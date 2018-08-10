@@ -30,6 +30,9 @@ If applicable, add screenshots to help explain your problem.
  - OS: [e.g. iOS8.1]
  - Browser [e.g. stock browser, safari]
  - Version [e.g. 22]
+ 
+ **Possible Solution**
+Any thoughts as to potential solutions or ideas to go about finding one. Please include links to any research.
 
 **Additional context**
 Add any other context about the problem here.
