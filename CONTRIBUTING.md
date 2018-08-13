@@ -2,29 +2,24 @@
 
 ### THANK YOU :heart:
 
->First off, thank you for just being _here_. It's people like you who have a heart to serve and desire to create something bigger than themselves that we want to be on our team. So thank you, because by considering t ocontribute to Barak, we know you're a person we'd love to be with. This is so much more than a product, it's an opportunity that opens doors. Thank you for making all of this possible. 
+First off, thank you for just being _here_. It's people like you who have a heart to serve and desire to create something bigger than themselves that we want to be on our team. So thank you, because by considering t ocontribute to Barak, we know you're a person we'd love to be with. This is so much more than a product, it's an opportunity that opens doors. Thank you for making all of this possible. 
 
 ### Read All About It :book:
 
->We all have the same goal: for this community to create a product that empowers individuals. Following these guidelines helps to communicate that you respect the time of the developers managing and developing this open source project. In return, they should reciprocate that respect in addressing your issue, assessing changes, and helping you finalize your pull requests.
+We all have the same goal: for this community to create a product that empowers individuals. Following these guidelines helps to communicate that you respect the time of the developers managing and developing this open source project. In return, they should reciprocate that respect in addressing your issue, assessing changes, and helping you finalize your pull requests.
 
 ### Be a Part :handshake:
 
->This is a space for you to share your talents, gitfs, and abilities to serve one another. There are many ways to contribute (even if you don't know how to code - _yet_)! From writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests, translating to another language or writing code, we would love to have you share your God-given abilities with us! 
+This is a space for you to share your talents, gitfs, and abilities to serve one another. There are many ways to contribute (even if you don't know how to code - _yet_)! From writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests, translating to another language or writing code, we would love to have you share your God-given abilities with us! 
 
 # Ground Rules
-### Set expectations for behavior (yours, and theirs).
-This includes not just how to communicate with others (being respectful, considerate, etc) but also technical responsibilities (importance of testing, project dependencies, etc). Mention and link to your code of conduct, if you have one.
-
-> Responsibilities
-> * Ensure cross-platform compatibility for every change that's accepted. Windows, Mac, Debian & Ubuntu Linux.
-> * Ensure that code that goes into core meets all requirements in this checklist: https://gist.github.com/audreyr/4feef90445b9680475f2
-> * Create issues for any major changes and enhancements that you wish to make. Discuss things transparently and get community feedback.
-> * Don't add any classes to the codebase unless absolutely needed. Err on the side of using functions.
-> * Keep feature versions as small as possible, preferably one new feature per version.
-> * Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. See the [Python Community Code of Conduct](https://www.python.org/psf/codeofconduct/).
-
-[source: [cookiecutter](https://github.com/audreyr/cookiecutter/blob/master/CONTRIBUTING.rst)] **Need more inspiration?** [1] [Celery](https://github.com/celery/celery/blob/master/CONTRIBUTING.rst#community-code-of-conduct) [2] [geocoder](https://github.com/alexreisner/geocoder#contributing)
+When contributing it is important to make sure we follow the same guidelines: 
+* Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. [(Read More)](https://github.com/madipfaff/barak/blob/master/CODE_OF_CONDUCT.md)
+* Ensure cross-platform compatibility for every change that's accepted. (Windows, Mac, Debian & Ubuntu Linux)
+* Ensure that code that goes into core meets all requirements in this checklist: https://github.com/madipfaff/barak/tree/master/.github/ISSUE_TEMPLATE
+* Create issues for any major changes and enhancements that you wish to make. Discuss things transparently and get community feedback.
+* Don't add any classes to the codebase unless absolutely needed. Err on the side of using functions.
+* Keep feature versions as small as possible, preferably one new feature per version.
 
 # Your First Contribution
 Help people who are new to your project understand where they can be most helpful. This is also a good time to let people know if you follow a label convention for flagging beginner issues.
