@@ -105,4 +105,9 @@ Answer [these questions](https://github.com/madipfaff/barak/blob/master/.github/
 Answer [these questions](https://github.com/madipfaff/barak/blob/master/.github/ISSUE_TEMPLATE/feature_request.md) when suggesting a feature or enhancement.
 
 # Code Review Process
---> This may need more thought.
+### Language Translations
+- The translated file will need to be reviewed by at least 2 different community members to make sure it is appropriate and the best translation that will allow the developer to best understand the foundation of programming. 
+- After 2 approved reviews, all 3 contributors will be given credit for the addition of the language when it is merged with the project.
+
+### Code 
+- The pull request will need to be reviewed by at least one member of the maintainer community before it can be merged into the project. 
