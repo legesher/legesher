@@ -12,6 +12,14 @@ We all have the same goal: for this community to create a product that empowers 
 
 This is a space for you to share your talents, gitfs, and abilities to serve one another. There are many ways to contribute (even if you don't know how to code - _yet_)! From writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests, translating to another language or writing code, we would love to have you share your God-given abilities with us! 
 
+Here are some important and helpful resources:
+- [Tutorials Would Go Here]()
+- [Join Our Slack Conmmunity!]()
+    - Use the `barak` channel for questions about Barak
+    - Use the `tutorials` channel for questions about Barak, Github, or Programming tutorials
+    - There are many other channels available, check the channel list 
+- [Current Project Status]() (we're keeping everything on Github for the time being)
+
 # Ground Rules
 When contributing it is important to make sure we follow the same guidelines: 
 * Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. [(Read More)](https://github.com/madipfaff/barak/blob/master/CODE_OF_CONDUCT.md)
@@ -29,55 +37,33 @@ One great way to begin contributing is to look for issues with the `beginner`, `
 - `help wanted`: issues which should be a bit more involved than beginner issues.
 - `great first issue`: issues for individuals new to programming or the github platform. 
 
-[source: [Atom](https://github.com/atom/atom/blob/master/CONTRIBUTING.md#your-first-code-contribution)] **Need more inspiration?** [1] [Read the Docs](http://docs.readthedocs.org/en/latest/contribute.html#contributing-to-development) [2] [Django](https://docs.djangoproject.com/en/dev/internals/contributing/new-contributors/#first-steps) (scroll down to "Guidelines" as well)
+**If you've never contributed to an open source project before**
+Here are a couple of friendly tutorials that may help: 
+- [Make A Pull Request](http://makeapullrequest.com/)
+- [First Timers Only](http://www.firsttimersonly.com/)
+- [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github).
 
-### Bonus points: Add a link to a resource for people who have never contributed to open source before.
-Here are a couple of friendly tutorials you can include: http://makeapullrequest.com/ and http://www.firsttimersonly.com/
+# Getting Started
 
-> Working on your first Pull Request? You can learn how from this *free* series, [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github).
+**TESTS** If you are changing the code base of the project, you will need to perform the provided tests before your changes can be merged. If you add new features to the project, please include tests with your pull request. 
 
-[source: [React](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#pull-requests)]  
+To run the tests, run the following command:
+```sh
+test project
+```
 
-As a side note, it helps to use newcomer-friendly language throughout the rest of your document. Here are a couple of examples from [Active Admin](https://github.com/activeadmin/activeadmin/blob/master/CONTRIBUTING.md):
+**DOCUMENTATION** The more documentation we have the easier it will be for our project to be used. Documentation will change constantly, as we improve the way the product works and we gain better ways of explaining.
 
->At this point, you're ready to make your changes! Feel free to ask for help; everyone is a beginner at first :smile_cat:
->
->If a maintainer asks you to "rebase" your PR, they're saying that a lot of code has changed, and that you need to update your branch so it's easier to merge.
+**TUTORIALS** If there was anything you do not currently understand or did not while going through the current tutorials, please update them to improve their usefulness. This is for the betterment of our community, we all thank you for it!
 
-# Getting started
-### Give them a quick walkthrough of how to submit a contribution.
-How you write this is up to you, but some things you may want to include:
-
-* Let them know if they need to sign a CLA, agree to a DCO, or get any other legal stuff out of the way
-* If tests are required for contributions, let them know, and explain how to run the tests
-* If you use anything other than GitHub to manage issues (ex. JIRA or Trac), let them know which tools they’ll need to contribute
-
->For something that is bigger than a one or two line fix:
-
->1. Create your own fork of the code
->2. Do the changes in your fork
->3. If you like the change and think the project could use it:
+**For updates larger than a one or two line fix:**
+1. Create your own fork of the code
+2. Do the changes in your fork
+3. If you like the change and think the project could use it:
     * Be sure you have followed the code style for the project.
-    * Sign the Contributor License Agreement, CLA, with the jQuery Foundation.
-    * Note the jQuery Foundation Code of Conduct.
-    * Send a pull request indicating that you have a CLA on file.
-
-[source: [Requirejs](http://requirejs.org/docs/contributing.html)] **Need more inspiration?** [1] [Active Admin](https://github.com/activeadmin/activeadmin/blob/master/CONTRIBUTING.md#1-where-do-i-go-from-here) [2] [Node.js](https://github.com/nodejs/node/blob/master/CONTRIBUTING.md#code-contributions) [3] [Ember.js](https://github.com/emberjs/ember.js/blob/master/CONTRIBUTING.md#pull-requests)
-
-### If you have a different process for small or "obvious" fixes, let them know.
-
-> Small contributions such as fixing spelling errors, where the content is small enough to not be considered intellectual property, can be submitted by a contributor as a patch, without a CLA.
->
->As a rule of thumb, changes are obvious fixes if they do not introduce any new functionality or creative thinking. As long as the change does not affect functionality, some likely examples include the following:
->* Spelling / grammar fixes
->* Typo correction, white space and formatting changes
->* Comment clean up
->* Bug fixes that change default return values or error codes stored in constants
->* Adding logging messages or debugging output
->* Changes to ‘metadata’ files like Gemfile, .gitignore, build scripts, etc.
->* Moving source files from one directory or package to another
-
-[source: [Chef](https://github.com/chef/chef/blob/master/CONTRIBUTING.md#chef-obvious-fix-policy)] **Need more inspiration?** [1] [Puppet](https://github.com/puppetlabs/puppet/blob/master/CONTRIBUTING.md#making-trivial-changes)
+    * Note the Barak Code of Conduct.
+    * Add your name to the `CONTRIBUTORS` file.
+    * Send a pull request and be open for feedback.
 
 # How to report a bug
 ### Explain security disclosures first!
