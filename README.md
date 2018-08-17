@@ -6,11 +6,11 @@ ABOUT BARAK
 # Getting Started
 To get Barak up and running you will need to do the following:
 
-INSTRUCTIONS ON HOW TO RUN PROJECT
-### Installing
-### Running
-### Testing 
-### Deploying
+INSTRUCTIONS ON HOW TO RUN PROJECT  
+### Installing  
+### Running  
+### Testing  
+### Deploying  
 
 # Contributing 
 We would love for you to join in our community, because we need you! Please read our [Contributing Guide]() for more detail in contributing and our [Code of Conduct]() to maintain the healthy space our community thrives in! 
