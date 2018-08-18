@@ -1,5 +1,5 @@
 # Welcome to Barak :wave:
->**Barak**: to kneel, abundantly bless
+>**אֶחָ֑ת**: One, the same, was of one 
 
 ABOUT BARAK 
 
