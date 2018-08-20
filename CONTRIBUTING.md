@@ -66,7 +66,43 @@ test project
     * Send a pull request and be open for feedback.
     
 # Style Guide
-### Git Commit Messages
+### Commit Messages Guidelines
+A good commit message should describe what changed and why. This project uses semantic commit messages to streamline the release process.
+
+Before a pull request can be merged, it must have a pull request title with a semantic prefix.
+
+Examples of commit messages with semantic prefixes:
+
+- `fix: don't overwrite prevent_default if default wasn't prevented`
+- `feat: add app.isPackaged() method`
+- `docs: app.isDefaultProtocolClient is now available on Linux`
+Common prefixes:
+
+- fix: A bug fix
+- feat: A new feature
+- docs: Documentation changes
+- test: Adding missing tests or correcting existing tests
+- build: Changes that affect the build system
+- ci: Changes to our CI configuration files and scripts
+- perf: A code change that improves performance
+- refactor: A code change that neither fixes a bug nor adds a feature
+- style: Changes that do not affect the meaning of the code (linting)
+- vendor: Bumping a dependency like libchromiumcontent or node
+
+Other things to keep in mind when writing a commit message:
+
+1. The first line should:
+  - contain a short description of the change (preferably 50 characters or less, and no more than 72 characters)
+  - be entirely in lowercase with the exception of proper nouns, acronyms, and the words that refer to code, like function/variable names
+2. Keep the second line blank.
+3. Wrap all other lines at 72 columns.
+
+**Breaking Changes**
+A commit that has the text `BREAKING CHANGE:` at the beginning of its optional body or footer section introduces a breaking API change (correlating with Major in semantic versioning). A breaking change can be part of commits of any type. e.g., a `fix:`, `feat:` & `chore:` types would all be valid, in addition to any other type.
+
+See [conventionalcommits.org](https://conventionalcommits.org/) for more details.
+
+
 * Use the present tense ("Add feature" not "Added feature")
 * Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
 * Limit the first line to 72 characters or less
