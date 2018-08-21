@@ -1,10 +1,10 @@
-# Welcome to Barak :wave:
+# Welcome to Legasher :wave:
 >**אֶחָ֑ת**: One, the same, was of one 
 
-ABOUT BARAK 
+ABOUT Legasher 
 
 # Getting Started
-To get Barak up and running you will need to do the following:
+To get Legasher up and running you will need to do the following:
 
 INSTRUCTIONS ON HOW TO RUN PROJECT  
 ### Installing  
@@ -19,4 +19,4 @@ We would love for you to join in our community, because we need you! Please read
 - If you can't find the answer there, open an issue in this repository and add the label `question`.
 
 # Givers
-This project is maintained by a [passionate community]() (and) With Madi Co. Use of this project under the [MIT License](https://github.com/madipfaff/barak/blob/master/LICENSE). 
+This project is maintained by a [passionate community]() (and) With Madi Co. Use of this project under the [MIT License](https://github.com/madipfaff/Legasher/blob/master/LICENSE). 
