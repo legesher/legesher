@@ -1,1 +1,66 @@
 
+### TOKEN NAMES
+In the python parser these tokens are in the `const char *_PyParser_TokenNames[]` object.
+
+`ENDMARKER` :
+`NAME` :
+`NUMBER` :
+`STRING` :
+`NEWLINE` :
+`INDENT` :
+`DEDENT` :
+`LPAR` :
+`RPAR` :
+`LSQB` :
+`RSQB` :
+`COLON` :
+`COMMA` :
+`SEMI` :
+`PLUS` :
+`MINUS` :
+`STAR` :
+`SLASH` :
+`VBAR` :
+`AMPER` :
+`LESS` :
+`GREATER` :
+`EQUAL` :
+`DOT` :
+`PERCENT` :
+`LBRACE` :
+`RBRACE` :
+`EQEQUAL` :
+`NOTEQUAL` :
+`LESSEQUAL` :
+`GREATEREQUAL` :
+`TILDE` :
+`CIRCUMFLEX` :
+`LEFTSHIFT` :
+`RIGHTSHIFT` :
+`DOUBLESTAR` :
+`PLUSEQUAL` :
+`MINEQUAL` :
+`STAREQUAL` :
+`SLASHEQUAL` :
+`PERCENTEQUAL` :
+`AMPEREQUAL` :
+`VBAREQUAL` :
+`CIRCUMFLEXEQUAL` :
+`LEFTSHIFTEQUAL` :
+`RIGHTSHIFTEQUAL` :
+`DOUBLESTAREQUAL` :
+`DOUBLESLASH` :
+`DOUBLESLASHEQUAL` :
+`AT` :
+`ATEQUAL` :
+`RARROW` :
+`ELLIPSIS` :
+
+**(This table must match the #defines in token.h!)**
+
+`OP` :
+`<ERRORTOKEN>` :
+`COMMENT` :
+`NL` :
+`ENCODING` :
+`<N_TOKENS>`
