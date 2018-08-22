@@ -1,62 +1,37 @@
-This is the core dictionary for coding in English. Use this file to translate to your own language.
+This is the core dictionary for coding in English. Use this file to translate to your own language. Please refer to the docs/glossary.md for the true definition of each keyword.
 
-
-ENDMARKER =
-NAME =
-NUMBER =
-STRING =
-NEWLINE =
-INDENT =
-DEDENT =
-LPAR =
-RPAR =
-LSQB =
-RSQB =
-COLON =
-COMMA =
-SEMI =
-PLUS =
-MINUS =
-STAR =
-SLASH =
-VBAR =
-AMPER =
-LESS =
-GREATER =
-EQUAL =
-DOT =
-PERCENT =
-LBRACE =
-RBRACE =
-EQEQUAL =
-NOTEQUAL =
-LESSEQUAL =
-GREATEREQUAL =
-TILDE =
-CIRCUMFLEX =
-LEFTSHIFT =
-RIGHTSHIFT =
-DOUBLESTAR =
-PLUSEQUAL =
-MINEQUAL =
-STAREQUAL =
-SLASHEQUAL =
-PERCENTEQUAL =
-AMPEREQUAL =
-VBAREQUAL =
-CIRCUMFLEXEQUAL =
-LEFTSHIFTEQUAL =
-RIGHTSHIFTEQUAL =
-DOUBLESTAREQUAL =
-DOUBLESLASH =
-DOUBLESLASHEQUAL =
-AT =
-ATEQUAL =
-RARROW =
-ELLIPSIS =
-OP =
-<ERRORTOKEN> =
-COMMENT =
-NL =
-ENCODING =
-<N_TOKENS> = 
+False
+None
+True
+and
+as
+assert
+async
+await
+break
+class
+continue
+def
+del
+elif
+else
+except
+finally
+for
+from
+global
+if
+import
+in
+is
+lambda
+nonlocal
+not
+or
+pass
+raise
+return
+try
+while
+with
+yield
