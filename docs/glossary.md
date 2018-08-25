@@ -14,10 +14,10 @@ For all the words that would be of benefit to know. If there is a word you belie
 ## Truth Values
 _Truth values_ are the results of comparison operations or logical (Boolean) operations.
 
-### True
+### `True`
 `True`: similar to `1`, **TRUE** in boolean logic  
 
-### False
+### `False`
 `False`: similar to `0`, **FALSE** in boolean logic  
 
 ## None
