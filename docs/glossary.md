@@ -5,7 +5,10 @@ For all the words that would be of benefit to know. If there is a word you belie
   - [Truth Values](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#truth-values)
     - [`True`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#true)
     - [`False`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#false)
-  -
+  - [Logical Operators](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#logical-operators)
+    - [`and`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#and)
+    - [`not`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#not)
+    - [`or`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#or)
 
 # Keywords 🔑
 
@@ -15,22 +18,22 @@ For all the words that would be of benefit to know. If there is a word you belie
 _Truth values_ are the results of comparison operations or logical (Boolean) operations.
 
 ### `True`
-`True`: similar to `1`, **TRUE** in boolean logic  
+- Definition: similar to "1", and considered **TRUE** in boolean logic  
 
 ### `False`
-`False`: similar to `0`, **FALSE** in boolean logic  
-
-## None
-`None`: special constant in python that represents the absence of a value or null value.
-
->**NOTE**: It is an object with the datatype `NoneType`. There cannot be multiple `None` objects but can assign it to variables which would be equal to one another. `None` does NOT imply `False`, `0`, or empty list/string/dict.
+- Definition: similar to "0", and considered **FALSE** in boolean logic  
 
 ## Logical Operators
 The other logical operators. Each operator has their own truth table:
 
-`and`: will result into `True` only if both the operands are `True`  
-`not`: used to invert the truth value  
-`or`: will result into `True` if any the operands are `True`  
+### `and`
+- Definition: will result into `True` only if both the operands are `True`  
+
+### `not`
+- Definition: used to invert the truth value  
+
+### `or`
+- Definition: will result into `True` if any the operands are `True`  
 
 ## Debugging
 `assert`: used for debugging purposes by checking the internal state or if assumptions are true.
@@ -111,4 +114,9 @@ Exceptions are errors that suggest something went wrong while executing the prog
 
 `yield`: used inside a function like a `return` statement, however it returns a generator.  
 
->**NOTE**: A Generator is an iterator that generates one item at a time. A large list of value will take up a lot of memory. Generators are useful in this situation as it generates only one value at a time instead of storing all the values in memory.  
+>**NOTE**: A Generator is an iterator that generates one item at a time. A large list of value will take up a lot of memory. Generators are useful in this situation as it generates only one value at a time instead of storing all the values in memory.
+
+## None
+`None`: special constant in python that represents the absence of a value or null value.
+
+>**NOTE**: It is an object with the datatype `NoneType`. There cannot be multiple `None` objects but can assign it to variables which would be equal to one another. `None` does NOT imply `False`, `0`, or empty list/string/dict.
