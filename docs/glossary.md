@@ -107,32 +107,65 @@ The other logical operators. Each operator has their own truth table:
 
 >**NOTE**: If the assert condition is true, nothing will happen. But if the condition is false, the error - `AssertionError` is raised.
 
+### Loops
+`for`: used for looping, generally when we know the number of times we want to loop with any type of sequence like a list or string.  
+
+`if`: used for conditional branching or decision making.
+
+`elif`: short for "else if" used for conditional branching or decision making.  
+
+`else`: used for conditional branching or decision making if the condition is false; the last resort.  
+
+To alter the loop's normal behavior, use the following keywords:  
+`break`: this will end the smallest loop it is in and control flows to the statement immediately below the loop.  
+
+`continue`: causes to end the current iteration of the loop, but not the whole loop.  
+
+`in`: used to test if a sequence (list, tuple, string, etc.) contains a value. It returns `TRUE` if the value is present. Its secondary use is to traverse through a sequence in a `for` loop.  
+
+### User Defined Structures
+`class`: used to define a new user-defined class - which is a collection of related attributes and methods that try to represent a real world situation.
+
+`def`: used to define a new user-defined function.  
+
 `async`:
 `await`:
-`break`:
-`class`:
-`continue`:
-`def`:
 `del`:
-`elif`:
-`else`:
+
+### Exceptions
+Exceptions are errors that suggest something went wrong while executing the program. Some examples of errors that one could encounter are `IOError`, `ValueError`, `ZeroDivisionError`, `ImportError`, `NameError`, `TypeError`. To catch exceptions, use `try...except`blocks.
 `except`:
-`finally`:
-`for`:
-`from`:
-`global`:
-`if`:
-`import`:
-`in`:
-`is`:
-`lambda`:
-`nonlocal`:
-`not`:
-`or`: will result into `True` only if both the operands are `True`
-`pass`:
-`raise`:
-`return`:
+
+`raise`: to raise an exception explicitly.  
+
+`finally`: used with `try...except` statements to close up resources or file streams. This ensures that the block of code inside it gets executed even if there is an unhandled exception.   
+
+### Module Abstractions
+
+`from`: to import specific attributes or functions into the current namespace, use `from...import`.   
+
+`import`: used to import modules into the current namespace.  
+
+### Variable Declarations
+`global`: used to declare that a variable inside the function is global (outside the function).
+
+>**NOTE**: As a global variable, if we need to read the value of the variable we do not need to define it as global. If we need to modify the value of a global variable inside a function, then we must declare it with global, otherwise a local variable is created.  
+
+`lambda`:  used to create an inline, anonymous function (function without a name), without a `return` statement, consisting of an expression that is evaluated and returned.  
+
+`nonlocal`:  used to declare that a variable inside a nested function (function inside a function) is not local to it, meaning it lies in the outer inclosing function. (similar to the `global` keyword).
+
+>**NOTE**: If you need to modify a non-local variable inside a nested function, then we must declare it with `nonlocal`. Otherwise a local variable with that name is created inside the nested function.  
+
+`is`: used for testing object identity, by testing if the two variables refer to the same object. This will return `TRUE` if the objects are identical and `FALSE` if not.  
+
+`pass`: null statement where nothing happens when executed, mainly used as a placeholder.  
+
+`return`: used inside a function to exit and return a value.  
+
+>**NOTE**: If we do not return a value explicitly, `NONE` is returned automatically.
 `try`:
 `while`:
 `with`:
 `yield`:
+`not`:
