@@ -9,6 +9,15 @@ For all the words that would be of benefit to know. If there is a word you belie
     - [`and`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#and)
     - [`not`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#not)
     - [`or`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#or)
+  - [Loops](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#loops)
+    - [`for`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#for)
+    - [`in`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#in)
+    - [`while`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#while)
+    - [`if`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#if)
+    - [`elif`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#elif)
+    - [`else`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#else)
+    - [`break`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#break)
+    - [`continue`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#continue)
 
 # Keywords 🔑
 
@@ -18,45 +27,48 @@ For all the words that would be of benefit to know. If there is a word you belie
 _Truth values_ are the results of comparison operations or logical (Boolean) operations.
 
 ### `True`
-- Definition: similar to "1", and considered **TRUE** in boolean logic  
+- **Definition**: similar to "1", and considered **TRUE** in boolean logic  
 
 ### `False`
-- Definition: similar to "0", and considered **FALSE** in boolean logic  
+- **Definition**: similar to "0", and considered **FALSE** in boolean logic  
 
 ## Logical Operators
 The other logical operators. Each operator has their own truth table:
 
 ### `and`
-- Definition: will result into `True` only if both the operands are `True`  
+- **Definition**: will result into `True` only if both the operands are `True`  
 
 ### `not`
-- Definition: used to invert the truth value  
+- **Definition**: used to invert the truth value  
 
 ### `or`
-- Definition: will result into `True` if any the operands are `True`  
-
-## Debugging
-`assert`: used for debugging purposes by checking the internal state or if assumptions are true.
-
->**NOTE**: If the assert condition is true, nothing will happen. But if the condition is false, the error - `AssertionError` is raised.
+- **Definition**: will result into `True` if any the operands are `True`  
 
 ## Loops
-`for`: used for looping, generally when we know the number of times we want to loop with any type of sequence like a list or string.  
 
-`if`: used for conditional branching or decision making.
+### `for`
+- **Definition**: used for looping, generally when we know the number of times we want to loop with any type of sequence like a list or string.  
 
-`elif`: short for "else if" used for conditional branching or decision making.  
+### `in`
+- **Definition**: used to test if a sequence (list, tuple, string, etc.) contains a value. It returns `TRUE` if the value is present. Its secondary use is to traverse through a sequence in a `for` loop.  
 
-`else`: used for conditional branching or decision making if the condition is false; the last resort.  
+### `while`
+- **Definition**: used for looping. The statements inside this type of loop will continue to execute until the condition for the `while` loop evaluates to `FALSE` or a `break` statement is encountered.  
 
-To alter the loop's normal behavior, use the following keywords:  
-`break`: this will end the smallest loop it is in and control flows to the statement immediately below the loop.  
+### `if`
+- **Definition**: used for conditional branching or decision making.
 
-`continue`: causes to end the current iteration of the loop, but not the whole loop.  
+### `elif`
+- **Definition**: short for "else if" used for conditional branching or decision making.  
 
-`in`: used to test if a sequence (list, tuple, string, etc.) contains a value. It returns `TRUE` if the value is present. Its secondary use is to traverse through a sequence in a `for` loop.  
+### `else`
+- **Definition**: used for conditional branching or decision making if the condition is false; the last resort.  
 
-`while`: used for looping. The statements inside this type of loop will continue to execute until the condition for the `while` loop evaluates to `FALSE` or a `break` statement is encountered.  
+### `break`
+- **Definition**: used to alter the loop's normal behavior; this will end the smallest loop it is in and control flows to the statement immediately below the loop.  
+
+### `continue`
+- **Definition**: used to alter the loop's normal behavior; causes to end the current iteration of the loop, but not the whole loop.  
 
 ## User Defined Structures
 `class`: used to define a new user-defined class - which is a collection of related attributes and methods that try to represent a real world situation.
@@ -120,3 +132,9 @@ Exceptions are errors that suggest something went wrong while executing the prog
 `None`: special constant in python that represents the absence of a value or null value.
 
 >**NOTE**: It is an object with the datatype `NoneType`. There cannot be multiple `None` objects but can assign it to variables which would be equal to one another. `None` does NOT imply `False`, `0`, or empty list/string/dict.
+
+
+## Debugging
+`assert`: used for debugging purposes by checking the internal state or if assumptions are true.
+
+>**NOTE**: If the assert condition is true, nothing will happen. But if the condition is false, the error - `AssertionError` is raised.
