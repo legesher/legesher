@@ -1,14 +1,23 @@
-# Glossary
+# Glossary 📖
 For all the words that would be of benefit to know. If there is a word you believe should be on this list, open an `issue`.  
 
-# Keywords
+- [Keywords](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#keywords)  
+  - [Truth Values](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#truth-values)
+    - [`True`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#true)
+    - [`False`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#false)
+  -
+
+# Keywords 🔑
 
 `Keywords` in programming languages are specific words that are reserved to communicate specific things to the computer. These words remain consistent across all uses of the programming language.
 
 ## Truth Values
 _Truth values_ are the results of comparison operations or logical (Boolean) operations.
 
+### True
 `True`: similar to `1`, **TRUE** in boolean logic  
+
+### False
 `False`: similar to `0`, **FALSE** in boolean logic  
 
 ## None
@@ -22,9 +31,6 @@ The other logical operators. Each operator has their own truth table:
 `and`: will result into `True` only if both the operands are `True`  
 `not`: used to invert the truth value  
 `or`: will result into `True` if any the operands are `True`  
-
-## Alias
-`as`: used to create an alias while importing a module, giving a different name to a module while importing it.
 
 ## Debugging
 `assert`: used for debugging purposes by checking the internal state or if assumptions are true.
@@ -56,7 +62,11 @@ To alter the loop's normal behavior, use the following keywords:
 
 `async`:
 `await`:
-`del`:
+
+## References
+`del`: used to delete the reference to an object.  
+
+`as`: used to create an alias while importing a module, giving a different name to a module while importing it.  
 
 ## Exceptions
 Exceptions are errors that suggest something went wrong while executing the program. Some examples of errors that one could encounter are `IOError`, `ValueError`, `ZeroDivisionError`, `ImportError`, `NameError`, `TypeError`. To catch exceptions, use `try...except`blocks.  
