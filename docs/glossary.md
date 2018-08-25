@@ -123,6 +123,8 @@ To alter the loop's normal behavior, use the following keywords:
 
 `in`: used to test if a sequence (list, tuple, string, etc.) contains a value. It returns `TRUE` if the value is present. Its secondary use is to traverse through a sequence in a `for` loop.  
 
+`while`: used for looping. The statements inside this type of loop will continue to execute until the condition for the `while` loop evaluates to `FALSE` or a `break` statement is encountered.  
+
 ### User Defined Structures
 `class`: used to define a new user-defined class - which is a collection of related attributes and methods that try to represent a real world situation.
 
@@ -133,12 +135,16 @@ To alter the loop's normal behavior, use the following keywords:
 `del`:
 
 ### Exceptions
-Exceptions are errors that suggest something went wrong while executing the program. Some examples of errors that one could encounter are `IOError`, `ValueError`, `ZeroDivisionError`, `ImportError`, `NameError`, `TypeError`. To catch exceptions, use `try...except`blocks.
-`except`:
+Exceptions are errors that suggest something went wrong while executing the program. Some examples of errors that one could encounter are `IOError`, `ValueError`, `ZeroDivisionError`, `ImportError`, `NameError`, `TypeError`. To catch exceptions, use `try...except`blocks.  
+
+`except`: used with exceptions, where `try...except` blocks are used to catch exceptions if they fail the `try` set of instructions.  
+
+`try`: used with exceptions, where `try...except` blocks are used to catch exceptions by trying out a set of instructions to see if an exception occur.  
 
 `raise`: to raise an exception explicitly.  
 
 `finally`: used with `try...except` statements to close up resources or file streams. This ensures that the block of code inside it gets executed even if there is an unhandled exception.   
+
 
 ### Module Abstractions
 
@@ -163,9 +169,12 @@ Exceptions are errors that suggest something went wrong while executing the prog
 
 `return`: used inside a function to exit and return a value.  
 
->**NOTE**: If we do not return a value explicitly, `NONE` is returned automatically.
-`try`:
-`while`:
-`with`:
-`yield`:
-`not`:
+>**NOTE**: If we do not return a value explicitly, `NONE` is returned automatically.  
+
+`with`: statement used to wrap the execution of a block of code within methods defined by the context manager.  
+
+>**NOTE**: "Context Manager" is a class that implements `__enter__` and `__exit__` methods. Use of `with` statement ensures that the `__exit__` method is called at the end of the nested block. Tis concept is similar to the use of `try...finally` block.  
+
+`yield`: used inside a function like a `return` statement, however it returns a generator.  
+
+>**NOTE**: A Generator is an iterator that generates one item at a time. A large list of value will take up a lot of memory. Generators are useful in this situation as it generates only one value at a time instead of storing all the values in memory.  
