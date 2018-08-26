@@ -18,6 +18,19 @@ For all the words that would be of benefit to know. If there is a word you belie
     - [`else`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#else)
     - [`break`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#break)
     - [`continue`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#continue)
+  - [`User Defined Structures`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#user-defined-structures)
+    - [`class`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#class)
+    - [`def`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#def)
+    - [`async`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#async)
+    - [`await`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#await)
+  - [`References`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#references)
+    - [`del`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#del)
+    - [`as`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#as)
+  - [`Exceptions`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#exceptions)
+    - [`except`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#except)
+    - [`try`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#try)
+    - [`raise`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#raise)
+    - [`finally`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#finally)
 
 # Keywords 🔑
 
@@ -71,70 +84,95 @@ The other logical operators. Each operator has their own truth table:
 - **Definition**: used to alter the loop's normal behavior; causes to end the current iteration of the loop, but not the whole loop.  
 
 ## User Defined Structures
-`class`: used to define a new user-defined class - which is a collection of related attributes and methods that try to represent a real world situation.
 
-`def`: used to define a new user-defined function.  
+### `class`
+- **Definition**: used to define a new user-defined class - which is a collection of related attributes and methods that try to represent a real world situation.
 
-`async`:
-`await`:
+### `def`
+- **Definition**: used to define a new user-defined function.  
+
+### `async`
+- **Definition**:
+
+### `await`
+- **Definition**:
 
 ## References
-`del`: used to delete the reference to an object.  
 
-`as`: used to create an alias while importing a module, giving a different name to a module while importing it.  
+### `del`
+- **Definition**: used to delete the reference to an object.  
+
+### `as`
+- **Definition**: used to create an alias while importing a module, giving a different name to a module while importing it.  
 
 ## Exceptions
 Exceptions are errors that suggest something went wrong while executing the program. Some examples of errors that one could encounter are `IOError`, `ValueError`, `ZeroDivisionError`, `ImportError`, `NameError`, `TypeError`. To catch exceptions, use `try...except`blocks.  
 
-`except`: used with exceptions, where `try...except` blocks are used to catch exceptions if they fail the `try` set of instructions.  
+### `except`
+- **Definition**: used with exceptions, where `try...except` blocks are used to catch exceptions if they fail the `try` set of instructions.  
 
-`try`: used with exceptions, where `try...except` blocks are used to catch exceptions by trying out a set of instructions to see if an exception occur.  
+### `try`
+- **Definition**: used with exceptions, where `try...except` blocks are used to catch exceptions by trying out a set of instructions to see if an exception occur.  
 
-`raise`: to raise an exception explicitly.  
+### `raise`
+- **Definition**: to raise an exception explicitly.  
 
-`finally`: used with `try...except` statements to close up resources or file streams. This ensures that the block of code inside it gets executed even if there is an unhandled exception.   
-
+### `finally`
+- **Definition**: used with `try...except` statements to close up resources or file streams. This ensures that the block of code inside it gets executed even if there is an unhandled exception.   
 
 ## Module Abstractions
 
-`from`: to import specific attributes or functions into the current namespace, use `from...import`.   
+### `from`
+- **Definition**: to import specific attributes or functions into the current namespace, use `from...import`.   
 
-`import`: used to import modules into the current namespace.  
+### `import`
+- **Definition**: used to import modules into the current namespace.  
 
 ## Variable Declarations
-`global`: used to declare that a variable inside the function is global (outside the function).
+
+### `global`
+- **Definition**: used to declare that a variable inside the function is global (outside the function).
 
 >**NOTE**: As a global variable, if we need to read the value of the variable we do not need to define it as global. If we need to modify the value of a global variable inside a function, then we must declare it with global, otherwise a local variable is created.  
 
-`lambda`:  used to create an inline, anonymous function (function without a name), without a `return` statement, consisting of an expression that is evaluated and returned.  
+### `lambda`
+- **Definition**:  used to create an inline, anonymous function (function without a name), without a `return` statement, consisting of an expression that is evaluated and returned.  
 
-`nonlocal`:  used to declare that a variable inside a nested function (function inside a function) is not local to it, meaning it lies in the outer inclosing function. (similar to the `global` keyword).
+### `nonlocal`
+- **Definition**:  used to declare that a variable inside a nested function (function inside a function) is not local to it, meaning it lies in the outer inclosing function. (similar to the `global` keyword).
 
 >**NOTE**: If you need to modify a non-local variable inside a nested function, then we must declare it with `nonlocal`. Otherwise a local variable with that name is created inside the nested function.  
 
-`is`: used for testing object identity, by testing if the two variables refer to the same object. This will return `TRUE` if the objects are identical and `FALSE` if not.  
+### `is`
+- **Definition**: used for testing object identity, by testing if the two variables refer to the same object. This will return `TRUE` if the objects are identical and `FALSE` if not.  
 
-`pass`: null statement where nothing happens when executed, mainly used as a placeholder.  
+### `pass`
+- **Definition**: null statement where nothing happens when executed, mainly used as a placeholder.  
 
-`return`: used inside a function to exit and return a value.  
+### `return`
+- **Definition**: used inside a function to exit and return a value.  
 
 >**NOTE**: If we do not return a value explicitly, `NONE` is returned automatically.  
 
-`with`: statement used to wrap the execution of a block of code within methods defined by the context manager.  
+### `with`
+- **Definition**: statement used to wrap the execution of a block of code within methods defined by the context manager.  
 
 >**NOTE**: "Context Manager" is a class that implements `__enter__` and `__exit__` methods. Use of `with` statement ensures that the `__exit__` method is called at the end of the nested block. Tis concept is similar to the use of `try...finally` block.  
 
-`yield`: used inside a function like a `return` statement, however it returns a generator.  
+### `yield`
+- **Definition**: used inside a function like a `return` statement, however it returns a generator.  
 
 >**NOTE**: A Generator is an iterator that generates one item at a time. A large list of value will take up a lot of memory. Generators are useful in this situation as it generates only one value at a time instead of storing all the values in memory.
 
 ## None
-`None`: special constant in python that represents the absence of a value or null value.
+### `None`
+- **Definition**: special constant in python that represents the absence of a value or null value.
 
 >**NOTE**: It is an object with the datatype `NoneType`. There cannot be multiple `None` objects but can assign it to variables which would be equal to one another. `None` does NOT imply `False`, `0`, or empty list/string/dict.
 
 
 ## Debugging
-`assert`: used for debugging purposes by checking the internal state or if assumptions are true.
+### `assert`
+- **Definition**: used for debugging purposes by checking the internal state or if assumptions are true.
 
 >**NOTE**: If the assert condition is true, nothing will happen. But if the condition is false, the error - `AssertionError` is raised.
