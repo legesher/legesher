@@ -26,11 +26,27 @@ For all the words that would be of benefit to know. If there is a word you belie
   - [References](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#references)
     - [`del`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#del)
     - [`as`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#as)
+    - [`is`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#is)
+    - [`none`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#none)
   - [Exceptions](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#exceptions)
     - [`except`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#except)
     - [`try`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#try)
     - [`raise`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#raise)
     - [`finally`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#finally)
+  - [Module Abstractions](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#module-abstractions)
+    - [`from`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#from)
+    - [`import`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#import)
+  - [Variable Declarations](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#variable-declarations)
+    - [`global`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#global)
+    - [`lambda`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#lambda)
+    - [`nonlocal`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#nonlocal)
+  - [Function Properties](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#function-properties)
+    - [`pass`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#pass)
+    - [`return`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#return)
+    - [`with`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#with)
+    - [`yield`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#yield)
+  - [Debugging](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#debugging)
+    - [`assert`](https://github.com/madipfaff/Legasher/blob/master/docs/glossary.md#assert)
 
 # Keywords 🔑
 
@@ -105,6 +121,14 @@ The other logical operators. Each operator has their own truth table:
 ### `as`
 - **Definition**: used to create an alias while importing a module, giving a different name to a module while importing it.  
 
+### `is`
+- **Definition**: used for testing object identity, by testing if the two variables refer to the same object. This will return `TRUE` if the objects are identical and `FALSE` if not.
+
+### `None`
+- **Definition**: special constant in python that represents the absence of a value or null value.
+
+>**NOTE**: It is an object with the datatype `NoneType`. There cannot be multiple `None` objects but can assign it to variables which would be equal to one another. `None` does NOT imply `False`, `0`, or empty list/string/dict.
+
 ## Exceptions
 Exceptions are errors that suggest something went wrong while executing the program. Some examples of errors that one could encounter are `IOError`, `ValueError`, `ZeroDivisionError`, `ImportError`, `NameError`, `TypeError`. To catch exceptions, use `try...except`blocks.  
 
@@ -143,8 +167,7 @@ Exceptions are errors that suggest something went wrong while executing the prog
 
 >**NOTE**: If you need to modify a non-local variable inside a nested function, then we must declare it with `nonlocal`. Otherwise a local variable with that name is created inside the nested function.  
 
-### `is`
-- **Definition**: used for testing object identity, by testing if the two variables refer to the same object. This will return `TRUE` if the objects are identical and `FALSE` if not.  
+## Function Properties
 
 ### `pass`
 - **Definition**: null statement where nothing happens when executed, mainly used as a placeholder.  
@@ -163,13 +186,6 @@ Exceptions are errors that suggest something went wrong while executing the prog
 - **Definition**: used inside a function like a `return` statement, however it returns a generator.  
 
 >**NOTE**: A Generator is an iterator that generates one item at a time. A large list of value will take up a lot of memory. Generators are useful in this situation as it generates only one value at a time instead of storing all the values in memory.
-
-## None
-### `None`
-- **Definition**: special constant in python that represents the absence of a value or null value.
-
->**NOTE**: It is an object with the datatype `NoneType`. There cannot be multiple `None` objects but can assign it to variables which would be equal to one another. `None` does NOT imply `False`, `0`, or empty list/string/dict.
-
 
 ## Debugging
 ### `assert`
