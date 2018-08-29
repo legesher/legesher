@@ -17,10 +17,18 @@ INSTRUCTIONS ON HOW TO RUN PROJECT
 ### Testing  
 ### Deploying  
 
-# Contributing 🎁
+# Contributing to Legasher 🎁
 We would love for you to join in our community, because we need you! What are you gifted in? Head on over to the project's [current open issues](https://github.com/madipfaff/Legasher/issues) to see what you can get involved in!  
 
+There are 2 main components and depending on what kind of feature you're writing, you may need to change one or more of these.
+
 When you find something you'd like to help with, please spend some time reading our [Contributing Guide](https://github.com/madipfaff/Legasher/blob/master/CONTRIBUTING.md) for more details in contributing and our [Code of Conduct](https://github.com/madipfaff/Legasher/blob/master/CODE_OF_CONDUCT.md) to maintain the healthy space our community thrives in!
+
+### Source Code Overview
+- `community`: Dedicated to all of the individuals who made this project possible
+- `compiler`: Python package implementing Python in English -> Python trans-compiled language
+- `docs`: Documentation and style guides for the project
+- `languages`: Translations for keywords and error messages
 
 # Need Help?
 - If you can't find the answer there, open an issue in this repository and add the label `question`.
