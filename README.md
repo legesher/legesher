@@ -2,9 +2,11 @@
 
 We are all about building bridges to help others better understand concepts. With **Parable**, one can learn the foundations of programming by coding in their own spoken language.
 
-[!https://media.giphy.com/media/3ohhwEfVTkU4hOBcVG/giphy.gif](https://giphy.com/gifs/3ohhwEfVTkU4hOBcVG/html5)
+![Alt Text](https://media.giphy.com/media/Kibopv5xV0hHy/giphy.gif)
 
 You're familiar with a STOP sign 🔴 right? That red hexagon with 4 white letters `S`, `T`,`O`,`P`? When one encounters that STOP sign, they are under a special pretense: come complete stop, look both ways for oncoming traffic, and proceed with caution in your intended direction.
+
+![Alt Text](https://media.giphy.com/media/3o6nUNR05ScpmwQSu4/giphy.gif)
 
 What if you win a mystery trip to some far off country and when you get off the plane you see a red hexagon with white letters. BUT the white letters aren't `S`, `T`,`O`,`P`. They're in a language completely unfamiliar to you. However, because you first learned and understood the context behind the red hexagon, you're now able to apply that same understanding to the sign in front of you.
 
