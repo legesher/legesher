@@ -2,9 +2,9 @@
 
 We are all about building bridges to help others better understand concepts. With **Parable**, one can learn the foundations of programming by coding in their own spoken language.
 
-You're familiar with a STOP sign :stop: right? That red hexagon with 4 white letters "S", "T","O","P"? When one encounters that STOP sign, they are under a special pretense: come complete stop, look both ways for oncoming traffic, and proceed with caution in your intended direction.
+You're familiar with a STOP sign 🔴 right? That red hexagon with 4 white letters `S`, `T`,`O`,`P`? When one encounters that STOP sign, they are under a special pretense: come complete stop, look both ways for oncoming traffic, and proceed with caution in your intended direction.
 
-What if you win a mystery trip to some far off country and when you get off the plane you see a red hexagon with white letters. BUT the white letters aren't "S","T", "O","P". They're in a language completely unfamiliar to you. However, because you first learned and understood the context behind the red hexagon, you're now able to apply that same understanding to the sign in front of you.
+What if you win a mystery trip to some far off country and when you get off the plane you see a red hexagon with white letters. BUT the white letters aren't `S`, `T`,`O`,`P`. They're in a language completely unfamiliar to you. However, because you first learned and understood the context behind the red hexagon, you're now able to apply that same understanding to the sign in front of you.
 
 That's what we do with Parable. We allow individuals to learn _how_ to code in their native language. Because of this project, language doesn't have to be a barrier anymore.
 
@@ -22,7 +22,7 @@ We would love for you to join in our community, because we need you! What are yo
 
 When you find something you'd like to help with, please spend some time reading our [Contributing Guide](https://github.com/madipfaff/Legasher/blob/master/CONTRIBUTING.md) for more details in contributing and our [Code of Conduct](https://github.com/madipfaff/Legasher/blob/master/CODE_OF_CONDUCT.md) to maintain the healthy space our community thrives in!
 
-# Need Help? 
+# Need Help?
 - If you can't find the answer there, open an issue in this repository and add the label `question`.
 
 # Community :handshake:
