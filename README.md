@@ -2,6 +2,8 @@
 
 We are all about building bridges to help others better understand concepts. With **Parable**, one can learn the foundations of programming by coding in their own spoken language.
 
+[!https://media.giphy.com/media/3ohhwEfVTkU4hOBcVG/giphy.gif](https://giphy.com/gifs/3ohhwEfVTkU4hOBcVG/html5)
+
 You're familiar with a STOP sign 🔴 right? That red hexagon with 4 white letters `S`, `T`,`O`,`P`? When one encounters that STOP sign, they are under a special pretense: come complete stop, look both ways for oncoming traffic, and proceed with caution in your intended direction.
 
 What if you win a mystery trip to some far off country and when you get off the plane you see a red hexagon with white letters. BUT the white letters aren't `S`, `T`,`O`,`P`. They're in a language completely unfamiliar to you. However, because you first learned and understood the context behind the red hexagon, you're now able to apply that same understanding to the sign in front of you.
@@ -10,6 +12,11 @@ That's what we do with Parable. We allow individuals to learn _how_ to code in t
 
 # Getting Started 📍
 To get Legasher up and running you will need to do the following:
+
+### Supported Languages
+- [Spanish (Mexico)](https://github.com/madipfaff/Legasher/tree/master/languages/spanish-mexico)
+- [French (France)](https://github.com/madipfaff/Legasher/tree/master/languages/french-france)
+- Ukrainian
 
 INSTRUCTIONS ON HOW TO RUN PROJECT  
 ### Installing  
@@ -22,6 +29,15 @@ We would love for you to join in our community, because we need you! What are yo
 
 There are 2 main components and depending on what kind of feature you're writing, you may need to change one or more of these.
 
+### Translator
+Legasher allows for the user to code in any desired spoken language available within the `languages/*` folder. The transcompiler `legasherc` is the tool responsible for running the program in the desired spoken language. `legasherc` is written in Python and uses the `pythonparser` module to accomplish parsing.
+
+The `legasherc` script itself lives at `tools/legasherc`.
+
+
+### Legasher Platform
+In order for users to take full advantage of the gift of Legasher, the platform needs to be developed. 🎉
+
 When you find something you'd like to help with, please spend some time reading our [Contributing Guide](https://github.com/madipfaff/Legasher/blob/master/CONTRIBUTING.md) for more details in contributing and our [Code of Conduct](https://github.com/madipfaff/Legasher/blob/master/CODE_OF_CONDUCT.md) to maintain the healthy space our community thrives in!
 
 ### Source Code Overview
@@ -29,12 +45,16 @@ When you find something you'd like to help with, please spend some time reading 
 - `compiler`: Python package implementing Python in English -> Python trans-compiled language
 - `docs`: Documentation and style guides for the project
 - `languages`: Translations for keywords and error messages
-
+- `tools`: Transcompilation and utility binaries
 # Need Help?
 - If you can't find the answer there, open an issue in this repository and add the label `question`.
 
 # Community :handshake:
+
+### Supporters
 This project is maintained by a [passionate community](https://github.com/madipfaff/Legasher/blob/master/community) (and) With Madi Co. To give towards the development of this project, please visit our [Patreon page](https://www.patreon.com/madiedgar).
 
+### Contact
+Questions? Comments? Drop us a line at mailto:withmadico@gmail.com or join our [Slack channel](ADD SLACK INVITE). 
 
 Use of this project under the [MIT License](https://github.com/madipfaff/Legasher/blob/master/LICENSE).
