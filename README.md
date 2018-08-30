@@ -1,4 +1,4 @@
-# Welcome to Legasher 👋
+# Welcome to Legesher 👋
 
 We are all about building bridges to help others better understand concepts. With **Parable**, one can learn the foundations of programming by coding in their own spoken language.
 
@@ -13,11 +13,11 @@ What if you win a mystery trip to some far off country and when you get off the 
 That's what we do with Parable. We allow individuals to learn _how_ to code in their native language. Because of this project, language doesn't have to be a barrier anymore.
 
 # Getting Started 📍
-To get Legasher up and running you will need to do the following:
+To get Legesher up and running you will need to do the following:
 
 ### Supported Languages
-- [Spanish (Mexico)](https://github.com/madipfaff/Legasher/tree/master/languages/spanish-mexico)
-- [French (France)](https://github.com/madipfaff/Legasher/tree/master/languages/french-france)
+- [Spanish (Mexico)](https://github.com/madipfaff/Legesher/tree/master/languages/spanish-mexico)
+- [French (France)](https://github.com/madipfaff/Legesher/tree/master/languages/french-france)
 - Ukrainian
 
 INSTRUCTIONS ON HOW TO RUN PROJECT  
@@ -26,21 +26,21 @@ INSTRUCTIONS ON HOW TO RUN PROJECT
 ### Testing  
 ### Deploying  
 
-# Contributing to Legasher 🎁
-We would love for you to join in our community, because we need you! What are you gifted in? Head on over to the project's [current open issues](https://github.com/madipfaff/Legasher/issues) to see what you can get involved in!  
+# Contributing to Legesher 🎁
+We would love for you to join in our community, because we need you! What are you gifted in? Head on over to the project's [current open issues](https://github.com/madipfaff/Legesher/issues) to see what you can get involved in!  
 
 There are 2 main components and depending on what kind of feature you're writing, you may need to change one or more of these.
 
 ### Translator
-Legasher allows for the user to code in any desired spoken language available within the `languages/*` folder. The transcompiler `legasherc` is the tool responsible for running the program in the desired spoken language. `legasherc` is written in Python and uses the `pythonparser` module to accomplish parsing.
+Legesher allows for the user to code in any desired spoken language available within the `languages/*` folder. The transcompiler `legesherc` is the tool responsible for running the program in the desired spoken language. `legesherc` is written in Python and uses the `pythonparser` module to accomplish parsing.
 
-The `legasherc` script itself lives at `tools/legasherc`.
+The `legesherc` script itself lives at `tools/legesherc`.
 
 
-### Legasher Platform
-In order for users to take full advantage of the gift of Legasher, the platform needs to be developed. 🎉
+### Legesher Platform
+In order for users to take full advantage of the gift of Legesher, the platform needs to be developed. 🎉
 
-When you find something you'd like to help with, please spend some time reading our [Contributing Guide](https://github.com/madipfaff/Legasher/blob/master/CONTRIBUTING.md) for more details in contributing and our [Code of Conduct](https://github.com/madipfaff/Legasher/blob/master/CODE_OF_CONDUCT.md) to maintain the healthy space our community thrives in!
+When you find something you'd like to help with, please spend some time reading our [Contributing Guide](https://github.com/madipfaff/Legesher/blob/master/CONTRIBUTING.md) for more details in contributing and our [Code of Conduct](https://github.com/madipfaff/Legesher/blob/master/CODE_OF_CONDUCT.md) to maintain the healthy space our community thrives in!
 
 ### Source Code Overview
 - `community`: Dedicated to all of the individuals who made this project possible
@@ -54,9 +54,9 @@ When you find something you'd like to help with, please spend some time reading 
 # Community :handshake:
 
 ### Supporters
-This project is maintained by a [passionate community](https://github.com/madipfaff/Legasher/blob/master/community) (and) With Madi Co. To give towards the development of this project, please visit our [Patreon page](https://www.patreon.com/madiedgar).
+This project is maintained by a [passionate community](https://github.com/madipfaff/Legesher/blob/master/community) (and) With Madi Co. To give towards the development of this project, please visit our [Patreon page](https://www.patreon.com/madiedgar).
 
 ### Contact
 Questions? Comments? Drop us a line at mailto:withmadico@gmail.com or join our [Slack channel](ADD SLACK INVITE). 
 
-Use of this project under the [MIT License](https://github.com/madipfaff/Legasher/blob/master/LICENSE).
+Use of this project under the [MIT License](https://github.com/madipfaff/Legesher/blob/master/LICENSE).

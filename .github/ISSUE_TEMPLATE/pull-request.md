@@ -1,6 +1,6 @@
 ## Title
 <!--- Title should be the general summary of changes made --->
-This pull request is made in reference to: [Please link to the issue here](github.com/madipfaff/Legasher)  
+This pull request is made in reference to: [Please link to the issue here](github.com/madipfaff/Legesher)  
 
 <!--- KEY REMINDER
 This project only accepts pull requests related to open issues
