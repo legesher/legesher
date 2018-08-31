@@ -1,1 +1,0 @@
-This is the core error dictionary for coding in English. Use this file to translate to your own language. 
