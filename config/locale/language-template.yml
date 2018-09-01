@@ -1,0 +1,77 @@
+# Files in the config/locales directory are used for internationalization.
+# If you want to use locales other than English, add the necessary files in this directory.
+#
+# This is the template to automate this process in the future.
+#
+# THANK YOU FOR MAKING LEGESHER LARGER THAN US.
+
+# TRANSLATION LANGUAGE: this will also be the name of the file, the abbreviation of
+# the language we are translating to.
+language-abbreviation:
+# ----------------------
+# |  LANGUAGE: PYTHON  |
+# ----------------------
+# << Keywords >>
+  False: ""
+  None: ""
+  True: ""
+  and: ""
+  as: ""
+  assert: ""
+  async: ""
+  await: ""
+  break: ""
+  class: ""
+  continue: ""
+  def: ""
+  del: ""
+  elif: ""
+  else: ""
+  except: ""
+  finally: ""
+  for: ""
+  from: ""
+  global: ""
+  if: ""
+  import: ""
+  in: ""
+  is: ""
+  lambda: ""
+  nonlocal: ""
+  not: ""
+  or: ""
+  pass: ""
+  raise: ""
+  return: ""
+  try: ""
+  while: ""
+  with: ""
+  yield: ""
+
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: JAVA   |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ------------------------
+# |   LANGUAGE: GOLANG   |
+# ------------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------------
+# |   LANGUAGE: JAVASCRIPT   |
+# ----------------------------
+# << Keywords >>
+# << Error Messages >>
+
+
+# ------------------------------------
+# |   CONTENT: LEGESHER.IO WEBSITE   |
+# ------------------------------------
+# TODO: add home page translations
+# TODO: add tutorials
+# TODO: add other content
