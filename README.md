@@ -1,24 +1,44 @@
 # Welcome to Legesher 👋
 
-We are all about building bridges to help others better understand concepts. With **Parable**, one can learn the foundations of programming by coding in their own spoken language.
+>**Legesher** _(le - geh - share)_: meaning to bridge, to connect
+
+Your native language shouldn't be a barrier when you're programming software.
+
+We're always building something. Bridges or Barriers.
+
+-------------------
+
+We are all about building bridges to empower others towards the direction of their lives. With **Legesher**, our bridges allow people to code in their native language.
+
+### Okay, but why?
+Its okay if you're asking yourself this question, allow me to paint you a picture.. You're familiar with a `STOP` 🔴 sign right? That red hexagon with 4 white letters `S`, `T`,`O`,`P` that you see at intersections?
 
 ![Alt Text](https://media.giphy.com/media/Kibopv5xV0hHy/giphy.gif)
 
-You're familiar with a STOP sign 🔴 right? That red hexagon with 4 white letters `S`, `T`,`O`,`P`? When one encounters that STOP sign, they are under a special pretense: come complete stop, look both ways for oncoming traffic, and proceed with caution in your intended direction.
+When one encounters that STOP sign, they are under a special pretense:  
+  1. come to a complete stop  
+  2. look both ways for oncoming traffic  
+  3. if clear, proceed with caution to your intended direction.  
+  4. if not, wait until traffic slows  
 
 ![Alt Text](https://media.giphy.com/media/3o6nUNR05ScpmwQSu4/giphy.gif)
 
-What if you win a mystery trip to some far off country and when you get off the plane you see a red hexagon with white letters. BUT the white letters aren't `S`, `T`,`O`,`P`. They're in a language completely unfamiliar to you. However, because you first learned and understood the context behind the red hexagon, you're now able to apply that same understanding to the sign in front of you.
+**Consider this**: What if you win a mystery trip to some far off country and when you get off the plane you see a 🔴 red hexagon with white letters. **BUT** the white letters aren't `S`, `T`,`O`,`P`. Instead, they're in a language _completely unfamiliar_ to you. What do you do then?
 
-That's what we do with Parable. We allow individuals to learn _how_ to code in their native language. Because of this project, language doesn't have to be a barrier anymore.
+Right now in the world of software development, we're full of `STOP` signs that have the same four letters no matter where you are in the world, no matter what language you natively use. For much of the world, they see that stop sign with letters `completely unfamiliar` to them.
+
+>**But it doesn't have to be this way..**
+
+Language doesn't have to be a barrier. Language can be a bridge. **Legesher** creates this ability for people to learn and develop code in their own native language, without getting stuck trying to understand foreign symbols and slang. That's what we're doing here. 
+
 
 # Getting Started 📍
 To get Legesher up and running you will need to do the following:
 
 ### Supported Languages
-- [Spanish (Mexico)](https://github.com/madipfaff/Legesher/tree/master/languages/spanish-mexico)
-- [French (France)](https://github.com/madipfaff/Legesher/tree/master/languages/french-france)
-- Ukrainian
+-   [Spanish (Mexico)](https://github.com/madipfaff/Legesher/tree/master/languages/spanish-mexico)
+-   [French (France)](https://github.com/madipfaff/Legesher/tree/master/languages/french-france)
+-   Ukrainian
 
 INSTRUCTIONS ON HOW TO RUN PROJECT  
 ### Installing  
@@ -43,13 +63,13 @@ In order for users to take full advantage of the gift of Legesher, the platform 
 When you find something you'd like to help with, please spend some time reading our [Contributing Guide](https://github.com/madipfaff/Legesher/blob/master/CONTRIBUTING.md) for more details in contributing and our [Code of Conduct](https://github.com/madipfaff/Legesher/blob/master/CODE_OF_CONDUCT.md) to maintain the healthy space our community thrives in!
 
 ### Source Code Overview
-- `community`: Dedicated to all of the individuals who made this project possible
-- `compiler`: Python package implementing Python in English -> Python trans-compiled language
-- `docs`: Documentation and style guides for the project
-- `languages`: Translations for keywords and error messages
-- `tools`: Transcompilation and utility binaries
+-   `community`: Dedicated to all of the individuals who made this project possible
+-   `compiler`: Python package implementing Python in English -> Python trans-compiled language
+-   `docs`: Documentation and style guides for the project
+-   `languages`: Translations for keywords and error messages
+-   `tools`: Transcompilation and utility binaries
 # Need Help?
-- If you can't find the answer there, open an issue in this repository and add the label `question`.
+-   If you can't find the answer there, open an issue in this repository and add the label `question`.
 
 # Community :handshake:
 
@@ -57,6 +77,6 @@ When you find something you'd like to help with, please spend some time reading 
 This project is maintained by a [passionate community](https://github.com/madipfaff/Legesher/blob/master/community) (and) With Madi Co. To give towards the development of this project, please visit our [Patreon page](https://www.patreon.com/madiedgar).
 
 ### Contact
-Questions? Comments? Drop us a line at mailto:withmadico@gmail.com or join our [Slack channel](ADD SLACK INVITE). 
+Questions? Comments? Drop us a line at mailto:withmadico@gmail.com or join our [Slack channel]()).
 
 Use of this project under the [MIT License](https://github.com/madipfaff/Legesher/blob/master/LICENSE).
