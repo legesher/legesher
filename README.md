@@ -29,19 +29,28 @@ Right now in the world of software development, we're full of `STOP` signs that 
 
 >**But it doesn't have to be this way..**
 
-Language doesn't have to be a barrier. Language can be a bridge. **Legesher** creates this ability for people to learn and develop code in their own native language, without getting stuck trying to understand foreign symbols and slang. That's what we're doing here. 
+Language doesn't have to be a barrier. Language can be a bridge. **Legesher** creates this ability for people to learn and develop code in their own native language, without getting stuck trying to understand foreign symbols and slang. That's what we're doing here.
 
 
 # Getting Started 📍
-To get Legesher up and running you will need to do the following:
+👷 Currently, a **work in progress**, check out our [roadmap](https://github.com/madipfaff/legesher/issues).
+
+**Legesher** is a tool that enables anyone to code in their native language. In order to do that we have several projects within the **Legesher** theme to support such an mission. We built **Legesher** on top of [Atom](atom.io), a hackable text editor, in order to give users as much of a personal invitation to programming as we could.
+
+### 1️⃣ Download Atom
+<!-- insert Atom logo -->
+Atom is available for all major operating systems. For a step-by-step instruction, check out our [wiki](https://github.com/madipfaff/legesher/wiki)!
+
+### 2️⃣ Install Packages
+Navigate to the `Install` section in your editor's settings. 
+
 
 ### Supported Languages
 -   [Spanish (Mexico)](https://github.com/madipfaff/Legesher/tree/master/languages/spanish-mexico)
 -   [French (France)](https://github.com/madipfaff/Legesher/tree/master/languages/french-france)
 -   Ukrainian
 
-INSTRUCTIONS ON HOW TO RUN PROJECT  
-### Installing  
+
 ### Running  
 ### Testing  
 ### Deploying  
