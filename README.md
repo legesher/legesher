@@ -88,4 +88,7 @@ This project is maintained by a [passionate community](https://github.com/madipf
 ### Contact
 Questions? Comments? Drop us a line at mailto:withmadico@gmail.com or join our [Slack channel]()).
 
+
+-----------
+
 Use of this project under the [MIT License](https://github.com/madipfaff/Legesher/blob/master/LICENSE).
