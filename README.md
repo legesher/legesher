@@ -42,7 +42,7 @@ Language doesn't have to be a barrier. Language can be a bridge. **Legesher** cr
 Atom is available for all major operating systems. For a step-by-step instruction, check out our [wiki](https://github.com/madipfaff/legesher/wiki)!
 
 ### 2️⃣ Install Packages
-Navigate to the `Install` section in your editor's settings. 
+Navigate to the `Install` section in your editor's settings.
 
 
 ### Supported Languages
@@ -88,7 +88,6 @@ This project is maintained by a [passionate community](https://github.com/madipf
 ### Contact
 Questions? Comments? Drop us a line at mailto:withmadico@gmail.com or join our [Slack channel]()).
 
-
------------
+-------------------
 
 Use of this project under the [MIT License](https://github.com/madipfaff/Legesher/blob/master/LICENSE).
