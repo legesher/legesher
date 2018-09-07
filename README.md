@@ -86,7 +86,7 @@ When you find something you'd like to help with, please spend some time reading 
 This project is maintained by a [passionate community](https://github.com/madipfaff/Legesher/blob/master/community) (and) With Madi Co. To give towards the development of this project, please visit our [Patreon page](https://www.patreon.com/madiedgar).
 
 ### Contact
-Questions? Comments? Drop us a line at mailto:withmadico@gmail.com or join our [Slack channel]()).
+Questions? Comments? Drop us a line at mailto:legesher@gmail.com or join our [Slack channel]()).
 
 -------------------
 
