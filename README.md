@@ -48,7 +48,11 @@ Navigate to the `Install` section in your editor's settings.
 ### Supported Languages
 -   [Spanish (Mexico)](https://github.com/madipfaff/Legesher/tree/master/languages/spanish-mexico)
 -   [French (France)](https://github.com/madipfaff/Legesher/tree/master/languages/french-france)
+-   Portuguese
 -   Ukrainian
+-   Mandarin
+-   Korean
+-   Arabic
 
 
 ### Running  
