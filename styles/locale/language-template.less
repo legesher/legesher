@@ -1,0 +1,31 @@
+atom-text-editor:not(.mini) {
+  &, &::shadow {
+    .storage {
+      // NOTE|INFO|IDEA|DEBUG|REMOVE
+      &.type.class.note,
+      &.type.class.info,
+      &.type.class.idea,
+      &.type.class.debug,
+      &.type.class.remove {
+        // color: @text-color-info;
+        color: #ffba8e;
+        background-color: #4a4a4a;
+      }
+
+      // WTF|BUG|ERROR|OMG|ERR|OMFGRLY|WARNING|WARN|BROKEN
+      &.type.class.wtf,
+      &.type.class.bug,
+      &.type.class.error,
+      &.type.class.omg,
+      &.type.class.err,
+      &.type.class.omfgrly,
+      &.type.class.warning,
+      &.type.class.warn,
+      &.type.class.broken {
+        // color: @text-color-error;
+        color: #d8d8d8;
+        background-color: #7f0000;
+      }
+    }
+  }
+}
