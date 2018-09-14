@@ -1,4 +1,6 @@
-# ![legesher-logo](https://github.com/madipfaff/Legesher/tree/master/assets/images/testOstrich.png) Welcome to Legesher 👋
+<img src="https://github.com/madipfaff/legesher/blob/master/assets/images/testOstrich.png" align="left" height="400px"/>
+
+# Welcome to Legesher 👋
 
 >**Legesher** _(leg - ah - share)_: to bridge; to connect
 
