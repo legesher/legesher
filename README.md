@@ -1,10 +1,8 @@
-# Welcome to Legesher 👋
+# ![legesher-logo](https://github.com/madipfaff/Legesher/tree/master/assets/images/testOstrich.png) Welcome to Legesher 👋
 
->**Legesher** _(le - geh - share)_: meaning to bridge, to connect
+>**Legesher** _(leg - ah - share)_: to bridge; to connect
 
 Your native language shouldn't be a barrier when you're programming software.
-
-We're always building something. Bridges or Barriers.
 
 -------------------
 
@@ -90,7 +88,7 @@ When you find something you'd like to help with, please spend some time reading 
 This project is maintained by a [passionate community](https://github.com/madipfaff/Legesher/blob/master/community) (and) With Madi Co. To give towards the development of this project, please visit our [Patreon page](https://www.patreon.com/madiedgar).
 
 ### Contact
-Questions? Comments? Drop us a line at mailto:legesher@gmail.com or join our [Slack channel]()).
+Questions? Comments? Drop us a line at [legesher@gmail.com](mailto:legesher@gmail.com) or join our [Slack channel](https://join.slack.com/t/codewithmadi/shared_invite/enQtNDM1NDU4NTY4MjA5LTc0ODAyNjM5OTI4ZjJlZjYxNTdhNWQ5OGE4MjNjNzRiMjBmZjczNTkxYTU1ZWFhZDg1NGY2OWRlMzhlOWMyODQ).
 
 -------------------
 
