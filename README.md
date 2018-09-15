@@ -9,8 +9,6 @@ We are all about building bridges to empower others towards the direction of the
 
 **Legesher** is a tool that enables anyone to code in their native language. In order to do that we have several projects within the **Legesher** theme to support such an mission. We built **Legesher** on top of [Atom](atom.io), a hackable text editor, in order to give users as much of a personal invitation to programming as we could.
 
------------------------------------
-
 # Getting Started 📍
 👷 Currently, a **work in progress**, but check out our [roadmap](https://github.com/madipfaff/legesher/issues) for the latest updates.
 
