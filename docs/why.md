@@ -1,4 +1,4 @@
-### Okay, but why?
+## Okay, but why?
 Its okay if you're asking yourself this question, allow me to paint you a picture.. You're familiar with a `STOP` 🔴 sign right? That red hexagon with 4 white letters `S`, `T`,`O`,`P` that you see at intersections?
 
 ![Alt Text](https://media.giphy.com/media/Kibopv5xV0hHy/giphy.gif)
