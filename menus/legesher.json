@@ -1,0 +1,22 @@
+{
+  "context-menu": {
+    "atom-worspace": [
+      {
+        "label": "Packages",
+        "submenu": [
+          {
+            "label": "Legesher",
+            "submenu": [
+              {
+                "label": "Toggle",
+                "command": "legesher:toggle"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+
+/* TODO: toggle languages */

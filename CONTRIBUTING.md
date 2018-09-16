@@ -2,7 +2,7 @@
 
 ### THANK YOU :heart:
 
-First off, thank you for just being _here_. It's people like you who have a heart to serve and desire to create something bigger than themselves that we want to be on our team. So thank you, because by considering t ocontribute to Legesher, we know you're a person we'd love to be with. This is so much more than a product, it's an opportunity that opens doors. Thank you for making all of this possible. 
+First off, thank you for just being _here_. It's people like you who have a heart to serve and desire to create something bigger than themselves that we want to be on our team. So thank you, because by considering t ocontribute to Legesher, we know you're a person we'd love to be with. This is so much more than a product, it's an opportunity that opens doors. Thank you for making all of this possible.
 
 ### Read All About It :book:
 
@@ -10,18 +10,18 @@ We all have the same goal: for this community to create a product that empowers 
 
 ### Be a Part :handshake:
 
-This is a space for you to share your talents, gitfs, and abilities to serve one another. There are many ways to contribute (even if you don't know how to code - _yet_)! From writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests, translating to another language or writing code, we would love to have you share your God-given abilities with us! 
+This is a space for you to share your talents, gitfs, and abilities to serve one another. There are many ways to contribute (even if you don't know how to code - _yet_)! From writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests, translating to another language or writing code, we would love to have you share your God-given abilities with us!
 
 Here are some important and helpful resources:
-- [Tutorials Would Go Here]()
-- [Join Our Slack Conmmunity!]()
+- [Tutorials Would Go Here](https://github.com/WithMadi/BetaTeam)
+- [Join Our Slack Conmmunity!](https://join.slack.com/t/codewithmadi/shared_invite/enQtNDM1NDU4NTY4MjA5LTc0ODAyNjM5OTI4ZjJlZjYxNTdhNWQ5OGE4MjNjNzRiMjBmZjczNTkxYTU1ZWFhZDg1NGY2OWRlMzhlOWMyODQ)
     - Use the `Legesher` channel for questions about Legesher
     - Use the `tutorials` channel for questions about Legesher, Github, or Programming tutorials
-    - There are many other channels available, check the channel list 
+    - There are many other channels available, check the channel list
 - [Current Project Status]() (we're keeping everything on Github for the time being)
 
 # Ground Rules
-When contributing it is important to make sure we follow the same guidelines: 
+When contributing it is important to make sure we follow the same guidelines:
 * Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. [(Read More)](https://github.com/madipfaff/Legesher/blob/master/CODE_OF_CONDUCT.md)
 * Ensure cross-platform compatibility for every change that's accepted. (Windows, Mac, Debian & Ubuntu Linux)
 * Ensure that code that goes into core meets all requirements in this checklist: https://github.com/madipfaff/Legesher/tree/master/.github/ISSUE_TEMPLATE
@@ -35,17 +35,17 @@ If this is your first time contributing to the Legesher project, then we have so
 One great way to begin contributing is to look for issues with the `beginner`, `help wanted` or `great first issue` label.
 - `beginner`: issues which should only require a few lines of code, and a test or two.
 - `help wanted`: issues which should be a bit more involved than beginner issues.
-- `great first issue`: issues for individuals new to programming or the github platform. 
+- `great first issue`: issues for individuals new to programming or the github platform.
 
 **If you've never contributed to an open source project before**
-Here are a couple of friendly tutorials that may help: 
+Here are a couple of friendly tutorials that may help:
 - [Make A Pull Request](http://makeapullrequest.com/)
 - [First Timers Only](http://www.firsttimersonly.com/)
 - [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github).
 
 # Getting Started
 
-**TESTS** If you are changing the code base of the project, you will need to perform the provided tests before your changes can be merged. If you add new features to the project, please include tests with your pull request. 
+**TESTS** If you are changing the code base of the project, you will need to perform the provided tests before your changes can be merged. If you add new features to the project, please include tests with your pull request.
 
 To run the tests, run the following command:
 ```sh
@@ -64,7 +64,7 @@ test project
     * Note the Legesher Code of Conduct.
     * Add your name to the `CONTRIBUTORS` file.
     * Send a pull request and be open for feedback.
-    
+
 # Style Guide
 ### Commit Messages Guidelines
 A good commit message should describe what changed and why. This project uses semantic commit messages to streamline the release process.
@@ -126,7 +126,7 @@ See [conventionalcommits.org](https://conventionalcommits.org/) for more details
     * :shirt: `:shirt:` when removing linter warnings
 
 # Bug :bug: Reports
-### Security 
+### Security
 If you find a security vulnerability, do NOT open an issue. Email mailto:legesher@gmail.com instead.
 In order to determine whether you are dealing with a security issue, ask yourself these two questions:
 * Can I access something that's not mine, or something I shouldn't have access to?
@@ -135,15 +135,15 @@ In order to determine whether you are dealing with a security issue, ask yoursel
 If the answer to either of those two questions are "yes", then you're probably dealing with a security issue. Note that even if you answer "no" to both questions, you may still be dealing with a security issue, so if you're unsure, just email us at mailto:legesher@gmail.com.
 
 ### How to Report a Bug
-Answer [these questions](https://github.com/madipfaff/Legesher/blob/master/.github/ISSUE_TEMPLATE/bug_report.md) when reporting a bug. 
+Answer [these questions](https://github.com/madipfaff/Legesher/blob/master/.github/ISSUE_TEMPLATE/bug_report.md) when reporting a bug.
 
 # Feature :rocket: or Enhancement Suggestions
 Answer [these questions](https://github.com/madipfaff/Legesher/blob/master/.github/ISSUE_TEMPLATE/feature_request.md) when suggesting a feature or enhancement.
 
 # Code Review Process
 ### Language Translations
-- The translated file will need to be reviewed by at least 2 different community members to make sure it is appropriate and the best translation that will allow the developer to best understand the foundation of programming. 
+- The translated file will need to be reviewed by at least 2 different community members to make sure it is appropriate and the best translation that will allow the developer to best understand the foundation of programming.
 - After 2 approved reviews, all 3 contributors will be given credit for the addition of the language when it is merged with the project.
 
-### Code 
-- The pull request will need to be reviewed by at least one member of the maintainer community before it can be merged into the project. 
+### Code
+- The pull request will need to be reviewed by at least one member of the maintainer community before it can be merged into the project.

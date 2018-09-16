@@ -1,0 +1,25 @@
+{
+  "name": "legasher",
+  "main": ".lib/legesher",
+  "version": "0.0.0",
+  "description": "a native language translator for code",
+  "activationCommands": {
+    "atom-workspace": "legesher:toggle"
+  },
+  "keywords": [
+    "translator",
+    "code",
+    "language",
+    "legasher"
+  ],
+  "repository": "https://github.com/madipfaff/legesher",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "dependencies": {
+
+  }
+}
+
+/* TODO: activationHooks? */
