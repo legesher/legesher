@@ -12,7 +12,7 @@
     "language",
     "legasher"
   ],
-  "repository": "https://github.com/madipfaff/legesher",
+  "repository": "https://github.com/madiedgar/legesher",
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"

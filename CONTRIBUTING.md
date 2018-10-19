@@ -25,9 +25,9 @@ Here are some important and helpful resources:
 
 When contributing it is important to make sure we follow the same guidelines:
 
--   Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. [(Read More)](https://github.com/madipfaff/Legesher/blob/master/CODE_OF_CONDUCT.md)
+-   Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. [(Read More)](https://github.com/madiedgar/Legesher/blob/master/CODE_OF_CONDUCT.md)
 -   Ensure cross-platform compatibility for every change that's accepted. (Windows, Mac, Debian & Ubuntu Linux)
--   Ensure that code that goes into core meets all requirements in [this checklist](https://github.com/madipfaff/Legesher/tree/master/.github/ISSUE_TEMPLATE):
+-   Ensure that code that goes into core meets all requirements in [this checklist](https://github.com/madiedgar/Legesher/tree/master/.github/ISSUE_TEMPLATE):
 -   Create issues for any major changes and enhancements that you wish to make. Discuss things transparently and get community feedback.
 -   Don't add any classes to the codebase unless absolutely needed. Err on the side of using functions.
 -   Keep feature versions as small as possible, preferably one new feature per version.
@@ -150,11 +150,11 @@ If the answer to either of those two questions are "yes", then you're probably d
 
 ### How to Report a Bug
 
-Answer [these questions](https://github.com/madipfaff/Legesher/blob/master/.github/ISSUE_TEMPLATE/bug_report.md) when reporting a bug.
+Answer [these questions](https://github.com/madiedgar/Legesher/blob/master/.github/ISSUE_TEMPLATE/bug_report.md) when reporting a bug.
 
 # Feature :rocket: or Enhancement Suggestions
 
-Answer [these questions](https://github.com/madipfaff/Legesher/blob/master/.github/ISSUE_TEMPLATE/feature_request.md) when suggesting a feature or enhancement.
+Answer [these questions](https://github.com/madiedgar/Legesher/blob/master/.github/ISSUE_TEMPLATE/feature_request.md) when suggesting a feature or enhancement.
 
 # Code Review Process
 
