@@ -1,4 +1,4 @@
-<img src="https://github.com/madiedgar/legesher/blob/master/assets/images/testOstrich.png" align="left" height="400px"/>
+<img src="https://github.com/madiedgar/legesher/blob/master/styles/images/testOstrich.png" align="left" height="400px"/>
 
 # Welcome to Legesher 👋
 
