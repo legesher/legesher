@@ -2,7 +2,7 @@
 
 <!-- TODO: ADD PEGGY PHOTOS -->
 
-## THANK YOU :heart:
+### THANK YOU :heart:
 
 First off, thank you for just being _here_. It's people like you who have a heart ❤️ to serve and desire to create something bigger than themselves that we want to be part of our team. So thank you, because by choosing to contribute to **Legesher** we're one step closer to creating a world where innovation and creativity isn't lost in translation. This is so much more than a product, it's an opportunity that opens doors. Thank you for making all of this possible.
 
