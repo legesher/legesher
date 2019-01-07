@@ -17,13 +17,13 @@ Here's a high level overview of what this guide entails. It is designed to be re
     -   [My First Contribution](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#my-first-contribution-)
 -   [Review Process](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#review-process-)
     -   [Program Enhancements](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#program-enhancements-)
-    -   [Language Translations](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#language-translations-)
+    -   [Language Translations](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#language-translations-loudspeaker)
 -   [Style Guide](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#style-guide-)
     -   [Commit Message Guidelines](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#commit-message-guidelines-)
--   [Submitting Issues](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#submitting-issues-)
-    -   [Bug Reports](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Bug-Reports)
+-   [Submitting Issues](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#submitting-issues-%EF%B8%8F)
+    -   [Bug Reports](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#bug-reports-bug)
     -   [Feature or Enhancement Suggestions](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#feature-or-enhancement-suggestions-)
-    -   [Security Reports](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Security-Reports)
+    -   [Security Reports](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#security-reports-police_car)
 
 ***
 
@@ -119,7 +119,7 @@ test project
 
 # Style Guide 🎨
 
-### Commit Messages Guidelines 📝
+### Commit Message Guidelines 📝
 
 A good commit message should describe what changed and why. This project uses semantic commit messages to streamline the release process.
 
