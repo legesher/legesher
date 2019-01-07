@@ -9,20 +9,20 @@ First off, thank you for just being _here_. It's people like you who have a hear
 
 Here's a high level overview of what this guide entails. It is designed to be read and revisited as you become more involved with the project.
 
--   [Our Reason Why](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Our-Reason-Why)
--   [Be a Part](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Be-A-Part)
-    -   [Legesher Resources](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Legesher-Resources)
--   [Contributing](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Contributing)
-    -   [Ground Rules](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Ground-Rules)
-    -   [My First Contribution](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#My-First-Contribution)
--   [Review Process](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Review-Process)
-    -   [Program Enhancements](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Program-Enhancements)
-    -   [Language Translations](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Language-Translations)
--   [Style Guide](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Style-Guide)
-    -   [Commit Message Guidelines](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Commit-Message-Guidelines)
--   [Submitting Issues](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Submitting-Issues)
+-   [Our Reason Why](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#our-reason-why-)
+-   [Be a Part](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#be-a-part-handshake)
+    -   [Legesher Resources](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#legesher-resources-)
+-   [Contributing](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#contributing-)
+    -   [Ground Rules](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#ground-rules-)
+    -   [My First Contribution](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#my-first-contribution-)
+-   [Review Process](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#review-process-)
+    -   [Program Enhancements](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#program-enhancements-)
+    -   [Language Translations](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#language-translations-)
+-   [Style Guide](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#style-guide-)
+    -   [Commit Message Guidelines](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#commit-message-guidelines-)
+-   [Submitting Issues](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#submitting-issues-)
     -   [Bug Reports](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Bug-Reports)
-    -   [Feature or Enhancement Suggestions](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Feature-Or-Enhancement-Suggestions)
+    -   [Feature or Enhancement Suggestions](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#feature-or-enhancement-suggestions-)
     -   [Security Reports](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#Security-Reports)
 
 ***
@@ -85,9 +85,9 @@ Here are a couple of friendly tutorials that may help:
 -   [First Timers Only](http://www.firsttimersonly.com/)
 -   [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github).
 
-# Review Process
+# Review Process 💚
 
-### Program Enhancements
+### Program Enhancements ✅
 
 **TESTS** If you are changing the code base of the project, you will need to perform the provided tests before your changes can be merged. If you add new features to the project, please include tests with your pull request.
 
@@ -112,7 +112,7 @@ test project
 -   Send a pull request and be open for feedback.
 -   The pull request will need to be reviewed by at least one member of the maintainer community before it can be merged into the project.
 
-### Language Translations
+### Language Translations :loudspeaker:
 
 -   The translated file will need to be reviewed by at least 2 different community members to make sure it is appropriate and the best translation that will allow the developer to best understand the foundation of programming.
 -   After 2 approved reviews, all 3 contributors will be given credit for the addition of the language when it is merged with the project.
@@ -176,7 +176,7 @@ _Other things to keep in mind when writing a commit message:_
 
 _See [conventionalcommits.org](https://conventionalcommits.org/) for more details._
 
-# Submitting Issues
+# Submitting Issues ⚠️
 
 ### Bug Reports :bug:
 
@@ -186,7 +186,7 @@ Answer [these questions](https://github.com/madiedgar/Legesher/blob/master/.gith
 
 Answer [these questions](https://github.com/madiedgar/Legesher/blob/master/.github/ISSUE_TEMPLATE/feature_request.md) when suggesting a feature or enhancement.
 
-### Security :police_car:
+### Security Reports :police_car:
 
 If you find a security vulnerability, do NOT open an issue. Email <mailto:legesher@gmail.com> instead.
 In order to determine whether you are dealing with a security issue, ask yourself these two questions:
