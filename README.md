@@ -4,10 +4,12 @@
 
 >**Legesher** _(leg - ah - share)_: to bridge; to connect
 
-### Your native language shouldn't be a barrier when you're programming software.
+### Because innovation and creativity shouldn't be lost in translation
 We are all about building bridges to empower others towards the direction of their lives. With **Legesher**, our bridges allow people to code in their native language.
 
 **Legesher** is a tool that enables anyone to code in their native language. In order to do that we have several projects within the **Legesher** theme to support such an mission. We built **Legesher** on top of [Atom](atom.io), a hackable text editor, in order to give users as much of a personal invitation to programming as we could.
+
+<img src="https://github.com/madiedgar/legesher/blob/master/styles/images/EggPeggy@4xCutWithShadow.png" align="left" height="400px"/>
 
 # Getting Started 📍
 👷 Currently, a **work in progress**, but check out our [roadmap](https://github.com/madiedgar/legesher/issues) for the latest updates.
