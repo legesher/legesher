@@ -5,12 +5,14 @@
 >**Legesher** _(leg - ah - share)_: to bridge; to connect
 
 ### Because innovation and creativity shouldn't be lost in translation
-We are all about building bridges to empower others towards the direction of their lives. With **Legesher**, our bridges allow people to code in their native language.
+We are all about building bridges to empower others towards the direction of their lives. With **Legesher**, our bridges allow people to code in their native language. 
 
 **Legesher** is a tool that enables anyone to code in their native language. In order to do that we have several projects within the **Legesher** theme to support such an mission. We built **Legesher** on top of [Atom](atom.io), a hackable text editor, in order to give users as much of a personal invitation to programming as we could.
 
-<img src="https://github.com/madiedgar/legesher/blob/master/styles/images/EggPeggy@4xCutWithShadow.png" align="left" height="400px"/>
+# Meet Peggy
+This is Peggy the Ostrich. She's pretty fly, for someone who doesn't..
 
+<img src="https://github.com/madiedgar/legesher/blob/master/styles/images/EggPeggy@4xCutWithShadow.png" align="left" height="350px"/>
 # Getting Started 📍
 👷 Currently, a **work in progress**, but check out our [roadmap](https://github.com/madiedgar/legesher/issues) for the latest updates.
 
@@ -69,14 +71,14 @@ When you find something you'd like to help with, please spend some time reading 
 ### Testing  
 ### Deploying  
 
-
 # Need Help?
 -   If you can't find the answer there, open an issue in this repository and add the label `question`.
 
-# Community :handshake:
+# Our People :handshake:
+Out community is full of inspiring people with a heart for others. Although it's rather small in comparison to the impact they've had, we'd like to recognize the people who have made this happen. 
 
 ### Supporters
-This project is maintained by a [passionate community](https://github.com/madiedgar/Legesher/blob/master/community) (and) With Madi Co. To give towards the development of this project, please visit our [Patreon page](https://www.patreon.com/madiedgar).
+This project is maintained by a [passionate community](https://github.com/madiedgar/Legesher/blob/master/community) (and) [With Madi Co.](https://withmadi.co). To give towards the development of this project, please visit our [Patreon page](https://www.patreon.com/madiedgar).
 
 ### Contact
 Questions? Comments? Drop us a line at [legesher@gmail.com](mailto:legesher@gmail.com) or join our [Slack channel](https://join.slack.com/t/codewithmadi/shared_invite/enQtNDM1NDU4NTY4MjA5LTc0ODAyNjM5OTI4ZjJlZjYxNTdhNWQ5OGE4MjNjNzRiMjBmZjczNTkxYTU1ZWFhZDg1NGY2OWRlMzhlOWMyODQ).
