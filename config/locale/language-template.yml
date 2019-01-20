@@ -19,6 +19,16 @@ language-abbreviation:
   IDEA: ""
   DEBUG: ""
   REMOVE: ""
+  OPTIMIZE: ""
+  REVIEW: ""
+  HACK: ""
+  UNDONE: ""
+  TODO: ""
+  REFACTOR: ""
+  DEPRECATED: ""
+  TASK: ""
+  CHGME: ""
+  NOTREACHED: ""
   WTF: ""
   BUG: ""
   ERROR: ""
@@ -28,6 +38,120 @@ language-abbreviation:
   WARNING: ""
   WARN: ""
   BROKEN: ""
+
+# ----------------------
+# |   LANGUAGE: AGDA   |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: AFL    |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: BASH   |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: C      |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE:  C++   |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: C#     |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: CSS    |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ------------------------
+# |   LANGUAGE: FLUENT   |
+# ------------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ------------------------
+# |   LANGUAGE: GOLANG   |
+# ------------------------
+# << Keywords >>
+# << Error Messages >>
+
+# -------------------------
+# |   LANGUAGE: HASKELL   |
+# -------------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: HTML   |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: JAVA   |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------------
+# |   LANGUAGE: JAVASCRIPT   |
+# ----------------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: JULIA  |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: JSDOC  |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: JSON   |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: NODE   |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: OCAML  |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: PHP    |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
 
 # ----------------------
 # |  LANGUAGE: PYTHON  |
@@ -72,23 +196,52 @@ language-abbreviation:
 # << Error Messages >>
 
 # ----------------------
-# |   LANGUAGE: JAVA   |
+# |   LANGUAGE: RAZOR   |
 # ----------------------
 # << Keywords >>
 # << Error Messages >>
 
-# ------------------------
-# |   LANGUAGE: GOLANG   |
-# ------------------------
+# ----------------------
+# |   LANGUAGE: REGEX  |
+# ----------------------
 # << Keywords >>
 # << Error Messages >>
 
-# ----------------------------
-# |   LANGUAGE: JAVASCRIPT   |
-# ----------------------------
+# ----------------------
+# |   LANGUAGE: RUBY   |
+# ----------------------
 # << Keywords >>
 # << Error Messages >>
 
+# ----------------------
+# |   LANGUAGE:  RUST  |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: SCALA  |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ----------------------
+# |   LANGUAGE: SWIFT   |
+# ----------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ---------------------------
+# |   LANGUAGE: TYPESCRIPT  |
+# ---------------------------
+# << Keywords >>
+# << Error Messages >>
+
+# ------------------------
+# |   LANGUAGE: VERILOG  |
+# ------------------------
+# << Keywords >>
+# << Error Messages >>
 
 # ------------------------------------
 # |   CONTENT: LEGESHER.IO WEBSITE   |
