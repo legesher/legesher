@@ -54,7 +54,7 @@ The current list of _work in progress_ dialects:
 ### 3️⃣ Start Coding
 That's it! You're good to go and start coding. We have [several tutorials](https://github.com/WithMadi/BetaTeam) to get you on your way!
 
-🛄 **`legesher-docs`**
+🛄 **`legesher-docs`** 
 > **`legesher-docs`** : this resource allows you an inside look on the code behind the packages above as well as tutorials to best utilize these tools.
 
 # Contributing to Legesher 🎁
@@ -98,6 +98,10 @@ This project is maintained by a [passionate community](https://github.com/madied
 
 ### Contact
 Questions? Comments? Drop us a line at [legesher@gmail.com](mailto:legesher@gmail.com) or join our [Slack channel](https://join.slack.com/t/codewithmadi/shared_invite/enQtNDM1NDU4NTY4MjA5LTc0ODAyNjM5OTI4ZjJlZjYxNTdhNWQ5OGE4MjNjNzRiMjBmZjczNTkxYTU1ZWFhZDg1NGY2OWRlMzhlOWMyODQ).
+
+### The Legesher Portfolio
+
+
 
 -----------------------------------
 

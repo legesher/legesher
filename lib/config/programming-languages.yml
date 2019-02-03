@@ -1,0 +1,57 @@
+# The list of supported programming languages
+
+defaults: &defaults
+  agda: agda
+  lagda: agda # literate adga - TODO: check if this is supported
+  afl: afl
+  sh: bash
+  c: c # c
+  cgi: c # c
+  cc: c # c++
+  cs: cs # c#
+  css: css
+  # TODO find file extension for fluent
+  go: golang
+  has: haskell
+  hs: haskell
+  lhs: haskell # literate haskell script
+  lit: haskell # literate haskell script
+  html: html
+  htm: html
+  xhtml: html
+  jhtml: html
+  java: java
+  jsp: java
+  jspx: java
+  wss: java
+  do: java
+  action: java
+  js: javascript
+  # TODO find file extension for: julia
+  # TODO find file extension for: jsdoc
+  json: json
+  nw: node # node-webkit app package # TODO check if this is what the atom language supports
+  # TODO find file extension for: ocaml
+  php: php
+  php4: php
+  php3: php
+  phtml: php
+  py: python
+  # TODO find file extension for: razor
+  # TODO find file extension for: regex
+  rb: ruby
+  rhtml: ruby
+  # TODO find file extension for: rust
+  # TODO find file extension for: scala
+  swift: swift
+  # TODO find file extension for: typescript
+  v: verilog
+
+production:
+  <<: *defaults
+
+development:
+  <<: *defaults
+
+test:
+  <<: *defaults

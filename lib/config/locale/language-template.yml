@@ -42,19 +42,91 @@ language-abbreviation:
 # ----------------------
 # |   LANGUAGE: AGDA   |
 # ----------------------
+# NOTE: https://agda.readthedocs.io/en/v2.5.4.2/index.html
 # << Keywords >>
+  abstract: ""
+  codata: ""
+  coinductive: ""
+  constructor: ""
+  data: ""
+  do: ""
+  eta-equality: ""
+  field: ""
+  forall: ""
+  hiding: ""
+  import: ""
+  in: ""
+  inductive: ""
+  infix: ""
+  infixl: ""
+  infixr: ""
+  instance: ""
+  let: ""
+  macro: ""
+  module: ""
+  mutual: ""
+  no-eta-equality: ""
+  open: ""
+  overlap: ""
+  pattern: ""
+  postulate: ""
+  primitive: ""
+  private: ""
+  public: ""
+  quote: ""
+  quoteContext: ""
+  quoteGoal: ""
+  quoteTerm: ""
+  record: ""
+  renaming: ""
+  rewrite: ""
+  Set: "" # can appear with a number suffix, optionally suffixed, make sure we account for this
+  syntax: ""
+  tactic: ""
+  unquote: ""
+  unquoteDecl: ""
+  unquoteDef: ""
+  using: ""
+  where: ""
+  with: ""
+
 # << Error Messages >>
 
 # ----------------------
 # |   LANGUAGE: AFL    |
 # ----------------------
+# Amibroker Formula Language
+# NOTE: https://www.amibroker.com/guide/a_language.html
+
 # << Keywords >>
+do: "" # (part of do-while statement)
+while: ""
+for: ""
+if: "" # (part of if-else statement)
+else: "" # (part of if-else statement)
+switch: ""
+break: "" # (part of the switch statement or for/while statements)
+case: "" # (part of the switch statement)
+continue: "" # (part of for/while statements)
+default: "" # (part of switch statement)
+function: ""
+procedure: ""
+return: ""
+local: ""
+global: ""
+static: ""
+typeof: ""
+NOT: ""
+AND: ""
+OR: ""
+Null: ""
 # << Error Messages >>
 
 # ----------------------
 # |   LANGUAGE: BASH   |
 # ----------------------
 # << Keywords >>
+
 # << Error Messages >>
 
 # ----------------------

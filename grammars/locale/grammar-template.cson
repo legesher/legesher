@@ -1,0 +1,23 @@
+'name': 'legesher-{LANGUAGE}'
+'scopeName': 'text.legesher-{LANGUAGE}'
+'type': 'tree-sitter'
+'parser': 'tree-sitter-legesher-python'
+'injectionSelector': 'comment, text.plain'
+
+
+'fileTypes': ["py"]
+# 'firstLineRegex': language to be originated in
+# 'contentRegex': test content to see what language
+'patterns': [
+  {
+    'match': '(?<!\\w)@?(NOTE|INFO|IDEA|DEBUG|REMOVE|OPTIMIZE|REVIEW|HACK|UNDONE|TO DO|REFACTOR|DEPRECATED|TASK|CHGME|NOTREACHED|WTF|BUG|ERROR|OMG|ERR|OMFGRLY|WARNING|WARN|BROKEN)\\b'
+    'name': 'storage.type.class.${1:/downcase}'
+  }
+  {
+    'captures':
+      '1':
+        'name': 'markup.underline.link.radar'
+    'match': '<(ra?dar:/(?:/problems?|)/(?:[&0-9]+))>'
+    'name': 'storage.type.class.radar'
+  }
+]

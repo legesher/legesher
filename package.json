@@ -1,10 +1,13 @@
 {
-  "name": "legasher",
-  "main": ".lib/legesher",
-  "version": "0.0.0",
+  "name": "legesher",
+  "main": "./lib/legesher",
+  "version": "0.0.1",
   "description": "a native language translator for code; the bridge to connect the language we speak to the code we write.",
   "activationCommands": {
-    "atom-workspace": "legesher:toggle"
+    "atom-workspace": [
+      "legesher:toggle-language",
+      "legesher:open-settings"
+    ]
   },
   "keywords": [
     "translator",
@@ -22,6 +25,6 @@
     "atom": ">=1.0.0 <2.0.0"
   },
   "dependencies": {
-
+    "underscore": "^1.9.1"
   }
 }

@@ -1,22 +1,30 @@
 {
   "context-menu": {
-    "atom-worspace": [
+    "atom-text-editor": [
       {
-        "label": "Packages",
-        "submenu": [
-          {
-            "label": "Legesher",
-            "submenu": [
-              {
-                "label": "Toggle",
-                "command": "legesher:toggle"
-              }
-            ]
-          }
-        ]
+        "label": "Toggle Legesher",
+        "command": "legesher:toggle"
       }
     ]
-  }
+  },
+  "menu": [
+    {
+      "label": "Packages",
+      "submenu": [
+        {
+          "label": "Legesher",
+          "submenu": [
+            {
+              "label": "Toggle Language",
+              "command": "legesher:toggle"
+            },
+            {
+              "label": "Settings",
+              "command": "legesher:open-settings"
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
-
-/* TODO: toggle languages */
