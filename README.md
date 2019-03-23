@@ -10,19 +10,18 @@ We are all about building bridges to empower others towards the direction of the
 **Legesher** is a tool that enables anyone to code in their native language. In order to do that we have several projects within the **Legesher** theme to support such an mission. We built **Legesher** on top of [Atom](atom.io), a hackable text editor, in order to give users as much of a personal invitation to programming as we could.
 
 # Developing with Legesher 💻
-👷 Currently, Legesher is a **work in progress** / in the formation phase. We would love your help to get it up and running! Check out our [roadmap](https://github.com/madiedgar/legesher/issues) for the latest updates.
+👷 Currently, Legesher is a **work in progress** / in the formation phase. We would love your help to get it up and running! Check out our public [roadmap](https://github.com/madiedgar/legesher/issues) for the latest updates.
 
 <img src="https://github.com/madiedgar/legesher/blob/master/styles/images/EggPeggy@4xCutWithShadow.png" align="left" height="350px"/>
 
-Designed for beginner developers in mind, we're starting this README.md from the very top! For more in-depth tutorials, head on over to our [wiki](https://github.com/madiedgar/legesher/wiki). If you would like more clarity on a certain topic, _submit a pull request_ or [tweet @ us 🐦](https://twitter.com/legesherio).
+Designed for beginner developers in mind, we're starting this README.md from the very top! For more in-depth, step-by-step tutorials, head on over to our [wiki](https://github.com/madiedgar/legesher/wiki). If you would like more clarity on a certain topic, _[join the conversation here](https://github.com/madiedgar/legesher/issues/5)_ or [tweet @ us 🐦](https://twitter.com/legesherio).
 
 ### 1️⃣ Download A Text Editor
 > **Text Editor** - an interface that allows you to open and edit your code in an user-friendly environment
 
 At this time, we are only actively working on extensions for the following open sourced text editors. If there is another you would like to have included on this list, please _submit a pull request_ and we'll see how all of us can make it happen!
--   [Atom](https://atom.io) <!-- insert Atom logo -->
--   [VS Code](https://code.visualstudio.com/)  <!-- insert VS Code logo -->
-
+-   :atom: [Atom](https://atom.io)
+-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Visual_Studio_Code_1.18_icon.svg/1200px-Visual_Studio_Code_1.18_icon.svg.png" height="16px"/> [VS Code](https://code.visualstudio.com/)
 
 ### 2️⃣ Install Legesher Packages
 Legesher is a collection of packages that enable you to code across language barriers. Use any one or all of them to change the way you work, hopefully allowing your innovation and creativity to flourish.
