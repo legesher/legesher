@@ -19,7 +19,7 @@
     "program",
     "open-source"
   ],
-  "repository": "https://github.com/madiedgar/legesher",
+  "repository": "https://github.com/legesher/legesher",
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"
