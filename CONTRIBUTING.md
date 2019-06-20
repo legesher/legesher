@@ -9,21 +9,21 @@ First off, thank you for just being _here_. It's people like you who have a hear
 
 Here's a high level overview of what this guide entails. It is designed to be read and revisited as you become more involved with the project.
 
--   [Our Reason Why](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#our-reason-why-)
--   [Be a Part](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#be-a-part-handshake)
-    -   [Legesher Resources](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#legesher-resources-)
--   [Contributing](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#contributing-)
-    -   [Ground Rules](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#ground-rules-)
-    -   [My First Contribution](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#my-first-contribution-)
--   [Review Process](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#review-process-)
-    -   [Program Enhancements](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#program-enhancements-)
-    -   [Language Translations](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#language-translations-loudspeaker)
--   [Style Guide](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#style-guide-)
-    -   [Commit Message Guidelines](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#commit-message-guidelines-)
--   [Submitting Issues](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#submitting-issues-%EF%B8%8F)
-    -   [Bug Reports](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#bug-reports-bug)
-    -   [Feature or Enhancement Suggestions](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#feature-or-enhancement-suggestions-)
-    -   [Security Reports](https://github.com/madiedgar/Legesher/blob/master/CONTRIBUTING.md#security-reports-police_car)
+-   [Our Reason Why](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#our-reason-why-)
+-   [Be a Part](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#be-a-part-handshake)
+    -   [Legesher Resources](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#legesher-resources-)
+-   [Contributing](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#contributing-)
+    -   [Ground Rules](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#ground-rules-)
+    -   [My First Contribution](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#my-first-contribution-)
+-   [Review Process](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#review-process-)
+    -   [Program Enhancements](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#program-enhancements-)
+    -   [Language Translations](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#language-translations-loudspeaker)
+-   [Style Guide](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#style-guide-)
+    -   [Commit Message Guidelines](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#commit-message-guidelines-)
+-   [Submitting Issues](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#submitting-issues-%EF%B8%8F)
+    -   [Bug Reports](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#bug-reports-bug)
+    -   [Feature or Enhancement Suggestions](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#feature-or-enhancement-suggestions-)
+    -   [Security Reports](https://github.com/legesher/Legesher/blob/master/CONTRIBUTING.md#security-reports-police_car)
 
 ***
 
@@ -32,7 +32,7 @@ Here's a high level overview of what this guide entails. It is designed to be re
 We all have the same goal:
 > For this community to create product that **empowers** individuals, where _innovation_ and _creativity_ aren't lost in translation.  
 
-To learn more about why [Madi at With Madi Co.](https://withmadi.co/) created this project, all of the information is in our [WHY.md](https://github.com/madiedgar/Legesher/blob/master/WHY.md).
+To learn more about why [Madi at With Madi Co.](https://withmadi.co/) created this project, all of the information is in our [WHY.md](https://github.com/legesher/Legesher/blob/master/WHY.md).
 
 # Be A Part :handshake:
 
@@ -46,7 +46,7 @@ Here are some important and helpful resources for **Legesher**:
     -   Use the `Legesher` channel for questions about Legesher
     -   Use the `tutorials` channel for questions about Legesher, Github, or Programming tutorials
     -   There are many other channels available, check the channel list
--   [Current Project Status](https://github.com/madiedgar/legesher) (we're keeping everything on Github for the time being)
+-   [Current Project Status](https://github.com/legesher/legesher) (we're keeping everything on Github for the time being)
 -   [Official Legesher Website](https://legesher.io)
 
 <!-- TODO: ADD DOCUMENTATION WEBSITE -->
@@ -60,9 +60,9 @@ There are many ways for you to get involved in **Legesher**. One of the biggest 
 
 When contributing it is important to make sure we follow the same guidelines:
 
--   Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. [(Read More)](https://github.com/madiedgar/Legesher/blob/master/CODE_OF_CONDUCT.md)
+-   Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. [(Read More)](https://github.com/legesher/Legesher/blob/master/CODE_OF_CONDUCT.md)
 -   Ensure cross-platform compatibility for every change that's accepted. (Windows, Mac, Debian & Ubuntu Linux)
--   Ensure that code that goes into core meets all requirements in [this checklist](https://github.com/madiedgar/Legesher/tree/master/.github/ISSUE_TEMPLATE)
+-   Ensure that code that goes into core meets all requirements in [this checklist](https://github.com/legesher/Legesher/tree/master/.github/ISSUE_TEMPLATE)
 -   Create issues for any major changes and enhancements that you wish to make. Discuss things transparently and get community feedback.
 -   Don't add any classes to the codebase unless absolutely needed. Err on the side of using functions.
 -   Keep feature versions as small as possible, preferably one new feature per version.
@@ -180,11 +180,11 @@ _See [conventionalcommits.org](https://conventionalcommits.org/) for more detail
 
 ### Bug Reports :bug:
 
-Answer [these questions](https://github.com/madiedgar/Legesher/blob/master/.github/ISSUE_TEMPLATE/bug_report.md) when reporting a bug.
+Answer [these questions](https://github.com/legesher/Legesher/blob/master/.github/ISSUE_TEMPLATE/bug_report.md) when reporting a bug.
 
 ### Feature or Enhancement Suggestions 🚀
 
-Answer [these questions](https://github.com/madiedgar/Legesher/blob/master/.github/ISSUE_TEMPLATE/feature_request.md) when suggesting a feature or enhancement.
+Answer [these questions](https://github.com/legesher/Legesher/blob/master/.github/ISSUE_TEMPLATE/feature_request.md) when suggesting a feature or enhancement.
 
 ### Security Reports :police_car:
 
