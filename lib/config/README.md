@@ -4,11 +4,11 @@ With a project dedicated to connecting the language we speak to the code we writ
 
 ## Spoken Languages
 
-The list of the supported spoken languages are located here: [view the list](https://github.com/madiedgar/legesher/blob/master/lib/config/spoken-languages.yml)
+The list of the supported spoken languages are located here: [view the list](https://github.com/legesher/legesher/blob/master/lib/config/spoken-languages.yml)
 
 ## Programming Languages
 
-The list of the supported programming languages are located here: [view the list](https://github.com/madiedgar/legesher/blob/master/lib/config/programming-languages.yml)
+The list of the supported programming languages are located here: [view the list](https://github.com/legesher/legesher/blob/master/lib/config/programming-languages.yml)
 
 ## Add New Language
 
