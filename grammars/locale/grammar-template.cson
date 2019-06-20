@@ -10,7 +10,7 @@
 # 'contentRegex': test content to see what language
 'patterns': [
   {
-    'match': '(?<!\\w)@?(NOTE|INFO|IDEA|DEBUG|REMOVE|OPTIMIZE|REVIEW|HACK|UNDONE|TO DO|REFACTOR|DEPRECATED|TASK|CHGME|NOTREACHED|WTF|BUG|ERROR|OMG|ERR|OMFGRLY|WARNING|WARN|BROKEN)\\b'
+    'match': '(?<!\\w)@?({NOTE}|{INFO}|{IDEA}|{DEBUG}|{REMOVE}|{OPTIMIZE}|{REVIEW}|{HACK}|{UNDONE}|{TO} {DO}|{REFACTOR}|{DEPRECATED}|{TASK}|{CHGME}|{NOTREACHED}|{WTF}|{BUG}|{ERROR}|{OMG}|{ERR}|{OMFGRLY}|{WARNING}|{WARN}|{BROKEN})\\b'
     'name': 'storage.type.class.${1:/downcase}'
   }
   {
