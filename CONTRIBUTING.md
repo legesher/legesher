@@ -56,6 +56,8 @@ Here are some important and helpful resources for **Legesher**:
 
 There are many ways for you to get involved in **Legesher**. One of the biggest misconceptions I want to clarify before going forward, is that you can contribute even if you **do not** code. Following these guidelines will help to get the best product in the hands of the people that need it most. In respecting the time of the developers managing and developing this open source project, your issues will be addressed, changes assessed, and pull requests finalized with our help.
 
+**Working on your first Pull Request?** You can learn how from this *free* series [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github)
+
 ### Ground Rules 🎋
 
 When contributing it is important to make sure we follow the same guidelines:
