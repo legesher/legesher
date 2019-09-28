@@ -61,6 +61,11 @@
 
 **`legesher`** 🌳 is the overarching developer tool for interchanging the written language within your code. This tool integrates with git to allow code changes to focus only on the updates and not on the translation.
 
+### Because innovation, creativity, and collaboration shouldn't be lost in translation
+We are all about building bridges to empower others towards the direction of their lives. With **Legesher**, our bridges allow people to code in their native language. Legesher is designed for individuals where English is a second language and for diverse teams that span across many other barriers already.
+
+**Legesher** is a tool that enables anyone to code in their native language. In order to do that we have several projects within the **Legesher** theme to support such an mission. We built **Legesher** on top of [Atom](atom.io), a hackable text editor, and [Git w/ GitHub](https://github.com), a version control tool, in order to give users as much of a personal invitation to programming as we could.
+
 _📢 Check if your native language is available in the [Legesher translation repository](https://github.com/legesher/legesher-translations)! If not, we'd love your help to add it!!_
 
 # Getting Started
