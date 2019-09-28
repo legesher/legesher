@@ -1,5 +1,5 @@
-'name': 'legesher-english'
-'scopeName': 'text.legesher-english'
+'name': 'legesher-uk'
+'scopeName': 'text.legesher-uk'
 'type': 'tree-sitter'
 'parser': 'tree-sitter-legesher-python'
 'injectionSelector': 'comment, text.plain'
