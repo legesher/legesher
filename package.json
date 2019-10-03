@@ -9,6 +9,10 @@
       "legesher:open-settings"
     ]
   },
+  "scripts": {
+    "precommit": "lint-staged",
+    "eslint": "node_modules/.bin/eslint /"
+  },
   "keywords": [
     "translator",
     "code",
@@ -26,5 +30,20 @@
   },
   "dependencies": {
     "underscore": "^1.9.1"
+  },
+  "devDependencies": {
+    "eslint": "^6.5.1",
+    "eslint-config-prettier": "^6.3.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "husky": "^3.0.8",
+    "lint-staged": "^9.4.1",
+    "prettier": "^1.18.2"
+  },
+  "lint-staged": {
+    "*.{js}": [
+      "node_modules/.bin/eslint --max-warnings=0",
+      "prettier --write",
+      "git add"
+    ]
   }
 }
