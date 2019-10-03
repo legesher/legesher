@@ -155,6 +155,7 @@ Legesher Developer Tools might be useful to you if:
 | [`legesher-translations`](https://github.com/legesher/legesher-translations) |  Host and API of all the language translations for written languages for code keywords / concepts |
 | [`legesher-dot-io`](https://github.com/legesher/legesher-dot-io) | Legesher's public [website](https://legesher.io) |
 | [`legesher-docs`](https://github.com/legesher/legesher-docs) | Legesher's documentation hub. Will be transitioning to a documentation host soon. |
+| [`legesher-pride`](https://github.com/legesher/legesher-pride) | A non-programmer's dream to contributing to open source by sharing what they know and learning what's new |
 | [`legesher`](https://github.com/legesher/legesher) | Git integration to collaborate with code and others in other languages |
 
 ## The Community
