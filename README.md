@@ -1,5 +1,5 @@
 <img src="/lib/images/README-EggPeggy.png" align="center"/>
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
 
 
 <h1 align="center">Legesher</h1>
@@ -175,6 +175,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <table>
   <tr>
     <td align="center"><a href="http://withmadi.co"><img src="https://avatars0.githubusercontent.com/u/7844510?v=4" width="100px;" alt="Madison (Pfaff) Edgar"/><br /><sub><b>Madison (Pfaff) Edgar</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=madiedgar" title="Code">💻</a> <a href="#projectManagement-madiedgar" title="Project Management">📆</a></td>
+    <td align="center"><a href="https://github.com/Beomus"><img src="https://avatars1.githubusercontent.com/u/54792554?v=4" width="100px;" alt="Beomus"/><br /><sub><b>Beomus</b></sub></a><br /><a href="#marketing-Beomus" title="Marketing - People who help in marketing the repo/project">💌</a></td>
   </tr>
 </table>
 
