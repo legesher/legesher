@@ -52,6 +52,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "JasperBarzilaij",
+      "name": "Jasper Barzilaij",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/12871682?v=4",
+      "profile": "https://github.com/JasperBarzilaij",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7
