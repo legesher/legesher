@@ -1,0 +1,67 @@
+{
+  "projectName": "legesher",
+  "projectOwner": "madiedgar",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "types": {
+    "marketing": {
+      "symbol": "💌",
+      "description": "Marketing - People who help in marketing the repo/project"
+    }
+  },
+  "imageSize": 100,
+  "commit": true,
+  "commitConvention": "atom",
+  "contributors": [
+    {
+      "login": "madiedgar",
+      "name": "Madison (Pfaff) Edgar",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/7844510?v=4",
+      "profile": "http://withmadi.co",
+      "contributions": [
+        "code",
+        "projectManagement"
+      ]
+    },
+    {
+      "login": "Beomus",
+      "name": "Beomus",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/54792554?v=4",
+      "profile": "https://github.com/Beomus",
+      "contributions": [
+        "marketing"
+      ]
+    },
+    {
+      "login": "AlexandruBuhai",
+      "name": "Alex Buhai",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/23296075?v=4",
+      "profile": "https://github.com/AlexandruBuhai",
+      "contributions": [
+        "marketing"
+      ]
+    },
+    {
+      "login": "korolr",
+      "name": "Alexsey Ramzaev",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/11715165?v=4",
+      "profile": "https://Korolr.me/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "JasperBarzilaij",
+      "name": "Jasper Barzilaij",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/12871682?v=4",
+      "profile": "https://github.com/JasperBarzilaij",
+      "contributions": [
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7
+}
