@@ -19,7 +19,7 @@
   "Python": {
     "beautifiers": [
       "Black",
-      "YAPF",
+      "YAPF"
     ]
   }
 }
