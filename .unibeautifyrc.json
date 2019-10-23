@@ -8,18 +8,14 @@
     ],
     "arrow_parens": "always",
     "brace_style": "collapse-preserve-inline"
-  }
-},
-{
+  },
   "CSS": {
     "beautifiers": [
       "Prettier",
       "Pretty Diff",
       "JS-Beautify"
     ]
-  }
-},
-{
+  },
   "Python": {
     "beautifiers": [
       "Black",
