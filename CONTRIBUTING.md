@@ -4,9 +4,9 @@
 
 ### THANK YOU :heart:
 
-First off, thank you for just being _here_. It's people like you who have a heart ❤️ to serve and desire to create something bigger than themselves that we want to be part of our team. So thank you, because by choosing to contribute to **Legesher** we're one step closer to creating a world where innovation, creativity and collaboration aren't lost in translation. This is so much more than a product, it's an opportunity that opens doors. Thank YOU for making all of this possible.
+First off, thank you for just being _here_. It's people like you who have a heart ❤️ to serve and desire to create something bigger than themselves that we want to be part of our team. So thank you, because by choosing to contribute to **Legesher** we're one step closer to creating a world where innovation, creativity, and collaboration aren't lost in translation. This is so much more than a product, it's an opportunity that opens doors. Thank YOU for making all of this possible.
 
-Here's a high level overview of what this guide entails. It is designed to be read and revisited as you become more involved with the project.
+Here's a high-level overview of what this guide entails. It is designed to be read and revisited as you become more involved with the project.
 
 - [Our Reason Why](#our-reason-why-)
 - [You Can Be a Part](#you-can-be-a-part-handshake)
@@ -44,7 +44,7 @@ Here are some important and helpful resources for **Legesher**:
 
 <!-- - [Tutorials Would Go Here](https://github.com/WithMadi/BetaTeam) -->
 
-- [Join Our Discord Conmmunity!](https://discord.gg/DkVjVDP)
+- [Join Our Discord Community!](https://discord.gg/DkVjVDP)
   - Use the `Legesher` channel for questions about Legesher
   - Use the `tutorials` channel for questions about Legesher, Github, or Programming tutorials
   - There are many other channels available, check the channel list
@@ -80,7 +80,7 @@ Here are some important and helpful resources for **Legesher**:
 
 # Contributing 📖
 
-There are many ways for you to get involved in **Legesher**. One of the biggest misconceptions I want to clarify before going forward, is that you can contribute even if you **do not** code. Following these guidelines will help to get the best product in the hands of the people that need it most. In respecting the time of the developers managing and developing this open source project, your issues will be addressed, changes assessed, and pull requests finalized with our help.
+There are many ways for you to get involved in **Legesher**. One of the biggest misconceptions I want to clarify before going forward is that you can contribute even if you **do not** code. Following these guidelines will help to get the best product in the hands of the people that need it most. In respecting the time of the developers managing and developing this open-source project, your issues will be addressed, changes assessed, and pull requests finalized with our help.
 
 **Working on your first Pull Request?** You can learn how from this _free_ series [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github)
 
@@ -94,13 +94,13 @@ When contributing it is important to make sure we follow the same guidelines:
 - Create issues for any major changes and enhancements that you wish to make. Discuss things transparently and get community feedback.
 - Don't add any classes to the codebase unless absolutely needed. Err on the side of using functions.
 - Keep feature versions as small as possible, preferably one new feature per version.
-- Cover features with tests, examples and documentation.
+- Cover features with tests, examples, and documentation.
 
 ### My First Contribution ➕
 
-Contributing to an open source project can be very intimidating and overwhelming, but we've tried to make your first contribution as easy as possible. On top of sharing your gifts with the community that needs it, upon merging your first contribution, you'll get a free starter pack and a big welcome into the community!
+Contributing to an open-source project can be very intimidating and overwhelming, but we've tried to make your first contribution as easy as possible. On top of sharing your gifts with the community that needs it, upon merging your first contribution, you'll get a free starter pack and a big welcome into the community!
 
-One great way to begin contributing is to look for one of the following issues labels:
+One great way to begin contributing is to look for one of the labels of the following issue:
 
 - `Technical Experience: None`
 - `Technical Experience: Beginner`
@@ -109,7 +109,7 @@ One great way to begin contributing is to look for one of the following issues l
 - `help wanted`
 - `good first issue`
 
-**If you've never contributed to an open source project before**
+**If you've never contributed to an open-source project before**
 Here are a couple of friendly tutorials that may help:
 
 - [Make A Pull Request](http://makeapullrequest.com/)
@@ -135,14 +135,14 @@ The more documentation we have the easier it will be for our project to be used.
 **TUTORIALS**  
  If there was anything you do not currently understand or did not while going through the current tutorials, please update them to improve their usefulness. This is for the betterment of our community, we all thank you for it!
 
-**For updates larger than a one or two line fix:**
+**For updates larger than a one or two-line fix:**
 1\. Create your own fork of the code
 2\. Do the changes in your fork
 3\. If you like the change and think the project could use it:
 
 - Be sure you have followed the code style for the project.
 - Note the Legesher Code of Conduct.
-- Send a pull request and be open for feedback.
+- Send a pull request and be open to feedback.
 - The pull request will need to be reviewed by at least one member of the maintainer community before it can be merged into the project.
 
 ### Language Translations :loudspeaker:
@@ -155,7 +155,7 @@ The more documentation we have the easier it will be for our project to be used.
 
 ### Commit Message Guidelines 📝
 
-A good commit message should describe what changed and why. This project uses semantic commit messages to streamline the release process.
+A good commit message should describe what changed and why. This project uses semantic to commit messages to streamline the release process.
 
 **Semantic Prefixes**: Before a pull request can be merged, it must have a pull request title with a semantic prefix.
 
@@ -232,4 +232,4 @@ In order to determine whether you are dealing with a security issue, ask yoursel
 - Can I access something that's not mine, or something I shouldn't have access to?
 - Can I disable something for other people?
 
-If the answer to either of those two questions are "yes", then you're probably dealing with a security issue. Note that even if you answer "no" to both questions, you may still be dealing with a security issue, so if you're unsure, just email us at <legesher@gmail.com>.
+If the answer to either of those two questions is "yes", then you're probably dealing with a security issue. Note that even if you answer "no" to both questions, you may still be dealing with a security issue, so if you're unsure, just email us at <legesher@gmail.com>.
