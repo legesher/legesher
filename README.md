@@ -191,6 +191,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://Korolr.me/"><img src="https://avatars0.githubusercontent.com/u/11715165?v=4" width="100px;" alt="Alexsey Ramzaev"/><br /><sub><b>Alexsey Ramzaev</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=korolr" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/JasperBarzilaij"><img src="https://avatars2.githubusercontent.com/u/12871682?v=4" width="100px;" alt="Jasper Barzilaij"/><br /><sub><b>Jasper Barzilaij</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=JasperBarzilaij" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/Spooky9"><img src="https://avatars2.githubusercontent.com/u/36751163?v=4" width="100px;" alt="Sergio"/><br /><sub><b>Sergio</b></sub></a><br /><a href="#content-Spooky9" title="Content">🖋</a></td>
+    <td align="center"><a href="http://jyeung.me"><img src="https://avatars3.githubusercontent.com/u/15700803?v=4" width="100px;" alt="Jason Yeung"/><br /><sub><b>Jason Yeung</b></sub></a><br /><a href="#maintenance-jsonyeung" title="Maintenance">🚧</a></td>
   </tr>
 </table>
 
