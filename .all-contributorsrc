@@ -61,6 +61,42 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "Spooky9",
+      "name": "Sergio",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/36751163?v=4",
+      "profile": "https://github.com/Spooky9",
+      "contributions": [
+        "content"
+      ]
+    },
+    {
+      "login": "jsonyeung",
+      "name": "Jason Yeung",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/15700803?v=4",
+      "profile": "http://jyeung.me",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "underscoreanuj",
+      "name": "Anuj Singh",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/30765911?v=4",
+      "profile": "https://github.com/underscoreanuj",
+      "contributions": [
+        "projectManagement"
+      ]
+    },
+    {
+      "login": "sakshamtaneja21",
+      "name": "saksham taneja",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/43172716?v=4",
+      "profile": "https://www.linkedin.com/in/tanejasaksham/",
+      "contributions": [
+        "ideas"
+      ]
     }
   ],
   "contributorsPerLine": 7

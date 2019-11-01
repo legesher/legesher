@@ -31,10 +31,21 @@
     "underscore": "^1.9.1"
   },
   "devDependencies": {
+    "@unibeautify/beautifier-black": "^0.1.1",
+    "@unibeautify/beautifier-eslint": "^0.6.0",
+    "@unibeautify/beautifier-js-beautify": "^0.4.0",
+    "@unibeautify/beautifier-prettier": "^0.9.0",
+    "@unibeautify/beautifier-prettydiff": "^0.6.0",
+    "@unibeautify/beautifier-yapf": "^0.3.0",
+    "@unibeautify/cli": "^0.5.1",
     "all-contributors-cli": "^6.9.2",
-    "eslint": "^6.5.1",
-    "eslint-config-prettier": "^6.3.0",
+    "eslint": "^5.16.0",
+    "eslint-config-prettier": "^6.5.0",
     "eslint-plugin-prettier": "^3.1.1",
-    "prettier": "^1.18.2"
+    "eslint-plugin-react": "^7.16.0",
+    "js-beautify": "^1.10.2",
+    "prettier": "^1.18.2",
+    "prettydiff2": "^2.2.8",
+    "unibeautify-cli": "^0.2.1"
   }
 }
