@@ -147,7 +147,7 @@ The more documentation we have the easier it will be for our project to be used.
 
 ### Language Translations :loudspeaker:
 
-- A language is first introduced when an indiviual raises their hand to add in their dialect.
+- A language is first introduced when an individual raises their hand to add in their dialect.
 - After the initial translation is added, the translated file will need to be reviewed by at least 3 different community members to make sure it is appropriate and the best translation that will allow the developer to best understand the foundation of programming. (additional reviewers are highly encouraged)
 - After 3 approved reviews, all 4(or more) contributors will be given credit for the addition of the language when it is merged with the project.
 
