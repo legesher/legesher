@@ -190,12 +190,12 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/AlexandruBuhai"><img src="https://avatars3.githubusercontent.com/u/23296075?v=4" width="100px;" alt="Alex Buhai"/><br /><sub><b>Alex Buhai</b></sub></a><br /><a href="#marketing-AlexandruBuhai" title="Marketing - People who help in marketing the repo/project">💌</a></td>
     <td align="center"><a href="https://Korolr.me/"><img src="https://avatars0.githubusercontent.com/u/11715165?v=4" width="100px;" alt="Alexsey Ramzaev"/><br /><sub><b>Alexsey Ramzaev</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=korolr" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/JasperBarzilaij"><img src="https://avatars2.githubusercontent.com/u/12871682?v=4" width="100px;" alt="Jasper Barzilaij"/><br /><sub><b>Jasper Barzilaij</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=JasperBarzilaij" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/Spooky9"><img src="https://avatars2.githubusercontent.com/u/36751163?v=4" width="100px;" alt="Sergio"/><br /><sub><b>Sergio</b></sub></a><br /><a href="#content-Spooky9" title="Content">🖋</a></td>
   </tr>
 </table>
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
-
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
