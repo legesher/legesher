@@ -25,7 +25,7 @@
     <!-- <a href="https://github.com/legesher/legesher/graphs/contributors" alt="Contributors">
         <img src="https://img.shields.io/github/contributors/legesher/legesher?style=flat-square&color=f58977&labelColor=black" /></a> -->
     <a href="#the-community" alt="All Contributors">
-        <img src="https://img.shields.io/badge/all_contributors-5-black?style=flat-square&color=f58977&labelColor=black" /></a>
+        <img src="https://img.shields.io/badge/all_contributors-9-black?style=flat-square&color=f58977&labelColor=black" /></a>
     <a href="https://streamlabs.com/withmadico/tip" alt="Backers on Github">
         <img src="https://img.shields.io/badge/sponsors-4-black?style=flat-square&color=f58977&labelColor=black" /></a>
     <a href="https://instagram.com/withmadico" alt="Sponsors on Github">
@@ -201,6 +201,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
