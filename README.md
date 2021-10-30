@@ -26,10 +26,8 @@
         <img src="https://img.shields.io/github/contributors/legesher/legesher?style=flat-square&color=f58977&labelColor=black" /></a> -->
     <a href="#the-community" alt="All Contributors">
         <img src="https://img.shields.io/badge/all_contributors-9-black?style=flat-square&color=f58977&labelColor=black" /></a>
-    <a href="https://streamlabs.com/withmadico/tip" alt="Backers on Github">
-        <img src="https://img.shields.io/badge/sponsors-4-black?style=flat-square&color=f58977&labelColor=black" /></a>
-    <a href="https://instagram.com/withmadico" alt="Sponsors on Github">
-        <img src="https://img.shields.io/badge/sponsor-@withmadico-black?style=flat-square&color=f58977&labelColor=black" /></a>
+    <a href="https://github.com/sponsors/madiedgar" alt="Sponsors on Github">
+        <img src="https://img.shields.io/badge/sponsor-madiedgar-black?style=flat-square&color=f58977&labelColor=black" /></a>
 
 </p>
 <!-- SOCIAL BADGES -->
@@ -37,9 +35,6 @@
     <a href="https://github.com/legesher">
         <img src="https://img.shields.io/badge/-Contribute-black?style=flat-square&logo=github&logoColor=7ed2e7"
             alt="Contribute on Github"></a>
-    <a href="https://twitch.tv/withmadico">
-        <img src="https://img.shields.io/badge/-Watch-black?style=flat-square&logo=twitch&logoColor=7ed2e7"
-            alt="Watch on Twitch"></a>
     <a href="https://discord.gg/DkVjVDP">
         <img src="https://img.shields.io/badge/-Chat-black?style=flat-square&logo=discord&logoColor=7ed2e7"
             alt="chat on Discord"></a>
@@ -49,10 +44,7 @@
     <a href="https://twitter.com/intent/follow?screen_name=legesherio">
         <img src="https://img.shields.io/badge/-Tweet-black?style=flat-square&logo=twitter&logoColor=7ed2e7"
             alt="follow on Twitter"></a>
-    <a href="https://medium.com/@legesher">
-        <img src="https://img.shields.io/badge/-Read-black?style=flat-square&logo=medium&logoColor=7ed2e7"
-            alt="Read on Medium"></a>
-    <a href="https://legesher.io">
+    <a href="https://mailchi.mp/083d8b2e0e12/legesher-landing-page)">
         <img src="https://img.shields.io/badge/-Subscribe-black?style=flat-square&logo=mailchimp&logoColor=7ed2e7"
             alt="Subscribe on Mailchimp"></a>    
 </p>
