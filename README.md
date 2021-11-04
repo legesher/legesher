@@ -189,6 +189,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/underscoreanuj"><img src="https://avatars1.githubusercontent.com/u/30765911?v=4" width="100px;" alt=""/><br /><sub><b>Anuj Singh</b></sub></a><br /><a href="#projectManagement-underscoreanuj" title="Project Management">📆</a></td>
     <td align="center"><a href="https://www.linkedin.com/in/tanejasaksham/"><img src="https://avatars3.githubusercontent.com/u/43172716?v=4" width="100px;" alt=""/><br /><sub><b>saksham taneja</b></sub></a><br /><a href="#ideas-sakshamtaneja21" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://github.com/Rutam21"><img src="https://avatars.githubusercontent.com/u/47860497?v=4" width="100px;" alt=""/><br /><sub><b>Rutam Prita Mishra</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=Rutam21" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/atom19-i"><img src="https://avatars.githubusercontent.com/u/54570007?v=4" width="100px;" alt=""/><br /><sub><b>atom19-i</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=atom19-i" title="Documentation">📖</a></td>
   </tr>
 </table>
 
