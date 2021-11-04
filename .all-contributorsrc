@@ -97,6 +97,24 @@
       "contributions": [
         "ideas"
       ]
+    },
+    {
+      "login": "Rutam21",
+      "name": "Rutam Prita Mishra",
+      "avatar_url": "https://avatars.githubusercontent.com/u/47860497?v=4",
+      "profile": "https://github.com/Rutam21",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "atom19-i",
+      "name": "atom19-i",
+      "avatar_url": "https://avatars.githubusercontent.com/u/54570007?v=4",
+      "profile": "https://github.com/atom19-i",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7
