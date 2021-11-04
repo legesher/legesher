@@ -25,7 +25,7 @@
     <!-- <a href="https://github.com/legesher/legesher/graphs/contributors" alt="Contributors">
         <img src="https://img.shields.io/github/contributors/legesher/legesher?style=flat-square&color=f58977&labelColor=black" /></a> -->
     <a href="#the-community" alt="All Contributors">
-        <img src="https://img.shields.io/badge/all_contributors-9-black?style=flat-square&color=f58977&labelColor=black" /></a>
+        <img src="https://img.shields.io/badge/all_contributors-11-black?style=flat-square&color=f58977&labelColor=black" /></a>
     <a href="https://github.com/sponsors/madiedgar" alt="Sponsors on Github">
         <img src="https://img.shields.io/badge/sponsor-madiedgar-black?style=flat-square&color=f58977&labelColor=black" /></a>
 
@@ -44,7 +44,7 @@
     <a href="https://twitter.com/intent/follow?screen_name=legesherio">
         <img src="https://img.shields.io/badge/-Tweet-black?style=flat-square&logo=twitter&logoColor=7ed2e7"
             alt="follow on Twitter"></a>
-    <a href="https://mailchi.mp/083d8b2e0e12/legesher-landing-page)">
+    <a href="https://mailchi.mp/083d8b2e0e12/legesher-landing-page">
         <img src="https://img.shields.io/badge/-Subscribe-black?style=flat-square&logo=mailchimp&logoColor=7ed2e7"
             alt="Subscribe on Mailchimp"></a>    
 </p>
