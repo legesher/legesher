@@ -30,7 +30,7 @@
   "dependencies": {
     "underscore": "^1.12.1",
     "acorn": ">=6.4.1",
-    "minimist": ">=1.2.2"
+    "minimist": ">=1.2.6"
   },
   "devDependencies": {
     "@unibeautify/beautifier-black": "^0.1.1",
