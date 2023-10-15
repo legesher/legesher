@@ -58,88 +58,15 @@
 
 We are all about building bridges to empower others towards the direction of their lives. With **Legesher**, our bridges allow people to code in their native language. Legesher is designed for individuals where English is a second language and for diverse teams that span across many other barriers already.
 
-**Legesher** is a tool that enables anyone to code in their native language. In order to do that we have several projects within the **Legesher** theme to support such an mission. We built **Legesher** on top of [Atom](atom.io), a hackable text editor, and [Git w/ GitHub](https://github.com), a version control tool, in order to give users as much of a personal invitation to programming as we could.
+**Legesher** is a tool that enables anyone to code in their native language. In order to do that we have several projects within the **Legesher** theme to support such an mission. We built **Legesher** on top of [VS Code](https://code.visualstudio.com/download), a hackable text editor, and [Git w/ GitHub](https://github.com), a version control tool, in order to give users as much of a personal invitation to programming as we could.
 
 _📢 Check if your native language is available in the [Legesher translation repository](https://github.com/legesher/legesher-translations)! If not, we'd love your help to add it!!_
-
-# Getting Started
-
-In order to use `legesher` to code, you will need to follow the following steps:
-
-**1️⃣ Download Atom (a text editor)**  
-Head on over to [Atom.io](https://atom.io/) to download the latest version of the text editor.
-
-**2️⃣ Update Preferences**  
-Once installed on your local computer, open the _Atom_ application. In the options in the top menu bar, navigate to Atom's Settings _Atom > Preferences..._ . A settings window should pop up in your editor.
-
-**3️⃣ Disable Atom's `language-python`**  
-Continue by clicking the _Packages_ section. Here, you'll see a number of items: _Installed Packages_, _Community Packages_, _Core Packages_, _Development Packages_, _Git Packages_. Using the search bar, type `language-python` to find the _Core Package_ currently installed on your text editor. Click _Disable_.
-
-**4️⃣ Download Legesher's `language-legesher-python`**  
-Now, head to the _Install_ section to install a new package to your text editor (make sure that the _Packages_ button is selected instead of the _Themes_). Type `language-legesher-python` in the search bar to find Legesher's package, and click _Install_.
-
-**5️⃣ Enable Legesher's `language-legesher-python`**  
-Sometimes you'll have to enable a newly installed package by clicking the _Enable_ button in the package when it is within the _Packages_ section of the settings.
-
-**6️⃣ Write A "Hello World" Program In Your Language**  
-Now, you can start coding in Python using any written language currently available within Legesher's translation library! The syntax highlighting should match as if you were coding Python in English!
-
-```python
-def main():
-    print "Hello World"
-```
-
-**7️⃣ Commit those changes to GitHub**
-Add the updates to your code base to GitHub to bring your repository up to date.
-
-**8️⃣ View translated code on GitHub**
-⚠️ This step is in development, view our roadmap to see the current status of this feature.
 
 # Contributing
 
 ❤️Legesher relies on the passionate members of its community (both developer and non-developer alike) to keep delivering impactful tools to people all over the world.
 
 Before contributing, be sure to consult Legesher's [contribution guidelines](https://github.com/legesher/legesher/blob/master/CONTRIBUTING.md) and [language conventions](https://github.com/legesher/legesher/blob/master/LANGUAGE_CONVENTIONS.md). As a member of our community, you must abide by our [Code Of Conduct](https://github.com/legesher/legesher/blob/master/CODE_OF_CONDUCT.md).
-
-## Installation
-
-**1️⃣ Fork the legesher/legesher repository**  
-Follow these instructions on [how to fork a repository](https://help.github.com/en/articles/fork-a-repo)
-
-**2️⃣ Cloning the repository**  
-Once you have set up your fork of the `legesher/legesher` repository, you'll want to clone it to your local machine. This is so you can make and test all of your personal edits before adding it to the master version of `legesher/legesher`.
-
-Navigate to the location on your computer where you want to host your code. Once in the appropriate folder, run the following command to clone the repository to your local machine.
-
-```
-git clone git@github.com:your-username/legesher.git
-```
-
-**3️⃣ Bootstrapping the repository**  
-You'll then want to navigate within the folder that was just created that contains all of the content of the forked repository. There you'll want to run the installation script to get the updated version of all the dependencies.
-
-```
-cd legesher
-npm install
-```
-
-## Development
-
-We love your desire to give back, and want to make the process as welcoming to newcomers and experts as possible. We're working on developing more intuitive tutorials for individuals of all skill levels and expertise, so if you think the community would value from being walked through the steps you're going through please share! ❤️
-
-### Test Changes
-
-When you start making changes to the code on your local branch, you'll need to test those changes. Before your code can be accepted into the master branch, it will have to pass all of the tests within `/spec/*`. To check the updates made to the grammar, run the following commands:
-
-**1️⃣ Save Current Changes**  
-When you get to a point when you want to test the functionality of the code, make sure all your changes are saved. ❗They don't necessarily have to be _committed_ changes in order to test them.
-
-**2️⃣ Test changes**  
-To make sure that the application is properly updated, run the tests. If you add elements that do not have tests to prove whether they work correctly or not, please include them in your pull request.
-
-```
-npm test
-```
 
 # Legesher Projects
 
@@ -153,22 +80,13 @@ Legesher Developer Tools might be useful to you if:
 | Project                                                                                  | Purpose                                                                                                   |
 | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | [`tree-sitter-legesher-python`](https://github.com/legesher/tree-sitter-legesher-python) | Tree-sitter python grammar used by text editors allowing Legesher's languages to be implemented           |
-| [`language-legesher-python`](https://github.com/legesher/language-legesher-python)       | Atom's programming language binding to allow syntax highlighting, code folding etc. to a specific grammar |
 | [`legesher-translations`](https://github.com/legesher/legesher-translations)             | Host and API of all the language translations for written languages for code keywords / concepts          |
 | [`legesher-dot-io`](https://github.com/legesher/legesher-dot-io)                         | Legesher's public [website](https://legesher.io)                                                          |
 | [`legesher-docs`](https://github.com/legesher/legesher-docs)                             | Legesher's documentation hub. Will be transitioning to a documentation host soon.                         |
 | [`legesher-pride`](https://github.com/legesher/legesher-pride)                           | A non-programmer's dream to contributing to open source by sharing what they know and learning what's new |
 | [`legesher`](https://github.com/legesher/legesher)                                       | Git integration to collaborate with code and others in other languages                                    |
 
-## The Community
-
-A message from our [founder, Madi](https://www.instagram.com/withmadico/):
-
-> It is truly a blessing to be surrounded by a community of passionate, driven individuals who love sharing their gifts to creating better products together. Your contribution means the world to me, and keeps me motivated to continue creating. This wouldn't be possible without you. From the bottom of my heart, 💛 THANK YOU!
-
-Meet our [community](https://github.com/legesher/legesher/tree/master/community) (full of contributors, backers, sponsors, and supporters) that give a little piece of their heart to this project. Thank you so much.
-
-## Contributors ✨
+## The Community ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
