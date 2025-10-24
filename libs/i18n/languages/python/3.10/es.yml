@@ -1,0 +1,98 @@
+# Spanish Language Pack for Python 3.10+
+# Base pack with all core keywords and Python 3.10 additions (match/case)
+
+language: es
+target: python
+version: "3.10"
+
+keywords:
+  # Core keywords (Python 3.x)
+  and: y
+  as: como
+  assert: afirmar
+  async: asíncrono
+  await: esperar
+  break: romper
+  class: clase
+  continue: continuar
+  def: definir
+  del: eliminar
+  elif: sinoentonces
+  else: sino
+  except: excepto
+  "False": Falso
+  finally: finalmente
+  for: para
+  from: desde
+  global: global
+  if: si
+  import: importar
+  in: en
+  is: es
+  lambda: lambda
+  "None": Ninguno
+  nonlocal: nolocal
+  "not": "no"
+  or: o
+  pass: pasar
+  raise: lanzar
+  return: retornar
+  "True": Verdadero
+  try: intentar
+  while: mientras
+  with: con
+  yield: ceder
+
+  # Python 3.10+ specific (PEP 634: Structural Pattern Matching)
+  match: coincidir
+  case: caso
+
+builtins:
+  # Common built-in functions
+  print: imprimir
+  input: entrada
+  len: longitud
+  range: rango
+  str: cadena
+  int: entero
+  float: flotante
+  list: lista
+  dict: diccionario
+  set: conjunto
+  tuple: tupla
+  bool: booleano
+  type: tipo
+  isinstance: esinstancia
+  hasattr: tieneatributo
+  getattr: obteneratributo
+  setattr: estableceratributo
+  open: abrir
+  close: cerrar
+  read: leer
+  write: escribir
+  sum: suma
+  min: mínimo
+  max: máximo
+  abs: absoluto
+  round: redondear
+  sorted: ordenado
+  reversed: invertido
+  enumerate: enumerar
+  zip: comprimir
+  map: mapear
+  filter: filtrar
+  any: alguno
+  all: todos
+
+metadata:
+  python_version_min: "3.10"
+  python_version_max: "3.13"
+  compatibility_tested:
+    - "3.10"
+    - "3.11"
+    - "3.12"
+    - "3.13"
+  last_updated: "2025-10-23"
+  community_reviewed: False
+  author: "Legesher Team"
+  license: "MIT"

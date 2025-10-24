@@ -1,0 +1,17 @@
+language: test
+target: python
+version: "3.10"
+
+keywords:
+  def: test_def
+  class: test_class
+  if: test_if
+
+builtins:
+  print: test_print
+  len: test_len
+
+metadata:
+  python_version_min: "3.10"
+  last_updated: "2025-10-23"
+  author: "Test Author"
