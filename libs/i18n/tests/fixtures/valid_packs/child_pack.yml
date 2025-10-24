@@ -1,0 +1,13 @@
+language: test
+target: python
+version: "3.11"
+extends: "base_pack.yml"
+
+keywords:
+  except*: test_except_star
+  # Overrides parent
+  def: test_def_override
+
+metadata:
+  python_version_min: "3.11"
+  last_updated: "2025-10-23"

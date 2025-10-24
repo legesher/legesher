@@ -1,0 +1,5 @@
+target: python
+version: "3.10"
+
+keywords:
+  def: test_def

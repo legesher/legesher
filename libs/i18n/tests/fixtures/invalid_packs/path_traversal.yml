@@ -1,0 +1,7 @@
+language: test
+target: python
+version: "3.10"
+extends: "../../../../../../etc/passwd"
+
+keywords:
+  def: malicious
