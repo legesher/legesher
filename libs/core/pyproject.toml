@@ -1,0 +1,16 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+authors = [
+    {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
+]
+license = {text = "MIT"}
+requires-python = "<4.0,>=3.13"
+dependencies = []
+name = "legesher-core"
+version = "0.0.1"
+description = "Core library for Legesher Monorepo"
+readme = "README.md"
+

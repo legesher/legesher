@@ -1,0 +1,20 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+authors = [
+    {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
+]
+license = {text = "LicenseRef-Proprietary"}
+requires-python = "<4.0,>=3.13"
+dependencies = []
+name = "legesher-pride"
+version = "0.0.1"
+description = "community package for Legesher Monorepo"
+readme = "README.md"
+
+[tool.uv.sources]
+legesher-core = { path = "../core", editable = true }
+legesher-i18n = { path = "../i18n", editable = true }
+legesher = { path = "../legesher", editable = true }

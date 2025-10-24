@@ -1,0 +1,25 @@
+[project]
+name = "legesher-monorepo"
+# license = {}
+version = "0.0.1"
+description = "Legesher Monorepo"
+authors = [
+    {name = "Madison (Pfaff) Edgar",email = "7844510+madiedgar@users.noreply.github.com"}
+]
+requires-python = ">=3.13"
+dependencies = []
+readme = "README.md"
+
+[project.urls]
+repository = "https://www.github.com/legesher/legesher"
+
+[tool.uv.sources]
+legesher-core = { path = "./libs/core", editable = true }
+legesher-i18n = { path = "./libs/i18n", editable = true }
+legesher = { path = "./libs/legesher", editable = true }
+legesher-pride = { path = "./libs/pride", editable = true }
+legesher-vs-code = { path = "./libs/vs-code", editable = true }
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"

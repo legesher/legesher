@@ -1,0 +1,81 @@
+---
+title: Welcome to Legesher
+description: Code in your native language - multilingual programming tools for everyone
+template: splash
+hero:
+  tagline: Empowering developers to code in their native language instead of English
+  image:
+    file: ../../assets/houston.webp
+  actions:
+    - text: Planning Summary
+      link: /planning_summary/
+      icon: right-arrow
+    - text: MLCP Specification
+      link: /specifications/mlcp-v1/
+      icon: document
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Overview
+
+Legesher is a collection of developer tools and packages that enable developers to code in their native language instead of English. From creation within an IDE to collaboration across projects and git histories, Legesher's tools remove English as the prerequisite of coding.
+
+## Key Documents
+
+<CardGrid stagger>
+	<Card title="Planning Summary" icon="document">
+		Start here for an overview of the project architecture and pending tasks.
+		[Read Planning Summary →](/planning_summary/)
+	</Card>
+	<Card title="MLCP v1.0 Specification" icon="rocket">
+		The Multilingual Code Protocol - an open standard for multilingual programming.
+		[Read Specification →](/specifications/mlcp-v1/)
+	</Card>
+	<Card title="Language Pack Registry" icon="setting">
+		Architecture for the community-driven language pack registry.
+		[Read Architecture →](/architecture/language-pack-registry/)
+	</Card>
+	<Card title="Implementation Roadmap" icon="list-format">
+		Detailed implementation plan with tasks, timeline, and priorities.
+		[Read Roadmap →](/architecture/implementation-roadmap/)
+	</Card>
+</CardGrid>
+
+## Architecture Highlights
+
+### Multilingual Code Protocol (MLCP)
+
+A standardized protocol that enables:
+- Language pack discovery and distribution
+- Code translation between natural languages
+- IDE and tooling integration
+- Community-driven translation validation
+
+### Version-Aware Language Packs
+
+Support for multiple Python versions (3.10+) with automatic adaptation:
+- Pack inheritance system
+- Auto-detection of Python version
+- Compatibility tracking
+- Auto-update on new releases
+
+### Git Integration
+
+Seamless version control with multilingual code:
+- Canonical English storage
+- Developer-specific language views
+- Dual-language commit messages
+- Translation metadata tracking
+
+### Language Server Protocol
+
+IDE-agnostic support via LSP:
+- Works with VS Code, Cursor, Windsurf, Zed, PyCharm
+- Real-time translation
+- Localized IntelliSense
+- Cultural context annotations
+
+## Getting Started
+
+The project is currently in the planning phase. See the [Planning Summary](/planning_summary/) for the complete roadmap and next steps.

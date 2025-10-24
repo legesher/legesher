@@ -1,0 +1,57 @@
+Legesher Multi-License Repository
+
+Copyright (c) 2025 Madison (Pfaff) Edgar
+
+================================================================================
+
+This repository contains multiple packages with different licenses.
+Each package's specific license terms are located in that package's directory.
+
+PACKAGE LICENSING OVERVIEW:
+
+1. OPEN SOURCE PACKAGES (MIT License)
+   - libs/core/       Core translation engine and shared utilities
+   - libs/i18n/       Internationalization and language data
+   - libs/vs-code/    VS Code editor integration
+
+   These packages are freely available under the MIT License.
+   See individual package LICENSE files for full terms.
+
+2. DUAL-LICENSED PACKAGE (MIT + Commercial)
+   - libs/legesher/   Main package with CLI and primary API
+
+   Free Tier: Available under MIT License for personal and open source use
+   Premium Tier: Requires commercial license for cloud features, team management,
+                 and advanced functionality
+
+3. PROPRIETARY PACKAGES (Source Available)
+   - libs/pride/      Community features and project showcase
+
+   These packages are source-available for reference and security review only.
+   Commercial use requires a separate license agreement.
+   Contact: sales@legesher.com
+
+================================================================================
+
+IMPORTANT NOTES:
+
+- Code visibility does not imply permission to use
+- Proprietary code may not be used, modified, or distributed without explicit
+  written permission
+- Open source packages may be used according to their MIT License terms
+- Trademarks: "Legesher" and associated logos are trademarks and may not be
+  used without permission
+
+For questions about licensing, please contact: legal@legesher.com
+
+================================================================================
+
+DEFAULT LICENSE (if not otherwise specified):
+
+Unless explicitly stated otherwise in a package-specific LICENSE file,
+all code in this repository is:
+
+Copyright (c) 2025 Madison (Pfaff) Edgar
+
+All rights reserved. This code is proprietary and confidential.
+Unauthorized copying, modification, distribution, or use is strictly prohibited.
