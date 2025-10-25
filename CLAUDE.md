@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Current Phase**: Early Development / Planning Complete
 **Version**: 0.0.1
-**Last Updated**: 2025-10-21
+**Last Updated**: 2025-10-25
 
-This is an active monorepo currently in early development phase. Most packages contain scaffold structure with minimal implementation. See [FINAL_SUMMARY.md](FINAL_SUMMARY.md) for complete planning documentation (35,000+ words) and [implementation roadmap](docs/src/content/docs/architecture/implementation-roadmap.md) for 24-week detailed timeline.
+This is an active monorepo currently in early development phase. Most packages contain scaffold structure with minimal implementation. Planning documentation and implementation roadmap are in development.
 
 ## Repository Overview
 
@@ -89,7 +89,7 @@ uv run pytest libs/
 uv run pytest --cov=legesher_core libs/core/
 ```
 
-**Note**: Test suites are currently scaffolded but empty. See [implementation roadmap](docs/src/content/docs/architecture/implementation-roadmap.md) for testing requirements and strategy.
+**Note**: Test suites are currently scaffolded but empty. Testing strategy will be documented as implementation progresses.
 
 ### Documentation Site
 
@@ -156,7 +156,7 @@ The packages have a logical dependency hierarchy defined in the architecture:
 - `legesher-pride`: Community features, depends on `core`, `i18n`, and `legesher`
   - Community platform, showcase projects
 
-When making changes, consider impact on dependent packages. See [implementation roadmap](docs/src/content/docs/architecture/implementation-roadmap.md) for recommended build order.
+When making changes, consider impact on dependent packages. Build order should follow the tier system (Tier 1 → Tier 2 → Tier 3 → Tier 4).
 
 ## Development Guidelines
 
@@ -185,9 +185,8 @@ When making changes, consider impact on dependent packages. See [implementation 
 ### Linear Integration
 
 - Issues are managed in Linear workspace
-- Import file: [linear-import.csv](linear-import.csv) (50+ issues ready to import)
-- See [Linear Integration Guide](docs/src/content/docs/guides/linear-integration.md) for setup instructions
-- 4 phases: Core Foundation → Developer Tools → Community Infrastructure → Registry & Scaling
+- Project phases: Core Foundation → Developer Tools → Community Infrastructure → Registry & Scaling
+- Issue labels help track progress across packages and phases
 
 ### Milestones
 
@@ -206,20 +205,24 @@ When making changes, consider impact on dependent packages. See [implementation 
 
 ### Essential Files
 
-- [FINAL_SUMMARY.md](FINAL_SUMMARY.md) - Complete planning documentation summary
-- [linear-import.csv](linear-import.csv) - Implementation issues ready for project management
 - [CLAUDE.md](CLAUDE.md) - This file (AI assistant guidance)
+- [WORKING_WITH_AI_GUIDE.md](docs/WORKING_WITH_AI_GUIDE.md) - Guide for working with AI assistants
 - Root `pyproject.toml` - Workspace configuration
+- [README.md](README.md) - Project overview
 
 ### Key Documentation
 
-All planning documentation is in `docs/src/content/docs/`:
+Documentation is being developed in `docs/src/content/docs/`:
 
-- [Complete Architecture Guide](docs/src/content/docs/architecture/complete-architecture-guide.md) (12,000+ words) - All architectural decisions with pros/cons
-- [MLCP v1.0 Specification](docs/src/content/docs/specifications/mlcp-v1.md) (4,500+ words) - Multilingual Code Protocol definition
-- [Implementation Roadmap](docs/src/content/docs/architecture/implementation-roadmap.md) (5,000+ words) - 24-week detailed timeline
-- [Language Pack Registry Architecture](docs/src/content/docs/architecture/language-pack-registry.md) (6,000+ words) - Registry system design
-- [Architecture Index](docs/src/content/docs/architecture/index.md) - Navigation guide to all documentation
+- Architecture guides (in development)
+- MLCP (Multilingual Code Protocol) specification (planned)
+- Implementation roadmap (planned)
+- Language pack registry design (planned)
+
+Current documentation:
+- [Getting Started](docs/src/content/docs/index.mdx) - Project overview and quick start
+- [Example Guides](docs/src/content/docs/guides/) - Usage examples
+- [API Reference](docs/src/content/docs/reference/) - API documentation
 
 ### Key Architectural Decisions
 
@@ -230,16 +233,16 @@ All planning documentation is in `docs/src/content/docs/`:
 **Python Versions**: Version-aware packs with inheritance (future-proof)
 **Protocol**: MLCP (Multilingual Code Protocol) for ecosystem interoperability
 
-See [Complete Architecture Guide](docs/src/content/docs/architecture/complete-architecture-guide.md) for detailed rationale.
+Architectural rationale and detailed design decisions will be documented as the project evolves.
 
 ## Working with Claude Code
 
 ### Project Context
 
 - This monorepo is in **early development phase** - packages have scaffold structure
-- See [FINAL_SUMMARY.md](FINAL_SUMMARY.md) for complete planning documentation (35,000+ words)
-- See [implementation roadmap](docs/src/content/docs/architecture/implementation-roadmap.md) for 24-week implementation plan
-- See [linear-import.csv](linear-import.csv) for 50+ detailed implementation issues
+- Planning and architecture documentation is being developed iteratively
+- Implementation follows the tier system (Tier 1 → Tier 2 → Tier 3 → Tier 4)
+- Issues are tracked in Linear workspace with package and phase labels
 
 ### When Requesting Changes
 
@@ -262,12 +265,12 @@ See [Complete Architecture Guide](docs/src/content/docs/architecture/complete-ar
 
 ### Common Workflows
 
-**Implementing a new feature from roadmap**:
+**Implementing a new feature**:
 
 
-1. Find the issue in [linear-import.csv](linear-import.csv) or Linear workspace
-2. Read the relevant architecture documentation
-3. Identify affected package(s) in `libs/`
+1. Find the issue in Linear workspace
+2. Review relevant architectural decisions in this file
+3. Identify affected package(s) in `libs/` and check tier dependencies
 4. Implement following the architectural patterns
 5. Add tests in the package's `tests/` directory
 6. Update package README.md and docs as needed
@@ -276,10 +279,10 @@ See [Complete Architecture Guide](docs/src/content/docs/architecture/complete-ar
 **Adding a new language pack**:
 
 
-1. See [Implementation Roadmap - Language Pack Creation](docs/src/content/docs/architecture/implementation-roadmap.md)
-2. Use version-aware pack structure (libs/i18n/)
-3. Include keyword mappings, cultural comments, metadata
-4. Follow MLCP v1.0 specification
+1. Create language pack in `libs/i18n/` following existing structure
+2. Include keyword mappings, cultural comments, and metadata
+3. Ensure version-aware pack structure for Python version compatibility
+4. Add documentation and examples
 
 **Updating documentation**:
 
