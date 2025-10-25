@@ -29,7 +29,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0  # Fetch full history so Claude can see all PR changes
+          ref: ${{ github.event.pull_request.head.sha }}  # Ensure we check out the PR head
 
       - name: Run Claude Code Review
         id: claude-review
@@ -51,8 +52,8 @@ jobs:
             
             Be constructive and helpful in your feedback.
 
-          # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
-          # use_sticky_comment: true
+          # Use sticky comments to make Claude update the same comment on subsequent pushes
+          use_sticky_comment: true
           
           # Optional: Customize review based on file types
           # direct_prompt: |
