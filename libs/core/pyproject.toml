@@ -13,4 +13,15 @@ name = "legesher-core"
 version = "0.0.1"
 description = "Core library for Legesher Monorepo"
 readme = "README.md"
+keywords = ["translation", "i18n", "programming", "multilingual", "code-translation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Internationalization",
+    "Topic :: Software Development :: Localization",
+    "Operating System :: OS Independent",
+]
 

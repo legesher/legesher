@@ -6,13 +6,25 @@ build-backend = "pdm.backend"
 authors = [
     {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
 ]
-license = {text = "MIT OR LicenseRef-Proprietary"}
+license = {text = "MIT OR LicenseRef-Commercial"}
 requires-python = "<4.0,>=3.13"
 dependencies = []
 name = "legesher"
 version = "0.0.1"
 description = "main build for Legesher Monorepo"
 readme = "README.md"
+keywords = ["translation", "programming", "multilingual", "i18n", "cli", "developer-tools"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: Other/Proprietary License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Internationalization",
+    "Topic :: Software Development :: Localization",
+    "Operating System :: OS Independent",
+]
 
 [tool.uv.sources]
 legesher-core = { path = "../core", editable = true }
