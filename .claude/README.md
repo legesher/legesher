@@ -29,7 +29,7 @@ This configuration is built on **Anthropic's best practices** for Claude-assiste
 
 ## Directory Structure
 
-```
+```text
 .claude/
 ├── README.md                    # This file
 ├── settings.json                # Project-wide hook configurations
@@ -42,6 +42,8 @@ This configuration is built on **Anthropic's best practices** for Claude-assiste
 │   ├── tdd.md                   # Test-driven development workflow
 │   ├── review.md                # Code review checklist and feedback
 │   ├── commit.md                # Create well-structured commits
+│   ├── linear-commit.md         # Linear-integrated commits (NEW)
+│   ├── changelog.md             # Update CHANGELOG.md (NEW)
 │   ├── pr.md                    # Create comprehensive pull requests
 │   ├── teach.md                 # Mentorship mode (expert → apprentice)
 │   └── context.md               # Provide comprehensive context docs
@@ -50,10 +52,12 @@ This configuration is built on **Anthropic's best practices** for Claude-assiste
 │   ├── test-engineer.md         # Comprehensive test writing
 │   ├── doc-writer.md            # Documentation specialist
 │   └── security-reviewer.md     # Security vulnerability analysis
+├── org-templates/               # Organization-wide templates (NEW)
+│   ├── README.md                # Template usage guide
+│   └── settings.json.template   # Standard hooks configuration
 ├── scratchpads/                 # Implementation plans and notes
 │   └── *.md                     # Issue-specific planning documents
 └── todo.md                      # Task tracking
-
 ```
 
 ## Commands
@@ -168,6 +172,34 @@ Commands are invoked with `/command-name` in Claude Code.
 **Format**: `<type>(<scope>): <subject>`
 
 **Types**: feat, fix, refactor, test, docs, style, perf, chore
+
+#### `/linear-commit {issue-id}`
+
+**Create git commit with Linear integration** - automatically links commit to Linear issue and updates issue status.
+
+**What it does**:
+- Fetches Linear issue details via MCP
+- Generates commit message with Linear reference
+- Creates commit with proper formatting
+- Adds commit comment to Linear issue
+- Suggests Linear issue state updates
+
+**When to use**: When working on Linear issues (auto-detects from branch name)
+
+**Branch naming**: `feature/leg-123-brief-description` enables auto-detection
+
+#### `/changelog {version}`
+
+**Update CHANGELOG.md** following Keep a Changelog format.
+
+**What it does**:
+- Analyzes commits since last release
+- Categorizes by type (Added, Changed, Fixed, etc.)
+- Generates user-focused descriptions
+- Includes PR/issue references
+- Suggests version bumps
+
+**When to use**: Before releases, or continuously as features are completed
 
 ### Documentation Commands
 
