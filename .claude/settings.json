@@ -1,0 +1,44 @@
+{
+  "$schema": "https://claude.ai/schemas/settings.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "description": "Auto-format Python files after editing",
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path' | { read file_path; if echo \"$file_path\" | grep -q '\\.py$'; then uv run black \"$file_path\" 2>/dev/null && uv run ruff check --fix \"$file_path\" 2>/dev/null; fi; }"
+          }
+        ]
+      },
+      {
+        "description": "Auto-format Markdown files after editing",
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path' | { read file_path; if echo \"$file_path\" | grep -q '\\.md$'; then npx prettier --write \"$file_path\" 2>/dev/null || true; fi; }"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "description": "Log all bash commands for debugging",
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command' | { read cmd; echo \"[$(date '+%Y-%m-%d %H:%M:%S')] $cmd\" >> ~/.claude/bash_history.log; }"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "ask": [],
+    "allow": [],
+    "deny": []
+  }
+}
