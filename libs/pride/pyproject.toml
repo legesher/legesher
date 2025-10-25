@@ -13,6 +13,17 @@ name = "legesher-pride"
 version = "0.0.1"
 description = "community package for Legesher Monorepo"
 readme = "README.md"
+keywords = ["community", "portfolio", "showcase", "developer-community"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: Other/Proprietary License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development",
+    "Operating System :: OS Independent",
+    "Private :: Do Not Upload",
+]
 
 [tool.uv.sources]
 legesher-core = { path = "../core", editable = true }
