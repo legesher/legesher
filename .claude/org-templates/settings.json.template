@@ -1,0 +1,84 @@
+{
+  "$schema": "https://claude.ai/schemas/settings.json",
+  "// INSTRUCTIONS": "Copy this file to .claude/settings.json in your project",
+  "// VERSION": "1.0.0 - Legesher Organization Standards",
+
+  "hooks": {
+    "PostToolUse": [
+      {
+        "description": "Auto-format Python files after editing (Black + Ruff)",
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Format Python files to maintain consistent code style",
+            "command": "jq -r '.tool_input.file_path' | { read file_path; if echo \"$file_path\" | grep -q '\\.py$'; then uv run black \"$file_path\" 2>/dev/null && uv run ruff check --fix \"$file_path\" 2>/dev/null || true; fi; }"
+          }
+        ]
+      },
+      {
+        "description": "Auto-format Markdown files after editing (Prettier)",
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Format Markdown for consistent documentation",
+            "command": "jq -r '.tool_input.file_path' | { read file_path; if echo \"$file_path\" | grep -q '\\.md$'; then npx prettier --write \"$file_path\" 2>/dev/null || true; fi; }"
+          }
+        ]
+      },
+      {
+        "description": "Reminder to update CHANGELOG for user-facing changes",
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Remind to update CHANGELOG.md for library changes",
+            "command": "jq -r '.tool_input.file_path' | { read file_path; if echo \"$file_path\" | grep -qE 'libs/[^/]+/legesher_[^/]+/.*\\.py$'; then echo '💡 Reminder: Update CHANGELOG.md if this is a user-facing change' >&2; fi; }"
+          }
+        ]
+      },
+      {
+        "description": "Validate YAML syntax after editing language packs",
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Ensure language pack YAML is valid",
+            "command": "jq -r '.tool_input.file_path' | { read file_path; if echo \"$file_path\" | grep -qE 'languages/.*\\.ya?ml$'; then python -c \"import yaml; yaml.safe_load(open('$file_path'))\" 2>&1 && echo '✅ YAML valid' || echo '❌ YAML invalid!' >&2; fi; }"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "description": "Log all bash commands for debugging",
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Keep audit trail of commands for debugging",
+            "command": "jq -r '.tool_input.command' | { read cmd; mkdir -p ~/.claude/logs; echo \"[$(date '+%Y-%m-%d %H:%M:%S')] $cmd\" >> ~/.claude/logs/bash_history.log; }"
+          }
+        ]
+      },
+      {
+        "description": "Warn when modifying critical files",
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Alert when changing important configuration files",
+            "command": "jq -r '.tool_input.file_path' | { read file_path; if echo \"$file_path\" | grep -qE '(CLAUDE\\.md|pyproject\\.toml|uv\\.lock)$'; then echo '⚠️  Modifying critical file: '\"$file_path\" >&2; fi; }"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "// COMMENT": "Customize these based on your security requirements",
+    "ask": [],
+    "allow": [],
+    "deny": []
+  }
+}
