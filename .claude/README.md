@@ -16,6 +16,7 @@ This directory contains Claude Code configuration, commands, agents, and workflo
 ## Overview
 
 This configuration is built on **Anthropic's best practices** for Claude-assisted development, specifically designed for:
+
 - **Solo founders** managing complex projects
 - **Open source contributors** at various skill levels
 - **Mentorship-focused development** (learning as you build)
@@ -71,6 +72,7 @@ Commands are invoked with `/command-name` in Claude Code.
 **Complete issue workflow** following Anthropic's Explore → Plan → Code → Commit pattern.
 
 **Phases**:
+
 1. **Explore**: Understand problem, search prior art, map codebase (read-only)
 2. **Plan**: Think deeply, create implementation plan, document in scratchpad
 3. **Code**: Test-driven development, small commits, handle edge cases
@@ -80,6 +82,7 @@ Commands are invoked with `/command-name` in Claude Code.
 **When to use**: Starting work on any GitHub issue
 
 **Features**:
+
 - Prevents jumping straight to coding
 - Emphasizes planning and exploration
 - Includes tips for solo founders and open source contributors
@@ -92,12 +95,14 @@ Commands are invoked with `/command-name` in Claude Code.
 **Deep codebase exploration** without making changes.
 
 **What it does**:
+
 - Searches files and code patterns
 - Maps dependencies and architecture
 - Identifies conventions and standards
 - Documents current state
 
 **When to use**:
+
 - Understanding unfamiliar code
 - Planning major refactors
 - Onboarding to new area
@@ -109,12 +114,14 @@ Commands are invoked with `/command-name` in Claude Code.
 **Create detailed implementation plan** with deep thinking.
 
 **What it does**:
+
 - Uses "think harder" for deeper reasoning
 - Considers multiple approaches with trade-offs
 - Breaks work into atomic tasks
 - Documents in scratchpad
 
 **When to use**:
+
 - Before implementing features
 - Complex refactoring
 - Architectural decisions
@@ -126,12 +133,14 @@ Commands are invoked with `/command-name` in Claude Code.
 **Test-driven development workflow**.
 
 **Phases**:
+
 1. Write tests FIRST (describe expected behavior)
 2. Run tests, confirm they FAIL
 3. Implement minimal code to pass
 4. Refactor with safety net of tests
 
 **When to use**:
+
 - New features with clear input/output
 - Bug fixes (test reproduces bug first)
 - Complex business logic
@@ -145,6 +154,7 @@ Commands are invoked with `/command-name` in Claude Code.
 **Comprehensive code review** following security and quality best practices.
 
 **Checks**:
+
 - Code quality (readability, structure, types)
 - Security (input validation, injection prevention)
 - Testing (coverage, quality)
@@ -153,6 +163,7 @@ Commands are invoked with `/command-name` in Claude Code.
 - Dependencies
 
 **When to use**:
+
 - Before merging PRs
 - Self-review before requesting review
 - Learning code quality standards
@@ -164,6 +175,7 @@ Commands are invoked with `/command-name` in Claude Code.
 **Create well-structured git commits** following Conventional Commits.
 
 **What it does**:
+
 - Guides commit message format
 - Reviews staged changes
 - Ensures atomic commits
@@ -178,6 +190,7 @@ Commands are invoked with `/command-name` in Claude Code.
 **Create git commit with Linear integration** - automatically links commit to Linear issue and updates issue status.
 
 **What it does**:
+
 - Fetches Linear issue details via MCP
 - Generates commit message with Linear reference
 - Creates commit with proper formatting
@@ -193,6 +206,7 @@ Commands are invoked with `/command-name` in Claude Code.
 **Update CHANGELOG.md** following Keep a Changelog format.
 
 **What it does**:
+
 - Analyzes commits since last release
 - Categorizes by type (Added, Changed, Fixed, etc.)
 - Generates user-focused descriptions
@@ -208,6 +222,7 @@ Commands are invoked with `/command-name` in Claude Code.
 **Create comprehensive pull request** that's easy to review.
 
 **Includes**:
+
 - Clear summary and motivation
 - Test plan and screenshots
 - Security considerations
@@ -220,6 +235,7 @@ Commands are invoked with `/command-name` in Claude Code.
 **Mentorship mode**: Explain as expert to entry-level developer.
 
 **Teaching approach**:
+
 - Explains WHY, not just WHAT
 - Shares thought process and trade-offs
 - Checks for understanding
@@ -227,6 +243,7 @@ Commands are invoked with `/command-name` in Claude Code.
 - Builds mental models
 
 **When to use**:
+
 - Learning new concepts
 - Understanding architectural decisions
 - Preparing to hand off code
@@ -239,6 +256,7 @@ Commands are invoked with `/command-name` in Claude Code.
 **Provide comprehensive context** for contributors or future you.
 
 **What it includes**:
+
 - Problem statement and motivation
 - Architecture and key concepts
 - Design decisions with rationale
@@ -247,6 +265,7 @@ Commands are invoked with `/command-name` in Claude Code.
 - Learning resources
 
 **When to use**:
+
 - Onboarding contributors
 - Documenting architectural decisions
 - Creating project knowledge base
@@ -264,6 +283,7 @@ Agents are specialized subagents that focus on specific tasks. Invoke with the T
 **Tools**: Read, Glob, Grep, Bash (read-only)
 
 **Use for**:
+
 - Understanding unfamiliar code areas
 - Mapping dependencies
 - Finding patterns and conventions
@@ -278,6 +298,7 @@ Agents are specialized subagents that focus on specific tasks. Invoke with the T
 **Tools**: Read, Edit, Write, Bash, Grep, Glob
 
 **Use for**:
+
 - Test-driven development
 - Achieving coverage targets (90%+)
 - Integration tests
@@ -292,6 +313,7 @@ Agents are specialized subagents that focus on specific tasks. Invoke with the T
 **Tools**: Read, Write, Edit, Glob, Grep
 
 **Use for**:
+
 - README files
 - API documentation (docstrings)
 - Tutorials and how-to guides
@@ -306,6 +328,7 @@ Agents are specialized subagents that focus on specific tasks. Invoke with the T
 **Tools**: Read, Grep, Glob, Bash
 
 **Use for**:
+
 - Security reviews before merge
 - Input validation checks
 - Injection attack prevention
@@ -342,6 +365,7 @@ Logs all bash commands with timestamps to `~/.claude/bash_history.log`.
 ### More Examples
 
 See [hooks-examples.md](hooks-examples.md) for comprehensive examples:
+
 - Run tests automatically
 - Prevent production changes
 - Backup files before editing
@@ -461,11 +485,11 @@ This configuration is built on research from:
 
 ### Primary Sources
 
-- **Anthropic Claude Code Best Practices**: https://www.anthropic.com/engineering/claude-code-best-practices
-- **Claude Code Common Workflows**: https://docs.claude.com/en/docs/claude-code/common-workflows
-- **How Anthropic Teams Use Claude Code**: https://www.anthropic.com/news/how-anthropic-teams-use-claude-code
-- **Claude Code Hooks Guide**: https://docs.claude.com/en/docs/claude-code/hooks-guide
-- **Claude Code Subagents**: https://docs.claude.com/en/docs/claude-code/sub-agents
+- **Anthropic Claude Code Best Practices**: <https://www.anthropic.com/engineering/claude-code-best-practices>
+- **Claude Code Common Workflows**: <https://docs.claude.com/en/docs/claude-code/common-workflows>
+- **How Anthropic Teams Use Claude Code**: <https://www.anthropic.com/news/how-anthropic-teams-use-claude-code>
+- **Claude Code Hooks Guide**: <https://docs.claude.com/en/docs/claude-code/hooks-guide>
+- **Claude Code Subagents**: <https://docs.claude.com/en/docs/claude-code/sub-agents>
 
 ### Key Patterns
 
@@ -477,10 +501,10 @@ This configuration is built on research from:
 
 ### Community Resources
 
-- **awesome-claude-code**: https://github.com/hesreallyhim/awesome-claude-code
-- **awesome-claude-code-subagents**: https://github.com/VoltAgent/awesome-claude-code-subagents
-- **Builder.io's Claude Code Guide**: https://www.builder.io/blog/claude-code
-- **eesel AI Best Practices**: https://www.eesel.ai/blog/claude-code-best-practices
+- **awesome-claude-code**: <https://github.com/hesreallyhim/awesome-claude-code>
+- **awesome-claude-code-subagents**: <https://github.com/VoltAgent/awesome-claude-code-subagents>
+- **Builder.io's Claude Code Guide**: <https://www.builder.io/blog/claude-code>
+- **eesel AI Best Practices**: <https://www.eesel.ai/blog/claude-code-best-practices>
 
 ## Customization
 
@@ -492,6 +516,7 @@ This configuration is built on research from:
 4. Include source references in HTML comments
 
 Example:
+
 ```markdown
 <!--
 SOURCES:
@@ -515,6 +540,7 @@ Step-by-step instructions for Claude...
 4. Provide process/checklist
 
 Example:
+
 ```markdown
 ---
 name: your-agent
@@ -594,9 +620,9 @@ See [hooks-examples.md](hooks-examples.md) for patterns.
 
 ## Support
 
-- **Claude Code Docs**: https://docs.claude.com/claude-code
-- **Legesher Issues**: https://github.com/legesher/legesher/issues
-- **Legesher Discussions**: https://github.com/legesher/legesher/discussions
+- **Claude Code Docs**: <https://docs.claude.com/claude-code>
+- **Legesher Issues**: <https://github.com/legesher/legesher/issues>
+- **Legesher Discussions**: <https://github.com/legesher/legesher/discussions>
 
 ## License
 

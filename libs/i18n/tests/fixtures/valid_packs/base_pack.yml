@@ -1,6 +1,6 @@
 language: test
 target: python
-version: "3.10"
+version: '3.10'
 
 keywords:
   def: test_def
@@ -12,6 +12,6 @@ builtins:
   len: test_len
 
 metadata:
-  python_version_min: "3.10"
-  last_updated: "2025-10-23"
-  author: "Test Author"
+  python_version_min: '3.10'
+  last_updated: '2025-10-23'
+  author: Test Author

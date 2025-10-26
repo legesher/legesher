@@ -30,14 +30,17 @@ Closes #
 ## License and Contribution Agreement
 
 ### For Open Source Packages (core, i18n, vs-code)
+
 - [ ] I understand my contribution will be licensed under the MIT License
 - [ ] I have the right to submit this code under the MIT License
 
 ### For Dual-Licensed Package (legesher)
+
 - [ ] I understand my contribution may be used in both free and commercial versions
 - [ ] I agree to the dual-license terms described in CONTRIBUTING.md
 
 ### Not Applicable
+
 - [ ] This PR only affects documentation or non-code files
 
 ## Testing
@@ -48,17 +51,20 @@ Closes #
 - [ ] I have tested this change on my local machine
 
 ### Test Environment
+
 - OS: <!-- e.g., macOS 14, Ubuntu 22.04, Windows 11 -->
 - Python version: <!-- e.g., 3.13.0 -->
 - Package version: <!-- e.g., 0.0.1 -->
 
 ## Documentation
+
 - [ ] I have updated the documentation accordingly
 - [ ] I have updated the CHANGELOG (if applicable)
 - [ ] I have added docstrings to new functions/classes
 - [ ] I have updated package README if needed
 
 ## Code Quality
+
 - [ ] My code follows the style guidelines of this project
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
@@ -66,6 +72,7 @@ Closes #
 - [ ] I have run `uv run pytest` and all tests pass
 
 ## Translation/Language Support (if applicable)
+
 - [ ] I have verified translations with native speakers
 - [ ] I have added language files following the project structure
 - [ ] I have added tests for new language support
@@ -82,6 +89,7 @@ None / N/A
 <!-- Add screenshots to help explain your changes -->
 
 ## Checklist
+
 - [ ] I have read the [CONTRIBUTING.md](../CONTRIBUTING.md) guidelines
 - [ ] I agree to follow the project's Code of Conduct
 - [ ] This PR is being submitted to the correct repository and branch
@@ -90,6 +98,7 @@ None / N/A
 ---
 
 **For Maintainers:**
+
 - [ ] Code review completed
 - [ ] All checks passing
 - [ ] Documentation reviewed

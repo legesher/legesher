@@ -3,13 +3,8 @@
 import pytest
 from pathlib import Path
 
-from legesher_i18n.pack_loader import LanguagePack, LanguagePackLoader
-from legesher_i18n.exceptions import (
-    PackNotFoundError,
-    CircularInheritanceError,
-    MaxInheritanceDepthError,
-    PathTraversalError,
-)
+from legesher_i18n.pack_loader import LanguagePackLoader
+from legesher_i18n.exceptions import PackNotFoundError
 
 
 # Real language packs directory
@@ -68,7 +63,7 @@ class TestPackInheritance:
         loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
 
         # Load 3.10 pack (base)
-        pack_310 = loader.load("es", "python", "3.10")
+        _ = loader.load("es", "python", "3.10")
 
         # Load 3.11 pack (inherits from 3.10)
         pack_311 = loader.load("es", "python", "3.11")
@@ -109,16 +104,9 @@ class TestPackInheritance:
 
     def test_fixture_inheritance(self):
         """Test inheritance with test fixtures."""
-        fixtures_pack_dir = FIXTURES_DIR / "valid_packs"
-        loader = LanguagePackLoader(pack_root=fixtures_pack_dir)
-
-        # Load child pack that extends base
-        child_pack_path = fixtures_pack_dir / "child_pack.yml"
-        # Manually set pack_root and load by constructing path
-        # Since load() expects language/target/version structure,
-        # we need to test _resolve_inheritance directly or restructure
-
+        # TODO: Implement fixture-based inheritance tests
         # For now, test with real packs which have proper inheritance
+        pass
 
 
 class TestPackCaching:

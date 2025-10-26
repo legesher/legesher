@@ -1,6 +1,5 @@
 """Integration tests for end-to-end workflows."""
 
-import sys
 import pytest
 from pathlib import Path
 
@@ -137,7 +136,7 @@ class TestPerformance:
         loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
 
         start = time.time()
-        pack = loader.load("es", "python", "3.13")
+        _ = loader.load("es", "python", "3.13")
         elapsed = time.time() - start
 
         # Should load in under 100ms (without inheritance resolution)

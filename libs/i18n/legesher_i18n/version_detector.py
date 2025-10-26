@@ -11,8 +11,13 @@ Priority is given in the order listed above.
 
 import re
 import sys
-import tomllib
 from pathlib import Path
+
+# tomllib is only available in Python 3.11+, use tomli for older versions
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib  # type: ignore[import-not-found, no-redef]
 from typing import Optional
 
 from packaging.specifiers import SpecifierSet
@@ -106,9 +111,7 @@ class PythonVersionDetector:
         except tomllib.TOMLDecodeError as e:
             raise VersionDetectionError(f"Malformed pyproject.toml: {e}")
         except Exception as e:
-            raise VersionDetectionError(
-                f"Failed to read pyproject.toml: {e}"
-            )
+            raise VersionDetectionError(f"Failed to read pyproject.toml: {e}")
 
     def _parse_requires_python(self, requires_python: str) -> Optional[str]:
         """Parse requires-python field to extract version.
@@ -169,9 +172,7 @@ class PythonVersionDetector:
             return self._normalize_version(content)
 
         except Exception as e:
-            raise VersionDetectionError(
-                f"Failed to read .python-version: {e}"
-            )
+            raise VersionDetectionError(f"Failed to read .python-version: {e}")
 
     def detect_from_runtime(self) -> str:
         """Detect Python version from current runtime.
@@ -208,9 +209,7 @@ class PythonVersionDetector:
         # Extract X.Y from version
         match = re.search(r"(\d+)\.(\d+)", version_str)
         if not match:
-            raise VersionDetectionError(
-                f"Invalid version format: {version_str}"
-            )
+            raise VersionDetectionError(f"Invalid version format: {version_str}")
 
         major, minor = match.groups()
         return f"{major}.{minor}"

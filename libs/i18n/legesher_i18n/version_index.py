@@ -175,8 +175,8 @@ class VersionIndex:
         if version not in self.versions:
             raise UnsupportedVersionError(version, self.get_supported_versions())
 
-        chain = []
-        visited = set()
+        chain: list[str] = []
+        visited: set[str] = set()
         current = version
 
         while current:

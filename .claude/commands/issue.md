@@ -71,6 +71,7 @@ Follow the Explore → Plan → Code → Commit workflow:
 **Goal**: Implement in small, verifiable steps with tests.
 
 9. **Create Feature Branch**
+
    ```bash
    git checkout -b feature/{ISSUE-ID}-brief-description
    ```
@@ -106,6 +107,7 @@ Follow the Explore → Plan → Code → Commit workflow:
 **Goal**: Ensure quality, catch regressions, verify edge cases.
 
 14. **Run Test Suite**
+
     ```bash
     # For Python packages in this repo:
     cd libs/{package} && uv run pytest -v
@@ -120,6 +122,7 @@ Follow the Explore → Plan → Code → Commit workflow:
     - If test expectations are wrong, document why you're changing them
 
 16. **Code Quality Checks**
+
     ```bash
     # Run linting (adjust based on project setup):
     uv run ruff check .
@@ -148,6 +151,7 @@ Follow the Explore → Plan → Code → Commit workflow:
 **Goal**: Clean git history, thorough PR, request review.
 
 19. **Review Your Changes**
+
     ```bash
     git diff main...HEAD  # Review full diff
     git log main..HEAD --oneline  # Review commit history
@@ -169,6 +173,7 @@ Follow the Explore → Plan → Code → Commit workflow:
     - [ ] Commit messages are clear and descriptive
 
 22. **Create Pull Request**
+
     ```bash
     # Push branch
     git push -u origin feature/{ISSUE-ID}-brief-description
@@ -184,6 +189,7 @@ Follow the Explore → Plan → Code → Commit workflow:
     - Include: Test plan, screenshots (if UI), performance notes
     - Tag: Relevant reviewers or maintainers
     - Use template:
+
       ```markdown
       ## Summary
       {Brief description of changes}
@@ -222,6 +228,7 @@ Follow the Explore → Plan → Code → Commit workflow:
 # TIPS FOR OPEN SOURCE CONTRIBUTORS
 
 When explaining context to contributors:
+
 - Link to architectural docs (CLAUDE.md, FINAL_SUMMARY.md)
 - Point to similar PRs as examples
 - Explain "why" decisions were made, not just "what"
@@ -230,6 +237,7 @@ When explaining context to contributors:
 - Use Linear/GitHub issues with detailed acceptance criteria
 
 When receiving contributions:
+
 - Review with empathy—contributors are volunteering time
 - Point to specific docs/examples instead of just saying "this is wrong"
 - Ask questions to understand their approach

@@ -50,9 +50,7 @@ class CircularInheritanceError(InheritanceError):
         self.pack_path = pack_path
         self.visited = visited
         chain = " -> ".join(visited)
-        super().__init__(
-            f"Circular inheritance detected: {chain} -> {pack_path}"
-        )
+        super().__init__(f"Circular inheritance detected: {chain} -> {pack_path}")
 
 
 class MaxInheritanceDepthError(InheritanceError):
@@ -71,9 +69,7 @@ class PathTraversalError(LanguagePackError):
 
     def __init__(self, path: str):
         self.path = path
-        super().__init__(
-            f"Path traversal detected (security violation): {path}"
-        )
+        super().__init__(f"Path traversal detected (security violation): {path}")
 
 
 class VersionDetectionError(LanguagePackError):
@@ -90,9 +86,7 @@ class VersionIndexError(LanguagePackError):
     def __init__(self, index_path: str, reason: str):
         self.index_path = index_path
         self.reason = reason
-        super().__init__(
-            f"Version index error ({index_path}): {reason}"
-        )
+        super().__init__(f"Version index error ({index_path}): {reason}")
 
 
 class UnsupportedVersionError(LanguagePackError):

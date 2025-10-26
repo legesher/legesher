@@ -219,22 +219,26 @@ cd libs/i18n && uv run pytest -v --cov
 ```
 
 Edge cases tested:
+
 - Circular inheritance (prevented)
 - Path traversal (sanitized)
 - Missing files (graceful fallback)
 
 ## Performance Impact
+
 - Pack loading: 35ms (with caching), 120ms (first load)
 - Memory: ~2MB per pack cached
 - Acceptable for CLI/IDE use
 
 ## Security Considerations
+
 - All file paths sanitized (prevent `../` escapes)
 - Max inheritance depth (10 levels)
 - YAML schema validation with Pydantic
 - No arbitrary code execution
 
 ## Checklist
+
 - [x] Tests added (95% coverage)
 - [x] Documentation: README, user guide
 - [x] CHANGELOG.md updated
@@ -242,6 +246,7 @@ Edge cases tested:
 - [x] Passes ruff, black, mypy
 
 Closes #123
+
 ```
 
 **Bug Fix PR**:
@@ -265,10 +270,12 @@ cd libs/core && uv run pytest tests/test_ast_transformer.py::test_deep_nesting
 ```
 
 ## Checklist
+
 - [x] Regression test added
 - [x] Existing tests still pass
 
 Fixes #456
+
 ```
 
 ### 8. Request Reviews

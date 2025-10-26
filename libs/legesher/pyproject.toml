@@ -7,7 +7,7 @@ authors = [
     {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
 ]
 license = {text = "MIT OR LicenseRef-Commercial"}
-requires-python = "<4.0,>=3.13"
+requires-python = ">=3.10,<4.0"
 dependencies = []
 name = "legesher"
 version = "0.0.1"
@@ -19,6 +19,9 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: Other/Proprietary License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Code Generators",
     "Topic :: Software Development :: Internationalization",
@@ -29,3 +32,46 @@ classifiers = [
 [tool.uv.sources]
 legesher-core = { path = "../core", editable = true }
 legesher-i18n = { path = "../i18n", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.1.0",
+    "black>=24.0.0",
+    "mypy>=1.8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-v",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow-running tests",
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false  # Start lenient, can tighten later
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+check_untyped_defs = false

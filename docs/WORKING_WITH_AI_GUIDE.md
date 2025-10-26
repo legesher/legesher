@@ -22,6 +22,7 @@
 3. Keep CLAUDE.md open in a side panel for quick reference
 
 **Note on Slash Commands:**
+
 - Location: `.claude/commands/` in repository root (same level as `CLAUDE.md`)
 - Git behavior: **Commit these to git** - they're project-specific, not user-specific
 - Team benefit: Shared commands ensure consistent development practices
@@ -33,6 +34,7 @@
 Create these files in `.claude/commands/` (in repository root) for quick access to common workflows.
 
 **Setup:**
+
 ```bash
 mkdir -p .claude/commands
 # Then create the .md files below
@@ -124,11 +126,13 @@ The code or feature to review is:
 ### 1. Start Conversations with Context
 
 ❌ **Don't:**
+
 ```
 How do I add Spanish support?
 ```
 
 ✅ **Do:**
+
 ```
 I'm adding a Spanish language pack for Python translation. According to CLAUDE.md, v0.1 milestone includes 3 language packs (ES, AR, ZH).
 Following the "Adding a new language pack" workflow in CLAUDE.md,
@@ -167,7 +171,7 @@ Are we on track?
 
 ## CLAUDE.md Quick Reference
 
-### Most Useful Sections:
+### Most Useful Sections
 
 1. **Project Status** - Current phase and maturity
 2. **Package Interdependencies** - Tier system and dependencies
@@ -176,7 +180,7 @@ Are we on track?
 5. **Common Workflows** - Step-by-step procedures
 6. **Quick Reference > Key Documentation** - Links to all planning docs
 
-### Important Constraints (Always Consider):
+### Important Constraints (Always Consider)
 
 1. **Security**: Code translation tools handle source code - critical security practices required
 2. **Privacy**: Local-first approach, cloud optional, never required
@@ -193,11 +197,13 @@ Are we on track?
 ### Example 1: Feature Implementation
 
 **User:**
+
 ```
 I'm ready to start implementing. Let's work on the Token-Based Transformer in libs/core/.
 ```
 
 **AI:**
+
 ```
 Great! The Token-Based Transformer is in libs/core/ (Tier 1 - Foundation). According to CLAUDE.md's Key Architectural Decisions, we're using "Token-based for MVP, Tree-sitter for production".
 
@@ -215,11 +221,13 @@ Should we break this down into subtasks?
 ### Example 2: Architecture Discussion
 
 **User:**
+
 ```
 /architecture We're planning token-based for MVP, but when should we switch to Tree-sitter?
 ```
 
 **AI:**
+
 ```
 According to your Key Architectural Decisions: "AST Transformation: Token-based for MVP, Tree-sitter for production"
 
@@ -254,6 +262,7 @@ Reasons to wait:
 ## Additional Resources
 
 **Key Documentation Files:**
+
 - [CLAUDE.md](../CLAUDE.md) - AI assistant guidance (loaded automatically)
 - [Getting Started](./src/content/docs/index.mdx) - Project overview
 - [Package READMEs](../libs/) - Individual package documentation

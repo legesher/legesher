@@ -53,6 +53,7 @@ Hooks are configured in JSON files:
 Automatically format files after Claude edits them.
 
 **Python (Black + Ruff)**:
+
 ```json
 {
   "hooks": {
@@ -73,6 +74,7 @@ Automatically format files after Claude edits them.
 ```
 
 **JavaScript/TypeScript (Prettier + ESLint)**:
+
 ```json
 {
   "hooks": {
@@ -93,6 +95,7 @@ Automatically format files after Claude edits them.
 ```
 
 **Markdown (Prettier)**:
+
 ```json
 {
   "hooks": {
@@ -159,6 +162,7 @@ Log all bash commands before they execute, useful for debugging and auditing.
 ```
 
 View the log:
+
 ```bash
 tail -f ~/.claude/bash_history.log
 ```
@@ -371,6 +375,7 @@ jq -r '.tool_input.file_path' | {
 Available fields vary by tool:
 
 **Edit/Write tools**:
+
 ```bash
 # Get file path
 jq -r '.tool_input.file_path'
@@ -383,6 +388,7 @@ jq -r '.tool_input.new_string'
 ```
 
 **Bash tool**:
+
 ```bash
 # Get command
 jq -r '.tool_input.command'
@@ -405,6 +411,7 @@ Hooks can return JSON to control Claude Code behavior:
 ```
 
 Example:
+
 ```bash
 if [ some_condition ]; then
   echo '{"decision": "block", "reason": "Tests must pass before committing"}'
@@ -417,12 +424,14 @@ fi
 ### 1. Make Hooks Fast
 
 Hooks run synchronously, so keep them fast:
+
 - ❌ `npm install` (slow)
 - ✅ `npx prettier --write file` (fast)
 
 ### 2. Handle Failures Gracefully
 
 Use `|| true` to prevent hooks from blocking Claude:
+
 ```bash
 npx prettier --write "$file_path" || true
 ```
@@ -430,11 +439,13 @@ npx prettier --write "$file_path" || true
 ### 3. Silent Unless Important
 
 Redirect output to /dev/null for routine operations:
+
 ```bash
 ruff check --fix "$file_path" 2>/dev/null || true
 ```
 
 Show output only for important events:
+
 ```bash
 echo "Warning: Modifying security-sensitive file" >&2
 ```
@@ -442,6 +453,7 @@ echo "Warning: Modifying security-sensitive file" >&2
 ### 4. Test Hooks Manually
 
 Test hook commands before adding to settings:
+
 ```bash
 # Simulate hook input
 echo '{"tool_input": {"file_path": "test.py"}}' | jq -r '.tool_input.file_path'
@@ -459,6 +471,7 @@ echo '{"tool_input": {"file_path": "test.py"}}' | jq -r '.tool_input.file_path'
 ### 6. Document Hook Purpose
 
 Add comments explaining why the hook exists:
+
 ```json
 {
   "// Purpose": "Automatically format code to maintain consistent style across team",
@@ -472,6 +485,7 @@ Add comments explaining why the hook exists:
 ### Enable Hook Logging
 
 Check Claude Code logs to see hook execution:
+
 ```bash
 # macOS
 tail -f ~/Library/Logs/Claude/main.log
@@ -483,6 +497,7 @@ tail -f ~/.config/Claude/logs/main.log
 ### Test Hook Commands
 
 Run hook commands manually with sample input:
+
 ```bash
 # Test a PostToolUse hook for Edit
 echo '{"tool_input": {"file_path": "/path/to/test.py", "old_string": "old", "new_string": "new"}}' | jq -r '.tool_input.file_path' | {
@@ -494,16 +509,19 @@ echo '{"tool_input": {"file_path": "/path/to/test.py", "old_string": "old", "new
 ### Common Issues
 
 **Hook doesn't run**:
+
 - Check matcher (tool name must match exactly)
 - Verify JSON syntax (use JSONLint)
 - Check file paths in script
 
 **Hook blocks Claude**:
+
 - Command is taking too long
 - Command is failing without `|| true`
 - Output is too verbose (redirect to /dev/null)
 
 **Hook runs for wrong tools**:
+
 - Matcher too broad (`matcher: ".*"`)
 - Need more specific tool names
 

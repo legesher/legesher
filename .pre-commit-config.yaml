@@ -1,0 +1,84 @@
+# Pre-commit hooks for Legesher
+# See https://pre-commit.com for more information
+# Run `pre-commit install` to set up the git hook scripts
+
+repos:
+  # General file checks
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+  - id: trailing-whitespace
+    args: [--markdown-linebreak-ext=md]
+  - id: end-of-file-fixer
+  - id: check-yaml
+    args: [--unsafe]      # Allow custom YAML tags
+  - id: check-toml
+  - id: check-json
+  - id: check-added-large-files
+    args: [--maxkb=1000]
+  - id: check-merge-conflict
+  - id: check-case-conflict
+  - id: mixed-line-ending
+    args: [--fix=lf]
+  - id: detect-private-key
+
+  # Python code formatting with Black
+- repo: https://github.com/psf/black
+  rev: 24.10.0
+  hooks:
+  - id: black
+    args: [--line-length=88]
+    files: ^libs/.*\.py$
+
+  # Python linting and auto-fixing with Ruff
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.8.4
+  hooks:
+      # Run the linter
+  - id: ruff
+    args: [--fix, --exit-non-zero-on-fix]
+    files: ^libs/.*\.py$
+      # Run the formatter (faster alternative to black, but we use both)
+  - id: ruff-format
+    files: ^libs/.*\.py$
+
+  # Type checking with mypy (optional - can be slow)
+  # Uncomment to enable strict type checking on every commit
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.13.0
+  #   hooks:
+  #     - id: mypy
+  #       files: ^libs/(i18n|legesher)/.*\.py$
+  #       additional_dependencies:
+  #         - pydantic>=2.0
+  #         - types-PyYAML>=6.0
+  #         - packaging>=23.0
+  #       args: [--config-file=libs/i18n/pyproject.toml]
+
+  # Markdown linting
+- repo: https://github.com/igorshubovych/markdownlint-cli
+  rev: v0.43.0
+  hooks:
+  - id: markdownlint
+    args: [--fix]
+
+  # YAML formatting
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.14.0
+  hooks:
+  - id: pretty-format-yaml
+    args: [--autofix, --indent=2]
+    exclude: ^\.github/workflows/.*\.yml$      # Don't auto-format GitHub Actions
+
+# Configuration for pre-commit.ci (if using)
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

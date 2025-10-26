@@ -6,7 +6,6 @@ from pathlib import Path
 from legesher_i18n.schema_validator import (
     LanguagePackSchema,
     SchemaValidator,
-    LanguagePackMetadata,
 )
 from legesher_i18n.exceptions import PackValidationError
 
@@ -228,12 +227,9 @@ class TestInheritancePathValidation:
 
     def test_validate_safe_parent_path(self):
         """Test validation of safe parent path."""
-        current_path = Path("/project/languages/python/3.11/es.yml")
-        extends = "../3.10/es.yml"
-
-        # This should be allowed (one level up for version inheritance)
-        # SchemaValidator.validate_inheritance_path would check this
-        # Implementation depends on actual directory structure
+        # TODO: Implement path validation tests
+        # This should test that relative paths like "../3.10/es.yml" are safe
+        pass
 
     def test_validate_unsafe_parent_path(self):
         """Test rejection of unsafe parent path."""

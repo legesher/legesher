@@ -1,7 +1,10 @@
 # legesher
+
 monorepo for legesher
 
 [![All Contributors](https://img.shields.io/github/all-contributors/legesher/legesher?color=ee8449&style=flat-square)](#contributors)
+[![Tests](https://github.com/legesher/legesher/workflows/Tests/badge.svg)](https://github.com/legesher/legesher/actions/workflows/test.yml)
+[![Lint](https://github.com/legesher/legesher/workflows/Lint/badge.svg)](https://github.com/legesher/legesher/actions/workflows/lint.yml)
 [![License: Multi](https://img.shields.io/badge/license-Multi-blue.svg)](LICENSE)
 [![Core: MIT](https://img.shields.io/badge/core-MIT-green.svg)](libs/core/LICENSE)
 [![i18n: MIT](https://img.shields.io/badge/i18n-MIT-green.svg)](libs/i18n/LICENSE)
@@ -20,6 +23,7 @@ Legesher is a collection of developer tools and packages that enable developers 
 This repository uses a **multi-license structure** to support both an open protocol and commercial features:
 
 ### 📖 Open Source (MIT License)
+
 - **[legesher-core](libs/core/)** - Core translation engine
 - **[legesher-i18n](libs/i18n/)** - Language data and dictionaries
 - **[legesher-vs-code](libs/vs-code/)** - VS Code extension
@@ -27,11 +31,13 @@ This repository uses a **multi-license structure** to support both an open proto
 These packages are freely available under the MIT License. Community contributions welcome!
 
 ### 🎯 Dual Licensed (MIT + Commercial)
+
 - **[legesher](libs/legesher/)** - Main CLI and library
   - **Free Tier**: MIT License for local translation
   - **Premium Tier**: Commercial license for cloud sync, team features, and advanced tooling
 
 ### 🔒 Proprietary (Source Available)
+
 - **[legesher-pride](libs/pride/)** - Community showcase and premium features
   - Source code visible for transparency and security review
   - Commercial license required for use
@@ -56,13 +62,13 @@ See [CLAUDE.md](CLAUDE.md) for detailed development instructions.
 ## Contributing
 
 We welcome contributions to our open source packages! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
 - Which packages accept contributions
 - Development setup
 - Code of Conduct
 - Contributor License Agreement
 
 **Note**: Only open source packages (`core`, `i18n`, `vs-code`) accept external contributions at this time.
-
 
 ## Contributors
 
@@ -74,4 +80,3 @@ We welcome contributions to our open source packages! Please see [CONTRIBUTING.m
 <!-- prettier-ignore-end -->
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
-
