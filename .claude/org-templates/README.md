@@ -5,6 +5,7 @@ This directory contains templates and standards for Claude Code configuration th
 ## Purpose
 
 These templates help maintain consistency across:
+
 - Multiple repositories in the Legesher ecosystem
 - Contributor setups
 - Personal projects that follow Legesher conventions
@@ -13,12 +14,15 @@ These templates help maintain consistency across:
 ## Contents
 
 ### `settings.json.template`
+
 Standard hooks and permissions configuration for Legesher projects.
 
 ### `CLAUDE.md.template`
+
 Template for project-specific Claude Code instructions.
 
 ### `commands/`
+
 Standard slash commands that work across Legesher projects.
 
 ## How to Use
@@ -51,12 +55,15 @@ cp .claude/org-templates/commands/* your-project/.claude/commands/
 ## Customization
 
 ### Project-Level
+
 Edit `.claude/settings.json` and `.claude/CLAUDE.md` in each project for project-specific behavior.
 
 ### Personal-Level
+
 Create `.claude/settings.local.json` (gitignored) for personal preferences that override project settings.
 
 ### User-Level
+
 Edit `~/.claude/settings.json` for global settings across all projects.
 
 ## Standards

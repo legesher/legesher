@@ -57,31 +57,33 @@ class LanguagePackSchema(BaseModel):
     @classmethod
     def validate_extends_path(cls, v: Optional[str]) -> Optional[str]:
         """Validate extends path for security (prevent path traversal).
-        
+
         Allows one level up for version inheritance (e.g., ../3.10/es.yml)
         but prevents deeper traversal or absolute paths.
         """
         if v is None:
             return v
-        
+
         # Reject absolute paths
         if v.startswith("/"):
             raise ValueError(f"Absolute paths not allowed in extends: {v}")
-        
+
         # Allow one level up for version inheritance (../X.Y/file.yml)
         if ".." in v:
             # Count occurrences of ../
             if v.count("../") > 1:
-                raise ValueError(f"Multiple parent directory traversal not allowed: {v}")
-            
+                raise ValueError(
+                    f"Multiple parent directory traversal not allowed: {v}"
+                )
+
             # Must start with exactly one ../
             if not v.startswith("../"):
                 raise ValueError(f"Invalid path traversal pattern: {v}")
-        
+
         # Extends should be a relative path to YAML
         if not (v.endswith(".yml") or v.endswith(".yaml")):
             raise ValueError(f"Extends must point to a YAML file: {v}")
-        
+
         return v
 
     @field_validator("keywords", "builtins")
@@ -207,7 +209,9 @@ class SchemaValidator:
             # Security check: Ensure resolved path doesn't escape pack directory
             # Get the root language packs directory (should be libs/i18n/languages/)
             pack_root = current_pack_path
-            while pack_root.parent.name != "languages" and pack_root.parent != pack_root:
+            while (
+                pack_root.parent.name != "languages" and pack_root.parent != pack_root
+            ):
                 pack_root = pack_root.parent
 
             if pack_root.parent.name == "languages":
@@ -219,14 +223,15 @@ class SchemaValidator:
                 except ValueError:
                     raise PackValidationError(
                         str(current_pack_path),
-                        [f"Path traversal detected: {extends_path} escapes pack directory"]
+                        [
+                            f"Path traversal detected: {extends_path} escapes pack directory"
+                        ],
                     )
 
             # Check if file exists
             if not resolved.exists():
                 raise PackValidationError(
-                    str(current_pack_path),
-                    [f"Parent pack not found: {extends_path}"]
+                    str(current_pack_path), [f"Parent pack not found: {extends_path}"]
                 )
 
             return resolved
@@ -235,8 +240,7 @@ class SchemaValidator:
             if isinstance(e, PackValidationError):
                 raise
             raise PackValidationError(
-                str(current_pack_path),
-                [f"Invalid extends path: {extends_path} - {e}"]
+                str(current_pack_path), [f"Invalid extends path: {extends_path} - {e}"]
             )
 
     @staticmethod

@@ -3,18 +3,18 @@
 
 language: ar
 target: python
-version: "3.13"
-extends: "../3.12/ar.yml"
+version: '3.13'
+extends: ../3.12/ar.yml
 
 # No new keywords in Python 3.13
 keywords: {}
 
 metadata:
-  python_version_min: "3.13"
-  python_version_max: "3.13"
+  python_version_min: '3.13'
+  python_version_max: '3.13'
   compatibility_tested:
-    - "3.13"
-  last_updated: "2025-10-23"
-  community_reviewed: False
-  author: "Legesher Team"
-  license: "MIT"
+  - '3.13'
+  last_updated: '2025-10-23'
+  community_reviewed: false
+  author: Legesher Team
+  license: MIT

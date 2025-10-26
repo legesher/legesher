@@ -2,7 +2,7 @@
 
 **Issue**: [CORE-346](https://linear.app/legesher/issue/CORE-346)
 **Status**: 🧼 Ready
-**Assignee**: madi@legesher.com
+**Assignee**: <madi@legesher.com>
 **Created**: 2025-10-23
 
 ## Overview
@@ -12,12 +12,14 @@ Implement a version-aware language pack system that automatically adapts to diff
 ## Context & Prior Art
 
 ### Current State
+
 - Empty `libs/i18n` package with scaffold structure
 - No existing language packs or version detection logic
 - Dependencies: Need to add PyYAML for YAML parsing
 - Python requirement: >=3.13 (per pyproject.toml)
 
 ### Architecture Alignment
+
 - Tier 2 package (depends on `legesher-core`)
 - Part of Phase 1: Core Foundation
 - Milestone: v0.1 (MVP) - Target: 2025-11-04
@@ -25,6 +27,7 @@ Implement a version-aware language pack system that automatically adapts to diff
 ## Implementation Strategy
 
 ### Security Considerations
+
 1. **Input Validation**: Validate all YAML files against strict schemas
 2. **Path Traversal**: Sanitize all file paths, prevent `../` escapes in `extends` fields
 3. **Resource Limits**: Prevent infinite inheritance loops (max depth: 10)
@@ -32,6 +35,7 @@ Implement a version-aware language pack system that automatically adapts to diff
 5. **Error Handling**: Fail safely with clear error messages, no stack traces exposing internals
 
 ### Design Principles
+
 1. **Fail Fast**: Validate early, catch errors at load time
 2. **Explicit > Implicit**: Clear error messages over silent failures
 3. **Immutable Data**: Loaded packs are frozen dataclasses
@@ -79,6 +83,7 @@ libs/i18n/
 ### Phase 1: Core Infrastructure (Priority: High)
 
 #### 1.1 Add Dependencies
+
 ```toml
 # Add to libs/i18n/pyproject.toml
 dependencies = [
@@ -89,7 +94,9 @@ dependencies = [
 ```
 
 #### 1.2 Create Exception Classes
+
 **File**: `libs/i18n/legesher_i18n/exceptions.py`
+
 - `LanguagePackError` (base)
 - `PackNotFoundError`
 - `PackValidationError`
@@ -97,42 +104,51 @@ dependencies = [
 - `VersionDetectionError`
 
 #### 1.3 Implement Version Index Parser
+
 **File**: `libs/i18n/legesher_i18n/version_index.py`
 
 Classes:
+
 - `PythonVersionInfo`: Dataclass for version metadata
 - `VersionIndex`: Load and query version-index.yml
 
 Key Methods:
+
 - `load(index_path: Path) -> VersionIndex`
 - `get_version_info(version: str) -> PythonVersionInfo`
 - `get_supported_versions() -> List[str]`
 - `get_inheritance_chain(version: str) -> List[str]`
 
 Security:
+
 - Validate version strings (semver format)
 - Prevent circular inheritance
 - Max inheritance depth: 10 levels
 
 #### 1.4 Implement Version Detector
+
 **File**: `libs/i18n/legesher_i18n/version_detector.py`
 
 Classes:
+
 - `PythonVersionDetector`
 
 Detection Priority:
+
 1. `pyproject.toml` `requires-python` field
 2. `.python-version` file
 3. Runtime `sys.version_info`
 4. Default to "3.13"
 
 Key Methods:
+
 - `detect(project_path: Path = None) -> str`
 - `detect_from_pyproject(path: Path) -> Optional[str]`
 - `detect_from_file(path: Path) -> Optional[str]`
 - `detect_from_runtime() -> str`
 
 Security:
+
 - Sanitize all file paths
 - Handle missing/malformed files gracefully
 - Parse `requires-python` with packaging.specifiers
@@ -140,18 +156,22 @@ Security:
 ### Phase 2: Language Pack Loading (Priority: High)
 
 #### 2.1 Implement Pack Loader with Inheritance
+
 **File**: `libs/i18n/legesher_i18n/pack_loader.py`
 
 Classes:
+
 - `LanguagePack`: Frozen dataclass for pack data
 - `LanguagePackLoader`: Load packs with inheritance
 
 Key Methods:
+
 - `load(language: str, target: str, version: str) -> LanguagePack`
 - `_resolve_inheritance(pack_path: Path, visited: Set[Path]) -> Dict`
 - `_merge_packs(base: Dict, override: Dict) -> Dict`
 
 Inheritance Logic:
+
 1. Load pack YAML
 2. Check for `extends` field
 3. Recursively load parent pack
@@ -159,24 +179,29 @@ Inheritance Logic:
 5. Cache result
 
 Security:
+
 - Prevent path traversal in `extends`
 - Detect circular inheritance
 - Validate all pack files with schema
 
 #### 2.2 Implement Schema Validator
+
 **File**: `libs/i18n/legesher_i18n/schema_validator.py`
 
 Classes:
+
 - `LanguagePackSchema`: Pydantic model for validation
 - `VersionIndexSchema`: Pydantic model for version index
 - `SchemaValidator`: Validation utilities
 
 Key Methods:
+
 - `validate_pack(pack_data: Dict) -> LanguagePackSchema`
 - `validate_version_index(index_data: Dict) -> VersionIndexSchema`
 - `check_completeness(pack: LanguagePack, version_info: PythonVersionInfo) -> List[str]`
 
 Validation Rules:
+
 - Required fields: language, target, version
 - Optional: extends, metadata
 - Keywords: Dict[str, str]
@@ -186,9 +211,11 @@ Validation Rules:
 ### Phase 3: Data Files (Priority: High)
 
 #### 3.1 Create Version Index
+
 **File**: `libs/i18n/languages/python/version-index.yml`
 
 Content:
+
 ```yaml
 python_versions:
   "3.10":
@@ -221,12 +248,14 @@ auto_update:
 #### 3.2 Create Example Language Packs
 
 **Spanish (es)**:
+
 - `3.10/es.yml`: Base pack with all 3.10 keywords
 - `3.11/es.yml`: Extends 3.10, adds `except*: excepto*`
 - `3.12/es.yml`: Extends 3.11, adds `type: tipo`
 - `3.13/es.yml`: Extends 3.12, no new keywords
 
 **Arabic (ar)**:
+
 - Similar structure, Arabic translations
 - RTL considerations in metadata
 
@@ -235,6 +264,7 @@ auto_update:
 #### 4.1 Unit Tests
 
 **test_version_index.py**:
+
 - Load version index successfully
 - Get version info
 - Build inheritance chain
@@ -242,6 +272,7 @@ auto_update:
 - Handle missing versions
 
 **test_version_detector.py**:
+
 - Detect from pyproject.toml
 - Detect from .python-version
 - Detect from runtime
@@ -249,6 +280,7 @@ auto_update:
 - Handle missing files
 
 **test_pack_loader.py**:
+
 - Load simple pack
 - Load with single inheritance
 - Load with multi-level inheritance
@@ -258,6 +290,7 @@ auto_update:
 - Path traversal protection
 
 **test_schema_validator.py**:
+
 - Validate correct pack
 - Reject invalid pack
 - Check required fields
@@ -267,6 +300,7 @@ auto_update:
 #### 4.2 Integration Tests
 
 **test_integration.py**:
+
 - End-to-end: Auto-detect version + load pack
 - Explicit version override
 - Multiple languages
@@ -276,6 +310,7 @@ auto_update:
 #### 4.3 Test Fixtures
 
 Create `tests/fixtures/`:
+
 - `valid_packs/`: Valid language pack examples
 - `invalid_packs/`: Packs with various errors
 - `version_indexes/`: Test version indexes
@@ -284,9 +319,11 @@ Create `tests/fixtures/`:
 ### Phase 5: Documentation (Priority: Medium)
 
 #### 5.1 Update Package README
+
 **File**: `libs/i18n/README.md`
 
 Sections:
+
 - Overview
 - Installation
 - Quick Start
@@ -296,9 +333,11 @@ Sections:
 - Contributing
 
 #### 5.2 Update Main Documentation
+
 **File**: `docs/src/content/docs/guides/language-packs.md` (new)
 
 Content:
+
 - How language packs work
 - Version-aware system
 - Creating new packs
@@ -306,14 +345,17 @@ Content:
 - Best practices
 
 #### 5.3 API Documentation
+
 Generate from docstrings using Sphinx or mkdocs
 
 ### Phase 6: Integration (Priority: Medium)
 
-#### 6.1 Update Package __init__.py
+#### 6.1 Update Package **init**.py
+
 **File**: `libs/i18n/legesher_i18n/__init__.py`
 
 Export public API:
+
 ```python
 from .pack_loader import LanguagePack, LanguagePackLoader
 from .version_detector import PythonVersionDetector
@@ -328,6 +370,7 @@ __all__ = [
 ```
 
 #### 6.2 Add Convenience Functions
+
 ```python
 def load_language_pack(
     language: str,
@@ -347,21 +390,26 @@ def load_language_pack(
 ## Testing Strategy
 
 ### Test Pyramid
+
 1. **Unit Tests (70%)**: Test individual components in isolation
 2. **Integration Tests (20%)**: Test component interactions
 3. **End-to-End Tests (10%)**: Test complete workflows
 
 ### Test Coverage Target
+
 - Minimum: 90% coverage
 - Critical paths: 100% coverage (security, validation)
 
 ### Performance Benchmarks
+
 - Pack loading: < 50ms (with caching)
 - Version detection: < 10ms
 - Inheritance resolution: < 100ms for 10 levels
 
 ### Compatibility Testing
+
 Test on:
+
 - Python 3.13 (primary)
 - macOS, Linux, Windows
 - Various project structures
@@ -382,12 +430,15 @@ Test on:
 ## Dependencies & Blockers
 
 ### Dependencies
+
 - None (can be implemented independently)
 
 ### Blockers
+
 - None identified
 
 ### Nice-to-Have (Future Work)
+
 - Auto-update mechanism for version-index.yml
 - Pack validation CLI tool
 - Pack completeness report
@@ -436,15 +487,18 @@ Test on:
 ## Risk Assessment
 
 ### High Risk
+
 - **Circular Inheritance**: Mitigated by tracking visited packs
 - **Path Traversal**: Mitigated by path sanitization
 - **Performance**: Mitigated by caching
 
 ### Medium Risk
+
 - **YAML Parsing Errors**: Mitigated by schema validation
 - **Version Detection Failures**: Mitigated by fallback chain
 
 ### Low Risk
+
 - **Missing Language Packs**: Clear error messages
 - **Incomplete Packs**: Validation warnings
 

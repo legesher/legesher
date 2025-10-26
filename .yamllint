@@ -1,0 +1,34 @@
+extends: default
+
+rules:
+  # Disable key ordering - GitHub Actions has its own conventions
+  key-ordering: disable
+
+  # Keep useful rules enabled
+  line-length:
+    max: 120
+    level: warning
+
+  indentation:
+    spaces: 2
+    indent-sequences: true
+
+  # Allow duplicate keys in some cases (e.g., multiple 'on' triggers)
+  key-duplicates: enable
+
+  comments:
+    min-spaces-from-content: 1
+
+  # Don't enforce document start markers
+  document-start: disable
+
+  # Allow empty values
+  empty-values: disable
+
+  # Trailing spaces
+  trailing-spaces: enable
+
+  # Truthy values (yes/no vs true/false)
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false

@@ -37,7 +37,7 @@ Describe your changes in detail
 Why is this change required? What problem does it solve?
 --->
 
-# Checklist:
+# Checklist
 
 <!---
 [ ] implies unchecked
@@ -64,6 +64,6 @@ Include any details about your testing process
   - If you did additional testing, please describe in detail how you tested your changes
 - [ ] I added new tests for core changes, as applicable?
 
-### Screenshots (if appropriate):
+### Screenshots (if appropriate)
 
 <!--- you can also upload a GIF --->

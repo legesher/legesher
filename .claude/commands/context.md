@@ -14,6 +14,7 @@ SOURCES:
 You are creating context documentation that explains not just *what* the code does, but *why* it exists, *how* it fits into the bigger picture, and *what* someone needs to know to work on it successfully.
 
 This is for:
+
 - Open source contributors at various skill levels
 - Future you (6 months from now)
 - Team members joining the project
@@ -38,16 +39,19 @@ Start with a 2-3 sentence summary:
 Explain the problem this solves:
 
 **User Need**:
+
 - What pain point does this address?
 - What would happen without this?
 - Who benefits from this?
 
 **Technical Need**:
+
 - What architectural problem does this solve?
 - What constraints led to this design?
 - What alternatives were considered?
 
 **Example**:
+
 ```markdown
 ## Problem Statement
 
@@ -66,16 +70,19 @@ Explain the problem this solves:
 Explain the solution architecture:
 
 **Components**:
+
 - What are the main parts?
 - How do they interact?
 - What are the boundaries/interfaces?
 
 **Data Flow**:
+
 - What comes in? (inputs)
 - What goes out? (outputs)
 - How does data transform along the way?
 
 **Diagram** (ASCII art is fine):
+
 ```
 User Code (Spanish)
     ↓
@@ -171,9 +178,10 @@ Map out the codebase:
 
 ### Package Structure
 ```
+
 libs/i18n/
 ├── legesher_i18n/
-│   ├── __init__.py              # Public API
+│   ├── **init**.py              # Public API
 │   ├── pack_loader.py           # Load language packs
 │   ├── version_detector.py      # Detect Python version
 │   ├── version_index.py         # Parse version metadata
@@ -187,6 +195,7 @@ libs/i18n/
 └── tests/
     ├── test_pack_loader.py      # Unit tests
     └── fixtures/                # Test data
+
 ```
 
 ### Key Files
@@ -259,6 +268,7 @@ uv run pytest tests/test_pack_loader.py -v
 # Specific test
 uv run pytest tests/test_pack_loader.py::test_inheritance -v
 ```
+
 ```
 
 ### 9. Common Patterns ("How We Do Things Here")
@@ -326,6 +336,7 @@ def load_pack(
 ) -> LanguagePack:  # Clear return type
     ...
 ```
+
 ```
 
 ### 10. For Contributors ("How to Get Started")
@@ -343,11 +354,13 @@ def load_pack(
    ```
 
 2. **Verify Setup**:
+
    ```bash
    uv run python -c "import legesher_i18n; print('Success!')"
    ```
 
 3. **Run Tests**:
+
    ```bash
    cd libs/i18n && uv run pytest -v
    ```
@@ -374,6 +387,7 @@ A: Check the "Learning Resources" section below, or ask in discussions!
 
 **Q: Can I refactor this code? It seems overcomplicated.**
 A: Maybe! Open an issue first to discuss. There might be reasons for the current design.
+
 ```
 
 ### 11. Learning Resources
@@ -428,6 +442,7 @@ uv run python -c "import legesher_i18n"  # Use uv run prefix
 **Cause**: Language pack file doesn't exist or wrong path.
 
 **Fix**:
+
 - Check path: `ls libs/i18n/languages/python/3.13/es.yml`
 - Verify language code: "es" not "esp"
 - Check version: "3.13" not "3.13.0"
@@ -437,9 +452,11 @@ uv run python -c "import legesher_i18n"  # Use uv run prefix
 **Cause**: Syntax error in YAML file.
 
 **Fix**:
-- Validate YAML: https://yamlchecker.com/
+
+- Validate YAML: <https://yamlchecker.com/>
 - Check indentation (YAML is whitespace-sensitive)
 - Look for tabs (use spaces only)
+
 ```
 
 ## Deliverable

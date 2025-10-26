@@ -3,7 +3,7 @@
 
 language: es
 target: python
-version: "3.10"
+version: '3.10'
 
 keywords:
   # Core keywords (Python 3.x)
@@ -20,7 +20,7 @@ keywords:
   elif: sinoentonces
   else: sino
   except: excepto
-  "False": Falso
+  'False': Falso
   finally: finalmente
   for: para
   from: desde
@@ -30,14 +30,14 @@ keywords:
   in: en
   is: es
   lambda: lambda
-  "None": Ninguno
+  None: Ninguno
   nonlocal: nolocal
-  "not": "no"
+  not: "no"
   or: o
   pass: pasar
   raise: lanzar
   return: retornar
-  "True": Verdadero
+  'True': Verdadero
   try: intentar
   while: mientras
   with: con
@@ -85,14 +85,14 @@ builtins:
   all: todos
 
 metadata:
-  python_version_min: "3.10"
-  python_version_max: "3.13"
+  python_version_min: '3.10'
+  python_version_max: '3.13'
   compatibility_tested:
-    - "3.10"
-    - "3.11"
-    - "3.12"
-    - "3.13"
-  last_updated: "2025-10-23"
-  community_reviewed: False
-  author: "Legesher Team"
-  license: "MIT"
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  last_updated: '2025-10-23'
+  community_reviewed: false
+  author: Legesher Team
+  license: MIT

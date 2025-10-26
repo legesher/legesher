@@ -5,7 +5,6 @@ resolving inheritance chains, merging keyword translations, and caching results.
 """
 
 from dataclasses import dataclass, field
-from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
@@ -234,9 +233,7 @@ class LanguagePackLoader:
                 raise PathTraversalError(extends)
 
             # Resolve parent pack path
-            parent_path = SchemaValidator.validate_inheritance_path(
-                extends, pack_path
-            )
+            parent_path = SchemaValidator.validate_inheritance_path(extends, pack_path)
 
             # Recursively load parent
             parent_data, parent_chain = self._resolve_inheritance(

@@ -56,6 +56,7 @@ class TestVersionDetector:
 
         # With neither, should fall back to runtime
         import tempfile
+
         with tempfile.TemporaryDirectory() as tmpdir:
             version = detector.detect(Path(tmpdir))
             # Should match runtime version

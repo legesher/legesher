@@ -3,7 +3,7 @@
 
 language: ar
 target: python
-version: "3.10"
+version: '3.10'
 
 keywords:
   # Core keywords (Python 3.x)
@@ -20,7 +20,7 @@ keywords:
   elif: أوإذا
   else: وإلا
   except: استثناء
-  "False": خطأ
+  'False': خطأ
   finally: أخيرا
   for: لكل
   from: من
@@ -30,14 +30,14 @@ keywords:
   in: في
   is: يكون
   lambda: لامدا
-  "None": لاشيء
+  None: لاشيء
   nonlocal: غيرمحلي
-  "not": ليس
+  not: ليس
   or: أو
   pass: تجاوز
   raise: رفع
   return: إرجاع
-  "True": صحيح
+  'True': صحيح
   try: محاولة
   while: بينما
   with: مع
@@ -85,14 +85,14 @@ builtins:
   all: كل
 
 metadata:
-  python_version_min: "3.10"
-  python_version_max: "3.13"
+  python_version_min: '3.10'
+  python_version_max: '3.13'
   compatibility_tested:
-    - "3.10"
-    - "3.11"
-    - "3.12"
-    - "3.13"
-  last_updated: "2025-10-23"
-  community_reviewed: False
-  author: "Legesher Team"
-  license: "MIT"
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  last_updated: '2025-10-23'
+  community_reviewed: false
+  author: Legesher Team
+  license: MIT

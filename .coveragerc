@@ -1,0 +1,33 @@
+[run]
+source =
+    legesher_core
+    legesher_i18n
+    legesher
+branch = true
+omit =
+    */tests/*
+    */test_*.py
+    */.venv/*
+    */site-packages/*
+    */__pycache__/*
+
+[report]
+precision = 2
+fail_under = 30.0
+show_missing = true
+skip_covered = false
+
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml

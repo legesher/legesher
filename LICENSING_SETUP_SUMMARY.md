@@ -5,6 +5,7 @@ This document summarizes the multi-license structure that has been set up for th
 ## Overview
 
 Your repository now implements **Option 1: Source Available Monorepo with Mixed Licensing**, which allows you to:
+
 - Keep the entire codebase public and visible on GitHub
 - Have different license terms for different packages
 - Build an open protocol while maintaining commercial features
@@ -28,13 +29,16 @@ Your repository now implements **Option 1: Source Available Monorepo with Mixed 
 ### Updated Files
 
 #### Root README.md
+
 - Added license badges showing licensing for each package
 - Added licensing section explaining the structure
 - Added contributing section with clear guidelines
 - Updated with Quick Start and project overview
 
 #### Package pyproject.toml Files
+
 All packages now include:
+
 - `license` metadata (MIT, dual, or proprietary)
 - `keywords` for better discoverability
 - `classifiers` for PyPI compliance:
@@ -47,6 +51,7 @@ All packages now include:
 ### Contributing Guidelines
 
 **[CONTRIBUTING.md](CONTRIBUTING.md)** includes:
+
 - License structure explanation
 - Which packages accept contributions
 - Development setup instructions
@@ -89,6 +94,7 @@ Created in `.github/`:
 ## License Structure
 
 ### Open Source (MIT) - Builds Ecosystem
+
 - **legesher-core** - Core translation engine
 - **legesher-i18n** - Language data and dictionaries
 - **legesher-vs-code** - Editor integration
@@ -96,6 +102,7 @@ Created in `.github/`:
 **Purpose**: Build trust, encourage adoption, create community
 
 ### Dual License (MIT + Commercial) - Freemium Model
+
 - **legesher** - Main CLI and library
   - Free tier: Local translation (MIT)
   - Premium tier: Cloud sync, teams, analytics (Commercial)
@@ -103,6 +110,7 @@ Created in `.github/`:
 **Purpose**: Revenue generation while maintaining open protocol
 
 ### Proprietary (Source Available) - Premium Features
+
 - **legesher-pride** - Community showcase
 
 **Purpose**: Protect commercial features while maintaining transparency
@@ -120,11 +128,13 @@ Even though code is public and visible:
 ## Business Model Support
 
 ### For Users
+
 - **Free tier**: Full access to open protocol via MIT packages
 - **Visibility**: Can see all code for security review
 - **Clear upgrade path**: Understand premium features before buying
 
 ### For Your Business
+
 - **Open protocol adoption**: MIT packages encourage widespread use
 - **Revenue protection**: Commercial features legally protected
 - **Conversion funnel**: Free users can see (but not use) premium features
@@ -134,7 +144,7 @@ Even though code is public and visible:
 
 You may want to:
 
-1. **Update email addresses** in LICENSE files (currently using placeholder emails like sales@legesher.com)
+1. **Update email addresses** in LICENSE files (currently using placeholder emails like <sales@legesher.com>)
 2. **Create actual pricing page** at legesher.io/pricing
 3. **Set up API authentication** to enforce premium features
 4. **Add security policy** (.github/SECURITY.md)
@@ -148,17 +158,20 @@ You may want to:
 When ready to publish:
 
 ### Open Source Packages (core, i18n, vs-code)
+
 - Can be published to PyPI immediately
 - Will display MIT license
 - Classifiers will show up correctly
 
 ### Dual-Licensed Package (legesher)
+
 - Can be published to PyPI
 - Free tier functionality available via PyPI
 - Premium features gated by authentication
 - PyPI listing will show dual license
 
 ### Proprietary Package (pride)
+
 - **DO NOT publish to PyPI** (has "Private :: Do Not Upload" classifier)
 - Distribute only to licensed customers
 - Consider private package repository
@@ -166,6 +179,7 @@ When ready to publish:
 ## Legal Disclaimer
 
 This setup provides a reasonable licensing structure, but:
+
 - Consider consulting with a lawyer for your specific situation
 - Update placeholder email addresses with real contact points
 - Ensure you have trademark protection for "Legesher" if desired
@@ -173,9 +187,9 @@ This setup provides a reasonable licensing structure, but:
 
 ## Questions?
 
-- Licensing: legal@legesher.com
-- Commercial: sales@legesher.com
-- Security: security@legesher.com
+- Licensing: <legal@legesher.com>
+- Commercial: <sales@legesher.com>
+- Security: <security@legesher.com>
 - General: GitHub Discussions
 
 ---

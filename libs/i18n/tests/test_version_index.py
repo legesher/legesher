@@ -3,17 +3,17 @@
 import pytest
 from pathlib import Path
 
-from legesher_i18n.version_index import VersionIndex, PythonVersionInfo
+from legesher_i18n.version_index import VersionIndex
 from legesher_i18n.exceptions import (
     VersionIndexError,
     UnsupportedVersionError,
-    CircularInheritanceError,
-    MaxInheritanceDepthError,
 )
 
 
 # Use actual version-index.yml from languages/python/
-REAL_INDEX_PATH = Path(__file__).parent.parent / "languages" / "python" / "version-index.yml"
+REAL_INDEX_PATH = (
+    Path(__file__).parent.parent / "languages" / "python" / "version-index.yml"
+)
 
 
 class TestVersionIndexLoading:
@@ -78,6 +78,7 @@ class TestVersionInfo:
 
         assert "2.7" in str(exc_info.value)
 
+
 class TestInheritanceChain:
     """Test inheritance chain resolution."""
 
@@ -101,12 +102,8 @@ class TestInheritanceChain:
         chain = index.get_inheritance_chain("3.12")
 
         # Should be ordered from base to specific
-        for i in range(len(chain) - 1):
-            current_ver = chain[i]
-            next_ver = chain[i + 1]
-            current_info = index.get_version_info(current_ver)
-            # Next version should have current as base
-            # (or inherit through chain)
+        # Just verify the chain has multiple versions
+        assert len(chain) > 1
 
 
 class TestKeywordTracking:

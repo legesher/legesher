@@ -18,6 +18,7 @@ Create a well-structured commit that automatically updates the related Linear is
 ### 1. Identify Linear Issue
 
 **From arguments**:
+
 - If `$ARGUMENTS` contains issue ID (e.g., `LEG-123`), use that
 - If current branch name contains issue ID (e.g., `feature/leg-123-description`), extract it
 
@@ -89,6 +90,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Type based on Linear labels**:
+
 - `bug` label → `fix:`
 - `enhancement` label → `feat:`
 - `documentation` label → `docs:`
@@ -96,6 +98,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - `testing` label → `test:`
 
 **Scope from Linear labels**:
+
 - `package:core` → `(core)`
 - `package:i18n` → `(i18n)`
 - `package:legesher` → `(legesher)`
@@ -154,7 +157,9 @@ mcp__MCP_DOCKER__create_comment(
 **Commit**: `{commit_sha[:7]}`
 **Message**:
 ```
+
 {commit_msg}
+
 ```
 
 [View commit](https://github.com/legesher/legesher/commit/{commit_sha})
@@ -189,18 +194,23 @@ git show HEAD
 Based on commit type, suggest state updates:
 
 **Initial commit for issue**:
+
 - `Todo` → `In Progress`
 
 **Bug fix completed**:
+
 - `In Progress` → `In Review`
 
 **Feature completed**:
+
 - `In Progress` → `In Review`
 
 **Tests added**:
+
 - Keep in `In Progress` (unless complete)
 
 **Docs updated**:
+
 - `In Progress` → `In Review` (if docs were the task)
 
 ## Example Workflow

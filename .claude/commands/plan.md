@@ -14,6 +14,7 @@ SOURCES:
 You are in PLANNING mode. Think deeply before proposing solutions.
 
 **Use "think harder" or "ultrathink"** to engage deeper reasoning about:
+
 - Trade-offs between different approaches
 - Edge cases and failure modes
 - Simplest solution that could work
@@ -127,6 +128,7 @@ Use this structure:
 ## Deliverable
 
 Present the plan to the user for feedback. Ask:
+
 - Does this approach make sense?
 - Are there concerns about the proposed solution?
 - Should we proceed with implementation?

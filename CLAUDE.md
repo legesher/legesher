@@ -34,7 +34,6 @@ It is important to note the need for the functionality to be extensible across m
 
 **Future Packages** (planned, not yet created):
 
-
 - `language-server/`: LSP server for IDE integration (static code analysis)
 - Additional IDE integrations: Zed, JetBrains PyCharm
 
@@ -132,18 +131,15 @@ The packages have a logical dependency hierarchy defined in the architecture:
 
 **Tier 1 - Foundation**:
 
-
 - `legesher-core`: Foundation package (no internal dependencies)
   - Token-based transformer, AST utilities, git filters
 
 **Tier 2 - Language Support**:
 
-
 - `legesher-i18n`: Depends on `core`
   - Version-aware language packs, translation API, cultural comments
 
 **Tier 3 - User-Facing Tools**:
-
 
 - `legesher`: Main package, depends on `core` and `i18n`
   - CLI tools, main API, end-to-end workflows
@@ -151,7 +147,6 @@ The packages have a logical dependency hierarchy defined in the architecture:
   - IDE extensions, language client/server
 
 **Tier 4 - Community**:
-
 
 - `legesher-pride`: Community features, depends on `core`, `i18n`, and `legesher`
   - Community platform, showcase projects
@@ -220,6 +215,7 @@ Documentation is being developed in `docs/src/content/docs/`:
 - Language pack registry design (planned)
 
 Current documentation:
+
 - [Getting Started](docs/src/content/docs/index.mdx) - Project overview and quick start
 - [Example Guides](docs/src/content/docs/guides/) - Usage examples
 - [API Reference](docs/src/content/docs/reference/) - API documentation
@@ -267,7 +263,6 @@ Architectural rationale and detailed design decisions will be documented as the 
 
 **Implementing a new feature**:
 
-
 1. Find the issue in Linear workspace
 2. Review relevant architectural decisions in this file
 3. Identify affected package(s) in `libs/` and check tier dependencies
@@ -278,14 +273,12 @@ Architectural rationale and detailed design decisions will be documented as the 
 
 **Adding a new language pack**:
 
-
 1. Create language pack in `libs/i18n/` following existing structure
 2. Include keyword mappings, cultural comments, and metadata
 3. Ensure version-aware pack structure for Python version compatibility
 4. Add documentation and examples
 
 **Updating documentation**:
-
 
 1. Navigate to `docs/src/content/docs/`
 2. Edit MDX files (Markdown + JSX)
