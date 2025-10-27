@@ -70,3 +70,9 @@ strict_equality = true
 module = "tests.*"
 disallow_untyped_defs = false
 check_untyped_defs = false
+
+[tool.black]
+extend-exclude = "tests/fixtures/sample_spanish.py"
+
+[tool.ruff]
+extend-exclude = ["tests/fixtures/sample_spanish.py"]
