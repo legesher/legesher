@@ -9,9 +9,12 @@ import io
 import logging
 import tokenize
 from pathlib import Path
+from typing import Union
 
+from .cultural_comments import CulturalCommentParser
 from .exceptions import InvalidCodeError
 from .token_mapper import TokenMapper
+from .types import CulturalCommentMetadata
 from .utils import validate_utf8_encoding, normalize_newlines
 
 # Configure logger
@@ -77,8 +80,12 @@ class TokenTranslator:
         self.python_version = python_version
 
     def translate_code(
-        self, source_code: str, source_lang: str = "en", target_lang: str = "es"
-    ) -> str:
+        self,
+        source_code: str,
+        source_lang: str = "en",
+        target_lang: str = "es",
+        return_metadata: bool = False,
+    ) -> Union[str, tuple[str, CulturalCommentMetadata]]:
         """Translate Python source code from one language to another.
 
         This method translates Python keywords and builtin function names while
@@ -87,17 +94,20 @@ class TokenTranslator:
         Translation process:
         1. Normalize line endings (\\r\\n → \\n)
         2. Tokenize source code using Python's tokenize module
-        3. For each NAME token, check if it's a keyword or builtin
-        4. Replace with translated version if found in maps
-        5. Reconstruct code using untokenize, preserving formatting
+        3. Optionally extract cultural comment metadata (for IDE integration)
+        4. For each NAME token, check if it's a keyword or builtin
+        5. Replace with translated version if found in maps
+        6. Reconstruct code using untokenize, preserving formatting
 
         Args:
             source_code: Python source code to translate
             source_lang: Source language code (currently unused, for future)
             target_lang: Target language code (currently unused, for future)
+            return_metadata: If True, return tuple of (code, cultural_metadata)
 
         Returns:
-            Translated Python source code with preserved formatting
+            If return_metadata=False: Translated source code (default)
+            If return_metadata=True: Tuple of (translated code, cultural metadata)
 
         Raises:
             InvalidCodeError: If code has severe syntax errors
@@ -109,14 +119,29 @@ class TokenTranslator:
             definir calculate_tax(income, rate):
                 retornar income * rate
 
+            >>> # With metadata for IDE integration
+            >>> code_with_cultural = '''
+            ... #@culture[es]: explanation
+            ... def foo(): pass
+            ... '''
+            >>> translated, metadata = translator.translate_code(
+            ...     code_with_cultural, "en", "es", return_metadata=True
+            ... )
+            >>> metadata.has_comments()
+            True
+
         Note:
             - Comments and docstrings are NOT translated (preserved as-is)
+            - Cultural comments (#@culture[lang]: ...) are extracted when
+              return_metadata=True for IDE tooltip/decoration support
             - Variable and function names are NOT translated (out of scope)
             - Incomplete code is handled gracefully (translates valid portion)
             - Syntax errors return original code unchanged
         """
         # Handle empty input
         if not source_code or not source_code.strip():
+            if return_metadata:
+                return source_code, CulturalCommentMetadata()
             return source_code
 
         # Normalize line endings for consistent processing
@@ -124,7 +149,17 @@ class TokenTranslator:
 
         try:
             # Tokenize the source code
-            tokens = tokenize.generate_tokens(io.StringIO(source_code).readline)
+            tokens = list(tokenize.generate_tokens(io.StringIO(source_code).readline))
+
+            # Extract cultural comment metadata if requested (for IDE integration)
+            cultural_metadata = None
+            if return_metadata:
+                parser = CulturalCommentParser()
+                cultural_metadata = parser.parse_from_tokens(iter(tokens))
+                logger.debug(
+                    f"Extracted {len(cultural_metadata.comments)} "
+                    f"cultural comment(s) from source"
+                )
 
             # Translate tokens
             translated_tokens = []
@@ -161,11 +196,16 @@ class TokenTranslator:
             if isinstance(result, bytes):
                 result = result.decode("utf-8")
 
+            # Return with or without metadata based on request
+            if return_metadata:
+                return result, cultural_metadata
             return result
 
         except tokenize.TokenError as e:
             # Handle incomplete code gracefully (expected during real-time editing)
             logger.info(f"Incomplete code handled gracefully: {e}")
+            if return_metadata:
+                return source_code, CulturalCommentMetadata()
             return source_code
 
         except Exception as e:
