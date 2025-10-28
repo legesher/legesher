@@ -1,0 +1,1113 @@
+{
+  "branch": "l10n_indonesian-translation",
+  "language_code": "id",
+  "keywords": {
+    "False": "Salah",
+    "None": "Kosong",
+    "True": "Benar",
+    "and": "dan",
+    "as": "sebagai",
+    "assert": "menyatakan",
+    "async": "asinkron",
+    "await": "menunggu",
+    "break": "hentikan",
+    "class": "kelas",
+    "continue": "lanjut",
+    "def": "menetapkan",
+    "del": "hapus",
+    "elif": "lainnya jika",
+    "else": "lainnya",
+    "except": "kecuali",
+    "finally": "akhir",
+    "for": "untuk",
+    "from": "dari",
+    "global": "global",
+    "if": "jika",
+    "import": "impor",
+    "in": "dalam",
+    "is": "adalah",
+    "lambda": "lambda",
+    "nonlocal": "non lokal",
+    "not": "tidak",
+    "or": "atau",
+    "pass": "lewati",
+    "raise": "angkat",
+    "return": "kembali",
+    "try": "coba",
+    "while": "selama",
+    "with": "dengan",
+    "yield": "hasil"
+  },
+  "builtins": {
+    "abs": "mutlak",
+    "all": "semua",
+    "any": "apapun",
+    "ascii": "ascii",
+    "bin": "biner",
+    "bool": "bool",
+    "breakpoint": "titik henti",
+    "bytearray": "himpunan byte",
+    "bytes": "bytes",
+    "callable": "dapat dipanggil",
+    "chr": "karakter",
+    "classmethod": "metode kelas",
+    "compile": "menyusun",
+    "complex": "kompleks",
+    "delattr": "hapus atribut",
+    "dict": "kamus",
+    "dir": "direktori",
+    "divmod": "pembagian dan modulus",
+    "enumerate": "menghitung",
+    "eval": "evaluasi",
+    "exec": "eksekusi",
+    "filter": "filter",
+    "float": "pecahan",
+    "format": "format",
+    "frozenset": "objek beku",
+    "getattr": "dapatkan atribut",
+    "globals": "global",
+    "hasattr": "punya atribut",
+    "hash": "campuran",
+    "help": "bantuan",
+    "hex": "heksa",
+    "id": "identitas",
+    "input": "masukan",
+    "int": "bilangan bulat",
+    "isinstance": "adalah contoh",
+    "issubclass": "adalah subkelas",
+    "iter": "iterasi",
+    "len": "panjang",
+    "list": "daftar",
+    "locals": "lokal",
+    "map": "petakan",
+    "max": "maksimal",
+    "memoryview": "tampilan memori",
+    "min": "minimal",
+    "next": "berikutnya",
+    "object": "obyek",
+    "oct": "oktal",
+    "open": "buka",
+    "ord": "ord",
+    "pow": "pangkat",
+    "print": "cetak",
+    "property": "properti",
+    "range": "jarak",
+    "repr": "representasi",
+    "reversed": "terbalik",
+    "round": "bulat",
+    "set": "set",
+    "setattr": "set atribut",
+    "slice": "irisan",
+    "sorted": "urutkan",
+    "staticmethod": "metode statis",
+    "str": "rangkaian",
+    "sum": "jumlah",
+    "super": "super",
+    "tuple": "tupel",
+    "type": "tipe",
+    "vars": "variabel",
+    "zip": "zip",
+    "__import__": "__impor__"
+  },
+  "reviews": [
+    {
+      "term": "False",
+      "translation": "Salah",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "None",
+      "translation": "Kosong",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "True",
+      "translation": "Benar",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "and",
+      "translation": "dan",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "as",
+      "translation": "sebagai",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "assert",
+      "translation": "menyatakan",
+      "comment": "❓ @Wrth1 \"pastikan\", ✅@Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1"
+      ]
+    },
+    {
+      "term": "async",
+      "translation": "asinkron",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "await",
+      "translation": "menunggu",
+      "comment": "❓ @Wrth1 \"tunggu\", ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1"
+      ]
+    },
+    {
+      "term": "break",
+      "translation": "hentikan",
+      "comment": "❓ @Wrth1 \"berhenti\" atau \"henti\" karena terjemahan continue juga tidak memiliki 'kan', ❓@Takane42 Berhenti, ❓@mhmdbhsk \"Berhenti\"",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1",
+        "@Takane42 Berhenti",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "class",
+      "translation": "kelas",
+      "comment": "✅ @Wrth1, 🤔 @Takane42,🤔 @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Takane42",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "continue",
+      "translation": "lanjut",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "def",
+      "translation": "menetapkan",
+      "comment": "❓ @Wrth1 \"tetapkan\", ❓ @Takane42 \"tetapkan\",❓ @mhmdbhsk \"tetapkan\"",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1",
+        "@Takane42",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "del",
+      "translation": "hapus",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "elif",
+      "translation": "lainnya jika",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "else",
+      "translation": "lainnya",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "except",
+      "translation": "kecuali",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "finally",
+      "translation": "akhir",
+      "comment": "❓ @Wrth1 \"akhirnya\" ada ly nya, ❓ @Takane42 \"Akhirnya\" bener kata @Wrth1, ❓ @mhmdbhsk \"Akhirnya\"",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1",
+        "@Takane42",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "for",
+      "translation": "untuk",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "from",
+      "translation": "dari",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "global",
+      "translation": "global",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "if",
+      "translation": "jika",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "import",
+      "translation": "impor",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "in",
+      "translation": "dalam",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "is",
+      "translation": "adalah",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "lambda",
+      "translation": "lambda",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "nonlocal",
+      "translation": "non lokal",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "not",
+      "translation": "tidak",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "or",
+      "translation": "atau",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "pass",
+      "translation": "lewati",
+      "comment": "✅ @Wrth1, ❓ @Takane42 ini bisa \"Lewati\" atau \"oke\",❓ @mhmdbhsk \"lewati\" / \"oke\" / \"sukses\"",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Takane42 ini bisa",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "raise",
+      "translation": "angkat",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "return",
+      "translation": "kembali",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "try",
+      "translation": "coba",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "while",
+      "translation": "selama",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "with",
+      "translation": "dengan",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "yield",
+      "translation": "hasil",
+      "comment": "❓ @Wrth1 \"hasilkan\", ❓ @Takane42 \"Menghasilkan\",🤔 @mhmdbhsk",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1",
+        "@Takane42",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "abs",
+      "translation": "mutlak",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "all",
+      "translation": "semua",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "any",
+      "translation": "apapun",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "ascii",
+      "translation": "ascii",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "bin",
+      "translation": "biner",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "bool",
+      "translation": "bool",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "breakpoint",
+      "translation": "titik henti",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "bytearray",
+      "translation": "himpunan byte",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "bytes",
+      "translation": "bytes",
+      "comment": "✅ @Wrth1, 🤔 @Takane42, ❓ @mhmdbhsk \"byte\" indonesia tidak ada jamak",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Takane42",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "callable",
+      "translation": "dapat dipanggil",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "chr",
+      "translation": "karakter",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "classmethod",
+      "translation": "metode kelas",
+      "comment": "✅ @Wrth1, ❓ @Takane42 \"Metode Class\", ❓ @mhmdbhsk \"Metode Class\"",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Takane42",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "compile",
+      "translation": "menyusun",
+      "comment": "❓ @Wrth1 \"susun\", ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1"
+      ]
+    },
+    {
+      "term": "complex",
+      "translation": "kompleks",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "delattr",
+      "translation": "hapus atribut",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "dict",
+      "translation": "kamus",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "dir",
+      "translation": "direktori",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "divmod",
+      "translation": "pembagian dan modulus",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "enumerate",
+      "translation": "menghitung",
+      "comment": "❓ @Wrth1 \"enumerasi\", 🤔 @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "eval",
+      "translation": "evaluasi",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "exec",
+      "translation": "eksekusi",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "filter",
+      "translation": "filter",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "float",
+      "translation": "pecahan",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "format",
+      "translation": "format",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "frozenset",
+      "translation": "objek beku",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "getattr",
+      "translation": "dapatkan atribut",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "globals",
+      "translation": "global",
+      "comment": "✅ @Wrth1 tetapi terjemahannya jadi sama dengan keyword global, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "hasattr",
+      "translation": "punya atribut",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "hash",
+      "translation": "campuran",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "help",
+      "translation": "bantuan",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "hex",
+      "translation": "heksa",
+      "comment": "❓ @Wrth1 \"heksadesimal\", ❓ @Takane42 \"heksadesimal\" iya harusnya heksadesimal, ❓ @mhmdbhsk \"heksadesimal\"",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1",
+        "@Takane42",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "id",
+      "translation": "identitas",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "input",
+      "translation": "masukan",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "int",
+      "translation": "bilangan bulat",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "isinstance",
+      "translation": "adalah contoh",
+      "comment": "❓ @Wrth1 \"adalah hal\", 🤔 @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "issubclass",
+      "translation": "adalah subkelas",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "iter",
+      "translation": "iterasi",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "len",
+      "translation": "panjang",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "list",
+      "translation": "daftar",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "locals",
+      "translation": "lokal",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "map",
+      "translation": "petakan",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "max",
+      "translation": "maksimal",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "memoryview",
+      "translation": "tampilan memori",
+      "comment": "✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "min",
+      "translation": "minimal",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "next",
+      "translation": "berikutnya",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "object",
+      "translation": "obyek",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "oct",
+      "translation": "oktal",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "open",
+      "translation": "buka",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "ord",
+      "translation": "ord",
+      "comment": "✅ @Wrth1, 🤔 @Takane42, 🤔 @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Takane42",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "pow",
+      "translation": "pangkat",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "print",
+      "translation": "cetak",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "property",
+      "translation": "properti",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "range",
+      "translation": "jarak",
+      "comment": "❓ @Wrth1 \"area\" \"wilayah\" \"radius\", ❓ @Takane42 \"Area\",❓ @mhmdbhsk \"area\" \"radius\"",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1",
+        "@Takane42",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "repr",
+      "translation": "representasi",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "reversed",
+      "translation": "terbalik",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "round",
+      "translation": "bulat",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "set",
+      "translation": "set",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "setattr",
+      "translation": "set atribut",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "slice",
+      "translation": "irisan",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "sorted",
+      "translation": "urutkan",
+      "comment": "❓ @Wrth1 \"terurut\",❓ @Takanae42 \"Telah diurutkan\", ❓ @mhmdbhsk \"Telah diurutkan\"",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1",
+        "@Takanae42",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "staticmethod",
+      "translation": "metode statis",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "str",
+      "translation": "rangkaian",
+      "comment": "❓ @Wrth1 \"teks\" atau sesuatu yang lebih berkaitan ke rangkaian karakter, 🤔 @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": [
+        "@Wrth1",
+        "@mhmdbhsk"
+      ]
+    },
+    {
+      "term": "sum",
+      "translation": "jumlah",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "super",
+      "translation": "super",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "tuple",
+      "translation": "tupel",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "type",
+      "translation": "tipe",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "vars",
+      "translation": "variabel",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "zip",
+      "translation": "zip",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    },
+    {
+      "term": "__import__",
+      "translation": "__impor__",
+      "comment": "✅ @Wrth1, ✅ @Takane42, ✅ @mhmdbhsk",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": true,
+      "suggestions": []
+    }
+  ],
+  "stats": {
+    "keyword_count": 35,
+    "builtin_count": 69,
+    "review_count": 104
+  }
+}

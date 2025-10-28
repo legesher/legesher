@@ -1,0 +1,439 @@
+{
+  "branch": "tagalog-translation",
+  "language_code": "tl",
+  "keywords": {
+    "False": "mali",
+    "None": "wala",
+    "True": "totoo",
+    "and": "at",
+    "as": "bilang",
+    "assert": "igiit",
+    "async": "async",
+    "await": "naghihintay",
+    "break": "hinto",
+    "class": "klase",
+    "continue": "magpatuloy",
+    "def": "def",
+    "del": "del",
+    "elif": "elif",
+    "else": "iba pa",
+    "except": "maliban",
+    "finally": "sa wakas",
+    "for": "para sa",
+    "from": "mula sa",
+    "global": "global",
+    "if": "kung",
+    "import": "angkat",
+    "in": "sa",
+    "is": "ay",
+    "lambda": "lambda",
+    "nonlocal": "nonlocal",
+    "not": "hindi",
+    "or": "o",
+    "pass": "pumasa",
+    "raise": "itaas",
+    "return": "bumalik",
+    "try": "subukan",
+    "while": "habang",
+    "with": "kasama",
+    "yield": "ani"
+  },
+  "builtins": {
+    "abs": "abs",
+    "all": "lahat",
+    "any": "anumang",
+    "ascii": "ascii",
+    "bin": "bin",
+    "bool": "bool",
+    "breakpoint": "breakpoint",
+    "bytearray": "bytearray",
+    "bytes": "bytes",
+    "callable": "natatawag",
+    "chr": "chr",
+    "classmethod": "classmethod",
+    "compile": "compile",
+    "complex": "kumplikado",
+    "delattr": "delattr",
+    "dict": "dict",
+    "dir": "dir",
+    "divmod": "divmod",
+    "enumerate": "magtala",
+    "eval": "eval",
+    "exec": "exec",
+    "filter": "salain",
+    "float": "float",
+    "format": "format",
+    "frozenset": "frozenset",
+    "getattr": "getattr",
+    "globals": "globals",
+    "hasattr": "hasattr",
+    "hash": "hash",
+    "help": "tumulong",
+    "hex": "hex",
+    "id": "id",
+    "input": "input",
+    "int": "int",
+    "isinstance": "isinstance",
+    "issubclass": "issubclass",
+    "iter": "iter",
+    "len": "len",
+    "list": "list",
+    "locals": "locals",
+    "map": "map",
+    "max": "pinakamataas",
+    "memoryview": "memoryview",
+    "min": "pinakamaliit",
+    "next": "susunod",
+    "object": "bagay",
+    "oct": "oct",
+    "open": "bukas",
+    "ord": "ord",
+    "pow": "pow",
+    "print": "print",
+    "property": "katangian",
+    "range": "saklaw",
+    "repr": "repr",
+    "reversed": "baligtad",
+    "round": "round",
+    "set": "set",
+    "setattr": "setattr",
+    "slice": "hiwain",
+    "sorted": "pinagsunod-sunod",
+    "str": "str",
+    "sum": "suma",
+    "super": "super",
+    "tuple": "tuple",
+    "type": "uri",
+    "vars": "vars",
+    "zip": "zip",
+    "__import__": "__import__"
+  },
+  "reviews": [
+    {
+      "term": "False",
+      "translation": "mali",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "None",
+      "translation": "wala",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "True",
+      "translation": "totoo",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "and",
+      "translation": "at",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "as",
+      "translation": "bilang",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "assert",
+      "translation": "igiit",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "async",
+      "translation": "async",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "await",
+      "translation": "naghihintay",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "break",
+      "translation": "hinto",
+      "comment": "❓ # tigil might be a better alternative",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        ""
+      ]
+    },
+    {
+      "term": "class",
+      "translation": "klase",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "continue",
+      "translation": "magpatuloy",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "def",
+      "translation": "def",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "del",
+      "translation": "del",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "elif",
+      "translation": "elif",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "else",
+      "translation": "iba pa",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "except",
+      "translation": "maliban",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "finally",
+      "translation": "sa wakas",
+      "comment": "❓ # sa huli might be a better alternative",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        ""
+      ]
+    },
+    {
+      "term": "for",
+      "translation": "para sa",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "from",
+      "translation": "mula sa",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "global",
+      "translation": "global",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "if",
+      "translation": "kung",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "import",
+      "translation": "angkat",
+      "comment": "🤔 # import works for the context used in Python, angkat is not widely used anymore",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        ""
+      ]
+    },
+    {
+      "term": "in",
+      "translation": "sa",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "is",
+      "translation": "ay",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "lambda",
+      "translation": "lambda",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "nonlocal",
+      "translation": "nonlocal",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "not",
+      "translation": "hindi",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "or",
+      "translation": "o",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "pass",
+      "translation": "pumasa",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "raise",
+      "translation": "itaas",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "return",
+      "translation": "bumalik",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "try",
+      "translation": "subukan",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "while",
+      "translation": "habang",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "with",
+      "translation": "kasama",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "yield",
+      "translation": "ani",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    }
+  ],
+  "stats": {
+    "keyword_count": 35,
+    "builtin_count": 68,
+    "review_count": 35
+  }
+}
