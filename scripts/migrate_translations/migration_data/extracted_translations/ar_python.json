@@ -1,5 +1,5 @@
 {
-  "branch": "l10n_arabic-translation",
+  "branch": "arabic-translation",
   "language_code": "ar",
   "keywords": {
     "None": "متغير لا يحمل أي قيمة",
@@ -33,7 +33,10 @@
     "try": "حاول، غالبا ما تستخدم في بداية كتلة استثناءات",
     "while": "بيان تدوير",
     "with": "مع",
-    "yield": "إرجاع كائن مولًد لا يحفظ في الذاكرة"
+    "yield": "إرجاع كائن مولًد لا يحفظ في الذاكرة",
+    "False": "خاطئ",
+    "continue": "استمرار",
+    "finally": "في النهاية"
   },
   "builtins": {
     "abs": "قيمة مطلقة",

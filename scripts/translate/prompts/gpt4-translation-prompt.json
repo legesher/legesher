@@ -1,0 +1,141 @@
+{
+  "version": "1.0",
+  "model": "gpt-4o",
+  "temperature": 0.3,
+  "max_tokens": 4000,
+  "response_format": { "type": "json_object" },
+
+  "system_message": "You are an expert linguist and computer science educator specializing in translating programming language keywords and builtins for multilingual developers. You translate Python terms while preserving technical accuracy, consistency, and learnability.\n\nIMPORTANT: This translation is part of the Legesher project, which enables FULL LOCALIZATION - developers will write Python code entirely in their native language, not a mix of English and their language. Your translation will be typed hundreds of times per day by developers, spoken aloud in code reviews, and taught to new programmers. Optimize for daily use, naturalness, and learnability.\n\nAlways respond with valid JSON matching the specified schema.",
+
+  "user_message_template": "# Translation Task\n\nTranslate the Python {term_type} **`{term}`** into **{target_language}**.\n\n## Context\n\n{tier1_context}\n\n## Linguistic Standards (Key Points)\n\n- **Register:** Technical/formal (CS education vocabulary)\n- **Recommended Form:** {recommended_form} for {language_family}\n- **Pattern Classification:** {pattern_type}\n- **Consistency Requirements:** Must align with {related_terms}\n\n## Existing Translations (for consistency)\n\n{existing_translations_table}\n\n## Instructions\n\n1. **Analyze the concept**: What does this term DO in Python? (not what the English word means)\n2. **Generate 3-5 translation options** with rationale for each\n3. **Apply priority framework**:\n   - Priority 1: Technical Accuracy (eliminate wrong meanings)\n   - Priority 2: CS Education Alignment (how is this taught in target regions?)\n   - Priority 3: Naturalness (easy to say, remember, type?)\n   - Priority 4: Consistency (matches related term forms?)\n4. **Validate** against checklist (concept accuracy, correct form, pattern match, usability)\n5. **Assess confidence**: HIGH (clear winner) | MEDIUM (multiple options) | LOW (needs expert review)\n\n## Output Format\n\nRespond with JSON matching this schema:\n\n```json\n{\n  \"term\": \"{term}\",\n  \"target_language\": \"{target_language}\",\n  \"recommended_translation\": {\n    \"translation\": \"your_translation_here\",\n    \"form\": \"infinitive|noun|adjective|masdar|etc\",\n    \"confidence\": \"HIGH|MEDIUM|LOW\"\n  },\n  \"reasoning\": {\n    \"concept_analysis\": \"What this term DOES in Python (2-3 sentences)\",\n    \"translation_options\": [\n      {\n        \"translation\": \"option_1\",\n        \"form\": \"infinitive|noun|etc\",\n        \"rationale\": \"why considered\",\n        \"eliminated\": false,\n        \"elimination_reason\": null\n      },\n      {\n        \"translation\": \"option_2\",\n        \"form\": \"noun\",\n        \"rationale\": \"why considered\",\n        \"eliminated\": true,\n        \"elimination_reason\": \"wrong form for pattern\"\n      }\n    ],\n    \"priority_filtering\": {\n      \"technical_accuracy\": \"Which options are technically correct? Which are wrong? Why?\",\n      \"cs_education_alignment\": \"How is this taught in {language} CS education? What terms appear in textbooks?\",\n      \"naturalness\": \"Which option is most natural for native speakers?\",\n      \"consistency_check\": \"Does this match the form of related terms?\"\n    },\n    \"final_decision\": \"Why this specific translation was chosen (2-3 sentences)\"\n  },\n  \"alternatives_considered\": [\n    {\n      \"rank\": 2,\n      \"translation\": \"second_best\",\n      \"form\": \"form\",\n      \"why_not_chosen\": \"explanation\"\n    }\n  ],\n  \"validation_checklist\": {\n    \"captures_python_concept\": true,\n    \"correct_part_of_speech\": true,\n    \"correct_form\": true,\n    \"matches_pattern\": true,\n    \"short_enough\": true,\n    \"easy_to_pronounce\": true,\n    \"no_offensive_meanings\": true,\n    \"renders_in_ides\": true,\n    \"cs_education_aligned\": true,\n    \"consistent_with_related\": true\n  },\n  \"human_review_notes\": \"If confidence is not HIGH, what should reviewers verify? Any cultural considerations?\",\n  \"metadata\": {\n    \"difficulty\": \"EASY|MEDIUM|HARD|EXPERT\",\n    \"pattern\": \"ACTION_KEYWORD|STATE_KEYWORD|VALUE_CONSTANT|etc\",\n    \"python_version\": \"3.10+\"\n  }\n}\n```\n\n**Now translate:** `{term}` → {target_language}",
+
+  "example_request": {
+    "term": "def",
+    "term_type": "keyword",
+    "target_language": "Spanish",
+    "tier1_context": "[Tier 1 context document would be inserted here]",
+    "recommended_form": "infinitive",
+    "language_family": "Romance",
+    "pattern_type": "ACTION_KEYWORD",
+    "related_terms": "return, break, continue",
+    "existing_translations_table": "| Term | Translation | Form |\n|------|-------------|------|\n| return | retornar | infinitive |\n| break | romper | infinitive |\n| continue | continuar | infinitive |"
+  },
+
+  "example_response": {
+    "term": "def",
+    "target_language": "Spanish",
+    "recommended_translation": {
+      "translation": "definir",
+      "form": "infinitive",
+      "confidence": "HIGH"
+    },
+    "reasoning": {
+      "concept_analysis": "The `def` keyword in Python creates a function definition. It's an ACTION keyword that tells Python 'I am about to define a function.' The English 'def' is short for 'define,' meaning to establish or set bounds to something.",
+      "translation_options": [
+        {
+          "translation": "definir",
+          "form": "infinitive",
+          "rationale": "Direct translation of 'define' - to establish, to set bounds",
+          "eliminated": false,
+          "elimination_reason": null
+        },
+        {
+          "translation": "función",
+          "form": "noun",
+          "rationale": "Names what it creates (a function)",
+          "eliminated": true,
+          "elimination_reason": "Describes the result, not the action. Python ACTION keywords should be verbs, not nouns."
+        },
+        {
+          "translation": "crear",
+          "form": "infinitive",
+          "rationale": "Means 'to create' - describes the action",
+          "eliminated": true,
+          "elimination_reason": "Too generic - you 'create' many things. Doesn't capture the specific concept of defining/establishing a function."
+        },
+        {
+          "translation": "declarar",
+          "form": "infinitive",
+          "rationale": "Means 'to declare' - similar concept",
+          "eliminated": true,
+          "elimination_reason": "While technically correct, 'declarar' is used more for variable declarations. 'Definir' is the standard term in Spanish CS education for function definitions."
+        }
+      ],
+      "priority_filtering": {
+        "technical_accuracy": "✅ 'definir' (to define/establish) - correct. ✅ 'crear' (to create) - technically correct but generic. ✅ 'declarar' (to declare) - correct but wrong context. ❌ 'función' (function) - wrong part of speech (noun instead of verb).",
+        "cs_education_alignment": "Research shows Spanish CS textbooks consistently use 'definir una función' (define a function). This is standard across Spain, Mexico, Argentina, and other Spanish-speaking regions. Students already associate 'definir' with function definitions from their coursework.",
+        "naturalness": "'Definir' is natural, easy to pronounce, and commonly used in technical contexts. It's a cognate with English 'define,' which helps bilingual learners connect concepts across languages.",
+        "consistency_check": "This is an ACTION keyword pattern. Other ACTION keywords use infinitives: 'retornar' (return), 'romper' (break), 'continuar' (continue). Using 'definir' (infinitive) maintains pattern consistency."
+      },
+      "final_decision": "'Definir' is the clear choice: it's technically accurate (captures the concept of establishing/defining), aligns with CS education terminology across Spanish-speaking regions, is natural for native speakers, and maintains consistency with the ACTION keyword pattern (infinitive verb form)."
+    },
+    "alternatives_considered": [
+      {
+        "rank": 2,
+        "translation": "declarar",
+        "form": "infinitive",
+        "why_not_chosen": "While technically valid, 'declarar' is more commonly used for variable declarations in Spanish CS education. 'Definir' is the standard term specifically for function definitions."
+      },
+      {
+        "rank": 3,
+        "translation": "crear",
+        "form": "infinitive",
+        "why_not_chosen": "Too generic - doesn't capture the specific concept of 'definition' vs general 'creation'. Less precise than 'definir'."
+      }
+    ],
+    "validation_checklist": {
+      "captures_python_concept": true,
+      "correct_part_of_speech": true,
+      "correct_form": true,
+      "matches_pattern": true,
+      "short_enough": true,
+      "easy_to_pronounce": true,
+      "no_offensive_meanings": true,
+      "renders_in_ides": true,
+      "cs_education_aligned": true,
+      "consistent_with_related": true
+    },
+    "human_review_notes": "High confidence. This is a straightforward translation with strong CS education backing across all Spanish-speaking regions. No regional variations or concerns identified.",
+    "metadata": {
+      "difficulty": "EASY",
+      "pattern": "ACTION_KEYWORD",
+      "python_version": "3.10+"
+    }
+  },
+
+  "schema_documentation": {
+    "description": "JSON schema for Python keyword/builtin translation results",
+    "fields": {
+      "term": "The Python keyword or builtin being translated (string)",
+      "target_language": "The language being translated to (string)",
+      "recommended_translation": {
+        "translation": "The recommended translation (string)",
+        "form": "Linguistic form (infinitive|noun|adjective|masdar|etc)",
+        "confidence": "Confidence level (HIGH|MEDIUM|LOW)"
+      },
+      "reasoning": {
+        "concept_analysis": "What the term DOES in Python (string, 2-3 sentences)",
+        "translation_options": "Array of 3-5 translation options with rationale (array of objects)",
+        "priority_filtering": "Analysis using priority framework (object with 4 string fields)",
+        "final_decision": "Why this translation was chosen (string, 2-3 sentences)"
+      },
+      "alternatives_considered": "2nd and 3rd best options with explanations (array of objects)",
+      "validation_checklist": "10-item checklist with true/false values (object with boolean fields)",
+      "human_review_notes": "Notes for human reviewers, especially if confidence is not HIGH (string)",
+      "metadata": {
+        "difficulty": "Translation difficulty (EASY|MEDIUM|HARD|EXPERT)",
+        "pattern": "Pattern classification (ACTION_KEYWORD|STATE_KEYWORD|etc)",
+        "python_version": "Minimum Python version (string)"
+      }
+    }
+  },
+
+  "important_reminders": [
+    "Translate the CONCEPT, not the English word",
+    "Research how this concept is taught in CS education in the target language",
+    "Ensure consistency with related terms (same pattern = same form)",
+    "Be honest about confidence - if unsure, mark as MEDIUM or LOW and explain why",
+    "Consider the learner - will they understand, remember, and be able to pronounce this?",
+    "Show your reasoning in detail so human reviewers understand your logic"
+  ]
+}
