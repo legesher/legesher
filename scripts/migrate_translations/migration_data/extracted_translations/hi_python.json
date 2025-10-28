@@ -1,5 +1,5 @@
 {
-  "branch": "l10n_hindi-translation",
+  "branch": "hindi-translation",
   "language_code": "hi",
   "keywords": {
     "False": "असत्य",
@@ -69,7 +69,6 @@
     "hasattr": "hasattr",
     "hash": "हैश",
     "help": "मदद",
-    "hx": "हेक्स",
     "id": "आईडी",
     "input": "इनपुट",
     "int": "पूर्णांक",
@@ -107,7 +106,8 @@
     "type": "प्रकार",
     "vars": "जिसका",
     "zip": "ज़िप",
-    "__import__": "__आयात__"
+    "__import__": "__आयात__",
+    "hex": "हेक्स"
   },
   "reviews": [],
   "stats": {

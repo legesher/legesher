@@ -1,0 +1,501 @@
+language:
+  code: ar
+  name: Arabic
+  native_name: العربية
+  family: Semitic
+  direction: rtl
+metadata:
+  status: migrated
+  version: 0.1.0-community
+  source: legesher-translations repository
+  branch: arabic-translation
+  review_count: 101
+  notes: Migrated from legesher-translations community contributions. These translations were created by the community and may need review and refinement using the new linguistic standards.
+keywords:
+  'False':
+    translation: خاطئ
+    form: adjective
+    pattern: VALUE_CONSTANT
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  None:
+    translation: متغير لا يحمل أي قيمة
+    form: adjective
+    pattern: VALUE_CONSTANT
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  'True':
+    translation: صحيح
+    form: adjective
+    pattern: VALUE_CONSTANT
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  and:
+    translation: و
+    form: conjunction
+    pattern: OPERATOR_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  as:
+    translation: كلمة مفتاحية بمعنى كاف التشبية تستخدم لاعطاء اسم بديل للموديل عند تضمينها
+    form: preposition
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  assert:
+    translation: تصريح تأكيد صحة قيمة
+    form: masdar
+    pattern: ACTION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  async:
+    translation: تشغيل كتلتين أو أكثر بشكل متوازي بدلا من متسلسل
+    form: conjunction
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  await:
+    translation: انتظار
+    form: masdar
+    pattern: ACTION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  break:
+    translation: خروج من الحلقة
+    form: masdar
+    pattern: ACTION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  class:
+    translation: ظبقة
+    form: varies
+    pattern: DECLARATION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  continue:
+    translation: استمرار
+    form: masdar
+    pattern: ACTION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  def:
+    translation: تعريف
+    form: masdar
+    pattern: ACTION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  del:
+    translation: حذف
+    form: masdar
+    pattern: ACTION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  elif:
+    translation: في حال ‫(‬الشرط‫)‬
+    form: conjunction
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  else:
+    translation: في حال أي شيء آخر
+    form: conjunction
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  except:
+    translation: اسثناء
+    form: conjunction
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  finally:
+    translation: في النهاية
+    form: conjunction
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  for:
+    translation: بداية بيان تسلسل حلقي
+    form: conjunction
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  from:
+    translation: من
+    form: preposition
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  global:
+    translation: عمومي
+    form: varies
+    pattern: DECLARATION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  if:
+    translation: إذا
+    form: conjunction
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  import:
+    translation: استيراد
+    form: masdar
+    pattern: ACTION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  in:
+    translation: في
+    form: preposition
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  is:
+    translation: هو
+    form: conjunction
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  lambda:
+    translation: تصريح لانشاء كائنات دالة جذيدة
+    form: varies
+    pattern: DECLARATION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  nonlocal:
+    translation: غير محلي
+    form: varies
+    pattern: DECLARATION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  not:
+    translation: ليس
+    form: conjunction
+    pattern: OPERATOR_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  or:
+    translation: أو
+    form: conjunction
+    pattern: OPERATOR_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  pass:
+    translation: بيان اشارة االى كتلة فارغة من البيانات
+    form: masdar
+    pattern: ACTION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  raise:
+    translation: كلمة مفتاحية لإنشاءأو إرجاع استثناء
+    form: masdar
+    pattern: ACTION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  return:
+    translation: إرجاع قيمة معينة
+    form: masdar
+    pattern: ACTION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  try:
+    translation: حاول، غالبا ما تستخدم في بداية كتلة استثناءات
+    form: conjunction
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  while:
+    translation: بيان تدوير
+    form: conjunction
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  with:
+    translation: مع
+    form: preposition
+    pattern: STATE_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  yield:
+    translation: إرجاع كائن مولًد لا يحفظ في الذاكرة
+    form: masdar
+    pattern: ACTION_KEYWORD
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+builtins:
+  __import__:
+    translation: إستيراد
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  abs:
+    translation: قيمة مطلقة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  all:
+    translation: كل
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  any:
+    translation: أي
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  ascii:
+    translation: أسكي
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  bin:
+    translation: ثنائي
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  bool:
+    translation: بوولي
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  breakpoint:
+    translation: نقطة المقاطعة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  bytearray:
+    translation: مجموعة من البايت
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  bytes:
+    translation: قيم من البايت
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  callable:
+    translation: دالة يمكن استدعائها
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  chr:
+    translation: حرف
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  classmethod:
+    translation: دالة صنف
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  compile:
+    translation: ترجم
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  complex:
+    translation: الجزء المركب
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  delattr:
+    translation: إزالة خاصية
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  dict:
+    translation: قاموس
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  dir:
+    translation: إظهار خواص الكائن
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  divmod:
+    translation: حساب ناتج وباقي القسمة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  enumerate:
+    translation: سرد
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  eval:
+    translation: قييم
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  exec:
+    translation: نفذ
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  filter:
+    translation: نقي
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  float:
+    translation: كسر
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  format:
+    translation: تهيئة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  frozenset:
+    translation: مجموعة غير قابلة للتغيير
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  getattr:
+    translation: إستحضار خاصية
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  globals:
+    translation: القيم العمومية
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  hasattr:
+    translation: لديه خاصية
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  hash:
+    translation: تلبيد
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  help:
+    translation: مساعدة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  hex:
+    translation: تحويل للنظام الستة عشري
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  id:
+    translation: هوية
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  input:
+    translation: إدخال
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  int:
+    translation: عدد صحيح
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  isinstance:
+    translation: من نوع
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  issubclass:
+    translation: يرث من
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  iter:
+    translation: مكرر
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  len:
+    translation: طول
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  list:
+    translation: قائمة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  locals:
+    translation: القيم المحلية
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  map:
+    translation: نفذ دالة على كل من
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  max:
+    translation: أكبر
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  memoryview:
+    translation: إظهار الذاكرة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  min:
+    translation: أصغر
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  next:
+    translation: التالي
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  object:
+    translation: الكائن
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  oct:
+    translation: تحويل للنظام ثماني
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  open:
+    translation: فتح
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  ord:
+    translation: إستحضار قيمة اليونيكود
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  pow:
+    translation: أس
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  print:
+    translation: طباعة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  property:
+    translation: خاصية
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  range:
+    translation: مدى
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  repr:
+    translation: إستحضار ممثل عن القيمة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  reversed:
+    translation: معكوس
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  round:
+    translation: تقريب
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  set:
+    translation: مجموعة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  setattr:
+    translation: ضبط خاصية
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  slice:
+    translation: إستحضار جزء من
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  sorted:
+    translation: مرتب
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  staticmethod:
+    translation: دالة ثابتة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  str:
+    translation: تحويل القيمة إلى سلسلة من الحروف
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  sum:
+    translation: إجمع
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  super:
+    translation: إستحضار الضالة من الفئة العظيمة
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  tuple:
+    translation: زوج
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  type:
+    translation: نوع
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  vars:
+    translation: إستحضار خواص الكائن
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
+  zip:
+    translation: إستحضار مكرر من
+    confidence: COMMUNITY
+    notes: Migrated from legesher-translations repository
