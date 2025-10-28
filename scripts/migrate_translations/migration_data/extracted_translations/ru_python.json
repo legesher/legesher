@@ -1,0 +1,1073 @@
+{
+  "branch": "russian-translation",
+  "language_code": "ru",
+  "keywords": {
+    "False": "ложь",
+    "None": "ничто",
+    "True": "истина",
+    "and": "и",
+    "as": "как",
+    "assert": "утверждать",
+    "async": "асинхронной",
+    "await": "ожидать",
+    "break": "прерывать",
+    "class": "класс",
+    "continue": "продалжать",
+    "def": "определить",
+    "del": "удалить",
+    "elif": "иначе–если",
+    "else": "иначе",
+    "except": "кроме",
+    "finally": "наконец",
+    "for": "для",
+    "from": "из",
+    "global": "глобальный",
+    "if": "если",
+    "import": "импортировать",
+    "in": "в",
+    "is": "является",
+    "lambda": "лямбда",
+    "nonlocal": "нелокальный",
+    "not": "не",
+    "or": "или",
+    "pass": "пропускать",
+    "raise": "поднимать",
+    "return": "вернуть",
+    "try": "попробовать",
+    "while": "пока",
+    "with": "с",
+    "yield": "выдать"
+  },
+  "builtins": {
+    "abs": "абсолютный",
+    "all": "все",
+    "any": "какой-нибудь",
+    "ascii": "ASCII-код",
+    "bin": "бинарный",
+    "bool": "булев",
+    "breakpoint": "точка-останова",
+    "bytearray": "байтовый-массив",
+    "bytes": "байты",
+    "callable": "вызываемый",
+    "chr": "символ",
+    "classmethod": "метод-класса",
+    "compile": "компилировать",
+    "complex": "сложный",
+    "delattr": "удалить-атрибут",
+    "dict": "словарь",
+    "dir": "директория",
+    "divmod": "деление-нацело",
+    "enumerate": "перечислить",
+    "eval": "вычислить",
+    "exec": "исполнять",
+    "filter": "фильтровать",
+    "float": "плавающая-точка",
+    "format": "формат",
+    "frozenset": "замороженный-набор",
+    "getattr": "добыть-атрибут",
+    "globals": "глобальные",
+    "hasattr": "имеет-атрибут",
+    "hash": "хеш",
+    "help": "помогать",
+    "hex": "шестнадцатеричный",
+    "id": "идентификатор",
+    "input": "ввод",
+    "int": "целое-число",
+    "isinstance": "является-экземпляром",
+    "issubclass": "является-подклассом",
+    "iter": "итераратор",
+    "len": "длина",
+    "list": "список",
+    "locals": "локальные",
+    "map": "таблица",
+    "max": "максимум",
+    "memoryview": "обзор-памяти",
+    "min": "минимум",
+    "next": "следующий",
+    "object": "объект",
+    "oct": "октальный",
+    "open": "открывать",
+    "ord": "порядковый",
+    "pow": "степень",
+    "print": "печатать",
+    "property": "свойство",
+    "range": "дипазон",
+    "repr": "представление",
+    "reversed": "обратный",
+    "round": "округлить",
+    "set": "набор",
+    "setattr": "определить-атрибут",
+    "slice": "срез",
+    "sorted": "отсортированный",
+    "staticmethod": "статичный-метод",
+    "str": "строка",
+    "sum": "сумма",
+    "super": "супер",
+    "tuple": "кортеж",
+    "type": "тип",
+    "vars": "переменные",
+    "zip": "итератор-по-кортежам",
+    "__import__": "__импорт__"
+  },
+  "reviews": [
+    {
+      "term": "False",
+      "translation": "ложь",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "None",
+      "translation": "ничто",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "True",
+      "translation": "истина",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "and",
+      "translation": "и",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "as",
+      "translation": "как",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "assert",
+      "translation": "утверждать",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "async",
+      "translation": "асинхронной",
+      "comment": "🤔 асинхронно",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "асинхронно"
+      ]
+    },
+    {
+      "term": "await",
+      "translation": "ожидать",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "break",
+      "translation": "прерывать",
+      "comment": "🤔 прервать",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "прервать"
+      ]
+    },
+    {
+      "term": "class",
+      "translation": "класс",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "continue",
+      "translation": "продалжать",
+      "comment": "🤔 продолжать",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "продолжать"
+      ]
+    },
+    {
+      "term": "def",
+      "translation": "определить",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "del",
+      "translation": "удалить",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "elif",
+      "translation": "иначе–если",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "else",
+      "translation": "иначе",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "except",
+      "translation": "кроме",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "finally",
+      "translation": "наконец",
+      "comment": "🤔 вне зависимости от наличия исключений выполнить",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "вне зависимости от наличия исключений выполнить"
+      ]
+    },
+    {
+      "term": "for",
+      "translation": "для",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "from",
+      "translation": "из",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "global",
+      "translation": "глобальный",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "if",
+      "translation": "если",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "import",
+      "translation": "импортировать",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "in",
+      "translation": "в",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "is",
+      "translation": "является",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "lambda",
+      "translation": "лямбда",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "nonlocal",
+      "translation": "нелокальный",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "not",
+      "translation": "не",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "or",
+      "translation": "или",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "pass",
+      "translation": "пропускать",
+      "comment": "🤔 пропустить",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "пропустить"
+      ]
+    },
+    {
+      "term": "raise",
+      "translation": "поднимать",
+      "comment": "🤔 поднять",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "поднять"
+      ]
+    },
+    {
+      "term": "return",
+      "translation": "вернуть",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "try",
+      "translation": "попробовать",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "while",
+      "translation": "пока",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "with",
+      "translation": "с",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "yield",
+      "translation": "выдать",
+      "comment": "✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "abs",
+      "translation": "абсолютный",
+      "comment": "/ \"абс\" # ✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "all",
+      "translation": "все",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "any",
+      "translation": "какой-нибудь",
+      "comment": "🤔 любой",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "любой"
+      ]
+    },
+    {
+      "term": "ascii",
+      "translation": "ASCII-код",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "bin",
+      "translation": "бинарный",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "bool",
+      "translation": "булев",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "breakpoint",
+      "translation": "точка-останова",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "bytearray",
+      "translation": "байтовый-массив",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "bytes",
+      "translation": "байты",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "callable",
+      "translation": "вызываемый",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "chr",
+      "translation": "символ",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "classmethod",
+      "translation": "метод-класса",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "compile",
+      "translation": "компилировать",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "complex",
+      "translation": "сложный",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "delattr",
+      "translation": "удалить-атрибут",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "dict",
+      "translation": "словарь",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "dir",
+      "translation": "директория",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "divmod",
+      "translation": "деление-нацело",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "enumerate",
+      "translation": "перечислить",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "eval",
+      "translation": "вычислить",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "exec",
+      "translation": "исполнять",
+      "comment": "🤔 исполнить",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "исполнить"
+      ]
+    },
+    {
+      "term": "filter",
+      "translation": "фильтровать",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "float",
+      "translation": "плавающая-точка",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "format",
+      "translation": "формат",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "frozenset",
+      "translation": "замороженный-набор",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "getattr",
+      "translation": "добыть-атрибут",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "globals",
+      "translation": "глобальные",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "hasattr",
+      "translation": "имеет-атрибут",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "hash",
+      "translation": "хеш",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "help",
+      "translation": "помогать",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "hex",
+      "translation": "шестнадцатеричный",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "id",
+      "translation": "идентификатор",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "input",
+      "translation": "ввод",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "int",
+      "translation": "целое-число",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "isinstance",
+      "translation": "является-экземпляром",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "issubclass",
+      "translation": "является-подклассом",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "iter",
+      "translation": "итераратор",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "len",
+      "translation": "длина",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "list",
+      "translation": "список",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "locals",
+      "translation": "локальные",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "map",
+      "translation": "таблица",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "max",
+      "translation": "максимум",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "memoryview",
+      "translation": "обзор-памяти",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "min",
+      "translation": "минимум",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "next",
+      "translation": "следующий",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "object",
+      "translation": "объект",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "oct",
+      "translation": "октальный",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "open",
+      "translation": "открывать",
+      "comment": "🤔 открыть",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "открыть"
+      ]
+    },
+    {
+      "term": "ord",
+      "translation": "порядковый",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "pow",
+      "translation": "степень",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "print",
+      "translation": "печатать",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "property",
+      "translation": "свойство",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "range",
+      "translation": "дипазон",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "repr",
+      "translation": "представление",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "reversed",
+      "translation": "обратный",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "round",
+      "translation": "округлить",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "set",
+      "translation": "набор",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "setattr",
+      "translation": "определить-атрибут",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "slice",
+      "translation": "срез",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "sorted",
+      "translation": "отсортированный",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "staticmethod",
+      "translation": "статичный-метод",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "str",
+      "translation": "строка",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "sum",
+      "translation": "сумма",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "super",
+      "translation": "супер",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "tuple",
+      "translation": "кортеж",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "type",
+      "translation": "тип",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "vars",
+      "translation": "переменные",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "zip",
+      "translation": "итератор-по-кортежам",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "__import__",
+      "translation": "__импорт__",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    }
+  ],
+  "stats": {
+    "keyword_count": 35,
+    "builtin_count": 69,
+    "review_count": 104
+  }
+}

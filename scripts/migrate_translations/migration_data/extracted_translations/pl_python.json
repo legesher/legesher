@@ -1,0 +1,1159 @@
+{
+  "branch": "polish-translation",
+  "language_code": "pl",
+  "keywords": {
+    "False": "Nieprawda",
+    "None": "Nic",
+    "True": "Prawda",
+    "and": "i",
+    "as": "jako",
+    "assert": "zapewnij",
+    "async": "asynchronicznie",
+    "await": "oczekój",
+    "break": "przerwij",
+    "class": "klasa",
+    "continue": "kontynuuj",
+    "def": "definicja",
+    "del": "usuń",
+    "elif": "inaczejjeśli",
+    "else": "inaczej",
+    "except": "wyjątek",
+    "finally": "wreszcie",
+    "for": "na",
+    "from": "z",
+    "global": "globalna",
+    "if": "jeśli",
+    "import": "importuj",
+    "in": "w",
+    "is": "jest",
+    "lambda": "lambda",
+    "nonlocal": "nielokalna",
+    "not": "nie",
+    "or": "albo",
+    "pass": "przejdź",
+    "raise": "zgłoś",
+    "return": "zwróć",
+    "try": "spróbuj",
+    "while": "podczas",
+    "with": "przy",
+    "yield": "wydobywaj"
+  },
+  "builtins": {
+    "abs": "wartość_całkowita",
+    "all": "wszystko",
+    "any": "jakiekolwiek",
+    "ascii": "ascii",
+    "bin": "binarny",
+    "bool": "bool",
+    "breakpoint": "punkt_przerwania",
+    "bytearray": "tablica_bajtów",
+    "bytes": "bajty",
+    "callable": "wywoływalne",
+    "chr": "znak",
+    "classmethod": "metoda_klasowa",
+    "compile": "skompiluj",
+    "complex": "kompleksowa",
+    "delattr": "usuń_atrybut",
+    "dict": "słownik",
+    "dir": "katalog",
+    "divmod": "dzielmod",
+    "enumerate": "wyliczaj",
+    "eval": "oceń",
+    "exec": "wykonaj",
+    "filter": "filtruj",
+    "float": "zmiennoprzecinkowa",
+    "format": "sformatuj",
+    "frozenset": "niezmienny_zestaw",
+    "getattr": "weź_atrybut",
+    "globals": "globalne",
+    "hasattr": "ma_atrybut",
+    "hash": "zakoduj",
+    "help": "pomoc",
+    "hex": "szesnastkowa",
+    "id": "identyfikator",
+    "input": "wkład",
+    "int": "liczba_całkowita",
+    "isinstance": "jest_wystąpieniem",
+    "issubclass": "jest_podklasą",
+    "iter": "iterator",
+    "len": "ilość",
+    "list": "lista",
+    "locals": "lokalne",
+    "map": "zamapuj",
+    "max": "maksymalna",
+    "memoryview": "widok_pamięciowy",
+    "min": "minimalna",
+    "next": "następny",
+    "object": "objekt",
+    "oct": "ósemkowa",
+    "open": "otwartym",
+    "ord": "ord",
+    "pow": "do_potęgi",
+    "print": "drukuj",
+    "property": "właściwość",
+    "range": "zasięg",
+    "repr": "przedrukuj",
+    "reversed": "odwróć",
+    "round": "zaokrągl",
+    "set": "ustaw",
+    "setattr": "ustaw_atrybut",
+    "slice": "pokrój",
+    "sorted": "posortowana",
+    "staticmethod": "metoda_statyczna",
+    "str": "ciąg",
+    "sum": "suma",
+    "super": "rodzic",
+    "tuple": "krotka",
+    "type": "typ",
+    "vars": "zmienne",
+    "zip": "zip",
+    "__import__": "__importuj__"
+  },
+  "reviews": [
+    {
+      "term": "False",
+      "translation": "Nieprawda",
+      "comment": "Fałsz? # ❓ I Would go with Fałsz ❓ \"fałsz\" sounds better ❓ 'fałsz' definitely sounds more natural",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "I Would go with Fałsz ❓",
+        "fałsz"
+      ]
+    },
+    {
+      "term": "None",
+      "translation": "Nic",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "True",
+      "translation": "Prawda",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "and",
+      "translation": "i",
+      "comment": "❓ I would use \"oraz\" because i is often used as variable for iteration ❓ \"oraz\" would be better ❓ 'oraz' sounds better",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "I would use",
+        "oraz",
+        "oraz"
+      ]
+    },
+    {
+      "term": "as",
+      "translation": "jako",
+      "comment": "jak? ✅ 'jako' is good ✅ \"jako\" is fine ✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "assert",
+      "translation": "zapewnij",
+      "comment": "zapewniać ✅ 'zapewnij' is good ✅ \"zapewnij\" is fine ✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "async",
+      "translation": "asynchronicznie",
+      "comment": "Probably best to keep as \"async\". ✅ both seem good ✅ \"asynchronicznie\" is fine but quite long, but I think it might be more understandable this way✅ the translation is correct, although i'd keep it as 'async'",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "await",
+      "translation": "oczekój",
+      "comment": "poczekaj? oczekiwać? ❓ it's a grammar error, should be: 'oczekuj' ❓ it should be \"oczekuj\", but apart from that it's fine ❓ it's 'oczekuj'",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "it",
+        "it should be",
+        "it"
+      ]
+    },
+    {
+      "term": "break",
+      "translation": "przerwij",
+      "comment": "przerwać? ✅ is good ✅ \"przerwij\" is fine ✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "class",
+      "translation": "klasa",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "continue",
+      "translation": "kontynuuj",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "def",
+      "translation": "definicja",
+      "comment": "Probably best to keep as \"def\" ✅ both are good ✅ I think that \"definicja\" is better and easier to understand, especially for total newbies, even though it's longer ❓ 'definicja' sounds good, although python's 'def' is an abbreviation of 'define'. 'define' in polish is 'zdefiniuj'",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "definicja"
+      ]
+    },
+    {
+      "term": "del",
+      "translation": "usuń",
+      "comment": "kasuj? ✅ 'usuń' is good ✅ \"usuń\" is fine ✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "elif",
+      "translation": "inaczejjeśli",
+      "comment": "inaczej_jeśli?   Abbreviation: injeśli? [2ndOPINION] ✅ 'inaczejjeśli ❓considering my change below I suggest \"w_przeciwnym_razie_jeżeli\" ✅ 'inaczejjeśli' sounds pretty straightforward and i'd leave it as is",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "considering my change below I suggest"
+      ]
+    },
+    {
+      "term": "else",
+      "translation": "inaczej",
+      "comment": "✅ ❓ I'd go with \"w_przeciwnym_razie\", it's way longer but sounds more appropriate ✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "I"
+      ]
+    },
+    {
+      "term": "except",
+      "translation": "wyjątek",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "finally",
+      "translation": "wreszcie",
+      "comment": "ostatecznie? ✅ 'wreszcie' is good ❓ I'd also consider: \"w_końcu\" ❓ in this context, it'd be 'ostatecznie'",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "I",
+        "in this context"
+      ]
+    },
+    {
+      "term": "for",
+      "translation": "na",
+      "comment": "za? ❓ should be: 'dla' ❓ \"dla\" is more appropriate ❓ i agree on 'dla'",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "should be:",
+        "dla",
+        "i agree on"
+      ]
+    },
+    {
+      "term": "from",
+      "translation": "z",
+      "comment": "od? ✅ 'z' is good ✅ \"z\" is fine ✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "global",
+      "translation": "globalna",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "if",
+      "translation": "jeśli",
+      "comment": "jeżeli? ✅ both are good ❓ \"jeżeli\" sounds better ✅ 'jeśli' sounds better imho, personal preference. both are understandable",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "jeżeli"
+      ]
+    },
+    {
+      "term": "import",
+      "translation": "importuj",
+      "comment": "importować? ✅ 'importuj' is good ❓ I think \"zaimportuj\" might be better ✅ 'importuj' sounds best",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "I think"
+      ]
+    },
+    {
+      "term": "in",
+      "translation": "w",
+      "comment": "we? ✅ 'w' is good ✅ \"w\" is fine ✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "is",
+      "translation": "jest",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "lambda",
+      "translation": "lambda",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "nonlocal",
+      "translation": "nielokalna",
+      "comment": "nie_lokalna? ✅ 'nielokalna' is good ✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "not",
+      "translation": "nie",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "or",
+      "translation": "albo",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "pass",
+      "translation": "przejdź",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "raise",
+      "translation": "zgłoś",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "return",
+      "translation": "zwróć",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "try",
+      "translation": "spróbuj",
+      "comment": "✅✅✅",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "while",
+      "translation": "podczas",
+      "comment": "❓ should be 'dopóki' or 'gdy' ❓ \"dopóki\" would be better ❓ i agree on 'dopóki'",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "should be",
+        "dopóki",
+        "i agree on"
+      ]
+    },
+    {
+      "term": "with",
+      "translation": "przy",
+      "comment": "Can't think of any other word that makes sense & doesn't clash with \"from\". [2ndOPINION] # ✅ ❓ I'd go with \"wraz\" ❓ i'd go with 'wraz' / 'wraz_z'",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "I",
+        "i"
+      ]
+    },
+    {
+      "term": "yield",
+      "translation": "wydobywaj",
+      "comment": "❓ 'zwracaj' should be better although it does conflict with 'return' ❓ not sure how to translate, it's similar to return but then it would collide ❓ I think 'dostarcz' could work pretty well to avoid the clash with 'return'",
+      "category": "keyword",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "zwracaj",
+        "not sure how to translate",
+        "I think"
+      ]
+    },
+    {
+      "term": "abs",
+      "translation": "wartość_całkowita",
+      "comment": "To avoid clash with \"int\" the \"wartość_\" & \"liczba_\" (for \"int\") unless there are better suggestions? [2dOPInNION] ❓ I think it should be \"wartość_bezwzględna\"? ❓ agreed, should be 'wartość_bezwzględna', maybe even just 'bezwzględna' to make it shorter",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "I think it should be",
+        "agreed"
+      ]
+    },
+    {
+      "term": "all",
+      "translation": "wszystko",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "any",
+      "translation": "jakiekolwiek",
+      "comment": "❓ \"jakikolwiek\" might be better ❓ 'jakikolwiek' would work better in this case",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "jakikolwiek",
+        "jakikolwiek"
+      ]
+    },
+    {
+      "term": "ascii",
+      "translation": "ascii",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "bin",
+      "translation": "binarny",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "bool",
+      "translation": "bool",
+      "comment": "boolowska? zerojedynkowa? 🤔 not sure if there is any translation🤔 we use 'boolean' in polish so i'd leave it",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "not sure if there is any translation🤔 we use"
+      ]
+    },
+    {
+      "term": "breakpoint",
+      "translation": "punkt_przerwania",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "bytearray",
+      "translation": "tablica_bajtów",
+      "comment": "szyk_bajtów? ✅ \"tablica_bajtów\" is fine ❓ i'd argue that 'szereg_bajtów' would be better. 'tablica' means 'table/board' and i feel like it shouldn't be used in this context",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "i"
+      ]
+    },
+    {
+      "term": "bytes",
+      "translation": "bajty",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "callable",
+      "translation": "wywoływalne",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "chr",
+      "translation": "znak",
+      "comment": "litera? ✅ znak is fine ✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "classmethod",
+      "translation": "metoda_klasowa",
+      "comment": "metodaklasowa klasowametoda? klasowa_metoda? ✅ \"metoda_klasowa\" is fine✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "compile",
+      "translation": "skompiluj",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "complex",
+      "translation": "kompleksowa",
+      "comment": "kompleksowa_analiza? ❓ not sure about this one ❓ it's 'zespolona' or 'liczba_zespolona'",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "not sure about this one ❓ it"
+      ]
+    },
+    {
+      "term": "delattr",
+      "translation": "usuń_atrybut",
+      "comment": "usuńatrybut? ✅ I think that writing with floor will make the code look cleaner so I'd leave it as it is✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "dict",
+      "translation": "słownik",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "dir",
+      "translation": "katalog",
+      "comment": "informator? ✅ \"katalog\" is fine✅ 'katalog' sounds better",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "divmod",
+      "translation": "dzielmod",
+      "comment": "❓ \"podziel_z_resztą\"? But it's a bit longer ❓ 'dziel_z_resztą' maybe?",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "podziel_z_resztą",
+        "dziel_z_resztą"
+      ]
+    },
+    {
+      "term": "enumerate",
+      "translation": "wyliczaj",
+      "comment": "❓ \"wylicz\" sounds better ❓ agreed, 'wylicz' sounds more appropriate",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "wylicz",
+        "agreed"
+      ]
+    },
+    {
+      "term": "eval",
+      "translation": "oceń",
+      "comment": "❓ I think it's quite similar to exec so I don't know what translation should be here ❓ 'oceń' or 'oszacuj' should be fine",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "I think it",
+        "oceń"
+      ]
+    },
+    {
+      "term": "exec",
+      "translation": "wykonaj",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "filter",
+      "translation": "filtruj",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "float",
+      "translation": "zmiennoprzecinkowa",
+      "comment": "liczba_zmiennoprzecinkowa?   Abbreviation: zmienno? [2ndOPINION] ✅ I think \"zmiennoprzecinkowa\" is fine ✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "format",
+      "translation": "sformatuj",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "frozenset",
+      "translation": "niezmienny_zestaw",
+      "comment": "niezmiennyzestaw? ✅ ❓ 'niezmienny_zbiór' sounds better to me. in polish, 'zestaw' would rather be used for e.g. a toy set",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "niezmienny_zbiór"
+      ]
+    },
+    {
+      "term": "getattr",
+      "translation": "weź_atrybut",
+      "comment": "weźatrybut? ❓ \"pobierz_atrybut\" would be better ✅ i don't mind 'weź' in this context",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "pobierz_atrybut"
+      ]
+    },
+    {
+      "term": "globals",
+      "translation": "globalne",
+      "comment": "wszystkie_globalne? ❓ \"zmienne_globalne\"? ❓ i like 'zmienne_globalne' or just 'globalne'",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "zmienne_globalne",
+        "i like"
+      ]
+    },
+    {
+      "term": "hasattr",
+      "translation": "ma_atrybut",
+      "comment": "maatrybut ✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "hash",
+      "translation": "zakoduj",
+      "comment": "❓ \"wartość_skrócona\"? 🤔 really not sure about this one, might have to leave it as it is",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "wartość_skrócona",
+        "really not sure about this one"
+      ]
+    },
+    {
+      "term": "help",
+      "translation": "pomoc",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "hex",
+      "translation": "szesnastkowa",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "id",
+      "translation": "identyfikator",
+      "comment": "Probably best to keep as \"id\". # ✅ both are fine here✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "input",
+      "translation": "wkład",
+      "comment": "wklad_użytkownika? ❓ \"zmienna_wejściowa\" might better? ❓ \"zmienna_wejściowa\" sounds most appropriate",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "zmienna_wejściowa",
+        "zmienna_wejściowa"
+      ]
+    },
+    {
+      "term": "int",
+      "translation": "liczba_całkowita",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "isinstance",
+      "translation": "jest_wystąpieniem",
+      "comment": "jestwystąpieniem? # ✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "issubclass",
+      "translation": "jest_podklasą",
+      "comment": "jestpodklasą # ✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "iter",
+      "translation": "iterator",
+      "comment": "Probably best to keep as \"iter\". [2ndOPINION] 🤔 not sure if it's possible to translate ✅ 'iterator' sounds pretty straightforward to me",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "not sure if it"
+      ]
+    },
+    {
+      "term": "len",
+      "translation": "ilość",
+      "comment": "❓ \"długość\" would be better ❓ i agree on 'długość'",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "długość",
+        "i agree on"
+      ]
+    },
+    {
+      "term": "list",
+      "translation": "lista",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "locals",
+      "translation": "lokalne",
+      "comment": "❓ \"zmienne_lokalne\" would be better ✅ 'lokalne' sounds alright to me",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "zmienne_lokalne"
+      ]
+    },
+    {
+      "term": "map",
+      "translation": "zamapuj",
+      "comment": "❓ not sure how to translate it  🤔 i can only think of 'przypisz' [2ndOPINION]",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "not sure how to translate it  🤔 i can only think of"
+      ]
+    },
+    {
+      "term": "max",
+      "translation": "maksymalna",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "memoryview",
+      "translation": "widok_pamięciowy",
+      "comment": "widokpamięciowy ✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "min",
+      "translation": "minimalna",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "next",
+      "translation": "następny",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "object",
+      "translation": "objekt",
+      "comment": "❓ it should be \"obiekt\", aside from that it's fine ❓ 'obiekt'",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "it should be",
+        "obiekt"
+      ]
+    },
+    {
+      "term": "oct",
+      "translation": "ósemkowa",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "open",
+      "translation": "otwartym",
+      "comment": "Was thinking \"otwórz\" but then we lose Python's speech-like flow. [2ndOPINION] ❓ i think \"otwórz\" would be better ❓ i agree on 'otwórz'",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "i think",
+        "i agree on"
+      ]
+    },
+    {
+      "term": "ord",
+      "translation": "ord",
+      "comment": "I can't think✅ of a sensible translation for this, probably best to keep as \"ord\"? [2ndOPINION] ❓ \"numer_unicode\"? ✅ i'd leave it as 'ord'",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "numer_unicode"
+      ]
+    },
+    {
+      "term": "pow",
+      "translation": "do_potęgi",
+      "comment": "✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "print",
+      "translation": "drukuj",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "property",
+      "translation": "właściwość",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "range",
+      "translation": "zasięg",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "repr",
+      "translation": "przedrukuj",
+      "comment": "przedruk? przedrukować? ❓ I think it's more like \"reprezentacja\"? 🤔",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "I think it"
+      ]
+    },
+    {
+      "term": "reversed",
+      "translation": "odwróć",
+      "comment": "odwrócić? odwrócona? ❓ \"odwrócona\" sounds better ❓ 'odwrócona'",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "odwrócona",
+        "odwrócona"
+      ]
+    },
+    {
+      "term": "round",
+      "translation": "zaokrągl",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "set",
+      "translation": "ustaw",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "setattr",
+      "translation": "ustaw_atrybut",
+      "comment": "ustawatrybut? # ✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "slice",
+      "translation": "pokrój",
+      "comment": "❓ \"potnij\" sounds better ✅ either 'pokrój' or 'potnij' sound fine",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "potnij"
+      ]
+    },
+    {
+      "term": "sorted",
+      "translation": "posortowana",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "staticmethod",
+      "translation": "metoda_statyczna",
+      "comment": "metodastatyczna? ✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "str",
+      "translation": "ciąg",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "sum",
+      "translation": "suma",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "super",
+      "translation": "rodzic",
+      "comment": "❓ actually I don't know what might be better for it, but \"rodzic\" doesn't sound quite right ❓ i'd probably leave it as 'super', but 'rodzic' is okay as well",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "actually I don",
+        "i"
+      ]
+    },
+    {
+      "term": "tuple",
+      "translation": "krotka",
+      "comment": "❓ \"stała_lista\"? \"niezmienialna_tablica\"? ✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "stała_lista"
+      ]
+    },
+    {
+      "term": "type",
+      "translation": "typ",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "vars",
+      "translation": "zmienne",
+      "comment": "❓ maybe \"atrybuty_zmiennej\"? ✅ 'zmienne' is used commonly",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": [
+        "maybe"
+      ]
+    },
+    {
+      "term": "zip",
+      "translation": "zip",
+      "comment": "✅✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    },
+    {
+      "term": "__import__",
+      "translation": "__importuj__",
+      "comment": "__importować__? ✅ \"__importuj__\" is fine✅",
+      "category": "builtin",
+      "has_emoji": true,
+      "has_mention": false,
+      "suggestions": []
+    }
+  ],
+  "stats": {
+    "keyword_count": 35,
+    "builtin_count": 69,
+    "review_count": 104
+  }
+}
