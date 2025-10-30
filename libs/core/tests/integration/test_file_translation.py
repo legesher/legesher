@@ -83,9 +83,9 @@ class TestFileTranslation:
             orig_indent = len(orig) - len(orig.lstrip())
             trans_indent = len(trans) - len(trans.lstrip())
 
-            assert (
-                orig_indent == trans_indent
-            ), f"Line {i+1}: Indentation mismatch ({orig_indent} vs {trans_indent})"
+            assert orig_indent == trans_indent, (
+                f"Line {i + 1}: Indentation mismatch ({orig_indent} vs {trans_indent})"
+            )
 
     def test_file_translation_encoding_utf8(self, translator, tmp_path):
         """Test that translated files are UTF-8 encoded."""
