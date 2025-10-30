@@ -1,0 +1,8 @@
+# Markdownlint configuration for Legesher
+
+# MD013: Line length
+# Allow longer lines for tables and code blocks
+MD013:
+  line_length: 120  # Increase from default 80
+  tables: false     # Don't check line length in tables
+  code_blocks: false # Don't check line length in code blocks

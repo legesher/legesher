@@ -37,11 +37,11 @@ keywords:
     confidence: COMMUNITY
     notes: Migrated from legesher-translations repository
   as:
-    translation: كلمة مفتاحية بمعنى كاف التشبية تستخدم لاعطاء اسم بديل للموديل عند تضمينها
+    translation: كـ
     form: preposition
     pattern: STATE_KEYWORD
-    confidence: COMMUNITY
-    notes: Migrated from legesher-translations repository
+    confidence: REVIEWED
+    notes: Simplified from verbose community translation for better code readability
   assert:
     translation: تصريح تأكيد صحة قيمة
     form: masdar

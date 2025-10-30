@@ -8,7 +8,9 @@ authors = [
 ]
 license = {text = "MIT"}
 requires-python = ">=3.10,<4.0"
-dependencies = []
+dependencies = [
+    "legesher-i18n",
+]
 name = "legesher-core"
 version = "0.0.1"
 description = "Core library for Legesher Monorepo"
@@ -76,3 +78,6 @@ extend-exclude = "tests/fixtures/sample_spanish.py"
 
 [tool.ruff]
 extend-exclude = ["tests/fixtures/sample_spanish.py"]
+
+[tool.uv.sources]
+legesher-i18n = { path = "../i18n", editable = true }

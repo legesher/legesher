@@ -22,23 +22,15 @@ repos:
     args: [--fix=lf]
   - id: detect-private-key
 
-  # Python code formatting with Black
-- repo: https://github.com/psf/black
-  rev: 24.10.0
-  hooks:
-  - id: black
-    args: [--line-length=88]
-    files: ^libs/.*\.py$
-
   # Python linting and auto-fixing with Ruff
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.8.4
+  rev: v0.14.2
   hooks:
       # Run the linter
   - id: ruff
     args: [--fix, --exit-non-zero-on-fix]
     files: ^libs/.*\.py$
-      # Run the formatter (faster alternative to black, but we use both)
+      # Run the formatter
   - id: ruff-format
     files: ^libs/.*\.py$
 

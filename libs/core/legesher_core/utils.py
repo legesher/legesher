@@ -37,8 +37,7 @@ def validate_utf8_encoding(file_path: Path) -> str:
         return "utf-8"
     except UnicodeDecodeError as e:
         raise EncodingError(
-            f"File '{file_path}' must be UTF-8 encoded. "
-            f"Detected encoding error: {e}"
+            f"File '{file_path}' must be UTF-8 encoded. Detected encoding error: {e}"
         ) from e
 
 
