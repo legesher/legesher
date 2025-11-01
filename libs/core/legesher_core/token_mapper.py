@@ -121,3 +121,26 @@ class TokenMapper:
             False
         """
         return token in self.builtin_map
+
+    def reverse(self) -> "TokenMapper":
+        """Create a reversed mapper (target → source language).
+
+        Returns a new TokenMapper with reversed translation maps, enabling
+        bidirectional translation (e.g., Spanish → English).
+
+        Returns:
+            New TokenMapper with reversed maps
+
+        Example:
+            >>> en_to_es = TokenMapper({"def": "definir"}, {"print": "imprimir"})
+            >>> es_to_en = en_to_es.reverse()
+            >>> es_to_en.get_keyword("definir")
+            'def'
+
+        Note:
+            If multiple English keywords map to the same target keyword,
+            only one will be preserved in the reversed map (dict behavior).
+        """
+        reversed_keywords = {v: k for k, v in self.keyword_map.items()}
+        reversed_builtins = {v: k for k, v in self.builtin_map.items()}
+        return TokenMapper(reversed_keywords, reversed_builtins)

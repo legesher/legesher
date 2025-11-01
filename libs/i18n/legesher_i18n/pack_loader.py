@@ -5,6 +5,7 @@ resolving inheritance chains, merging keyword translations, and caching results.
 """
 
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
@@ -89,7 +90,10 @@ class LanguagePack:
 
 
 class LanguagePackLoader:
-    """Loads language packs with inheritance resolution and caching."""
+    """Loads language packs with inheritance resolution and caching.
+
+    This loader is thread-safe and uses LRU caching for performance.
+    """
 
     def __init__(self, pack_root: Optional[Path] = None):
         """Initialize the loader.
@@ -103,8 +107,8 @@ class LanguagePackLoader:
             pack_root = Path(__file__).parent.parent / "languages"
 
         self.pack_root = pack_root
-        self._cache: dict[tuple[str, str, str], LanguagePack] = {}
 
+    @lru_cache(maxsize=32)
     def load(
         self,
         language: str,
@@ -112,6 +116,8 @@ class LanguagePackLoader:
         version: Optional[str] = None,
     ) -> LanguagePack:
         """Load a language pack with full inheritance resolution.
+
+        This method is thread-safe and caches results using lru_cache.
 
         Args:
             language: Language code (e.g., 'es', 'ar')
@@ -123,21 +129,22 @@ class LanguagePackLoader:
             Loaded LanguagePack with merged keywords from inheritance
 
         Raises:
-            PackNotFoundError: If pack file doesn't exist
+            PackNotFoundError: If pack file doesn't exist (includes available languages)
             CircularInheritanceError: If circular inheritance detected
             MaxInheritanceDepthError: If inheritance too deep
         """
-        # Check cache first
-        cache_key = (language, target, version or "default")
-        if cache_key in self._cache:
-            return self._cache[cache_key]
-
         # Build pack path
         pack_path = self._get_pack_path(language, target, version)
 
         if not pack_path.exists():
+            # Get list of available languages for helpful error message
+            available = self.list_available_languages(target)
             raise PackNotFoundError(
-                language, target, version or "default", str(pack_path)
+                language,
+                target,
+                version or "default",
+                str(pack_path),
+                available_languages=available,
             )
 
         # Load with inheritance
@@ -157,9 +164,6 @@ class LanguagePackLoader:
             extends=pack_schema.extends,
             inheritance_chain=inheritance_chain,
         )
-
-        # Cache the result
-        self._cache[cache_key] = pack
 
         return pack
 
@@ -308,20 +312,108 @@ class LanguagePackLoader:
         return merged
 
     def clear_cache(self):
-        """Clear the pack cache."""
-        self._cache.clear()
+        """Clear the pack cache.
+
+        Thread-safe cache clearing using lru_cache.cache_clear().
+        """
+        self.load.cache_clear()
 
     def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics.
 
         Returns:
-            Dictionary with cache size and hit information
+            Dictionary with cache size and hit information from lru_cache
         """
+        info = self.load.cache_info()
         return {
-            "size": len(self._cache),
-            "entries": list(self._cache.keys()),
+            "hits": info.hits,
+            "misses": info.misses,
+            "size": info.currsize,
+            "maxsize": info.maxsize,
         }
+
+    def list_available_languages(self, target: str = "python") -> list[tuple[str, str]]:
+        """List all available language packs for a target language.
+
+        Note: This method performs filesystem operations (globbing, file I/O, YAML parsing)
+        which can be expensive. Results are computed fresh on each call since language
+        packs may be added/removed at runtime. For better performance in production,
+        consider calling this method once at startup and caching the results.
+
+        Args:
+            target: Target programming language (default: 'python')
+
+        Returns:
+            List of (language_code, language_name) tuples
+
+        Example:
+            >>> loader = LanguagePackLoader()
+            >>> loader.list_available_languages()
+            [('es', 'Spanish'), ('ar', 'Arabic'), ('hi', 'Hindi')]
+        """
+        languages: list[tuple[str, str]] = []
+        target_dir = self.pack_root / target
+
+        if not target_dir.exists():
+            return languages
+
+        # Scan for .yml files in target directory
+        for pack_file in target_dir.glob("*.yml"):
+            if pack_file.is_file():
+                lang_code = pack_file.stem
+
+                # Skip version-index file (not a language pack)
+                if lang_code == "version-index":
+                    continue
+
+                # Try to load metadata to get full language name
+                try:
+                    with open(pack_file, "r", encoding="utf-8") as f:
+                        data = yaml.safe_load(f)
+                        lang_name = data.get("metadata", {}).get(
+                            "name", lang_code.upper()
+                        )
+                except (OSError, yaml.YAMLError, KeyError, TypeError, AttributeError):
+                    # Fall back to language code if file can't be read, parsed,
+                    # or has unexpected structure
+                    lang_name = lang_code.upper()
+
+                languages.append((lang_code, lang_name))
+
+        # Also check versioned packs
+        for version_dir in target_dir.iterdir():
+            if version_dir.is_dir():
+                for pack_file in version_dir.glob("*.yml"):
+                    if pack_file.is_file():
+                        lang_code = pack_file.stem
+
+                        # Skip version-index file
+                        if lang_code == "version-index":
+                            continue
+
+                        if not any(code == lang_code for code, _ in languages):
+                            try:
+                                with open(pack_file, "r", encoding="utf-8") as f:
+                                    data = yaml.safe_load(f)
+                                    lang_name = data.get("metadata", {}).get(
+                                        "name", lang_code.upper()
+                                    )
+                            except (
+                                OSError,
+                                yaml.YAMLError,
+                                KeyError,
+                                TypeError,
+                                AttributeError,
+                            ):
+                                # Fall back to language code if file can't be read, parsed,
+                                # or has unexpected structure
+                                lang_name = lang_code.upper()
+
+                            languages.append((lang_code, lang_name))
+
+        return sorted(languages, key=lambda x: x[0])
 
     def __repr__(self) -> str:
         """String representation of loader."""
-        return f"LanguagePackLoader(pack_root={self.pack_root}, cache_size={len(self._cache)})"
+        info = self.load.cache_info()
+        return f"LanguagePackLoader(pack_root={self.pack_root}, cache_size={info.currsize}/{info.maxsize})"
