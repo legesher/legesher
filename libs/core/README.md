@@ -15,6 +15,30 @@ Token-based translation engine for multilingual Python.
 
 ## Quick Start
 
+### Using Language Packs (Recommended)
+
+```python
+from legesher_core import TokenTranslator
+
+# Create translator from language pack (auto-detects Python version)
+translator = TokenTranslator.from_language_pack("es")
+
+# Translate code
+code = "def greet():\n    print('Hello!')"
+spanish = translator.translate_code(code)
+# Result: "definir greet():\n    imprimir('Hello!')"
+
+# Bidirectional translation
+es_to_en = translator.reverse()
+back_to_english = es_to_en.translate_code(spanish)
+
+# List available languages
+languages = TokenTranslator.list_available_languages()
+# [('ar', 'Arabic'), ('es', 'Spanish')]
+```
+
+### Using Custom Maps (Legacy)
+
 ```python
 from legesher_core import TokenTranslator
 
@@ -28,16 +52,40 @@ translator = TokenTranslator(spanish_keywords, spanish_builtins)
 # Translate code
 code = "def greet():\n    print('Hello!')"
 spanish = translator.translate_code(code, "en", "es")
-# Result: "definir greet():\n    imprimir('Hello!')"
 ```
 
 ## Testing
 
+### Run all tests
+
 ```bash
-uv run pytest tests/ --cov=legesher_core
+cd libs/core
+uv run python -m pytest tests/ -v
 ```
 
-**Results**: 86 tests passing, 91% coverage
+### Run specific test file
+
+```bash
+cd libs/core
+uv run python -m pytest tests/integration/test_pack_integration.py -v
+```
+
+### Run with coverage
+
+```bash
+cd libs/core
+uv run python -m pytest tests/ --cov=legesher_core --cov-report=html
+```
+
+### Troubleshooting Test Runs
+
+If you encounter "No module named pytest":
+
+1. Ensure you're in the package directory (`libs/core`)
+2. Run `uv sync` to install dependencies
+3. Use `uv run python -m pytest` (not just `pytest`)
+
+**Current Results**: 255 tests passing, 4 skipped
 
 ## License
 

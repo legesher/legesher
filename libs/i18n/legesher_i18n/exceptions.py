@@ -4,6 +4,8 @@ This module defines exception classes for language pack loading, validation,
 version detection, and inheritance resolution.
 """
 
+from typing import Optional
+
 
 class LanguagePackError(Exception):
     """Base exception for all language pack-related errors."""
@@ -14,15 +16,31 @@ class LanguagePackError(Exception):
 class PackNotFoundError(LanguagePackError):
     """Raised when a requested language pack cannot be found."""
 
-    def __init__(self, language: str, target: str, version: str, pack_path: str):
+    def __init__(
+        self,
+        language: str,
+        target: str,
+        version: str,
+        pack_path: str,
+        available_languages: Optional[list[tuple[str, str]]] = None,
+    ):
         self.language = language
         self.target = target
         self.version = version
         self.pack_path = pack_path
-        super().__init__(
-            f"Language pack not found: {language}/{target}/{version} "
-            f"(searched: {pack_path})"
-        )
+        self.available_languages = available_languages
+
+        # Build error message with available languages if provided
+        msg = f"Language pack not found: '{language}' for {target} {version}\n"
+        msg += f"Searched: {pack_path}\n"
+
+        if available_languages:
+            msg += "\nAvailable languages:\n"
+            for code, name in available_languages:
+                msg += f"  - {code} ({name})\n"
+            msg += "\nTo add a new language pack, see: https://docs.legesher.io/guides/creating-packs"
+
+        super().__init__(msg)
 
 
 class PackValidationError(LanguagePackError):

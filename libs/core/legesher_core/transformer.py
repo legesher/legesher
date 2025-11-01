@@ -7,9 +7,10 @@ whitespace, comments, and code structure.
 
 import io
 import logging
+import sys
 import tokenize
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 from .cultural_comments import CulturalCommentParser
 from .exceptions import InvalidCodeError
@@ -247,3 +248,145 @@ class TokenTranslator:
         return self.translate_code(
             source_code, source_lang="en", target_lang=target_lang
         )
+
+    def reverse(self) -> "TokenTranslator":
+        """Create a reversed translator (target → source language).
+
+        Returns a new TokenTranslator with reversed translation maps, enabling
+        bidirectional translation (e.g., Spanish → English).
+
+        Returns:
+            New TokenTranslator with reversed maps
+
+        Example:
+            >>> en_to_es = TokenTranslator.from_language_pack("es")
+            >>> es_to_en = en_to_es.reverse()
+            >>> spanish = "definir greet(): retornar 42"
+            >>> english = es_to_en.translate_code(spanish)
+            >>> "def greet(): return 42" in english
+            True
+
+        Note:
+            If multiple English keywords map to the same target keyword,
+            only one will be preserved in the reversed map (dict behavior).
+        """
+        reversed_mapper = self.mapper.reverse()
+        return TokenTranslator(
+            keyword_map=reversed_mapper.keyword_map,
+            builtin_map=reversed_mapper.builtin_map,
+            python_version=self.python_version,
+        )
+
+    @classmethod
+    def from_language_pack(
+        cls,
+        language: str,
+        python_version: Optional[str] = None,
+    ) -> "TokenTranslator":
+        """Create translator from language pack with version awareness.
+
+        Loads the appropriate language pack for the specified language and
+        Python version, with automatic version detection if not specified.
+
+        The language pack system supports inheritance, so newer Python
+        versions automatically inherit translations from earlier versions.
+
+        Args:
+            language: ISO 639-1 language code (e.g., 'es', 'ar', 'hi')
+            python_version: Python version string (e.g., '3.10', '3.13')
+                           If None, auto-detects from runtime (sys.version_info)
+
+        Returns:
+            Configured TokenTranslator ready for code translation
+
+        Raises:
+            PackNotFoundError: If language pack doesn't exist for this version
+                              (includes list of available languages)
+            PackValidationError: If pack file is corrupted or invalid
+
+        Example:
+            >>> # Auto-detect version from runtime
+            >>> translator = TokenTranslator.from_language_pack("es")
+            >>> code = "def greet(): print('Hello')"
+            >>> spanish = translator.translate_code(code)
+            >>> print(spanish)
+            definir greet(): imprimir('Hello')
+
+            >>> # Pin to specific version
+            >>> translator = TokenTranslator.from_language_pack("es", "3.10")
+
+            >>> # Round-trip translation
+            >>> en_to_es = TokenTranslator.from_language_pack("es")
+            >>> es_to_en = en_to_es.reverse()
+
+        See Also:
+            - reverse(): Create bidirectional translator
+            - list_available_languages(): Get available language packs
+
+        Note:
+            Language packs are cached after first load for performance.
+            Concurrent calls are thread-safe.
+        """
+        # Import here to avoid circular dependency
+        from legesher_i18n import LanguagePackLoader
+
+        # Auto-detect Python version if not provided
+        if python_version is None:
+            version_info = sys.version_info
+            python_version = f"{version_info.major}.{version_info.minor}"
+            logger.debug(f"Auto-detected Python version: {python_version}")
+
+        # Load language pack
+        loader = LanguagePackLoader()
+        pack = loader.load(language, target="python", version=python_version)
+
+        logger.info(
+            f"Loaded language pack: {pack.language} ({len(pack.keywords)} keywords, "
+            f"{len(pack.builtins)} builtins) for Python {pack.version}"
+        )
+
+        # Create translator with loaded maps
+        return cls(
+            keyword_map=pack.keywords,
+            builtin_map=pack.builtins,
+            python_version=python_version,
+        )
+
+    @classmethod
+    def list_available_languages(cls) -> list[tuple[str, str]]:
+        """Get list of available language packs.
+
+        Returns:
+            List of (language_code, language_name) tuples
+
+        Example:
+            >>> TokenTranslator.list_available_languages()
+            [('ar', 'Arabic'), ('es', 'Spanish'), ('hi', 'Hindi')]
+
+        Note:
+            This scans the language pack directory to find all available
+            languages for Python.
+        """
+        # Import here to avoid circular dependency
+        from legesher_i18n import LanguagePackLoader
+
+        loader = LanguagePackLoader()
+        return loader.list_available_languages(target="python")
+
+    def get_pack_info(self) -> dict[str, Union[str, int]]:
+        """Get information about the translator's language maps.
+
+        Returns:
+            Dictionary with translation map metadata
+
+        Example:
+            >>> translator = TokenTranslator.from_language_pack("es")
+            >>> info = translator.get_pack_info()
+            >>> info
+            {'python_version': '3.13', 'keyword_count': 35, 'builtin_count': 69}
+        """
+        return {
+            "python_version": self.python_version,
+            "keyword_count": len(self.mapper.keyword_map),
+            "builtin_count": len(self.mapper.builtin_map),
+        }
