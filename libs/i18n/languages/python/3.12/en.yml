@@ -1,0 +1,22 @@
+# English Language Pack for Python 3.12
+# Extends 3.11 pack - adds 'type' keyword (PEP 695: Type Parameter Syntax)
+
+language: en
+target: python
+version: '3.12'
+extends: ../3.11/en.yml
+
+keywords:
+  # Python 3.12+ specific (PEP 695: Type Parameter Syntax)
+  type: type
+
+metadata:
+  python_version_min: '3.12'
+  python_version_max: '3.13'
+  compatibility_tested:
+  - '3.12'
+  - '3.13'
+  last_updated: '2025-11-03'
+  community_reviewed: true
+  author: Legesher Team
+  license: MIT

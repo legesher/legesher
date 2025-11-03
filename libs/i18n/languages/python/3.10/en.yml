@@ -1,0 +1,99 @@
+# English Language Pack for Python 3.10+
+# Base pack with all core keywords and Python 3.10 additions (match/case)
+# English is the canonical language - all keywords map to themselves
+
+language: en
+target: python
+version: '3.10'
+
+keywords:
+  # Core keywords (Python 3.x)
+  and: and
+  as: as
+  assert: assert
+  async: async
+  await: await
+  break: break
+  class: class
+  continue: continue
+  def: def
+  del: del
+  elif: elif
+  else: else
+  except: except
+  'False': 'False'
+  finally: finally
+  for: for
+  from: from
+  global: global
+  if: if
+  import: import
+  in: in
+  is: is
+  lambda: lambda
+  None: None
+  nonlocal: nonlocal
+  not: not
+  or: or
+  pass: pass
+  raise: raise
+  return: return
+  'True': 'True'
+  try: try
+  while: while
+  with: with
+  yield: yield
+
+  # Python 3.10+ specific (PEP 634: Structural Pattern Matching)
+  match: match
+  case: case
+
+builtins:
+  # Common built-in functions
+  print: print
+  input: input
+  len: len
+  range: range
+  str: str
+  int: int
+  float: float
+  list: list
+  dict: dict
+  set: set
+  tuple: tuple
+  bool: bool
+  type: type
+  isinstance: isinstance
+  hasattr: hasattr
+  getattr: getattr
+  setattr: setattr
+  open: open
+  close: close
+  read: read
+  write: write
+  sum: sum
+  min: min
+  max: max
+  abs: abs
+  round: round
+  sorted: sorted
+  reversed: reversed
+  enumerate: enumerate
+  zip: zip
+  map: map
+  filter: filter
+  any: any
+  all: all
+
+metadata:
+  python_version_min: '3.10'
+  python_version_max: '3.13'
+  compatibility_tested:
+  - '3.10'
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  last_updated: '2025-11-03'
+  community_reviewed: true
+  author: Legesher Team
+  license: MIT

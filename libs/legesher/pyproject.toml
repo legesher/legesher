@@ -8,7 +8,11 @@ authors = [
 ]
 license = {text = "MIT OR LicenseRef-Commercial"}
 requires-python = ">=3.10,<4.0"
-dependencies = []
+dependencies = [
+    "click>=8.0.0",
+    "legesher-core",
+    "legesher-i18n",
+]
 name = "legesher"
 version = "0.0.1"
 description = "main build for Legesher Monorepo"
@@ -28,6 +32,9 @@ classifiers = [
     "Topic :: Software Development :: Localization",
     "Operating System :: OS Independent",
 ]
+
+[project.scripts]
+legesher = "legesher.cli.main:cli"
 
 [tool.uv.sources]
 legesher-core = { path = "../core", editable = true }
