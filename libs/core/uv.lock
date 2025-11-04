@@ -206,6 +206,7 @@ name = "legesher-core"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [
+    { name = "click" },
     { name = "legesher-i18n" },
 ]
 
@@ -220,7 +221,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "legesher-i18n", editable = "../i18n" }]
+requires-dist = [
+    { name = "click", specifier = ">=8.0.0" },
+    { name = "legesher-i18n", editable = "../i18n" },
+]
 
 [package.metadata.requires-dev]
 dev = [
