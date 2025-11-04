@@ -9,6 +9,7 @@ authors = [
 license = {text = "MIT"}
 requires-python = ">=3.10,<4.0"
 dependencies = [
+    "click>=8.0.0",
     "legesher-i18n",
 ]
 name = "legesher-core"
@@ -29,6 +30,9 @@ classifiers = [
     "Topic :: Software Development :: Localization",
     "Operating System :: OS Independent",
 ]
+
+[project.scripts]
+legesher-filter = "legesher_core.__main__:main"
 
 [dependency-groups]
 dev = [

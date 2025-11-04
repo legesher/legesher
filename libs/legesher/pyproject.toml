@@ -10,6 +10,7 @@ license = {text = "MIT OR LicenseRef-Commercial"}
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "click>=8.0.0",
+    "pyyaml>=6.0",
     "legesher-core",
     "legesher-i18n",
 ]

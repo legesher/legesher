@@ -9,6 +9,7 @@ Example:
 
 import click
 
+from legesher.cli import git as git_module
 from legesher.cli import translate
 
 
@@ -39,6 +40,7 @@ def cli():
 
 # Register commands
 cli.add_command(translate.translate)
+cli.add_command(git_module.git)
 
 
 if __name__ == "__main__":
