@@ -1,18 +1,19 @@
 # legesher-i18n
 
-**Internationalization and Language Pack Management for Legesher**
-
-Version-aware language pack loading with inheritance, Python version detection, and schema validation for multilingual programming.
+Version-aware language pack loading with inheritance, Python version detection, schema validation, and
+dynamic translation API for multilingual programming.
 
 ## Overview
 
-The `legesher-i18n` package provides the core internationalization infrastructure for Legesher, enabling developers to code in their native language. It includes:
+The `legesher-i18n` package provides the core internationalization infrastructure for Legesher,
+enabling developers to code in their native language. It includes:
 
 - **Version-Aware Language Packs**: Automatic adaptation to Python 3.10-3.13+ with inheritance
 - **Auto-Detection**: Detects Python version from `pyproject.toml`, `.python-version`, or runtime
 - **Pack Inheritance**: Child packs inherit from parents, defining only what's new
 - **Schema Validation**: Pydantic-based validation with security checks
 - **Performance**: Caching for fast repeated loads
+- **Translation API**: Multi-provider dynamic translation with quality-based fallback (NEW!)
 
 ## Installation
 
@@ -67,6 +68,41 @@ Current MVP includes:
 
 - **Spanish (es)**: Complete translations for Python 3.10-3.13
 - **Arabic (ar)**: Complete translations for Python 3.10-3.13
+
+### Translation API (Optional)
+
+Dynamic translation support for content not in language packs:
+
+```bash
+# Install with API support
+pip install legesher-i18n[api]
+```
+
+```python
+from legesher_i18n.api import TranslationCoordinator
+from legesher_i18n.api.providers import LibreTranslateProvider
+
+# Free, self-hosted translation (no API key required)
+coordinator = TranslationCoordinator(
+    providers=[LibreTranslateProvider()],
+)
+
+result = await coordinator.translate("Hello, world!", "en", "es")
+print(result.text)  # "¡Hola, mundo!"
+```
+
+**Features:**
+
+- Multi-provider support (DeepL, Google Translate, LibreTranslate)
+- Automatic quality-based fallback
+- Usage tracking and cost monitoring
+- SQLite and Redis caching
+- CLI tools for monitoring
+
+**Documentation:**
+
+- [Full API Documentation](docs/translation-api.md)
+- [Quick Start Guide](docs/translation-api-quickstart.md)
 
 ## Development
 

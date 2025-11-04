@@ -36,6 +36,18 @@ classifiers = [
 [tool.uv.sources]
 legesher-core = { path = "../core", editable = true }
 
+[project.optional-dependencies]
+# Translation API providers (optional)
+api = [
+    "deepl>=1.16.0",  # DeepL API
+    "google-cloud-translate>=3.15.0",  # Google Translate API
+    "httpx>=0.25.0",  # For LibreTranslate HTTP client
+    "redis>=5.0.0",  # Redis cache backend (optional)
+]
+
+[project.scripts]
+legesher-api = "legesher_i18n.api.cli:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
@@ -45,6 +57,12 @@ dev = [
     "black>=24.0.0",
     "mypy>=1.8.0",
     "types-PyYAML>=6.0",
+    "deepl>=1.16.0",  # For testing
+    "google-cloud-translate>=3.15.0",  # For testing
+    "httpx>=0.25.0",  # For testing
+    "redis>=5.0.0",  # For testing
+    "pytest-mock>=3.12.0",  # For mocking
+    "responses>=0.24.0",  # For HTTP mocking
 ]
 
 [tool.pytest.ini_options]
