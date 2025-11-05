@@ -11,6 +11,8 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
     "click>=8.0.0",
     "legesher-i18n",
+    "tree-sitter>=0.20.4",
+    "tree-sitter-python>=0.21.0",
 ]
 name = "legesher-core"
 version = "0.0.1"
