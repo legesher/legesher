@@ -8,28 +8,38 @@
 
 The Legesher Language Server provides LSP support for coding in Python using your native language. It enables real-time IDE features like hover tooltips, code completion, and diagnostics - all translated to your preferred language.
 
-### What's Included (CORE-356)
+### What's Included
 
-✅ **Core Infrastructure**
+✅ **LSP Server Foundation (CORE-356)**
 
-- LSP server using `pygls 1.3`
-- Document management with version tracking
-- Configuration system (env vars + CLI args)
-- Server lifecycle (initialize, shutdown, document sync)
+- Language server using `pygls` framework
+- Document state management with version tracking
+- Configuration system with Pydantic validation
+- Complete LSP lifecycle support
 
-🔄 **Provider Stubs** (Full implementation in CORE-357, 358, 359)
+✅ **Providers (CORE-357, CORE-358)**
 
-- Hover provider (translated docstrings)
-- Completion provider (localized keywords)
-- Diagnostic provider (translated errors)
+- **Hover Provider (CORE-357)**: Translated docstrings, keyword docs, cultural comments
+- **Completion Provider (CORE-358)**: Localized keywords, builtins, user symbols with fuzzy matching
+
+🔄 **Diagnostic Provider (CORE-359)** - In Progress
+
+- Error templates implemented (41 templates, 17 error types)
+- Main diagnostic provider integration pending
 
 ### What's Next
 
-- **CORE-357**: Hover provider implementation
-- **CORE-358**: Completion provider implementation
-- **CORE-359**: Diagnostic translator implementation
-- **CORE-360**: Pylance integration
-- **Cycle 8**: VS Code extension with custom UI
+**Current: CORE-359** - Diagnostic Provider
+
+- Integrate error templates with diagnostic provider
+- AST-based error detection
+- Translated error messages with variable preservation
+
+**Next: CORE-360** - Pylance Integration
+
+- Integrate with Pylance for advanced diagnostics
+- Semantic error detection
+- Type checking integration
 
 ## Quick Start
 
@@ -101,6 +111,65 @@ legesher-lsp --help
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architecture documentation.
 
+## Features
+
+### Hover Provider (CORE-357)
+
+Translates Python docstrings and provides keyword documentation in the target language.
+
+**Status:** ✅ Complete
+
+**Features:**
+
+- Docstring translation for functions, classes, modules
+- Keyword documentation in target language
+- Cultural comments for context
+- Fast caching for repeated hovers
+
+### Completion Provider (CORE-358)
+
+Provides localized code completion suggestions.
+
+**Status:** ✅ Complete
+
+**Features:**
+
+- Localized Python keywords
+- Translated built-in functions
+- User-defined symbols with context
+- Fuzzy matching for better UX
+
+### Diagnostic Provider (CORE-359)
+
+Translates Python error messages while preserving code identifiers.
+
+**Status:** 🔄 In Progress (Error templates complete, provider integration pending)
+
+**Completed:**
+
+- 41 error message templates covering 17 Python error types
+- Multi-language support (English, Spanish, Arabic)
+- Variable name preservation
+- Template-based translation with caching
+
+**Pending:**
+
+- Integration with diagnostic provider
+- AST-based error detection
+- LSP diagnostic object creation
+
+**Supported Error Types:**
+
+- SyntaxError, IndentationError, NameError
+- TypeError, AttributeError, ImportError
+- ValueError, KeyError, IndexError, ZeroDivisionError
+
+**Example Translation:**
+
+English: `SyntaxError: expected ':'`
+Spanish: `ErrorDeSintaxis: se esperaba ':'`
+Arabic: `خطأ في بناء الجملة: متوقع ':'`
+
 ## Development
 
 ### Running Tests
@@ -116,12 +185,20 @@ pytest tests/test_config.py -v
 pytest tests/ -v -s --log-cli-level=DEBUG
 ```
 
-### Test Coverage (CORE-356)
+### Test Coverage
 
-- ✅ `config.py`: 100% coverage
-- ✅ `document.py`: 100% coverage
-- 🔄 `server.py`: Integration testing (VS Code integration in Cycle 8)
-- 🔄 `providers/`: Stubs (full tests in CORE-357, 358, 359)
+**Complete:**
+
+- ✅ `config.py`: 100% coverage (CORE-356)
+- ✅ `document.py`: 100% coverage (CORE-356)
+- ✅ `providers/hover.py`: 581 test lines, comprehensive coverage (CORE-357)
+- ✅ `providers/completion.py`: 786 test lines, comprehensive coverage (CORE-358)
+- ✅ `utils/error_templates.py`: 641 test lines, 95% coverage (CORE-359 utility)
+
+**In Progress:**
+
+- 🔄 `providers/diagnostic.py`: Stub, needs integration with error_templates (CORE-359)
+- 🔄 `server.py`: Integration testing (CORE-360)
 
 ### Code Quality
 
@@ -146,9 +223,9 @@ ruff format legesher_language_server/
 | `textDocument/didOpen` | ✅ Implemented | CORE-356 |
 | `textDocument/didChange` | ✅ Implemented | CORE-356 |
 | `textDocument/didClose` | ✅ Implemented | CORE-356 |
-| `textDocument/hover` | 🔄 Stub | CORE-357 |
-| `textDocument/completion` | 🔄 Stub | CORE-358 |
-| `textDocument/diagnostic` | 🔄 Stub | CORE-359 |
+| `textDocument/hover` | ✅ Implemented | CORE-357 |
+| `textDocument/completion` | ✅ Implemented | CORE-358 |
+| `textDocument/diagnostic` | 🔄 Stub (templates ready) | CORE-359 |
 
 ## For VS Code Extension Developers
 
@@ -203,23 +280,34 @@ Multiple licenses apply - see LICENSE files in the monorepo root.
 
 ## Roadmap
 
-**Completed (CORE-356)**
+### Completed
 
-- ✅ LSP server foundation
-- ✅ Document management
-- ✅ Configuration system
-- ✅ Provider stubs
+**Phase 1: Foundation (CORE-356)** ✅
 
-**In Progress (Cycle 7)**
+- LSP server infrastructure
+- Document management
+- Configuration system
 
-- 🔄 CORE-357: Hover provider
-- 🔄 CORE-358: Completion provider
-- 🔄 CORE-359: Diagnostic translator
+**Phase 2A: Python Language Server - Core Providers** ✅
+
+- ✅ CORE-357: Hover provider (translated docstrings)
+- ✅ CORE-358: Completion provider (localized keywords & symbols)
+
+### In Progress
+
+**Phase 2A: Diagnostic Provider (CORE-359)**
+
+- ✅ Error message templates (41 templates, 17 error types)
+- 🔄 Diagnostic provider integration (AST parsing, error detection)
+
+**Phase 2A: Python Language Server - Integration (CORE-360)**
+
 - 🔄 CORE-360: Pylance integration
 
-**Upcoming (Cycle 8)**
+### Upcoming
 
-- VS Code extension
+**Cycle 8: VS Code Extension**
+
 - Custom UI components
 - End-to-end integration testing
 

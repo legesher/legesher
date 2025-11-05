@@ -17,14 +17,12 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, TextIO
+from typing import Optional, TextIO
 
+from . import __version__
 from .exceptions import InvalidCodeError
 from .transformer import TokenTranslator
 from .types import HistoryEntry
-
-if TYPE_CHECKING:
-    from .metadata import MetadataManager
 
 # Configure logger
 logger = logging.getLogger(__name__)
