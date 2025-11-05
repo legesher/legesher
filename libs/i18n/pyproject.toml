@@ -13,6 +13,8 @@ dependencies = [
     "pydantic>=2.0",
     "pyyaml>=6.0",
     "tomli>=2.0.0; python_version<'3.11'",
+    "click>=8.0.0",
+    "rich>=13.0.0",
 ]
 name = "legesher-i18n"
 version = "0.0.1"
@@ -33,6 +35,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.scripts]
+legesher-i18n = "legesher_i18n.cli:cli"
+legesher-api = "legesher_i18n.api.cli:main"
+
 [tool.uv.sources]
 legesher-core = { path = "../core", editable = true }
 
@@ -44,9 +50,6 @@ api = [
     "httpx>=0.25.0",  # For LibreTranslate HTTP client
     "redis>=5.0.0",  # Redis cache backend (optional)
 ]
-
-[project.scripts]
-legesher-api = "legesher_i18n.api.cli:main"
 
 [dependency-groups]
 dev = [
