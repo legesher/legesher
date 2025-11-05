@@ -17,6 +17,7 @@ repository = "https://www.github.com/legesher/legesher"
 legesher-core = { path = "./libs/core", editable = true }
 legesher-i18n = { path = "./libs/i18n", editable = true }
 legesher = { path = "./libs/legesher", editable = true }
+legesher-language-server = { path = "./libs/language-server", editable = true }
 legesher-pride = { path = "./libs/pride", editable = true }
 legesher-vs-code = { path = "./libs/vs-code", editable = true }
 
@@ -26,6 +27,9 @@ dev = [
     "ruff>=0.1.0",
     "black>=24.0.0",
     "mypy>=1.8.0",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "pytest-cov>=7.0.0",
 ]
 
 [build-system]

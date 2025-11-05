@@ -7,7 +7,7 @@ authors = [
     {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
 ]
 license = {text = "LicenseRef-Proprietary"}
-requires-python = "<4.0,>=3.13"
+requires-python = ">=3.10,<4.0"
 dependencies = []
 name = "legesher-pride"
 version = "0.0.1"
@@ -19,6 +19,9 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: Other/Proprietary License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development",
     "Operating System :: OS Independent",

@@ -59,3 +59,9 @@ jobs:
           cd libs/legesher
           uv run pytest --cov=legesher --cov-report=xml --cov-report=term-missing
         continue-on-error: false
+
+      - name: Run tests - legesher-language-server
+        run: |
+          cd libs/language-server
+          uv run pytest --cov=legesher_language_server --cov-report=xml --cov-report=term-missing
+        continue-on-error: false
