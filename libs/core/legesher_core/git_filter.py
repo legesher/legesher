@@ -13,11 +13,18 @@ the code passes through unchanged.
 """
 
 import logging
+import subprocess
 import sys
-from typing import Optional, TextIO
+from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Optional, TextIO
 
 from .exceptions import InvalidCodeError
 from .transformer import TokenTranslator
+from .types import HistoryEntry
+
+if TYPE_CHECKING:
+    from .metadata import MetadataManager
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -42,6 +49,8 @@ class GitFilter:
         python_version: Target Python version (e.g., "3.13")
         translator_to_en: Translator for local language → English
         translator_from_en: Translator for English → local language
+        metadata_manager: Optional metadata manager for tracking translations
+        file_path: Optional path to the file being filtered (for metadata)
 
     Example:
         >>> # Create filter for Spanish
@@ -52,6 +61,11 @@ class GitFilter:
         >>>
         >>> # Smudge: English → Spanish (for working directory)
         >>> exit_code = filter.smudge(sys.stdin, sys.stdout)
+        >>>
+        >>> # With metadata tracking
+        >>> from legesher_core.metadata import MetadataManager
+        >>> manager = MetadataManager(Path("/repo"))
+        >>> filter = GitFilter(language="es", metadata_manager=manager, file_path="src/main.py")
     """
 
     def __init__(
@@ -59,6 +73,8 @@ class GitFilter:
         language: str,
         python_version: Optional[str] = None,
         canonical_language: str = "en",
+        metadata_manager: Optional["MetadataManager"] = None,
+        file_path: Optional[str] = None,
     ) -> None:
         """Initialize git filter for a specific language.
 
@@ -66,6 +82,8 @@ class GitFilter:
             language: Target natural language code (e.g., "es" for Spanish)
             python_version: Python version (default: auto-detect from runtime)
             canonical_language: Git storage language (default: "en")
+            metadata_manager: Optional metadata manager for tracking translations
+            file_path: Optional path to the file being filtered (for metadata tracking)
 
         Raises:
             ValueError: If language pack cannot be loaded
@@ -73,10 +91,16 @@ class GitFilter:
         Example:
             >>> filter = GitFilter(language="es")  # Auto-detect Python version
             >>> filter = GitFilter(language="ar", python_version="3.13")
+            >>> # With metadata
+            >>> from legesher_core.metadata import MetadataManager
+            >>> manager = MetadataManager(Path("/repo"))
+            >>> filter = GitFilter(language="es", metadata_manager=manager, file_path="src/main.py")
         """
         self.language = language
         self.canonical_language = canonical_language
         self.python_version = python_version or self._detect_python_version()
+        self.metadata_manager = metadata_manager
+        self.file_path = file_path
 
         logger.info(
             f"Initializing GitFilter: {language} ↔ {canonical_language} "
@@ -160,6 +184,13 @@ class GitFilter:
             output_stream.write(translated_code)
             logger.debug("Clean filter: Translation completed successfully")
 
+            # Record metadata (never fail git operations due to metadata errors)
+            self._record_metadata_history(
+                action="clean",
+                from_language=self.language,
+                to_language=self.canonical_language,
+            )
+
             return 0
 
         except InvalidCodeError as e:
@@ -229,6 +260,13 @@ class GitFilter:
             output_stream.write(translated_code)
             logger.debug("Smudge filter: Translation completed successfully")
 
+            # Record metadata (never fail git operations due to metadata errors)
+            self._record_metadata_history(
+                action="smudge",
+                from_language=self.canonical_language,
+                to_language=self.language,
+            )
+
             return 0
 
         except InvalidCodeError as e:
@@ -244,6 +282,79 @@ class GitFilter:
             )
             output_stream.write(source_code if "source_code" in locals() else "")
             return 0
+
+    def _record_metadata_history(
+        self, action: str, from_language: str, to_language: str
+    ) -> None:
+        """Record git filter operation in metadata history.
+
+        This method is designed to never fail - if metadata recording fails,
+        it logs the error but does not raise an exception. This ensures git
+        operations are never interrupted by metadata issues.
+
+        Args:
+            action: Git filter action ("clean" or "smudge")
+            from_language: Source language code
+            to_language: Target language code
+        """
+        # Skip if no metadata manager or file path configured
+        if not self.metadata_manager or not self.file_path:
+            logger.debug("Skipping metadata recording: manager or file_path not set")
+            return
+
+        try:
+            # Get current git commit SHA (if available)
+            commit_sha = self._get_current_commit_sha()
+
+            # Create history entry
+            entry: HistoryEntry = {
+                "action": action,
+                "from_language": from_language,
+                "to_language": to_language,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "commit_sha": commit_sha,
+            }
+
+            # Add to metadata
+            file_path = Path(self.file_path)
+            self.metadata_manager.add_history_entry(file_path, entry)
+
+            logger.debug(
+                f"Recorded metadata history: {action} {from_language}->{to_language} "
+                f"for {self.file_path}"
+            )
+
+        except Exception as e:
+            # Never fail git operations due to metadata errors
+            logger.warning(
+                f"Failed to record metadata history for {self.file_path}: {e}",
+                exc_info=True,
+            )
+
+    def _get_current_commit_sha(self) -> Optional[str]:
+        """Get current git commit SHA.
+
+        Returns:
+            Current commit SHA or None if not available or on error
+        """
+        try:
+            result = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                capture_output=True,
+                text=True,
+                timeout=2,  # Don't hang git operations
+                check=False,  # Don't raise on error
+            )
+
+            if result.returncode == 0:
+                return result.stdout.strip()
+            else:
+                logger.debug(f"Could not get git commit SHA: {result.stderr}")
+                return None
+
+        except (subprocess.TimeoutExpired, Exception) as e:
+            logger.debug(f"Error getting git commit SHA: {e}")
+            return None
 
     def _is_canonical_language(self, code: str) -> bool:
         """Detect if code is in canonical language (English).

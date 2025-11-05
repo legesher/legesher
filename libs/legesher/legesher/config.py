@@ -30,6 +30,13 @@ DEFAULT_CONFIG = {
         "canonical_language": "en",
         "filter_enabled": True,
     },
+    "metadata": {
+        "enabled": True,
+        "directory": ".legesher/metadata",
+        "track_in_git": True,
+        "verbose_history": False,
+        "max_history_entries": 100,
+    },
 }
 
 
@@ -45,6 +52,11 @@ class LegesherConfig:
         python_version: Python version (e.g., "3.13", None for auto-detect)
         git_canonical_language: Language used for git storage (default: "en")
         git_filter_enabled: Whether git filters are enabled (default: True)
+        metadata_enabled: Whether metadata tracking is enabled (default: True)
+        metadata_directory: Directory for storing metadata files (default: ".legesher/metadata")
+        metadata_track_in_git: Whether to track metadata files in git (default: True)
+        metadata_verbose_history: Include detailed history in metadata (default: False)
+        metadata_max_history_entries: Maximum history entries per file (default: 100)
 
     Example:
         >>> # Load configuration
@@ -62,6 +74,11 @@ class LegesherConfig:
         python_version: Optional[str] = None,
         git_canonical_language: str = "en",
         git_filter_enabled: bool = True,
+        metadata_enabled: bool = True,
+        metadata_directory: str = ".legesher/metadata",
+        metadata_track_in_git: bool = True,
+        metadata_verbose_history: bool = False,
+        metadata_max_history_entries: int = 100,
     ) -> None:
         """Initialize configuration with values.
 
@@ -70,11 +87,24 @@ class LegesherConfig:
             python_version: Python version (None for auto-detect)
             git_canonical_language: Language for git storage (default: "en")
             git_filter_enabled: Enable git filters (default: True)
+            metadata_enabled: Whether to track translation metadata (default: True)
+            metadata_directory: Directory for storing metadata files (default: ".legesher/metadata")
+            metadata_track_in_git: Whether to track metadata files in git (default: True)
+            metadata_verbose_history: Include detailed history in metadata (default: False)
+            metadata_max_history_entries: Maximum history entries per file (default: 100)
         """
         self.language = language
         self.python_version = python_version
         self.git_canonical_language = git_canonical_language
         self.git_filter_enabled = git_filter_enabled
+        self.metadata_enabled = metadata_enabled
+        self.metadata_directory = metadata_directory
+        self.metadata_track_in_git = metadata_track_in_git
+        self.metadata_verbose_history = metadata_verbose_history
+        self.metadata_max_history_entries = metadata_max_history_entries
+
+        # Validate metadata configuration
+        self._validate_metadata_config()
 
     @classmethod
     def from_dict(cls, data: dict) -> "LegesherConfig":
@@ -91,12 +121,20 @@ class LegesherConfig:
             >>> config = LegesherConfig.from_dict(data)
         """
         git_config = data.get("git", {})
+        metadata_config = data.get("metadata", {})
 
         return cls(
             language=data.get("language", "en"),
             python_version=data.get("python_version"),
             git_canonical_language=git_config.get("canonical_language", "en"),
             git_filter_enabled=git_config.get("filter_enabled", True),
+            metadata_enabled=metadata_config.get("enabled", True),
+            metadata_directory=metadata_config.get("directory", ".legesher/metadata"),
+            metadata_track_in_git=metadata_config.get("track_in_git", True),
+            metadata_verbose_history=metadata_config.get("verbose_history", False),
+            metadata_max_history_entries=metadata_config.get(
+                "max_history_entries", 100
+            ),
         )
 
     def to_dict(self) -> dict:
@@ -108,7 +146,7 @@ class LegesherConfig:
         Example:
             >>> config = LegesherConfig(language="es")
             >>> config.to_dict()
-            {'language': 'es', 'python_version': None, 'git': {...}}
+            {'language': 'es', 'python_version': None, 'git': {...}, 'metadata': {...}}
         """
         return {
             "language": self.language,
@@ -116,6 +154,13 @@ class LegesherConfig:
             "git": {
                 "canonical_language": self.git_canonical_language,
                 "filter_enabled": self.git_filter_enabled,
+            },
+            "metadata": {
+                "enabled": self.metadata_enabled,
+                "directory": self.metadata_directory,
+                "track_in_git": self.metadata_track_in_git,
+                "verbose_history": self.metadata_verbose_history,
+                "max_history_entries": self.metadata_max_history_entries,
             },
         }
 
@@ -308,13 +353,62 @@ class LegesherConfig:
 
         raise ValueError(f"Not in a git repository (starting from {start_path})")
 
+    def _validate_metadata_config(self) -> None:
+        """Validate metadata configuration values.
+
+        Raises:
+            ValueError: If configuration values are invalid
+        """
+        # Ensure directory is relative (not absolute)
+        if Path(self.metadata_directory).is_absolute():
+            raise ValueError(
+                f"metadata_directory must be a relative path, got: {self.metadata_directory}"
+            )
+
+        # Ensure max_history_entries is non-negative
+        if self.metadata_max_history_entries < 0:
+            raise ValueError(
+                f"metadata_max_history_entries must be >= 0, got: {self.metadata_max_history_entries}"
+            )
+
+    def is_metadata_enabled(self) -> bool:
+        """Check if metadata tracking is enabled.
+
+        Returns:
+            True if metadata tracking is enabled
+
+        Example:
+            >>> config = LegesherConfig(metadata_enabled=True)
+            >>> config.is_metadata_enabled()
+            True
+        """
+        return self.metadata_enabled
+
+    def get_metadata_dir(self, repo_root: Path) -> Path:
+        """Get absolute path to metadata directory.
+
+        Args:
+            repo_root: Git repository root path
+
+        Returns:
+            Absolute path to metadata directory
+
+        Example:
+            >>> config = LegesherConfig()
+            >>> repo_root = Path("/home/user/project")
+            >>> config.get_metadata_dir(repo_root)
+            PosixPath('/home/user/project/.legesher/metadata')
+        """
+        return repo_root / self.metadata_directory
+
     def __repr__(self) -> str:
         """String representation of configuration."""
         return (
             f"LegesherConfig(language={self.language!r}, "
             f"python_version={self.python_version!r}, "
             f"git_canonical_language={self.git_canonical_language!r}, "
-            f"git_filter_enabled={self.git_filter_enabled})"
+            f"git_filter_enabled={self.git_filter_enabled}, "
+            f"metadata_enabled={self.metadata_enabled})"
         )
 
 
