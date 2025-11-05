@@ -14,6 +14,10 @@ Public API:
         - CulturalCommentParser: Parser for extracting cultural comments
         - CulturalCommentProvider: High-level IDE integration API
 
+    Git Integration & Metadata Tracking:
+        - TranslationTracker: High-level API for tracking translations
+        - MetadataManager: Low-level metadata persistence (internal)
+
     Exceptions:
         - TranslationError: Base exception class
         - InvalidCodeError: Raised for unparseable code
@@ -38,6 +42,13 @@ Example:
     ... )
     >>> metadata.has_comments()
     True
+
+    >>> # Track translations
+    >>> from pathlib import Path
+    >>> from legesher_core import TranslationTracker, MetadataManager
+    >>> manager = MetadataManager(Path(".legesher/metadata"))
+    >>> tracker = TranslationTracker(manager)
+    >>> tracker.track_clean(Path("src/main.py"), "es", "en")
 """
 
 from .cultural_comments import CulturalCommentParser
@@ -48,8 +59,10 @@ from .exceptions import (
     UnsupportedLanguageError,
 )
 from .ide_support import CulturalCommentProvider
+from .metadata import MetadataManager
 from .token_mapper import TokenMapper
 from .transformer import TokenTranslator
+from .translation_tracker import TranslationTracker
 from .types import CulturalComment, CulturalCommentMetadata
 
 __version__ = "0.0.1"
@@ -63,6 +76,9 @@ __all__ = [
     "CulturalCommentMetadata",
     "CulturalCommentParser",
     "CulturalCommentProvider",
+    # Git integration & metadata
+    "TranslationTracker",
+    "MetadataManager",
     # Exceptions
     "TranslationError",
     "InvalidCodeError",

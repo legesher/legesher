@@ -59,8 +59,18 @@ def git():
     is_flag=True,
     help="Configure git filters globally instead of per-repository",
 )
-def git_setup(language: str, python_version: Optional[str], use_global: bool):
-    """Set up git filters for multilingual code.
+@click.option(
+    "--track-metadata/--no-track-metadata",
+    default=True,
+    help="Track metadata files in git (default: yes)",
+)
+def git_setup(
+    language: str,
+    python_version: Optional[str],
+    use_global: bool,
+    track_metadata: bool,
+):
+    """Set up git filters and metadata tracking for multilingual code.
 
     This command configures git clean/smudge filters that automatically
     translate code between your local language and canonical English:
@@ -74,13 +84,16 @@ def git_setup(language: str, python_version: Optional[str], use_global: bool):
     2. Creates .legesher/config.yml configuration
     3. Configures git filter settings
     4. Creates .gitattributes entry for *.py files
-    5. Verifies setup is working
+    5. Initializes metadata directory (.legesher/metadata/)
+    6. Optionally adds metadata to .gitignore
+    7. Verifies setup is working
 
     \b
     Examples:
         $ legesher git-setup --language es
         $ legesher git-setup --language ar --python-version 3.13
         $ legesher git-setup --language es --global
+        $ legesher git-setup --language es --no-track-metadata
     """
     try:
         # Step 1: Validate we're in a git repository (unless --global)
@@ -155,7 +168,12 @@ def git_setup(language: str, python_version: Optional[str], use_global: bool):
             _create_gitattributes(repo_root)
             click.echo("✓ Updated .gitattributes")
 
-        # Step 6: Verify setup
+        # Step 6: Initialize metadata directory (only for project, not global)
+        if not use_global:
+            click.echo("\nInitializing metadata system...")
+            _initialize_metadata(repo_root, track_metadata)
+
+        # Step 7: Verify setup
         click.echo("\nVerifying setup...")
         if _verify_git_setup(use_global=use_global):
             click.echo("✓ Git filter setup verified")
@@ -338,8 +356,7 @@ def _create_gitattributes(repo_root: Path) -> None:
 
     # Read existing content if file exists
     if gitattributes_path.exists():
-        existing_content = gitattributes_path.read_text()
-        lines = existing_content.splitlines()
+        lines = gitattributes_path.read_text().splitlines()
     else:
         lines = []
 
@@ -362,6 +379,64 @@ def _create_gitattributes(repo_root: Path) -> None:
 
     # Write back to file
     gitattributes_path.write_text("\n".join(lines) + "\n")
+
+
+def _initialize_metadata(repo_root: Path, track_metadata: bool) -> None:
+    """Initialize metadata directory and configure tracking.
+
+    Args:
+        repo_root: Repository root directory
+        track_metadata: Whether to track metadata files in git
+    """
+    try:
+        # Create metadata directory
+        metadata_dir = repo_root / ".legesher" / "metadata"
+        metadata_dir.mkdir(parents=True, exist_ok=True)
+        click.echo(f"✓ Created metadata directory: {metadata_dir}")
+
+        # Configure .gitignore based on user preference
+        if not track_metadata:
+            gitignore_path = repo_root / ".gitignore"
+
+            # Read existing content if file exists
+            if gitignore_path.exists():
+                existing_content = gitignore_path.read_text()
+            else:
+                existing_content = ""
+
+            # Check if metadata ignore is already configured
+            if ".legesher/metadata/" not in existing_content:
+                with gitignore_path.open("a") as f:
+                    # Add newline if file doesn't end with one
+                    if existing_content and not existing_content.endswith("\n"):
+                        f.write("\n")
+                    f.write("\n# Legesher metadata (optional)\n")
+                    f.write(".legesher/metadata/\n")
+                click.echo("✓ Added .legesher/metadata/ to .gitignore")
+            else:
+                click.echo("✓ Metadata already in .gitignore")
+        else:
+            click.echo("✓ Metadata will be tracked in git")
+
+        # Verify metadata system is working
+        try:
+            from legesher_core.metadata import MetadataManager
+
+            _ = MetadataManager(repo_root)
+            click.echo("✓ Metadata system initialized successfully")
+        except Exception as e:
+            click.echo(
+                f"⚠ Warning: Metadata system initialization had issues: {e}", err=True
+            )
+            click.echo(
+                "  Git filters will still work, but metadata tracking may be limited",
+                err=True,
+            )
+
+    except Exception as e:
+        logger.error(f"Error initializing metadata: {e}", exc_info=True)
+        click.echo(f"⚠ Warning: Could not initialize metadata: {e}", err=True)
+        click.echo("  Git filters will still work without metadata", err=True)
 
 
 def _verify_git_setup(use_global: bool = False) -> bool:

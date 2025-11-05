@@ -87,6 +87,113 @@ If you encounter "No module named pytest":
 
 **Current Results**: 255 tests passing, 4 skipped
 
+## Metadata Tracking
+
+Legesher Core includes a comprehensive metadata tracking system that records translation history and git operations for audit trails and debugging.
+
+### What is Metadata?
+
+The metadata system tracks:
+
+- Original language of each file
+- Translation operations performed
+- Git filter operations (clean/smudge)
+- Python version and translator version used
+- Timestamps and commit SHAs
+
+Metadata is stored in `.legesher/metadata/` as YAML files that mirror your source tree structure.
+
+### Metadata Schema
+
+Each file gets a metadata file at `.legesher/metadata/<file_path>.yml`:
+
+```yaml
+file: src/calculator.py
+original_language: es
+canonical_language: en
+python_version: "3.13"
+created_at: "2025-11-06T10:30:00Z"
+updated_at: "2025-11-06T14:35:00Z"
+translations:
+  - language: en
+    method: token_transformer
+    timestamp: "2025-11-06T10:30:00Z"
+    commit_sha: abc123
+    translator_version: "0.1.0"
+    python_version: "3.13"
+history:
+  - action: clean
+    from_language: es
+    to_language: en
+    timestamp: "2025-11-06T10:35:00Z"
+    commit_sha: def456
+```
+
+### Using Metadata in Code
+
+```python
+from pathlib import Path
+from legesher_core.metadata import MetadataManager
+from legesher_core.types import TranslationRecord, HistoryEntry
+
+# Initialize manager
+repo_root = Path("/path/to/repo")
+manager = MetadataManager(repo_root)
+
+# Create metadata for new file
+metadata = manager.create_metadata(
+    Path("src/calculator.py"),
+    original_language="es",
+    python_version="3.13"
+)
+
+# Read existing metadata
+metadata = manager.get_metadata(Path("src/calculator.py"))
+if metadata:
+    print(f"Original language: {metadata['original_language']}")
+    print(f"Translations: {len(metadata['translations'])}")
+
+# Record translation operation
+record: TranslationRecord = {
+    "language": "en",
+    "method": "token_transformer",
+    "timestamp": "2025-11-06T10:30:00Z",
+    "commit_sha": "a91228a",
+    "translator_version": "0.1.0",
+    "python_version": "3.13"
+}
+manager.record_translation(Path("src/calculator.py"), record)
+
+# Add history entry (git operation)
+entry: HistoryEntry = {
+    "action": "clean",
+    "from_language": "es",
+    "to_language": "en",
+    "timestamp": "2025-11-06T10:30:00Z",
+    "commit_sha": "a91228a"
+}
+manager.add_history_entry(Path("src/calculator.py"), entry)
+
+# List all metadata files
+metadata_files = manager.list_metadata_files()
+print(f"Tracking {len(metadata_files)} files")
+
+# Validate metadata integrity
+is_valid = manager.validate_metadata(Path("src/calculator.py"))
+```
+
+### Privacy & Security
+
+- **No source code stored**: Metadata contains only file paths, languages, timestamps
+- **Local-first**: All metadata stored locally in `.legesher/metadata/`
+- **No cloud required**: Never requires external services
+- **Optional git tracking**: Can exclude metadata from git if desired
+- **Atomic writes**: All file operations use atomic write-then-rename for safety
+
+### API Reference
+
+See the [metadata module documentation](legesher_core/metadata.py) for complete API details.
+
 ## License
 
 MIT License

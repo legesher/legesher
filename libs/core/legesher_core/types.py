@@ -8,7 +8,7 @@ because Python keywords cannot be used as TypedDict field names.
 """
 
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Protocol, TypedDict
 
 
 # Type aliases for translation maps
@@ -201,6 +201,130 @@ class CulturalCommentMetadata:
                 )
                 metadata.add_comment(comment)
         return metadata
+
+
+# Metadata tracking constants
+METADATA_VERSION = "1.0"
+TRANSLATION_METHODS = ["token_transformer", "tree_sitter", "manual"]
+
+
+class TranslationRecord(TypedDict):
+    """Record of a single translation operation.
+
+    Tracks when and how a file was translated to a specific language.
+    Used for debugging, auditing, and understanding translation history.
+
+    Attributes:
+        language: Target language code (e.g., "en", "es", "ar")
+        method: Translation method used (see TRANSLATION_METHODS constant)
+        timestamp: ISO 8601 timestamp of translation (e.g., "2025-11-06T10:30:00Z")
+        commit_sha: Git commit SHA if available, None otherwise
+        translator_version: Version of legesher-core that performed translation
+        python_version: Python version used (e.g., "3.13", "3.12")
+
+    Example:
+        >>> record: TranslationRecord = {
+        ...     "language": "es",
+        ...     "method": "token_transformer",
+        ...     "timestamp": "2025-11-06T10:30:00Z",
+        ...     "commit_sha": "a91228a",
+        ...     "translator_version": "0.1.0",
+        ...     "python_version": "3.13"
+        ... }
+    """
+
+    language: str
+    method: str
+    timestamp: str
+    commit_sha: str | None
+    translator_version: str
+    python_version: str
+
+
+class HistoryEntry(TypedDict):
+    """Single entry in translation history log.
+
+    Records git filter operations (clean/smudge) for audit trail.
+    Helps understand how files move between languages during git operations.
+
+    Attributes:
+        action: Git filter action - "clean" (working → git) or "smudge" (git → working)
+        from_language: Source language code before translation
+        to_language: Target language code after translation
+        timestamp: ISO 8601 timestamp of operation
+        commit_sha: Git commit SHA if available, None otherwise
+
+    Example:
+        >>> entry: HistoryEntry = {
+        ...     "action": "clean",
+        ...     "from_language": "es",
+        ...     "to_language": "en",
+        ...     "timestamp": "2025-11-06T10:30:00Z",
+        ...     "commit_sha": "a91228a"
+        ... }
+    """
+
+    action: str
+    from_language: str
+    to_language: str
+    timestamp: str
+    commit_sha: str | None
+
+
+class FileMetadata(TypedDict):
+    """Complete metadata for a single translated file.
+
+    Stored in .legesher/metadata/<file>.yaml to track translation state,
+    history, and configuration for each file in the repository.
+
+    Attributes:
+        file: Relative path from repository root (e.g., "src/main.py")
+        original_language: Language file was originally authored in
+        canonical_language: Language stored in git (usually "en")
+        python_version: Python version for this file (e.g., "3.13")
+        created_at: ISO 8601 timestamp when metadata was first created
+        updated_at: ISO 8601 timestamp of last metadata update
+        translations: List of all translation operations performed
+        history: Log of git filter operations (clean/smudge)
+
+    Example:
+        >>> metadata: FileMetadata = {
+        ...     "file": "src/calculator.py",
+        ...     "original_language": "es",
+        ...     "canonical_language": "en",
+        ...     "python_version": "3.13",
+        ...     "created_at": "2025-11-06T10:00:00Z",
+        ...     "updated_at": "2025-11-06T10:30:00Z",
+        ...     "translations": [
+        ...         {
+        ...             "language": "en",
+        ...             "method": "token_transformer",
+        ...             "timestamp": "2025-11-06T10:30:00Z",
+        ...             "commit_sha": "a91228a",
+        ...             "translator_version": "0.1.0",
+        ...             "python_version": "3.13"
+        ...         }
+        ...     ],
+        ...     "history": [
+        ...         {
+        ...             "action": "clean",
+        ...             "from_language": "es",
+        ...             "to_language": "en",
+        ...             "timestamp": "2025-11-06T10:30:00Z",
+        ...             "commit_sha": "a91228a"
+        ...         }
+        ...     ]
+        ... }
+    """
+
+    file: str
+    original_language: str
+    canonical_language: str
+    python_version: str
+    created_at: str
+    updated_at: str
+    translations: list[TranslationRecord]
+    history: list[HistoryEntry]
 
 
 class Translator(Protocol):

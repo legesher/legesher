@@ -10,6 +10,7 @@ Example:
 import click
 
 from legesher.cli import git as git_module
+from legesher.cli import metadata as metadata_module
 from legesher.cli import translate
 
 
@@ -41,6 +42,7 @@ def cli():
 # Register commands
 cli.add_command(translate.translate)
 cli.add_command(git_module.git)
+cli.add_command(metadata_module.metadata)
 
 
 if __name__ == "__main__":
