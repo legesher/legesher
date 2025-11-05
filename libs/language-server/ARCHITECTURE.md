@@ -17,10 +17,10 @@ The Legesher Language Server provides LSP (Language Server Protocol) support for
 │  ├── Server (pygls 1.3)                         │
 │  ├── Document Manager                           │
 │  ├── Configuration System                       │
-│  └── Providers (stubs)                          │
-│      ├── Hover (CORE-357)                       │
-│      ├── Completion (CORE-358)                  │
-│      └── Diagnostic (CORE-359)                  │
+│  └── Providers                                  │
+│      ├── Hover (CORE-357) ✅                    │
+│      ├── Completion (CORE-358) ✅               │
+│      └── Diagnostic (CORE-359) 🔄               │
 └─────────────────┬───────────────────────────────┘
                   │ Dependencies
 ┌─────────────────▼───────────────────────────────┐
@@ -76,13 +76,18 @@ The Legesher Language Server provides LSP (Language Server Protocol) support for
 
 **Responsibility:** LSP feature implementations
 
-**Modules:**
+**Location:** `legesher_language_server/providers/`
 
-- `hover.py` - Translated docstrings and tooltips (CORE-357)
-- `completion.py` - Localized code completion (CORE-358)
-- `diagnostic.py` - Translated error messages (CORE-359)
+**Status:**
 
-**Status:** 🔄 Stubs created (full implementation in subsequent issues)
+- ✅ `hover.py`: Complete (CORE-357) - 347 lines
+- ✅ `completion.py`: Complete (CORE-358) - 500 lines
+- 🔄 `diagnostic.py`: Stub (CORE-359) - 39 lines, needs integration with error_templates.py
+
+**Utilities:**
+
+- ✅ `utils/error_templates.py`: Complete - 401 lines, 41 templates, 17 error types
+- ✅ `utils/keyword_docs.py`: Complete - 235 lines
 
 ## Data Flow
 
@@ -113,6 +118,89 @@ The Legesher Language Server provides LSP (Language Server Protocol) support for
    ↓
 6. Return to IDE
 ```
+
+### Diagnostic Flow (CORE-359)
+
+```
+1. IDE sends textDocument/diagnostic request
+   ↓
+2. provide_diagnostics() called
+   ↓
+3. DiagnosticProvider._parse_syntax_errors()
+   ↓
+4. For each error:
+   - Extract error type and message
+   - _extract_variables() finds identifiers to preserve
+   - _get_translation_template() looks up template
+   - _translate_error_message() performs translation with caching
+   - _create_diagnostic() creates LSP Diagnostic object
+   ↓
+5. Return list of translated Diagnostic objects to IDE
+```
+
+## Provider Details
+
+### Diagnostic Provider (CORE-359)
+
+**Location:** `legesher_language_server/providers/diagnostic.py`
+
+**Status:** 🔄 In Progress
+
+**Completed:**
+
+- ✅ Error message templates utility (`utils/error_templates.py`)
+  - 41 error message templates
+  - 17 Python error types
+  - Multi-language support (English, Spanish, Arabic)
+  - Variable substitution with `.format()`
+  - 641 test lines, 95% coverage
+
+**Pending Integration:**
+
+- Main diagnostic provider (`diagnostic.py` currently a stub)
+- AST-based error detection
+- Integration with error templates
+- LSP Diagnostic object creation
+- Variable name preservation in error messages
+
+**Planned Architecture:**
+
+```
+User Code → AST Parser → Error Detection → Translation → LSP Diagnostic
+                                                ↓
+                                        ErrorMessageTemplates ✅
+                                                ↓
+                                        Module-level Cache
+```
+
+**Planned Features:**
+
+- Parse Python code using AST
+- Detect syntax errors, indentation errors, tab errors
+- Translate error messages using templates
+- Preserve variable names and identifiers
+- Create LSP Diagnostic objects
+- Performance: <50ms for cached errors, <500ms for new errors
+
+**Variable Preservation (Planned):**
+
+Variables, function names, and module names will never be translated:
+
+```python
+# English
+NameError: name 'imprimir' is not defined
+
+# Spanish (planned)
+ErrorDeNombre: el nombre 'imprimir' no está definido
+
+# 'imprimir' is preserved in both
+```
+
+**Future Integration (CORE-360):**
+
+- Pylance integration for semantic errors
+- Type checker integration (mypy, pyright)
+- Linter integration (ruff, pylint)
 
 ## Configuration
 
@@ -165,12 +253,20 @@ pytest tests/test_config.py -v
 pytest tests/ -v -s
 ```
 
-### Test Coverage (CORE-356)
+### Test Coverage
 
-- `config.py`: 100% ✅
-- `document.py`: 100% ✅
-- `providers/`: Stubs (tested in CORE-357, 358, 359)
-- `server.py`: Integration testing in progress
+**Complete:**
+
+- ✅ `config.py`: 100% (CORE-356)
+- ✅ `document.py`: 100% (CORE-356)
+- ✅ `providers/hover.py`: 581 test lines (CORE-357)
+- ✅ `providers/completion.py`: 786 test lines (CORE-358)
+- ✅ `utils/error_templates.py`: 641 test lines, 95% coverage (CORE-359)
+
+**In Progress:**
+
+- 🔄 `providers/diagnostic.py`: Stub, no tests yet (CORE-359)
+- 🔄 `server.py`: Integration testing (CORE-360)
 
 ## Integration with VS Code (Cycle 8)
 
@@ -186,29 +282,19 @@ See [Integration Guide](docs/integration-guide.md) for details.
 
 ## Future Work
 
-### CORE-357: Hover Provider
+### CORE-359: Complete Diagnostic Provider
 
-- Translate docstrings
-- Show type hints in target language
-- Cache hover results
-
-### CORE-358: Completion Provider
-
-- Translate keywords
-- Translate builtins
-- Context-aware suggestions
-
-### CORE-359: Diagnostic Provider
-
-- Translate Python error messages
-- Translate syntax errors
-- Translate type errors
+- Integrate error_templates.py with diagnostic.py provider
+- Implement AST-based error detection
+- Create LSP Diagnostic objects
+- Add variable name preservation
 
 ### CORE-360: Pylance Integration
 
 - Proxy Python intelligence
 - Combine Pylance + translation
 - Seamless developer experience
+- Advanced semantic error detection
 
 ## Performance Considerations
 

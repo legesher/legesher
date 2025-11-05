@@ -132,9 +132,7 @@ class LegesherConfig:
             metadata_directory=metadata_config.get("directory", ".legesher/metadata"),
             metadata_track_in_git=metadata_config.get("track_in_git", True),
             metadata_verbose_history=metadata_config.get("verbose_history", False),
-            metadata_max_history_entries=metadata_config.get(
-                "max_history_entries", 100
-            ),
+            metadata_max_history_entries=metadata_config.get("max_history_entries", 100),
         )
 
     def to_dict(self) -> dict:

@@ -94,7 +94,6 @@ Legesher Core includes a comprehensive metadata tracking system that records tra
 ### What is Metadata?
 
 The metadata system tracks:
-
 - Original language of each file
 - Translation operations performed
 - Git filter operations (clean/smudge)

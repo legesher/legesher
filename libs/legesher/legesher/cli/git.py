@@ -356,7 +356,8 @@ def _create_gitattributes(repo_root: Path) -> None:
 
     # Read existing content if file exists
     if gitattributes_path.exists():
-        lines = gitattributes_path.read_text().splitlines()
+        existing_content = gitattributes_path.read_text()
+        lines = existing_content.splitlines()
     else:
         lines = []
 
@@ -422,7 +423,7 @@ def _initialize_metadata(repo_root: Path, track_metadata: bool) -> None:
         try:
             from legesher_core.metadata import MetadataManager
 
-            _ = MetadataManager(repo_root)
+            manager = MetadataManager(repo_root)
             click.echo("✓ Metadata system initialized successfully")
         except Exception as e:
             click.echo(
