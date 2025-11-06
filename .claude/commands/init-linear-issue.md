@@ -4,20 +4,35 @@ description: Initialize work on a Linear issue with comprehensive planning and s
 
 # Initialize Linear Issue
 
-You are helping initialize and plan work on a Linear issue for the
-Legesher project.
+You are helping initialize and plan work on a Linear issue for the Legesher project.
 
 ## Phase 1: Gather Context (REQUIRED - DO NOT SKIP)
 
-1. **Fetch the Linear issue details** using the Linear MCP tool
-   - Get full issue description, acceptance criteria, and metadata
-   - Check current status, priority, and story points
-   - Identify dependencies and related issues
+1. **Fetch the Linear issue details** using Linear MCP tools
 
-2. **Locate issue in roadmap context**
-   - Check which phase and week this task belongs to
-   - Read relevant section in [planning/architecture/implementation-roadmap.md](private-working-memory)
-   - Understand what comes before and after this task
+   **Available tools:**
+   - `mcp__linear-server__get_issue` - Get detailed issue information
+   - `mcp__linear-server__list_issues` - Search and filter issues
+   - `mcp__linear-server__update_issue` - Update issue status, assignee, etc.
+   - `mcp__linear-server__create_comment` - Add planning comments
+   - `mcp__linear-server__list_comments` - View issue comments
+   - Plus: teams, projects, cycles, labels, users, and more
+
+   **Usage:** Use the issue identifier (e.g., "CORE-438" or full ID)
+
+   **Get from issue:**
+   - Full description and acceptance criteria
+   - Current status, priority, and estimate
+   - Dependencies (parent/blocking issues)
+   - Labels, assignee, cycle, project
+   - Attachments and git branch name
+   - Related comments and context
+
+2. **Locate issue in roadmap context** (Reference only - not source of truth)
+   - The Linear issue is the source of truth for task details
+   - Roadmap docs in private-working-memory are helpful for understanding context
+   - Check [planning/architecture/implementation-roadmap.md](private-working-memory) to understand which phase/week
+   - Use roadmap to understand dependencies and what comes before/after
 
 3. **Review architectural context**
    - Check [planning/architecture/complete-architecture-guide.md]
@@ -122,15 +137,23 @@ Break down into clear, sequential steps:
 
 **After plan is approved by Madison:**
 
-1. **Update issue status**
-   - Use Linear MCP tool: `update_issue(id=<issue-id>, state='In Progress')`
+1. **Update issue status in Linear**
+
+   Use `mcp__linear-server__update_issue` to update:
+   - Status: Change to "In Progress" (or appropriate state)
+   - Assignee: Set if not already assigned
+   - Branch: Link the git branch name
+   - Any other relevant fields
 
 2. **Add planning comment to Linear**
-   - Post comprehensive plan as a comment
-   - Include scope boundaries (In/Out of scope)
+
+   Use `mcp__linear-server__create_comment` to post the implementation plan.
+
+   Include in comment:
+   - Scope boundaries (In/Out of scope)
    - Link to created branch
-   - Add acceptance criteria checklist
-   - Note any questions or blockers
+   - Acceptance criteria checklist
+   - Questions or blockers
 
    Format:
 
@@ -138,7 +161,7 @@ Break down into clear, sequential steps:
    ## Implementation Plan
 
    **Branch:** `<ISSUE-KEY>-short-description`
-   **Estimated Time:** X hours (Y story points)
+   **Status:** In Progress
 
    ### Scope
 
