@@ -1,7 +1,7 @@
 [project]
 name = "legesher-monorepo"
 # license = {}
-version = "0.0.1"
+version = "0.1.0"
 description = "Legesher Monorepo"
 authors = [
     {name = "Madison (Pfaff) Edgar",email = "7844510+madiedgar@users.noreply.github.com"}
@@ -16,6 +16,8 @@ repository = "https://www.github.com/legesher/legesher"
 [tool.uv.sources]
 legesher-core = { path = "./libs/core", editable = true }
 legesher-i18n = { path = "./libs/i18n", editable = true }
+legesher-i18n-python-ar = { path = "./libs/i18n-python-ar", editable = true }
+legesher-i18n-python-es = { path = "./libs/i18n-python-es", editable = true }
 legesher = { path = "./libs/legesher", editable = true }
 legesher-language-server = { path = "./libs/language-server", editable = true }
 legesher-pride = { path = "./libs/pride", editable = true }
@@ -30,8 +32,46 @@ dev = [
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",
     "pytest-cov>=7.0.0",
+    "python-semantic-release>=9.0.0",
 ]
 
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
+
+[tool.semantic_release]
+# Foundation suite configuration (core, i18n, legesher)
+version_variables = [
+    "libs/core/legesher_core/__init__.py:__version__",
+    "libs/i18n/legesher_i18n/__init__.py:__version__",
+    "libs/legesher/legesher/__init__.py:__version__",
+]
+
+version_toml = [
+    "pyproject.toml:project.version",
+    "libs/core/pyproject.toml:project.version",
+    "libs/i18n/pyproject.toml:project.version",
+    "libs/legesher/pyproject.toml:project.version",
+]
+
+commit_parser = "angular"
+major_on_zero = true
+allow_zero_version = true
+branch = "main"
+tag_format = "v{version}"
+build_command = "uv build"
+upload_to_vcs_release = true
+upload_to_pypi = false
+
+# Filter to foundation packages only
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "feat", "fix", "docs", "style", "refactor",
+    "perf", "test", "build", "ci", "chore", "revert"
+]
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    "^chore\\(release\\):",
+    "^Merge",
+]

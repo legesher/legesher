@@ -8,9 +8,12 @@ authors = [
 ]
 license = {text = "MIT"}
 requires-python = ">=3.10,<4.0"
-dependencies = []
+dependencies = [
+    "legesher>=0.1.0,<0.2.0",
+    "legesher-core>=0.1.0,<0.2.0",
+]
 name = "legesher-vs-code"
-version = "0.0.1"
+version = "0.1.0"
 description = "vs code extension for Legesher Monorepo"
 readme = "README.md"
 keywords = ["vscode", "editor", "extension", "translation", "multilingual", "python"]
@@ -29,5 +32,29 @@ classifiers = [
 ]
 
 [tool.uv.sources]
+legesher = { path = "../legesher", editable = true }
 legesher-core = { path = "../core", editable = true }
 legesher-i18n = { path = "../i18n", editable = true }
+
+[tool.semantic_release]
+version_variable = "legesher-vs-code/__init__.py:__version__"
+version_toml = "pyproject.toml:project.version"
+commit_parser = "angular"
+major_on_zero = true
+allow_zero_version = true
+branch = "main"
+tag_format = "vs-code-v{version}"
+upload_to_vcs_release = true
+upload_to_pypi = false
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "feat", "fix", "docs", "style", "refactor",
+    "perf", "test", "build", "ci", "chore", "revert"
+]
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    "^chore\\(release\\):",
+    "^Merge",
+]

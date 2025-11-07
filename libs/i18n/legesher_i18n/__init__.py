@@ -25,7 +25,7 @@ from .schema_validator import (
 from .version_detector import PythonVersionDetector
 from .version_index import PythonVersionInfo, VersionIndex
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 
 __all__ = [
     # Main classes
