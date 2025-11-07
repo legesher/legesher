@@ -1,6 +1,47 @@
 # Contributing to Legesher
 
-Thank you for your interest in contributing to Legesher! This document explains how to contribute to this multi-license repository.
+Thank you for your interest in contributing to Legesher! This document explains how to contribute to this
+multi-license repository.
+
+## New to Open Source?
+
+Welcome! We're excited to have you. Open source contribution might seem intimidating at first, but we're here to help.
+
+### What is Open Source?
+
+Open source means the code is publicly visible and accepts contributions from anyone. You can:
+
+- **Report bugs** you find while using the project
+- **Suggest features** you'd like to see
+- **Fix typos** in documentation
+- **Translate** content to your native language
+- **Write code** to add features or fix bugs
+
+### Your First Contribution
+
+Not sure where to start? Here are beginner-friendly ways to contribute:
+
+1. **Fix Documentation:** Found a typo? Confusing explanation? Documentation PRs are always welcome!
+2. **Translate Language Packs:** Native speaker of a language we don't support yet? Create a language pack!
+3. **Report Bugs:** Found something broken? Open an issue with reproduction steps.
+4. **Answer Questions:** Help other users in GitHub Discussions.
+5. **Good First Issues:** Look for issues tagged `good-first-issue` - these are designed for newcomers.
+
+### Resources for Beginners
+
+- **[GitHub's Guide to Open Source](https://opensource.guide/)** - Learn the basics
+- **[First Timers Only](https://www.firsttimersonly.com/)** - Resources for first-time contributors
+- **[How to Contribute](https://opensource.guide/how-to-contribute/)** - Step-by-step guide
+
+### Getting Help
+
+Stuck? Don't hesitate to ask! We're here to help:
+
+- **GitHub Discussions:** Ask questions and discuss ideas
+- **Issue Comments:** Comment on issues for clarification
+- **Draft PRs:** Open a draft pull request and ask for feedback early
+
+**Remember:** Everyone was a beginner once. We're patient and welcoming to newcomers!
 
 ## Repository License Structure
 
@@ -20,7 +61,8 @@ These packages are fully open source under the MIT License. Your contributions w
 
 - **`libs/legesher/`** - Main package with CLI and primary API
 
-The free tier features use the MIT License. Premium features require a commercial license. Contributions to free tier features are welcome.
+The free tier features use the MIT License. Premium features require a commercial license. Contributions to free tier
+features are welcome.
 
 ### Proprietary Packages
 
@@ -69,7 +111,8 @@ uv run pytest
 
 #### Pre-commit Hooks (RECOMMENDED)
 
-We use pre-commit hooks to automatically check and format code before committing. This ensures code quality and prevents CI/CD failures.
+We use pre-commit hooks to automatically check and format code before committing. This ensures code quality and
+prevents CI/CD failures.
 
 **Setup:**
 
@@ -157,7 +200,8 @@ By contributing to the `legesher` package, you agree that:
 
 ### Copyright Assignment
 
-We do NOT require copyright assignment. You retain copyright to your contributions, but you grant Legesher a perpetual license to use your contributions under the project's license terms.
+We do NOT require copyright assignment. You retain copyright to your contributions, but you grant Legesher a perpetual
+license to use your contributions under the project's license terms.
 
 ## Code of Conduct
 
@@ -184,7 +228,8 @@ Violations may result in temporary or permanent ban from the project. Report iss
 
 ### Testing
 
-All code contributions must include tests. We use pytest for testing with a 30% minimum coverage requirement (gradually increasing to 90% as the codebase matures).
+All code contributions must include tests. We use pytest for testing with a 30% minimum coverage requirement
+(gradually increasing to 90% as the codebase matures).
 
 #### Running Tests Locally
 
@@ -297,7 +342,7 @@ def test_translate_keyword_from_spanish_to_english():
 
 Example:
 
-```
+```text
 Add Spanish translation for core keywords
 
 - Add es_ES language file
@@ -326,6 +371,123 @@ Fixes #123
 - Follow VS Code extension guidelines
 - Test on multiple VS Code versions
 - Update extension documentation
+
+## Release Process
+
+### How Releases Work
+
+Legesher uses **semantic-release** for automated versioning and releases. Here's how the process works:
+
+### During Development (Your Part)
+
+1. **Make your changes** in a feature branch
+2. **Update CHANGELOGs** as you work (see CHANGELOG workflow below)
+3. **Write conventional commits** (enforced by pre-commit hooks)
+4. **Open a pull request** with your changes and CHANGELOG updates
+5. **Get review approval** from maintainers
+6. **Merge to main** when approved
+
+### After Merge (Automated)
+
+1. **semantic-release runs** automatically via GitHub Actions
+2. **Reads conventional commits** to determine version bump (major/minor/patch)
+3. **Creates git tag** with new version
+4. **Publishes to PyPI** (if configured)
+5. **Creates GitHub release** with release notes
+
+### CHANGELOG Workflow
+
+CHANGELOGs are part of your pull request, not created after merge.
+
+#### Step 1: Update CHANGELOG during implementation
+
+- Add entries to affected package CHANGELOGs (`libs/*/CHANGELOG.md`)
+- Follow [Keep a Changelog](https://keepachangelog.com/) format
+- Use conventional commits style with detailed descriptions
+- Include PR and commit links
+
+#### Step 2: CHANGELOG entry format
+
+```markdown
+### Added
+
+- **Feature Name** ([#PR](link), [commit](link))
+  - Detailed description of what was added
+  - Key metrics (test coverage, performance, etc.)
+  - Technical details that users should know
+  - Examples of usage
+```
+
+#### Step 3: Pre-commit validation
+
+- Pre-commit hooks validate CHANGELOG format automatically
+- Catches markdown issues before commit
+- Ensures conventional commit format
+
+#### Step 4: Include in PR
+
+- CHANGELOG updates are reviewed alongside code changes
+- Maintainers verify accuracy and completeness
+- Updates made based on review feedback
+- Must be approved before merge
+
+#### Step 5: Post-merge automation
+
+- semantic-release handles version bumping
+- Git tags created automatically
+- PyPI publishing (when enabled)
+- CHANGELOG already exists - no post-merge commit needed
+
+### Conventional Commits
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages:
+
+**Format:**
+
+```text
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Types:**
+
+- `feat:` - New feature (triggers minor version bump)
+- `fix:` - Bug fix (triggers patch version bump)
+- `docs:` - Documentation changes
+- `test:` - Adding or updating tests
+- `refactor:` - Code refactoring
+- `perf:` - Performance improvements
+- `build:` - Build system changes
+- `ci:` - CI/CD changes
+- `chore:` - Maintenance tasks
+
+**Examples:**
+
+```bash
+# Feature (minor version bump: 0.1.0 → 0.2.0)
+feat(core): add Arabic language support with RTL
+
+# Bug fix (patch version bump: 0.1.0 → 0.1.1)
+fix(i18n): resolve pack inheritance circular reference
+
+# Breaking change (major version bump: 0.1.0 → 1.0.0)
+feat(core)!: redesign translation API
+
+BREAKING CHANGE: TokenTranslator constructor now requires language pack instance
+```
+
+**Note:** Pre-commit hooks enforce conventional commit format automatically.
+
+### Version Numbers
+
+- **Foundation Suite** (`core`, `i18n`, `legesher`): Synchronized versions
+- **App Packages** (`vs-code`, `pride`): Independent versions
+- **Language Packs** (`i18n-python-*`): Independent versions
+
+See [README.md](README.md#versioning-strategy) for complete versioning strategy.
 
 ## Translation Contributions
 
