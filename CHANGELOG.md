@@ -7,6 +7,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 <!--next-version-placeholder-->
 
+## [Unreleased]
+
+### Added
+
+- **Comprehensive Documentation Expansion** ([#37](https://github.com/madiedgar/legesher/pull/37), CORE-440)
+  - **Beginner Guides**: Installation, getting started, and git workflow guides
+  - **Translation Guide**: Language pack creation guide for contributors
+  - **Glossary**: Technical terms dictionary with 29 entries
+  - **Architecture Diagrams**: 5 Mermaid diagrams (package arch, translation flow, git workflow, LSP, pack inheritance)
+  - **FAQ**: 35+ questions across 7 categories
+  - **Code of Conduct**: Contributor Covenant 2.1 with multilingual programming focus
+  - **Roadmap**: v0.1.0 through v1.0.0+ with community involvement details
+  - **CLI Documentation**: Complete legesher package README with 5 main commands
+  - Improves onboarding experience for new users and contributors
+  - All documentation follows markdown best practices with 120-char line limit
+
 ## [0.1.0] - 2025-11-07
 
 ### First Public Release

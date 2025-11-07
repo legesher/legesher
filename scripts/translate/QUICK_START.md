@@ -9,6 +9,7 @@
 Navigate to: `scripts/translate/test-cases/`
 
 **Start with:**
+
 - `01-def-spanish.md` - Easiest, ACTION keyword
 - `02-true-spanish.md` - VALUE constant (different pattern)
 
@@ -43,6 +44,7 @@ Navigate to: `scripts/translate/test-cases/`
 **Look for these quality indicators:**
 
 ✅ **Good signs:**
+
 - Provided 3-5 translation options
 - Clear reasoning for each option
 - Explained why alternatives were rejected
@@ -51,6 +53,7 @@ Navigate to: `scripts/translate/test-cases/`
 - Checked consistency with related terms
 
 ❌ **Red flags:**
+
 - Only 1 option considered
 - No explanation of reasoning
 - Literal word-for-word translation
@@ -64,18 +67,24 @@ Navigate to: `scripts/translate/test-cases/`
 **After testing 2-3 terms:**
 
 ### If quality is EXCELLENT ✅
+
 → Prompts are ready! You can:
+
 - **Option A:** Continue manually (free, 10-20 hours for all 420)
 - **Option B:** Use API for automation ($7.56, 30 min setup)
 
 ### If quality is GOOD ⚠️
+
 → Minor tweaks needed:
+
 - Identify what could be improved
 - Adjust prompts slightly
 - Test 1-2 more terms
 
 ### If quality is POOR ❌
+
 → Significant revision needed:
+
 - Review what went wrong
 - Update linguistic standards
 - Add more examples
@@ -112,22 +121,27 @@ test-results/
 ## Tips for Success
 
 **1. Fresh conversation each time**
+
 - Start new conversation for each test
 - Prevents Claude from being influenced by previous translations
 
 **2. Copy the FULL prompt**
+
 - Don't skip sections
 - Examples and context are important
 
 **3. Don't guide Claude**
+
 - Let it work through the framework independently
 - Don't say "I think it should be X"
 
 **4. Save everything**
+
 - You'll reference these later
 - Successful translations inform the rest
 
 **5. Look for patterns**
+
 - After 2-3 tests, check:
   - Is reasoning consistent?
   - Are confidence ratings accurate?
@@ -138,16 +152,19 @@ test-results/
 ## Need Help?
 
 **If Claude's response is confusing:**
+
 - Check that you copied the entire prompt
 - Make sure you started a fresh conversation
 - Review the example in the prompt template
 
 **If you're unsure about translation quality:**
+
 - Compare to the `def` → Spanish example in the prompt
 - Check if reasoning is detailed and logical
 - Verify that multiple options were considered
 
 **If you want to test more terms:**
+
 - Use the same format as `01-def-spanish.md`
 - Fill in context for the new term
 - Adjust linguistic guidance as needed

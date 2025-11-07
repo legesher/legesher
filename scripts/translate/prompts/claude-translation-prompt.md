@@ -33,12 +33,14 @@ This translation is part of the **Legesher** project, which enables developers t
 
 **Example of full localization:**
 Instead of writing mixed code like:
+
 ```python
 def calculate_total(price, tax):  # Mix of English keywords
     return price + tax
 ```
 
 Developers will write fully localized code:
+
 ```python
 {translated_def} calcular_total(precio, impuesto):  # Fully in target language
     {translated_return} precio + impuesto

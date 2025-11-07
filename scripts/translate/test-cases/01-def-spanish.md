@@ -52,6 +52,7 @@ This is not about translating documentation or comments - this is about making P
 Translate the Python keyword **`def`** into **Spanish**.
 
 You will be provided with:
+
 - Complete context document (Tier 1 translation brief)
 - Linguistic standards for consistency
 - Pattern classification for this term
@@ -109,6 +110,7 @@ The `def` keyword **defines a function**. It tells Python "I am about to establi
 **This term is:** ACTION KEYWORD
 
 **Similar terms in this pattern:**
+
 1. `class` - Defines a class
 2. `return` - Returns a value from function
 3. `lambda` - Defines anonymous function
@@ -118,6 +120,7 @@ The `def` keyword **defines a function**. It tells Python "I am about to establi
 ## Translation Guidance
 
 ### Good Translation Characteristics
+
 - ✅ Captures the "defining/establishing" concept
 - ✅ Infinitive verb form (for Romance languages like Spanish)
 - ✅ Short (1 word ideally)
@@ -125,6 +128,7 @@ The `def` keyword **defines a function**. It tells Python "I am about to establi
 - ✅ Matches form of other ACTION keywords
 
 ### Common Mistakes to Avoid
+
 - ❌ Using a noun instead of verb ("función" = function)
 - ❌ Too generic ("crear" = create - too broad)
 - ❌ Wrong verb tense (should be infinitive, not conjugated)
@@ -137,20 +141,24 @@ The `def` keyword **defines a function**. It tells Python "I am about to establi
 ## Key Linguistic Standards for Spanish
 
 **Register:** Technical/formal (CS education vocabulary)
+
 - NOT academic stuffy (avoid archaic terms)
 - NOT colloquial slang (avoid regional dialects)
 - TARGET: Professional technical register used in CS textbooks
 
 **Form for ACTION keywords:** Infinitive verb
+
 - Spanish infinitives end in -ar, -er, or -ir
 - Examples: definir (to define), retornar (to return), romper (to break)
 
 **Pattern:** This is an ACTION keyword
+
 - ACTION keywords perform an operation
 - Should use infinitive verb form in Spanish
 - Must be consistent with other ACTION keywords
 
 **Consistency:** Must align with translations of similar terms
+
 - `return` → "retornar" (infinitive)
 - `break` → "romper" (infinitive)
 - `continue` → "continuar" (infinitive)
@@ -186,6 +194,7 @@ Please think through this translation step-by-step using the following framework
 ### Step 1: Concept Analysis
 
 <concept_analysis>
+
 - What does this term DO in Python? (not what the English word means)
 - Is this an ACTION (something you do) or STATE (something that is)?
 - What programming concept does it represent?
@@ -196,6 +205,7 @@ Please think through this translation step-by-step using the following framework
 
 <translation_options>
 Generate 3-5 possible translations:
+
 1. {option_1} - {rationale}
 2. {option_2} - {rationale}
 3. {option_3} - {rationale}
@@ -208,22 +218,26 @@ Generate 3-5 possible translations:
 <priority_filtering>
 
 **Priority 1: Technical Accuracy (eliminate incorrect meanings)**
+
 - ❌ {option_x} - wrong meaning because {reason}
 - ✅ {option_y} - correct meaning
 - ✅ {option_z} - correct meaning
 
 **Priority 2: CS Education Alignment (research regional usage)**
+
 - What term appears in Spanish CS textbooks?
 - What term appears in Spanish Python tutorials?
 - What term would students already know?
 - Winner: {term} because {reason}
 
 **Priority 3: Naturalness (among remaining options)**
+
 - Is it easy to say out loud?
 - Is it memorable?
 - Does it feel natural to native speakers?
 
 **Priority 4: Consistency (check pattern alignment)**
+
 - Does this match the form of related terms?
 - If `return` uses infinitive, this should too
 - Check cross-references for consistency requirements
@@ -252,6 +266,7 @@ Run through checklist:
 Rate your confidence: HIGH | MEDIUM | LOW
 
 **If MEDIUM or LOW, explain why:**
+
 - What concerns do you have?
 - What would you want a human reviewer to verify?
 - Are there multiple equally valid options?
