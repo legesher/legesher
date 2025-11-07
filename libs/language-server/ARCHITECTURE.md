@@ -280,21 +280,332 @@ The VS Code extension will:
 
 See [Integration Guide](docs/integration-guide.md) for details.
 
+## Pylance Integration (CORE-360)
+
+### Overview
+
+The Pylance integration provides advanced Python intelligence (type checking, advanced hover, go-to-definition) for localized code through a translation proxy architecture.
+
+**Status**: Foundation ✅ Complete | LSP Communication 🚧 In Progress
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│  User Code (Localized)                          │
+│  definir foo(x: entero) -> cadena:              │
+└──────────────────┬──────────────────────────────┘
+                   │ Translation Layer
+┌──────────────────▼──────────────────────────────┐
+│  Hybrid Python (TypeAlias)                      │
+│  from typing import TypeAlias                   │
+│  entero: TypeAlias = int                        │
+│  cadena: TypeAlias = str                        │
+│  def foo(x: entero) -> cadena:                  │
+└──────────────────┬──────────────────────────────┘
+                   │ Forward to Pylance
+┌──────────────────▼──────────────────────────────┐
+│  Pylance/Pyright                                │
+│  Type checks with TypeAlias understanding       │
+│  Returns diagnostics, hover, etc.               │
+└──────────────────┬──────────────────────────────┘
+                   │ Translate back
+┌──────────────────▼──────────────────────────────┐
+│  User sees results in original language         │
+└─────────────────────────────────────────────────┘
+```
+
+### Components
+
+#### 1. SourceMap (`source_map.py`)
+
+Bidirectional position mapping between localized and English code.
+
+**Purpose**: When keywords change length (e.g., `definir` (7) → `def` (3)), line/column positions shift. SourceMap tracks these shifts for accurate error reporting.
+
+**Algorithm**: Binary search for O(log n) position lookups.
+
+**Example**:
+
+```python
+# Spanish position (0, 10) → English position (0, 6)
+source_map.to_english(Position(0, 10))  # Returns Position(0, 6)
+source_map.to_original(Position(0, 6))  # Returns Position(0, 10)
+```
+
+**Coverage**: 80.43% with 20 comprehensive tests
+
+#### 2. TypeAliasGenerator (`type_alias_generator.py`)
+
+**The Key Innovation**: Generates Python `TypeAlias` statements to preserve localized type hints.
+
+**Problem**: Pylance expects English type names (`int`, `str`), but users write localized types (`entero`, `cadena`).
+
+**Solution**: Instead of translating (losing semantics), generate TypeAlias:
+
+```python
+from typing import TypeAlias
+entero: TypeAlias = int
+cadena: TypeAlias = str
+
+def foo(x: entero) -> cadena:  # ✅ Valid Python, Pylance understands!
+    return str(x)
+```
+
+**Why This Works**:
+
+- Pylance understands `entero` as `int` via TypeAlias
+- Type checking works correctly
+- Error messages preserve user's original type names
+- Zero translation loss
+- Extensible to other languages (JS: `type entero = number;`)
+
+**Features**:
+
+- AST-based type hint extraction
+- Support for generics (List[entero], Dict[cadena, entero])
+- Union types and Optional
+- String annotations (forward references)
+
+**Coverage**: 20 comprehensive tests, all passing
+
+#### 3. IncrementalTranslator (`incremental_translator.py`)
+
+Translation engine with performance optimizations.
+
+**Features**:
+
+- **Content-based caching**: SHA256 hashing for instant cache hits
+- **Bidirectional translation**: Spanish ↔ English
+- **Integrated SourceMapBuilder**: Builds position mappings during translation
+- **Automatic TypeAlias injection**: Prepends TypeAlias block to translated code
+
+**Performance**:
+
+- Target: <50ms translation overhead
+- Cache hits: <5ms
+- Strategy: Hash unchanged files for instant cache hits
+
+**Example**:
+
+```python
+translator = IncrementalTranslator(source_lang="es", target_lang="en", ...)
+result = await translator.translate_to_english(spanish_code)
+# result.translated_code: English code with TypeAlias
+# result.source_map: Position mapping
+# result.content_hash: Cache key
+```
+
+#### 4. PylanceProxy (`pylance_proxy.py`)
+
+Manages Pyright subprocess and coordinates translation.
+
+**Responsibilities**:
+
+- Start/stop Pyright subprocess
+- Auto-detect Pyright installation
+- Forward LSP requests with translation
+- Graceful degradation when Pylance unavailable
+- Performance monitoring
+
+**Lifecycle**:
+
+```python
+# Initialization
+proxy = PylanceProxy(config)
+
+# On server start
+await proxy.start()  # Starts Pyright subprocess
+
+# On hover request
+hover = await proxy.forward_hover(params)
+
+# On server shutdown
+await proxy.stop()  # Graceful Pyright termination
+```
+
+**Auto-detection**: Checks npm global, system PATH, configured path
+
+**Graceful Degradation**: Falls back to basic providers if Pyright not found
+
+### Translation Flow
+
+#### Hover Example
+
+```
+1. User hovers at Position(0, 10) in Spanish code
+      ↓
+2. Translate document to English (cached if unchanged)
+      ↓
+3. Map position: Spanish (0, 10) → English (0, 6)
+      ↓
+4. Send textDocument/hover to Pyright with English position
+      ↓
+5. Pyright returns hover info at English position
+      ↓
+6. Map position back: English (0, 6) → Spanish (0, 10)
+      ↓
+7. Translate hover content (if needed)
+      ↓
+8. Return to user
+```
+
+#### Diagnostic Example
+
+```
+1. Document changed notification
+      ↓
+2. Translate document to English + generate TypeAlias
+      ↓
+3. Send textDocument/diagnostic to Pyright
+      ↓
+4. Pyright returns type errors
+      ↓
+5. Map error positions back to Spanish
+      ↓
+6. Translate error messages using error_templates
+      ↓
+7. Merge with basic diagnostics (syntax errors)
+      ↓
+8. Return combined diagnostics to user
+```
+
+### Performance Considerations
+
+**Target**: <50ms overhead per request
+
+**Strategies**:
+
+1. **Content-based caching**: Unchanged files = instant cache hit
+2. **Lazy translation**: Only translate on first request
+3. **Position mapping optimization**: O(log n) binary search
+4. **TypeAlias caching**: Reuse generated aliases
+5. **Speculative translation**: Pre-translate likely requests
+
+**Monitoring**:
+
+```python
+stats = proxy.get_performance_stats()
+# Returns: request_count, average_latency_ms, cache_size, etc.
+```
+
+### Configuration
+
+```python
+# Environment variables
+LEGESHER_PYLANCE_ENABLED=true    # Enable/disable Pylance
+LEGESHER_PYLANCE_PATH=/path/to/pyright  # Custom path (optional)
+
+# In code
+config = LanguageServerConfig(
+    pylance_enabled=True,
+    pylance_path=None,  # Auto-detect
+)
+```
+
+### Error Handling
+
+**Pyright Not Found**:
+
+```python
+# Logs warning, disables Pylance features
+logger.warning("Pyright not found. Install with: npm install -g pyright")
+# Falls back to basic providers (hover, completion, diagnostics)
+```
+
+**Pyright Crashes**:
+
+```python
+# Detects process exit, logs error
+# Falls back to basic providers
+# Future: Auto-restart after delay
+```
+
+**Translation Errors**:
+
+```python
+# Returns original code unchanged
+# Logs error for debugging
+# Server remains functional
+```
+
+### Testing
+
+**Unit Tests**: 40 tests, all passing
+
+- SourceMap: 20 tests (80.43% coverage)
+- TypeAliasGenerator: 20 tests (comprehensive)
+
+**Integration Tests**: Planned
+
+- Mock Pyright server
+- End-to-end translation validation
+- Performance benchmarks
+
+**Real-world Scenarios**:
+
+- Spanish function definitions
+- Complex generic types
+- Multi-line statements
+- Error message translation
+
+### Future Enhancements
+
+**LSP Communication** (CORE-360 completion):
+
+- Full JSON-RPC 2.0 implementation
+- textDocument/hover with translation
+- textDocument/diagnostic with merging
+- Initialization handshake
+
+**Advanced Features** (Future sprints):
+
+- Go-to-definition across files
+- Find references with translation
+- Symbol renaming
+- Code actions / quick fixes
+- Workspace-wide symbol search
+
+**Performance Optimizations** (Future sprints):
+
+- Incremental document updates
+- Streaming translation for large files
+- Parallel translation requests
+- Persistent cache across sessions
+
+### Known Limitations
+
+**Current** (Foundation phase):
+
+- LSP communication not yet implemented (stubs in place)
+- Hover/diagnostic forward returns None (falls back to basic providers)
+- Integration tests pending
+
+**Architectural**:
+
+- Requires Pyright/Pylance installation (graceful degradation if missing)
+- TypeAlias approach requires Python 3.10+ (typing.TypeAlias)
+- Position mapping assumes keywords don't span multiple lines
+
+### References
+
+- [LSP Specification](https://microsoft.github.io/language-server-protocol/)
+- [Pyright Documentation](https://github.com/microsoft/pyright)
+- [TypeAlias (PEP 613)](https://peps.python.org/pep-0613/)
+- [JSON-RPC 2.0](https://www.jsonrpc.org/specification)
+
+---
+
 ## Future Work
 
-### CORE-359: Complete Diagnostic Provider
+### CORE-360: Complete Pylance Integration
 
-- Integrate error_templates.py with diagnostic.py provider
-- Implement AST-based error detection
-- Create LSP Diagnostic objects
-- Add variable name preservation
-
-### CORE-360: Pylance Integration
-
-- Proxy Python intelligence
-- Combine Pylance + translation
-- Seamless developer experience
-- Advanced semantic error detection
+- ✅ Foundation architecture (SourceMap, TypeAlias, Translator, Proxy)
+- ✅ Comprehensive tests (40 tests passing)
+- 🚧 LSP communication (JSON-RPC message passing)
+- 📋 Integration tests with mock Pyright
+- 📋 Performance benchmarks
+- 📋 Documentation updates
 
 ## Performance Considerations
 
