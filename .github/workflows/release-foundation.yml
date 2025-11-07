@@ -1,0 +1,99 @@
+name: Release Foundation Suite
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'libs/core/**'
+      - 'libs/i18n/**'
+      - 'libs/legesher/**'
+      - 'pyproject.toml'
+  workflow_dispatch:  # Allow manual triggers
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release Foundation (core, i18n, legesher)
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'chore(release)')"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for semantic-release
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system python-semantic-release
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run Semantic Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📦 Running semantic-release for foundation suite..."
+          if ! uv run semantic-release version --verbose; then
+            echo "ℹ️ No release needed (no releasable commits)"
+            exit 0
+          fi
+
+      - name: Sync uv.lock
+        if: success()
+        run: |
+          echo "🔒 Syncing uv.lock..."
+          uv sync
+
+          # Commit lock file if it changed
+          if [ -n "$(git status --porcelain uv.lock)" ]; then
+            git add uv.lock
+            git commit -m "chore: update uv.lock after version bump"
+            git push origin main
+          fi
+
+      - name: Create GitHub Release
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🚀 Creating GitHub Release..."
+          uv run semantic-release publish --verbose
+
+      - name: Build packages
+        if: success()
+        run: |
+          echo "📦 Building foundation packages..."
+          uv build -p libs/core
+          uv build -p libs/i18n
+          uv build -p libs/legesher
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: foundation-dist-${{ github.sha }}
+          path: |
+            libs/core/dist/
+            libs/i18n/dist/
+            libs/legesher/dist/
+          retention-days: 90

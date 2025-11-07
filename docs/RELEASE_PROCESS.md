@@ -373,16 +373,118 @@ git tag -l "vs-code-v*"   # VS Code releases
 git tag -l "pride-v*"     # Pride releases
 ```
 
-## Future: CI/CD Automation
+## CI/CD Automation
 
-**Phase 3 (Planned):** Releases will be automated in GitHub Actions:
+**Status:** ✅ Implemented in CORE-439
 
-- Automatic releases on merge to main
-- PyPI publishing
-- GitHub Release creation
-- Notification to team
+Releases are now automated via GitHub Actions workflows. You can choose between automatic releases (on merge to
+main) or manual releases (via GitHub UI).
 
-Until then, use the manual scripts documented above.
+### Automatic Releases
+
+Releases trigger automatically when you push to `main` and files in watched directories change:
+
+**Foundation Suite** (`release-foundation.yml`):
+
+- **Triggers when:** Changes to `libs/core/`, `libs/i18n/`, `libs/legesher/`, or `pyproject.toml`
+- **Creates tag:** `v{version}` (e.g., `v0.2.0`)
+- **Releases:** core, i18n, and legesher together
+
+**Language Packs** (`release-language-packs.yml`):
+
+- **Triggers when:** Changes to `libs/i18n-python-*/`
+- **Creates tag:** `i18n-{target}-{lang}-v{version}` (e.g., `i18n-python-es-v0.1.1`)
+- **Releases:** Only changed language packs
+
+**Applications** (`release-apps.yml`):
+
+- **Triggers when:** Changes to `libs/vs-code/` or `libs/pride/`
+- **Creates tag:** `{app}-v{version}` (e.g., `vs-code-v0.2.0`)
+- **Releases:** Only changed applications
+
+### Manual Releases
+
+You can manually trigger releases via GitHub Actions:
+
+1. Go to **Actions** tab in GitHub
+2. Select the appropriate workflow:
+   - **Release Foundation Suite**
+   - **Release Language Packs** (specify target + language)
+   - **Release Applications** (specify app name)
+3. Click **Run workflow**
+4. Select `main` branch
+5. Fill in any required inputs
+6. Click **Run workflow**
+
+### What the Workflows Do
+
+Each workflow automatically:
+
+1. ✅ Checks out code with full git history
+2. ✅ Installs Python 3.13 and uv
+3. ✅ Runs `semantic-release version` to determine next version
+4. ✅ Updates version numbers in code and `pyproject.toml`
+5. ✅ Updates CHANGELOG.md
+6. ✅ Creates git tag
+7. ✅ Syncs `uv.lock` (foundation only)
+8. ✅ Creates GitHub Release
+9. ✅ Builds packages
+10. ✅ Uploads build artifacts (retained for 90 days)
+
+### Monitoring Releases
+
+**Check workflow status:**
+
+- Go to **Actions** tab → Select workflow run
+- Green checkmark = success
+- Red X = failure (check logs)
+
+**Verify release:**
+
+```bash
+# Fetch latest tags
+git fetch --tags
+
+# View recent releases
+git tag -l | tail -5
+
+# Check GitHub Releases page
+gh release list
+```
+
+### PyPI Publishing
+
+PyPI publishing is **disabled by default** and requires manual trigger.
+
+**To publish to PyPI:**
+
+1. **First time setup:**
+   - Create accounts on [PyPI](https://pypi.org) and [TestPyPI](https://test.pypi.org)
+   - Generate API tokens (Account Settings → API tokens)
+   - Add to GitHub Secrets:
+     - `PYPI_API_TOKEN`
+     - `TEST_PYPI_API_TOKEN`
+
+2. **Publish (manual trigger):**
+   - Go to **Actions** → **Publish to PyPI**
+   - Click **Run workflow**
+   - Select package: `foundation`, `i18n-python-es`, `vs-code`, etc.
+   - Select environment: `testpypi` (test) or `pypi` (production)
+   - Click **Run workflow**
+
+**Recommendation:** Always test on TestPyPI first, then publish to production PyPI.
+
+**When to enable:** During Phase 3B (Beta Program, Week 12+) when beta testers need `pip install` access.
+
+### Skipping CI Releases
+
+Release commits are automatically skipped to prevent loops:
+
+```yaml
+if: "!contains(github.event.head_commit.message, 'chore(release)')"
+```
+
+This prevents the workflow from triggering on its own release commits.
 
 ## FAQ
 
@@ -420,6 +522,94 @@ git revert HEAD~2..HEAD
 
 **Note:** Avoid reverting releases if possible. Better to release a fix.
 
+## Future Enhancements
+
+These features are planned for future implementation:
+
+### Near-Term (Phase 3-4, Next 3-6 Months)
+
+1. **Automated Dependency Updates (Dependabot)** - *CORE-440 (planned)*
+   - Weekly PRs for security updates
+   - Automatic minor/patch version bumps
+   - Grouped updates per ecosystem (Python, GitHub Actions)
+   - **When:** After beta launch (Week 12+)
+
+2. **VS Code Marketplace Publishing** - *CORE-441 (planned)*
+   - Auto-publish extension on `vs-code-v*` tag
+   - Deploy to VS Code Marketplace and Open VSX
+   - **When:** Phase 2D (Multi-Language IDE ready)
+
+3. **Release Notification System**
+   - Discord/Slack webhook on new releases
+   - Email notifications to beta testers
+   - RSS feed for release notes
+   - **When:** During beta program (Week 12-16)
+
+4. **Documentation Site Auto-Deployment** - *CORE-442 (planned)*
+   - Deploy docs.legesher.io on release
+   - Versioned documentation (v0.1, v0.2, etc.)
+   - Automatic API reference generation
+   - **When:** Phase 3 (Week 21-24)
+
+### Mid-Term (v0.5-v1.0, 6-12 Months)
+
+1. **Docker Image Publishing** - *CORE-443 (planned)*
+   - Language server container images
+   - Registry backend Docker images
+   - Multi-platform builds (amd64, arm64)
+   - **When:** Phase 2B+ (Language Server production-ready)
+
+2. **Release Notes Enhancement**
+   - Custom templates with screenshots/demos
+   - Grouped by package/feature area
+   - Contributor acknowledgments
+   - Migration guides for breaking changes
+   - **When:** v0.5.0+ (More stable releases)
+
+3. **Automated Changelog Categorization**
+   - AI-powered commit classification
+   - Automatic "highlights" section generation
+   - Link commits to Linear issues
+   - **When:** v0.8.0+ (Larger changelog volume)
+
+4. **PyPI Trusted Publishing**
+   - Remove API tokens, use OIDC
+   - More secure GitHub Actions → PyPI flow
+   - **When:** v0.5.0+ (Production PyPI releases)
+
+### Long-Term (v1.0+, 12+ Months)
+
+1. **Multi-Environment Release Pipeline**
+   - Staging → Production deployment flow
+   - Canary releases (10% → 50% → 100%)
+   - Automatic rollback on errors
+   - **When:** v1.0+ (Enterprise production use)
+
+2. **Rollback Automation**
+   - One-click revert to previous release
+   - Automatic issue creation on rollback
+   - Rollback health checks
+   - **When:** v1.0+ (Mission-critical deployments)
+
+3. **Release Health Monitoring**
+   - Download trend tracking
+   - Error rate monitoring post-release
+   - User feedback aggregation
+   - Automated quality gates
+   - **When:** v1.0+ (Large user base)
+
+4. **Community Translation Workflow**
+   - Auto-create PRs for language pack updates
+   - Translation review dashboard
+   - Contributor recognition in releases
+   - **When:** Phase 4+ (Active translator community)
+
+### Not Currently Planned
+
+- **Multi-package synchronized versioning in CI** - Independent versioning works well
+- **Automatic major version bumps** - Major versions need human decision
+- **Release on every commit** - Too noisy, main branch is sufficient
+
 ## Related Documentation
 
 - [Semantic Versioning](https://semver.org/)
@@ -427,3 +617,4 @@ git revert HEAD~2..HEAD
 - [python-semantic-release Docs](https://python-semantic-release.readthedocs.io/)
 - [Keep a Changelog](https://keepachangelog.com/)
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Commit message guidelines
+- [Release Checklist](../.github/RELEASE_CHECKLIST.md) - Quick reference for releases
