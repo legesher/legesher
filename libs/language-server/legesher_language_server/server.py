@@ -17,6 +17,7 @@ from lsprotocol.types import (
     TEXT_DOCUMENT_HOVER,
     CompletionList,
     CompletionParams,
+    Diagnostic,
     DidChangeTextDocumentParams,
     DidCloseTextDocumentParams,
     DidOpenTextDocumentParams,
@@ -35,8 +36,28 @@ from pygls.server import LanguageServer
 from .config import LanguageServerConfig
 from .document import DocumentManager
 from .providers import provide_completion, provide_diagnostics, provide_hover
+from .pylance_proxy import PylanceProxy
 
 logger = logging.getLogger(__name__)
+
+
+def _deduplicate_diagnostics(diagnostics: list[Diagnostic]) -> list[Diagnostic]:
+    """Remove duplicate diagnostics by range and message.
+
+    Args:
+        diagnostics: List of diagnostics potentially containing duplicates
+
+    Returns:
+        List of unique diagnostics
+    """
+    seen: set[tuple[int, int, str]] = set()
+    unique: list[Diagnostic] = []
+    for diag in diagnostics:
+        key = (diag.range.start.line, diag.range.start.character, diag.message)
+        if key not in seen:
+            seen.add(key)
+            unique.append(diag)
+    return unique
 
 
 class LegesherLanguageServer(LanguageServer):
@@ -67,6 +88,12 @@ class LegesherLanguageServer(LanguageServer):
         # Note: Translation engine will be loaded on-demand in CORE-357
         # to avoid loading language packs during initialization
         self.translator: object | None = None
+
+        # Pylance proxy for advanced Python intelligence (CORE-360)
+        self.pylance_proxy: PylanceProxy | None = None
+        if config.pylance_enabled:
+            self.pylance_proxy = PylanceProxy(config)
+            logger.info("Pylance proxy initialized")
 
         # Register all LSP handlers
         self._register_handlers()
@@ -122,6 +149,14 @@ class LegesherLanguageServer(LanguageServer):
         """
         logger.info("Server initialized successfully")
 
+        # Start Pylance proxy if enabled (CORE-360)
+        if self.pylance_proxy:
+            started = await self.pylance_proxy.start()
+            if started:
+                logger.info("Pylance proxy started successfully")
+            else:
+                logger.warning("Pylance proxy failed to start, using basic providers only")
+
     async def on_shutdown(self, params: object) -> None:
         """Handle shutdown request from client.
 
@@ -129,7 +164,11 @@ class LegesherLanguageServer(LanguageServer):
             params: Shutdown parameters (unused)
         """
         logger.info("Server shutting down")
-        # Clean up resources if needed
+
+        # Stop Pylance proxy if running (CORE-360)
+        if self.pylance_proxy:
+            await self.pylance_proxy.stop()
+            logger.info("Pylance proxy stopped")
 
     async def on_did_open(self, params: DidOpenTextDocumentParams) -> None:
         """Handle document open notification.
@@ -142,6 +181,17 @@ class LegesherLanguageServer(LanguageServer):
             uri=doc.uri, text=doc.text, version=doc.version, language_id=doc.language_id
         )
         logger.debug(f"Document opened: {doc.uri}")
+
+        # Translate document for Pylance if enabled (CORE-360)
+        if self.pylance_proxy and self.pylance_proxy.is_running():
+            try:
+                await self.pylance_proxy.translate_document_for_pylance(doc.uri, doc.text)
+            except (TimeoutError, RuntimeError, ValueError) as e:
+                logger.warning(f"Failed to translate document for Pylance: {e!r}")
+            except Exception as e:
+                logger.error(
+                    f"Unexpected error translating document for Pylance: {e!r}", exc_info=True
+                )
 
     async def on_did_change(self, params: DidChangeTextDocumentParams) -> None:
         """Handle document change notification.
@@ -156,6 +206,19 @@ class LegesherLanguageServer(LanguageServer):
                 version=params.text_document.version,
             )
             logger.debug(f"Document changed: {params.text_document.uri}")
+
+            # Update translation for Pylance if enabled (CORE-360)
+            if self.pylance_proxy and self.pylance_proxy.is_running():
+                try:
+                    await self.pylance_proxy.translate_document_for_pylance(
+                        params.text_document.uri, params.content_changes[0].text
+                    )
+                except (TimeoutError, RuntimeError, ValueError) as e:
+                    logger.warning(f"Failed to update translation for Pylance: {e!r}")
+                except Exception as e:
+                    logger.error(
+                        f"Unexpected error updating translation for Pylance: {e!r}", exc_info=True
+                    )
 
     async def on_did_close(self, params: DidCloseTextDocumentParams) -> None:
         """Handle document close notification.
@@ -178,8 +241,20 @@ class LegesherLanguageServer(LanguageServer):
             Hover information or None
 
         Note:
-            STUB - Full implementation in CORE-357
+            Implementation in CORE-357 with Pylance enhancement in CORE-360
         """
+        # Try Pylance first for advanced type information (CORE-360)
+        if self.pylance_proxy and self.pylance_proxy.is_running():
+            try:
+                pylance_hover = await self.pylance_proxy.forward_hover(params)
+                if pylance_hover:
+                    return pylance_hover
+            except (TimeoutError, RuntimeError, ValueError) as e:
+                logger.warning(f"Pylance hover request failed: {e!r}")
+            except Exception as e:
+                logger.error(f"Unexpected error in Pylance hover: {e!r}", exc_info=True)
+
+        # Fallback to basic hover provider
         return await provide_hover(self, params.text_document.uri, params.position)
 
     async def on_completion(self, params: CompletionParams) -> CompletionList:
@@ -209,11 +284,29 @@ class LegesherLanguageServer(LanguageServer):
         Note:
             STUB - Full implementation in CORE-359
         """
-        diagnostics = await provide_diagnostics(self, params.text_document.uri)
+        # Get basic diagnostics
+        basic_diagnostics = await provide_diagnostics(self, params.text_document.uri)
+
+        # Try to get Pylance diagnostics if available (CORE-360)
+        pylance_diagnostics: list[Diagnostic] = []
+        if self.pylance_proxy and self.pylance_proxy.is_running():
+            doc = self.document_manager.get_document(params.text_document.uri)
+            if doc:
+                try:
+                    pylance_diagnostics = await self.pylance_proxy.forward_diagnostic(
+                        params.text_document.uri, doc.text
+                    )
+                except (TimeoutError, RuntimeError, ValueError) as e:
+                    logger.warning(f"Pylance diagnostic request failed: {e!r}")
+                except Exception as e:
+                    logger.error(f"Unexpected error in Pylance diagnostics: {e!r}", exc_info=True)
+
+        # Merge and deduplicate diagnostics
+        all_diagnostics = _deduplicate_diagnostics(list(pylance_diagnostics) + basic_diagnostics)
 
         return DocumentDiagnosticReport(
             kind="full",
-            items=diagnostics,
+            items=all_diagnostics,
         )
 
 
