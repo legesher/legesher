@@ -8,10 +8,13 @@ while translating between localized keywords and English.
 Implementation for CORE-360 - Pylance Integration.
 """
 
+import asyncio
+import json
 import logging
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +22,8 @@ from lsprotocol.types import (
     Diagnostic,
     Hover,
     HoverParams,
+    Position,
+    Range,
 )
 
 from .config import LanguageServerConfig
@@ -67,6 +72,12 @@ class PylanceProxy:
 
         # Document cache: uri -> (translated_content, source_map)
         self._document_cache: dict[str, Any] = {}
+
+        # JSON-RPC request tracking
+        self._request_id = 0
+        self._pending_requests: dict[int, asyncio.Future] = {}
+        self._reader_task: asyncio.Task | None = None
+        self._initialized = False
 
         # Performance tracking
         self._request_count = 0
@@ -138,7 +149,7 @@ class PylanceProxy:
             return {}
 
     async def start(self) -> bool:
-        """Start Pyright subprocess.
+        """Start Pyright subprocess and initialize LSP connection.
 
         Returns:
             True if successfully started, False otherwise
@@ -166,7 +177,17 @@ class PylanceProxy:
                 text=False,  # Binary mode for proper encoding
             )
 
-            logger.info(f"Pyright server started: {self.pyright_path}")
+            # Start background reader task
+            self._reader_task = asyncio.create_task(self._read_responses())
+
+            # Initialize LSP connection
+            initialized = await self._initialize_pyright()
+            if not initialized:
+                logger.error("Failed to initialize Pyright")
+                await self.stop()
+                return False
+
+            logger.info(f"Pyright server started and initialized: {self.pyright_path}")
             return True
 
         except Exception as e:
@@ -209,11 +230,210 @@ class PylanceProxy:
 
         return None
 
+    async def _initialize_pyright(self) -> bool:
+        """Initialize Pyright with LSP initialize handshake.
+
+        Returns:
+            True if initialization successful, False otherwise
+        """
+        try:
+            # Send initialize request
+            init_params = {
+                "processId": os.getpid(),
+                "clientInfo": {"name": "legesher", "version": "0.1.0"},
+                "rootUri": None,
+                "capabilities": {
+                    "textDocument": {
+                        "hover": {"contentFormat": ["markdown", "plaintext"]},
+                        "diagnostic": {"dynamicRegistration": False},
+                    }
+                },
+            }
+
+            response = await self._send_request("initialize", init_params, timeout=10.0)
+            if not response or "error" in response:
+                logger.error(f"Initialize request failed: {response}")
+                return False
+
+            # Send initialized notification
+            await self._send_notification("initialized", {})
+
+            self._initialized = True
+            logger.debug("Pyright initialized successfully")
+            return True
+
+        except Exception as e:
+            logger.error(f"Pyright initialization failed: {e}")
+            return False
+
+    async def _send_request(self, method: str, params: dict, timeout: float = 5.0) -> dict | None:
+        """Send JSON-RPC request to Pyright and wait for response.
+
+        Args:
+            method: LSP method name
+            params: Method parameters
+            timeout: Request timeout in seconds
+
+        Returns:
+            Response dictionary or None on error
+        """
+        if not self.process or not self.process.stdin:
+            return None
+
+        # Generate request ID
+        self._request_id += 1
+        request_id = self._request_id
+
+        # Create JSON-RPC request
+        request = {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": method,
+            "params": params,
+        }
+
+        # Create future for response
+        future: asyncio.Future = asyncio.Future()
+        self._pending_requests[request_id] = future
+
+        try:
+            # Send request
+            message = json.dumps(request)
+            content = f"Content-Length: {len(message)}\r\n\r\n{message}"
+            self.process.stdin.write(content.encode("utf-8"))
+            self.process.stdin.flush()
+
+            logger.debug(f"Sent request {request_id}: {method}")
+
+            # Wait for response with timeout
+            response = await asyncio.wait_for(future, timeout=timeout)
+            return response
+
+        except asyncio.TimeoutError:
+            logger.warning(f"Request {request_id} timed out: {method}")
+            self._pending_requests.pop(request_id, None)
+            return None
+        except Exception as e:
+            logger.error(f"Request {request_id} failed: {e}")
+            self._pending_requests.pop(request_id, None)
+            return None
+
+    async def _send_notification(self, method: str, params: dict) -> None:
+        """Send JSON-RPC notification to Pyright (no response expected).
+
+        Args:
+            method: LSP method name
+            params: Method parameters
+        """
+        if not self.process or not self.process.stdin:
+            return
+
+        # Create JSON-RPC notification (no id field)
+        notification = {"jsonrpc": "2.0", "method": method, "params": params}
+
+        try:
+            message = json.dumps(notification)
+            content = f"Content-Length: {len(message)}\r\n\r\n{message}"
+            self.process.stdin.write(content.encode("utf-8"))
+            self.process.stdin.flush()
+
+            logger.debug(f"Sent notification: {method}")
+
+        except Exception as e:
+            logger.error(f"Failed to send notification {method}: {e}")
+
+    async def _read_responses(self) -> None:
+        """Background task to read JSON-RPC responses from Pyright stdout."""
+        if not self.process or not self.process.stdout:
+            return
+
+        try:
+            while self.is_running():
+                # Read Content-Length header
+                header = await self._read_line()
+                if not header:
+                    break
+
+                # Parse Content-Length
+                if not header.startswith("Content-Length:"):
+                    continue
+
+                content_length = int(header.split(":")[1].strip())
+
+                # Read blank line
+                await self._read_line()
+
+                # Read message body
+                message_bytes = await self._read_bytes(content_length)
+                if not message_bytes:
+                    break
+
+                # Parse JSON response
+                try:
+                    response = json.loads(message_bytes.decode("utf-8"))
+                    await self._handle_response(response)
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse JSON response: {e}")
+
+        except Exception as e:
+            logger.error(f"Response reader crashed: {e}")
+
+    async def _read_line(self) -> str:
+        """Read a line from Pyright stdout."""
+        if not self.process or not self.process.stdout:
+            return ""
+
+        try:
+            line = self.process.stdout.readline()
+            return line.decode("utf-8").strip()
+        except Exception:
+            return ""
+
+    async def _read_bytes(self, count: int) -> bytes:
+        """Read specified number of bytes from Pyright stdout."""
+        if not self.process or not self.process.stdout:
+            return b""
+
+        try:
+            return self.process.stdout.read(count)
+        except Exception:
+            return b""
+
+    async def _handle_response(self, response: dict) -> None:
+        """Handle JSON-RPC response from Pyright.
+
+        Args:
+            response: Parsed JSON-RPC response
+        """
+        # Check if this is a response to our request
+        if "id" in response:
+            request_id = response["id"]
+            future = self._pending_requests.pop(request_id, None)
+            if future and not future.done():
+                future.set_result(response)
+                logger.debug(f"Received response for request {request_id}")
+        else:
+            # This is a notification from server (e.g., diagnostics)
+            logger.debug(f"Received notification: {response.get('method', 'unknown')}")
+
     async def stop(self) -> None:
         """Stop Pyright subprocess gracefully."""
+        # Cancel reader task
+        if self._reader_task and not self._reader_task.done():
+            self._reader_task.cancel()
+            try:
+                await self._reader_task
+            except asyncio.CancelledError:
+                pass
+
+        # Stop subprocess
         if self.process:
             try:
-                # Send shutdown request first
+                # Send shutdown request if initialized
+                if self._initialized:
+                    await self._send_request("shutdown", {}, timeout=2.0)
+                    await self._send_notification("exit", {})
+
                 self.process.terminate()
                 self.process.wait(timeout=5)
                 logger.info("Pyright server stopped")
@@ -223,6 +443,7 @@ class PylanceProxy:
                 logger.warning("Pyright server forcefully terminated")
             finally:
                 self.process = None
+                self._initialized = False
 
     def is_running(self) -> bool:
         """Check if Pyright subprocess is running.
@@ -241,13 +462,79 @@ class PylanceProxy:
         Returns:
             Hover information or None if not available
         """
-        if not self.is_running():
+        if not self.is_running() or not self._initialized:
             return None
 
-        # TODO: Implement full LSP communication
-        # For now, return None to fallback to basic hover provider
-        logger.debug(f"Pylance hover forward not yet implemented: {params.text_document.uri}")
-        return None
+        start_time = time.time()
+
+        try:
+            uri = params.text_document.uri
+            position = params.position
+
+            # Get document content from cache or translate
+            cache_entry = self._document_cache.get(uri)
+            if not cache_entry:
+                logger.debug(f"Document {uri} not in cache for hover")
+                return None
+
+            source_map = cache_entry["source_map"]
+
+            # Translate position to English coordinates
+            english_pos = source_map.to_english(
+                Position(line=position.line, character=position.character)
+            )
+
+            # Send hover request to Pyright
+            hover_params = {
+                "textDocument": {"uri": uri},
+                "position": {"line": english_pos.line, "character": english_pos.character},
+            }
+
+            response = await self._send_request("textDocument/hover", hover_params)
+            if not response or "error" in response:
+                return None
+
+            result = response.get("result")
+            if not result:
+                return None
+
+            # Translate response position back to original
+            if "range" in result:
+                eng_range = result["range"]
+                start_pos = source_map.to_original(
+                    Position(
+                        line=eng_range["start"]["line"],
+                        character=eng_range["start"]["character"],
+                    )
+                )
+                end_pos = source_map.to_original(
+                    Position(
+                        line=eng_range["end"]["line"],
+                        character=eng_range["end"]["character"],
+                    )
+                )
+
+                hover_range = Range(
+                    start=Position(line=start_pos.line, character=start_pos.character),
+                    end=Position(line=end_pos.line, character=end_pos.character),
+                )
+            else:
+                hover_range = None
+
+            # Create Hover object
+            hover = Hover(contents=result.get("contents", ""), range=hover_range)
+
+            # Track performance
+            elapsed = time.time() - start_time
+            self._request_count += 1
+            self._total_latency += elapsed
+
+            logger.debug(f"Hover completed in {elapsed * 1000:.1f}ms")
+            return hover
+
+        except Exception as e:
+            logger.error(f"Hover forward failed: {e}")
+            return None
 
     async def forward_diagnostic(self, uri: str, content: str) -> list[Diagnostic]:
         """Forward diagnostic request to Pylance with translation.
@@ -259,13 +546,84 @@ class PylanceProxy:
         Returns:
             List of diagnostics with translated messages
         """
-        if not self.is_running():
+        if not self.is_running() or not self._initialized:
             return []
 
-        # TODO: Implement full LSP communication
-        # For now, return empty list to fallback to basic diagnostic provider
-        logger.debug(f"Pylance diagnostic forward not yet implemented: {uri}")
-        return []
+        try:
+            # Translate document to English
+            result = await self.translator.translate_to_english(content)
+
+            # Cache translation
+            self._document_cache[uri] = {
+                "translated": result.translated_code,
+                "source_map": result.source_map,
+                "hash": result.content_hash,
+            }
+
+            # Send didOpen to sync document with Pyright
+            await self._send_notification(
+                "textDocument/didOpen",
+                {
+                    "textDocument": {
+                        "uri": uri,
+                        "languageId": "python",
+                        "version": 1,
+                        "text": result.translated_code,
+                    }
+                },
+            )
+
+            # Request diagnostics
+            diag_params = {"textDocument": {"uri": uri}}
+            response = await self._send_request("textDocument/diagnostic", diag_params)
+
+            if not response or "error" in response:
+                return []
+
+            result_data = response.get("result", {})
+            items = result_data.get("items", [])
+
+            # Translate diagnostics back to original positions
+            diagnostics = []
+            source_map = self._document_cache[uri]["source_map"]
+
+            for item in items:
+                # Translate range
+                eng_range = item["range"]
+                start_pos = source_map.to_original(
+                    Position(
+                        line=eng_range["start"]["line"],
+                        character=eng_range["start"]["character"],
+                    )
+                )
+                end_pos = source_map.to_original(
+                    Position(
+                        line=eng_range["end"]["line"],
+                        character=eng_range["end"]["character"],
+                    )
+                )
+
+                diag_range = Range(
+                    start=Position(line=start_pos.line, character=start_pos.character),
+                    end=Position(line=end_pos.line, character=end_pos.character),
+                )
+
+                # Create diagnostic
+                # TODO: Translate message using error_templates.py
+                diagnostic = Diagnostic(
+                    range=diag_range,
+                    message=item.get("message", ""),
+                    severity=item.get("severity", 1),
+                    source="pylance",
+                )
+
+                diagnostics.append(diagnostic)
+
+            return diagnostics
+
+        except Exception as e:
+            logger.error(f"Diagnostic forward failed: {e}")
+            return []
 
     async def translate_document_for_pylance(self, uri: str, content: str) -> str | None:
         """Translate document content for Pylance.
@@ -307,6 +665,7 @@ class PylanceProxy:
             "average_latency_ms": avg_latency * 1000,
             "cache_size": len(self._document_cache),
             "translation_cache_size": self.translator.get_cache_size(),
+            "initialized": self._initialized,
         }
 
     def clear_caches(self) -> None:
@@ -318,4 +677,5 @@ class PylanceProxy:
     def __repr__(self) -> str:
         """String representation."""
         status = "running" if self.is_running() else "stopped"
-        return f"PylanceProxy(status={status}, path={self.pyright_path})"
+        init_status = "initialized" if self._initialized else "not initialized"
+        return f"PylanceProxy(status={status}, {init_status}, path={self.pyright_path})"

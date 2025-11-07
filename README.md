@@ -16,7 +16,9 @@ monorepo for legesher
 
 ## About Legesher
 
-Legesher is a collection of developer tools and packages that enable developers to code in their native language instead of English. From creation within an IDE to collaboration across projects and git histories, Legesher's tools remove English as the prerequisite of coding.
+Legesher is a collection of developer tools and packages that enable developers to code in their native language instead
+of English. From creation within an IDE to collaboration across projects and git histories, Legesher's tools remove
+English as the prerequisite of coding.
 
 ## Licensing
 
@@ -58,6 +60,42 @@ uv run pytest
 ```
 
 See [CLAUDE.md](CLAUDE.md) for detailed development instructions.
+
+## Versioning Strategy
+
+Legesher uses a **hybrid versioning approach** with [Semantic Versioning](https://semver.org/):
+
+### Foundation Suite (Synchronized)
+
+These packages are released together with the same version:
+
+- `legesher-core` - Core translation engine
+- `legesher-i18n` - Language pack system
+- `legesher` - Main CLI package
+
+**Current version:** All at v0.0.1
+
+### Application Packages (Independent)
+
+These packages can release independently:
+
+- `legesher-vs-code` v0.0.1 - VS Code extension
+- `legesher-pride` v0.0.1 - Community platform
+
+This allows rapid iteration on apps while maintaining foundation stability. Apps use semantic version constraints (e.g.,
+`legesher>=0.0.1,<0.1.0`) to ensure compatibility.
+
+### Language Packs (Independent)
+
+Language packs are released independently, allowing each language community to iterate at their own pace:
+
+- `legesher-i18n-python-es` v0.0.1 - Spanish translations for Python
+- `legesher-i18n-python-ar` v0.0.1 - Arabic translations for Python
+
+Each pack supports Python 3.10-3.13 with version-aware inheritance. Users install only the languages they need, and
+translation communities can release updates independently.
+
+**For release documentation**, see [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md).
 
 ## Contributing
 

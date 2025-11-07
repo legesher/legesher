@@ -65,7 +65,7 @@ from .transformer import TokenTranslator
 from .translation_tracker import TranslationTracker
 from .types import CulturalComment, CulturalCommentMetadata
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 
 __all__ = [
     # Translation engine
