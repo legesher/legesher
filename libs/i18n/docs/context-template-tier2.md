@@ -69,6 +69,7 @@ How other programming languages handle the same concept:
 {Plain language explanation}
 
 **Simple Example:**
+
 ```python
 # {Comment explaining what's happening}
 {code example}
@@ -77,6 +78,7 @@ How other programming languages handle the same concept:
 ```
 
 **Key Points:**
+
 - {Point 1}
 - {Point 2}
 - {Point 3}
@@ -92,17 +94,20 @@ How other programming languages handle the same concept:
 {Explain the mechanics, scope, memory, execution}
 
 **Example with Context:**
+
 ```python
 # {More realistic example showing practical use}
 {multi-line code example}
 ```
 
 **Important Behaviors:**
+
 1. **{Behavior 1}:** {Explanation}
 2. **{Behavior 2}:** {Explanation}
 3. **{Behavior 3}:** {Explanation}
 
 **Common Patterns:**
+
 ```python
 # Pattern 1: {Name}
 {code example}
@@ -119,6 +124,7 @@ How other programming languages handle the same concept:
 {How CPython implements this}
 
 **Bytecode:**
+
 ```python
 # {Show bytecode if relevant}
 import dis
@@ -126,6 +132,7 @@ dis.dis({example code})
 ```
 
 **Performance Considerations:**
+
 - {Performance note 1}
 - {Performance note 2}
 
@@ -133,6 +140,7 @@ dis.dis({example code})
 {Show advanced patterns, metaprogramming, introspection}
 
 **Related PEPs:**
+
 - PEP XXX: {Title and link}
 - PEP YYY: {Title and link}
 
@@ -145,6 +153,7 @@ dis.dis({example code})
 **English Term Category:** {verb/noun/adjective/operator/constant}
 
 **In Python Context:**
+
 - **Grammatical Role:** {What grammatical function does it serve?}
 - **Action vs State:** {Does it perform an action or describe a state?}
 - **Temporal Aspect:** {Does it have a time component?}
@@ -157,10 +166,12 @@ dis.dis({example code})
 {2-3 sentences explaining why this form is appropriate}
 
 **Alternative Forms to Consider:**
+
 1. **{Form 1}:** {When this might be appropriate}
 2. **{Form 2}:** {When this might be appropriate}
 
 **Forms to Avoid:**
+
 - ❌ **{Form to avoid}:** {Why not use this}
 
 ### Examples Across Language Families
@@ -184,6 +195,7 @@ dis.dis({example code})
 {Describe where this term appears in Python syntax}
 
 **Syntax Pattern:**
+
 ```python
 # {Show the syntax structure}
 {pattern using <placeholders>}
@@ -195,6 +207,7 @@ dis.dis({example code})
 {What does this term create or do in the execution model?}
 
 **Creates:**
+
 - {Object/Structure/Effect 1}
 - {Object/Structure/Effect 2}
 
@@ -204,6 +217,7 @@ dis.dis({example code})
 {How does this affect or relate to scope?}
 
 **Example:**
+
 ```python
 # {Demonstrate scope behavior}
 {code showing scope}
@@ -212,10 +226,12 @@ dis.dis({example code})
 ### Related Syntax Components
 
 **Works with:**
+
 - `{term1}` - {How they work together}
 - `{term2}` - {How they work together}
 
 **Often paired with:**
+
 ```python
 # {Show common combinations}
 {code example}
@@ -228,10 +244,12 @@ dis.dis({example code})
 ### Similar Keywords/Builtins
 
 **Conceptually Similar:**
+
 - `{similar_term_1}` - {How it's similar}
 - `{similar_term_2}` - {How it's similar}
 
 **Key Differences:**
+
 | Feature | `{this term}` | `{other term}` |
 |---------|---------------|----------------|
 | {feature} | {this behavior} | {other behavior} |
@@ -239,18 +257,21 @@ dis.dis({example code})
 ### Associated Keywords
 
 **Frequently Used Together:**
+
 - `{term1}` + `{this term}` - {Common pattern}
 - `{term2}` + `{this term}` - {Common pattern}
 
 ### Common Patterns
 
 **Pattern 1: {Name}**
+
 ```python
 # {Description}
 {code example}
 ```
 
 **Pattern 2: {Name}**
+
 ```python
 # {Description}
 {code example}
@@ -269,6 +290,7 @@ dis.dis({example code})
 {Correct explanation}
 
 **Example Showing the Truth:**
+
 ```python
 # {Demonstrate the reality}
 {code that proves the point}
@@ -310,6 +332,7 @@ dis.dis({example code})
 {Search "{language} Python tutorial {term}" - what terms do they use?}
 
 **Educational resources:**
+
 - Textbook terms: {What do Spanish CS textbooks call this?}
 - University courses: {Check course pages in Spanish}
 - Online tutorials: {What terms appear in Spanish Python tutorials?}
@@ -417,9 +440,11 @@ When translating `{this term}`:
 {Specific guidance to prevent mix of infinitive/noun/gerund across related terms}
 
 **Good example (consistent):**
+
 - Spanish: "definir" (infinitive), "retornar" (infinitive), "romper" (infinitive) ✅
 
 **Bad example (inconsistent):**
+
 - Spanish: "definir" (infinitive), "devolución" (noun), "rompiendo" (gerund) ❌
 
 ---
@@ -447,6 +472,7 @@ When translating `{this term}`:
 
 **Example:**
 Spanish "volver" could mean "return home" or "return value"
+
 - Ambiguous for learners ❌
 - Better: "retornar" (clearer programming context) ✅
 
@@ -457,6 +483,7 @@ Spanish "volver" could mean "return home" or "return value"
 **Why this matters:** Developers verbalize code ("we define a function here...")
 
 **Test:** Try saying "print hello" with your translation
+
 - If it's a tongue-twister → reconsider
 - If it flows naturally → good ✅
 
@@ -465,6 +492,7 @@ Spanish "volver" could mean "return home" or "return value"
 **Can learners quickly spot this term when scanning code?**
 
 **Factors:**
+
 - Short terms > long terms (faster to recognize)
 - Distinctive terms > generic terms (stand out in code)
 - Familiar terms > invented terms (no learning curve)
@@ -474,10 +502,12 @@ Spanish "volver" could mean "return home" or "return value"
 **Many programmers are multilingual:**
 
 **Balance:**
+
 - Native clarity (understandable in target language)
 - English resource compatibility (can they map to English docs/Stack Overflow?)
 
 **If translation is very different from English:**
+
 - Document the English equivalent clearly
 - Provide mapping in language pack metadata
 
@@ -545,23 +575,27 @@ Spanish "volver" could mean "return home" or "return value"
 ### Severity Levels
 
 **P0 (Blocker - Must fix):**
+
 - Technically inaccurate (wrong concept)
 - Offensive or culturally inappropriate
 - Impossible to type on standard keyboard
 - Doesn't render in major IDEs
 
 **P1 (High - Should fix):**
+
 - Inconsistent with pattern
 - Awkward or unnatural phrasing
 - Too long (>3 words)
 - Ambiguous with other keyword
 
 **P2 (Medium - Nice to fix):**
+
 - Doesn't align with regional CS education
 - Slightly awkward pronunciation
 - Missing cognate advantage
 
 **P3 (Low - Optional):**
+
 - Could be shorter
 - Alternative might be slightly more natural
 - Minor stylistic preferences
@@ -584,11 +618,13 @@ Spanish "volver" could mean "return home" or "return value"
 ### Translation Considerations
 
 **Key Aspects to Preserve:**
+
 1. **{Aspect 1}:** {Why this matters}
 2. **{Aspect 2}:** {Why this matters}
 3. **{Aspect 3}:** {Why this matters}
 
 **Questions to Ask Yourself:**
+
 1. Does my translation capture the **action** or **state** correctly?
 2. Would a programmer in my language immediately understand this?
 3. Is this consistent with how programming is taught in my region?
@@ -601,6 +637,7 @@ Spanish "volver" could mean "return home" or "return value"
 {Should this be translated as an action (verb) or a thing (noun) in your language?}
 
 **Cultural Context:**
+
 - **English speakers think of this as:** {Perspective}
 - **Consider translating the concept as:** {Alternative framing}
 
@@ -619,6 +656,7 @@ Spanish "volver" could mean "return home" or "return value"
 {Explanation}
 
 **Output:**
+
 ```
 {expected output}
 ```
@@ -660,12 +698,14 @@ Spanish "volver" could mean "return home" or "return value"
 ### Pitfall 1: {Title}
 
 **Problem:**
+
 ```python
 # {Code showing the mistake}
 {incorrect code}
 ```
 
 **Solution:**
+
 ```python
 # {Code showing the fix}
 {correct code}
@@ -691,17 +731,21 @@ Spanish "volver" could mean "return home" or "return value"
 ## Further Reading
 
 ### Official Documentation
+
 - [Python Docs: {Topic}](https://docs.python.org/3/...)
 - [Python Language Reference: {Section}](https://docs.python.org/3/reference/...)
 
 ### Python Enhancement Proposals (PEPs)
+
 - [PEP XXX: {Title}](https://peps.python.org/pep-xxxx/)
 
 ### Historical Context
+
 - [Python History: {Topic}](https://python-history.blogspot.com/)
 - {Other relevant historical sources}
 
 ### Tutorials & Guides
+
 - [Real Python: {Topic}](https://realpython.com/...)
 - [Python.org Tutorial: {Section}](https://docs.python.org/3/tutorial/...)
 

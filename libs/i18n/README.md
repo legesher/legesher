@@ -152,6 +152,7 @@ Pack Information:
 ```
 
 **Validation Checks:**
+
 - Schema validation (required fields, types, format)
 - Completeness checks (keywords, metadata)
 - Inheritance chain verification

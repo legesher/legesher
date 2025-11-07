@@ -21,6 +21,7 @@ Start with these recommended test terms (in order):
 ### Step 2: Get the Prompt
 
 Each prompt is in `test-cases/` directory:
+
 - `test-cases/01-def-spanish.md` - Complete prompt ready to copy
 - `test-cases/02-true-spanish.md`
 - `test-cases/03-isinstance-spanish.md`
@@ -39,6 +40,7 @@ Each prompt is in `test-cases/` directory:
 Claude will respond with XML-structured translation. Look for:
 
 **Quality Indicators:**
+
 - ✅ Did it provide 3-5 translation options?
 - ✅ Did it explain reasoning clearly?
 - ✅ Is the recommended translation sensible?
@@ -46,6 +48,7 @@ Claude will respond with XML-structured translation. Look for:
 - ✅ Did it consider CS education usage?
 
 **Red Flags:**
+
 - ❌ Only 1 option considered
 - ❌ No explanation of reasoning
 - ❌ Literal word-for-word translation (not concept-based)
@@ -104,16 +107,19 @@ Save to `test-results/summary.md`
 After completing 2-3 test translations:
 
 **If quality is HIGH:**
+
 - ✅ Prompts are ready for production
 - ✅ Can proceed with API batch processing ($7.56)
 - ✅ Or continue manually if preferred
 
 **If quality is MEDIUM:**
+
 - ⚠️ Iterate on prompts (adjust examples, guidance)
 - ⚠️ Test 2-3 more terms
 - ⚠️ Identify what's missing
 
 **If quality is LOW:**
+
 - ❌ Prompts need significant revision
 - ❌ Review linguistic standards
 - ❌ Add more detailed examples
@@ -123,16 +129,19 @@ After completing 2-3 test translations:
 ## Next Steps After Manual Testing
 
 **Option A: Continue Manually (Free)**
+
 - Use this same approach for all 420 translations
 - Time: 10-20 hours total
 - Cost: $0
 
 **Option B: Switch to API (Automated)**
+
 - Prompts validated, run batch processing
 - Time: 30 min setup + 24h wait
 - Cost: $7.56
 
 **Option C: Hybrid**
+
 - Do Spanish/Arabic manually (already done, no new costs)
 - Use API for Chinese/Hindi
 - Cost: ~$4 (half the batch)

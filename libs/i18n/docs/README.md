@@ -5,7 +5,9 @@ This directory contains the foundation documents for creating high-quality Pytho
 ## Contents
 
 ### [linguistic-standards.md](./linguistic-standards.md)
+
 Establishes consistent linguistic conventions for translating Python terms:
+
 - Word type classification (verb, noun, adjective, etc.)
 - Form recommendations by language family
 - Examples from existing language packs
@@ -14,7 +16,9 @@ Establishes consistent linguistic conventions for translating Python terms:
 **Use this for:** Understanding what form translations should take
 
 ### [deep-context-template.md](./deep-context-template.md)
+
 Template for creating comprehensive context documents for each Python term:
+
 - Etymology & history
 - Multi-level explanations (5yo → expert)
 - Linguistic recommendations

@@ -36,6 +36,7 @@ This is not about translating documentation or comments - this is about making P
 Translate the Python keyword **`True`** into **Spanish**.
 
 You will be provided with:
+
 - Complete context document (Tier 1 translation brief)
 - Linguistic standards for consistency
 - Pattern classification for this term
@@ -94,6 +95,7 @@ if has_permission and not is_admin:
 **This term is:** VALUE_CONSTANT
 
 **Similar terms in this pattern:**
+
 1. `False` - Boolean false value
 2. `None` - Null/empty value
 3. (Constants are values, not actions)
@@ -103,6 +105,7 @@ if has_permission and not is_admin:
 ## Translation Guidance
 
 ### Good Translation Characteristics
+
 - ✅ Captures the boolean "true" concept
 - ✅ Noun or adjective form (NOT a verb)
 - ✅ Short (1 word ideally)
@@ -110,6 +113,7 @@ if has_permission and not is_admin:
 - ✅ Matches form of `False` (should be grammatically parallel)
 
 ### Common Mistakes to Avoid
+
 - ❌ Using a verb form ("es verdad" = is true)
 - ❌ Philosophical "truth" instead of logical "true"
 - ❌ Too colloquial ("sí" = yes - not the same as true)
@@ -122,29 +126,35 @@ if has_permission and not is_admin:
 ## Key Linguistic Standards for Spanish
 
 **Register:** Technical/formal (CS education vocabulary)
+
 - NOT everyday conversational Spanish
 - NOT philosophical concepts
 - TARGET: Boolean/logical terminology from CS education
 
 **Form for VALUE_CONSTANT:** Noun or adjective
+
 - Should represent a STATE or VALUE, not an action
 - Examples: verdadero (true), falso (false), ninguno (none)
 
 **Pattern:** This is a VALUE_CONSTANT keyword
+
 - VALUE constants represent fixed values
 - Should use noun/adjective forms, NOT verbs
 - Must be grammatically parallel with other constants
 
 **Gendered Language Rule for Constants:**
+
 - Use masculine form for consistency
 - Spanish: verdadero (masc) not verdadera (fem)
 - Rationale: Constants should be consistent, masculine is default/generic
 
 **Consistency:** Must align with translations of similar terms
+
 - `False` should be grammatically parallel (same gender, same form type)
 - `None` should also follow same pattern
 
 **Capitalization for Constants:**
+
 - First letter capitalized, rest lowercase
 - Example: Verdadero (not VERDADERO, not verdadero)
 - Matches Python pattern (True not TRUE or true)
@@ -178,6 +188,7 @@ Please think through this translation step-by-step using the following framework
 ### Step 1: Concept Analysis
 
 <concept_analysis>
+
 - What does this term DO in Python? (not what the English word means)
 - Is this an ACTION (something you do) or STATE/VALUE (something that is)?
 - What programming concept does it represent?
@@ -188,6 +199,7 @@ Please think through this translation step-by-step using the following framework
 
 <translation_options>
 Generate 3-5 possible translations:
+
 1. {option_1} - {rationale}
 2. {option_2} - {rationale}
 3. {option_3} - {rationale}
@@ -200,22 +212,26 @@ Generate 3-5 possible translations:
 <priority_filtering>
 
 **Priority 1: Technical Accuracy (eliminate incorrect meanings)**
+
 - ❌ {option_x} - wrong meaning because {reason}
 - ✅ {option_y} - correct meaning
 - ✅ {option_z} - correct meaning
 
 **Priority 2: CS Education Alignment (research regional usage)**
+
 - What term appears in Spanish CS/logic textbooks for boolean true?
 - What term appears in Spanish Python tutorials?
 - What term would students already know from logic/boolean algebra?
 - Winner: {term} because {reason}
 
 **Priority 3: Naturalness (among remaining options)**
+
 - Is it easy to say out loud?
 - Is it memorable?
 - Does it feel natural to native speakers?
 
 **Priority 4: Consistency (check pattern alignment)**
+
 - Does this match the form expected for VALUE_CONSTANT?
 - Is it grammatically parallel with `False` (opposite concept)?
 - Does it set a good pattern for other constants like `None`?
@@ -244,6 +260,7 @@ Run through checklist:
 Rate your confidence: HIGH | MEDIUM | LOW
 
 **If MEDIUM or LOW, explain why:**
+
 - What concerns do you have?
 - What would you want a human reviewer to verify?
 - Are there multiple equally valid options?

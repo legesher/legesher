@@ -81,6 +81,7 @@
 **What it does:**
 
 {2-3 paragraph explanation of the concept at intermediate programmer level. Focus on:
+
 - What the term creates or does
 - When you use it
 - How it affects program execution
