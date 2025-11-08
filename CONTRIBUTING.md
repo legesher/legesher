@@ -119,6 +119,9 @@ prevents CI/CD failures.
 ```bash
 # Install pre-commit hooks (one-time setup)
 uv run pre-commit install
+
+# Install commit message validation hooks
+uv run pre-commit install --hook-type commit-msg --hook-type pre-push
 ```
 
 **What gets checked automatically:**
@@ -130,6 +133,7 @@ uv run pre-commit install
 - ✅ Large file detection
 - ✅ Merge conflict markers
 - ✅ Private key detection
+- ✅ **Commit message validation** (Conventional Commits format)
 
 **Manual runs:**
 
@@ -440,7 +444,8 @@ CHANGELOGs are part of your pull request, not created after merge.
 
 ### Conventional Commits
 
-We use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages:
+We use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages. This format is
+automatically validated by pre-commit hooks and enables automated version management.
 
 **Format:**
 
@@ -463,6 +468,18 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) for commit m
 - `build:` - Build system changes
 - `ci:` - CI/CD changes
 - `chore:` - Maintenance tasks
+- `revert:` - Revert a previous commit
+
+**Scopes (optional but recommended):**
+
+- `core` - Core translation engine
+- `i18n` - Internationalization package
+- `legesher` - Main package/CLI
+- `language-server` - Language Server Protocol implementation
+- `vs-code` - VS Code extension
+- `pride` - Pride/community features
+- `i18n-python-es` - Spanish language pack
+- `i18n-python-ar` - Arabic language pack
 
 **Examples:**
 
@@ -479,7 +496,32 @@ feat(core)!: redesign translation API
 BREAKING CHANGE: TokenTranslator constructor now requires language pack instance
 ```
 
-**Note:** Pre-commit hooks enforce conventional commit format automatically.
+**Interactive Commit Helper:**
+
+We provide Commitizen to guide you through creating valid commit messages interactively:
+
+```bash
+# Use Commitizen for interactive commit creation
+uv run cz commit
+
+# Or use regular git commit (validation still happens)
+git commit -m "feat(core): add new feature"
+```
+
+The interactive helper will:
+
+- Prompt you to select a commit type
+- Ask for an optional scope
+- Request a short description
+- Ask if this is a breaking change
+- Automatically format the commit message correctly
+
+**Validation:**
+
+- Pre-commit hooks enforce conventional commit format automatically
+- Invalid commits will be rejected with helpful error messages
+- You can bypass validation with `git commit --no-verify` (not recommended)
+- CI/CD also validates commit messages on pull requests (when enabled)
 
 ### Version Numbers
 
