@@ -23,6 +23,7 @@ from lsprotocol.types import (
     DidOpenTextDocumentParams,
     DocumentDiagnosticParams,
     DocumentDiagnosticReport,
+    FullDocumentDiagnosticReport,
     Hover,
     HoverParams,
     InitializedParams,
@@ -31,7 +32,7 @@ from lsprotocol.types import (
     ServerCapabilities,
     TextDocumentSyncKind,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from .config import LanguageServerConfig
 from .document import DocumentManager
@@ -99,18 +100,50 @@ class LegesherLanguageServer(LanguageServer):
         self._register_handlers()
 
     def _register_handlers(self) -> None:
-        """Register all LSP method handlers."""
-        self.feature(INITIALIZE)(self.on_initialize)
-        self.feature(INITIALIZED)(self.on_initialized)
-        self.feature(SHUTDOWN)(self.on_shutdown)
-        self.feature(TEXT_DOCUMENT_DID_OPEN)(self.on_did_open)
-        self.feature(TEXT_DOCUMENT_DID_CHANGE)(self.on_did_change)
-        self.feature(TEXT_DOCUMENT_DID_CLOSE)(self.on_did_close)
+        """Register all LSP method handlers using decorators."""
+        # Create wrapper functions that pygls can decorate properly
+        # This is necessary because pygls tries to set attributes on the function
+        # and bound methods don't allow that
 
-        # Provider stubs (implemented in CORE-357, 358, 359)
-        self.feature(TEXT_DOCUMENT_HOVER)(self.on_hover)
-        self.feature(TEXT_DOCUMENT_COMPLETION)(self.on_completion)
-        self.feature(TEXT_DOCUMENT_DIAGNOSTIC)(self.on_diagnostic)
+        async def initialize_wrapper(params: InitializeParams) -> InitializeResult:
+            return await self.on_initialize(params)
+
+        async def initialized_wrapper(params: InitializedParams) -> None:
+            await self.on_initialized(params)
+
+        async def shutdown_wrapper(*args, **kwargs) -> None:
+            # pygls v2.0 may pass ls instance as first arg
+            params = args[0] if args else kwargs.get("params", None)
+            await self.on_shutdown(params)
+
+        async def did_open_wrapper(params: DidOpenTextDocumentParams) -> None:
+            await self.on_did_open(params)
+
+        async def did_change_wrapper(params: DidChangeTextDocumentParams) -> None:
+            await self.on_did_change(params)
+
+        async def did_close_wrapper(params: DidCloseTextDocumentParams) -> None:
+            await self.on_did_close(params)
+
+        async def hover_wrapper(params: HoverParams) -> Hover | None:
+            return await self.on_hover(params)
+
+        async def completion_wrapper(params: CompletionParams) -> CompletionList:
+            return await self.on_completion(params)
+
+        async def diagnostic_wrapper(params: DocumentDiagnosticParams) -> DocumentDiagnosticReport:
+            return await self.on_diagnostic(params)
+
+        # Register the wrappers
+        self.feature(INITIALIZE)(initialize_wrapper)
+        self.feature(INITIALIZED)(initialized_wrapper)
+        self.feature(SHUTDOWN)(shutdown_wrapper)
+        self.feature(TEXT_DOCUMENT_DID_OPEN)(did_open_wrapper)
+        self.feature(TEXT_DOCUMENT_DID_CHANGE)(did_change_wrapper)
+        self.feature(TEXT_DOCUMENT_DID_CLOSE)(did_close_wrapper)
+        self.feature(TEXT_DOCUMENT_HOVER)(hover_wrapper)
+        self.feature(TEXT_DOCUMENT_COMPLETION)(completion_wrapper)
+        self.feature(TEXT_DOCUMENT_DIAGNOSTIC)(diagnostic_wrapper)
 
     async def on_initialize(self, params: InitializeParams) -> InitializeResult:
         """Handle initialize request from client.
@@ -304,7 +337,7 @@ class LegesherLanguageServer(LanguageServer):
         # Merge and deduplicate diagnostics
         all_diagnostics = _deduplicate_diagnostics(list(pylance_diagnostics) + basic_diagnostics)
 
-        return DocumentDiagnosticReport(
+        return FullDocumentDiagnosticReport(
             kind="full",
             items=all_diagnostics,
         )

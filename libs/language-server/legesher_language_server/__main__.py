@@ -64,6 +64,11 @@ Environment Variables:
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         help="Logging level (default: INFO)",
     )
+    parser.add_argument(
+        "--stdio",
+        action="store_true",
+        help="Use stdio for LSP communication (default mode for IDE integration)",
+    )
     parser.add_argument("--version", action="version", version="legesher-lsp 0.1.0")
 
     args = parser.parse_args()
