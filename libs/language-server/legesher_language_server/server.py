@@ -41,6 +41,42 @@ from .pylance_proxy import PylanceProxy
 
 logger = logging.getLogger(__name__)
 
+# Allowed language codes for security validation
+ALLOWED_LANGUAGES = {"en", "es", "ar", "zh"}
+
+
+def validate_language_code(code: str, field_name: str) -> str:
+    """Validate language code against whitelist.
+
+    Security: Only accept whitelisted 2-letter ISO 639-1 codes
+    to prevent injection attacks and path traversal.
+
+    Args:
+        code: Language code to validate
+        field_name: Field name for error messages
+
+    Returns:
+        Validated language code
+
+    Raises:
+        ValueError: If code is invalid or not in whitelist
+    """
+    # Type validation
+    if not isinstance(code, str):
+        raise ValueError(f"{field_name} must be a string")
+
+    # Format validation (2-letter lowercase)
+    if not code.islower() or len(code) != 2:
+        raise ValueError(f"{field_name} must be 2-letter lowercase code")
+
+    # Whitelist validation
+    if code not in ALLOWED_LANGUAGES:
+        raise ValueError(
+            f"{field_name} '{code}' not supported. Allowed: {', '.join(sorted(ALLOWED_LANGUAGES))}"
+        )
+
+    return code
+
 
 def _deduplicate_diagnostics(diagnostics: list[Diagnostic]) -> list[Diagnostic]:
     """Remove duplicate diagnostics by range and message.
@@ -155,6 +191,34 @@ class LegesherLanguageServer(LanguageServer):
             Server capabilities
         """
         logger.info(f"Client initializing from: {params.root_uri}")
+
+        # Update config from initialization options (CORE-362)
+        # Security: Validate all client inputs to prevent injection attacks
+        if params.initialization_options:
+            init_opts = params.initialization_options
+            if isinstance(init_opts, dict):
+                try:
+                    if "targetLanguage" in init_opts:
+                        self.config.target_language = validate_language_code(
+                            init_opts["targetLanguage"], "targetLanguage"
+                        )
+                        logger.info(
+                            f"Updated target language from init options: "
+                            f"{self.config.target_language}"
+                        )
+                    if "sourceLanguage" in init_opts:
+                        self.config.source_language = validate_language_code(
+                            init_opts["sourceLanguage"], "sourceLanguage"
+                        )
+                        logger.info(
+                            f"Updated source language from init options: "
+                            f"{self.config.source_language}"
+                        )
+                except ValueError as e:
+                    logger.warning(
+                        f"Invalid language configuration from client: {e}. Using defaults."
+                    )
+                    # Continue with default config - fail securely
 
         return InitializeResult(
             capabilities=ServerCapabilities(
