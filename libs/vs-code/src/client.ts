@@ -5,7 +5,7 @@ import {
     ServerOptions,
     Executable,
 } from 'vscode-languageclient/node';
-import { isServerAvailable } from './utils';
+import { getLanguageConfig } from './config';
 
 /**
  * Create and configure the Language Server Protocol client
@@ -14,14 +14,18 @@ import { isServerAvailable } from './utils';
  * LSP features like hover, completion, diagnostics, etc.
  */
 export function createLanguageClient(
-    context: vscode.ExtensionContext
+    context: vscode.ExtensionContext,
+    outputChannel: vscode.OutputChannel
 ): LanguageClient {
     // Get configuration
     const config = vscode.workspace.getConfiguration('legesher');
     const serverCommand = config.get<string>('serverCommand', 'legesher-lsp');
     const traceLevel = config.get<string>('trace.server', 'off');
+    const languageConfig = getLanguageConfig();
 
     console.log(`Creating language client with command: ${serverCommand}`);
+    console.log(`Language configuration:`, languageConfig);
+    outputChannel.appendLine(`Creating client with target language: ${languageConfig.targetLanguage}`);
 
     // Configure server executable
     const serverOptions: ServerOptions = {
@@ -50,11 +54,12 @@ export function createLanguageClient(
             fileEvents: vscode.workspace.createFileSystemWatcher('**/*.py')
         },
 
-        // Output channel for server communication logs
-        outputChannelName: 'Legesher Language Server',
+        // Reuse existing output channel instead of creating new ones
+        outputChannel: outputChannel,
 
-        // Trace configuration
-        traceOutputChannel: traceLevel !== 'off' ? vscode.window.createOutputChannel('Legesher Language Server Trace') : undefined,
+        // Trace configuration - don't create trace channel (causes duplicates)
+        // Users can enable trace in the main output channel if needed
+        traceOutputChannel: undefined,
 
         // Middleware to customize LSP behavior (can be extended later)
         middleware: {
@@ -65,7 +70,8 @@ export function createLanguageClient(
         // Initialization options passed to the server
         initializationOptions: {
             // These options are sent to the server during initialization
-            // Can be extended to pass user preferences, language settings, etc.
+            // Include language configuration for translation
+            ...languageConfig,
             trace: traceLevel,
         },
 

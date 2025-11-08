@@ -42,6 +42,24 @@
     "configuration": {
       "title": "Legesher",
       "properties": {
+        "legesher.targetLanguage": {
+          "type": "string",
+          "default": "en",
+          "enum": ["en", "es", "ar", "zh"],
+          "enumDescriptions": [
+            "English (default)",
+            "Spanish (Español)",
+            "Arabic (العربية)",
+            "Chinese (中文)"
+          ],
+          "description": "Target language for code translation"
+        },
+        "legesher.sourceLanguage": {
+          "type": "string",
+          "default": "en",
+          "description": "Source language (Python keywords)",
+          "markdownDescription": "Source language for Python keywords. **Note:** Only English (en) is currently supported."
+        },
         "legesher.serverCommand": {
           "type": "string",
           "default": "legesher-lsp",
@@ -64,6 +82,10 @@
       {
         "command": "legesher.restartServer",
         "title": "Legesher: Restart Language Server"
+      },
+      {
+        "command": "legesher.selectLanguage",
+        "title": "Legesher: Select Language"
       }
     ]
   },
