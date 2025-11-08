@@ -83,10 +83,60 @@ class PylanceProxy:
         self._request_count = 0
         self._total_latency = 0.0
 
+    def _find_language_pack(self, lang: str) -> Path | None:
+        """Find language pack directory using multiple strategies.
+
+        Checks:
+        1. Development location: libs/i18n-python-{lang}/ (relative to this file)
+        2. Installed package: try importing legesher_i18n_python_{lang}
+        3. Site-packages: check importlib metadata
+
+        Args:
+            lang: Target language code
+
+        Returns:
+            Path to language pack directory or None if not found
+        """
+        from pathlib import Path
+
+        # Strategy 1: Development monorepo structure (libs/ directory)
+        dev_pack_dir = Path(__file__).parent.parent.parent / f"i18n-python-{lang}"
+        if dev_pack_dir.exists():
+            return dev_pack_dir
+
+        # Strategy 2: Try importing the package (works if installed)
+        try:
+            import importlib.util
+
+            pack_module_name = f"legesher_i18n_python_{lang}"
+            spec = importlib.util.find_spec(pack_module_name)
+            if spec and spec.origin:
+                # Return parent directory of the package
+                return Path(spec.origin).parent.parent
+        except (ImportError, AttributeError):
+            pass
+
+        # Strategy 3: Check site-packages using importlib.metadata
+        try:
+            import importlib.metadata
+
+            pack_dist_name = f"legesher-i18n-python-{lang}"
+            dist = importlib.metadata.distribution(pack_dist_name)
+            # Get files from distribution
+            if dist.files:
+                # Find the packs directory
+                for file in dist.files:
+                    if "packs" in str(file):
+                        return Path(dist.locate_file(file)).parent.parent
+        except (ImportError, importlib.metadata.PackageNotFoundError):
+            pass
+
+        return None
+
     def _get_keyword_map(self, lang: str) -> dict[str, str]:
         """Get keyword translation map for language.
 
-        TODO: Load from legesher-i18n language packs
+        Loads from legesher-i18n language packs dynamically.
 
         Args:
             lang: Target language code
@@ -94,59 +144,34 @@ class PylanceProxy:
         Returns:
             Dictionary mapping localized keywords to English
         """
-        if lang == "es":
-            return {
-                "definir": "def",
-                "clase": "class",
-                "retornar": "return",
-                "si": "if",
-                "sino": "elif",
-                "si_no": "else",
-                "mientras": "while",
-                "para": "for",
-                "en": "in",
-                "romper": "break",
-                "continuar": "continue",
-                "pasar": "pass",
-                "intentar": "try",
-                "excepto": "except",
-                "finalmente": "finally",
-                "elevar": "raise",
-                "asertir": "assert",
-                "importar": "import",
-                "desde": "from",
-                "como": "as",
-                "global": "global",
-                "no_local": "nonlocal",
-                "lambda": "lambda",
-                "con": "with",
-                "rendimiento": "yield",
-                "eliminar": "del",
-                "verdadero": "True",
-                "falso": "False",
-                "nulo": "None",
-                "y": "and",
-                "o": "or",
-                "no": "not",
-                "es": "is",
-            }
-        elif lang == "ar":
-            return {
-                "تعريف": "def",
-                "صنف": "class",
-                "إرجاع": "return",
-                "إذا": "if",
-                "وإلا_إذا": "elif",
-                "وإلا": "else",
-                "بينما": "while",
-                "لكل": "for",
-                "في": "in",
-                "كسر": "break",
-                "متابعة": "continue",
-                "تمرير": "pass",
-            }
-        else:
-            return {}
+        try:
+            import yaml
+
+            # Find language pack using robust discovery
+            pack_dir = self._find_language_pack(lang)
+            if not pack_dir:
+                logger.warning(f"Language pack for '{lang}' not found")
+                return {}
+
+            # Load the base pack (3.10 has all keywords)
+            pack_file = pack_dir / f"legesher_i18n_python_{lang}" / "packs" / "3.10.yml"
+
+            if pack_file.exists():
+                with open(pack_file, encoding="utf-8") as f:
+                    pack_data = yaml.safe_load(f)
+
+                # Get keyword translations and reverse them (localized -> English)
+                keywords = pack_data.get("keywords", {})
+                # Reverse the mapping: English->Spanish becomes Spanish->English
+                return {v: k for k, v in keywords.items()}
+            else:
+                logger.warning(f"Language pack file not found: {pack_file}")
+
+        except Exception as e:
+            logger.warning(f"Failed to load language pack for '{lang}': {e}")
+
+        # Fallback: empty dict if pack not found
+        return {}
 
     async def start(self) -> bool:
         """Start Pyright subprocess and initialize LSP connection.

@@ -1,0 +1,90 @@
+{
+  "name": "legesher-vscode",
+  "displayName": "Legesher - Code in Your Language",
+  "description": "Write Python code in your native language with real-time translation",
+  "version": "0.1.0",
+  "publisher": "legesher",
+  "author": {
+    "name": "Madison Edgar",
+    "email": "madi@legesher.com"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/madiedgar/legesher"
+  },
+  "bugs": {
+    "url": "https://github.com/madiedgar/legesher/issues"
+  },
+  "homepage": "https://legesher.io",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Education",
+    "Other"
+  ],
+  "keywords": [
+    "legesher",
+    "multilingual",
+    "i18n",
+    "localization",
+    "python",
+    "translation",
+    "education"
+  ],
+  "activationEvents": [
+    "onLanguage:python"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Legesher",
+      "properties": {
+        "legesher.serverCommand": {
+          "type": "string",
+          "default": "legesher-lsp",
+          "description": "Path to the Legesher language server executable"
+        },
+        "legesher.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Traces communication between VS Code and the language server"
+        },
+        "legesher.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable the Legesher extension"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "legesher.restartServer",
+        "title": "Legesher: Restart Language Server"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "pretest": "npm run compile && npm run lint",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@vscode/vsce": "^2.22.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}

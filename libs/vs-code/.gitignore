@@ -1,0 +1,14 @@
+# Node modules
+node_modules/
+
+# Build output
+out/
+*.vsix
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# VS Code workspace
+*.code-workspace

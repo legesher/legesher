@@ -254,3 +254,99 @@ class KeywordDocumentation:
             List of language codes ('en', 'es', 'ar')
         """
         return ["en", "es", "ar"]
+
+    def _find_language_pack(self, target_lang: str):
+        """Find language pack directory using multiple strategies.
+
+        Checks:
+        1. Development location: libs/i18n-python-{lang}/ (relative to this file)
+        2. Installed package: try importing legesher_i18n_python_{lang}
+        3. Site-packages: check importlib metadata
+
+        Args:
+            target_lang: Target language code
+
+        Returns:
+            Path to language pack directory or None if not found
+        """
+        from pathlib import Path
+
+        # Strategy 1: Development monorepo structure (libs/ directory)
+        dev_pack_dir = Path(__file__).parent.parent.parent.parent / f"i18n-python-{target_lang}"
+        if dev_pack_dir.exists():
+            return dev_pack_dir
+
+        # Strategy 2: Try importing the package (works if installed)
+        try:
+            import importlib.util
+
+            pack_module_name = f"legesher_i18n_python_{target_lang}"
+            spec = importlib.util.find_spec(pack_module_name)
+            if spec and spec.origin:
+                # Return parent directory of the package
+                return Path(spec.origin).parent.parent
+        except (ImportError, AttributeError):
+            pass
+
+        # Strategy 3: Check site-packages using importlib.metadata
+        try:
+            import importlib.metadata
+
+            pack_dist_name = f"legesher-i18n-python-{target_lang}"
+            dist = importlib.metadata.distribution(pack_dist_name)
+            # Get files from distribution
+            if dist.files:
+                # Find the packs directory
+                for file in dist.files:
+                    if "packs" in str(file):
+                        return Path(dist.locate_file(file)).parent.parent
+        except (ImportError, importlib.metadata.PackageNotFoundError):
+            pass
+
+        return None
+
+    def get_keyword_translation(self, keyword: str, target_lang: str) -> str | None:
+        """Get keyword translation from English to target language.
+
+        This method loads translations from i18n language packs dynamically.
+        Uses robust package discovery that works in development and installed environments.
+
+        Args:
+            keyword: English keyword (e.g., 'def', 'class')
+            target_lang: Target language code ('es', 'ar', 'zh')
+
+        Returns:
+            Translated keyword or None if not available
+
+        Example:
+            >>> docs = KeywordDocumentation()
+            >>> docs.get_keyword_translation("def", "es")
+            'definir'
+            >>> docs.get_keyword_translation("class", "ar")
+            'صنف'
+        """
+        # For MVP, load from i18n packages if available
+        try:
+            import yaml
+
+            # Find language pack using robust discovery
+            pack_dir = self._find_language_pack(target_lang)
+            if not pack_dir:
+                return None
+
+            # Load the base pack (3.10 has all keywords)
+            pack_file = pack_dir / f"legesher_i18n_python_{target_lang}" / "packs" / "3.10.yml"
+
+            if pack_file.exists():
+                with open(pack_file, encoding="utf-8") as f:
+                    pack_data = yaml.safe_load(f)
+
+                # Get keyword translation
+                keywords = pack_data.get("keywords", {})
+                return keywords.get(keyword)
+
+        except Exception:
+            # Fallback: If loading fails, return None
+            pass
+
+        return None

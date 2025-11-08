@@ -377,10 +377,14 @@ class CompletionProvider:
 
         # Extract partial word being typed
         partial_word = ""
-        if col_idx > 0:
+        if col_idx > 0 and len(line_text) > 0:
             # Walk backwards to find word boundary
-            start = col_idx - 1
-            while start >= 0 and (line_text[start].isalnum() or line_text[start] == "_"):
+            start = min(col_idx - 1, len(line_text) - 1)  # Bounds check
+            while (
+                start >= 0
+                and start < len(line_text)
+                and (line_text[start].isalnum() or line_text[start] == "_")
+            ):
                 start -= 1
             partial_word = line_text[start + 1 : col_idx]
 
