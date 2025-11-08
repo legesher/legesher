@@ -1,0 +1,266 @@
+# Test & Coverage
+# This workflow runs tests and reports coverage for all packages in the monorepo
+# Uses py-cov-action for coverage reporting (no external service required)
+#
+# To enable: rename this file to test-coverage.yml (remove .disabled)
+
+name: Test & Coverage
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # Foundation packages (core, i18n, legesher)
+  test-foundation:
+    name: Test ${{ matrix.package }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [core, i18n, legesher]
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+        os: [ubuntu-latest]
+        # Only test on macOS and Windows with Python 3.13
+        include:
+          - package: core
+            python-version: '3.13'
+            os: macos-latest
+          - package: core
+            python-version: '3.13'
+            os: windows-latest
+          - package: i18n
+            python-version: '3.13'
+            os: macos-latest
+          - package: i18n
+            python-version: '3.13'
+            os: windows-latest
+          - package: legesher
+            python-version: '3.13'
+            os: macos-latest
+          - package: legesher
+            python-version: '3.13'
+            os: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: |
+          cd libs/${{ matrix.package }}
+          uv sync --all-extras
+
+      - name: Run tests with coverage
+        run: |
+          cd libs/${{ matrix.package }}
+          uv run pytest --cov=legesher_${{ matrix.package }} \
+                        --cov-report=term-missing \
+                        --cov-report=xml \
+                        --cov-report=html \
+                        --cov-branch \
+                        --cov-fail-under=30 \
+                        -v
+
+      - name: Coverage comment (Ubuntu Python 3.13 only)
+        if: matrix.python-version == '3.13' && matrix.os == 'ubuntu-latest'
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          COVERAGE_PATH: libs/${{ matrix.package }}
+          MINIMUM_GREEN: 80
+          MINIMUM_ORANGE: 60
+          ANNOTATE_MISSING_LINES: true
+          ANNOTATION_TYPE: warning
+          SUBPROJECT_ID: ${{ matrix.package }}
+          COMMENT_TEMPLATE: |
+            ## Coverage Report: `legesher-${{ matrix.package }}`
+
+            Coverage: **{coverage}**
+            {emoji} **{coverage_percentage}%**
+
+            <details>
+            <summary>📊 Coverage Details</summary>
+
+            {table}
+            </details>
+
+      - name: Store coverage file
+        if: matrix.python-version == '3.13' && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.package }}
+          path: libs/${{ matrix.package }}/coverage.xml
+          retention-days: 7
+
+      - name: Upload HTML coverage report
+        if: matrix.python-version == '3.13' && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: htmlcov-${{ matrix.package }}
+          path: libs/${{ matrix.package }}/htmlcov
+          retention-days: 7
+
+  # Language Server
+  test-language-server:
+    name: Test language-server
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: |
+          cd libs/language-server
+          uv sync --all-extras
+
+      - name: Run tests with coverage
+        run: |
+          cd libs/language-server
+          uv run pytest --cov=legesher_language_server \
+                        --cov-report=term-missing \
+                        --cov-report=xml \
+                        --cov-branch \
+                        -v
+
+      - name: Coverage comment (Python 3.13 only)
+        if: matrix.python-version == '3.13'
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          COVERAGE_PATH: libs/language-server
+          SUBPROJECT_ID: language-server
+          COMMENT_TEMPLATE: |
+            ## Coverage Report: `legesher-language-server`
+            Coverage: **{coverage_percentage}%**
+
+  # Language packs
+  test-language-packs:
+    name: Test ${{ matrix.pack }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        pack: [i18n-python-es, i18n-python-ar]
+        python-version: ['3.13']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: |
+          cd libs/${{ matrix.pack }}
+          uv sync --all-extras
+
+      - name: Run tests with coverage
+        run: |
+          cd libs/${{ matrix.pack }}
+          uv run pytest --cov=legesher_${{ matrix.pack }} \
+                        --cov-report=xml \
+                        --cov-report=term-missing \
+                        --cov-branch \
+                        -v
+
+      - name: Coverage comment
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          COVERAGE_PATH: libs/${{ matrix.pack }}
+          SUBPROJECT_ID: ${{ matrix.pack }}
+          COMMENT_TEMPLATE: |
+            ## Coverage Report: `legesher-${{ matrix.pack }}`
+            Coverage: **{coverage_percentage}%**
+
+  # VS Code Extension (TypeScript/JavaScript)
+  test-vs-code:
+    name: Test vs-code
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: ['18', '20']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: |
+          cd libs/vs-code
+          npm install
+
+      - name: Compile TypeScript
+        run: |
+          cd libs/vs-code
+          npm run compile
+
+      - name: Run tests (when available)
+        run: |
+          cd libs/vs-code
+          # npm test
+          echo "VS Code extension tests not yet implemented"
+
+  # Summary
+  test-summary:
+    name: Test Summary
+    needs: [test-foundation, test-language-server, test-language-packs, test-vs-code]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          echo "### 🧪 Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.test-foundation.result }}" == "success" ] && \
+             [ "${{ needs.test-language-server.result }}" == "success" ] && \
+             [ "${{ needs.test-language-packs.result }}" == "success" ] && \
+             [ "${{ needs.test-vs-code.result }}" == "success" ]; then
+            echo "✅ All tests passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some tests failed. Please check the logs above." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

@@ -62,6 +62,15 @@ repos:
     args: [--autofix, --indent=2]
     exclude: ^\.github/workflows/.*\.yml$      # Don't auto-format GitHub Actions
 
+  # Commit message validation with Commitizen
+- repo: https://github.com/commitizen-tools/commitizen
+  rev: v4.9.1
+  hooks:
+  - id: commitizen
+    stages: [commit-msg]
+  - id: commitizen-branch
+    stages: [pre-push]
+
 # Configuration for pre-commit.ci (if using)
 ci:
   autofix_commit_msg: |

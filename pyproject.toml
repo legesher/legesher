@@ -33,6 +33,7 @@ dev = [
     "pytest-asyncio>=1.2.0",
     "pytest-cov>=7.0.0",
     "python-semantic-release>=9.0.0",
+    "commitizen>=4.9.1",
 ]
 
 [build-system]
@@ -75,3 +76,64 @@ exclude_commit_patterns = [
     "^chore\\(release\\):",
     "^Merge",
 ]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+version_files = [
+    "pyproject.toml:project.version",
+    "libs/core/pyproject.toml:project.version",
+    "libs/i18n/pyproject.toml:project.version",
+    "libs/legesher/pyproject.toml:project.version",
+]
+style = [
+    ["qmark", "fg:#ff9d00 bold"],
+    ["question", "bold"],
+    ["answer", "fg:#ff9d00 bold"],
+    ["pointer", "fg:#ff9d00 bold"],
+    ["highlighted", "fg:#ff9d00 bold"],
+    ["selected", "fg:#cc5454"],
+    ["separator", "fg:#cc5454"],
+    ["instruction", ""],
+    ["text", ""],
+    ["disabled", "fg:#858585 italic"]
+]
+
+# Match semantic-release configuration
+[tool.commitizen.customize]
+message_template = "{{change_type}}{% if scope %}({{scope}}){% endif %}{% if is_breaking_change %}!{% endif %}: {{message}}"
+schema_pattern = "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\\([a-z0-9-]+\\))?!?: .{1,88}"
+
+[[tool.commitizen.customize.questions]]
+type = "list"
+name = "change_type"
+message = "Select the type of change you are committing:"
+choices = [
+    {value = "feat", name = "feat: A new feature"},
+    {value = "fix", name = "fix: A bug fix"},
+    {value = "docs", name = "docs: Documentation only changes"},
+    {value = "style", name = "style: Code style changes (formatting, etc)"},
+    {value = "refactor", name = "refactor: Code change that neither fixes a bug nor adds a feature"},
+    {value = "perf", name = "perf: Performance improvement"},
+    {value = "test", name = "test: Adding or updating tests"},
+    {value = "build", name = "build: Build system or external dependencies"},
+    {value = "ci", name = "ci: CI/CD configuration changes"},
+    {value = "chore", name = "chore: Other changes that don't modify src or test files"},
+    {value = "revert", name = "revert: Revert a previous commit"},
+]
+
+[[tool.commitizen.customize.questions]]
+type = "input"
+name = "scope"
+message = "Scope (package name: core, i18n, legesher, language-server, vs-code, pride, i18n-python-es, i18n-python-ar) [optional]:"
+
+[[tool.commitizen.customize.questions]]
+type = "input"
+name = "message"
+message = "Short description of the change:"
+
+[[tool.commitizen.customize.questions]]
+type = "confirm"
+name = "is_breaking_change"
+message = "Is this a BREAKING CHANGE?"
+default = false
