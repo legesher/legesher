@@ -2,6 +2,8 @@
  * Utility functions for the Legesher VS Code extension
  */
 
+import { Logger } from './logger';
+
 /**
  * Validate that the command appears to be a Legesher-related executable
  * This provides basic protection against arbitrary command execution
@@ -20,7 +22,7 @@ function isValidLegesherCommand(command: string): boolean {
 export async function isServerAvailable(command: string): Promise<boolean> {
     // Validate command before executing
     if (!isValidLegesherCommand(command)) {
-        console.warn(`Command '${command}' does not appear to be a Legesher executable. Skipping availability check.`);
+        Logger.warn(`Command '${command}' does not appear to be a Legesher executable. Skipping availability check.`);
         return false;
     }
 

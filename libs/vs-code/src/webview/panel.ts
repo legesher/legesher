@@ -1,0 +1,298 @@
+import * as vscode from 'vscode';
+import { translateDocument } from './translator';
+import { getAvailableLanguages, getLanguageNativeName } from '../config';
+
+/**
+ * Message types sent from webview to extension
+ */
+type WebviewMessage =
+    | { type: 'copy'; data: { text: string } }
+    | { type: 'refresh' }
+    | { type: 'error'; data: { message: string } };
+
+/**
+ * Manages the translation panel webview.
+ * Singleton pattern ensures only one panel exists at a time.
+ */
+export class TranslationPanelManager {
+    private static instance: TranslationPanelManager | undefined;
+    private panel: vscode.WebviewPanel | undefined;
+    private disposables: vscode.Disposable[] = [];
+
+    private constructor(private readonly context: vscode.ExtensionContext) {}
+
+    /**
+     * Get or create the singleton instance of the translation panel manager.
+     */
+    public static getInstance(context: vscode.ExtensionContext): TranslationPanelManager {
+        if (!TranslationPanelManager.instance) {
+            TranslationPanelManager.instance = new TranslationPanelManager(context);
+        }
+        return TranslationPanelManager.instance;
+    }
+
+    /**
+     * Show the translation panel for the given document.
+     * If panel already exists, reveal it. Otherwise, create a new one.
+     */
+    public async show(document: vscode.TextDocument): Promise<void> {
+        const column = vscode.ViewColumn.Beside;
+
+        if (this.panel) {
+            // Panel already exists, just reveal it
+            this.panel.reveal(column);
+        } else {
+            // Create new panel
+            this.panel = vscode.window.createWebviewPanel(
+                'legesherTranslation',
+                'Translation View',
+                column,
+                {
+                    enableScripts: true,
+                    retainContextWhenHidden: true,
+                    localResourceRoots: [
+                        vscode.Uri.joinPath(this.context.extensionUri, 'media'),
+                        vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview'),
+                        vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'prismjs')
+                    ]
+                }
+            );
+
+            // Set up panel lifecycle handlers
+            this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
+
+            // Handle messages from webview
+            this.panel.webview.onDidReceiveMessage(
+                async (message) => await this.handleMessage(message),
+                null,
+                this.disposables
+            );
+
+            // Set initial HTML
+            this.panel.webview.html = this.getWebviewContent();
+        }
+
+        // Load and display translation
+        await this.updateTranslation(document);
+    }
+
+    /**
+     * Update the panel with a new translation for the given document.
+     */
+    private async updateTranslation(document: vscode.TextDocument): Promise<void> {
+        if (!this.panel) {
+            return;
+        }
+
+        try {
+            // Show loading state
+            this.panel.webview.postMessage({
+                type: 'loading',
+                data: { isLoading: true }
+            });
+
+            // Get original code
+            const originalCode = document.getText();
+
+            // Get current language configuration
+            const config = vscode.workspace.getConfiguration('legesher');
+            const sourceLanguage = config.get<string>('sourceLanguage', 'en');
+            const targetLanguage = config.get<string>('targetLanguage', 'en');
+
+            // Translate document
+            const translatedCode = await translateDocument(document, targetLanguage);
+
+            // Get language display names
+            const sourceLanguageName = getLanguageNativeName(sourceLanguage);
+            const targetLanguageName = getLanguageNativeName(targetLanguage);
+
+            // RTL languages list
+            const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
+
+            // Update panel with translation
+            this.panel.webview.postMessage({
+                type: 'update',
+                data: {
+                    originalCode,
+                    translatedCode,
+                    sourceLanguage,
+                    targetLanguage,
+                    sourceLanguageName,
+                    targetLanguageName,
+                    fileName: document.fileName,
+                    rtlLanguages
+                }
+            });
+        } catch (error) {
+            // Show error in panel
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.panel.webview.postMessage({
+                type: 'error',
+                data: { message: errorMessage }
+            });
+
+            vscode.window.showErrorMessage(`Translation failed: ${errorMessage}`);
+        }
+    }
+
+    /**
+     * Handle messages from the webview.
+     */
+    private async handleMessage(message: WebviewMessage): Promise<void> {
+        switch (message.type) {
+            case 'copy':
+                // Copy translation to clipboard
+                await vscode.env.clipboard.writeText(message.data.text);
+                vscode.window.showInformationMessage('Translation copied to clipboard');
+                break;
+
+            case 'refresh':
+                // Refresh translation for active editor
+                const editor = vscode.window.activeTextEditor;
+                if (editor) {
+                    await this.updateTranslation(editor.document);
+                }
+                break;
+
+            case 'error':
+                // Errors from webview are handled by the webview itself
+                // No need to log here as they're already shown to the user
+                break;
+        }
+    }
+
+    /**
+     * Generate the HTML content for the webview.
+     */
+    private getWebviewContent(): string {
+        if (!this.panel) {
+            return '';
+        }
+
+        const webview = this.panel.webview;
+
+        // Get URIs for resources
+        const styleUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', 'ui', 'styles.css')
+        );
+        const scriptUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', 'ui', 'main.js')
+        );
+
+        // Prism.js for syntax highlighting (bundled locally)
+        const prismCssUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'prismjs', 'themes', 'prism-tomorrow.min.css')
+        );
+        const prismJsUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'prismjs', 'prism.js')
+        );
+        const prismPythonUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'prismjs', 'components', 'prism-python.min.js')
+        );
+
+        // Content Security Policy
+        const cspSource = webview.cspSource;
+        const nonce = this.getNonce();
+
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'none';
+        style-src ${cspSource};
+        script-src ${cspSource} 'nonce-${nonce}';
+        font-src ${cspSource};
+    ">
+    <title>Translation View</title>
+    <link href="${styleUri}" rel="stylesheet">
+    <link href="${prismCssUri}" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Translating...</p>
+        </div>
+
+        <div id="error" class="error hidden">
+            <h2>⚠️ Translation Error</h2>
+            <p id="error-message"></p>
+            <button id="retry-button" class="button">Retry</button>
+        </div>
+
+        <div id="content" class="content hidden">
+            <header class="header">
+                <div class="header-left">
+                    <h2 id="source-lang-label">Original</h2>
+                    <span id="file-name" class="file-name"></span>
+                </div>
+                <div class="header-right">
+                    <h2 id="target-lang-label">Translation</h2>
+                    <button id="copy-button" class="button" title="Copy translation to clipboard">
+                        📋 Copy
+                    </button>
+                </div>
+            </header>
+
+            <div class="translation-container">
+                <div class="pane left-pane">
+                    <pre id="original-code"><code class="language-python"></code></pre>
+                </div>
+                <div class="divider"></div>
+                <div class="pane right-pane">
+                    <pre id="translated-code"><code class="language-python"></code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="${prismJsUri}"></script>
+    <script src="${prismPythonUri}"></script>
+    <script nonce="${nonce}" src="${scriptUri}"></script>
+</body>
+</html>`;
+    }
+
+    /**
+     * Generate a nonce for Content Security Policy.
+     */
+    private getNonce(): string {
+        let text = '';
+        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        for (let i = 0; i < 32; i++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+    }
+
+    /**
+     * Dispose of the panel and clean up resources.
+     */
+    private dispose(): void {
+        TranslationPanelManager.instance = undefined;
+
+        if (this.panel) {
+            this.panel.dispose();
+            this.panel = undefined;
+        }
+
+        // Dispose of all event listeners
+        while (this.disposables.length) {
+            const disposable = this.disposables.pop();
+            if (disposable) {
+                disposable.dispose();
+            }
+        }
+    }
+
+    /**
+     * Public method to dispose the panel from outside.
+     */
+    public static disposeInstance(): void {
+        if (TranslationPanelManager.instance) {
+            TranslationPanelManager.instance.dispose();
+        }
+    }
+}
