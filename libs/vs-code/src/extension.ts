@@ -3,6 +3,8 @@ import { LanguageClient } from 'vscode-languageclient/node';
 import { createLanguageClient } from './client';
 import { isServerAvailable } from './utils';
 import { getLanguageConfig, getAvailableLanguages, getLanguageName } from './config';
+import { TranslationPanelManager } from './webview/panel';
+import { Logger } from './logger';
 
 let client: LanguageClient | undefined;
 let statusBarItem: vscode.StatusBarItem;
@@ -15,7 +17,13 @@ let languageChangeTimeout: NodeJS.Timeout | undefined;
  * Called when the extension is activated (when a Python file is opened)
  */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    console.log('Legesher extension activating...');
+    // Create reusable output channel first
+    outputChannel = vscode.window.createOutputChannel('Legesher Language Server');
+    context.subscriptions.push(outputChannel);
+
+    // Initialize logger
+    Logger.init(outputChannel);
+    Logger.info('Legesher extension activating...');
 
     // Create status bar item to show connection status
     statusBarItem = vscode.window.createStatusBarItem(
@@ -37,10 +45,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     updateLanguageStatusBar();
     languageStatusBarItem.show();
 
-    // Create reusable output channel
-    outputChannel = vscode.window.createOutputChannel('Legesher Language Server');
-    context.subscriptions.push(outputChannel);
-
     // Check if extension is enabled
     const config = vscode.workspace.getConfiguration('legesher');
     const enabled = config.get<boolean>('enabled', true);
@@ -48,7 +52,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     if (!enabled) {
         statusBarItem.text = "$(circle-slash) Legesher";
         statusBarItem.tooltip = "Legesher: Disabled";
-        console.log('Legesher extension is disabled via configuration');
+        Logger.info('Legesher extension is disabled via configuration');
         return;
     }
 
@@ -63,6 +67,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(
         vscode.commands.registerCommand('legesher.selectLanguage', async () => {
             await selectLanguage(context);
+        })
+    );
+
+    // Register translation panel command
+    context.subscriptions.push(
+        vscode.commands.registerCommand('legesher.showTranslationPanel', async () => {
+            await showTranslationPanel(context);
         })
     );
 
@@ -98,21 +109,20 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
             // Server not available - this is expected in early development
             statusBarItem.text = "$(warning) Legesher";
             statusBarItem.tooltip = "Legesher: Language server not installed (extension features limited)";
-            console.warn(`Language server '${serverCommand}' not found. Extension will run with limited functionality.`);
-            console.warn('This is expected during early development. The language server package is planned for future implementation.');
+            Logger.warn(`Language server '${serverCommand}' not found. Extension will run with limited functionality.`);
+            Logger.warn('This is expected during early development. The language server package is planned for future implementation.');
             return;
         }
 
         // Log current language configuration
         const languageConfig = getLanguageConfig();
-        console.log('Starting language server with configuration:', languageConfig);
-        outputChannel.appendLine(`Starting server with target language: ${languageConfig.targetLanguage}`);
+        Logger.info('Starting language server with configuration', languageConfig);
 
         client = createLanguageClient(context, outputChannel);
 
         // Handle client state changes
         client.onDidChangeState((event) => {
-            console.log('Language server state changed:', event);
+            Logger.debug('Language server state changed', event);
         });
 
         // Start the client (this also launches the server)
@@ -121,13 +131,13 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
         // Update status after successful start
         statusBarItem.text = "$(check) Legesher";
         statusBarItem.tooltip = "Legesher: Connected";
-        console.log('Legesher language server started and connected successfully');
+        Logger.info('Legesher language server started and connected successfully');
     } catch (error) {
         statusBarItem.text = "$(error) Legesher";
         statusBarItem.tooltip = `Legesher: Error - ${error}`;
 
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error('Failed to start Legesher language server:', errorMessage);
+        Logger.error('Failed to start Legesher language server', errorMessage);
 
         // Show error message with action buttons
         const action = await vscode.window.showErrorMessage(
@@ -148,7 +158,7 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
  * Restart the language server
  */
 async function restartServer(context: vscode.ExtensionContext): Promise<void> {
-    console.log('Restarting Legesher language server...');
+    Logger.info('Restarting Legesher language server...');
 
     if (client) {
         await client.stop();
@@ -216,13 +226,34 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
 }
 
 /**
+ * Show the translation panel for the active Python file
+ */
+async function showTranslationPanel(context: vscode.ExtensionContext): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+
+    if (!editor) {
+        vscode.window.showErrorMessage('No file open. Please open a Python file to view translations.');
+        return;
+    }
+
+    if (editor.document.languageId !== 'python') {
+        vscode.window.showErrorMessage('Translation panel only supports Python files. Please open a Python file.');
+        return;
+    }
+
+    // Get or create the panel manager and show the panel
+    const panelManager = TranslationPanelManager.getInstance(context);
+    await panelManager.show(editor.document);
+}
+
+/**
  * Handle language configuration changes
  *
  * Uses debouncing to prevent multiple rapid server restarts if configuration
  * changes multiple times in quick succession (e.g., during settings sync).
  */
 async function handleLanguageChange(context: vscode.ExtensionContext): Promise<void> {
-    console.log('Language configuration changed, scheduling server restart...');
+    Logger.info('Language configuration changed, scheduling server restart...');
 
     // Update status bar immediately (fast, no server interaction)
     updateLanguageStatusBar();
@@ -234,7 +265,7 @@ async function handleLanguageChange(context: vscode.ExtensionContext): Promise<v
 
     // Debounce server restart (expensive operation)
     languageChangeTimeout = setTimeout(async () => {
-        console.log('Applying language configuration change...');
+        Logger.info('Applying language configuration change...');
         await restartServer(context);
         languageChangeTimeout = undefined;
     }, 500); // 500ms debounce
@@ -245,11 +276,11 @@ async function handleLanguageChange(context: vscode.ExtensionContext): Promise<v
  * Called when the extension is deactivated
  */
 export async function deactivate(): Promise<void> {
-    console.log('Legesher extension deactivating...');
+    Logger.info('Legesher extension deactivating...');
 
     if (client) {
         await client.stop();
-        console.log('Legesher language server stopped');
+        Logger.info('Legesher language server stopped');
     }
 
     if (statusBarItem) {
@@ -263,4 +294,7 @@ export async function deactivate(): Promise<void> {
     if (outputChannel) {
         outputChannel.dispose();
     }
+
+    // Dispose translation panel if open
+    TranslationPanelManager.disposeInstance();
 }

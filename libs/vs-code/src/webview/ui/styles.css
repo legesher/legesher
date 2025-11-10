@@ -1,0 +1,296 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    color: var(--vscode-foreground);
+    background-color: var(--vscode-editor-background);
+    height: 100vh;
+    overflow: hidden;
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Loading state */
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.loading p {
+    margin-top: 1rem;
+    color: var(--vscode-descriptionForeground);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--vscode-progressBar-background);
+    border-top-color: var(--vscode-button-background);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error state */
+.error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 2rem;
+    text-align: center;
+}
+
+.error h2 {
+    color: var(--vscode-errorForeground);
+    margin-bottom: 1rem;
+}
+
+.error p {
+    margin-bottom: 1.5rem;
+    color: var(--vscode-descriptionForeground);
+}
+
+/* Hidden utility class */
+.hidden {
+    display: none !important;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    background-color: var(--vscode-editor-background);
+    flex-shrink: 0;
+}
+
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--vscode-foreground);
+}
+
+.file-name {
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground);
+    font-family: var(--vscode-editor-font-family);
+}
+
+/* Button */
+.button {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-family: var(--vscode-font-family);
+    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-background);
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.button:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+.button:active {
+    background-color: var(--vscode-button-background);
+    opacity: 0.8;
+}
+
+.button:focus {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: 2px;
+}
+
+/* Translation container */
+.content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.translation-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.pane {
+    flex: 1;
+    overflow: auto;
+    background-color: var(--vscode-editor-background);
+    padding: 1rem;
+}
+
+.left-pane {
+    border-right: 1px solid var(--vscode-panel-border);
+}
+
+.right-pane {
+    border-left: 1px solid var(--vscode-panel-border);
+}
+
+/* Divider */
+.divider {
+    width: 4px;
+    background-color: var(--vscode-panel-border);
+    cursor: col-resize;
+    flex-shrink: 0;
+}
+
+.divider:hover {
+    background-color: var(--vscode-focusBorder);
+}
+
+/* Code blocks */
+pre {
+    margin: 0;
+    padding: 0;
+    background-color: transparent !important;
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    line-height: var(--vscode-editor-line-height);
+}
+
+code {
+    font-family: var(--vscode-editor-font-family);
+    background-color: transparent !important;
+    display: block;
+    white-space: pre;
+    word-wrap: normal;
+    overflow-wrap: normal;
+}
+
+/* RTL support for Arabic and other RTL languages */
+.pane.rtl pre,
+.pane.rtl code {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: embed;
+}
+
+/* Syntax highlighting overrides to match VS Code theme */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+    color: var(--vscode-editor-foreground);
+    opacity: 0.6;
+}
+
+.token.keyword,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+    color: var(--vscode-symbolIcon-keywordForeground, #569cd6);
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+    color: var(--vscode-symbolIcon-stringForeground, #ce9178);
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+    color: var(--vscode-editor-foreground);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.function,
+.token.class-name {
+    color: var(--vscode-symbolIcon-functionForeground, #dcdcaa);
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+    color: var(--vscode-symbolIcon-variableForeground, #9cdcfe);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--vscode-scrollbarSlider-background);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--vscode-scrollbarSlider-hoverBackground);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--vscode-scrollbarSlider-activeBackground);
+}
+
+/* Responsive design for smaller panels */
+@media (max-width: 768px) {
+    .translation-container {
+        flex-direction: column;
+    }
+
+    .left-pane,
+    .right-pane {
+        border: none;
+        border-bottom: 1px solid var(--vscode-panel-border);
+    }
+
+    .divider {
+        width: 100%;
+        height: 4px;
+        cursor: row-resize;
+    }
+}
+
+/* Copy button success state */
+.button.copied {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}
+
+.button.copied::before {
+    content: "✓ ";
+}

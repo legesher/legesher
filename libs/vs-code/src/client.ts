@@ -6,6 +6,7 @@ import {
     Executable,
 } from 'vscode-languageclient/node';
 import { getLanguageConfig } from './config';
+import { Logger } from './logger';
 
 /**
  * Create and configure the Language Server Protocol client
@@ -23,9 +24,8 @@ export function createLanguageClient(
     const traceLevel = config.get<string>('trace.server', 'off');
     const languageConfig = getLanguageConfig();
 
-    console.log(`Creating language client with command: ${serverCommand}`);
-    console.log(`Language configuration:`, languageConfig);
-    outputChannel.appendLine(`Creating client with target language: ${languageConfig.targetLanguage}`);
+    Logger.info(`Creating language client with command: ${serverCommand}`);
+    Logger.debug('Language configuration', languageConfig);
 
     // Configure server executable
     const serverOptions: ServerOptions = {
@@ -78,12 +78,12 @@ export function createLanguageClient(
         // Error handler
         errorHandler: {
             error: (error, message, count) => {
-                console.error('Language server error:', error, message, count);
+                Logger.error('Language server error', { error, message, count });
                 // Return ErrorAction.Continue to keep trying
                 return { action: 1 }; // ErrorAction.Continue = 1
             },
             closed: () => {
-                console.warn('Language server connection closed');
+                Logger.warn('Language server connection closed');
                 // Return CloseAction.Restart to automatically restart
                 return { action: 1 }; // CloseAction.Restart = 1
             }
@@ -98,7 +98,7 @@ export function createLanguageClient(
         clientOptions
     );
 
-    console.log('Language client created successfully');
+    Logger.info('Language client created successfully');
 
     return client;
 }
