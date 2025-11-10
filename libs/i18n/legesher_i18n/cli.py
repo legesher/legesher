@@ -11,6 +11,7 @@ from rich.table import Table
 from .exceptions import PackValidationError
 from .pack_loader import LanguagePackLoader
 from .schema_validator import SchemaValidator
+from .db import TranslationDatabase
 
 console = Console()
 
@@ -270,6 +271,231 @@ def show(language: str, target: str):
         if "--debug" in sys.argv:
             raise
         sys.exit(1)
+
+
+@click.group()
+def db():
+    """Database management commands.
+
+    Manage the translation database for storing translations from multiple
+    sources (community, AI models) with review history.
+    """
+    pass
+
+
+@db.command()
+@click.option(
+    "--db-path",
+    default=".legesher/translations.db",
+    help="Path to database file",
+    type=click.Path(path_type=Path),
+)
+def init(db_path: Path):
+    """Initialize the translation database.
+
+    Creates the database file and all required tables if they don't exist.
+
+    Examples:
+
+        legesher-i18n db init
+
+        legesher-i18n db init --db-path /custom/path/translations.db
+    """
+    try:
+        console.print(f"[cyan]Initializing database at:[/cyan] {db_path}")
+
+        # Check if database already exists
+        if db_path.exists():
+            console.print(f"[yellow]Database already exists at:[/yellow] {db_path}")
+            console.print("[dim]Tables will be created if they don't exist.[/dim]")
+
+        # Initialize database
+        db = TranslationDatabase(db_path=str(db_path))
+        db.close()
+
+        console.print("✅ [green]Database initialized successfully![/green]")
+        console.print(f"\n[dim]Location: {db_path}[/dim]")
+
+    except Exception as e:
+        console.print(f"❌ [red]Error initializing database:[/red] {e}")
+        if "--debug" in sys.argv:
+            raise
+        sys.exit(1)
+
+
+@db.command()
+@click.option(
+    "--db-path",
+    default=".legesher/translations.db",
+    help="Path to database file",
+    type=click.Path(exists=True, path_type=Path),
+)
+def stats(db_path: Path):
+    """Show database statistics.
+
+    Displays counts of translations, reviews, and other data by source and language.
+
+    Examples:
+
+        legesher-i18n db stats
+
+        legesher-i18n db stats --db-path /custom/path/translations.db
+    """
+    try:
+        db = TranslationDatabase(db_path=str(db_path))
+
+        # Get statistics
+        conn = db._get_connection()
+
+        # Total translations
+        total_translations = conn.execute(
+            "SELECT COUNT(*) FROM translations"
+        ).fetchone()[0]
+
+        # Translations by source
+        source_stats = conn.execute("""
+            SELECT source, COUNT(*) as count
+            FROM translations
+            GROUP BY source
+            ORDER BY count DESC
+        """).fetchall()
+
+        # Translations by language
+        language_stats = conn.execute("""
+            SELECT language_code, COUNT(*) as count
+            FROM translations
+            GROUP BY language_code
+            ORDER BY count DESC
+        """).fetchall()
+
+        # Total reviews
+        total_reviews = conn.execute("SELECT COUNT(*) FROM reviews").fetchone()[0]
+
+        # Total deep contexts
+        total_contexts = conn.execute("SELECT COUNT(*) FROM deep_contexts").fetchone()[
+            0
+        ]
+
+        # Total linguistic standards
+        total_standards = conn.execute(
+            "SELECT COUNT(*) FROM linguistic_standards"
+        ).fetchone()[0]
+
+        db.close()
+
+        # Display overview
+        console.print("\n[bold cyan]Translation Database Statistics[/bold cyan]\n")
+
+        # Summary table
+        summary_table = Table(title="Overview")
+        summary_table.add_column("Metric", style="cyan")
+        summary_table.add_column("Count", justify="right", style="green")
+
+        summary_table.add_row("Total Translations", str(total_translations))
+        summary_table.add_row("Total Reviews", str(total_reviews))
+        summary_table.add_row("Deep Contexts", str(total_contexts))
+        summary_table.add_row("Linguistic Standards", str(total_standards))
+
+        console.print(summary_table)
+
+        # Translations by source
+        if source_stats:
+            console.print("\n[bold]Translations by Source[/bold]\n")
+            source_table = Table()
+            source_table.add_column("Source", style="cyan")
+            source_table.add_column("Count", justify="right", style="green")
+
+            for source, count in source_stats:
+                source_table.add_row(source, str(count))
+
+            console.print(source_table)
+
+        # Translations by language
+        if language_stats:
+            console.print("\n[bold]Translations by Language[/bold]\n")
+            lang_table = Table()
+            lang_table.add_column("Language", style="cyan")
+            lang_table.add_column("Count", justify="right", style="green")
+
+            for language, count in language_stats:
+                lang_table.add_row(language, str(count))
+
+            console.print(lang_table)
+
+        console.print(f"\n[dim]Database: {db_path}[/dim]\n")
+
+    except FileNotFoundError:
+        console.print(f"❌ [red]Error:[/red] Database not found at {db_path}")
+        console.print(
+            "\n[dim]Run 'legesher-i18n db init' to create the database.[/dim]"
+        )
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"❌ [red]Error reading database:[/red] {e}")
+        if "--debug" in sys.argv:
+            raise
+        sys.exit(1)
+
+
+@db.command()
+@click.option(
+    "--db-path",
+    default=".legesher/translations.db",
+    help="Path to database file",
+    type=click.Path(exists=True, path_type=Path),
+)
+def vacuum(db_path: Path):
+    """Optimize database size.
+
+    Runs SQLite VACUUM command to reclaim unused space and optimize the database file.
+
+    Examples:
+
+        legesher-i18n db vacuum
+
+        legesher-i18n db vacuum --db-path /custom/path/translations.db
+    """
+    try:
+        console.print(f"[cyan]Optimizing database:[/cyan] {db_path}")
+
+        db = TranslationDatabase(db_path=str(db_path))
+        conn = db._get_connection()
+
+        # Get size before
+        size_before = db_path.stat().st_size
+
+        # Run VACUUM
+        conn.execute("VACUUM")
+
+        # Get size after
+        size_after = db_path.stat().st_size
+
+        db.close()
+
+        # Calculate savings
+        savings = size_before - size_after
+        percent_saved = (savings / size_before * 100) if size_before > 0 else 0
+
+        console.print("✅ [green]Database optimized successfully![/green]")
+        console.print(f"\n[dim]Size before: {size_before:,} bytes[/dim]")
+        console.print(f"[dim]Size after: {size_after:,} bytes[/dim]")
+        console.print(f"[dim]Saved: {savings:,} bytes ({percent_saved:.1f}%)[/dim]")
+
+    except FileNotFoundError:
+        console.print(f"❌ [red]Error:[/red] Database not found at {db_path}")
+        console.print(
+            "\n[dim]Run 'legesher-i18n db init' to create the database.[/dim]"
+        )
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"❌ [red]Error optimizing database:[/red] {e}")
+        if "--debug" in sys.argv:
+            raise
+        sys.exit(1)
+
+
+# Add db group to main CLI
+cli.add_command(db)
 
 
 if __name__ == "__main__":
