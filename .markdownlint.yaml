@@ -6,3 +6,12 @@ MD013:
   line_length: 120  # Increase from default 80
   tables: false     # Don't check line length in tables
   code_blocks: false # Don't check line length in code blocks
+
+# MD036: Emphasis as heading
+# Allow emphasis (bold/italic) for section labels in comprehensive documentation
+MD036: false
+
+# MD024: Duplicate headings
+# Allow duplicate headings in different sections
+MD024:
+  siblings_only: true
