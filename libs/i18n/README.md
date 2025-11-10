@@ -106,9 +106,10 @@ print(result.text)  # "¡Hola, mundo!"
 
 ## CLI Tools
 
-The `legesher-i18n` package includes powerful command-line tools for validating and managing language packs.
+The `legesher-i18n` package includes powerful command-line tools for validating and managing
+language packs.
 
-### Installation
+### CLI Usage
 
 After installing the package, the `legesher-i18n` CLI is automatically available:
 
@@ -133,7 +134,7 @@ legesher-i18n validate libs/i18n/languages/python/3.13/es.yml --strict
 
 **Example Output:**
 
-```
+```text
 Validating: libs/i18n/languages/python/3.13/es.yml
 ✅ Schema validation passed
 
@@ -172,7 +173,7 @@ legesher-i18n show ar --target python
 
 **Example Output:**
 
-```
+```text
        ES Language Packs for Python
 ┏━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
 ┃ Version ┃ Keywords ┃ Builtins ┃ Extends ┃
@@ -201,7 +202,9 @@ python libs/i18n/scripts/generate_compatibility_matrix.py es \
 
 **Generated Output:**
 
-The script creates a Markdown table showing which keywords are available in each Python version, with version-specific keywords clearly marked (e.g., `except*` only appears in Python 3.11+).
+The script creates a Markdown table showing which keywords are available in each
+Python version, with version-specific keywords clearly marked (e.g., `except*`
+only appears in Python 3.11+).
 
 ### Integration Examples
 
@@ -275,11 +278,12 @@ uv run pytest tests/test_cli.py -v
 
 ### Creating Language Packs
 
-See the [Language Pack Creation Guide](../../docs/guides/creating-language-packs.md) for instructions on creating new language packs.
+See the [Language Pack Creation Guide](../../docs/guides/creating-language-packs.md)
+for instructions on creating new language packs.
 
 ### Project Structure
 
-```
+```text
 libs/i18n/
 ├── legesher_i18n/
 │   ├── __init__.py          # Public API
