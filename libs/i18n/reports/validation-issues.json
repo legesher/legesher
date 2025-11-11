@@ -1,0 +1,755 @@
+{
+  "generated": "2025-11-10T20:34:54.091683",
+  "summary": {
+    "total_documents": 5,
+    "valid_documents": 5,
+    "total_errors": 0,
+    "total_warnings": 82
+  },
+  "documents": [
+    {
+      "filename": "for.md",
+      "word_count": 1876,
+      "code_example_count": 7,
+      "translation_example_count": 4,
+      "cross_reference_count": 0,
+      "difficulty": "EASY",
+      "sections_present": [
+        "Quick Summary",
+        "Code Examples FIRST (Learn by Seeing)",
+        "Pattern Classification",
+        "Etymology (Brief)",
+        "Concept Explanation (Intermediate Level)",
+        "Linguistic Form Recommendation",
+        "Translation Examples (Good & Bad)",
+        "Ambiguity Resolution",
+        "Cross-References (Consistency Requirements)",
+        "Confidence Calibration",
+        "Translation Validation Checklist"
+      ],
+      "sections_missing": [],
+      "is_valid": true,
+      "error_count": 0,
+      "warning_count": 18,
+      "issues": [
+        {
+          "severity": "info",
+          "category": "completeness",
+          "message": "Word count (1876) above target (1000)",
+          "line_number": null,
+          "section": null
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 4 missing explanation",
+          "line_number": 240,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 5 missing explanation",
+          "line_number": 247,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 6 missing explanation",
+          "line_number": 253,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 7 missing explanation",
+          "line_number": 262,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "No cross-references found in Cross-References section",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: por.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: cada.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: variable.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: iterar.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: para.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: while.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: break.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: durante.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: para_cada.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: continue.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: number.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: char.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: range.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        }
+      ]
+    },
+    {
+      "filename": "if.md",
+      "word_count": 1708,
+      "code_example_count": 6,
+      "translation_example_count": 4,
+      "cross_reference_count": 0,
+      "difficulty": "EASY",
+      "sections_present": [
+        "Quick Summary",
+        "Code Examples FIRST (Learn by Seeing)",
+        "Pattern Classification",
+        "Etymology (Brief)",
+        "Concept Explanation (Intermediate Level)",
+        "Linguistic Form Recommendation",
+        "Translation Examples (Good & Bad)",
+        "Ambiguity Resolution",
+        "Cross-References (Consistency Requirements)",
+        "Confidence Calibration",
+        "Translation Validation Checklist"
+      ],
+      "sections_missing": [],
+      "is_valid": true,
+      "error_count": 0,
+      "warning_count": 12,
+      "issues": [
+        {
+          "severity": "info",
+          "category": "completeness",
+          "message": "Word count (1708) above target (1000)",
+          "line_number": null,
+          "section": null
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 4 missing explanation",
+          "line_number": 243,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 5 missing explanation",
+          "line_number": 254,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 6 missing explanation",
+          "line_number": 263,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "No cross-references found in Cross-References section",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: verificar.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: si_entonces.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: else.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: not.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: elif.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: while.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: cuando.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: and.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        }
+      ]
+    },
+    {
+      "filename": "int.md",
+      "word_count": 1690,
+      "code_example_count": 4,
+      "translation_example_count": 4,
+      "cross_reference_count": 0,
+      "difficulty": "EASY",
+      "sections_present": [
+        "Quick Summary",
+        "Code Examples FIRST (Learn by Seeing)",
+        "Pattern Classification",
+        "Etymology (Brief)",
+        "Concept Explanation (Intermediate Level)",
+        "Linguistic Form Recommendation",
+        "Translation Examples (Good & Bad)",
+        "Ambiguity Resolution",
+        "Cross-References (Consistency Requirements)",
+        "Confidence Calibration",
+        "Translation Validation Checklist"
+      ],
+      "sections_missing": [],
+      "is_valid": true,
+      "error_count": 0,
+      "warning_count": 17,
+      "issues": [
+        {
+          "severity": "info",
+          "category": "completeness",
+          "message": "Word count (1690) above target (1000)",
+          "line_number": null,
+          "section": null
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 4 missing explanation",
+          "line_number": 249,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "No cross-references found in Cross-References section",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: dict.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: booleano.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: entero.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: integral.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: float.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: list.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: cadena.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: ent.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: tuple.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: type.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: bool.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: enterar.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: set.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: flotante.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: convertir_cadena.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        }
+      ]
+    },
+    {
+      "filename": "print.md",
+      "word_count": 1848,
+      "code_example_count": 7,
+      "translation_example_count": 4,
+      "cross_reference_count": 0,
+      "difficulty": "EASY",
+      "sections_present": [
+        "Quick Summary",
+        "Code Examples FIRST (Learn by Seeing)",
+        "Pattern Classification",
+        "Etymology (Brief)",
+        "Concept Explanation (Intermediate Level)",
+        "Linguistic Form Recommendation",
+        "Translation Examples (Good & Bad)",
+        "Ambiguity Resolution",
+        "Cross-References (Consistency Requirements)",
+        "Confidence Calibration",
+        "Translation Validation Checklist"
+      ],
+      "sections_missing": [],
+      "is_valid": true,
+      "error_count": 0,
+      "warning_count": 19,
+      "issues": [
+        {
+          "severity": "info",
+          "category": "completeness",
+          "message": "Word count (1848) above target (1000)",
+          "line_number": null,
+          "section": null
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 4 missing explanation",
+          "line_number": 239,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 5 missing explanation",
+          "line_number": 245,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 6 missing explanation",
+          "line_number": 252,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 7 missing explanation",
+          "line_number": 259,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "No cross-references found in Cross-References section",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: len.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: entrada.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: flush.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: end.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: escribir.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: abrir.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: open.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: mostrar.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: write.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: salida.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: imprimir.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: sep.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: input.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: file.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        }
+      ]
+    },
+    {
+      "filename": "str.md",
+      "word_count": 1790,
+      "code_example_count": 4,
+      "translation_example_count": 4,
+      "cross_reference_count": 0,
+      "difficulty": "EASY",
+      "sections_present": [
+        "Quick Summary",
+        "Code Examples FIRST (Learn by Seeing)",
+        "Pattern Classification",
+        "Etymology (Brief)",
+        "Concept Explanation (Intermediate Level)",
+        "Linguistic Form Recommendation",
+        "Translation Examples (Good & Bad)",
+        "Ambiguity Resolution",
+        "Cross-References (Consistency Requirements)",
+        "Confidence Calibration",
+        "Translation Validation Checklist"
+      ],
+      "sections_missing": [],
+      "is_valid": true,
+      "error_count": 0,
+      "warning_count": 16,
+      "issues": [
+        {
+          "severity": "info",
+          "category": "completeness",
+          "message": "Word count (1790) above target (1000)",
+          "line_number": null,
+          "section": null
+        },
+        {
+          "severity": "warning",
+          "category": "completeness",
+          "message": "Code example 4 missing explanation",
+          "line_number": 252,
+          "section": "Code Examples FIRST (Learn by Seeing)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "No cross-references found in Cross-References section",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: dict.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: entero.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: list.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: float.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: cadena.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: convertir_entero.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: cadena_de_caracteres.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: tuple.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: lista.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: bool.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: set.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: flotante.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: cuerda.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        },
+        {
+          "severity": "warning",
+          "category": "consistency",
+          "message": "Cross-reference to non-existent document: texto.md",
+          "line_number": null,
+          "section": "Cross-References (Consistency Requirements)"
+        }
+      ]
+    }
+  ]
+}

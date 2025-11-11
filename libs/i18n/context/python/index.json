@@ -1,0 +1,976 @@
+{
+  "version": "1.0",
+  "language": "python",
+  "total_documents": 121,
+  "last_updated": "2025-11-11",
+  "documents": [
+    {
+      "term": "False",
+      "filename": "False.md",
+      "category": "keyword",
+      "type": "constant (boolean literal)",
+      "difficulty": "EASY",
+      "summary": "`False` is a boolean literal in Python representing the logical value \"false.\" It's one of two possible `bool` values (the other being `True`) and is fundamental to conditional logic, comparisons, and..."
+    },
+    {
+      "term": "None",
+      "filename": "None.md",
+      "category": "keyword",
+      "type": "constant (null literal)",
+      "difficulty": "EASY",
+      "summary": "`None` is Python's null value representing the absence of a value or \"nothing.\" It's the only value of type `NoneType`, used to indicate missing data, uninitialized variables, or functions that don't ..."
+    },
+    {
+      "term": "True",
+      "filename": "True.md",
+      "category": "keyword",
+      "type": "constant (boolean literal)",
+      "difficulty": "EASY",
+      "summary": "`True` is a boolean literal in Python representing the logical value \"true.\" It's one of two possible `bool` values (the other being `False`) and is fundamental to conditional logic, comparisons, and ..."
+    },
+    {
+      "term": "__import__",
+      "filename": "__import__.md",
+      "category": "builtin",
+      "type": "function",
+      "difficulty": "HIGH",
+      "summary": "`__import__()` is the low-level function that the `import` statement calls internally to dynamically import modules at runtime, rarely used directly except in advanced scenarios requiring programmatic..."
+    },
+    {
+      "term": "abs",
+      "filename": "abs.md",
+      "category": "builtin_function",
+      "type": "noun (mathematical function)",
+      "difficulty": "EASY",
+      "summary": "The `abs` function in Python returns the absolute value of a number - its distance from zero without considering direction (sign). For positive numbers, returns the same number; for negative numbers, ..."
+    },
+    {
+      "term": "aiter",
+      "filename": "aiter.md",
+      "category": "builtin",
+      "type": "function",
+      "difficulty": "HIGH",
+      "summary": "`aiter()` returns an asynchronous iterator from an asynchronous iterable, the async equivalent of `iter()` for use with `async for` loops and the async iteration protocol."
+    },
+    {
+      "term": "all",
+      "filename": "all.md",
+      "category": "builtin_function",
+      "type": "adjective/quantifier (logical aggregation)",
+      "difficulty": "LOW",
+      "summary": "The `all` function in Python returns `True` if all elements in an iterable are truthy (or if the iterable is empty). It's a logical AND operation across a sequence, checking if every single item evalu..."
+    },
+    {
+      "term": "and",
+      "filename": "and.md",
+      "category": "keyword",
+      "type": "operator (logical conjunction)",
+      "difficulty": "EASY",
+      "summary": "The `and` keyword is a logical operator in Python that returns `True` only if both operands are true. It uses short-circuit evaluation: if the first operand is false, it returns that value immediately..."
+    },
+    {
+      "term": "anext",
+      "filename": "anext.md",
+      "category": "builtin",
+      "type": "function",
+      "difficulty": "HIGH",
+      "summary": "`anext()` retrieves the next item from an asynchronous iterator, the async equivalent of `next()` for use with async iteration protocol, must be awaited to get the value."
+    },
+    {
+      "term": "any",
+      "filename": "any.md",
+      "category": "builtin_function",
+      "type": "verb (query/test)",
+      "difficulty": "EASY",
+      "summary": "The `any` function in Python returns `True` if at least one element in an iterable is truthy, otherwise `False`. It stops checking as soon as it finds a truthy value (short-circuit evaluation). Return..."
+    },
+    {
+      "term": "as",
+      "filename": "as.md",
+      "category": "keyword",
+      "type": "module_system, exception_handling (alias/binding)",
+      "difficulty": "EASY",
+      "summary": "The `as` keyword creates aliases or binds names in two contexts: (1) import statements (`import module as alias`), making modules/names accessible under different names, and (2) exception handling (`e..."
+    },
+    {
+      "term": "ascii",
+      "filename": "ascii.md",
+      "category": "builtin_function",
+      "type": "noun",
+      "difficulty": "MEDIUM",
+      "summary": "The `ascii` function returns a string representation of an object similar to `repr()`, but escapes non-ASCII characters using `\\x`, `\\u`, or `\\U` escape sequences. It ensures the output contains only ..."
+    },
+    {
+      "term": "assert",
+      "filename": "assert.md",
+      "category": "keyword",
+      "type": "debugging (assertion statement)",
+      "difficulty": "EASY",
+      "summary": "The `assert` keyword tests a condition and raises `AssertionError` if the condition is false. Used for debugging and development - checking assumptions and invariants. Assertions can be disabled globa..."
+    },
+    {
+      "term": "async",
+      "filename": "async.md",
+      "category": "keyword",
+      "type": "adjective (modifier)",
+      "difficulty": "HARD",
+      "summary": "The `async` keyword in Python declares asynchronous functions (coroutines), context managers, and iterators that can perform non-blocking operations. It marks code that can use `await` to pause and re..."
+    },
+    {
+      "term": "attributeerror",
+      "filename": "attributeerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`AttributeError` is a built-in exception raised when attempting to access or assign an attribute that doesn't exist on an object. It signals that the requested attribute (method or property) is not fo..."
+    },
+    {
+      "term": "await",
+      "filename": "await.md",
+      "category": "keyword",
+      "type": "verb",
+      "difficulty": "HARD",
+      "summary": "The `await` keyword in Python pauses an async function until an awaitable object (coroutine, task, or future) completes, allowing other async operations to run concurrently. It can only be used inside..."
+    },
+    {
+      "term": "baseexception",
+      "filename": "baseexception.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`BaseException` is the root base class of all exceptions in Python's exception hierarchy. Every exception that can be raised or caught in Python inherits from `BaseException`, making it the fundamenta..."
+    },
+    {
+      "term": "bin",
+      "filename": "bin.md",
+      "category": "builtin",
+      "type": "noun",
+      "difficulty": "LOW",
+      "summary": "The `bin()` function converts an integer to a binary string prefixed with \"0b\". It returns the binary (base-2) representation of the number."
+    },
+    {
+      "term": "bool",
+      "filename": "bool.md",
+      "category": "builtin_type",
+      "type": "noun (type constructor)",
+      "difficulty": "EASY",
+      "summary": "The `bool` type in Python represents boolean values - `True` or `False`. It's short for \"boolean\" (named after mathematician George Boole) and is fundamental to logic, conditionals, and control flow i..."
+    },
+    {
+      "term": "break",
+      "filename": "break.md",
+      "category": "keyword",
+      "type": "control_flow (loop control)",
+      "difficulty": "EASY",
+      "summary": "The `break` keyword immediately exits the innermost enclosing loop (`for` or `while`), terminating the loop regardless of the loop's condition. Execution continues with the first statement after the l..."
+    },
+    {
+      "term": "breakpoint",
+      "filename": "breakpoint.md",
+      "category": "builtin",
+      "type": "function",
+      "difficulty": "HIGH",
+      "summary": "`breakpoint()` drops into the debugger at the point where it's called, providing an interactive debugging session to inspect variables, step through code, and diagnose issues."
+    },
+    {
+      "term": "bytearray",
+      "filename": "bytearray.md",
+      "category": "builtin_type",
+      "type": "noun (compound)",
+      "difficulty": "MEDIUM",
+      "summary": "The `bytearray` type represents mutable sequences of bytes (integers 0-255). Like `bytes` but modifiable - you can change individual bytes after creation. Used when you need to build or modify binary ..."
+    },
+    {
+      "term": "bytes",
+      "filename": "bytes.md",
+      "category": "builtin_type",
+      "type": "noun",
+      "difficulty": "MEDIUM",
+      "summary": "The `bytes` type represents immutable sequences of bytes (integers 0-255). It's used for binary data like file contents, network packets, and encoded text. Unlike strings which are text, bytes are raw..."
+    },
+    {
+      "term": "callable",
+      "filename": "callable.md",
+      "category": "builtin_function",
+      "type": "adjective",
+      "difficulty": "LOW",
+      "summary": "The `callable()` function in Python checks whether an object can be called like a function. It returns `True` if the object is callable (functions, methods, classes, objects with `__call__` method) an..."
+    },
+    {
+      "term": "case",
+      "filename": "case.md",
+      "category": "keyword",
+      "type": "control flow (pattern branch)",
+      "difficulty": "MEDIUM",
+      "summary": "The `case` keyword defines pattern branches within a `match` statement in Python 3.10+. Each `case` specifies a pattern to match against; when the pattern matches, its associated code block executes. ..."
+    },
+    {
+      "term": "chr",
+      "filename": "chr.md",
+      "category": "builtin_function",
+      "type": "noun (conversion function)",
+      "difficulty": "EASY",
+      "summary": "The `chr` function in Python converts a Unicode code point (integer) to its corresponding character (string). It's the inverse of `ord()`. Takes an integer in range 0-1,114,111 (valid Unicode range) a..."
+    },
+    {
+      "term": "class",
+      "filename": "class.md",
+      "category": "keyword",
+      "type": "noun/verb",
+      "difficulty": "EASY",
+      "summary": "The `class` keyword in Python defines a new class - a blueprint for creating objects that bundles data (attributes) and behavior (methods) together. Classes are fundamental to object-oriented programm..."
+    },
+    {
+      "term": "classmethod",
+      "filename": "classmethod.md",
+      "category": "builtin",
+      "type": "decorator",
+      "difficulty": "HIGH",
+      "summary": "`@classmethod` decorator creates a method that receives the class as its first argument instead of an instance, enabling class-level operations and alternative constructors."
+    },
+    {
+      "term": "compile",
+      "filename": "compile.md",
+      "category": "builtin_function",
+      "type": "verb",
+      "difficulty": "MEDIUM",
+      "summary": "The `compile()` function converts Python source code (string) into code object that can be executed by `exec()` or evaluated by `eval()`. Takes three required arguments: source code, filename (for err..."
+    },
+    {
+      "term": "complex",
+      "filename": "complex.md",
+      "category": "builtin_type",
+      "type": "noun/adjective",
+      "difficulty": "LOW",
+      "summary": "The `complex` type in Python represents complex numbers with real and imaginary parts. Complex numbers are essential in mathematics, engineering, and scientific computing, representing numbers as `a +..."
+    },
+    {
+      "term": "continue",
+      "filename": "continue.md",
+      "category": "keyword",
+      "type": "control_flow (loop control)",
+      "difficulty": "EASY",
+      "summary": "The `continue` keyword skips the rest of the current loop iteration and immediately proceeds to the next iteration. Unlike `break` which exits the loop entirely, `continue` just skips to the next cycl..."
+    },
+    {
+      "term": "def",
+      "filename": "def.md",
+      "category": "keyword",
+      "type": "verb",
+      "difficulty": "EASY",
+      "summary": "The `def` keyword in Python introduces a function definition, declaring a reusable block of code with a name, optional parameters, and a body. It's short for \"define\" and creates a function object tha..."
+    },
+    {
+      "term": "del",
+      "filename": "del.md",
+      "category": "keyword",
+      "type": "verb",
+      "difficulty": "MEDIUM",
+      "summary": "The `del` keyword in Python removes references to objects, deleting variable names, list items, dictionary keys, or object attributes from their namespaces. It unbinds names rather than directly destr..."
+    },
+    {
+      "term": "delattr",
+      "filename": "delattr.md",
+      "category": "builtin_function",
+      "type": "compound_verb",
+      "difficulty": "MEDIUM",
+      "summary": "The `delattr()` function deletes a named attribute from an object. Signature: `delattr(object, name)` where name is a string. Equivalent to `del object.attribute` but allows dynamic attribute names. P..."
+    },
+    {
+      "term": "dict",
+      "filename": "dict.md",
+      "category": "builtin_type",
+      "type": "noun (type constructor)",
+      "difficulty": "EASY",
+      "summary": "The `dict` type in Python represents a dictionary - an unordered collection of key-value pairs. It's short for \"dictionary\" and provides fast lookup: give it a key, get back the associated value. Dict..."
+    },
+    {
+      "term": "dir",
+      "filename": "dir.md",
+      "category": "builtin_function",
+      "type": "noun (abbreviation)",
+      "difficulty": "MEDIUM",
+      "summary": "The `dir()` function returns a sorted list of names (attributes, methods) in an object's namespace. Without arguments, returns names in current local scope. Essential debugging and introspection tool ..."
+    },
+    {
+      "term": "divmod",
+      "filename": "divmod.md",
+      "category": "builtin_function",
+      "type": "compound_verb",
+      "difficulty": "LOW",
+      "summary": "The `divmod()` function in Python performs division and modulo operations simultaneously, returning both the quotient and remainder as a tuple. It's equivalent to `(a // b, a % b)` but computed more e..."
+    },
+    {
+      "term": "elif",
+      "filename": "elif.md",
+      "category": "keyword",
+      "type": "control_flow (conditional)",
+      "difficulty": "EASY",
+      "summary": "The `elif` keyword (contraction of \"else if\") provides additional conditional branches in if-elif-else chains. It tests an alternative condition only if previous conditions were false. Allows multiple..."
+    },
+    {
+      "term": "ellipsis",
+      "filename": "ellipsis.md",
+      "category": "builtin constant",
+      "type": "constant / literal",
+      "difficulty": "MEDIUM",
+      "summary": "`Ellipsis` (written as `...`) is a special singleton constant in Python used as a placeholder or to indicate \"more to come.\" It's primarily used in type hints, NumPy array slicing, and as a placeholde..."
+    },
+    {
+      "term": "else",
+      "filename": "else.md",
+      "category": "keyword",
+      "type": "conjunction",
+      "difficulty": "EASY",
+      "summary": "The `else` keyword in Python introduces an alternative code block that executes when a preceding `if` condition is false, when a loop (`for`/`while`) completes normally, or when a `try` block doesn't ..."
+    },
+    {
+      "term": "enumerate",
+      "filename": "enumerate.md",
+      "category": "builtin_function",
+      "type": "verb (iteration utility)",
+      "difficulty": "LOW",
+      "summary": "The `enumerate` function in Python adds a counter to an iterable, returning an enumerate object that yields pairs of (index, item). It's used to get both the position and value when looping, avoiding ..."
+    },
+    {
+      "term": "eval",
+      "filename": "eval.md",
+      "category": "builtin",
+      "type": "function",
+      "difficulty": "HIGH",
+      "summary": "`eval()` evaluates a Python expression string and returns the result, powerful but dangerous as it executes arbitrary code - use only with trusted input."
+    },
+    {
+      "term": "except",
+      "filename": "except.md",
+      "category": "keyword",
+      "type": "exception_handling (error catching)",
+      "difficulty": "EASY",
+      "summary": "The `except` keyword catches and handles exceptions raised in a `try` block. Specifies which exception types to catch and what code to execute when they occur. Allows programs to recover from errors g..."
+    },
+    {
+      "term": "exception",
+      "filename": "exception.md",
+      "category": "builtin exception class",
+      "type": "class / exception base",
+      "difficulty": "MEDIUM",
+      "summary": "`Exception` is the base class for all built-in exceptions in Python (except system-exiting exceptions). It's the parent class you inherit from when creating custom exceptions, and it's what you typica..."
+    },
+    {
+      "term": "exec",
+      "filename": "exec.md",
+      "category": "builtin",
+      "type": "function",
+      "difficulty": "HIGH",
+      "summary": "`exec()` executes Python statements from a string or code object, unlike `eval()` which only handles expressions, powerful but dangerous with untrusted input."
+    },
+    {
+      "term": "filter",
+      "filename": "filter.md",
+      "category": "builtin_function",
+      "type": "verb",
+      "difficulty": "LOW",
+      "summary": "The `filter()` function in Python creates an iterator that yields only the elements from an iterable that satisfy a given condition (predicate function). It's a functional programming tool for selecti..."
+    },
+    {
+      "term": "finally",
+      "filename": "finally.md",
+      "category": "keyword",
+      "type": "conjunction",
+      "difficulty": "MEDIUM",
+      "summary": "The `finally` keyword in Python defines a block of code that always executes after a try-except block, regardless of whether an exception occurred or was caught. It guarantees cleanup actions run even..."
+    },
+    {
+      "term": "float",
+      "filename": "float.md",
+      "category": "builtin_type",
+      "type": "noun (numeric type)",
+      "difficulty": "LOW",
+      "summary": "The `float` type in Python represents floating-point numbers (decimals). It stores approximate real numbers using IEEE 754 double-precision format, supporting decimal fractions and scientific notation..."
+    },
+    {
+      "term": "for",
+      "filename": "for.md",
+      "category": "keyword",
+      "type": "conjunction/preposition",
+      "difficulty": "EASY",
+      "summary": "The `for` keyword in Python creates a loop that iterates over a sequence (list, string, range, etc.), executing a code block once for each element. It's Python's primary mechanism for iteration, autom..."
+    },
+    {
+      "term": "format",
+      "filename": "format.md",
+      "category": "builtin_method",
+      "type": "verb",
+      "difficulty": "LOW",
+      "summary": "The `format()` method in Python creates formatted strings by inserting values into placeholders. It provides a powerful way to construct strings with dynamic content, replacing placeholders with actua..."
+    },
+    {
+      "term": "from",
+      "filename": "from.md",
+      "category": "keyword",
+      "type": "module_system (selective import)",
+      "difficulty": "EASY",
+      "summary": "The `from` keyword is used with `import` to specify selective importing from a module - bringing specific names into the current namespace without importing the entire module. Syntax: `from module imp..."
+    },
+    {
+      "term": "frozenset",
+      "filename": "frozenset.md",
+      "category": "builtin_type",
+      "type": "noun (compound)",
+      "difficulty": "MEDIUM",
+      "summary": "The `frozenset` type represents an immutable set - a collection of unique elements that cannot be modified after creation. Like `set` but frozen/unchangeable, making it hashable and usable as dictiona..."
+    },
+    {
+      "term": "getattr",
+      "filename": "getattr.md",
+      "category": "builtin_function",
+      "type": "compound_verb",
+      "difficulty": "LOW",
+      "summary": "The `getattr()` function in Python retrieves an attribute from an object by name (as a string). It's equivalent to `object.attribute` but allows dynamic attribute access when the attribute name is sto..."
+    },
+    {
+      "term": "global",
+      "filename": "global.md",
+      "category": "keyword",
+      "type": "adjective",
+      "difficulty": "MEDIUM",
+      "summary": "The `global` keyword in Python declares that a variable name refers to a variable in the global (module-level) scope, allowing functions to modify global variables rather than creating local ones. It ..."
+    },
+    {
+      "term": "globals",
+      "filename": "globals.md",
+      "category": "builtin_function",
+      "type": "noun",
+      "difficulty": "MEDIUM",
+      "summary": "The `globals()` function returns a dictionary of the current global symbol table (module-level variables). It provides access to all globally-scoped variables, useful for introspection, debugging, and..."
+    },
+    {
+      "term": "hasattr",
+      "filename": "hasattr.md",
+      "category": "builtin_function",
+      "type": "compound_verb",
+      "difficulty": "LOW",
+      "summary": "The `hasattr()` function in Python checks whether an object has a specified attribute (by name as a string). Returns `True` if the attribute exists, `False` otherwise. Essential for defensive programm..."
+    },
+    {
+      "term": "hash",
+      "filename": "hash.md",
+      "category": "builtin_function",
+      "type": "noun (computational function)",
+      "difficulty": "EASY",
+      "summary": "The `hash` function in Python returns the hash value of an object (if it has one). Hash values are integers used for fast dictionary lookups and set membership testing. Immutable objects can be hashed..."
+    },
+    {
+      "term": "help",
+      "filename": "help.md",
+      "category": "builtin_function",
+      "type": "noun/verb (documentation access)",
+      "difficulty": "LOW",
+      "summary": "The `help` function in Python displays documentation for objects, modules, functions, and classes. It's an interactive documentation system that shows docstrings and usage information, essential for l..."
+    },
+    {
+      "term": "hex",
+      "filename": "hex.md",
+      "category": "builtin",
+      "type": "noun",
+      "difficulty": "LOW",
+      "summary": "The `hex()` function converts an integer to a hexadecimal string prefixed with \"0x\". It returns the hexadecimal (base-16) representation of the number."
+    },
+    {
+      "term": "id",
+      "filename": "id.md",
+      "category": "builtin_function",
+      "type": "noun",
+      "difficulty": "MEDIUM",
+      "summary": "The `id` function returns the unique identity (memory address) of an object. Every object in Python has a unique identifier that remains constant for its lifetime, which Python uses internally to trac..."
+    },
+    {
+      "term": "if",
+      "filename": "if.md",
+      "category": "keyword",
+      "type": "conjunction",
+      "difficulty": "EASY",
+      "summary": "The `if` keyword in Python tests a condition and executes a block of code only when that condition evaluates to `True`. It is the fundamental building block for conditional logic, allowing programs to..."
+    },
+    {
+      "term": "import",
+      "filename": "import.md",
+      "category": "keyword",
+      "type": "module_system (import statement)",
+      "difficulty": "EASY",
+      "summary": "The `import` keyword loads external modules, packages, or specific objects into the current namespace, making their functionality available for use. It's Python's mechanism for code reuse and accessin..."
+    },
+    {
+      "term": "in",
+      "filename": "in.md",
+      "category": "keyword",
+      "type": "operator (membership test)",
+      "difficulty": "EASY",
+      "summary": "The `in` keyword is a membership test operator in Python that checks whether a value exists within a container (list, string, dict, set, etc.). It returns `True` if the value is found, `False` otherwi..."
+    },
+    {
+      "term": "indexerror",
+      "filename": "indexerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`IndexError` is a built-in exception raised when attempting to access a sequence (list, tuple, string) using an index that is out of range. It signals that the requested position doesn't exist in the ..."
+    },
+    {
+      "term": "input",
+      "filename": "input.md",
+      "category": "builtin_function",
+      "type": "verb/noun",
+      "difficulty": "EASY",
+      "summary": "The `input` function in Python reads a line of text from the user (standard input), waits for the user to press Enter, and returns the text as a string. It's the primary way to get interactive input f..."
+    },
+    {
+      "term": "int",
+      "filename": "int.md",
+      "category": "builtin_type",
+      "type": "noun (type constructor)",
+      "difficulty": "EASY",
+      "summary": "The `int` type in Python represents integer numbers (whole numbers without decimal points). It supports unlimited precision (arbitrary size) and serves both as a type name and a constructor function t..."
+    },
+    {
+      "term": "is",
+      "filename": "is.md",
+      "category": "keyword",
+      "type": "operator (identity test)",
+      "difficulty": "EASY",
+      "summary": "The `is` keyword is an identity test operator in Python that checks whether two variables refer to the same object in memory (same identity), not whether they have equal values. It returns `True` if b..."
+    },
+    {
+      "term": "isinstance",
+      "filename": "isinstance.md",
+      "category": "builtin",
+      "type": "function",
+      "difficulty": "HIGH",
+      "summary": "`isinstance()` checks if an object is an instance of a class or tuple of classes, returning True or False, the preferred way to check object types in Python."
+    },
+    {
+      "term": "issubclass",
+      "filename": "issubclass.md",
+      "category": "builtin",
+      "type": "function",
+      "difficulty": "HIGH",
+      "summary": "`issubclass()` checks if a class is a subclass of another class or tuple of classes, returning True or False, used for checking class inheritance relationships."
+    },
+    {
+      "term": "iter",
+      "filename": "iter.md",
+      "category": "builtin_function",
+      "type": "verb/noun",
+      "difficulty": "MEDIUM",
+      "summary": "The `iter` function creates an iterator object from an iterable (list, tuple, string, etc.) or calls a function repeatedly until a sentinel value is reached. It's the starting point for iteration - co..."
+    },
+    {
+      "term": "keyerror",
+      "filename": "keyerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`KeyError` is a built-in exception raised when attempting to access a dictionary key that doesn't exist. It's one of Python's most common exceptions, signaling that a lookup operation failed because t..."
+    },
+    {
+      "term": "lambda",
+      "filename": "lambda.md",
+      "category": "keyword",
+      "type": "noun (Greek letter, technical term)",
+      "difficulty": "MEDIUM",
+      "summary": "The `lambda` keyword in Python creates anonymous functions (functions without names) using a compact single-expression syntax. Lambda functions are often used for short, throwaway functions passed as ..."
+    },
+    {
+      "term": "len",
+      "filename": "len.md",
+      "category": "builtin_function",
+      "type": "noun/verb",
+      "difficulty": "EASY",
+      "summary": "The `len` function in Python returns the number of items in a container (list, string, dict, etc.). It's short for \"length\" and provides a consistent interface for measuring the size of sequences and ..."
+    },
+    {
+      "term": "list",
+      "filename": "list.md",
+      "category": "builtin_type",
+      "type": "noun (type constructor)",
+      "difficulty": "EASY",
+      "summary": "The `list` type in Python represents an ordered, mutable collection of items. Lists can contain any mix of types, support indexing and slicing, and can grow or shrink dynamically. They're one of Pytho..."
+    },
+    {
+      "term": "locals",
+      "filename": "locals.md",
+      "category": "builtin_function",
+      "type": "noun",
+      "difficulty": "MEDIUM",
+      "summary": "The `locals()` function returns a dictionary of the current local symbol table (local variables). It provides access to all variables defined in the current scope, useful for introspection and debuggi..."
+    },
+    {
+      "term": "map",
+      "filename": "map.md",
+      "category": "builtin_function",
+      "type": "verb",
+      "difficulty": "LOW",
+      "summary": "The `map()` function in Python applies a given function to each item in an iterable (list, tuple, etc.) and returns an iterator of the results. It's a functional programming tool for transforming sequ..."
+    },
+    {
+      "term": "match",
+      "filename": "match.md",
+      "category": "keyword",
+      "type": "control flow (structural pattern matching)",
+      "difficulty": "MEDIUM",
+      "summary": "The `match` keyword introduces structural pattern matching in Python 3.10+, similar to `switch` statements in other languages but more powerful. It compares a value against multiple patterns in `case`..."
+    },
+    {
+      "term": "max",
+      "filename": "max.md",
+      "category": "builtin_function",
+      "type": "noun (comparison/aggregation)",
+      "difficulty": "EASY",
+      "summary": "The `max` function in Python returns the largest item from an iterable or the largest of two or more arguments. Works with numbers, strings, or any objects that support comparison operators. Can accep..."
+    },
+    {
+      "term": "memoryview",
+      "filename": "memoryview.md",
+      "category": "builtin",
+      "type": "type constructor",
+      "difficulty": "HIGH",
+      "summary": "`memoryview()` creates a memory view object that exposes the buffer protocol, allowing direct access to an object's internal data without copying, enabling zero-copy operations on bytes-like objects."
+    },
+    {
+      "term": "min",
+      "filename": "min.md",
+      "category": "builtin_function",
+      "type": "noun (comparison/aggregation)",
+      "difficulty": "EASY",
+      "summary": "The `min` function in Python returns the smallest item from an iterable or the smallest of two or more arguments. Works with numbers, strings, or any objects that support comparison operators. Can acc..."
+    },
+    {
+      "term": "nameerror",
+      "filename": "nameerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`NameError` is a built-in exception raised when attempting to use a variable, function, or class name that hasn't been defined in the current scope. It signals that Python cannot find the name you're ..."
+    },
+    {
+      "term": "next",
+      "filename": "next.md",
+      "category": "builtin_function",
+      "type": "verb/adjective",
+      "difficulty": "MEDIUM",
+      "summary": "The `next` function retrieves the next item from an iterator. It calls the iterator's `__next__()` method and returns the next value in the sequence. When the iterator is exhausted, it raises `StopIte..."
+    },
+    {
+      "term": "nonlocal",
+      "filename": "nonlocal.md",
+      "category": "keyword",
+      "type": "adjective",
+      "difficulty": "HARD",
+      "summary": "The `nonlocal` keyword in Python declares that a variable name refers to a variable in the nearest enclosing scope (excluding global), allowing nested functions to modify variables from their parent f..."
+    },
+    {
+      "term": "not",
+      "filename": "not.md",
+      "category": "keyword",
+      "type": "operator (logical negation)",
+      "difficulty": "EASY",
+      "summary": "The `not` keyword is a unary logical operator in Python that negates boolean values. It returns `True` if the operand is falsy, and `False` if the operand is truthy. It's the primary way to express lo..."
+    },
+    {
+      "term": "notimplemented",
+      "filename": "notimplemented.md",
+      "category": "builtin constant",
+      "type": "constant / singleton",
+      "difficulty": "MEDIUM",
+      "summary": "`NotImplemented` is a special singleton constant returned by binary operator methods (like `__add__`, `__eq__`) to indicate that the operation is not supported for the given operand types. It triggers..."
+    },
+    {
+      "term": "object",
+      "filename": "object.md",
+      "category": "builtin_type",
+      "type": "noun",
+      "difficulty": "MEDIUM",
+      "summary": "`object` is the base class for all Python classes. Every class in Python inherits from `object` (implicitly or explicitly), making it the root of the entire class hierarchy. It provides fundamental me..."
+    },
+    {
+      "term": "oct",
+      "filename": "oct.md",
+      "category": "builtin_function",
+      "type": "noun/adjective",
+      "difficulty": "MEDIUM",
+      "summary": "The `oct` function converts an integer to an octal string representation prefixed with \"0o\". Octal (base-8) uses digits 0-7, historically used in Unix file permissions and some low-level programming c..."
+    },
+    {
+      "term": "open",
+      "filename": "open.md",
+      "category": "builtin",
+      "type": "verb",
+      "difficulty": "LOW",
+      "summary": "The `open()` function opens a file and returns a file object that allows you to read from or write to that file. It is the primary way to work with files in Python."
+    },
+    {
+      "term": "or",
+      "filename": "or.md",
+      "category": "keyword",
+      "type": "operator (logical disjunction)",
+      "difficulty": "EASY",
+      "summary": "The `or` keyword is a logical operator in Python that returns `True` if at least one operand is true. It uses short-circuit evaluation: if the first operand is true, it returns that value immediately ..."
+    },
+    {
+      "term": "ord",
+      "filename": "ord.md",
+      "category": "builtin_function",
+      "type": "noun (conversion function)",
+      "difficulty": "EASY",
+      "summary": "The `ord` function in Python converts a single character (string of length 1) to its Unicode code point (integer). It's the inverse of `chr()`. Takes a single-character string and returns an integer r..."
+    },
+    {
+      "term": "pass",
+      "filename": "pass.md",
+      "category": "keyword",
+      "type": "control_flow (null operation)",
+      "difficulty": "EASY",
+      "summary": "The `pass` keyword is a null operation statement that does nothing when executed. It serves as a syntactic placeholder where a statement is required by Python's grammar but no action is needed. Used i..."
+    },
+    {
+      "term": "pow",
+      "filename": "pow.md",
+      "category": "builtin_function",
+      "type": "noun (mathematical function)",
+      "difficulty": "EASY",
+      "summary": "The `pow` function in Python raises a number to a power (exponentiation). `pow(x, y)` returns x raised to the power y (x**y). Optionally accepts a third argument for modular exponentiation: `pow(x, y,..."
+    },
+    {
+      "term": "print",
+      "filename": "print.md",
+      "category": "builtin_function",
+      "type": "verb",
+      "difficulty": "EASY",
+      "summary": "The `print` function in Python outputs text, numbers, or other object representations to the console (standard output). It's the primary way to display information to users and debug programs, automat..."
+    },
+    {
+      "term": "property",
+      "filename": "property.md",
+      "category": "builtin",
+      "type": "decorator / descriptor",
+      "difficulty": "HIGH",
+      "summary": "`property()` creates a managed attribute using getter/setter/deleter methods, enabling computed properties and attribute access control through Python's descriptor protocol."
+    },
+    {
+      "term": "raise",
+      "filename": "raise.md",
+      "category": "keyword",
+      "type": "exception_handling (error throwing)",
+      "difficulty": "EASY",
+      "summary": "The `raise` keyword throws (raises) an exception, interrupting normal program flow. Can raise new exceptions, re-raise caught exceptions, or chain exceptions. Used to signal errors, validate inputs, o..."
+    },
+    {
+      "term": "range",
+      "filename": "range.md",
+      "category": "builtin_function",
+      "type": "noun (sequence generator)",
+      "difficulty": "LOW",
+      "summary": "The `range` function in Python generates a sequence of numbers, commonly used for looping a specific number of times. It returns an immutable sequence object that produces numbers on demand rather tha..."
+    },
+    {
+      "term": "repr",
+      "filename": "repr.md",
+      "category": "builtin_function",
+      "type": "noun/verb",
+      "difficulty": "MEDIUM",
+      "summary": "The `repr` function returns a string representation of an object that is ideally unambiguous and evaluable - meaning it should recreate the object when passed to `eval()`. Short for \"representation,\" ..."
+    },
+    {
+      "term": "return",
+      "filename": "return.md",
+      "category": "keyword",
+      "type": "verb",
+      "difficulty": "EASY",
+      "summary": "The `return` keyword in Python exits a function and optionally sends a value back to the caller. It marks the end of function execution and specifies what result (if any) the function produces. Functi..."
+    },
+    {
+      "term": "reversed",
+      "filename": "reversed.md",
+      "category": "builtin_function",
+      "type": "verb",
+      "difficulty": "LOW",
+      "summary": "The `reversed()` function in Python returns a reverse iterator that accesses elements of a sequence in reverse order. It doesn't modify the original sequence but provides a memory-efficient way to ite..."
+    },
+    {
+      "term": "round",
+      "filename": "round.md",
+      "category": "builtin_function",
+      "type": "verb/noun (mathematical function)",
+      "difficulty": "EASY",
+      "summary": "The `round` function in Python rounds a number to a specified number of decimal places. Without a second argument, rounds to the nearest integer. Uses \"round half to even\" (banker's rounding) to reduc..."
+    },
+    {
+      "term": "runtimeerror",
+      "filename": "runtimeerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`RuntimeError` is a built-in exception raised when an error is detected that doesn't fall into any other specific exception category. It serves as a generic runtime error for situations that don't fit..."
+    },
+    {
+      "term": "set",
+      "filename": "set.md",
+      "category": "builtin_type",
+      "type": "noun (unordered collection)",
+      "difficulty": "LOW",
+      "summary": "A `set` in Python is an unordered collection of unique items. Sets automatically remove duplicates and provide fast membership testing. They support mathematical set operations like union, intersectio..."
+    },
+    {
+      "term": "setattr",
+      "filename": "setattr.md",
+      "category": "builtin_function",
+      "type": "compound_verb",
+      "difficulty": "LOW",
+      "summary": "The `setattr()` function in Python sets an attribute on an object by name (as a string) to a specified value. It's equivalent to `object.attribute = value` but allows dynamic attribute assignment when..."
+    },
+    {
+      "term": "slice",
+      "filename": "slice.md",
+      "category": "builtin_type",
+      "type": "noun/verb",
+      "difficulty": "MEDIUM",
+      "summary": "The `slice` type creates slice objects that represent ranges for indexing sequences. While you usually use slice notation (`[start:stop:step]`), the `slice()` function creates explicit slice objects t..."
+    },
+    {
+      "term": "sorted",
+      "filename": "sorted.md",
+      "category": "builtin_function",
+      "type": "adjective/participle (ordering function)",
+      "difficulty": "LOW",
+      "summary": "The `sorted` function in Python returns a new sorted list from any iterable. Unlike the `.sort()` method that modifies lists in-place, `sorted()` creates a new list leaving the original unchanged, and..."
+    },
+    {
+      "term": "staticmethod",
+      "filename": "staticmethod.md",
+      "category": "builtin",
+      "type": "decorator",
+      "difficulty": "HIGH",
+      "summary": "`@staticmethod` decorator creates a method that doesn't receive an implicit first argument (neither `self` nor `cls`), functioning like a regular function but organized within a class namespace."
+    },
+    {
+      "term": "stopiteration",
+      "filename": "stopiteration.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`StopIteration` is a special exception raised by iterator objects to signal that there are no more items to iterate over. It's the mechanism Python uses internally to end loops when using iterators an..."
+    },
+    {
+      "term": "str",
+      "filename": "str.md",
+      "category": "builtin_type",
+      "type": "noun (type constructor)",
+      "difficulty": "EASY",
+      "summary": "The `str` type in Python represents text (strings of characters). It's an immutable sequence type supporting Unicode characters, and serves both as the type name and a constructor function to convert ..."
+    },
+    {
+      "term": "sum",
+      "filename": "sum.md",
+      "category": "builtin_function",
+      "type": "noun/verb (aggregation)",
+      "difficulty": "EASY",
+      "summary": "The `sum` function in Python adds all numeric elements in an iterable and returns the total. Optionally accepts a start value (default 0). Works with integers, floats, and any objects supporting the `..."
+    },
+    {
+      "term": "super",
+      "filename": "super.md",
+      "category": "builtin_function",
+      "type": "noun",
+      "difficulty": "MEDIUM",
+      "summary": "The `super()` function in Python returns a proxy object that delegates method calls to a parent or sibling class. Used primarily in inheritance to call parent class methods without hardcoding parent n..."
+    },
+    {
+      "term": "try",
+      "filename": "try.md",
+      "category": "keyword",
+      "type": "exception_handling (error handling)",
+      "difficulty": "EASY",
+      "summary": "The `try` keyword begins an exception handling block where risky code is executed. If an exception occurs in the `try` block, execution jumps to the appropriate `except` block. Used with `except`, `el..."
+    },
+    {
+      "term": "tuple",
+      "filename": "tuple.md",
+      "category": "builtin_type",
+      "type": "noun (immutable sequence)",
+      "difficulty": "LOW",
+      "summary": "A `tuple` in Python is an immutable, ordered sequence of items. Like a list but cannot be modified after creation. Tuples are created with parentheses `()` or just commas, and are commonly used for fi..."
+    },
+    {
+      "term": "type",
+      "filename": "type.md",
+      "category": "builtin_function",
+      "type": "noun (introspection function)",
+      "difficulty": "LOW",
+      "summary": "The `type` function in Python returns the type/class of an object. It's used for type checking and introspection, telling you what kind of object you're working with (int, str, list, etc.)."
+    },
+    {
+      "term": "typeerror",
+      "filename": "typeerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`TypeError` is raised when an operation or function is applied to an object of inappropriate type. It signals that the data type itself is wrong for the operation, not just the specific value—you're t..."
+    },
+    {
+      "term": "underscore",
+      "filename": "underscore.md",
+      "category": "keyword",
+      "type": "variable (wildcard pattern)",
+      "difficulty": "MEDIUM",
+      "summary": "The `_` (underscore) is a special identifier in Python used as a wildcard or throwaway variable. In pattern matching (Python 3.10+), it matches anything without binding to a value. It's also conventio..."
+    },
+    {
+      "term": "valueerror",
+      "filename": "valueerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`ValueError` is raised when a function receives an argument of the correct type but with an inappropriate value. It signals that while the data type is right, the specific value doesn't make sense for..."
+    },
+    {
+      "term": "vars",
+      "filename": "vars.md",
+      "category": "builtin_function",
+      "type": "noun (abbreviation)",
+      "difficulty": "MEDIUM",
+      "summary": "The `vars()` function returns the `__dict__` attribute of an object, module, class, or instance - a dictionary containing its attributes. With no arguments, returns `locals()` dictionary. Used for int..."
+    },
+    {
+      "term": "while",
+      "filename": "while.md",
+      "category": "keyword",
+      "type": "conjunction",
+      "difficulty": "EASY",
+      "summary": "The `while` keyword in Python creates a loop that repeatedly executes a code block as long as a condition remains `True`. It's condition-based iteration, continuing until the condition evaluates to `F..."
+    },
+    {
+      "term": "with",
+      "filename": "with.md",
+      "category": "keyword",
+      "type": "control_flow (context manager)",
+      "difficulty": "EASY",
+      "summary": "The `with` keyword creates a context manager block that automatically handles setup and cleanup operations (like opening/closing files). It ensures resources are properly released even if errors occur..."
+    },
+    {
+      "term": "yield",
+      "filename": "yield.md",
+      "category": "keyword",
+      "type": "verb",
+      "difficulty": "HARD",
+      "summary": "The `yield` keyword in Python creates generator functions that produce values lazily one at a time, pausing execution after each value and resuming when the next value is requested. Unlike `return` wh..."
+    },
+    {
+      "term": "zip",
+      "filename": "zip.md",
+      "category": "builtin_function",
+      "type": "verb (iteration utility)",
+      "difficulty": "LOW",
+      "summary": "The `zip` function in Python combines multiple iterables element-wise, creating an iterator of tuples where each tuple contains corresponding items from each input iterable. It \"zips\" sequences togeth..."
+    }
+  ]
+}
