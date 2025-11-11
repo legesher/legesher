@@ -116,6 +116,75 @@ python generate_language_pack.py \
 - `languages/python/3.14/zh.yml`
 - Updated `version-index.yml`
 
+### 5. `compare_translations.py`
+
+Compares translations from multiple sources (Claude, GPT-4o, Aya 23, community) and generates detailed comparison reports with metrics and recommendations.
+
+**Usage:**
+
+```bash
+# Compare Spanish translations using mock data
+uv run python scripts/compare_translations.py compare --language es --mock
+
+# Compare specific term
+uv run python scripts/compare_translations.py compare --language es --term def --mock
+
+# Compare multiple languages
+uv run python scripts/compare_translations.py compare -l es -l ar -l zh --mock
+
+# Generate markdown report
+uv run python scripts/compare_translations.py compare --language es --mock --output spanish_report.md
+
+# Generate JSON output
+uv run python scripts/compare_translations.py compare --language es --mock --format json --output results.json
+
+# Cross-language comparison report
+uv run python scripts/compare_translations.py compare -l es -l ar -l zh --mock --output cross_lang_report.md
+
+# List available languages
+uv run python scripts/compare_translations.py list-languages
+
+# List available terms for a language
+uv run python scripts/compare_translations.py list-terms --language es
+```
+
+**Features:**
+
+- **Agreement Metrics**: Calculate agreement scores across translation sources
+- **Conflict Detection**: Identify word type, form, length, and semantic conflicts
+- **Rich Console Output**: Beautiful tables with color-coded agreement levels
+- **Multiple Formats**: Generate markdown or JSON reports
+- **Cost Tracking**: Monitor API costs with configurable warnings and limits
+- **Mock Data Support**: Test with realistic mock translations without API costs
+- **Cross-Language Reports**: Compare translation quality across multiple languages
+
+**Options:**
+
+- `--language` / `-l`: Language(s) to compare (es, ar, zh). Can specify multiple.
+- `--term` / `-t`: Specific term to compare (optional)
+- `--mock`: Use mock test data instead of real translations
+- `--output` / `-o`: Output file path for report
+- `--format` / `-f`: Report format (markdown or json)
+- `--use-anthropic`: Use Anthropic API for semantic analysis (costs apply)
+- `--cost-warning`: Cost warning threshold in USD (default: $50)
+- `--cost-limit`: Cost limit threshold in USD (default: $100)
+
+**Output:**
+
+Single language markdown report includes:
+- Summary statistics (agreement distribution, review needed)
+- Source coverage
+- Conflict analysis
+- Top disagreements with detailed breakdowns
+- Terms requiring human review
+
+Cross-language report includes:
+- Executive summary
+- Language performance comparison
+- Translation source analysis
+- Top disagreements per language
+- Recommendations
+
 ## Complete Workflow
 
 ### Manual Process

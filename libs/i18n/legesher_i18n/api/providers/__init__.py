@@ -9,6 +9,10 @@ from .base import (
     AuthenticationError,
     UnsupportedLanguageError,
 )
+from .anthropic import AnthropicProvider
+from .deepl import DeepLProvider
+from .google import GoogleTranslateProvider
+from .libretranslate import LibreTranslateProvider
 
 __all__ = [
     "TranslationProvider",
@@ -18,4 +22,8 @@ __all__ = [
     "QuotaExceededError",
     "AuthenticationError",
     "UnsupportedLanguageError",
+    "AnthropicProvider",
+    "DeepLProvider",
+    "GoogleTranslateProvider",
+    "LibreTranslateProvider",
 ]

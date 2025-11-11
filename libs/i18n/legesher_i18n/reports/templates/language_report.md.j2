@@ -1,0 +1,137 @@
+# Translation Comparison Report: {{ language|upper }}
+
+**Generated**: {{ metrics.total_terms }} terms analyzed
+
+---
+
+## Summary Statistics
+
+| Metric | Count | Percentage |
+|--------|-------|------------|
+| **Total Terms** | {{ metrics.total_terms }} | 100% |
+| Perfect Agreement | {{ metrics.perfect_agreement }} | {{ agreement_distribution.perfect|decimal(1) }}% |
+| High Agreement (75%+) | {{ metrics.high_agreement }} | {{ agreement_distribution.high|decimal(1) }}% |
+| Medium Agreement (50-75%) | {{ metrics.medium_agreement }} | {{ agreement_distribution.medium|decimal(1) }}% |
+| Low Agreement (<50%) | {{ metrics.low_agreement }} | {{ agreement_distribution.low|decimal(1) }}% |
+| **Needs Review** | {{ metrics.needs_review }} | {{ metrics.get_review_percentage()|decimal(1) }}% |
+
+**Average Agreement Score**: {{ metrics.average_agreement|decimal(3) }}
+
+---
+
+## Source Coverage
+
+{% if metrics.sources_coverage %}
+| Source | Terms Covered |
+|--------|---------------|
+{% for source, count in metrics.sources_coverage.items() %}
+| {{ source }} | {{ count }} |
+{% endfor %}
+{% else %}
+No source coverage data available.
+{% endif %}
+
+---
+
+## Conflict Analysis
+
+{% if conflict_summary.total_with_conflicts > 0 %}
+| Conflict Type | Count |
+|---------------|-------|
+| Word Type Conflicts | {{ conflict_summary.word_type_conflicts }} |
+| Form Conflicts | {{ conflict_summary.form_conflicts }} |
+| Length Conflicts | {{ conflict_summary.length_conflicts }} |
+| Semantic Conflicts | {{ conflict_summary.semantic_conflicts }} |
+| **Total with Conflicts** | {{ conflict_summary.total_with_conflicts }} |
+{% else %}
+No conflicts detected across all terms.
+{% endif %}
+
+---
+
+## Top Disagreements
+
+{% if top_disagreements %}
+{% for result in top_disagreements %}
+### {{ loop.index }}. **{{ result.term }}** (Agreement: {{ result.agreement_score|percentage }})
+
+**Unique Translations**: {{ result.get_unique_translations()|length }}
+
+| Source | Translation | Word Type | Form | Confidence |
+|--------|-------------|-----------|------|------------|
+{% for source, trans in result.translations.items() %}
+| {{ source }} | {{ trans.translation }} | {{ trans.word_type or 'N/A' }} | {{ trans.form or 'N/A' }} | {{ trans.confidence|decimal }} |
+{% endfor %}
+
+**Analysis**:
+- Word types differ: {{ "Yes" if result.differences.word_type_differs else "No" }}
+- Forms differ: {{ "Yes" if result.differences.form_differs else "No" }}
+- Significant length variation: {{ "Yes" if result.differences.length_differs_significantly else "No" }}
+- Completely different words: {{ "Yes" if result.differences.completely_different_words else "No" }}
+
+**Recommendation**: {{ result.recommendation }}
+
+{% if result.translations.values()|selectattr('rationale')|list %}
+**Translation Rationales**:
+{% for trans in result.translations.values() %}
+{% if trans.rationale %}
+- **{{ trans.source }}**: {{ trans.rationale }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+---
+
+{% endfor %}
+{% else %}
+No significant disagreements found. All terms have high agreement.
+{% endif %}
+
+## Terms Needing Human Review
+
+{% if needs_review %}
+**Total**: {{ needs_review|length }} terms require human review
+
+{% for result in needs_review[:10] %}
+- **{{ result.term }}**: {{ result.get_unique_translations()|length }} different translations ({{ result.agreement_score|percentage }} agreement)
+{% endfor %}
+{% if needs_review|length > 10 %}
+
+... and {{ needs_review|length - 10 }} more terms.
+{% endif %}
+{% else %}
+No terms require human review. All translations meet quality thresholds.
+{% endif %}
+
+---
+
+## Recommendations
+
+{% if metrics.average_agreement >= 0.9 %}
+**Excellent translation consistency** across sources for {{ language|upper }}. The translation quality is high with minimal conflicts.
+{% elif metrics.average_agreement >= 0.75 %}
+**Good translation consistency** overall. Focus review efforts on the {{ needs_review|length }} terms with lower agreement.
+{% elif metrics.average_agreement >= 0.5 %}
+**Moderate translation consistency**. Recommend systematic review of low-agreement terms to establish standards.
+{% else %}
+**Low translation consistency** detected. Comprehensive review needed to establish translation guidelines and standards for {{ language|upper }}.
+{% endif %}
+
+### Priority Actions
+
+{% if metrics.word_type_conflicts > 0 %}
+1. **Word Type Alignment**: Review {{ metrics.word_type_conflicts }} terms with word type conflicts to establish grammatical standards.
+{% endif %}
+{% if metrics.form_conflicts > 0 %}
+2. **Form Standardization**: Resolve {{ metrics.form_conflicts }} terms with form conflicts (e.g., infinitive vs. conjugated).
+{% endif %}
+{% if metrics.semantic_conflicts > 0 %}
+3. **Semantic Review**: Analyze {{ metrics.semantic_conflicts }} terms with completely different translations for semantic equivalence.
+{% endif %}
+{% if needs_review|length > 0 %}
+4. **Manual Review Queue**: {{ needs_review|length }} terms flagged for human expert review.
+{% endif %}
+
+---
+
+*Report generated by Legesher Translation Comparison System*

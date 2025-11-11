@@ -1,0 +1,223 @@
+# Cross-Language Translation Comparison Report
+
+**Generated**: {{ cross_metrics.total_languages }} languages, {{ cross_metrics.total_terms }} total terms analyzed
+
+---
+
+## Executive Summary
+
+| Metric | Value |
+|--------|-------|
+| **Total Languages** | {{ cross_metrics.total_languages }} |
+| **Total Terms** | {{ cross_metrics.total_terms }} |
+| **Total Comparisons** | {{ cross_metrics.total_comparisons }} |
+| **Overall Average Agreement** | {{ cross_metrics.overall_average_agreement|decimal(3) }} ({{ (cross_metrics.overall_average_agreement * 100)|decimal(1) }}%) |
+
+{% if cross_metrics.best_language %}
+**Best Performing Language**: {{ cross_metrics.best_language|upper }} ({{ cross_metrics.languages_by_agreement[cross_metrics.best_language]|decimal(3) }} avg agreement)
+{% endif %}
+{% if cross_metrics.worst_language %}
+**Needs Most Attention**: {{ cross_metrics.worst_language|upper }} ({{ cross_metrics.languages_by_agreement[cross_metrics.worst_language]|decimal(3) }} avg agreement)
+{% endif %}
+
+---
+
+## Language Performance Comparison
+
+| Language | Terms | Avg Agreement | Perfect | High | Medium | Low | Needs Review |
+|----------|-------|---------------|---------|------|--------|-----|--------------|
+{% for lang, metrics in language_metrics.items() %}
+| **{{ lang|upper }}** | {{ metrics.total_terms }} | {{ metrics.average_agreement|decimal(3) }} | {{ metrics.perfect_agreement }} | {{ metrics.high_agreement }} | {{ metrics.medium_agreement }} | {{ metrics.low_agreement }} | {{ metrics.needs_review }} |
+{% endfor %}
+
+---
+
+## Translation Source Analysis
+
+{% if source_metrics %}
+### Source Performance Overview
+
+| Source | Total | Avg Confidence | Languages | Community Agreement | Peer Agreement | Unique |
+|--------|-------|----------------|-----------|---------------------|----------------|--------|
+{% for source, metrics in source_metrics.items() %}
+| **{{ source }}** | {{ metrics.total_translations }} | {{ metrics.average_confidence|decimal(3) }} | {{ metrics.languages_covered|length }} | {{ metrics.agreement_with_community }} | {{ metrics.agreement_with_others }} | {{ metrics.unique_translations }} |
+{% endfor %}
+
+{% if cross_metrics.most_consistent_source %}
+**Most Consistent Source**: {{ cross_metrics.most_consistent_source }}
+{% endif %}
+{% if cross_metrics.least_consistent_source %}
+**Least Consistent Source**: {{ cross_metrics.least_consistent_source }}
+{% endif %}
+
+### Source Insights
+
+{% for source, metrics in source_metrics.items() %}
+#### {{ source|upper }}
+
+- **Coverage**: {{ metrics.languages_covered|length }} languages ({{ metrics.languages_covered|join(', ')|upper }})
+- **Total Translations**: {{ metrics.total_translations }}
+- **Average Confidence**: {{ metrics.average_confidence|decimal(3) }}
+- **Community Agreement**: {{ metrics.agreement_with_community }} terms
+- **Peer Agreement**: {{ metrics.agreement_with_others }} terms
+- **Unique Translations**: {{ metrics.unique_translations }} (translations not shared by other sources)
+
+{% if metrics.word_type_distribution %}
+**Word Type Distribution**:
+{% for word_type, count in metrics.word_type_distribution.items() %}
+- {{ word_type }}: {{ count }}
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+{% endif %}
+
+---
+
+## Top Disagreements by Language
+
+{% for lang, disagreements in top_disagreements_by_language.items() %}
+### {{ lang|upper }}
+
+{% if disagreements %}
+| Term | Agreement | Unique Translations | Recommendation |
+|------|-----------|---------------------|----------------|
+{% for result in disagreements %}
+| {{ result.term }} | {{ result.agreement_score|percentage }} | {{ result.get_unique_translations()|length }} | {{ result.recommendation[:60] }}... |
+{% endfor %}
+{% else %}
+No significant disagreements found for {{ lang|upper }}.
+{% endif %}
+
+{% endfor %}
+
+---
+
+## Detailed Language Analysis
+
+{% for lang, metrics in language_metrics.items() %}
+### {{ lang|upper }}
+
+**Summary**:
+- **Total Terms**: {{ metrics.total_terms }}
+- **Average Agreement**: {{ metrics.average_agreement|decimal(3) }}
+- **Review Needed**: {{ metrics.needs_review }} terms ({{ metrics.get_review_percentage()|decimal(1) }}%)
+
+**Agreement Distribution**:
+{% set dist = metrics.get_agreement_distribution() %}
+- Perfect (100%): {{ metrics.perfect_agreement }} terms ({{ dist.perfect|decimal(1) }}%)
+- High (75-99%): {{ metrics.high_agreement }} terms ({{ dist.high|decimal(1) }}%)
+- Medium (50-74%): {{ metrics.medium_agreement }} terms ({{ dist.medium|decimal(1) }}%)
+- Low (<50%): {{ metrics.low_agreement }} terms ({{ dist.low|decimal(1) }}%)
+
+**Conflict Analysis**:
+- Word Type Conflicts: {{ metrics.word_type_conflicts }}
+- Form Conflicts: {{ metrics.form_conflicts }}
+- Length Conflicts: {{ metrics.length_conflicts }}
+- Semantic Conflicts: {{ metrics.semantic_conflicts }}
+
+{% endfor %}
+
+---
+
+## Cross-Language Insights
+
+### Agreement Score Distribution
+
+{% set sorted_langs = cross_metrics.languages_by_agreement.items()|sort(attribute='1', reverse=True) %}
+```
+{% for lang, score in sorted_langs %}
+{{ lang|upper }}: {{ "█" * (score * 50)|int }}{{ "░" * (50 - (score * 50)|int) }} {{ score|decimal(3) }}
+{% endfor %}
+```
+
+### Recommendations by Language
+
+{% for lang, metrics in language_metrics.items() %}
+#### {{ lang|upper }}
+
+{% if metrics.average_agreement >= 0.9 %}
+✅ **Excellent**: High-quality translations with minimal conflicts. Ready for production use.
+{% elif metrics.average_agreement >= 0.75 %}
+⚠️ **Good**: Generally solid translations. Review {{ metrics.needs_review }} flagged terms.
+{% elif metrics.average_agreement >= 0.5 %}
+⚠️ **Moderate**: Requires systematic review to improve consistency.
+{% else %}
+❌ **Needs Work**: Comprehensive review required. Consider establishing translation guidelines.
+{% endif %}
+
+**Priority Actions**:
+{% if metrics.word_type_conflicts > 0 %}
+- Resolve {{ metrics.word_type_conflicts }} word type conflicts
+{% endif %}
+{% if metrics.form_conflicts > 0 %}
+- Standardize {{ metrics.form_conflicts }} grammatical form conflicts
+{% endif %}
+{% if metrics.semantic_conflicts > 0 %}
+- Review {{ metrics.semantic_conflicts }} terms with semantic differences
+{% endif %}
+{% if metrics.needs_review > 0 %}
+- Human review for {{ metrics.needs_review }} low-agreement terms
+{% endif %}
+
+{% endfor %}
+
+---
+
+## Overall Recommendations
+
+{% if cross_metrics.overall_average_agreement >= 0.9 %}
+### ✅ Excellent Translation Quality
+
+The translation ecosystem shows strong consistency across all languages and sources. Minor refinements may be needed for specific terms, but overall quality is production-ready.
+
+**Next Steps**:
+1. Address the {{ language_metrics.values()|sum(attribute='needs_review') }} terms flagged for review
+2. Document established translation patterns as guidelines
+3. Set up monitoring for new translations to maintain quality
+{% elif cross_metrics.overall_average_agreement >= 0.75 %}
+### ⚠️ Good Foundation, Refinement Needed
+
+Translation quality is generally good but shows areas for improvement. Focus on standardizing translations for problematic terms.
+
+**Next Steps**:
+1. Systematic review of {{ language_metrics.values()|sum(attribute='needs_review') }} flagged terms
+2. Establish translation guidelines for each language
+3. Create glossaries for commonly-used programming terms
+4. Align word type and form conventions across sources
+{% elif cross_metrics.overall_average_agreement >= 0.5 %}
+### ⚠️ Moderate Quality - Systematic Review Required
+
+Significant inconsistencies detected across languages. Recommend comprehensive review process.
+
+**Next Steps**:
+1. Establish translation review committee with native speakers
+2. Create comprehensive translation guidelines for each language
+3. Review all terms with <75% agreement
+4. Set up validation workflows for new translations
+5. Document rationale for translation choices
+{% else %}
+### ❌ Quality Improvement Critical
+
+Low agreement scores indicate fundamental issues with translation consistency. Immediate action required.
+
+**Next Steps**:
+1. Halt use of current translations until reviewed
+2. Assemble expert review team for each language
+3. Establish clear translation principles and guidelines
+4. Conduct comprehensive review of all terms
+5. Implement validation and review processes
+6. Consider additional translation sources or validation
+{% endif %}
+
+### Cross-Source Coordination
+
+{% if cross_metrics.most_consistent_source and cross_metrics.least_consistent_source %}
+- Leverage **{{ cross_metrics.most_consistent_source }}** as baseline for quality standards
+- Review **{{ cross_metrics.least_consistent_source }}** translations against other sources
+- Establish consensus-building process for disagreements
+{% endif %}
+
+---
+
+*Report generated by Legesher Translation Comparison System*
