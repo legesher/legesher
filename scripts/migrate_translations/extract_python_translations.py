@@ -46,7 +46,14 @@ def get_translation_branches() -> list[str]:
     branches = []
     for line in result.stdout.split("\n"):
         line = line.strip()
-        if "translation" in line.lower() and "origin/" in line and "HEAD" not in line:
+        # Filter out Crowdin branches (l10n_*) and i18n-dialect-translation
+        if (
+            "translation" in line.lower()
+            and "origin/" in line
+            and "HEAD" not in line
+            and "l10n_" not in line
+            and "i18n-dialect" not in line
+        ):
             branch = line.replace("origin/", "")
             branches.append(branch)
 
