@@ -82,7 +82,7 @@ Provides detailed analysis of pack completeness with version-index integration:
 ```python
 from pathlib import Path
 
-version_index_path = Path("libs/i18n/languages/python/version-index.yml")
+version_index_path = Path("libs/i18n/programming_languages/python/version-index.yml")
 result = SchemaValidator.check_completeness_enhanced(
     pack_schema,
     version_index_path=version_index_path
@@ -261,7 +261,7 @@ from legesher_i18n.schema_validator import SchemaValidator, LanguagePackSchema
 import yaml
 
 # Load language pack
-pack_path = Path("libs/i18n/languages/python/3.13/es.yml")
+pack_path = Path("libs/i18n/programming_languages/python/3.13/es.yml")
 with open(pack_path) as f:
     pack_data = yaml.safe_load(f)
 
@@ -283,7 +283,7 @@ else:
 
 # 2. Completeness
 print("\n2. Completeness Analysis")
-version_index = Path("libs/i18n/languages/python/version-index.yml")
+version_index = Path("libs/i18n/programming_languages/python/version-index.yml")
 comp_result = SchemaValidator.check_completeness_enhanced(
     pack_schema, version_index
 )
@@ -316,16 +316,16 @@ This validation system is designed to be consumed by **CORE-385: Validation CLI 
 
 ```bash
 # Validate a single pack
-legesher-i18n validate languages/python/3.13/es.yml
+legesher-i18n validate programming_languages/python/3.13/es.yml
 
 # Validate all packs for a language
-legesher-i18n validate languages/python/*/es.yml
+legesher-i18n validate programming_languages/python/*/es.yml
 
 # Strict validation (fail on warnings)
-legesher-i18n validate languages/python/3.13/es.yml --strict
+legesher-i18n validate programming_languages/python/3.13/es.yml --strict
 
 # Output as JSON
-legesher-i18n validate languages/python/3.13/es.yml --json
+legesher-i18n validate programming_languages/python/3.13/es.yml --json
 ```
 
 ## References

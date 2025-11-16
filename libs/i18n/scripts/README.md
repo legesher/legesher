@@ -43,7 +43,7 @@ python monitor_python.py
 python monitor_python.py --verbose
 
 # Specify version-index.yml location
-python monitor_python.py --version-index ../languages/python/version-index.yml
+python monitor_python.py --version-index ../programming_languages/python/version-index.yml
 ```
 
 **Output:** Prints new version (e.g., "3.14") or empty string if none found
@@ -110,10 +110,10 @@ python generate_language_pack.py \
 
 **Output:**
 
-- `languages/python/3.14/en.yml`
-- `languages/python/3.14/es.yml`
-- `languages/python/3.14/ar.yml`
-- `languages/python/3.14/zh.yml`
+- `programming_languages/python/3.14/en.yml`
+- `programming_languages/python/3.14/es.yml`
+- `programming_languages/python/3.14/ar.yml`
+- `programming_languages/python/3.14/zh.yml`
 - Updated `version-index.yml`
 
 ### 5. `compare_translations.py`
@@ -172,6 +172,7 @@ uv run python scripts/compare_translations.py list-terms --language es
 **Output:**
 
 Single language markdown report includes:
+
 - Summary statistics (agreement distribution, review needed)
 - Source coverage
 - Conflict analysis
@@ -179,6 +180,7 @@ Single language markdown report includes:
 - Terms requiring human review
 
 Cross-language report includes:
+
 - Executive summary
 - Language performance comparison
 - Translation source analysis
@@ -381,10 +383,10 @@ echo $DEEPL_API_KEY
 
 ```bash
 # Verify version-index.yml exists
-ls languages/python/version-index.yml
+ls programming_languages/python/version-index.yml
 
 # Check parent version
-cat languages/python/version-index.yml
+cat programming_languages/python/version-index.yml
 ```
 
 ## Reference

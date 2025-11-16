@@ -8,7 +8,7 @@ from legesher_i18n.exceptions import PackNotFoundError
 
 
 # Real language packs directory
-LANG_PACKS_DIR = Path(__file__).parent.parent / "languages"
+LANG_PACKS_DIR = Path(__file__).parent.parent / "programming_languages"
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 

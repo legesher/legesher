@@ -100,11 +100,11 @@ class LanguagePackLoader:
 
         Args:
             pack_root: Root directory for language packs
-                      (defaults to libs/i18n/languages/)
+                      (defaults to libs/i18n/programming_languages/)
         """
         if pack_root is None:
-            # Default to package's languages directory
-            pack_root = Path(__file__).parent.parent / "languages"
+            # Default to package's programming_languages directory
+            pack_root = Path(__file__).parent.parent / "programming_languages"
 
         self.pack_root = pack_root
 
@@ -181,10 +181,10 @@ class LanguagePackLoader:
             Path to pack file
         """
         if version:
-            # Version-specific pack: languages/python/3.10/es.yml
+            # Version-specific pack: programming_languages/python/3.10/es.yml
             return self.pack_root / target / version / f"{language}.yml"
         else:
-            # Default pack: languages/python/es.yml
+            # Default pack: programming_languages/python/es.yml
             return self.pack_root / target / f"{language}.yml"
 
     def _resolve_inheritance(

@@ -4,6 +4,10 @@ This module provides documentation for Python keywords with translations
 for hover tooltips in the Language Server.
 """
 
+# TODO: Consider validating keys against legesher_i18n.scripts.translate.term_classifier
+#       to ensure all Python keywords are documented and no deprecated keywords remain.
+#       Currently missing Python 3.11+ (except*) and 3.12+ (type) keywords.
+
 # Python keyword documentation (English, Spanish, Arabic)
 PYTHON_KEYWORD_DOCS = {
     "def": {

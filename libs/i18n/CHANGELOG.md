@@ -7,6 +7,36 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 <!--next-version-placeholder-->
 
+## [Unreleased]
+
+### Changed
+
+- **Directory Restructure for Multi-Language Support** (PR #49, CORE-460)
+  - Renamed `libs/i18n/languages/` to `libs/i18n/programming_languages/` to prepare for TypeScript and other language support
+  - Updated all Python files and documentation to use new path structure
+  - Added centralized `language_registry.py` for human language metadata (English, Spanish, etc.)
+  - Added TODO comments for future centralization of Python term lists
+
+### Added
+
+- **Comprehensive Directory Structure Tests** (PR #49)
+  - New test file `tests/test_directory_structure.py` with 12 tests
+  - Validates directory existence, path configuration, and inheritance
+  - Tests PackLoader default path, YAML exporter, and CLI validation
+  - Ensures backward compatibility (old `languages/` path not used)
+
+### Fixed
+
+- **Spanish Language Pack YAML Boolean Parsing** (PR #49)
+  - Fixed `not: no` being parsed as boolean `False` instead of string `"no"`
+  - Used YAML `!!str` type tag to force string type: `not: !!str no`
+  - Fix survives pre-commit pretty-format-yaml hook
+
+- **Python 3.14 Language Pack Support** (PR #49)
+  - Added Python 3.14 language packs for all 5 languages (en, ar, es, zh, fr)
+  - Updated compatibility metadata in 3.10-3.13 packs to include 3.14
+  - Fixed English language pack: expanded builtins, added `except*` keyword (3.11), corrected metadata
+
 ## [0.1.0] - 2025-11-07
 
 ### Added
@@ -162,7 +192,7 @@ open htmlcov/index.html
 cd libs/i18n
 
 # Validate a language pack
-uv run legesher-i18n validate languages/python/3.13/es.yml
+uv run legesher-i18n validate programming_languages/python/3.13/es.yml
 
 # Generate compatibility matrix
 uv run legesher-i18n matrix --output docs/compatibility/
