@@ -70,7 +70,7 @@ if not result['passed']:
 
 **Example Output:**
 
-```
+```text
 Found 1 conflicts:
   'definir' maps to: ['class', 'def']
 ```
@@ -96,7 +96,7 @@ print(f"Recommendations: {len(result['recommendations'])}")
 
 **Example Output:**
 
-```
+```text
 Completeness: 92%
 Metadata Score: 71%
 Missing Keywords: 3
@@ -126,7 +126,7 @@ if result['issues']:
 
 **Example Output:**
 
-```
+```text
 Conformance Level: extended
 Passed: True
 Spec Version: 1.0

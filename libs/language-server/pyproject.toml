@@ -24,7 +24,11 @@ dependencies = [
     "pydantic>=2.5.0",
     "lru-dict>=1.3.0",
     "pyyaml>=6.0.0",  # For loading language pack YAML files
+    "legesher-i18n",  # Language pack loading (CORE-450)
 ]
+
+[tool.uv.sources]
+legesher-i18n = { path = "../i18n", editable = true }
 
 [project.optional-dependencies]
 dev = [

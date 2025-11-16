@@ -39,6 +39,18 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "semanticTokenScopes": [
+      {
+        "language": "python",
+        "scopes": {
+          "keyword": ["keyword.control.python", "storage.type.function.python"],
+          "class": ["entity.name.type.class.python", "support.type.python"],
+          "function": ["entity.name.function.python", "support.function.builtin.python"],
+          "variable": ["variable.other.python"],
+          "parameter": ["variable.parameter.python"]
+        }
+      }
+    ],
     "configuration": {
       "title": "Legesher",
       "properties": {
