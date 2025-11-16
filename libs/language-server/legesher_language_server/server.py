@@ -15,6 +15,7 @@ from lsprotocol.types import (
     TEXT_DOCUMENT_DID_CLOSE,
     TEXT_DOCUMENT_DID_OPEN,
     TEXT_DOCUMENT_HOVER,
+    TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
     CompletionList,
     CompletionParams,
     Diagnostic,
@@ -29,14 +30,22 @@ from lsprotocol.types import (
     InitializedParams,
     InitializeParams,
     InitializeResult,
+    SemanticTokens,
+    SemanticTokensLegend,
+    SemanticTokensParams,
     ServerCapabilities,
     TextDocumentSyncKind,
 )
-from pygls.lsp.server import LanguageServer
+from pygls.server import LanguageServer
 
 from .config import LanguageServerConfig
 from .document import DocumentManager
-from .providers import provide_completion, provide_diagnostics, provide_hover
+from .providers import (
+    provide_completion,
+    provide_diagnostics,
+    provide_hover,
+    provide_semantic_tokens,
+)
 from .pylance_proxy import PylanceProxy
 
 logger = logging.getLogger(__name__)
@@ -105,6 +114,7 @@ class LegesherLanguageServer(LanguageServer):
     - Hover tooltips (CORE-357)
     - Code completion (CORE-358)
     - Diagnostics (CORE-359)
+    - Semantic token highlighting (CORE-450)
     """
 
     def __init__(self, config: LanguageServerConfig):
@@ -120,6 +130,22 @@ class LegesherLanguageServer(LanguageServer):
         logger.info(
             f"Initializing Legesher Language Server "
             f"(source: {config.source_language}, target: {config.target_language})"
+        )
+
+        # Semantic tokens legend (CORE-450)
+        # These token types match the indices in semantic_tokens.py
+        self.semantic_tokens_legend = SemanticTokensLegend(
+            token_types=[
+                "keyword",  # 0: Python keywords
+                "class",  # 1: Class names (future)
+                "function",  # 2: Function names (future)
+                "variable",  # 3: Variables (future)
+                "parameter",  # 4: Parameters (future)
+            ],
+            token_modifiers=[
+                # No modifiers in Phase 1 (CORE-450)
+                # Future: "declaration", "readonly", "async", etc.
+            ],
         )
 
         # Note: Translation engine will be loaded on-demand in CORE-357
@@ -170,6 +196,11 @@ class LegesherLanguageServer(LanguageServer):
         async def diagnostic_wrapper(params: DocumentDiagnosticParams) -> DocumentDiagnosticReport:
             return await self.on_diagnostic(params)
 
+        async def semantic_tokens_full_wrapper(
+            params: SemanticTokensParams,
+        ) -> SemanticTokens | None:
+            return await self.on_semantic_tokens_full(params)
+
         # Register the wrappers
         self.feature(INITIALIZE)(initialize_wrapper)
         self.feature(INITIALIZED)(initialized_wrapper)
@@ -180,6 +211,7 @@ class LegesherLanguageServer(LanguageServer):
         self.feature(TEXT_DOCUMENT_HOVER)(hover_wrapper)
         self.feature(TEXT_DOCUMENT_COMPLETION)(completion_wrapper)
         self.feature(TEXT_DOCUMENT_DIAGNOSTIC)(diagnostic_wrapper)
+        self.feature(TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL)(semantic_tokens_full_wrapper)
 
     async def on_initialize(self, params: InitializeParams) -> InitializeResult:
         """Handle initialize request from client.
@@ -230,6 +262,12 @@ class LegesherLanguageServer(LanguageServer):
                 diagnostic_provider={
                     "inter_file_dependencies": False,
                     "workspace_diagnostics": False,
+                },
+                semantic_tokens_provider={
+                    "legend": self.semantic_tokens_legend,
+                    "full": True,
+                    # Phase 1 (CORE-450): Only full document tokens
+                    # Future phases: "range": True, "delta": True
                 },
             ),
             server_info={
@@ -405,6 +443,20 @@ class LegesherLanguageServer(LanguageServer):
             kind="full",
             items=all_diagnostics,
         )
+
+    async def on_semantic_tokens_full(self, params: SemanticTokensParams) -> SemanticTokens | None:
+        """Provide semantic tokens for entire document.
+
+        Args:
+            params: Semantic tokens request parameters
+
+        Returns:
+            Semantic tokens for syntax highlighting
+
+        Note:
+            Implementation in CORE-450 - Phase 1: Basic keyword highlighting
+        """
+        return provide_semantic_tokens(self, params.text_document.uri)
 
 
 def create_server(config: LanguageServerConfig | None = None) -> LegesherLanguageServer:

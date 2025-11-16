@@ -63,8 +63,16 @@ export function createLanguageClient(
 
         // Middleware to customize LSP behavior (can be extended later)
         middleware: {
-            // We can add custom middleware here in future iterations
-            // For example, to customize how hover information is displayed
+            // Semantic tokens middleware (CORE-450)
+            // Automatically enabled when server advertises semantic tokens capability
+            provideDocumentSemanticTokens: async (document, token, next) => {
+                Logger.debug(`Semantic tokens requested for: ${document.uri.toString()}`);
+                const result = await next(document, token);
+                if (result) {
+                    Logger.debug(`Semantic tokens received: ${result.data.length} integers`);
+                }
+                return result;
+            },
         },
 
         // Initialization options passed to the server

@@ -118,7 +118,8 @@ python generate_language_pack.py \
 
 ### 5. `compare_translations.py`
 
-Compares translations from multiple sources (Claude, GPT-4o, Aya 23, community) and generates detailed comparison reports with metrics and recommendations.
+Compares translations from multiple sources (Claude, GPT-4o, Aya 23, community) and generates detailed comparison
+reports with metrics and recommendations.
 
 **Usage:**
 

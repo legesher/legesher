@@ -107,6 +107,34 @@ class HoverProvider:
         self.document_uri = document_uri
         self.keyword_docs = KeywordDocumentation()
 
+        # Load keyword translation map for target language
+        self._keyword_translation_map = self._load_keyword_translations()
+
+    def _load_keyword_translations(self) -> dict[str, str]:
+        """Load keyword translation map (Spanish -> English).
+
+        Returns:
+            Dictionary mapping translated keywords to English keywords
+            Example: {"definir": "def", "retornar": "return", ...}
+        """
+        from legesher_i18n import LanguagePackLoader
+
+        keyword_map = {}
+
+        try:
+            loader = LanguagePackLoader()
+            pack = loader.load(language=self.target_lang, target="python", version="3.10")
+
+            # Build reverse map: Spanish -> English
+            for english, translated in pack.keywords.items():
+                keyword_map[translated] = english
+
+        except Exception:
+            # If loading fails, return empty dict (will fall back to English-only keywords)
+            pass
+
+        return keyword_map
+
     async def get_hover_content(self, word: str, position: Position) -> str | None:
         """Get hover content for word at position.
 
@@ -117,9 +145,15 @@ class HoverProvider:
         Returns:
             Markdown-formatted hover content or None
         """
-        # Check if keyword
+        # Check if English keyword
         if self.keyword_docs.has_keyword(word):
             return self._hover_keyword(word)
+
+        # Check if translated keyword (e.g., Spanish "definir")
+        english_keyword = self._keyword_translation_map.get(word)
+        if english_keyword:
+            # Show documentation for the English equivalent
+            return self._hover_keyword(english_keyword, original_keyword=word)
 
         # Check if builtin
         if self._is_builtin(word):
@@ -137,11 +171,12 @@ class HoverProvider:
 
         return None
 
-    def _hover_keyword(self, keyword: str) -> str:
+    def _hover_keyword(self, keyword: str, original_keyword: str | None = None) -> str:
         """Get hover content for Python keyword.
 
         Args:
             keyword: Python keyword (e.g., 'def', 'class')
+            original_keyword: Original translated keyword if different (e.g., 'definir')
 
         Returns:
             Markdown-formatted keyword documentation
@@ -153,8 +188,11 @@ class HoverProvider:
             # Fallback to English if translation not available
             doc = self.keyword_docs.get(keyword, "en") or "Python keyword"
 
+        # Use original keyword in display if provided (e.g., show "definir" not "def")
+        display_keyword = original_keyword if original_keyword else keyword
+
         # Format as markdown
-        return f"**`{keyword}`** — Python keyword\n\n{doc}"
+        return f"**`{display_keyword}`** — Python keyword\n\n{doc}"
 
     def _is_builtin(self, name: str) -> bool:
         """Check if name is a Python builtin.
@@ -336,12 +374,18 @@ def _extract_word_at_position(text: str, position: Position) -> str | None:
         return None
 
     # Find word boundaries using regex
-    # Python identifier: starts with letter or underscore, followed by alphanumeric/underscore
-    word_pattern = r"\b[A-Za-z_][A-Za-z0-9_]*\b"
+    # Support Unicode identifiers for all languages (Spanish, Arabic, Chinese, etc.)
+    # Python identifiers can contain: letters (any Unicode), digits, underscore
+    # But must start with a letter or underscore (not a digit)
+    # Use negative lookahead/lookbehind to avoid matching parts of larger identifiers
+    word_pattern = r"(?<![a-zA-Z0-9_\u0080-\uFFFF])[\w\u0080-\uFFFF]+(?![a-zA-Z0-9_\u0080-\uFFFF])"
 
-    for match in re.finditer(word_pattern, line):
+    for match in re.finditer(word_pattern, line, re.UNICODE):
         start, end = match.span()
         if start <= position.character < end:
-            return match.group()
+            word = match.group()
+            # Ensure it starts with a letter or underscore (not a digit)
+            if word and (word[0].isalpha() or word[0] == "_"):
+                return word
 
     return None
