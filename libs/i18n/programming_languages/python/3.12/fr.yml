@@ -1,10 +1,10 @@
-# English Language Pack for Python 3.12
-# Extends 3.11 pack - adds 'type' keyword (PEP 695: Type Parameter Syntax)
+# French Language Pack for Python 3.12+
+# Extends 3.11 pack and adds 'type' keyword for type parameters
 
-language: en
+language: fr
 target: python
 version: '3.12'
-extends: ../3.11/en.yml
+extends: ../3.11/fr.yml
 
 keywords:
   # Python 3.12+ specific (PEP 695: Type Parameter Syntax)
@@ -16,7 +16,7 @@ metadata:
   compatibility_tested:
   - '3.12'
   - '3.13'
-  last_updated: '2025-11-03'
-  community_reviewed: true
-  author: Legesher Team
+  last_updated: '2025-11-15'
+  community_reviewed: false
+  author: Legesher Team (Aya AI Model)
   license: MIT

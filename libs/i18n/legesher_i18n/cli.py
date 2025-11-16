@@ -37,9 +37,9 @@ def validate(pack_file: Path, strict: bool):
 
     Examples:
 
-        legesher-i18n validate languages/python/3.13/es.yml
+        legesher-i18n validate programming_languages/python/3.13/es.yml
 
-        legesher-i18n validate languages/python/3.13/es.yml --strict
+        legesher-i18n validate programming_languages/python/3.13/es.yml --strict
     """
     try:
         # Load pack data from YAML
@@ -66,12 +66,12 @@ def validate(pack_file: Path, strict: bool):
         console.print("\n[cyan]Loading pack with inheritance...[/cyan]")
 
         # Determine pack root from file path
-        # Navigate up to find the 'languages' directory
+        # Navigate up to find the 'programming_languages' directory
         current = pack_file.parent
         pack_root = None
         while current.parent != current:
-            if current.name == "languages":
-                pack_root = current  # The languages directory itself
+            if current.name == "programming_languages":
+                pack_root = current  # The programming_languages directory itself
                 break
             current = current.parent
 
@@ -165,14 +165,14 @@ def show(language: str, target: str):
         legesher-i18n show ar --target python
     """
     try:
-        # Find the languages directory
-        # Start from package location and look for languages dir
+        # Find the programming_languages directory
+        # Start from package location and look for programming_languages dir
         package_dir = Path(__file__).parent.parent
-        languages_dir = package_dir / "languages"
+        languages_dir = package_dir / "programming_languages"
 
         if not languages_dir.exists():
             console.print(
-                f"❌ [red]Error:[/red] Languages directory not found at {languages_dir}"
+                f"❌ [red]Error:[/red] Programming languages directory not found at {languages_dir}"
             )
             sys.exit(1)
 

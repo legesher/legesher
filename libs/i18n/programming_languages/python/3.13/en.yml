@@ -1,20 +1,20 @@
-# English Language Pack for Python 3.13
-# Extends 3.12 pack (no new keywords in 3.13)
+# English Language Pack for Python 3.13+
+# Extends 3.12 pack (no new keywords in Python 3.13)
 
 language: en
 target: python
 version: '3.13'
 extends: ../3.12/en.yml
 
-# No new keywords in Python 3.13
-keywords: {}
+keywords: {}  # No new keywords in Python 3.13
 
 metadata:
   python_version_min: '3.13'
-  python_version_max: '3.13'
+  python_version_max: '3.14'
   compatibility_tested:
   - '3.13'
-  last_updated: '2025-11-03'
+  - '3.14'
+  last_updated: '2025-11-16'
   community_reviewed: true
   author: Legesher Team
   license: MIT

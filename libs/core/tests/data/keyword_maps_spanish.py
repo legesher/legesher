@@ -10,6 +10,9 @@ ISO Code: es
 Python Version: 3.13
 """
 
+# TODO: Consider importing keywords from legesher_i18n.scripts.translate.term_classifier
+#       for source of truth validation. Currently hardcoded for test fixtures.
+
 # Python 3.13 Keywords - Spanish Translations
 # Based on common Spanish programming terminology
 SPANISH_KEYWORDS = {

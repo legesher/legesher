@@ -33,6 +33,8 @@ CLASS_DEFINITIONS = """
 #       This pattern ensures we match them as keywords, not as variable names.
 #       The query deliberately uses exact string matching [literals] instead of
 #       named node types, which is tree-sitter's recommended pattern for keywords.
+# TODO: Consider generating this dynamically from legesher_i18n.scripts.translate.term_classifier
+#       Currently missing Python 3.11+ (except*) and 3.12+ (type) keywords
 KEYWORDS_QUERY = """
 [
   "def" "class" "if" "elif" "else"

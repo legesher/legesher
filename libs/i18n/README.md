@@ -126,16 +126,16 @@ Validate language pack files with schema validation, completeness checks, and in
 
 ```bash
 # Validate a single pack
-legesher-i18n validate libs/i18n/languages/python/3.13/es.yml
+legesher-i18n validate libs/i18n/programming_languages/python/3.13/es.yml
 
 # Strict mode (fail on warnings)
-legesher-i18n validate libs/i18n/languages/python/3.13/es.yml --strict
+legesher-i18n validate libs/i18n/programming_languages/python/3.13/es.yml --strict
 ```
 
 **Example Output:**
 
 ```text
-Validating: libs/i18n/languages/python/3.13/es.yml
+Validating: libs/i18n/programming_languages/python/3.13/es.yml
 ✅ Schema validation passed
 
 Loading pack with inheritance...

@@ -12,7 +12,7 @@ from legesher_i18n import (
 from legesher_i18n.exceptions import PackNotFoundError
 
 
-LANG_PACKS_DIR = Path(__file__).parent.parent / "languages"
+LANG_PACKS_DIR = Path(__file__).parent.parent / "programming_languages"
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
