@@ -1,0 +1,7 @@
+# Valid YAML but no keywords section
+language: es
+target: python
+version: '3.10'
+
+metadata:
+  python_version_min: '3.10'

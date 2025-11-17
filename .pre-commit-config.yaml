@@ -12,6 +12,7 @@ repos:
   - id: end-of-file-fixer
   - id: check-yaml
     args: [--unsafe]      # Allow custom YAML tags
+    exclude: ^libs/language-server/tests/fixtures/language_packs/invalid/.*\.yml$  # Exclude intentionally invalid test fixtures
   - id: check-toml
   - id: check-json
   - id: check-added-large-files
@@ -60,7 +61,7 @@ repos:
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent=2]
-    exclude: ^\.github/workflows/.*\.yml$      # Don't auto-format GitHub Actions
+    exclude: ^(\.github/workflows/.*\.yml|libs/language-server/tests/fixtures/language_packs/invalid/.*\.yml)$      # Don't auto-format GitHub Actions or invalid test fixtures
 
   # Commit message validation with Commitizen
 - repo: https://github.com/commitizen-tools/commitizen

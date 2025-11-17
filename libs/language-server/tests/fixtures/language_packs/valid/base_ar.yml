@@ -1,0 +1,63 @@
+# Complete Arabic language pack for testing
+language: ar
+target: python
+version: '3.10'
+
+keywords:
+  def: تعريف
+  class: صنف
+  if: إذا
+  else: وإلا
+  elif: وإلا إذا
+  for: لـ
+  while: بينما
+  return: العودة
+  import: استيراد
+  from: من
+  as: باسم
+  try: محاولة
+  except: استثناء
+  finally: أخيراً
+  with: مع
+  pass: تمرير
+  break: توقف
+  continue: استمرار
+  raise: رفع
+  assert: تأكيد
+  and: و
+  or: أو
+  not: ليس
+  in: في
+  is: هو
+  None: لا شيء
+  true: صحيح
+  false: خطأ
+  async: متزامن
+  await: انتظر
+  lambda: دالة
+  global: عام
+  nonlocal: محلي_غير
+  del: حذف
+  match: مطابق
+  case: حالة
+  yield: إسقاط
+
+builtins:
+  print: طباعة
+  input: إدخال
+  len: طول
+  range: نطاق
+  str: نص
+  int: عدد_صحيح
+  float: عدد_عشري
+  list: قائمة
+  dict: قاموس
+  set: مجموعة
+  tuple: صف_مضغوط
+  bool: منطقي
+  type: نوع
+
+metadata:
+  python_version_min: '3.10'
+  last_updated: '2025-11-12'
+  author: Test Suite

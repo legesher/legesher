@@ -1,0 +1,72 @@
+# Complete Spanish language pack for testing
+language: es
+target: python
+version: '3.10'
+
+keywords:
+  and: y
+  as: como
+  assert: afirmar
+  async: asíncrono
+  await: esperar
+  break: romper
+  class: clase
+  continue: continuar
+  def: definir
+  del: eliminar
+  elif: sinoentonces
+  else: sino
+  except: excepto
+  'False': Falso
+  finally: finalmente
+  for: para
+  from: desde
+  global: global
+  if: si
+  import: importar
+  in: en
+  is: es
+  lambda: lambda
+  None: Ninguno
+  nonlocal: nolocal
+  not: !!str no  # Force string type to prevent YAML boolean parsing
+  or: o
+  pass: pasar
+  raise: lanzar
+  return: retornar
+  'True': Verdadero
+  try: intentar
+  while: mientras
+  with: con
+  yield: ceder
+  match: coincidir
+  case: caso
+
+builtins:
+  print: imprimir
+  input: entrada
+  len: longitud
+  range: rango
+  str: cadena
+  int: entero
+  float: flotante
+  list: lista
+  dict: diccionario
+  set: conjunto
+  tuple: tupla
+  bool: booleano
+  type: tipo
+  open: abrir
+  close: cerrar
+  read: leer
+  write: escribir
+  sum: suma
+  min: mínimo
+  max: máximo
+  sorted: ordenado
+
+metadata:
+  python_version_min: '3.10'
+  last_updated: '2025-11-12'
+  author: Test Suite
+  contributors: []

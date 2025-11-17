@@ -1,0 +1,7 @@
+# Missing required 'language' field
+target: python
+version: '3.10'
+
+keywords:
+  def: definir
+  class: clase

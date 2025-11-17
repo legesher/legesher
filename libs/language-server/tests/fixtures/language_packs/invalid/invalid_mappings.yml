@@ -1,0 +1,9 @@
+# Keywords with non-string values
+language: es
+target: python
+version: '3.10'
+
+keywords:
+  def: 123
+  class: [list, items]
+  if: {object: value}

@@ -312,8 +312,9 @@ class KeywordDocumentation:
     def get_keyword_translation(self, keyword: str, target_lang: str) -> str | None:
         """Get keyword translation from English to target language.
 
-        This method loads translations from i18n language packs dynamically.
-        Uses robust package discovery that works in development and installed environments.
+        This method loads translations from i18n language packs dynamically with
+        comprehensive error handling and version fallback support. Uses robust
+        package discovery that works in development and installed environments.
 
         Args:
             keyword: English keyword (e.g., 'def', 'class')
@@ -322,35 +323,124 @@ class KeywordDocumentation:
         Returns:
             Translated keyword or None if not available
 
+        Error Handling:
+            All errors are caught and logged, never raises exceptions:
+            - Directory not found: Logs warning, returns None
+            - File not found: Tries version fallback (3.10→3.11→3.12→3.13), returns None
+            - Invalid YAML: Logs error with details, returns None
+            - Missing keywords section: Logs warning, returns None
+            - Invalid keyword types: Logs warning, skips entry, returns None
+
+            Logging uses emoji prefixes for VS Code output:
+            - ⚠️ Warning: non-critical issues (missing packs, fallbacks)
+            - ❌ Error: critical issues (YAML errors, type errors)
+            - ℹ️ Info: successful operations with counts
+
         Example:
             >>> docs = KeywordDocumentation()
             >>> docs.get_keyword_translation("def", "es")
             'definir'
             >>> docs.get_keyword_translation("class", "ar")
             'صنف'
+            >>> docs.get_keyword_translation("def", "nonexistent")  # Missing pack
+            None  # Logs: "⚠️ Language pack directory for 'nonexistent' not found"
         """
-        # For MVP, load from i18n packages if available
-        try:
-            import yaml
+        import logging
 
+        import yaml
+
+        logger = logging.getLogger(__name__)
+
+        try:
             # Find language pack using robust discovery
             pack_dir = self._find_language_pack(target_lang)
             if not pack_dir:
+                logger.warning(
+                    f"⚠️  Language pack directory for '{target_lang}' not found, "
+                    f"using English keywords"
+                )
                 return None
 
-            # Load the base pack (3.10 has all keywords)
-            pack_file = pack_dir / f"legesher_i18n_python_{target_lang}" / "packs" / "3.10.yml"
+            # Try multiple Python versions in fallback order
+            python_versions = ["3.10", "3.11", "3.12", "3.13"]
+            pack_file = None
 
-            if pack_file.exists():
+            for version in python_versions:
+                candidate_file = (
+                    pack_dir / f"legesher_i18n_python_{target_lang}" / "packs" / f"{version}.yml"
+                )
+                if candidate_file.exists():
+                    pack_file = candidate_file
+                    break
+
+            if not pack_file:
+                logger.warning(
+                    f"⚠️  Language pack file not found for '{target_lang}' "
+                    f"(tried Python versions: {', '.join(python_versions)}), using English keywords"
+                )
+                return None
+
+            # Load YAML with specific error handling
+            try:
                 with open(pack_file, encoding="utf-8") as f:
                     pack_data = yaml.safe_load(f)
+            except yaml.YAMLError as e:
+                logger.error(
+                    f"❌  Invalid YAML in {target_lang} language pack ({pack_file.name}): {e}"
+                )
+                return None
+            except OSError as e:
+                logger.error(f"❌  Failed to read language pack file {pack_file}: {e}")
+                return None
 
-                # Get keyword translation
-                keywords = pack_data.get("keywords", {})
-                return keywords.get(keyword)
+            # Validate pack structure
+            if not isinstance(pack_data, dict):
+                logger.error(
+                    f"❌  Invalid language pack format in {pack_file.name}: "
+                    f"expected dict, got {type(pack_data).__name__}"
+                )
+                return None
 
-        except Exception:
-            # Fallback: If loading fails, return None
-            pass
+            # Get keywords section
+            keywords = pack_data.get("keywords", {})
 
-        return None
+            if not keywords:
+                logger.warning(
+                    f"⚠️  Language pack {pack_file.name} has no keywords section, "
+                    f"using English keywords"
+                )
+                return None
+
+            if not isinstance(keywords, dict):
+                logger.error(
+                    f"❌  Invalid keywords section in {pack_file.name}: "
+                    f"expected dict, got {type(keywords).__name__}"
+                )
+                return None
+
+            # Get specific keyword translation
+            translation = keywords.get(keyword)
+
+            # Validate translation value
+            if translation is not None and not isinstance(translation, str):
+                logger.warning(
+                    f"⚠️  Invalid translation for keyword '{keyword}' in {pack_file.name}: "
+                    f"expected string, got {type(translation).__name__}, skipping"
+                )
+                return None
+
+            # Log successful translation at info level for operational visibility
+            if translation:
+                logger.info(
+                    f"ℹ️  Found translation for '{keyword}' in {target_lang}: '{translation}'"
+                )
+
+            return translation
+
+        except Exception as e:
+            # Catch-all for unexpected errors
+            logger.error(
+                f"❌  Unexpected error loading language pack for '{target_lang}': {e}",
+                exc_info=True,
+            )
+            return None

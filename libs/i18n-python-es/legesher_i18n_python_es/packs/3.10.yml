@@ -32,7 +32,7 @@ keywords:
   lambda: lambda
   None: Ninguno
   nonlocal: nolocal
-  not: no
+  not: !!str no  # Force string type to prevent YAML boolean parsing
   or: o
   pass: pasar
   raise: lanzar
