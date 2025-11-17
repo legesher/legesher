@@ -62,6 +62,13 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# SQLite temp files
+*.db-shm
+*.db-wal
+
+# Legesher local data
+.legesher/
+
 # Flask stuff:
 instance/
 .webassets-cache

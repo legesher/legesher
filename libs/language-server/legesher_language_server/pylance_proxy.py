@@ -136,13 +136,38 @@ class PylanceProxy:
     def _get_keyword_map(self, lang: str) -> dict[str, str]:
         """Get keyword translation map for language.
 
-        Loads from legesher-i18n language packs dynamically.
+        Loads from legesher-i18n language packs dynamically with comprehensive
+        error handling and version fallback support. Creates reversed mapping
+        (localized→English) for translation from native language to English.
 
         Args:
-            lang: Target language code
+            lang: Target language code (e.g., 'es', 'ar', 'zh')
 
         Returns:
-            Dictionary mapping localized keywords to English
+            Dictionary mapping localized keywords to English, or empty dict on error
+
+        Error Handling:
+            All errors are caught and logged, never raises exceptions:
+            - Directory not found: Logs warning, returns {}
+            - File not found: Tries version fallback (3.10→3.11→3.12→3.13), returns {}
+            - Invalid YAML: Logs error with details, returns {}
+            - Missing keywords section: Logs warning, returns {}
+            - Invalid keyword types: Logs warning, skips invalid entries
+
+            Logging uses emoji prefixes for VS Code output:
+            - ⚠️ Warning: non-critical issues (missing packs, skipped entries)
+            - ❌ Error: critical issues (YAML errors, type errors)
+            - ℹ️ Info: successful load with translation count
+
+        Note:
+            Returns empty dict (not None) to ensure IncrementalTranslator can always
+            be initialized, even without translations available. Empty dict means
+            no translation will occur (pass-through mode).
+
+        Example:
+            >>> proxy._get_keyword_map("es")
+            {'definir': 'def', 'clase': 'class', ...}  # Reversed for translation
+            # Logs: "ℹ️ Loaded 37 keyword translations for es from 3.10.yml"
         """
         try:
             import yaml
@@ -150,28 +175,112 @@ class PylanceProxy:
             # Find language pack using robust discovery
             pack_dir = self._find_language_pack(lang)
             if not pack_dir:
-                logger.warning(f"Language pack for '{lang}' not found")
+                logger.warning(
+                    f"⚠️  Language pack directory for '{lang}' not found, translation disabled"
+                )
                 return {}
 
-            # Load the base pack (3.10 has all keywords)
-            pack_file = pack_dir / f"legesher_i18n_python_{lang}" / "packs" / "3.10.yml"
+            # Try multiple Python versions in fallback order
+            python_versions = ["3.10", "3.11", "3.12", "3.13"]
+            pack_file = None
 
-            if pack_file.exists():
+            for version in python_versions:
+                candidate_file = (
+                    pack_dir / f"legesher_i18n_python_{lang}" / "packs" / f"{version}.yml"
+                )
+                if candidate_file.exists():
+                    pack_file = candidate_file
+                    logger.debug(f"Found language pack: {pack_file.name}")
+                    break
+
+            if not pack_file:
+                logger.warning(
+                    f"⚠️  Language pack file not found for '{lang}' "
+                    f"(tried Python versions: {', '.join(python_versions)}), "
+                    f"translation disabled"
+                )
+                return {}
+
+            # Load YAML with specific error handling
+            try:
                 with open(pack_file, encoding="utf-8") as f:
                     pack_data = yaml.safe_load(f)
+            except yaml.YAMLError as e:
+                logger.error(f"❌  Invalid YAML in {lang} language pack ({pack_file.name}): {e}")
+                return {}
+            except OSError as e:
+                logger.error(f"❌  Failed to read language pack file {pack_file}: {e}")
+                return {}
 
-                # Get keyword translations and reverse them (localized -> English)
-                keywords = pack_data.get("keywords", {})
-                # Reverse the mapping: English->Spanish becomes Spanish->English
-                return {v: k for k, v in keywords.items()}
+            # Validate pack structure
+            if not isinstance(pack_data, dict):
+                logger.error(
+                    f"❌  Invalid language pack format in {pack_file.name}: "
+                    f"expected dict, got {type(pack_data).__name__}"
+                )
+                return {}
+
+            # Get keywords section
+            keywords = pack_data.get("keywords", {})
+
+            if not keywords:
+                logger.warning(
+                    f"⚠️  Language pack {pack_file.name} has no keywords section, "
+                    f"translation disabled"
+                )
+                return {}
+
+            if not isinstance(keywords, dict):
+                logger.error(
+                    f"❌  Invalid keywords section in {pack_file.name}: "
+                    f"expected dict, got {type(keywords).__name__}"
+                )
+                return {}
+
+            # Validate and reverse the mapping (English->Spanish becomes Spanish->English)
+            reversed_map = {}
+            invalid_count = 0
+
+            for eng_keyword, localized_keyword in keywords.items():
+                # Skip invalid entries
+                if not isinstance(localized_keyword, str):
+                    logger.warning(
+                        f"⚠️  Invalid translation for '{eng_keyword}' in {pack_file.name}: "
+                        f"expected string, got {type(localized_keyword).__name__}, skipping"
+                    )
+                    invalid_count += 1
+                    continue
+
+                if not isinstance(eng_keyword, str):
+                    logger.warning(
+                        f"⚠️  Invalid English keyword in {pack_file.name}: "
+                        f"expected string, got {type(eng_keyword).__name__}, skipping"
+                    )
+                    invalid_count += 1
+                    continue
+
+                # Add to reversed mapping
+                reversed_map[localized_keyword] = eng_keyword
+
+            # Log success with count
+            if reversed_map:
+                logger.info(
+                    f"ℹ️  Loaded {len(reversed_map)} keyword translations for {lang} "
+                    f"from {pack_file.name}"
+                )
+                if invalid_count > 0:
+                    logger.warning(f"⚠️  Skipped {invalid_count} invalid translation entries")
             else:
-                logger.warning(f"Language pack file not found: {pack_file}")
+                logger.warning(f"⚠️  No valid keyword translations found in {pack_file.name}")
+
+            return reversed_map
 
         except Exception as e:
-            logger.warning(f"Failed to load language pack for '{lang}': {e}")
-
-        # Fallback: empty dict if pack not found
-        return {}
+            # Catch-all for unexpected errors
+            logger.error(
+                f"❌  Unexpected error loading language pack for '{lang}': {e}", exc_info=True
+            )
+            return {}
 
     async def start(self) -> bool:
         """Start Pyright subprocess and initialize LSP connection.

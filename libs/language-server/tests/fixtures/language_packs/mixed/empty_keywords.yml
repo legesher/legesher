@@ -1,0 +1,9 @@
+# Has keywords section but it's empty
+language: es
+target: python
+version: '3.10'
+
+keywords: {}
+
+builtins:
+  print: imprimir

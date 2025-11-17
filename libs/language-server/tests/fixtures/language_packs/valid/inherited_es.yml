@@ -1,0 +1,13 @@
+# Spanish pack with inheritance (simulates 3.11 extending 3.10)
+language: es
+target: python
+version: '3.11'
+extends: base_es.yml
+
+keywords:
+  # 3.11 additions (exception groups)
+  except*: excepto*
+
+metadata:
+  python_version_min: '3.11'
+  last_updated: '2025-11-12'

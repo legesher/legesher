@@ -1,0 +1,9 @@
+# Malformed YAML: unclosed bracket
+language: es
+target: python
+version: '3.10'
+
+keywords:
+  def: definir
+  class: clase
+  if: [unclosed
