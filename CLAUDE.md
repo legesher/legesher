@@ -21,20 +21,23 @@ It is important to note the need for the functionality to be extensible across m
 ### Monorepo Structure
 
 - **Root**: Contains monorepo configuration with `pyproject.toml` defining all sub-packages
-- **libs/**: Contains 5 Python packages with clear separation of concerns:
+- **libs/**: Contains Python packages with clear separation of concerns:
   - `core/`: Core translation engine and shared utilities (`legesher-core`)
   - `legesher/`: Main package with primary API and functionality
-  - `i18n/`: Internationalization, localization, and natural language data (`legesher-i18n`)
+  - `i18n/`: Internationalization infrastructure AND language pack packages
+    - `legesher_i18n/`: Core infrastructure (pack loading, validation)
+    - `language-packs/python/`: Independently versioned Python language packs (ar, es, en, fr, zh)
+    - `language-packs-archive/`: Legacy community translations (see private-working-memory repo)
   - `pride/`: Community features and project showcase (`legesher-pride`)
   - `vs-code/`: VS Code editor integration for Python language (`legesher-vs-code`)
     - Based on the `vscode-python` package (<https://github.com/microsoft/vscode-python>)
     - Provides language extensions for native language support within the editor
     - Includes declarative and programmatic language features for coding Python in native languages
+  - `language-server/`: LSP server for IDE integration (static code analysis)
 - **docs/**: Astro-based documentation site using Starlight theme hosted at docs.legesher.io
 
 **Future Packages** (planned, not yet created):
 
-- `language-server/`: LSP server for IDE integration (static code analysis)
 - Additional IDE integrations: Zed, JetBrains PyCharm
 
 **Package Status** (as of 2025-10-21):
@@ -152,6 +155,49 @@ The packages have a logical dependency hierarchy defined in the architecture:
   - Community platform, showcase projects
 
 When making changes, consider impact on dependent packages. Build order should follow the tier system (Tier 1 → Tier 2 → Tier 3 → Tier 4).
+
+## Language Pack Organization
+
+Language packs are organized hierarchically within `libs/i18n/` for independent versioning and releases:
+
+### Structure
+
+```
+libs/i18n/language-packs/{programming-language}/{natural-language}/
+```
+
+**Example:** `libs/i18n/language-packs/python/ar/` (Arabic Python translations)
+
+### Current Language Packs
+
+All packs support Python 3.10-3.14 with version inheritance:
+
+- `legesher-i18n-python-ar`: Arabic (v0.0.2) - 81 builtins, Aya AI Model translations
+- `legesher-i18n-python-es`: Spanish (v0.0.2) - 81 builtins, Aya AI Model translations
+- `legesher-i18n-python-en`: English (v0.0.2) - 81 builtins, Reference implementation
+- `legesher-i18n-python-fr`: French (v0.0.2) - 81 builtins, Aya AI Model translations
+- `legesher-i18n-python-zh`: Chinese Simplified (v0.0.2) - 81 builtins, Aya AI Model translations
+
+### Independent Releases
+
+Each language pack can be released independently:
+
+- Tag format: `i18n-python-{lang}-v{version}`
+- Example: Release `python-ar` v1.2.0 without affecting `python-es` v1.0.5
+- Enables focused updates per language
+- Separate changelogs and version histories
+
+### Adding New Language Packs
+
+1. Create directory: `libs/i18n/language-packs/python/{lang}/`
+2. Follow structure of existing packages (examine `ar/` or `es/`)
+3. Create translation YAML files for each Python version (3.10-3.14)
+4. Add package metadata: `pyproject.toml`, `CHANGELOG.md`, `README.md`, `__init__.py`
+5. Update root `pyproject.toml`:
+   - Add to `[tool.uv.sources]` section
+   - Add to `[tool.uv.workspace]` members
+6. Set version to match current release (0.0.2)
+7. Run `uv sync` to install in development mode
 
 ## Development Guidelines
 

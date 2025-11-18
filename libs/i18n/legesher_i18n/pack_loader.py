@@ -4,6 +4,9 @@ This module implements the core functionality for loading language packs,
 resolving inheritance chains, merging keyword translations, and caching results.
 """
 
+import importlib.metadata
+import importlib.util
+import logging
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -18,6 +21,8 @@ from .exceptions import (
     PathTraversalError,
 )
 from .schema_validator import LanguagePackMetadata, SchemaValidator
+
+logger = logging.getLogger(__name__)
 
 
 MAX_INHERITANCE_DEPTH = 10
@@ -107,6 +112,83 @@ class LanguagePackLoader:
             pack_root = Path(__file__).parent.parent / "programming_languages"
 
         self.pack_root = pack_root
+        self._discovered_packs: dict[str, Path] | None = None
+
+    def _discover_packs(self) -> dict[str, Path]:
+        """Discover all available language packs from monorepo and installed packages.
+
+        Checks two locations:
+        1. Development monorepo: libs/i18n/language-packs/{target}/{lang}/
+        2. Installed packages: legesher-i18n-{target}-{lang}
+
+        Returns:
+            Dictionary mapping pack keys to their base paths.
+            Keys are formatted as "{target}-{lang}" (e.g., "python-ar").
+            Values are Path objects to the package directory containing packs/.
+
+        Example:
+            {
+                "python-ar": Path("/path/to/legesher_i18n_python_ar"),
+                "python-es": Path("/path/to/legesher_i18n_python_es"),
+            }
+        """
+        if self._discovered_packs is not None:
+            return self._discovered_packs
+
+        discovered: dict[str, Path] = {}
+
+        # 1. Check development monorepo structure
+        # Path: libs/i18n/language-packs/{target}/{lang}/legesher_i18n_{target}_{lang}/
+        monorepo_root = Path(__file__).parent.parent / "language-packs"
+        if monorepo_root.exists():
+            for target_dir in monorepo_root.iterdir():
+                if target_dir.is_dir():
+                    target = target_dir.name
+                    for lang_dir in target_dir.iterdir():
+                        if lang_dir.is_dir():
+                            # Check for module directory inside lang directory
+                            module_name = f"legesher_i18n_{target}_{lang_dir.name}"
+                            module_dir = lang_dir / module_name
+                            if module_dir.exists() and (module_dir / "packs").exists():
+                                pack_key = f"{target}-{lang_dir.name}"
+                                discovered[pack_key] = module_dir
+                                logger.debug(
+                                    f"Discovered monorepo pack: {pack_key} at {module_dir}"
+                                )
+
+        # 2. Check installed packages using importlib
+        # Package naming: legesher-i18n-{target}-{lang} -> legesher_i18n_{target}_{lang}
+        try:
+            for dist in importlib.metadata.distributions():
+                package_name = dist.name
+                if package_name.startswith("legesher-i18n-"):
+                    # Extract target and language from package name
+                    # e.g., "legesher-i18n-python-ar" -> ["python", "ar"]
+                    parts = package_name[len("legesher-i18n-") :].split("-")
+                    if len(parts) >= 2:
+                        target = parts[0]
+                        lang = "-".join(parts[1:])  # Support multi-part language codes
+                        pack_key = f"{target}-{lang}"
+
+                        # Convert package name to module name
+                        # "legesher-i18n-python-ar" -> "legesher_i18n_python_ar"
+                        module_name = package_name.replace("-", "_")
+
+                        # Try to find the package location using importlib
+                        spec = importlib.util.find_spec(module_name)
+                        if spec and spec.origin:
+                            # Get the package directory (parent of __init__.py)
+                            package_path = Path(spec.origin).parent
+                            if (package_path / "packs").exists():
+                                discovered[pack_key] = package_path
+                                logger.debug(
+                                    f"Discovered installed pack: {pack_key} at {package_path}"
+                                )
+        except Exception as e:
+            logger.warning(f"Error discovering installed packages: {e}")
+
+        self._discovered_packs = discovered
+        return discovered
 
     @lru_cache(maxsize=32)
     def load(
@@ -172,6 +254,9 @@ class LanguagePackLoader:
     ) -> Path:
         """Build path to language pack file.
 
+        First checks discovered packs (monorepo or installed packages).
+        Falls back to legacy pack_root structure for backward compatibility.
+
         Args:
             language: Language code
             target: Target programming language
@@ -180,11 +265,29 @@ class LanguagePackLoader:
         Returns:
             Path to pack file
         """
+        # Try discovered packs first (new structure)
+        discovered = self._discover_packs()
+        pack_key = f"{target}-{language}"
+
+        if pack_key in discovered:
+            pack_dir = discovered[pack_key]
+            if version:
+                # New structure: {pack_dir}/packs/{version}.yml
+                pack_path = pack_dir / "packs" / f"{version}.yml"
+            else:
+                # New structure: {pack_dir}/packs/default.yml
+                pack_path = pack_dir / "packs" / "default.yml"
+
+            # Check if pack exists in new structure
+            if pack_path.exists():
+                return pack_path
+
+        # Fallback to legacy structure for backward compatibility
         if version:
-            # Version-specific pack: programming_languages/python/3.10/es.yml
+            # Legacy: programming_languages/python/3.10/es.yml
             return self.pack_root / target / version / f"{language}.yml"
         else:
-            # Default pack: programming_languages/python/es.yml
+            # Legacy: programming_languages/python/es.yml
             return self.pack_root / target / f"{language}.yml"
 
     def _resolve_inheritance(
@@ -312,11 +415,13 @@ class LanguagePackLoader:
         return merged
 
     def clear_cache(self):
-        """Clear the pack cache.
+        """Clear the pack cache and discovered packs.
 
         Thread-safe cache clearing using lru_cache.cache_clear().
+        Also resets the discovered packs cache to force re-discovery.
         """
         self.load.cache_clear()
+        self._discovered_packs = None
 
     def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics.
@@ -335,6 +440,9 @@ class LanguagePackLoader:
     def list_available_languages(self, target: str = "python") -> list[tuple[str, str]]:
         """List all available language packs for a target language.
 
+        First checks discovered packs (monorepo or installed packages).
+        Falls back to legacy pack_root structure for backward compatibility.
+
         Note: This method performs filesystem operations (globbing, file I/O, YAML parsing)
         which can be expensive. Results are computed fresh on each call since language
         packs may be added/removed at runtime. For better performance in production,
@@ -352,46 +460,98 @@ class LanguagePackLoader:
             [('es', 'Spanish'), ('ar', 'Arabic'), ('hi', 'Hindi')]
         """
         languages: list[tuple[str, str]] = []
-        target_dir = self.pack_root / target
+        seen_codes: set[str] = set()
 
-        if not target_dir.exists():
-            return languages
+        # 1. Check discovered packs (new structure)
+        discovered = self._discover_packs()
+        for pack_key, pack_dir in discovered.items():
+            # Extract target and language from pack_key (e.g., "python-ar")
+            if pack_key.startswith(f"{target}-"):
+                lang_code = pack_key[len(target) + 1 :]
 
-        # Scan for .yml files in target directory
-        for pack_file in target_dir.glob("*.yml"):
-            if pack_file.is_file():
-                lang_code = pack_file.stem
+                # Try to read metadata from default.yml or any version file
+                metadata_path = pack_dir / "packs" / "default.yml"
+                if not metadata_path.exists():
+                    # Try to find any version file for metadata
+                    packs_dir = pack_dir / "packs"
+                    if packs_dir.exists():
+                        for pack_file in packs_dir.glob("*.yml"):
+                            metadata_path = pack_file
+                            break
 
-                # Skip version-index file (not a language pack)
-                if lang_code == "version-index":
-                    continue
-
-                # Try to load metadata to get full language name
-                try:
-                    with open(pack_file, "r", encoding="utf-8") as f:
-                        data = yaml.safe_load(f)
-                        lang_name = data.get("metadata", {}).get(
-                            "name", lang_code.upper()
-                        )
-                except (OSError, yaml.YAMLError, KeyError, TypeError, AttributeError):
-                    # Fall back to language code if file can't be read, parsed,
-                    # or has unexpected structure
-                    lang_name = lang_code.upper()
+                # Load language name from metadata
+                lang_name = lang_code.upper()
+                if metadata_path.exists():
+                    try:
+                        with open(metadata_path, "r", encoding="utf-8") as f:
+                            data = yaml.safe_load(f)
+                            lang_name = data.get("metadata", {}).get("name", lang_name)
+                    except (
+                        OSError,
+                        yaml.YAMLError,
+                        KeyError,
+                        TypeError,
+                        AttributeError,
+                    ):
+                        # Silently fall back to default language name if metadata is missing or invalid
+                        pass
 
                 languages.append((lang_code, lang_name))
+                seen_codes.add(lang_code)
 
-        # Also check versioned packs
-        for version_dir in target_dir.iterdir():
-            if version_dir.is_dir():
-                for pack_file in version_dir.glob("*.yml"):
-                    if pack_file.is_file():
-                        lang_code = pack_file.stem
+        # 2. Fallback to legacy structure (for backward compatibility)
+        target_dir = self.pack_root / target
 
-                        # Skip version-index file
-                        if lang_code == "version-index":
-                            continue
+        if target_dir.exists():
+            # Scan for .yml files in target directory
+            for pack_file in target_dir.glob("*.yml"):
+                if pack_file.is_file():
+                    lang_code = pack_file.stem
 
-                        if not any(code == lang_code for code, _ in languages):
+                    # Skip version-index file (not a language pack)
+                    if lang_code == "version-index":
+                        continue
+
+                    # Skip if already discovered in new structure
+                    if lang_code in seen_codes:
+                        continue
+
+                    # Try to load metadata to get full language name
+                    try:
+                        with open(pack_file, "r", encoding="utf-8") as f:
+                            data = yaml.safe_load(f)
+                            lang_name = data.get("metadata", {}).get(
+                                "name", lang_code.upper()
+                            )
+                    except (
+                        OSError,
+                        yaml.YAMLError,
+                        KeyError,
+                        TypeError,
+                        AttributeError,
+                    ):
+                        # Fall back to language code if file can't be read, parsed,
+                        # or has unexpected structure
+                        lang_name = lang_code.upper()
+
+                    languages.append((lang_code, lang_name))
+                    seen_codes.add(lang_code)
+
+            # Also check versioned packs in legacy structure
+            for version_dir in target_dir.iterdir():
+                if version_dir.is_dir():
+                    for pack_file in version_dir.glob("*.yml"):
+                        if pack_file.is_file():
+                            lang_code = pack_file.stem
+
+                            # Skip version-index file
+                            if lang_code == "version-index":
+                                continue
+
+                            # Skip if already found
+                            if lang_code in seen_codes:
+                                continue
+
                             try:
                                 with open(pack_file, "r", encoding="utf-8") as f:
                                     data = yaml.safe_load(f)
@@ -410,10 +570,18 @@ class LanguagePackLoader:
                                 lang_name = lang_code.upper()
 
                             languages.append((lang_code, lang_name))
+                            seen_codes.add(lang_code)
 
         return sorted(languages, key=lambda x: x[0])
 
     def __repr__(self) -> str:
         """String representation of loader."""
         info = self.load.cache_info()
-        return f"LanguagePackLoader(pack_root={self.pack_root}, cache_size={info.currsize}/{info.maxsize})"
+        discovered_count = (
+            len(self._discovered_packs) if self._discovered_packs is not None else 0
+        )
+        return (
+            f"LanguagePackLoader(pack_root={self.pack_root}, "
+            f"discovered_packs={discovered_count}, "
+            f"cache_size={info.currsize}/{info.maxsize})"
+        )

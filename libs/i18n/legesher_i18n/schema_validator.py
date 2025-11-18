@@ -241,19 +241,17 @@ class SchemaValidator:
             resolved = (pack_dir / extends_path).resolve()
 
             # Security check: Ensure resolved path doesn't escape pack directory
-            # Get the root language packs directory (should be libs/i18n/languages/)
+            # Get the root packs directory (e.g., legesher_i18n_python_ar/packs/)
             pack_root = current_pack_path
-            while (
-                pack_root.parent.name != "languages" and pack_root.parent != pack_root
-            ):
+            while pack_root.parent.name != "packs" and pack_root.parent != pack_root:
                 pack_root = pack_root.parent
 
-            if pack_root.parent.name == "languages":
-                language_root = pack_root.parent
+            if pack_root.parent.name == "packs":
+                packs_dir = pack_root.parent
 
-                # Ensure resolved path is within language packs directory
+                # Ensure resolved path is within packs directory
                 try:
-                    resolved.relative_to(language_root)
+                    resolved.relative_to(packs_dir)
                 except ValueError:
                     raise PackValidationError(
                         str(current_pack_path),

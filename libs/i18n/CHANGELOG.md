@@ -11,13 +11,27 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- **Directory Restructure for Multi-Language Support** (PR #49, CORE-460)
-  - Renamed `libs/i18n/languages/` to `libs/i18n/programming_languages/` to prepare for TypeScript and other language support
-  - Updated all Python files and documentation to use new path structure
-  - Added centralized `language_registry.py` for human language metadata (English, Spanish, etc.)
-  - Added TODO comments for future centralization of Python term lists
+- **Language Pack Reorganization into Hierarchical Structure** (CORE-XXX)
+  - Reorganized language packs from `programming_languages/` into hierarchical `language-packs/python/{lang}/` structure
+  - Each language pack is now an independently versioned package (ar, es, en, fr, zh)
+  - Enables focused releases per language (e.g., `python-ar` v1.2.0 independent of `python-es` v1.0.5)
+  - Refactored `LanguagePackLoader` with importlib-based package discovery
+  - Updated language-server integration to use new paths
+  - Renamed legacy community archive: `language-packs/` → `language-packs-archive/`
+
+- **Language Pack Version Bump to v0.0.2**
+  - All language packs (ar, es, en, fr, zh) now at v0.0.2
+  - Added 40 additional builtin translations (81 total, up from 41)
+  - Added Python 3.14 support across all language packs
+  - Improved translation quality using Aya AI Model pipeline
+  - Source of truth established from `programming_languages/` (higher quality translations)
 
 ### Added
+
+- **New Language Packs** (v0.0.2)
+  - English (en): 37 keywords, 81 builtins, Python 3.10-3.14 (canonical reference)
+  - French (fr): 37 keywords, 81 builtins, Python 3.10-3.14
+  - Chinese (zh): 37 keywords, 81 builtins, Python 3.10-3.14
 
 - **Comprehensive Directory Structure Tests** (PR #49)
   - New test file `tests/test_directory_structure.py` with 12 tests

@@ -10,12 +10,9 @@ from legesher_i18n.exceptions import (
 )
 
 
-# Use actual version-index.yml from programming_languages/python/
+# Use actual version-index.yml from language-packs/python/
 REAL_INDEX_PATH = (
-    Path(__file__).parent.parent
-    / "programming_languages"
-    / "python"
-    / "version-index.yml"
+    Path(__file__).parent.parent / "language-packs" / "python" / "version-index.yml"
 )
 
 

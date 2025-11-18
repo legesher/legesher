@@ -16,8 +16,11 @@ repository = "https://www.github.com/legesher/legesher"
 [tool.uv.sources]
 legesher-core = { path = "./libs/core", editable = true }
 legesher-i18n = { path = "./libs/i18n", editable = true }
-legesher-i18n-python-ar = { path = "./libs/i18n-python-ar", editable = true }
-legesher-i18n-python-es = { path = "./libs/i18n-python-es", editable = true }
+legesher-i18n-python-ar = { path = "./libs/i18n/language-packs/python/ar", editable = true }
+legesher-i18n-python-es = { path = "./libs/i18n/language-packs/python/es", editable = true }
+legesher-i18n-python-en = { path = "./libs/i18n/language-packs/python/en", editable = true }
+legesher-i18n-python-fr = { path = "./libs/i18n/language-packs/python/fr", editable = true }
+legesher-i18n-python-zh = { path = "./libs/i18n/language-packs/python/zh", editable = true }
 legesher = { path = "./libs/legesher", editable = true }
 legesher-language-server = { path = "./libs/language-server", editable = true }
 legesher-pride = { path = "./libs/pride", editable = true }
@@ -125,7 +128,7 @@ choices = [
 [[tool.commitizen.customize.questions]]
 type = "input"
 name = "scope"
-message = "Scope (package name: core, i18n, legesher, language-server, vs-code, pride, i18n-python-es, i18n-python-ar) [optional]:"
+message = "Scope (package name: core, i18n, legesher, language-server, vs-code, pride, i18n-python-ar, i18n-python-es, i18n-python-en, i18n-python-fr, i18n-python-zh) [optional]:"
 
 [[tool.commitizen.customize.questions]]
 type = "input"
