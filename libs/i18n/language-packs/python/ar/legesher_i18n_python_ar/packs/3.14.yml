@@ -1,0 +1,19 @@
+# Arabic Language Pack for Python 3.14+
+# Extends 3.13 pack (no new keywords in Python 3.14)
+
+language: ar
+target: python
+version: '3.14'
+extends: 3.13.yml
+
+keywords: {}  # No new keywords in Python 3.14
+
+metadata:
+  python_version_min: '3.14'
+  python_version_max: '3.14'
+  compatibility_tested:
+  - '3.14'
+  last_updated: '2025-11-16'
+  community_reviewed: false
+  author: Legesher Team (Aya AI Model)
+  license: MIT

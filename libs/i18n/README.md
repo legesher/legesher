@@ -64,10 +64,15 @@ Language packs automatically adapt to different Python versions:
 
 ### Supported Languages
 
-Current MVP includes:
+All language packs (v0.0.2) support Python 3.10-3.14:
 
-- **Spanish (es)**: Complete translations for Python 3.10-3.13
-- **Arabic (ar)**: Complete translations for Python 3.10-3.13
+- **Arabic (ar)**: 37 keywords, 81 builtins
+- **Spanish (es)**: 37 keywords, 81 builtins
+- **English (en)**: 37 keywords, 81 builtins (canonical reference)
+- **French (fr)**: 37 keywords, 81 builtins
+- **Chinese (zh)**: 37 keywords, 81 builtins
+
+Each language pack is independently versioned at `libs/i18n/language-packs/python/{lang}/`
 
 ### Translation API (Optional)
 

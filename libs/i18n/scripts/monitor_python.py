@@ -214,10 +214,10 @@ def get_version_index_path() -> Path:
     Returns:
         Path object pointing to version-index.yml
     """
-    # Script is in libs/i18n/scripts/, version-index.yml is in libs/i18n/programming_languages/python/
+    # Script is in libs/i18n/scripts/, version-index.yml is in libs/i18n/language-packs/python/
     script_dir = Path(__file__).parent
     version_index = (
-        script_dir.parent / "programming_languages" / "python" / "version-index.yml"
+        script_dir.parent / "language-packs" / "python" / "version-index.yml"
     )
     return version_index
 

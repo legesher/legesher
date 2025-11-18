@@ -1,0 +1,23 @@
+# French Language Pack for Python 3.11+
+# Extends 3.10 pack and adds except* for exception groups
+
+language: fr
+target: python
+version: '3.11'
+extends: 3.10.yml
+
+keywords:
+  # Python 3.11+ specific (PEP 654: Exception Groups)
+  except*: excepter*
+
+metadata:
+  python_version_min: '3.11'
+  python_version_max: '3.13'
+  compatibility_tested:
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  last_updated: '2025-11-15'
+  community_reviewed: false
+  author: Legesher Team (Aya AI Model)
+  license: MIT
