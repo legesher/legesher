@@ -6,7 +6,6 @@ This module provides the main LSP server implementation using pygls.
 import logging
 
 from lsprotocol.types import (
-    INITIALIZE,
     INITIALIZED,
     SHUTDOWN,
     TEXT_DOCUMENT_COMPLETION,
@@ -32,6 +31,7 @@ from lsprotocol.types import (
     InitializeResult,
     SemanticTokens,
     SemanticTokensLegend,
+    SemanticTokensOptions,
     SemanticTokensParams,
     ServerCapabilities,
     TextDocumentSyncKind,
@@ -167,9 +167,6 @@ class LegesherLanguageServer(LanguageServer):
         # This is necessary because pygls tries to set attributes on the function
         # and bound methods don't allow that
 
-        async def initialize_wrapper(params: InitializeParams) -> InitializeResult:
-            return await self.on_initialize(params)
-
         async def initialized_wrapper(params: InitializedParams) -> None:
             await self.on_initialized(params)
 
@@ -201,8 +198,7 @@ class LegesherLanguageServer(LanguageServer):
         ) -> SemanticTokens | None:
             return await self.on_semantic_tokens_full(params)
 
-        # Register the wrappers
-        self.feature(INITIALIZE)(initialize_wrapper)
+        # Register the wrappers (don't override initialize - let pygls handle it)
         self.feature(INITIALIZED)(initialized_wrapper)
         self.feature(SHUTDOWN)(shutdown_wrapper)
         self.feature(TEXT_DOCUMENT_DID_OPEN)(did_open_wrapper)
@@ -211,7 +207,11 @@ class LegesherLanguageServer(LanguageServer):
         self.feature(TEXT_DOCUMENT_HOVER)(hover_wrapper)
         self.feature(TEXT_DOCUMENT_COMPLETION)(completion_wrapper)
         self.feature(TEXT_DOCUMENT_DIAGNOSTIC)(diagnostic_wrapper)
-        self.feature(TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL)(semantic_tokens_full_wrapper)
+
+        # Register semantic tokens with legend
+        self.feature(TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL, self.semantic_tokens_legend)(
+            semantic_tokens_full_wrapper
+        )
 
     async def on_initialize(self, params: InitializeParams) -> InitializeResult:
         """Handle initialize request from client.
@@ -263,12 +263,12 @@ class LegesherLanguageServer(LanguageServer):
                     "inter_file_dependencies": False,
                     "workspace_diagnostics": False,
                 },
-                semantic_tokens_provider={
-                    "legend": self.semantic_tokens_legend,
-                    "full": True,
+                semantic_tokens_provider=SemanticTokensOptions(
+                    legend=self.semantic_tokens_legend,
+                    full=True,
                     # Phase 1 (CORE-450): Only full document tokens
-                    # Future phases: "range": True, "delta": True
-                },
+                    # Future phases: range=True
+                ),
             ),
             server_info={
                 "name": "legesher-lsp",

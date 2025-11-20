@@ -12,6 +12,7 @@ Implementation for CORE-357.
 import ast
 import builtins
 import inspect
+import logging
 import re
 from typing import TYPE_CHECKING
 
@@ -21,6 +22,8 @@ if TYPE_CHECKING:
 from lsprotocol.types import Hover, MarkupContent, MarkupKind, Position
 
 from ..utils.keyword_docs import KeywordDocumentation
+
+logger = logging.getLogger(__name__)
 
 # Simple cache for builtin docstrings (bounded by ~35 builtins × 3 languages ≈ 105 entries max)
 # Note: Not a true LRU cache - entries never expire. See CORE-XXX for proper LRU implementation.
@@ -54,6 +57,7 @@ async def provide_hover(
 
     # Extract word at position
     word = _extract_word_at_position(doc.text, position)
+    logger.info(f"Hover request at {position.line}:{position.character}, extracted word: '{word}'")
     if not word:
         return None
 
@@ -69,6 +73,7 @@ async def provide_hover(
     hover_content = await provider.get_hover_content(word, position)
 
     if hover_content:
+        logger.info(f"Returning hover content: {hover_content[:100]}...")
         return Hover(
             contents=MarkupContent(
                 kind=MarkupKind.Markdown,
@@ -111,11 +116,11 @@ class HoverProvider:
         self._keyword_translation_map = self._load_keyword_translations()
 
     def _load_keyword_translations(self) -> dict[str, str]:
-        """Load keyword translation map (Spanish -> English).
+        """Load keyword translation map (target language -> English).
 
         Returns:
             Dictionary mapping translated keywords to English keywords
-            Example: {"definir": "def", "retornar": "return", ...}
+            Example: {"definir": "def"}, {"تعريف": "def"}, {"定义": "def"}
         """
         from legesher_i18n import LanguagePackLoader
 
@@ -125,12 +130,19 @@ class HoverProvider:
             loader = LanguagePackLoader()
             pack = loader.load(language=self.target_lang, target="python", version="3.10")
 
-            # Build reverse map: Spanish -> English
+            # Build reverse map: target language -> English
             for english, translated in pack.keywords.items():
                 keyword_map[translated] = english
 
-        except Exception:
+            logger.info(
+                f"Loaded {len(keyword_map)} keyword translations for hover provider "
+                f"(lang={self.target_lang})"
+            )
+            logger.debug(f"Sample translations: {list(keyword_map.items())[:5]}")
+
+        except Exception as e:
             # If loading fails, return empty dict (will fall back to English-only keywords)
+            logger.warning(f"Failed to load keyword translations for hover: {e}")
             pass
 
         return keyword_map
@@ -145,14 +157,24 @@ class HoverProvider:
         Returns:
             Markdown-formatted hover content or None
         """
+        logger.debug(
+            f"get_hover_content called: word='{word}', "
+            f"translation_map_size={len(self._keyword_translation_map)}"
+        )
+
         # Check if English keyword
         if self.keyword_docs.has_keyword(word):
+            logger.debug(f"'{word}' is an English keyword")
             return self._hover_keyword(word)
 
-        # Check if translated keyword (e.g., Spanish "definir")
+        # Check if translated keyword (e.g., Spanish "definir", Arabic "تعريف", Chinese "定义")
         english_keyword = self._keyword_translation_map.get(word)
+        logger.debug(f"Translation lookup: '{word}' -> {english_keyword}")
         if english_keyword:
             # Show documentation for the English equivalent
+            logger.debug(
+                f"Calling _hover_keyword with keyword='{english_keyword}', original='{word}'"
+            )
             return self._hover_keyword(english_keyword, original_keyword=word)
 
         # Check if builtin
@@ -190,6 +212,11 @@ class HoverProvider:
 
         # Use original keyword in display if provided (e.g., show "definir" not "def")
         display_keyword = original_keyword if original_keyword else keyword
+
+        logger.debug(
+            f"Hover keyword: keyword={keyword}, original={original_keyword}, "
+            f"display={display_keyword}"
+        )
 
         # Format as markdown
         return f"**`{display_keyword}`** — Python keyword\n\n{doc}"

@@ -119,6 +119,74 @@ class DiagnosticProvider:
         self.document_uri = document_uri
         self.error_templates = ErrorMessageTemplates()
 
+        # Load keyword translation map for translating code before parsing
+        self._keyword_translation_map = self._load_keyword_translations()
+
+    def _load_keyword_translations(self) -> dict[str, str]:
+        """Load keyword translation map (target language -> English).
+
+        Returns:
+            Dictionary mapping translated keywords to English keywords
+            Example: {"definir": "def", "devolver": "return", ...}
+        """
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        keyword_map = {}
+
+        # Only load translations if target language is not English
+        if self.target_lang == "en":
+            return keyword_map
+
+        try:
+            from legesher_i18n import LanguagePackLoader
+
+            loader = LanguagePackLoader()
+            pack = loader.load(language=self.target_lang, target="python", version="3.10")
+
+            # Build reverse map: Spanish/Arabic/etc -> English
+            for english, translated in pack.keywords.items():
+                keyword_map[translated] = english
+
+            logger.info(
+                f"Loaded {len(keyword_map)} keyword translations for diagnostic provider "
+                f"(lang={self.target_lang})"
+            )
+
+        except Exception as e:
+            # If loading fails, return empty dict (diagnostics will fail for non-English code)
+            logger.warning(f"Failed to load keyword translations for diagnostics: {e}")
+
+        return keyword_map
+
+    def _translate_code_to_english(self, code: str) -> str:
+        """Translate code from target language to English for parsing.
+
+        Args:
+            code: Source code in target language
+
+        Returns:
+            Code translated to English
+        """
+        # If no translations loaded, return as-is
+        if not self._keyword_translation_map:
+            return code
+
+        # Simple word-by-word replacement
+        # This is a basic implementation - a proper tokenizer would be better
+        # but this works for keyword translation
+        import re
+
+        # Replace each keyword
+        translated = code
+        for target_keyword, english_keyword in self._keyword_translation_map.items():
+            # Use word boundaries to avoid partial replacements
+            pattern = r"\b" + re.escape(target_keyword) + r"\b"
+            translated = re.sub(pattern, english_keyword, translated)
+
+        return translated
+
     async def get_diagnostics(self) -> list[Diagnostic]:
         """Get all diagnostics for document.
 
@@ -143,8 +211,11 @@ class DiagnosticProvider:
         """
         errors = []
 
+        # Translate code to English before parsing if needed
+        code_to_parse = self._translate_code_to_english(self.document_text)
+
         try:
-            ast.parse(self.document_text)
+            ast.parse(code_to_parse)
         except SyntaxError as e:
             errors.append(
                 {
