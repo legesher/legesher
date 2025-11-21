@@ -11,6 +11,7 @@ import click
 
 from legesher.cli import git as git_module
 from legesher.cli import metadata as metadata_module
+from legesher.cli import run as run_module
 from legesher.cli import translate
 
 
@@ -41,6 +42,7 @@ def cli():
 
 # Register commands
 cli.add_command(translate.translate)
+cli.add_command(run_module.run)
 cli.add_command(git_module.git)
 cli.add_command(metadata_module.metadata)
 
