@@ -72,10 +72,10 @@ def run(script: str, lang: Optional[str], args: Optional[str]):
             native_code = f.read()
 
         # Translate main script if needed (import hook only handles imports)
-        translator = TokenTranslator.from_language_pack(language)
-        code = translator.translate_code(
-            native_code, source_lang=language, target_lang="en"
-        )
+        # from_language_pack creates EN->target translator, so we reverse for target->EN
+        en_to_native = TokenTranslator.from_language_pack(language)
+        native_to_en = en_to_native.reverse()
+        code = native_to_en.translate_code(native_code)
 
         # Register source mapping for error reporting
         source_mapper = get_source_mapper()
