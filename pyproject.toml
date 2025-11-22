@@ -80,6 +80,15 @@ exclude_commit_patterns = [
     "^Merge",
 ]
 
+[tool.ruff]
+exclude = [
+    "libs/legesher/examples/*",  # Demo files may use native language keywords
+]
+
+[tool.ruff.lint]
+# Allow undefined names in demo files that intentionally trigger errors
+per-file-ignores = { "libs/legesher/examples/*" = ["F821"] }
+
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "0.1.0"

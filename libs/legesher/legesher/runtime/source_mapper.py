@@ -121,6 +121,47 @@ class LegesherSourceMapper:
         self._mappings.clear()
         self._native_sources.clear()
 
+    def clear_all(self):
+        """Clear all mappings (alias for clear()).
+
+        This is useful for testing or when resetting the runtime state.
+        """
+        self.clear()
+
+    def clear_mapping(self, filename: str):
+        """Clear mapping for a specific file.
+
+        Args:
+            filename: Source file path to clear
+        """
+        if filename in self._native_sources:
+            del self._native_sources[filename]
+            # Remove all line mappings for this file
+            keys_to_remove = [key for key in self._mappings if key[0] == filename]
+            for key in keys_to_remove:
+                del self._mappings[key]
+
+    def get_mapped_files(self) -> list:
+        """Get list of all files with registered mappings.
+
+        Returns:
+            List of file paths that have mappings
+        """
+        return list(self._native_sources.keys())
+
+    def get_line_count(self, filename: str) -> Optional[int]:
+        """Get the number of lines in the native source file.
+
+        Args:
+            filename: Source file path
+
+        Returns:
+            Number of lines in native source, or None if not found
+        """
+        if filename in self._native_sources:
+            return len(self._native_sources[filename].splitlines())
+        return None
+
 
 # Global mapper instance
 _source_mapper = LegesherSourceMapper()
@@ -133,3 +174,13 @@ def get_source_mapper() -> LegesherSourceMapper:
         Global LegesherSourceMapper instance
     """
     return _source_mapper
+
+
+def reset_source_mapper():
+    """Reset the global source mapper instance.
+
+    This creates a new mapper instance, discarding all previous mappings.
+    Primarily useful for testing.
+    """
+    global _source_mapper
+    _source_mapper = LegesherSourceMapper()
