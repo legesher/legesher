@@ -48,6 +48,7 @@ class LanguagePackSchema(BaseModel):
     extends: Optional[str] = None
     keywords: dict[str, str] = Field(default_factory=dict)
     builtins: dict[str, str] = Field(default_factory=dict)
+    exceptions: dict[str, str] = Field(default_factory=dict)
 
     # MLCP v1.0 Extended Optional Fields
     operators: dict[str, str] = Field(default_factory=dict)
@@ -120,10 +121,12 @@ class LanguagePackSchema(BaseModel):
 
         return v
 
-    @field_validator("keywords", "builtins", "operators", "standard_library")
+    @field_validator(
+        "keywords", "builtins", "exceptions", "operators", "standard_library"
+    )
     @classmethod
     def validate_mappings(cls, v: dict[str, str]) -> dict[str, str]:
-        """Validate keyword/builtin/operator/stdlib mappings."""
+        """Validate keyword/builtin/exception/operator/stdlib mappings."""
         for key, value in v.items():
             if not key or not value:
                 raise ValueError("Empty keys or values not allowed in mappings")
@@ -438,12 +441,14 @@ class SchemaValidator:
 
         keyword_duplicates = find_duplicate_values(pack_schema.keywords)
         builtin_duplicates = find_duplicate_values(pack_schema.builtins)
+        exception_duplicates = find_duplicate_values(pack_schema.exceptions)
         operator_duplicates = find_duplicate_values(pack_schema.operators)
         stdlib_duplicates = find_duplicate_values(pack_schema.standard_library)
 
         total_duplicates = (
             len(keyword_duplicates)
             + len(builtin_duplicates)
+            + len(exception_duplicates)
             + len(operator_duplicates)
             + len(stdlib_duplicates)
         )
@@ -452,6 +457,7 @@ class SchemaValidator:
             "passed": total_duplicates == 0,
             "keyword_duplicates": keyword_duplicates,
             "builtin_duplicates": builtin_duplicates,
+            "exception_duplicates": exception_duplicates,
             "operator_duplicates": operator_duplicates,
             "stdlib_duplicates": stdlib_duplicates,
             "total_conflicts": total_duplicates,
@@ -623,6 +629,7 @@ class SchemaValidator:
             "has_inheritance": pack_schema.extends is not None,
             "keywords_count": len(pack_schema.keywords),
             "builtins_count": len(pack_schema.builtins),
+            "exceptions_count": len(pack_schema.exceptions),
             "warnings": warnings,
             "has_metadata": pack_schema.metadata is not None,
             "completeness_score": (

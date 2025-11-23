@@ -125,12 +125,79 @@ builtins:
   valueerror: error de valor
   vars: vars
   zip: zip
+exceptions:
+  arithmeticerror: error aritmético
+  assertionerror: error de aserción
+  attributeerror: Error de atributo
+  baseexception: excepción base
+  basegeneratorexit: generar_salida
+  blockingioerror: error de E/S bloqueante
+  brokenpipeerror: error de tubería rota
+  buffererror: error de búfer
+  byteswarning: advertencia de bytes
+  childprocesserror: error de proceso secundario
+  connectionabortederror: error de abortar conexión
+  connectionerror: error de conexión
+  connectionrefusederror: error de rechazo de conexión
+  connectionreseterror: resetear conexión
+  deprecationwarning: advertencia de depreciación
+  environmenterror: error de entorno
+  eoferror: error de E/S
+  exception: excepción
+  fileexistserror: error de existencia de archivo
+  filenotfounderror: Error de no encontrar el archivo
+  floatingpointerror: error de puntero flotante
+  futurewarning: advertencia_futura
+  generatorexit: salida de generador
+  importerror: error de importación
+  importwarning: advertencia de importación
+  indentationerror: error de sangría
+  indexerror: Error de índice
+  interruptederror: error de interrupción
+  ioerror: error de E/S
+  isadirectoryerror: error de directorio
+  keyboardinterrupt: interrupción del teclado
+  keyerror: error de clave
+  lookuperror: error de búsqueda
+  memoryerror: error de memoria
+  modulenotfounderror: Error de módulo no encontrado
+  nameerror: Error de nombre
+  notadirectoryerror: error de no ser un directorio
+  notimplementederror: error de no implementación
+  oserror: oserror
+  overflowerror: error de desbordamiento
+  pendingdeprecationwarning: advertencia de advertencia de depreciación pendiente
+  permissionerror: error de permiso
+  processlookuperror: error de búsqueda de proceso
+  recursionerror: error de recursión
+  referenceerror: error de referencia
+  resourcewarning: advertencia de recursos
+  runtimeerror: error en tiempo de ejecución
+  runtimewarning: advertencia de tiempo de ejecución
+  stopasynciteration: detener la iteración asincrónica
+  stopiteration: stopiteration
+  syntaxerror: error de sintaxis
+  syntaxwarning: advertencia de sintaxis
+  systemexit: salir del sistema
+  taberror: error de tabulación
+  timeouterror: error de tiempo de espera
+  typeerror: error de tipo
+  unboundlocalerror: error de referencia local no enlazada
+  unicodedecodeerror: error de decodificación de Unicode
+  unicodeencodeerror: error de codificación unicode
+  unicodeerror: error de unicode
+  unicodetranslateerror: error de traducción de Unicode
+  unicodewarning: advertencia de unicode
+  userwarning: advertencia del usuario
+  valueerror: valor incorrecto
+  warning: advertencia
+  zerodivisionerror: error de división por cero
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-11-16'
+  last_updated: '2025-11-23'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

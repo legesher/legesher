@@ -10,6 +10,10 @@ keywords:
   # Python 3.11+ specific (PEP 654: Exception Groups)
   except*: استثناء*
 
+exceptions:
+  baseexceptiongroup: مجموعة الاستثناءات الأساسية
+  encodingwarning: تحذير الترميز
+  exceptiongroup: مجموعة الاستثناءات
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.13'
@@ -17,7 +21,7 @@ metadata:
   - '3.11'
   - '3.12'
   - '3.13'
-  last_updated: '2025-10-23'
+  last_updated: '2025-11-23'
   community_reviewed: false
   author: Legesher Team
   license: MIT

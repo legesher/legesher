@@ -125,12 +125,79 @@ builtins:
   valueerror: valeur incorrecte
   vars: vars
   zip: zipper
+exceptions:
+  arithmeticerror: erreur arithmétique
+  assertionerror: erreur d'assertion
+  attributeerror: Error d'attribut
+  baseexception: l'exception de base
+  basegeneratorexit: base générateur de sortie
+  blockingioerror: erreur d'E/S bloquante
+  brokenpipeerror: erreur de pipe cassée
+  buffererror: erreur de tampon
+  byteswarning: avertissement de bytes
+  childprocesserror: erreur de processus enfant
+  connectionabortederror: erreur d'abandon de connexion
+  connectionerror: erreur de connexion
+  connectionrefusederror: erreur de refus de connexion
+  connectionreseterror: resetter la connexion
+  deprecationwarning: avertissement de dépréciation
+  environmenterror: erreur d'environnement
+  eoferror: erreur d'éof
+  exception: l'exception
+  fileexistserror: erreur d'existence de fichier
+  filenotfounderror: erreur de fichier non trouvé
+  floatingpointerror: erreur de pointeau flottant
+  futurewarning: avertissement_futur
+  generatorexit: générateur d'exit
+  importerror: importation_erreur
+  importwarning: avertissement d'importation
+  indentationerror: erreur d'indentation
+  indexerror: Erreur d'index
+  interruptederror: erreur d'interruption
+  ioerror: erreur d'E/S
+  isadirectoryerror: erreur isadirectory
+  keyboardinterrupt: interruption du clavier
+  keyerror: erreur de clé
+  lookuperror: erreur de recherche
+  memoryerror: erreur de mémoire
+  modulenotfounderror: erreur de module non trouvé
+  nameerror: Error de nom
+  notadirectoryerror: erreur 'notadirectory'
+  notimplementederror: erreur de non-implémentation
+  oserror: erreur du système d'exploitation
+  overflowerror: erreur de débordement
+  pendingdeprecationwarning: avertissement de dépréciation en attente
+  permissionerror: erreur d'autorisation
+  processlookuperror: erreur de recherche de processus
+  recursionerror: erreur de récursivité
+  referenceerror: erreur de référence
+  resourcewarning: avertissement de ressources
+  runtimeerror: erreur de runtime
+  runtimewarning: avertissement de temps d'exécution
+  stopasynciteration: arrêt d'itération asynchrone
+  stopiteration: arrêt de l'itération
+  syntaxerror: erreur de syntaxe
+  syntaxwarning: avertissement de syntaxe
+  systemexit: arrêt du système
+  taberror: erreur de tabulation
+  timeouterror: erreur de délai
+  typeerror: erreur de type
+  unboundlocalerror: erreur de référence locale non liée
+  unicodedecodeerror: erreur de décodage Unicode
+  unicodeencodeerror: unicodeencodeerror
+  unicodeerror: erreur unicode
+  unicodetranslateerror: erreur de traduction de l'unicode
+  unicodewarning: avertissement de unicode
+  userwarning: avertissement de l'utilisateur
+  valueerror: valeur invalide
+  warning: avertissement
+  zerodivisionerror: erreur de division par zéro
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-11-16'
+  last_updated: '2025-11-23'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT
