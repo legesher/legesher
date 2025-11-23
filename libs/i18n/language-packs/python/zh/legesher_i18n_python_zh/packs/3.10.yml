@@ -125,12 +125,79 @@ builtins:
   valueerror: ValueError
   vars: vars
   zip: zip
+exceptions:
+  arithmeticerror: 算术错误
+  assertionerror: 断言错误
+  attributeerror: 属性错误
+  baseexception: 基异常
+  basegeneratorexit: 基底生成器退出
+  blockingioerror: 阻塞的 I/O 错误
+  brokenpipeerror: 破管错误
+  buffererror: 缓冲区错误
+  byteswarning: 字节警告
+  childprocesserror: 子进程错误
+  connectionabortederror: 连接中断错误
+  connectionerror: 连接错误
+  connectionrefusederror: 连接拒绝错误
+  connectionreseterror: 连接重置错误
+  deprecationwarning: 弃用警告
+  environmenterror: 环境错误
+  eoferror: 错误
+  exception: 异常情况
+  fileexistserror: 文件已存在错误
+  filenotfounderror: 文件未找到错误
+  floatingpointerror: 浮点数错误
+  futurewarning: 未来警告
+  generatorexit: 生成器退出
+  importerror: 导入错误
+  importwarning: 导入警告
+  indentationerror: 缩进错误
+  indexerror: 越界错误
+  interruptederror: 中断错误
+  ioerror: I/O 错误
+  isadirectoryerror: 文件或目录不存在
+  keyboardinterrupt: 键盘中断
+  keyerror: 键错误
+  lookuperror: 查找错误
+  memoryerror: 内存错误
+  modulenotfounderror: 模块未找到错误
+  nameerror: 名称错误
+  notadirectoryerror: No such file or directory
+  notimplementederror: 未实现错误
+  oserror: oserror
+  overflowerror: 溢出错误
+  pendingdeprecationwarning: 待删除警告
+  permissionerror: 权限错误
+  processlookuperror: 进程查找错误
+  recursionerror: 递归错误
+  referenceerror: 引用错误
+  resourcewarning: 资源警告
+  runtimeerror: 运行时错误
+  runtimewarning: 运行时警告
+  stopasynciteration: 停止异步迭代
+  stopiteration: 停止迭代
+  syntaxerror: 语法错误
+  syntaxwarning: 语法警告
+  systemexit: 系统退出
+  taberror: 标签错误
+  timeouterror: 超时错误
+  typeerror: 类型错误
+  unboundlocalerror: 未绑定局部错误
+  unicodedecodeerror: Unicode解码错误
+  unicodeencodeerror: unicodeencodeerror
+  unicodeerror: unicode错误
+  unicodetranslateerror: unicodetranslate错误
+  unicodewarning: unicode警告
+  userwarning: 用户警告
+  valueerror: ValueError
+  warning: 警告
+  zerodivisionerror: 零除数错误
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-11-16'
+  last_updated: '2025-11-23'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

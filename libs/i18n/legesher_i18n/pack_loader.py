@@ -38,6 +38,7 @@ class LanguagePack:
         version: Python version string (e.g., '3.10', '3.13')
         keywords: Merged keyword translations from pack + inheritance
         builtins: Merged builtin function translations
+        exceptions: Merged exception type translations
         metadata: Optional metadata about the pack
         extends: Optional path to parent pack (for reference)
         inheritance_chain: List of pack paths in inheritance order
@@ -48,6 +49,7 @@ class LanguagePack:
     version: str
     keywords: dict[str, str] = field(default_factory=dict)
     builtins: dict[str, str] = field(default_factory=dict)
+    exceptions: dict[str, str] = field(default_factory=dict)
     metadata: Optional[LanguagePackMetadata] = None
     extends: Optional[str] = None
     inheritance_chain: list[str] = field(default_factory=list)
@@ -74,6 +76,18 @@ class LanguagePack:
         """
         return self.builtins.get(builtin)
 
+    def get_exception_translation(self, exception: str) -> Optional[str]:
+        """Get translation for a specific exception type.
+
+        Args:
+            exception: English exception name to translate (e.g., 'ValueError')
+
+        Returns:
+            Translated exception name, or None if not found
+        """
+        # Try lowercase first (our internal convention), then original case
+        return self.exceptions.get(exception.lower()) or self.exceptions.get(exception)
+
     def has_keyword(self, keyword: str) -> bool:
         """Check if pack contains a keyword translation.
 
@@ -90,7 +104,7 @@ class LanguagePack:
         return (
             f"LanguagePack(language={self.language}, target={self.target}, "
             f"version={self.version}, keywords={len(self.keywords)}, "
-            f"builtins={len(self.builtins)})"
+            f"builtins={len(self.builtins)}, exceptions={len(self.exceptions)})"
         )
 
 
@@ -242,6 +256,7 @@ class LanguagePackLoader:
             version=pack_schema.version,
             keywords=dict(pack_schema.keywords),  # Copy to ensure immutability
             builtins=dict(pack_schema.builtins),
+            exceptions=dict(pack_schema.exceptions),
             metadata=pack_schema.metadata,
             extends=pack_schema.extends,
             inheritance_chain=inheritance_chain,
@@ -406,6 +421,12 @@ class LanguagePackLoader:
             base_builtins = base.get("builtins", {})
             override_builtins = override.get("builtins", {})
             merged["builtins"] = {**base_builtins, **override_builtins}
+
+        # Merge exceptions (override takes precedence)
+        if "exceptions" in base or "exceptions" in override:
+            base_exceptions = base.get("exceptions", {})
+            override_exceptions = override.get("exceptions", {})
+            merged["exceptions"] = {**base_exceptions, **override_exceptions}
 
         # Override scalar fields
         for key in ["language", "target", "version", "extends", "metadata"]:

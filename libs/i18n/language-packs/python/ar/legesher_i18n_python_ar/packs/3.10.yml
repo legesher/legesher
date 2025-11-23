@@ -125,12 +125,79 @@ builtins:
   valueerror: خطأ القيمة
   vars: الحصول على المتغيرات
   zip: التجميع
+exceptions:
+  arithmeticerror: خطأ حسابي
+  assertionerror: خطأ التأكيد
+  attributeerror: خطأ في السمة
+  baseexception: الاستثناء الأساسي
+  basegeneratorexit: إنشاء قاعدة الخروج
+  blockingioerror: خطأ الإدخال/الإخراج المُعطّل
+  brokenpipeerror: خطأ انسداد الأنبوب المكسور
+  buffererror: خطأ_الذاكرة_الموقتة
+  byteswarning: تحذير بايتس
+  childprocesserror: خطأ في عملية الطفل
+  connectionabortederror: خطأ الإنهاء القسري للاتصال
+  connectionerror: خطأ_التواصل
+  connectionrefusederror: خطأ رفض الاتصال
+  connectionreseterror: إعادة تعيين خطأ الاتصال
+  deprecationwarning: تحذير الإهمال
+  environmenterror: خطأ البيئة
+  eoferror: خطأ
+  exception: الاستثناء
+  fileexistserror: خطأ وجود ملف
+  filenotfounderror: خطأ_في_العثور_على_الملف
+  floatingpointerror: خطأ مؤشر العائمة
+  futurewarning: تحذير_المستقبل
+  generatorexit: خروج
+  importerror: خطأ الاستيراد
+  importwarning: تحذير الاستيراد
+  indentationerror: خطأ الإزاحة
+  indexerror: خطأ الفهرس
+  interruptederror: خطأ مقاطعة
+  ioerror: خطأ الإدخال/الإخراج
+  isadirectoryerror: خطأ في الوصول إلى الدليل
+  keyboardinterrupt: مقاطعة لوحة المفاتيح
+  keyerror: خطأ_المفتاح
+  lookuperror: خطأ البحث
+  memoryerror: خطأ الذاكرة
+  modulenotfounderror: خطأ في استيراد الوحدة
+  nameerror: خطأ الاسم
+  notadirectoryerror: خطأ غير موجود الدليل
+  notimplementederror: خطأ التنفيذ غير المُنفذ
+  oserror: خطأ نظام التشغيل
+  overflowerror: خطأ التدفق الزائد
+  pendingdeprecationwarning: تحذير_التَحْذِير_الْمُؤَقَّت
+  permissionerror: خطأ الإذن
+  processlookuperror: خطأ_البحث_في_العملية
+  recursionerror: خطأ الاستدعاء الذاتي
+  referenceerror: خطأ المرجع
+  resourcewarning: تحذير المورد
+  runtimeerror: خطأ وقت التشغيل
+  runtimewarning: تحذير وقت التشغيل
+  stopasynciteration: إيقاف التكرار غير المتزامن
+  stopiteration: الإيقاف_التكراري
+  syntaxerror: خطأ في بناء الجملة
+  syntaxwarning: تحذير بناء
+  systemexit: إنهاء النظام
+  taberror: خطأ التبويب
+  timeouterror: خطأ_الوقت
+  typeerror: خطأ النوع
+  unboundlocalerror: خطأ غير محدود محلي
+  unicodedecodeerror: خطأ فك تشفير Unicode
+  unicodeencodeerror: خطأ الترميز Unicode
+  unicodeerror: خطأ يونيكود
+  unicodetranslateerror: خطأ ترجمة يونيكود
+  unicodewarning: تحذير يونيكود
+  userwarning: تحذير المستخدم
+  valueerror: خطأ القيمة
+  warning: تحذير
+  zerodivisionerror: خطأ القسمة على الصفر
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-11-16'
+  last_updated: '2025-11-23'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

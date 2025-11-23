@@ -13,7 +13,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.14'
-  last_updated: '2025-11-16'
+  last_updated: '2025-11-23'
   community_reviewed: true
   author: Legesher Team
   license: MIT

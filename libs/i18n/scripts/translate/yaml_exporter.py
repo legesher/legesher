@@ -32,15 +32,12 @@ class YAMLExporter:
         Args:
             db: Translation database instance
             output_dir: Output directory for YAML files
-                       (defaults to libs/i18n/programming_languages/python/3.10/)
+                       (defaults to libs/i18n/language-packs/python/)
         """
         self.db = db
         if output_dir is None:
             self.output_dir = (
-                Path(__file__).parent.parent.parent
-                / "programming_languages"
-                / "python"
-                / "3.10"
+                Path(__file__).parent.parent.parent / "language-packs" / "python"
             )
         else:
             self.output_dir = Path(output_dir)
@@ -104,6 +101,7 @@ class YAMLExporter:
         # Classify and organize terms
         keywords = {}
         builtins = {}
+        exceptions = {}
         python_version = "3.10"  # Default version for base packs
 
         for term, trans in term_map.items():
@@ -118,11 +116,13 @@ class YAMLExporter:
             # Keywords and special values
             if category == "keyword":
                 keywords[term] = translation
-            # Built-in functions, types, exceptions, and constants
+            # Exceptions get their own section
+            elif category == "exception":
+                exceptions[term] = translation
+            # Built-in functions, types, and constants
             elif category in (
                 "builtin_func",
                 "builtin_type",
-                "exception",
                 "special_constant",
             ):
                 builtins[term] = translation
@@ -140,6 +140,7 @@ class YAMLExporter:
             "version": python_version,
             "keywords": keywords,
             "builtins": builtins,
+            "exceptions": exceptions,
             "metadata": {
                 "python_version_min": python_version,
                 "python_version_max": "3.13",
@@ -174,7 +175,8 @@ class YAMLExporter:
             )
 
         logger.info(
-            f"Exported {len(keywords)} keywords + {len(builtins)} builtins to {output_file}"
+            f"Exported {len(keywords)} keywords + {len(builtins)} builtins + "
+            f"{len(exceptions)} exceptions to {output_file}"
             + (f" (source: {source})" if source else "")
         )
 

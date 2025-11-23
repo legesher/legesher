@@ -150,18 +150,98 @@ BUILTIN_TYPES = [
     # Note: 'type' moves to KEYWORDS_3_12 in Python 3.12+
 ]
 
-# Common Exceptions
+# All Python Built-in Exceptions (Python 3.13)
+# Organized by hierarchy for clarity
+# See: https://docs.python.org/3/library/exceptions.html
 EXCEPTIONS = [
-    "attributeerror",
+    # Base exception classes
     "baseexception",
+    "basegeneratorexit",  # 3.12+ internal
     "exception",
+    "generatorexit",
+    # System-related exceptions
+    "systemexit",
+    "keyboardinterrupt",
+    # Arithmetic exceptions
+    "arithmeticerror",
+    "floatingpointerror",
+    "overflowerror",
+    "zerodivisionerror",
+    # Lookup exceptions
+    "lookuperror",
     "indexerror",
     "keyerror",
+    # Name/Attribute exceptions
+    "attributeerror",
     "nameerror",
-    "runtimeerror",
+    "unboundlocalerror",
+    # OS/IO exceptions
+    "oserror",
+    "blockingioerror",
+    "childprocesserror",
+    "connectionerror",
+    "brokenpipeerror",
+    "connectionabortederror",
+    "connectionrefusederror",
+    "connectionreseterror",
+    "fileexistserror",
+    "filenotfounderror",
+    "interruptederror",
+    "isadirectoryerror",
+    "notadirectoryerror",
+    "permissionerror",
+    "processlookuperror",
+    "timeouterror",
+    # Import exceptions
+    "importerror",
+    "modulenotfounderror",
+    # Iteration exceptions
     "stopiteration",
+    "stopasynciteration",
+    # Type/Value exceptions
     "typeerror",
     "valueerror",
+    "unicodeerror",
+    "unicodedecodeerror",
+    "unicodeencodeerror",
+    "unicodetranslateerror",
+    # Runtime exceptions
+    "runtimeerror",
+    "notimplementederror",
+    "recursionerror",
+    # Reference exceptions
+    "referenceerror",
+    # Assertion exceptions
+    "assertionerror",
+    # Memory exceptions
+    "memoryerror",
+    # Buffer exceptions
+    "buffererror",
+    # EOF exceptions
+    "eoferror",
+    # Syntax exceptions
+    "syntaxerror",
+    "indentationerror",
+    "taberror",
+    # Environment exceptions
+    "environmenterror",  # Alias for OSError
+    "ioerror",  # Alias for OSError
+    # Warning classes (also exceptions)
+    "warning",
+    "userwarning",
+    "deprecationwarning",
+    "pendingdeprecationwarning",
+    "syntaxwarning",
+    "runtimewarning",
+    "futurewarning",
+    "importwarning",
+    "unicodewarning",
+    "byteswarning",
+    "encodingwarning",
+    "resourcewarning",
+    # Exception groups (Python 3.11+)
+    "exceptiongroup",
+    "baseexceptiongroup",
 ]
 
 # Special Constants
