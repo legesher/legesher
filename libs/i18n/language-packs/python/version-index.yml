@@ -1,35 +1,47 @@
 # Python Version Index
-# Tracks keyword changes across Python versions for language pack inheritance
+# Tracks keyword and builtin changes across Python versions for language pack inheritance
 
 python_versions:
   '3.10':
+    added_builtins:
+    - aiter                # Async iterator protocol
+    - anext                # Async next() equivalent
     added_keywords:
     - match                # PEP 634: Structural Pattern Matching
     - case                 # PEP 634: Structural Pattern Matching
-    removed_keywords: []
     base:                  # Base version (no inheritance for MVP)
+    removed_builtins: []
+    removed_keywords: []
 
   '3.11':
+    added_builtins: []     # No new builtins in Python 3.11
     added_keywords:
     - except*              # PEP 654: Exception Groups
-    removed_keywords: []
     base: '3.10'
+    removed_builtins: []
+    removed_keywords: []
 
   '3.12':
+    added_builtins: []     # No new builtins in Python 3.12
     added_keywords:
     - type                 # PEP 695: Type Parameter Syntax
-    removed_keywords: []
     base: '3.11'
+    removed_builtins: []
+    removed_keywords: []
 
   '3.13':
+    added_builtins: []     # No new builtins in Python 3.13
     added_keywords: []     # No new keywords in Python 3.13
-    removed_keywords: []
     base: '3.12'
+    removed_builtins: []
+    removed_keywords: []
 
   '3.14':
+    added_builtins: []     # No new builtins in Python 3.14
     added_keywords: []     # No new keywords in Python 3.14
-    removed_keywords: []
     base: '3.13'
+    removed_builtins: []
+    removed_keywords: []
 
 # Configuration for automatic updates
 auto_update:

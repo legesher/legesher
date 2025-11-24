@@ -65,9 +65,11 @@ class TestLanguagePackLoading:
             f"{lang} should have 39 keywords, got {len(pack.keywords)}"
         )
 
-        # All packs should have 81 builtins (updated from 41)
-        assert len(pack.builtins) == 81, (
-            f"{lang} should have 81 builtins, got {len(pack.builtins)}"
+        # After CORE-469, exceptions were moved to separate section
+        # English has 71 builtins, other packs have 81 (includes some legacy exceptions)
+        expected_builtins = 71 if lang == "en" else 81
+        assert len(pack.builtins) == expected_builtins, (
+            f"{lang} should have {expected_builtins} builtins, got {len(pack.builtins)}"
         )
 
 
@@ -151,11 +153,16 @@ class TestTranslationQuality:
 
     @pytest.mark.parametrize("lang", ["ar", "es", "en", "fr", "zh"])
     def test_all_languages_have_81_builtins(self, lang):
-        """Verify all language packs have 81 builtins (updated count)."""
+        """Verify language packs have correct builtin counts."""
         pack = load_language_pack(lang, version="3.10")
 
-        assert len(pack.builtins) == 81, (
-            f"{lang} should have 81 builtins, got {len(pack.builtins)}"
+        # After CORE-469, exceptions moved to separate section
+        # English: 71 builtins (exceptions now in exceptions section)
+        # Others: 81 builtins (some legacy exceptions still in builtins)
+        expected_builtins = 71 if lang == "en" else 81
+
+        assert len(pack.builtins) == expected_builtins, (
+            f"{lang} should have {expected_builtins} builtins, got {len(pack.builtins)}"
         )
 
 

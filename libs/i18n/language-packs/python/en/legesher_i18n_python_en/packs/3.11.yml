@@ -1,15 +1,16 @@
 # English Language Pack for Python 3.11+
-# Extends 3.10 pack with Python 3.11 additions (except*)
+# Extends 3.10 pack and adds except* for exception groups
 
 language: en
 target: python
 version: '3.11'
+exceptions:
+  baseexceptiongroup: baseexceptiongroup
+  encodingwarning: encodingwarning
+  exceptiongroup: exceptiongroup
 extends: 3.10.yml
-
 keywords:
-  # Python 3.11+ specific (PEP 654: Exception Groups)
   except*: except*
-
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'
@@ -18,7 +19,7 @@ metadata:
   - '3.12'
   - '3.13'
   - '3.14'
-  last_updated: '2025-11-23'
+  last_updated: '2025-11-24'
   community_reviewed: true
   author: Legesher Team
   license: MIT

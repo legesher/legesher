@@ -8,7 +8,7 @@ extends: 3.10.yml
 keywords:
   except*: except
 exceptions:
-  exceptiongroup: ' özel durum grubu'
+  exceptiongroup: özel durum grubu
   baseexceptiongroup: temel istisna grubu
   encodingwarning: encodingwarning
 metadata:

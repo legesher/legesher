@@ -113,7 +113,7 @@ builtins:
   runtimeerror: erreur de runtime
   set: ensemble
   setattr: setattrter
-  slice: ' tranche '
+  slice: tranche
   sorted: trié
   staticmethod: méthode de classe
   stopiteration: arrêt de l'itération

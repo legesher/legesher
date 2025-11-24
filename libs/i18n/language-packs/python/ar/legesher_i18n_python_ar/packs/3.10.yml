@@ -89,7 +89,7 @@ builtins:
   issubclass: التصنيف_التفرعي
   iter: الحلقة
   keyerror: خطأ_المفتاح
-  len: ' الطول '
+  len: الطول
   list: قائمة
   locals: المتغيرات المحلية
   map: الخريطة
