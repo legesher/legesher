@@ -1,0 +1,22 @@
+# TH Language Pack for Python 3.11+
+# Extends 3.10 pack and adds except* for exception groups
+
+language: th
+target: python
+version: '3.11'
+extends: 3.10.yml
+keywords:
+  except*: เครื่องมือที่ใช้ในการเอาเป็น
+exceptions:
+  exceptiongroup: กลุ่มข้อความที่ไม่เป็นประโยชน์
+  baseexceptiongroup: กลุ่มข้อความที่เป็นพื้นฐาน
+  encodingwarning: คำเตือนการอัปโลด
+metadata:
+  python_version_min: '3.11'
+  python_version_max: '3.14'
+  compatibility_tested:
+  - '3.11'
+  last_updated: '2025-11-24'
+  community_reviewed: false
+  author: Legesher Team (Aya AI Model)
+  license: MIT

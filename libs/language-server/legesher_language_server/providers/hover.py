@@ -21,7 +21,11 @@ if TYPE_CHECKING:
 
 from lsprotocol.types import Hover, MarkupContent, MarkupKind, Position
 
-from ..utils.keyword_docs import KeywordDocumentation
+from ..utils.keyword_docs import (
+    BuiltinDocumentation,
+    KeywordDocumentation,
+    ParameterTranslation,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -111,9 +115,14 @@ class HoverProvider:
         self.document_text = document_text
         self.document_uri = document_uri
         self.keyword_docs = KeywordDocumentation()
+        self.builtin_docs = BuiltinDocumentation()
+        self.param_translator = ParameterTranslation()
 
         # Load keyword translation map for target language
         self._keyword_translation_map = self._load_keyword_translations()
+
+        # Load builtin translation map for target language
+        self._builtin_translation_map = self._load_builtin_translations()
 
     def _load_keyword_translations(self) -> dict[str, str]:
         """Load keyword translation map (target language -> English).
@@ -147,6 +156,38 @@ class HoverProvider:
 
         return keyword_map
 
+    def _load_builtin_translations(self) -> dict[str, str]:
+        """Load builtin translation map (target language -> English).
+
+        Returns:
+            Dictionary mapping translated builtins to English builtins
+            Example: {"imprimir": "print"}, {"طباعة": "print"}
+        """
+        from legesher_i18n import LanguagePackLoader
+
+        builtin_map = {}
+
+        try:
+            loader = LanguagePackLoader()
+            pack = loader.load(language=self.target_lang, target="python", version="3.10")
+
+            # Build reverse map: target language -> English
+            for english, translated in pack.builtins.items():
+                builtin_map[translated] = english
+
+            logger.info(
+                f"Loaded {len(builtin_map)} builtin translations for hover provider "
+                f"(lang={self.target_lang})"
+            )
+            logger.debug(f"Sample builtin translations: {list(builtin_map.items())[:5]}")
+
+        except Exception as e:
+            # If loading fails, return empty dict (will fall back to English-only builtins)
+            logger.warning(f"Failed to load builtin translations for hover: {e}")
+            pass
+
+        return builtin_map
+
     async def get_hover_content(self, word: str, position: Position) -> str | None:
         """Get hover content for word at position.
 
@@ -177,9 +218,15 @@ class HoverProvider:
             )
             return self._hover_keyword(english_keyword, original_keyword=word)
 
-        # Check if builtin
+        # Check if English builtin
         if self._is_builtin(word):
             return await self._hover_builtin(word)
+
+        # Check if translated builtin (e.g., Spanish "imprimir" -> "print")
+        english_builtin = self._builtin_translation_map.get(word)
+        if english_builtin and self._is_builtin(english_builtin):
+            logger.debug(f"Translated builtin: '{word}' -> '{english_builtin}'")
+            return await self._hover_builtin(english_builtin, original_name=word)
 
         # Check if user function/class
         hover_content = self._hover_user_defined(word)
@@ -232,40 +279,66 @@ class HoverProvider:
         """
         return hasattr(builtins, name)
 
-    async def _hover_builtin(self, name: str) -> str | None:
+    async def _hover_builtin(self, name: str, original_name: str | None = None) -> str | None:
         """Get hover content for builtin function/class.
 
         Args:
-            name: Builtin name (e.g., 'print', 'len', 'list')
+            name: Builtin name in English (e.g., 'print', 'len', 'list')
+            original_name: Original translated name if different (e.g., 'imprimir')
 
         Returns:
             Markdown-formatted docstring or None
         """
-        # Check cache first
-        cache_key = (name, self.source_lang, self.target_lang)
+        # Use original name for cache key if provided
+        display_name = original_name if original_name else name
+        cache_key = (display_name, self.source_lang, self.target_lang)
         if cache_key in _docstring_cache:
             return _docstring_cache[cache_key]
 
         try:
             builtin_obj = getattr(builtins, name)
-            docstring = inspect.getdoc(builtin_obj)
+
+            # Try to get translated documentation first
+            docstring = self.builtin_docs.get(name, self.target_lang)
+            if not docstring:
+                # Fallback to English translated doc
+                docstring = self.builtin_docs.get(name, "en")
+            if not docstring:
+                # Fallback to Python's builtin docstring
+                docstring = inspect.getdoc(builtin_obj)
 
             if not docstring:
                 return None
 
-            # For MVP, show English docstring
-            # TODO: Integrate translation API for docstring translation
-            # (Would require legesher-i18n Translation API integration)
-
             # Get signature if available
             try:
                 sig = inspect.signature(builtin_obj)
-                signature_str = f"{name}{sig}"
+                sig_str = str(sig)
+                # Translate parameter names in signature
+                translated_sig = self.param_translator.translate_signature(
+                    sig_str, self.target_lang
+                )
+                # Build signature with translated function name and parameters
+                signature_str = f"{display_name}{translated_sig}"
             except (ValueError, TypeError):
-                signature_str = f"{name}(...)"
+                signature_str = f"{display_name}(...)"
 
-            # Format as markdown
-            content = f"**`{signature_str}`** — Python builtin\n\n{docstring}"
+            # Format as markdown with improved layout
+            if original_name and original_name != name:
+                # Show: translated name (english name) - for translated builtins
+                # Format:
+                # **`imprimir`** (`print`)
+                #
+                # ```
+                # imprimir(*argumentos, separador=' ', fin='\n', archivo=None, vaciar=False)
+                # ```
+                #
+                # Description in target language
+                content = (
+                    f"**`{display_name}`** (`{name}`)\n\n```\n{signature_str}\n```\n\n{docstring}"
+                )
+            else:
+                content = f"**`{display_name}`**\n\n```\n{signature_str}\n```\n\n{docstring}"
 
             # Cache result
             _docstring_cache[cache_key] = content

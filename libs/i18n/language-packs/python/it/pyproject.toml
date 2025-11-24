@@ -1,0 +1,60 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+authors = [
+    {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
+]
+license = {text = "MIT"}
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "legesher-i18n>=0.0.1,<0.1.0",
+]
+name = "legesher-i18n-python-it"
+version = "0.0.1"
+description = "Italian language pack for Python in Legesher"
+readme = "README.md"
+keywords = ["legesher", "i18n", "italian", "python", "translation", "multilingual"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Internationalization",
+    "Topic :: Software Development :: Localization",
+    "Natural Language :: Italian",
+    "Operating System :: OS Independent",
+]
+
+[tool.uv.sources]
+legesher-i18n = { path = "../../../", editable = true }
+
+[tool.semantic_release]
+version_variable = "legesher_i18n_python_it/__init__.py:__version__"
+version_toml = "pyproject.toml:project.version"
+commit_parser = "angular"
+major_on_zero = true
+allow_zero_version = true
+branch = "main"
+tag_format = "i18n-python-it-v{version}"
+upload_to_vcs_release = true
+upload_to_pypi = false
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "feat", "fix", "docs", "style", "refactor",
+    "perf", "test", "build", "ci", "chore", "revert"
+]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    "^chore\\(release\\):",
+    "^Merge",
+]

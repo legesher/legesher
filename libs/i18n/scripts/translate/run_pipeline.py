@@ -89,6 +89,12 @@ def parse_args():
         help="Verbose logging",
     )
 
+    parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="Skip translations that already exist in the database",
+    )
+
     return parser.parse_args()
 
 
@@ -112,6 +118,7 @@ async def main_async(args):
         max_budget=args.max_budget,
         context_dir=args.context_dir,
         output_db=args.output_db,
+        skip_existing=args.skip_existing,
     )
 
     logger.info("Starting translation pipeline...")

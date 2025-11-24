@@ -1,0 +1,22 @@
+# Japanese Language Pack for Python 3.11+
+# Extends 3.10 pack and adds except* for exception groups
+
+language: ja
+target: python
+version: '3.11'
+extends: 3.10.yml
+keywords:
+  except*: except の使用
+exceptions:
+  exceptiongroup: 例外グループ
+  baseexceptiongroup: 基底例外グループ
+  encodingwarning: エンコーディング警告
+metadata:
+  python_version_min: '3.11'
+  python_version_max: '3.14'
+  compatibility_tested:
+  - '3.11'
+  last_updated: '2025-11-24'
+  community_reviewed: false
+  author: Legesher Team (Aya AI Model)
+  license: MIT
