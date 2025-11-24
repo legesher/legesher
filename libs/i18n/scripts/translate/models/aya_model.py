@@ -4,6 +4,7 @@ This module implements the TranslationModel interface using the Aya 23
 multilingual model running locally through Ollama.
 """
 
+import asyncio
 import json
 import logging
 import re
@@ -34,15 +35,21 @@ class AyaModel(TranslationModel):
         self,
         model: str = "aya:latest",
         dry_run: bool = False,
+        max_retries: int = 3,
+        retry_delay: float = 2.0,
     ):
         """Initialize Aya model.
 
         Args:
             model: Aya model version in Ollama
             dry_run: If True, don't make real calls (for testing)
+            max_retries: Maximum number of retry attempts on failure
+            retry_delay: Initial delay in seconds before first retry (exponential backoff)
         """
         self.model = model
         self.dry_run = dry_run
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
 
         if not self.dry_run:
             # Test Ollama connection
@@ -75,7 +82,7 @@ class AyaModel(TranslationModel):
         return 0.0
 
     async def translate(self, request: TranslationRequest) -> Translation:
-        """Translate a Python term using Aya 23.
+        """Translate a Python term using Aya 23 with retry logic.
 
         Args:
             request: Translation request with term, language, and context
@@ -84,55 +91,98 @@ class AyaModel(TranslationModel):
             Translation with result and metadata
 
         Raises:
-            Exception: If Ollama call fails or response parsing fails
+            Exception: If Ollama call fails after all retries
         """
         if self.dry_run:
             return self._mock_translation(request)
 
         prompt = self._build_prompt(request)
 
-        try:
-            logger.debug(
-                f"Calling Aya via Ollama for term '{request.term}' -> {request.target_language}"
-            )
+        # Retry with exponential backoff
+        last_exception = None
+        for attempt in range(self.max_retries):
+            try:
+                logger.debug(
+                    f"Calling Aya via Ollama for term '{request.term}' -> {request.target_language} "
+                    f"(attempt {attempt + 1}/{self.max_retries})"
+                )
 
-            # Call Ollama API (synchronous, but we wrap in async context)
-            response = ollama.generate(
-                model=self.model,
-                prompt=prompt,
-                options={
-                    "temperature": 0.3,  # Lower temperature for more consistent translations
-                    "num_predict": 512,  # Max output tokens
-                },
-            )
+                # Call Ollama API in a thread to avoid blocking the event loop
+                response = await asyncio.to_thread(
+                    ollama.generate,
+                    model=self.model,
+                    prompt=prompt,
+                    options={
+                        "temperature": 0.3,  # Lower temperature for more consistent translations
+                        "num_predict": 512,  # Max output tokens
+                    },
+                )
 
-            response_text = response["response"]
+                response_text = response["response"]
 
-            # Parse JSON from response
-            result_data = self._parse_json_response(response_text)
+                # Parse JSON from response
+                result_data = self._parse_json_response(response_text)
 
-            logger.info(
-                f"Aya translation: '{request.term}' -> '{result_data.get('translation')}' "
-                f"({request.target_language})"
-            )
+                logger.info(
+                    f"Aya translation: '{request.term}' -> '{result_data.get('translation')}' "
+                    f"({request.target_language})"
+                )
 
-            # Build Translation object
-            return Translation(
-                translation=result_data.get("translation", ""),
-                alternatives=result_data.get("alternatives", []),
-                rationale=result_data.get("rationale", ""),
-                word_type=result_data.get("word_type", ""),
-                form=result_data.get("form", ""),
-                model_name=self.get_model_name(),
-                cost=0.0,  # Local model, no cost
-                input_tokens=0,  # Ollama doesn't report token counts
-                output_tokens=0,
-                confidence=result_data.get("confidence", 0.85),
-            )
+                # Build Translation object
+                return Translation(
+                    translation=result_data.get("translation", ""),
+                    alternatives=result_data.get("alternatives", []),
+                    rationale=result_data.get("rationale", ""),
+                    word_type=result_data.get("word_type", ""),
+                    form=result_data.get("form", ""),
+                    model_name=self.get_model_name(),
+                    cost=0.0,  # Local model, no cost
+                    input_tokens=0,  # Ollama doesn't report token counts
+                    output_tokens=0,
+                    confidence=result_data.get("confidence", 0.85),
+                )
 
-        except Exception as e:
-            logger.error(f"Aya/Ollama error for '{request.term}': {e}")
-            raise
+            except (ConnectionError, TimeoutError, OSError) as e:
+                # Retryable errors (connection issues, timeouts)
+                last_exception = e
+                if attempt < self.max_retries - 1:
+                    delay = self.retry_delay * (2**attempt)
+                    logger.warning(
+                        f"Aya/Ollama error for '{request.term}' (attempt {attempt + 1}): {e}. "
+                        f"Retrying in {delay:.1f}s..."
+                    )
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(
+                        f"Aya/Ollama error for '{request.term}' after {self.max_retries} attempts: {e}"
+                    )
+                    raise
+
+            except ValueError as e:
+                # JSON parsing errors - retry in case of malformed response
+                last_exception = e
+                if attempt < self.max_retries - 1:
+                    delay = self.retry_delay * (2**attempt)
+                    logger.warning(
+                        f"Aya response parsing failed for '{request.term}' (attempt {attempt + 1}): {e}. "
+                        f"Retrying in {delay:.1f}s..."
+                    )
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(
+                        f"Aya response parsing failed for '{request.term}' after {self.max_retries} attempts: {e}"
+                    )
+                    raise
+
+            except Exception as e:
+                # Non-retryable errors
+                logger.error(f"Aya/Ollama error for '{request.term}': {e}")
+                raise
+
+        # This should never be reached, but just in case
+        if last_exception:
+            raise last_exception
+        raise Exception("Translation failed after all retries")
 
     def _build_prompt(self, request: TranslationRequest) -> str:
         """Build translation prompt for Aya.
@@ -169,6 +219,7 @@ class AyaModel(TranslationModel):
             "he": "Hebrew",
             "id": "Indonesian",
             "ms": "Malay",
+            "hu": "Hungarian",
         }
 
         language_name = LANGUAGE_NAMES.get(

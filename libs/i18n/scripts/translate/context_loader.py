@@ -188,6 +188,7 @@ class LinguisticStandardsLoader:
             "he": "Hebrew",
             "id": "Indonesian",
             "ms": "Malay",
+            "hu": "Hungarian",
         }
 
         language_name = LANGUAGE_FULL_NAMES.get(language_code, language_code.upper())
