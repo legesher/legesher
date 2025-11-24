@@ -1,12 +1,21 @@
-"""Legesher Core - Token-based translation engine for multilingual Python.
+"""Legesher Core - Translation engine for multilingual Python.
 
 This package provides the core translation functionality for Legesher,
 enabling developers to write Python code in their native language.
 
 Public API:
     Translation Engine:
-        - TokenTranslator: Main translation engine
+        - TokenTranslator: Token-based translation engine (simple, stable)
+        - TreeSitterTranslator: Tree-sitter translation engine (4x faster, AST-based)
         - TokenMapper: Language map abstraction
+
+    Language Abstraction Interface (CORE-415):
+        - Translator: Protocol defining translator interface
+        - create_translator: Factory function for creating translators
+        - create_translator_from_language_pack: Convenience factory for language packs
+        - get_default_backend: Query default backend from environment
+        - get_supported_languages: List supported programming languages
+        - TranslatorBackend: Type alias for backend selection
 
     Cultural Comments (MLCP Protocol):
         - CulturalComment: Immutable cultural comment metadata
@@ -31,6 +40,12 @@ Example:
     >>> translator = TokenTranslator(spanish_keywords, spanish_builtins)
     >>> code = "def greet():\\n    print('Hello')"
     >>> spanish_code = translator.translate_code(code, "en", "es")
+
+    >>> # Using factory function (CORE-415)
+    >>> from legesher_core import create_translator
+    >>> translator = create_translator("python", spanish_keywords, spanish_builtins)
+    >>> # Or use environment variable: export LEGESHER_USE_TREE_SITTER=true
+    >>> translator = create_translator("python", spanish_keywords, spanish_builtins)
 
     >>> # With cultural comments
     >>> code_with_cultural = '''
@@ -59,18 +74,38 @@ from .exceptions import (
     UnsupportedLanguageError,
 )
 from .ide_support import CulturalCommentProvider
+from .language_interface import (
+    TranslatorBackend,
+    TranslatorConfig,
+    create_translator,
+    create_translator_from_config,
+    create_translator_from_language_pack,
+    get_default_backend,
+    get_supported_languages,
+)
 from .metadata import MetadataManager
 from .token_mapper import TokenMapper
 from .transformer import TokenTranslator
 from .translation_tracker import TranslationTracker
-from .types import CulturalComment, CulturalCommentMetadata
+from .tree_sitter.translator import TreeSitterTranslator
+from .types import CulturalComment, CulturalCommentMetadata, Translator
 
 __version__ = "0.1.0"
 
 __all__ = [
     # Translation engine
     "TokenTranslator",
+    "TreeSitterTranslator",
     "TokenMapper",
+    # Language abstraction interface (CORE-415)
+    "Translator",
+    "TranslatorBackend",
+    "TranslatorConfig",
+    "create_translator",
+    "create_translator_from_config",
+    "create_translator_from_language_pack",
+    "get_default_backend",
+    "get_supported_languages",
     # Cultural comments (MLCP)
     "CulturalComment",
     "CulturalCommentMetadata",

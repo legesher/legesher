@@ -80,6 +80,21 @@ class TokenTranslator:
         self.mapper = TokenMapper(keyword_map, builtin_map)
         self.python_version = python_version
 
+    def __repr__(self) -> str:
+        """Return a developer-friendly string representation for debugging.
+
+        Example:
+            >>> translator = TokenTranslator({"def": "definir"}, {"print": "imprimir"})
+            >>> repr(translator)
+            "TokenTranslator(keywords=1, builtins=1, python_version='3.13')"
+        """
+        return (
+            f"TokenTranslator("
+            f"keywords={len(self.mapper.keyword_map)}, "
+            f"builtins={len(self.mapper.builtin_map)}, "
+            f"python_version={self.python_version!r})"
+        )
+
     def translate_code(
         self,
         source_code: str,

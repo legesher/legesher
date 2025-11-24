@@ -274,6 +274,51 @@ Current documentation:
 **IDE Integration**: Language Server Protocol (multi-editor support)
 **Python Versions**: Version-aware packs with inheritance (future-proof)
 **Protocol**: MLCP (Multilingual Code Protocol) for ecosystem interoperability
+**Language Abstraction** (CORE-415): Protocol-based interface for multiple translator backends and programming languages
+
+#### Language Abstraction Interface (CORE-415)
+
+Legesher uses a Protocol-based abstraction to support multiple translator backends and programming languages:
+
+**Available Backends**:
+
+- **TokenTranslator**: Token-based, simple, stable (~140μs for medium files)
+- **TreeSitterTranslator**: AST-based, production-ready (~160μs for medium files)
+
+**Factory Pattern**:
+
+```python
+from legesher_core import create_translator
+
+# Default: TokenTranslator (or from environment)
+translator = create_translator("python", keyword_map, builtin_map)
+
+# Explicit tree-sitter backend
+translator = create_translator("python", keyword_map, builtin_map, use_tree_sitter=True)
+```
+
+**Environment Configuration**:
+
+```bash
+# Use tree-sitter backend by default
+export LEGESHER_USE_TREE_SITTER=true
+
+# Or in .env file
+LEGESHER_USE_TREE_SITTER=true
+```
+
+**Performance Benchmarks**:
+
+```bash
+# Run comprehensive benchmarks
+cd libs/core
+uv run pytest tests/benchmarks/ --benchmark-only
+
+# Compare implementations
+uv run pytest tests/benchmarks/ --benchmark-compare
+```
+
+**Future Languages**: TypeScript support coming in Phase 2C (CORE-421 through CORE-427). The abstraction provides clear extension points for new programming languages.
 
 Architectural rationale and detailed design decisions will be documented as the project evolves.
 

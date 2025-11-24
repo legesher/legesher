@@ -88,6 +88,21 @@ class TreeSitterTranslator:
             logger.error(f"Failed to initialize tree-sitter parser: {e}")
             raise TreeSitterError(f"Failed to initialize parser: {e}") from e
 
+    def __repr__(self) -> str:
+        """Return a developer-friendly string representation for debugging.
+
+        Example:
+            >>> translator = TreeSitterTranslator({"def": "definir"}, {"print": "imprimir"})
+            >>> repr(translator)
+            "TreeSitterTranslator(keywords=1, builtins=1, python_version='3.13')"
+        """
+        return (
+            f"TreeSitterTranslator("
+            f"keywords={len(self.mapper.keyword_map)}, "
+            f"builtins={len(self.mapper.builtin_map)}, "
+            f"python_version={self.python_version!r})"
+        )
+
     def translate_code(
         self,
         source_code: str,
