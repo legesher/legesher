@@ -26,7 +26,8 @@ from rich.progress import (
 
 from legesher_i18n.db import TranslationDatabase
 
-from .context_loader import ContextLoader, LinguisticStandardsLoader, load_term_manifest
+from .context_loader import ContextLoader, LinguisticStandardsLoader
+from .term_classifier import get_all_terms_by_category, classify_term
 from .models.base import TranslationRequest, TranslationModel
 from .models.claude_model import ClaudeModel
 from .models.aya_model import AyaModel
@@ -106,6 +107,7 @@ class PipelineStats:
     total_translations: int = 0
     successful_translations: int = 0
     failed_translations: int = 0
+    skipped_translations: int = 0
     total_cost: float = 0.0
     cost_by_model: Dict[str, float] = None
     start_time: datetime = None
@@ -132,6 +134,10 @@ class PipelineStats:
         self.failed_translations += 1
         self.total_translations += 1
 
+    def record_skip(self):
+        """Record a skipped translation (already exists)."""
+        self.skipped_translations += 1
+
     def finish(self):
         """Mark pipeline as finished."""
         self.end_time = datetime.now(timezone.utc)
@@ -146,6 +152,7 @@ class PipelineStats:
         console.print("\n[bold green]Pipeline Complete![/bold green]\n")
         console.print(f"Total translations: {self.total_translations}")
         console.print(f"  ✓ Successful: {self.successful_translations}")
+        console.print(f"  ⏭ Skipped: {self.skipped_translations}")
         console.print(f"  ✗ Failed: {self.failed_translations}")
         console.print(f"\nTotal cost: [bold]${self.total_cost:.2f}[/bold]")
 
@@ -238,6 +245,23 @@ class TranslationPipeline:
                             self.stats.finish()
                             return self.stats
 
+                        # Check if translation already exists (skip_existing)
+                        if self.config.skip_existing:
+                            term_type = classify_term(term, python_version="3.13")
+                            existing = self.db.get_translation(
+                                language_code=language,
+                                term=term,
+                                term_type=term_type,
+                                source=model_name,
+                            )
+                            if existing:
+                                logger.debug(
+                                    f"Skipping '{term}' ({language}, {model_name}) - already exists"
+                                )
+                                self.stats.record_skip()
+                                progress.advance(task)
+                                continue
+
                         try:
                             await self._translate_one(term, language, model_name, model)
                             progress.advance(task)
@@ -299,10 +323,13 @@ class TranslationPipeline:
             try:
                 import json
 
+                # Get proper term_type from term_classifier
+                term_type = classify_term(term, python_version="3.13")
+
                 translation_id = self.db.add_translation(
                     language_code=language,
                     term=term,
-                    term_type="keyword",  # Default to keyword; can be improved later
+                    term_type=term_type,
                     translation=translation.translation,
                     source=model_name,
                     word_type=translation.word_type,
@@ -327,6 +354,10 @@ class TranslationPipeline:
     def _get_terms_to_translate(self) -> List[str]:
         """Get list of terms to translate.
 
+        Uses term_classifier as the source of truth for all Python terms.
+        This includes keywords, built-in functions, built-in types, exceptions,
+        special constants, and helper terms.
+
         Returns:
             List of term strings
         """
@@ -334,15 +365,26 @@ class TranslationPipeline:
             # Use provided list
             return self.config.terms
 
-        # Load from manifest
-        manifest = load_term_manifest()
-        terms = [t["term"] for t in manifest.get("terms", [])]
+        # Get all terms from term_classifier (source of truth)
+        # This includes keywords, builtins, exceptions, etc.
+        terms_by_category = get_all_terms_by_category(python_version="3.13")
 
-        if not terms:
-            # Fallback: get all terms with context documents
-            terms = self.context_loader.get_term_list()
+        # Flatten all categories into a single list (excluding helper terms)
+        terms = []
+        for category, category_terms in terms_by_category.items():
+            if category != "helper":  # Skip helper terms like README, underscore
+                terms.extend(category_terms)
 
-        return terms
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_terms = []
+        for term in terms:
+            if term not in seen:
+                seen.add(term)
+                unique_terms.append(term)
+
+        logger.info(f"Loaded {len(unique_terms)} terms from term_classifier")
+        return unique_terms
 
 
 async def main_async():
