@@ -8,7 +8,8 @@ because Python keywords cannot be used as TypedDict field names.
 """
 
 from dataclasses import dataclass, field
-from typing import Protocol, TypedDict
+from pathlib import Path
+from typing import Optional, Protocol, TypedDict, Union, runtime_checkable
 
 
 # Type aliases for translation maps
@@ -327,28 +328,124 @@ class FileMetadata(TypedDict):
     history: list[HistoryEntry]
 
 
+@runtime_checkable
 class Translator(Protocol):
     """Protocol defining the translator interface.
 
     This protocol allows type checking for any class that implements
     the translator interface, supporting dependency injection and testing.
 
+    All translator implementations (TokenTranslator, TreeSitterTranslator, etc.)
+    must implement these methods to ensure polymorphic usage.
+
     Example:
         >>> def process_code(translator: Translator, code: str) -> str:
         ...     return translator.translate_code(code, "en", "es")
+
+        >>> # Both translators implement this protocol
+        >>> from legesher_core import TokenTranslator, create_translator
+        >>> translator = create_translator("python", keyword_map, builtin_map)
+        >>> result = translator.translate_code(code, "en", "es")
     """
 
     def translate_code(
-        self, source_code: str, source_lang: str = "en", target_lang: str = "es"
-    ) -> str:
+        self,
+        source_code: str,
+        source_lang: str = "en",
+        target_lang: str = "es",
+        return_metadata: bool = False,
+    ) -> Union[str, tuple[str, "CulturalCommentMetadata"]]:
         """Translate Python source code from one language to another.
 
         Args:
             source_code: Python source code to translate
             source_lang: Source language code (default: "en")
             target_lang: Target language code (default: "es")
+            return_metadata: If True, return tuple of (translated_code, metadata)
+
+        Returns:
+            If return_metadata is False: Translated Python source code
+            If return_metadata is True: Tuple of (translated_code, cultural_comment_metadata)
+
+        Raises:
+            TranslationError: If translation fails
+            InvalidCodeError: If source code is invalid
+        """
+        ...
+
+    def translate_file(self, file_path: Path, target_lang: str) -> str:
+        """Translate a Python file to the target language.
+
+        Args:
+            file_path: Path to Python file to translate
+            target_lang: Target language code (e.g., "es", "ar")
 
         Returns:
             Translated Python source code
+
+        Raises:
+            FileNotFoundError: If file doesn't exist
+            TranslationError: If translation fails
+        """
+        ...
+
+    def reverse(self) -> "Translator":
+        """Create a reverse translator (swaps source and target languages).
+
+        Returns:
+            New Translator instance with reversed language mapping
+
+        Example:
+            >>> es_to_en = translator.reverse()
+            >>> english_code = es_to_en.translate_code(spanish_code, "es", "en")
+        """
+        ...
+
+    @classmethod
+    def from_language_pack(
+        cls, language: str, python_version: Optional[str] = None
+    ) -> "Translator":
+        """Create translator from a language pack.
+
+        Args:
+            language: Natural language code (e.g., "es", "ar", "zh")
+            python_version: Python version for version-aware packs (e.g., "3.13")
+                          If None, auto-detects from environment
+
+        Returns:
+            Translator instance configured for the language pack
+
+        Raises:
+            UnsupportedLanguageError: If language pack not found
+
+        Example:
+            >>> translator = TokenTranslator.from_language_pack("es", "3.13")
+            >>> code = translator.translate_code("def hello(): pass", "en", "es")
+        """
+        ...
+
+    @classmethod
+    def list_available_languages(cls) -> list[tuple[str, str]]:
+        """List all available language packs.
+
+        Returns:
+            List of tuples (language_code, language_name)
+            Example: [("es", "Spanish"), ("ar", "Arabic"), ("zh", "Chinese")]
+        """
+        ...
+
+    def get_pack_info(self) -> dict[str, Union[str, int]]:
+        """Get information about the loaded language pack.
+
+        Returns:
+            Dictionary containing:
+                - language: Natural language code (e.g., "es")
+                - python_version: Python version (e.g., "3.13")
+                - keyword_count: Number of keywords in pack
+                - builtin_count: Number of builtins in pack
+
+        Example:
+            >>> info = translator.get_pack_info()
+            >>> print(f"Language: {info['language']}, Keywords: {info['keyword_count']}")
         """
         ...

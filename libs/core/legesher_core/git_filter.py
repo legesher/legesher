@@ -17,12 +17,14 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, TextIO
+from typing import TYPE_CHECKING, Callable, Optional, TextIO
 
-from . import __version__
 from .exceptions import InvalidCodeError
-from .transformer import TokenTranslator
-from .types import HistoryEntry
+from .language_interface import create_translator_from_language_pack
+from .types import HistoryEntry, Translator
+
+if TYPE_CHECKING:
+    from .metadata import MetadataManager
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -71,6 +73,8 @@ class GitFilter:
         language: str,
         python_version: Optional[str] = None,
         canonical_language: str = "en",
+        use_tree_sitter: bool | None = None,
+        translator_factory: Optional[Callable[[str, str], Translator]] = None,
         metadata_manager: Optional["MetadataManager"] = None,
         file_path: Optional[str] = None,
     ) -> None:
@@ -80,19 +84,41 @@ class GitFilter:
             language: Target natural language code (e.g., "es" for Spanish)
             python_version: Python version (default: auto-detect from runtime)
             canonical_language: Git storage language (default: "en")
+            use_tree_sitter: Translator backend selection:
+                - True: Use TreeSitterTranslator (4x faster, AST-based)
+                - False: Use TokenTranslator (simpler, token-based)
+                - None: Check LEGESHER_USE_TREE_SITTER environment variable
+            translator_factory: Optional custom factory function for advanced usage.
+                Should take (source_lang, target_lang) and return a Translator.
+                If provided, use_tree_sitter is ignored.
             metadata_manager: Optional metadata manager for tracking translations
             file_path: Optional path to the file being filtered (for metadata tracking)
+
+        Environment Variables:
+            LEGESHER_USE_TREE_SITTER: Set to "true" to use tree-sitter backend by default
 
         Raises:
             ValueError: If language pack cannot be loaded
 
         Example:
-            >>> filter = GitFilter(language="es")  # Auto-detect Python version
-            >>> filter = GitFilter(language="ar", python_version="3.13")
-            >>> # With metadata
+            >>> # Default (token-based, or from environment)
+            >>> filter = GitFilter(language="es")
+
+            >>> # Explicit tree-sitter backend
+            >>> filter = GitFilter(language="es", use_tree_sitter=True)
+
+            >>> # With specific Python version
+            >>> filter = GitFilter(language="ar", python_version="3.13", use_tree_sitter=True)
+
+            >>> # With metadata tracking
             >>> from legesher_core.metadata import MetadataManager
             >>> manager = MetadataManager(Path("/repo"))
             >>> filter = GitFilter(language="es", metadata_manager=manager, file_path="src/main.py")
+
+            >>> # Advanced: custom translator factory
+            >>> def custom_factory(source_lang, target_lang):
+            ...     return create_translator_from_language_pack("python", target_lang)
+            >>> filter = GitFilter(language="es", translator_factory=custom_factory)
         """
         self.language = language
         self.canonical_language = canonical_language
@@ -100,31 +126,54 @@ class GitFilter:
         self.metadata_manager = metadata_manager
         self.file_path = file_path
 
+        backend_desc = (
+            "custom factory"
+            if translator_factory
+            else (
+                "tree-sitter"
+                if use_tree_sitter
+                else "token-based"
+                if use_tree_sitter is False
+                else "environment-configured"
+            )
+        )
         logger.info(
             f"Initializing GitFilter: {language} ↔ {canonical_language} "
-            f"(Python {self.python_version})"
+            f"(Python {self.python_version}, backend: {backend_desc})"
         )
 
         # Load language pack and create bidirectional translators
         try:
-            # from_language_pack("es") creates EN→ES translator
-            # We need ES→EN for clean filter, so reverse it
-            en_to_local = TokenTranslator.from_language_pack(
-                language=language,
-                python_version=self.python_version,
-            )
+            if translator_factory:
+                # Custom factory provided (advanced usage)
+                self.translator_from_en = translator_factory(
+                    canonical_language, language
+                )
+                self.translator_to_en = translator_factory(language, canonical_language)
+                logger.info("GitFilter initialized with custom translator factory")
+            else:
+                # Standard factory: load from language pack
+                # from_language_pack("es") creates EN→ES translator
+                # We need ES→EN for clean filter, so reverse it
+                en_to_local = create_translator_from_language_pack(
+                    programming_language="python",
+                    natural_language=language,
+                    python_version=self.python_version,
+                    use_tree_sitter=use_tree_sitter,  # Respects environment if None
+                )
 
-            # Translator for local language → English (clean filter)
-            self.translator_to_en = en_to_local.reverse()
+                # Translator for local language → English (clean filter)
+                self.translator_to_en = en_to_local.reverse()
 
-            # Translator for English → local language (smudge filter)
-            self.translator_from_en = en_to_local
+                # Translator for English → local language (smudge filter)
+                self.translator_from_en = en_to_local
 
-            logger.info(
-                f"GitFilter initialized successfully for {language} "
-                f"({en_to_local.get_pack_info()['keyword_count']} keywords, "
-                f"{en_to_local.get_pack_info()['builtin_count']} builtins)"
-            )
+                pack_info = en_to_local.get_pack_info()
+                logger.info(
+                    f"GitFilter initialized successfully for {language} "
+                    f"({pack_info['keyword_count']} keywords, "
+                    f"{pack_info['builtin_count']} builtins)"
+                )
 
         except Exception as e:
             logger.error(f"Failed to initialize GitFilter: {e}")
