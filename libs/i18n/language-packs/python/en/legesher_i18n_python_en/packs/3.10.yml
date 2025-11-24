@@ -1,5 +1,5 @@
 # English Language Pack for Python 3.10+
-# Base pack with all core keywords and Python 3.10 additions (match/case)
+# Base pack with all core keywords and Python 3.10 additions (match/case, aiter/anext)
 # English is the canonical language - all keywords map to themselves
 
 language: en
@@ -122,21 +122,77 @@ builtins:
   super: super
   tuple: tuple
 
-  # Exceptions
-  attributeerror: attributeerror
-  baseexception: baseexception
-  exception: exception
-  indexerror: indexerror
-  keyerror: keyerror
-  nameerror: nameerror
-  runtimeerror: runtimeerror
-  stopiteration: stopiteration
-  typeerror: typeerror
-  valueerror: valueerror
-
   # Special constants
   ellipsis: ellipsis
   notimplemented: notimplemented
+
+exceptions:
+  arithmeticerror: arithmeticerror
+  assertionerror: assertionerror
+  attributeerror: attributeerror
+  baseexception: baseexception
+  basegeneratorexit: basegeneratorexit
+  blockingioerror: blockingioerror
+  brokenpipeerror: brokenpipeerror
+  buffererror: buffererror
+  byteswarning: byteswarning
+  childprocesserror: childprocesserror
+  connectionabortederror: connectionabortederror
+  connectionerror: connectionerror
+  connectionrefusederror: connectionrefusederror
+  connectionreseterror: connectionreseterror
+  deprecationwarning: deprecationwarning
+  environmenterror: environmenterror
+  eoferror: eoferror
+  exception: exception
+  fileexistserror: fileexistserror
+  filenotfounderror: filenotfounderror
+  floatingpointerror: floatingpointerror
+  futurewarning: futurewarning
+  generatorexit: generatorexit
+  importerror: importerror
+  importwarning: importwarning
+  indentationerror: indentationerror
+  indexerror: indexerror
+  interruptederror: interruptederror
+  ioerror: ioerror
+  isadirectoryerror: isadirectoryerror
+  keyboardinterrupt: keyboardinterrupt
+  keyerror: keyerror
+  lookuperror: lookuperror
+  memoryerror: memoryerror
+  modulenotfounderror: modulenotfounderror
+  nameerror: nameerror
+  notadirectoryerror: notadirectoryerror
+  notimplementederror: notimplementederror
+  oserror: oserror
+  overflowerror: overflowerror
+  pendingdeprecationwarning: pendingdeprecationwarning
+  permissionerror: permissionerror
+  processlookuperror: processlookuperror
+  recursionerror: recursionerror
+  referenceerror: referenceerror
+  resourcewarning: resourcewarning
+  runtimeerror: runtimeerror
+  runtimewarning: runtimewarning
+  stopasynciteration: stopasynciteration
+  stopiteration: stopiteration
+  syntaxerror: syntaxerror
+  syntaxwarning: syntaxwarning
+  systemexit: systemexit
+  taberror: taberror
+  timeouterror: timeouterror
+  typeerror: typeerror
+  unboundlocalerror: unboundlocalerror
+  unicodedecodeerror: unicodedecodeerror
+  unicodeencodeerror: unicodeencodeerror
+  unicodeerror: unicodeerror
+  unicodetranslateerror: unicodetranslateerror
+  unicodewarning: unicodewarning
+  userwarning: userwarning
+  valueerror: valueerror
+  warning: warning
+  zerodivisionerror: zerodivisionerror
 
 metadata:
   python_version_min: '3.10'
@@ -147,7 +203,7 @@ metadata:
   - '3.12'
   - '3.13'
   - '3.14'
-  last_updated: '2025-11-23'
+  last_updated: '2025-11-24'
   community_reviewed: true
   author: Legesher Team
   license: MIT
