@@ -22,9 +22,23 @@ export interface LanguageInfo {
  */
 export function getLanguageConfig(): LanguageConfig {
     const config = vscode.workspace.getConfiguration('legesher');
+
+    // During extension development, inspect() returns the actual effective value
+    // across all configuration scopes (global, workspace, folder)
+    const targetLangInspect = config.inspect<string>('targetLanguage');
+    const sourceLangInspect = config.inspect<string>('sourceLanguage');
+
+    // Priority: globalValue > defaultValue
+    const targetLanguage = targetLangInspect?.globalValue ||
+                          targetLangInspect?.defaultValue ||
+                          'en';
+    const sourceLanguage = sourceLangInspect?.globalValue ||
+                          sourceLangInspect?.defaultValue ||
+                          'en';
+
     return {
-        targetLanguage: config.get<string>('targetLanguage', 'en'),
-        sourceLanguage: config.get<string>('sourceLanguage', 'en')
+        targetLanguage,
+        sourceLanguage
     };
 }
 

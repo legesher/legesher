@@ -92,8 +92,9 @@ export function createLanguageClient(
             },
             closed: () => {
                 Logger.warn('Language server connection closed');
-                // Return CloseAction.Restart to automatically restart
-                return { action: 1 }; // CloseAction.Restart = 1
+                // Don't auto-restart - let manual restart handle it
+                // This prevents conflicts when changing languages
+                return { action: 2 }; // CloseAction.DoNotRestart = 2
             }
         }
     };

@@ -43,11 +43,24 @@
       {
         "language": "python",
         "scopes": {
-          "keyword": ["keyword.control.python", "storage.type.function.python"],
-          "class": ["entity.name.type.class.python", "support.type.python"],
-          "function": ["entity.name.function.python", "support.function.builtin.python"],
-          "variable": ["variable.other.python"],
-          "parameter": ["variable.parameter.python"]
+          "keyword": [
+            "keyword.control.python",
+            "storage.type.function.python"
+          ],
+          "class": [
+            "entity.name.type.class.python",
+            "support.type.python"
+          ],
+          "function": [
+            "entity.name.function.python",
+            "support.function.builtin.python"
+          ],
+          "variable": [
+            "variable.other.python"
+          ],
+          "parameter": [
+            "variable.parameter.python"
+          ]
         }
       }
     ],
@@ -96,6 +109,15 @@
           "type": "boolean",
           "default": true,
           "description": "Enable or disable the Legesher extension"
+        },
+        "legesher.telemetry.enabled": {
+          "type": "boolean",
+          "default": true,
+          "tags": [
+            "telemetry",
+            "usesOnlineServices"
+          ],
+          "markdownDescription": "Enable anonymous usage telemetry to help improve Legesher. **No personal information or code content is collected.** This respects VS Code's global telemetry settings."
         }
       }
     },
@@ -112,6 +134,14 @@
         "command": "legesher.showTranslationPanel",
         "title": "Legesher: Show Translation Panel",
         "icon": "$(split-horizontal)"
+      },
+      {
+        "command": "legesher.giveFeedback",
+        "title": "Legesher: Give Feedback"
+      },
+      {
+        "command": "legesher.resetFeedbackState",
+        "title": "Legesher: Reset Feedback State (Debug)"
       }
     ],
     "menus": {
@@ -142,6 +172,7 @@
     "package": "vsce package"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.10.0",
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
@@ -154,6 +185,9 @@
   },
   "dependencies": {
     "@types/prismjs": "^1.26.5",
+    "@vscode/extension-telemetry": "^1.2.0",
+    "dotenv": "^17.2.3",
+    "js-yaml": "^4.1.1",
     "prismjs": "^1.30.0",
     "vscode-languageclient": "^9.0.1"
   }
