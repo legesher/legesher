@@ -5,18 +5,24 @@ import { isServerAvailable } from './utils';
 import { getLanguageConfig, getAvailableLanguages, getLanguageName } from './config';
 import { TranslationPanelManager } from './webview/panel';
 import { Logger } from './logger';
+import { LegesherTelemetry } from './telemetry';
+import { initializeFeedback, getFeedbackInstance } from './feedback';
+import { initializeKeywords } from './keywords';
+import { loadEnvVariables } from './env';
 
 let client: LanguageClient | undefined;
 let statusBarItem: vscode.StatusBarItem;
 let languageStatusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
-let languageChangeTimeout: NodeJS.Timeout | undefined;
 
 /**
  * Extension activation entry point
  * Called when the extension is activated (when a Python file is opened)
  */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    // Load environment variables from .env file (development only)
+    loadEnvVariables(context.extensionPath);
+
     // Create reusable output channel first
     outputChannel = vscode.window.createOutputChannel('Legesher Language Server');
     context.subscriptions.push(outputChannel);
@@ -24,6 +30,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Initialize logger
     Logger.init(outputChannel);
     Logger.info('Legesher extension activating...');
+
+    // Initialize keywords module (loads language packs for translations)
+    initializeKeywords(context.extensionPath);
+
+    // Initialize telemetry (respects user settings)
+    LegesherTelemetry.initialize(context);
+
+    // Initialize feedback system (two-stage: first session + 7 days)
+    initializeFeedback(context);
 
     // Create status bar item to show connection status
     statusBarItem = vscode.window.createStatusBarItem(
@@ -59,6 +74,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Register restart command
     context.subscriptions.push(
         vscode.commands.registerCommand('legesher.restartServer', async () => {
+            LegesherTelemetry.trackCommand('restartServer');
             await restartServer(context);
         })
     );
@@ -66,6 +82,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Register language selection command
     context.subscriptions.push(
         vscode.commands.registerCommand('legesher.selectLanguage', async () => {
+            LegesherTelemetry.trackCommand('selectLanguage');
             await selectLanguage(context);
         })
     );
@@ -73,28 +90,59 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Register translation panel command
     context.subscriptions.push(
         vscode.commands.registerCommand('legesher.showTranslationPanel', async () => {
+            LegesherTelemetry.trackCommand('showTranslationPanel');
             await showTranslationPanel(context);
         })
     );
 
-    // Watch for configuration changes
+    // Register feedback command
     context.subscriptions.push(
-        vscode.workspace.onDidChangeConfiguration(async (event) => {
-            if (event.affectsConfiguration('legesher.targetLanguage') ||
-                event.affectsConfiguration('legesher.sourceLanguage')) {
-                await handleLanguageChange(context);
+        vscode.commands.registerCommand('legesher.giveFeedback', async () => {
+            LegesherTelemetry.trackCommand('giveFeedback');
+            const feedback = getFeedbackInstance();
+            if (feedback) {
+                await feedback.promptNow();
             }
         })
     );
 
+    // DEBUG: Reset feedback state (for testing)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('legesher.resetFeedbackState', async () => {
+            const feedback = getFeedbackInstance();
+            if (feedback) {
+                await feedback.resetState();
+                vscode.window.showInformationMessage('Feedback state reset! Restart the extension to see the prompt.');
+            }
+        })
+    );
+
+    // Watch for configuration changes
+    // Note: This is disabled because manual language changes via selectLanguage
+    // handle restarts themselves. Auto-restart was causing race conditions.
+    // context.subscriptions.push(
+    //     vscode.workspace.onDidChangeConfiguration(async (event) => {
+    //         if (event.affectsConfiguration('legesher.targetLanguage') ||
+    //             event.affectsConfiguration('legesher.sourceLanguage')) {
+    //             await handleLanguageChange(context);
+    //         }
+    //     })
+    // );
+
     // Start the language server (optional - server may not exist yet)
     await startServer(context);
+
+    // Track activation with current language
+    const languageConfig = getLanguageConfig();
+    LegesherTelemetry.trackActivation(languageConfig.targetLanguage);
 }
 
 /**
  * Start the language server and create LSP client
  */
 async function startServer(context: vscode.ExtensionContext): Promise<void> {
+    const startTime = Date.now();
+
     try {
         statusBarItem.text = "$(sync~spin) Legesher";
         statusBarItem.tooltip = "Legesher: Connecting...";
@@ -128,11 +176,20 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
         // Start the client (this also launches the server)
         await client.start();
 
+        // Track successful connection
+        const durationMs = Date.now() - startTime;
+        LegesherTelemetry.trackServerConnection(true, durationMs);
+
         // Update status after successful start
         statusBarItem.text = "$(check) Legesher";
         statusBarItem.tooltip = "Legesher: Connected";
         Logger.info('Legesher language server started and connected successfully');
     } catch (error) {
+        // Track failed connection
+        const durationMs = Date.now() - startTime;
+        LegesherTelemetry.trackServerConnection(false, durationMs);
+        LegesherTelemetry.trackError('serverStartFailed');
+
         statusBarItem.text = "$(error) Legesher";
         statusBarItem.tooltip = `Legesher: Error - ${error}`;
 
@@ -161,8 +218,13 @@ async function restartServer(context: vscode.ExtensionContext): Promise<void> {
     Logger.info('Restarting Legesher language server...');
 
     if (client) {
-        await client.stop();
-        client = undefined;
+        try {
+            await client.stop();
+        } catch (error) {
+            Logger.error('Error stopping language server', error);
+        } finally {
+            client = undefined;
+        }
     }
 
     await startServer(context);
@@ -208,6 +270,9 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
         return;
     }
 
+    // Track language change in telemetry
+    LegesherTelemetry.trackLanguageChange(currentConfig.targetLanguage, selected.languageCode);
+
     // Update configuration (user-level / global)
     const config = vscode.workspace.getConfiguration('legesher');
     await config.update('targetLanguage', selected.languageCode, vscode.ConfigurationTarget.Global);
@@ -220,6 +285,9 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
 
     // Update status bar immediately
     updateLanguageStatusBar();
+
+    // Wait a bit for config to propagate
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Restart server with new language
     await restartServer(context);
@@ -246,30 +314,6 @@ async function showTranslationPanel(context: vscode.ExtensionContext): Promise<v
     await panelManager.show(editor.document);
 }
 
-/**
- * Handle language configuration changes
- *
- * Uses debouncing to prevent multiple rapid server restarts if configuration
- * changes multiple times in quick succession (e.g., during settings sync).
- */
-async function handleLanguageChange(context: vscode.ExtensionContext): Promise<void> {
-    Logger.info('Language configuration changed, scheduling server restart...');
-
-    // Update status bar immediately (fast, no server interaction)
-    updateLanguageStatusBar();
-
-    // Clear any pending restart
-    if (languageChangeTimeout) {
-        clearTimeout(languageChangeTimeout);
-    }
-
-    // Debounce server restart (expensive operation)
-    languageChangeTimeout = setTimeout(async () => {
-        Logger.info('Applying language configuration change...');
-        await restartServer(context);
-        languageChangeTimeout = undefined;
-    }, 500); // 500ms debounce
-}
 
 /**
  * Extension deactivation

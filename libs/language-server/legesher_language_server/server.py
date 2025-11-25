@@ -6,6 +6,7 @@ This module provides the main LSP server implementation using pygls.
 import logging
 
 from lsprotocol.types import (
+    INITIALIZE,
     INITIALIZED,
     SHUTDOWN,
     TEXT_DOCUMENT_COMPLETION,
@@ -153,10 +154,9 @@ class LegesherLanguageServer(LanguageServer):
         self.translator: object | None = None
 
         # Pylance proxy for advanced Python intelligence (CORE-360)
+        # Note: Initialization deferred until on_initialized() to ensure
+        # initialization_options are processed first (fixes language switching bug)
         self.pylance_proxy: PylanceProxy | None = None
-        if config.pylance_enabled:
-            self.pylance_proxy = PylanceProxy(config)
-            logger.info("Pylance proxy initialized")
 
         # Register all LSP handlers
         self._register_handlers()
@@ -166,6 +166,9 @@ class LegesherLanguageServer(LanguageServer):
         # Create wrapper functions that pygls can decorate properly
         # This is necessary because pygls tries to set attributes on the function
         # and bound methods don't allow that
+
+        async def initialize_wrapper(params: InitializeParams) -> InitializeResult:
+            return await self.on_initialize(params)
 
         async def initialized_wrapper(params: InitializedParams) -> None:
             await self.on_initialized(params)
@@ -198,7 +201,10 @@ class LegesherLanguageServer(LanguageServer):
         ) -> SemanticTokens | None:
             return await self.on_semantic_tokens_full(params)
 
-        # Register the wrappers (don't override initialize - let pygls handle it)
+        # Register the wrappers
+        # CRITICAL: Must register initialize to process initialization_options
+        # for language switching
+        self.feature(INITIALIZE)(initialize_wrapper)
         self.feature(INITIALIZED)(initialized_wrapper)
         self.feature(SHUTDOWN)(shutdown_wrapper)
         self.feature(TEXT_DOCUMENT_DID_OPEN)(did_open_wrapper)
@@ -223,14 +229,26 @@ class LegesherLanguageServer(LanguageServer):
             Server capabilities
         """
         logger.info(f"Client initializing from: {params.root_uri}")
+        logger.info(f"DEBUG: initialization_options = {params.initialization_options}")
+        logger.info(
+            f"DEBUG: config BEFORE - target: {self.config.target_language}, "
+            f"source: {self.config.source_language}"
+        )
 
         # Update config from initialization options (CORE-362)
         # Security: Validate all client inputs to prevent injection attacks
         if params.initialization_options:
+            logger.info("DEBUG: initialization_options exists, processing...")
             init_opts = params.initialization_options
+            logger.info(
+                f"DEBUG: init_opts type = {type(init_opts)}, "
+                f"isinstance dict = {isinstance(init_opts, dict)}"
+            )
             if isinstance(init_opts, dict):
+                logger.info(f"DEBUG: Keys in init_opts: {list(init_opts.keys())}")
                 try:
                     if "targetLanguage" in init_opts:
+                        logger.info(f"DEBUG: Found targetLanguage = {init_opts['targetLanguage']}")
                         self.config.target_language = validate_language_code(
                             init_opts["targetLanguage"], "targetLanguage"
                         )
@@ -239,6 +257,7 @@ class LegesherLanguageServer(LanguageServer):
                             f"{self.config.target_language}"
                         )
                     if "sourceLanguage" in init_opts:
+                        logger.info(f"DEBUG: Found sourceLanguage = {init_opts['sourceLanguage']}")
                         self.config.source_language = validate_language_code(
                             init_opts["sourceLanguage"], "sourceLanguage"
                         )
@@ -251,6 +270,11 @@ class LegesherLanguageServer(LanguageServer):
                         f"Invalid language configuration from client: {e}. Using defaults."
                     )
                     # Continue with default config - fail securely
+
+        logger.info(
+            f"DEBUG: config AFTER - target: {self.config.target_language}, "
+            f"source: {self.config.source_language}"
+        )
 
         return InitializeResult(
             capabilities=ServerCapabilities(
@@ -279,10 +303,23 @@ class LegesherLanguageServer(LanguageServer):
     async def on_initialized(self, params: InitializedParams) -> None:
         """Handle initialized notification from client.
 
+        Note: initialization_options are now processed in on_initialize() which runs first.
+        This method just initializes PylanceProxy after config has been updated.
+
         Args:
             params: Initialized parameters
         """
+        logger.info(
+            f"Server initialized: target={self.config.target_language}, "
+            f"source={self.config.source_language}"
+        )
         logger.info("Server initialized successfully")
+
+        # Initialize Pylance proxy now that config is finalized (CORE-360)
+        # This must happen AFTER processing initialization_options above
+        if self.config.pylance_enabled and self.pylance_proxy is None:
+            self.pylance_proxy = PylanceProxy(self.config)
+            logger.info("Pylance proxy initialized")
 
         # Start Pylance proxy if enabled (CORE-360)
         if self.pylance_proxy:
