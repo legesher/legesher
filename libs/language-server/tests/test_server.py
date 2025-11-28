@@ -46,7 +46,6 @@ def server(config):
     return LegesherLanguageServer(config)
 
 
-@pytest.mark.skip(reason="Python 3.13 incompatibility with pygls 1.3.1 - defer to CORE-357")
 @pytest.mark.asyncio
 async def test_server_initialization(server):
     """Test server initialization."""
@@ -63,7 +62,6 @@ async def test_server_initialization(server):
     assert result.server_info["version"] == "0.1.0"
 
 
-@pytest.mark.skip(reason="Python 3.13 incompatibility with pygls 1.3.1 - defer to CORE-357")
 @pytest.mark.asyncio
 async def test_document_open(server):
     """Test document open notification."""
@@ -82,7 +80,6 @@ async def test_document_open(server):
     assert doc.language_id == "python"
 
 
-@pytest.mark.skip(reason="Python 3.13 incompatibility with pygls 1.3.1 - defer to CORE-357")
 @pytest.mark.asyncio
 async def test_document_change(server):
     """Test document change notification."""
@@ -107,7 +104,6 @@ async def test_document_change(server):
     assert doc.version == 2
 
 
-@pytest.mark.skip(reason="Python 3.13 incompatibility with pygls 1.3.1 - defer to CORE-357")
 @pytest.mark.asyncio
 async def test_document_close(server):
     """Test document close notification."""
@@ -130,7 +126,6 @@ async def test_document_close(server):
     assert not server.document_manager.has_document("file:///test.py")
 
 
-@pytest.mark.skip(reason="Python 3.13 incompatibility with pygls 1.3.1 - defer to CORE-357")
 @pytest.mark.asyncio
 async def test_hover_stub(server):
     """Test hover provider stub (returns None until CORE-357)."""
@@ -154,7 +149,6 @@ async def test_hover_stub(server):
     assert result is None
 
 
-@pytest.mark.skip(reason="Python 3.13 incompatibility with pygls 1.3.1 - defer to CORE-357")
 @pytest.mark.asyncio
 async def test_completion_stub(server):
     """Test completion provider stub (returns empty list until CORE-358)."""
@@ -179,7 +173,6 @@ async def test_completion_stub(server):
     assert len(result.items) == 0
 
 
-@pytest.mark.skip(reason="Python 3.13 incompatibility with pygls 1.3.1 - defer to CORE-357")
 @pytest.mark.asyncio
 async def test_diagnostic_stub(server):
     """Test diagnostic provider stub (returns empty list until CORE-359)."""
@@ -206,7 +199,6 @@ async def test_diagnostic_stub(server):
     assert len(result.items) == 0
 
 
-@pytest.mark.skip(reason="Python 3.13 incompatibility with pygls 1.3.1 - defer to CORE-357")
 @pytest.mark.asyncio
 async def test_shutdown(server):
     """Test server shutdown."""
@@ -214,7 +206,6 @@ async def test_shutdown(server):
     await server.on_shutdown(None)
 
 
-@pytest.mark.skip(reason="Python 3.13 incompatibility with pygls 1.3.1 - defer to CORE-357")
 def test_create_server_with_config():
     """Test creating server with explicit config."""
     config = LanguageServerConfig(source_language="fr", target_language="de")
@@ -225,7 +216,6 @@ def test_create_server_with_config():
     assert server.config.target_language == "de"
 
 
-@pytest.mark.skip(reason="Python 3.13 incompatibility with pygls 1.3.1 - defer to CORE-357")
 def test_create_server_from_env(monkeypatch):
     """Test creating server from environment variables."""
     monkeypatch.setenv("LEGESHER_SOURCE_LANG", "pt")
@@ -237,7 +227,6 @@ def test_create_server_from_env(monkeypatch):
     assert server.config.target_language == "ja"
 
 
-@pytest.mark.skip(reason="Python 3.13 incompatibility with pygls 1.3.1 - defer to CORE-357")
 @pytest.mark.asyncio
 async def test_multiple_documents(server):
     """Test handling multiple open documents."""
