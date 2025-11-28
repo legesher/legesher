@@ -1067,7 +1067,13 @@ class KeywordDocumentation:
         from pathlib import Path
 
         # Strategy 1: Development monorepo structure (libs/ directory)
-        dev_pack_dir = Path(__file__).parent.parent.parent.parent / f"i18n-python-{target_lang}"
+        dev_pack_dir = (
+            Path(__file__).parent.parent.parent.parent
+            / "i18n"
+            / "language-packs"
+            / "python"
+            / target_lang
+        )
         if dev_pack_dir.exists():
             return dev_pack_dir
 

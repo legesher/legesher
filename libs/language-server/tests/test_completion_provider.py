@@ -49,9 +49,9 @@ class TestCompletionProviderKeywords:
         assert "definir" in labels  # def
         assert "clase" in labels  # class
         assert "si" in labels  # if
-        assert "para" in labels  # for
+        assert "por" in labels  # for
         assert "mientras" in labels  # while
-        assert "retornar" in labels  # return
+        assert "devolver" in labels  # return
 
     def test_keyword_completions_arabic(self):
         """Test keyword completions with Arabic translations."""
@@ -94,9 +94,9 @@ class TestCompletionProviderKeywords:
             ("def", "definir"),
             ("class", "clase"),
             ("if", "si"),
-            ("for", "para"),
+            ("for", "por"),
             ("while", "mientras"),
-            ("return", "retornar"),
+            ("return", "devolver"),
             ("import", "importar"),
             ("from", "desde"),
         ],
