@@ -539,6 +539,16 @@ These features are planned for future implementation:
    - Deploy to VS Code Marketplace and Open VSX
    - **When:** Phase 2D (Multi-Language IDE ready)
 
+   **Publisher Account Details:**
+   - **Publisher ID:** `legesher`
+   - **Account Owner:** Madison Edgar (<madi@legesher.com>)
+   - **Created:** 2025
+   - **Marketplace URL:** <https://marketplace.visualstudio.com/publishers/legesher>
+   - **Status:** Active (unverified)
+   - **Verified Publisher Badge:** Not yet applied (requires 6 months of publishing history)
+     - See CORE-463 for tracking verified badge application
+     - Eligibility date: ~6 months after first extension publish
+
 3. **Release Notification System**
    - Discord/Slack webhook on new releases
    - Email notifications to beta testers
