@@ -781,7 +781,7 @@ class TestDiagnosticProviderTabError:
             document_uri="file:///test.py",
         )
         # Note: Python 3 is more lenient with tabs, might not always error
-        diagnostics = await provider.get_diagnostics()
+        _ = await provider.get_diagnostics()
 
         # May or may not error depending on Python version
         # Just verify it doesn't crash
@@ -901,7 +901,6 @@ class TestDiagnosticProviderGetTranslationTemplate:
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Integration tests skipped due to pygls Python 3.13 compatibility issue")
 class TestProvideDignosticsFunction:
     """Test the provide_diagnostics async function.
 

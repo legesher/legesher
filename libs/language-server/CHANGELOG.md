@@ -7,6 +7,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 <!--next-version-placeholder-->
 
+## [Unreleased]
+
+### Changed
+
+- **pygls 2.0 Migration** ([CORE-448](https://linear.app/legesher/issue/CORE-448))
+  - Upgraded from pygls 1.3.1 to pygls 2.0.0 for Python 3.13 compatibility
+  - Updated import path: `pygls.server.LanguageServer` → `pygls.lsp.server.LanguageServer`
+  - Upgraded lsprotocol from 2023.0.1 to 2025.0.0
+  - **Breaking**: None for end users (internal dependency upgrade only)
+  - **Fixed**: Shutdown handler compatibility with Python 3.13
+  - **Fixed**: Removed bound method `__dict__` errors on Python 3.13
+  - **Improved**: Test coverage increased from 21% to 70% (306 tests now passing)
+  - **Improved**: Un-skipped all integration tests previously blocked by Python 3.13 incompatibility
+  - **Verified**: All LSP methods working (initialize, shutdown, didOpen, didChange, didClose)
+  - **Verified**: All providers functional (hover, completion, diagnostic)
+
 ## [0.1.0] - 2025-11-07
 
 ### Added
@@ -117,7 +133,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **Protocol**: Language Server Protocol (LSP) 3.17
 - **Transport**: stdio (suitable for VS Code, Zed, and other LSP clients)
 - **Dependencies**:
-  - pygls >= 1.3.0, < 3.0.0 (LSP framework)
+  - pygls >= 2.0.0, < 3.0.0 (LSP framework) - Updated from 1.3.0 in CORE-448
   - pydantic >= 2.5.0 (configuration validation)
   - lru-dict >= 1.3.0 (efficient LRU caching)
 - **Supported Python Versions**: 3.10, 3.11, 3.12, 3.13

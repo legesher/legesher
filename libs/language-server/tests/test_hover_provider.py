@@ -382,7 +382,6 @@ my_list = [1, 2, 3]"""
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Integration tests skipped due to pygls Python 3.13 compatibility issue")
 class TestHoverProviderIntegration:
     """Integration tests for full hover flow.
 

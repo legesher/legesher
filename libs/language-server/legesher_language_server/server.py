@@ -37,7 +37,7 @@ from lsprotocol.types import (
     ServerCapabilities,
     TextDocumentSyncKind,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer  # pygls 2.0 import path
 
 from .config import LanguageServerConfig
 from .document import DocumentManager
