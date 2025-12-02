@@ -4,9 +4,46 @@ This module provides documentation for Python keywords with translations
 for hover tooltips in the Language Server.
 """
 
+import logging
+from pathlib import Path
+
+from legesher_i18n import LanguagePackLoader
+
 # TODO: Consider validating keys against legesher_i18n.scripts.translate.term_classifier
 #       to ensure all Python keywords are documented and no deprecated keywords remain.
 #       Currently missing Python 3.11+ (except*) and 3.12+ (type) keywords.
+
+logger = logging.getLogger(__name__)
+
+# Shared language pack loader with LRU cache (CORE-446)
+# Uses lazy initialization to avoid import-time failures
+_pack_loader: LanguagePackLoader | None = None
+
+
+def _get_pack_loader() -> LanguagePackLoader:
+    """Get or create the shared language pack loader with error handling.
+
+    Uses lazy initialization to avoid module import failures if language
+    pack directory is missing or permissions are incorrect (CORE-446 security).
+
+    Returns:
+        LanguagePackLoader instance
+
+    Note:
+        On initialization failure, returns a loader with empty pack root
+        to allow graceful degradation rather than crashing.
+    """
+    global _pack_loader
+    if _pack_loader is None:
+        try:
+            _pack_loader = LanguagePackLoader()
+        except Exception as e:
+            logger.error(f"Failed to initialize LanguagePackLoader: {e}")
+            # Graceful degradation - loader with nonexistent root
+            # Will return None for all translations, allowing pass-through mode
+            _pack_loader = LanguagePackLoader(pack_root=Path("/tmp/nonexistent_legesher_packs"))
+    return _pack_loader
+
 
 # Python keyword documentation (English, Spanish, Arabic)
 PYTHON_KEYWORD_DOCS = {
@@ -1050,68 +1087,11 @@ class KeywordDocumentation:
         """
         return ["en", "es", "ar"]
 
-    def _find_language_pack(self, target_lang: str):
-        """Find language pack directory using multiple strategies.
-
-        Checks:
-        1. Development location: libs/i18n-python-{lang}/ (relative to this file)
-        2. Installed package: try importing legesher_i18n_python_{lang}
-        3. Site-packages: check importlib metadata
-
-        Args:
-            target_lang: Target language code
-
-        Returns:
-            Path to language pack directory or None if not found
-        """
-        from pathlib import Path
-
-        # Strategy 1: Development monorepo structure (libs/ directory)
-        dev_pack_dir = (
-            Path(__file__).parent.parent.parent.parent
-            / "i18n"
-            / "language-packs"
-            / "python"
-            / target_lang
-        )
-        if dev_pack_dir.exists():
-            return dev_pack_dir
-
-        # Strategy 2: Try importing the package (works if installed)
-        try:
-            import importlib.util
-
-            pack_module_name = f"legesher_i18n_python_{target_lang}"
-            spec = importlib.util.find_spec(pack_module_name)
-            if spec and spec.origin:
-                # Return parent directory of the package
-                return Path(spec.origin).parent.parent
-        except (ImportError, AttributeError):
-            pass
-
-        # Strategy 3: Check site-packages using importlib.metadata
-        try:
-            import importlib.metadata
-
-            pack_dist_name = f"legesher-i18n-python-{target_lang}"
-            dist = importlib.metadata.distribution(pack_dist_name)
-            # Get files from distribution
-            if dist.files:
-                # Find the packs directory
-                for file in dist.files:
-                    if "packs" in str(file):
-                        return Path(dist.locate_file(file)).parent.parent
-        except (ImportError, importlib.metadata.PackageNotFoundError):
-            pass
-
-        return None
-
     def get_keyword_translation(self, keyword: str, target_lang: str) -> str | None:
         """Get keyword translation from English to target language.
 
-        This method loads translations from i18n language packs dynamically with
-        comprehensive error handling and version fallback support. Uses robust
-        package discovery that works in development and installed environments.
+        Uses cached LanguagePackLoader for performance (CORE-446).
+        All language packs are loaded once and cached in memory.
 
         Args:
             keyword: English keyword (e.g., 'def', 'class')
@@ -1121,17 +1101,8 @@ class KeywordDocumentation:
             Translated keyword or None if not available
 
         Error Handling:
-            All errors are caught and logged, never raises exceptions:
-            - Directory not found: Logs warning, returns None
-            - File not found: Tries version fallback (3.10→3.11→3.12→3.13), returns None
-            - Invalid YAML: Logs error with details, returns None
-            - Missing keywords section: Logs warning, returns None
-            - Invalid keyword types: Logs warning, skips entry, returns None
-
-            Logging uses emoji prefixes for VS Code output:
-            - ⚠️ Warning: non-critical issues (missing packs, fallbacks)
-            - ❌ Error: critical issues (YAML errors, type errors)
-            - ℹ️ Info: successful operations with counts
+            All errors are caught and logged, never raises exceptions.
+            Falls back to None (English keyword) on any error.
 
         Example:
             >>> docs = KeywordDocumentation()
@@ -1140,105 +1111,22 @@ class KeywordDocumentation:
             >>> docs.get_keyword_translation("class", "ar")
             'صنف'
             >>> docs.get_keyword_translation("def", "nonexistent")  # Missing pack
-            None  # Logs: "⚠️ Language pack directory for 'nonexistent' not found"
+            None  # Logs warning
         """
-        import logging
-
-        import yaml
-
-        logger = logging.getLogger(__name__)
-
         try:
-            # Find language pack using robust discovery
-            pack_dir = self._find_language_pack(target_lang)
-            if not pack_dir:
-                logger.warning(
-                    f"⚠️  Language pack directory for '{target_lang}' not found, "
-                    f"using English keywords"
-                )
-                return None
+            # Load language pack using cached loader (CORE-446)
+            pack = _get_pack_loader().load(language=target_lang, target="python", version="3.10")
+            translation = pack.keywords.get(keyword)
 
-            # Try multiple Python versions in fallback order
-            python_versions = ["3.10", "3.11", "3.12", "3.13"]
-            pack_file = None
-
-            for version in python_versions:
-                candidate_file = (
-                    pack_dir / f"legesher_i18n_python_{target_lang}" / "packs" / f"{version}.yml"
-                )
-                if candidate_file.exists():
-                    pack_file = candidate_file
-                    break
-
-            if not pack_file:
-                logger.warning(
-                    f"⚠️  Language pack file not found for '{target_lang}' "
-                    f"(tried Python versions: {', '.join(python_versions)}), using English keywords"
-                )
-                return None
-
-            # Load YAML with specific error handling
-            try:
-                with open(pack_file, encoding="utf-8") as f:
-                    pack_data = yaml.safe_load(f)
-            except yaml.YAMLError as e:
-                logger.error(
-                    f"❌  Invalid YAML in {target_lang} language pack ({pack_file.name}): {e}"
-                )
-                return None
-            except OSError as e:
-                logger.error(f"❌  Failed to read language pack file {pack_file}: {e}")
-                return None
-
-            # Validate pack structure
-            if not isinstance(pack_data, dict):
-                logger.error(
-                    f"❌  Invalid language pack format in {pack_file.name}: "
-                    f"expected dict, got {type(pack_data).__name__}"
-                )
-                return None
-
-            # Get keywords section
-            keywords = pack_data.get("keywords", {})
-
-            if not keywords:
-                logger.warning(
-                    f"⚠️  Language pack {pack_file.name} has no keywords section, "
-                    f"using English keywords"
-                )
-                return None
-
-            if not isinstance(keywords, dict):
-                logger.error(
-                    f"❌  Invalid keywords section in {pack_file.name}: "
-                    f"expected dict, got {type(keywords).__name__}"
-                )
-                return None
-
-            # Get specific keyword translation
-            translation = keywords.get(keyword)
-
-            # Validate translation value
-            if translation is not None and not isinstance(translation, str):
-                logger.warning(
-                    f"⚠️  Invalid translation for keyword '{keyword}' in {pack_file.name}: "
-                    f"expected string, got {type(translation).__name__}, skipping"
-                )
-                return None
-
-            # Log successful translation at info level for operational visibility
             if translation:
-                logger.info(
-                    f"ℹ️  Found translation for '{keyword}' in {target_lang}: '{translation}'"
-                )
+                logger.debug(f"Found translation for '{keyword}' in {target_lang}: '{translation}'")
 
             return translation
 
         except Exception as e:
-            # Catch-all for unexpected errors
-            logger.error(
-                f"❌  Unexpected error loading language pack for '{target_lang}': {e}",
-                exc_info=True,
+            # Log warning and fall back to None (English keywords)
+            logger.warning(
+                f"Failed to load keyword translation for '{keyword}' in '{target_lang}': {e}"
             )
             return None
 

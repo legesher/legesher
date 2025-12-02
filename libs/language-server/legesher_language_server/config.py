@@ -4,10 +4,14 @@ This module provides configuration loading from environment variables,
 command-line arguments, and defaults for the LSP server.
 """
 
+import logging
 import os
+import re
 import sys
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 
 class LanguageServerConfig(BaseModel):
@@ -50,9 +54,106 @@ class LanguageServerConfig(BaseModel):
     # Logging
     log_level: str = Field(default="INFO", description="Logging level")
 
+    @field_validator("source_language", "target_language")
+    @classmethod
+    def validate_language_code(cls, v: str) -> str:
+        """Validate language code format (ISO 639-1/639-2).
+
+        Prevents cache pollution and path traversal attempts (CORE-446 security).
+
+        Args:
+            v: Language code to validate
+
+        Returns:
+            Validated and normalized language code (lowercase)
+
+        Raises:
+            ValueError: If language code format is invalid
+        """
+        if not v:
+            raise ValueError("Language code cannot be empty")
+
+        # Check length (2-3 chars for ISO 639-1/639-2)
+        if len(v) < 2 or len(v) > 3:
+            raise ValueError(f"Language code must be 2-3 characters (ISO 639): '{v}' has {len(v)}")
+
+        # Must be alphabetic only (no path separators, special chars)
+        if not v.isalpha():
+            raise ValueError(f"Language code must be alphabetic: '{v}' contains invalid characters")
+
+        # Convert to lowercase for consistency
+        return v.lower()
+
+    @field_validator("python_version")
+    @classmethod
+    def validate_python_version(cls, v: str | None) -> str | None:
+        """Validate Python version format.
+
+        Args:
+            v: Python version string or None
+
+        Returns:
+            Validated version string or None
+
+        Raises:
+            ValueError: If version format is invalid
+        """
+        if v is None:
+            return v
+
+        # Must match X.Y or X.Y.Z format
+        if not re.match(r"^\d+\.\d+(\.\d+)?$", v):
+            raise ValueError(f"Invalid Python version format: '{v}' (expected X.Y or X.Y.Z)")
+
+        # Reasonable range check
+        parts = v.split(".")
+        major, minor = int(parts[0]), int(parts[1])
+        if major != 3 or minor < 8 or minor > 20:
+            raise ValueError(f"Python version out of supported range: {v}")
+
+        return v
+
+    @field_validator("cache_size")
+    @classmethod
+    def validate_cache_size(cls, v: int) -> int:
+        """Validate cache size to prevent resource exhaustion.
+
+        Args:
+            v: Cache size value
+
+        Returns:
+            Validated cache size
+
+        Raises:
+            ValueError: If cache size is out of acceptable range
+        """
+        if v < 1 or v > 10000:
+            logger.warning(f"Cache size out of range (1-10000): {v}, using 1000")
+            return 1000
+        return v
+
+    @field_validator("cache_ttl")
+    @classmethod
+    def validate_cache_ttl(cls, v: int) -> int:
+        """Validate cache TTL to prevent resource exhaustion.
+
+        Args:
+            v: Cache TTL in seconds
+
+        Returns:
+            Validated TTL
+
+        Raises:
+            ValueError: If TTL is out of acceptable range
+        """
+        if v < 0 or v > 86400:  # Max 24 hours
+            logger.warning(f"Cache TTL out of range (0-86400): {v}, using 3600")
+            return 3600
+        return v
+
     @classmethod
     def from_env(cls) -> "LanguageServerConfig":
-        """Load configuration from environment variables.
+        """Load configuration from environment variables with validation.
 
         Environment variables:
             LEGESHER_SOURCE_LANG: Source language code
@@ -66,17 +167,40 @@ class LanguageServerConfig(BaseModel):
 
         Returns:
             Configured LanguageServerConfig instance
+
+        Note:
+            Falls back to safe defaults if environment variables contain invalid values.
+            Validation errors are logged as warnings (CORE-446 security).
         """
-        return cls(
-            source_language=os.getenv("LEGESHER_SOURCE_LANG", "en"),
-            target_language=os.getenv("LEGESHER_TARGET_LANG", "es"),
-            python_version=os.getenv("LEGESHER_PYTHON_VERSION"),
-            cache_size=int(os.getenv("LEGESHER_CACHE_SIZE", "1000")),
-            cache_ttl=int(os.getenv("LEGESHER_CACHE_TTL", "3600")),
-            pylance_enabled=os.getenv("LEGESHER_PYLANCE_ENABLED", "true").lower() == "true",
-            pylance_path=os.getenv("LEGESHER_PYLANCE_PATH"),
-            log_level=os.getenv("LEGESHER_LOG_LEVEL", "INFO"),
-        )
+        try:
+            # Parse cache values with error handling
+            try:
+                cache_size = int(os.getenv("LEGESHER_CACHE_SIZE", "1000"))
+            except ValueError:
+                logger.warning("Invalid LEGESHER_CACHE_SIZE, using default 1000")
+                cache_size = 1000
+
+            try:
+                cache_ttl = int(os.getenv("LEGESHER_CACHE_TTL", "3600"))
+            except ValueError:
+                logger.warning("Invalid LEGESHER_CACHE_TTL, using default 3600")
+                cache_ttl = 3600
+
+            return cls(
+                source_language=os.getenv("LEGESHER_SOURCE_LANG", "en"),
+                target_language=os.getenv("LEGESHER_TARGET_LANG", "es"),
+                python_version=os.getenv("LEGESHER_PYTHON_VERSION"),
+                cache_size=cache_size,
+                cache_ttl=cache_ttl,
+                pylance_enabled=os.getenv("LEGESHER_PYLANCE_ENABLED", "true").lower() == "true",
+                pylance_path=os.getenv("LEGESHER_PYLANCE_PATH"),
+                log_level=os.getenv("LEGESHER_LOG_LEVEL", "INFO"),
+            )
+        except ValueError as e:
+            logger.error(f"Invalid configuration: {e}")
+            logger.info("Using safe default configuration")
+            # Fall back to safe defaults rather than crash
+            return cls()
 
     def detect_python_version(self) -> str:
         """Detect or return configured Python version.

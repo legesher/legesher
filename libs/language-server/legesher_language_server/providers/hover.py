@@ -14,6 +14,8 @@ import builtins
 import inspect
 import logging
 import re
+import threading
+from collections import OrderedDict
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -29,9 +31,109 @@ from ..utils.keyword_docs import (
 
 logger = logging.getLogger(__name__)
 
-# Simple cache for builtin docstrings (bounded by ~35 builtins × 3 languages ≈ 105 entries max)
-# Note: Not a true LRU cache - entries never expire. See CORE-XXX for proper LRU implementation.
-_docstring_cache: dict[tuple[str, str, str], str] = {}
+# Thread-safe cache lock for builtin documentation (CORE-446 security)
+_cache_lock = threading.Lock()
+
+
+# LRU cache for builtin docstrings (CORE-442/CORE-443/CORE-446)
+# Replaced simple dict with proper LRU cache with automatic eviction
+# Size: 128 entries allows ~35 builtins × 3 languages with room for growth
+# Note: We use OrderedDict for LRU behavior since BuiltinDocumentation/ParameterTranslation
+# instances are not hashable for @lru_cache decorator
+
+
+def _get_builtin_doc_cached(
+    name: str,
+    display_name: str,
+    source_lang: str,
+    target_lang: str,
+    builtin_docs: BuiltinDocumentation,
+    param_translator: ParameterTranslation,
+) -> str | None:
+    """Get cached builtin documentation with LRU eviction.
+
+    Args:
+        name: Builtin name in English (e.g., 'print', 'len')
+        display_name: Display name (translated name if different)
+        source_lang: Source language code
+        target_lang: Target language code
+        builtin_docs: BuiltinDocumentation instance for fetching docs
+        param_translator: ParameterTranslation instance for signature translation
+
+    Returns:
+        Markdown-formatted docstring or None
+
+    Note:
+        This function uses a manual LRU cache. The cache is bounded
+        at 128 entries and automatically evicts least-recently-used items.
+        We use a manual cache because BuiltinDocumentation/ParameterTranslation
+        instances are not hashable for @lru_cache decorator.
+
+        Thread-safe: Uses threading.Lock to prevent race conditions during
+        concurrent async task execution (CORE-446 security).
+    """
+    # Create cache key from hashable values only
+    cache_key = (name, display_name, source_lang, target_lang)
+
+    # Create module-level cache if it doesn't exist
+    if not hasattr(_get_builtin_doc_cached, "_cache"):
+        _get_builtin_doc_cached._cache = OrderedDict()
+
+    cache = _get_builtin_doc_cached._cache
+
+    # Thread-safe cache access
+    with _cache_lock:
+        # Check cache
+        if cache_key in cache:
+            # Move to end (mark as recently used)
+            cache.move_to_end(cache_key)
+            return cache[cache_key]
+
+    # Not in cache - compute result
+    try:
+        builtin_obj = getattr(builtins, name)
+
+        # Try to get translated documentation first
+        docstring = builtin_docs.get(name, target_lang)
+        if not docstring:
+            # Fallback to English translated doc
+            docstring = builtin_docs.get(name, "en")
+        if not docstring:
+            # Fallback to Python's builtin docstring
+            docstring = inspect.getdoc(builtin_obj)
+
+        if not docstring:
+            return None
+
+        # Get signature if available
+        try:
+            sig = inspect.signature(builtin_obj)
+            sig_str = str(sig)
+            # Translate parameter names in signature
+            translated_sig = param_translator.translate_signature(sig_str, target_lang)
+            # Build signature with translated function name and parameters
+            signature_str = f"{display_name}{translated_sig}"
+        except (ValueError, TypeError):
+            signature_str = f"{display_name}(...)"
+
+        # Format as markdown with improved layout
+        if display_name != name:
+            # Show: translated name (english name) - for translated builtins
+            content = f"**`{display_name}`** (`{name}`)\n\n```\n{signature_str}\n```\n\n{docstring}"
+        else:
+            content = f"**`{display_name}`**\n\n```\n{signature_str}\n```\n\n{docstring}"
+
+        # Add to cache with LRU eviction (thread-safe)
+        with _cache_lock:
+            cache[cache_key] = content
+            # Evict oldest if cache is full
+            if len(cache) > 128:
+                cache.popitem(last=False)  # Remove oldest (first) item
+
+        return content
+
+    except (AttributeError, TypeError):
+        return None
 
 
 async def provide_hover(
@@ -288,65 +390,22 @@ class HoverProvider:
 
         Returns:
             Markdown-formatted docstring or None
+
+        Note:
+            Uses LRU cached function for performance (CORE-442/CORE-443).
         """
-        # Use original name for cache key if provided
+        # Use original name for display if provided
         display_name = original_name if original_name else name
-        cache_key = (display_name, self.source_lang, self.target_lang)
-        if cache_key in _docstring_cache:
-            return _docstring_cache[cache_key]
 
-        try:
-            builtin_obj = getattr(builtins, name)
-
-            # Try to get translated documentation first
-            docstring = self.builtin_docs.get(name, self.target_lang)
-            if not docstring:
-                # Fallback to English translated doc
-                docstring = self.builtin_docs.get(name, "en")
-            if not docstring:
-                # Fallback to Python's builtin docstring
-                docstring = inspect.getdoc(builtin_obj)
-
-            if not docstring:
-                return None
-
-            # Get signature if available
-            try:
-                sig = inspect.signature(builtin_obj)
-                sig_str = str(sig)
-                # Translate parameter names in signature
-                translated_sig = self.param_translator.translate_signature(
-                    sig_str, self.target_lang
-                )
-                # Build signature with translated function name and parameters
-                signature_str = f"{display_name}{translated_sig}"
-            except (ValueError, TypeError):
-                signature_str = f"{display_name}(...)"
-
-            # Format as markdown with improved layout
-            if original_name and original_name != name:
-                # Show: translated name (english name) - for translated builtins
-                # Format:
-                # **`imprimir`** (`print`)
-                #
-                # ```
-                # imprimir(*argumentos, separador=' ', fin='\n', archivo=None, vaciar=False)
-                # ```
-                #
-                # Description in target language
-                content = (
-                    f"**`{display_name}`** (`{name}`)\n\n```\n{signature_str}\n```\n\n{docstring}"
-                )
-            else:
-                content = f"**`{display_name}`**\n\n```\n{signature_str}\n```\n\n{docstring}"
-
-            # Cache result
-            _docstring_cache[cache_key] = content
-
-            return content
-
-        except (AttributeError, TypeError):
-            return None
+        # Call cached function (CORE-442/CORE-443)
+        return _get_builtin_doc_cached(
+            name=name,
+            display_name=display_name,
+            source_lang=self.source_lang,
+            target_lang=self.target_lang,
+            builtin_docs=self.builtin_docs,
+            param_translator=self.param_translator,
+        )
 
     def _hover_user_defined(self, name: str) -> str | None:
         """Get hover content for user-defined function/class.

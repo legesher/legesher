@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from legesher_i18n import LanguagePackLoader
 from lsprotocol.types import (
     Diagnostic,
     Hover,
@@ -30,6 +31,35 @@ from .config import LanguageServerConfig
 from .incremental_translator import IncrementalTranslator
 
 logger = logging.getLogger(__name__)
+
+# Shared language pack loader with LRU cache (CORE-446)
+# Uses lazy initialization to avoid import-time failures
+_pack_loader: LanguagePackLoader | None = None
+
+
+def _get_pack_loader() -> LanguagePackLoader:
+    """Get or create the shared language pack loader with error handling.
+
+    Uses lazy initialization to avoid module import failures if language
+    pack directory is missing or permissions are incorrect (CORE-446 security).
+
+    Returns:
+        LanguagePackLoader instance
+
+    Note:
+        On initialization failure, returns a loader with empty pack root
+        to allow graceful degradation rather than crashing.
+    """
+    global _pack_loader
+    if _pack_loader is None:
+        try:
+            _pack_loader = LanguagePackLoader()
+        except Exception as e:
+            logger.error(f"Failed to initialize LanguagePackLoader: {e}")
+            # Graceful degradation - loader with nonexistent root
+            # Will return None for all translations, allowing pass-through mode
+            _pack_loader = LanguagePackLoader(pack_root=Path("/tmp/nonexistent_legesher_packs"))
+    return _pack_loader
 
 
 class PylanceProxy:
@@ -83,64 +113,11 @@ class PylanceProxy:
         self._request_count = 0
         self._total_latency = 0.0
 
-    def _find_language_pack(self, lang: str) -> Path | None:
-        """Find language pack directory using multiple strategies.
-
-        Checks:
-        1. Development location: libs/i18n-python-{lang}/ (relative to this file)
-        2. Installed package: try importing legesher_i18n_python_{lang}
-        3. Site-packages: check importlib metadata
-
-        Args:
-            lang: Target language code
-
-        Returns:
-            Path to language pack directory or None if not found
-        """
-        from pathlib import Path
-
-        # Strategy 1: Development monorepo structure (libs/ directory)
-        dev_pack_dir = (
-            Path(__file__).parent.parent.parent / "i18n" / "language-packs" / "python" / lang
-        )
-        if dev_pack_dir.exists():
-            return dev_pack_dir
-
-        # Strategy 2: Try importing the package (works if installed)
-        try:
-            import importlib.util
-
-            pack_module_name = f"legesher_i18n_python_{lang}"
-            spec = importlib.util.find_spec(pack_module_name)
-            if spec and spec.origin:
-                # Return parent directory of the package
-                return Path(spec.origin).parent.parent
-        except (ImportError, AttributeError):
-            pass
-
-        # Strategy 3: Check site-packages using importlib.metadata
-        try:
-            import importlib.metadata
-
-            pack_dist_name = f"legesher-i18n-python-{lang}"
-            dist = importlib.metadata.distribution(pack_dist_name)
-            # Get files from distribution
-            if dist.files:
-                # Find the packs directory
-                for file in dist.files:
-                    if "packs" in str(file):
-                        return Path(dist.locate_file(file)).parent.parent
-        except (ImportError, importlib.metadata.PackageNotFoundError):
-            pass
-
-        return None
-
     def _get_keyword_map(self, lang: str) -> dict[str, str]:
         """Get keyword translation map for language.
 
-        Loads from legesher-i18n language packs dynamically with comprehensive
-        error handling and version fallback support. Creates reversed mapping
-        (localized→English) for translation from native language to English.
+        Uses cached LanguagePackLoader for performance (CORE-446).
+        Creates reversed mapping (localized→English) for translation.
 
         Args:
             lang: Target language code (e.g., 'es', 'ar', 'zh')
@@ -148,140 +125,24 @@ class PylanceProxy:
         Returns:
             Dictionary mapping localized keywords to English, or empty dict on error
 
-        Error Handling:
-            All errors are caught and logged, never raises exceptions:
-            - Directory not found: Logs warning, returns {}
-            - File not found: Tries version fallback (3.10→3.11→3.12→3.13), returns {}
-            - Invalid YAML: Logs error with details, returns {}
-            - Missing keywords section: Logs warning, returns {}
-            - Invalid keyword types: Logs warning, skips invalid entries
-
-            Logging uses emoji prefixes for VS Code output:
-            - ⚠️ Warning: non-critical issues (missing packs, skipped entries)
-            - ❌ Error: critical issues (YAML errors, type errors)
-            - ℹ️ Info: successful load with translation count
-
-        Note:
-            Returns empty dict (not None) to ensure IncrementalTranslator can always
-            be initialized, even without translations available. Empty dict means
-            no translation will occur (pass-through mode).
-
         Example:
             >>> proxy._get_keyword_map("es")
             {'definir': 'def', 'clase': 'class', ...}  # Reversed for translation
-            # Logs: "ℹ️ Loaded 37 keyword translations for es from 3.10.yml"
         """
         try:
-            import yaml
+            # Load language pack using cached loader (CORE-446)
+            pack = _get_pack_loader().load(language=lang, target="python", version="3.10")
 
-            # Find language pack using robust discovery
-            pack_dir = self._find_language_pack(lang)
-            if not pack_dir:
-                logger.warning(
-                    f"⚠️  Language pack directory for '{lang}' not found, translation disabled"
-                )
-                return {}
+            # Build reverse map: localized → English
+            reversed_map = {translated: english for english, translated in pack.keywords.items()}
 
-            # Try multiple Python versions in fallback order
-            python_versions = ["3.10", "3.11", "3.12", "3.13"]
-            pack_file = None
-
-            for version in python_versions:
-                candidate_file = (
-                    pack_dir / f"legesher_i18n_python_{lang}" / "packs" / f"{version}.yml"
-                )
-                if candidate_file.exists():
-                    pack_file = candidate_file
-                    logger.debug(f"Found language pack: {pack_file.name}")
-                    break
-
-            if not pack_file:
-                logger.warning(
-                    f"⚠️  Language pack file not found for '{lang}' "
-                    f"(tried Python versions: {', '.join(python_versions)}), "
-                    f"translation disabled"
-                )
-                return {}
-
-            # Load YAML with specific error handling
-            try:
-                with open(pack_file, encoding="utf-8") as f:
-                    pack_data = yaml.safe_load(f)
-            except yaml.YAMLError as e:
-                logger.error(f"❌  Invalid YAML in {lang} language pack ({pack_file.name}): {e}")
-                return {}
-            except OSError as e:
-                logger.error(f"❌  Failed to read language pack file {pack_file}: {e}")
-                return {}
-
-            # Validate pack structure
-            if not isinstance(pack_data, dict):
-                logger.error(
-                    f"❌  Invalid language pack format in {pack_file.name}: "
-                    f"expected dict, got {type(pack_data).__name__}"
-                )
-                return {}
-
-            # Get keywords section
-            keywords = pack_data.get("keywords", {})
-
-            if not keywords:
-                logger.warning(
-                    f"⚠️  Language pack {pack_file.name} has no keywords section, "
-                    f"translation disabled"
-                )
-                return {}
-
-            if not isinstance(keywords, dict):
-                logger.error(
-                    f"❌  Invalid keywords section in {pack_file.name}: "
-                    f"expected dict, got {type(keywords).__name__}"
-                )
-                return {}
-
-            # Validate and reverse the mapping (English->Spanish becomes Spanish->English)
-            reversed_map = {}
-            invalid_count = 0
-
-            for eng_keyword, localized_keyword in keywords.items():
-                # Skip invalid entries
-                if not isinstance(localized_keyword, str):
-                    logger.warning(
-                        f"⚠️  Invalid translation for '{eng_keyword}' in {pack_file.name}: "
-                        f"expected string, got {type(localized_keyword).__name__}, skipping"
-                    )
-                    invalid_count += 1
-                    continue
-
-                if not isinstance(eng_keyword, str):
-                    logger.warning(
-                        f"⚠️  Invalid English keyword in {pack_file.name}: "
-                        f"expected string, got {type(eng_keyword).__name__}, skipping"
-                    )
-                    invalid_count += 1
-                    continue
-
-                # Add to reversed mapping
-                reversed_map[localized_keyword] = eng_keyword
-
-            # Log success with count
-            if reversed_map:
-                logger.info(
-                    f"ℹ️  Loaded {len(reversed_map)} keyword translations for {lang} "
-                    f"from {pack_file.name}"
-                )
-                if invalid_count > 0:
-                    logger.warning(f"⚠️  Skipped {invalid_count} invalid translation entries")
-            else:
-                logger.warning(f"⚠️  No valid keyword translations found in {pack_file.name}")
+            logger.debug(f"Loaded {len(reversed_map)} keyword translations for {lang}")
 
             return reversed_map
 
         except Exception as e:
-            # Catch-all for unexpected errors
-            logger.error(
-                f"❌  Unexpected error loading language pack for '{lang}': {e}", exc_info=True
-            )
+            # Log warning and fall back to empty dict (pass-through mode)
+            logger.warning(f"Failed to load language pack for '{lang}': {e}")
             return {}
 
     async def start(self) -> bool:
