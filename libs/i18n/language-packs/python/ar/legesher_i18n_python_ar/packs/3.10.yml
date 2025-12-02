@@ -50,8 +50,6 @@ builtins:
   anext: التالي
   any: أي
   ascii: أسكي
-  attributeerror: خطأ في السمة
-  baseexception: الاستثناء الأساسي
   bin: البينري
   bool: المنطقي
   breakpoint: الإيقاف المؤقت
@@ -69,7 +67,6 @@ builtins:
   ellipsis: التقنية
   enumerate: التعداد
   eval: التقييم
-  exception: الاستثناء
   exec: التنفيذ
   filter: تصفية
   float: الطفرة
@@ -82,13 +79,11 @@ builtins:
   help: ساعد
   hex: الأساسي السداسي
   id: معرف
-  indexerror: خطأ الفهرس
   input: الإدخال
   int: العدد الصحيح
   isinstance: يُعَرِّف
   issubclass: التصنيف_التفرعي
   iter: الحلقة
-  keyerror: خطأ_المفتاح
   len: الطول
   list: قائمة
   locals: المتغيرات المحلية
@@ -96,7 +91,6 @@ builtins:
   max: الحد الأقصى
   memoryview: view_ذاكرة
   min: الأدنى
-  nameerror: خطأ الاسم
   next: التالي
   notimplemented: غير_مُنفَذ
   object: الكائن
@@ -110,19 +104,15 @@ builtins:
   repr: التمثيل
   reversed: العكسي
   round: التقريب
-  runtimeerror: خطأ وقت التشغيل
   set: المجموعة
   setattr: تعيين
   slice: الشرائح
   sorted: المُرتب
   staticmethod: الطريقة الثابتة
-  stopiteration: الإيقاف_التكراري
   str: سلسلة الأحرف
   sum: المجموع
   super: السوبر
   tuple: التوبلي
-  typeerror: خطأ_نوع
-  valueerror: خطأ القيمة
   vars: الحصول على المتغيرات
   zip: التجميع
 exceptions:

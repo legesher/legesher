@@ -50,8 +50,6 @@ builtins:
   anext: anext
   any: n'importe quel
   ascii: ascii
-  attributeerror: Erreur d'attribut
-  baseexception: baseexception
   bin: bin
   bool: bool
   breakpoint: point d'arrêt
@@ -69,7 +67,6 @@ builtins:
   ellipsis: ellipse
   enumerate: énumérer
   eval: evaluer
-  exception: l'exception
   exec: exécuter
   filter: filtre
   float: float
@@ -82,13 +79,11 @@ builtins:
   help: aide
   hex: hex
   id: l'identifiant
-  indexerror: IndexError
   input: entrée
   int: entier
   isinstance: isinstance
   issubclass: est sous-classe de
   iter: itérer
-  keyerror: erreur de clé
   len: la longueur
   list: liste
   locals: les variables locales
@@ -96,7 +91,6 @@ builtins:
   max: max
   memoryview: memoryview
   min: min
-  nameerror: Error de nom
   next: suivant
   notimplemented: non_implémenté
   object: objet
@@ -110,19 +104,15 @@ builtins:
   repr: représenter
   reversed: réverser
   round: arrondir
-  runtimeerror: erreur de runtime
   set: ensemble
   setattr: setattrter
   slice: tranche
   sorted: trié
   staticmethod: méthode de classe
-  stopiteration: arrêt de l'itération
   str: chaîne de caractères
   sum: somme
   super: super
   tuple: tuple
-  typeerror: erreur de type
-  valueerror: valeur incorrecte
   vars: vars
   zip: zipper
 exceptions:
