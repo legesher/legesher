@@ -50,8 +50,6 @@ builtins:
   anext: el siguiente
   any: cualquier
   ascii: ascii
-  attributeerror: Error de atributo
-  baseexception: excepción base
   bin: binario
   bool: booleano
   breakpoint: punto de interrupción
@@ -69,7 +67,6 @@ builtins:
   ellipsis: ellipsis
   enumerate: el enumerar
   eval: eval
-  exception: excepción
   exec: ejecutar
   filter: filtrar
   float: flotante
@@ -82,13 +79,11 @@ builtins:
   help: ayuda
   hex: hexadecimal
   id: identificador
-  indexerror: Error de índice
   input: entrada
   int: entero
   isinstance: ser de la clase
   issubclass: subclase de
   iter: iterar
-  keyerror: error de clave
   len: longitud
   list: lista
   locals: los locales
@@ -96,7 +91,6 @@ builtins:
   max: máximo
   memoryview: vista de memoria
   min: min
-  nameerror: Error de nombre
   next: el siguiente
   notimplemented: no implementado
   object: objeto
@@ -110,19 +104,15 @@ builtins:
   repr: representación
   reversed: revesado
   round: redondear
-  runtimeerror: error en tiempo de ejecución
   set: conjunto
   setattr: asignar
   slice: rebanada
   sorted: ordenado
   staticmethod: estático
-  stopiteration: stopiteration
   str: cadena
   sum: sumar
   super: super
   tuple: tupla
-  typeerror: error de tipo
-  valueerror: error de valor
   vars: vars
   zip: zip
 exceptions:

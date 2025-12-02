@@ -50,8 +50,6 @@ builtins:
   anext: 下一个
   any: 任意
   ascii: ASCII
-  attributeerror: 属性错误
-  baseexception: 基本异常
   bin: 二进制
   bool: 布尔
   breakpoint: 断点
@@ -69,7 +67,6 @@ builtins:
   ellipsis: 省略号
   enumerate: 枚举
   eval: eval
-  exception: 异常
   exec: 执行
   filter: 过滤
   float: 浮点数
@@ -82,13 +79,11 @@ builtins:
   help: 帮助
   hex: 十六进制
   id: 标识
-  indexerror: 越界访问错误
   input: 输入
   int: 整数
   isinstance: isinstance
   issubclass: 是子类
   iter: 迭代
-  keyerror: 键错误
   len: 长度
   list: 列表
   locals: 局部变量
@@ -96,7 +91,6 @@ builtins:
   max: 最大值
   memoryview: 内存视图
   min: 最小
-  nameerror: 名称错误
   next: 下一个
   notimplemented: 未实现
   object: 对象
@@ -110,19 +104,15 @@ builtins:
   repr: 表示
   reversed: 反转
   round: 四舍五入
-  runtimeerror: 运行时错误
   set: 集合
   setattr: setattr
   slice: 切片
   sorted: 排序的
   staticmethod: 静态方法
-  stopiteration: 停止迭代
   str: str
   sum: 求和
   super: 超
   tuple: 元组
-  typeerror: 类型错误
-  valueerror: ValueError
   vars: vars
   zip: zip
 exceptions:
