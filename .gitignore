@@ -180,3 +180,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Claude Code personal files (keep shared commands/agents in git)
+.claude/scratchpads/
+.claude/settings.local.json

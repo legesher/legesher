@@ -2,9 +2,11 @@
 
 Write Python code in your native language with real-time translation and intelligent IDE support.
 
+**Status**: Production-Ready (Pre-Beta) | **Version**: 0.0.x | **Languages**: 27+ | **VS Code**: 1.85.0+
+
 ## Features
 
-### v0.1.0 (Current)
+### Current (Pre-Beta v0.0.x)
 
 - **Language Server Integration**: Connects to the Legesher language server via LSP
 - **Language Selector**: Quick-pick menu to switch between languages (English, Spanish, Arabic, Chinese)
@@ -15,6 +17,8 @@ Write Python code in your native language with real-time translation and intelli
 - **Python Support**: Full support for Python files (`.py`)
 - **Status Indicator**: Visual indicator showing connection status and current language
 - **Configuration**: Customizable settings for language server connection
+- **Telemetry System**: Privacy-focused usage tracking (respects VS Code global settings)
+- **Feedback System**: Two-stage prompting for user feedback and GitHub issue integration
 
 ### Coming Soon
 

@@ -2,6 +2,8 @@
 
 > Command-line interface for coding in any language
 
+**Status**: Production-Ready (Pre-Beta) | **Version**: 0.0.x | **Languages**: 27+
+
 The legesher CLI is your gateway to programming in your native language. Translate Python code between English and localized
 keywords, manage git integration for collaborative workflows, and configure your multilingual development environment.
 
