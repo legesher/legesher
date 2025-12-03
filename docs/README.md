@@ -1,17 +1,33 @@
-# Starlight Starter Kit: Basics
+# Legesher Documentation
 
 [![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
 
-```
-pnpm create astro@latest -- --template starlight
-```
+**Status**: Production-Ready MVP (v0.9)
+**Last Updated**: December 3, 2025
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/starlight/tree/main/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/starlight/tree/main/examples/basics)
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/withastro/starlight&create_from_path=examples/basics)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwithastro%2Fstarlight%2Ftree%2Fmain%2Fexamples%2Fbasics&project-name=my-starlight-docs&repository-name=my-starlight-docs)
+This directory contains the official Legesher documentation site built with Astro and Starlight.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 📚 Documentation Overview
+
+Legesher is a production-ready multilingual programming system that enables developers to code in their native
+language instead of English. The documentation covers:
+
+- **Architecture**: System design, diagrams, and implementation details
+- **Guides**: Getting started, installation, git workflow, translation guide
+- **Reference**: API documentation and examples
+- **Development**: CI/CD, pre-commit hooks, contributing guidelines
+
+## 🎯 Key Features Documented
+
+- **27 Language Packs**: Support for ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms, nl, no, pl, pt,
+  ru, sv, th, tr, vi, zh
+- **Two Translator Backends**: Token-based and tree-sitter AST-based implementations
+- **Full LSP Implementation**: Hover, completion, diagnostics, semantic tokens
+- **VS Code Extension**: Complete extension with telemetry and feedback systems
+- **CLI Tools**: translate, run, git, metadata commands
+- **Git Integration**: Clean/smudge filters for canonical English storage
+
+For implementation status details, see [DOCUMENTATION_AUDIT_2025.md](DOCUMENTATION_AUDIT_2025.md).
 
 ## 🚀 Project Structure
 

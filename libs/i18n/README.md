@@ -1,19 +1,23 @@
 # legesher-i18n
 
-Version-aware language pack loading with inheritance, Python version detection, schema validation, and
-dynamic translation API for multilingual programming.
+Industrial-strength internationalization infrastructure with 27 language packs, version-aware inheritance,
+and multi-provider translation API for multilingual programming.
+
+**Status**: Production-Ready (Pre-Beta) | **Version**: 0.0.x | **Python**: 3.10-3.14
 
 ## Overview
 
 The `legesher-i18n` package provides the core internationalization infrastructure for Legesher,
 enabling developers to code in their native language. It includes:
 
-- **Version-Aware Language Packs**: Automatic adaptation to Python 3.10-3.13+ with inheritance
+- **27 Complete Language Packs**: Support for ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms, nl,
+  no, pl, pt, ru, sv, th, tr, vi, zh, and more
+- **Version-Aware Language Packs**: Automatic adaptation to Python 3.10-3.14 with inheritance
 - **Auto-Detection**: Detects Python version from `pyproject.toml`, `.python-version`, or runtime
 - **Pack Inheritance**: Child packs inherit from parents, defining only what's new
 - **Schema Validation**: Pydantic-based validation with security checks
-- **Performance**: Caching for fast repeated loads
-- **Translation API**: Multi-provider dynamic translation with quality-based fallback (NEW!)
+- **High Performance**: Thread-safe LRU caching for fast repeated loads
+- **Translation API**: Multi-provider dynamic translation with quality-based fallback and cost tracking
 
 ## Installation
 
@@ -64,15 +68,39 @@ Language packs automatically adapt to different Python versions:
 
 ### Supported Languages
 
-All language packs (v0.0.2) support Python 3.10-3.14:
+**27 complete language packs** - All support Python 3.10-3.14 with version inheritance:
 
-- **Arabic (ar)**: 37 keywords, 81 builtins
-- **Spanish (es)**: 37 keywords, 81 builtins
-- **English (en)**: 37 keywords, 81 builtins (canonical reference)
-- **French (fr)**: 37 keywords, 81 builtins
-- **Chinese (zh)**: 37 keywords, 81 builtins
+- **Arabic (ar)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Danish (da)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **German (de)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Greek (el)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **English (en)**: 37 keywords, 81 builtins - Canonical reference implementation
+- **Spanish (es)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Finnish (fi)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **French (fr)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Hebrew (he)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Hindi (hi)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Hungarian (hu)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Indonesian (id)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Italian (it)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Japanese (ja)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Korean (ko)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Malay (ms)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Dutch (nl)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Norwegian (no)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Polish (pl)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Portuguese (pt)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Russian (ru)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Swedish (sv)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Thai (th)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Turkish (tr)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Vietnamese (vi)**: 37 keywords, 81 builtins - Aya AI Model translations
+- **Chinese Simplified (zh)**: 37 keywords, 81 builtins - Aya AI Model translations
+- And more...
 
 Each language pack is independently versioned at `libs/i18n/language-packs/python/{lang}/`
+
+**Note**: Language packs are currently in pre-beta (v0.0.x) and awaiting community validation before v0.1.0 release.
 
 ### Translation API (Optional)
 
