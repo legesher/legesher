@@ -5,6 +5,7 @@ for hover tooltips in the Language Server.
 """
 
 import logging
+import threading
 from pathlib import Path
 
 from legesher_i18n import LanguagePackLoader
@@ -18,6 +19,11 @@ logger = logging.getLogger(__name__)
 # Shared language pack loader with LRU cache (CORE-446)
 # Uses lazy initialization to avoid import-time failures
 _pack_loader: LanguagePackLoader | None = None
+
+# Shared ParameterTranslation instance (lazy singleton)
+# Loaded once and reused to avoid repeated translation loading on every hover
+_param_translator: "ParameterTranslation | None" = None
+_param_translator_lock = threading.Lock()
 
 
 def _get_pack_loader() -> LanguagePackLoader:
@@ -43,6 +49,33 @@ def _get_pack_loader() -> LanguagePackLoader:
             # Will return None for all translations, allowing pass-through mode
             _pack_loader = LanguagePackLoader(pack_root=Path("/tmp/nonexistent_legesher_packs"))
     return _pack_loader
+
+
+def get_param_translator() -> "ParameterTranslation":
+    """Get or create the shared ParameterTranslation instance.
+
+    Uses lazy initialization to load translations once and reuse across all
+    hover requests. This avoids repeated loading of 174+ translations.
+
+    Returns:
+        Shared ParameterTranslation instance
+
+    Note:
+        Thread-safe with double-check locking pattern to prevent race conditions
+        during concurrent async task execution.
+    """
+    global _param_translator
+    # Fast path - already initialized
+    if _param_translator is not None:
+        return _param_translator
+
+    # Slow path - need to initialize with lock
+    with _param_translator_lock:
+        # Double-check: another thread might have initialized while we waited
+        if _param_translator is None:
+            _param_translator = ParameterTranslation()
+
+    return _param_translator
 
 
 # Python keyword documentation (English, Spanish, Arabic)
@@ -943,15 +976,88 @@ PYTHON_PARAMETER_TRANSLATIONS = {
 
 
 class ParameterTranslation:
-    """Provides translations for Python function parameters.
+    """Provides comprehensive translations for Python function signatures.
 
-    This class translates parameter names in function signatures
-    for hover tooltips.
+    This class translates all components in function signatures for hover tooltips:
+    - Parameter names (sep, end, file, etc.)
+    - Keyword constants (None, True, False, lambda)
+    - Builtin types (str, int, dict, list, etc.)
+    - Exception types (ValueError, TypeError, etc.)
+    - Functions (print, len, range, etc.)
+
+    Translations are lazily loaded per language on first use to minimize memory
+    footprint and startup time.
     """
 
     def __init__(self) -> None:
-        """Initialize parameter translation."""
+        """Initialize parameter translation with lazy loading."""
         self._translations = PYTHON_PARAMETER_TRANSLATIONS
+        # Lazy cache: translations loaded on-demand per language
+        self._keyword_constants_cache: dict[str, dict[str, str]] = {}
+        self._cache_lock = threading.Lock()
+
+    def _load_language_pack(self, language: str) -> dict[str, str]:
+        """Load keyword/builtin/exception translations for a specific language.
+
+        Lazily loads translations only when needed for a specific language.
+        Results are cached to avoid repeated loading.
+
+        Args:
+            language: Target language code ('es', 'ar', 'zh', etc.)
+
+        Returns:
+            Dictionary mapping English terms to translated terms for this language.
+            Example: {"None": "nulo", "str": "cadena", "ValueError": "error de valor"}
+
+        Raises:
+            ImportError: If language pack cannot be loaded
+            AttributeError: If pack structure is invalid
+        """
+        # Check cache first
+        if language in self._keyword_constants_cache:
+            return self._keyword_constants_cache[language]
+
+        # Load with lock to prevent concurrent loads of same language
+        with self._cache_lock:
+            # Double-check after acquiring lock
+            if language in self._keyword_constants_cache:
+                return self._keyword_constants_cache[language]
+
+            translations = {}
+            loader = _get_pack_loader()
+
+            try:
+                pack = loader.load(language=language, target="python", version="3.10")
+
+                if not pack:
+                    logger.warning(f"No language pack found for {language}")
+                    self._keyword_constants_cache[language] = {}
+                    return {}
+
+                # Load keywords section: None, True, False, lambda, and, or, etc.
+                if pack.keywords:
+                    translations.update(pack.keywords)
+
+                # Load builtins section: str, int, dict, print, len, etc.
+                if pack.builtins:
+                    translations.update(pack.builtins)
+
+                # Load exceptions section: ValueError, TypeError, etc.
+                if hasattr(pack, "exceptions") and pack.exceptions:
+                    translations.update(pack.exceptions)
+
+                logger.debug(f"Loaded {len(translations)} translations for {language}")
+
+            except (ImportError, AttributeError) as e:
+                logger.warning(f"Failed to load language pack for {language}: {e}")
+                translations = {}
+            except Exception as e:
+                logger.error(f"Unexpected error loading {language} pack: {e}", exc_info=True)
+                translations = {}
+
+            # Cache even if empty to avoid repeated failed loads
+            self._keyword_constants_cache[language] = translations
+            return translations
 
     def translate(self, param: str, language: str) -> str:
         """Translate a parameter name to target language.
@@ -976,36 +1082,75 @@ class ParameterTranslation:
         return self._translations[param].get(language, param)
 
     def translate_signature(self, signature_str: str, language: str) -> str:
-        """Translate all parameters in a signature string.
+        """Translate all components of a function signature to the target language.
+
+        Performs comprehensive translation in two phases:
+        1. Parameter names: sep → separador, end → fin, file → archivo
+        2. Default values: None → nulo, dict → diccionario, ValueError → error de valor
+
+        Supports translation of:
+        - Parameter names (sep, end, file, flush, etc.)
+        - Keyword constants (None, True, False, lambda)
+        - Builtin types (str, int, dict, list, bool, etc.)
+        - Exception types (ValueError, TypeError, ConnectionError, etc.)
+        - Any item defined in language pack's keywords, builtins, or exceptions
 
         Args:
-            signature_str: Function signature (e.g., "(sep=' ', end='\\n')")
-            language: Target language code ('es', 'ar')
+            signature_str: Function signature to translate
+                (e.g., "(sep=' ', end='\\n', file=None, factory=dict)")
+            language: Target language code ('es', 'ar', 'zh', etc.)
 
         Returns:
-            Signature with translated parameter names
+            Fully translated signature with all parameters and values localized
 
-        Example:
+        Examples:
             >>> trans = ParameterTranslation()
-            >>> trans.translate_signature("(sep=' ', end='\\n')", "es")
-            "(separador=' ', fin='\\n')"
+            >>> trans.translate_signature("(sep=' ', end='\\n', file=None)", "es")
+            "(separador=' ', fin='\\n', archivo=nulo)"
+            >>> trans.translate_signature("(factory=dict, default=False)", "es")
+            "(fábrica=diccionario, predeterminado=falso)"
+            >>> trans.translate_signature("(exc_type=ValueError, retries=3)", "es")
+            "(tipo_exc=error de valor, reintentos=3)"
+
+        Note:
+            Uses case-insensitive matching for default values to handle both
+            Python's CamelCase (ValueError) and language pack lowercase (valueerror).
         """
+        import re
+
         result = signature_str
-        # Sort by length (longest first) to avoid partial replacements
+
+        # Phase 1: Translate parameter names (sep, end, file, etc.)
+        # Sort by length (longest first) to avoid partial replacements (e.g., 'sep' before 's')
         sorted_params = sorted(self._translations.keys(), key=len, reverse=True)
 
         for param in sorted_params:
             translation = self._translations[param].get(language)
             if translation:
-                # Replace parameter names in signature
-                # Match word boundaries to avoid partial replacements
-                import re
-
-                # Match param as a word (not part of another identifier)
-                # Handle cases like: param=value, param, *param, **param
+                # Match parameter as a complete word with optional * or **
+                # Handles: param=value, param, *param, **param
+                # Captures: (\*{0,2})  - optional * or **
+                #          (param)     - the parameter name
+                #          (\s*[=,)])  - followed by =, comma, or closing paren
                 pattern = rf"(\*{{0,2}})({re.escape(param)})(\s*[=,\)])"
                 replacement = rf"\1{translation}\3"
                 result = re.sub(pattern, replacement, result)
+
+        # Phase 2: Translate default values (None, dict, ValueError, etc.)
+        # Lazy-load translations for the target language only
+        keyword_translations = self._load_language_pack(language)
+
+        # Uses case-insensitive matching to handle Python's CamelCase vs pack lowercase
+        # Example: "ValueError" in code matches "valueerror" in language pack
+        for const, translation in keyword_translations.items():
+            if translation:
+                # Match default value after '=' sign
+                # Captures: (=\s*)      - equals sign with optional whitespace
+                #          (const)      - the constant/type name
+                #          (\s*[,)])    - followed by comma or closing paren
+                pattern = rf"(=\s*)({re.escape(const)})(\s*[,\)])"
+                replacement = rf"\1{translation}\3"
+                result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
 
         return result
 
