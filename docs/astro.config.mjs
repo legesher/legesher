@@ -12,9 +12,34 @@ export default defineConfig({
 			},
 			sidebar: [
 				{
+					label: 'Getting Started',
+					items: [
+						{ label: 'Quick Start', slug: 'getting-started' },
+						{ label: 'Privacy Policy', slug: 'privacy' },
+					],
+				},
+				{
+					label: 'Project',
+					items: [
+						{ label: 'Planning Summary', slug: 'planning_summary' },
+					],
+				},
+				{
+					label: 'Specifications',
+					items: [
+						{ label: 'MLCP v1.0', slug: 'specifications/mlcp-v1' },
+					],
+				},
+				{
+					label: 'Architecture',
+					items: [
+						{ label: 'Implementation Roadmap', slug: 'architecture/implementation-roadmap' },
+						{ label: 'Language Pack Registry', slug: 'architecture/language-pack-registry' },
+					],
+				},
+				{
 					label: 'Guides',
 					items: [
-						// Each item here is one entry in the navigation menu.
 						{ label: 'Example Guide', slug: 'guides/example' },
 					],
 				},
