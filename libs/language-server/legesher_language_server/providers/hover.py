@@ -27,6 +27,7 @@ from ..utils.keyword_docs import (
     BuiltinDocumentation,
     KeywordDocumentation,
     ParameterTranslation,
+    get_param_translator,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,10 @@ logger = logging.getLogger(__name__)
 # Thread-safe cache lock for builtin documentation (CORE-446 security)
 _cache_lock = threading.Lock()
 
+# Cache version - increment when translation logic changes to invalidate old entries
+# Version 1: Initial implementation with parameter name translation only
+# Version 2: Added default value translation (None, True, False, types, exceptions)
+_HOVER_CACHE_VERSION = 2
 
 # LRU cache for builtin docstrings (CORE-442/CORE-443/CORE-446)
 # Replaced simple dict with proper LRU cache with automatic eviction
@@ -73,7 +78,8 @@ def _get_builtin_doc_cached(
         concurrent async task execution (CORE-446 security).
     """
     # Create cache key from hashable values only
-    cache_key = (name, display_name, source_lang, target_lang)
+    # Include cache version to invalidate old entries when translation logic changes
+    cache_key = (_HOVER_CACHE_VERSION, name, display_name, source_lang, target_lang)
 
     # Create module-level cache if it doesn't exist
     if not hasattr(_get_builtin_doc_cached, "_cache"):
@@ -117,11 +123,14 @@ def _get_builtin_doc_cached(
             signature_str = f"{display_name}(...)"
 
         # Format as markdown with improved layout
+        # Use 'python' language for syntax highlighting in code fence
         if display_name != name:
             # Show: translated name (english name) - for translated builtins
-            content = f"**`{display_name}`** (`{name}`)\n\n```\n{signature_str}\n```\n\n{docstring}"
+            content = (
+                f"**`{display_name}`** (`{name}`)\n\n```python\n{signature_str}\n```\n\n{docstring}"
+            )
         else:
-            content = f"**`{display_name}`**\n\n```\n{signature_str}\n```\n\n{docstring}"
+            content = f"**`{display_name}`**\n\n```python\n{signature_str}\n```\n\n{docstring}"
 
         # Add to cache with LRU eviction (thread-safe)
         with _cache_lock:
@@ -218,7 +227,8 @@ class HoverProvider:
         self.document_uri = document_uri
         self.keyword_docs = KeywordDocumentation()
         self.builtin_docs = BuiltinDocumentation()
-        self.param_translator = ParameterTranslation()
+        # Use cached singleton to avoid reloading 174+ translations on every hover
+        self.param_translator = get_param_translator()
 
         # Load keyword translation map for target language
         self._keyword_translation_map = self._load_keyword_translations()
