@@ -11,6 +11,8 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
     "click>=8.0.0",
     "pyyaml>=6.0",
+    "questionary>=2.0.0",
+    "tomli>=2.0.0; python_version < '3.11'",
     "legesher-core",
     "legesher-i18n",
 ]

@@ -66,6 +66,13 @@ Example:
     >>> tracker.track_clean(Path("src/main.py"), "es", "en")
 """
 
+from .ai_context import (
+    AIContextGenerator,
+    generate_bilingual_examples,
+    generate_builtin_table,
+    generate_exception_table,
+    generate_keyword_table,
+)
 from .cultural_comments import CulturalCommentParser
 from .exceptions import (
     EncodingError,
@@ -106,6 +113,12 @@ __all__ = [
     "create_translator_from_language_pack",
     "get_default_backend",
     "get_supported_languages",
+    # AI context generation
+    "AIContextGenerator",
+    "generate_keyword_table",
+    "generate_builtin_table",
+    "generate_exception_table",
+    "generate_bilingual_examples",
     # Cultural comments (MLCP)
     "CulturalComment",
     "CulturalCommentMetadata",
