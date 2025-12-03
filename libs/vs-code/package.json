@@ -118,6 +118,15 @@
             "usesOnlineServices"
           ],
           "markdownDescription": "Enable anonymous usage telemetry to help improve Legesher. **No personal information or code content is collected.** This respects VS Code's global telemetry settings."
+        },
+        "legesher.telemetry.contributeToMLTraining": {
+          "type": "boolean",
+          "default": false,
+          "tags": [
+            "telemetry",
+            "usesOnlineServices"
+          ],
+          "markdownDescription": "Help improve Legesher translations by sharing anonymous feedback when you change translation suggestions.\n\n**What we collect:**\n- Translation corrections (e.g., media → promedio)\n- Code context (function, variable, class)\n\n**What we DON'T collect:**\n- Your code or file paths\n- Personal information\n\nYou can change this anytime. [Learn more about our privacy practices](https://docs.legesher.io/privacy#ml-training)"
         }
       }
     },
@@ -142,6 +151,10 @@
       {
         "command": "legesher.resetFeedbackState",
         "title": "Legesher: Reset Feedback State (Debug)"
+      },
+      {
+        "command": "legesher.resetOnboarding",
+        "title": "Legesher: Reset Onboarding (Debug)"
       }
     ],
     "menus": {

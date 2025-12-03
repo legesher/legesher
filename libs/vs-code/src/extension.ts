@@ -9,6 +9,7 @@ import { LegesherTelemetry } from './telemetry';
 import { initializeFeedback, getFeedbackInstance } from './feedback';
 import { initializeKeywords } from './keywords';
 import { loadEnvVariables } from './env';
+import { OnboardingManager } from './onboarding';
 
 let client: LanguageClient | undefined;
 let statusBarItem: vscode.StatusBarItem;
@@ -39,6 +40,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // Initialize feedback system (two-stage: first session + 7 days)
     initializeFeedback(context);
+
+    // Show onboarding for first-time users (welcome + ML consent)
+    // Note: This runs async but doesn't block extension activation
+    OnboardingManager.showOnboarding(context).catch(error => {
+        Logger.error('Onboarding error:', error);
+    });
+
+    // Register onboarding reset command (for testing)
+    OnboardingManager.registerResetCommand(context);
 
     // Create status bar item to show connection status
     statusBarItem = vscode.window.createStatusBarItem(
