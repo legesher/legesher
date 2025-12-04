@@ -30,6 +30,9 @@ DEFAULT_CONFIG = {
         "canonical_language": "en",
         "filter_enabled": True,
     },
+    "runtime": {
+        "cache_size": 128,
+    },
     "metadata": {
         "enabled": True,
         "directory": ".legesher/metadata",
@@ -97,6 +100,7 @@ class LegesherConfig:
         self.python_version = python_version
         self.git_canonical_language = git_canonical_language
         self.git_filter_enabled = git_filter_enabled
+        self.runtime_cache_size = None  # Will be set from dict if provided
         self.metadata_enabled = metadata_enabled
         self.metadata_directory = metadata_directory
         self.metadata_track_in_git = metadata_track_in_git
@@ -121,9 +125,10 @@ class LegesherConfig:
             >>> config = LegesherConfig.from_dict(data)
         """
         git_config = data.get("git", {})
+        runtime_config = data.get("runtime", {})
         metadata_config = data.get("metadata", {})
 
-        return cls(
+        config = cls(
             language=data.get("language", "en"),
             python_version=data.get("python_version"),
             git_canonical_language=git_config.get("canonical_language", "en"),
@@ -132,8 +137,15 @@ class LegesherConfig:
             metadata_directory=metadata_config.get("directory", ".legesher/metadata"),
             metadata_track_in_git=metadata_config.get("track_in_git", True),
             metadata_verbose_history=metadata_config.get("verbose_history", False),
-            metadata_max_history_entries=metadata_config.get("max_history_entries", 100),
+            metadata_max_history_entries=metadata_config.get(
+                "max_history_entries", 100
+            ),
         )
+
+        # Set runtime_cache_size from config (not in __init__ to keep it simple)
+        config.runtime_cache_size = runtime_config.get("cache_size")
+
+        return config
 
     def to_dict(self) -> dict:
         """Convert configuration to dictionary.
@@ -144,9 +156,9 @@ class LegesherConfig:
         Example:
             >>> config = LegesherConfig(language="es")
             >>> config.to_dict()
-            {'language': 'es', 'python_version': None, 'git': {...}, 'metadata': {...}}
+            {'language': 'es', 'python_version': None, 'git': {...}, 'runtime': {...}, 'metadata': {...}}
         """
-        return {
+        result = {
             "language": self.language,
             "python_version": self.python_version,
             "git": {
@@ -161,6 +173,12 @@ class LegesherConfig:
                 "max_history_entries": self.metadata_max_history_entries,
             },
         }
+
+        # Add runtime config if cache_size is set
+        if hasattr(self, "runtime_cache_size") and self.runtime_cache_size is not None:
+            result["runtime"] = {"cache_size": self.runtime_cache_size}
+
+        return result
 
     @classmethod
     def load_project_config(

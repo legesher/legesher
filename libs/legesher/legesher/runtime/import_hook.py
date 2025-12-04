@@ -7,21 +7,151 @@ The key insight: Instead of "translating" to English, we compile
 native language code directly to Python bytecode, making all languages
 first-class citizens.
 
+Features:
+- LRU cache for translated code (default: 128 entries)
+- Automatic cache invalidation on file modification
+- Thread-safe cache operations
+- Configurable cache size via API, environment, or config file
+
+Configuration:
+    # Via API parameter
+    install_import_hook(language="es", cache_size=256)
+
+    # Via environment variable
+    export LEGESHER_CACHE_SIZE=256
+
+    # Via config file (.legesher/config.yml)
+    runtime:
+      cache_size: 256
+
+Cache Statistics:
+    >>> stats = get_cache_stats()
+    >>> print(stats)
+    {'hits': 42, 'misses': 10, 'evictions': 5, 'size': 47, 'max_size': 128}
+
 Example:
     >>> from legesher.runtime import install_import_hook
     >>> install_import_hook(language="es")
     >>> import mi_modulo  # Works seamlessly with Spanish code!
 """
 
+import os
 import sys
+import logging
+import threading
 import importlib.abc
 import importlib.machinery
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Tuple, Any
+from collections import OrderedDict
 
 from legesher_core import TokenTranslator
 from legesher.config import LegesherConfig
 from legesher.runtime.source_mapper import get_source_mapper
+
+# Configure logger
+logger = logging.getLogger(__name__)
+
+
+class _TranslationCache:
+    """Thread-safe LRU cache for translated source code.
+
+    This cache uses OrderedDict for LRU behavior and threading.Lock for
+    thread-safety. The cache automatically evicts least-recently-used
+    entries when full.
+
+    Each cache instance has its own lock to avoid contention between
+    different import hook instances.
+
+    Based on the pattern from the language server hover provider
+    (hover.py:46-140).
+
+    Args:
+        max_size: Maximum number of cache entries (default: 128)
+
+    Attributes:
+        _cache: OrderedDict storing cached translations
+        _max_size: Maximum cache size
+        _lock: Instance-specific threading lock
+        _stats: Dictionary tracking hits, misses, and evictions
+
+    Note:
+        Statistics (hits, misses, evictions, size, hit_rate) are accessible
+        via the get_stats() method.
+    """
+
+    def __init__(self, max_size: int = 128):
+        """Initialize the cache with a size limit.
+
+        Args:
+            max_size: Maximum number of cache entries
+        """
+        self._cache: OrderedDict[Tuple[str, int], bytes] = OrderedDict()
+        self._max_size = max(0, max_size)  # Validate non-negative
+        self._stats = {"hits": 0, "misses": 0, "evictions": 0}
+        self._lock = threading.Lock()  # Instance-specific lock
+
+    def get(self, key: Tuple[str, int]) -> Optional[bytes]:
+        """Get value from cache (thread-safe, LRU update).
+
+        Args:
+            key: Cache key (file_path, mtime_ns)
+
+        Returns:
+            Cached bytes if found, None otherwise
+        """
+        with self._lock:
+            if key in self._cache:
+                # Move to end (mark as recently used)
+                self._cache.move_to_end(key)
+                self._stats["hits"] += 1
+                return self._cache[key]
+
+            self._stats["misses"] += 1
+            return None
+
+    def set(self, key: Tuple[str, int], value: bytes) -> None:
+        """Store value in cache with LRU eviction (thread-safe).
+
+        Args:
+            key: Cache key (file_path, mtime_ns)
+            value: Translated source code as bytes
+        """
+        with self._lock:
+            # Add or update entry
+            self._cache[key] = value
+            self._cache.move_to_end(key)
+
+            # Evict oldest if cache exceeds max size
+            # When max_size=0, immediately evict to maintain empty cache
+            if len(self._cache) > self._max_size:
+                self._cache.popitem(last=False)  # Remove oldest (first) item
+                self._stats["evictions"] += 1
+
+    def clear(self) -> None:
+        """Clear the cache and reset statistics (thread-safe)."""
+        with self._lock:
+            self._cache.clear()
+            self._stats = {"hits": 0, "misses": 0, "evictions": 0}
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get cache statistics (thread-safe).
+
+        Returns:
+            Dictionary with hits, misses, evictions, size, max_size, and hit_rate
+        """
+        with self._lock:
+            total = self._stats["hits"] + self._stats["misses"]
+            hit_rate = self._stats["hits"] / total if total > 0 else 0.0
+
+            return {
+                "hits": self._stats["hits"],
+                "misses": self._stats["misses"],
+                "evictions": self._stats["evictions"],
+                "size": len(self._cache),
+                "max_size": self._max_size,
+                "hit_rate": hit_rate,
+            }
 
 
 class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
@@ -29,20 +159,24 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
 
     This finder intercepts imports and checks if the source file
     is written in a native language. If so, it translates on-the-fly.
+
+    The cache uses LRU eviction to keep memory usage bounded.
     """
 
-    def __init__(self, language: str):
-        """Initialize the finder with a target language.
+    def __init__(self, language: str, cache_size: int = 128):
+        """Initialize the finder with a target language and cache size.
 
         Args:
             language: Language code (e.g., 'es', 'ar', 'zh')
+            cache_size: Maximum number of cache entries (default: 128)
         """
         self.language = language
         # EN->native translator (for future use)
         self.translator = TokenTranslator.from_language_pack(language)
         # native->EN translator (for executing native code)
         self.reverse_translator = self.translator.reverse()
-        self.cache = {}  # bytecode cache: (path, mtime) -> translated_bytes
+        # LRU cache with configurable size
+        self.cache = _TranslationCache(max_size=cache_size)
 
     def find_spec(self, fullname, path, target=None):
         """Find module spec for native language files.
@@ -156,8 +290,9 @@ class LegesherLoader(importlib.abc.SourceLoader):
 
         # Check cache first (use nanosecond precision for reliable invalidation)
         cache_key = (str(file_path), file_path.stat().st_mtime_ns)
-        if cache_key in self.finder.cache:
-            return self.finder.cache[cache_key]
+        cached_result = self.finder.cache.get(cache_key)
+        if cached_result is not None:
+            return cached_result
 
         # Read native language source
         native_source = file_path.read_text(encoding="utf-8")
@@ -183,7 +318,7 @@ class LegesherLoader(importlib.abc.SourceLoader):
 
         # Cache result
         translated_bytes = english_source.encode("utf-8")
-        self.finder.cache[cache_key] = translated_bytes
+        self.finder.cache.set(cache_key, translated_bytes)
         return translated_bytes
 
     def _needs_translation(self, source):
@@ -210,11 +345,59 @@ class LegesherLoader(importlib.abc.SourceLoader):
         return False
 
 
-def install_import_hook(language: Optional[str] = None):
+def _get_cache_size(explicit_size: Optional[int] = None) -> int:
+    """Resolve cache size from configuration sources.
+
+    Precedence (highest to lowest):
+    1. Explicit API parameter
+    2. Environment variable (LEGESHER_CACHE_SIZE)
+    3. Config file (.legesher/config.yml)
+    4. Default value (128)
+
+    Args:
+        explicit_size: Explicit cache size from API call
+
+    Returns:
+        Resolved cache size (non-negative integer)
+    """
+    # 1. Explicit API parameter
+    if explicit_size is not None:
+        return max(0, explicit_size)  # Validate non-negative
+
+    # 2. Environment variable
+    env_size = os.getenv("LEGESHER_CACHE_SIZE")
+    if env_size is not None:
+        try:
+            return max(0, int(env_size))
+        except ValueError:
+            logger.warning(
+                f"Invalid LEGESHER_CACHE_SIZE environment variable: {env_size!r}, "
+                "using config file or default"
+            )
+
+    # 3. Config file
+    try:
+        config = LegesherConfig.load()
+        if (
+            hasattr(config, "runtime_cache_size")
+            and config.runtime_cache_size is not None
+        ):
+            return max(0, config.runtime_cache_size)
+    except Exception as e:
+        logger.debug(f"Could not load config for cache size: {e}")
+
+    # 4. Default
+    return 128
+
+
+def install_import_hook(
+    language: Optional[str] = None, cache_size: Optional[int] = None
+):
     """Install the Legesher import hook for native language execution.
 
     Args:
         language: Target language code (default: auto-detect from config)
+        cache_size: Maximum cache entries (default: 128, configurable via env/config)
 
     Returns:
         LegesherMetaPathFinder instance that was installed
@@ -223,7 +406,8 @@ def install_import_hook(language: Optional[str] = None):
         RuntimeError: If import hook is already installed
 
     Example:
-        >>> install_import_hook("es")  # Spanish
+        >>> install_import_hook("es")  # Spanish with default cache
+        >>> install_import_hook("es", cache_size=256)  # Spanish with larger cache
         >>> import mi_modulo  # Imports mi_modulo.py which contains Spanish code
     """
     # Check if already installed
@@ -234,8 +418,11 @@ def install_import_hook(language: Optional[str] = None):
         config = LegesherConfig.load()
         language = config.language
 
+    # Resolve cache size from configuration sources
+    resolved_cache_size = _get_cache_size(cache_size)
+
     # Create and install the finder
-    finder = LegesherMetaPathFinder(language)
+    finder = LegesherMetaPathFinder(language, cache_size=resolved_cache_size)
     sys.meta_path.insert(0, finder)  # Insert at front for priority
 
     return finder
@@ -272,3 +459,43 @@ def get_installed_language() -> Optional[str]:
         if isinstance(finder, LegesherMetaPathFinder):
             return finder.language
     return None
+
+
+def get_cache_stats() -> Optional[Dict[str, Any]]:
+    """Get cache statistics from the installed import hook.
+
+    Returns:
+        Dictionary with cache statistics if hook is installed, None otherwise.
+        Statistics include:
+        - hits: Number of cache hits
+        - misses: Number of cache misses
+        - evictions: Number of evicted entries
+        - size: Current cache size
+        - max_size: Maximum cache size
+        - hit_rate: Cache hit rate (hits / total lookups)
+
+    Example:
+        >>> stats = get_cache_stats()
+        >>> print(f"Hit rate: {stats['hit_rate']:.1%}")
+        Hit rate: 85.7%
+    """
+    for finder in sys.meta_path:
+        if isinstance(finder, LegesherMetaPathFinder):
+            return finder.cache.get_stats()
+    return None
+
+
+def clear_cache() -> None:
+    """Clear the translation cache in the installed import hook.
+
+    This clears all cached translations and resets statistics.
+    If no import hook is installed, this is a no-op.
+
+    Example:
+        >>> clear_cache()  # Clear all cached translations
+        >>> get_cache_stats()['size']
+        0
+    """
+    for finder in sys.meta_path:
+        if isinstance(finder, LegesherMetaPathFinder):
+            finder.cache.clear()
