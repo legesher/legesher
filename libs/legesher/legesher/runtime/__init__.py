@@ -19,6 +19,8 @@ from legesher.runtime.error_handler import LegesherErrorHandler, install_error_h
 from legesher.runtime.import_hook import (
     LegesherLoader,
     LegesherMetaPathFinder,
+    clear_cache,
+    get_cache_stats,
     install_import_hook,
     uninstall_import_hook,
 )
@@ -34,6 +36,9 @@ __all__ = [
     "uninstall_import_hook",
     "LegesherMetaPathFinder",
     "LegesherLoader",
+    # Cache management
+    "get_cache_stats",
+    "clear_cache",
     # Source mapper
     "get_source_mapper",
     "LegesherSourceMapper",
