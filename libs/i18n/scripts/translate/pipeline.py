@@ -32,6 +32,7 @@ from .models.base import TranslationRequest, TranslationModel
 from .models.claude_model import ClaudeModel
 from .models.aya_model import AyaModel
 from .yaml_exporter import YAMLExporter
+from .validators import TranslationValidator
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -108,6 +109,8 @@ class PipelineStats:
     successful_translations: int = 0
     failed_translations: int = 0
     skipped_translations: int = 0
+    validation_errors: int = 0
+    validation_warnings: int = 0
     total_cost: float = 0.0
     cost_by_model: Dict[str, float] = None
     start_time: datetime = None
@@ -154,6 +157,12 @@ class PipelineStats:
         console.print(f"  ✓ Successful: {self.successful_translations}")
         console.print(f"  ⏭ Skipped: {self.skipped_translations}")
         console.print(f"  ✗ Failed: {self.failed_translations}")
+
+        if self.validation_errors > 0 or self.validation_warnings > 0:
+            console.print("\nValidation:")
+            console.print(f"  ⚠ Errors: {self.validation_errors}")
+            console.print(f"  ⚠ Warnings: {self.validation_warnings}")
+
         console.print(f"\nTotal cost: [bold]${self.total_cost:.2f}[/bold]")
 
         for model, cost in self.cost_by_model.items():
@@ -190,6 +199,9 @@ class TranslationPipeline:
 
         # Initialize YAML exporter
         self.yaml_exporter = YAMLExporter(db=self.db)
+
+        # Initialize validator
+        self.validator = TranslationValidator()
 
         # Initialize models
         self.models: Dict[str, TranslationModel] = {}
@@ -314,6 +326,27 @@ class TranslationPipeline:
 
         # Translate
         translation = await model.translate(request)
+
+        # Validate translation
+        term_type = classify_term(term, python_version="3.13")
+        validation_result = self.validator.validate(
+            term=term,
+            translation=translation.translation,
+            language_code=language,
+            term_type=term_type,
+        )
+
+        # Record validation stats
+        if not validation_result.is_valid:
+            self.stats.validation_errors += len(validation_result.errors)
+            logger.warning(
+                f"Validation failed for '{term}' -> '{translation.translation}': {validation_result.errors}"
+            )
+        if validation_result.warnings:
+            self.stats.validation_warnings += len(validation_result.warnings)
+            logger.info(
+                f"Validation warnings for '{term}' -> '{translation.translation}': {validation_result.warnings}"
+            )
 
         # Record stats
         self.stats.record_success(model_name, translation.cost)

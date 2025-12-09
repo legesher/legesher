@@ -1,4 +1,4 @@
-# VI Language Pack for Python 3.13+
+# Vietnamese Language Pack for Python 3.13+
 # Extends 3.12 pack (no new keywords in 3.13)
 
 language: vi
@@ -12,7 +12,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.13'
-  last_updated: '2025-11-24'
+  last_updated: '2025-12-09'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

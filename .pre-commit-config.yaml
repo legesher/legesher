@@ -61,7 +61,17 @@ repos:
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent=2]
-    exclude: ^(\.github/workflows/.*\.yml|libs/language-server/tests/fixtures/language_packs/invalid/.*\.yml)$      # Don't auto-format GitHub Actions or invalid test fixtures
+    exclude: ^(\.github/workflows/.*\.yml|libs/language-server/tests/fixtures/language_packs/invalid/.*\.yml|libs/i18n/language-packs/.*/packs/.*\.yml)$      # Don't auto-format GitHub Actions, invalid test fixtures, or language pack files
+
+  # Custom language pack YAML validation
+- repo: local
+  hooks:
+  - entry: uv run python libs/i18n/scripts/validate_language_pack_yaml.py
+    files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
+    id: validate-language-pack-yaml
+    language: system
+    name: Validate Language Pack YAML
+    pass_filenames: true
 
   # Commit message validation with Commitizen
 - repo: https://github.com/commitizen-tools/commitizen

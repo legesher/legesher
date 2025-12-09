@@ -5,11 +5,8 @@ language: zh
 target: python
 version: '3.11'
 extends: 3.10.yml
-
 keywords:
-  # Python 3.11+ specific (PEP 654: Exception Groups)
   except*: 多重捕获*
-
 exceptions:
   baseexceptiongroup: 基异常组
   encodingwarning: 编码警告
@@ -21,7 +18,7 @@ metadata:
   - '3.11'
   - '3.12'
   - '3.13'
-  last_updated: '2025-11-23'
+  last_updated: '2025-12-09'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

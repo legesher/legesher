@@ -12,10 +12,10 @@ dependencies = [
     "legesher-i18n>=0.0.1,<0.1.0",
 ]
 name = "legesher-i18n-python-zh"
-version = "0.0.2"
-description = "Chinese (Simplified) language pack for Python in Legesher"
+version = "0.0.1"
+description = "Chinese language pack for Python in Legesher"
 readme = "README.md"
-keywords = ["legesher", "i18n", "chinese", "simplified", "python", "translation", "multilingual"]
+keywords = ["legesher", "i18n", "chinese", "python", "translation", "multilingual"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -27,12 +27,12 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Internationalization",
     "Topic :: Software Development :: Localization",
-    "Natural Language :: Chinese (Simplified)",
+    "Natural Language :: Chinese",
     "Operating System :: OS Independent",
 ]
 
 [tool.uv.sources]
-legesher-i18n = { path = "../../../i18n", editable = true }
+legesher-i18n = { path = "../../../", editable = true }
 
 [tool.semantic_release]
 version_variable = "legesher_i18n_python_zh/__init__.py:__version__"

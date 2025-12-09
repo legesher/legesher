@@ -1,11 +1,11 @@
 # legesher-i18n-python-zh
 
-Chinese (Simplified - 简体中文) language pack for Python in Legesher.
+Chinese (中文) language pack for Python in Legesher.
 
 ## Overview
 
-This package provides Chinese (Simplified) translations for Python keywords and built-in functions, enabling developers to write
-Python code in Chinese with full Legesher support.
+This package provides Chinese translations for Python keywords and built-in functions, enabling developers to write
+Python code in Chinese.
 
 ## Supported Python Versions
 
@@ -13,6 +13,7 @@ Python code in Chinese with full Legesher support.
 - Python 3.11
 - Python 3.12
 - Python 3.13
+- Python 3.14
 
 ## Installation
 
@@ -36,34 +37,18 @@ loader = LanguagePackLoader()
 pack = loader.load("zh", "python", "3.12")
 
 # Use translated keywords
-print(pack.keywords["def"])     # "定义"
-print(pack.keywords["class"])   # "类"
-print(pack.keywords["return"])  # "返回"
-```
-
-## Example Code
-
-```python
-# Write Python in Chinese!
-定义 问候(名字):
-    返回 f"你好，{名字}！"
-
-类 人:
-    定义 __初始化__(自己, 名字):
-        自己.名字 = 名字
-
-    定义 介绍(自己):
-        打印(f"我的名字是 {自己.名字}")
+print(pack.keywords["def"])
+print(pack.keywords["class"])
+print(pack.keywords["return"])
 ```
 
 ## Translation Coverage
 
 This pack provides translations for:
 
-- **Keywords**: All Python keywords (def, class, if, for, etc.)
-- **Built-ins**: Common built-in functions (print, len, range, etc.)
-- **Operators**: Logical operators (and, or, not)
-- **Constants**: True, False, None
+- **Keywords**: 0 Python keywords
+- **Built-ins**: 2 built-in functions and types
+- **Exceptions**: 0 exception classes
 
 ## Version Inheritance
 
@@ -73,32 +58,26 @@ Language packs use inheritance to minimize duplication:
 - `3.11.yml` - Extends 3.10, adds new keywords (e.g., `except*`)
 - `3.12.yml` - Extends 3.11, adds `type` keyword
 - `3.13.yml` - Extends 3.12 (no new keywords)
+- `3.14.yml` - Extends 3.13 (Python 3.14 in development)
 
 ## Contributing
 
 To contribute translations or improvements:
 
 1. Fork the [Legesher repository](https://github.com/madiedgar/legesher)
-2. Edit files in `libs/i18n-python-zh/legesher_i18n_python_zh/packs/`
+2. Edit files in `libs/i18n/language-packs/python/zh/legesher_i18n_python_zh/packs/`
 3. Submit a pull request
 
 Translation guidelines:
 
-- Use simplified Chinese characters (Simplified Chinese)
-- Prefer commonly used programming terminology
+- Keep translations concise and commonly used
 - Maintain consistency with existing translations
-- Test with various code editors supporting Chinese text
+- Follow Chinese programming terminology conventions
+- Test with real code examples
 
 ## License
 
-MIT License - See [LICENSE](../../LICENSE) for details.
-
-## Related Packages
-
-- [legesher-i18n](../i18n) - Core language pack system
-- [legesher-i18n-python-es](../i18n-python-es) - Spanish language pack
-- [legesher-i18n-python-ar](../i18n-python-ar) - Arabic language pack
-- [legesher-core](../core) - Translation engine
+MIT License - See [LICENSE](../../../LICENSE) for details.
 
 ## Version History
 
