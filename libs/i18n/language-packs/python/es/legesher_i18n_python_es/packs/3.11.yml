@@ -5,15 +5,12 @@ language: es
 target: python
 version: '3.11'
 extends: 3.10.yml
-
 keywords:
-  # Python 3.11+ specific (PEP 654: Exception Groups)
   except*: excepto*
-
 exceptions:
-  baseexceptiongroup: grupo de excepciones base
-  encodingwarning: advertencia de codificación
-  exceptiongroup: grupo de excepciones
+  baseexceptiongroup: 'grupodeexcepcionesbase  #grupo de excepciones base'
+  encodingwarning: 'advertenciadecodificación  #advertencia de codificación'
+  exceptiongroup: 'grupodeexcepciones  #grupo de excepciones'
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.13'
@@ -21,7 +18,7 @@ metadata:
   - '3.11'
   - '3.12'
   - '3.13'
-  last_updated: '2025-11-23'
+  last_updated: '2025-12-09'
   community_reviewed: false
   author: Legesher Team
   license: MIT

@@ -349,7 +349,31 @@ class YAMLExporter:
         exceptions: Dict,
         header: str,
     ):
-        """Write a single YAML pack file."""
+        """Write a single YAML pack file, merging with existing content if present."""
+        # Load existing file if it exists
+        existing_data = {}
+        if filepath.exists():
+            try:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    existing_data = yaml.safe_load(f) or {}
+                logger.debug(f"Merging with existing {filepath}")
+            except Exception as e:
+                logger.warning(f"Could not read existing {filepath}: {e}")
+                existing_data = {}
+
+        # Merge keywords - new translations override existing
+        merged_keywords = existing_data.get("keywords", {})
+        merged_keywords.update(keywords)
+
+        # Merge builtins - new translations override existing
+        merged_builtins = existing_data.get("builtins", {})
+        merged_builtins.update(builtins)
+
+        # Merge exceptions - new translations override existing
+        merged_exceptions = existing_data.get("exceptions", {})
+        merged_exceptions.update(exceptions)
+
+        # Build yaml data with merged content
         yaml_data = {
             "language": language_code,
             "target": "python",
@@ -359,28 +383,24 @@ class YAMLExporter:
         if extends:
             yaml_data["extends"] = extends
 
-        # Only add non-empty sections
-        if keywords:
-            yaml_data["keywords"] = keywords
-        else:
-            yaml_data["keywords"] = {}
+        # Use merged data
+        yaml_data["keywords"] = merged_keywords if merged_keywords else {}
+        if merged_builtins:
+            yaml_data["builtins"] = merged_builtins
+        yaml_data["exceptions"] = merged_exceptions if merged_exceptions else {}
 
-        if builtins:
-            yaml_data["builtins"] = builtins
-
-        if exceptions:
-            yaml_data["exceptions"] = exceptions
-        else:
-            yaml_data["exceptions"] = {}
-
+        # Update metadata with existing values where present
+        existing_metadata = existing_data.get("metadata", {})
         yaml_data["metadata"] = {
-            "python_version_min": version,
-            "python_version_max": "3.14",
-            "compatibility_tested": [version],
+            "python_version_min": existing_metadata.get("python_version_min", version),
+            "python_version_max": existing_metadata.get("python_version_max", "3.14"),
+            "compatibility_tested": existing_metadata.get(
+                "compatibility_tested", [version]
+            ),
             "last_updated": datetime.now().strftime("%Y-%m-%d"),
-            "community_reviewed": False,
-            "author": "Legesher Team (Aya AI Model)",
-            "license": "MIT",
+            "community_reviewed": existing_metadata.get("community_reviewed", False),
+            "author": existing_metadata.get("author", "Legesher Team (Aya AI Model)"),
+            "license": existing_metadata.get("license", "MIT"),
         }
 
         with open(filepath, "w", encoding="utf-8") as f:

@@ -1,4 +1,4 @@
-# ID Language Pack for Python 3.14+
+# Indonesian Language Pack for Python 3.14+
 # Extends 3.13 pack (Python 3.14 in development)
 
 language: id
@@ -12,7 +12,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.14'
-  last_updated: '2025-11-24'
+  last_updated: '2025-12-09'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

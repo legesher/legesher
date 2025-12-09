@@ -12,7 +12,7 @@ dependencies = [
     "legesher-i18n>=0.0.1,<0.1.0",
 ]
 name = "legesher-i18n-python-fr"
-version = "0.0.2"
+version = "0.0.1"
 description = "French language pack for Python in Legesher"
 readme = "README.md"
 keywords = ["legesher", "i18n", "french", "python", "translation", "multilingual"]
@@ -32,7 +32,7 @@ classifiers = [
 ]
 
 [tool.uv.sources]
-legesher-i18n = { path = "../../../i18n", editable = true }
+legesher-i18n = { path = "../../../", editable = true }
 
 [tool.semantic_release]
 version_variable = "legesher_i18n_python_fr/__init__.py:__version__"

@@ -13,6 +13,7 @@ Python code in Spanish.
 - Python 3.11
 - Python 3.12
 - Python 3.13
+- Python 3.14
 
 ## Installation
 
@@ -36,50 +37,35 @@ loader = LanguagePackLoader()
 pack = loader.load("es", "python", "3.12")
 
 # Use translated keywords
-print(pack.keywords["def"])     # "definir"
-print(pack.keywords["class"])   # "clase"
-print(pack.keywords["return"])  # "retornar"
-```
-
-## Example Code
-
-```python
-# Write Python in Spanish!
-definir saludar(nombre):
-    retornar f"¡Hola, {nombre}!"
-
-clase Persona:
-    definir __init__(yo, nombre):
-        yo.nombre = nombre
-
-    definir presentar(yo):
-        imprimir(f"Mi nombre es {yo.nombre}")
+print(pack.keywords["def"])
+print(pack.keywords["class"])
+print(pack.keywords["return"])
 ```
 
 ## Translation Coverage
 
 This pack provides translations for:
 
-- **Keywords**: All Python keywords (def, class, if, for, etc.)
-- **Built-ins**: Common built-in functions (print, len, range, etc.)
-- **Operators**: Logical operators (and, or, not)
-- **Constants**: True, False, None
+- **Keywords**: 0 Python keywords
+- **Built-ins**: 2 built-in functions and types
+- **Exceptions**: 2 exception classes
 
 ## Version Inheritance
 
 Language packs use inheritance to minimize duplication:
 
 - `3.10.yml` - Complete Python 3.10 translations
-- `3.11.yml` - Extends 3.10, adds new keywords (e.g., `except*: excepto*`)
-- `3.12.yml` - Extends 3.11, adds `type: tipo`
+- `3.11.yml` - Extends 3.10, adds new keywords (e.g., `except*`)
+- `3.12.yml` - Extends 3.11, adds `type` keyword
 - `3.13.yml` - Extends 3.12 (no new keywords)
+- `3.14.yml` - Extends 3.13 (Python 3.14 in development)
 
 ## Contributing
 
 To contribute translations or improvements:
 
 1. Fork the [Legesher repository](https://github.com/madiedgar/legesher)
-2. Edit files in `libs/i18n-python-es/legesher_i18n_python_es/packs/`
+2. Edit files in `libs/i18n/language-packs/python/es/legesher_i18n_python_es/packs/`
 3. Submit a pull request
 
 Translation guidelines:
@@ -91,13 +77,7 @@ Translation guidelines:
 
 ## License
 
-MIT License - See [LICENSE](../../LICENSE) for details.
-
-## Related Packages
-
-- [legesher-i18n](../i18n) - Core language pack system
-- [legesher-i18n-python-ar](../i18n-python-ar) - Arabic language pack
-- [legesher-core](../core) - Translation engine
+MIT License - See [LICENSE](../../../LICENSE) for details.
 
 ## Version History
 

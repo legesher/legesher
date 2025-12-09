@@ -54,6 +54,88 @@ Your goal is to create translations that are:
 
 ---
 
+## CRITICAL CONSTRAINTS: Python Syntax Requirements
+
+**⚠️ YOUR TRANSLATION MUST FOLLOW THESE RULES ⚠️**
+
+Python's parser has strict requirements. If you violate these, the translation will break Python syntax:
+
+### 1. Single Word Only - NO SPACES
+
+Your translation **MUST** be a single word with **NO SPACES**.
+
+✅ **Correct:**
+
+- `isinstance` → `esinstancia` (compound word, no space)
+- `hasattr` → `tieneattr` (compound word, no space)
+- `abs` → `valorabsoluto` (compound word, no space)
+
+❌ **WRONG - DO NOT DO THIS:**
+
+- `isinstance` → `es instancia` ← **HAS SPACE - BREAKS SYNTAX!**
+- `hasattr` → `tiene atributo` ← **HAS SPACE - BREAKS SYNTAX!**
+- `abs` → `valor absoluto` ← **HAS SPACE - BREAKS SYNTAX!**
+
+**Why:** Python treats spaces as token separators. If your translation has spaces, Python will see multiple tokens and throw a syntax error.
+
+**Solution:** If the natural translation has multiple words, **concatenate them** into one word:
+
+- "valor absoluto" → "valorabsoluto"
+- "es instancia" → "esinstancia"
+- "tiene atributo" → "tieneattr"
+
+### 2. NO Punctuation
+
+Your translation **CANNOT** contain these characters: `/` `-` `:` `.` `,` `;`
+
+✅ **Correct:**
+
+- `ioerror` → `errorees` (no punctuation)
+- `unicodeerror` → `errorunicode` (no punctuation)
+
+❌ **WRONG - DO NOT DO THIS:**
+
+- `ioerror` → `error de E/S` ← **HAS `/` - BREAKS SYNTAX!**
+- `ioerror` → `error-de-es` ← **HAS `-` - BREAKS SYNTAX!**
+- `unicodeerror` → `error: unicode` ← **HAS `:` - BREAKS SYNTAX!**
+
+**Why:** These characters are operators and special symbols in Python. `/` is division, `-` is subtraction, `:` starts code blocks.
+
+**Solution:** Remove ALL punctuation, even if it looks strange:
+
+- "error de E/S" → "errordees"
+- "error-de-es" → "errordees"
+
+### 3. DO Preserve Accents and Language Characters
+
+Language-specific characters are **ALLOWED** and **ENCOURAGED**:
+
+✅ **Keep these:**
+
+- Accents: á, é, í, ó, ú, ñ, ü, ö, ø, å, ã
+- Diacritics: ç, ş, ğ, ı, ł, ñ
+- Non-Latin scripts: 中文, العربية, עברית, हिंदी, 한국어, ไทย
+
+**Example:**
+
+- Spanish: `función` ✅ (keep the ó)
+- Turkish: `değişken` ✅ (keep the ğ and ş)
+- Arabic: `تعريف` ✅ (use Arabic script)
+
+### 4. Summary - Your Checklist
+
+Before submitting your translation, verify:
+
+- [ ] Is it a single word? (NO SPACES)
+- [ ] Does it have NO punctuation? (no `/` `-` `:` `.` `,` `;`)
+- [ ] Does it preserve language-specific characters? (accents OK!)
+- [ ] Is it technically accurate?
+- [ ] Would a native speaker use this in a CS context?
+
+**If your natural translation violates rules 1 or 2, concatenate the words and remove punctuation. Do NOT compromise on technical accuracy.**
+
+---
+
 ## Examples (Learn from these)
 
 ### Example 1: Translating `def` to Spanish

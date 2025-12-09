@@ -1,7 +1,7 @@
-# NO Language Pack for Python 3.11+
+# Norwegian Language Pack for Python 3.11+
 # Extends 3.10 pack and adds except* for exception groups
 
-language: no
+language: 'no'
 target: python
 version: '3.11'
 extends: 3.10.yml
@@ -16,7 +16,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.11'
-  last_updated: '2025-11-24'
+  last_updated: '2025-12-09'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

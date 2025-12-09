@@ -5,7 +5,7 @@ All notable changes to this language pack.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.1] - 2025-11-24
+## [0.0.1] - 2025-12-09
 
 ### Added
 

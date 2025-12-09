@@ -46,6 +46,84 @@ Translations should sound natural to native speakers while maintaining technical
 
 ---
 
+## Python Naming Constraints (CRITICAL)
+
+### Technical Requirements
+
+Python's parser and syntax impose strict constraints on identifiers. Translations **MUST** comply with these requirements:
+
+#### 1. Single-Word Requirement
+
+Python keywords and builtins **MUST** be single words without spaces.
+
+**Why:** Python treats spaces as token separators. Multi-word identifiers break syntax parsing.
+
+✅ **Correct:**
+
+- `isinstance` → `esinstancia` (compound, no space)
+- `hasattr` → `tieneattr` (compound, no space)
+
+❌ **Incorrect:**
+
+- `isinstance` → `es instancia` (has space) ← **Parser will treat as two tokens!**
+- `hasattr` → `tiene atributo` (has space) ← **Syntax error!**
+
+#### 2. No Punctuation
+
+Translations cannot contain: `/` `-` `:` `.` `,` `;`
+
+**Why:** These characters have special meaning in Python syntax.
+
+✅ **Correct:**
+
+- `ioerror` → `errorees` (no punctuation)
+- `blockingioerror` → `errordeesbl` (no punctuation)
+
+❌ **Incorrect:**
+
+- `ioerror` → `error de E/S` (has `/`) ← **Slash is division operator!**
+- `blockingioerror` → `error-de-es` (has `-`) ← **Hyphen is subtraction!**
+
+#### 3. Preserve Accents and Diacritics
+
+Language-specific characters are **ALLOWED** and should be preserved:
+
+✅ **Keep these:**
+
+- Accents: á, é, í, ó, ú, ñ, ü, ö, ø, å
+- Diacritics: ç, ş, ğ, ı
+- Non-Latin: 中文, العربية, עברית, हिंदी
+
+#### 4. Solution for Natural Multi-word Translations
+
+When the natural translation has multiple words:
+
+**Step 1:** Concatenate words (remove spaces)
+**Step 2:** Preserve original as inline comment
+
+**Format:**
+
+```yaml
+term: concatenatedtranslation  #original multi-word translation
+```
+
+**Examples:**
+
+```yaml
+abs: valorabsoluto  #valor absoluto
+isinstance: esinstancia  #es instancia
+blockingioerror: errordees  #error de E/S
+```
+
+This approach:
+
+- ✅ Meets Python's technical requirements
+- ✅ Preserves the natural translation for reference
+- ✅ Helps developers understand the original meaning
+- ✅ Aids future review and refinement
+
+---
+
 ## Word Type Classification
 
 ### Action Keywords (Commands)
