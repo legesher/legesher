@@ -175,11 +175,11 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "npm run compile:tsc && npm run copy:assets",
+    "vscode:prepublish": "npm run compile:prod",
+    "compile": "node esbuild.js",
+    "compile:prod": "node esbuild.js --production",
     "compile:tsc": "tsc -p ./",
-    "copy:assets": "mkdirp out/webview/ui && copyfiles -f src/webview/ui/styles.css src/webview/ui/main.js out/webview/ui/",
-    "watch": "tsc -watch -p ./",
+    "watch": "node esbuild.js --watch",
     "lint": "eslint src --ext ts",
     "pretest": "npm run compile && npm run lint",
     "package": "vsce package"
@@ -191,9 +191,8 @@
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "@vscode/vsce": "^2.22.0",
-    "copyfiles": "^2.4.1",
+    "esbuild": "^0.24.0",
     "eslint": "^8.54.0",
-    "mkdirp": "^3.0.1",
     "typescript": "^5.3.3"
   },
   "dependencies": {

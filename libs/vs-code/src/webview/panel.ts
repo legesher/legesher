@@ -53,7 +53,7 @@ export class TranslationPanelManager {
                     localResourceRoots: [
                         vscode.Uri.joinPath(this.context.extensionUri, 'media'),
                         vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview'),
-                        vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'prismjs')
+                        vscode.Uri.joinPath(this.context.extensionUri, 'out', 'prismjs')
                     ]
                 }
             );
@@ -179,15 +179,15 @@ export class TranslationPanelManager {
             vscode.Uri.joinPath(this.context.extensionUri, 'out', 'webview', 'ui', 'main.js')
         );
 
-        // Prism.js for syntax highlighting (bundled locally)
+        // Prism.js for syntax highlighting (copied to out/prismjs by esbuild)
         const prismCssUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'prismjs', 'themes', 'prism-tomorrow.min.css')
+            vscode.Uri.joinPath(this.context.extensionUri, 'out', 'prismjs', 'themes', 'prism-tomorrow.min.css')
         );
         const prismJsUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'prismjs', 'prism.js')
+            vscode.Uri.joinPath(this.context.extensionUri, 'out', 'prismjs', 'prism.js')
         );
         const prismPythonUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'prismjs', 'components', 'prism-python.min.js')
+            vscode.Uri.joinPath(this.context.extensionUri, 'out', 'prismjs', 'components', 'prism-python.min.js')
         );
 
         // Content Security Policy
