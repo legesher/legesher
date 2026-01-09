@@ -2,7 +2,7 @@
   "name": "legesher-vscode",
   "displayName": "Legesher - Code in Your Language",
   "description": "Write Python code in your native language with real-time translation",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "legesher",
   "author": {
     "name": "Madison Edgar",
