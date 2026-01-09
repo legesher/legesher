@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { translateDocument } from './translator';
-import { getAvailableLanguages, getLanguageNativeName } from '../config';
+// [Copilot Review Fix] Removed unused import getAvailableLanguages
+import { getLanguageNativeName, getLanguageConfig, getRtlLanguageCodes } from '../config';
+import { getTranslations, getEnglishKeywordsSet, getEnglishBuiltinsSet } from '../keywords';
 
 /**
  * Message types sent from webview to extension
@@ -94,10 +96,9 @@ export class TranslationPanelManager {
             // Get original code
             const originalCode = document.getText();
 
-            // Get current language configuration
-            const config = vscode.workspace.getConfiguration('legesher');
-            const sourceLanguage = config.get<string>('sourceLanguage', 'en');
-            const targetLanguage = config.get<string>('targetLanguage', 'en');
+            // Get current language configuration using the proper config reader
+            // that handles global vs workspace settings correctly
+            const { sourceLanguage, targetLanguage } = getLanguageConfig();
 
             // Translate document
             const translatedCode = await translateDocument(document, targetLanguage);
@@ -106,8 +107,15 @@ export class TranslationPanelManager {
             const sourceLanguageName = getLanguageNativeName(sourceLanguage);
             const targetLanguageName = getLanguageNativeName(targetLanguage);
 
-            // RTL languages list
-            const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
+            // RTL languages from centralized language registry (single source of truth)
+            const rtlLanguages = getRtlLanguageCodes();
+
+            // Get translations for custom syntax highlighting of translated keywords
+            const translations = getTranslations(targetLanguage) || {};
+
+            // Get English keywords and builtins from source of truth (language packs)
+            const pythonKeywords = Array.from(getEnglishKeywordsSet());
+            const pythonBuiltins = Array.from(getEnglishBuiltinsSet());
 
             // Update panel with translation
             this.panel.webview.postMessage({
@@ -120,7 +128,10 @@ export class TranslationPanelManager {
                     sourceLanguageName,
                     targetLanguageName,
                     fileName: document.fileName,
-                    rtlLanguages
+                    rtlLanguages,
+                    translations,  // Pass translations for syntax highlighting
+                    pythonKeywords,  // Pass keywords from source of truth
+                    pythonBuiltins   // Pass builtins from source of truth
                 }
             });
         } catch (error) {

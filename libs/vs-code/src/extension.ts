@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { createLanguageClient } from './client';
 import { isServerAvailable } from './utils';
-import { getLanguageConfig, getAvailableLanguages, getLanguageName } from './config';
+import { getLanguageConfig, getActiveLanguages, getLanguageName } from './config';
 import { TranslationPanelManager } from './webview/panel';
 import { Logger } from './logger';
 import { LegesherTelemetry } from './telemetry';
@@ -257,7 +257,7 @@ function updateLanguageStatusBar(): void {
  */
 async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
     const currentConfig = getLanguageConfig();
-    const languages = getAvailableLanguages();
+    const languages = getActiveLanguages();
 
     // Create quick-pick items with native names
     const items = languages.map(lang => ({

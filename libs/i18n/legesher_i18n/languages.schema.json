@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://legesher.io/schemas/languages.schema.json",
+  "title": "Legesher Language Registry",
+  "description": "Schema for the canonical language metadata registry used across all Legesher packages",
+  "type": "object",
+  "required": ["canonical_language", "languages"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "_comment": {
+      "type": "string",
+      "description": "Documentation comment"
+    },
+    "canonical_language": {
+      "type": "string",
+      "pattern": "^[a-z]{2}$",
+      "description": "ISO 639-1 code of the canonical/source language (the language programming keywords are written in)"
+    },
+    "languages": {
+      "type": "object",
+      "description": "Map of ISO 639-1 codes to language metadata",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z]{2}$": {
+          "$ref": "#/$defs/languageMetadata"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "languageMetadata": {
+      "type": "object",
+      "required": ["name", "native", "iso639_2", "bcp47", "rtl", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "English name of the language"
+        },
+        "native": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Native name of the language in its own script"
+        },
+        "iso639_2": {
+          "type": "string",
+          "pattern": "^[a-z]{3}$",
+          "description": "ISO 639-2 three-letter language code"
+        },
+        "bcp47": {
+          "type": "string",
+          "pattern": "^[a-z]{2,3}(-[A-Za-z]{4})?(-[A-Z]{2})?$",
+          "description": "BCP 47 language tag (e.g., 'en', 'zh-Hans', 'pt-BR')"
+        },
+        "rtl": {
+          "type": "boolean",
+          "description": "Whether the language uses right-to-left script"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["available", "experimental", "deprecated"],
+          "description": "Availability status of the language pack"
+        }
+      }
+    }
+  }
+}

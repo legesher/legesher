@@ -9,6 +9,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
+import { getActiveLanguageCodes } from './config';
 
 /**
  * Structure of a language pack YAML file
@@ -39,6 +40,9 @@ export interface KeywordTranslations {
 let _translationsCache: KeywordTranslations | null = null;
 let _allKeywordsCache: Set<string> | null = null;
 let _englishKeywordsCache: string[] | null = null;
+// Separate caches for keywords vs builtins (for syntax highlighting)
+let _pythonKeywordsCache: Set<string> | null = null;
+let _pythonBuiltinsCache: Set<string> | null = null;
 
 /**
  * Get the path to the language packs directory
@@ -101,8 +105,9 @@ export function loadAllTranslations(extensionPath: string): KeywordTranslations 
     const translations: KeywordTranslations = {};
     const languagePacksPath = getLanguagePacksPath(extensionPath);
 
-    // Supported languages (must match what's in libs/i18n/language-packs/python/)
-    const supportedLanguages = ['es', 'ar', 'zh', 'fr', 'en'];
+    // Supported languages from centralized language registry (single source of truth)
+    // Uses getActiveLanguageCodes() to include both 'available' and 'experimental' status
+    const supportedLanguages = getActiveLanguageCodes();
 
     for (const lang of supportedLanguages) {
         // Path structure: {lang}/legesher_i18n_python_{lang}/packs/3.10.yml
@@ -241,10 +246,87 @@ export function getTranslationsForLanguage(lang: string, extensionPath: string):
 }
 
 /**
+ * Get a set of English Python keywords only (not builtins or exceptions)
+ * Used for syntax highlighting to distinguish keywords from builtins
+ */
+export function getEnglishKeywordsSet(extensionPath: string): Set<string> {
+    if (_pythonKeywordsCache) {
+        return _pythonKeywordsCache;
+    }
+
+    const languagePacksPath = getLanguagePacksPath(extensionPath);
+    const packPath = path.join(
+        languagePacksPath,
+        'en',
+        'legesher_i18n_python_en',
+        'packs',
+        '3.10.yml'
+    );
+
+    const pack = loadLanguagePack(packPath);
+    if (pack && pack.keywords) {
+        _pythonKeywordsCache = new Set(Object.keys(pack.keywords));
+    } else {
+        // Fallback: hardcoded Python 3.10+ keywords
+        _pythonKeywordsCache = new Set([
+            'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await',
+            'break', 'case', 'class', 'continue', 'def', 'del', 'elif', 'else',
+            'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in',
+            'is', 'lambda', 'match', 'nonlocal', 'not', 'or', 'pass', 'raise',
+            'return', 'try', 'while', 'with', 'yield'
+        ]);
+    }
+
+    return _pythonKeywordsCache;
+}
+
+/**
+ * Get a set of English Python builtins only (not keywords or exceptions)
+ * Used for syntax highlighting to distinguish builtins from keywords
+ */
+export function getEnglishBuiltinsSet(extensionPath: string): Set<string> {
+    if (_pythonBuiltinsCache) {
+        return _pythonBuiltinsCache;
+    }
+
+    const languagePacksPath = getLanguagePacksPath(extensionPath);
+    const packPath = path.join(
+        languagePacksPath,
+        'en',
+        'legesher_i18n_python_en',
+        'packs',
+        '3.10.yml'
+    );
+
+    const pack = loadLanguagePack(packPath);
+    if (pack && pack.builtins) {
+        _pythonBuiltinsCache = new Set(Object.keys(pack.builtins));
+    } else {
+        // Fallback: hardcoded Python builtins
+        _pythonBuiltinsCache = new Set([
+            'abs', 'aiter', 'all', 'any', 'anext', 'ascii', 'bin', 'bool',
+            'breakpoint', 'bytearray', 'bytes', 'callable', 'chr', 'classmethod',
+            'compile', 'complex', 'delattr', 'dict', 'dir', 'divmod', 'enumerate',
+            'eval', 'exec', 'filter', 'float', 'format', 'frozenset', 'getattr',
+            'globals', 'hasattr', 'hash', 'help', 'hex', 'id', 'input', 'int',
+            'isinstance', 'issubclass', 'iter', 'len', 'list', 'locals', 'map',
+            'max', 'memoryview', 'min', 'next', 'object', 'oct', 'open', 'ord',
+            'pow', 'print', 'property', 'range', 'repr', 'reversed', 'round',
+            'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 'sum',
+            'super', 'tuple', 'type', 'vars', 'zip'
+        ]);
+    }
+
+    return _pythonBuiltinsCache;
+}
+
+/**
  * Clear the cache (useful for testing or when language packs are updated)
  */
 export function clearCache(): void {
     _translationsCache = null;
     _allKeywordsCache = null;
     _englishKeywordsCache = null;
+    _pythonKeywordsCache = null;
+    _pythonBuiltinsCache = null;
 }

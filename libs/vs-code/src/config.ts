@@ -1,5 +1,19 @@
 import * as vscode from 'vscode';
 
+// Import from generated language definitions (single source of truth)
+import {
+    LANGUAGE_METADATA,
+    getLanguageName as generatedGetLanguageName,
+    getLanguageNativeName as generatedGetLanguageNativeName,
+    getActiveLanguageCodes,
+    getAvailableLanguageCodes,
+    getRtlLanguageCodes,
+    isSupportedLanguage,
+    isRtlLanguage,
+    type LanguageCode,
+    type LanguageMetadata as GeneratedLanguageMetadata
+} from './generated/languages';
+
 /**
  * Language configuration returned by getLanguageConfig()
  */
@@ -43,32 +57,51 @@ export function getLanguageConfig(): LanguageConfig {
 }
 
 /**
- * Get available languages (MVP: hardcoded list)
- * Future: Auto-discover from installed i18n packages
+ * Get available languages from the generated language registry.
+ * This is the single source of truth loaded from languages.json.
  */
 export function getAvailableLanguages(): LanguageInfo[] {
-    return [
-        { code: 'en', name: 'English', nativeName: 'English' },
-        { code: 'es', name: 'Spanish', nativeName: 'Español' },
-        { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
-        { code: 'zh', name: 'Chinese', nativeName: '中文' }
-    ];
+    return getAvailableLanguageCodes().map(code => ({
+        code,
+        name: generatedGetLanguageName(code),
+        nativeName: generatedGetLanguageNativeName(code)
+    }));
+}
+
+/**
+ * Get active (non-deprecated) languages from the generated language registry.
+ * Includes both 'available' and 'experimental' status languages.
+ */
+export function getActiveLanguages(): LanguageInfo[] {
+    return getActiveLanguageCodes().map(code => ({
+        code,
+        name: generatedGetLanguageName(code),
+        nativeName: generatedGetLanguageNativeName(code)
+    }));
 }
 
 /**
  * Get the display name for a language code
  */
 export function getLanguageName(code: string): string {
-    const languages = getAvailableLanguages();
-    const lang = languages.find(l => l.code === code);
-    return lang ? lang.name : code.toUpperCase();
+    return generatedGetLanguageName(code);
 }
 
 /**
  * Get the native name for a language code
  */
 export function getLanguageNativeName(code: string): string {
-    const languages = getAvailableLanguages();
-    const lang = languages.find(l => l.code === code);
-    return lang ? lang.nativeName : code.toUpperCase();
+    return generatedGetLanguageNativeName(code);
 }
+
+// Re-export for convenience
+export {
+    LANGUAGE_METADATA,
+    getActiveLanguageCodes,
+    getAvailableLanguageCodes,
+    getRtlLanguageCodes,
+    isSupportedLanguage,
+    isRtlLanguage,
+    type LanguageCode,
+    type GeneratedLanguageMetadata
+};
