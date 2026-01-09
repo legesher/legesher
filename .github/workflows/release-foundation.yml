@@ -42,6 +42,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv pip install --system python-semantic-release
+          uv sync  # Set up workspace for building
 
       - name: Configure Git
         run: |
@@ -77,15 +78,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🚀 Creating GitHub Release..."
-          uv run semantic-release publish --verbose
+          uv run semantic-release publish
 
       - name: Build packages
         if: success()
         run: |
           echo "📦 Building foundation packages..."
-          uv build -p libs/core
-          uv build -p libs/i18n
-          uv build -p libs/legesher
+          cd libs/core && uv build && cd ../..
+          cd libs/i18n && uv build && cd ../..
+          cd libs/legesher && uv build && cd ../..
 
       - name: Upload build artifacts
         if: success()
