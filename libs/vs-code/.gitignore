@@ -5,8 +5,7 @@ node_modules/
 out/
 *.vsix
 
-# Package manager files
-package-lock.json
+# Package manager files (package-lock.json committed for reproducible CI builds)
 yarn.lock
 pnpm-lock.yaml
 
