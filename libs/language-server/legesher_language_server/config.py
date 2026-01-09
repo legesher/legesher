@@ -31,7 +31,7 @@ class LanguageServerConfig(BaseModel):
     # Language configuration
     source_language: str = Field(default="en", description="Source code language (ISO 639-1 code)")
     target_language: str = Field(
-        default="es", description="Target display language (ISO 639-1 code)"
+        default="en", description="Target display language (ISO 639-1 code)"
     )
 
     # Python configuration
@@ -188,7 +188,7 @@ class LanguageServerConfig(BaseModel):
 
             return cls(
                 source_language=os.getenv("LEGESHER_SOURCE_LANG", "en"),
-                target_language=os.getenv("LEGESHER_TARGET_LANG", "es"),
+                target_language=os.getenv("LEGESHER_TARGET_LANG", "en"),
                 python_version=os.getenv("LEGESHER_PYTHON_VERSION"),
                 cache_size=cache_size,
                 cache_ttl=cache_ttl,

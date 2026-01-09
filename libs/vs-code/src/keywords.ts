@@ -16,6 +16,8 @@ import {
     getEnglishKeyword as _getEnglishKeyword,
     getEnglishKeywords,
     getTranslationsForLanguage,
+    getEnglishKeywordsSet as _getEnglishKeywordsSet,
+    getEnglishBuiltinsSet as _getEnglishBuiltinsSet,
     KeywordTranslations
 } from './languagePackLoader';
 
@@ -95,6 +97,22 @@ export function getAllKeywordsSet(): Set<string> {
  */
 export function getTranslations(lang: string): { [english: string]: string } | null {
     return getTranslationsForLanguage(lang, getExtensionPath());
+}
+
+/**
+ * Get a set of English Python keywords only (not builtins or exceptions)
+ * Used for syntax highlighting to distinguish keywords from builtins
+ */
+export function getEnglishKeywordsSet(): Set<string> {
+    return _getEnglishKeywordsSet(getExtensionPath());
+}
+
+/**
+ * Get a set of English Python builtins only (not keywords or exceptions)
+ * Used for syntax highlighting to distinguish builtins from keywords
+ */
+export function getEnglishBuiltinsSet(): Set<string> {
+    return _getEnglishBuiltinsSet(getExtensionPath());
 }
 
 // Re-export types

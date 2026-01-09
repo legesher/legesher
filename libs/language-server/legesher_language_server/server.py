@@ -5,6 +5,7 @@ This module provides the main LSP server implementation using pygls.
 
 import logging
 
+from legesher_i18n import get_active_language_codes
 from lsprotocol.types import (
     INITIALIZE,
     INITIALIZED,
@@ -52,7 +53,9 @@ from .pylance_proxy import PylanceProxy
 logger = logging.getLogger(__name__)
 
 # Allowed language codes for security validation
-ALLOWED_LANGUAGES = {"en", "es", "ar", "zh"}
+# Includes both 'available' and 'experimental' status languages
+# Imported from legesher_i18n (single source of truth from languages.json)
+ALLOWED_LANGUAGES = set(get_active_language_codes())
 
 
 def validate_language_code(code: str, field_name: str) -> str:

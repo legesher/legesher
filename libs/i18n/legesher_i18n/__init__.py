@@ -16,6 +16,17 @@ from .exceptions import (
     VersionDetectionError,
     VersionIndexError,
 )
+from .language_registry import (
+    CANONICAL_LANGUAGE,
+    LANGUAGE_METADATA,
+    get_active_language_codes,
+    get_available_language_codes,
+    get_language_name,
+    get_native_name,
+    get_rtl_language_codes,
+    is_rtl_language,
+    is_supported_language,
+)
 from .pack_loader import LanguagePack, LanguagePackLoader
 from .schema_validator import (
     LanguagePackMetadata,
@@ -38,6 +49,16 @@ __all__ = [
     "LanguagePackMetadata",
     "SchemaValidator",
     "PythonVersionInfo",
+    # Language registry (single source of truth)
+    "LANGUAGE_METADATA",
+    "CANONICAL_LANGUAGE",
+    "get_active_language_codes",
+    "get_available_language_codes",
+    "get_rtl_language_codes",
+    "get_language_name",
+    "get_native_name",
+    "is_rtl_language",
+    "is_supported_language",
     # Exceptions
     "LanguagePackError",
     "PackNotFoundError",
