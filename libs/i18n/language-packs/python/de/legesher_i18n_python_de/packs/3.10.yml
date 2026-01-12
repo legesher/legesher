@@ -12,7 +12,7 @@ keywords:
   continue: fortsetzen
   def: def
   del: löschen
-  elif: 'wennsonst  #wenn sonst'
+  elif: wennsonst  # wenn sonst
   else: sonst
   except: außer
   finally: endlich
@@ -24,10 +24,10 @@ keywords:
   in: in
   is: ist
   lambda: Lambda
-  nonlocal: 'nichtlokal  #nicht lokal'
+  nonlocal: nichtlokal  # nicht lokal
   not: nicht
   or: oder
-  pass: 'passierenlassen  #passieren lassen'
+  pass: passierenlassen  # passieren lassen
   raise: erheben
   return: zurückgeben
   try: versuchen
@@ -45,7 +45,7 @@ builtins:
   any: jeder
   ascii: ASCII
   bin: binär
-  breakpoint: 'derHaltepunkt  #der Haltepunkt'
+  breakpoint: derHaltepunkt  # der Haltepunkt
   callable: rufbar
   chr: chr
   compile: kompilieren
@@ -57,22 +57,22 @@ builtins:
   exec: ausführen
   filter: filter
   format: formatieren
-  getattr: 'attributabrufen  #attribut abrufen'
+  getattr: attributabrufen  # attribut abrufen
   globals: global
   hasattr: hatattribut
   hash: Hash
   help: Hilfe
   hex: hex
-  id: 'dieID  #die ID'
+  id: dieID  # die ID
   input: Eingabe
-  isinstance: 'istinstanzvon  #istinstanz von'
+  isinstance: istinstanzvon  # istinstanz von
   issubclass: ist_unterklasse
   iter: iter
-  len: 'dieLänge  #die Länge'
-  locals: 'dielokalenVariablen  #die lokalen Variablen'
+  len: dieLänge  # die Länge
+  locals: dielokalenVariablen  # die lokalen Variablen
   map: mappe
   max: max
-  min: 'derkleinste  #der kleinste'
+  min: derkleinste  # der kleinste
   next: nächster
   oct: oct
   open: öffnen
@@ -92,7 +92,7 @@ builtins:
   bool: boolesch
   bytearray: Bytearray
   bytes: Bytes
-  classmethod: 'KlassendatenMethode  #Klassendaten-Methode'
+  classmethod: KlassendatenMethode  # Klassendaten-Methode
   complex: komplex
   dict: Wörterbuch
   float: float
@@ -103,12 +103,12 @@ builtins:
   object: Objekt
   property: Eigenschaft
   set: Satz
-  staticmethod: 'statischeMethode  #statische Methode'
-  str: 'diestrTypKonvertierung  #die str-Typ-Konvertierung'
+  staticmethod: statischeMethode  # statische Methode
+  str: diestrTypKonvertierung  # die str-Typ-Konvertierung
   super: super
   tuple: Tupel
-  ellipsis: 'dasAuslasszeichen  #das Auslasszeichen'
-  notimplemented: 'nichtimplementiert  #nicht implementiert'
+  ellipsis: dasAuslasszeichen  # das Auslasszeichen
+  notimplemented: nichtimplementiert  # nicht implementiert
   aiter: aiter
   anext: anext
 exceptions:
@@ -116,10 +116,10 @@ exceptions:
   basegeneratorexit: basegeneratorbeenden
   exception: Ausnahme
   generatorexit: generatorexit
-  systemexit: 'systematischerAusstieg  #systematischer Ausstieg'
+  systemexit: systematischerAusstieg  # systematischer Ausstieg
   keyboardinterrupt: KeyboardInterrupt
-  arithmeticerror: 'arithmetischerFehler  #arithmetischer Fehler'
-  floatingpointerror: 'FloatPunktFehler  #Float-Punkt-Fehler'
+  arithmeticerror: arithmetischerFehler  # arithmetischer Fehler
+  floatingpointerror: FloatPunktFehler  # Float-Punkt-Fehler
   overflowerror: Überlauffehler
   zerodivisionerror: Nullteilungsfehler
   lookuperror: Suchfehler
@@ -129,31 +129,31 @@ exceptions:
   nameerror: NameError
   unboundlocalerror: ungebundener_lokaler_fehler
   oserror: osfehler
-  blockingioerror: 'BlockingIOFehler  #Blocking-IO-Fehler'
+  blockingioerror: BlockingIOFehler  # Blocking-IO-Fehler
   childprocesserror: ChildProcessError
   connectionerror: Verbindungsfehler
   brokenpipeerror: BrokenPipeError
   connectionabortederror: Verbindungsabbruchfehler
   connectionrefusederror: Verbindungsverweigerungsfehler
   connectionreseterror: Verbindungsresetfehler
-  fileexistserror: 'Dateiexistiertbereits  #Datei existiert bereits'
-  filenotfounderror: 'Dateinichtgefunden  #Datei nicht gefunden'
+  fileexistserror: Dateiexistiertbereits  # Datei existiert bereits
+  filenotfounderror: Dateinichtgefunden  # Datei nicht gefunden
   interruptederror: Interruptorfehler
   isadirectoryerror: Isadirectoryerror
-  notadirectoryerror: 'NichtDateiVerzeichnisFehler  #Nicht-Datei-Verzeichnis-Fehler'
+  notadirectoryerror: NichtDateiVerzeichnisFehler  # Nicht-Datei-Verzeichnis-Fehler
   permissionerror: Berechtigungsfehler
   processlookuperror: Prozessfehler
   timeouterror: Zeitüberschreitung
   importerror: Importfehler
-  modulenotfounderror: 'Modulnichtgefunden  #Modul nicht gefunden'
+  modulenotfounderror: Modulnichtgefunden  # Modul nicht gefunden
   stopiteration: StopIteration
   stopasynciteration: stop_async_iteration
   typeerror: Typfehler
   valueerror: ValueError
-  unicodeerror: 'UnicodeFehler  #Unicode-Fehler'
-  unicodedecodeerror: 'UnicodeFehlerbeimDekodieren  #Unicode-Fehler beim Dekodieren'
-  unicodeencodeerror: 'UnicodeKodierungsfehler  #Unicode-Kodierungsfehler'
-  unicodetranslateerror: 'UnicodeÜbersetzungsfehler  #Unicode-Übersetzungsfehler'
+  unicodeerror: UnicodeFehler  # Unicode-Fehler
+  unicodedecodeerror: UnicodeFehlerbeimDekodieren  # Unicode-Fehler beim Dekodieren
+  unicodeencodeerror: UnicodeKodierungsfehler  # Unicode-Kodierungsfehler
+  unicodetranslateerror: UnicodeÜbersetzungsfehler  # Unicode-Übersetzungsfehler
   runtimeerror: Laufzeitfehler
   notimplementederror: Notimplementierungsfehler
   recursionerror: Rekursionfehler
@@ -165,17 +165,17 @@ exceptions:
   indentationerror: Indentationfehler
   taberror: Taberror
   environmenterror: Umweltfehler
-  ioerror: 'IOFehler  #I/O-Fehler'
+  ioerror: IOFehler  # I/O-Fehler
   warning: Warnung
   userwarning: Benutzerwarnung
   deprecationwarning: Depreciationwarnung
-  pendingdeprecationwarning: 'ausstehendeDeprecationWarnung  #ausstehende Deprecation-Warnung'
+  pendingdeprecationwarning: ausstehendeDeprecationWarnung  # ausstehende Deprecation-Warnung
   syntaxwarning: Syntaxwarnung
   runtimewarning: Laufzeitwarnung
   futurewarning: Futurewarnung
   importwarning: Importwarnung
-  unicodewarning: 'UnicodeWarnung  #Unicode-Warnung'
-  byteswarning: 'ByteWarnung  #Byte-Warnung'
+  unicodewarning: UnicodeWarnung  # Unicode-Warnung
+  byteswarning: ByteWarnung  # Byte-Warnung
   resourcewarning: Ressourcenwarnung
   assertionerror: Assertionfehler
 metadata:

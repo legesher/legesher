@@ -23,8 +23,8 @@ keywords:
   import: importere
   in: in
   is: er
-  lambda: 'lambdafunksjon  #lambda-funksjon'
-  nonlocal: 'ikkelokalt  #ikke-lokalt'
+  lambda: lambdafunksjon  # lambda-funksjon
+  nonlocal: ikkelokalt  # ikke-lokalt
   not: ikke
   or: eller
   pass: gå
@@ -40,16 +40,16 @@ keywords:
   match: match
   case: sak
 builtins:
-  abs: 'absoluttvurdere  #absolutt vurdere'
+  abs: absoluttvurdere  # absolutt vurdere
   all: alle
   any: alle
   ascii: ascii
   bin: bin
   breakpoint: pausepunkt
-  callable: 'kankalletpå  #kan kallet på'
+  callable: kankalletpå  # kan kallet på
   chr: karakter
   compile: kompilere
-  delattr: 'slettattributt  #slett attributt'
+  delattr: slettattributt  # slett attributt
   dir: dir
   divmod: delmod
   enumerate: lister
@@ -103,22 +103,22 @@ builtins:
   object: objekt
   property: egenskap
   set: set
-  staticmethod: 'statiskmetod  #statisk metod'
+  staticmethod: statiskmetod  # statisk metod
   str: str
   super: supp
   tuple: tuplet
   ellipsis: ellips
-  notimplemented: 'ikkeimplementert  #ikke implementert'
+  notimplemented: ikkeimplementert  # ikke implementert
   aiter: aiter
   anext: anext
 exceptions:
   baseexception: baseexception
   basegeneratorexit: basegeneratoruitgang
   exception: uitlandetilfordring
-  generatorexit: 'genererutgang  #generer utgang'
+  generatorexit: genererutgang  # generer utgang
   systemexit: systemavslutning
   keyboardinterrupt: tastaturinterrupser
-  arithmeticerror: 'aritmetiskfeil  #aritmetisk feil'
+  arithmeticerror: aritmetiskfeil  # aritmetisk feil
   floatingpointerror: floatingpointerr
   overflowerror: overflowerror
   zerodivisionerror: nuldivisasjonfeil
@@ -137,17 +137,17 @@ exceptions:
   connectionrefusederror: forbindelsesavhengigfeil
   connectionreseterror: forbindelsesresettingfeil
   fileexistserror: fileexistserror
-  filenotfounderror: 'filenfinnesikke  #filen finnes ikke'
+  filenotfounderror: filenfinnesikke  # filen finnes ikke
   interruptederror: interruptsjonfeil
   isadirectoryerror: isadirectoryerror
-  notadirectoryerror: 'ikkeenmapfeil  #ikke-en-map-feil'
+  notadirectoryerror: ikkeenmapfeil  # ikke-en-map-feil
   permissionerror: ilaksessjonfeil
   processlookuperror: processlookupfeil
   timeouterror: tidslim
   importerror: importfeil
-  modulenotfounderror: 'modulikkefunnet  #modul ikke funnet'
+  modulenotfounderror: modulikkefunnet  # modul ikke funnet
   stopiteration: stoppiterasjon
-  stopasynciteration: 'stoppeasynkroniterering  #stoppe asynkron iterering'
+  stopasynciteration: stoppeasynkroniterering  # stoppe asynkron iterering
   typeerror: typefeil
   valueerror: værdfeil
   unicodeerror: unicodefeil

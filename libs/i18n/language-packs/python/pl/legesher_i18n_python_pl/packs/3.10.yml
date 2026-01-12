@@ -15,7 +15,7 @@ keywords:
   elif: jeśli_inne
   else: inną
   except: wyjątek
-  finally: 'wkońcu  #w końcu'
+  finally: wkońcu  # w końcu
   for: for
   from: z
   global: globalny
@@ -45,11 +45,11 @@ builtins:
   any: dowolny
   ascii: ascii
   bin: bin
-  breakpoint: 'punktprzerwania  #punkt przerwania'
+  breakpoint: punktprzerwania  # punkt przerwania
   callable: wywoływalny
   chr: chr
   compile: skompilować
-  delattr: 'usuwanieatrybutu  #usuwanie atrybutu'
+  delattr: usuwanieatrybutu  # usuwanie atrybutu
   dir: dir
   divmod: divmod
   enumerate: wyliczać
@@ -57,7 +57,7 @@ builtins:
   exec: wykonaj
   filter: filtrować
   format: formatowanie
-  getattr: 'Pobieranieatrybutu  #Pobieranie atrybutu'
+  getattr: Pobieranieatrybutu  # Pobieranie atrybutu
   globals: globalne
   hasattr: mać
   hash: hash
@@ -104,7 +104,7 @@ builtins:
   property: właściwość
   set: zbiór
   staticmethod: statyczny
-  str: 'ciągznaków  #ciąg znaków'
+  str: ciągznaków  # ciąg znaków
   super: super
   tuple: krotka
   ellipsis: spójnik
@@ -113,74 +113,71 @@ builtins:
   anext: anext
 exceptions:
   baseexception: baseexception
-  basegeneratorexit: 'wyjściepodstawowegogeneratora  #wyjście podstawowego generatora'
+  basegeneratorexit: wyjściepodstawowegogeneratora  # wyjście podstawowego generatora
   exception: wyjątek
-  generatorexit: 'wyjściegeneratora  #wyjście generatora'
-  systemexit: 'wyjściezsystemu  #wyjście z systemu'
-  keyboardinterrupt: 'przerwanieklawiatury  #przerwanie klawiatury'
-  arithmeticerror: 'błądarytmetyczny  #błąd arytmetyczny'
-  floatingpointerror: 'błądfloatingpoint  #błąd floating point'
-  overflowerror: 'błądprzepełnienia  #błąd przepełnienia'
-  zerodivisionerror: 'błąddzieleniaprzezzero  #błąd dzielenia przez zero'
-  lookuperror: 'błądwyszukiwania  #błąd wyszukiwania'
-  indexerror: 'błądindeksu  #błąd indeksu'
-  keyerror: 'błądklucza  #błąd klucza'
-  attributeerror: 'błądatrybutu  #błąd atrybutu'
-  nameerror: 'błądnazwy  #błąd nazwy'
-  unboundlocalerror: 'błądniezdefiniowanejzmiennejlokalnej  #błąd niezdefiniowanej
-    zmiennej lokalnej'
-  oserror: 'błądsystemuoperacyjnego  #błąd systemu operacyjnego'
-  blockingioerror: 'błądweprzepełnieniaweprzepływiedanych  #błąd we/przepełnienia
-    we/przepływie danych'
-  childprocesserror: 'błądpodprocesu  #błąd podprocesu'
-  connectionerror: 'błądpołączenia  #błąd połączenia'
-  brokenpipeerror: 'błądprzerywanegopotoku  #błąd przerywanego potoku'
-  connectionabortederror: 'błądprzerwaniapołączenia  #błąd przerwania połączenia'
-  connectionrefusederror: 'błądodmowypołączenia  #błąd odmowy połączenia'
-  connectionreseterror: 'resetowaniebłędupołączenia  #resetowanie błędu połączenia'
-  fileexistserror: 'błądistniejącegopliku  #błąd istniejącego pliku'
+  generatorexit: wyjściegeneratora  # wyjście generatora
+  systemexit: wyjściezsystemu  # wyjście z systemu
+  keyboardinterrupt: przerwanieklawiatury  # przerwanie klawiatury
+  arithmeticerror: błądarytmetyczny  # błąd arytmetyczny
+  floatingpointerror: błądfloatingpoint  # błąd floating point
+  overflowerror: błądprzepełnienia  # błąd przepełnienia
+  zerodivisionerror: błąddzieleniaprzezzero  # błąd dzielenia przez zero
+  lookuperror: błądwyszukiwania  # błąd wyszukiwania
+  indexerror: błądindeksu  # błąd indeksu
+  keyerror: błądklucza  # błąd klucza
+  attributeerror: błądatrybutu  # błąd atrybutu
+  nameerror: błądnazwy  # błąd nazwy
+  unboundlocalerror: błądniezdefiniowanejzmiennejlokalnej  # błąd niezdefiniowanej zmiennej lokalnej
+  oserror: błądsystemuoperacyjnego  # błąd systemu operacyjnego
+  blockingioerror: błądweprzepełnieniaweprzepływiedanych  # błąd we/przepełnienia we/przepływie danych
+  childprocesserror: błądpodprocesu  # błąd podprocesu
+  connectionerror: błądpołączenia  # błąd połączenia
+  brokenpipeerror: błądprzerywanegopotoku  # błąd przerywanego potoku
+  connectionabortederror: błądprzerwaniapołączenia  # błąd przerwania połączenia
+  connectionrefusederror: błądodmowypołączenia  # błąd odmowy połączenia
+  connectionreseterror: resetowaniebłędupołączenia  # resetowanie błędu połączenia
+  fileexistserror: błądistniejącegopliku  # błąd istniejącego pliku
   filenotfounderror: błąd_nieznanego_pliku
-  interruptederror: 'błądprzerwania  #błąd przerwania'
-  isadirectoryerror: 'błądisadirectoryerror  #błąd isadirectoryerror'
-  notadirectoryerror: 'błądnieistniejnegokatalogu  #błąd nieistniejnego katalogu'
-  permissionerror: 'błąduprawnień  #błąd uprawnień'
-  processlookuperror: 'błądprocesuwyszukiwania  #błąd procesu wyszukiwania'
-  timeouterror: 'błądczasuwygaśnięcia  #błąd czasu wygaśnięcia'
-  importerror: 'błądimportu  #błąd importu'
-  modulenotfounderror: 'błądmodułunieznaleziono  #błąd modułu nie znaleziono'
+  interruptederror: błądprzerwania  # błąd przerwania
+  isadirectoryerror: błądisadirectoryerror  # błąd isadirectoryerror
+  notadirectoryerror: błądnieistniejnegokatalogu  # błąd nieistniejnego katalogu
+  permissionerror: błąduprawnień  # błąd uprawnień
+  processlookuperror: błądprocesuwyszukiwania  # błąd procesu wyszukiwania
+  timeouterror: błądczasuwygaśnięcia  # błąd czasu wygaśnięcia
+  importerror: błądimportu  # błąd importu
+  modulenotfounderror: błądmodułunieznaleziono  # błąd modułu nie znaleziono
   stopiteration: stopiteration
   stopasynciteration: stopasynciteration
-  typeerror: 'błądtypu  #błąd typu'
-  valueerror: 'błądwartości  #błąd wartości'
-  unicodeerror: 'błądunikalny  #błąd unikalny'
-  unicodedecodeerror: 'błąddekodowaniaUnicode  #błąd dekodowania Unicode'
+  typeerror: błądtypu  # błąd typu
+  valueerror: błądwartości  # błąd wartości
+  unicodeerror: błądunikalny  # błąd unikalny
+  unicodedecodeerror: błąddekodowaniaUnicode  # błąd dekodowania Unicode
   unicodeencodeerror: unicodeencodeerror
-  unicodetranslateerror: 'błądtłumaczeniaunicod  #błąd tłumaczenia unicod'
-  runtimeerror: 'błądczasuwykonywania  #błąd czasu wykonywania'
-  notimplementederror: 'błądnieimplementacji  #błąd nieimplementacji'
-  recursionerror: 'błądrekurencji  #błąd rekurencji'
-  referenceerror: 'błądodwołania  #błąd odwołania'
-  assertionerror: 'błądasercji  #błąd asercji'
-  memoryerror: 'błądpamięci  #błąd pamięci'
-  buffererror: 'błądbuforowania  #błąd buforowania'
+  unicodetranslateerror: błądtłumaczeniaunicod  # błąd tłumaczenia unicod
+  runtimeerror: błądczasuwykonywania  # błąd czasu wykonywania
+  notimplementederror: błądnieimplementacji  # błąd nieimplementacji
+  recursionerror: błądrekurencji  # błąd rekurencji
+  referenceerror: błądodwołania  # błąd odwołania
+  assertionerror: błądasercji  # błąd asercji
+  memoryerror: błądpamięci  # błąd pamięci
+  buffererror: błądbuforowania  # błąd buforowania
   eoferror: błąd
-  syntaxerror: 'błądskładniowy  #błąd składniowy'
-  indentationerror: 'błądwcięcia  #błąd wcięcia'
-  taberror: 'błądtabulatora  #błąd tabulatora'
-  environmenterror: 'błądśrodowiskowy  #błąd środowiskowy'
-  ioerror: 'błądwewczytywaniuzapisywaniu  #błąd we/wczytywaniu/zapisywaniu'
+  syntaxerror: błądskładniowy  # błąd składniowy
+  indentationerror: błądwcięcia  # błąd wcięcia
+  taberror: błądtabulatora  # błąd tabulatora
+  environmenterror: błądśrodowiskowy  # błąd środowiskowy
+  ioerror: błądwewczytywaniuzapisywaniu  # błąd we/wczytywaniu/zapisywaniu
   warning: ' ostrzeżenie'
-  userwarning: 'uwagaużytkownika  #uwaga użytkownika'
-  deprecationwarning: 'deprecyowanieostrzeżenia  #deprecyowanie ostrzeżenia'
-  pendingdeprecationwarning: 'ostrożenieprzedprzestarzałymostrzeżeniem  #ostrożenie
-    przed przestarzałym ostrzeżeniem'
-  syntaxwarning: 'uwaganaskładnię  #uwaga na składnię'
-  runtimewarning: 'ostrzeżenieoczasiewykonywania  #ostrzeżenie o czasie wykonywania'
-  futurewarning: 'przyszłościowyostrzeżenie  #przyszłościowy ostrzeżenie'
+  userwarning: uwagaużytkownika  # uwaga użytkownika
+  deprecationwarning: deprecyowanieostrzeżenia  # deprecyowanie ostrzeżenia
+  pendingdeprecationwarning: ostrożenieprzedprzestarzałymostrzeżeniem  # ostrożenie przed przestarzałym ostrzeżeniem
+  syntaxwarning: uwaganaskładnię  # uwaga na składnię
+  runtimewarning: ostrzeżenieoczasiewykonywania  # ostrzeżenie o czasie wykonywania
+  futurewarning: przyszłościowyostrzeżenie  # przyszłościowy ostrzeżenie
   importwarning: import_warning
-  unicodewarning: 'uwagaUnicode  #uwaga Unicode'
-  byteswarning: 'ostrzeżenieobajtach  #ostrzeżenie o bajtach'
-  resourcewarning: 'ostrzeżenieozasobie  #ostrzeżenie o zasobie'
+  unicodewarning: uwagaUnicode  # uwaga Unicode
+  byteswarning: ostrzeżenieobajtach  # ostrzeżenie o bajtach
+  resourcewarning: ostrzeżenieozasobie  # ostrzeżenie o zasobie
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

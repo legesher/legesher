@@ -4,111 +4,111 @@ version: '3.10'
 keywords:
   and: và
   as: như
-  assert: 'kiểmtra  #kiểm tra'
-  async: 'tựđộng  #tự động'
-  await: 'chờđợi  #chờ đợi'
+  assert: kiểmtra  # kiểm tra
+  async: tựđộng  # tự động
+  await: chờđợi  # chờ đợi
   break: ngắt
   class: lớp
-  continue: 'tiếptục  #tiếp tục'
+  continue: tiếptục  # tiếp tục
   def: bằng
   del: xóa
   elif: nếu_khác
   else: khác
   except: trừ
-  finally: 'Cuốicùng  #Cuối cùng'
+  finally: Cuốicùng  # Cuối cùng
   for: cho
   from: từ
-  global: 'toàncầu  #toàn cầu'
+  global: toàncầu  # toàn cầu
   if: nếu
   import: nhập
   in: trong
   is: là
   lambda: lambda
-  nonlocal: 'khôngđịaphương  #không địa phương'
+  nonlocal: khôngđịaphương  # không địa phương
   not: không
   or: hoặc
-  pass: 'chạyqua  #chạy qua'
-  raise: 'nângcao  #nâng cao'
-  return: 'trảvề  #trả về'
+  pass: chạyqua  # chạy qua
+  raise: nângcao  # nâng cao
+  return: trảvề  # trả về
   try: thử
-  while: 'trongkhi  #trong khi'
+  while: trongkhi  # trong khi
   with: với
-  yield: 'hiệusuất  #hiệu suất'
-  None: 'khôngcó  #không có'
+  yield: hiệusuất  # hiệu suất
+  None: khôngcó  # không có
   'True': Đúng
   'False': Sai
-  match: 'phùhợp  #phù hợp'
-  case: 'trườnghợp  #trường hợp'
+  match: phùhợp  # phù hợp
+  case: trườnghợp  # trường hợp
 builtins:
-  abs: 'sốtuyệtđối  #số tuyệt đối'
-  all: 'tấtcả  #tất cả'
-  any: 'bấtkỳ  #bất kỳ'
+  abs: sốtuyệtđối  # số tuyệt đối
+  all: tấtcả  # tất cả
+  any: bấtkỳ  # bất kỳ
   ascii: ascii
   bin: bin
-  breakpoint: 'điểmdừng  #điểm dừng'
-  callable: 'cóthểgọiđược  #có thể gọi được'
+  breakpoint: điểmdừng  # điểm dừng
+  callable: cóthểgọiđược  # có thể gọi được
   chr: chữ
-  compile: 'chuyểnmã  #chuyển mã'
-  delattr: 'xóathuộctính  #xóa thuộc tính'
-  dir: 'hiệndanhsách  #hiện danh sách'
-  divmod: 'đồngbộchia  #đồng bộ chia'
-  enumerate: 'lậpchỉsố  #lập chỉ số'
+  compile: chuyểnmã  # chuyển mã
+  delattr: xóathuộctính  # xóa thuộc tính
+  dir: hiệndanhsách  # hiện danh sách
+  divmod: đồngbộchia  # đồng bộ chia
+  enumerate: lậpchỉsố  # lập chỉ số
   eval: eval
-  exec: 'thựcthi  #thực thi'
+  exec: thựcthi  # thực thi
   filter: lọc
-  format: 'xácđịnh  #xác định'
-  getattr: 'lấythuộctính  #lấy thuộc tính'
-  globals: 'biếntoàncục  #biến toàn cục'
-  hasattr: 'cóthuộctính  #có thuộc tính'
-  hash: 'hàmbăm  #hàm băm'
+  format: xácđịnh  # xác định
+  getattr: lấythuộctính  # lấy thuộc tính
+  globals: biếntoàncục  # biến toàn cục
+  hasattr: cóthuộctính  # có thuộc tính
+  hash: hàmbăm  # hàm băm
   help: giúp
-  hex: 'hệlục  #hệ lục'
-  id: 'đườngdẫn  #đường dẫn'
+  hex: hệlục  # hệ lục
+  id: đườngdẫn  # đường dẫn
   input: nhập
   isinstance: là_một_loại
   issubclass: issubclass
-  iter: 'hànhtrình  #hành trình'
-  len: 'chiềudài  #chiều dài'
-  locals: 'biếncụcbộ  #biến cục bộ'
-  map: 'chuyểnđổi  #chuyển đổi'
-  max: 'tốiđa  #tối đa'
-  min: 'nhỏnhất  #nhỏ nhất'
-  next: 'tiếptheo  #tiếp theo'
+  iter: hànhtrình  # hành trình
+  len: chiềudài  # chiều dài
+  locals: biếncụcbộ  # biến cục bộ
+  map: chuyểnđổi  # chuyển đổi
+  max: tốiđa  # tối đa
+  min: nhỏnhất  # nhỏ nhất
+  next: tiếptheo  # tiếp theo
   oct: oct
   open: mở
-  ord: 'chuyểnđổikýtựthànhmãđiểmUnicode  #chuyển đổi ký tự thành mã điểm Unicode'
-  pow: 'làmchomộtsốnânglênlũythừa  #làm cho một số nâng lên lũy thừa'
+  ord: chuyểnđổikýtựthànhmãđiểmUnicode  # chuyển đổi ký tự thành mã điểm Unicode
+  pow: làmchomộtsốnânglênlũythừa  # làm cho một số nâng lên lũy thừa
   print: in
-  range: 'phạmvi  #phạm vi'
-  repr: 'biểudiễn  #biểu diễn'
-  reversed: 'lậtngược  #lật ngược'
-  round: 'làmtròn  #làm tròn'
-  setattr: 'thiếtlậpthuộctính  #thiết lập thuộc tính'
-  slice: 'khửtrùng  #khử trùng'
-  sorted: 'sắpxếp  #sắp xếp'
+  range: phạmvi  # phạm vi
+  repr: biểudiễn  # biểu diễn
+  reversed: lậtngược  # lật ngược
+  round: làmtròn  # làm tròn
+  setattr: thiếtlậpthuộctính  # thiết lập thuộc tính
+  slice: khửtrùng  # khử trùng
+  sorted: sắpxếp  # sắp xếp
   sum: tổng
   vars: varia
   zip: gộp
   bool: bool
   bytearray: bytearray
   bytes: bytes
-  classmethod: 'phươngthứclớp  #phương thức lớp'
-  complex: 'phứctạp  #phức tạp'
-  dict: 'từđiển  #từ điển'
+  classmethod: phươngthứclớp  # phương thức lớp
+  complex: phứctạp  # phức tạp
+  dict: từđiển  # từ điển
   float: float
-  frozenset: 'bộtậpđóngbăng  #bộ tập đóng băng'
-  int: 'sốnguyên  #số nguyên'
-  list: 'danhsách  #danh sách'
+  frozenset: bộtậpđóngbăng  # bộ tập đóng băng
+  int: sốnguyên  # số nguyên
+  list: danhsách  # danh sách
   memoryview: memoryview
-  object: 'đốitượng  #đối tượng'
-  property: 'thuộctính  #thuộc tính'
+  object: đốitượng  # đối tượng
+  property: thuộctính  # thuộc tính
   set: bộ
-  staticmethod: 'thôngdụngtĩnh  #thông dụng tĩnh'
+  staticmethod: thôngdụngtĩnh  # thông dụng tĩnh
   str: chuỗi
   super: siêu
-  tuple: 'thưmục  #thư mục'
-  ellipsis: 'đoạnbỏsót  #đoạn bỏ sót'
-  notimplemented: 'khôngthựchiệnđược  #không thực hiện được'
+  tuple: thưmục  # thư mục
+  ellipsis: đoạnbỏsót  # đoạn bỏ sót
+  notimplemented: khôngthựchiệnđược  # không thực hiện được
   aiter: aiter
   anext: anext
 exceptions:
@@ -116,69 +116,68 @@ exceptions:
   basegeneratorexit: basegenerator_exit
   exception: lỗi
   generatorexit: generatorexit
-  systemexit: 'hậukỳhệthống  #hậu kỳ hệ thống'
-  keyboardinterrupt: 'sựngắtkếtnốibànphím  #sự ngắt kết nối bàn phím'
-  arithmeticerror: 'lỗitínharít  #lỗi tính a rít'
-  floatingpointerror: 'lỗiđiểmnổi  #lỗi điểm nổi'
-  overflowerror: 'lỗitràn  #lỗi tràn'
-  zerodivisionerror: 'lỗichiasốcho  #lỗi chia số cho'
-  lookuperror: 'lỗitìmkiếm  #lỗi tìm kiếm'
-  indexerror: 'Lỗichỉmục  #Lỗi chỉ mục'
-  keyerror: 'Lỗikhóakhôngtồntại  #Lỗi khóa không tồn tại'
-  attributeerror: 'Lỗithuộctính  #Lỗi thuộc tính'
-  nameerror: 'Lỗitênbiến  #Lỗi tên biến'
-  unboundlocalerror: 'Lỗithamchiếubiếncụcbộkhôngđượcràngbuộc  #Lỗi tham chiếu biến
-    cục bộ không được ràng buộc'
-  oserror: 'Lỗihệđiềuhành  #Lỗi hệ điều hành'
-  blockingioerror: 'lỗiIOchặn  #lỗi I/O chặn'
-  childprocesserror: 'lỗicontrìnhtự  #lỗi con trình tự'
-  connectionerror: 'lỗikếtnối  #lỗi kết nối'
-  brokenpipeerror: 'lỗiốngbịvỡ  #lỗi ống bị vỡ'
-  connectionabortederror: 'lỗingắtkếtnối  #lỗi ngắt kết nối'
-  connectionrefusederror: 'lỗitừchốikếtnối  #lỗi từ chối kết nối'
-  connectionreseterror: 'lỗiđặtlạikếtnối  #lỗi đặt lại kết nối'
-  fileexistserror: 'lỗitồntạitệp  #lỗi tồn tại tệp'
-  filenotfounderror: 'Lỗikhôngtìmthấytệp  #Lỗi không tìm thấy tệp'
-  interruptederror: 'lỗingắt  #lỗi ngắt'
-  isadirectoryerror: 'lỗiisadirectory  #lỗi isadirectory'
-  notadirectoryerror: 'lỗikhôngphảilàthưmục  #lỗi không phải là thư mục'
-  permissionerror: 'lỗiquyền  #lỗi quyền'
-  processlookuperror: 'lỗitìmkiếmquytrình  #lỗi tìm kiếm quy trình'
-  timeouterror: 'lỗithờigian  #lỗi thời gian'
-  importerror: 'lỗinhập  #lỗi nhập'
-  modulenotfounderror: 'Lỗimodulenotfounderror  #Lỗi modulenotfounderror'
-  stopiteration: 'Dừnglặplại  #Dừng lặp lại'
-  stopasynciteration: 'ngừnglặpasync  #ngừng lặp async'
-  typeerror: 'Lỗikiểudữliệu  #Lỗi kiểu dữ liệu'
-  valueerror: 'LỗiGiátrị  #Lỗi Giá trị'
-  unicodeerror: 'lỗiUnicode  #lỗi Unicode'
-  unicodedecodeerror: 'lỗigiảimãUnicode  #lỗi giải mã Unicode'
-  unicodeencodeerror: 'lỗimãhóaunicode  #lỗi mã hóa unicode'
-  unicodetranslateerror: 'lỗidịchthuậtmãhóaUnicode  #lỗi dịch thuật mã hóa Unicode'
-  runtimeerror: 'Lỗithờigianchạy  #Lỗi thời gian chạy'
-  notimplementederror: 'Lỗikhôngthựchiện  #Lỗi không thực hiện'
-  recursionerror: 'lỗiđệquy  #lỗi đệ quy'
-  referenceerror: 'lỗithamchiếu  #lỗi tham chiếu'
-  assertionerror: 'lỗikhẳngđịnh  #lỗi khẳng định'
-  memoryerror: 'lỗibộnhớ  #lỗi bộ nhớ'
-  buffererror: 'lỗibộđệm  #lỗi bộ đệm'
-  eoferror: 'lỗieof  #lỗi eof'
-  syntaxerror: 'lỗicúpháp  #lỗi cú pháp'
-  indentationerror: 'lỗithụtlề  #lỗi thụt lề'
-  taberror: 'lỗitab  #lỗi tab'
-  environmenterror: 'lỗimôitrường  #lỗi môi trường'
-  ioerror: 'lỗiIO  #lỗi I/O'
-  warning: 'lờicảnhbáo  #lời cảnh báo'
-  userwarning: 'cảnhbáongườidùng  #cảnh báo người dùng'
-  deprecationwarning: 'cảnhbáolỗilỗi  #cảnh báo lỗi lỗi'
-  pendingdeprecationwarning: 'cảnhbáosắpbịlỗi  #cảnh báo sắp bị lỗi'
-  syntaxwarning: 'lờicảnhbáocúpháp  #lời cảnh báo cú pháp'
-  runtimewarning: 'cảnhbáothờigianchạy  #cảnh báo thời gian chạy'
-  futurewarning: 'cảnhbáotươnglai  #cảnh báo tương lai'
-  importwarning: 'cảnhbáonhậpkhẩu  #cảnh báo nhập khẩu'
-  unicodewarning: 'cảnhbáounicode  #cảnh báo unicode'
-  byteswarning: 'cảnhbáobyte  #cảnh báo byte'
-  resourcewarning: 'cảnhbáotàinguyên  #cảnh báo tài nguyên'
+  systemexit: hậukỳhệthống  # hậu kỳ hệ thống
+  keyboardinterrupt: sựngắtkếtnốibànphím  # sự ngắt kết nối bàn phím
+  arithmeticerror: lỗitínharít  # lỗi tính a rít
+  floatingpointerror: lỗiđiểmnổi  # lỗi điểm nổi
+  overflowerror: lỗitràn  # lỗi tràn
+  zerodivisionerror: lỗichiasốcho  # lỗi chia số cho
+  lookuperror: lỗitìmkiếm  # lỗi tìm kiếm
+  indexerror: Lỗichỉmục  # Lỗi chỉ mục
+  keyerror: Lỗikhóakhôngtồntại  # Lỗi khóa không tồn tại
+  attributeerror: Lỗithuộctính  # Lỗi thuộc tính
+  nameerror: Lỗitênbiến  # Lỗi tên biến
+  unboundlocalerror: Lỗithamchiếubiếncụcbộkhôngđượcràngbuộc  # Lỗi tham chiếu biến cục bộ không được ràng buộc
+  oserror: Lỗihệđiềuhành  # Lỗi hệ điều hành
+  blockingioerror: lỗiIOchặn  # lỗi I/O chặn
+  childprocesserror: lỗicontrìnhtự  # lỗi con trình tự
+  connectionerror: lỗikếtnối  # lỗi kết nối
+  brokenpipeerror: lỗiốngbịvỡ  # lỗi ống bị vỡ
+  connectionabortederror: lỗingắtkếtnối  # lỗi ngắt kết nối
+  connectionrefusederror: lỗitừchốikếtnối  # lỗi từ chối kết nối
+  connectionreseterror: lỗiđặtlạikếtnối  # lỗi đặt lại kết nối
+  fileexistserror: lỗitồntạitệp  # lỗi tồn tại tệp
+  filenotfounderror: Lỗikhôngtìmthấytệp  # Lỗi không tìm thấy tệp
+  interruptederror: lỗingắt  # lỗi ngắt
+  isadirectoryerror: lỗiisadirectory  # lỗi isadirectory
+  notadirectoryerror: lỗikhôngphảilàthưmục  # lỗi không phải là thư mục
+  permissionerror: lỗiquyền  # lỗi quyền
+  processlookuperror: lỗitìmkiếmquytrình  # lỗi tìm kiếm quy trình
+  timeouterror: lỗithờigian  # lỗi thời gian
+  importerror: lỗinhập  # lỗi nhập
+  modulenotfounderror: Lỗimodulenotfounderror  # Lỗi modulenotfounderror
+  stopiteration: Dừnglặplại  # Dừng lặp lại
+  stopasynciteration: ngừnglặpasync  # ngừng lặp async
+  typeerror: Lỗikiểudữliệu  # Lỗi kiểu dữ liệu
+  valueerror: LỗiGiátrị  # Lỗi Giá trị
+  unicodeerror: lỗiUnicode  # lỗi Unicode
+  unicodedecodeerror: lỗigiảimãUnicode  # lỗi giải mã Unicode
+  unicodeencodeerror: lỗimãhóaunicode  # lỗi mã hóa unicode
+  unicodetranslateerror: lỗidịchthuậtmãhóaUnicode  # lỗi dịch thuật mã hóa Unicode
+  runtimeerror: Lỗithờigianchạy  # Lỗi thời gian chạy
+  notimplementederror: Lỗikhôngthựchiện  # Lỗi không thực hiện
+  recursionerror: lỗiđệquy  # lỗi đệ quy
+  referenceerror: lỗithamchiếu  # lỗi tham chiếu
+  assertionerror: lỗikhẳngđịnh  # lỗi khẳng định
+  memoryerror: lỗibộnhớ  # lỗi bộ nhớ
+  buffererror: lỗibộđệm  # lỗi bộ đệm
+  eoferror: lỗieof  # lỗi eof
+  syntaxerror: lỗicúpháp  # lỗi cú pháp
+  indentationerror: lỗithụtlề  # lỗi thụt lề
+  taberror: lỗitab  # lỗi tab
+  environmenterror: lỗimôitrường  # lỗi môi trường
+  ioerror: lỗiIO  # lỗi I/O
+  warning: lờicảnhbáo  # lời cảnh báo
+  userwarning: cảnhbáongườidùng  # cảnh báo người dùng
+  deprecationwarning: cảnhbáolỗilỗi  # cảnh báo lỗi lỗi
+  pendingdeprecationwarning: cảnhbáosắpbịlỗi  # cảnh báo sắp bị lỗi
+  syntaxwarning: lờicảnhbáocúpháp  # lời cảnh báo cú pháp
+  runtimewarning: cảnhbáothờigianchạy  # cảnh báo thời gian chạy
+  futurewarning: cảnhbáotươnglai  # cảnh báo tương lai
+  importwarning: cảnhbáonhậpkhẩu  # cảnh báo nhập khẩu
+  unicodewarning: cảnhbáounicode  # cảnh báo unicode
+  byteswarning: cảnhbáobyte  # cảnh báo byte
+  resourcewarning: cảnhbáotàinguyên  # cảnh báo tài nguyên
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

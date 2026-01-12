@@ -5,9 +5,9 @@ extends: 3.10.yml
 keywords:
   except*: wyjątek
 exceptions:
-  exceptiongroup: 'grupawyjątków  #grupa wyjątków'
+  exceptiongroup: grupawyjątków  # grupa wyjątków
   baseexceptiongroup: baseexceptiongroup
-  encodingwarning: 'ostrzeżeniedotyczącekodowania  #ostrzeżenie dotyczące kodowania'
+  encodingwarning: ostrzeżeniedotyczącekodowania  # ostrzeżenie dotyczące kodowania
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'

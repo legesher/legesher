@@ -5,7 +5,7 @@ extends: 3.10.yml
 keywords:
   except*: למעט
 exceptions:
-  exceptiongroup: 'קבוצתחריגים  #קבוצת חריגים'
+  exceptiongroup: קבוצתחריגים  # קבוצת חריגים
   baseexceptiongroup: בסיס_אקסייפטיונגרופ
   encodingwarning: אזהרת_קידוד
 metadata:

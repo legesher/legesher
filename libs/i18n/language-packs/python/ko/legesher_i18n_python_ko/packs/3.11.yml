@@ -5,9 +5,9 @@ extends: 3.10.yml
 keywords:
   except*: 제외
 exceptions:
-  exceptiongroup: '예외처리그룹  #예외 처리 그룹'
-  baseexceptiongroup: '기본예외그룹  #기본 예외 그룹'
-  encodingwarning: '인코딩경고  #인코딩 경고'
+  exceptiongroup: 예외처리그룹  # 예외 처리 그룹
+  baseexceptiongroup: 기본예외그룹  # 기본 예외 그룹
+  encodingwarning: 인코딩경고  # 인코딩 경고
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'

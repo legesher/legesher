@@ -5,9 +5,9 @@ extends: 3.10.yml
 keywords:
   except*: अपराधिक
 exceptions:
-  exceptiongroup: 'विशेषाधिकारसमूह  #विशेषाधिकार समूह'
-  baseexceptiongroup: 'बेसएक्सेप्शनग्रुप  #बेसएक्सेप्शन ग्रुप'
-  encodingwarning: 'एन्कोडिंगचेतावनी  #एन्कोडिंग चेतावनी'
+  exceptiongroup: विशेषाधिकारसमूह  # विशेषाधिकार समूह
+  baseexceptiongroup: बेसएक्सेप्शनग्रुप  # बेसएक्सेप्शन ग्रुप
+  encodingwarning: एन्कोडिंगचेतावनी  # एन्कोडिंग चेतावनी
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'

@@ -4,27 +4,27 @@ version: '3.10'
 keywords:
   and: ve
   as: as
-  assert: 'talepetmek  #talep etmek'
+  assert: talepetmek  # talep etmek
   async: asenkron
   await: bekle
   break: çıkış
   class: sınıf
-  continue: 'devamet  #devam et'
+  continue: devamet  # devam et
   def: tanımla
   del: sil
   elif: eğer_de
   else: değil
-  except: 'yada  #ya da'
+  except: yada  # ya da
   finally: sonunda
   for: için
   from: dene
   global: küresel
   if: eğer
-  import: 'içeriaktarma  #içeri aktarma'
+  import: içeriaktarma  # içeri aktarma
   in: içinde
   is: olmak
   lambda: lambda
-  nonlocal: 'yerelolmayan  #yerel olmayan'
+  nonlocal: yerelolmayan  # yerel olmayan
   not: değil
   or: veya
   pass: geç
@@ -34,31 +34,31 @@ keywords:
   while: sürürken
   with: ile
   yield: ver
-  None: 'hiçbirşey  #hiçbir şey'
+  None: hiçbirşey  # hiçbir şey
   'True': doğru
   'False': yanlış
   match: eşleş
   case: vaka
 builtins:
   abs: abs
-  all: 'herşey  #her şey'
-  any: 'herhangibir  #herhangi bir'
+  all: herşey  # her şey
+  any: herhangibir  # herhangi bir
   ascii: ascii
   bin: bin
-  breakpoint: 'kesmenoktası  #kesme noktası'
+  breakpoint: kesmenoktası  # kesme noktası
   callable: çağırılabilir
   chr: karakter
   compile: dergi
   delattr: silattr
   dir: dizin
-  divmod: 'bölmevekalanınhesaplanması  #bölme ve kalanın hesaplanması'
+  divmod: bölmevekalanınhesaplanması  # bölme ve kalanın hesaplanması
   enumerate: sayma
   eval: değerlendir
   exec: yürüt
   filter: filtre
   format: biçim
-  getattr: 'özniteliğeeriş  #özniteliğe eriş'
-  globals: 'theglobalvariables  #the global variables'
+  getattr: özniteliğeeriş  # özniteliğe eriş
+  globals: theglobalvariables  # the global variables
   hasattr: sahip
   hash: hash
   help: yardım
@@ -66,10 +66,10 @@ builtins:
   id: kimlik
   input: giriş
   isinstance: isinstance
-  issubclass: 'altsınıf  #alt sınıf'
+  issubclass: altsınıf  # alt sınıf
   iter: iter
   len: uzunluk
-  locals: 'yereldeğişkenler  #yerel değişkenler'
+  locals: yereldeğişkenler  # yerel değişkenler
   map: haritalama
   max: maksimum
   min: min
@@ -77,7 +77,7 @@ builtins:
   oct: oct
   open: açmak
   ord: karakter
-  pow: 'üçüncükuvvet  #üçüncü kuvvet'
+  pow: üçüncükuvvet  # üçüncü kuvvet
   print: yazdır
   range: aralık
   repr: reprezentasyon
@@ -90,20 +90,20 @@ builtins:
   vars: değişkenler
   zip: birleştir
   bool: bool
-  bytearray: 'baytdizisi  #bayt dizisi'
+  bytearray: baytdizisi  # bayt dizisi
   bytes: baytlar
-  classmethod: 'sınıfyöntemi  #sınıf yöntemi'
+  classmethod: sınıfyöntemi  # sınıf yöntemi
   complex: karmaşık
   dict: sözlük
-  float: 'kayannokta  #kayan nokta'
-  frozenset: 'dondurulmuşküme  #dondurulmuş küme'
+  float: kayannokta  # kayan nokta
+  frozenset: dondurulmuşküme  # dondurulmuş küme
   int: tamsayı
   list: liste
-  memoryview: 'bellekgörünümü  #bellek görünümü'
+  memoryview: bellekgörünümü  # bellek görünümü
   object: nesne
   property: özellik
   set: küme
-  staticmethod: 'statikyöntem  #statik yöntem'
+  staticmethod: statikyöntem  # statik yöntem
   str: metin
   super: üst
   tuple: kökleme
@@ -112,72 +112,71 @@ builtins:
   aiter: aiter
   anext: anext
 exceptions:
-  baseexception: 'temelistisna  #temel istisna'
+  baseexception: temelistisna  # temel istisna
   basegeneratorexit: basegeneratorexit
-  exception: 'özeldurum  #özel durum'
+  exception: özeldurum  # özel durum
   generatorexit: generatorexit
-  systemexit: 'sistemçıkışı  #sistem çıkışı'
+  systemexit: sistemçıkışı  # sistem çıkışı
   keyboardinterrupt: klavye_kesintisi
   arithmeticerror: aritmetikhata
-  floatingpointerror: 'floathata  #float hata'
-  overflowerror: 'aşırıakışhatası  #aşırı akış hatası'
-  zerodivisionerror: 'sıfırbölmehatası  #sıfır bölme hatası'
-  lookuperror: 'aramahatası  #arama hatası'
-  indexerror: 'Dizinhatası  #Dizin hatası'
-  keyerror: 'anahtarhatası  #anahtar hatası'
-  attributeerror: 'öznitelikhatası  #öznitelik hatası'
+  floatingpointerror: floathata  # float hata
+  overflowerror: aşırıakışhatası  # aşırı akış hatası
+  zerodivisionerror: sıfırbölmehatası  # sıfır bölme hatası
+  lookuperror: aramahatası  # arama hatası
+  indexerror: Dizinhatası  # Dizin hatası
+  keyerror: anahtarhatası  # anahtar hatası
+  attributeerror: öznitelikhatası  # öznitelik hatası
   nameerror: AdHata
-  unboundlocalerror: 'yerinebağlanmamışyerelhata  #yerine bağlanmamış yerel hata'
+  unboundlocalerror: yerinebağlanmamışyerelhata  # yerine bağlanmamış yerel hata
   oserror: oserror
   blockingioerror: blockingioerror
-  childprocesserror: 'çocuksüreçhatası  #çocuk süreç hatası'
-  connectionerror: 'bağlantıhatası  #bağlantı hatası'
+  childprocesserror: çocuksüreçhatası  # çocuk süreç hatası
+  connectionerror: bağlantıhatası  # bağlantı hatası
   brokenpipeerror: brokenpipeerror
   connectionabortederror: bağlantı_kapatma_hata
   connectionrefusederror: bağlantı_kabul_etmedi_hata
-  connectionreseterror: 'bağlantısıfırlamahatası  #bağlantı sıfırlama hatası'
+  connectionreseterror: bağlantısıfırlamahatası  # bağlantı sıfırlama hatası
   fileexistserror: dosya_zaten_var
-  filenotfounderror: 'Dosyabulunamadıhatası  #Dosya bulunamadı hatası'
-  interruptederror: 'kesintiyeuğrayanhata  #kesintiye uğrayan hata'
+  filenotfounderror: Dosyabulunamadıhatası  # Dosya bulunamadı hatası
+  interruptederror: kesintiyeuğrayanhata  # kesintiye uğrayan hata
   isadirectoryerror: isadirectoryerror
   notadirectoryerror: notadirectoryerror
-  permissionerror: 'izinhatası  #izin hatası'
+  permissionerror: izinhatası  # izin hatası
   processlookuperror: processlookuperror
-  timeouterror: 'zamanaşımıhatası  #zaman aşımı hatası'
-  importerror: 'içeriaktarmahatası  #içeri aktarma hatası'
-  modulenotfounderror: 'modülbulunamadıhatası  #modül bulunamadı hatası'
+  timeouterror: zamanaşımıhatası  # zaman aşımı hatası
+  importerror: içeriaktarmahatası  # içeri aktarma hatası
+  modulenotfounderror: modülbulunamadıhatası  # modül bulunamadı hatası
   stopiteration: durdurma_iterasyonu
   stopasynciteration: stopasynciteration
-  typeerror: 'TürHatası  #Tür Hatası'
-  valueerror: 'değerhatası  #değer hatası'
+  typeerror: TürHatası  # Tür Hatası
+  valueerror: değerhatası  # değer hatası
   unicodeerror: unicodehata
   unicodedecodeerror: unicodedecodeerror
   unicodeencodeerror: unicodeencodeerror
   unicodetranslateerror: unicodetranslateerror
-  runtimeerror: 'çalışmazamanıhatası  #çalışma zamanı hatası'
-  notimplementederror: 'UygulanamayanHata  #Uygulanamayan Hata'
-  recursionerror: 'yinelemehatası  #yineleme hatası'
-  referenceerror: 'referanshatası  #referans hatası'
-  assertionerror: 'tartışmahatası  #tartışma hatası'
-  memoryerror: 'bellekhatası  #bellek hatası'
+  runtimeerror: çalışmazamanıhatası  # çalışma zamanı hatası
+  notimplementederror: UygulanamayanHata  # Uygulanamayan Hata
+  recursionerror: yinelemehatası  # yineleme hatası
+  referenceerror: referanshatası  # referans hatası
+  assertionerror: tartışmahatası  # tartışma hatası
+  memoryerror: bellekhatası  # bellek hatası
   buffererror: buffererror
   eoferror: hata
-  syntaxerror: 'sintakshatası  #sintaks hatası'
-  indentationerror: 'girintilemehatası  #girintileme hatası'
+  syntaxerror: sintakshatası  # sintaks hatası
+  indentationerror: girintilemehatası  # girintileme hatası
   taberror: taberror
   environmenterror: environmenterror
   ioerror: ioerror
   warning: uyarı
   userwarning: kullanıcıuyarı
   deprecationwarning: depreasyonuyarı
-  pendingdeprecationwarning: 'bekleyenkullanımdışıbırakmauyarısı  #bekleyen kullanım
-    dışı bırakma uyarısı'
-  syntaxwarning: 'sintaksuyarı  #sintaks uyarı'
-  runtimewarning: 'çalışmazamanıuyarı  #çalışma zamanı uyarı'
+  pendingdeprecationwarning: bekleyenkullanımdışıbırakmauyarısı  # bekleyen kullanım dışı bırakma uyarısı
+  syntaxwarning: sintaksuyarı  # sintaks uyarı
+  runtimewarning: çalışmazamanıuyarı  # çalışma zamanı uyarı
   futurewarning: gelecekuyarı
-  importwarning: 'importuyarı  #import uyarı'
+  importwarning: importuyarı  # import uyarı
   unicodewarning: unicodeuyarısı
-  byteswarning: 'baytuyarı  #bayt uyarı'
+  byteswarning: baytuyarı  # bayt uyarı
   resourcewarning: ' kaynakuyarı'
 metadata:
   python_version_min: '3.10'

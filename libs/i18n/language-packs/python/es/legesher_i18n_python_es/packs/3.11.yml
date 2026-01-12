@@ -8,9 +8,9 @@ extends: 3.10.yml
 keywords:
   except*: excepto*
 exceptions:
-  baseexceptiongroup: 'grupodeexcepcionesbase  #grupo de excepciones base'
-  encodingwarning: 'advertenciadecodificación  #advertencia de codificación'
-  exceptiongroup: 'grupodeexcepciones  #grupo de excepciones'
+  baseexceptiongroup: grupodeexcepcionesbase  # grupo de excepciones base
+  encodingwarning: advertenciadecodificación  # advertencia de codificación
+  exceptiongroup: grupodeexcepciones  # grupo de excepciones
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.13'

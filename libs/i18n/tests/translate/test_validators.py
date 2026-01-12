@@ -608,3 +608,94 @@ class TestValidatorIntegration:
         assert "Total translations: 2" in output
         assert "✓ Valid: 1" in output
         assert "✗ Invalid: 1" in output
+
+
+class TestEmbeddedCommentDetection:
+    """Test detection of embedded YAML comments (CORE-529 regression prevention)."""
+
+    @pytest.fixture
+    def validator(self):
+        """Create validator instance."""
+        return TranslationValidator()
+
+    def test_detects_embedded_comment(self, validator):
+        """Test that embedded YAML comment syntax is flagged."""
+        # This is what happens when a YAML comment is inside quotes
+        result = validator.validate(
+            term="abs",
+            translation="абсолютноезначение  #абсолютное значение",
+            language_code="ru",
+            term_type="builtin",
+        )
+
+        assert result.is_valid is False
+        assert any("embedded yaml comment" in err.lower() for err in result.errors)
+
+    def test_valid_translation_no_hash(self, validator):
+        """Test that translations without # are valid."""
+        result = validator.validate(
+            term="abs",
+            translation="абсолютноезначение",
+            language_code="ru",
+            term_type="builtin",
+        )
+
+        # Should not have embedded comment error
+        assert not any("embedded" in err.lower() for err in result.errors)
+
+    def test_single_hash_not_flagged(self, validator):
+        """Test that single # without double space is not flagged."""
+        # A single # in translation is unusual but not the embedded comment bug
+        result = validator.validate(
+            term="test",
+            translation="тест#значение",  # No double space before #
+            language_code="ru",
+            term_type="keyword",
+        )
+
+        # Should not be flagged as embedded comment
+        assert not any("embedded yaml comment" in err.lower() for err in result.errors)
+
+
+class TestApostropheDetection:
+    """Test detection of apostrophes in translations (invalid Python identifiers)."""
+
+    @pytest.fixture
+    def validator(self):
+        """Create validator instance."""
+        return TranslationValidator()
+
+    def test_detects_apostrophe(self, validator):
+        """Test that apostrophes are flagged as errors."""
+        result = validator.validate(
+            term="break",
+            translation="s'échapper",
+            language_code="fr",
+            term_type="keyword",
+        )
+
+        assert result.is_valid is False
+        assert any("apostrophe" in err.lower() for err in result.errors)
+
+    def test_suggests_removal(self, validator):
+        """Test that error suggests removing apostrophe."""
+        result = validator.validate(
+            term="break",
+            translation="s'échapper",
+            language_code="fr",
+            term_type="keyword",
+        )
+
+        assert any("séchapper" in err for err in result.errors)
+
+    def test_valid_without_apostrophe(self, validator):
+        """Test that translations without apostrophes pass."""
+        result = validator.validate(
+            term="break",
+            translation="séchapper",
+            language_code="fr",
+            term_type="keyword",
+        )
+
+        # Should not have apostrophe error
+        assert not any("apostrophe" in err.lower() for err in result.errors)

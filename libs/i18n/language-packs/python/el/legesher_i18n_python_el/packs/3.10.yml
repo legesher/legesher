@@ -4,7 +4,7 @@ version: '3.10'
 keywords:
   and: και
   as: ως
-  assert: 'διαταγήδιαβεβαίωσης  #διαταγή διαβεβαίωσης'
+  assert: διαταγήδιαβεβαίωσης  # διαταγή διαβεβαίωσης
   async: ασύγχρονος
   await: αναμονή
   break: διακοπή
@@ -40,7 +40,7 @@ keywords:
   match: ταυτοποίηση_μοτίβου
   case: περίπτωση
 builtins:
-  abs: 'απόλυτητιμή  #απόλυτη τιμή'
+  abs: απόλυτητιμή  # απόλυτη τιμή
   all: όλους
   any: οποιοσδήποτε
   ascii: ασκί
@@ -56,20 +56,20 @@ builtins:
   eval: αξιολόγηση
   exec: εκτέλεση
   filter: φίλτρο
-  format: 'τοformat  #το format'
+  format: τοformat  # το format
   getattr: λησμονώ_χρήση_απόκτησης_χαρακτηριστικού
   globals: παγκόσμιος
-  hasattr: 'έχειχαρακτηριστικό  #έχει χαρακτηριστικό'
+  hasattr: έχειχαρακτηριστικό  # έχει χαρακτηριστικό
   hash: χασάπης
   help: βοήθεια
   hex: εξαγωνικό
-  id: 'ηταυτότητα  #η ταυτότητα'
+  id: ηταυτότητα  # η ταυτότητα
   input: εισαγωγή
   isinstance: είναι_τύπος
   issubclass: είναι_υποκλάση
   iter: ιτερ
   len: μήκος
-  locals: 'οιτοπικοίμεταβλητοί  #οι τοπικοί μεταβλητοί'
+  locals: οιτοπικοίμεταβλητοί  # οι τοπικοί μεταβλητοί
   map: χάρτης
   max: μέγιστο
   min: ελαχίστη
@@ -80,35 +80,35 @@ builtins:
   pow: εξυψώνω
   print: εκτύπωση
   range: διαστήμα
-  repr: 'ηαναπαράσταση  #η αναπαράσταση'
+  repr: ηαναπαράσταση  # η αναπαράσταση
   reversed: αναστροφή
   round: γύρισμα
-  setattr: 'τοναορίσετεέναχαρακτηριστικό  #το να ορίσετε ένα χαρακτηριστικό'
-  slice: 'τοτμήμα  #το τμήμα'
+  setattr: τοναορίσετεέναχαρακτηριστικό  # το να ορίσετε ένα χαρακτηριστικό
+  slice: τοτμήμα  # το τμήμα
   sorted: ταξινομημένος
   sum: σύνολο
   vars: variabiles
   zip: zip
-  bool: 'τοboolean  #το boolean'
+  bool: τοboolean  # το boolean
   bytearray: bytearray
   bytes: bytes
-  classmethod: 'ηκλάσημεθόδου  #η κλάση μεθόδου'
+  classmethod: ηκλάσημεθόδου  # η κλάση μεθόδου
   complex: σύνθετός
-  dict: 'λεξικόςπίνακας  #λεξικός πίνακας'
+  dict: λεξικόςπίνακας  # λεξικός πίνακας
   float: float
-  frozenset: 'τοfrozenset  #το frozen set'
+  frozenset: τοfrozenset  # το frozen set
   int: int
   list: λίστα
   memoryview: memoryview
   object: αντικείμενο
   property: ιδιότητα
   set: σύνολο
-  staticmethod: 'στατικήμέθοδος  #στατική μέθοδος'
+  staticmethod: στατικήμέθοδος  # στατική μέθοδος
   str: str
   super: υπερ
-  tuple: 'τοtuple  #το tuple'
-  ellipsis: 'τοελλειξίριο  #το ελλειξίριο'
-  notimplemented: 'לאמיושם  #לא מיושם'
+  tuple: τοtuple  # το tuple
+  ellipsis: τοελλειξίριο  # το ελλειξίριο
+  notimplemented: לאמיושם  # לא מיושם
   aiter: αιτητής
   anext: anext
 exceptions:
@@ -118,16 +118,16 @@ exceptions:
   generatorexit: εξόδου_γεννήτριας
   systemexit: διακοπή_συστήματος
   keyboardinterrupt: διακοπή_με_κλειδαριά
-  arithmeticerror: 'αριθμητικόσφάλμα  #αριθμητικό σφάλμα'
+  arithmeticerror: αριθμητικόσφάλμα  # αριθμητικό σφάλμα
   floatingpointerror: σφάλμα_πλωτής_εκτύπωσης
-  overflowerror: 'σφραγίδαυπερχείλισης  #σφραγίδα υπερχείλισης'
+  overflowerror: σφραγίδαυπερχείλισης  # σφραγίδα υπερχείλισης
   zerodivisionerror: μηδέν_διαίρεση_σφάλμα
-  lookuperror: 'σφάλμααναζήτησης  #σφάλμα αναζήτησης'
-  indexerror: 'Σφάλμαευρετηρίου  #Σφάλμα ευρετηρίου'
-  keyerror: 'σφάλμακλειδιού  #σφάλμα κλειδιού'
+  lookuperror: σφάλμααναζήτησης  # σφάλμα αναζήτησης
+  indexerror: Σφάλμαευρετηρίου  # Σφάλμα ευρετηρίου
+  keyerror: σφάλμακλειδιού  # σφάλμα κλειδιού
   attributeerror: Σφάλμα_Χαρακτηριστικού
-  nameerror: 'Σφάλμαονόματος  #Σφάλμα ονόματος'
-  unboundlocalerror: 'απαράδεκτητοπικήμεταβλητή  #απαράδεκτη τοπική μεταβλητή'
+  nameerror: Σφάλμαονόματος  # Σφάλμα ονόματος
+  unboundlocalerror: απαράδεκτητοπικήμεταβλητή  # απαράδεκτη τοπική μεταβλητή
   oserror: oserror
   blockingioerror: blockingioerror
   childprocesserror: σφάλμα_παιδιού_διαδικασίας
@@ -138,12 +138,12 @@ exceptions:
   connectionreseterror: connectionreseterror
   fileexistserror: σφάλμα_υπάρχουσας_αρχειής
   filenotfounderror: σφάλμα_δεν_βρέθηκε_αρχείο
-  interruptederror: 'σφάλμαδιακοπής  #σφάλμα διακοπής'
+  interruptederror: σφάλμαδιακοπής  # σφάλμα διακοπής
   isadirectoryerror: isadirectoryerror
   notadirectoryerror: notadirectoryerror
   permissionerror: σφάλμα_άδειας
-  processlookuperror: 'σφάλμααναζήτησηςδιεργασίας  #σφάλμα αναζήτησης διεργασίας'
-  timeouterror: 'σφάλμαχρονικούορίου  #σφάλμα χρονικού ορίου'
+  processlookuperror: σφάλμααναζήτησηςδιεργασίας  # σφάλμα αναζήτησης διεργασίας
+  timeouterror: σφάλμαχρονικούορίου  # σφάλμα χρονικού ορίου
   importerror: importerror
   modulenotfounderror: modulenotfounderror
   stopiteration: διακοπή_επαναληψης
@@ -151,15 +151,15 @@ exceptions:
   typeerror: τύπος_σφάλματος
   valueerror: ValueError
   unicodeerror: unicodeerror
-  unicodedecodeerror: 'σφάλμααποκωδικοποίησηςUnicode  #σφάλμα αποκωδικοποίησης Unicode'
+  unicodedecodeerror: σφάλμααποκωδικοποίησηςUnicode  # σφάλμα αποκωδικοποίησης Unicode
   unicodeencodeerror: unicodeencodeerror
   unicodetranslateerror: unicodetranslateerror
   runtimeerror: runtimeerror
   notimplementederror: σφάλμα_μη_υλοποίησης
-  recursionerror: 'αναδρομήσφάλματος  #αναδρομή σφάλματος'
-  referenceerror: 'σφάλμααναφοράς  #σφάλμα αναφοράς'
-  assertionerror: 'ασύνδετηκατάσταση  #ασύνδετη κατάσταση'
-  memoryerror: 'σφάλμαμνήμης  #σφάλμα μνήμης'
+  recursionerror: αναδρομήσφάλματος  # αναδρομή σφάλματος
+  referenceerror: σφάλμααναφοράς  # σφάλμα αναφοράς
+  assertionerror: ασύνδετηκατάσταση  # ασύνδετη κατάσταση
+  memoryerror: σφάλμαμνήμης  # σφάλμα μνήμης
   buffererror: σφαλεμά_προσωρινής_ζώνης_δεδομένων
   eoferror: εσφαλμάτο
   syntaxerror: σύνταξη_σφάλματος
@@ -169,14 +169,14 @@ exceptions:
   ioerror: ioerror
   warning: προειδοποίηση
   userwarning: προειδοποίηση_χρήστη
-  deprecationwarning: 'αποκλεισμόςπροειδοποίησης  #αποκλεισμός προειδοποίησης'
+  deprecationwarning: αποκλεισμόςπροειδοποίησης  # αποκλεισμός προειδοποίησης
   pendingdeprecationwarning: ειδοποίηση_για_ακυρότητα
   syntaxwarning: σύνταξηπροειδοποίηση
   runtimewarning: προειδοποίηση_εκτέλεσης
   futurewarning: προειδοποίηση_για_το_μελλον
   importwarning: προειδοποίηση_εισαγωγής
   unicodewarning: unicodewarning
-  byteswarning: 'προειδοποίησηbyteswarning  #προειδοποίηση byteswarning'
+  byteswarning: προειδοποίησηbyteswarning  # προειδοποίηση byteswarning
   resourcewarning: προειδοποίηση_πόρων
 metadata:
   python_version_min: '3.10'
