@@ -12,7 +12,7 @@ keywords:
   continue: 継続する
   def: 定義する
   del: 削除
-  elif: 'elseif  #else if'
+  elif: elseif  # else if
   else: それ以外の場合
   except: 除く
   finally: ついに
@@ -166,10 +166,10 @@ exceptions:
   indentationerror: インデントエラー
   taberror: タブエラー
   environmenterror: 環境エラー
-  ioerror: 'IOエラー  #I/O エラー'
+  ioerror: IOエラー  # I/O エラー
   warning: 警告
   userwarning: ユーザーワーニング
-  deprecationwarning: '警告非推奨  #警告: 非推奨'
+  deprecationwarning: 警告非推奨  # 警告: 非推奨
   pendingdeprecationwarning: 未使用の警告
   syntaxwarning: 構文警告
   runtimewarning: ランタイム警告

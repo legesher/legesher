@@ -40,16 +40,16 @@ keywords:
   match: соответствие
   case: случай
 builtins:
-  abs: 'абсолютноезначение  #абсолютное значение'
+  abs: абсолютноезначение  # абсолютное значение
   all: все
   any: каждый
   ascii: ascii
   bin: бинарный
-  breakpoint: 'отрывнойпункт  #отрывной пункт'
+  breakpoint: отрывнойпункт  # отрывной пункт
   callable: призываемый
   chr: чар
   compile: сборка
-  delattr: 'удалитьатрибут  #удалить атрибут'
+  delattr: удалитьатрибут  # удалить атрибут
   dir: dir
   divmod: дивмод
   enumerate: перечисление
@@ -57,9 +57,9 @@ builtins:
   exec: выполнить
   filter: фильтр
   format: формат
-  getattr: 'получитьатрибут  #получить атрибут'
+  getattr: получитьатрибут  # получить атрибут
   globals: глобалы
-  hasattr: 'имеетатрибут  #имеет атрибут'
+  hasattr: имеетатрибут  # имеет атрибут
   hash: хэш
   help: помощь
   hex: шестнадцатеричный
@@ -69,15 +69,15 @@ builtins:
   issubclass: подкласс
   iter: iterировать
   len: длина
-  locals: 'локальныепеременные  #локальные переменные'
+  locals: локальныепеременные  # локальные переменные
   map: мапировать
   max: максимум
   min: минимум
   next: следующий
   oct: октальный
   open: открыть
-  ord: 'кодсимвола  #код символа'
-  pow: 'вышестьвстепень  #вышесть в степень'
+  ord: кодсимвола  # код символа
+  pow: вышестьвстепень  # вышесть в степень
   print: печать
   range: диапазон
   repr: представление
@@ -92,93 +92,92 @@ builtins:
   bool: булев
   bytearray: bytearray
   bytes: байты
-  classmethod: 'классовыйметод  #классовый метод'
+  classmethod: классовыйметод  # классовый метод
   complex: сложный
   dict: словарь
   float: флоат
-  frozenset: 'фрозенсет  #фрозен-сет'
-  int: 'целоечисло  #целое число'
+  frozenset: фрозенсет  # фрозен-сет
+  int: целоечисло  # целое число
   list: список
   memoryview: memoryview
   object: объект
   property: свойство
   set: множество
-  staticmethod: 'статическийметод  #статический метод'
+  staticmethod: статическийметод  # статический метод
   str: строка
   super: супер
   tuple: кортеж
   ellipsis: запятые
-  notimplemented: 'нереализовано  #не реализовано'
+  notimplemented: нереализовано  # не реализовано
   aiter: айтер
   anext: следующий
 exceptions:
-  baseexception: 'базовоеисключение  #базовое исключение'
-  basegeneratorexit: 'выходбазогенератора  #выход базогенератора'
+  baseexception: базовоеисключение  # базовое исключение
+  basegeneratorexit: выходбазогенератора  # выход базогенератора
   exception: исключение
-  generatorexit: 'выходизгенератора  #выход из генератора'
-  systemexit: 'выходизсистемы  #выход из системы'
-  keyboardinterrupt: 'прерываниепоклавиатуре  #прерывание по клавиатуре'
-  arithmeticerror: 'арифметическаяошибка  #арифметическая ошибка'
-  floatingpointerror: 'ошибкаплавающейточки  #ошибка плавающей точки'
-  overflowerror: 'ошибкапереполнения  #ошибка переполнения'
-  zerodivisionerror: 'ошибканулевогоделения  #ошибка нулевого деления'
-  lookuperror: 'ошибкапоиска  #ошибка поиска'
+  generatorexit: выходизгенератора  # выход из генератора
+  systemexit: выходизсистемы  # выход из системы
+  keyboardinterrupt: прерываниепоклавиатуре  # прерывание по клавиатуре
+  arithmeticerror: арифметическаяошибка  # арифметическая ошибка
+  floatingpointerror: ошибкаплавающейточки  # ошибка плавающей точки
+  overflowerror: ошибкапереполнения  # ошибка переполнения
+  zerodivisionerror: ошибканулевогоделения  # ошибка нулевого деления
+  lookuperror: ошибкапоиска  # ошибка поиска
   indexerror: IndexError
-  keyerror: 'ошибкаключа  #ошибка ключа'
-  attributeerror: 'Ошибкаатрибута  #Ошибка атрибута'
-  nameerror: 'Ошибкаимени  #Ошибка имени'
-  unboundlocalerror: 'неопределенныйлокальныйошибок  #неопределенный локальный ошибок'
-  oserror: 'ошибкасистемы  #ошибка системы'
-  blockingioerror: 'блокировкавводавывода  #блокировка ввода-вывода'
-  childprocesserror: 'ошибкадочернегопроцесса  #ошибка дочернего процесса'
-  connectionerror: 'ошибкаподключения  #ошибка подключения'
-  brokenpipeerror: 'бракнопайперор  #бракно-пайп-ерор'
-  connectionabortederror: 'отказотсоединения  #отказ от соединения'
-  connectionrefusederror: 'отказотподключения  #отказ от подключения'
+  keyerror: ошибкаключа  # ошибка ключа
+  attributeerror: Ошибкаатрибута  # Ошибка атрибута
+  nameerror: Ошибкаимени  # Ошибка имени
+  unboundlocalerror: неопределенныйлокальныйошибок  # неопределенный локальный ошибок
+  oserror: ошибкасистемы  # ошибка системы
+  blockingioerror: блокировкавводавывода  # блокировка ввода-вывода
+  childprocesserror: ошибкадочернегопроцесса  # ошибка дочернего процесса
+  connectionerror: ошибкаподключения  # ошибка подключения
+  brokenpipeerror: бракнопайперор  # бракно-пайп-ерор
+  connectionabortederror: отказотсоединения  # отказ от соединения
+  connectionrefusederror: отказотподключения  # отказ от подключения
   connectionreseterror: connectionreseterror
-  fileexistserror: 'ошибкасуществованияфайла  #ошибка существования файла'
+  fileexistserror: ошибкасуществованияфайла  # ошибка существования файла
   filenotfounderror: ошибка_не_найдена_файла
-  interruptederror: 'ошибкапрерывания  #ошибка прерывания'
+  interruptederror: ошибкапрерывания  # ошибка прерывания
   isadirectoryerror: isadirectoryerror
   notadirectoryerror: ошибка_не_явления_каталогa
-  permissionerror: 'ошибкаразрешения  #ошибка разрешения'
+  permissionerror: ошибкаразрешения  # ошибка разрешения
   processlookuperror: processlookuperror
-  timeouterror: 'таймаут  #тайм-аут'
+  timeouterror: таймаут  # тайм-аут
   importerror: импорт_ошибка
-  modulenotfounderror: 'ошибкамодуляненайдена  #ошибка модуля не найдена'
+  modulenotfounderror: ошибкамодуляненайдена  # ошибка модуля не найдена
   stopiteration: стопитерация
   stopasynciteration: стоп_асинхронное_итерация
   typeerror: типошаг
   valueerror: ValueError
-  unicodeerror: 'ошибкауниткодирования  #ошибка униткодирования'
-  unicodedecodeerror: 'ошибкадекодированияунитногокода  #ошибка декодирования унитного
-    кода'
+  unicodeerror: ошибкауниткодирования  # ошибка униткодирования
+  unicodedecodeerror: ошибкадекодированияунитногокода  # ошибка декодирования унитного кода
   unicodeencodeerror: unicodeencodeerror
-  unicodetranslateerror: 'ошибкапереводаUnicode  #ошибка перевода Unicode'
+  unicodetranslateerror: ошибкапереводаUnicode  # ошибка перевода Unicode
   runtimeerror: runtimeerror
-  notimplementederror: 'ошибканереализации  #ошибка не реализации'
-  recursionerror: 'рекурсионнаяошибка  #рекурсионная ошибка'
-  referenceerror: 'ошибкассылки  #ошибка ссылки'
-  assertionerror: 'ошибкаутверждения  #ошибка утверждения'
-  memoryerror: 'ошибкапамяти  #ошибка памяти'
-  buffererror: 'ошибкабуфера  #ошибка буфера'
-  eoferror: 'ошибкаEO  #ошибка E/O'
-  syntaxerror: 'синтаксическаяошибка  #синтаксическая ошибка'
-  indentationerror: 'ошибкаотступа  #ошибка отступа'
-  taberror: 'ошибкатабулятора  #ошибка табулятора'
-  environmenterror: 'ошибкасреды  #ошибка среды'
-  ioerror: 'ошибкавводавывода  #ошибка ввода/вывода'
+  notimplementederror: ошибканереализации  # ошибка не реализации
+  recursionerror: рекурсионнаяошибка  # рекурсионная ошибка
+  referenceerror: ошибкассылки  # ошибка ссылки
+  assertionerror: ошибкаутверждения  # ошибка утверждения
+  memoryerror: ошибкапамяти  # ошибка памяти
+  buffererror: ошибкабуфера  # ошибка буфера
+  eoferror: ошибкаEO  # ошибка E/O
+  syntaxerror: синтаксическаяошибка  # синтаксическая ошибка
+  indentationerror: ошибкаотступа  # ошибка отступа
+  taberror: ошибкатабулятора  # ошибка табулятора
+  environmenterror: ошибкасреды  # ошибка среды
+  ioerror: ошибкавводавывода  # ошибка ввода/вывода
   warning: предупреждение
   userwarning: userwarning
-  deprecationwarning: 'предупреждениеобустаревании  #предупреждение об устаревании'
-  pendingdeprecationwarning: 'предупреждениеобустаревании  #предупреждение об устаревании'
-  syntaxwarning: 'синтаксическоепредупреждение  #синтаксическое предупреждение'
+  deprecationwarning: предупреждениеобустаревании  # предупреждение об устаревании
+  pendingdeprecationwarning: предупреждениеобустаревании  # предупреждение об устаревании
+  syntaxwarning: синтаксическоепредупреждение  # синтаксическое предупреждение
   runtimewarning: runtimewarning
-  futurewarning: 'предупреждениеобудущем  #предупреждение о будущем'
-  importwarning: 'предупреждениеобимпорте  #предупреждение об импорте'
+  futurewarning: предупреждениеобудущем  # предупреждение о будущем
+  importwarning: предупреждениеобимпорте  # предупреждение об импорте
   unicodewarning: unicodewarning
-  byteswarning: 'предупреждениеобайтах  #предупреждение о байтах'
-  resourcewarning: 'предупреждениеоресурсах  #предупреждение о ресурсах'
+  byteswarning: предупреждениеобайтах  # предупреждение о байтах
+  resourcewarning: предупреждениеоресурсах  # предупреждение о ресурсах
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

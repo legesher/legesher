@@ -12,7 +12,7 @@ keywords:
   continue: continuar
   def: def
   del: del
-  elif: 'senão  #se não'
+  elif: senão  # se não
   else: senão
   except: excepto
   finally: finalmente
@@ -24,7 +24,7 @@ keywords:
   in: em
   is: é
   lambda: lambda
-  nonlocal: 'nãolocal  #não local'
+  nonlocal: nãolocal  # não local
   not: não
   or: ou
   pass: passar
@@ -40,7 +40,7 @@ keywords:
   match: combinar
   case: caso
 builtins:
-  abs: 'valorabsoluto  #valor absoluto'
+  abs: valorabsoluto  # valor absoluto
   all: todos
   any: qualquer
   ascii: ascii
@@ -59,14 +59,14 @@ builtins:
   format: formatar
   getattr: obter_atributo
   globals: globais
-  hasattr: 'teratributo  #ter atributo'
+  hasattr: teratributo  # ter atributo
   hash: hash
   help: ajuda
   hex: hex
   id: identificador
   input: input
   isinstance: isinstance
-  issubclass: 'subclassede  #subclasse de'
+  issubclass: subclassede  # subclasse de
   iter: iterar
   len: comprimento
   locals: locais
@@ -77,7 +77,7 @@ builtins:
   oct: octal
   open: abrir
   ord: ord
-  pow: 'eleelevadoapotênciade  #ele elevado a potência de'
+  pow: eleelevadoapotênciade  # ele elevado a potência de
   print: imprimir
   range: faixa
   repr: representação
@@ -92,14 +92,14 @@ builtins:
   bool: bool
   bytearray: bytearray
   bytes: bytes
-  classmethod: 'classemétodo  #classe método'
+  classmethod: classemétodo  # classe método
   complex: complexo
   dict: dicionário
   float: float
-  frozenset: 'conjuntocongelado  #conjunto congelado'
+  frozenset: conjuntocongelado  # conjunto congelado
   int: int
   list: lista
-  memoryview: 'viewdememória  #view de memória'
+  memoryview: viewdememória  # view de memória
   object: objeto
   property: propriedade
   set: conjunto
@@ -108,78 +108,76 @@ builtins:
   super: super
   tuple: tupla
   ellipsis: ellipse
-  notimplemented: 'nãoimplementado  #não implementado'
+  notimplemented: nãoimplementado  # não implementado
   aiter: aiter
   anext: próximo
 exceptions:
   baseexception: BaseException
-  basegeneratorexit: 'basegeradordesaída  #basegerador de saída'
+  basegeneratorexit: basegeradordesaída  # basegerador de saída
   exception: exceção
-  generatorexit: 'geradordesaída  #gerador de saída'
-  systemexit: 'saídadosistema  #saída do sistema'
-  keyboardinterrupt: 'interrupçãodoteclado  #interrupção do teclado'
-  arithmeticerror: 'erroaritmético  #erro aritmético'
-  floatingpointerror: 'errodeponteflutuante  #erro de ponte flutuante'
-  overflowerror: 'errodeestouro  #erro de estouro'
-  zerodivisionerror: 'errodedivisãoporzero  #erro de divisão por zero'
-  lookuperror: 'errodepesquisa  #erro de pesquisa'
-  indexerror: 'ErrodeÍndice  #Erro de Índice'
-  keyerror: 'errodechave  #erro de chave'
-  attributeerror: 'errodeatributo  #erro de atributo'
-  nameerror: 'ErrodeNome  #Erro de Nome'
-  unboundlocalerror: 'errodereferêncialocalnãodefinida  #erro de referência local
-    não definida'
-  oserror: 'errodesistema  #erro de sistema'
-  blockingioerror: 'errodeESbloqueante  #erro de E/S bloqueante'
-  childprocesserror: 'errodeprocessofilho  #erro de processo filho'
-  connectionerror: 'errodeconexão  #erro de conexão'
-  brokenpipeerror: 'errodepipequebrada  #erro de pipe quebrada'
-  connectionabortederror: 'errodeabortarconexão  #erro de abortar conexão'
-  connectionrefusederror: 'erroderecusadeconexão  #erro de recusa de conexão'
+  generatorexit: geradordesaída  # gerador de saída
+  systemexit: saídadosistema  # saída do sistema
+  keyboardinterrupt: interrupçãodoteclado  # interrupção do teclado
+  arithmeticerror: erroaritmético  # erro aritmético
+  floatingpointerror: errodeponteflutuante  # erro de ponte flutuante
+  overflowerror: errodeestouro  # erro de estouro
+  zerodivisionerror: errodedivisãoporzero  # erro de divisão por zero
+  lookuperror: errodepesquisa  # erro de pesquisa
+  indexerror: ErrodeÍndice  # Erro de Índice
+  keyerror: errodechave  # erro de chave
+  attributeerror: errodeatributo  # erro de atributo
+  nameerror: ErrodeNome  # Erro de Nome
+  unboundlocalerror: errodereferêncialocalnãodefinida  # erro de referência local não definida
+  oserror: errodesistema  # erro de sistema
+  blockingioerror: errodeESbloqueante  # erro de E/S bloqueante
+  childprocesserror: errodeprocessofilho  # erro de processo filho
+  connectionerror: errodeconexão  # erro de conexão
+  brokenpipeerror: errodepipequebrada  # erro de pipe quebrada
+  connectionabortederror: errodeabortarconexão  # erro de abortar conexão
+  connectionrefusederror: erroderecusadeconexão  # erro de recusa de conexão
   connectionreseterror: resetar_conexão
-  fileexistserror: 'errodearquivojáexistente  #erro de arquivo já existente'
-  filenotfounderror: 'errodearquivonãoencontrado  #erro de arquivo não encontrado'
-  interruptederror: 'errodeinterrupção  #erro de interrupção'
-  isadirectoryerror: 'errodediretórioinválido  #erro de diretório inválido'
-  notadirectoryerror: 'errodenãoserumdiretório  #erro de não ser um diretório'
-  permissionerror: 'errodepermissão  #erro de permissão'
-  processlookuperror: 'errodeprocuração  #erro de procuração'
-  timeouterror: 'errodetempolimite  #erro de tempo limite'
-  importerror: 'errodeimportação  #erro de importação'
-  modulenotfounderror: 'errodemódulonãoencontrado  #erro de módulo não encontrado'
+  fileexistserror: errodearquivojáexistente  # erro de arquivo já existente
+  filenotfounderror: errodearquivonãoencontrado  # erro de arquivo não encontrado
+  interruptederror: errodeinterrupção  # erro de interrupção
+  isadirectoryerror: errodediretórioinválido  # erro de diretório inválido
+  notadirectoryerror: errodenãoserumdiretório  # erro de não ser um diretório
+  permissionerror: errodepermissão  # erro de permissão
+  processlookuperror: errodeprocuração  # erro de procuração
+  timeouterror: errodetempolimite  # erro de tempo limite
+  importerror: errodeimportação  # erro de importação
+  modulenotfounderror: errodemódulonãoencontrado  # erro de módulo não encontrado
   stopiteration: stopiteration
-  stopasynciteration: 'pararaiteraçãoassíncrona  #parar a iteração assíncrona'
-  typeerror: 'errodetipo  #erro de tipo'
+  stopasynciteration: pararaiteraçãoassíncrona  # parar a iteração assíncrona
+  typeerror: errodetipo  # erro de tipo
   valueerror: ValueError
-  unicodeerror: 'errodeunicode  #erro de unicode'
-  unicodedecodeerror: 'errodedecodificaçãodeUnicode  #erro de decodificação de Unicode'
-  unicodeencodeerror: 'errordecodificaçãounicode  #error de codificação unicode'
-  unicodetranslateerror: 'errodetraduçãodeunicod  #erro de tradução de unicod'
-  runtimeerror: 'errodetempodeexecução  #erro de tempo de execução'
-  notimplementederror: 'errodeimplementaçãonãorealizada  #erro de implementação não
-    realizada'
-  recursionerror: 'erroderecursão  #erro de recursão'
-  referenceerror: 'errodereferência  #erro de referência'
-  assertionerror: 'errodeafirmação  #erro de afirmação'
-  memoryerror: 'errodememória  #erro de memória'
-  buffererror: 'errodebuffer  #erro de buffer'
-  eoferror: 'errodeeof  #erro de eof'
-  syntaxerror: 'errodesintaxe  #erro de sintaxe'
-  indentationerror: 'errodeindentação  #erro de indentação'
-  taberror: 'errodetabulação  #erro de tabulação'
-  environmenterror: 'errodeambiente  #erro de ambiente'
-  ioerror: 'errodeES  #erro de E/S'
+  unicodeerror: errodeunicode  # erro de unicode
+  unicodedecodeerror: errodedecodificaçãodeUnicode  # erro de decodificação de Unicode
+  unicodeencodeerror: errordecodificaçãounicode  # error de codificação unicode
+  unicodetranslateerror: errodetraduçãodeunicod  # erro de tradução de unicod
+  runtimeerror: errodetempodeexecução  # erro de tempo de execução
+  notimplementederror: errodeimplementaçãonãorealizada  # erro de implementação não realizada
+  recursionerror: erroderecursão  # erro de recursão
+  referenceerror: errodereferência  # erro de referência
+  assertionerror: errodeafirmação  # erro de afirmação
+  memoryerror: errodememória  # erro de memória
+  buffererror: errodebuffer  # erro de buffer
+  eoferror: errodeeof  # erro de eof
+  syntaxerror: errodesintaxe  # erro de sintaxe
+  indentationerror: errodeindentação  # erro de indentação
+  taberror: errodetabulação  # erro de tabulação
+  environmenterror: errodeambiente  # erro de ambiente
+  ioerror: errodeES  # erro de E/S
   warning: aviso
-  userwarning: 'avisodousuário  #aviso do usuário'
-  deprecationwarning: 'avisodedepreciação  #aviso de depreciação'
-  pendingdeprecationwarning: 'avisodedepreciaçãopendente  #aviso de depreciação pendente'
-  syntaxwarning: 'avisodesintaxe  #aviso de sintaxe'
-  runtimewarning: 'avisodetempodeexecução  #aviso de tempo de execução'
+  userwarning: avisodousuário  # aviso do usuário
+  deprecationwarning: avisodedepreciação  # aviso de depreciação
+  pendingdeprecationwarning: avisodedepreciaçãopendente  # aviso de depreciação pendente
+  syntaxwarning: avisodesintaxe  # aviso de sintaxe
+  runtimewarning: avisodetempodeexecução  # aviso de tempo de execução
   futurewarning: aviso_futuro
-  importwarning: 'avisodeimportação  #aviso de importação'
-  unicodewarning: 'avisodeunicode  #aviso de unicode'
-  byteswarning: 'avisodebytes  #aviso de bytes'
-  resourcewarning: 'avisoderecurso  #aviso de recurso'
+  importwarning: avisodeimportação  # aviso de importação
+  unicodewarning: avisodeunicode  # aviso de unicode
+  byteswarning: avisodebytes  # aviso de bytes
+  resourcewarning: avisoderecurso  # aviso de recurso
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

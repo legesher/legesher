@@ -5,8 +5,8 @@ extends: 3.10.yml
 keywords:
   except*: except
 exceptions:
-  exceptiongroup: 'özeldurumgrubu  #özel durum grubu'
-  baseexceptiongroup: 'temelistisnagrubu  #temel istisna grubu'
+  exceptiongroup: özeldurumgrubu  # özel durum grubu
+  baseexceptiongroup: temelistisnagrubu  # temel istisna grubu
   encodingwarning: encodingwarning
 metadata:
   python_version_min: '3.11'

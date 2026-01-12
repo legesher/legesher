@@ -11,8 +11,8 @@ keywords:
   class: klass
   continue: fortsätt
   def: definiere
-  del: 'tabort  #ta bort'
-  elif: 'annansom  #annans om'
+  del: tabort  # ta bort
+  elif: annansom  # annans om
   else: annär
   except: except
   finally: slutliggare
@@ -23,7 +23,7 @@ keywords:
   import: importera
   in: i
   is: ' är '
-  lambda: 'lambdafunktionen  #lambda-funktionen'
+  lambda: lambdafunktionen  # lambda-funktionen
   nonlocal: ejlokal
   not: not
   or: eller
@@ -49,7 +49,7 @@ builtins:
   callable: användbar
   chr: karakter
   compile: kompilera
-  delattr: 'tabortettattribut  #ta bort ett attribut'
+  delattr: tabortettattribut  # ta bort ett attribut
   dir: dir
   divmod: divmod
   enumerate: lista
@@ -57,9 +57,9 @@ builtins:
   exec: exekvering
   filter: filtera
   format: format
-  getattr: 'attfåtillgångtillettattribut  #att få tillgång till ett attribut'
+  getattr: attfåtillgångtillettattribut  # att få tillgång till ett attribut
   globals: globala
-  hasattr: 'attha  #att ha'
+  hasattr: attha  # att ha
   hash: hasha
   help: hjelp
   hex: hex
@@ -78,7 +78,7 @@ builtins:
   open: öppna
   ord: ord
   pow: upphöj
-  print: 'skrivaut  #skriva ut'
+  print: skrivaut  # skriva ut
   range: omfattning
   repr: repr
   reversed: omvärrdig
@@ -103,7 +103,7 @@ builtins:
   object: objekt
   property: egenskap
   set: uppsat
-  staticmethod: 'statiskmetod  #statisk metod'
+  staticmethod: statiskmetod  # statisk metod
   str: sträng
   super: super
   tuple: tuple
@@ -115,10 +115,10 @@ exceptions:
   baseexception: baseexception
   basegeneratorexit: basegeneratorutgående
   exception: undantag
-  generatorexit: 'generatörsutgång  #generatörs utgång'
+  generatorexit: generatörsutgång  # generatörs utgång
   systemexit: systemutgång
   keyboardinterrupt: tasttröttning
-  arithmeticerror: 'aritmetiskfel  #aritmetisk fel'
+  arithmeticerror: aritmetiskfel  # aritmetisk fel
   floatingpointerror: floatingpointerror
   overflowerror: overflowerror
   zerodivisionerror: nolldelningstjänst
@@ -127,7 +127,7 @@ exceptions:
   keyerror: nyckelfel
   attributeerror: attributfeil
   nameerror: Namnfeltsfel
-  unboundlocalerror: 'obundenlokalfel  #obunden lokal fel'
+  unboundlocalerror: obundenlokalfel  # obunden lokal fel
   oserror: osfeil
   blockingioerror: blockingioerror
   childprocesserror: childprocessfeil
@@ -137,17 +137,17 @@ exceptions:
   connectionrefusederror: connectionrefusederror
   connectionreseterror: connectionresetting
   fileexistserror: filexistserror
-  filenotfounderror: 'filenfinnsinte  #filen finns inte'
+  filenotfounderror: filenfinnsinte  # filen finns inte
   interruptederror: interrupterror
   isadirectoryerror: isadirectoryerror
   notadirectoryerror: not_a_directory_error
   permissionerror: behörighetshavelse
   processlookuperror: processlookupfeil
-  timeouterror: 'tidsgränssöttning  #tidsgränss öttning'
+  timeouterror: tidsgränssöttning  # tidsgränss öttning
   importerror: importfeil
   modulenotfounderror: modulenotfounderror
   stopiteration: stoppiteration
-  stopasynciteration: 'stoppaasynkrotisering  #stoppa asynkrotisering'
+  stopasynciteration: stoppaasynkrotisering  # stoppa asynkrotisering
   typeerror: typeerror
   valueerror: värdefel
   unicodeerror: unicodefeil
@@ -166,11 +166,11 @@ exceptions:
   indentationerror: indentationfel
   taberror: tabbortfellet
   environmenterror: miljöfel
-  ioerror: 'iofel  #io-fel'
+  ioerror: iofel  # io-fel
   warning: varning
   userwarning: användarvarning
   deprecationwarning: deprektionsvarning
-  pendingdeprecationwarning: 'väntandeavskrivningsvarning  #väntande avskrivningsvarning'
+  pendingdeprecationwarning: väntandeavskrivningsvarning  # väntande avskrivningsvarning
   syntaxwarning: syntaxvarning
   runtimewarning: runtimewarning
   futurewarning: futurewarning

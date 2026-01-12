@@ -15,7 +15,7 @@ keywords:
   elif: muuttujilla
   else: muuttuja
   except: except
-  finally: 'seuraaaina  #seuraa aina'
+  finally: seuraaaina  # seuraa aina
   for: forza
   from: kaa
   global: yhteensopiva
@@ -118,28 +118,28 @@ exceptions:
   generatorexit: generatorexit
   systemexit: jäätäyttymistä
   keyboardinterrupt: näkyvä_avautumin
-  arithmeticerror: 'aritmetinenvirhe  #aritmetinen virhe'
-  floatingpointerror: 'floatpointerrori  #float-pointerrori'
+  arithmeticerror: aritmetinenvirhe  # aritmetinen virhe
+  floatingpointerror: floatpointerrori  # float-pointerrori
   overflowerror: yliulostusvirhe
   zerodivisionerror: nulldivisiooneusi
   lookuperror: jälkikärsimyssä
   indexerror: indexerrori
   keyerror: avaimenvääritys
-  attributeerror: 'attribuutivirhe  #attribuuti-virhe'
-  nameerror: 'nimeenvirhe  #nimeen virhe'
+  attributeerror: attribuutivirhe  # attribuuti-virhe
+  nameerror: nimeenvirhe  # nimeen virhe
   unboundlocalerror: seltäimätyntyt
   oserror: oserrori
   blockingioerror: blockingioerrori
   childprocesserror: childprocesserrori
   connectionerror: yhteensopimustuomereista
   brokenpipeerror: pisteenlomakärsitys
-  connectionabortederror: 'yhteensulkeabortederror  #yhteensulke-abortederror'
+  connectionabortederror: yhteensulkeabortederror  # yhteensulke-abortederror
   connectionrefusederror: yhteensopimustodentuloma
-  connectionreseterror: 'yhteysreijimivirhe  #yhteysreijimi-virhe'
+  connectionreseterror: yhteysreijimivirhe  # yhteysreijimi-virhe
   fileexistserror: tietolaman_väärin_määritelystä
-  filenotfounderror: 'tietystäpuuttumatonvirhe  #tietystä puuttumaton virhe'
+  filenotfounderror: tietystäpuuttumatonvirhe  # tietystä puuttumaton virhe
   interruptederror: kesäyhteensopimuksen
-  isadirectoryerror: 'isädirکتorivirhe  #isädirکتori-virhe'
+  isadirectoryerror: isädirکتorivirhe  # isädirکتori-virhe
   notadirectoryerror: ei_rekisteri_minkä_siirryttävää_hakemistoa
   permissionerror: oikeudenviesti
   processlookuperror: processlookupvirhe
@@ -149,8 +149,8 @@ exceptions:
   stopiteration: stoppiteracija
   stopasynciteration: pyörittymispyytämistä
   typeerror: typeerrori
-  valueerror: 'arvovirhe  #arvo virhe'
-  unicodeerror: 'unicodevirhe  #unicode-virhe'
+  valueerror: arvovirhe  # arvo virhe
+  unicodeerror: unicodevirhe  # unicode-virhe
   unicodedecodeerror: unicodedecodeerrori
   unicodeencodeerror: unicodeencodeerrori
   unicodetranslateerror: unicodetranslateerrori
@@ -158,25 +158,24 @@ exceptions:
   notimplementederror: notimplementederror
   recursionerror: rekursioonvirhe
   referenceerror: viitevirhe
-  assertionerror: 'väärentamatontunnus  #väärentamaton tunnus'
+  assertionerror: väärentamatontunnus  # väärentamaton tunnus
   memoryerror: memoryerrori
   buffererror: buffererrori
   eoferror: väärinvalintaa
   syntaxerror: syntaxerrori
   indentationerror: indentationerrori
   taberror: taberrori
-  environmenterror: 'ympäröivävirhe  #ympäröivä virhe'
-  ioerror: 'iovirhe  #io-virhe'
+  environmenterror: ympäröivävirhe  # ympäröivä virhe
+  ioerror: iovirhe  # io-virhe
   warning: varotus
   userwarning: käyttöihme
-  deprecationwarning: 'vikaavarmaan  #vikaa varmaan'
-  pendingdeprecationwarning: 'odatettavavaarallinenvarmaus  #odatettava vaarallinen
-    varmaus'
+  deprecationwarning: vikaavarmaan  # vikaa varmaan
+  pendingdeprecationwarning: odatettavavaarallinenvarmaus  # odatettava vaarallinen varmaus
   syntaxwarning: syntaxwarning
-  runtimewarning: 'jälkikäyttövariminenvararma  #jälkikäyttövariminen vararma'
+  runtimewarning: jälkikäyttövariminenvararma  # jälkikäyttövariminen vararma
   futurewarning: seuraavahäntääs
-  importwarning: 'avustetuksenimporttaminen  #avustetuksen importtaminen'
-  unicodewarning: 'unicodevarnua  #unicode-varnua'
+  importwarning: avustetuksenimporttaminen  # avustetuksen importtaminen
+  unicodewarning: unicodevarnua  # unicode-varnua
   byteswarning: bajtivardi
   resourcewarning: resurssivarnauha
 metadata:

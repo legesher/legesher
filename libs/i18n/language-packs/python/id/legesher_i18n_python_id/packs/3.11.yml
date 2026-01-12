@@ -5,9 +5,9 @@ extends: 3.10.yml
 keywords:
   except*: kecuali
 exceptions:
-  exceptiongroup: 'kelompokpengecualian  #kelompok pengecualian'
-  baseexceptiongroup: 'kelompokpengecualiandasar  #kelompok pengecualian dasar'
-  encodingwarning: 'peringatanpengkodean  #peringatan pengkodean'
+  exceptiongroup: kelompokpengecualian  # kelompok pengecualian
+  baseexceptiongroup: kelompokpengecualiandasar  # kelompok pengecualian dasar
+  encodingwarning: peringatanpengkodean  # peringatan pengkodean
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'

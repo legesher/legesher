@@ -16,7 +16,7 @@ keywords:
   continue: 继续
   def: 定义
   del: del
-  elif: 'elseif  #else if'
+  elif: elseif  # else if
   else: 否则
   except: except
   finally: 最后

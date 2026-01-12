@@ -5,7 +5,7 @@ extends: 3.10.yml
 keywords:
   except*: exceptelni
 exceptions:
-  exceptiongroup: 'exceptiongroupel  #exceptiongroup-el'
+  exceptiongroup: exceptiongroupel  # exceptiongroup-el
   baseexceptiongroup: baseexceptioncsoport
   encodingwarning: encodingwarning
 metadata:

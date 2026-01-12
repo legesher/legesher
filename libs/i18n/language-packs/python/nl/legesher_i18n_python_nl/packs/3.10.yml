@@ -15,7 +15,7 @@ keywords:
   elif: alswel
   else: anders
   except: except
-  finally: 'tenslotte  #ten slotte'
+  finally: tenslotte  # ten slotte
   for: voor
   from: van
   global: wereldwijde
@@ -24,7 +24,7 @@ keywords:
   in: in
   is: is
   lambda: lambda
-  nonlocal: 'nietlokaal  #niet-lokaal'
+  nonlocal: nietlokaal  # niet-lokaal
   not: niet
   or: of
   pass: passeren
@@ -57,8 +57,8 @@ builtins:
   exec: uitvoeren
   filter: filteren
   format: opmaak
-  getattr: 'hetophalenvaneenkenmerk  #het ophalen van een kenmerk'
-  globals: 'deglobalevariabelen  #de globale variabelen'
+  getattr: hetophalenvaneenkenmerk  # het ophalen van een kenmerk
+  globals: deglobalevariabelen  # de globale variabelen
   hasattr: heeftattr
   hash: hash
   help: help
@@ -77,7 +77,7 @@ builtins:
   oct: octaal
   open: openen
   ord: ord
-  pow: 'demacht  #de macht'
+  pow: demacht  # de macht
   print: afdrukken
   range: bereik
   repr: weergave
@@ -103,22 +103,22 @@ builtins:
   object: object
   property: eigenschap
   set: set
-  staticmethod: 'statischemethode  #statische methode'
+  staticmethod: statischemethode  # statische methode
   str: tekenreeks
   super: super
   tuple: tupel
-  ellipsis: 'deverteldeterm  #de vertelde term'
-  notimplemented: 'nietgeïmplementeerd  #niet geïmplementeerd'
+  ellipsis: deverteldeterm  # de vertelde term
+  notimplemented: nietgeïmplementeerd  # niet geïmplementeerd
   aiter: aiter
   anext: anext
 exceptions:
-  baseexception: 'baseuitzondering  #base-uitzondering'
+  baseexception: baseuitzondering  # base-uitzondering
   basegeneratorexit: basegeneratoruitgang
   exception: uitzondering
   generatorexit: generatoruitgang
   systemexit: systeemafsluiting
   keyboardinterrupt: toetsenbordonderbreking
-  arithmeticerror: 'aritmetischefout  #aritmetische fout'
+  arithmeticerror: aritmetischefout  # aritmetische fout
   floatingpointerror: floatingpointerror
   overflowerror: overflowerror
   zerodivisionerror: nuldeeltverdelingfout
@@ -127,7 +127,7 @@ exceptions:
   keyerror: sleutelfout
   attributeerror: AttributeError
   nameerror: Naamfout
-  unboundlocalerror: 'ongebondenlokalefout  #ongebonden lokale fout'
+  unboundlocalerror: ongebondenlokalefout  # ongebonden lokale fout
   oserror: osfout
   blockingioerror: blockingioerror
   childprocesserror: childprocessfout
@@ -137,15 +137,15 @@ exceptions:
   connectionrefusederror: connection_refused_error
   connectionreseterror: connectionresetfout
   fileexistserror: fileexistserror
-  filenotfounderror: 'filenietgevondenfout  #file niet gevonden fout'
-  interruptederror: 'interruptiefout  #interruptie-fout'
+  filenotfounderror: filenietgevondenfout  # file niet gevonden fout
+  interruptederror: interruptiefout  # interruptie-fout
   isadirectoryerror: isadirectoryerror
-  notadirectoryerror: 'nietbestandfout  #niet-bestand-fout'
-  permissionerror: 'permissionerror  #permission error'
+  notadirectoryerror: nietbestandfout  # niet-bestand-fout
+  permissionerror: permissionerror  # permission error
   processlookuperror: processlookupfout
   timeouterror: timeouterror
   importerror: importerror
-  modulenotfounderror: 'modulenietgevondenfout  #module niet gevonden fout'
+  modulenotfounderror: modulenietgevondenfout  # module niet gevonden fout
   stopiteration: stopiteratie
   stopasynciteration: stopasynciteratie
   typeerror: typefout
@@ -155,10 +155,10 @@ exceptions:
   unicodeencodeerror: unicodeencodefout
   unicodetranslateerror: unicodetranslatefout
   runtimeerror: runtimeerror
-  notimplementederror: 'nietimplementatiefout  #niet-implementatie fout'
-  recursionerror: 'recursiefout  #recursie-fout'
-  referenceerror: 'referentiefout  #referentie-fout'
-  assertionerror: 'assertiefout  #assertie-fout'
+  notimplementederror: nietimplementatiefout  # niet-implementatie fout
+  recursionerror: recursiefout  # recursie-fout
+  referenceerror: referentiefout  # referentie-fout
+  assertionerror: assertiefout  # assertie-fout
   memoryerror: memoryerror
   buffererror: bufferfout
   eoferror: eoferror
@@ -170,7 +170,7 @@ exceptions:
   warning: waarschuwing
   userwarning: gebruikerwaarschuwing
   deprecationwarning: depreciatiewaarschuwing
-  pendingdeprecationwarning: 'pendingdeprecationwaarschuwing  #pending deprecationwaarschuwing'
+  pendingdeprecationwarning: pendingdeprecationwaarschuwing  # pending deprecationwaarschuwing
   syntaxwarning: syntaxwaarschuwing
   runtimewarning: runtimewaarschuwing
   futurewarning: futurewarning

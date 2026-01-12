@@ -21,10 +21,10 @@ keywords:
   global: globális
   if: ha
   import: importál
-  in: 'a(z)in  #a(z) in'
+  in: a(z)in  # a(z) in
   is: ezen
   lambda: lambda
-  nonlocal: 'nemházug  #nem-házug'
+  nonlocal: nemházug  # nem-házug
   not: nem
   or: vagy
   pass: passz
@@ -41,7 +41,7 @@ keywords:
   case: eset
 builtins:
   abs: absz
-  all: 'azösszeselemet  #az összes elemet'
+  all: azösszeselemet  # az összes elemet
   any: bármilyen
   ascii: ASCII
   bin: bin
@@ -49,7 +49,7 @@ builtins:
   callable: hivatázható
   chr: karakter
   compile: kompilál
-  delattr: 'törölaszemét  #töröl a szemét'
+  delattr: törölaszemét  # töröl a szemét
   dir: dir
   divmod: divmod
   enumerate: enumerate
@@ -63,13 +63,13 @@ builtins:
   hash: hasholni
   help: dokumentáció
   hex: hex
-  id: 'azobjektegyediazonosítója  #az objekt egyedi azonosítója'
+  id: azobjektegyediazonosítója  # az objekt egyedi azonosítója
   input: beállítás
   isinstance: isinstance
-  issubclass: 'apodrógosztatásértékügy  #a podróg-osztatás-érték-ügy'
+  issubclass: apodrógosztatásértékügy  # a podróg-osztatás-érték-ügy
   iter: iteráció
   len: hossz
-  locals: 'ahelyiváltozótáblát  #a helyi változótáblát'
+  locals: ahelyiváltozótáblát  # a helyi változótáblát
   map: leütkezni
   max: maximális
   min: min
@@ -89,21 +89,21 @@ builtins:
   sum: sum
   vars: variablak
   zip: zip
-  bool: 'logikaiértékek  #logikai értékek'
+  bool: logikaiértékek  # logikai értékek
   bytearray: bytearray
   bytes: bajtok
-  classmethod: 'theclassmethod  #the classmethod'
+  classmethod: theclassmethod  # the classmethod
   complex: komplex
   dict: készlet
   float: float
   frozenset: frozenset
-  int: 'egnumm  #eg numm'
+  int: egnumm  # eg numm
   list: lista
   memoryview: memoryview
   object: objektum
   property: térség
   set: beágyazott
-  staticmethod: 'statickýmetod  #statický metod'
+  staticmethod: statickýmetod  # statický metod
   str: str
   super: super
   tuple: tálto
@@ -115,71 +115,69 @@ exceptions:
   baseexception: BaseException
   basegeneratorexit: basegenerator_exit
   exception: výjimka
-  generatorexit: 'generátorkimenet  #generátor-kimenet'
-  systemexit: 'szeretniarendszer  #szeretni a rendszer'
+  generatorexit: generátorkimenet  # generátor-kimenet
+  systemexit: szeretniarendszer  # szeretni a rendszer
   keyboardinterrupt: kiborra_hajtás
-  arithmeticerror: 'aritmetikaihiba  #aritmetikai hiba'
-  floatingpointerror: 'floatoshivatázásihiány  #floatos-hivatázási-hiány'
+  arithmeticerror: aritmetikaihiba  # aritmetikai hiba
+  floatingpointerror: floatoshivatázásihiány  # floatos-hivatázási-hiány
   overflowerror: overflowerror
-  zerodivisionerror: 'nulleszütségosszámososztályosváltozó  #nulleszütségos számos
-    osztályos változó'
-  lookuperror: 'keresésihiba  #keresési hiba'
+  zerodivisionerror: nulleszütségosszámososztályosváltozó  # nulleszütségos számos osztályos változó
+  lookuperror: keresésihiba  # keresési hiba
   indexerror: indexerror
-  keyerror: 'akulcsszeretét  #a kulcsszeretét'
+  keyerror: akulcsszeretét  # a kulcsszeretét
   attributeerror: attributetorszivásítás
-  nameerror: 'Névjábólhiányos  #Névjából hiányos'
-  unboundlocalerror: 'belsőnévtöréshatásra  #belső névtörés hatásra'
+  nameerror: Névjábólhiányos  # Névjából hiányos
+  unboundlocalerror: belsőnévtöréshatásra  # belső névtörés hatásra
   oserror: oserror
-  blockingioerror: 'blokkálóIOhibakód  #blokkáló IO-hibakód'
+  blockingioerror: blokkálóIOhibakód  # blokkáló IO-hibakód
   childprocesserror: childprocesserror
-  connectionerror: 'kapcsolathiányashiba  #kapcsolathiányas-hiba'
+  connectionerror: kapcsolathiányashiba  # kapcsolathiányas-hiba
   brokenpipeerror: csörekfészárulás
   connectionabortederror: connectionabortederror
   connectionrefusederror: connection_refused_error
-  connectionreseterror: 'connectionresethiba  #connectionreset-hiba'
-  fileexistserror: 'fállomáséletkódhiba  #fállomás-életkód-hiba'
-  filenotfounderror: 'fállomáshiányegysége  #fállomás-hiány-egysége'
+  connectionreseterror: connectionresethiba  # connectionreset-hiba
+  fileexistserror: fállomáséletkódhiba  # fállomás-életkód-hiba
+  filenotfounderror: fállomáshiányegysége  # fállomás-hiány-egysége
   interruptederror: interruptederror
   isadirectoryerror: isadirectoryerror
-  notadirectoryerror: 'hiányanemkönyltszámítógépesmappába  #hiánya nem könylt számítógépes
-    mappába'
+  notadirectoryerror: hiányanemkönyltszámítógépesmappába  # hiánya nem könylt számítógépes mappába
   permissionerror: hozzáférési_hivatás
   processlookuperror: processlookuperror
-  timeouterror: 'timeouthiba  #timeout-hiba'
+  timeouterror: timeouthiba  # timeout-hiba
   importerror: importálatból_hivatás
-  modulenotfounderror: 'modulnemtalálható  #modul nem található'
+  modulenotfounderror: modulnemtalálható  # modul nem található
   stopiteration: stopiteration
-  stopasynciteration: 'aszinkroniterációrahatásos  #aszinkron iterációra hatásos'
+  stopasynciteration: aszinkroniterációrahatásos  # aszinkron iterációra hatásos
   typeerror: typeerror
-  valueerror: 'Értétlenértés  #Értétlen értés'
+  valueerror: Értétlenértés  # Értétlen értés
   unicodeerror: unicodehiba
   unicodedecodeerror: unicodedecodeerror
   unicodeencodeerror: unicodeencodeerror
   unicodetranslateerror: unicodetranslatehiba
   runtimeerror: runtimeError
-  notimplementederror: 'nemvalósításhiány  #nemvalósítás-hiány'
-  recursionerror: 'rekurszívhata  #rekurszív hata'
+  notimplementederror: nemvalósításhiány  # nemvalósítás-hiány
+  recursionerror: rekurszívhata  # rekurszív hata
   referenceerror: referenciahibás
-  assertionerror: 'beáramoláshiány  #beáramolás-hiány'
+  assertionerror: beáramoláshiány  # beáramolás-hiány
   memoryerror: memoryerror
   buffererror: buffererror
   eoferror: eöferror
   syntaxerror: syntaxerror
-  indentationerror: 'indentačníhata  #indentační hata'
+  indentationerror: indentačníhata  # indentační hata
   taberror: taberror
   environmenterror: environmenterror
-  ioerror: 'IOhibásul  #I/O-hibásul'
+  ioerror: IOhibásul  # I/O-hibásul
   warning: figyelmet
   userwarning: userwarning
-  deprecationwarning: 'depreciációvezetőújra  #depreciáció-vezető újra'
-  pendingdeprecationwarning: 'varrásraesikavarázslato  #varrásra esik a varázslato'
-  syntaxwarning: 'syntaxwarnings  #syntax warnings'
+  deprecationwarning: depreciációvezetőújra  # depreciáció-vezető újra
+  pendingdeprecationwarning: varrásraesikavarázslato  # varrásra esik a varázslato
+  syntaxwarning: syntaxwarnings  # syntax warnings
   runtimewarning: runtimewarning
   futurewarning: futurewarning
   importwarning: importvénetzetlenesseg
-  unicodewarning: 'unicodeváginaplát  #unicodevági naplát'
-  byteswarning: 'bajtnapomeresvezető  #bajt-napomeres-vezető'
-  resourcewarning: 'erőforrásrendezetlenesség  #erőforrás-rendezetlenesség'
+  unicodewarning: unicodeváginaplát  # unicodevági naplát
+  byteswarning: bajtnapomeresvezető  # bajt-napomeres-vezető
+  resourcewarning: erőforrásrendezetlenesség  # erőforrás-rendezetlenesség
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

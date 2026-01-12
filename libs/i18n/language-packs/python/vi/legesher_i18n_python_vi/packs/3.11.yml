@@ -5,9 +5,9 @@ extends: 3.10.yml
 keywords:
   except*: trừ
 exceptions:
-  exceptiongroup: 'nhómngoạilệ  #nhóm ngoại lệ'
-  baseexceptiongroup: 'nhómngoạilệcơbản  #nhóm ngoại lệ cơ bản'
-  encodingwarning: 'cảnhbáomãhóa  #cảnh báo mã hóa'
+  exceptiongroup: nhómngoạilệ  # nhóm ngoại lệ
+  baseexceptiongroup: nhómngoạilệcơbản  # nhóm ngoại lệ cơ bản
+  encodingwarning: cảnhbáomãhóa  # cảnh báo mã hóa
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'

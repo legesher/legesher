@@ -23,8 +23,8 @@ keywords:
   import: importere
   in: i
   is: er
-  lambda: 'lambdafunktionen  #lambda-funktionen'
-  nonlocal: 'ikkelokal  #ikke-lokal'
+  lambda: lambdafunktionen  # lambda-funktionen
+  nonlocal: ikkelokal  # ikke-lokal
   not: ikke
   or: eller
   pass: gå
@@ -49,7 +49,7 @@ builtins:
   callable: anmodbar
   chr: karakter
   compile: kompilere
-  delattr: 'sletatribut  #slet atribut'
+  delattr: sletatribut  # slet atribut
   dir: dir
   divmod: delmod
   enumerate: læg
@@ -57,8 +57,8 @@ builtins:
   exec: køre
   filter: filter
   format: format
-  getattr: 'hentattribut  #hent attribut'
-  globals: 'globalevariabler  #globale variabler'
+  getattr: hentattribut  # hent attribut
+  globals: globalevariabler  # globale variabler
   hasattr: haveattribut
   hash: hash
   help: hulp
@@ -69,13 +69,13 @@ builtins:
   issubclass: subklassen
   iter: iterere
   len: længde
-  locals: 'lokalevariabler  #lokale variabler'
+  locals: lokalevariabler  # lokale variabler
   map: kart
   max: max
   min: mindste
   next: næste
   oct: okt
-  open: 'åøvre  #å øvre'
+  open: åøvre  # å øvre
   ord: ord
   pow: helt
   print: print
@@ -103,7 +103,7 @@ builtins:
   object: objekt
   property: egenskab
   set: set
-  staticmethod: 'statiskmetod  #statisk metod'
+  staticmethod: statiskmetod  # statisk metod
   str: str
   super: superen
   tuple: tupel
@@ -127,17 +127,17 @@ exceptions:
   keyerror: keyerror
   attributeerror: attributeerror
   nameerror: Navnfejl
-  unboundlocalerror: 'ubundenlokalfejlgøring  #ubunden lokalfejlgøring'
+  unboundlocalerror: ubundenlokalfejlgøring  # ubunden lokalfejlgøring
   oserror: osfejlighed
   blockingioerror: blockingioerror
   childprocesserror: childprocessfejl
   connectionerror: forbindingsfejl
-  brokenpipeerror: 'brokkenpypefejl  #brokken pypefejl'
+  brokenpipeerror: brokkenpypefejl  # brokken pypefejl
   connectionabortederror: connectionabortederror
   connectionrefusederror: connection_refused_error
   connectionreseterror: connectionresetfejl
   fileexistserror: fileexistserror
-  filenotfounderror: 'fileterforatfinde  #fileter for at finde'
+  filenotfounderror: fileterforatfinde  # fileter for at finde
   interruptederror: interrupterfejl
   isadirectoryerror: isadirectoryerror
   notadirectoryerror: ikke_en_mappefejl
@@ -145,7 +145,7 @@ exceptions:
   processlookuperror: processlookupfejl
   timeouterror: timeouterror
   importerror: importfejl
-  modulenotfounderror: 'modulikkefundet  #modul ikke fundet'
+  modulenotfounderror: modulikkefundet  # modul ikke fundet
   stopiteration: stopiteration
   stopasynciteration: stopasynciteration
   typeerror: typefejlen
@@ -165,19 +165,18 @@ exceptions:
   syntaxerror: syntaxfejl
   indentationerror: indentationfejl
   taberror: tabfejl
-  environmenterror: 'fejlimiljø  #fejl i miljø'
+  environmenterror: fejlimiljø  # fejl i miljø
   ioerror: iofejlighedsfejl
   warning: advars
   userwarning: userwarning
   deprecationwarning: depreciationsvarning
-  pendingdeprecationwarning: 'eksponeringsvarningforafgang  #eksponeringsvarning for
-    afgang'
+  pendingdeprecationwarning: eksponeringsvarningforafgang  # eksponeringsvarning for afgang
   syntaxwarning: syntaxvarningen
   runtimewarning: runtimewarning
   futurewarning: futurewarning
   importwarning: importadvars
-  unicodewarning: 'unicodeadvars  #unicode-advars'
-  byteswarning: 'byteadvars  #byte-advars'
+  unicodewarning: unicodeadvars  # unicode-advars
+  byteswarning: byteadvars  # byte-advars
   resourcewarning: ressourceadvars
 metadata:
   python_version_min: '3.10'

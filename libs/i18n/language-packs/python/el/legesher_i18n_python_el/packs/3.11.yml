@@ -5,9 +5,9 @@ extends: 3.10.yml
 keywords:
   except*: εκτός
 exceptions:
-  exceptiongroup: 'οηομάδαεξαιρέσεων  #ο/η ομάδα εξαιρέσεων'
+  exceptiongroup: οηομάδαεξαιρέσεων  # ο/η ομάδα εξαιρέσεων
   baseexceptiongroup: βασική_εξαίρεση_ομάδα
-  encodingwarning: 'προειδοποίησηκωδικοποίησης  #προειδοποίηση κωδικοποίησης'
+  encodingwarning: προειδοποίησηκωδικοποίησης  # προειδοποίηση κωδικοποίησης
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'

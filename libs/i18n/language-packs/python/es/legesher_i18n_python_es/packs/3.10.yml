@@ -29,7 +29,7 @@ keywords:
   is: ser
   lambda: lambda
   match: coincidir
-  nonlocal: 'nolocal  #no local'
+  nonlocal: nolocal  # no local
   not: 'no'
   or: o
   pass: pasar
@@ -40,7 +40,7 @@ keywords:
   with: con
   yield: dar
 builtins:
-  abs: 'valorabsoluto  #valor absoluto'
+  abs: valorabsoluto  # valor absoluto
   aiter: aiter
   all: todo
   anext: próximo
@@ -48,12 +48,12 @@ builtins:
   ascii: ascii
   bin: binario
   bool: booleano
-  breakpoint: 'puntodeinterrupción  #punto de interrupción'
+  breakpoint: puntodeinterrupción  # punto de interrupción
   bytearray: bytearray
   bytes: bytes
   callable: llamable
   chr: carácter
-  classmethod: 'métododeclase  #método de clase'
+  classmethod: métododeclase  # método de clase
   compile: compilar
   complex: complejo
   delattr: eliminar_atributo
@@ -61,39 +61,39 @@ builtins:
   dir: dir
   divmod: divmod
   ellipsis: ellipsis
-  enumerate: 'elenumerar  #el enumerar'
+  enumerate: elenumerar  # el enumerar
   eval: eval
   exec: ejecutar
   filter: filtrar
   float: flotante
   format: formatear
-  frozenset: 'conjuntocongelado  #conjunto congelado'
-  getattr: 'obtenerelatributo  #obtener el atributo'
-  globals: 'eltérminotraducido  #el término traducido'
-  hasattr: 'teneratributo  #tener atributo'
+  frozenset: conjuntocongelado  # conjunto congelado
+  getattr: obtenerelatributo  # obtener el atributo
+  globals: eltérminotraducido  # el término traducido
+  hasattr: teneratributo  # tener atributo
   hash: hash
   help: ayuda
   hex: hexadecimal
   id: identificador
   input: entrada
   int: entero
-  isinstance: 'serdelaclase  #ser de la clase'
-  issubclass: 'subclasede  #subclase de'
+  isinstance: serdelaclase  # ser de la clase
+  issubclass: subclasede  # subclase de
   iter: iterar
   len: longitud
   list: lista
-  locals: 'loslocales  #los locales'
+  locals: loslocales  # los locales
   map: mapear
   max: máximo
-  memoryview: 'vistadememoria  #vista de memoria'
+  memoryview: vistadememoria  # vista de memoria
   min: min
   next: siguiente
-  notimplemented: 'noimplementado  #no implementado'
+  notimplemented: noimplementado  # no implementado
   object: objeto
   oct: octal
   open: abrir
   ord: ord
-  pow: 'elevaraunapotencia  #elevar a una potencia'
+  pow: elevaraunapotencia  # elevar a una potencia
   print: imprimir
   property: propiedad
   range: rango
@@ -114,8 +114,8 @@ builtins:
 exceptions:
   arithmeticerror: erroraritmético
   assertionerror: errordeaserción
-  attributeerror: 'Errordeatributo  #Error de atributo'
-  baseexception: 'excepciónbase  #excepción base'
+  attributeerror: Errordeatributo  # Error de atributo
+  baseexception: excepciónbase  # excepción base
   basegeneratorexit: generarsalida
   blockingioerror: errordeESbloqueante
   brokenpipeerror: errordetuberíarota
@@ -128,7 +128,7 @@ exceptions:
   connectionreseterror: resetearconexión
   deprecationwarning: advertenciadedepreciación
   environmenterror: errordeentorno
-  eoferror: 'errordeentradasalida  #error de entrada/salida'
+  eoferror: errordeentradasalida  # error de entrada/salida
   exception: excepción
   fileexistserror: errordeexistenciadearchivo
   filenotfounderror: Errordenoencontrarelarchivo
@@ -138,16 +138,16 @@ exceptions:
   importerror: errordeimportación
   importwarning: advertenciadeimportación
   indentationerror: errordesangría
-  indexerror: 'Errordeíndice  #Error de índice'
+  indexerror: Errordeíndice  # Error de índice
   interruptederror: errordeinterrupción
-  ioerror: 'errordeES  #error de E/S'
+  ioerror: errordeES  # error de E/S
   isadirectoryerror: errordedirectorio
   keyboardinterrupt: interrupcióndelteclado
-  keyerror: 'errordeclave  #error de clave'
+  keyerror: errordeclave  # error de clave
   lookuperror: errordebúsqueda
   memoryerror: errordememoria
   modulenotfounderror: Errordemódulonoencontrado
-  nameerror: 'Errordenombre  #Error de nombre'
+  nameerror: Errordenombre  # Error de nombre
   notadirectoryerror: errordenoserundirectorio
   notimplementederror: errordenoimplementación
   oserror: oserror
@@ -158,7 +158,7 @@ exceptions:
   recursionerror: errorderecursión
   referenceerror: errordereferencia
   resourcewarning: advertenciaderecursos
-  runtimeerror: 'errorentiempodeejecución  #error en tiempo de ejecución'
+  runtimeerror: errorentiempodeejecución  # error en tiempo de ejecución
   runtimewarning: advertenciadetiempodeejecución
   stopasynciteration: detenerlaiteraciónasincrónica
   stopiteration: stopiteration
@@ -167,7 +167,7 @@ exceptions:
   systemexit: salirdelsistema
   taberror: errordetabulación
   timeouterror: errordetiempodeespera
-  typeerror: 'errordetipo  #error de tipo'
+  typeerror: errordetipo  # error de tipo
   unboundlocalerror: errordereferencialocalnoenlazada
   unicodedecodeerror: errordedecodificacióndeUnicode
   unicodeencodeerror: errordecodificaciónunicode
@@ -175,7 +175,7 @@ exceptions:
   unicodetranslateerror: errordetraduccióndeUnicode
   unicodewarning: advertenciadeunicode
   userwarning: advertenciadelusuario
-  valueerror: 'errordevalor  #error de valor'
+  valueerror: errordevalor  # error de valor
   warning: advertencia
   zerodivisionerror: errordedivisiónporcero
 metadata:

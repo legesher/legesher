@@ -91,6 +91,9 @@ class TranslationValidator:
     # Common English words that shouldn't appear in non-English translations
     COMMON_ENGLISH_WORDS = ["the", "a", "an", "of", "to", "in", "for", "is", "are"]
 
+    # Pattern that indicates embedded YAML comment (should be outside quotes)
+    EMBEDDED_COMMENT_PATTERN = re.compile(r"\s{2,}#")
+
     def validate(
         self,
         term: str,
@@ -184,6 +187,23 @@ class TranslationValidator:
         # Rule 9: Check for multiple consecutive special chars
         if re.search(r"[^\w\s]{2,}", translation):
             warnings.append("Contains multiple consecutive special characters")
+
+        # Rule 10: Check for embedded YAML comments (CORE-529 fix regression check)
+        # If a translation contains "  #", it likely means a YAML comment was
+        # incorrectly parsed as part of the value (inside quoted string)
+        if self.EMBEDDED_COMMENT_PATTERN.search(translation):
+            errors.append(
+                "Contains embedded YAML comment syntax (  #). "
+                "This indicates the YAML file has a comment inside quotes. "
+                "Fix: Move the comment outside the quoted string."
+            )
+
+        # Rule 11: Check for apostrophes (invalid Python identifiers)
+        if "'" in translation:
+            errors.append(
+                f"Contains apostrophe (') which is invalid in Python identifiers. "
+                f"Remove apostrophes: '{translation}' → '{translation.replace(chr(39), '')}'"
+            )
 
         # Determine if valid
         is_valid = len(errors) == 0

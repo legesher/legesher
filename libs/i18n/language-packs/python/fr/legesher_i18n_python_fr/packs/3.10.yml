@@ -10,13 +10,13 @@ keywords:
   assert: affirmer
   async: asynchrone
   await: attendre
-  break: s'échapper
+  break: séchapper  # s'échapper
   case: cas
   class: classe
   continue: continuer
   def: défini
   del: supprimer
-  elif: 'sinonsi  #sinon si'
+  elif: sinonsi  # sinon si
   else: autre
   except: sauf
   finally: enfin
@@ -40,23 +40,23 @@ keywords:
   with: avec
   yield: dégager
 builtins:
-  abs: l'absolu
+  abs: labsolu  # l'absolu
   aiter: aiter
   all: tout
   anext: anext
-  any: 'n''importequel  #n''importe quel'
+  any: nimportequel  # n'importe quel
   ascii: ascii
   bin: bin
   bool: bool
-  breakpoint: 'pointd''arrêt  #point d''arrêt'
+  breakpoint: pointdarrêt  # point d'arrêt
   bytearray: bytearray
   bytes: octets
   callable: appelable
   chr: chr
-  classmethod: 'méthodedeclasse  #méthode de classe'
+  classmethod: méthodedeclasse  # méthode de classe
   compile: compiler
   complex: complexe
-  delattr: 'supprimerl''attribut  #supprimer l''attribut'
+  delattr: supprimerlattribut  # supprimer l'attribut
   dict: dictionnaire
   dir: dir
   divmod: divmod
@@ -67,22 +67,22 @@ builtins:
   filter: filtre
   float: float
   format: formatage
-  frozenset: 'ensemblegelé  #ensemble gelé'
-  getattr: 'obtenirl''attribut  #obtenir l''attribut'
-  globals: 'lesglobaux  #les globaux'
-  hasattr: 'avoiruneattribut  #avoir une attribut'
+  frozenset: ensemblegelé  # ensemble gelé
+  getattr: obtenirlattribut  # obtenir l'attribut
+  globals: lesglobaux  # les globaux
+  hasattr: avoiruneattribut  # avoir une attribut
   hash: hachage
   help: aide
   hex: hex
-  id: l'identifiant
+  id: lidentifiant  # l'identifiant
   input: entrée
   int: entier
   isinstance: isinstance
-  issubclass: 'estsousclassede  #est sous-classe de'
+  issubclass: estsousclassede  # est sous-classe de
   iter: itérer
-  len: 'lalongueur  #la longueur'
+  len: lalongueur  # la longueur
   list: liste
-  locals: 'lesvariableslocales  #les variables locales'
+  locals: lesvariableslocales  # les variables locales
   map: mappé
   max: max
   memoryview: memoryview
@@ -104,8 +104,8 @@ builtins:
   setattr: setattrter
   slice: ' tranche '
   sorted: trié
-  staticmethod: 'méthodestatique  #méthode statique'
-  str: 'chaînedecaractères  #chaîne de caractères'
+  staticmethod: méthodestatique  # méthode statique
+  str: chaînedecaractères  # chaîne de caractères
   sum: somme
   super: super
   tuple: tuple
@@ -113,69 +113,69 @@ builtins:
   zip: zipper
 exceptions:
   arithmeticerror: erreurarithmétique
-  assertionerror: erreurd'assertion
-  attributeerror: 'Erreurd''attribut  #Erreur d''attribut'
+  assertionerror: erreurdassertion  # erreurd'assertion
+  attributeerror: Erreurdattribut  # Erreur d'attribut
   baseexception: baseexception
   basegeneratorexit: basegénérateurdesortie
-  blockingioerror: erreurd'ESbloquante
+  blockingioerror: erreurdESbloquante  # erreurd'ESbloquante
   brokenpipeerror: erreurdepipecassée
   buffererror: erreurdetampon
   byteswarning: avertissementdebytes
   childprocesserror: erreurdeprocessusenfant
-  connectionabortederror: erreurd'abandondeconnexion
+  connectionabortederror: erreurdabandondeconnexion  # erreurd'abandondeconnexion
   connectionerror: erreurdeconnexion
   connectionrefusederror: erreurderefusdeconnexion
   connectionreseterror: resetterlaconnexion
   deprecationwarning: avertissementdedépréciation
-  environmenterror: erreurd'environnement
-  eoferror: erreurd'éof
-  exception: l'exception
-  fileexistserror: erreurd'existencedefichier
+  environmenterror: erreurdenvironnement  # erreurd'environnement
+  eoferror: erreurdéof  # erreurd'éof
+  exception: lexception  # l'exception
+  fileexistserror: erreurdexistencedefichier  # erreurd'existencedefichier
   filenotfounderror: erreurdefichiernontrouvé
   floatingpointerror: erreurdepointeauflottant
   futurewarning: avertissementfutur
-  generatorexit: générateurd'exit
+  generatorexit: générateurdexit  # générateurd'exit
   importerror: importationerreur
-  importwarning: avertissementd'importation
-  indentationerror: erreurd'indentation
+  importwarning: avertissementdimportation  # avertissementd'importation
+  indentationerror: erreurdindentation  # erreurd'indentation
   indexerror: IndexError
-  interruptederror: erreurd'interruption
-  ioerror: erreurd'ES
+  interruptederror: erreurdinterruption  # erreurd'interruption
+  ioerror: erreurdES  # erreurd'ES
   isadirectoryerror: erreurisadirectory
   keyboardinterrupt: interruptionduclavier
-  keyerror: 'erreurdeclé  #erreur de clé'
+  keyerror: erreurdeclé  # erreur de clé
   lookuperror: erreurderecherche
   memoryerror: erreurdemémoire
   modulenotfounderror: erreurdemodulenontrouvé
-  nameerror: 'Errordenom  #Error de nom'
-  notadirectoryerror: erreur'notadirectory'
+  nameerror: Errordenom  # Error de nom
+  notadirectoryerror: erreurnotadirectory  # erreur'notadirectory'
   notimplementederror: erreurdenonimplémentation
-  oserror: erreurdusystèmed'exploitation
+  oserror: erreurdusystèmedexploitation  # erreurdusystèmed'exploitation
   overflowerror: erreurdedébordement
   pendingdeprecationwarning: avertissementdedépréciationenattente
-  permissionerror: erreurd'autorisation
+  permissionerror: erreurdautorisation  # erreurd'autorisation
   processlookuperror: erreurderecherchedeprocessus
   recursionerror: erreurderécursivité
   referenceerror: erreurderéférence
   resourcewarning: avertissementderessources
-  runtimeerror: 'erreurderuntime  #erreur de runtime'
-  runtimewarning: avertissementdetempsd'exécution
-  stopasynciteration: arrêtd'itérationasynchrone
-  stopiteration: 'arrêtdel''itération  #arrêt de l''itération'
+  runtimeerror: erreurderuntime  # erreur de runtime
+  runtimewarning: avertissementdetempsdexécution  # avertissementdetempsd'exécution
+  stopasynciteration: arrêtditérationasynchrone  # arrêtd'itérationasynchrone
+  stopiteration: arrêtdelitération  # arrêt de l'itération
   syntaxerror: erreurdesyntaxe
   syntaxwarning: avertissementdesyntaxe
   systemexit: arrêtdusystème
   taberror: erreurdetabulation
   timeouterror: erreurdedélai
-  typeerror: 'erreurdetype  #erreur de type'
+  typeerror: erreurdetype  # erreur de type
   unboundlocalerror: erreurderéférencelocalenonliée
   unicodedecodeerror: erreurdedécodageUnicode
   unicodeencodeerror: unicodeencodeerror
   unicodeerror: erreurunicode
-  unicodetranslateerror: erreurdetraductiondel'unicode
+  unicodetranslateerror: erreurdetraductiondelunicode  # erreurdetraductiondel'unicode
   unicodewarning: avertissementdeunicode
-  userwarning: avertissementdel'utilisateur
-  valueerror: 'valeurincorrecte  #valeur incorrecte'
+  userwarning: avertissementdelutilisateur  # avertissementdel'utilisateur
+  valueerror: valeurincorrecte  # valeur incorrecte
   warning: avertissement
   zerodivisionerror: erreurdedivisionparzéro
 metadata:

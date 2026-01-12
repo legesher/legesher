@@ -9,8 +9,8 @@ keywords:
   except*: excepter*
 exceptions:
   baseexceptiongroup: baseexceptiongroup
-  encodingwarning: 'avertissementd''encodage  #avertissement d''encodage'
-  exceptiongroup: 'grouped''exceptions  #groupe d''exceptions'
+  encodingwarning: avertissementdencodage  # avertissement d'encodage
+  exceptiongroup: groupedexceptions  # groupe d'exceptions
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.13'

@@ -5,9 +5,9 @@ extends: 3.10.yml
 keywords:
   except*: кроме
 exceptions:
-  exceptiongroup: 'группировкаисключений  #группировка исключений'
-  baseexceptiongroup: 'базовоеисключениегруппы  #базовое исключение группы'
-  encodingwarning: 'предупреждениекодирования  #предупреждение кодирования'
+  exceptiongroup: группировкаисключений  # группировка исключений
+  baseexceptiongroup: базовоеисключениегруппы  # базовое исключение группы
+  encodingwarning: предупреждениекодирования  # предупреждение кодирования
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'
