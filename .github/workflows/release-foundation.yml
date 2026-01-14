@@ -49,18 +49,31 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Check for releasable changes
+        id: check-release
+        run: |
+          echo "🔍 Checking for releasable changes..."
+          # Use --print to check if a new version would be created
+          NEW_VERSION=$(uv run semantic-release version --print 2>/dev/null || echo "")
+          if [ -n "$NEW_VERSION" ]; then
+            echo "✅ New version detected: $NEW_VERSION"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️ No releasable changes found"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run Semantic Release
+        if: steps.check-release.outputs.should_release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "📦 Running semantic-release for foundation suite..."
-          if ! uv run semantic-release version --verbose; then
-            echo "ℹ️ No release needed (no releasable commits)"
-            exit 0
-          fi
+          echo "📦 Creating release ${{ steps.check-release.outputs.new_version }}..."
+          uv run semantic-release version
 
       - name: Sync uv.lock
-        if: success()
+        if: steps.check-release.outputs.should_release == 'true'
         run: |
           echo "🔒 Syncing uv.lock..."
           uv sync
@@ -73,7 +86,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        if: success()
+        if: steps.check-release.outputs.should_release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -81,7 +94,7 @@ jobs:
           uv run semantic-release publish
 
       - name: Build packages
-        if: success()
+        if: steps.check-release.outputs.should_release == 'true'
         run: |
           echo "📦 Building foundation packages..."
           cd libs/core && uv build && cd ../..
@@ -89,7 +102,7 @@ jobs:
           cd libs/legesher && uv build && cd ../..
 
       - name: Upload build artifacts
-        if: success()
+        if: steps.check-release.outputs.should_release == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: foundation-dist-${{ github.sha }}
