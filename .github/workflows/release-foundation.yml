@@ -49,31 +49,33 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Check for releasable changes
-        id: check-release
-        run: |
-          echo "🔍 Checking for releasable changes..."
-          # Use --print to check if a new version would be created
-          NEW_VERSION=$(uv run semantic-release version --print 2>/dev/null || echo "")
-          if [ -n "$NEW_VERSION" ]; then
-            echo "✅ New version detected: $NEW_VERSION"
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "ℹ️ No releasable changes found"
-            echo "should_release=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Run Semantic Release
-        if: steps.check-release.outputs.should_release == 'true'
+        id: semantic-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "📦 Creating release ${{ steps.check-release.outputs.new_version }}..."
+          echo "📦 Running semantic-release for foundation suite..."
+
+          # Capture HEAD before running semantic-release
+          HEAD_BEFORE=$(git rev-parse HEAD)
+
+          # Run semantic-release
+          # Note: Returns exit 0 regardless of whether a release is made
           uv run semantic-release version
 
+          # Check if HEAD changed (meaning a release commit was created)
+          HEAD_AFTER=$(git rev-parse HEAD)
+
+          if [ "$HEAD_BEFORE" != "$HEAD_AFTER" ]; then
+            echo "✅ Release created (commit: ${HEAD_AFTER:0:7})"
+            echo "release_created=true" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️ No release needed (HEAD unchanged)"
+            echo "release_created=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Sync uv.lock
-        if: steps.check-release.outputs.should_release == 'true'
+        if: steps.semantic-release.outputs.release_created == 'true'
         run: |
           echo "🔒 Syncing uv.lock..."
           uv sync
@@ -86,7 +88,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        if: steps.check-release.outputs.should_release == 'true'
+        if: steps.semantic-release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -94,7 +96,7 @@ jobs:
           uv run semantic-release publish
 
       - name: Build packages
-        if: steps.check-release.outputs.should_release == 'true'
+        if: steps.semantic-release.outputs.release_created == 'true'
         run: |
           echo "📦 Building foundation packages..."
           cd libs/core && uv build && cd ../..
@@ -102,7 +104,7 @@ jobs:
           cd libs/legesher && uv build && cd ../..
 
       - name: Upload build artifacts
-        if: steps.check-release.outputs.should_release == 'true'
+        if: steps.semantic-release.outputs.release_created == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: foundation-dist-${{ github.sha }}
