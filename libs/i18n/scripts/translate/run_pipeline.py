@@ -36,9 +36,11 @@ def parse_args():
     parser.add_argument(
         "--models",
         nargs="+",
-        choices=["claude", "aya"],
+        choices=["claude", "aya", "aya101-hf", "aya-api", "ollama"],
         default=["claude", "aya"],
-        help="AI models to use for translation",
+        help="AI models to use for translation. "
+        "aya101-hf requires transformers/torch (~16GB RAM). "
+        "aya-api uses HF Inference API (cloud, requires HF_TOKEN env var).",
     )
 
     parser.add_argument(

@@ -54,6 +54,14 @@ api = [
     "redis>=5.0.0",  # Redis cache backend (optional)
 ]
 
+# Hugging Face transformers for Aya-101 model (optional, ~2GB with PyTorch)
+ml = [
+    "transformers>=4.30.0",  # Hugging Face transformers library
+    "torch>=2.0.0",  # PyTorch (CPU version, users can install CUDA variant separately)
+    "accelerate>=0.20.0",  # For efficient model loading
+    "sentencepiece>=0.1.99",  # Required for some tokenizers
+]
+
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",

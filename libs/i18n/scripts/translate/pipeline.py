@@ -34,6 +34,30 @@ from .models.aya_model import AyaModel
 from .yaml_exporter import YAMLExporter
 from .validators import TranslationValidator
 
+# Optional: Aya-101 Hugging Face model (requires transformers/torch)
+try:
+    from .models.aya101_hf_model import Aya101HuggingFaceModel
+
+    HAS_AYA101_HF = True
+except ImportError:
+    HAS_AYA101_HF = False
+
+# Optional: Aya-101 via Hugging Face Inference API (cloud-based, no local RAM needed)
+try:
+    from .models.aya_inference_api_model import AyaInferenceAPIModel
+
+    HAS_AYA_API = True
+except ImportError:
+    HAS_AYA_API = False
+
+# Optional: Ollama for local LLM inference (requires Ollama installed)
+try:
+    from .models.ollama_model import OllamaModel
+
+    HAS_OLLAMA = True
+except ImportError:
+    HAS_OLLAMA = False
+
 logger = logging.getLogger(__name__)
 console = Console()
 
@@ -192,9 +216,11 @@ class TranslationPipeline:
 
         # Initialize database
         self.db = TranslationDatabase(
-            db_path=str(config.output_db)
-            if config.output_db
-            else ".legesher/translations.db"
+            db_path=(
+                str(config.output_db)
+                if config.output_db
+                else ".legesher/translations.db"
+            )
         )
 
         # Initialize YAML exporter
@@ -209,6 +235,33 @@ class TranslationPipeline:
             self.models["claude"] = ClaudeModel(dry_run=config.dry_run)
         if "aya" in config.models:
             self.models["aya"] = AyaModel(dry_run=config.dry_run)
+        if "aya101-hf" in config.models:
+            if not HAS_AYA101_HF:
+                raise ImportError(
+                    "Aya-101 HuggingFace model requires transformers and torch. "
+                    "Install with: uv pip install 'legesher-i18n[ml]'"
+                )
+            self.models["aya101-hf"] = Aya101HuggingFaceModel(
+                dry_run=config.dry_run,
+                device="cpu",  # Force CPU to avoid MPS memory issues
+            )
+        if "aya-api" in config.models:
+            if not HAS_AYA_API:
+                raise ImportError(
+                    "Aya Inference API model requires huggingface_hub. "
+                    "Install with: pip install huggingface_hub"
+                )
+            self.models["aya-api"] = AyaInferenceAPIModel(
+                dry_run=config.dry_run,
+            )
+        if "ollama" in config.models:
+            if not HAS_OLLAMA:
+                raise ImportError(
+                    "Ollama model requires httpx. Install with: pip install httpx"
+                )
+            self.models["ollama"] = OllamaModel(
+                dry_run=config.dry_run,
+            )
 
         logger.info(f"Pipeline initialized with models: {list(self.models.keys())}")
         logger.info(f"Target languages: {config.languages}")
@@ -369,11 +422,13 @@ class TranslationPipeline:
                     word_form=translation.form,
                     model_rationale=translation.rationale,
                     alternatives_considered=json.dumps(translation.alternatives),
-                    confidence="high"
-                    if translation.confidence >= 0.8
-                    else "medium"
-                    if translation.confidence >= 0.5
-                    else "low",
+                    confidence=(
+                        "high"
+                        if translation.confidence >= 0.8
+                        else "medium"
+                        if translation.confidence >= 0.5
+                        else "low"
+                    ),
                     created_by=f"ai-{model_name}",
                 )
                 logger.debug(f"Stored translation in database with ID {translation_id}")

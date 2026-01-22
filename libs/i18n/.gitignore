@@ -23,3 +23,7 @@ build/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Runtime artifacts
+*.pid
+*.db
