@@ -102,7 +102,7 @@ builtins:
   round: arrondir
   set: ensemble
   setattr: setattrter
-  slice: ' tranche '
+  slice: tranche
   sorted: trié
   staticmethod: méthodestatique  # méthode statique
   str: chaînedecaractères  # chaîne de caractères

@@ -126,13 +126,77 @@ class LanguagePackSchema(BaseModel):
     )
     @classmethod
     def validate_mappings(cls, v: dict[str, str]) -> dict[str, str]:
-        """Validate keyword/builtin/exception/operator/stdlib mappings."""
+        """Validate keyword/builtin/exception/operator/stdlib mappings.
+
+        Translations must be valid Python identifiers to work with the
+        TokenTranslator, which uses Python's tokenize module.
+        """
         for key, value in v.items():
             if not key or not value:
                 raise ValueError("Empty keys or values not allowed in mappings")
             if not isinstance(value, str):
                 raise ValueError(f"Mapping values must be strings: {key}={value}")
+
+            # Check for leading/trailing whitespace
+            if value != value.strip():
+                raise ValueError(
+                    f"Translation has leading/trailing whitespace: '{key}' -> '{value}'. "
+                    f"Use '{value.strip()}' instead."
+                )
+
+            # Check for valid Python identifier (required for TokenTranslator)
+            # Note: We use a relaxed check that allows Unicode letters per PEP 3131
+            if not cls._is_valid_identifier(value):
+                raise ValueError(
+                    f"Translation is not a valid Python identifier: '{key}' -> '{value}'. "
+                    "Translations must not contain spaces, punctuation, or escape sequences."
+                )
         return v
+
+    @classmethod
+    def _is_valid_identifier(cls, value: str) -> bool:
+        """Check if a value is a valid Python identifier.
+
+        Per PEP 3131, Python identifiers can contain Unicode letters and digits,
+        but must start with a letter or underscore, and cannot contain spaces
+        or most punctuation.
+
+        Args:
+            value: The translation value to check
+
+        Returns:
+            True if valid Python identifier, False otherwise
+        """
+        if not value:
+            return False
+
+        # Quick check: if it contains spaces, it's invalid
+        if " " in value:
+            return False
+
+        # Check for common invalid characters (escape sequences, punctuation)
+        invalid_chars = [
+            "\\",
+            "«",
+            "»",
+            "¢",
+            "£",
+            "~",
+            "@",
+            "#",
+            "$",
+            "%",
+            "^",
+            "&",
+            "*",
+        ]
+        for char in invalid_chars:
+            if char in value:
+                return False
+
+        # Use Python's isidentifier() for the actual check
+        # This handles Unicode letters properly per PEP 3131
+        return value.isidentifier()
 
 
 class SchemaValidator:
@@ -635,4 +699,87 @@ class SchemaValidator:
             "completeness_score": (
                 1.0 - (len(warnings) / 10.0) if warnings else 1.0
             ),  # Simple scoring
+        }
+
+    @staticmethod
+    def check_identifier_validity(pack_schema: LanguagePackSchema) -> dict[str, Any]:
+        """Check if all translations are valid Python identifiers.
+
+        Validates that translations can work with the TokenTranslator, which uses
+        Python's tokenize module and requires translations to be valid identifiers.
+
+        Args:
+            pack_schema: Validated language pack
+
+        Returns:
+            Dictionary with validation results:
+            - passed: bool - True if all translations are valid identifiers
+            - invalid_keywords: list - Keywords with invalid translations
+            - invalid_builtins: list - Builtins with invalid translations
+            - invalid_exceptions: list - Exceptions with invalid translations
+            - total_issues: int - Total number of invalid translations
+            - issues: list - Human-readable issue descriptions
+        """
+        invalid_keywords = []
+        invalid_builtins = []
+        invalid_exceptions = []
+        issues = []
+
+        def check_mapping(
+            mappings: dict[str, str], category: str
+        ) -> list[dict[str, str]]:
+            """Check a mapping dict for invalid identifiers."""
+            invalid = []
+            for key, value in mappings.items():
+                # Check for whitespace
+                if value != value.strip():
+                    invalid.append(
+                        {
+                            "key": key,
+                            "value": value,
+                            "reason": "has leading/trailing whitespace",
+                        }
+                    )
+                    issues.append(
+                        f"{category}: '{key}' -> '{value}' has leading/trailing whitespace"
+                    )
+                # Check for spaces within
+                elif " " in value:
+                    invalid.append(
+                        {
+                            "key": key,
+                            "value": value,
+                            "reason": "contains spaces",
+                        }
+                    )
+                    issues.append(f"{category}: '{key}' -> '{value}' contains spaces")
+                # Check for invalid characters
+                elif not value.isidentifier():
+                    invalid.append(
+                        {
+                            "key": key,
+                            "value": value,
+                            "reason": "not a valid Python identifier",
+                        }
+                    )
+                    issues.append(
+                        f"{category}: '{key}' -> '{value}' is not a valid Python identifier"
+                    )
+            return invalid
+
+        invalid_keywords = check_mapping(pack_schema.keywords, "keyword")
+        invalid_builtins = check_mapping(pack_schema.builtins, "builtin")
+        invalid_exceptions = check_mapping(pack_schema.exceptions, "exception")
+
+        total_issues = (
+            len(invalid_keywords) + len(invalid_builtins) + len(invalid_exceptions)
+        )
+
+        return {
+            "passed": total_issues == 0,
+            "invalid_keywords": invalid_keywords,
+            "invalid_builtins": invalid_builtins,
+            "invalid_exceptions": invalid_exceptions,
+            "total_issues": total_issues,
+            "issues": issues,
         }

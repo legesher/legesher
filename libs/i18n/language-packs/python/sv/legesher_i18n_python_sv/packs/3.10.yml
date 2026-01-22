@@ -22,7 +22,7 @@ keywords:
   if: om
   import: importera
   in: i
-  is: ' är '
+  is: är
   lambda: lambdafunktionen  # lambda-funktionen
   nonlocal: ejlokal
   not: not
