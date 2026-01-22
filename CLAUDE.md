@@ -229,6 +229,44 @@ Each language pack can be released independently:
 - Enables focused updates per language
 - Separate changelogs and version histories
 
+### Language Pack Version Inheritance
+
+**IMPORTANT**: Language packs use version inheritance to avoid duplication. Each Python version's YAML file can extend
+a previous version using the `extends` field.
+
+**Structure:**
+
+```
+libs/i18n/language-packs/python/{lang}/legesher_i18n_python_{lang}/packs/
+├── 3.10.yml   # Base file with ALL translations
+├── 3.11.yml   # extends: 3.10.yml (only new/changed terms)
+├── 3.12.yml   # extends: 3.11.yml (only new/changed terms)
+├── 3.13.yml   # extends: 3.12.yml (only new/changed terms)
+└── 3.14.yml   # extends: 3.13.yml (only new/changed terms)
+```
+
+**Example 3.13.yml (inherits from 3.12):**
+
+```yaml
+language: ru
+target: python
+version: "3.13"
+extends: 3.12.yml
+keywords: {} # Empty = inherits all from 3.12
+exceptions: {} # Empty = inherits all from 3.12
+```
+
+**When looking for translations:**
+
+- Always check the **base file (3.10.yml)** first - this contains most translations
+- Higher version files only contain NEW keywords/builtins added in that Python version
+- The `extends` field tells you which file to check for inherited translations
+
+**When updating translations:**
+
+- Update the **base file (3.10.yml)** for terms that exist across all versions
+- Only add to higher version files if the term is NEW to that Python version
+
 ### Adding New Language Packs
 
 1. Create directory: `libs/i18n/language-packs/python/{lang}/`
