@@ -108,7 +108,7 @@ builtins:
   super: υπερ
   tuple: τοtuple  # το tuple
   ellipsis: τοελλειξίριο  # το ελλειξίριο
-  notimplemented: לאמיושם  # לא מיושם
+  notimplemented: μηΥλοποιημένο  # μη υλοποιημένο
   aiter: αιτητής
   anext: anext
 exceptions:

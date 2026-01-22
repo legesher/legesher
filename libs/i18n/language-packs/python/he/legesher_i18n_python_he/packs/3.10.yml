@@ -2,7 +2,7 @@ language: he
 target: python
 version: '3.10'
 keywords:
-  and: ו\u00abוגם\u00bb
+  and: וגם
   as: כאשר
   assert: להתאמת
   async: אסינכרוני
@@ -16,7 +16,7 @@ keywords:
   else: אחרת
   except: למעט
   finally: לבסוף
-  for: לְ«¢for£
+  for: לכל  # for each
   from: מהמילה
   global: גלובלי
   if: אם
@@ -114,7 +114,7 @@ builtins:
 exceptions:
   baseexception: בסיסיוצאדופן  # בסיס יוצא דופן
   basegeneratorexit: יצירתבסיס  # יצירת בסיס
-  exception: ' חריגה '
+  exception: חריגה
   generatorexit: יצירתיציאה  # יצירת יציאה
   systemexit: יציאתמערכת  # יציאת מערכת
   keyboardinterrupt: הפרעת_מקלדת

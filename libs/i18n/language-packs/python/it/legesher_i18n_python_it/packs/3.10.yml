@@ -13,7 +13,7 @@ keywords:
   def: def
   del: del
   elif: sealtrimenti  # se altrimenti
-  else: ' altrimenti '
+  else: altrimenti
   except: eccetto
   finally: finally
   for: per

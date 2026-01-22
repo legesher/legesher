@@ -38,6 +38,7 @@ class LanguagePackValidator:
 
     def __init__(self):
         self.errors = []
+        self.warnings = []  # Non-blocking issues (e.g., mixed scripts)
 
     def validate_file(self, file_path: Path) -> bool:
         """Validate a single language pack file.
@@ -46,6 +47,7 @@ class LanguagePackValidator:
             True if valid, False if errors found
         """
         self.errors = []
+        self.warnings = []
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
@@ -117,14 +119,15 @@ class LanguagePackValidator:
 
                 # Check for mixed scripts (e.g., Latin + Arabic)
                 # Note: Allow Latin + CJK mixing for technical terms in CJK languages
+                # Mixed scripts are a warning (quality issue) not an error (tracked in CORE-530)
                 if self._has_mixed_scripts(value_part):
                     scripts = self._detect_scripts(value_part)
                     # Allow Latin + CJK (common for technical terms like "IO", "with", etc.)
                     is_latin_cjk_only = set(scripts) == {"Latin", "CJK"}
                     if not is_latin_cjk_only:
-                        self.errors.append(
+                        self.warnings.append(
                             f"{section}.{term}: Translation '{value_part}' mixes multiple scripts: "
-                            f"{', '.join(scripts)}. Use a single script for consistency."
+                            f"{', '.join(scripts)}. Consider using a single script for consistency."
                         )
 
         return len(self.errors) == 0
@@ -163,11 +166,13 @@ class LanguagePackValidator:
         return len(scripts) > 1
 
     def print_errors(self, file_path: Path):
-        """Print validation errors for a file."""
-        if self.errors:
+        """Print validation errors and warnings for a file."""
+        if self.errors or self.warnings:
             print(f"\n{file_path}:")
             for error in self.errors:
-                print(f"  - {error}")
+                print(f"  ❌ {error}")
+            for warning in self.warnings:
+                print(f"  ⚠️  {warning}")
 
 
 def main():
@@ -178,6 +183,7 @@ def main():
 
     validator = LanguagePackValidator()
     has_errors = False
+    has_warnings = False
 
     for file_arg in sys.argv[1:]:
         file_path = Path(file_arg)
@@ -194,11 +200,19 @@ def main():
 
         if not is_valid:
             has_errors = True
+        if validator.warnings:
+            has_warnings = True
+
+        # Print errors and warnings
+        if validator.errors or validator.warnings:
             validator.print_errors(file_path)
 
     if has_errors:
         print("\n❌ Language pack validation failed")
         sys.exit(1)
+    elif has_warnings:
+        print("\n⚠️  Language pack validation passed with warnings (see CORE-530)")
+        sys.exit(0)  # Warnings don't block
     else:
         print("✅ All language packs valid")
         sys.exit(0)

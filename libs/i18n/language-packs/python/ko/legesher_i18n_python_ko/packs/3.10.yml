@@ -102,7 +102,7 @@ builtins:
   memoryview: 메모리뷰
   object: 객체
   property: 속성
-  set: ' 집합 '
+  set: 집합
   staticmethod: 정적메서드  # 정적 메서드
   str: 문자열
   super: 슈퍼

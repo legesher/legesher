@@ -80,7 +80,7 @@ builtins:
   isinstance: يُعَرِّف
   issubclass: التصنيف_التفرعي
   iter: الحلقة
-  len: ' الطول '
+  len: الطول
   list: قائمة
   locals: المتغيراتالمحلية  # المتغيرات المحلية
   map: الخريطة
