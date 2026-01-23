@@ -18,10 +18,18 @@ from legesher_i18n.db import TranslationDatabase
 from legesher_i18n.language_registry import get_language_name
 
 try:
-    from .term_classifier import classify_term, is_python_term
+    from .term_classifier import (
+        classify_term,
+        get_yaml_section_for_term_type,
+        is_valid_term_type,
+    )
 except ImportError:
     # If relative import fails, try absolute import
-    from term_classifier import classify_term, is_python_term
+    from term_classifier import (  # type: ignore[no-redef]
+        classify_term,
+        get_yaml_section_for_term_type,
+        is_valid_term_type,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -189,33 +197,74 @@ class YAMLExporter:
         return term_map
 
     def _classify_terms(self, term_map: Dict[str, Dict]) -> Dict[str, Dict[str, str]]:
-        """Classify terms into keywords, builtins, and exceptions."""
-        keywords = {}
-        builtins = {}
-        exceptions = {}
-        python_version = "3.13"  # Use latest for classification
+        """Classify terms into YAML sections using stored term_type from database.
+
+        This method uses the term_type stored in the database as the single source
+        of truth, rather than re-classifying terms. This ensures consistency between
+        what's stored and what's exported.
+
+        For legacy data with missing/invalid term_type, falls back to classify_term()
+        with a warning logged.
+
+        Args:
+            term_map: Dictionary mapping term -> translation record (with term_type)
+
+        Returns:
+            Dictionary with YAML section names as keys (keywords, builtins, exceptions)
+            and dictionaries of term -> translation as values.
+        """
+        # Initialize output sections dynamically based on TERM_TYPE_YAML_SECTIONS
+        sections: Dict[str, Dict[str, str]] = {}
+        python_version = "3.13"  # Use latest for fallback classification
 
         for term, trans in term_map.items():
-            if not is_python_term(term, python_version):
-                logger.debug(f"Skipping helper term: {term}")
+            translation = trans["translation"]
+            stored_term_type = trans.get("term_type")
+
+            # Validate the stored term_type
+            if stored_term_type and is_valid_term_type(stored_term_type):
+                term_type = stored_term_type
+            else:
+                # Fallback: re-classify term and log warning
+                term_type = classify_term(term, python_version)
+                if stored_term_type is None:
+                    logger.warning(
+                        f"Missing term_type for '{term}' - using fallback classification: {term_type}"
+                    )
+                else:
+                    logger.warning(
+                        f"Invalid term_type '{stored_term_type}' for '{term}' - "
+                        f"using fallback classification: {term_type}"
+                    )
+
+            # Get the YAML section for this term_type
+            yaml_section = get_yaml_section_for_term_type(term_type)
+
+            # Skip terms that don't belong in YAML (helper, unknown)
+            if yaml_section is None:
+                logger.debug(
+                    f"Skipping term '{term}' with type '{term_type}' (no YAML section)"
+                )
                 continue
 
-            category = classify_term(term, python_version)
-            translation = trans["translation"]
+            # Add to the appropriate section
+            if yaml_section not in sections:
+                sections[yaml_section] = {}
+            sections[yaml_section][term] = translation
 
-            if category == "keyword":
-                keywords[term] = translation
-            elif category == "exception":
-                exceptions[term] = translation
-            elif category in ("builtin_func", "builtin_type", "special_constant"):
-                builtins[term] = translation
-            else:
-                logger.warning(
-                    f"Unknown term category for '{term}': {category} - adding to builtins"
-                )
-                builtins[term] = translation
+        # Ensure the standard sections exist (even if empty) for backwards compatibility
+        result = {
+            "keywords": sections.get("keywords", {}),
+            "builtins": sections.get("builtins", {}),
+            "exceptions": sections.get("exceptions", {}),
+        }
 
-        return {"keywords": keywords, "builtins": builtins, "exceptions": exceptions}
+        # Add any additional sections (for future term types like dunder_methods)
+        for section_name, section_terms in sections.items():
+            if section_name not in result:
+                result[section_name] = section_terms
+
+        return result
 
     def _export_version_packs(
         self, language_code: str, classified: Dict, packs_dir: Path
@@ -284,9 +333,11 @@ class YAMLExporter:
             language_code,
             "3.11",
             "3.10.yml",
-            keywords_311
-            if keywords_311
-            else {"# Python 3.11+ specific (PEP 654)": None},
+            (
+                keywords_311
+                if keywords_311
+                else {"# Python 3.11+ specific (PEP 654)": None}
+            ),
             {},  # No new builtins in 3.11
             exceptions_311,
             f"# {lang_name} Language Pack for Python 3.11+\n"
@@ -303,9 +354,11 @@ class YAMLExporter:
             language_code,
             "3.12",
             "3.11.yml",
-            keywords_312
-            if keywords_312
-            else {"# Python 3.12+ specific (PEP 695)": None},
+            (
+                keywords_312
+                if keywords_312
+                else {"# Python 3.12+ specific (PEP 695)": None}
+            ),
             {},  # No new builtins in 3.12
             {},  # No new exceptions in 3.12
             f"# {lang_name} Language Pack for Python 3.12+\n"
@@ -448,7 +501,7 @@ __all__ = ["__version__", "LANGUAGE", "TARGET", "PACK_DIR"]
             language_code, (language_code.upper(), language_code)
         )
 
-        toml_content = f'''[build-system]
+        toml_content = f"""[build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
@@ -508,7 +561,7 @@ exclude_commit_patterns = [
     "^chore\\\\(release\\\\):",
     "^Merge",
 ]
-'''
+"""
         toml_file = lang_dir / "pyproject.toml"
         toml_file.write_text(toml_content, encoding="utf-8")
         logger.debug(f"Wrote {toml_file}")
@@ -523,7 +576,7 @@ exclude_commit_patterns = [
         num_builtins = len(classified["builtins"])
         num_exceptions = len(classified["exceptions"])
 
-        readme_content = f'''# legesher-i18n-python-{language_code}
+        readme_content = f"""# legesher-i18n-python-{language_code}
 
 {lang_name} ({native_name}) language pack for Python in Legesher.
 
@@ -607,7 +660,7 @@ MIT License - See [LICENSE](../../../LICENSE) for details.
 ## Version History
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
-'''
+"""
         readme_file = lang_dir / "README.md"
         readme_file.write_text(readme_content, encoding="utf-8")
         logger.debug(f"Wrote {readme_file}")

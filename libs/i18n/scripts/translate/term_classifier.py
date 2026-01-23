@@ -9,6 +9,8 @@ This module provides comprehensive classification of Python terms into categorie
 - Helper/meta terms
 
 Used by YAML exporter to properly structure language packs.
+
+Also provides TERM_TYPE_YAML_SECTIONS mapping from term_type to YAML section name.
 """
 
 from typing import List, Literal
@@ -267,6 +269,24 @@ TermCategory = Literal[
     "unknown",
 ]
 
+# Mapping: term_type -> YAML section name
+# This is the SINGLE SOURCE OF TRUTH for how term types map to YAML sections.
+TERM_TYPE_YAML_SECTIONS: dict[str, str | None] = {
+    "keyword": "keywords",
+    "builtin_func": "builtins",
+    "builtin_type": "builtins",
+    "exception": "exceptions",
+    "special_constant": "builtins",
+    "helper": None,  # Excluded from YAML export
+    "unknown": None,  # Excluded from YAML export
+    # Future term types (not yet implemented):
+    # "dunder_method": "dunder_methods",  # Magic methods: __init__, __str__, __add__, etc.
+    # "numeric_literal": "numeric_literals",  # Number prefixes: 0x (hex), 0b (binary), 0o (octal)
+    # "string_prefix": "string_prefixes",  # String prefixes: f, r, b, fr, etc.
+    # "decorator": "decorators",  # Common decorators: @property, @staticmethod, @classmethod
+    # "protocol": "protocols",  # Protocol/ABC methods: __iter__, __next__, __enter__, __exit__
+}
+
 
 def get_keywords_for_version(version: str = "3.10") -> List[str]:
     """Get all keywords applicable to a specific Python version.
@@ -369,8 +389,39 @@ def is_python_term(term: str, python_version: str = "3.10") -> bool:
     return category not in ("helper", "unknown")
 
 
+def get_yaml_section_for_term_type(term_type: str) -> str | None:
+    """Get the YAML section name for a given term type.
+
+    This is the canonical way to map term_type values to YAML sections.
+    Used by yaml_exporter to determine which section a term belongs to.
+
+    Args:
+        term_type: The term type (e.g., 'keyword', 'builtin_func', 'exception')
+
+    Returns:
+        The YAML section name (e.g., 'keywords', 'builtins', 'exceptions'),
+        or None if the term type should be excluded from YAML export.
+    """
+    return TERM_TYPE_YAML_SECTIONS.get(term_type)
+
+
+def is_valid_term_type(term_type: str) -> bool:
+    """Check if a term_type value is valid (known to the system).
+
+    Used for validation and fallback logic in yaml_exporter.
+
+    Args:
+        term_type: The term type to validate
+
+    Returns:
+        True if the term_type is in TERM_TYPE_YAML_SECTIONS
+    """
+    return term_type in TERM_TYPE_YAML_SECTIONS
+
+
 # Export all for convenience
 __all__ = [
+    # Term lists
     "KEYWORDS_BASE",
     "KEYWORDS_3_10",
     "KEYWORDS_3_11",
@@ -381,9 +432,14 @@ __all__ = [
     "EXCEPTIONS",
     "SPECIAL_CONSTANTS",
     "HELPER_TERMS",
+    # Type system
     "TermCategory",
+    "TERM_TYPE_YAML_SECTIONS",
+    # Functions
     "get_keywords_for_version",
     "classify_term",
     "get_all_terms_by_category",
     "is_python_term",
+    "get_yaml_section_for_term_type",
+    "is_valid_term_type",
 ]
