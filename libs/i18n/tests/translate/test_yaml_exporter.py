@@ -467,3 +467,272 @@ class TestYAMLExporterRegressions:
 
         # Verify metadata preserved
         assert merged_data["metadata"]["author"] == "Legesher Team (Aya AI Model)"
+
+
+class TestYAMLExporterTermTypeFromDB:
+    """Test that YAML exporter uses stored term_type from database (CORE-460).
+
+    This test class verifies that:
+    1. Exporter uses the term_type stored in the database as single source of truth
+    2. Fallback to classify_term() works for legacy data with missing/invalid term_type
+    3. Special constants map correctly to builtins section
+    4. Future term types would create new sections (extensible design)
+    """
+
+    def test_uses_term_type_from_database(self, temp_db, temp_output_dir):
+        """Verify exporter uses stored term_type, not re-classification."""
+        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
+
+        # Add translations with explicit term_types
+        temp_db.add_translation(
+            language_code="es",
+            term="def",
+            term_type="keyword",  # Stored type
+            translation="definir",
+            source="test",
+        )
+        temp_db.add_translation(
+            language_code="es",
+            term="print",
+            term_type="builtin_func",  # Stored type
+            translation="imprimir",
+            source="test",
+        )
+        temp_db.add_translation(
+            language_code="es",
+            term="ValueError",
+            term_type="exception",  # Stored type - lowercase
+            translation="ErrorDeValor",
+            source="test",
+        )
+
+        # Build term map and classify
+        translations = temp_db.get_all_translations(language_code="es")
+        term_map = exporter._build_term_map(translations)
+        classified = exporter._classify_terms(term_map)
+
+        # Verify terms are in correct sections based on stored term_type
+        assert "def" in classified["keywords"], "keyword term should be in keywords"
+        assert "print" in classified["builtins"], "builtin_func should be in builtins"
+        assert "ValueError" in classified["exceptions"], (
+            "exception should be in exceptions"
+        )
+
+    def test_fallback_for_empty_term_type(self, temp_db, temp_output_dir, caplog):
+        """Verify fallback classification when term_type is empty string.
+
+        Note: The database schema has term_type NOT NULL, so we test with
+        empty string which is valid SQL but should trigger fallback.
+        """
+        import logging
+
+        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
+
+        # Manually insert a translation with empty term_type (simulating bad data)
+        conn = temp_db._get_connection()
+        conn.execute(
+            """
+            INSERT INTO translations (language_code, term, term_type, translation, source)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            ("es", "return", "", "retornar", "legacy"),  # Empty string term_type
+        )
+        conn.commit()
+
+        # Get translations and classify
+        translations = temp_db.get_all_translations(language_code="es")
+        term_map = exporter._build_term_map(translations)
+
+        with caplog.at_level(logging.WARNING):
+            classified = exporter._classify_terms(term_map)
+
+        # Verify fallback worked - "return" should be classified as keyword
+        assert "return" in classified["keywords"], (
+            "fallback should classify 'return' as keyword"
+        )
+
+        # Verify warning was logged about invalid term_type
+        assert any("Invalid term_type" in record.message for record in caplog.records)
+
+    def test_fallback_for_invalid_term_type(self, temp_db, temp_output_dir, caplog):
+        """Verify fallback classification when term_type is invalid."""
+        import logging
+
+        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
+
+        # Insert translation with invalid term_type
+        conn = temp_db._get_connection()
+        conn.execute(
+            """
+            INSERT INTO translations (language_code, term, term_type, translation, source)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            ("es", "for", "invalid_type_xyz", "para", "bad_source"),
+        )
+        conn.commit()
+
+        translations = temp_db.get_all_translations(language_code="es")
+        term_map = exporter._build_term_map(translations)
+
+        with caplog.at_level(logging.WARNING):
+            classified = exporter._classify_terms(term_map)
+
+        # Verify fallback worked - "for" should be classified as keyword
+        assert "for" in classified["keywords"], (
+            "fallback should classify 'for' as keyword"
+        )
+
+        # Verify warning was logged about invalid term_type
+        assert any("Invalid term_type" in record.message for record in caplog.records)
+
+    def test_special_constant_maps_to_builtins(self, temp_db, temp_output_dir):
+        """Verify special_constant term_type maps to builtins section."""
+        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
+
+        # Add special constant with explicit term_type
+        temp_db.add_translation(
+            language_code="es",
+            term="ellipsis",
+            term_type="special_constant",
+            translation="puntos_suspensivos",
+            source="test",
+        )
+
+        translations = temp_db.get_all_translations(language_code="es")
+        term_map = exporter._build_term_map(translations)
+        classified = exporter._classify_terms(term_map)
+
+        # Verify special_constant goes to builtins section
+        assert "ellipsis" in classified["builtins"], (
+            "special_constant should map to builtins section"
+        )
+        assert "ellipsis" not in classified.get("special_constants", {}), (
+            "should not create separate special_constants section"
+        )
+
+    def test_builtin_type_maps_to_builtins(self, temp_db, temp_output_dir):
+        """Verify builtin_type term_type maps to builtins section."""
+        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
+
+        temp_db.add_translation(
+            language_code="es",
+            term="str",
+            term_type="builtin_type",
+            translation="cadena",
+            source="test",
+        )
+
+        translations = temp_db.get_all_translations(language_code="es")
+        term_map = exporter._build_term_map(translations)
+        classified = exporter._classify_terms(term_map)
+
+        assert "str" in classified["builtins"], (
+            "builtin_type should map to builtins section"
+        )
+
+    def test_standard_sections_always_exist(self, temp_db, temp_output_dir):
+        """Verify keywords, builtins, exceptions sections always exist."""
+        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
+
+        # Add only a keyword - no builtins or exceptions
+        temp_db.add_translation(
+            language_code="es",
+            term="if",
+            term_type="keyword",
+            translation="si",
+            source="test",
+        )
+
+        translations = temp_db.get_all_translations(language_code="es")
+        term_map = exporter._build_term_map(translations)
+        classified = exporter._classify_terms(term_map)
+
+        # All standard sections should exist (even if empty)
+        assert "keywords" in classified
+        assert "builtins" in classified
+        assert "exceptions" in classified
+
+    def test_helper_and_unknown_excluded_from_yaml(self, temp_db, temp_output_dir):
+        """Verify helper and unknown term types are excluded from YAML export."""
+        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
+
+        # Add translations with helper and unknown types
+        temp_db.add_translation(
+            language_code="es",
+            term="README",
+            term_type="helper",
+            translation="LEEME",
+            source="test",
+        )
+
+        translations = temp_db.get_all_translations(language_code="es")
+        term_map = exporter._build_term_map(translations)
+        classified = exporter._classify_terms(term_map)
+
+        # Helper terms should not appear in any section
+        assert "README" not in classified["keywords"]
+        assert "README" not in classified["builtins"]
+        assert "README" not in classified["exceptions"]
+
+    def test_pipeline_to_yaml_term_type_consistency(self, temp_db, temp_output_dir):
+        """Integration test: verify term_type consistency from storage to export."""
+        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
+
+        # Simulate what pipeline.py does: store with classified term_type
+        test_terms = [
+            ("def", "keyword", "definir"),
+            ("print", "builtin_func", "imprimir"),
+            ("str", "builtin_type", "cadena"),
+            ("ValueError", "exception", "ErrorDeValor"),
+            ("ellipsis", "special_constant", "puntos_suspensivos"),
+        ]
+
+        for term, term_type, translation in test_terms:
+            temp_db.add_translation(
+                language_code="es",
+                term=term,
+                term_type=term_type,
+                translation=translation,
+                source="pipeline_test",
+            )
+
+        # Export and classify
+        translations = temp_db.get_all_translations(language_code="es")
+        term_map = exporter._build_term_map(translations)
+        classified = exporter._classify_terms(term_map)
+
+        # Verify correct section placement
+        assert classified["keywords"]["def"] == "definir"
+        assert classified["builtins"]["print"] == "imprimir"
+        assert classified["builtins"]["str"] == "cadena"
+        assert classified["exceptions"]["ValueError"] == "ErrorDeValor"
+        assert classified["builtins"]["ellipsis"] == "puntos_suspensivos"
+
+    def test_export_produces_idempotent_result(self, temp_db, temp_output_dir):
+        """Verify re-exporting produces the same classification result."""
+        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
+
+        temp_db.add_translation(
+            language_code="es",
+            term="class",
+            term_type="keyword",
+            translation="clase",
+            source="test",
+        )
+        temp_db.add_translation(
+            language_code="es",
+            term="len",
+            term_type="builtin_func",
+            translation="longitud",
+            source="test",
+        )
+
+        translations = temp_db.get_all_translations(language_code="es")
+        term_map = exporter._build_term_map(translations)
+
+        # Classify twice
+        classified_1 = exporter._classify_terms(term_map)
+        classified_2 = exporter._classify_terms(term_map)
+
+        # Results should be identical
+        assert classified_1 == classified_2, "Classification should be idempotent"
