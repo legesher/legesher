@@ -3,7 +3,7 @@ target: python
 version: '3.10'
 keywords:
   and: ja
-  as: as
+  as: kuten
   assert: varmistaa
   async: asynchrone
   await: odatetaan
@@ -14,16 +14,16 @@ keywords:
   del: poista
   elif: muuttujilla
   else: muuttuja
-  except: except
-  finally: seuraaaina  # seuraa aina
+  except: pois
+  finally: seuraaaina
   for: forza
   from: kaa
   global: yhteensopiva
   if: jos
   import: importoida
-  in: in
+  in: sisään
   is: 'on'
-  lambda: lambda
+  lambda: luuppi
   nonlocal: luonnonlaite
   not: ei
   or: ja
@@ -43,8 +43,8 @@ builtins:
   abs: absoluuti
   all: kaikki
   any: kaikki
-  ascii: ascii
-  bin: bin
+  ascii: asciiKoodit
+  bin: kymmenelimi_sisaltyy_binaariseksi
   breakpoint: peenäynti
   callable: kutsutontoon
   chr: karakteri
@@ -59,13 +59,13 @@ builtins:
   format: pärinnaita
   getattr: hakuattribuuti
   globals: kaikkivaltias
-  hasattr: hasattr
+  hasattr: ominaisuudella
   hash: hashi
   help: auttaa
-  hex: hex
+  hex: heksaDecimaaliluku
   id: tunnus
   input: syöttö
-  isinstance: isinstance
+  isinstance: onOletusTyyppi
   issubclass: subkelas
   iter: itereroa
   len: pystys
@@ -83,99 +83,99 @@ builtins:
   repr: reprezentaatio
   reversed: väkriin
   round: pyöriä
-  setattr: setattr
+  setattr: aseta_ominaisuus
   slice: kirjaus
   sorted: sorteerittu
   sum: summa
   vars: variaable
   zip: sijoita
-  bool: bool
-  bytearray: bytearray
-  bytes: bytes
+  bool: tietotyyppiBooleaani
+  bytearray: binaaritaulukko
+  bytes: bitti
   classmethod: klassiseen
   complex: kompleksinen
   dict: käsikirja
-  float: float
-  frozenset: frozenset
+  float: luku
+  frozenset: joukko
   int: enteri
   list: luetta
-  memoryview: memoryview
+  memoryview: muistivaikutus
   object: objekti
   property: osake
-  set: set
+  set: sana
   staticmethod: statiskasi
-  str: str
-  super: super
+  str: merkkijono
+  super: yläluokka
   tuple: tupla
   ellipsis: ellipsi
   notimplemented: ei_t_oikein_taipana
   aiter: aiteri
   anext: anextiä
 exceptions:
-  baseexception: baseexception
-  basegeneratorexit: basegeneratorexit
+  baseexception: perusvirhe
+  basegeneratorexit: perusGeneraattoriLopeta
   exception: ohje
-  generatorexit: generatorexit
+  generatorexit: generaattoriLopeta
   systemexit: jäätäyttymistä
   keyboardinterrupt: näkyvä_avautumin
-  arithmeticerror: aritmetinenvirhe  # aritmetinen virhe
-  floatingpointerror: floatpointerrori  # float-pointerrori
+  arithmeticerror: aritmetinenvirhe
+  floatingpointerror: floatpointerrori
   overflowerror: yliulostusvirhe
   zerodivisionerror: nulldivisiooneusi
   lookuperror: jälkikärsimyssä
   indexerror: indexerrori
   keyerror: avaimenvääritys
-  attributeerror: attribuutivirhe  # attribuuti-virhe
-  nameerror: nimeenvirhe  # nimeen virhe
+  attributeerror: attribuutivirhe
+  nameerror: nimeenvirhe
   unboundlocalerror: seltäimätyntyt
   oserror: oserrori
   blockingioerror: blockingioerrori
   childprocesserror: childprocesserrori
   connectionerror: yhteensopimustuomereista
   brokenpipeerror: pisteenlomakärsitys
-  connectionabortederror: yhteensulkeabortederror  # yhteensulke-abortederror
+  connectionabortederror: yhteensulkeabortederror
   connectionrefusederror: yhteensopimustodentuloma
-  connectionreseterror: yhteysreijimivirhe  # yhteysreijimi-virhe
+  connectionreseterror: yhteysreijimivirhe
   fileexistserror: tietolaman_väärin_määritelystä
-  filenotfounderror: tietystäpuuttumatonvirhe  # tietystä puuttumaton virhe
+  filenotfounderror: tietystäpuuttumatonvirhe
   interruptederror: kesäyhteensopimuksen
-  isadirectoryerror: isädirکتorivirhe  # isädirکتori-virhe
+  isadirectoryerror: isädirکتorivirhe
   notadirectoryerror: ei_rekisteri_minkä_siirryttävää_hakemistoa
   permissionerror: oikeudenviesti
   processlookuperror: processlookupvirhe
   timeouterror: aikausvirhe
   importerror: tulostusvirhe
-  modulenotfounderror: modulenotfounderror
+  modulenotfounderror: moduulinEiLöydettyVirhe
   stopiteration: stoppiteracija
   stopasynciteration: pyörittymispyytämistä
   typeerror: typeerrori
-  valueerror: arvovirhe  # arvo virhe
-  unicodeerror: unicodevirhe  # unicode-virhe
+  valueerror: arvovirhe
+  unicodeerror: unicodevirhe
   unicodedecodeerror: unicodedecodeerrori
   unicodeencodeerror: unicodeencodeerrori
   unicodetranslateerror: unicodetranslateerrori
-  runtimeerror: runtimeerror
-  notimplementederror: notimplementederror
+  runtimeerror: runtimevirhe
+  notimplementederror: ei_toteutettu
   recursionerror: rekursioonvirhe
   referenceerror: viitevirhe
-  assertionerror: väärentamatontunnus  # väärentamaton tunnus
+  assertionerror: väärentamatontunnus
   memoryerror: memoryerrori
   buffererror: buffererrori
   eoferror: väärinvalintaa
   syntaxerror: syntaxerrori
   indentationerror: indentationerrori
   taberror: taberrori
-  environmenterror: ympäröivävirhe  # ympäröivä virhe
-  ioerror: iovirhe  # io-virhe
+  environmenterror: ympäröivävirhe
+  ioerror: iovirhe
   warning: varotus
   userwarning: käyttöihme
-  deprecationwarning: vikaavarmaan  # vikaa varmaan
-  pendingdeprecationwarning: odatettavavaarallinenvarmaus  # odatettava vaarallinen varmaus
-  syntaxwarning: syntaxwarning
-  runtimewarning: jälkikäyttövariminenvararma  # jälkikäyttövariminen vararma
+  deprecationwarning: vikaavarmaan
+  pendingdeprecationwarning: odatettavavaarallinenvarmaus
+  syntaxwarning: syntaksivaroitus
+  runtimewarning: jälkikäyttövariminenvararma
   futurewarning: seuraavahäntääs
-  importwarning: avustetuksenimporttaminen  # avustetuksen importtaminen
-  unicodewarning: unicodevarnua  # unicode-varnua
+  importwarning: avustetuksenimporttaminen
+  unicodewarning: unicodevarnua
   byteswarning: bajtivardi
   resourcewarning: resurssivarnauha
 metadata:
@@ -183,7 +183,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

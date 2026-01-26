@@ -10,20 +10,20 @@ keywords:
   break: interrompi
   class: classe
   continue: continuare
-  def: def
-  del: del
-  elif: sealtrimenti  # se altrimenti
+  def: definire
+  del: eliminare
+  elif: sealtrimenti
   else: altrimenti
   except: eccetto
-  finally: finally
+  finally: finalmente
   for: per
   from: dal
   global: globale
   if: se
   import: importare
-  in: in
+  in: contenuto_in
   is: è
-  lambda: lambda
+  lambda: funzione_lambda
   nonlocal: nonlocale
   not: non
   or: o
@@ -40,150 +40,150 @@ keywords:
   match: corrispondere
   case: caso
 builtins:
-  abs: valoreassoluto  # valore assoluto
+  abs: valoreassoluto
   all: tutto
-  any: any
+  any: qualunque
   ascii: ASCII
-  bin: bin
-  breakpoint: puntodiinterruzione  # punto di interruzione
+  bin: binario
+  breakpoint: puntodiinterruzione
   callable: callabile
   chr: carattere
   compile: compilare
-  delattr: eliminarelattributo  # eliminare l'attributo
-  dir: dir
-  divmod: divmod
+  delattr: eliminarelattributo
+  dir: elencareAtributi
+  divmod: divisioneResiduo
   enumerate: enumerare
-  eval: eval
-  exec: exec
+  eval: valutare
+  exec: esegui
   filter: filtro
-  format: format
+  format: formattare
   getattr: getattributo
-  globals: globals
-  hasattr: haattributi  # ha attributi
-  hash: hash
+  globals: globali
+  hasattr: haattributi
+  hash: calcola_hash
   help: aiuto
   hex: esadecimale
-  id: id
-  input: input
-  isinstance: isinstance
+  id: identificatore_univoco
+  input: inserimento
+  isinstance: èIstanzaDi
   issubclass: isubclasse
   iter: iterare
   len: lunghezza
-  locals: levariabililocali  # le variabili locali
+  locals: levariabililocali
   map: mappare
   max: massimo
   min: minimo
-  next: ilprossimo  # il prossimo
+  next: ilprossimo
   oct: ottale
   open: aprire
-  ord: ord
-  pow: lapotenza  # la potenza
+  ord: carattere
+  pow: lapotenza
   print: stampa
-  range: range
+  range: intervallo
   repr: rappresentazione
   reversed: inverso
   round: arrotondare
-  setattr: setattr
+  setattr: impostaAttributo
   slice: fetta
   sorted: ordinato
   sum: somma
   vars: variabili
-  zip: zip
-  bool: bool
-  bytearray: bytearray
-  bytes: bytes
+  zip: zippare
+  bool: booleano
+  bytearray: arrayDiByte
+  bytes: byte
   classmethod: classe_metodo
   complex: complesso
   dict: dizionario
-  float: float
-  frozenset: setcongelato  # set congelato
+  float: flottante
+  frozenset: setcongelato
   int: intero
   list: lista
-  memoryview: viewdellamemoria  # view della memoria
+  memoryview: viewdellamemoria
   object: oggetto
   property: proprietà
   set: insieme
   staticmethod: statico
   str: stringa
-  super: super
+  super: classe_padre
   tuple: tupla
   ellipsis: ellissi
-  notimplemented: nonimplementato  # non implementato
-  aiter: aiter
-  anext: anext
+  notimplemented: nonimplementato
+  aiter: aiteratore
+  anext: nextAn
 exceptions:
   baseexception: BaseException
-  basegeneratorexit: basegeneratorediexit  # base generatore di exit
+  basegeneratorexit: basegeneratorediexit
   exception: eccezione
-  generatorexit: generatorexit
-  systemexit: systemexit
-  keyboardinterrupt: interruzionedatastiera  # interruzione da tastiera
-  arithmeticerror: errorearitmetico  # errore aritmetico
-  floatingpointerror: erroredifloatingpoint  # errore di floating point
-  overflowerror: erroredioverflow  # errore di overflow
-  zerodivisionerror: erroredidivisioneperzero  # errore di divisione per zero
-  lookuperror: errorediricerca  # errore di ricerca
+  generatorexit: generatore_errore
+  systemexit: uscitaSistema
+  keyboardinterrupt: interruzionedatastiera
+  arithmeticerror: errorearitmetico
+  floatingpointerror: erroredifloatingpoint
+  overflowerror: erroredioverflow
+  zerodivisionerror: erroredidivisioneperzero
+  lookuperror: errorediricerca
   indexerror: ErroreIndice
   keyerror: KeyError
   attributeerror: AttributeError
-  nameerror: Erroredinome  # Errore di nome
-  unboundlocalerror: errorediriferimentolocalenonvincolato  # errore di riferimento locale non vincolato
-  oserror: oserror
-  blockingioerror: errorediinputoutputbloccante  # errore di input/output bloccante
-  childprocesserror: erroredelprocessofiglio  # errore del processo figlio
-  connectionerror: errorediconnessione  # errore di connessione
-  brokenpipeerror: erroredibrokenpipe  # errore di brokenpipe
-  connectionabortederror: erroridiinterruzionedelcollegamento  # errori di interruzione del collegamento
-  connectionrefusederror: erroredirifiutodiconnessione  # errore di rifiuto di connessione
+  nameerror: Erroredinome
+  unboundlocalerror: errorediriferimentolocalenonvincolato
+  oserror: erroreOs
+  blockingioerror: errorediinputoutputbloccante
+  childprocesserror: erroredelprocessofiglio
+  connectionerror: errorediconnessione
+  brokenpipeerror: erroredibrokenpipe
+  connectionabortederror: erroridiinterruzionedelcollegamento
+  connectionrefusederror: erroredirifiutodiconnessione
   connectionreseterror: resetterrorconnessione
-  fileexistserror: errorediesistenzadelfile  # errore di esistenza del file
+  fileexistserror: errorediesistenzadelfile
   filenotfounderror: ErroreFileNonTrovato
-  interruptederror: errorediinterruzione  # errore di interruzione
-  isadirectoryerror: errorediisadirectory  # errore di isadirectory
-  notadirectoryerror: notadirectoryerror
-  permissionerror: errorediautorizzazione  # errore di autorizzazione
-  processlookuperror: erroridilookupdelprocesso  # errori di lookup del processo
-  timeouterror: erroreditimeout  # errore di timeout
-  importerror: errorediimportazione  # errore di importazione
-  modulenotfounderror: erroredimodulonontrovato  # errore di modulo non trovato
-  stopiteration: stopiteration
-  stopasynciteration: stoppazioneasincrona  # stoppazione asincrona
-  typeerror: erroreditipo  # errore di tipo
+  interruptederror: errorediinterruzione
+  isadirectoryerror: errorediisadirectory
+  notadirectoryerror: erroreNonDirectory
+  permissionerror: errorediautorizzazione
+  processlookuperror: erroridilookupdelprocesso
+  timeouterror: erroreditimeout
+  importerror: errorediimportazione
+  modulenotfounderror: erroredimodulonontrovato
+  stopiteration: iterazioneInterrotta
+  stopasynciteration: stoppazioneasincrona
+  typeerror: erroreditipo
   valueerror: ValueError
-  unicodeerror: erroreunicode  # errore unicode
-  unicodedecodeerror: erroredidecodificaUnicode  # errore di decodifica Unicode
-  unicodeencodeerror: unicodeencodeerror
-  unicodetranslateerror: erroreditraduzionediUnicode  # errore di traduzione di Unicode
-  runtimeerror: erroreinfasediesecuzione  # errore in fase di esecuzione
-  notimplementederror: notimplementederror
-  recursionerror: errorediricorsione  # errore di ricorsione
-  referenceerror: errorediriferimento  # errore di riferimento
-  assertionerror: errorediasserzione  # errore di asserzione
-  memoryerror: erroredimemoria  # errore di memoria
-  buffererror: erroredibuffer  # errore di buffer
-  eoferror: errorediinputoutput  # errore di input/output
-  syntaxerror: erroredisintassi  # errore di sintassi
-  indentationerror: errorediindentazione  # errore di indentazione
-  taberror: taberror
-  environmenterror: errorediambiente  # errore di ambiente
-  ioerror: ioerror
+  unicodeerror: erroreunicode
+  unicodedecodeerror: erroredidecodificaUnicode
+  unicodeencodeerror: erroreDiCodificaDiUnicode
+  unicodetranslateerror: erroreditraduzionediUnicode
+  runtimeerror: erroreinfasediesecuzione
+  notimplementederror: erroreNonImplementato
+  recursionerror: errorediricorsione
+  referenceerror: errorediriferimento
+  assertionerror: errorediasserzione
+  memoryerror: erroredimemoria
+  buffererror: erroredibuffer
+  eoferror: errorediinputoutput
+  syntaxerror: erroredisintassi
+  indentationerror: errorediindentazione
+  taberror: erroreDiTabulazione
+  environmenterror: errorediambiente
+  ioerror: erroreI_O
   warning: avviso
   userwarning: avvertimento_utente
-  deprecationwarning: avvisodideprecazione  # avviso di deprecazione
-  pendingdeprecationwarning: avvisodideprecazioneinsospeso  # avviso di deprecazione in sospeso
-  syntaxwarning: avvertimentodisintassi  # avvertimento di sintassi
-  runtimewarning: avvisodiruntime  # avviso di runtime
+  deprecationwarning: avvisodideprecazione
+  pendingdeprecationwarning: avvisodideprecazioneinsospeso
+  syntaxwarning: avvertimentodisintassi
+  runtimewarning: avvisodiruntime
   futurewarning: avvertimento_futuro
-  importwarning: avvertimentodiimportazione  # avvertimento di importazione
-  unicodewarning: avvertimentounicode  # avvertimento unicode
+  importwarning: avvertimentodiimportazione
+  unicodewarning: avvertimentounicode
   byteswarning: avviso_bytes
-  resourcewarning: avvertimentodirisorsa  # avvertimento di risorsa
+  resourcewarning: avvertimentodirisorsa
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

@@ -46,9 +46,9 @@ print(pack.keywords["return"])
 
 This pack provides translations for:
 
-- **Keywords**: 39 Python keywords
+- **Keywords**: 37 Python keywords
 - **Built-ins**: 71 built-in functions and types
-- **Exceptions**: 69 exception classes
+- **Exceptions**: 66 exception classes
 
 ## Version Inheritance
 

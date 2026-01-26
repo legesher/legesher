@@ -18,13 +18,13 @@ keywords:
   finally: akhirnya
   for: untuk
   from: dari
-  global: global
+  global: global_deklarasi
   if: jika
   import: mengimpor
   in: ada
   is: adalah
-  lambda: lambda
-  nonlocal: nonlocal
+  lambda: fungsi_anonim
+  nonlocal: tidak_lokal
   not: bukan
   or: atau
   pass: lewat
@@ -34,156 +34,156 @@ keywords:
   while: selama
   with: dengan
   yield: menghasilkan
-  None: tidakada  # tidak ada
+  None: tidakada
   'True': Benar
   'False': Salah
   match: cocokkan
   case: kasus
 builtins:
-  abs: nilaimutlak  # nilai mutlak
+  abs: nilaimutlak
   all: semua
   any: manusia
-  ascii: ascii
+  ascii: kode_ascii
   bin: biner
-  breakpoint: breakpoint  # break point
+  breakpoint: pemecahPoin
   callable: menggantikan
   chr: karakter
   compile: mengkompilasi
-  delattr: menghapusatribut  # menghapus atribut
+  delattr: menghapusatribut
   dir: direktori
-  divmod: divmod
-  enumerate: mengaturnomor  # mengatur nomor
+  divmod: bagi_sisa
+  enumerate: mengaturnomor
   eval: menilai
   exec: eksekusi
   filter: memfilter
-  format: format
-  getattr: mengaksesatribut  # mengakses atribut
+  format: formatkan
+  getattr: mengaksesatribut
   globals: global
-  hasattr: memilikiatribut  # memiliki atribut
-  hash: hash
+  hasattr: memilikiatribut
+  hash: nilai_hash
   help: bantuan
   hex: heksadesimal
-  id: id
-  input: input
-  isinstance: isinstanceadalah  # isinstance adalah
-  issubclass: issubclass
+  id: identifikasi_unik
+  input: masukan
+  isinstance: isinstanceadalah
+  issubclass: menjadi_turunan
   iter: mengiterasi
   len: panjang
   locals: lokal
   map: memetakan
   max: maksimum
-  min: min
+  min: minimum
   next: berikutnya
   oct: oktal
   open: buka
-  ord: ord
+  ord: asciiNilai
   pow: eksponen
   print: cetak
   range: rentang
   repr: perwakilan
   reversed: balik
   round: dibulatkan
-  setattr: menetapkanatribut  # menetapkan atribut
+  setattr: menetapkanatribut
   slice: pemotongan
   sorted: tertata
   sum: menambahkan
-  vars: vars
-  zip: zip
-  bool: bool
-  bytearray: bytearray
+  vars: var
+  zip: gabungan
+  bool: boolean
+  bytearray: arrayOfBytes
   bytes: byte
-  classmethod: metodekelas  # metode kelas
+  classmethod: metodekelas
   complex: kompleks
   dict: kamus
-  float: float
-  frozenset: setyangtidakdapatdiubah  # set yang tidak dapat diubah
-  int: bilanganbulat  # bilangan bulat
+  float: bilanganDesimal
+  frozenset: setyangtidakdapatdiubah
+  int: bilanganbulat
   list: daftar
-  memoryview: viewmemori  # view memori
+  memoryview: viewmemori
   object: objek
   property: sifat
-  set: set
-  staticmethod: metodestatis  # metode statis
+  set: himpunan
+  staticmethod: metodestatis
   str: string
-  super: super
+  super: superclasses
   tuple: tupel
   ellipsis: ellips
-  notimplemented: tidakdiimplementasikan  # tidak diimplementasikan
-  aiter: aiter
-  anext: anext
+  notimplemented: tidakdiimplementasikan
+  aiter: pengulangan_asinkron
+  anext: nextAn
 exceptions:
   baseexception: BaseException
-  basegeneratorexit: basegeneratorkeluar  # basegenerator keluar
+  basegeneratorexit: basegeneratorkeluar
   exception: kecurangan
-  generatorexit: generasikeluar  # generasi keluar
-  systemexit: keluaransistem  # keluaran sistem
-  keyboardinterrupt: interupsikeyboard  # interupsi keyboard
-  arithmeticerror: kesalahanaritmatika  # kesalahan aritmatika
-  floatingpointerror: errorpointermengambang  # error pointer mengambang
-  overflowerror: kesalahanoverflow  # kesalahan overflow
-  zerodivisionerror: kesalahanpembagiannol  # kesalahan pembagian nol
-  lookuperror: kesalahanpencarian  # kesalahan pencarian
-  indexerror: kesalahanindeks  # kesalahan indeks
-  keyerror: kesalahankunci  # kesalahan kunci
-  attributeerror: ErrorAtribut  # Error Atribut
-  nameerror: ErrorNama  # Error Nama
-  unboundlocalerror: KesalahanUnboundLocal  # Kesalahan Unbound Local
-  oserror: oserror
-  blockingioerror: kesalahanioyangmemblokir  # kesalahan i/o yang memblokir
-  childprocesserror: kesalahanprosesanak  # kesalahan proses anak
+  generatorexit: generasikeluar
+  systemexit: keluaransistem
+  keyboardinterrupt: interupsikeyboard
+  arithmeticerror: kesalahanaritmatika
+  floatingpointerror: errorpointermengambang
+  overflowerror: kesalahanoverflow
+  zerodivisionerror: kesalahanpembagiannol
+  lookuperror: kesalahanpencarian
+  indexerror: kesalahanindeks
+  keyerror: kesalahankunci
+  attributeerror: ErrorAtribut
+  nameerror: ErrorNama
+  unboundlocalerror: KesalahanUnboundLocal
+  oserror: kesalahanOs
+  blockingioerror: kesalahanioyangmemblokir
+  childprocesserror: kesalahanprosesanak
   connectionerror: kesalahan_koneksi
-  brokenpipeerror: kesalahanpiparusak  # kesalahan pipa rusak
-  connectionabortederror: kesalahanpenghentiankoneksi  # kesalahan penghentian koneksi
+  brokenpipeerror: kesalahanpiparusak
+  connectionabortederror: kesalahanpenghentiankoneksi
   connectionrefusederror: error_koneksi_ditolak
-  connectionreseterror: resetterkesalahankoneksi  # resetter kesalahan koneksi
+  connectionreseterror: resetterkesalahankoneksi
   fileexistserror: kesalahan_file_sudah_ada
   filenotfounderror: ErrorTidakDitemukanFile
-  interruptederror: kesalahangangguan  # kesalahan gangguan
+  interruptederror: kesalahangangguan
   isadirectoryerror: kesalahan_direktori
   notadirectoryerror: kesalahan_bukan_direktori
-  permissionerror: kesalahanizin  # kesalahan izin
+  permissionerror: kesalahanizin
   processlookuperror: kesalahan_pencarian_proses
-  timeouterror: kesalahanwaktutunggu  # kesalahan waktu tunggu
-  importerror: kesalahanimpor  # kesalahan impor
-  modulenotfounderror: Errormodultidakditemukan  # Error modul tidak ditemukan
+  timeouterror: kesalahanwaktutunggu
+  importerror: kesalahanimpor
+  modulenotfounderror: Errormodultidakditemukan
   stopiteration: henti_iterasi
-  stopasynciteration: berhentidariiterasiasinkron  # berhenti dari iterasi asinkron
-  typeerror: KesalahanTipe  # Kesalahan Tipe
-  valueerror: kesalahannilai  # kesalahan nilai
-  unicodeerror: errorunicode  # error unicode
-  unicodedecodeerror: errordekodeunikode  # error dekode unikode
-  unicodeencodeerror: unicodeencodeerror
-  unicodetranslateerror: errorterjemahanunicode  # error terjemahan unicode
-  runtimeerror: kesalahanruntime  # kesalahan runtime
-  notimplementederror: errorimplementasitidakdilakukan  # error implementasi tidak dilakukan
-  recursionerror: kesalahanrekursi  # kesalahan rekursi
-  referenceerror: errorreferensi  # error referensi
-  assertionerror: kesalahanasersi  # kesalahan asersi
-  memoryerror: kesalahanmemori  # kesalahan memori
-  buffererror: kesalahanbuffer  # kesalahan buffer
-  eoferror: kesalahaneksternal  # kesalahan eksternal
-  syntaxerror: kesalahansintaks  # kesalahan sintaks
-  indentationerror: indentasiyangsalah  # indentasi yang salah
-  taberror: taberror
-  environmenterror: kesalahanlingkungan  # kesalahan lingkungan
-  ioerror: kesalahanIO  # kesalahan I/O
+  stopasynciteration: berhentidariiterasiasinkron
+  typeerror: KesalahanTipe
+  valueerror: kesalahannilai
+  unicodeerror: errorunicode
+  unicodedecodeerror: errordekodeunikode
+  unicodeencodeerror: kesalahanPengkodeanUnicode
+  unicodetranslateerror: errorterjemahanunicode
+  runtimeerror: kesalahanruntime
+  notimplementederror: errorimplementasitidakdilakukan
+  recursionerror: kesalahanrekursi
+  referenceerror: errorreferensi
+  assertionerror: kesalahanasersi
+  memoryerror: kesalahanmemori
+  buffererror: kesalahanbuffer
+  eoferror: kesalahaneksternal
+  syntaxerror: kesalahansintaks
+  indentationerror: indentasiyangsalah
+  taberror: kesalahanTab
+  environmenterror: kesalahanlingkungan
+  ioerror: kesalahanIO
   warning: peringatan
   userwarning: peringatan_pengguna
-  deprecationwarning: peringatanpenghapusan  # peringatan penghapusan
-  pendingdeprecationwarning: peringatanpendingdeprecasi  # peringatan pending deprecasi
-  syntaxwarning: peringatansintaks  # peringatan sintaks
-  runtimewarning: peringatanruntime  # peringatan runtime
+  deprecationwarning: peringatanpenghapusan
+  pendingdeprecationwarning: peringatanpendingdeprecasi
+  syntaxwarning: peringatansintaks
+  runtimewarning: peringatanruntime
   futurewarning: peringatan_masa_depan
-  importwarning: peringatanimpor  # peringatan impor
-  unicodewarning: peringatanunicode  # peringatan unicode
-  byteswarning: peringatanbyte  # peringatan byte
-  resourcewarning: peringatansumberdaya  # peringatan sumber daya
+  importwarning: peringatanimpor
+  unicodewarning: peringatanunicode
+  byteswarning: peringatanbyte
+  resourcewarning: peringatansumberdaya
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

@@ -14,17 +14,17 @@ keywords:
   del: verwijderen
   elif: alswel
   else: anders
-  except: except
-  finally: tenslotte  # ten slotte
+  except: behalve
+  finally: tenslotte
   for: voor
   from: van
   global: wereldwijde
   if: indien
   import: importeren
-  in: in
-  is: is
-  lambda: lambda
-  nonlocal: nietlokaal  # niet-lokaal
+  in: bevat
+  is: identiek_aan
+  lambda: lambda_functie
+  nonlocal: nietlokaal
   not: niet
   or: of
   pass: passeren
@@ -43,109 +43,109 @@ builtins:
   abs: absoluut
   all: alles
   any: enige
-  ascii: ascii
-  bin: bin
+  ascii: asciiOmzetting
+  bin: binair
   breakpoint: pauzepunt
   callable: aanroepbaar
   chr: karakter
   compile: compileren
   delattr: verwijderken
-  dir: dir
-  divmod: divmod
+  dir: lijst_alle_eigenschappen_en_methoden
+  divmod: deling_met_rest
   enumerate: opnummeren
   eval: evalueren
   exec: uitvoeren
   filter: filteren
   format: opmaak
-  getattr: hetophalenvaneenkenmerk  # het ophalen van een kenmerk
-  globals: deglobalevariabelen  # de globale variabelen
+  getattr: hetophalenvaneenkenmerk
+  globals: deglobalevariabelen
   hasattr: heeftattr
-  hash: hash
-  help: help
-  hex: hex
-  id: id
+  hash: hashen
+  help: hulp
+  hex: hexadecimaal
+  id: unieke_identificator
   input: invoer
-  isinstance: isinstance
+  isinstance: isinstanceVan
   issubclass: is_subklasse
-  iter: iter
+  iter: itereren
   len: lengte
   locals: lokaal
   map: kaarten
   max: maximaal
-  min: min
+  min: minimum
   next: volgende
   oct: octaal
   open: openen
-  ord: ord
-  pow: demacht  # de macht
+  ord: ordeer
+  pow: demacht
   print: afdrukken
   range: bereik
   repr: weergave
   reversed: omgekeerd
   round: afronden
-  setattr: setattr
-  slice: slice
+  setattr: setAttribuut
+  slice: slicen
   sorted: gesorteerd
   sum: som
-  vars: vars
+  vars: variabelen
   zip: zippen
-  bool: bool
-  bytearray: bytearray
-  bytes: bytes
+  bool: waarheid
+  bytearray: byte_array_waarden_reeks
+  bytes: bytereeks
   classmethod: classmethode
-  complex: complex
-  dict: dict
-  float: float
-  frozenset: frozenset
-  int: int
+  complex: complexe
+  dict: woordenboek
+  float: decimaal_getal
+  frozenset: onveranderlijke_mengset
+  int: geheel_getal
   list: lijst
-  memoryview: memoryview
-  object: object
+  memoryview: geheugenvuist
+  object: basis_klasse_voor_al_python_klassen
   property: eigenschap
-  set: set
-  staticmethod: statischemethode  # statische methode
+  set: onvolgde_collectie
+  staticmethod: statischemethode
   str: tekenreeks
-  super: super
+  super: superHogerNiveau
   tuple: tupel
-  ellipsis: deverteldeterm  # de vertelde term
-  notimplemented: nietgeïmplementeerd  # niet geïmplementeerd
-  aiter: aiter
-  anext: anext
+  ellipsis: deverteldeterm
+  notimplemented: nietgeïmplementeerd
+  aiter: asynch_iterator
+  anext: anexten
 exceptions:
-  baseexception: baseuitzondering  # base-uitzondering
+  baseexception: baseuitzondering
   basegeneratorexit: basegeneratoruitgang
   exception: uitzondering
   generatorexit: generatoruitgang
   systemexit: systeemafsluiting
   keyboardinterrupt: toetsenbordonderbreking
-  arithmeticerror: aritmetischefout  # aritmetische fout
-  floatingpointerror: floatingpointerror
-  overflowerror: overflowerror
+  arithmeticerror: aritmetischefout
+  floatingpointerror: floatBijzonderheid
+  overflowerror: overvloedfout
   zerodivisionerror: nuldeeltverdelingfout
   lookuperror: lookupfout
   indexerror: indexfout
   keyerror: sleutelfout
   attributeerror: AttributeError
   nameerror: Naamfout
-  unboundlocalerror: ongebondenlokalefout  # ongebonden lokale fout
+  unboundlocalerror: ongebondenlokalefout
   oserror: osfout
-  blockingioerror: blockingioerror
+  blockingioerror: blokkendIOFout
   childprocesserror: childprocessfout
   connectionerror: verbindingstoring
   brokenpipeerror: brokenpipefout
-  connectionabortederror: connectionabortederror
+  connectionabortederror: verbindingGebrokenFout
   connectionrefusederror: connection_refused_error
   connectionreseterror: connectionresetfout
-  fileexistserror: fileexistserror
-  filenotfounderror: filenietgevondenfout  # file niet gevonden fout
-  interruptederror: interruptiefout  # interruptie-fout
-  isadirectoryerror: isadirectoryerror
-  notadirectoryerror: nietbestandfout  # niet-bestand-fout
-  permissionerror: permissionerror  # permission error
+  fileexistserror: bestaandeBestandFout
+  filenotfounderror: filenietgevondenfout
+  interruptederror: interruptiefout
+  isadirectoryerror: is_map_error
+  notadirectoryerror: nietbestandfout
+  permissionerror: permission_error
   processlookuperror: processlookupfout
-  timeouterror: timeouterror
-  importerror: importerror
-  modulenotfounderror: modulenietgevondenfout  # module niet gevonden fout
+  timeouterror: timeoutfout
+  importerror: ImportFout
+  modulenotfounderror: modulenietgevondenfout
   stopiteration: stopiteratie
   stopasynciteration: stopasynciteratie
   typeerror: typefout
@@ -154,14 +154,14 @@ exceptions:
   unicodedecodeerror: unicodedecodefout
   unicodeencodeerror: unicodeencodefout
   unicodetranslateerror: unicodetranslatefout
-  runtimeerror: runtimeerror
-  notimplementederror: nietimplementatiefout  # niet-implementatie fout
-  recursionerror: recursiefout  # recursie-fout
-  referenceerror: referentiefout  # referentie-fout
-  assertionerror: assertiefout  # assertie-fout
-  memoryerror: memoryerror
+  runtimeerror: runtimefout
+  notimplementederror: nietimplementatiefout
+  recursionerror: recursiefout
+  referenceerror: referentiefout
+  assertionerror: assertiefout
+  memoryerror: geheugentekening
   buffererror: bufferfout
-  eoferror: eoferror
+  eoferror: eindBestandFout
   syntaxerror: syntaxisfout
   indentationerror: indentatiefout
   taberror: tabfout
@@ -170,10 +170,10 @@ exceptions:
   warning: waarschuwing
   userwarning: gebruikerwaarschuwing
   deprecationwarning: depreciatiewaarschuwing
-  pendingdeprecationwarning: pendingdeprecationwaarschuwing  # pending deprecationwaarschuwing
+  pendingdeprecationwarning: pendingdeprecationwaarschuwing
   syntaxwarning: syntaxwaarschuwing
   runtimewarning: runtimewaarschuwing
-  futurewarning: futurewarning
+  futurewarning: toekenningsWaarschuwing
   importwarning: importwaarschuwing
   unicodewarning: unicodewaarschuwing
   byteswarning: byteswaarschuwing
@@ -183,7 +183,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

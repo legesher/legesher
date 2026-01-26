@@ -6,7 +6,7 @@ target: python
 version: '3.12'
 extends: 3.11.yml
 keywords:
-  type: type
+  type: retourne_type
 exceptions: {}
 metadata:
   python_version_min: '3.12'
@@ -14,7 +14,7 @@ metadata:
   compatibility_tested:
   - '3.12'
   - '3.13'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

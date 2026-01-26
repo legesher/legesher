@@ -256,19 +256,27 @@ STANDARDS:
         prompt += f"""
 TASK:
 Translate "{request.term}" to {language_name} for Python programming:
-1. Focus on the programming CONCEPT
+1. Focus on the programming CONCEPT, not the English word
 2. Use natural {language_name} that programmers would understand
 3. Prefer appropriate grammatical forms (infinitive for verbs, singular for nouns)
+
+CRITICAL RULES:
+- You MUST translate to {language_name}. DO NOT return the English term.
+- Even technical terms like "ValueError", "isinstance", "bytearray" MUST be translated.
+- Example: "ValueError" in Spanish should be "ErrorDeValor", not "ValueError"
+- Example: "isinstance" in German should be "istinstanzvon", not "isinstance"
+- The only exception: if the {language_name} word happens to be identical to English (like "no" in Spanish)
+- Combine words without spaces to create valid Python identifiers (e.g., "istinstanzvon" not "ist instanz von")
 
 OUTPUT:
 Respond with ONLY a valid JSON object (no markdown, no extra text):
 {{
-  "translation": "the translated term",
+  "translation": "the translated term in {language_name}",
   "word_type": "verb|noun|etc",
   "form": "infinitive|singular|etc",
   "confidence": 0.85,
   "alternatives": ["alt1", "alt2"],
-  "rationale": "Why you chose this translation"
+  "rationale": "Why you chose this {language_name} translation"
 }}
 """
 

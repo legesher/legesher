@@ -5,15 +5,15 @@ extends: 3.10.yml
 keywords:
   except*: kecuali
 exceptions:
-  exceptiongroup: kelompokpengecualian  # kelompok pengecualian
-  baseexceptiongroup: kelompokpengecualiandasar  # kelompok pengecualian dasar
-  encodingwarning: peringatanpengkodean  # peringatan pengkodean
+  exceptiongroup: kelompokpengecualian
+  baseexceptiongroup: kelompokpengecualiandasar
+  encodingwarning: peringatanpengkodean
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'
   compatibility_tested:
   - '3.11'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

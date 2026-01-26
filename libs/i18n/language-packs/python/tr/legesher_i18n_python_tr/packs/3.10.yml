@@ -3,28 +3,28 @@ target: python
 version: '3.10'
 keywords:
   and: ve
-  as: as
-  assert: talepetmek  # talep etmek
+  as: eşdeğer
+  assert: talepetmek
   async: asenkron
   await: bekle
   break: çıkış
   class: sınıf
-  continue: devamet  # devam et
+  continue: devamet
   def: tanımla
   del: sil
   elif: eğer_de
   else: değil
-  except: yada  # ya da
+  except: yada
   finally: sonunda
   for: için
   from: dene
   global: küresel
   if: eğer
-  import: içeriaktarma  # içeri aktarma
+  import: içeriaktarma
   in: içinde
   is: olmak
-  lambda: lambda
-  nonlocal: yerelolmayan  # yerel olmayan
+  lambda: lambdan
+  nonlocal: yerelolmayan
   not: değil
   or: veya
   pass: geç
@@ -34,156 +34,156 @@ keywords:
   while: sürürken
   with: ile
   yield: ver
-  None: hiçbirşey  # hiçbir şey
+  None: hiçbirşey
   'True': doğru
   'False': yanlış
   match: eşleş
   case: vaka
 builtins:
-  abs: abs
-  all: herşey  # her şey
-  any: herhangibir  # herhangi bir
-  ascii: ascii
-  bin: bin
-  breakpoint: kesmenoktası  # kesme noktası
+  abs: mutlakDeğer
+  all: herşey
+  any: herhangibir
+  ascii: asciiDegerleri
+  bin: ikilikSistemden
+  breakpoint: kesmenoktası
   callable: çağırılabilir
   chr: karakter
   compile: dergi
   delattr: silattr
   dir: dizin
-  divmod: bölmevekalanınhesaplanması  # bölme ve kalanın hesaplanması
+  divmod: bölmevekalanınhesaplanması
   enumerate: sayma
   eval: değerlendir
   exec: yürüt
   filter: filtre
   format: biçim
-  getattr: özniteliğeeriş  # özniteliğe eriş
-  globals: theglobalvariables  # the global variables
+  getattr: özniteliğeeriş
+  globals: theglobalvariables
   hasattr: sahip
-  hash: hash
+  hash: özet_değeri
   help: yardım
-  hex: hex
+  hex: hexaDize
   id: kimlik
   input: giriş
-  isinstance: isinstance
-  issubclass: altsınıf  # alt sınıf
-  iter: iter
+  isinstance: tür_kontrolü
+  issubclass: altsınıf
+  iter: iterasyon
   len: uzunluk
-  locals: yereldeğişkenler  # yerel değişkenler
+  locals: yereldeğişkenler
   map: haritalama
   max: maksimum
-  min: min
+  min: küçük
   next: sonraki
-  oct: oct
+  oct: oktal
   open: açmak
   ord: karakter
-  pow: üçüncükuvvet  # üçüncü kuvvet
+  pow: üçüncükuvvet
   print: yazdır
   range: aralık
   repr: reprezentasyon
   reversed: tersine
-  round: ' yuvarlak'
+  round: yuvarlak
   setattr: şatatt
   slice: kesme
   sorted: sıralı
   sum: toplam
   vars: değişkenler
   zip: birleştir
-  bool: bool
-  bytearray: baytdizisi  # bayt dizisi
+  bool: doğru
+  bytearray: byteDizisi
   bytes: baytlar
-  classmethod: sınıfyöntemi  # sınıf yöntemi
+  classmethod: sınıfyöntemi
   complex: karmaşık
   dict: sözlük
-  float: kayannokta  # kayan nokta
-  frozenset: dondurulmuşküme  # dondurulmuş küme
+  float: kayan_nokta
+  frozenset: dondurulmuşküme
   int: tamsayı
   list: liste
-  memoryview: bellekgörünümü  # bellek görünümü
+  memoryview: bellekgörünümü
   object: nesne
   property: özellik
   set: küme
-  staticmethod: statikyöntem  # statik yöntem
+  staticmethod: statikyöntem
   str: metin
   super: üst
   tuple: kökleme
   ellipsis: ellipsiz
   notimplemented: yapılamaz
-  aiter: aiter
-  anext: anext
+  aiter: asenkron_itaratci
+  anext: sonraki
 exceptions:
-  baseexception: temelistisna  # temel istisna
-  basegeneratorexit: basegeneratorexit
-  exception: özeldurum  # özel durum
-  generatorexit: generatorexit
-  systemexit: sistemçıkışı  # sistem çıkışı
+  baseexception: temelistisna
+  basegeneratorexit: basegeneratorçıkışı
+  exception: özeldurum
+  generatorexit: generatör_çıkışı
+  systemexit: sistemçıkışı
   keyboardinterrupt: klavye_kesintisi
   arithmeticerror: aritmetikhata
-  floatingpointerror: floathata  # float hata
-  overflowerror: aşırıakışhatası  # aşırı akış hatası
-  zerodivisionerror: sıfırbölmehatası  # sıfır bölme hatası
-  lookuperror: aramahatası  # arama hatası
-  indexerror: Dizinhatası  # Dizin hatası
-  keyerror: anahtarhatası  # anahtar hatası
-  attributeerror: öznitelikhatası  # öznitelik hatası
+  floatingpointerror: floathata
+  overflowerror: aşırıakışhatası
+  zerodivisionerror: sıfırbölmehatası
+  lookuperror: aramahatası
+  indexerror: Dizinhatası
+  keyerror: anahtarhatası
+  attributeerror: öznitelikhatası
   nameerror: AdHata
-  unboundlocalerror: yerinebağlanmamışyerelhata  # yerine bağlanmamış yerel hata
-  oserror: oserror
-  blockingioerror: blockingioerror
-  childprocesserror: çocuksüreçhatası  # çocuk süreç hatası
-  connectionerror: bağlantıhatası  # bağlantı hatası
-  brokenpipeerror: brokenpipeerror
+  unboundlocalerror: yerinebağlanmamışyerelhata
+  oserror: os_hatası
+  blockingioerror: blokeeriohletehir
+  childprocesserror: çocuksüreçhatası
+  connectionerror: bağlantıhatası
+  brokenpipeerror: bozuk_boru_hatası
   connectionabortederror: bağlantı_kapatma_hata
   connectionrefusederror: bağlantı_kabul_etmedi_hata
-  connectionreseterror: bağlantısıfırlamahatası  # bağlantı sıfırlama hatası
+  connectionreseterror: bağlantısıfırlamahatası
   fileexistserror: dosya_zaten_var
-  filenotfounderror: Dosyabulunamadıhatası  # Dosya bulunamadı hatası
-  interruptederror: kesintiyeuğrayanhata  # kesintiye uğrayan hata
-  isadirectoryerror: isadirectoryerror
-  notadirectoryerror: notadirectoryerror
-  permissionerror: izinhatası  # izin hatası
-  processlookuperror: processlookuperror
-  timeouterror: zamanaşımıhatası  # zaman aşımı hatası
-  importerror: içeriaktarmahatası  # içeri aktarma hatası
-  modulenotfounderror: modülbulunamadıhatası  # modül bulunamadı hatası
+  filenotfounderror: Dosyabulunamadıhatası
+  interruptederror: kesintiyeuğrayanhata
+  isadirectoryerror: dosyaYoluHata
+  notadirectoryerror: dosyaYokHata
+  permissionerror: izinhatası
+  processlookuperror: yönetimHata
+  timeouterror: zamanaşımıhatası
+  importerror: içeriaktarmahatası
+  modulenotfounderror: modülbulunamadıhatası
   stopiteration: durdurma_iterasyonu
-  stopasynciteration: stopasynciteration
-  typeerror: TürHatası  # Tür Hatası
-  valueerror: değerhatası  # değer hatası
+  stopasynciteration: stopAsyncİterasyon
+  typeerror: TürHatası
+  valueerror: değerhatası
   unicodeerror: unicodehata
-  unicodedecodeerror: unicodedecodeerror
-  unicodeencodeerror: unicodeencodeerror
-  unicodetranslateerror: unicodetranslateerror
-  runtimeerror: çalışmazamanıhatası  # çalışma zamanı hatası
-  notimplementederror: UygulanamayanHata  # Uygulanamayan Hata
-  recursionerror: yinelemehatası  # yineleme hatası
-  referenceerror: referanshatası  # referans hatası
-  assertionerror: tartışmahatası  # tartışma hatası
-  memoryerror: bellekhatası  # bellek hatası
-  buffererror: buffererror
+  unicodedecodeerror: unicodedecodehataırı
+  unicodeencodeerror: unicodeencodehata
+  unicodetranslateerror: unicodeKodDönüşHatası
+  runtimeerror: çalışmazamanıhatası
+  notimplementederror: UygulanamayanHata
+  recursionerror: yinelemehatası
+  referenceerror: referanshatası
+  assertionerror: tartışmahatası
+  memoryerror: bellekhatası
+  buffererror: buffer_hatası
   eoferror: hata
-  syntaxerror: sintakshatası  # sintaks hatası
-  indentationerror: girintilemehatası  # girintileme hatası
-  taberror: taberror
-  environmenterror: environmenterror
-  ioerror: ioerror
+  syntaxerror: sintakshatası
+  indentationerror: girintilemehatası
+  taberror: tabhata
+  environmenterror: ortamHata
+  ioerror: G_Ç_hatası
   warning: uyarı
   userwarning: kullanıcıuyarı
   deprecationwarning: depreasyonuyarı
-  pendingdeprecationwarning: bekleyenkullanımdışıbırakmauyarısı  # bekleyen kullanım dışı bırakma uyarısı
-  syntaxwarning: sintaksuyarı  # sintaks uyarı
-  runtimewarning: çalışmazamanıuyarı  # çalışma zamanı uyarı
+  pendingdeprecationwarning: bekleyenkullanımdışıbırakmauyarısı
+  syntaxwarning: sintaksuyarı
+  runtimewarning: çalışmazamanıuyarı
   futurewarning: gelecekuyarı
-  importwarning: importuyarı  # import uyarı
+  importwarning: importuyarı
   unicodewarning: unicodeuyarısı
-  byteswarning: baytuyarı  # bayt uyarı
-  resourcewarning: ' kaynakuyarı'
+  byteswarning: baytuyarı
+  resourcewarning: kaynakuyarı
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

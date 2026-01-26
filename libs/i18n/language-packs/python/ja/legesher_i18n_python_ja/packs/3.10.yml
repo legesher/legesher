@@ -3,7 +3,7 @@ target: python
 version: '3.10'
 keywords:
   and: そして
-  as: as
+  as: 作為
   assert: アサーション
   async: 非同期
   await: 待機
@@ -12,7 +12,7 @@ keywords:
   continue: 継続する
   def: 定義する
   del: 削除
-  elif: elseif  # else if
+  elif: elseif
   else: それ以外の場合
   except: 除く
   finally: ついに
@@ -31,7 +31,7 @@ keywords:
   raise: エラーをスローする
   return: 戻り値
   try: 試す
-  while: while
+  while: while_ループ
   with: with文
   yield: 生成する
   None: なし
@@ -62,10 +62,10 @@ builtins:
   hasattr: 有属性
   hash: ハッシュ
   help: ヘルプ
-  hex: hex
+  hex: ヘクス
   id: オブジェクトの識別子
   input: 入力
-  isinstance: isinstance
+  isinstance: インスタンスチェック
   issubclass: サブクラスであるかどうかを確認する
   iter: 反復
   len: 長さ
@@ -83,7 +83,7 @@ builtins:
   repr: レプリケーション
   reversed: 逆順
   round: 丸める
-  setattr: setattr
+  setattr: 属性を設定する
   slice: スライス
   sorted: 並べ替えられた
   sum: 合計
@@ -128,7 +128,7 @@ exceptions:
   attributeerror: 属性エラー
   nameerror: 未定義名エラー
   unboundlocalerror: 未定義の変数によるエラー
-  oserror: oserror
+  oserror: osエラー
   blockingioerror: ブロックIOエラー
   childprocesserror: 子プロセスエラー
   connectionerror: 接続エラー
@@ -166,10 +166,10 @@ exceptions:
   indentationerror: インデントエラー
   taberror: タブエラー
   environmenterror: 環境エラー
-  ioerror: IOエラー  # I/O エラー
+  ioerror: IOエラー
   warning: 警告
   userwarning: ユーザーワーニング
-  deprecationwarning: 警告非推奨  # 警告: 非推奨
+  deprecationwarning: 警告非推奨
   pendingdeprecationwarning: 未使用の警告
   syntaxwarning: 構文警告
   runtimewarning: ランタイム警告
@@ -183,7 +183,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

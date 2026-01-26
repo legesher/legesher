@@ -10,89 +10,89 @@ keywords:
   assert: affirmer
   async: asynchrone
   await: attendre
-  break: séchapper  # s'échapper
+  break: séchapper
   case: cas
   class: classe
   continue: continuer
   def: défini
   del: supprimer
-  elif: sinonsi  # sinon si
+  elif: sinonsi
   else: autre
   except: sauf
   finally: enfin
   for: pour
   from: de
-  global: global
+  global: dans_espace_de_noms_global
   if: si
   import: importer
-  in: in
+  in: dans
   is: est
-  lambda: lambda
+  lambda: fonction_lambda
   match: correspondere
-  nonlocal: nonlocal
+  nonlocal: nonlocale
   not: pas
   or: ou
   pass: passer
   raise: élever
   return: retourner
   try: essayer
-  while: while
+  while: tant_que
   with: avec
   yield: dégager
 builtins:
-  abs: labsolu  # l'absolu
-  aiter: aiter
+  abs: labsolu
+  aiter: iterer
   all: tout
-  anext: anext
-  any: nimportequel  # n'importe quel
-  ascii: ascii
-  bin: bin
-  bool: bool
-  breakpoint: pointdarrêt  # point d'arrêt
-  bytearray: bytearray
+  anext: get_prochain_element
+  any: nimportequel
+  ascii: code_ascii
+  bin: binaire
+  bool: booleen
+  breakpoint: pointdarrêt
+  bytearray: tableDeBytes
   bytes: octets
   callable: appelable
-  chr: chr
-  classmethod: méthodedeclasse  # méthode de classe
+  chr: caractère
+  classmethod: méthodedeclasse
   compile: compiler
   complex: complexe
-  delattr: supprimerlattribut  # supprimer l'attribut
+  delattr: supprimerlattribut
   dict: dictionnaire
-  dir: dir
-  divmod: divmod
+  dir: liste_attributs_methodes
+  divmod: division_entiere_et_residu
   ellipsis: ellipse
   enumerate: énumérer
   eval: evaluer
   exec: exécuter
   filter: filtre
-  float: float
+  float: flottant
   format: formatage
-  frozenset: ensemblegelé  # ensemble gelé
-  getattr: obtenirlattribut  # obtenir l'attribut
-  globals: lesglobaux  # les globaux
-  hasattr: avoiruneattribut  # avoir une attribut
+  frozenset: ensemblegelé
+  getattr: obtenirlattribut
+  globals: lesglobaux
+  hasattr: avoiruneattribut
   hash: hachage
   help: aide
-  hex: hex
-  id: lidentifiant  # l'identifiant
+  hex: hexadécimal
+  id: lidentifiant
   input: entrée
   int: entier
-  isinstance: isinstance
-  issubclass: estsousclassede  # est sous-classe de
+  isinstance: estInstanceDe
+  issubclass: estsousclassede
   iter: itérer
-  len: lalongueur  # la longueur
+  len: lalongueur
   list: liste
-  locals: lesvariableslocales  # les variables locales
+  locals: lesvariableslocales
   map: mappé
-  max: max
-  memoryview: memoryview
-  min: min
+  max: maximiser
+  memoryview: vueDeLaMemoire
+  min: le_plus_petit
   next: suivant
   notimplemented: non_implémenté
   object: objet
   oct: octal
   open: ouvrir
-  ord: ord
+  ord: codePoint
   pow: puissance
   print: imprimer
   property: propriété
@@ -104,78 +104,78 @@ builtins:
   setattr: setattrter
   slice: tranche
   sorted: trié
-  staticmethod: méthodestatique  # méthode statique
-  str: chaînedecaractères  # chaîne de caractères
+  staticmethod: méthodestatique
+  str: chaînedecaractères
   sum: somme
-  super: super
-  tuple: tuple
-  vars: vars
+  super: classe_parente
+  tuple: sequence_ordonnee_inmutabble
+  vars: variables
   zip: zipper
 exceptions:
   arithmeticerror: erreurarithmétique
-  assertionerror: erreurdassertion  # erreurd'assertion
-  attributeerror: Erreurdattribut  # Erreur d'attribut
-  baseexception: baseexception
+  assertionerror: erreurdassertion
+  attributeerror: Erreurdattribut
+  baseexception: exception_de_base
   basegeneratorexit: basegénérateurdesortie
-  blockingioerror: erreurdESbloquante  # erreurd'ESbloquante
+  blockingioerror: erreurdESbloquante
   brokenpipeerror: erreurdepipecassée
   buffererror: erreurdetampon
   byteswarning: avertissementdebytes
   childprocesserror: erreurdeprocessusenfant
-  connectionabortederror: erreurdabandondeconnexion  # erreurd'abandondeconnexion
+  connectionabortederror: erreurdabandondeconnexion
   connectionerror: erreurdeconnexion
   connectionrefusederror: erreurderefusdeconnexion
   connectionreseterror: resetterlaconnexion
   deprecationwarning: avertissementdedépréciation
-  environmenterror: erreurdenvironnement  # erreurd'environnement
-  eoferror: erreurdéof  # erreurd'éof
-  exception: lexception  # l'exception
-  fileexistserror: erreurdexistencedefichier  # erreurd'existencedefichier
+  environmenterror: erreurdenvironnement
+  eoferror: erreurdéof
+  exception: lexception
+  fileexistserror: erreurdexistencedefichier
   filenotfounderror: erreurdefichiernontrouvé
   floatingpointerror: erreurdepointeauflottant
   futurewarning: avertissementfutur
-  generatorexit: générateurdexit  # générateurd'exit
+  generatorexit: générateurdexit
   importerror: importationerreur
-  importwarning: avertissementdimportation  # avertissementd'importation
-  indentationerror: erreurdindentation  # erreurd'indentation
+  importwarning: avertissementdimportation
+  indentationerror: erreurdindentation
   indexerror: IndexError
-  interruptederror: erreurdinterruption  # erreurd'interruption
-  ioerror: erreurdES  # erreurd'ES
+  interruptederror: erreurdinterruption
+  ioerror: erreurdES
   isadirectoryerror: erreurisadirectory
   keyboardinterrupt: interruptionduclavier
-  keyerror: erreurdeclé  # erreur de clé
+  keyerror: erreurdeclé
   lookuperror: erreurderecherche
   memoryerror: erreurdemémoire
   modulenotfounderror: erreurdemodulenontrouvé
-  nameerror: Errordenom  # Error de nom
-  notadirectoryerror: erreurnotadirectory  # erreur'notadirectory'
+  nameerror: Errordenom
+  notadirectoryerror: erreurnotadirectory
   notimplementederror: erreurdenonimplémentation
-  oserror: erreurdusystèmedexploitation  # erreurdusystèmed'exploitation
+  oserror: erreurdusystèmedexploitation
   overflowerror: erreurdedébordement
   pendingdeprecationwarning: avertissementdedépréciationenattente
-  permissionerror: erreurdautorisation  # erreurd'autorisation
+  permissionerror: erreurdautorisation
   processlookuperror: erreurderecherchedeprocessus
   recursionerror: erreurderécursivité
   referenceerror: erreurderéférence
   resourcewarning: avertissementderessources
-  runtimeerror: erreurderuntime  # erreur de runtime
-  runtimewarning: avertissementdetempsdexécution  # avertissementdetempsd'exécution
-  stopasynciteration: arrêtditérationasynchrone  # arrêtd'itérationasynchrone
-  stopiteration: arrêtdelitération  # arrêt de l'itération
+  runtimeerror: erreurderuntime
+  runtimewarning: avertissementdetempsdexécution
+  stopasynciteration: arrêtditérationasynchrone
+  stopiteration: arrêtdelitération
   syntaxerror: erreurdesyntaxe
   syntaxwarning: avertissementdesyntaxe
   systemexit: arrêtdusystème
   taberror: erreurdetabulation
   timeouterror: erreurdedélai
-  typeerror: erreurdetype  # erreur de type
+  typeerror: erreurdetype
   unboundlocalerror: erreurderéférencelocalenonliée
   unicodedecodeerror: erreurdedécodageUnicode
-  unicodeencodeerror: unicodeencodeerror
+  unicodeencodeerror: erreurDeCodageUnicode
   unicodeerror: erreurunicode
-  unicodetranslateerror: erreurdetraductiondelunicode  # erreurdetraductiondel'unicode
+  unicodetranslateerror: erreurdetraductiondelunicode
   unicodewarning: avertissementdeunicode
-  userwarning: avertissementdelutilisateur  # avertissementdel'utilisateur
-  valueerror: valeurincorrecte  # valeur incorrecte
+  userwarning: avertissementdelutilisateur
+  valueerror: valeurincorrecte
   warning: avertissement
   zerodivisionerror: erreurdedivisionparzéro
 metadata:
@@ -183,7 +183,7 @@ metadata:
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

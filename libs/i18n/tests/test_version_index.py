@@ -182,3 +182,188 @@ class TestVersionIndexRepr:
 
         assert "VersionIndex" in repr_str
         assert "3.10" in repr_str or "versions" in repr_str
+
+
+class TestConnectedArchitecture:
+    """Test that VersionIndex uses term_definitions as the source of truth.
+
+    These tests verify that the connected architecture works correctly:
+    - Base terms come from term_definitions.py
+    - Version deltas come from version-index.yml
+    - get_all_keywords/builtins/exceptions return complete sets
+    """
+
+    def test_get_all_keywords_includes_base_keywords(self):
+        """Verify base keywords from term_definitions are included."""
+        from legesher_i18n.term_definitions import KEYWORDS_BASE, SPECIAL_VALUES
+
+        index = VersionIndex.load(REAL_INDEX_PATH)
+        kw_310 = index.get_all_keywords("3.10")
+
+        # Should include all base keywords
+        for base_kw in KEYWORDS_BASE:
+            assert base_kw in kw_310, f"Base keyword '{base_kw}' missing from 3.10"
+
+        # Should include special values (None, True, False)
+        for special in SPECIAL_VALUES:
+            assert special in kw_310, f"Special value '{special}' missing from 3.10"
+
+    def test_get_all_keywords_includes_version_additions(self):
+        """Verify version-specific keywords are added."""
+        index = VersionIndex.load(REAL_INDEX_PATH)
+
+        # 3.10 additions
+        kw_310 = index.get_all_keywords("3.10")
+        assert "match" in kw_310
+        assert "case" in kw_310
+
+        # 3.11 additions
+        kw_311 = index.get_all_keywords("3.11")
+        assert "except*" in kw_311
+
+        # 3.12 additions
+        kw_312 = index.get_all_keywords("3.12")
+        assert "type" in kw_312
+
+    def test_get_all_keywords_returns_complete_set(self):
+        """Verify get_all_keywords returns a complete set, not just deltas."""
+
+        index = VersionIndex.load(REAL_INDEX_PATH)
+        kw_310 = index.get_all_keywords("3.10")
+
+        # Should have at least 35 keywords (32 base + 3 special + match/case)
+        assert len(kw_310) >= 35, f"Expected >= 35 keywords, got {len(kw_310)}"
+
+        # Verify common keywords
+        assert "def" in kw_310
+        assert "class" in kw_310
+        assert "if" in kw_310
+        assert "for" in kw_310
+        assert "while" in kw_310
+
+    def test_get_all_builtins_includes_base_builtins(self):
+        """Verify base builtins from term_definitions are included."""
+
+        index = VersionIndex.load(REAL_INDEX_PATH)
+        builtins = index.get_all_builtins("3.10")
+
+        # Should include common builtin functions
+        assert "print" in builtins
+        assert "len" in builtins
+        assert "range" in builtins
+        assert "open" in builtins
+
+        # Should include builtin types
+        assert "int" in builtins
+        assert "str" in builtins
+        assert "list" in builtins
+        assert "dict" in builtins
+
+        # Should include special constants
+        assert "ellipsis" in builtins
+        assert "notimplemented" in builtins
+
+    def test_get_all_builtins_returns_complete_set(self):
+        """Verify get_all_builtins returns a complete set."""
+        index = VersionIndex.load(REAL_INDEX_PATH)
+        builtins = index.get_all_builtins("3.10")
+
+        # Should have at least 70 builtins (52 functions + 18 types + 2 constants)
+        assert len(builtins) >= 70, f"Expected >= 70 builtins, got {len(builtins)}"
+
+    def test_get_all_exceptions_includes_base_exceptions(self):
+        """Verify base exceptions from term_definitions are included."""
+        index = VersionIndex.load(REAL_INDEX_PATH)
+        exceptions = index.get_all_exceptions("3.10")
+
+        # Should include common exceptions
+        assert "exception" in exceptions
+        assert "valueerror" in exceptions
+        assert "typeerror" in exceptions
+        assert "keyerror" in exceptions
+        assert "indexerror" in exceptions
+
+    def test_get_all_exceptions_returns_complete_set(self):
+        """Verify get_all_exceptions returns a complete set."""
+        index = VersionIndex.load(REAL_INDEX_PATH)
+        exceptions = index.get_all_exceptions("3.10")
+
+        # Should have at least 60 exceptions
+        assert len(exceptions) >= 60, (
+            f"Expected >= 60 exceptions, got {len(exceptions)}"
+        )
+
+    def test_get_all_terms_returns_all_categories(self):
+        """Verify get_all_terms returns all term categories."""
+        index = VersionIndex.load(REAL_INDEX_PATH)
+        terms = index.get_all_terms("3.10")
+
+        assert "keywords" in terms
+        assert "builtins" in terms
+        assert "exceptions" in terms
+
+        # Verify each category has content
+        assert len(terms["keywords"]) >= 35
+        assert len(terms["builtins"]) >= 70
+        assert len(terms["exceptions"]) >= 60
+
+    def test_term_definitions_is_source_of_truth(self):
+        """Verify term_definitions.py is the source of truth for base terms."""
+        from legesher_i18n.term_definitions import KEYWORDS_BASE
+
+        index = VersionIndex.load(REAL_INDEX_PATH)
+        kw = index.get_all_keywords("3.10")
+
+        # All base keywords should be in result
+        for base_kw in KEYWORDS_BASE:
+            assert base_kw in kw, f"Base keyword '{base_kw}' not in result"
+
+        # This confirms the import from term_definitions is working
+        assert "def" in kw
+        assert "class" in kw
+        assert "return" in kw
+
+
+class TestBackwardsCompatibility:
+    """Test backwards compatibility of the term_classifier re-export."""
+
+    def test_old_import_path_works(self):
+        """Verify the old import path still works."""
+        # This import should work via the re-export in term_classifier.py
+        from scripts.translate.term_classifier import (
+            classify_term,
+            KEYWORDS_BASE,
+            get_keywords_for_version,
+        )
+
+        # Test the imported functions work
+        assert classify_term("def") == "keyword"
+        assert "def" in KEYWORDS_BASE
+        assert "def" in get_keywords_for_version("3.10")
+
+    def test_new_import_path_works(self):
+        """Verify the new direct import path works."""
+        from legesher_i18n.term_definitions import (
+            classify_term,
+            KEYWORDS_BASE,
+            get_keywords_for_version,
+        )
+
+        # Test the imported functions work
+        assert classify_term("def") == "keyword"
+        assert "def" in KEYWORDS_BASE
+        assert "def" in get_keywords_for_version("3.10")
+
+    def test_both_paths_return_same_data(self):
+        """Verify both import paths return identical data."""
+        from scripts.translate.term_classifier import (
+            KEYWORDS_BASE as OLD_KEYWORDS,
+            BUILTIN_FUNCTIONS as OLD_FUNCTIONS,
+        )
+        from legesher_i18n.term_definitions import (
+            KEYWORDS_BASE as NEW_KEYWORDS,
+            BUILTIN_FUNCTIONS as NEW_FUNCTIONS,
+        )
+
+        assert OLD_KEYWORDS == NEW_KEYWORDS
+        assert OLD_FUNCTIONS == NEW_FUNCTIONS

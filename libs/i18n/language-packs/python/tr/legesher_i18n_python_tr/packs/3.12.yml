@@ -1,6 +1,3 @@
-# Turkish Language Pack for Python 3.12+
-# Extends 3.11 pack and adds 'type' keyword for type parameters
-
 language: tr
 target: python
 version: '3.12'
@@ -13,7 +10,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.12'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

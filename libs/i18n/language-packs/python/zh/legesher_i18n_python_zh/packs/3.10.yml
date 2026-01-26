@@ -15,19 +15,19 @@ keywords:
   class: 类
   continue: 继续
   def: 定义
-  del: del
-  elif: elseif  # else if
+  del: 删除
+  elif: elseif
   else: 否则
-  except: except
+  except: 异常
   finally: 最后
-  for: for
+  for: 循环
   from: 从
   global: 全局
   if: 如果
   import: 导入
   in: 在
   is: 是
-  lambda: lambda
+  lambda: 玪抑
   match: 匹配
   nonlocal: 非局部
   not: 不
@@ -36,7 +36,7 @@ keywords:
   raise: 引发
   return: 返回
   try: 尝试
-  while: while
+  while: 当
   with: 使用
   yield: 产生
 builtins:
@@ -58,11 +58,11 @@ builtins:
   complex: 复数
   delattr: 删除属性
   dict: 字典
-  dir: dir
-  divmod: divmod
+  dir: dir_列出属性和方法
+  divmod: 除模
   ellipsis: 省略号
   enumerate: 枚举
-  eval: eval
+  eval: 评估
   exec: 执行
   filter: 过滤
   float: 浮点数
@@ -77,7 +77,7 @@ builtins:
   id: 标识
   input: 输入
   int: 整数
-  isinstance: isinstance
+  isinstance: 是实例
   issubclass: 是子类
   iter: 迭代
   len: 长度
@@ -92,7 +92,7 @@ builtins:
   object: 对象
   oct: 八进制
   open: 打开
-  ord: ord
+  ord: 字符编码
   pow: 幂
   print: 打印
   property: 属性
@@ -101,16 +101,16 @@ builtins:
   reversed: 反转
   round: 四舍五入
   set: 集合
-  setattr: setattr
+  setattr: 设置属性
   slice: 切片
   sorted: 排序的
   staticmethod: 静态方法
-  str: str
+  str: 字符串
   sum: 求和
   super: 超
   tuple: 元组
-  vars: vars
-  zip: zip
+  vars: 变量字典
+  zip: 组合
 exceptions:
   arithmeticerror: 算术错误
   assertionerror: 断言错误
@@ -150,7 +150,7 @@ exceptions:
   nameerror: 名称错误
   notadirectoryerror: Nosuchfileordirectory
   notimplementederror: 未实现错误
-  oserror: oserror
+  oserror: os错误
   overflowerror: 溢出错误
   pendingdeprecationwarning: 待删除警告
   permissionerror: 权限错误
@@ -170,7 +170,7 @@ exceptions:
   typeerror: 类型错误
   unboundlocalerror: 未绑定局部错误
   unicodedecodeerror: Unicode解码错误
-  unicodeencodeerror: unicodeencodeerror
+  unicodeencodeerror: unicodeencode错误
   unicodeerror: unicode错误
   unicodetranslateerror: unicodetranslate错误
   unicodewarning: unicode警告
@@ -183,7 +183,7 @@ metadata:
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

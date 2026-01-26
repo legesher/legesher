@@ -14,7 +14,7 @@ keywords:
   del: удалить
   elif: если_иначе
   else: иначе
-  except: except
+  except: за_исключением
   finally: наконец
   for: для
   from: от
@@ -40,150 +40,150 @@ keywords:
   match: соответствие
   case: случай
 builtins:
-  abs: абсолютноезначение  # абсолютное значение
+  abs: абсолютноезначение
   all: все
   any: каждый
-  ascii: ascii
+  ascii: аsci
   bin: бинарный
-  breakpoint: отрывнойпункт  # отрывной пункт
+  breakpoint: отрывнойпункт
   callable: призываемый
   chr: чар
   compile: сборка
-  delattr: удалитьатрибут  # удалить атрибут
-  dir: dir
+  delattr: удалитьатрибут
+  dir: списокАтрибутов
   divmod: дивмод
   enumerate: перечисление
   eval: evalюировать
   exec: выполнить
   filter: фильтр
   format: формат
-  getattr: получитьатрибут  # получить атрибут
+  getattr: получитьатрибут
   globals: глобалы
-  hasattr: имеетатрибут  # имеет атрибут
+  hasattr: имеетатрибут
   hash: хэш
   help: помощь
   hex: шестнадцатеричный
   id: идентификатор
   input: ввод
-  isinstance: isinstance
+  isinstance: являетсяИсключением
   issubclass: подкласс
   iter: iterировать
   len: длина
-  locals: локальныепеременные  # локальные переменные
+  locals: локальныепеременные
   map: мапировать
   max: максимум
   min: минимум
   next: следующий
   oct: октальный
   open: открыть
-  ord: кодсимвола  # код символа
-  pow: вышестьвстепень  # вышесть в степень
+  ord: кодсимвола
+  pow: вышестьвстепень
   print: печать
   range: диапазон
   repr: представление
   reversed: обратный
   round: округлять
-  setattr: setattr
+  setattr: присвойат_атрибут
   slice: срез
   sorted: отсортированный
   sum: сумма
-  vars: vars
+  vars: переменные
   zip: сжатие
   bool: булев
-  bytearray: bytearray
+  bytearray: байтарей
   bytes: байты
-  classmethod: классовыйметод  # классовый метод
+  classmethod: классовыйметод
   complex: сложный
   dict: словарь
   float: флоат
-  frozenset: фрозенсет  # фрозен-сет
-  int: целоечисло  # целое число
+  frozenset: фрозенсет
+  int: целоечисло
   list: список
-  memoryview: memoryview
+  memoryview: памятьноеПредставление
   object: объект
   property: свойство
   set: множество
-  staticmethod: статическийметод  # статический метод
+  staticmethod: статическийметод
   str: строка
   super: супер
   tuple: кортеж
   ellipsis: запятые
-  notimplemented: нереализовано  # не реализовано
+  notimplemented: нереализовано
   aiter: айтер
   anext: следующий
 exceptions:
-  baseexception: базовоеисключение  # базовое исключение
-  basegeneratorexit: выходбазогенератора  # выход базогенератора
+  baseexception: базовоеисключение
+  basegeneratorexit: выходбазогенератора
   exception: исключение
-  generatorexit: выходизгенератора  # выход из генератора
-  systemexit: выходизсистемы  # выход из системы
-  keyboardinterrupt: прерываниепоклавиатуре  # прерывание по клавиатуре
-  arithmeticerror: арифметическаяошибка  # арифметическая ошибка
-  floatingpointerror: ошибкаплавающейточки  # ошибка плавающей точки
-  overflowerror: ошибкапереполнения  # ошибка переполнения
-  zerodivisionerror: ошибканулевогоделения  # ошибка нулевого деления
-  lookuperror: ошибкапоиска  # ошибка поиска
+  generatorexit: выходизгенератора
+  systemexit: выходизсистемы
+  keyboardinterrupt: прерываниепоклавиатуре
+  arithmeticerror: арифметическаяошибка
+  floatingpointerror: ошибкаплавающейточки
+  overflowerror: ошибкапереполнения
+  zerodivisionerror: ошибканулевогоделения
+  lookuperror: ошибкапоиска
   indexerror: IndexError
-  keyerror: ошибкаключа  # ошибка ключа
-  attributeerror: Ошибкаатрибута  # Ошибка атрибута
-  nameerror: Ошибкаимени  # Ошибка имени
-  unboundlocalerror: неопределенныйлокальныйошибок  # неопределенный локальный ошибок
-  oserror: ошибкасистемы  # ошибка системы
-  blockingioerror: блокировкавводавывода  # блокировка ввода-вывода
-  childprocesserror: ошибкадочернегопроцесса  # ошибка дочернего процесса
-  connectionerror: ошибкаподключения  # ошибка подключения
-  brokenpipeerror: бракнопайперор  # бракно-пайп-ерор
-  connectionabortederror: отказотсоединения  # отказ от соединения
-  connectionrefusederror: отказотподключения  # отказ от подключения
-  connectionreseterror: connectionreseterror
-  fileexistserror: ошибкасуществованияфайла  # ошибка существования файла
+  keyerror: ошибкаключа
+  attributeerror: Ошибкаатрибута
+  nameerror: Ошибкаимени
+  unboundlocalerror: неопределенныйлокальныйошибок
+  oserror: ошибкасистемы
+  blockingioerror: блокировкавводавывода
+  childprocesserror: ошибкадочернегопроцесса
+  connectionerror: ошибкаподключения
+  brokenpipeerror: бракнопайперор
+  connectionabortederror: отказотсоединения
+  connectionrefusederror: отказотподключения
+  connectionreseterror: reset_ошибка_соединения
+  fileexistserror: ошибкасуществованияфайла
   filenotfounderror: ошибка_не_найдена_файла
-  interruptederror: ошибкапрерывания  # ошибка прерывания
-  isadirectoryerror: isadirectoryerror
+  interruptederror: ошибкапрерывания
+  isadirectoryerror: ошибкаПапки
   notadirectoryerror: ошибка_не_явления_каталогa
-  permissionerror: ошибкаразрешения  # ошибка разрешения
-  processlookuperror: processlookuperror
-  timeouterror: таймаут  # тайм-аут
+  permissionerror: ошибкаразрешения
+  processlookuperror: ошибкаПроцесса
+  timeouterror: таймаут
   importerror: импорт_ошибка
-  modulenotfounderror: ошибкамодуляненайдена  # ошибка модуля не найдена
+  modulenotfounderror: ошибкамодуляненайдена
   stopiteration: стопитерация
   stopasynciteration: стоп_асинхронное_итерация
   typeerror: типошаг
   valueerror: ValueError
-  unicodeerror: ошибкауниткодирования  # ошибка униткодирования
-  unicodedecodeerror: ошибкадекодированияунитногокода  # ошибка декодирования унитного кода
-  unicodeencodeerror: unicodeencodeerror
-  unicodetranslateerror: ошибкапереводаUnicode  # ошибка перевода Unicode
-  runtimeerror: runtimeerror
-  notimplementederror: ошибканереализации  # ошибка не реализации
-  recursionerror: рекурсионнаяошибка  # рекурсионная ошибка
-  referenceerror: ошибкассылки  # ошибка ссылки
-  assertionerror: ошибкаутверждения  # ошибка утверждения
-  memoryerror: ошибкапамяти  # ошибка памяти
-  buffererror: ошибкабуфера  # ошибка буфера
-  eoferror: ошибкаEO  # ошибка E/O
-  syntaxerror: синтаксическаяошибка  # синтаксическая ошибка
-  indentationerror: ошибкаотступа  # ошибка отступа
-  taberror: ошибкатабулятора  # ошибка табулятора
-  environmenterror: ошибкасреды  # ошибка среды
-  ioerror: ошибкавводавывода  # ошибка ввода/вывода
+  unicodeerror: ошибкауниткодирования
+  unicodedecodeerror: ошибкадекодированияунитногокода
+  unicodeencodeerror: ошибкаУнicodeКодирования
+  unicodetranslateerror: ошибкапереводаUnicode
+  runtimeerror: runtime_error
+  notimplementederror: ошибканереализации
+  recursionerror: рекурсионнаяошибка
+  referenceerror: ошибкассылки
+  assertionerror: ошибкаутверждения
+  memoryerror: ошибкапамяти
+  buffererror: ошибкабуфера
+  eoferror: ошибкаEO
+  syntaxerror: синтаксическаяошибка
+  indentationerror: ошибкаотступа
+  taberror: ошибкатабулятора
+  environmenterror: ошибкасреды
+  ioerror: ошибкавводавывода
   warning: предупреждение
-  userwarning: userwarning
-  deprecationwarning: предупреждениеобустаревании  # предупреждение об устаревании
-  pendingdeprecationwarning: предупреждениеобустаревании  # предупреждение об устаревании
-  syntaxwarning: синтаксическоепредупреждение  # синтаксическое предупреждение
-  runtimewarning: runtimewarning
-  futurewarning: предупреждениеобудущем  # предупреждение о будущем
-  importwarning: предупреждениеобимпорте  # предупреждение об импорте
-  unicodewarning: unicodewarning
-  byteswarning: предупреждениеобайтах  # предупреждение о байтах
-  resourcewarning: предупреждениеоресурсах  # предупреждение о ресурсах
+  userwarning: предупреждение_пользователя
+  deprecationwarning: предупреждениеобустаревании
+  pendingdeprecationwarning: предупреждениеобустаревании
+  syntaxwarning: синтаксическоепредупреждение
+  runtimewarning: ошибкаВремяВыполнения
+  futurewarning: предупреждениеобудущем
+  importwarning: предупреждениеобимпорте
+  unicodewarning: уникодПредупреждение
+  byteswarning: предупреждениеобайтах
+  resourcewarning: предупреждениеоресурсах
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

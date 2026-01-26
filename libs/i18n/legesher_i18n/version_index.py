@@ -3,6 +3,10 @@
 This module handles loading and querying the version-index.yml file,
 which tracks keyword changes across Python versions and enables
 version-aware language pack inheritance.
+
+The base terms (keywords, builtins, exceptions) are imported from
+term_definitions.py, and version-specific deltas are applied from
+version-index.yml to provide complete term sets for any Python version.
 """
 
 from dataclasses import dataclass, field
@@ -17,6 +21,14 @@ from .exceptions import (
     MaxInheritanceDepthError,
     VersionIndexError,
     UnsupportedVersionError,
+)
+from .term_definitions import (
+    BUILTIN_FUNCTIONS,
+    BUILTIN_TYPES,
+    EXCEPTIONS,
+    KEYWORDS_BASE,
+    SPECIAL_CONSTANTS,
+    SPECIAL_VALUES,
 )
 
 
@@ -38,6 +50,10 @@ class PythonVersionInfo(BaseModel):
     version: str
     added_keywords: list[str] = Field(default_factory=list)
     removed_keywords: list[str] = Field(default_factory=list)
+    added_builtins: list[str] = Field(default_factory=list)
+    removed_builtins: list[str] = Field(default_factory=list)
+    added_exceptions: list[str] = Field(default_factory=list)
+    removed_exceptions: list[str] = Field(default_factory=list)
     base: Optional[str] = None
 
     @field_validator("version")
@@ -74,6 +90,10 @@ class VersionIndexSchema(BaseModel):
                 version=version,
                 added_keywords=data.get("added_keywords", []),
                 removed_keywords=data.get("removed_keywords", []),
+                added_builtins=data.get("added_builtins", []),
+                removed_builtins=data.get("removed_builtins", []),
+                added_exceptions=data.get("added_exceptions", []),
+                removed_exceptions=data.get("removed_exceptions", []),
                 base=data.get("base"),
             )
         return result
@@ -202,19 +222,25 @@ class VersionIndex:
         return list(reversed(chain))
 
     def get_all_keywords(self, version: str) -> set[str]:
-        """Get all keywords available in a Python version (including inherited).
+        """Get all keywords available in a Python version.
+
+        Combines base keywords from term_definitions.py with version-specific
+        additions and removals from version-index.yml.
 
         Args:
             version: Python version string
 
         Returns:
-            Set of all keyword names
+            Set of all keyword names (complete set, not just deltas)
 
         Raises:
             UnsupportedVersionError: If version is not supported
         """
+        # Start with base keywords + special values from term_definitions
+        keywords = set(KEYWORDS_BASE + SPECIAL_VALUES)
+
+        # Apply version-specific additions/removals from YAML
         chain = self.get_inheritance_chain(version)
-        keywords = set()
 
         for v in chain:
             info = self.versions[v]
@@ -222,6 +248,84 @@ class VersionIndex:
             keywords.difference_update(info.removed_keywords)
 
         return keywords
+
+    def get_all_builtins(self, version: str) -> set[str]:
+        """Get all builtins available in a Python version.
+
+        Combines base builtins from term_definitions.py with version-specific
+        additions and removals from version-index.yml.
+
+        Args:
+            version: Python version string
+
+        Returns:
+            Set of all builtin names (functions, types, and special constants)
+
+        Raises:
+            UnsupportedVersionError: If version is not supported
+        """
+        # Start with base builtins from term_definitions
+        builtins = set(BUILTIN_FUNCTIONS + BUILTIN_TYPES + SPECIAL_CONSTANTS)
+
+        # Apply version-specific additions/removals from YAML
+        chain = self.get_inheritance_chain(version)
+
+        for v in chain:
+            info = self.versions[v]
+            builtins.update(info.added_builtins)
+            builtins.difference_update(info.removed_builtins)
+
+        return builtins
+
+    def get_all_exceptions(self, version: str) -> set[str]:
+        """Get all exceptions available in a Python version.
+
+        Combines base exceptions from term_definitions.py with version-specific
+        additions and removals from version-index.yml.
+
+        Args:
+            version: Python version string
+
+        Returns:
+            Set of all exception class names
+
+        Raises:
+            UnsupportedVersionError: If version is not supported
+        """
+        # Start with base exceptions from term_definitions
+        exceptions = set(EXCEPTIONS)
+
+        # Apply version-specific additions/removals from YAML
+        chain = self.get_inheritance_chain(version)
+
+        for v in chain:
+            info = self.versions[v]
+            exceptions.update(info.added_exceptions)
+            exceptions.difference_update(info.removed_exceptions)
+
+        return exceptions
+
+    def get_all_terms(self, version: str) -> dict[str, set[str]]:
+        """Get all terms organized by category for a Python version.
+
+        Combines base terms from term_definitions.py with version-specific
+        deltas from version-index.yml.
+
+        Args:
+            version: Python version string
+
+        Returns:
+            Dictionary with keys 'keywords', 'builtins', 'exceptions'
+            mapping to complete sets of terms for that version
+
+        Raises:
+            UnsupportedVersionError: If version is not supported
+        """
+        return {
+            "keywords": self.get_all_keywords(version),
+            "builtins": self.get_all_builtins(version),
+            "exceptions": self.get_all_exceptions(version),
+        }
 
     def get_added_since(self, base_version: str, target_version: str) -> list[str]:
         """Get keywords added between two versions.
