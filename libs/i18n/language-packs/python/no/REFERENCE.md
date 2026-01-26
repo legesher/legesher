@@ -19,15 +19,15 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Norwegian.
 
 | English | Norwegian |
 |---------|--------|
 | `and` | `og` |
-| `as` | `as` |
-| `assert` | `assert` |
+| `as` | `som` |
+| `assert` | `sørge` |
 | `async` | `asynkron` |
 | `await` | `ventile` |
 | `break` | `stopp` |
@@ -38,18 +38,19 @@ These are Python's reserved words translated to Norwegian.
 | `del` | `slette` |
 | `elif` | `elsif` |
 | `else` | `annett` |
-| `except` | `except` |
+| `except` | `u犁ksluttelse` |
+| `except*` | `except` |
 | `False` | `falsk` |
 | `finally` | `forrestil` |
-| `for` | `for` |
+| `for` | `for_loops` |
 | `from` | `fra` |
-| `global` | `global` |
+| `global` | `global_styrke` |
 | `if` | `om` |
 | `import` | `importere` |
-| `in` | `in` |
+| `in` | `i` |
 | `is` | `er` |
 | `lambda` | `lambdafunksjon` |
-| `match` | `match` |
+| `match` | `matching` |
 | `None` | `ingen` |
 | `nonlocal` | `ikkelokalt` |
 | `not` | `ikke` |
@@ -59,7 +60,8 @@ These are Python's reserved words translated to Norwegian.
 | `return` | `retur` |
 | `True` | `verre` |
 | `try` | `prøve` |
-| `while` | `while` |
+| `type` | `objekt_type` |
+| `while` | `medan` |
 | `with` | `med` |
 | `yield` | `yeld` |
 
@@ -70,16 +72,16 @@ Python's built-in functions and types in Norwegian.
 | English | Norwegian |
 |---------|--------|
 | `abs` | `absoluttvurdere` |
-| `aiter` | `aiter` |
+| `aiter` | `iterer` |
 | `all` | `alle` |
-| `anext` | `anext` |
+| `anext` | `neste` |
 | `any` | `alle` |
-| `ascii` | `ascii` |
-| `bin` | `bin` |
-| `bool` | `bool` |
+| `ascii` | `asciiKonvertering` |
+| `bin` | `binær_konvertering` |
+| `bool` | `boolean` |
 | `breakpoint` | `pausepunkt` |
-| `bytearray` | `bytearray` |
-| `bytes` | `bytes` |
+| `bytearray` | `byteArray` |
+| `bytes` | `bytes_sekvens` |
 | `callable` | `kankalletpå` |
 | `chr` | `karakter` |
 | `classmethod` | `klassenometisk` |
@@ -87,61 +89,61 @@ Python's built-in functions and types in Norwegian.
 | `complex` | `komplekst` |
 | `delattr` | `slettattributt` |
 | `dict` | `ordningsset` |
-| `dir` | `dir` |
+| `dir` | `direktør` |
 | `divmod` | `delmod` |
 | `ellipsis` | `ellips` |
 | `enumerate` | `lister` |
-| `eval` | `eval` |
+| `eval` | `evaluer` |
 | `exec` | `eksekver` |
-| `filter` | `filter` |
-| `float` | `float` |
-| `format` | `format` |
-| `frozenset` | `frozenset` |
+| `filter` | `filtere` |
+| `float` | `flyttall` |
+| `format` | `formatere_verdi` |
+| `frozenset` | `frozensatt` |
 | `getattr` | `hentattribut` |
 | `globals` | `globale` |
 | `hasattr` | `harattribut` |
-| `hash` | `hash` |
+| `hash` | `hashVerdi` |
 | `help` | `hjelp` |
-| `hex` | `hex` |
-| `id` | `id` |
+| `hex` | `heks` |
+| `id` | `identifikator` |
 | `input` | `innspilling` |
 | `int` | `ent` |
-| `isinstance` | `isinstance` |
-| `issubclass` | `issubclass` |
+| `isinstance` | `erInstansAv` |
+| `issubclass` | `erUnderklasseAv` |
 | `iter` | `iterere` |
 | `len` | `lengde` |
 | `list` | `liste` |
 | `locals` | `lokale` |
 | `map` | `kartlegge` |
-| `max` | `max` |
-| `memoryview` | `memoryview` |
-| `min` | `min` |
+| `max` | `maks` |
+| `memoryview` | `minneoversikt` |
+| `min` | `minVerdi` |
 | `next` | `næsta` |
 | `notimplemented` | `ikkeimplementert` |
 | `object` | `objekt` |
 | `oct` | `okt` |
-| `open` | `open` |
-| `ord` | `ord` |
+| `open` | `åbne` |
+| `ord` | `bokstav_kode` |
 | `pow` | `hevet` |
-| `print` | `print` |
+| `print` | `skrive` |
 | `property` | `egenskap` |
 | `range` | `område` |
-| `repr` | `repr` |
+| `repr` | `representasjon` |
 | `reversed` | `omvendt` |
 | `round` | `runde` |
-| `set` | `set` |
-| `setattr` | `setattr` |
-| `slice` | `slice` |
+| `set` | `sett` |
+| `setattr` | `settAttributt` |
+| `slice` | `slices` |
 | `sorted` | `sorteret` |
 | `staticmethod` | `statiskmetod` |
-| `str` | `str` |
+| `str` | `streng` |
 | `sum` | `summe` |
 | `super` | `supp` |
 | `tuple` | `tuplet` |
-| `vars` | `vars` |
+| `vars` | `variabler` |
 | `zip` | `zippe` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -150,7 +152,8 @@ Exception classes for error handling.
 | `arithmeticerror` | `aritmetiskfeil` |
 | `assertionerror` | `assertionsfeil` |
 | `attributeerror` | `attributfeil` |
-| `baseexception` | `baseexception` |
+| `baseexception` | `basenesteFeil` |
+| `baseexceptiongroup` | `baseexceptiongruppen` |
 | `basegeneratorexit` | `basegeneratoruitgang` |
 | `blockingioerror` | `blockingiofeil` |
 | `brokenpipeerror` | `brokkepipefeil` |
@@ -162,13 +165,15 @@ Exception classes for error handling.
 | `connectionrefusederror` | `forbindelsesavhengigfeil` |
 | `connectionreseterror` | `forbindelsesresettingfeil` |
 | `deprecationwarning` | `depreksjonavwarining` |
+| `encodingwarning` | `kodingerremake` |
 | `environmenterror` | `miljøfeil` |
 | `eoferror` | `feil` |
 | `exception` | `uitlandetilfordring` |
-| `fileexistserror` | `fileexistserror` |
+| `exceptiongroup` | `uitfallsklassifikasjon` |
+| `fileexistserror` | `filfinnesfeil` |
 | `filenotfounderror` | `filenfinnesikke` |
 | `floatingpointerror` | `floatingpointerr` |
-| `futurewarning` | `futurewarning` |
+| `futurewarning` | `tidendepåvarning` |
 | `generatorexit` | `genererutgang` |
 | `importerror` | `importfeil` |
 | `importwarning` | `importavering` |
@@ -176,9 +181,9 @@ Exception classes for error handling.
 | `indexerror` | `indexfeil` |
 | `interruptederror` | `interruptsjonfeil` |
 | `ioerror` | `iofeil` |
-| `isadirectoryerror` | `isadirectoryerror` |
+| `isadirectoryerror` | `erMappeFeil` |
 | `keyboardinterrupt` | `tastaturinterrupser` |
-| `keyerror` | `keyerror` |
+| `keyerror` | `feilKey` |
 | `lookuperror` | `søkfeil` |
 | `memoryerror` | `minnefeil` |
 | `modulenotfounderror` | `modulikkefunnet` |
@@ -186,7 +191,7 @@ Exception classes for error handling.
 | `notadirectoryerror` | `ikkeenmapfeil` |
 | `notimplementederror` | `ikke_implementert_feil` |
 | `oserror` | `osfeil` |
-| `overflowerror` | `overflowerror` |
+| `overflowerror` | `overflodFeil` |
 | `pendingdeprecationwarning` | `avventrikk` |
 | `permissionerror` | `ilaksessjonfeil` |
 | `processlookuperror` | `processlookupfeil` |
@@ -194,7 +199,7 @@ Exception classes for error handling.
 | `referenceerror` | `referansefeil` |
 | `resourcewarning` | `resursadvars` |
 | `runtimeerror` | `runtimefeil` |
-| `runtimewarning` | `runtimewarning` |
+| `runtimewarning` | `runtimevarning` |
 | `stopasynciteration` | `stoppeasynkroniterering` |
 | `stopiteration` | `stoppiterasjon` |
 | `syntaxerror` | `syntaxfeil` |
@@ -208,7 +213,7 @@ Exception classes for error handling.
 | `unicodeencodeerror` | `unicodeencodefeil` |
 | `unicodeerror` | `unicodefeil` |
 | `unicodetranslateerror` | `unicodetranslatefeil` |
-| `unicodewarning` | `unicodewarning` |
+| `unicodewarning` | `tegnvarning` |
 | `userwarning` | `brukeradvars` |
 | `valueerror` | `værdfeil` |
 | `warning` | `warnings` |
@@ -233,25 +238,25 @@ definisjon fakultet(n):
         retur n * fakultet(n - 1)
 
 definisjon hoved():
-    tall = [ent(x) for x in område(6)]
+    tall = [ent(x) for_loops x i område(6)]
 
-    for nummer in tall:
+    for_loops nummer i tall:
         resultat = fakultet(nummer)
-        print(f"{nummer}! = {resultat}")
+        skrive(f"{nummer}! = {resultat}")
 
     # Demonstrer while-løkke
     teller = 0
-    while teller < 3:
-        print(f"Teller: {teller}")
+    medan teller < 3:
+        skrive(f"Teller: {teller}")
         teller += 1
 
     # Demonstrer try/except
     prøve:
         fakultet(-1)
-    except Værdfeil as feil:
-        print(f"Feil: {feil}")
+    u犁ksluttelse Værdfeil som feil:
+        skrive(f"Feil: {feil}")
     forrestil:
-        print("Ferdig!")
+        skrive("Ferdig!")
 
 om __name__ == "__main__":
     hoved()

@@ -9,7 +9,7 @@ authors = [
 license = {text = "MIT"}
 requires-python = ">=3.10,<4.0"
 dependencies = [
-    "legesher-i18n>=0.0.1,<0.1.0",
+    "legesher-i18n>=0.2.0,<1.0.0",
 ]
 name = "legesher-i18n-python-ms"
 version = "0.0.1"

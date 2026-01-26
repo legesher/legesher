@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Russian.
 
@@ -38,7 +38,8 @@ These are Python's reserved words translated to Russian.
 | `del` | `удалить` |
 | `elif` | `если_иначе` |
 | `else` | `иначе` |
-| `except` | `except` |
+| `except` | `за_исключением` |
+| `except*` | `кроме` |
 | `False` | `ложный` |
 | `finally` | `наконец` |
 | `for` | `для` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Russian.
 | `return` | `возвратить` |
 | `True` | `истина` |
 | `try` | `попытаться` |
+| `type` | `тип` |
 | `while` | `пока` |
 | `with` | `с` |
 | `yield` | `приводить` |
@@ -74,11 +76,11 @@ Python's built-in functions and types in Russian.
 | `all` | `все` |
 | `anext` | `следующий` |
 | `any` | `каждый` |
-| `ascii` | `ascii` |
+| `ascii` | `аsci` |
 | `bin` | `бинарный` |
 | `bool` | `булев` |
 | `breakpoint` | `отрывнойпункт` |
-| `bytearray` | `bytearray` |
+| `bytearray` | `байтарей` |
 | `bytes` | `байты` |
 | `callable` | `призываемый` |
 | `chr` | `чар` |
@@ -87,7 +89,7 @@ Python's built-in functions and types in Russian.
 | `complex` | `сложный` |
 | `delattr` | `удалитьатрибут` |
 | `dict` | `словарь` |
-| `dir` | `dir` |
+| `dir` | `списокАтрибутов` |
 | `divmod` | `дивмод` |
 | `ellipsis` | `запятые` |
 | `enumerate` | `перечисление` |
@@ -106,7 +108,7 @@ Python's built-in functions and types in Russian.
 | `id` | `идентификатор` |
 | `input` | `ввод` |
 | `int` | `целоечисло` |
-| `isinstance` | `isinstance` |
+| `isinstance` | `являетсяИсключением` |
 | `issubclass` | `подкласс` |
 | `iter` | `iterировать` |
 | `len` | `длина` |
@@ -114,7 +116,7 @@ Python's built-in functions and types in Russian.
 | `locals` | `локальныепеременные` |
 | `map` | `мапировать` |
 | `max` | `максимум` |
-| `memoryview` | `memoryview` |
+| `memoryview` | `памятьноеПредставление` |
 | `min` | `минимум` |
 | `next` | `следующий` |
 | `notimplemented` | `нереализовано` |
@@ -130,7 +132,7 @@ Python's built-in functions and types in Russian.
 | `reversed` | `обратный` |
 | `round` | `округлять` |
 | `set` | `множество` |
-| `setattr` | `setattr` |
+| `setattr` | `присвойат_атрибут` |
 | `slice` | `срез` |
 | `sorted` | `отсортированный` |
 | `staticmethod` | `статическийметод` |
@@ -138,10 +140,10 @@ Python's built-in functions and types in Russian.
 | `sum` | `сумма` |
 | `super` | `супер` |
 | `tuple` | `кортеж` |
-| `vars` | `vars` |
+| `vars` | `переменные` |
 | `zip` | `сжатие` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,6 +153,7 @@ Exception classes for error handling.
 | `assertionerror` | `ошибкаутверждения` |
 | `attributeerror` | `Ошибкаатрибута` |
 | `baseexception` | `базовоеисключение` |
+| `baseexceptiongroup` | `базовоеисключениегруппы` |
 | `basegeneratorexit` | `выходбазогенератора` |
 | `blockingioerror` | `блокировкавводавывода` |
 | `brokenpipeerror` | `бракнопайперор` |
@@ -160,11 +163,13 @@ Exception classes for error handling.
 | `connectionabortederror` | `отказотсоединения` |
 | `connectionerror` | `ошибкаподключения` |
 | `connectionrefusederror` | `отказотподключения` |
-| `connectionreseterror` | `connectionreseterror` |
+| `connectionreseterror` | `reset_ошибка_соединения` |
 | `deprecationwarning` | `предупреждениеобустаревании` |
+| `encodingwarning` | `предупреждениекодирования` |
 | `environmenterror` | `ошибкасреды` |
 | `eoferror` | `ошибкаEO` |
 | `exception` | `исключение` |
+| `exceptiongroup` | `группировкаисключений` |
 | `fileexistserror` | `ошибкасуществованияфайла` |
 | `filenotfounderror` | `ошибка_не_найдена_файла` |
 | `floatingpointerror` | `ошибкаплавающейточки` |
@@ -176,7 +181,7 @@ Exception classes for error handling.
 | `indexerror` | `IndexError` |
 | `interruptederror` | `ошибкапрерывания` |
 | `ioerror` | `ошибкавводавывода` |
-| `isadirectoryerror` | `isadirectoryerror` |
+| `isadirectoryerror` | `ошибкаПапки` |
 | `keyboardinterrupt` | `прерываниепоклавиатуре` |
 | `keyerror` | `ошибкаключа` |
 | `lookuperror` | `ошибкапоиска` |
@@ -189,12 +194,12 @@ Exception classes for error handling.
 | `overflowerror` | `ошибкапереполнения` |
 | `pendingdeprecationwarning` | `предупреждениеобустаревании` |
 | `permissionerror` | `ошибкаразрешения` |
-| `processlookuperror` | `processlookuperror` |
+| `processlookuperror` | `ошибкаПроцесса` |
 | `recursionerror` | `рекурсионнаяошибка` |
 | `referenceerror` | `ошибкассылки` |
 | `resourcewarning` | `предупреждениеоресурсах` |
-| `runtimeerror` | `runtimeerror` |
-| `runtimewarning` | `runtimewarning` |
+| `runtimeerror` | `runtime_error` |
+| `runtimewarning` | `ошибкаВремяВыполнения` |
 | `stopasynciteration` | `стоп_асинхронное_итерация` |
 | `stopiteration` | `стопитерация` |
 | `syntaxerror` | `синтаксическаяошибка` |
@@ -205,11 +210,11 @@ Exception classes for error handling.
 | `typeerror` | `типошаг` |
 | `unboundlocalerror` | `неопределенныйлокальныйошибок` |
 | `unicodedecodeerror` | `ошибкадекодированияунитногокода` |
-| `unicodeencodeerror` | `unicodeencodeerror` |
+| `unicodeencodeerror` | `ошибкаУнicodeКодирования` |
 | `unicodeerror` | `ошибкауниткодирования` |
 | `unicodetranslateerror` | `ошибкапереводаUnicode` |
-| `unicodewarning` | `unicodewarning` |
-| `userwarning` | `userwarning` |
+| `unicodewarning` | `уникодПредупреждение` |
+| `userwarning` | `предупреждение_пользователя` |
 | `valueerror` | `ValueError` |
 | `warning` | `предупреждение` |
 | `zerodivisionerror` | `ошибканулевогоделения` |
@@ -248,7 +253,7 @@ Here's an example showing Russian Python code with Legesher:
     # Демонстрация try/except
     попытаться:
         факториал(-1)
-    except ValueError как ошибка:
+    за_исключением ValueError как ошибка:
         печать(f"Ошибка: {ошибка}")
     наконец:
         печать("Готово!")

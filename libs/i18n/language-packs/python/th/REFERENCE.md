@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Thai.
 
@@ -38,7 +38,8 @@ These are Python's reserved words translated to Thai.
 | `del` | `ลบ` |
 | `elif` | `อีเมลิฟ` |
 | `else` | `อื่นๆ` |
-| `except` | `except` |
+| `except` | `เลือก` |
+| `except*` | `เครื่องมือที่ใช้ในการเอาเป็น` |
 | `False` | `ผลักดัน` |
 | `finally` | `ทำเสมอ` |
 | `for` | `เทคนิคfor` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Thai.
 | `return` | `เครื่องสำคัญ` |
 | `True` | `เป็นจริง` |
 | `try` | `ลอง` |
+| `type` | `ชนิด` |
 | `while` | `ลักษณะ` |
 | `with` | `ใช้กับ` |
 | `yield` | `ซอยเดินผ่าน` |
@@ -70,15 +72,15 @@ Python's built-in functions and types in Thai.
 | English | Thai |
 |---------|--------|
 | `abs` | `ฟังก์ชันabs` |
-| `aiter` | `aiter` |
+| `aiter` | `aiterator` |
 | `all` | `ทุกอย่าง` |
 | `anext` | `ฟังกำลัง` |
 | `any` | `ใช่` |
 | `ascii` | `อาซิก` |
-| `bin` | `bin` |
+| `bin` | `บิน` |
 | `bool` | `บูล` |
 | `breakpoint` | `เป้าหมายปัญหา` |
-| `bytearray` | `bytearray` |
+| `bytearray` | `ไบต์เรയ์` |
 | `bytes` | `บайтส` |
 | `callable` | `การทำให้เป็นตัวอย่างที่สามารถถูกเรียกได้` |
 | `chr` | `เซริลล์` |
@@ -94,7 +96,7 @@ Python's built-in functions and types in Thai.
 | `eval` | `พิมัญเครื่องคำeval` |
 | `exec` | `ซับเทริก` |
 | `filter` | `ฟิลเตอร์` |
-| `float` | `float` |
+| `float` | `ฟลอต` |
 | `format` | `ฟอร์มเทริต` |
 | `frozenset` | `ฟรอสนเซต` |
 | `getattr` | `หาการเข้าไปในอันตราย` |
@@ -141,7 +143,7 @@ Python's built-in functions and types in Thai.
 | `vars` | `แทรกซับ` |
 | `zip` | `ซิป` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,6 +153,7 @@ Exception classes for error handling.
 | `assertionerror` | `ข้อสมพันธ์ที่ไม่ถูก` |
 | `attributeerror` | `ความผิดพลาดในการเก็บอัตรา` |
 | `baseexception` | `การเปลี่ยนที่พื้นฐาน` |
+| `baseexceptiongroup` | `กลุ่มข้อความที่เป็นพื้นฐาน` |
 | `basegeneratorexit` | `เครื่องมือพัฒนาเพื่อออกแบบ` |
 | `blockingioerror` | `การแจ้งเหตุผลการบังคับให้อยู่ในสิ่งที่หยุดการดำเนินการ` |
 | `brokenpipeerror` | `เครื่องมือที่ผิดหลัก` |
@@ -162,9 +165,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `การปฏิเสธในการตรงต่อ` |
 | `connectionreseterror` | `การรีเซ็ตเชิงส์` |
 | `deprecationwarning` | `คำเตือนการขับเคลื่อนที่ไม่ใช่สิ่งที่ดี` |
+| `encodingwarning` | `คำเตือนการอัปโลด` |
 | `environmenterror` | `เกิดข้อผิดพลาดในการตั้งค่าเครื่องมือ` |
 | `eoferror` | `เกิดข้อผิดพลาด` |
 | `exception` | `การถือเป็นการติดต่อกับการเกิดอาการที่ไม่คาดฝัน` |
+| `exceptiongroup` | `กลุ่มข้อความที่ไม่เป็นประโยชน์` |
 | `fileexistserror` | `ข้อเท็จการในการเปิดไฟล์` |
 | `filenotfounderror` | `ข้อผิดพลาดในการเจรจาไม่หาได้` |
 | `floatingpointerror` | `ข้อผิดพลาดของตัวเลือดเวียนทางเคมี` |
@@ -248,7 +253,7 @@ Here's an example showing Thai Python code with Legesher:
     # สาธิต try/except
     ลอง:
         แฟกทอเรียล(-1)
-    except ข้อผิดพลาดค่า เป็น ข้อผิดพลาด:
+    เลือก ข้อผิดพลาดค่า เป็น ข้อผิดพลาด:
         เจตนา(f"ข้อผิดพลาด: {ข้อผิดพลาด}")
     ทำเสมอ:
         เจตนา("เสร็จสิ้น!")

@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Vietnamese.
 
@@ -39,6 +39,7 @@ These are Python's reserved words translated to Vietnamese.
 | `elif` | `nếu_khác` |
 | `else` | `khác` |
 | `except` | `trừ` |
+| `except*` | `trừ` |
 | `False` | `Sai` |
 | `finally` | `Cuốicùng` |
 | `for` | `cho` |
@@ -48,7 +49,7 @@ These are Python's reserved words translated to Vietnamese.
 | `import` | `nhập` |
 | `in` | `trong` |
 | `is` | `là` |
-| `lambda` | `lambda` |
+| `lambda` | `cua_lambda` |
 | `match` | `phùhợp` |
 | `None` | `khôngcó` |
 | `nonlocal` | `khôngđịaphương` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Vietnamese.
 | `return` | `trảvề` |
 | `True` | `Đúng` |
 | `try` | `thử` |
+| `type` | `loại` |
 | `while` | `trongkhi` |
 | `with` | `với` |
 | `yield` | `hiệusuất` |
@@ -70,16 +72,16 @@ Python's built-in functions and types in Vietnamese.
 | English | Vietnamese |
 |---------|--------|
 | `abs` | `sốtuyệtđối` |
-| `aiter` | `aiter` |
+| `aiter` | `ktraiter` |
 | `all` | `tấtcả` |
-| `anext` | `anext` |
+| `anext` | `tiếp_theo` |
 | `any` | `bấtkỳ` |
-| `ascii` | `ascii` |
-| `bin` | `bin` |
-| `bool` | `bool` |
+| `ascii` | `asciiPhanSo` |
+| `bin` | `binh_luận` |
+| `bool` | `boolean` |
 | `breakpoint` | `điểmdừng` |
-| `bytearray` | `bytearray` |
-| `bytes` | `bytes` |
+| `bytearray` | `khoáNgTrốngCácBite` |
+| `bytes` | `bites` |
 | `callable` | `cóthểgọiđược` |
 | `chr` | `chữ` |
 | `classmethod` | `phươngthứclớp` |
@@ -91,10 +93,10 @@ Python's built-in functions and types in Vietnamese.
 | `divmod` | `đồngbộchia` |
 | `ellipsis` | `đoạnbỏsót` |
 | `enumerate` | `lậpchỉsố` |
-| `eval` | `eval` |
+| `eval` | `đánh_giá` |
 | `exec` | `thựcthi` |
 | `filter` | `lọc` |
-| `float` | `float` |
+| `float` | `chuyenDoiDenSoThuPhan` |
 | `format` | `xácđịnh` |
 | `frozenset` | `bộtậpđóngbăng` |
 | `getattr` | `lấythuộctính` |
@@ -107,19 +109,19 @@ Python's built-in functions and types in Vietnamese.
 | `input` | `nhập` |
 | `int` | `sốnguyên` |
 | `isinstance` | `là_một_loại` |
-| `issubclass` | `issubclass` |
+| `issubclass` | `hiệu_ứng_con_của` |
 | `iter` | `hànhtrình` |
 | `len` | `chiềudài` |
 | `list` | `danhsách` |
 | `locals` | `biếncụcbộ` |
 | `map` | `chuyểnđổi` |
 | `max` | `tốiđa` |
-| `memoryview` | `memoryview` |
+| `memoryview` | `kiểm_tra_bộ_nhớ` |
 | `min` | `nhỏnhất` |
 | `next` | `tiếptheo` |
 | `notimplemented` | `khôngthựchiệnđược` |
 | `object` | `đốitượng` |
-| `oct` | `oct` |
+| `oct` | `đổi_cơ_số` |
 | `open` | `mở` |
 | `ord` | `chuyểnđổikýtựthànhmãđiểmUnicode` |
 | `pow` | `làmchomộtsốnânglênlũythừa` |
@@ -141,7 +143,7 @@ Python's built-in functions and types in Vietnamese.
 | `vars` | `varia` |
 | `zip` | `gộp` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -150,7 +152,8 @@ Exception classes for error handling.
 | `arithmeticerror` | `lỗitínharít` |
 | `assertionerror` | `lỗikhẳngđịnh` |
 | `attributeerror` | `Lỗithuộctính` |
-| `baseexception` | `baseexception` |
+| `baseexception` | `lỗi_cơ_bản` |
+| `baseexceptiongroup` | `nhómngoạilệcơbản` |
 | `basegeneratorexit` | `basegenerator_exit` |
 | `blockingioerror` | `lỗiIOchặn` |
 | `brokenpipeerror` | `lỗiốngbịvỡ` |
@@ -162,14 +165,16 @@ Exception classes for error handling.
 | `connectionrefusederror` | `lỗitừchốikếtnối` |
 | `connectionreseterror` | `lỗiđặtlạikếtnối` |
 | `deprecationwarning` | `cảnhbáolỗilỗi` |
+| `encodingwarning` | `cảnhbáomãhóa` |
 | `environmenterror` | `lỗimôitrường` |
 | `eoferror` | `lỗieof` |
 | `exception` | `lỗi` |
+| `exceptiongroup` | `nhómngoạilệ` |
 | `fileexistserror` | `lỗitồntạitệp` |
 | `filenotfounderror` | `Lỗikhôngtìmthấytệp` |
 | `floatingpointerror` | `lỗiđiểmnổi` |
 | `futurewarning` | `cảnhbáotươnglai` |
-| `generatorexit` | `generatorexit` |
+| `generatorexit` | `generatorkhải` |
 | `importerror` | `lỗinhập` |
 | `importwarning` | `cảnhbáonhậpkhẩu` |
 | `indentationerror` | `lỗithụtlề` |

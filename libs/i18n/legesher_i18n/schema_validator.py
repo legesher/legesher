@@ -12,6 +12,12 @@ from pydantic import BaseModel, Field, field_validator
 from .exceptions import PackValidationError, VersionIndexError
 
 
+# Soft keywords that contain special characters but are valid Python syntax
+# These are special cases that bypass the normal identifier validation
+# Reference: https://docs.python.org/3/reference/lexical_analysis.html#soft-keywords
+SOFT_KEYWORDS = {"except*"}
+
+
 class LanguagePackMetadata(BaseModel):
     """Metadata section of a language pack."""
 
@@ -146,7 +152,8 @@ class LanguagePackSchema(BaseModel):
 
             # Check for valid Python identifier (required for TokenTranslator)
             # Note: We use a relaxed check that allows Unicode letters per PEP 3131
-            if not cls._is_valid_identifier(value):
+            # Special case: soft keywords like 'except*' can have translations ending with '*'
+            if not cls._is_valid_identifier(value, source_key=key):
                 raise ValueError(
                     f"Translation is not a valid Python identifier: '{key}' -> '{value}'. "
                     "Translations must not contain spaces, punctuation, or escape sequences."
@@ -154,21 +161,38 @@ class LanguagePackSchema(BaseModel):
         return v
 
     @classmethod
-    def _is_valid_identifier(cls, value: str) -> bool:
-        """Check if a value is a valid Python identifier.
+    def _is_valid_identifier(cls, value: str, source_key: str | None = None) -> bool:
+        """Check if a value is a valid Python identifier or soft keyword.
 
         Per PEP 3131, Python identifiers can contain Unicode letters and digits,
         but must start with a letter or underscore, and cannot contain spaces
         or most punctuation.
 
+        Special case: Soft keywords like 'except*' (Python 3.11+) are allowed
+        even though they contain special characters. Translations of soft keywords
+        (e.g., 'excepto*' for Spanish 'except*') are also allowed.
+
         Args:
             value: The translation value to check
+            source_key: The original English keyword (used to detect soft keyword translations)
 
         Returns:
-            True if valid Python identifier, False otherwise
+            True if valid Python identifier or soft keyword, False otherwise
         """
         if not value:
             return False
+
+        # Allow soft keywords (e.g., 'except*' in Python 3.11+)
+        if value in SOFT_KEYWORDS:
+            return True
+
+        # Allow translations of soft keywords (e.g., 'excepto*' for 'except*')
+        # If the source key is a soft keyword, allow the translation to follow the same pattern
+        if source_key in SOFT_KEYWORDS and value.endswith("*"):
+            # Validate the base part (without the *)
+            base_value = value[:-1]
+            if base_value and cls._is_valid_identifier(base_value):
+                return True
 
         # Quick check: if it contains spaces, it's invalid
         if " " in value:
@@ -753,8 +777,8 @@ class SchemaValidator:
                         }
                     )
                     issues.append(f"{category}: '{key}' -> '{value}' contains spaces")
-                # Check for invalid characters
-                elif not value.isidentifier():
+                # Check for invalid characters (pass source_key for soft keyword support)
+                elif not LanguagePackSchema._is_valid_identifier(value, source_key=key):
                     invalid.append(
                         {
                             "key": key,

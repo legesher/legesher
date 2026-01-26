@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Greek.
 
@@ -39,6 +39,7 @@ These are Python's reserved words translated to Greek.
 | `elif` | `αν` |
 | `else` | `αλλιώς` |
 | `except` | `εκτός` |
+| `except*` | `εκτός` |
 | `False` | `ψευδής` |
 | `finally` | `τελικά` |
 | `for` | `για` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Greek.
 | `return` | `επιστροφή` |
 | `True` | `αληθές` |
 | `try` | `προσπάθεια` |
+| `type` | `τύπος` |
 | `while` | `ενώ` |
 | `with` | `με` |
 | `yield` | `αποτέλεσμα` |
@@ -72,14 +74,14 @@ Python's built-in functions and types in Greek.
 | `abs` | `απόλυτητιμή` |
 | `aiter` | `αιτητής` |
 | `all` | `όλους` |
-| `anext` | `anext` |
+| `anext` | `επόμενο` |
 | `any` | `οποιοσδήποτε` |
 | `ascii` | `ασκί` |
-| `bin` | `bin` |
+| `bin` | `δυναμικό` |
 | `bool` | `τοboolean` |
 | `breakpoint` | `διακοπή_σημείου_παύσης` |
-| `bytearray` | `bytearray` |
-| `bytes` | `bytes` |
+| `bytearray` | `κυμαίνονταςByte` |
+| `bytes` | `κυανος` |
 | `callable` | `καλή_χρήση` |
 | `chr` | `χαρακτήρας` |
 | `classmethod` | `ηκλάσημεθόδου` |
@@ -94,7 +96,7 @@ Python's built-in functions and types in Greek.
 | `eval` | `αξιολόγηση` |
 | `exec` | `εκτέλεση` |
 | `filter` | `φίλτρο` |
-| `float` | `float` |
+| `float` | `διατυπωμένος` |
 | `format` | `τοformat` |
 | `frozenset` | `τοfrozenset` |
 | `getattr` | `λησμονώ_χρήση_απόκτησης_χαρακτηριστικού` |
@@ -105,8 +107,8 @@ Python's built-in functions and types in Greek.
 | `hex` | `εξαγωνικό` |
 | `id` | `ηταυτότητα` |
 | `input` | `εισαγωγή` |
-| `int` | `int` |
-| `isinstance` | `είναι_τύπος` |
+| `int` | `κείμενο` |
+| `isinstance` | `είναιΕκτιμητής` |
 | `issubclass` | `είναι_υποκλάση` |
 | `iter` | `ιτερ` |
 | `len` | `μήκος` |
@@ -114,7 +116,7 @@ Python's built-in functions and types in Greek.
 | `locals` | `οιτοπικοίμεταβλητοί` |
 | `map` | `χάρτης` |
 | `max` | `μέγιστο` |
-| `memoryview` | `memoryview` |
+| `memoryview` | `πινακαςΣυνειδησης` |
 | `min` | `ελαχίστη` |
 | `next` | `επόμενος` |
 | `notimplemented` | `μηΥλοποιημένο` |
@@ -134,14 +136,14 @@ Python's built-in functions and types in Greek.
 | `slice` | `τοτμήμα` |
 | `sorted` | `ταξινομημένος` |
 | `staticmethod` | `στατικήμέθοδος` |
-| `str` | `str` |
+| `str` | `στρ` |
 | `sum` | `σύνολο` |
 | `super` | `υπερ` |
 | `tuple` | `τοtuple` |
 | `vars` | `variabiles` |
-| `zip` | `zip` |
+| `zip` | `συνδεις` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,41 +153,44 @@ Exception classes for error handling.
 | `assertionerror` | `ασύνδετηκατάσταση` |
 | `attributeerror` | `Σφάλμα_Χαρακτηριστικού` |
 | `baseexception` | `βασική_εξαίρεση` |
+| `baseexceptiongroup` | `βασική_εξαίρεση_ομάδα` |
 | `basegeneratorexit` | `basegeneratorέξοδος` |
-| `blockingioerror` | `blockingioerror` |
-| `brokenpipeerror` | `brokenpipeerror` |
+| `blockingioerror` | `σταματητικοςIOMsg` |
+| `brokenpipeerror` | `κατάληψηΣφαλμέτηςΕποπτείας` |
 | `buffererror` | `σφαλεμά_προσωρινής_ζώνης_δεδομένων` |
 | `byteswarning` | `προειδοποίησηbyteswarning` |
 | `childprocesserror` | `σφάλμα_παιδιού_διαδικασίας` |
-| `connectionabortederror` | `connectionabortederror` |
+| `connectionabortederror` | `σύνδεσμοςΑκολουθητήςΣφαίρας` |
 | `connectionerror` | `σφάλμα_σύνδεσης` |
 | `connectionrefusederror` | `connection_refused_error` |
-| `connectionreseterror` | `connectionreseterror` |
+| `connectionreseterror` | `σφάλμαΚλεισιμοςΣύνδεσης` |
 | `deprecationwarning` | `αποκλεισμόςπροειδοποίησης` |
+| `encodingwarning` | `προειδοποίησηκωδικοποίησης` |
 | `environmenterror` | `σφάλμα_περιβάλλοντος` |
 | `eoferror` | `εσφαλμάτο` |
 | `exception` | `εξαίρεση` |
+| `exceptiongroup` | `οηομάδαεξαιρέσεων` |
 | `fileexistserror` | `σφάλμα_υπάρχουσας_αρχειής` |
 | `filenotfounderror` | `σφάλμα_δεν_βρέθηκε_αρχείο` |
 | `floatingpointerror` | `σφάλμα_πλωτής_εκτύπωσης` |
 | `futurewarning` | `προειδοποίηση_για_το_μελλον` |
 | `generatorexit` | `εξόδου_γεννήτριας` |
-| `importerror` | `importerror` |
+| `importerror` | `importerroros` |
 | `importwarning` | `προειδοποίηση_εισαγωγής` |
-| `indentationerror` | `indentationerror` |
+| `indentationerror` | `κεντρισμοςΣφαλμα` |
 | `indexerror` | `Σφάλμαευρετηρίου` |
 | `interruptederror` | `σφάλμαδιακοπής` |
-| `ioerror` | `ioerror` |
-| `isadirectoryerror` | `isadirectoryerror` |
+| `ioerror` | `σφάλμαIO` |
+| `isadirectoryerror` | `είσαιΔιαρκείαΑρχείου` |
 | `keyboardinterrupt` | `διακοπή_με_κλειδαριά` |
 | `keyerror` | `σφάλμακλειδιού` |
 | `lookuperror` | `σφάλμααναζήτησης` |
 | `memoryerror` | `σφάλμαμνήμης` |
-| `modulenotfounderror` | `modulenotfounderror` |
+| `modulenotfounderror` | `σφάλμαΔιατύπωσηςΠυθόν` |
 | `nameerror` | `Σφάλμαονόματος` |
-| `notadirectoryerror` | `notadirectoryerror` |
+| `notadirectoryerror` | `δενΕίναικατάλογος` |
 | `notimplementederror` | `σφάλμα_μη_υλοποίησης` |
-| `oserror` | `oserror` |
+| `oserror` | `σφάλμαΟS` |
 | `overflowerror` | `σφραγίδαυπερχείλισης` |
 | `pendingdeprecationwarning` | `ειδοποίηση_για_ακυρότητα` |
 | `permissionerror` | `σφάλμα_άδειας` |
@@ -193,7 +198,7 @@ Exception classes for error handling.
 | `recursionerror` | `αναδρομήσφάλματος` |
 | `referenceerror` | `σφάλμααναφοράς` |
 | `resourcewarning` | `προειδοποίηση_πόρων` |
-| `runtimeerror` | `runtimeerror` |
+| `runtimeerror` | `σφάλμαΕκτελήσεως` |
 | `runtimewarning` | `προειδοποίηση_εκτέλεσης` |
 | `stopasynciteration` | `διακοπή_ασύγχρονης_επανάληψης` |
 | `stopiteration` | `διακοπή_επαναληψης` |
@@ -205,10 +210,10 @@ Exception classes for error handling.
 | `typeerror` | `τύπος_σφάλματος` |
 | `unboundlocalerror` | `απαράδεκτητοπικήμεταβλητή` |
 | `unicodedecodeerror` | `σφάλμααποκωδικοποίησηςUnicode` |
-| `unicodeencodeerror` | `unicodeencodeerror` |
-| `unicodeerror` | `unicodeerror` |
-| `unicodetranslateerror` | `unicodetranslateerror` |
-| `unicodewarning` | `unicodewarning` |
+| `unicodeencodeerror` | `κατάστροφηΚωδικούUnicode` |
+| `unicodeerror` | `σφάλμαUnicode` |
+| `unicodetranslateerror` | `κατάλογοςUnicodeΣφάλμα` |
+| `unicodewarning` | `προσοχήUnicode` |
 | `userwarning` | `προειδοποίηση_χρήστη` |
 | `valueerror` | `ValueError` |
 | `warning` | `προειδοποίηση` |
@@ -233,7 +238,7 @@ Here's an example showing Greek Python code with Legesher:
         επιστροφή n * παραγοντικό(n - 1)
 
 δε κύριο():
-    αριθμοί = [int(x) για x εν διαστήμα(6)]
+    αριθμοί = [κείμενο(x) για x εν διαστήμα(6)]
 
     για αριθμός εν αριθμοί:
         αποτέλεσμα = παραγοντικό(αριθμός)

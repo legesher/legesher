@@ -22,7 +22,7 @@
 | **Text Direction** | Right-to-Left (RTL) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Hebrew.
 
@@ -42,6 +42,7 @@ These are Python's reserved words translated to Hebrew.
 | `elif` | `אם_אלו` |
 | `else` | `אחרת` |
 | `except` | `למעט` |
+| `except*` | `למעט` |
 | `False` | `כוזב` |
 | `finally` | `לבסוף` |
 | `for` | `לכל` |
@@ -62,6 +63,7 @@ These are Python's reserved words translated to Hebrew.
 | `return` | `להחזיר` |
 | `True` | `אמת` |
 | `try` | `לנסות` |
+| `type` | `סוג` |
 | `while` | `בעוד` |
 | `with` | `עם` |
 | `yield` | `להחזיר` |
@@ -81,7 +83,7 @@ Python's built-in functions and types in Hebrew.
 | `bin` | `בינארי` |
 | `bool` | `בוליאני` |
 | `breakpoint` | `השהייה` |
-| `bytearray` | `bytearray` |
+| `bytearray` | `ARRY_OF_BYTE` |
 | `bytes` | `בתים` |
 | `callable` | `קריאה` |
 | `chr` | `תו` |
@@ -91,13 +93,13 @@ Python's built-in functions and types in Hebrew.
 | `delattr` | `מחיקהשלתכונה` |
 | `dict` | `מילון` |
 | `dir` | `התרגוםלמונח` |
-| `divmod` | `divmod` |
+| `divmod` | `делитומוד` |
 | `ellipsis` | `הנקודהפסיק` |
 | `enumerate` | `לספור` |
 | `eval` | `הערכה` |
 | `exec` | `הביצועשל` |
 | `filter` | `לסנן` |
-| `float` | `float` |
+| `float` | `צף` |
 | `format` | `הפורמט` |
 | `frozenset` | `קפואset` |
 | `getattr` | `הגטטרייז` |
@@ -109,7 +111,7 @@ Python's built-in functions and types in Hebrew.
 | `id` | `הזהותהייחודית` |
 | `input` | `קלט` |
 | `int` | `שלם` |
-| `isinstance` | `isinstance` |
+| `isinstance` | `isinstance_hebrew` |
 | `issubclass` | `היש_תת_מחלקה` |
 | `iter` | `אִיטֵר` |
 | `len` | `אורך` |
@@ -144,7 +146,7 @@ Python's built-in functions and types in Hebrew.
 | `vars` | `משתנים` |
 | `zip` | `למזג` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -154,6 +156,7 @@ Exception classes for error handling.
 | `assertionerror` | `טעותבטוען` |
 | `attributeerror` | `שגיאתתכונה` |
 | `baseexception` | `בסיסיוצאדופן` |
+| `baseexceptiongroup` | `בסיס_אקסייפטיונגרופ` |
 | `basegeneratorexit` | `יצירתבסיס` |
 | `blockingioerror` | `שגיאתקלטפלטחסימתי` |
 | `brokenpipeerror` | `שגיאתשבירתצינור` |
@@ -165,9 +168,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `שגיאהבסירובחיבור` |
 | `connectionreseterror` | `התחברות_שגיאה` |
 | `deprecationwarning` | `אזהרת_דעיכה` |
+| `encodingwarning` | `אזהרת_קידוד` |
 | `environmenterror` | `שגיאתסביבה` |
 | `eoferror` | `שגיאתeoferror` |
 | `exception` | `חריגה` |
+| `exceptiongroup` | `קבוצתחריגים` |
 | `fileexistserror` | `שגיאתקיוםקובץ` |
 | `filenotfounderror` | `שגיאהבמציאתהקובץ` |
 | `floatingpointerror` | `שגיאהשלמצביעצף` |

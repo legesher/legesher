@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Chinese.
 
@@ -35,20 +35,21 @@ These are Python's reserved words translated to Chinese.
 | `class` | `类` |
 | `continue` | `继续` |
 | `def` | `定义` |
-| `del` | `del` |
+| `del` | `删除` |
 | `elif` | `elseif` |
 | `else` | `否则` |
-| `except` | `except` |
+| `except` | `异常` |
+| `except*` | `多重捕获*` |
 | `False` | `假` |
 | `finally` | `最后` |
-| `for` | `for` |
+| `for` | `循环` |
 | `from` | `从` |
 | `global` | `全局` |
 | `if` | `如果` |
 | `import` | `导入` |
 | `in` | `在` |
 | `is` | `是` |
-| `lambda` | `lambda` |
+| `lambda` | `玪抑` |
 | `match` | `匹配` |
 | `None` | `没有` |
 | `nonlocal` | `非局部` |
@@ -59,7 +60,8 @@ These are Python's reserved words translated to Chinese.
 | `return` | `返回` |
 | `True` | `真` |
 | `try` | `尝试` |
-| `while` | `while` |
+| `type` | `类型` |
+| `while` | `当` |
 | `with` | `使用` |
 | `yield` | `产生` |
 
@@ -87,11 +89,11 @@ Python's built-in functions and types in Chinese.
 | `complex` | `复数` |
 | `delattr` | `删除属性` |
 | `dict` | `字典` |
-| `dir` | `dir` |
-| `divmod` | `divmod` |
+| `dir` | `dir_列出属性和方法` |
+| `divmod` | `除模` |
 | `ellipsis` | `省略号` |
 | `enumerate` | `枚举` |
-| `eval` | `eval` |
+| `eval` | `评估` |
 | `exec` | `执行` |
 | `filter` | `过滤` |
 | `float` | `浮点数` |
@@ -106,7 +108,7 @@ Python's built-in functions and types in Chinese.
 | `id` | `标识` |
 | `input` | `输入` |
 | `int` | `整数` |
-| `isinstance` | `isinstance` |
+| `isinstance` | `是实例` |
 | `issubclass` | `是子类` |
 | `iter` | `迭代` |
 | `len` | `长度` |
@@ -121,7 +123,7 @@ Python's built-in functions and types in Chinese.
 | `object` | `对象` |
 | `oct` | `八进制` |
 | `open` | `打开` |
-| `ord` | `ord` |
+| `ord` | `字符编码` |
 | `pow` | `幂` |
 | `print` | `打印` |
 | `property` | `属性` |
@@ -130,18 +132,18 @@ Python's built-in functions and types in Chinese.
 | `reversed` | `反转` |
 | `round` | `四舍五入` |
 | `set` | `集合` |
-| `setattr` | `setattr` |
+| `setattr` | `设置属性` |
 | `slice` | `切片` |
 | `sorted` | `排序的` |
 | `staticmethod` | `静态方法` |
-| `str` | `str` |
+| `str` | `字符串` |
 | `sum` | `求和` |
 | `super` | `超` |
 | `tuple` | `元组` |
-| `vars` | `vars` |
-| `zip` | `zip` |
+| `vars` | `变量字典` |
+| `zip` | `组合` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,6 +153,7 @@ Exception classes for error handling.
 | `assertionerror` | `断言错误` |
 | `attributeerror` | `属性错误` |
 | `baseexception` | `基本异常` |
+| `baseexceptiongroup` | `基异常组` |
 | `basegeneratorexit` | `基底生成器退出` |
 | `blockingioerror` | `阻塞的IO错误` |
 | `brokenpipeerror` | `破管错误` |
@@ -162,9 +165,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `连接拒绝错误` |
 | `connectionreseterror` | `连接重置错误` |
 | `deprecationwarning` | `弃用警告` |
+| `encodingwarning` | `编码警告` |
 | `environmenterror` | `环境错误` |
 | `eoferror` | `错误` |
 | `exception` | `异常` |
+| `exceptiongroup` | `异常组` |
 | `fileexistserror` | `文件已存在错误` |
 | `filenotfounderror` | `文件未找到错误` |
 | `floatingpointerror` | `浮点数错误` |
@@ -185,7 +190,7 @@ Exception classes for error handling.
 | `nameerror` | `名称错误` |
 | `notadirectoryerror` | `Nosuchfileordirectory` |
 | `notimplementederror` | `未实现错误` |
-| `oserror` | `oserror` |
+| `oserror` | `os错误` |
 | `overflowerror` | `溢出错误` |
 | `pendingdeprecationwarning` | `待删除警告` |
 | `permissionerror` | `权限错误` |
@@ -205,7 +210,7 @@ Exception classes for error handling.
 | `typeerror` | `类型错误` |
 | `unboundlocalerror` | `未绑定局部错误` |
 | `unicodedecodeerror` | `Unicode解码错误` |
-| `unicodeencodeerror` | `unicodeencodeerror` |
+| `unicodeencodeerror` | `unicodeencode错误` |
 | `unicodeerror` | `unicode错误` |
 | `unicodetranslateerror` | `unicodetranslate错误` |
 | `unicodewarning` | `unicode警告` |
@@ -233,22 +238,22 @@ Here's an example showing Chinese Python code with Legesher:
         返回 n * 阶乘(n - 1)
 
 定义 主函数():
-    数字列表 = [整数(x) for x 在 范围(6)]
+    数字列表 = [整数(x) 循环 x 在 范围(6)]
 
-    for 数字 在 数字列表:
+    循环 数字 在 数字列表:
         结果 = 阶乘(数字)
         打印(f"{数字}! = {结果}")
 
     # 演示while循环
     计数 = 0
-    while 计数 < 3:
+    当 计数 < 3:
         打印(f"计数： {计数}")
         计数 += 1
 
     # 演示try/except
     尝试:
         阶乘(-1)
-    except ValueError 作为 错误:
+    异常 ValueError 作为 错误:
         打印(f"错误： {错误}")
     最后:
         打印("完成！")

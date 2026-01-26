@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Spanish.
 
@@ -39,16 +39,17 @@ These are Python's reserved words translated to Spanish.
 | `elif` | `si_no` |
 | `else` | `sino` |
 | `except` | `excepto` |
+| `except*` | `excepto*` |
 | `False` | `falso` |
 | `finally` | `finalmente` |
 | `for` | `por` |
 | `from` | `desde` |
-| `global` | `global` |
+| `global` | `declara_variable_global` |
 | `if` | `si` |
 | `import` | `importar` |
 | `in` | `en` |
 | `is` | `ser` |
-| `lambda` | `lambda` |
+| `lambda` | `funcion_anonima` |
 | `match` | `coincidir` |
 | `None` | `nulo` |
 | `nonlocal` | `nolocal` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Spanish.
 | `return` | `devolver` |
 | `True` | `verdadero` |
 | `try` | `probar` |
+| `type` | `tipo` |
 | `while` | `mientras` |
 | `with` | `con` |
 | `yield` | `dar` |
@@ -70,16 +72,16 @@ Python's built-in functions and types in Spanish.
 | English | Spanish |
 |---------|--------|
 | `abs` | `valorabsoluto` |
-| `aiter` | `aiter` |
+| `aiter` | `iterador_asincrónico` |
 | `all` | `todo` |
 | `anext` | `próximo` |
 | `any` | `cualquier` |
-| `ascii` | `ascii` |
+| `ascii` | `asciiificar` |
 | `bin` | `binario` |
 | `bool` | `booleano` |
 | `breakpoint` | `puntodeinterrupción` |
-| `bytearray` | `bytearray` |
-| `bytes` | `bytes` |
+| `bytearray` | `conjuntoDeBytes` |
+| `bytes` | `secuencia_inmutable_de_bytes` |
 | `callable` | `llamable` |
 | `chr` | `carácter` |
 | `classmethod` | `métododeclase` |
@@ -87,11 +89,11 @@ Python's built-in functions and types in Spanish.
 | `complex` | `complejo` |
 | `delattr` | `eliminar_atributo` |
 | `dict` | `diccionario` |
-| `dir` | `dir` |
-| `divmod` | `divmod` |
-| `ellipsis` | `ellipsis` |
+| `dir` | `directorio` |
+| `divmod` | `division_con_resta` |
+| `ellipsis` | `ipsislo` |
 | `enumerate` | `elenumerar` |
-| `eval` | `eval` |
+| `eval` | `evalúo` |
 | `exec` | `ejecutar` |
 | `filter` | `filtrar` |
 | `float` | `flotante` |
@@ -100,13 +102,13 @@ Python's built-in functions and types in Spanish.
 | `getattr` | `obtenerelatributo` |
 | `globals` | `eltérminotraducido` |
 | `hasattr` | `teneratributo` |
-| `hash` | `hash` |
+| `hash` | `resumen_hash` |
 | `help` | `ayuda` |
 | `hex` | `hexadecimal` |
 | `id` | `identificador` |
 | `input` | `entrada` |
 | `int` | `entero` |
-| `isinstance` | `serdelaclase` |
+| `isinstance` | `ser_de_la_clase` |
 | `issubclass` | `subclasede` |
 | `iter` | `iterar` |
 | `len` | `longitud` |
@@ -115,13 +117,13 @@ Python's built-in functions and types in Spanish.
 | `map` | `mapear` |
 | `max` | `máximo` |
 | `memoryview` | `vistadememoria` |
-| `min` | `min` |
+| `min` | `minimo` |
 | `next` | `siguiente` |
 | `notimplemented` | `noimplementado` |
 | `object` | `objeto` |
 | `oct` | `octal` |
 | `open` | `abrir` |
-| `ord` | `ord` |
+| `ord` | `ordinal` |
 | `pow` | `elevaraunapotencia` |
 | `print` | `imprimir` |
 | `property` | `propiedad` |
@@ -136,12 +138,12 @@ Python's built-in functions and types in Spanish.
 | `staticmethod` | `estático` |
 | `str` | `cadena` |
 | `sum` | `sumar` |
-| `super` | `super` |
+| `super` | `superClase` |
 | `tuple` | `tupla` |
-| `vars` | `vars` |
-| `zip` | `zip` |
+| `vars` | `devuelve_el_diccionario_de_variables` |
+| `zip` | `acopiar` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,6 +153,7 @@ Exception classes for error handling.
 | `assertionerror` | `errordeaserción` |
 | `attributeerror` | `Errordeatributo` |
 | `baseexception` | `excepciónbase` |
+| `baseexceptiongroup` | `grupodeexcepcionesbase` |
 | `basegeneratorexit` | `generarsalida` |
 | `blockingioerror` | `errordeESbloqueante` |
 | `brokenpipeerror` | `errordetuberíarota` |
@@ -162,9 +165,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `errorderechazodeconexión` |
 | `connectionreseterror` | `resetearconexión` |
 | `deprecationwarning` | `advertenciadedepreciación` |
+| `encodingwarning` | `advertenciadecodificación` |
 | `environmenterror` | `errordeentorno` |
 | `eoferror` | `errordeentradasalida` |
 | `exception` | `excepción` |
+| `exceptiongroup` | `grupodeexcepciones` |
 | `fileexistserror` | `errordeexistenciadearchivo` |
 | `filenotfounderror` | `Errordenoencontrarelarchivo` |
 | `floatingpointerror` | `errordepunteroflotante` |
@@ -185,7 +190,7 @@ Exception classes for error handling.
 | `nameerror` | `Errordenombre` |
 | `notadirectoryerror` | `errordenoserundirectorio` |
 | `notimplementederror` | `errordenoimplementación` |
-| `oserror` | `oserror` |
+| `oserror` | `ErrorDeOS` |
 | `overflowerror` | `errordedesbordamiento` |
 | `pendingdeprecationwarning` | `advertenciadeadvertenciadedepreciaciónpendiente` |
 | `permissionerror` | `errordepermiso` |
@@ -196,7 +201,7 @@ Exception classes for error handling.
 | `runtimeerror` | `errorentiempodeejecución` |
 | `runtimewarning` | `advertenciadetiempodeejecución` |
 | `stopasynciteration` | `detenerlaiteraciónasincrónica` |
-| `stopiteration` | `stopiteration` |
+| `stopiteration` | `detener_iteración` |
 | `syntaxerror` | `errordesintaxis` |
 | `syntaxwarning` | `advertenciadesintaxis` |
 | `systemexit` | `salirdelsistema` |

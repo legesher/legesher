@@ -19,14 +19,14 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Turkish.
 
 | English | Turkish |
 |---------|--------|
 | `and` | `ve` |
-| `as` | `as` |
+| `as` | `eşdeğer` |
 | `assert` | `talepetmek` |
 | `async` | `asenkron` |
 | `await` | `bekle` |
@@ -39,6 +39,7 @@ These are Python's reserved words translated to Turkish.
 | `elif` | `eğer_de` |
 | `else` | `değil` |
 | `except` | `yada` |
+| `except*` | `except` |
 | `False` | `yanlış` |
 | `finally` | `sonunda` |
 | `for` | `için` |
@@ -48,7 +49,7 @@ These are Python's reserved words translated to Turkish.
 | `import` | `içeriaktarma` |
 | `in` | `içinde` |
 | `is` | `olmak` |
-| `lambda` | `lambda` |
+| `lambda` | `lambdan` |
 | `match` | `eşleş` |
 | `None` | `hiçbirşey` |
 | `nonlocal` | `yerelolmayan` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Turkish.
 | `return` | `dönüş` |
 | `True` | `doğru` |
 | `try` | `deneme` |
+| `type` | `tür` |
 | `while` | `sürürken` |
 | `with` | `ile` |
 | `yield` | `ver` |
@@ -69,16 +71,16 @@ Python's built-in functions and types in Turkish.
 
 | English | Turkish |
 |---------|--------|
-| `abs` | `abs` |
-| `aiter` | `aiter` |
+| `abs` | `mutlakDeğer` |
+| `aiter` | `asenkron_itaratci` |
 | `all` | `herşey` |
-| `anext` | `anext` |
+| `anext` | `sonraki` |
 | `any` | `herhangibir` |
-| `ascii` | `ascii` |
-| `bin` | `bin` |
-| `bool` | `bool` |
+| `ascii` | `asciiDegerleri` |
+| `bin` | `ikilikSistemden` |
+| `bool` | `doğru` |
 | `breakpoint` | `kesmenoktası` |
-| `bytearray` | `baytdizisi` |
+| `bytearray` | `byteDizisi` |
 | `bytes` | `baytlar` |
 | `callable` | `çağırılabilir` |
 | `chr` | `karakter` |
@@ -94,32 +96,32 @@ Python's built-in functions and types in Turkish.
 | `eval` | `değerlendir` |
 | `exec` | `yürüt` |
 | `filter` | `filtre` |
-| `float` | `kayannokta` |
+| `float` | `kayan_nokta` |
 | `format` | `biçim` |
 | `frozenset` | `dondurulmuşküme` |
 | `getattr` | `özniteliğeeriş` |
 | `globals` | `theglobalvariables` |
 | `hasattr` | `sahip` |
-| `hash` | `hash` |
+| `hash` | `özet_değeri` |
 | `help` | `yardım` |
-| `hex` | `hex` |
+| `hex` | `hexaDize` |
 | `id` | `kimlik` |
 | `input` | `giriş` |
 | `int` | `tamsayı` |
-| `isinstance` | `isinstance` |
+| `isinstance` | `tür_kontrolü` |
 | `issubclass` | `altsınıf` |
-| `iter` | `iter` |
+| `iter` | `iterasyon` |
 | `len` | `uzunluk` |
 | `list` | `liste` |
 | `locals` | `yereldeğişkenler` |
 | `map` | `haritalama` |
 | `max` | `maksimum` |
 | `memoryview` | `bellekgörünümü` |
-| `min` | `min` |
+| `min` | `küçük` |
 | `next` | `sonraki` |
 | `notimplemented` | `yapılamaz` |
 | `object` | `nesne` |
-| `oct` | `oct` |
+| `oct` | `oktal` |
 | `open` | `açmak` |
 | `ord` | `karakter` |
 | `pow` | `üçüncükuvvet` |
@@ -141,7 +143,7 @@ Python's built-in functions and types in Turkish.
 | `vars` | `değişkenler` |
 | `zip` | `birleştir` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,10 +153,11 @@ Exception classes for error handling.
 | `assertionerror` | `tartışmahatası` |
 | `attributeerror` | `öznitelikhatası` |
 | `baseexception` | `temelistisna` |
-| `basegeneratorexit` | `basegeneratorexit` |
-| `blockingioerror` | `blockingioerror` |
-| `brokenpipeerror` | `brokenpipeerror` |
-| `buffererror` | `buffererror` |
+| `baseexceptiongroup` | `temelistisnagrubu` |
+| `basegeneratorexit` | `basegeneratorçıkışı` |
+| `blockingioerror` | `blokeeriohletehir` |
+| `brokenpipeerror` | `bozuk_boru_hatası` |
+| `buffererror` | `buffer_hatası` |
 | `byteswarning` | `baytuyarı` |
 | `childprocesserror` | `çocuksüreçhatası` |
 | `connectionabortederror` | `bağlantı_kapatma_hata` |
@@ -162,52 +165,54 @@ Exception classes for error handling.
 | `connectionrefusederror` | `bağlantı_kabul_etmedi_hata` |
 | `connectionreseterror` | `bağlantısıfırlamahatası` |
 | `deprecationwarning` | `depreasyonuyarı` |
-| `environmenterror` | `environmenterror` |
+| `encodingwarning` | `encoding_uyarısı` |
+| `environmenterror` | `ortamHata` |
 | `eoferror` | `hata` |
 | `exception` | `özeldurum` |
+| `exceptiongroup` | `özeldurumgrubu` |
 | `fileexistserror` | `dosya_zaten_var` |
 | `filenotfounderror` | `Dosyabulunamadıhatası` |
 | `floatingpointerror` | `floathata` |
 | `futurewarning` | `gelecekuyarı` |
-| `generatorexit` | `generatorexit` |
+| `generatorexit` | `generatör_çıkışı` |
 | `importerror` | `içeriaktarmahatası` |
 | `importwarning` | `importuyarı` |
 | `indentationerror` | `girintilemehatası` |
 | `indexerror` | `Dizinhatası` |
 | `interruptederror` | `kesintiyeuğrayanhata` |
-| `ioerror` | `ioerror` |
-| `isadirectoryerror` | `isadirectoryerror` |
+| `ioerror` | `G_Ç_hatası` |
+| `isadirectoryerror` | `dosyaYoluHata` |
 | `keyboardinterrupt` | `klavye_kesintisi` |
 | `keyerror` | `anahtarhatası` |
 | `lookuperror` | `aramahatası` |
 | `memoryerror` | `bellekhatası` |
 | `modulenotfounderror` | `modülbulunamadıhatası` |
 | `nameerror` | `AdHata` |
-| `notadirectoryerror` | `notadirectoryerror` |
+| `notadirectoryerror` | `dosyaYokHata` |
 | `notimplementederror` | `UygulanamayanHata` |
-| `oserror` | `oserror` |
+| `oserror` | `os_hatası` |
 | `overflowerror` | `aşırıakışhatası` |
 | `pendingdeprecationwarning` | `bekleyenkullanımdışıbırakmauyarısı` |
 | `permissionerror` | `izinhatası` |
-| `processlookuperror` | `processlookuperror` |
+| `processlookuperror` | `yönetimHata` |
 | `recursionerror` | `yinelemehatası` |
 | `referenceerror` | `referanshatası` |
 | `resourcewarning` | `kaynakuyarı` |
 | `runtimeerror` | `çalışmazamanıhatası` |
 | `runtimewarning` | `çalışmazamanıuyarı` |
-| `stopasynciteration` | `stopasynciteration` |
+| `stopasynciteration` | `stopAsyncİterasyon` |
 | `stopiteration` | `durdurma_iterasyonu` |
 | `syntaxerror` | `sintakshatası` |
 | `syntaxwarning` | `sintaksuyarı` |
 | `systemexit` | `sistemçıkışı` |
-| `taberror` | `taberror` |
+| `taberror` | `tabhata` |
 | `timeouterror` | `zamanaşımıhatası` |
 | `typeerror` | `TürHatası` |
 | `unboundlocalerror` | `yerinebağlanmamışyerelhata` |
-| `unicodedecodeerror` | `unicodedecodeerror` |
-| `unicodeencodeerror` | `unicodeencodeerror` |
+| `unicodedecodeerror` | `unicodedecodehataırı` |
+| `unicodeencodeerror` | `unicodeencodehata` |
 | `unicodeerror` | `unicodehata` |
-| `unicodetranslateerror` | `unicodetranslateerror` |
+| `unicodetranslateerror` | `unicodeKodDönüşHatası` |
 | `unicodewarning` | `unicodeuyarısı` |
 | `userwarning` | `kullanıcıuyarı` |
 | `valueerror` | `değerhatası` |
@@ -248,7 +253,7 @@ tanımla ana():
     # try/except gösterimi
     deneme:
         faktoriyel(-1)
-    yada Değerhatası as hata:
+    yada Değerhatası eşdeğer hata:
         yazdır(f"Hata: {hata}")
     sonunda:
         yazdır("Bitti!")

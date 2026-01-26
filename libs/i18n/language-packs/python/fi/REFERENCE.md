@@ -19,14 +19,14 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Finnish.
 
 | English | Finnish |
 |---------|--------|
 | `and` | `ja` |
-| `as` | `as` |
+| `as` | `kuten` |
 | `assert` | `varmistaa` |
 | `async` | `asynchrone` |
 | `await` | `odatetaan` |
@@ -38,7 +38,8 @@ These are Python's reserved words translated to Finnish.
 | `del` | `poista` |
 | `elif` | `muuttujilla` |
 | `else` | `muuttuja` |
-| `except` | `except` |
+| `except` | `pois` |
+| `except*` | `exceptiivi` |
 | `False` | `valmis` |
 | `finally` | `seuraaaina` |
 | `for` | `forza` |
@@ -46,9 +47,9 @@ These are Python's reserved words translated to Finnish.
 | `global` | `yhteensopiva` |
 | `if` | `jos` |
 | `import` | `importoida` |
-| `in` | `in` |
+| `in` | `sisään` |
 | `is` | `on` |
-| `lambda` | `lambda` |
+| `lambda` | `luuppi` |
 | `match` | `täydentäyttää` |
 | `None` | `tähtiäntä` |
 | `nonlocal` | `luonnonlaite` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Finnish.
 | `return` | `valita` |
 | `True` | `tosi` |
 | `try` | `pyyttää` |
+| `type` | `tyyppi` |
 | `while` | `juhana` |
 | `with` | `jäsen` |
 | `yield` | `yields` |
@@ -74,12 +76,12 @@ Python's built-in functions and types in Finnish.
 | `all` | `kaikki` |
 | `anext` | `anextiä` |
 | `any` | `kaikki` |
-| `ascii` | `ascii` |
-| `bin` | `bin` |
-| `bool` | `bool` |
+| `ascii` | `asciiKoodit` |
+| `bin` | `kymmenelimi_sisaltyy_binaariseksi` |
+| `bool` | `tietotyyppiBooleaani` |
 | `breakpoint` | `peenäynti` |
-| `bytearray` | `bytearray` |
-| `bytes` | `bytes` |
+| `bytearray` | `binaaritaulukko` |
+| `bytes` | `bitti` |
 | `callable` | `kutsutontoon` |
 | `chr` | `karakteri` |
 | `classmethod` | `klassiseen` |
@@ -94,19 +96,19 @@ Python's built-in functions and types in Finnish.
 | `eval` | `evaluaa` |
 | `exec` | `käynnistä` |
 | `filter` | `suodatin` |
-| `float` | `float` |
+| `float` | `luku` |
 | `format` | `pärinnaita` |
-| `frozenset` | `frozenset` |
+| `frozenset` | `joukko` |
 | `getattr` | `hakuattribuuti` |
 | `globals` | `kaikkivaltias` |
-| `hasattr` | `hasattr` |
+| `hasattr` | `ominaisuudella` |
 | `hash` | `hashi` |
 | `help` | `auttaa` |
-| `hex` | `hex` |
+| `hex` | `heksaDecimaaliluku` |
 | `id` | `tunnus` |
 | `input` | `syöttö` |
 | `int` | `enteri` |
-| `isinstance` | `isinstance` |
+| `isinstance` | `onOletusTyyppi` |
 | `issubclass` | `subkelas` |
 | `iter` | `itereroa` |
 | `len` | `pystys` |
@@ -114,7 +116,7 @@ Python's built-in functions and types in Finnish.
 | `locals` | `paikallista` |
 | `map` | `mappa` |
 | `max` | `enintä` |
-| `memoryview` | `memoryview` |
+| `memoryview` | `muistivaikutus` |
 | `min` | `minimi` |
 | `next` | `seuraava` |
 | `notimplemented` | `ei_t_oikein_taipana` |
@@ -129,19 +131,19 @@ Python's built-in functions and types in Finnish.
 | `repr` | `reprezentaatio` |
 | `reversed` | `väkriin` |
 | `round` | `pyöriä` |
-| `set` | `set` |
-| `setattr` | `setattr` |
+| `set` | `sana` |
+| `setattr` | `aseta_ominaisuus` |
 | `slice` | `kirjaus` |
 | `sorted` | `sorteerittu` |
 | `staticmethod` | `statiskasi` |
-| `str` | `str` |
+| `str` | `merkkijono` |
 | `sum` | `summa` |
-| `super` | `super` |
+| `super` | `yläluokka` |
 | `tuple` | `tupla` |
 | `vars` | `variaable` |
 | `zip` | `sijoita` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -150,8 +152,9 @@ Exception classes for error handling.
 | `arithmeticerror` | `aritmetinenvirhe` |
 | `assertionerror` | `väärentamatontunnus` |
 | `attributeerror` | `attribuutivirhe` |
-| `baseexception` | `baseexception` |
-| `basegeneratorexit` | `basegeneratorexit` |
+| `baseexception` | `perusvirhe` |
+| `baseexceptiongroup` | `baseexceptiongroupin` |
+| `basegeneratorexit` | `perusGeneraattoriLopeta` |
 | `blockingioerror` | `blockingioerrori` |
 | `brokenpipeerror` | `pisteenlomakärsitys` |
 | `buffererror` | `buffererrori` |
@@ -162,14 +165,16 @@ Exception classes for error handling.
 | `connectionrefusederror` | `yhteensopimustodentuloma` |
 | `connectionreseterror` | `yhteysreijimivirhe` |
 | `deprecationwarning` | `vikaavarmaan` |
+| `encodingwarning` | `enkodivarnin` |
 | `environmenterror` | `ympäröivävirhe` |
 | `eoferror` | `väärinvalintaa` |
 | `exception` | `ohje` |
+| `exceptiongroup` | `ohje` |
 | `fileexistserror` | `tietolaman_väärin_määritelystä` |
 | `filenotfounderror` | `tietystäpuuttumatonvirhe` |
 | `floatingpointerror` | `floatpointerrori` |
 | `futurewarning` | `seuraavahäntääs` |
-| `generatorexit` | `generatorexit` |
+| `generatorexit` | `generaattoriLopeta` |
 | `importerror` | `tulostusvirhe` |
 | `importwarning` | `avustetuksenimporttaminen` |
 | `indentationerror` | `indentationerrori` |
@@ -181,10 +186,10 @@ Exception classes for error handling.
 | `keyerror` | `avaimenvääritys` |
 | `lookuperror` | `jälkikärsimyssä` |
 | `memoryerror` | `memoryerrori` |
-| `modulenotfounderror` | `modulenotfounderror` |
+| `modulenotfounderror` | `moduulinEiLöydettyVirhe` |
 | `nameerror` | `nimeenvirhe` |
 | `notadirectoryerror` | `ei_rekisteri_minkä_siirryttävää_hakemistoa` |
-| `notimplementederror` | `notimplementederror` |
+| `notimplementederror` | `ei_toteutettu` |
 | `oserror` | `oserrori` |
 | `overflowerror` | `yliulostusvirhe` |
 | `pendingdeprecationwarning` | `odatettavavaarallinenvarmaus` |
@@ -193,12 +198,12 @@ Exception classes for error handling.
 | `recursionerror` | `rekursioonvirhe` |
 | `referenceerror` | `viitevirhe` |
 | `resourcewarning` | `resurssivarnauha` |
-| `runtimeerror` | `runtimeerror` |
+| `runtimeerror` | `runtimevirhe` |
 | `runtimewarning` | `jälkikäyttövariminenvararma` |
 | `stopasynciteration` | `pyörittymispyytämistä` |
 | `stopiteration` | `stoppiteracija` |
 | `syntaxerror` | `syntaxerrori` |
-| `syntaxwarning` | `syntaxwarning` |
+| `syntaxwarning` | `syntaksivaroitus` |
 | `systemexit` | `jäätäyttymistä` |
 | `taberror` | `taberrori` |
 | `timeouterror` | `aikausvirhe` |
@@ -233,9 +238,9 @@ määritellä kertoma(n):
         valita n * kertoma(n - 1)
 
 määritellä paa():
-    numerot = [enteri(x) forza x in alue(6)]
+    numerot = [enteri(x) forza x sisään alue(6)]
 
-    forza numero in numerot:
+    forza numero sisään numerot:
         tulos = kertoma(numero)
         kirjaa(f"{numero}! = {tulos}")
 
@@ -248,7 +253,7 @@ määritellä paa():
     # Esittele try/except
     pyyttää:
         kertoma(-1)
-    except Arvovirhe as virhe:
+    pois Arvovirhe kuten virhe:
         kirjaa(f"Virhe: {virhe}")
     seuraaaina:
         kirjaa("Valmis!")

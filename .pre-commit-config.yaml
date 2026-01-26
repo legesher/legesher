@@ -73,6 +73,14 @@ repos:
     name: Validate Language Pack YAML
     pass_filenames: true
 
+  # Regenerate REFERENCE.md when language pack YAML files change
+  - entry: uv run python scripts/generate_reference_docs.py
+    files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
+    id: regenerate-reference-docs
+    language: system
+    name: Regenerate Reference Documentation
+    pass_filenames: false
+
   # Commit message validation with Commitizen
 - repo: https://github.com/commitizen-tools/commitizen
   rev: v4.9.1

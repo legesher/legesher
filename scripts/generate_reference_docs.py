@@ -492,15 +492,51 @@ def load_languages() -> dict:
         return json.load(f)["languages"]
 
 
-def get_pack_path(lang_code: str) -> Path:
-    """Get path to language pack's 3.10.yml file."""
-    return (
-        PACKS_DIR
-        / lang_code
-        / f"legesher_i18n_python_{lang_code}"
-        / "packs"
-        / "3.10.yml"
-    )
+def get_packs_dir(lang_code: str) -> Path:
+    """Get path to language pack's packs directory."""
+    return PACKS_DIR / lang_code / f"legesher_i18n_python_{lang_code}" / "packs"
+
+
+def load_merged_pack(lang_code: str) -> dict:
+    """Load and merge all YAML files for a language pack.
+
+    This merges all version files (3.10.yml, 3.11.yml, etc.) to get
+    the complete set of keywords, builtins, and exceptions.
+    """
+    packs_dir = get_packs_dir(lang_code)
+
+    if not packs_dir.exists():
+        raise FileNotFoundError(f"Packs directory not found: {packs_dir}")
+
+    # Find all version YAML files
+    version_files = sorted(packs_dir.glob("3.*.yml"))
+
+    if not version_files:
+        raise FileNotFoundError(f"No version files found in {packs_dir}")
+
+    # Merge all versions (base + additions from each version)
+    merged = {
+        "keywords": {},
+        "builtins": {},
+        "exceptions": {},
+    }
+
+    for version_file in version_files:
+        data = load_yaml(version_file)
+
+        # Merge keywords
+        if "keywords" in data and data["keywords"]:
+            merged["keywords"].update(data["keywords"])
+
+        # Merge builtins
+        if "builtins" in data and data["builtins"]:
+            merged["builtins"].update(data["builtins"])
+
+        # Merge exceptions
+        if "exceptions" in data and data["exceptions"]:
+            merged["exceptions"].update(data["exceptions"])
+
+    return merged
 
 
 def generate_example_code(
@@ -698,7 +734,13 @@ Found a better translation? We welcome contributions from native speakers!
 def main():
     """Generate REFERENCE.md for all non-English language packs."""
     languages = load_languages()
-    english_data = load_yaml(get_pack_path("en"))
+
+    # Load merged English pack (all versions combined)
+    try:
+        english_data = load_merged_pack("en")
+    except FileNotFoundError as e:
+        print(f"Error loading English pack: {e}")
+        return
 
     generated = []
     errors = []
@@ -707,15 +749,16 @@ def main():
         if lang_code == "en":
             continue  # Skip English (it's the reference)
 
-        pack_path = get_pack_path(lang_code)
+        packs_dir = get_packs_dir(lang_code)
         output_path = PACKS_DIR / lang_code / "REFERENCE.md"
 
-        if not pack_path.exists():
-            errors.append(f"  {lang_code}: Pack file not found at {pack_path}")
+        if not packs_dir.exists():
+            errors.append(f"  {lang_code}: Packs directory not found at {packs_dir}")
             continue
 
         try:
-            pack_data = load_yaml(pack_path)
+            # Load merged pack data (all versions combined)
+            pack_data = load_merged_pack(lang_code)
             content = generate_reference_md(
                 lang_code, languages[lang_code], pack_data, english_data
             )
@@ -723,8 +766,14 @@ def main():
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(content)
 
+            # Count totals from merged data
+            kw_count = len(pack_data.get("keywords", {}))
+            bl_count = len(pack_data.get("builtins", {}))
+            ex_count = len(pack_data.get("exceptions", {}))
+
             generated.append(
-                f"  {lang_code}: {languages[lang_code]['name']} ({output_path.name})"
+                f"  {lang_code}: {languages[lang_code]['name']} "
+                f"({kw_count} kw, {bl_count} builtins, {ex_count} exceptions)"
             )
         except Exception as e:
             errors.append(f"  {lang_code}: Error - {e}")

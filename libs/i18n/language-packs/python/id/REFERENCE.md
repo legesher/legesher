@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Indonesian.
 
@@ -39,19 +39,20 @@ These are Python's reserved words translated to Indonesian.
 | `elif` | `jika_lain` |
 | `else` | `lainnya` |
 | `except` | `kecuali` |
+| `except*` | `kecuali` |
 | `False` | `Salah` |
 | `finally` | `akhirnya` |
 | `for` | `untuk` |
 | `from` | `dari` |
-| `global` | `global` |
+| `global` | `global_deklarasi` |
 | `if` | `jika` |
 | `import` | `mengimpor` |
 | `in` | `ada` |
 | `is` | `adalah` |
-| `lambda` | `lambda` |
+| `lambda` | `fungsi_anonim` |
 | `match` | `cocokkan` |
 | `None` | `tidakada` |
-| `nonlocal` | `nonlocal` |
+| `nonlocal` | `tidak_lokal` |
 | `not` | `bukan` |
 | `or` | `atau` |
 | `pass` | `lewat` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Indonesian.
 | `return` | `mengembalikan` |
 | `True` | `Benar` |
 | `try` | `coba` |
+| `type` | `tipe` |
 | `while` | `selama` |
 | `with` | `dengan` |
 | `yield` | `menghasilkan` |
@@ -70,15 +72,15 @@ Python's built-in functions and types in Indonesian.
 | English | Indonesian |
 |---------|--------|
 | `abs` | `nilaimutlak` |
-| `aiter` | `aiter` |
+| `aiter` | `pengulangan_asinkron` |
 | `all` | `semua` |
-| `anext` | `anext` |
+| `anext` | `nextAn` |
 | `any` | `manusia` |
-| `ascii` | `ascii` |
+| `ascii` | `kode_ascii` |
 | `bin` | `biner` |
-| `bool` | `bool` |
-| `breakpoint` | `breakpoint` |
-| `bytearray` | `bytearray` |
+| `bool` | `boolean` |
+| `breakpoint` | `pemecahPoin` |
+| `bytearray` | `arrayOfBytes` |
 | `bytes` | `byte` |
 | `callable` | `menggantikan` |
 | `chr` | `karakter` |
@@ -88,26 +90,26 @@ Python's built-in functions and types in Indonesian.
 | `delattr` | `menghapusatribut` |
 | `dict` | `kamus` |
 | `dir` | `direktori` |
-| `divmod` | `divmod` |
+| `divmod` | `bagi_sisa` |
 | `ellipsis` | `ellips` |
 | `enumerate` | `mengaturnomor` |
 | `eval` | `menilai` |
 | `exec` | `eksekusi` |
 | `filter` | `memfilter` |
-| `float` | `float` |
-| `format` | `format` |
+| `float` | `bilanganDesimal` |
+| `format` | `formatkan` |
 | `frozenset` | `setyangtidakdapatdiubah` |
 | `getattr` | `mengaksesatribut` |
 | `globals` | `global` |
 | `hasattr` | `memilikiatribut` |
-| `hash` | `hash` |
+| `hash` | `nilai_hash` |
 | `help` | `bantuan` |
 | `hex` | `heksadesimal` |
-| `id` | `id` |
-| `input` | `input` |
+| `id` | `identifikasi_unik` |
+| `input` | `masukan` |
 | `int` | `bilanganbulat` |
 | `isinstance` | `isinstanceadalah` |
-| `issubclass` | `issubclass` |
+| `issubclass` | `menjadi_turunan` |
 | `iter` | `mengiterasi` |
 | `len` | `panjang` |
 | `list` | `daftar` |
@@ -115,13 +117,13 @@ Python's built-in functions and types in Indonesian.
 | `map` | `memetakan` |
 | `max` | `maksimum` |
 | `memoryview` | `viewmemori` |
-| `min` | `min` |
+| `min` | `minimum` |
 | `next` | `berikutnya` |
 | `notimplemented` | `tidakdiimplementasikan` |
 | `object` | `objek` |
 | `oct` | `oktal` |
 | `open` | `buka` |
-| `ord` | `ord` |
+| `ord` | `asciiNilai` |
 | `pow` | `eksponen` |
 | `print` | `cetak` |
 | `property` | `sifat` |
@@ -129,19 +131,19 @@ Python's built-in functions and types in Indonesian.
 | `repr` | `perwakilan` |
 | `reversed` | `balik` |
 | `round` | `dibulatkan` |
-| `set` | `set` |
+| `set` | `himpunan` |
 | `setattr` | `menetapkanatribut` |
 | `slice` | `pemotongan` |
 | `sorted` | `tertata` |
 | `staticmethod` | `metodestatis` |
 | `str` | `string` |
 | `sum` | `menambahkan` |
-| `super` | `super` |
+| `super` | `superclasses` |
 | `tuple` | `tupel` |
-| `vars` | `vars` |
-| `zip` | `zip` |
+| `vars` | `var` |
+| `zip` | `gabungan` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,6 +153,7 @@ Exception classes for error handling.
 | `assertionerror` | `kesalahanasersi` |
 | `attributeerror` | `ErrorAtribut` |
 | `baseexception` | `BaseException` |
+| `baseexceptiongroup` | `kelompokpengecualiandasar` |
 | `basegeneratorexit` | `basegeneratorkeluar` |
 | `blockingioerror` | `kesalahanioyangmemblokir` |
 | `brokenpipeerror` | `kesalahanpiparusak` |
@@ -162,9 +165,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `error_koneksi_ditolak` |
 | `connectionreseterror` | `resetterkesalahankoneksi` |
 | `deprecationwarning` | `peringatanpenghapusan` |
+| `encodingwarning` | `peringatanpengkodean` |
 | `environmenterror` | `kesalahanlingkungan` |
 | `eoferror` | `kesalahaneksternal` |
 | `exception` | `kecurangan` |
+| `exceptiongroup` | `kelompokpengecualian` |
 | `fileexistserror` | `kesalahan_file_sudah_ada` |
 | `filenotfounderror` | `ErrorTidakDitemukanFile` |
 | `floatingpointerror` | `errorpointermengambang` |
@@ -185,7 +190,7 @@ Exception classes for error handling.
 | `nameerror` | `ErrorNama` |
 | `notadirectoryerror` | `kesalahan_bukan_direktori` |
 | `notimplementederror` | `errorimplementasitidakdilakukan` |
-| `oserror` | `oserror` |
+| `oserror` | `kesalahanOs` |
 | `overflowerror` | `kesalahanoverflow` |
 | `pendingdeprecationwarning` | `peringatanpendingdeprecasi` |
 | `permissionerror` | `kesalahanizin` |
@@ -200,12 +205,12 @@ Exception classes for error handling.
 | `syntaxerror` | `kesalahansintaks` |
 | `syntaxwarning` | `peringatansintaks` |
 | `systemexit` | `keluaransistem` |
-| `taberror` | `taberror` |
+| `taberror` | `kesalahanTab` |
 | `timeouterror` | `kesalahanwaktutunggu` |
 | `typeerror` | `KesalahanTipe` |
 | `unboundlocalerror` | `KesalahanUnboundLocal` |
 | `unicodedecodeerror` | `errordekodeunikode` |
-| `unicodeencodeerror` | `unicodeencodeerror` |
+| `unicodeencodeerror` | `kesalahanPengkodeanUnicode` |
 | `unicodeerror` | `errorunicode` |
 | `unicodetranslateerror` | `errorterjemahanunicode` |
 | `unicodewarning` | `peringatanunicode` |

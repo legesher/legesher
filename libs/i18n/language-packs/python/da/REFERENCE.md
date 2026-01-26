@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Danish.
 
@@ -27,7 +27,7 @@ These are Python's reserved words translated to Danish.
 |---------|--------|
 | `and` | `og` |
 | `as` | `som` |
-| `assert` | `assert` |
+| `assert` | `kontroller` |
 | `async` | `asynkron` |
 | `await` | `ventile` |
 | `break` | `brudt` |
@@ -39,9 +39,10 @@ These are Python's reserved words translated to Danish.
 | `elif` | `hvisannet` |
 | `else` | `annelse` |
 | `except` | `undtages` |
+| `except*` | `undtiden` |
 | `False` | `falsk` |
 | `finally` | `endelig` |
-| `for` | `for` |
+| `for` | `gentag` |
 | `from` | `fra` |
 | `global` | `globalt` |
 | `if` | `hvis` |
@@ -49,7 +50,7 @@ These are Python's reserved words translated to Danish.
 | `in` | `i` |
 | `is` | `er` |
 | `lambda` | `lambdafunktionen` |
-| `match` | `match` |
+| `match` | `sammenligning` |
 | `None` | `ingen` |
 | `nonlocal` | `ikkelokal` |
 | `not` | `ikke` |
@@ -59,9 +60,10 @@ These are Python's reserved words translated to Danish.
 | `return` | `retur` |
 | `True` | `sandet` |
 | `try` | `prøve` |
+| `type` | `objekt_type` |
 | `while` | `ved` |
 | `with` | `med` |
-| `yield` | `yield` |
+| `yield` | `udbyde` |
 
 ## Built-in Functions (71 terms)
 
@@ -70,16 +72,16 @@ Python's built-in functions and types in Danish.
 | English | Danish |
 |---------|--------|
 | `abs` | `absolutværdien` |
-| `aiter` | `aiter` |
+| `aiter` | `iterer` |
 | `all` | `alle` |
-| `anext` | `anext` |
+| `anext` | `næsteElement` |
 | `any` | `enigen` |
-| `ascii` | `ascii` |
-| `bin` | `bin` |
+| `ascii` | `ascii_konvertering` |
+| `bin` | `binært` |
 | `bool` | `boolesk` |
 | `breakpoint` | `pausepunkt` |
-| `bytearray` | `bytearray` |
-| `bytes` | `bytes` |
+| `bytearray` | `byte_array` |
+| `bytes` | `bytter` |
 | `callable` | `anmodbar` |
 | `chr` | `karakter` |
 | `classmethod` | `classmethode` |
@@ -87,61 +89,61 @@ Python's built-in functions and types in Danish.
 | `complex` | `komplekst` |
 | `delattr` | `sletatribut` |
 | `dict` | `ordning` |
-| `dir` | `dir` |
+| `dir` | `mappe` |
 | `divmod` | `delmod` |
 | `ellipsis` | `ellipsen` |
 | `enumerate` | `læg` |
 | `eval` | `evaluering` |
 | `exec` | `køre` |
-| `filter` | `filter` |
-| `float` | `float` |
-| `format` | `format` |
-| `frozenset` | `frozenset` |
+| `filter` | `filtrer` |
+| `float` | `flydende` |
+| `format` | `formatering` |
+| `frozenset` | `immuantes` |
 | `getattr` | `hentattribut` |
 | `globals` | `globalevariabler` |
 | `hasattr` | `haveattribut` |
-| `hash` | `hash` |
+| `hash` | `hash_kommer_i_gang` |
 | `help` | `hulp` |
-| `hex` | `hex` |
-| `id` | `id` |
+| `hex` | `hekseregel_convertering` |
+| `id` | `objekt_id` |
 | `input` | `indgang` |
 | `int` | `ent` |
-| `isinstance` | `isinstance` |
+| `isinstance` | `erInstansAf` |
 | `issubclass` | `subklassen` |
 | `iter` | `iterere` |
 | `len` | `længde` |
 | `list` | `liste` |
 | `locals` | `lokalevariabler` |
 | `map` | `kart` |
-| `max` | `max` |
-| `memoryview` | `memoryview` |
+| `max` | `maksimum` |
+| `memoryview` | `mindevist` |
 | `min` | `mindste` |
 | `next` | `næste` |
 | `notimplemented` | `ik_er_ikke_implementeret` |
 | `object` | `objekt` |
 | `oct` | `okt` |
 | `open` | `åøvre` |
-| `ord` | `ord` |
+| `ord` | `char_code` |
 | `pow` | `helt` |
-| `print` | `print` |
+| `print` | `skrivUd` |
 | `property` | `egenskab` |
 | `range` | `område` |
 | `repr` | `représentation` |
 | `reversed` | `omvending` |
 | `round` | `runde` |
-| `set` | `set` |
-| `setattr` | `setattr` |
-| `slice` | `slice` |
+| `set` | `sætning` |
+| `setattr` | `angivEgenskab` |
+| `slice` | `skær` |
 | `sorted` | `sorteret` |
 | `staticmethod` | `statiskmetod` |
-| `str` | `str` |
-| `sum` | `sum` |
+| `str` | `streng` |
+| `sum` | `summe` |
 | `super` | `superen` |
 | `tuple` | `tupel` |
-| `vars` | `vars` |
-| `zip` | `zip` |
+| `vars` | `variabler` |
+| `zip` | `samlet` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -149,26 +151,29 @@ Exception classes for error handling.
 |---------|--------|
 | `arithmeticerror` | `aritmetiskfejl` |
 | `assertionerror` | `assertfejl` |
-| `attributeerror` | `attributeerror` |
+| `attributeerror` | `attributfejl` |
 | `baseexception` | `baseriseksemplet` |
+| `baseexceptiongroup` | `basecovidsgroup` |
 | `basegeneratorexit` | `basegenerator_exit` |
-| `blockingioerror` | `blockingioerror` |
+| `blockingioerror` | `blokeringioerror` |
 | `brokenpipeerror` | `brokkenpypefejl` |
 | `buffererror` | `bufferfejl` |
 | `byteswarning` | `byteadvars` |
 | `childprocesserror` | `childprocessfejl` |
-| `connectionabortederror` | `connectionabortederror` |
+| `connectionabortederror` | `forbindelsesafbrudfejlkode` |
 | `connectionerror` | `forbindingsfejl` |
-| `connectionrefusederror` | `connection_refused_error` |
+| `connectionrefusederror` | `forbindelseafvistfejl` |
 | `connectionreseterror` | `connectionresetfejl` |
 | `deprecationwarning` | `depreciationsvarning` |
+| `encodingwarning` | `encodingadvarsel` |
 | `environmenterror` | `fejlimiljø` |
 | `eoferror` | `fejltilstand` |
-| `exception` | `exception` |
-| `fileexistserror` | `fileexistserror` |
+| `exception` | `undtagelse` |
+| `exceptiongroup` | `exceptiongruppe` |
+| `fileexistserror` | `fileksistererfejl` |
 | `filenotfounderror` | `fileterforatfinde` |
 | `floatingpointerror` | `floatingpointfejl` |
-| `futurewarning` | `futurewarning` |
+| `futurewarning` | `fremtidigAdvarsel` |
 | `generatorexit` | `generatorforløsning` |
 | `importerror` | `importfejl` |
 | `importwarning` | `importadvars` |
@@ -176,17 +181,17 @@ Exception classes for error handling.
 | `indexerror` | `indexfejl` |
 | `interruptederror` | `interrupterfejl` |
 | `ioerror` | `iofejlighedsfejl` |
-| `isadirectoryerror` | `isadirectoryerror` |
+| `isadirectoryerror` | `erenmappefejl` |
 | `keyboardinterrupt` | `tastaturinterrupter` |
-| `keyerror` | `keyerror` |
+| `keyerror` | `nøglefejl` |
 | `lookuperror` | `søgningsfejl` |
 | `memoryerror` | `minnefejlsfejl` |
 | `modulenotfounderror` | `modulikkefundet` |
-| `nameerror` | `Navnfejl` |
+| `nameerror` | `navnfejl` |
 | `notadirectoryerror` | `ikke_en_mappefejl` |
-| `notimplementederror` | `notimplementederror` |
+| `notimplementederror` | `ikkeimplementeretfejl` |
 | `oserror` | `osfejlighed` |
-| `overflowerror` | `overflowerror` |
+| `overflowerror` | `overshedsfejl` |
 | `pendingdeprecationwarning` | `eksponeringsvarningforafgang` |
 | `permissionerror` | `adgangsvilkårfejlgørelse` |
 | `processlookuperror` | `processlookupfejl` |
@@ -194,14 +199,14 @@ Exception classes for error handling.
 | `referenceerror` | `referensfejl` |
 | `resourcewarning` | `ressourceadvars` |
 | `runtimeerror` | `runtimefejl` |
-| `runtimewarning` | `runtimewarning` |
-| `stopasynciteration` | `stopasynciteration` |
+| `runtimewarning` | `løbetidadvarsel` |
+| `stopasynciteration` | `stopasynkroniteration` |
 | `stopiteration` | `stopiteration` |
 | `syntaxerror` | `syntaxfejl` |
 | `syntaxwarning` | `syntaxvarningen` |
 | `systemexit` | `systemafslut` |
 | `taberror` | `tabfejl` |
-| `timeouterror` | `timeouterror` |
+| `timeouterror` | `tidslimetre_fejl` |
 | `typeerror` | `typefejlen` |
 | `unboundlocalerror` | `ubundenlokalfejlgøring` |
 | `unicodedecodeerror` | `unicodedecodefejl` |
@@ -209,7 +214,7 @@ Exception classes for error handling.
 | `unicodeerror` | `unicodefejl` |
 | `unicodetranslateerror` | `unicodetranslatefejl` |
 | `unicodewarning` | `unicodeadvars` |
-| `userwarning` | `userwarning` |
+| `userwarning` | `BrugerAdvarsel` |
 | `valueerror` | `værdfejlighedsfejl` |
 | `warning` | `advars` |
 | `zerodivisionerror` | `nuldelingfejl` |
@@ -233,25 +238,25 @@ definer fakultet(n):
         retur n * fakultet(n - 1)
 
 definer hoved():
-    tal = [ent(x) for x i område(6)]
+    tal = [ent(x) gentag x i område(6)]
 
-    for nummer i tal:
+    gentag nummer i tal:
         resultat = fakultet(nummer)
-        print(f"{nummer}! = {resultat}")
+        skrivUd(f"{nummer}! = {resultat}")
 
     # Demonstrer while-løkke
     tæller = 0
     ved tæller < 3:
-        print(f"Tæller: {tæller}")
+        skrivUd(f"Tæller: {tæller}")
         tæller += 1
 
     # Demonstrer try/except
     prøve:
         fakultet(-1)
     undtages Værdfejlighedsfejl som fejl:
-        print(f"Fejl: {fejl}")
+        skrivUd(f"Fejl: {fejl}")
     endelig:
-        print("Færdig!")
+        skrivUd("Færdig!")
 
 hvis __name__ == "__main__":
     hoved()

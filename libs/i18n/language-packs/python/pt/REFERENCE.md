@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Portuguese.
 
@@ -34,21 +34,22 @@ These are Python's reserved words translated to Portuguese.
 | `case` | `caso` |
 | `class` | `classe` |
 | `continue` | `continuar` |
-| `def` | `def` |
-| `del` | `del` |
+| `def` | `definir` |
+| `del` | `apagar` |
 | `elif` | `senão` |
 | `else` | `senão` |
 | `except` | `excepto` |
+| `except*` | `exceptar` |
 | `False` | `falso` |
 | `finally` | `finalmente` |
 | `for` | `por` |
 | `from` | `de` |
-| `global` | `global` |
+| `global` | `declara_global` |
 | `if` | `se` |
 | `import` | `importar` |
 | `in` | `em` |
 | `is` | `é` |
-| `lambda` | `lambda` |
+| `lambda` | `funcao_anonima` |
 | `match` | `combinar` |
 | `None` | `nada` |
 | `nonlocal` | `nãolocal` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Portuguese.
 | `return` | `retornar` |
 | `True` | `verdadeiro` |
 | `try` | `tentar` |
+| `type` | `tipo` |
 | `while` | `enquanto` |
 | `with` | `com` |
 | `yield` | `renderizar` |
@@ -70,43 +72,43 @@ Python's built-in functions and types in Portuguese.
 | English | Portuguese |
 |---------|--------|
 | `abs` | `valorabsoluto` |
-| `aiter` | `aiter` |
+| `aiter` | `iter_async` |
 | `all` | `todos` |
 | `anext` | `próximo` |
 | `any` | `qualquer` |
-| `ascii` | `ascii` |
+| `ascii` | `asciiToString` |
 | `bin` | `binário` |
-| `bool` | `bool` |
+| `bool` | `booleano` |
 | `breakpoint` | `pausa` |
-| `bytearray` | `bytearray` |
-| `bytes` | `bytes` |
+| `bytearray` | `conjuntoDeBytes` |
+| `bytes` | `byte` |
 | `callable` | `chamável` |
 | `chr` | `caractere` |
 | `classmethod` | `classemétodo` |
 | `compile` | `compilar` |
 | `complex` | `complexo` |
-| `delattr` | `delattr` |
+| `delattr` | `deletaAtributo` |
 | `dict` | `dicionário` |
 | `dir` | `diretório` |
-| `divmod` | `divmod` |
+| `divmod` | `divmodo` |
 | `ellipsis` | `ellipse` |
 | `enumerate` | `enumeração` |
-| `eval` | `eval` |
+| `eval` | `avaliar` |
 | `exec` | `execução` |
 | `filter` | `filtro` |
-| `float` | `float` |
+| `float` | `flutuar` |
 | `format` | `formatar` |
 | `frozenset` | `conjuntocongelado` |
 | `getattr` | `obter_atributo` |
 | `globals` | `globais` |
 | `hasattr` | `teratributo` |
-| `hash` | `hash` |
+| `hash` | `resumo_hash` |
 | `help` | `ajuda` |
-| `hex` | `hex` |
+| `hex` | `hexadecimal` |
 | `id` | `identificador` |
-| `input` | `input` |
-| `int` | `int` |
-| `isinstance` | `isinstance` |
+| `input` | `entrada` |
+| `int` | `inteiro` |
+| `isinstance` | `ehInstanciaDe` |
 | `issubclass` | `subclassede` |
 | `iter` | `iterar` |
 | `len` | `comprimento` |
@@ -121,7 +123,7 @@ Python's built-in functions and types in Portuguese.
 | `object` | `objeto` |
 | `oct` | `octal` |
 | `open` | `abrir` |
-| `ord` | `ord` |
+| `ord` | `ordinal` |
 | `pow` | `eleelevadoapotênciade` |
 | `print` | `imprimir` |
 | `property` | `propriedade` |
@@ -130,18 +132,18 @@ Python's built-in functions and types in Portuguese.
 | `reversed` | `reverter` |
 | `round` | `redondar` |
 | `set` | `conjunto` |
-| `setattr` | `setattr` |
+| `setattr` | `definirAtributo` |
 | `slice` | `fatiar` |
 | `sorted` | `ordenado` |
 | `staticmethod` | `estático` |
-| `str` | `str` |
+| `str` | `stringa` |
 | `sum` | `soma` |
-| `super` | `super` |
+| `super` | `superClasse` |
 | `tuple` | `tupla` |
-| `vars` | `vars` |
+| `vars` | `variaveis` |
 | `zip` | `zipar` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,6 +153,7 @@ Exception classes for error handling.
 | `assertionerror` | `errodeafirmação` |
 | `attributeerror` | `errodeatributo` |
 | `baseexception` | `BaseException` |
+| `baseexceptiongroup` | `grupodeexceçãobase` |
 | `basegeneratorexit` | `basegeradordesaída` |
 | `blockingioerror` | `errodeESbloqueante` |
 | `brokenpipeerror` | `errodepipequebrada` |
@@ -162,9 +165,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `erroderecusadeconexão` |
 | `connectionreseterror` | `resetar_conexão` |
 | `deprecationwarning` | `avisodedepreciação` |
+| `encodingwarning` | `avisodecodificação` |
 | `environmenterror` | `errodeambiente` |
 | `eoferror` | `errodeeof` |
 | `exception` | `exceção` |
+| `exceptiongroup` | `grupodeexceções` |
 | `fileexistserror` | `errodearquivojáexistente` |
 | `filenotfounderror` | `errodearquivonãoencontrado` |
 | `floatingpointerror` | `errodeponteflutuante` |
@@ -196,7 +201,7 @@ Exception classes for error handling.
 | `runtimeerror` | `errodetempodeexecução` |
 | `runtimewarning` | `avisodetempodeexecução` |
 | `stopasynciteration` | `pararaiteraçãoassíncrona` |
-| `stopiteration` | `stopiteration` |
+| `stopiteration` | `excecaoDeIteracaoParada` |
 | `syntaxerror` | `errodesintaxe` |
 | `syntaxwarning` | `avisodesintaxe` |
 | `systemexit` | `saídadosistema` |
@@ -223,7 +228,7 @@ Here's an example showing Portuguese Python code with Legesher:
 
 de typing importar Optional
 
-def fatorial(n):
+definir fatorial(n):
     """Calcular o fatorial de n."""
     se n < 0:
         elevar ValueError("Números negativos não são permitidos")
@@ -232,8 +237,8 @@ def fatorial(n):
     senão:
         retornar n * fatorial(n - 1)
 
-def principal():
-    numeros = [int(x) por x em faixa(6)]
+definir principal():
+    numeros = [inteiro(x) por x em faixa(6)]
 
     por numero em numeros:
         resultado = fatorial(numero)

@@ -807,7 +807,7 @@ wheels = [
 
 [[package]]
 name = "legesher-i18n"
-version = "0.1.1"
+version = "0.2.1"
 source = { editable = "." }
 dependencies = [
     { name = "anthropic" },

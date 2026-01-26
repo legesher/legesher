@@ -1,0 +1,92 @@
+name: Sync Reference Docs to Preview
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'libs/i18n/language-packs/python/*/REFERENCE.md'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force sync all REFERENCE.md files'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  sync-to-preview:
+    name: Sync Reference Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout monorepo
+        uses: actions/checkout@v4
+
+      - name: Checkout preview repository
+        uses: actions/checkout@v4
+        with:
+          repository: legesher/preview-repo
+          token: ${{ secrets.PREVIEW_REPO_PAT }}
+          path: preview
+
+      - name: Sync REFERENCE.md files
+        run: |
+          echo "📚 Syncing REFERENCE.md files to preview-repo..."
+          FORCE="${{ github.event.inputs.force || 'false' }}"
+
+          # Sync all language pack REFERENCE.md files
+          for lang_dir in libs/i18n/language-packs/python/*/; do
+            lang_code=$(basename "$lang_dir")
+
+            # Skip if no REFERENCE.md exists
+            if [ ! -f "$lang_dir/REFERENCE.md" ]; then
+              echo "⏭️  Skipping $lang_code (no REFERENCE.md)"
+              continue
+            fi
+
+            # Create target directory if needed
+            mkdir -p "preview/languages/$lang_code"
+
+            # Skip unchanged files unless force is true
+            if [ "$FORCE" != "true" ] && [ -f "preview/languages/$lang_code/REFERENCE.md" ]; then
+              if diff -q "$lang_dir/REFERENCE.md" "preview/languages/$lang_code/REFERENCE.md" > /dev/null 2>&1; then
+                echo "⏭️  Skipping $lang_code (unchanged)"
+                continue
+              fi
+            fi
+
+            # Copy REFERENCE.md
+            cp "$lang_dir/REFERENCE.md" "preview/languages/$lang_code/"
+            echo "✅ Synced $lang_code/REFERENCE.md"
+          done
+
+      - name: Commit and push to preview
+        working-directory: preview
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "ℹ️  No changes to sync"
+            exit 0
+          fi
+
+          # Get list of changed files for commit message
+          CHANGED=$(git diff --staged --name-only | wc -l | tr -d ' ')
+
+          git commit -m "chore: sync REFERENCE.md from monorepo
+
+          Synced $CHANGED language reference file(s) from legesher monorepo.
+
+          Source: ${{ github.repository }}@${{ github.sha }}"
+
+          git push
+
+          echo "🚀 Pushed $CHANGED file(s) to preview-repo"

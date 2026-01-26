@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Hindi.
 
@@ -39,6 +39,7 @@ These are Python's reserved words translated to Hindi.
 | `elif` | `अगरनहीं` |
 | `else` | `अन्यथा` |
 | `except` | `अभिव्यक्तिकोछोड़दें` |
+| `except*` | `अपराधिक` |
 | `False` | `झूठा` |
 | `finally` | `अंतमें` |
 | `for` | `फ़ॉर` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Hindi.
 | `return` | `वापसी` |
 | `True` | `सत्य` |
 | `try` | `कोशिशकरना` |
+| `type` | `प्रकार` |
 | `while` | `जबतककि` |
 | `with` | `साथमें` |
 | `yield` | `देना` |
@@ -141,7 +143,7 @@ Python's built-in functions and types in Hindi.
 | `vars` | `परिभाषितकरना` |
 | `zip` | `ज़िप` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,6 +153,7 @@ Exception classes for error handling.
 | `assertionerror` | `अवालंबनत्रुटि` |
 | `attributeerror` | `अत्रिभाष्यत्रुटि` |
 | `baseexception` | `बेसएक्सपेक्शन` |
+| `baseexceptiongroup` | `बेसएक्सेप्शनग्रुप` |
 | `basegeneratorexit` | `बेसजेनरेटरएक्सिट` |
 | `blockingioerror` | `ब्लॉकिंगआईओएरोर` |
 | `brokenpipeerror` | `ब्रोकनपाइपएरर` |
@@ -162,9 +165,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `कनेक्शनरिफाउंडएरर` |
 | `connectionreseterror` | `कनेक्शनरीसेटत्रुटि` |
 | `deprecationwarning` | `अवेगप्रेषणचेतावनी` |
+| `encodingwarning` | `एन्कोडिंगचेतावनी` |
 | `environmenterror` | `पर्यावरणत्रुटि` |
 | `eoferror` | `त्रुटि` |
 | `exception` | `विशेषाधिकार` |
+| `exceptiongroup` | `विशेषाधिकारसमूह` |
 | `fileexistserror` | `फ़ाइलपहलेसेमौजूदहै` |
 | `filenotfounderror` | `फ़ाइलनामिलनेकीत्रुटि` |
 | `floatingpointerror` | `फ्लोटिंगपॉइंटरएरर` |
