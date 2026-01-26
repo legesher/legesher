@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Malay.
 
@@ -39,16 +39,17 @@ These are Python's reserved words translated to Malay.
 | `elif` | `lainjika` |
 | `else` | `lainnya` |
 | `except` | `kecuali` |
+| `except*` | `kecuali` |
 | `False` | `Salah` |
 | `finally` | `akhirnya` |
 | `for` | `untuk` |
 | `from` | `dari` |
-| `global` | `global` |
+| `global` | `global_deklarasi` |
 | `if` | `jika` |
 | `import` | `mengimpor` |
 | `in` | `dalam` |
 | `is` | `adalah` |
-| `lambda` | `lambda` |
+| `lambda` | `fungsi_anonim` |
 | `match` | `cocokkan` |
 | `None` | `tidakada` |
 | `nonlocal` | `tidaklokal` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Malay.
 | `return` | `kembali` |
 | `True` | `benar` |
 | `try` | `coba` |
+| `type` | `jenis` |
 | `while` | `sambil` |
 | `with` | `dengan` |
 | `yield` | `menghasilkan` |
@@ -70,15 +72,15 @@ Python's built-in functions and types in Malay.
 | English | Malay |
 |---------|--------|
 | `abs` | `darjat` |
-| `aiter` | `aiter` |
+| `aiter` | `pengulangan_asinkron` |
 | `all` | `semua` |
-| `anext` | `anext` |
+| `anext` | `nextAn` |
 | `any` | `apapun` |
 | `ascii` | `ASCII` |
-| `bin` | `bin` |
+| `bin` | `binari` |
 | `bool` | `boolean` |
 | `breakpoint` | `hentisementara` |
-| `bytearray` | `bytearray` |
+| `bytearray` | `arrayOfBytes` |
 | `bytes` | `byte` |
 | `callable` | `menggugurkan` |
 | `chr` | `karakter` |
@@ -88,19 +90,19 @@ Python's built-in functions and types in Malay.
 | `delattr` | `menghapusatribut` |
 | `dict` | `daftarsiri` |
 | `dir` | `menunjuk` |
-| `divmod` | `divmod` |
+| `divmod` | `pembahagianModulus` |
 | `ellipsis` | `titisan` |
 | `enumerate` | `menghitung` |
 | `eval` | `menilai` |
 | `exec` | `eksekusi` |
 | `filter` | `memfilter` |
-| `float` | `float` |
-| `format` | `format` |
+| `float` | `pecahkanAngka` |
+| `format` | `formatkan` |
 | `frozenset` | `setyangdibekukan` |
 | `getattr` | `mengambilatribut` |
 | `globals` | `global` |
 | `hasattr` | `memilikiatribut` |
-| `hash` | `hash` |
+| `hash` | `hashcode` |
 | `help` | `bantu` |
 | `hex` | `heks` |
 | `id` | `identitiunik` |
@@ -115,7 +117,7 @@ Python's built-in functions and types in Malay.
 | `map` | `memetakan` |
 | `max` | `maksimum` |
 | `memoryview` | `view_memori` |
-| `min` | `min` |
+| `min` | `minimum` |
 | `next` | `selanjutnya` |
 | `notimplemented` | `tidakdiimplementasikan` |
 | `object` | `objek` |
@@ -129,19 +131,19 @@ Python's built-in functions and types in Malay.
 | `repr` | `pembuatanrepresentasi` |
 | `reversed` | `balik` |
 | `round` | `membungkus` |
-| `set` | `set` |
+| `set` | `himpunan_tidak_terurut` |
 | `setattr` | `menetapkanatribut` |
 | `slice` | `pemotongan` |
 | `sorted` | `terurut` |
 | `staticmethod` | `metodestatis` |
 | `str` | `string` |
 | `sum` | `hitung` |
-| `super` | `super` |
+| `super` | `superObjek` |
 | `tuple` | `tupel` |
-| `vars` | `vars` |
-| `zip` | `zip` |
+| `vars` | `memperlihatkan` |
+| `zip` | `zipping` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -150,7 +152,8 @@ Exception classes for error handling.
 | `arithmeticerror` | `kesalahanaritmetika` |
 | `assertionerror` | `kesalahanasersi` |
 | `attributeerror` | `kesalahanatribut` |
-| `baseexception` | `baseexception` |
+| `baseexception` | `kesalahan_asas` |
+| `baseexceptiongroup` | `kelompokpengecualiandasar` |
 | `basegeneratorexit` | `basegeneratorkeluaran` |
 | `blockingioerror` | `kesalahanmasukankeluaranyangmemblokir` |
 | `brokenpipeerror` | `kesalahanselangyangpecah` |
@@ -162,9 +165,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `kesalahan_penolakan_koneksi` |
 | `connectionreseterror` | `kesalahanpengaturuansambungan` |
 | `deprecationwarning` | `peringatanpenghapusan` |
+| `encodingwarning` | `peringatanpengkodean` |
 | `environmenterror` | `kesalahanlingkungan` |
 | `eoferror` | `kesalahaneof` |
 | `exception` | `kecualan` |
+| `exceptiongroup` | `kelompokpengecualian` |
 | `fileexistserror` | `kesalahanfilesudahada` |
 | `filenotfounderror` | `kesalahanfiletidakditemukan` |
 | `floatingpointerror` | `kesalahanpointermengambang` |
@@ -181,7 +186,7 @@ Exception classes for error handling.
 | `keyerror` | `kesalahan_kunci` |
 | `lookuperror` | `kesalahanpencarian` |
 | `memoryerror` | `kesalahanmemori` |
-| `modulenotfounderror` | `modulenotfounderror` |
+| `modulenotfounderror` | `kesilapanPengimportanModul` |
 | `nameerror` | `NameError` |
 | `notadirectoryerror` | `kesalahan_bukan_direktori` |
 | `notimplementederror` | `kesalahanimplementasiyangtidakwajar` |

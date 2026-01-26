@@ -19,18 +19,18 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Hungarian.
 
 | English | Hungarian |
 |---------|--------|
 | `and` | `és` |
-| `as` | `as` |
-| `assert` | `assertani` |
+| `as` | `mint` |
+| `assert` | `fejléntesnítés` |
 | `async` | `asynchron` |
 | `await` | `később` |
-| `break` | `break` |
+| `break` | `romlás` |
 | `case` | `eset` |
 | `class` | `osztály` |
 | `continue` | `folytatja` |
@@ -39,28 +39,30 @@ These are Python's reserved words translated to Hungarian.
 | `elif` | `ha` |
 | `else` | `more` |
 | `except` | `kivéve` |
+| `except*` | `kivéve` |
 | `False` | `hamis` |
-| `finally` | `finalment` |
-| `for` | `for` |
+| `finally` | `finalizálás` |
+| `for` | `ezen` |
 | `from` | `bővítés` |
 | `global` | `globális` |
 | `if` | `ha` |
 | `import` | `importál` |
-| `in` | `a(z)in` |
-| `is` | `ezen` |
-| `lambda` | `lambda` |
+| `in` | `benne` |
+| `is` | `azonos` |
+| `lambda` | `lambda_függvény` |
 | `match` | `egyeztetés` |
 | `None` | `nincs` |
-| `nonlocal` | `nemházug` |
+| `nonlocal` | `nem_hatálos` |
 | `not` | `nem` |
 | `or` | `vagy` |
-| `pass` | `passz` |
-| `raise` | `kifányasztani` |
-| `return` | `visszaadás` |
+| `pass` | `passázni` |
+| `raise` | `fejrekezni` |
+| `return` | `visszajátszásra` |
 | `True` | `igaz` |
 | `try` | `próbálja` |
+| `type` | `típus` |
 | `while` | `mielőtt` |
-| `with` | `a(z)` |
+| `with` | `kontextussal` |
 | `yield` | `rendni` |
 
 ## Built-in Functions (71 terms)
@@ -70,149 +72,152 @@ Python's built-in functions and types in Hungarian.
 | English | Hungarian |
 |---------|--------|
 | `abs` | `absz` |
-| `aiter` | `aiter` |
-| `all` | `azösszeselemet` |
-| `anext` | `anext` |
-| `any` | `bármilyen` |
+| `aiter` | `asynchronos_iterator` |
+| `all` | `az_összes_elemet` |
+| `anext` | `következő_tétel` |
+| `any` | `bővebben` |
 | `ascii` | `ASCII` |
-| `bin` | `bin` |
-| `bool` | `logikaiértékek` |
-| `breakpoint` | `breakpoint` |
-| `bytearray` | `bytearray` |
+| `bin` | `egészszám_bináris` |
+| `bool` | `logikai_értékek` |
+| `breakpoint` | `hibakeresőPont` |
+| `bytearray` | `bajt_kutat` |
 | `bytes` | `bajtok` |
 | `callable` | `hivatázható` |
-| `chr` | `karakter` |
-| `classmethod` | `theclassmethod` |
+| `chr` | `karakterszerkezet` |
+| `classmethod` | `the_classmethod` |
 | `compile` | `kompilál` |
 | `complex` | `komplex` |
-| `delattr` | `törölaszemét` |
+| `delattr` | `törölni` |
 | `dict` | `készlet` |
-| `dir` | `dir` |
-| `divmod` | `divmod` |
-| `ellipsis` | `ellipszis` |
-| `enumerate` | `enumerate` |
-| `eval` | `eval` |
-| `exec` | `exec` |
+| `dir` | `objektum_szerinti_listázás` |
+| `divmod` | `osztás_maradék` |
+| `ellipsis` | `határozat` |
+| `enumerate` | `enumeráló` |
+| `eval` | `éval` |
+| `exec` | `végrehajtás` |
 | `filter` | `filtrozálás` |
-| `float` | `float` |
+| `float` | `tizedesegyenes` |
 | `format` | `formátolni` |
-| `frozenset` | `frozenset` |
-| `getattr` | `getattr` |
+| `frozenset` | `frozensethalmaz` |
+| `getattr` | `attributet` |
 | `globals` | `globális` |
-| `hasattr` | `hasattr` |
-| `hash` | `hasholni` |
+| `hasattr` | `elemezik` |
+| `hash` | `hash_alapitanyag` |
 | `help` | `dokumentáció` |
-| `hex` | `hex` |
-| `id` | `azobjektegyediazonosítója` |
+| `hex` | `hexa` |
+| `id` | `az_objekt_egyedi_azonosítója` |
 | `input` | `beállítás` |
-| `int` | `egnumm` |
-| `isinstance` | `isinstance` |
-| `issubclass` | `apodrógosztatásértékügy` |
+| `int` | `eg` |
+| `isinstance` | `típusellenőr` |
+| `issubclass` | `a_podrevezés` |
 | `iter` | `iteráció` |
 | `len` | `hossz` |
 | `list` | `lista` |
-| `locals` | `ahelyiváltozótáblát` |
-| `map` | `leütkezni` |
-| `max` | `maximális` |
-| `memoryview` | `memoryview` |
-| `min` | `min` |
-| `next` | `olvasom` |
-| `notimplemented` | `nemvaló` |
+| `locals` | `a_helyi_változótábla` |
+| `map` | `mappá` |
+| `max` | `maxima` |
+| `memoryview` | `memóriavény` |
+| `min` | `minimum` |
+| `next` | `következő` |
+| `notimplemented` | `nem_vagyunk_készben` |
 | `object` | `objektum` |
-| `oct` | `oct` |
+| `oct` | `okt` |
 | `open` | `nyitani` |
-| `ord` | `ord` |
+| `ord` | `betű_kód` |
 | `pow` | `határozás` |
 | `print` | `nyomtat` |
 | `property` | `térség` |
 | `range` | `térség` |
 | `repr` | `reprezentáció` |
 | `reversed` | `fordításra` |
-| `round` | `kerekítés` |
-| `set` | `beágyazott` |
-| `setattr` | `setattr` |
+| `round` | `körül` |
+| `set` | `készlet` |
+| `setattr` | `beállítás` |
 | `slice` | `osztatás` |
-| `sorted` | `sortálású` |
-| `staticmethod` | `statickýmetod` |
-| `str` | `str` |
-| `sum` | `sum` |
-| `super` | `super` |
-| `tuple` | `tálto` |
-| `vars` | `variablak` |
-| `zip` | `zip` |
+| `sorted` | `szerelésre` |
+| `staticmethod` | `statický_člen` |
+| `str` | `sztring` |
+| `sum` | `összeg` |
+| `super` | `szülő_osztály` |
+| `tuple` | `sorozat_tartomany` |
+| `vars` | `variablák` |
+| `zip` | `csatol` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
 | English | Hungarian |
 |---------|--------|
-| `arithmeticerror` | `aritmetikaihiba` |
-| `assertionerror` | `beáramoláshiány` |
-| `attributeerror` | `attributetorszivásítás` |
+| `arithmeticerror` | `aritmetikai_hiba` |
+| `assertionerror` | `az_ellenőrzési_hiba` |
+| `attributeerror` | `attributetori` |
 | `baseexception` | `BaseException` |
+| `baseexceptiongroup` | `baseexceptioncsoport` |
 | `basegeneratorexit` | `basegenerator_exit` |
-| `blockingioerror` | `blokkálóIOhibakód` |
-| `brokenpipeerror` | `csörekfészárulás` |
-| `buffererror` | `buffererror` |
-| `byteswarning` | `bajtnapomeresvezető` |
-| `childprocesserror` | `childprocesserror` |
-| `connectionabortederror` | `connectionabortederror` |
-| `connectionerror` | `kapcsolathiányashiba` |
+| `blockingioerror` | `blokkoló_io_hiba` |
+| `brokenpipeerror` | `bükört_üzem_leállítás` |
+| `buffererror` | `hibaBuffernak` |
+| `byteswarning` | `bajt_rőlévő_vágás` |
+| `childprocesserror` | `gyermekprocesshiba` |
+| `connectionabortederror` | `kapcsolatmegszakadt_hiba` |
+| `connectionerror` | `kapcsolatbiztosítási_hibá` |
 | `connectionrefusederror` | `connection_refused_error` |
-| `connectionreseterror` | `connectionresethiba` |
-| `deprecationwarning` | `depreciációvezetőújra` |
-| `environmenterror` | `environmenterror` |
+| `connectionreseterror` | `connectionresetting` |
+| `deprecationwarning` | `depreciációveszeltséget` |
+| `encodingwarning` | `encoding警告` |
+| `environmenterror` | `környezetiHiba` |
 | `eoferror` | `eöferror` |
 | `exception` | `výjimka` |
-| `fileexistserror` | `fállomáséletkódhiba` |
-| `filenotfounderror` | `fállomáshiányegysége` |
-| `floatingpointerror` | `floatoshivatázásihiány` |
-| `futurewarning` | `futurewarning` |
-| `generatorexit` | `generátorkimenet` |
-| `importerror` | `importálatból_hivatás` |
-| `importwarning` | `importvénetzetlenesseg` |
-| `indentationerror` | `indentačníhata` |
-| `indexerror` | `indexerror` |
-| `interruptederror` | `interruptederror` |
-| `ioerror` | `IOhibásul` |
-| `isadirectoryerror` | `isadirectoryerror` |
-| `keyboardinterrupt` | `kiborra_hajtás` |
-| `keyerror` | `akulcsszeretét` |
-| `lookuperror` | `keresésihiba` |
-| `memoryerror` | `memoryerror` |
-| `modulenotfounderror` | `modulnemtalálható` |
-| `nameerror` | `Névjábólhiányos` |
-| `notadirectoryerror` | `hiányanemkönyltszámítógépesmappába` |
-| `notimplementederror` | `nemvalósításhiány` |
-| `oserror` | `oserror` |
-| `overflowerror` | `overflowerror` |
-| `pendingdeprecationwarning` | `varrásraesikavarázslato` |
+| `exceptiongroup` | `kivételcsoport` |
+| `fileexistserror` | `fállomás_életkódolás_hibajelés` |
+| `filenotfounderror` | `fállomás_hiány_egység` |
+| `floatingpointerror` | `floatos_hivatázás_hiány` |
+| `futurewarning` | `nearhatékonyságátElőreAdás` |
+| `generatorexit` | `generátor_kimenet` |
+| `importerror` | `importálatból_származó_hibák` |
+| `importwarning` | `importáció_rendszere` |
+| `indentationerror` | `indentační_hata` |
+| `indexerror` | `indexHiba` |
+| `interruptederror` | `szakaszHibája` |
+| `ioerror` | `I_O_hibásul` |
+| `isadirectoryerror` | `helytelenMappaHiba` |
+| `keyboardinterrupt` | `kiborraabbagyűjlés` |
+| `keyerror` | `a_kígyűtetsző_dísz` |
+| `lookuperror` | `keresési_hiba` |
+| `memoryerror` | `memóriatilag` |
+| `modulenotfounderror` | `modul_nem_található` |
+| `nameerror` | `Névjából_nem_érhető_el` |
+| `notadirectoryerror` | `hiánya_nem_könylt_össze` |
+| `notimplementederror` | `nemvalósítás_hiány` |
+| `oserror` | `hiba` |
+| `overflowerror` | `überlauffehler` |
+| `pendingdeprecationwarning` | `várjon_a_letávolítási_értesítőjét` |
 | `permissionerror` | `hozzáférési_hivatás` |
-| `processlookuperror` | `processlookuperror` |
-| `recursionerror` | `rekurszívhata` |
+| `processlookuperror` | `folyamatKeresesHiba` |
+| `recursionerror` | `rekurzív_hiba` |
 | `referenceerror` | `referenciahibás` |
-| `resourcewarning` | `erőforrásrendezetlenesség` |
+| `resourcewarning` | `erőforrásfigyelmén` |
 | `runtimeerror` | `runtimeError` |
-| `runtimewarning` | `runtimewarning` |
-| `stopasynciteration` | `aszinkroniterációrahatásos` |
-| `stopiteration` | `stopiteration` |
-| `syntaxerror` | `syntaxerror` |
-| `syntaxwarning` | `syntaxwarnings` |
-| `systemexit` | `szeretniarendszer` |
-| `taberror` | `taberror` |
-| `timeouterror` | `timeouthiba` |
-| `typeerror` | `typeerror` |
-| `unboundlocalerror` | `belsőnévtöréshatásra` |
-| `unicodedecodeerror` | `unicodedecodeerror` |
-| `unicodeencodeerror` | `unicodeencodeerror` |
+| `runtimewarning` | `választásiHiba` |
+| `stopasynciteration` | `stopAsyncIteration` |
+| `stopiteration` | `bejegyzesErtelmesitett` |
+| `syntaxerror` | `szintakszis_hiányos` |
+| `syntaxwarning` | `syntax_warning` |
+| `systemexit` | `rendszerkilépés` |
+| `taberror` | `tabHiba` |
+| `timeouterror` | `timeout_hibás` |
+| `typeerror` | `tipushiba` |
+| `unboundlocalerror` | `bővített_helyi_hiba` |
+| `unicodedecodeerror` | `unicoddekódérszabály破环` |
+| `unicodeencodeerror` | `üzenetKódolásiHiba` |
 | `unicodeerror` | `unicodehiba` |
 | `unicodetranslateerror` | `unicodetranslatehiba` |
-| `unicodewarning` | `unicodeváginaplát` |
-| `userwarning` | `userwarning` |
-| `valueerror` | `Értétlenértés` |
+| `unicodewarning` | `unicodeavériség` |
+| `userwarning` | `felhasznalofigyelme` |
+| `valueerror` | `Értétvéltesés` |
 | `warning` | `figyelmet` |
-| `zerodivisionerror` | `nulleszütségosszámososztályosváltozó` |
+| `zerodivisionerror` | `nulasos_osztályhasználat` |
 
 ## Example Code
 
@@ -226,16 +231,16 @@ bővítés typing importál Optional
 definíró faktorialis(n):
     """Számítsd ki n faktoriálisát."""
     ha n < 0:
-        kifányasztani Értétlenértés("Negatív számok nem engedélyezettek")
+        fejrekezni Értétvéltesés("Negatív számok nem engedélyezettek")
     ha n == 0 vagy n == 1:
-        visszaadás 1
+        visszajátszásra 1
     more:
-        visszaadás n * faktorialis(n - 1)
+        visszajátszásra n * faktorialis(n - 1)
 
 definíró fo():
-    szamok = [egnumm(x) for x a(z)in térség(6)]
+    szamok = [eg(x) ezen x benne térség(6)]
 
-    for szam a(z)in szamok:
+    ezen szam benne szamok:
         eredmeny = faktorialis(szam)
         nyomtat(f"{szam}! = {eredmeny}")
 
@@ -248,9 +253,9 @@ definíró fo():
     # Try/except bemutatása
     próbálja:
         faktorialis(-1)
-    kivéve Értétlenértés as hiba:
+    kivéve Értétvéltesés mint hiba:
         nyomtat(f"Hiba: {hiba}")
-    finalment:
+    finalizálás:
         nyomtat("Kész!")
 
 ha __name__ == "__main__":

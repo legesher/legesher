@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Italian.
 
@@ -34,21 +34,22 @@ These are Python's reserved words translated to Italian.
 | `case` | `caso` |
 | `class` | `classe` |
 | `continue` | `continuare` |
-| `def` | `def` |
-| `del` | `del` |
+| `def` | `definire` |
+| `del` | `eliminare` |
 | `elif` | `sealtrimenti` |
 | `else` | `altrimenti` |
 | `except` | `eccetto` |
+| `except*` | `eccetto` |
 | `False` | `falso` |
-| `finally` | `finally` |
+| `finally` | `finalmente` |
 | `for` | `per` |
 | `from` | `dal` |
 | `global` | `globale` |
 | `if` | `se` |
 | `import` | `importare` |
-| `in` | `in` |
+| `in` | `contenuto_in` |
 | `is` | `è` |
-| `lambda` | `lambda` |
+| `lambda` | `funzione_lambda` |
 | `match` | `corrispondere` |
 | `None` | `nessuno` |
 | `nonlocal` | `nonlocale` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Italian.
 | `return` | `ritorno` |
 | `True` | `vero` |
 | `try` | `prova` |
+| `type` | `tipo` |
 | `while` | `mentre` |
 | `with` | `con` |
 | `yield` | `dare` |
@@ -70,16 +72,16 @@ Python's built-in functions and types in Italian.
 | English | Italian |
 |---------|--------|
 | `abs` | `valoreassoluto` |
-| `aiter` | `aiter` |
+| `aiter` | `aiteratore` |
 | `all` | `tutto` |
-| `anext` | `anext` |
-| `any` | `any` |
+| `anext` | `nextAn` |
+| `any` | `qualunque` |
 | `ascii` | `ASCII` |
-| `bin` | `bin` |
-| `bool` | `bool` |
+| `bin` | `binario` |
+| `bool` | `booleano` |
 | `breakpoint` | `puntodiinterruzione` |
-| `bytearray` | `bytearray` |
-| `bytes` | `bytes` |
+| `bytearray` | `arrayDiByte` |
+| `bytes` | `byte` |
 | `callable` | `callabile` |
 | `chr` | `carattere` |
 | `classmethod` | `classe_metodo` |
@@ -87,26 +89,26 @@ Python's built-in functions and types in Italian.
 | `complex` | `complesso` |
 | `delattr` | `eliminarelattributo` |
 | `dict` | `dizionario` |
-| `dir` | `dir` |
-| `divmod` | `divmod` |
+| `dir` | `elencareAtributi` |
+| `divmod` | `divisioneResiduo` |
 | `ellipsis` | `ellissi` |
 | `enumerate` | `enumerare` |
-| `eval` | `eval` |
-| `exec` | `exec` |
+| `eval` | `valutare` |
+| `exec` | `esegui` |
 | `filter` | `filtro` |
-| `float` | `float` |
-| `format` | `format` |
+| `float` | `flottante` |
+| `format` | `formattare` |
 | `frozenset` | `setcongelato` |
 | `getattr` | `getattributo` |
-| `globals` | `globals` |
+| `globals` | `globali` |
 | `hasattr` | `haattributi` |
-| `hash` | `hash` |
+| `hash` | `calcola_hash` |
 | `help` | `aiuto` |
 | `hex` | `esadecimale` |
-| `id` | `id` |
-| `input` | `input` |
+| `id` | `identificatore_univoco` |
+| `input` | `inserimento` |
 | `int` | `intero` |
-| `isinstance` | `isinstance` |
+| `isinstance` | `èIstanzaDi` |
 | `issubclass` | `isubclasse` |
 | `iter` | `iterare` |
 | `len` | `lunghezza` |
@@ -121,27 +123,27 @@ Python's built-in functions and types in Italian.
 | `object` | `oggetto` |
 | `oct` | `ottale` |
 | `open` | `aprire` |
-| `ord` | `ord` |
+| `ord` | `carattere` |
 | `pow` | `lapotenza` |
 | `print` | `stampa` |
 | `property` | `proprietà` |
-| `range` | `range` |
+| `range` | `intervallo` |
 | `repr` | `rappresentazione` |
 | `reversed` | `inverso` |
 | `round` | `arrotondare` |
 | `set` | `insieme` |
-| `setattr` | `setattr` |
+| `setattr` | `impostaAttributo` |
 | `slice` | `fetta` |
 | `sorted` | `ordinato` |
 | `staticmethod` | `statico` |
 | `str` | `stringa` |
 | `sum` | `somma` |
-| `super` | `super` |
+| `super` | `classe_padre` |
 | `tuple` | `tupla` |
 | `vars` | `variabili` |
-| `zip` | `zip` |
+| `zip` | `zippare` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,6 +153,7 @@ Exception classes for error handling.
 | `assertionerror` | `errorediasserzione` |
 | `attributeerror` | `AttributeError` |
 | `baseexception` | `BaseException` |
+| `baseexceptiongroup` | `gruppoDiEccezioniBase` |
 | `basegeneratorexit` | `basegeneratorediexit` |
 | `blockingioerror` | `errorediinputoutputbloccante` |
 | `brokenpipeerror` | `erroredibrokenpipe` |
@@ -162,20 +165,22 @@ Exception classes for error handling.
 | `connectionrefusederror` | `erroredirifiutodiconnessione` |
 | `connectionreseterror` | `resetterrorconnessione` |
 | `deprecationwarning` | `avvisodideprecazione` |
+| `encodingwarning` | `avvertimentodicodifica` |
 | `environmenterror` | `errorediambiente` |
 | `eoferror` | `errorediinputoutput` |
 | `exception` | `eccezione` |
+| `exceptiongroup` | `gruppodieccezioni` |
 | `fileexistserror` | `errorediesistenzadelfile` |
 | `filenotfounderror` | `ErroreFileNonTrovato` |
 | `floatingpointerror` | `erroredifloatingpoint` |
 | `futurewarning` | `avvertimento_futuro` |
-| `generatorexit` | `generatorexit` |
+| `generatorexit` | `generatore_errore` |
 | `importerror` | `errorediimportazione` |
 | `importwarning` | `avvertimentodiimportazione` |
 | `indentationerror` | `errorediindentazione` |
 | `indexerror` | `ErroreIndice` |
 | `interruptederror` | `errorediinterruzione` |
-| `ioerror` | `ioerror` |
+| `ioerror` | `erroreI_O` |
 | `isadirectoryerror` | `errorediisadirectory` |
 | `keyboardinterrupt` | `interruzionedatastiera` |
 | `keyerror` | `KeyError` |
@@ -183,9 +188,9 @@ Exception classes for error handling.
 | `memoryerror` | `erroredimemoria` |
 | `modulenotfounderror` | `erroredimodulonontrovato` |
 | `nameerror` | `Erroredinome` |
-| `notadirectoryerror` | `notadirectoryerror` |
-| `notimplementederror` | `notimplementederror` |
-| `oserror` | `oserror` |
+| `notadirectoryerror` | `erroreNonDirectory` |
+| `notimplementederror` | `erroreNonImplementato` |
+| `oserror` | `erroreOs` |
 | `overflowerror` | `erroredioverflow` |
 | `pendingdeprecationwarning` | `avvisodideprecazioneinsospeso` |
 | `permissionerror` | `errorediautorizzazione` |
@@ -196,16 +201,16 @@ Exception classes for error handling.
 | `runtimeerror` | `erroreinfasediesecuzione` |
 | `runtimewarning` | `avvisodiruntime` |
 | `stopasynciteration` | `stoppazioneasincrona` |
-| `stopiteration` | `stopiteration` |
+| `stopiteration` | `iterazioneInterrotta` |
 | `syntaxerror` | `erroredisintassi` |
 | `syntaxwarning` | `avvertimentodisintassi` |
-| `systemexit` | `systemexit` |
-| `taberror` | `taberror` |
+| `systemexit` | `uscitaSistema` |
+| `taberror` | `erroreDiTabulazione` |
 | `timeouterror` | `erroreditimeout` |
 | `typeerror` | `erroreditipo` |
 | `unboundlocalerror` | `errorediriferimentolocalenonvincolato` |
 | `unicodedecodeerror` | `erroredidecodificaUnicode` |
-| `unicodeencodeerror` | `unicodeencodeerror` |
+| `unicodeencodeerror` | `erroreDiCodificaDiUnicode` |
 | `unicodeerror` | `erroreunicode` |
 | `unicodetranslateerror` | `erroreditraduzionediUnicode` |
 | `unicodewarning` | `avvertimentounicode` |
@@ -223,7 +228,7 @@ Here's an example showing Italian Python code with Legesher:
 
 dal typing importare Optional
 
-def fattoriale(n):
+definire fattoriale(n):
     """Calcola il fattoriale di n."""
     se n < 0:
         sollevare ValueError("I numeri negativi non sono consentiti")
@@ -232,10 +237,10 @@ def fattoriale(n):
     altrimenti:
         ritorno n * fattoriale(n - 1)
 
-def principale():
-    numeri = [intero(x) per x in range(6)]
+definire principale():
+    numeri = [intero(x) per x contenuto_in intervallo(6)]
 
-    per numero in numeri:
+    per numero contenuto_in numeri:
         risultato = fattoriale(numero)
         stampa(f"{numero}! = {risultato}")
 
@@ -250,7 +255,7 @@ def principale():
         fattoriale(-1)
     eccetto ValueError come errore:
         stampa(f"Errore: {errore}")
-    finally:
+    finalmente:
         stampa("Fatto!")
 
 se __name__ == "__main__":

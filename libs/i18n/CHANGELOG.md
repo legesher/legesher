@@ -9,35 +9,83 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-### Changed
-
-- **Language Pack Reorganization into Hierarchical Structure** (CORE-XXX)
-  - Reorganized language packs from `programming_languages/` into hierarchical `language-packs/python/{lang}/` structure
-  - Each language pack is now an independently versioned package (ar, es, en, fr, zh)
-  - Enables focused releases per language (e.g., `python-ar` v1.2.0 independent of `python-es` v1.0.5)
-  - Refactored `LanguagePackLoader` with importlib-based package discovery
-  - Updated language-server integration to use new paths
-  - Renamed legacy community archive: `language-packs/` → `language-packs-archive/`
-
-- **Language Pack Version Bump to v0.0.2**
-  - All language packs (ar, es, en, fr, zh) now at v0.0.2
-  - Added 40 additional builtin translations (81 total, up from 41)
-  - Added Python 3.14 support across all language packs
-  - Improved translation quality using Aya AI Model pipeline
-  - Source of truth established from `programming_languages/` (higher quality translations)
+## [0.2.1] - 2026-01-26
 
 ### Added
 
-- **New Language Packs** (v0.0.2)
-  - English (en): 37 keywords, 81 builtins, Python 3.10-3.14 (canonical reference)
-  - French (fr): 37 keywords, 81 builtins, Python 3.10-3.14
-  - Chinese (zh): 37 keywords, 81 builtins, Python 3.10-3.14
+- **New CLI Export Commands** (CORE-555)
+  - `export json`: Export language pack to JSON format with Python doc links
+  - `export csv`: Export language pack to CSV format with examples
+  - `export all`: Export all available language packs with progress bar
+  - All export commands support `--output -` for stdout piping
+  - All export commands support `--dry-run` for preview mode
+  - All commands now support `--quiet/-q` flag for CI/script usage
+
+- **New CLI Registry Commands** (CORE-555)
+  - `registry list`: List all available language packs with status
+  - `registry validate`: Validate language pack translations against English reference
+  - Support for `--strict` mode that fails on warnings
+
+- **REFERENCE.md Auto-Generation** (CORE-555)
+  - `scripts/generate_reference_docs.py` generates comprehensive REFERENCE.md for all 25 languages
+  - Merges all version YAML files (3.10-3.14) with proper inheritance
+  - Pre-commit hook auto-regenerates when YAML files change
+  - Localized example code for each language
+
+- **GitHub Actions Sync Workflow** (CORE-555)
+  - `.github/workflows/sync-reference-docs.yml` syncs REFERENCE.md to preview-repo repo
+  - Triggers on REFERENCE.md changes to main branch
+  - Supports manual dispatch with force-sync option
+
+- **Language Name Fallbacks** (CORE-555)
+  - Added `LANGUAGE_NAME_FALLBACKS` dictionary for 26 common languages
+  - Cached `_get_language_name()` function with `@lru_cache` for performance
+
+### Changed
+
+- **Schema Validator Enhanced Soft Keyword Support** (CORE-555)
+  - `check_identifier_validity()` now passes source_key for soft keyword translations
+  - Translations of soft keywords (e.g., `excepto*` for `except*`) validate correctly
+
+### Fixed
+
+- **Schema Validator Soft Keywords Support** (CORE-555)
+  - Added `SOFT_KEYWORDS` set to handle Python 3.11+ soft keywords like `except*`
+  - `except*` now passes schema validation instead of failing as invalid identifier
+  - Translations of soft keywords also validate correctly (e.g., `excepto*` for Spanish)
+  - Reference: <https://docs.python.org/3/reference/lexical_analysis.html#soft-keywords>
+
+- **CLI Test Version Assertion** (CORE-555)
+  - Fixed test expecting "0.0.1" to correctly expect "0.2.0"
+
+## [0.2.0] - 2026-01-25
+
+### Added
+
+- **New Language Packs** (v0.2.0)
+  - English (en): 39 keywords, 71 builtins, 69 exceptions, Python 3.10-3.14 (canonical reference)
+  - All 26 languages: Complete translations via Aya AI Model pipeline
 
 - **Comprehensive Directory Structure Tests** (PR #49)
   - New test file `tests/test_directory_structure.py` with 12 tests
   - Validates directory existence, path configuration, and inheritance
   - Tests PackLoader default path, YAML exporter, and CLI validation
   - Ensures backward compatibility (old `languages/` path not used)
+
+### Changed
+
+- **Language Pack Reorganization into Hierarchical Structure** (CORE-530)
+  - Reorganized language packs from `programming_languages/` into hierarchical `language-packs/python/{lang}/` structure
+  - Each language pack is now an independently versioned package (ar, es, en, fr, zh, etc.)
+  - Enables focused releases per language (e.g., `python-ar` v1.2.0 independent of `python-es` v1.0.5)
+  - Refactored `LanguagePackLoader` with importlib-based package discovery
+  - Updated language-server integration to use new paths
+  - Renamed legacy community archive: `language-packs/` → `language-packs-archive/`
+
+- **Language Pack Version Constraints**
+  - All language packs now require `>=0.2.0,<1.0.0`
+  - Added Python 3.14 support across all language packs
+  - Improved translation quality using Aya AI Model pipeline
 
 ### Fixed
 
@@ -47,7 +95,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Fix survives pre-commit pretty-format-yaml hook
 
 - **Python 3.14 Language Pack Support** (PR #49)
-  - Added Python 3.14 language packs for all 5 languages (en, ar, es, zh, fr)
+  - Added Python 3.14 language packs for all languages
   - Updated compatibility metadata in 3.10-3.13 packs to include 3.14
   - Fixed English language pack: expanded builtins, added `except*` keyword (3.11), corrected metadata
 
@@ -206,13 +254,13 @@ open htmlcov/index.html
 cd libs/i18n
 
 # Validate a language pack
-uv run legesher-i18n validate programming_languages/python/3.13/es.yml
+uv run legesher-i18n validate language-packs/python/es/legesher_i18n_python_es/packs/3.13.yml
 
-# Generate compatibility matrix
-uv run legesher-i18n matrix --output docs/compatibility/
+# List available language packs
+uv run legesher-i18n registry list
 
-# Test pack loading
-uv run legesher-i18n test es --version 3.13
+# Validate all language packs
+uv run legesher-i18n registry validate --lang all
 ```
 
 ### Translation API Setup

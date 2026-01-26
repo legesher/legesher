@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to German.
 
@@ -30,23 +30,24 @@ These are Python's reserved words translated to German.
 | `assert` | `assertieren` |
 | `async` | `asynchron` |
 | `await` | `warten` |
-| `break` | `break` |
+| `break` | `beenden` |
 | `case` | `Fall` |
 | `class` | `Klasse` |
 | `continue` | `fortsetzen` |
-| `def` | `def` |
+| `def` | `definit` |
 | `del` | `löschen` |
 | `elif` | `wennsonst` |
 | `else` | `sonst` |
 | `except` | `außer` |
+| `except*` | `abgesehenvon` |
 | `False` | `Falsch` |
 | `finally` | `endlich` |
 | `for` | `für` |
 | `from` | `von` |
-| `global` | `global` |
+| `global` | `globales_scope_deklarieren` |
 | `if` | `wenn` |
 | `import` | `importieren` |
-| `in` | `in` |
+| `in` | `enthält` |
 | `is` | `ist` |
 | `lambda` | `Lambda` |
 | `match` | `abgleichen` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to German.
 | `return` | `zurückgeben` |
 | `True` | `wahr` |
 | `try` | `versuchen` |
+| `type` | `Typ` |
 | `while` | `während` |
 | `with` | `mit` |
 | `yield` | `abgeben` |
@@ -69,10 +71,10 @@ Python's built-in functions and types in German.
 
 | English | German |
 |---------|--------|
-| `abs` | `abs` |
-| `aiter` | `aiter` |
+| `abs` | `absoluter_Wert` |
+| `aiter` | `asynchrone_itor` |
 | `all` | `alle` |
-| `anext` | `anext` |
+| `anext` | `nächsterWert` |
 | `any` | `jeder` |
 | `ascii` | `ASCII` |
 | `bin` | `binär` |
@@ -81,67 +83,67 @@ Python's built-in functions and types in German.
 | `bytearray` | `Bytearray` |
 | `bytes` | `Bytes` |
 | `callable` | `rufbar` |
-| `chr` | `chr` |
+| `chr` | `Zeichen` |
 | `classmethod` | `KlassendatenMethode` |
 | `compile` | `kompilieren` |
 | `complex` | `komplex` |
 | `delattr` | `entfernen` |
 | `dict` | `Wörterbuch` |
-| `dir` | `dir` |
-| `divmod` | `divmod` |
+| `dir` | `attributensuchung` |
+| `divmod` | `teilt_und_betrachtet_rest` |
 | `ellipsis` | `dasAuslasszeichen` |
 | `enumerate` | `aufzählen` |
-| `eval` | `eval` |
+| `eval` | `auswerten` |
 | `exec` | `ausführen` |
-| `filter` | `filter` |
-| `float` | `float` |
+| `filter` | `filtern` |
+| `float` | `Float` |
 | `format` | `formatieren` |
-| `frozenset` | `frozenset` |
+| `frozenset` | `gefrorener_Satz` |
 | `getattr` | `attributabrufen` |
 | `globals` | `global` |
 | `hasattr` | `hatattribut` |
 | `hash` | `Hash` |
 | `help` | `Hilfe` |
-| `hex` | `hex` |
+| `hex` | `hexadezimal` |
 | `id` | `dieID` |
 | `input` | `Eingabe` |
-| `int` | `int` |
+| `int` | `ganze_Zahl` |
 | `isinstance` | `istinstanzvon` |
 | `issubclass` | `ist_unterklasse` |
-| `iter` | `iter` |
+| `iter` | `iterieren` |
 | `len` | `dieLänge` |
 | `list` | `Liste` |
 | `locals` | `dielokalenVariablen` |
 | `map` | `mappe` |
-| `max` | `max` |
+| `max` | `maximaler` |
 | `memoryview` | `Memoryview` |
 | `min` | `derkleinste` |
 | `next` | `nächster` |
 | `notimplemented` | `nichtimplementiert` |
 | `object` | `Objekt` |
-| `oct` | `oct` |
+| `oct` | `zehnerSystemDarstellung` |
 | `open` | `öffnen` |
-| `ord` | `ord` |
+| `ord` | `codePoint` |
 | `pow` | `potenzieren` |
 | `print` | `drucken` |
 | `property` | `Eigenschaft` |
 | `range` | `Bereich` |
-| `repr` | `repr` |
+| `repr` | `représentation` |
 | `reversed` | `umgekehrt` |
 | `round` | `runden` |
 | `set` | `Satz` |
-| `setattr` | `setattr` |
+| `setattr` | `setAttribut` |
 | `slice` | `Schnitt` |
 | `sorted` | `geordnet` |
 | `staticmethod` | `statischeMethode` |
 | `str` | `diestrTypKonvertierung` |
 | `sum` | `summe` |
-| `super` | `super` |
+| `super` | `superKlasse` |
 | `tuple` | `Tupel` |
-| `vars` | `vars` |
+| `vars` | `variablen` |
 | `zip` | `zippen` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,6 +153,7 @@ Exception classes for error handling.
 | `assertionerror` | `Assertionfehler` |
 | `attributeerror` | `Attributfehler` |
 | `baseexception` | `BaseException` |
+| `baseexceptiongroup` | `BaseExceptionGroup` |
 | `basegeneratorexit` | `basegeneratorbeenden` |
 | `blockingioerror` | `BlockingIOFehler` |
 | `brokenpipeerror` | `BrokenPipeError` |
@@ -162,14 +165,16 @@ Exception classes for error handling.
 | `connectionrefusederror` | `Verbindungsverweigerungsfehler` |
 | `connectionreseterror` | `Verbindungsresetfehler` |
 | `deprecationwarning` | `Depreciationwarnung` |
+| `encodingwarning` | `Codierungswarnung` |
 | `environmenterror` | `Umweltfehler` |
 | `eoferror` | `Fehler` |
 | `exception` | `Ausnahme` |
+| `exceptiongroup` | `Ausnahmegruppe` |
 | `fileexistserror` | `Dateiexistiertbereits` |
 | `filenotfounderror` | `Dateinichtgefunden` |
 | `floatingpointerror` | `FloatPunktFehler` |
 | `futurewarning` | `Futurewarnung` |
-| `generatorexit` | `generatorexit` |
+| `generatorexit` | `generator_exit` |
 | `importerror` | `Importfehler` |
 | `importwarning` | `Importwarnung` |
 | `indentationerror` | `Indentationfehler` |
@@ -223,7 +228,7 @@ Here's an example showing German Python code with Legesher:
 
 von typing importieren Optional
 
-def fakultaet(n):
+definit fakultaet(n):
     """Berechne die Fakultät von n."""
     wenn n < 0:
         erheben ValueError("Negative Zahlen sind nicht erlaubt")
@@ -232,10 +237,10 @@ def fakultaet(n):
     sonst:
         zurückgeben n * fakultaet(n - 1)
 
-def haupt():
-    zahlen = [int(x) für x in Bereich(6)]
+definit haupt():
+    zahlen = [ganze_Zahl(x) für x enthält Bereich(6)]
 
-    für zahl in zahlen:
+    für zahl enthält zahlen:
         ergebnis = fakultaet(zahl)
         drucken(f"{zahl}! = {ergebnis}")
 

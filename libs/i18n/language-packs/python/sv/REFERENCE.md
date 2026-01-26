@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Swedish.
 
@@ -38,12 +38,13 @@ These are Python's reserved words translated to Swedish.
 | `del` | `tabort` |
 | `elif` | `annansom` |
 | `else` | `annär` |
-| `except` | `except` |
+| `except` | `förutom` |
+| `except*` | `undantag` |
 | `False` | `falsk` |
 | `finally` | `slutliggare` |
 | `for` | `för` |
 | `from` | `från` |
-| `global` | `global` |
+| `global` | `globala` |
 | `if` | `om` |
 | `import` | `importera` |
 | `in` | `i` |
@@ -52,14 +53,15 @@ These are Python's reserved words translated to Swedish.
 | `match` | `matcha` |
 | `None` | `nada` |
 | `nonlocal` | `ejlokal` |
-| `not` | `not` |
+| `not` | `inte` |
 | `or` | `eller` |
 | `pass` | `gå` |
 | `raise` | `utlåda` |
 | `return` | `retur` |
 | `True` | `verkligen` |
 | `try` | `prova` |
-| `while` | `while` |
+| `type` | `typ` |
+| `while` | `medan` |
 | `with` | `med` |
 | `yield` | `gebe` |
 
@@ -69,44 +71,44 @@ Python's built-in functions and types in Swedish.
 
 | English | Swedish |
 |---------|--------|
-| `abs` | `abs` |
-| `aiter` | `aiter` |
+| `abs` | `absolut_värde` |
+| `aiter` | `asynk_Iterator` |
 | `all` | `alla` |
-| `anext` | `anext` |
+| `anext` | `nastaAnvarende` |
 | `any` | `valfri` |
-| `ascii` | `ascii` |
+| `ascii` | `asciiSträng` |
 | `bin` | `binär` |
 | `bool` | `boolesk` |
 | `breakpoint` | `paus` |
-| `bytearray` | `bytearray` |
-| `bytes` | `bytes` |
+| `bytearray` | `byteArray` |
+| `bytes` | `byteData` |
 | `callable` | `användbar` |
 | `chr` | `karakter` |
-| `classmethod` | `classmethod` |
+| `classmethod` | `classmethodMetod` |
 | `compile` | `kompilera` |
 | `complex` | `komplex` |
 | `delattr` | `tabortettattribut` |
 | `dict` | `ordning` |
-| `dir` | `dir` |
-| `divmod` | `divmod` |
+| `dir` | `direktori` |
+| `divmod` | `divMod` |
 | `ellipsis` | `ellipsen` |
 | `enumerate` | `lista` |
-| `eval` | `eval` |
+| `eval` | `utvärdera` |
 | `exec` | `exekvering` |
 | `filter` | `filtera` |
-| `float` | `float` |
-| `format` | `format` |
-| `frozenset` | `frozenset` |
+| `float` | `flytta` |
+| `format` | `formatera_värde` |
+| `frozenset` | `frozensett` |
 | `getattr` | `attfåtillgångtillettattribut` |
 | `globals` | `globala` |
 | `hasattr` | `attha` |
 | `hash` | `hasha` |
 | `help` | `hjelp` |
-| `hex` | `hex` |
-| `id` | `id` |
+| `hex` | `hexa` |
+| `id` | `objekt_id` |
 | `input` | `inmatning` |
 | `int` | `ent` |
-| `isinstance` | `isinstance` |
+| `isinstance` | `ärInstansAv` |
 | `issubclass` | `subklassen` |
 | `iter` | `iterera` |
 | `len` | `längd` |
@@ -114,34 +116,34 @@ Python's built-in functions and types in Swedish.
 | `locals` | `lokala` |
 | `map` | `kartläggning` |
 | `max` | `maxima` |
-| `memoryview` | `memoryview` |
-| `min` | `min` |
+| `memoryview` | `minnesvy` |
+| `min` | `minsta` |
 | `next` | `nästa` |
 | `notimplemented` | `ej_implementerad` |
 | `object` | `objekt` |
-| `oct` | `oct` |
+| `oct` | `okta` |
 | `open` | `öppna` |
-| `ord` | `ord` |
+| `ord` | `ordning` |
 | `pow` | `upphöj` |
 | `print` | `skrivaut` |
 | `property` | `egenskap` |
 | `range` | `omfattning` |
-| `repr` | `repr` |
+| `repr` | `repr_str` |
 | `reversed` | `omvärrdig` |
 | `round` | `runda` |
 | `set` | `uppsat` |
-| `setattr` | `setattr` |
-| `slice` | `slice` |
+| `setattr` | `sättEgenskap` |
+| `slice` | `slices` |
 | `sorted` | `ordnat` |
 | `staticmethod` | `statiskmetod` |
 | `str` | `sträng` |
 | `sum` | `summa` |
-| `super` | `super` |
-| `tuple` | `tuple` |
-| `vars` | `vars` |
+| `super` | `superObjekt` |
+| `tuple` | `ordnad_olika` |
+| `vars` | `variabler` |
 | `zip` | `zippa` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -150,25 +152,28 @@ Exception classes for error handling.
 | `arithmeticerror` | `aritmetiskfel` |
 | `assertionerror` | `asserteringsfel` |
 | `attributeerror` | `attributfeil` |
-| `baseexception` | `baseexception` |
+| `baseexception` | `basen_exception` |
+| `baseexceptiongroup` | `basertulevärdighetshav` |
 | `basegeneratorexit` | `basegeneratorutgående` |
-| `blockingioerror` | `blockingioerror` |
+| `blockingioerror` | `blockerandeIoFel` |
 | `brokenpipeerror` | `brottnöje` |
-| `buffererror` | `buffererror` |
+| `buffererror` | `bufferfel` |
 | `byteswarning` | `bytesvarnings` |
 | `childprocesserror` | `childprocessfeil` |
-| `connectionabortederror` | `connectionabortederror` |
+| `connectionabortederror` | `anslutningsstoppfel` |
 | `connectionerror` | `anslutningsfel` |
-| `connectionrefusederror` | `connectionrefusederror` |
+| `connectionrefusederror` | `anslutningsnekarfejl` |
 | `connectionreseterror` | `connectionresetting` |
 | `deprecationwarning` | `deprektionsvarning` |
+| `encodingwarning` | `kodningvarning` |
 | `environmenterror` | `miljöfel` |
 | `eoferror` | `fel` |
 | `exception` | `undantag` |
+| `exceptiongroup` | `exceptionGrupp` |
 | `fileexistserror` | `filexistserror` |
 | `filenotfounderror` | `filenfinnsinte` |
-| `floatingpointerror` | `floatingpointerror` |
-| `futurewarning` | `futurewarning` |
+| `floatingpointerror` | `floatError` |
+| `futurewarning` | `tidigareVarning` |
 | `generatorexit` | `generatörsutgång` |
 | `importerror` | `importfeil` |
 | `importwarning` | `importav警警` |
@@ -176,25 +181,25 @@ Exception classes for error handling.
 | `indexerror` | `indexfeil` |
 | `interruptederror` | `interrupterror` |
 | `ioerror` | `iofel` |
-| `isadirectoryerror` | `isadirectoryerror` |
+| `isadirectoryerror` | `ärMappFel` |
 | `keyboardinterrupt` | `tasttröttning` |
 | `keyerror` | `nyckelfel` |
 | `lookuperror` | `sökfeil` |
 | `memoryerror` | `minnebråk` |
-| `modulenotfounderror` | `modulenotfounderror` |
+| `modulenotfounderror` | `modulenotfunnetfel` |
 | `nameerror` | `Namnfeltsfel` |
 | `notadirectoryerror` | `not_a_directory_error` |
 | `notimplementederror` | `not_implemented_error` |
 | `oserror` | `osfeil` |
-| `overflowerror` | `overflowerror` |
+| `overflowerror` | `överflödesfel` |
 | `pendingdeprecationwarning` | `väntandeavskrivningsvarning` |
 | `permissionerror` | `behörighetshavelse` |
 | `processlookuperror` | `processlookupfeil` |
 | `recursionerror` | `rekursionsfel` |
 | `referenceerror` | `referensfel` |
 | `resourcewarning` | `resursavvisning` |
-| `runtimeerror` | `runtimeerror` |
-| `runtimewarning` | `runtimewarning` |
+| `runtimeerror` | `körtypererror` |
+| `runtimewarning` | `runtimevarning` |
 | `stopasynciteration` | `stoppaasynkrotisering` |
 | `stopiteration` | `stoppiteration` |
 | `syntaxerror` | `syntaxfel` |
@@ -202,7 +207,7 @@ Exception classes for error handling.
 | `systemexit` | `systemutgång` |
 | `taberror` | `tabbortfellet` |
 | `timeouterror` | `tidsgränssöttning` |
-| `typeerror` | `typeerror` |
+| `typeerror` | `typfel` |
 | `unboundlocalerror` | `obundenlokalfel` |
 | `unicodedecodeerror` | `unicodedecodefeil` |
 | `unicodeencodeerror` | `unicodeencodefeil` |
@@ -241,14 +246,14 @@ definiere huvud():
 
     # Demonstrera while-loop
     rakna = 0
-    while rakna < 3:
+    medan rakna < 3:
         skrivaut(f"Räknare: {rakna}")
         rakna += 1
 
     # Demonstrera try/except
     prova:
         fakultet(-1)
-    except Värdefel som fel:
+    förutom Värdefel som fel:
         skrivaut(f"Fel: {fel}")
     slutliggare:
         skrivaut("Klart!")

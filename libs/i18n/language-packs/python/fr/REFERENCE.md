@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to French.
 
@@ -39,19 +39,20 @@ These are Python's reserved words translated to French.
 | `elif` | `sinonsi` |
 | `else` | `autre` |
 | `except` | `sauf` |
+| `except*` | `excepter*` |
 | `False` | `faux` |
 | `finally` | `enfin` |
 | `for` | `pour` |
 | `from` | `de` |
-| `global` | `global` |
+| `global` | `dans_espace_de_noms_global` |
 | `if` | `si` |
 | `import` | `importer` |
-| `in` | `in` |
+| `in` | `dans` |
 | `is` | `est` |
-| `lambda` | `lambda` |
+| `lambda` | `fonction_lambda` |
 | `match` | `correspondere` |
 | `None` | `rien` |
-| `nonlocal` | `nonlocal` |
+| `nonlocal` | `nonlocale` |
 | `not` | `pas` |
 | `or` | `ou` |
 | `pass` | `passer` |
@@ -59,7 +60,8 @@ These are Python's reserved words translated to French.
 | `return` | `retourner` |
 | `True` | `vrai` |
 | `try` | `essayer` |
-| `while` | `while` |
+| `type` | `retourne_type` |
+| `while` | `tant_que` |
 | `with` | `avec` |
 | `yield` | `dégager` |
 
@@ -70,31 +72,31 @@ Python's built-in functions and types in French.
 | English | French |
 |---------|--------|
 | `abs` | `labsolu` |
-| `aiter` | `aiter` |
+| `aiter` | `iterer` |
 | `all` | `tout` |
-| `anext` | `anext` |
+| `anext` | `get_prochain_element` |
 | `any` | `nimportequel` |
-| `ascii` | `ascii` |
-| `bin` | `bin` |
-| `bool` | `bool` |
+| `ascii` | `code_ascii` |
+| `bin` | `binaire` |
+| `bool` | `booleen` |
 | `breakpoint` | `pointdarrêt` |
-| `bytearray` | `bytearray` |
+| `bytearray` | `tableDeBytes` |
 | `bytes` | `octets` |
 | `callable` | `appelable` |
-| `chr` | `chr` |
+| `chr` | `caractère` |
 | `classmethod` | `méthodedeclasse` |
 | `compile` | `compiler` |
 | `complex` | `complexe` |
 | `delattr` | `supprimerlattribut` |
 | `dict` | `dictionnaire` |
-| `dir` | `dir` |
-| `divmod` | `divmod` |
+| `dir` | `liste_attributs_methodes` |
+| `divmod` | `division_entiere_et_residu` |
 | `ellipsis` | `ellipse` |
 | `enumerate` | `énumérer` |
 | `eval` | `evaluer` |
 | `exec` | `exécuter` |
 | `filter` | `filtre` |
-| `float` | `float` |
+| `float` | `flottant` |
 | `format` | `formatage` |
 | `frozenset` | `ensemblegelé` |
 | `getattr` | `obtenirlattribut` |
@@ -102,26 +104,26 @@ Python's built-in functions and types in French.
 | `hasattr` | `avoiruneattribut` |
 | `hash` | `hachage` |
 | `help` | `aide` |
-| `hex` | `hex` |
+| `hex` | `hexadécimal` |
 | `id` | `lidentifiant` |
 | `input` | `entrée` |
 | `int` | `entier` |
-| `isinstance` | `isinstance` |
+| `isinstance` | `estInstanceDe` |
 | `issubclass` | `estsousclassede` |
 | `iter` | `itérer` |
 | `len` | `lalongueur` |
 | `list` | `liste` |
 | `locals` | `lesvariableslocales` |
 | `map` | `mappé` |
-| `max` | `max` |
-| `memoryview` | `memoryview` |
-| `min` | `min` |
+| `max` | `maximiser` |
+| `memoryview` | `vueDeLaMemoire` |
+| `min` | `le_plus_petit` |
 | `next` | `suivant` |
 | `notimplemented` | `non_implémenté` |
 | `object` | `objet` |
 | `oct` | `octal` |
 | `open` | `ouvrir` |
-| `ord` | `ord` |
+| `ord` | `codePoint` |
 | `pow` | `puissance` |
 | `print` | `imprimer` |
 | `property` | `propriété` |
@@ -136,12 +138,12 @@ Python's built-in functions and types in French.
 | `staticmethod` | `méthodestatique` |
 | `str` | `chaînedecaractères` |
 | `sum` | `somme` |
-| `super` | `super` |
-| `tuple` | `tuple` |
-| `vars` | `vars` |
+| `super` | `classe_parente` |
+| `tuple` | `sequence_ordonnee_inmutabble` |
+| `vars` | `variables` |
 | `zip` | `zipper` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -150,7 +152,8 @@ Exception classes for error handling.
 | `arithmeticerror` | `erreurarithmétique` |
 | `assertionerror` | `erreurdassertion` |
 | `attributeerror` | `Erreurdattribut` |
-| `baseexception` | `baseexception` |
+| `baseexception` | `exception_de_base` |
+| `baseexceptiongroup` | `groupeDeBaseException` |
 | `basegeneratorexit` | `basegénérateurdesortie` |
 | `blockingioerror` | `erreurdESbloquante` |
 | `brokenpipeerror` | `erreurdepipecassée` |
@@ -162,9 +165,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `erreurderefusdeconnexion` |
 | `connectionreseterror` | `resetterlaconnexion` |
 | `deprecationwarning` | `avertissementdedépréciation` |
+| `encodingwarning` | `avertissementdencodage` |
 | `environmenterror` | `erreurdenvironnement` |
 | `eoferror` | `erreurdéof` |
 | `exception` | `lexception` |
+| `exceptiongroup` | `groupedexceptions` |
 | `fileexistserror` | `erreurdexistencedefichier` |
 | `filenotfounderror` | `erreurdefichiernontrouvé` |
 | `floatingpointerror` | `erreurdepointeauflottant` |
@@ -205,7 +210,7 @@ Exception classes for error handling.
 | `typeerror` | `erreurdetype` |
 | `unboundlocalerror` | `erreurderéférencelocalenonliée` |
 | `unicodedecodeerror` | `erreurdedécodageUnicode` |
-| `unicodeencodeerror` | `unicodeencodeerror` |
+| `unicodeencodeerror` | `erreurDeCodageUnicode` |
 | `unicodeerror` | `erreurunicode` |
 | `unicodetranslateerror` | `erreurdetraductiondelunicode` |
 | `unicodewarning` | `avertissementdeunicode` |
@@ -233,15 +238,15 @@ défini factorielle(n):
         retourner n * factorielle(n - 1)
 
 défini principal():
-    nombres = [entier(x) pour x in plage(6)]
+    nombres = [entier(x) pour x dans plage(6)]
 
-    pour nombre in nombres:
+    pour nombre dans nombres:
         resultat = factorielle(nombre)
         imprimer(f"{nombre}! = {resultat}")
 
     # Démontrer la boucle while
     compteur = 0
-    while compteur < 3:
+    tant_que compteur < 3:
         imprimer(f"Compteur: {compteur}")
         compteur += 1
 

@@ -3,7 +3,7 @@
 Industrial-strength internationalization infrastructure with 27 language packs, version-aware inheritance,
 and multi-provider translation API for multilingual programming.
 
-**Status**: Production-Ready (Pre-Beta) | **Version**: 0.0.x | **Python**: 3.10-3.14
+**Status**: Production-Ready (Pre-Beta) | **Version**: 0.2.x | **Python**: 3.10-3.14
 
 ## Overview
 
@@ -278,7 +278,7 @@ name: Validate Language Packs
 on:
   pull_request:
     paths:
-      - 'libs/i18n/languages/**/*.yml'
+      - "libs/i18n/languages/**/*.yml"
 
 jobs:
   validate:

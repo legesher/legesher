@@ -19,14 +19,14 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Korean.
 
 | English | Korean |
 |---------|--------|
 | `and` | `그리고` |
-| `as` | `as` |
+| `as` | `알려주기` |
 | `assert` | `확인` |
 | `async` | `비동기` |
 | `await` | `기다리다` |
@@ -38,7 +38,8 @@ These are Python's reserved words translated to Korean.
 | `del` | `삭제하다` |
 | `elif` | `다른만` |
 | `else` | `다른경우` |
-| `except` | `except` |
+| `except` | `제외` |
+| `except*` | `제외` |
 | `False` | `거짓` |
 | `finally` | `마지막으로` |
 | `for` | `반복` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Korean.
 | `return` | `반환` |
 | `True` | `정말` |
 | `try` | `시도` |
+| `type` | `타입` |
 | `while` | `반복문` |
 | `with` | `with문` |
 | `yield` | `값을생성하다` |
@@ -91,7 +93,7 @@ Python's built-in functions and types in Korean.
 | `divmod` | `디브모드` |
 | `ellipsis` | `엘리스스` |
 | `enumerate` | `열거` |
-| `eval` | `eval` |
+| `eval` | `평가` |
 | `exec` | `실행` |
 | `filter` | `필터링` |
 | `float` | `부동소수점` |
@@ -106,7 +108,7 @@ Python's built-in functions and types in Korean.
 | `id` | `아이디` |
 | `input` | `입력` |
 | `int` | `정수` |
-| `isinstance` | `isinstance` |
+| `isinstance` | `형종류는` |
 | `issubclass` | `하위클래스인지확인합니다` |
 | `iter` | `이터` |
 | `len` | `길이` |
@@ -130,7 +132,7 @@ Python's built-in functions and types in Korean.
 | `reversed` | `역순` |
 | `round` | `반올림` |
 | `set` | `집합` |
-| `setattr` | `setattr` |
+| `setattr` | `셋attr` |
 | `slice` | `슬라이스` |
 | `sorted` | `정렬된` |
 | `staticmethod` | `정적메서드` |
@@ -139,9 +141,9 @@ Python's built-in functions and types in Korean.
 | `super` | `슈퍼` |
 | `tuple` | `튜플` |
 | `vars` | `변수` |
-| `zip` | `zip` |
+| `zip` | `자바` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,6 +153,7 @@ Exception classes for error handling.
 | `assertionerror` | `명확한오류` |
 | `attributeerror` | `속성오류` |
 | `baseexception` | `기본예외` |
+| `baseexceptiongroup` | `기본예외그룹` |
 | `basegeneratorexit` | `기본생성자종료` |
 | `blockingioerror` | `블로킹io오류` |
 | `brokenpipeerror` | `브로큰파이프오류` |
@@ -162,9 +165,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `연결거부오류` |
 | `connectionreseterror` | `연결재설정오류` |
 | `deprecationwarning` | `경고구식입니다` |
+| `encodingwarning` | `인코딩경고` |
 | `environmenterror` | `환경오류` |
 | `eoferror` | `오류발생` |
 | `exception` | `예외` |
+| `exceptiongroup` | `예외처리그룹` |
 | `fileexistserror` | `파일존재오류` |
 | `filenotfounderror` | `파일없음오류` |
 | `floatingpointerror` | `부동소수점오류` |
@@ -248,7 +253,7 @@ Here's an example showing Korean Python code with Legesher:
     # try/except 시연
     시도:
         팩토리얼(-1)
-    except 값오류 as 오류:
+    제외 값오류 알려주기 오류:
         출력(f"오류: {오류}")
     마지막으로:
         출력("완료!")

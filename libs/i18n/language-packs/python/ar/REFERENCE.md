@@ -22,7 +22,7 @@
 | **Text Direction** | Right-to-Left (RTL) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Arabic.
 
@@ -42,6 +42,7 @@ These are Python's reserved words translated to Arabic.
 | `elif` | `إلّاإذا` |
 | `else` | `إلا` |
 | `except` | `ماعدا` |
+| `except*` | `استثناء*` |
 | `False` | `كاذب` |
 | `finally` | `أخيراً` |
 | `for` | `لـ` |
@@ -62,6 +63,7 @@ These are Python's reserved words translated to Arabic.
 | `return` | `إرجاع` |
 | `True` | `صحيح` |
 | `try` | `التجربة` |
+| `type` | `النوع` |
 | `while` | `حتى` |
 | `with` | `مع` |
 | `yield` | `تَرْجِع` |
@@ -144,7 +146,7 @@ Python's built-in functions and types in Arabic.
 | `vars` | `الحصولعلىالمتغيرات` |
 | `zip` | `التجميع` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -154,6 +156,7 @@ Exception classes for error handling.
 | `assertionerror` | `خطأالتأكيد` |
 | `attributeerror` | `خطأفيالسمة` |
 | `baseexception` | `الاستثناءالأساسي` |
+| `baseexceptiongroup` | `مجموعةالاستثناءاتالأساسية` |
 | `basegeneratorexit` | `إنشاءقاعدةالخروج` |
 | `blockingioerror` | `خطأالإدخالالإخراجالمُعطّل` |
 | `brokenpipeerror` | `خطأانسدادالأنبوبالمكسور` |
@@ -165,9 +168,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `خطأرفضالاتصال` |
 | `connectionreseterror` | `إعادةتعيينخطأالاتصال` |
 | `deprecationwarning` | `تحذيرالإهمال` |
+| `encodingwarning` | `تحذيرالترميز` |
 | `environmenterror` | `خطأالبيئة` |
 | `eoferror` | `خطأ` |
 | `exception` | `الاستثناء` |
+| `exceptiongroup` | `مجموعةالاستثناءات` |
 | `fileexistserror` | `خطأوجودملف` |
 | `filenotfounderror` | `خطأفيالعثورعلىالملف` |
 | `floatingpointerror` | `خطأمؤشرالعائمة` |
@@ -207,7 +212,7 @@ Exception classes for error handling.
 | `timeouterror` | `خطأالوقت` |
 | `typeerror` | `خطأ_نوع` |
 | `unboundlocalerror` | `خطأغيرمحدودمحلي` |
-| `unicodedecodeerror` | `خطأفكترميزUnicode` |
+| `unicodedecodeerror` | `خطأفكترميزيونيكود` |
 | `unicodeencodeerror` | `خطأفيترميزيونيكود` |
 | `unicodeerror` | `خطأيونيكود` |
 | `unicodetranslateerror` | `خطأترجمةيونيكود` |

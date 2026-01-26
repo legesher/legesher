@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Polish.
 
@@ -39,16 +39,17 @@ These are Python's reserved words translated to Polish.
 | `elif` | `jeśli_inne` |
 | `else` | `inną` |
 | `except` | `wyjątek` |
+| `except*` | `wyjątek` |
 | `False` | `fałsz` |
 | `finally` | `wkońcu` |
-| `for` | `for` |
+| `for` | `pętla` |
 | `from` | `z` |
 | `global` | `globalny` |
 | `if` | `jeśli` |
 | `import` | `importować` |
 | `in` | `w` |
 | `is` | `jest` |
-| `lambda` | `lambda` |
+| `lambda` | `anon_funkcja` |
 | `match` | `dopasować` |
 | `None` | `nic` |
 | `nonlocal` | `nieglobalny` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Polish.
 | `return` | `zwrot` |
 | `True` | `prawda` |
 | `try` | `próbować` |
+| `type` | `typ` |
 | `while` | `podczas` |
 | `with` | `z` |
 | `yield` | `wprowadzać` |
@@ -69,59 +71,59 @@ Python's built-in functions and types in Polish.
 
 | English | Polish |
 |---------|--------|
-| `abs` | `abs` |
-| `aiter` | `aiter` |
+| `abs` | `wartosc_bez_znaku` |
+| `aiter` | `asynchroniczny_iterator` |
 | `all` | `wszystkie` |
-| `anext` | `anext` |
+| `anext` | `następny` |
 | `any` | `dowolny` |
-| `ascii` | `ascii` |
-| `bin` | `bin` |
-| `bool` | `bool` |
+| `ascii` | `asciiZnak` |
+| `bin` | `binarny` |
+| `bool` | `布尔` |
 | `breakpoint` | `punktprzerwania` |
-| `bytearray` | `bytearray` |
+| `bytearray` | `tablicaBajtow` |
 | `bytes` | `byty` |
 | `callable` | `wywoływalny` |
-| `chr` | `chr` |
+| `chr` | `znak` |
 | `classmethod` | `metoda_klasy` |
 | `compile` | `skompilować` |
 | `complex` | `kompleksowy` |
 | `delattr` | `usuwanieatrybutu` |
 | `dict` | `słownik` |
-| `dir` | `dir` |
-| `divmod` | `divmod` |
+| `dir` | `spis_atrybutow` |
+| `divmod` | `dzielenieModulo` |
 | `ellipsis` | `spójnik` |
 | `enumerate` | `wyliczać` |
-| `eval` | `eval` |
+| `eval` | `ocena` |
 | `exec` | `wykonaj` |
 | `filter` | `filtrować` |
-| `float` | `float` |
+| `float` | `zmiennaPowszechna` |
 | `format` | `formatowanie` |
-| `frozenset` | `frozenset` |
+| `frozenset` | `zamrożonyZbiór` |
 | `getattr` | `Pobieranieatrybutu` |
 | `globals` | `globalne` |
 | `hasattr` | `mać` |
-| `hash` | `hash` |
+| `hash` | `hashowanie` |
 | `help` | `pomoc` |
 | `hex` | `szesnastkowa` |
 | `id` | `identyfikator` |
 | `input` | `wejście` |
-| `int` | `int` |
-| `isinstance` | `isinstance` |
-| `issubclass` | `issubclass` |
-| `iter` | `iter` |
+| `int` | `całkowita` |
+| `isinstance` | `jestinstancja` |
+| `issubclass` | `podklasy` |
+| `iter` | `iterator` |
 | `len` | `długość` |
 | `list` | `lista` |
 | `locals` | `lokalne` |
 | `map` | `mapa` |
 | `max` | `maksymalny` |
-| `memoryview` | `memoryview` |
-| `min` | `min` |
+| `memoryview` | `widokPamieci` |
+| `min` | `minimalny` |
 | `next` | `następny` |
 | `notimplemented` | `niezaimplementowane` |
 | `object` | `obiekt` |
-| `oct` | `oct` |
+| `oct` | `oktalny` |
 | `open` | `otworzyć` |
-| `ord` | `ord` |
+| `ord` | `porządkowanie` |
 | `pow` | `potęga` |
 | `print` | `wydrukuj` |
 | `property` | `właściwość` |
@@ -130,18 +132,18 @@ Python's built-in functions and types in Polish.
 | `reversed` | `odwrócony` |
 | `round` | `zaokrąglaj` |
 | `set` | `zbiór` |
-| `setattr` | `setattr` |
+| `setattr` | `stawianie_atrybutu` |
 | `slice` | `wyciążenie` |
 | `sorted` | `posortowany` |
 | `staticmethod` | `statyczny` |
 | `str` | `ciągznaków` |
 | `sum` | `suma` |
-| `super` | `super` |
+| `super` | `superKlasy` |
 | `tuple` | `krotka` |
-| `vars` | `vars` |
-| `zip` | `zip` |
+| `vars` | `zmienne` |
+| `zip` | `zipped` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -150,7 +152,8 @@ Exception classes for error handling.
 | `arithmeticerror` | `błądarytmetyczny` |
 | `assertionerror` | `błądasercji` |
 | `attributeerror` | `błądatrybutu` |
-| `baseexception` | `baseexception` |
+| `baseexception` | `BazaWyjątku` |
+| `baseexceptiongroup` | `podstawowaWyjątkowaGrupa` |
 | `basegeneratorexit` | `wyjściepodstawowegogeneratora` |
 | `blockingioerror` | `błądweprzepełnieniaweprzepływiedanych` |
 | `brokenpipeerror` | `błądprzerywanegopotoku` |
@@ -162,9 +165,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `błądodmowypołączenia` |
 | `connectionreseterror` | `resetowaniebłędupołączenia` |
 | `deprecationwarning` | `deprecyowanieostrzeżenia` |
+| `encodingwarning` | `ostrzeżeniedotyczącekodowania` |
 | `environmenterror` | `błądśrodowiskowy` |
 | `eoferror` | `błąd` |
 | `exception` | `wyjątek` |
+| `exceptiongroup` | `grupawyjątków` |
 | `fileexistserror` | `błądistniejącegopliku` |
 | `filenotfounderror` | `błąd_nieznanego_pliku` |
 | `floatingpointerror` | `błądfloatingpoint` |
@@ -195,8 +200,8 @@ Exception classes for error handling.
 | `resourcewarning` | `ostrzeżenieozasobie` |
 | `runtimeerror` | `błądczasuwykonywania` |
 | `runtimewarning` | `ostrzeżenieoczasiewykonywania` |
-| `stopasynciteration` | `stopasynciteration` |
-| `stopiteration` | `stopiteration` |
+| `stopasynciteration` | `zatrzymajAsyncIterację` |
+| `stopiteration` | `KoniecIteracji` |
 | `syntaxerror` | `błądskładniowy` |
 | `syntaxwarning` | `uwaganaskładnię` |
 | `systemexit` | `wyjściezsystemu` |
@@ -205,7 +210,7 @@ Exception classes for error handling.
 | `typeerror` | `błądtypu` |
 | `unboundlocalerror` | `błądniezdefiniowanejzmiennejlokalnej` |
 | `unicodedecodeerror` | `błąddekodowaniaUnicode` |
-| `unicodeencodeerror` | `unicodeencodeerror` |
+| `unicodeencodeerror` | `BłądKodowaniaUnicode` |
 | `unicodeerror` | `błądunikalny` |
 | `unicodetranslateerror` | `błądtłumaczeniaunicod` |
 | `unicodewarning` | `uwagaUnicode` |
@@ -233,9 +238,9 @@ definiuj silnia(n):
         zwrot n * silnia(n - 1)
 
 definiuj glowna():
-    liczby = [int(x) for x w zakres(6)]
+    liczby = [całkowita(x) pętla x w zakres(6)]
 
-    for liczba w liczby:
+    pętla liczba w liczby:
         wynik = silnia(liczba)
         wydrukuj(f"{liczba}! = {wynik}")
 

@@ -19,7 +19,7 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Dutch.
 
@@ -38,7 +38,8 @@ These are Python's reserved words translated to Dutch.
 | `del` | `verwijderen` |
 | `elif` | `alswel` |
 | `else` | `anders` |
-| `except` | `except` |
+| `except` | `behalve` |
+| `except*` | `behalve` |
 | `False` | `fout` |
 | `finally` | `tenslotte` |
 | `for` | `voor` |
@@ -46,9 +47,9 @@ These are Python's reserved words translated to Dutch.
 | `global` | `wereldwijde` |
 | `if` | `indien` |
 | `import` | `importeren` |
-| `in` | `in` |
-| `is` | `is` |
-| `lambda` | `lambda` |
+| `in` | `bevat` |
+| `is` | `identiek_aan` |
+| `lambda` | `lambda_functie` |
 | `match` | `overeenkomst` |
 | `None` | `niets` |
 | `nonlocal` | `nietlokaal` |
@@ -59,6 +60,7 @@ These are Python's reserved words translated to Dutch.
 | `return` | `teruggeven` |
 | `True` | `waar` |
 | `try` | `proberen` |
+| `type` | `soort` |
 | `while` | `terwijl` |
 | `with` | `met` |
 | `yield` | `opbrengen` |
@@ -70,58 +72,58 @@ Python's built-in functions and types in Dutch.
 | English | Dutch |
 |---------|--------|
 | `abs` | `absoluut` |
-| `aiter` | `aiter` |
+| `aiter` | `asynch_iterator` |
 | `all` | `alles` |
-| `anext` | `anext` |
+| `anext` | `anexten` |
 | `any` | `enige` |
-| `ascii` | `ascii` |
-| `bin` | `bin` |
-| `bool` | `bool` |
+| `ascii` | `asciiOmzetting` |
+| `bin` | `binair` |
+| `bool` | `waarheid` |
 | `breakpoint` | `pauzepunt` |
-| `bytearray` | `bytearray` |
-| `bytes` | `bytes` |
+| `bytearray` | `byte_array_waarden_reeks` |
+| `bytes` | `bytereeks` |
 | `callable` | `aanroepbaar` |
 | `chr` | `karakter` |
 | `classmethod` | `classmethode` |
 | `compile` | `compileren` |
-| `complex` | `complex` |
+| `complex` | `complexe` |
 | `delattr` | `verwijderken` |
-| `dict` | `dict` |
-| `dir` | `dir` |
-| `divmod` | `divmod` |
+| `dict` | `woordenboek` |
+| `dir` | `lijst_alle_eigenschappen_en_methoden` |
+| `divmod` | `deling_met_rest` |
 | `ellipsis` | `deverteldeterm` |
 | `enumerate` | `opnummeren` |
 | `eval` | `evalueren` |
 | `exec` | `uitvoeren` |
 | `filter` | `filteren` |
-| `float` | `float` |
+| `float` | `decimaal_getal` |
 | `format` | `opmaak` |
-| `frozenset` | `frozenset` |
+| `frozenset` | `onveranderlijke_mengset` |
 | `getattr` | `hetophalenvaneenkenmerk` |
 | `globals` | `deglobalevariabelen` |
 | `hasattr` | `heeftattr` |
-| `hash` | `hash` |
-| `help` | `help` |
-| `hex` | `hex` |
-| `id` | `id` |
+| `hash` | `hashen` |
+| `help` | `hulp` |
+| `hex` | `hexadecimaal` |
+| `id` | `unieke_identificator` |
 | `input` | `invoer` |
-| `int` | `int` |
-| `isinstance` | `isinstance` |
+| `int` | `geheel_getal` |
+| `isinstance` | `isinstanceVan` |
 | `issubclass` | `is_subklasse` |
-| `iter` | `iter` |
+| `iter` | `itereren` |
 | `len` | `lengte` |
 | `list` | `lijst` |
 | `locals` | `lokaal` |
 | `map` | `kaarten` |
 | `max` | `maximaal` |
-| `memoryview` | `memoryview` |
-| `min` | `min` |
+| `memoryview` | `geheugenvuist` |
+| `min` | `minimum` |
 | `next` | `volgende` |
 | `notimplemented` | `nietgeïmplementeerd` |
-| `object` | `object` |
+| `object` | `basis_klasse_voor_al_python_klassen` |
 | `oct` | `octaal` |
 | `open` | `openen` |
-| `ord` | `ord` |
+| `ord` | `ordeer` |
 | `pow` | `demacht` |
 | `print` | `afdrukken` |
 | `property` | `eigenschap` |
@@ -129,19 +131,19 @@ Python's built-in functions and types in Dutch.
 | `repr` | `weergave` |
 | `reversed` | `omgekeerd` |
 | `round` | `afronden` |
-| `set` | `set` |
-| `setattr` | `setattr` |
-| `slice` | `slice` |
+| `set` | `onvolgde_collectie` |
+| `setattr` | `setAttribuut` |
+| `slice` | `slicen` |
 | `sorted` | `gesorteerd` |
 | `staticmethod` | `statischemethode` |
 | `str` | `tekenreeks` |
 | `sum` | `som` |
-| `super` | `super` |
+| `super` | `superHogerNiveau` |
 | `tuple` | `tupel` |
-| `vars` | `vars` |
+| `vars` | `variabelen` |
 | `zip` | `zippen` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,49 +153,52 @@ Exception classes for error handling.
 | `assertionerror` | `assertiefout` |
 | `attributeerror` | `AttributeError` |
 | `baseexception` | `baseuitzondering` |
+| `baseexceptiongroup` | `baseexceptiongroep` |
 | `basegeneratorexit` | `basegeneratoruitgang` |
-| `blockingioerror` | `blockingioerror` |
+| `blockingioerror` | `blokkendIOFout` |
 | `brokenpipeerror` | `brokenpipefout` |
 | `buffererror` | `bufferfout` |
 | `byteswarning` | `byteswaarschuwing` |
 | `childprocesserror` | `childprocessfout` |
-| `connectionabortederror` | `connectionabortederror` |
+| `connectionabortederror` | `verbindingGebrokenFout` |
 | `connectionerror` | `verbindingstoring` |
 | `connectionrefusederror` | `connection_refused_error` |
 | `connectionreseterror` | `connectionresetfout` |
 | `deprecationwarning` | `depreciatiewaarschuwing` |
+| `encodingwarning` | `encodingwaarschuwing` |
 | `environmenterror` | `omgevingsfout` |
-| `eoferror` | `eoferror` |
+| `eoferror` | `eindBestandFout` |
 | `exception` | `uitzondering` |
-| `fileexistserror` | `fileexistserror` |
+| `exceptiongroup` | `uitzonderinggroep` |
+| `fileexistserror` | `bestaandeBestandFout` |
 | `filenotfounderror` | `filenietgevondenfout` |
-| `floatingpointerror` | `floatingpointerror` |
-| `futurewarning` | `futurewarning` |
+| `floatingpointerror` | `floatBijzonderheid` |
+| `futurewarning` | `toekenningsWaarschuwing` |
 | `generatorexit` | `generatoruitgang` |
-| `importerror` | `importerror` |
+| `importerror` | `ImportFout` |
 | `importwarning` | `importwaarschuwing` |
 | `indentationerror` | `indentatiefout` |
 | `indexerror` | `indexfout` |
 | `interruptederror` | `interruptiefout` |
 | `ioerror` | `iofout` |
-| `isadirectoryerror` | `isadirectoryerror` |
+| `isadirectoryerror` | `is_map_error` |
 | `keyboardinterrupt` | `toetsenbordonderbreking` |
 | `keyerror` | `sleutelfout` |
 | `lookuperror` | `lookupfout` |
-| `memoryerror` | `memoryerror` |
+| `memoryerror` | `geheugentekening` |
 | `modulenotfounderror` | `modulenietgevondenfout` |
 | `nameerror` | `Naamfout` |
 | `notadirectoryerror` | `nietbestandfout` |
 | `notimplementederror` | `nietimplementatiefout` |
 | `oserror` | `osfout` |
-| `overflowerror` | `overflowerror` |
+| `overflowerror` | `overvloedfout` |
 | `pendingdeprecationwarning` | `pendingdeprecationwaarschuwing` |
-| `permissionerror` | `permissionerror` |
+| `permissionerror` | `permission_error` |
 | `processlookuperror` | `processlookupfout` |
 | `recursionerror` | `recursiefout` |
 | `referenceerror` | `referentiefout` |
 | `resourcewarning` | `resourcewaarschuwing` |
-| `runtimeerror` | `runtimeerror` |
+| `runtimeerror` | `runtimefout` |
 | `runtimewarning` | `runtimewaarschuwing` |
 | `stopasynciteration` | `stopasynciteratie` |
 | `stopiteration` | `stopiteratie` |
@@ -201,7 +206,7 @@ Exception classes for error handling.
 | `syntaxwarning` | `syntaxwaarschuwing` |
 | `systemexit` | `systeemafsluiting` |
 | `taberror` | `tabfout` |
-| `timeouterror` | `timeouterror` |
+| `timeouterror` | `timeoutfout` |
 | `typeerror` | `typefout` |
 | `unboundlocalerror` | `ongebondenlokalefout` |
 | `unicodedecodeerror` | `unicodedecodefout` |
@@ -233,9 +238,9 @@ definitie faculteit(n):
         teruggeven n * faculteit(n - 1)
 
 definitie hoofd():
-    getallen = [int(x) voor x in bereik(6)]
+    getallen = [geheel_getal(x) voor x bevat bereik(6)]
 
-    voor getal in getallen:
+    voor getal bevat getallen:
         resultaat = faculteit(getal)
         afdrukken(f"{getal}! = {resultaat}")
 
@@ -248,7 +253,7 @@ definitie hoofd():
     # Demonstreer try/except
     proberen:
         faculteit(-1)
-    except Waardefout als fout:
+    behalve Waardefout als fout:
         afdrukken(f"Fout: {fout}")
     tenslotte:
         afdrukken("Klaar!")

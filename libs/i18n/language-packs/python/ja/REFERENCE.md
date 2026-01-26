@@ -19,14 +19,14 @@
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (37 terms)
+## Keywords (39 terms)
 
 These are Python's reserved words translated to Japanese.
 
 | English | Japanese |
 |---------|--------|
 | `and` | `そして` |
-| `as` | `as` |
+| `as` | `作為` |
 | `assert` | `アサーション` |
 | `async` | `非同期` |
 | `await` | `待機` |
@@ -39,6 +39,7 @@ These are Python's reserved words translated to Japanese.
 | `elif` | `elseif` |
 | `else` | `それ以外の場合` |
 | `except` | `除く` |
+| `except*` | `exceptの使用` |
 | `False` | `偽` |
 | `finally` | `ついに` |
 | `for` | `ループ` |
@@ -59,7 +60,8 @@ These are Python's reserved words translated to Japanese.
 | `return` | `戻り値` |
 | `True` | `真` |
 | `try` | `試す` |
-| `while` | `while` |
+| `type` | `型` |
+| `while` | `while_ループ` |
 | `with` | `with文` |
 | `yield` | `生成する` |
 
@@ -102,11 +104,11 @@ Python's built-in functions and types in Japanese.
 | `hasattr` | `有属性` |
 | `hash` | `ハッシュ` |
 | `help` | `ヘルプ` |
-| `hex` | `hex` |
+| `hex` | `ヘクス` |
 | `id` | `オブジェクトの識別子` |
 | `input` | `入力` |
 | `int` | `整数` |
-| `isinstance` | `isinstance` |
+| `isinstance` | `インスタンスチェック` |
 | `issubclass` | `サブクラスであるかどうかを確認する` |
 | `iter` | `反復` |
 | `len` | `長さ` |
@@ -130,7 +132,7 @@ Python's built-in functions and types in Japanese.
 | `reversed` | `逆順` |
 | `round` | `丸める` |
 | `set` | `セット` |
-| `setattr` | `setattr` |
+| `setattr` | `属性を設定する` |
 | `slice` | `スライス` |
 | `sorted` | `並べ替えられた` |
 | `staticmethod` | `静的メソッド` |
@@ -141,7 +143,7 @@ Python's built-in functions and types in Japanese.
 | `vars` | `変数` |
 | `zip` | `ジップ` |
 
-## Exceptions (66 terms)
+## Exceptions (69 terms)
 
 Exception classes for error handling.
 
@@ -151,6 +153,7 @@ Exception classes for error handling.
 | `assertionerror` | `アサーティブエラー` |
 | `attributeerror` | `属性エラー` |
 | `baseexception` | `ベーシック例外` |
+| `baseexceptiongroup` | `基底例外グループ` |
 | `basegeneratorexit` | `ベースジェネレータエクジット` |
 | `blockingioerror` | `ブロックIOエラー` |
 | `brokenpipeerror` | `ブロークンピープラーエラー` |
@@ -162,9 +165,11 @@ Exception classes for error handling.
 | `connectionrefusederror` | `接続拒否エラー` |
 | `connectionreseterror` | `接続リセットエラー` |
 | `deprecationwarning` | `警告非推奨` |
+| `encodingwarning` | `エンコーディング警告` |
 | `environmenterror` | `環境エラー` |
 | `eoferror` | `エラーが発生しました` |
 | `exception` | `例外` |
+| `exceptiongroup` | `例外グループ` |
 | `fileexistserror` | `ファイルが既に存在するエラー` |
 | `filenotfounderror` | `ファイルが見つかりませんエラー` |
 | `floatingpointerror` | `浮動小数点数エラー` |
@@ -185,7 +190,7 @@ Exception classes for error handling.
 | `nameerror` | `未定義名エラー` |
 | `notadirectoryerror` | `ノットディレクトリエラー` |
 | `notimplementederror` | `未実装エラー` |
-| `oserror` | `oserror` |
+| `oserror` | `osエラー` |
 | `overflowerror` | `オーバーフローエラー` |
 | `pendingdeprecationwarning` | `未使用の警告` |
 | `permissionerror` | `アクセス拒否` |
@@ -241,14 +246,14 @@ Here's an example showing Japanese Python code with Legesher:
 
     # whileループのデモ
     カウント = 0
-    while カウント < 3:
+    while_ループ カウント < 3:
         印刷(f"カウント: {カウント}")
         カウント += 1
 
     # try/exceptのデモ
     試す:
         階乗(-1)
-    除く 値の誤り as エラー:
+    除く 値の誤り 作為 エラー:
         印刷(f"エラー: {エラー}")
     ついに:
         印刷("完了!")
