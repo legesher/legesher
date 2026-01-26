@@ -33,29 +33,11 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Python version-specific additions
-PYTHON_VERSION_ADDITIONS = {
-    "3.10": {
-        "keywords": ["match", "case"],  # PEP 634: Structural Pattern Matching
-        "exceptions": [],
-    },
-    "3.11": {
-        "keywords": ["except*"],  # PEP 654: Exception Groups
-        "exceptions": ["exceptiongroup", "baseexceptiongroup", "encodingwarning"],
-    },
-    "3.12": {
-        "keywords": ["type"],  # PEP 695: Type Parameter Syntax
-        "exceptions": [],
-    },
-    "3.13": {
-        "keywords": [],
-        "exceptions": [],
-    },
-    "3.14": {
-        "keywords": [],
-        "exceptions": [],
-    },
-}
+# NOTE: Python version-specific additions are now tracked in:
+#   libs/i18n/language-packs/python/version-index.yml
+# And the base terms are defined in:
+#   legesher_i18n/term_definitions.py
+# Use VersionIndex.load() to access version-specific deltas.
 
 # Natural language names for README generation
 NATURAL_LANGUAGE_NAMES = {
@@ -180,17 +162,39 @@ class YAMLExporter:
         return lang_dir
 
     def _build_term_map(self, translations: List[Dict]) -> Dict[str, Dict]:
-        """Build a map of terms to their best translations."""
+        """Build a map of terms to their best translations.
+
+        Priority logic:
+        1. Prefer actual translations (term != translation) over untranslated (term == translation)
+        2. Among translations of same "translated" status, prefer higher confidence
+        """
         term_map: Dict[str, Dict] = {}
 
         for trans in translations:
             term = trans["term"]
+            translation = trans["translation"]
+
+            # Check if this is actually translated (term != translation)
+            is_translated = term.lower() != translation.lower()
 
             if term in term_map:
-                existing_conf = self._confidence_to_score(term_map[term]["confidence"])
-                new_conf = self._confidence_to_score(trans["confidence"])
-                if new_conf > existing_conf:
+                existing = term_map[term]
+                existing_translated = (
+                    existing["term"].lower() != existing["translation"].lower()
+                )
+
+                # Prefer translated over untranslated
+                if is_translated and not existing_translated:
                     term_map[term] = trans
+                elif not is_translated and existing_translated:
+                    # Keep existing (it's actually translated)
+                    pass
+                else:
+                    # Both same status, compare confidence
+                    existing_conf = self._confidence_to_score(existing["confidence"])
+                    new_conf = self._confidence_to_score(trans["confidence"])
+                    if new_conf > existing_conf:
+                        term_map[term] = trans
             else:
                 term_map[term] = trans
 

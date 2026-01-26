@@ -87,6 +87,7 @@ class PipelineConfig:
     standards_file: Optional[Path] = None
     output_db: Optional[Path] = None
     skip_existing: bool = True
+    ollama_model: str = "aya"  # Ollama model name (aya, command-r, qwen2.5, etc.)
 
     def __post_init__(self):
         """Set defaults."""
@@ -260,6 +261,7 @@ class TranslationPipeline:
                     "Ollama model requires httpx. Install with: pip install httpx"
                 )
             self.models["ollama"] = OllamaModel(
+                model=config.ollama_model,
                 dry_run=config.dry_run,
             )
 
@@ -412,7 +414,7 @@ class TranslationPipeline:
                 # Get proper term_type from term_classifier
                 term_type = classify_term(term, python_version="3.13")
 
-                translation_id = self.db.add_translation(
+                translation_id = self.db.upsert_translation(
                     language_code=language,
                     term=term,
                     term_type=term_type,

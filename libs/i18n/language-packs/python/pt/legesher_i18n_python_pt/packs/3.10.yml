@@ -10,21 +10,21 @@ keywords:
   break: quebrar
   class: classe
   continue: continuar
-  def: def
-  del: del
-  elif: senão  # se não
+  def: definir
+  del: apagar
+  elif: senão
   else: senão
   except: excepto
   finally: finalmente
   for: por
   from: de
-  global: global
+  global: declara_global
   if: se
   import: importar
   in: em
   is: é
-  lambda: lambda
-  nonlocal: nãolocal  # não local
+  lambda: funcao_anonima
+  nonlocal: nãolocal
   not: não
   or: ou
   pass: passar
@@ -40,33 +40,33 @@ keywords:
   match: combinar
   case: caso
 builtins:
-  abs: valorabsoluto  # valor absoluto
+  abs: valorabsoluto
   all: todos
   any: qualquer
-  ascii: ascii
+  ascii: asciiToString
   bin: binário
   breakpoint: pausa
   callable: chamável
   chr: caractere
   compile: compilar
-  delattr: delattr
+  delattr: deletaAtributo
   dir: diretório
-  divmod: divmod
+  divmod: divmodo
   enumerate: enumeração
-  eval: eval
+  eval: avaliar
   exec: execução
   filter: filtro
   format: formatar
   getattr: obter_atributo
   globals: globais
-  hasattr: teratributo  # ter atributo
-  hash: hash
+  hasattr: teratributo
+  hash: resumo_hash
   help: ajuda
-  hex: hex
+  hex: hexadecimal
   id: identificador
-  input: input
-  isinstance: isinstance
-  issubclass: subclassede  # subclasse de
+  input: entrada
+  isinstance: ehInstanciaDe
+  issubclass: subclassede
   iter: iterar
   len: comprimento
   locals: locais
@@ -76,114 +76,114 @@ builtins:
   next: próximo
   oct: octal
   open: abrir
-  ord: ord
-  pow: eleelevadoapotênciade  # ele elevado a potência de
+  ord: ordinal
+  pow: eleelevadoapotênciade
   print: imprimir
   range: faixa
   repr: representação
   reversed: reverter
   round: redondar
-  setattr: setattr
+  setattr: definirAtributo
   slice: fatiar
   sorted: ordenado
   sum: soma
-  vars: vars
+  vars: variaveis
   zip: zipar
-  bool: bool
-  bytearray: bytearray
-  bytes: bytes
-  classmethod: classemétodo  # classe método
+  bool: booleano
+  bytearray: conjuntoDeBytes
+  bytes: byte
+  classmethod: classemétodo
   complex: complexo
   dict: dicionário
-  float: float
-  frozenset: conjuntocongelado  # conjunto congelado
-  int: int
+  float: flutuar
+  frozenset: conjuntocongelado
+  int: inteiro
   list: lista
-  memoryview: viewdememória  # view de memória
+  memoryview: viewdememória
   object: objeto
   property: propriedade
   set: conjunto
   staticmethod: estático
-  str: str
-  super: super
+  str: stringa
+  super: superClasse
   tuple: tupla
   ellipsis: ellipse
-  notimplemented: nãoimplementado  # não implementado
-  aiter: aiter
+  notimplemented: nãoimplementado
+  aiter: iter_async
   anext: próximo
 exceptions:
   baseexception: BaseException
-  basegeneratorexit: basegeradordesaída  # basegerador de saída
+  basegeneratorexit: basegeradordesaída
   exception: exceção
-  generatorexit: geradordesaída  # gerador de saída
-  systemexit: saídadosistema  # saída do sistema
-  keyboardinterrupt: interrupçãodoteclado  # interrupção do teclado
-  arithmeticerror: erroaritmético  # erro aritmético
-  floatingpointerror: errodeponteflutuante  # erro de ponte flutuante
-  overflowerror: errodeestouro  # erro de estouro
-  zerodivisionerror: errodedivisãoporzero  # erro de divisão por zero
-  lookuperror: errodepesquisa  # erro de pesquisa
-  indexerror: ErrodeÍndice  # Erro de Índice
-  keyerror: errodechave  # erro de chave
-  attributeerror: errodeatributo  # erro de atributo
-  nameerror: ErrodeNome  # Erro de Nome
-  unboundlocalerror: errodereferêncialocalnãodefinida  # erro de referência local não definida
-  oserror: errodesistema  # erro de sistema
-  blockingioerror: errodeESbloqueante  # erro de E/S bloqueante
-  childprocesserror: errodeprocessofilho  # erro de processo filho
-  connectionerror: errodeconexão  # erro de conexão
-  brokenpipeerror: errodepipequebrada  # erro de pipe quebrada
-  connectionabortederror: errodeabortarconexão  # erro de abortar conexão
-  connectionrefusederror: erroderecusadeconexão  # erro de recusa de conexão
+  generatorexit: geradordesaída
+  systemexit: saídadosistema
+  keyboardinterrupt: interrupçãodoteclado
+  arithmeticerror: erroaritmético
+  floatingpointerror: errodeponteflutuante
+  overflowerror: errodeestouro
+  zerodivisionerror: errodedivisãoporzero
+  lookuperror: errodepesquisa
+  indexerror: ErrodeÍndice
+  keyerror: errodechave
+  attributeerror: errodeatributo
+  nameerror: ErrodeNome
+  unboundlocalerror: errodereferêncialocalnãodefinida
+  oserror: errodesistema
+  blockingioerror: errodeESbloqueante
+  childprocesserror: errodeprocessofilho
+  connectionerror: errodeconexão
+  brokenpipeerror: errodepipequebrada
+  connectionabortederror: errodeabortarconexão
+  connectionrefusederror: erroderecusadeconexão
   connectionreseterror: resetar_conexão
-  fileexistserror: errodearquivojáexistente  # erro de arquivo já existente
-  filenotfounderror: errodearquivonãoencontrado  # erro de arquivo não encontrado
-  interruptederror: errodeinterrupção  # erro de interrupção
-  isadirectoryerror: errodediretórioinválido  # erro de diretório inválido
-  notadirectoryerror: errodenãoserumdiretório  # erro de não ser um diretório
-  permissionerror: errodepermissão  # erro de permissão
-  processlookuperror: errodeprocuração  # erro de procuração
-  timeouterror: errodetempolimite  # erro de tempo limite
-  importerror: errodeimportação  # erro de importação
-  modulenotfounderror: errodemódulonãoencontrado  # erro de módulo não encontrado
-  stopiteration: stopiteration
-  stopasynciteration: pararaiteraçãoassíncrona  # parar a iteração assíncrona
-  typeerror: errodetipo  # erro de tipo
+  fileexistserror: errodearquivojáexistente
+  filenotfounderror: errodearquivonãoencontrado
+  interruptederror: errodeinterrupção
+  isadirectoryerror: errodediretórioinválido
+  notadirectoryerror: errodenãoserumdiretório
+  permissionerror: errodepermissão
+  processlookuperror: errodeprocuração
+  timeouterror: errodetempolimite
+  importerror: errodeimportação
+  modulenotfounderror: errodemódulonãoencontrado
+  stopiteration: excecaoDeIteracaoParada
+  stopasynciteration: pararaiteraçãoassíncrona
+  typeerror: errodetipo
   valueerror: ValueError
-  unicodeerror: errodeunicode  # erro de unicode
-  unicodedecodeerror: errodedecodificaçãodeUnicode  # erro de decodificação de Unicode
-  unicodeencodeerror: errordecodificaçãounicode  # error de codificação unicode
-  unicodetranslateerror: errodetraduçãodeunicod  # erro de tradução de unicod
-  runtimeerror: errodetempodeexecução  # erro de tempo de execução
-  notimplementederror: errodeimplementaçãonãorealizada  # erro de implementação não realizada
-  recursionerror: erroderecursão  # erro de recursão
-  referenceerror: errodereferência  # erro de referência
-  assertionerror: errodeafirmação  # erro de afirmação
-  memoryerror: errodememória  # erro de memória
-  buffererror: errodebuffer  # erro de buffer
-  eoferror: errodeeof  # erro de eof
-  syntaxerror: errodesintaxe  # erro de sintaxe
-  indentationerror: errodeindentação  # erro de indentação
-  taberror: errodetabulação  # erro de tabulação
-  environmenterror: errodeambiente  # erro de ambiente
-  ioerror: errodeES  # erro de E/S
+  unicodeerror: errodeunicode
+  unicodedecodeerror: errodedecodificaçãodeUnicode
+  unicodeencodeerror: errordecodificaçãounicode
+  unicodetranslateerror: errodetraduçãodeunicod
+  runtimeerror: errodetempodeexecução
+  notimplementederror: errodeimplementaçãonãorealizada
+  recursionerror: erroderecursão
+  referenceerror: errodereferência
+  assertionerror: errodeafirmação
+  memoryerror: errodememória
+  buffererror: errodebuffer
+  eoferror: errodeeof
+  syntaxerror: errodesintaxe
+  indentationerror: errodeindentação
+  taberror: errodetabulação
+  environmenterror: errodeambiente
+  ioerror: errodeES
   warning: aviso
-  userwarning: avisodousuário  # aviso do usuário
-  deprecationwarning: avisodedepreciação  # aviso de depreciação
-  pendingdeprecationwarning: avisodedepreciaçãopendente  # aviso de depreciação pendente
-  syntaxwarning: avisodesintaxe  # aviso de sintaxe
-  runtimewarning: avisodetempodeexecução  # aviso de tempo de execução
+  userwarning: avisodousuário
+  deprecationwarning: avisodedepreciação
+  pendingdeprecationwarning: avisodedepreciaçãopendente
+  syntaxwarning: avisodesintaxe
+  runtimewarning: avisodetempodeexecução
   futurewarning: aviso_futuro
-  importwarning: avisodeimportação  # aviso de importação
-  unicodewarning: avisodeunicode  # aviso de unicode
-  byteswarning: avisodebytes  # aviso de bytes
-  resourcewarning: avisoderecurso  # aviso de recurso
+  importwarning: avisodeimportação
+  unicodewarning: avisodeunicode
+  byteswarning: avisodebytes
+  resourcewarning: avisoderecurso
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

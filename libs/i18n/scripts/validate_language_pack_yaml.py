@@ -9,8 +9,17 @@ Rules:
 1. All translations must be strings (not booleans, numbers, or null)
 2. Values that look like YAML booleans must be quoted ('yes', 'no', 'true', 'false')
 3. No spaces in translation values (must be concatenated)
-4. No punctuation in translation values (no /, -, :, .)
+4. No punctuation in translation values (no /, -, :, ., parentheses)
 5. Proper YAML structure with required sections
+6. No duplicate translations (same translation for different terms)
+7. Script-aware validation (RTL, CJK, Latin scripts have different conventions)
+
+Script-Specific Concatenation Guidelines:
+- Latin scripts (en, es, fr, de, etc.): Use snake_case for multi-word terms
+- RTL scripts (ar, he): Concatenate without separators (Arabic/Hebrew naturally connect)
+- CJK scripts (zh, ja, ko): No separators needed (characters are self-contained)
+- Cyrillic (ru): Use snake_case similar to Latin
+- Greek (el): Use snake_case similar to Latin
 
 Usage:
     python validate_language_pack_yaml.py <file1.yml> <file2.yml> ...
@@ -62,6 +71,9 @@ class LanguagePackValidator:
             self.errors.append("Root element must be a dictionary")
             return False
 
+        # Track all translations to detect duplicates
+        translation_to_terms: dict[str, list[str]] = {}
+
         # Validate each section
         for section in ["keywords", "builtins", "exceptions"]:
             if section not in data:
@@ -109,12 +121,25 @@ class LanguagePackValidator:
                         f"Multi-word translations must be concatenated."
                     )
 
-                # Check for punctuation
-                invalid_chars = set(value_part) & {"/", "-", ":", ".", ",", ";"}
+                # Check for punctuation (including parentheses)
+                invalid_chars = set(value_part) & {
+                    "/",
+                    "-",
+                    ":",
+                    ".",
+                    ",",
+                    ";",
+                    "(",
+                    ")",
+                    "[",
+                    "]",
+                    "{",
+                    "}",
+                }
                 if invalid_chars:
                     self.errors.append(
                         f"{section}.{term}: Translation '{value_part}' contains invalid "
-                        f"punctuation: {', '.join(sorted(invalid_chars))}"
+                        f"characters: {', '.join(sorted(invalid_chars))}"
                     )
 
                 # Check for mixed scripts (e.g., Latin + Arabic)
@@ -130,16 +155,38 @@ class LanguagePackValidator:
                             f"{', '.join(scripts)}. Consider using a single script for consistency."
                         )
 
+                # Track translation for duplicate detection
+                if value_part:
+                    key = f"{section}.{term}"
+                    if value_part not in translation_to_terms:
+                        translation_to_terms[value_part] = []
+                    translation_to_terms[value_part].append(key)
+
+        # Check for duplicate translations (same translation used for different terms)
+        for translation, terms in translation_to_terms.items():
+            if len(terms) > 1:
+                self.warnings.append(
+                    f"Duplicate translation '{translation}' used for: {', '.join(terms)}"
+                )
+
         return len(self.errors) == 0
 
     def _is_value_quoted_in_source(self, content: str, section: str, term: str) -> bool:
         """Check if a value is quoted in the source YAML."""
-        # Look for the term in the content
+        # Look for the term in the content - handle both quoted and unquoted keys
+        # Patterns to match: `term:`, `'term':`, `"term":`
+        key_patterns = [
+            f"{term}:",  # unquoted key
+            f"'{term}':",  # single-quoted key
+            f'"{term}":',  # double-quoted key
+        ]
+
         for line in content.split("\n"):
-            if f"{term}:" in line:
-                # Check if value after colon is quoted
-                after_colon = line.split(f"{term}:", 1)[1].strip()
-                return after_colon.startswith("'") or after_colon.startswith('"')
+            for pattern in key_patterns:
+                if pattern in line:
+                    # Check if value after colon is quoted
+                    after_colon = line.split(pattern, 1)[1].strip()
+                    return after_colon.startswith("'") or after_colon.startswith('"')
         return False
 
     def _detect_scripts(self, text: str) -> list:

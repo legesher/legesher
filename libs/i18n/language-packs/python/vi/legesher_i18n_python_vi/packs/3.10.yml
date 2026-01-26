@@ -4,186 +4,186 @@ version: '3.10'
 keywords:
   and: và
   as: như
-  assert: kiểmtra  # kiểm tra
-  async: tựđộng  # tự động
-  await: chờđợi  # chờ đợi
+  assert: kiểmtra
+  async: tựđộng
+  await: chờđợi
   break: ngắt
   class: lớp
-  continue: tiếptục  # tiếp tục
+  continue: tiếptục
   def: bằng
   del: xóa
   elif: nếu_khác
   else: khác
   except: trừ
-  finally: Cuốicùng  # Cuối cùng
+  finally: Cuốicùng
   for: cho
   from: từ
-  global: toàncầu  # toàn cầu
+  global: toàncầu
   if: nếu
   import: nhập
   in: trong
   is: là
-  lambda: lambda
-  nonlocal: khôngđịaphương  # không địa phương
+  lambda: cua_lambda
+  nonlocal: khôngđịaphương
   not: không
   or: hoặc
-  pass: chạyqua  # chạy qua
-  raise: nângcao  # nâng cao
-  return: trảvề  # trả về
+  pass: chạyqua
+  raise: nângcao
+  return: trảvề
   try: thử
-  while: trongkhi  # trong khi
+  while: trongkhi
   with: với
-  yield: hiệusuất  # hiệu suất
-  None: khôngcó  # không có
+  yield: hiệusuất
+  None: khôngcó
   'True': Đúng
   'False': Sai
-  match: phùhợp  # phù hợp
-  case: trườnghợp  # trường hợp
+  match: phùhợp
+  case: trườnghợp
 builtins:
-  abs: sốtuyệtđối  # số tuyệt đối
-  all: tấtcả  # tất cả
-  any: bấtkỳ  # bất kỳ
-  ascii: ascii
-  bin: bin
-  breakpoint: điểmdừng  # điểm dừng
-  callable: cóthểgọiđược  # có thể gọi được
+  abs: sốtuyệtđối
+  all: tấtcả
+  any: bấtkỳ
+  ascii: asciiPhanSo
+  bin: binh_luận
+  breakpoint: điểmdừng
+  callable: cóthểgọiđược
   chr: chữ
-  compile: chuyểnmã  # chuyển mã
-  delattr: xóathuộctính  # xóa thuộc tính
-  dir: hiệndanhsách  # hiện danh sách
-  divmod: đồngbộchia  # đồng bộ chia
-  enumerate: lậpchỉsố  # lập chỉ số
-  eval: eval
-  exec: thựcthi  # thực thi
+  compile: chuyểnmã
+  delattr: xóathuộctính
+  dir: hiệndanhsách
+  divmod: đồngbộchia
+  enumerate: lậpchỉsố
+  eval: đánh_giá
+  exec: thựcthi
   filter: lọc
-  format: xácđịnh  # xác định
-  getattr: lấythuộctính  # lấy thuộc tính
-  globals: biếntoàncục  # biến toàn cục
-  hasattr: cóthuộctính  # có thuộc tính
-  hash: hàmbăm  # hàm băm
+  format: xácđịnh
+  getattr: lấythuộctính
+  globals: biếntoàncục
+  hasattr: cóthuộctính
+  hash: hàmbăm
   help: giúp
-  hex: hệlục  # hệ lục
-  id: đườngdẫn  # đường dẫn
+  hex: hệlục
+  id: đườngdẫn
   input: nhập
   isinstance: là_một_loại
-  issubclass: issubclass
-  iter: hànhtrình  # hành trình
-  len: chiềudài  # chiều dài
-  locals: biếncụcbộ  # biến cục bộ
-  map: chuyểnđổi  # chuyển đổi
-  max: tốiđa  # tối đa
-  min: nhỏnhất  # nhỏ nhất
-  next: tiếptheo  # tiếp theo
-  oct: oct
+  issubclass: hiệu_ứng_con_của
+  iter: hànhtrình
+  len: chiềudài
+  locals: biếncụcbộ
+  map: chuyểnđổi
+  max: tốiđa
+  min: nhỏnhất
+  next: tiếptheo
+  oct: đổi_cơ_số
   open: mở
-  ord: chuyểnđổikýtựthànhmãđiểmUnicode  # chuyển đổi ký tự thành mã điểm Unicode
-  pow: làmchomộtsốnânglênlũythừa  # làm cho một số nâng lên lũy thừa
+  ord: chuyểnđổikýtựthànhmãđiểmUnicode
+  pow: làmchomộtsốnânglênlũythừa
   print: in
-  range: phạmvi  # phạm vi
-  repr: biểudiễn  # biểu diễn
-  reversed: lậtngược  # lật ngược
-  round: làmtròn  # làm tròn
-  setattr: thiếtlậpthuộctính  # thiết lập thuộc tính
-  slice: khửtrùng  # khử trùng
-  sorted: sắpxếp  # sắp xếp
+  range: phạmvi
+  repr: biểudiễn
+  reversed: lậtngược
+  round: làmtròn
+  setattr: thiếtlậpthuộctính
+  slice: khửtrùng
+  sorted: sắpxếp
   sum: tổng
   vars: varia
   zip: gộp
-  bool: bool
-  bytearray: bytearray
-  bytes: bytes
-  classmethod: phươngthứclớp  # phương thức lớp
-  complex: phứctạp  # phức tạp
-  dict: từđiển  # từ điển
-  float: float
-  frozenset: bộtậpđóngbăng  # bộ tập đóng băng
-  int: sốnguyên  # số nguyên
-  list: danhsách  # danh sách
-  memoryview: memoryview
-  object: đốitượng  # đối tượng
-  property: thuộctính  # thuộc tính
+  bool: boolean
+  bytearray: khoáNgTrốngCácBite
+  bytes: bites
+  classmethod: phươngthứclớp
+  complex: phứctạp
+  dict: từđiển
+  float: chuyenDoiDenSoThuPhan
+  frozenset: bộtậpđóngbăng
+  int: sốnguyên
+  list: danhsách
+  memoryview: kiểm_tra_bộ_nhớ
+  object: đốitượng
+  property: thuộctính
   set: bộ
-  staticmethod: thôngdụngtĩnh  # thông dụng tĩnh
+  staticmethod: thôngdụngtĩnh
   str: chuỗi
   super: siêu
-  tuple: thưmục  # thư mục
-  ellipsis: đoạnbỏsót  # đoạn bỏ sót
-  notimplemented: khôngthựchiệnđược  # không thực hiện được
-  aiter: aiter
-  anext: anext
+  tuple: thưmục
+  ellipsis: đoạnbỏsót
+  notimplemented: khôngthựchiệnđược
+  aiter: ktraiter
+  anext: tiếp_theo
 exceptions:
-  baseexception: baseexception
+  baseexception: lỗi_cơ_bản
   basegeneratorexit: basegenerator_exit
   exception: lỗi
-  generatorexit: generatorexit
-  systemexit: hậukỳhệthống  # hậu kỳ hệ thống
-  keyboardinterrupt: sựngắtkếtnốibànphím  # sự ngắt kết nối bàn phím
-  arithmeticerror: lỗitínharít  # lỗi tính a rít
-  floatingpointerror: lỗiđiểmnổi  # lỗi điểm nổi
-  overflowerror: lỗitràn  # lỗi tràn
-  zerodivisionerror: lỗichiasốcho  # lỗi chia số cho
-  lookuperror: lỗitìmkiếm  # lỗi tìm kiếm
-  indexerror: Lỗichỉmục  # Lỗi chỉ mục
-  keyerror: Lỗikhóakhôngtồntại  # Lỗi khóa không tồn tại
-  attributeerror: Lỗithuộctính  # Lỗi thuộc tính
-  nameerror: Lỗitênbiến  # Lỗi tên biến
-  unboundlocalerror: Lỗithamchiếubiếncụcbộkhôngđượcràngbuộc  # Lỗi tham chiếu biến cục bộ không được ràng buộc
-  oserror: Lỗihệđiềuhành  # Lỗi hệ điều hành
-  blockingioerror: lỗiIOchặn  # lỗi I/O chặn
-  childprocesserror: lỗicontrìnhtự  # lỗi con trình tự
-  connectionerror: lỗikếtnối  # lỗi kết nối
-  brokenpipeerror: lỗiốngbịvỡ  # lỗi ống bị vỡ
-  connectionabortederror: lỗingắtkếtnối  # lỗi ngắt kết nối
-  connectionrefusederror: lỗitừchốikếtnối  # lỗi từ chối kết nối
-  connectionreseterror: lỗiđặtlạikếtnối  # lỗi đặt lại kết nối
-  fileexistserror: lỗitồntạitệp  # lỗi tồn tại tệp
-  filenotfounderror: Lỗikhôngtìmthấytệp  # Lỗi không tìm thấy tệp
-  interruptederror: lỗingắt  # lỗi ngắt
-  isadirectoryerror: lỗiisadirectory  # lỗi isadirectory
-  notadirectoryerror: lỗikhôngphảilàthưmục  # lỗi không phải là thư mục
-  permissionerror: lỗiquyền  # lỗi quyền
-  processlookuperror: lỗitìmkiếmquytrình  # lỗi tìm kiếm quy trình
-  timeouterror: lỗithờigian  # lỗi thời gian
-  importerror: lỗinhập  # lỗi nhập
-  modulenotfounderror: Lỗimodulenotfounderror  # Lỗi modulenotfounderror
-  stopiteration: Dừnglặplại  # Dừng lặp lại
-  stopasynciteration: ngừnglặpasync  # ngừng lặp async
-  typeerror: Lỗikiểudữliệu  # Lỗi kiểu dữ liệu
-  valueerror: LỗiGiátrị  # Lỗi Giá trị
-  unicodeerror: lỗiUnicode  # lỗi Unicode
-  unicodedecodeerror: lỗigiảimãUnicode  # lỗi giải mã Unicode
-  unicodeencodeerror: lỗimãhóaunicode  # lỗi mã hóa unicode
-  unicodetranslateerror: lỗidịchthuậtmãhóaUnicode  # lỗi dịch thuật mã hóa Unicode
-  runtimeerror: Lỗithờigianchạy  # Lỗi thời gian chạy
-  notimplementederror: Lỗikhôngthựchiện  # Lỗi không thực hiện
-  recursionerror: lỗiđệquy  # lỗi đệ quy
-  referenceerror: lỗithamchiếu  # lỗi tham chiếu
-  assertionerror: lỗikhẳngđịnh  # lỗi khẳng định
-  memoryerror: lỗibộnhớ  # lỗi bộ nhớ
-  buffererror: lỗibộđệm  # lỗi bộ đệm
-  eoferror: lỗieof  # lỗi eof
-  syntaxerror: lỗicúpháp  # lỗi cú pháp
-  indentationerror: lỗithụtlề  # lỗi thụt lề
-  taberror: lỗitab  # lỗi tab
-  environmenterror: lỗimôitrường  # lỗi môi trường
-  ioerror: lỗiIO  # lỗi I/O
-  warning: lờicảnhbáo  # lời cảnh báo
-  userwarning: cảnhbáongườidùng  # cảnh báo người dùng
-  deprecationwarning: cảnhbáolỗilỗi  # cảnh báo lỗi lỗi
-  pendingdeprecationwarning: cảnhbáosắpbịlỗi  # cảnh báo sắp bị lỗi
-  syntaxwarning: lờicảnhbáocúpháp  # lời cảnh báo cú pháp
-  runtimewarning: cảnhbáothờigianchạy  # cảnh báo thời gian chạy
-  futurewarning: cảnhbáotươnglai  # cảnh báo tương lai
-  importwarning: cảnhbáonhậpkhẩu  # cảnh báo nhập khẩu
-  unicodewarning: cảnhbáounicode  # cảnh báo unicode
-  byteswarning: cảnhbáobyte  # cảnh báo byte
-  resourcewarning: cảnhbáotàinguyên  # cảnh báo tài nguyên
+  generatorexit: generatorkhải
+  systemexit: hậukỳhệthống
+  keyboardinterrupt: sựngắtkếtnốibànphím
+  arithmeticerror: lỗitínharít
+  floatingpointerror: lỗiđiểmnổi
+  overflowerror: lỗitràn
+  zerodivisionerror: lỗichiasốcho
+  lookuperror: lỗitìmkiếm
+  indexerror: Lỗichỉmục
+  keyerror: Lỗikhóakhôngtồntại
+  attributeerror: Lỗithuộctính
+  nameerror: Lỗitênbiến
+  unboundlocalerror: Lỗithamchiếubiếncụcbộkhôngđượcràngbuộc
+  oserror: Lỗihệđiềuhành
+  blockingioerror: lỗiIOchặn
+  childprocesserror: lỗicontrìnhtự
+  connectionerror: lỗikếtnối
+  brokenpipeerror: lỗiốngbịvỡ
+  connectionabortederror: lỗingắtkếtnối
+  connectionrefusederror: lỗitừchốikếtnối
+  connectionreseterror: lỗiđặtlạikếtnối
+  fileexistserror: lỗitồntạitệp
+  filenotfounderror: Lỗikhôngtìmthấytệp
+  interruptederror: lỗingắt
+  isadirectoryerror: lỗiisadirectory
+  notadirectoryerror: lỗikhôngphảilàthưmục
+  permissionerror: lỗiquyền
+  processlookuperror: lỗitìmkiếmquytrình
+  timeouterror: lỗithờigian
+  importerror: lỗinhập
+  modulenotfounderror: Lỗimodulenotfounderror
+  stopiteration: Dừnglặplại
+  stopasynciteration: ngừnglặpasync
+  typeerror: Lỗikiểudữliệu
+  valueerror: LỗiGiátrị
+  unicodeerror: lỗiUnicode
+  unicodedecodeerror: lỗigiảimãUnicode
+  unicodeencodeerror: lỗimãhóaunicode
+  unicodetranslateerror: lỗidịchthuậtmãhóaUnicode
+  runtimeerror: Lỗithờigianchạy
+  notimplementederror: Lỗikhôngthựchiện
+  recursionerror: lỗiđệquy
+  referenceerror: lỗithamchiếu
+  assertionerror: lỗikhẳngđịnh
+  memoryerror: lỗibộnhớ
+  buffererror: lỗibộđệm
+  eoferror: lỗieof
+  syntaxerror: lỗicúpháp
+  indentationerror: lỗithụtlề
+  taberror: lỗitab
+  environmenterror: lỗimôitrường
+  ioerror: lỗiIO
+  warning: lờicảnhbáo
+  userwarning: cảnhbáongườidùng
+  deprecationwarning: cảnhbáolỗilỗi
+  pendingdeprecationwarning: cảnhbáosắpbịlỗi
+  syntaxwarning: lờicảnhbáocúpháp
+  runtimewarning: cảnhbáothờigianchạy
+  futurewarning: cảnhbáotươnglai
+  importwarning: cảnhbáonhậpkhẩu
+  unicodewarning: cảnhbáounicode
+  byteswarning: cảnhbáobyte
+  resourcewarning: cảnhbáotàinguyên
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

@@ -11,27 +11,27 @@ keywords:
   class: klass
   continue: fortsätt
   def: definiere
-  del: tabort  # ta bort
-  elif: annansom  # annans om
+  del: tabort
+  elif: annansom
   else: annär
-  except: except
+  except: förutom
   finally: slutliggare
   for: för
   from: från
-  global: global
+  global: globala
   if: om
   import: importera
   in: i
   is: är
-  lambda: lambdafunktionen  # lambda-funktionen
+  lambda: lambdafunktionen
   nonlocal: ejlokal
-  not: not
+  not: inte
   or: eller
   pass: gå
   raise: utlåda
   return: retur
   try: prova
-  while: while
+  while: medan
   with: med
   yield: gebe
   None: nada
@@ -40,140 +40,140 @@ keywords:
   match: matcha
   case: fall
 builtins:
-  abs: abs
+  abs: absolut_värde
   all: alla
   any: valfri
-  ascii: ascii
+  ascii: asciiSträng
   bin: binär
   breakpoint: paus
   callable: användbar
   chr: karakter
   compile: kompilera
-  delattr: tabortettattribut  # ta bort ett attribut
-  dir: dir
-  divmod: divmod
+  delattr: tabortettattribut
+  dir: direktori
+  divmod: divMod
   enumerate: lista
-  eval: eval
+  eval: utvärdera
   exec: exekvering
   filter: filtera
-  format: format
-  getattr: attfåtillgångtillettattribut  # att få tillgång till ett attribut
+  format: formatera_värde
+  getattr: attfåtillgångtillettattribut
   globals: globala
-  hasattr: attha  # att ha
+  hasattr: attha
   hash: hasha
   help: hjelp
-  hex: hex
-  id: id
+  hex: hexa
+  id: objekt_id
   input: inmatning
-  isinstance: isinstance
+  isinstance: ärInstansAv
   issubclass: subklassen
   iter: iterera
   len: längd
   locals: lokala
   map: kartläggning
   max: maxima
-  min: min
+  min: minsta
   next: nästa
-  oct: oct
+  oct: okta
   open: öppna
-  ord: ord
+  ord: ordning
   pow: upphöj
-  print: skrivaut  # skriva ut
+  print: skrivaut
   range: omfattning
-  repr: repr
+  repr: repr_str
   reversed: omvärrdig
   round: runda
-  setattr: setattr
-  slice: slice
+  setattr: sättEgenskap
+  slice: slices
   sorted: ordnat
   sum: summa
-  vars: vars
+  vars: variabler
   zip: zippa
   bool: boolesk
-  bytearray: bytearray
-  bytes: bytes
-  classmethod: classmethod
+  bytearray: byteArray
+  bytes: byteData
+  classmethod: classmethodMetod
   complex: komplex
   dict: ordning
-  float: float
-  frozenset: frozenset
+  float: flytta
+  frozenset: frozensett
   int: ent
   list: lista
-  memoryview: memoryview
+  memoryview: minnesvy
   object: objekt
   property: egenskap
   set: uppsat
-  staticmethod: statiskmetod  # statisk metod
+  staticmethod: statiskmetod
   str: sträng
-  super: super
-  tuple: tuple
+  super: superObjekt
+  tuple: ordnad_olika
   ellipsis: ellipsen
   notimplemented: ej_implementerad
-  aiter: aiter
-  anext: anext
+  aiter: asynk_Iterator
+  anext: nastaAnvarende
 exceptions:
-  baseexception: baseexception
+  baseexception: basen_exception
   basegeneratorexit: basegeneratorutgående
   exception: undantag
-  generatorexit: generatörsutgång  # generatörs utgång
+  generatorexit: generatörsutgång
   systemexit: systemutgång
   keyboardinterrupt: tasttröttning
-  arithmeticerror: aritmetiskfel  # aritmetisk fel
-  floatingpointerror: floatingpointerror
-  overflowerror: overflowerror
+  arithmeticerror: aritmetiskfel
+  floatingpointerror: floatError
+  overflowerror: överflödesfel
   zerodivisionerror: nolldelningstjänst
   lookuperror: sökfeil
   indexerror: indexfeil
   keyerror: nyckelfel
   attributeerror: attributfeil
   nameerror: Namnfeltsfel
-  unboundlocalerror: obundenlokalfel  # obunden lokal fel
+  unboundlocalerror: obundenlokalfel
   oserror: osfeil
-  blockingioerror: blockingioerror
+  blockingioerror: blockerandeIoFel
   childprocesserror: childprocessfeil
   connectionerror: anslutningsfel
   brokenpipeerror: brottnöje
-  connectionabortederror: connectionabortederror
-  connectionrefusederror: connectionrefusederror
+  connectionabortederror: anslutningsstoppfel
+  connectionrefusederror: anslutningsnekarfejl
   connectionreseterror: connectionresetting
   fileexistserror: filexistserror
-  filenotfounderror: filenfinnsinte  # filen finns inte
+  filenotfounderror: filenfinnsinte
   interruptederror: interrupterror
-  isadirectoryerror: isadirectoryerror
+  isadirectoryerror: ärMappFel
   notadirectoryerror: not_a_directory_error
   permissionerror: behörighetshavelse
   processlookuperror: processlookupfeil
-  timeouterror: tidsgränssöttning  # tidsgränss öttning
+  timeouterror: tidsgränssöttning
   importerror: importfeil
-  modulenotfounderror: modulenotfounderror
+  modulenotfounderror: modulenotfunnetfel
   stopiteration: stoppiteration
-  stopasynciteration: stoppaasynkrotisering  # stoppa asynkrotisering
-  typeerror: typeerror
+  stopasynciteration: stoppaasynkrotisering
+  typeerror: typfel
   valueerror: värdefel
   unicodeerror: unicodefeil
   unicodedecodeerror: unicodedecodefeil
   unicodeencodeerror: unicodeencodefeil
   unicodetranslateerror: unicodetranslatefeil
-  runtimeerror: runtimeerror
+  runtimeerror: körtypererror
   notimplementederror: not_implemented_error
   recursionerror: rekursionsfel
   referenceerror: referensfel
   assertionerror: asserteringsfel
   memoryerror: minnebråk
-  buffererror: buffererror
+  buffererror: bufferfel
   eoferror: fel
   syntaxerror: syntaxfel
   indentationerror: indentationfel
   taberror: tabbortfellet
   environmenterror: miljöfel
-  ioerror: iofel  # io-fel
+  ioerror: iofel
   warning: varning
   userwarning: användarvarning
   deprecationwarning: deprektionsvarning
-  pendingdeprecationwarning: väntandeavskrivningsvarning  # väntande avskrivningsvarning
+  pendingdeprecationwarning: väntandeavskrivningsvarning
   syntaxwarning: syntaxvarning
-  runtimewarning: runtimewarning
-  futurewarning: futurewarning
+  runtimewarning: runtimevarning
+  futurewarning: tidigareVarning
   importwarning: importav警警
   unicodewarning: unicodevarning
   byteswarning: bytesvarnings
@@ -183,7 +183,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

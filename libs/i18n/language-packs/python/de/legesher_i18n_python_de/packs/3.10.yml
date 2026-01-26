@@ -7,27 +7,27 @@ keywords:
   assert: assertieren
   async: asynchron
   await: warten
-  break: break
+  break: beenden
   class: Klasse
   continue: fortsetzen
-  def: def
+  def: definit
   del: löschen
-  elif: wennsonst  # wenn sonst
+  elif: wennsonst
   else: sonst
   except: außer
   finally: endlich
   for: für
   from: von
-  global: global
+  global: globales_scope_deklarieren
   if: wenn
   import: importieren
-  in: in
+  in: enthält
   is: ist
   lambda: Lambda
-  nonlocal: nichtlokal  # nicht lokal
+  nonlocal: nichtlokal
   not: nicht
   or: oder
-  pass: passierenlassen  # passieren lassen
+  pass: passierenlassen
   raise: erheben
   return: zurückgeben
   try: versuchen
@@ -40,86 +40,86 @@ keywords:
   match: abgleichen
   case: Fall
 builtins:
-  abs: abs
+  abs: absoluter_Wert
   all: alle
   any: jeder
   ascii: ASCII
   bin: binär
-  breakpoint: derHaltepunkt  # der Haltepunkt
+  breakpoint: derHaltepunkt
   callable: rufbar
-  chr: chr
+  chr: Zeichen
   compile: kompilieren
   delattr: entfernen
-  dir: dir
-  divmod: divmod
+  dir: attributensuchung
+  divmod: teilt_und_betrachtet_rest
   enumerate: aufzählen
-  eval: eval
+  eval: auswerten
   exec: ausführen
-  filter: filter
+  filter: filtern
   format: formatieren
-  getattr: attributabrufen  # attribut abrufen
+  getattr: attributabrufen
   globals: global
   hasattr: hatattribut
   hash: Hash
   help: Hilfe
-  hex: hex
-  id: dieID  # die ID
+  hex: hexadezimal
+  id: dieID
   input: Eingabe
-  isinstance: istinstanzvon  # istinstanz von
+  isinstance: istinstanzvon
   issubclass: ist_unterklasse
-  iter: iter
-  len: dieLänge  # die Länge
-  locals: dielokalenVariablen  # die lokalen Variablen
+  iter: iterieren
+  len: dieLänge
+  locals: dielokalenVariablen
   map: mappe
-  max: max
-  min: derkleinste  # der kleinste
+  max: maximaler
+  min: derkleinste
   next: nächster
-  oct: oct
+  oct: zehnerSystemDarstellung
   open: öffnen
-  ord: ord
+  ord: codePoint
   pow: potenzieren
   print: drucken
   range: Bereich
-  repr: repr
+  repr: représentation
   reversed: umgekehrt
   round: runden
-  setattr: setattr
+  setattr: setAttribut
   slice: Schnitt
   sorted: geordnet
   sum: summe
-  vars: vars
+  vars: variablen
   zip: zippen
   bool: boolesch
   bytearray: Bytearray
   bytes: Bytes
-  classmethod: KlassendatenMethode  # Klassendaten-Methode
+  classmethod: KlassendatenMethode
   complex: komplex
   dict: Wörterbuch
-  float: float
-  frozenset: frozenset
-  int: int
+  float: Float
+  frozenset: gefrorener_Satz
+  int: ganze_Zahl
   list: Liste
   memoryview: Memoryview
   object: Objekt
   property: Eigenschaft
   set: Satz
-  staticmethod: statischeMethode  # statische Methode
-  str: diestrTypKonvertierung  # die str-Typ-Konvertierung
-  super: super
+  staticmethod: statischeMethode
+  str: diestrTypKonvertierung
+  super: superKlasse
   tuple: Tupel
-  ellipsis: dasAuslasszeichen  # das Auslasszeichen
-  notimplemented: nichtimplementiert  # nicht implementiert
-  aiter: aiter
-  anext: anext
+  ellipsis: dasAuslasszeichen
+  notimplemented: nichtimplementiert
+  aiter: asynchrone_itor
+  anext: nächsterWert
 exceptions:
   baseexception: BaseException
   basegeneratorexit: basegeneratorbeenden
   exception: Ausnahme
-  generatorexit: generatorexit
-  systemexit: systematischerAusstieg  # systematischer Ausstieg
+  generatorexit: generator_exit
+  systemexit: systematischerAusstieg
   keyboardinterrupt: KeyboardInterrupt
-  arithmeticerror: arithmetischerFehler  # arithmetischer Fehler
-  floatingpointerror: FloatPunktFehler  # Float-Punkt-Fehler
+  arithmeticerror: arithmetischerFehler
+  floatingpointerror: FloatPunktFehler
   overflowerror: Überlauffehler
   zerodivisionerror: Nullteilungsfehler
   lookuperror: Suchfehler
@@ -129,31 +129,31 @@ exceptions:
   nameerror: NameError
   unboundlocalerror: ungebundener_lokaler_fehler
   oserror: osfehler
-  blockingioerror: BlockingIOFehler  # Blocking-IO-Fehler
+  blockingioerror: BlockingIOFehler
   childprocesserror: ChildProcessError
   connectionerror: Verbindungsfehler
   brokenpipeerror: BrokenPipeError
   connectionabortederror: Verbindungsabbruchfehler
   connectionrefusederror: Verbindungsverweigerungsfehler
   connectionreseterror: Verbindungsresetfehler
-  fileexistserror: Dateiexistiertbereits  # Datei existiert bereits
-  filenotfounderror: Dateinichtgefunden  # Datei nicht gefunden
+  fileexistserror: Dateiexistiertbereits
+  filenotfounderror: Dateinichtgefunden
   interruptederror: Interruptorfehler
   isadirectoryerror: Isadirectoryerror
-  notadirectoryerror: NichtDateiVerzeichnisFehler  # Nicht-Datei-Verzeichnis-Fehler
+  notadirectoryerror: NichtDateiVerzeichnisFehler
   permissionerror: Berechtigungsfehler
   processlookuperror: Prozessfehler
   timeouterror: Zeitüberschreitung
   importerror: Importfehler
-  modulenotfounderror: Modulnichtgefunden  # Modul nicht gefunden
+  modulenotfounderror: Modulnichtgefunden
   stopiteration: StopIteration
   stopasynciteration: stop_async_iteration
   typeerror: Typfehler
   valueerror: ValueError
-  unicodeerror: UnicodeFehler  # Unicode-Fehler
-  unicodedecodeerror: UnicodeFehlerbeimDekodieren  # Unicode-Fehler beim Dekodieren
-  unicodeencodeerror: UnicodeKodierungsfehler  # Unicode-Kodierungsfehler
-  unicodetranslateerror: UnicodeÜbersetzungsfehler  # Unicode-Übersetzungsfehler
+  unicodeerror: UnicodeFehler
+  unicodedecodeerror: UnicodeFehlerbeimDekodieren
+  unicodeencodeerror: UnicodeKodierungsfehler
+  unicodetranslateerror: UnicodeÜbersetzungsfehler
   runtimeerror: Laufzeitfehler
   notimplementederror: Notimplementierungsfehler
   recursionerror: Rekursionfehler
@@ -165,17 +165,17 @@ exceptions:
   indentationerror: Indentationfehler
   taberror: Taberror
   environmenterror: Umweltfehler
-  ioerror: IOFehler  # I/O-Fehler
+  ioerror: IOFehler
   warning: Warnung
   userwarning: Benutzerwarnung
   deprecationwarning: Depreciationwarnung
-  pendingdeprecationwarning: ausstehendeDeprecationWarnung  # ausstehende Deprecation-Warnung
+  pendingdeprecationwarning: ausstehendeDeprecationWarnung
   syntaxwarning: Syntaxwarnung
   runtimewarning: Laufzeitwarnung
   futurewarning: Futurewarnung
   importwarning: Importwarnung
-  unicodewarning: UnicodeWarnung  # Unicode-Warnung
-  byteswarning: ByteWarnung  # Byte-Warnung
+  unicodewarning: UnicodeWarnung
+  byteswarning: ByteWarnung
   resourcewarning: Ressourcenwarnung
   assertionerror: Assertionfehler
 metadata:
@@ -183,7 +183,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

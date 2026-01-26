@@ -218,23 +218,216 @@ class OllamaModel(TranslationModel):
             request.target_language, request.target_language.upper()
         )
 
-        prompt = f"""You are translating Python programming keywords for developers who code in {language_name}.
+        # Term concept explanations - what the term DOES, not what it's CALLED
+        term_concepts = {
+            # High-impact builtins (15 terms covering ~150 untranslated entries)
+            "bytearray": "a mutable sequence of bytes (like a changeable list of byte values)",
+            "aiter": "asynchronous iterator - gets items one at a time without blocking",
+            "ord": "gets the numeric Unicode code point for a single character",
+            "isinstance": "checks if an object is of a specific type (type verification)",
+            "super": "refers to the parent/base class in inheritance",
+            "float": "a decimal/fractional number (numbers with decimal points)",
+            "divmod": "division with remainder - returns both quotient and modulo",
+            "lambda": "an anonymous/unnamed small inline function",
+            "ascii": "converts to text representation using ASCII encoding",
+            "dir": "lists all attributes and methods of an object (directory listing)",
+            "vars": "returns the __dict__ attribute (variables dictionary) of an object",
+            "hash": "computes a hash value (integer) for an object",
+            "bin": "converts integer to binary string representation",
+            "anext": "gets the next item from an async iterator",
+            "global": "declares a variable as global scope (not local)",
+            # Additional common terms
+            "enumerate": "pairs each item in a sequence with its index number",
+            "filter": "selects items from a sequence that pass a test",
+            "map": "applies a function to each item in a sequence",
+            "zip": "combines multiple sequences element by element",
+            "iter": "creates an iterator from a sequence",
+            "next": "gets the next item from an iterator",
+            "range": "generates a sequence of numbers",
+            "slice": "extracts a portion of a sequence",
+            "sorted": "returns a new sorted list from items",
+            "reversed": "returns items in reverse order",
+            "sum": "adds all numbers in a sequence",
+            "len": "returns the length/count of items",
+            "max": "returns the largest item",
+            "min": "returns the smallest item",
+            "abs": "returns absolute value (removes negative sign)",
+            "pow": "raises a number to a power (exponentiation)",
+            "round": "rounds a number to specified precision",
+            "hex": "converts integer to hexadecimal string",
+            "oct": "converts integer to octal string",
+            "chr": "converts Unicode code point to character",
+            "repr": "returns printable representation of object",
+            "format": "formats a value according to a format spec",
+            "eval": "evaluates a string as Python expression",
+            "exec": "executes Python code from a string",
+            "compile": "compiles source code into a code object",
+            "input": "reads a line of text from user input",
+            "print": "outputs text to the console",
+            "open": "opens a file for reading or writing",
+            "help": "displays documentation for an object",
+            "id": "returns unique identifier of an object",
+            "type": "returns the type/class of an object",
+            "callable": "checks if an object can be called like a function",
+            "getattr": "gets an attribute value from an object",
+            "setattr": "sets an attribute value on an object",
+            "delattr": "deletes an attribute from an object",
+            "hasattr": "checks if an object has an attribute",
+            "globals": "returns dictionary of global variables",
+            "locals": "returns dictionary of local variables",
+            "breakpoint": "pauses execution for debugging",
+            "memoryview": "creates a view into memory of an object",
+            "object": "base class for all Python classes",
+            "property": "creates a managed attribute with getter/setter",
+            "classmethod": "defines a method that receives the class",
+            "staticmethod": "defines a method without self parameter",
+            "bool": "boolean type - True or False",
+            "int": "integer type - whole numbers",
+            "str": "string type - text",
+            "list": "ordered mutable sequence",
+            "dict": "key-value mapping (dictionary)",
+            "set": "unordered collection of unique items",
+            "tuple": "ordered immutable sequence",
+            "frozenset": "immutable set",
+            "bytes": "immutable sequence of bytes",
+            "complex": "complex number with real and imaginary parts",
+            "issubclass": "checks if a class inherits from another",
+            "all": "returns True if all items are truthy",
+            "any": "returns True if any item is truthy",
+            "ellipsis": "placeholder indicating continuation (...)",
+            "notimplemented": "marker for unimplemented operations",
+        }
 
-TERM TO TRANSLATE: "{request.term}"
+        # Script type detection for concatenation rules
+        logographic_scripts = {"zh", "ja"}  # Characters naturally concatenate
+
+        if request.target_language in logographic_scripts:
+            concat_rule = (
+                "Characters naturally concatenate in your script. "
+                "Underscores are OPTIONAL but acceptable for clarity in long terms."
+            )
+        else:
+            concat_rule = (
+                "Use UNDERSCORES to join compound words. "
+                "NO spaces allowed (invalid Python identifier)."
+            )
+
+        # Get concept explanation for this term
+        term_lower = request.term.lower()
+        concept = term_concepts.get(
+            term_lower,
+            "a Python programming concept (translate based on what it does)",
+        )
+
+        # Language-specific examples to discourage transliteration
+        transliteration_examples = {
+            "ar": (
+                '❌ BAD: "bytearray" → "بايتاراي" (just sounds like English)\n'
+                '✅ GOOD: "bytearray" → "مصفوفة_بايت" (means "byte array")'
+            ),
+            "hi": (
+                '❌ BAD: "isinstance" → "इन्स्टेन्स" (just sounds like English)\n'
+                '✅ GOOD: "isinstance" → "प्रकार_जाँच" (means "type check")'
+            ),
+            "ru": (
+                '❌ BAD: "float" → "флоат" (just sounds like English)\n'
+                '✅ GOOD: "float" → "дробное" (means "fractional/decimal")'
+            ),
+            "zh": (
+                '❌ BAD: "isinstance" → "实例" (incomplete meaning)\n'
+                '✅ GOOD: "isinstance" → "是实例" (means "is instance of")'
+            ),
+            "ja": (
+                '❌ BAD: "isinstance" → "インスタンス" (just katakana of English)\n'
+                '✅ GOOD: "isinstance" → "型確認" (means "type verification")'
+            ),
+            "ko": (
+                '❌ BAD: "isinstance" → "인스턴스" (just sounds like English)\n'
+                '✅ GOOD: "isinstance" → "유형확인" (means "type check")'
+            ),
+            "th": (
+                '❌ BAD: "bytearray" → "ไบต์อาร์เรย์" (just sounds like English)\n'
+                '✅ GOOD: "bytearray" → "อาร์เรย์_ไบต์" (means "byte array")'
+            ),
+            "he": (
+                '❌ BAD: "lambda" → "למבדה" (just sounds like English)\n'
+                '✅ GOOD: "lambda" → "פונקציה_אלמונית" (means "anonymous function")'
+            ),
+            "de": (
+                '❌ BAD: "isinstance" → "isinstance" (unchanged English)\n'
+                '✅ GOOD: "isinstance" → "ist_instanz_von" (means "is instance of")'
+            ),
+            "es": (
+                '❌ BAD: "isinstance" → "isinstance" (unchanged English)\n'
+                '✅ GOOD: "isinstance" → "es_instancia_de" (means "is instance of")'
+            ),
+            "fr": (
+                '❌ BAD: "isinstance" → "isinstance" (unchanged English)\n'
+                '✅ GOOD: "isinstance" → "est_instance_de" (means "is instance of")'
+            ),
+            "pt": (
+                '❌ BAD: "isinstance" → "isinstance" (unchanged English)\n'
+                '✅ GOOD: "isinstance" → "é_instância_de" (means "is instance of")'
+            ),
+            "it": (
+                '❌ BAD: "isinstance" → "isinstance" (unchanged English)\n'
+                '✅ GOOD: "isinstance" → "è_istanza_di" (means "is instance of")'
+            ),
+            "nl": (
+                '❌ BAD: "isinstance" → "isinstance" (unchanged English)\n'
+                '✅ GOOD: "isinstance" → "is_instantie_van" (means "is instance of")'
+            ),
+            "pl": (
+                '❌ BAD: "isinstance" → "isinstance" (unchanged English)\n'
+                '✅ GOOD: "isinstance" → "jest_instancją" (means "is instance of")'
+            ),
+            "hu": (
+                '❌ BAD: "isinstance" → "isinstance" (unchanged English)\n'
+                '✅ GOOD: "isinstance" → "példány_e" (means "is instance of")'
+            ),
+        }
+
+        # Get language-specific example or use a generic one
+        example = transliteration_examples.get(
+            request.target_language,
+            (
+                "❌ BAD: Keeping the English word unchanged or just making it sound local\n"
+                "✅ GOOD: Using native words that describe what the concept DOES"
+            ),
+        )
+
+        prompt = f"""You are translating Python programming terms into {language_name}.
+
+TERM: "{request.term}"
+CONCEPT: {concept}
 TARGET LANGUAGE: {language_name}
 
-IMPORTANT CONTEXT:
-- This is the Python keyword "{request.term}" used in exception handling (try/except blocks)
-- The translation should be a SINGLE WORD that {language_name}-speaking programmers would use
-- It must be a valid identifier (no spaces, no special characters except underscore)
-- Focus on the programming CONCEPT, not literal word translation
+## CRITICAL: Conceptual Translation, NOT Transliteration
 
-Respond with ONLY a valid JSON object:
+You must translate the MEANING/CONCEPT into native {language_name} words.
+DO NOT just make the English word sound like {language_name}.
+
+{example}
+
+## Word Concatenation Rule for {language_name}
+
+{concat_rule}
+
+## Requirements
+
+1. Translate the CONCEPT using native {language_name} words
+2. Think: "What would a {language_name} speaker call this functionality?"
+3. Result MUST be a valid Python identifier:
+   - NO spaces (use underscores instead)
+   - NO hyphens (minus sign in Python)
+   - Start with letter or underscore
+4. DO NOT return the English term unchanged
+
+Respond with ONLY valid JSON (no markdown code blocks):
 {{
-  "translation": "the_translated_term",
-  "word_type": "keyword",
-  "confidence": 0.85,
-  "rationale": "Brief explanation of why this translation"
+  "translation": "your_translation_here",
+  "rationale": "Brief explanation of your word choice",
+  "confidence": 0.85
 }}"""
 
         return prompt

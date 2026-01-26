@@ -660,6 +660,99 @@ class TranslationDatabase:
 
         return translation_id
 
+    def upsert_translation(
+        self,
+        language_code: str,
+        term: str,
+        term_type: str,
+        translation: str,
+        source: str,
+        word_type: str | None = None,
+        word_form: str | None = None,
+        model_rationale: str | None = None,
+        alternatives_considered: str | None = None,
+        confidence: str | None = None,
+        created_by: str | None = None,
+    ) -> int:
+        """Add or update a translation in the database.
+
+        If a translation with the same (language_code, term, term_type, source)
+        already exists, it will be updated. Otherwise, a new translation is inserted.
+
+        Args:
+            language_code: Target language code (e.g., 'es', 'ar', 'zh')
+            term: The English term being translated
+            term_type: Type of term (keyword, builtin, operator, etc.)
+            translation: The translated term
+            source: Source of translation (community, aya23, claude, etc.)
+            word_type: Optional grammatical word type
+            word_form: Optional word form variation
+            model_rationale: Optional AI model reasoning for translation
+            alternatives_considered: Optional alternative translations considered
+            confidence: Optional confidence level (high, medium, low)
+            created_by: Optional creator identifier
+
+        Returns:
+            The translation ID (primary key)
+        """
+        conn = self._get_connection()
+
+        # Check if translation exists
+        existing = self.get_translation(language_code, term, term_type, source)
+
+        if existing:
+            # Update existing translation
+            conn.execute(
+                """
+                UPDATE translations SET
+                    translation = ?,
+                    word_type = ?,
+                    word_form = ?,
+                    model_rationale = ?,
+                    alternatives_considered = ?,
+                    confidence = ?,
+                    created_by = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE language_code = ? AND term = ? AND term_type = ? AND source = ?
+            """,
+                (
+                    translation,
+                    word_type,
+                    word_form,
+                    model_rationale,
+                    alternatives_considered,
+                    confidence,
+                    created_by,
+                    language_code,
+                    term,
+                    term_type,
+                    source,
+                ),
+            )
+            conn.commit()
+            translation_id = existing["id"]
+            logger.debug(
+                f"Updated translation: {term} -> {translation} "
+                f"({language_code}, {term_type}, source: {source}, id: {translation_id})"
+            )
+        else:
+            # Insert new translation
+            translation_id = self.add_translation(
+                language_code=language_code,
+                term=term,
+                term_type=term_type,
+                translation=translation,
+                source=source,
+                word_type=word_type,
+                word_form=word_form,
+                model_rationale=model_rationale,
+                alternatives_considered=alternatives_considered,
+                confidence=confidence,
+                created_by=created_by,
+            )
+
+        return translation_id
+
     def get_translation(
         self,
         language_code: str,

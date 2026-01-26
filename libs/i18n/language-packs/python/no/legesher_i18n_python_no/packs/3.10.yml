@@ -3,8 +3,8 @@ target: python
 version: '3.10'
 keywords:
   and: og
-  as: as
-  assert: assert
+  as: som
+  assert: sørge
   async: asynkron
   await: ventile
   break: stopp
@@ -14,117 +14,117 @@ keywords:
   del: slette
   elif: elsif
   else: annett
-  except: except
+  except: u犁ksluttelse
   finally: forrestil
-  for: for
+  for: for_loops
   from: fra
-  global: global
+  global: global_styrke
   if: om
   import: importere
-  in: in
+  in: i
   is: er
-  lambda: lambdafunksjon  # lambda-funksjon
-  nonlocal: ikkelokalt  # ikke-lokalt
+  lambda: lambdafunksjon
+  nonlocal: ikkelokalt
   not: ikke
   or: eller
   pass: gå
   raise: oppnå
   return: retur
   try: prøve
-  while: while
+  while: medan
   with: med
   yield: yeld
   None: ingen
   'True': verre
   'False': falsk
-  match: match
+  match: matching
   case: sak
 builtins:
-  abs: absoluttvurdere  # absolutt vurdere
+  abs: absoluttvurdere
   all: alle
   any: alle
-  ascii: ascii
-  bin: bin
+  ascii: asciiKonvertering
+  bin: binær_konvertering
   breakpoint: pausepunkt
-  callable: kankalletpå  # kan kallet på
+  callable: kankalletpå
   chr: karakter
   compile: kompilere
-  delattr: slettattributt  # slett attributt
-  dir: dir
+  delattr: slettattributt
+  dir: direktør
   divmod: delmod
   enumerate: lister
-  eval: eval
+  eval: evaluer
   exec: eksekver
-  filter: filter
-  format: format
+  filter: filtere
+  format: formatere_verdi
   getattr: hentattribut
   globals: globale
   hasattr: harattribut
-  hash: hash
+  hash: hashVerdi
   help: hjelp
-  hex: hex
-  id: id
+  hex: heks
+  id: identifikator
   input: innspilling
-  isinstance: isinstance
-  issubclass: issubclass
+  isinstance: erInstansAv
+  issubclass: erUnderklasseAv
   iter: iterere
   len: lengde
   locals: lokale
   map: kartlegge
-  max: max
-  min: min
+  max: maks
+  min: minVerdi
   next: næsta
   oct: okt
-  open: open
-  ord: ord
+  open: åbne
+  ord: bokstav_kode
   pow: hevet
-  print: print
+  print: skrive
   range: område
-  repr: repr
+  repr: representasjon
   reversed: omvendt
   round: runde
-  setattr: setattr
-  slice: slice
+  setattr: settAttributt
+  slice: slices
   sorted: sorteret
   sum: summe
-  vars: vars
+  vars: variabler
   zip: zippe
-  bool: bool
-  bytearray: bytearray
-  bytes: bytes
+  bool: boolean
+  bytearray: byteArray
+  bytes: bytes_sekvens
   classmethod: klassenometisk
   complex: komplekst
   dict: ordningsset
-  float: float
-  frozenset: frozenset
+  float: flyttall
+  frozenset: frozensatt
   int: ent
   list: liste
-  memoryview: memoryview
+  memoryview: minneoversikt
   object: objekt
   property: egenskap
-  set: set
-  staticmethod: statiskmetod  # statisk metod
-  str: str
+  set: sett
+  staticmethod: statiskmetod
+  str: streng
   super: supp
   tuple: tuplet
   ellipsis: ellips
-  notimplemented: ikkeimplementert  # ikke implementert
-  aiter: aiter
-  anext: anext
+  notimplemented: ikkeimplementert
+  aiter: iterer
+  anext: neste
 exceptions:
-  baseexception: baseexception
+  baseexception: basenesteFeil
   basegeneratorexit: basegeneratoruitgang
   exception: uitlandetilfordring
-  generatorexit: genererutgang  # generer utgang
+  generatorexit: genererutgang
   systemexit: systemavslutning
   keyboardinterrupt: tastaturinterrupser
-  arithmeticerror: aritmetiskfeil  # aritmetisk feil
+  arithmeticerror: aritmetiskfeil
   floatingpointerror: floatingpointerr
-  overflowerror: overflowerror
+  overflowerror: overflodFeil
   zerodivisionerror: nuldivisasjonfeil
   lookuperror: søkfeil
   indexerror: indexfeil
-  keyerror: keyerror
+  keyerror: feilKey
   attributeerror: attributfeil
   nameerror: Navnfeil
   unboundlocalerror: uutfullig_lokall_feil
@@ -136,18 +136,18 @@ exceptions:
   connectionabortederror: forbindelsesavbruddfeil
   connectionrefusederror: forbindelsesavhengigfeil
   connectionreseterror: forbindelsesresettingfeil
-  fileexistserror: fileexistserror
-  filenotfounderror: filenfinnesikke  # filen finnes ikke
+  fileexistserror: filfinnesfeil
+  filenotfounderror: filenfinnesikke
   interruptederror: interruptsjonfeil
-  isadirectoryerror: isadirectoryerror
-  notadirectoryerror: ikkeenmapfeil  # ikke-en-map-feil
+  isadirectoryerror: erMappeFeil
+  notadirectoryerror: ikkeenmapfeil
   permissionerror: ilaksessjonfeil
   processlookuperror: processlookupfeil
   timeouterror: tidslim
   importerror: importfeil
-  modulenotfounderror: modulikkefunnet  # modul ikke funnet
+  modulenotfounderror: modulikkefunnet
   stopiteration: stoppiterasjon
-  stopasynciteration: stoppeasynkroniterering  # stoppe asynkron iterering
+  stopasynciteration: stoppeasynkroniterering
   typeerror: typefeil
   valueerror: værdfeil
   unicodeerror: unicodefeil
@@ -172,10 +172,10 @@ exceptions:
   deprecationwarning: depreksjonavwarining
   pendingdeprecationwarning: avventrikk
   syntaxwarning: syntaxwarnings
-  runtimewarning: runtimewarning
-  futurewarning: futurewarning
+  runtimewarning: runtimevarning
+  futurewarning: tidendepåvarning
   importwarning: importavering
-  unicodewarning: unicodewarning
+  unicodewarning: tegnvarning
   byteswarning: bytesvaring
   resourcewarning: resursadvars
 metadata:
@@ -183,7 +183,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

@@ -22,14 +22,14 @@ keywords:
   finally: finalmente
   for: por
   from: desde
-  global: global
+  global: declara_variable_global
   if: si
   import: importar
   in: en
   is: ser
-  lambda: lambda
+  lambda: funcion_anonima
   match: coincidir
-  nonlocal: nolocal  # no local
+  nonlocal: nolocal
   not: 'no'
   or: o
   pass: pasar
@@ -40,60 +40,60 @@ keywords:
   with: con
   yield: dar
 builtins:
-  abs: valorabsoluto  # valor absoluto
-  aiter: aiter
+  abs: valorabsoluto
+  aiter: iterador_asincrónico
   all: todo
   anext: próximo
   any: cualquier
-  ascii: ascii
+  ascii: asciiificar
   bin: binario
   bool: booleano
-  breakpoint: puntodeinterrupción  # punto de interrupción
-  bytearray: bytearray
-  bytes: bytes
+  breakpoint: puntodeinterrupción
+  bytearray: conjuntoDeBytes
+  bytes: secuencia_inmutable_de_bytes
   callable: llamable
   chr: carácter
-  classmethod: métododeclase  # método de clase
+  classmethod: métododeclase
   compile: compilar
   complex: complejo
   delattr: eliminar_atributo
   dict: diccionario
-  dir: dir
-  divmod: divmod
-  ellipsis: ellipsis
-  enumerate: elenumerar  # el enumerar
-  eval: eval
+  dir: directorio
+  divmod: division_con_resta
+  ellipsis: ipsislo
+  enumerate: elenumerar
+  eval: evalúo
   exec: ejecutar
   filter: filtrar
   float: flotante
   format: formatear
-  frozenset: conjuntocongelado  # conjunto congelado
-  getattr: obtenerelatributo  # obtener el atributo
-  globals: eltérminotraducido  # el término traducido
-  hasattr: teneratributo  # tener atributo
-  hash: hash
+  frozenset: conjuntocongelado
+  getattr: obtenerelatributo
+  globals: eltérminotraducido
+  hasattr: teneratributo
+  hash: resumen_hash
   help: ayuda
   hex: hexadecimal
   id: identificador
   input: entrada
   int: entero
-  isinstance: serdelaclase  # ser de la clase
-  issubclass: subclasede  # subclase de
+  isinstance: ser_de_la_clase
+  issubclass: subclasede
   iter: iterar
   len: longitud
   list: lista
-  locals: loslocales  # los locales
+  locals: loslocales
   map: mapear
   max: máximo
-  memoryview: vistadememoria  # vista de memoria
-  min: min
+  memoryview: vistadememoria
+  min: minimo
   next: siguiente
-  notimplemented: noimplementado  # no implementado
+  notimplemented: noimplementado
   object: objeto
   oct: octal
   open: abrir
-  ord: ord
-  pow: elevaraunapotencia  # elevar a una potencia
+  ord: ordinal
+  pow: elevaraunapotencia
   print: imprimir
   property: propiedad
   range: rango
@@ -107,15 +107,15 @@ builtins:
   staticmethod: estático
   str: cadena
   sum: sumar
-  super: super
+  super: superClase
   tuple: tupla
-  vars: vars
-  zip: zip
+  vars: devuelve_el_diccionario_de_variables
+  zip: acopiar
 exceptions:
   arithmeticerror: erroraritmético
   assertionerror: errordeaserción
-  attributeerror: Errordeatributo  # Error de atributo
-  baseexception: excepciónbase  # excepción base
+  attributeerror: Errordeatributo
+  baseexception: excepciónbase
   basegeneratorexit: generarsalida
   blockingioerror: errordeESbloqueante
   brokenpipeerror: errordetuberíarota
@@ -128,7 +128,7 @@ exceptions:
   connectionreseterror: resetearconexión
   deprecationwarning: advertenciadedepreciación
   environmenterror: errordeentorno
-  eoferror: errordeentradasalida  # error de entrada/salida
+  eoferror: errordeentradasalida
   exception: excepción
   fileexistserror: errordeexistenciadearchivo
   filenotfounderror: Errordenoencontrarelarchivo
@@ -138,19 +138,19 @@ exceptions:
   importerror: errordeimportación
   importwarning: advertenciadeimportación
   indentationerror: errordesangría
-  indexerror: Errordeíndice  # Error de índice
+  indexerror: Errordeíndice
   interruptederror: errordeinterrupción
-  ioerror: errordeES  # error de E/S
+  ioerror: errordeES
   isadirectoryerror: errordedirectorio
   keyboardinterrupt: interrupcióndelteclado
-  keyerror: errordeclave  # error de clave
+  keyerror: errordeclave
   lookuperror: errordebúsqueda
   memoryerror: errordememoria
   modulenotfounderror: Errordemódulonoencontrado
-  nameerror: Errordenombre  # Error de nombre
+  nameerror: Errordenombre
   notadirectoryerror: errordenoserundirectorio
   notimplementederror: errordenoimplementación
-  oserror: oserror
+  oserror: ErrorDeOS
   overflowerror: errordedesbordamiento
   pendingdeprecationwarning: advertenciadeadvertenciadedepreciaciónpendiente
   permissionerror: errordepermiso
@@ -158,16 +158,16 @@ exceptions:
   recursionerror: errorderecursión
   referenceerror: errordereferencia
   resourcewarning: advertenciaderecursos
-  runtimeerror: errorentiempodeejecución  # error en tiempo de ejecución
+  runtimeerror: errorentiempodeejecución
   runtimewarning: advertenciadetiempodeejecución
   stopasynciteration: detenerlaiteraciónasincrónica
-  stopiteration: stopiteration
+  stopiteration: detener_iteración
   syntaxerror: errordesintaxis
   syntaxwarning: advertenciadesintaxis
   systemexit: salirdelsistema
   taberror: errordetabulación
   timeouterror: errordetiempodeespera
-  typeerror: errordetipo  # error de tipo
+  typeerror: errordetipo
   unboundlocalerror: errordereferencialocalnoenlazada
   unicodedecodeerror: errordedecodificacióndeUnicode
   unicodeencodeerror: errordecodificaciónunicode
@@ -175,7 +175,7 @@ exceptions:
   unicodetranslateerror: errordetraduccióndeUnicode
   unicodewarning: advertenciadeunicode
   userwarning: advertenciadelusuario
-  valueerror: errordevalor  # error de valor
+  valueerror: errordevalor
   warning: advertencia
   zerodivisionerror: errordedivisiónporcero
 metadata:
@@ -183,7 +183,7 @@ metadata:
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'
-  last_updated: '2025-12-09'
+  last_updated: '2026-01-26'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT
