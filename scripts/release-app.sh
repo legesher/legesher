@@ -2,10 +2,10 @@
 set -e
 
 PACKAGE=$1
-VALID_APPS=("vs-code" "pride")
+VALID_APPS=("vs-code" "home")
 
 if [ -z "$PACKAGE" ]; then
-    echo "Usage: ./release-app.sh <vs-code|pride>"
+    echo "Usage: ./release-app.sh <vs-code|home>"
     exit 1
 fi
 

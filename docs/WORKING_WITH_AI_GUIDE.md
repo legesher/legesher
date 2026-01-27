@@ -49,14 +49,16 @@ mkdir -p .claude/commands
 You are helping review or discuss architectural decisions for the Legesher project.
 
 Before responding:
+
 1. Read the current architectural decisions in CLAUDE.md (Quick Reference > Key Architectural Decisions)
 2. Review the relevant sections of CLAUDE.md for context
 3. Check if this relates to any open issues in Linear workspace
 
 When discussing changes:
+
 - Reference the existing decision and rationale
 - Explain trade-offs of the proposed change
-- Consider impact on all 5 packages (core, i18n, legesher, vs-code, pride)
+- Consider impact on all 5 packages (core, i18n, legesher, vs-code, home)
 - Note which phase of the roadmap this would affect
 - Consider the Important Constraints (Security, Privacy, Performance, Git Compatibility, etc.)
 
@@ -73,12 +75,14 @@ The user's architectural question or proposed change is:
 You are helping implement a feature for the Legesher project.
 
 IMPORTANT: Before starting implementation:
+
 1. Check CLAUDE.md Project Status - understand current phase
 2. Review Package Interdependencies to understand build order (Tier 1 → 2 → 3 → 4)
 3. Check Important Constraints (Security, Privacy, Performance, etc.)
 4. Follow the "Implementing a new feature" workflow in CLAUDE.md
 
 Implementation requirements:
+
 - Follow architectural decisions (no debates on settled topics)
 - Write tests alongside implementation (even though test dirs are currently empty)
 - Update package README.md as you implement
@@ -102,11 +106,13 @@ CRITICAL CONTEXT:
 Legesher is a code translation tool that handles developers' source code. Security is paramount.
 
 Before reviewing:
+
 1. Read the Security constraint in CLAUDE.md (Important Constraints section)
 2. Remember: Users may have proprietary code - privacy is critical
 3. This tool must work offline (local-first approach)
 
 Security checklist:
+
 - [ ] Input validation (malformed code should fail gracefully)
 - [ ] No code execution (never eval/exec translated code)
 - [ ] Path traversal prevention (when reading language packs)
@@ -249,13 +255,13 @@ Reasons to wait:
 
 ## Best Practices Summary
 
-| Scenario | Best Approach | Example |
-|----------|---------------|---------|
-| **Architecture Discussion** | Slash command `/architecture` | `/architecture Should we switch to Tree-sitter now?` |
-| **Feature Implementation** | Slash command `/implement` | `/implement Version-Aware Language Pack System` |
-| **Quick Question** | Reference CLAUDE.md section | `Per Key Architectural Decisions, we use git filters. How?` |
-| **Security Review** | Slash command `/security-check` | `/security-check Review the file upload handler` |
-| **Package-specific Work** | IDE selection + tier reference | `In libs/core (Tier 1), implementing transformer` |
+| Scenario                    | Best Approach                   | Example                                                     |
+| --------------------------- | ------------------------------- | ----------------------------------------------------------- |
+| **Architecture Discussion** | Slash command `/architecture`   | `/architecture Should we switch to Tree-sitter now?`        |
+| **Feature Implementation**  | Slash command `/implement`      | `/implement Version-Aware Language Pack System`             |
+| **Quick Question**          | Reference CLAUDE.md section     | `Per Key Architectural Decisions, we use git filters. How?` |
+| **Security Review**         | Slash command `/security-check` | `/security-check Review the file upload handler`            |
+| **Package-specific Work**   | IDE selection + tier reference  | `In libs/core (Tier 1), implementing transformer`           |
 
 ---
 

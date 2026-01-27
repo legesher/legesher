@@ -18,7 +18,7 @@ body:
     - legesher-i18n (Language data)
     - legesher-vs-code (VS Code extension)
     - legesher (Main CLI/library)
-    - legesher-pride (Community features)
+    - legesher-home (Digital home/community)
     - Documentation
     - Other/Multiple packages
   validations:

@@ -39,7 +39,7 @@ It is important to note the need for the functionality to be extensible across m
     - `language-packs/python/`: **27 independently versioned Python language packs** (ar, da, de, el, en, es, fi, fr,
       he, hi, hu, id, it, ja, ko, ms, nl, no, pl, pt, ru, sv, th, tr, vi, zh, and more)
     - `language-packs-archive/`: Legacy community translations (see private-working-memory repo)
-  - `pride/`: Community features and project showcase (`legesher-pride`)
+  - `home/`: Digital home and community platform (`legesher-home`)
   - `vs-code/`: VS Code editor integration for Python language (`legesher-vs-code`)
     - Based on the `vscode-python` package (<https://github.com/microsoft/vscode-python>)
     - Provides language extensions for native language support within the editor
@@ -58,7 +58,7 @@ It is important to note the need for the functionality to be extensible across m
 - **legesher**: Production-ready - Complete CLI suite (translate, run, git, metadata), runtime import hooks
 - **language-server**: Production-ready (2,624 lines) - Full LSP with hover, completion, diagnostics, semantic tokens
 - **vs-code**: Production-ready (~13,000+ lines) - Complete extension with telemetry and feedback systems
-- **pride**: Minimal scaffold - Community features planned for future release
+- **home**: Minimal scaffold - Digital home and community features planned for future release
 
 All packages have **comprehensive test suites** with 100+ test files total covering unit, integration, and benchmarks.
 
@@ -171,8 +171,8 @@ The packages have a logical dependency hierarchy defined in the architecture:
 
 **Tier 4 - Community**:
 
-- `legesher-pride`: Community features, depends on `core`, `i18n`, and `legesher`
-  - Community platform, showcase projects
+- `legesher-home`: Digital home and community platform, depends on `core`, `i18n`, and `legesher`
+  - Community showcase projects
 
 When making changes, consider impact on dependent packages. Build order should follow the tier system (Tier 1 → Tier 2 → Tier 3 → Tier 4).
 
@@ -328,7 +328,7 @@ exceptions: {} # Empty = inherits all from 3.12
 
 ### Issue Labels
 
-- `package:core`, `package:i18n`, `package:legesher`, `package:vs-code`, `package:pride`
+- `package:core`, `package:i18n`, `package:legesher`, `package:vs-code`, `package:home`
 - `phase:1-foundation`, `phase:2-dev-tools`, `phase:3-community`, `phase:4-registry`
 - `priority:high`, `priority:medium`, `priority:low`
 

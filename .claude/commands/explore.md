@@ -34,7 +34,7 @@ You are in EXPLORE mode. This is a READ-ONLY phase.
    - Check Linear/GitHub issues for context (use MCP if available)
 
 4. **Identify Dependencies**
-   - Which packages are affected? (core, i18n, legesher, vs-code, pride)
+   - Which packages are affected? (core, i18n, legesher, vs-code, home)
    - What dependencies exist between components?
    - Check `pyproject.toml` files for package dependencies
    - Are there external dependencies needed?

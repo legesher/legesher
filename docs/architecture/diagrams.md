@@ -58,8 +58,8 @@ flowchart TB
 
     subgraph Tier4["Tier 4: Community"]
         style Tier4 fill:#fff3e0,stroke:#e65100
-        pride["@legesher/pride<br/>Community platform<br/>Language pack registry"]
-        style pride fill:#ffe0b2,stroke:#ef6c00
+        home["@legesher/home<br/>Digital home<br/>Community platform"]
+        style home fill:#ffe0b2,stroke:#ef6c00
     end
 
     %% Dependencies
@@ -73,8 +73,8 @@ flowchart TB
     language-server --> i18n
     vscode --> language-server
 
-    pride --> core
-    pride --> i18n
+    home --> core
+    home --> i18n
 ```
 
 ### Package Tiers Explained
@@ -99,7 +99,7 @@ flowchart TB
 
 **Tier 4 - Community:**
 
-- `@legesher/pride`: Community platform and public language pack registry
+- `@legesher/home`: Digital home and community platform
 
 ### Key Takeaways
 
@@ -450,7 +450,7 @@ Python 3.11 introduced the `except*` keyword for exception groups. The 3.11 lang
 Python 3.12 introduced the `type` keyword for type aliases. The 3.12 language pack:
 
 - Specifies parent version: 3.11
-- Inherits all 36 keywords (35 base + except*)
+- Inherits all 36 keywords (35 base + except\*)
 - Adds only the new translation: type → tipo (Spanish)
 - Total vocabulary: 37 keywords
 
