@@ -63,7 +63,7 @@ git diff --staged
 
 Use **Conventional Commits** format:
 
-```
+```text
 <type>(<scope>): <subject>
 
 <body>
@@ -111,7 +111,7 @@ Use **Conventional Commits** format:
 
 **Simple feature**:
 
-```
+```text
 feat(i18n): add version-aware language pack loader
 
 Implement loader that automatically selects correct language pack
@@ -120,7 +120,7 @@ based on Python version. Supports inheritance across versions.
 
 **Bug fix**:
 
-```
+```text
 fix(core): prevent infinite loop in AST transformer
 
 Add max depth check to prevent stack overflow when processing
@@ -131,7 +131,7 @@ Fixes #234
 
 **Breaking change**:
 
-```
+```text
 feat(api): change language pack API to async
 
 BREAKING CHANGE: LanguagePackLoader.load() is now async.
@@ -142,7 +142,7 @@ Migration guide: docs/migration/v0.2.md
 
 **Test commit**:
 
-```
+```text
 test(i18n): add comprehensive version detector tests
 
 Add tests for auto-detection priority:
@@ -153,7 +153,7 @@ Add tests for auto-detection priority:
 
 **Multiple changes** (break into separate commits if possible):
 
-```
+```text
 feat(i18n): add Spanish and Arabic language packs
 
 Add complete Python 3.10-3.13 keyword mappings for Spanish (es)
@@ -243,7 +243,7 @@ Before committing, verify:
 
 **❌ Avoid**:
 
-```
+```bash
 # Too vague
 git commit -m "fix stuff"
 git commit -m "update code"
@@ -260,7 +260,7 @@ git commit -m "fixed bug"
 
 **✅ Good**:
 
-```
+```bash
 git commit -m "feat(core): add token-based AST transformer"
 git commit -m "fix(i18n): prevent path traversal in pack loader"
 git commit -m "test(api): add edge case tests for null inputs"

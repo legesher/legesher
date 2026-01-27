@@ -5,26 +5,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Status
 
 **Current Phase**: Production-Ready (Pre-Beta)
-**Version**: 0.0.x (awaiting v0.1.0 beta release)
-**Last Updated**: 2025-12-03
+**Version**: 0.4.0 (foundation packages), 0.1.1 (apps)
+**Last Updated**: 2026-01-27
 
 This is an active monorepo with **production-ready implementations** across all major packages. The project has
-evolved significantly beyond initial planning and now features comprehensive test coverage, 27 language packs,
-complete LSP implementation, and a fully functional VS Code extension.
+evolved significantly beyond initial planning and now features comprehensive test coverage, 26 supported language packs
+(all in experimental status), complete LSP implementation, and a fully functional VS Code extension.
 
 **Version Strategy:**
 
-- **v0.0.x** (current): Pre-beta, feature-complete but awaiting community validation of language packs
-- **v0.1.0**: First beta release for community testers with validated language packs
-- **v1.0.0**: Major release after extensive community feedback and language pack confirmation
+- **v0.4.x** (current): Pre-beta with 26 experimental language packs awaiting community validation
+- **v1.0.0**: Major release after community validation with accepted language packs
+- Language packs: **experimental** (current, works but unvalidated) → **accepted** (community validated)
 
-See [Documentation Audit Report](docs/DOCUMENTATION_AUDIT_2025.md) for detailed implementation status.
+**Language Status** (source of truth: `libs/i18n/legesher_i18n/languages.json`):
+
+- **26 supported languages** - All currently in experimental status
+- Experimental = translations work but await community validation
+- Accepted = community-validated translations (future milestone)
 
 ## Repository Overview
 
-This is the Legesher monorepo; a collection of developer tools and packages to enable developers to code in their native language instead of English. From creation within an IDE to collaboration across projects and git histories, Legesher's tools remove English as the pre-requisite of coding. The first programming language Legesher is focusing on is Python, but has plans to extend to other programming languages, so it is important to create scalability in the repo style. The project uses UV for dependency management and pdm-backend for building, with multiple Python packages organized in a monorepo structure.
+This is the Legesher monorepo; a collection of developer tools and packages to enable developers to code in their
+native language instead of English. From creation within an IDE to collaboration across projects and git histories,
+Legesher's tools remove English as the pre-requisite of coding. The first programming language Legesher is focusing
+on is Python, but has plans to extend to other programming languages, so it is important to create scalability in
+the repo style. The project uses UV for dependency management and pdm-backend for building, with multiple Python
+packages organized in a monorepo structure.
 
-It is important to note the need for the functionality to be extensible across multiple IDEs. We are building first for VS Code (and other editors that are built on top of vscode like Cursor and Windsurf), but should also consider Zed and JetBrains PyCharm etc.
+It is important to note the need for the functionality to be extensible across multiple IDEs. We are building first
+for VS Code (and other editors that are built on top of vscode like Cursor and Windsurf), but should also consider
+Zed and JetBrains PyCharm etc.
 
 ## Architecture
 
@@ -36,8 +47,8 @@ It is important to note the need for the functionality to be extensible across m
   - `legesher/`: Main package with primary API and functionality
   - `i18n/`: Internationalization infrastructure AND language pack packages
     - `legesher_i18n/`: Core infrastructure (pack loading, validation, translation API)
-    - `language-packs/python/`: **27 independently versioned Python language packs** (ar, da, de, el, en, es, fi, fr,
-      he, hi, hu, id, it, ja, ko, ms, nl, no, pl, pt, ru, sv, th, tr, vi, zh, and more)
+    - `language-packs/python/`: **26 independently versioned Python language packs** (ar, da, de, el, en, es, fi, fr,
+      he, hi, hu, id, it, ja, ko, ms, nl, no, pl, pt, ru, sv, th, tr, vi, zh)
     - `language-packs-archive/`: Legacy community translations (see private-working-memory repo)
   - `home/`: Digital home and community platform (`legesher-home`)
   - `vs-code/`: VS Code editor integration for Python language (`legesher-vs-code`)
@@ -51,22 +62,26 @@ It is important to note the need for the functionality to be extensible across m
 
 - Additional IDE integrations: Zed, JetBrains PyCharm
 
-**Package Status** (as of 2025-12-03):
+**Package Status** (as of 2026-01-27):
 
-- **core**: Production-ready (3,911 lines) - Token & tree-sitter translators, git filters, cultural comments
-- **i18n**: Production-ready - 27 language packs, translation API with multi-provider support, caching
-- **legesher**: Production-ready - Complete CLI suite (translate, run, git, metadata), runtime import hooks
-- **language-server**: Production-ready (2,624 lines) - Full LSP with hover, completion, diagnostics, semantic tokens
-- **vs-code**: Production-ready (~13,000+ lines) - Complete extension with telemetry and feedback systems
-- **home**: Minimal scaffold - Digital home and community features planned for future release
+| Package             | Version | Status           | Description                                                     |
+| ------------------- | ------- | ---------------- | --------------------------------------------------------------- |
+| **core**            | 0.4.0   | Production-ready | Token & tree-sitter translators, git filters, cultural comments |
+| **i18n**            | 0.4.0   | Production-ready | 26 language packs (experimental), translation API, caching      |
+| **legesher**        | 0.4.0   | Production-ready | CLI suite (init, translate, run, git, metadata), runtime hooks  |
+| **language-server** | 0.1.0   | Production-ready | Full LSP with hover, completion, diagnostics, semantic tokens   |
+| **vs-code**         | 0.1.1   | Production-ready | Extension with telemetry/feedback, all 26 languages supported   |
+| **home**            | 0.1.0   | Minimal scaffold | Digital home for community features and project showcase        |
 
-All packages have **comprehensive test suites** with 100+ test files total covering unit, integration, and benchmarks.
+**Language pack versions**: 0.0.1–0.0.2 (see each pack's `pyproject.toml` for exact version)
+
+All packages have test suites with 100+ test files across core, i18n, legesher, and language-server packages.
 
 ### Package Management & Dependencies
 
 - **UV**: Primary dependency manager with workspace support
 - **pdm-backend**: Build backend for individual packages
-- **Python Version**: Requires Python >=3.13
+- **Python Version**: Requires Python >=3.10,<4.0 (development uses 3.13)
 - **Cross-package dependencies**: Managed through `[tool.uv.sources]` sections in each package's `pyproject.toml`
 - **Editable installs**: All packages installed in development mode for live updates
 
@@ -148,6 +163,52 @@ pnpm preview                 # Preview production build
 - **`docs/package.json`**: Documentation site dependencies and build scripts
 - **`docs/astro.config.mjs`**: Astro and Starlight configuration
 
+## CI/CD and Tooling
+
+### GitHub Actions Workflows
+
+Located in `.github/workflows/`:
+
+- **`release-foundation.yml`**: Semantic release for foundation packages (core, i18n, legesher)
+  - Triggers on push to main affecting `libs/core/`, `libs/i18n/`, `libs/legesher/`
+  - Creates version tags, GitHub releases, builds artifacts
+  - Syncs uv.lock after version bumps
+- **`release-language-packs.yml`**: Independent language pack releases
+  - Auto-detects changed packs and releases individually
+  - Manual workflow dispatch for specific languages
+- **`publish-pypi.yml`**: PyPI publishing pipeline
+- **`monitor-python-releases.yml`**: Monitors Python.org for new releases to update packs
+
+### Pre-commit Hooks
+
+Install with `pre-commit install`. Configuration in `.pre-commit-config.yaml`:
+
+- **General**: trailing-whitespace, end-of-file-fixer, check-yaml, check-toml, check-json
+- **Python**: Ruff linter and formatter (with auto-fix)
+- **Markdown**: markdownlint with auto-fix
+- **Custom**:
+  - `validate-language-pack-yaml`: Validates language pack YAML structure
+  - `regenerate-reference-docs`: Auto-regenerates REFERENCE.md when packs change
+- **Commits**: Commitizen for conventional commit validation
+
+### Semantic Release
+
+Configuration in root `pyproject.toml` under `[tool.semantic_release]`:
+
+- Commit parser: Angular
+- Tag format: `v{version}` (foundation), `i18n-python-{lang}-v{version}` (language packs)
+- Version files synchronized across foundation packages
+
+### Commitizen
+
+Interactive commit helper with conventional commits:
+
+```bash
+uv run cz commit
+```
+
+Supported scopes: `core`, `i18n`, `legesher`, `language-server`, `vs-code`, `home`, `i18n-python-{lang}`
+
 ## Package Interdependencies
 
 The packages have a logical dependency hierarchy defined in the architecture:
@@ -174,7 +235,8 @@ The packages have a logical dependency hierarchy defined in the architecture:
 - `legesher-home`: Digital home and community platform, depends on `core`, `i18n`, and `legesher`
   - Community showcase projects
 
-When making changes, consider impact on dependent packages. Build order should follow the tier system (Tier 1 → Tier 2 → Tier 3 → Tier 4).
+When making changes, consider impact on dependent packages. Build order should follow the tier system
+(Tier 1 → Tier 2 → Tier 3 → Tier 4).
 
 ## Language Pack Organization
 
@@ -182,7 +244,7 @@ Language packs are organized hierarchically within `libs/i18n/` for independent 
 
 ### Structure
 
-```
+```text
 libs/i18n/language-packs/{programming-language}/{natural-language}/
 ```
 
@@ -190,35 +252,38 @@ libs/i18n/language-packs/{programming-language}/{natural-language}/
 
 ### Current Language Packs
 
-**27 complete language packs** - All support Python 3.10-3.14 with version inheritance:
+**26 supported language packs** (all experimental) - Support Python 3.10-3.14 with version inheritance:
 
-- `legesher-i18n-python-ar`: Arabic - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-da`: Danish - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-de`: German - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-el`: Greek - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-en`: English - 81 builtins, Reference implementation
-- `legesher-i18n-python-es`: Spanish - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-fi`: Finnish - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-fr`: French - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-he`: Hebrew - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-hi`: Hindi - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-hu`: Hungarian - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-id`: Indonesian - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-it`: Italian - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-ja`: Japanese - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-ko`: Korean - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-ms`: Malay - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-nl`: Dutch - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-no`: Norwegian - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-pl`: Polish - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-pt`: Portuguese - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-ru`: Russian - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-sv`: Swedish - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-th`: Thai - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-tr`: Turkish - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-vi`: Vietnamese - 81 builtins, Aya AI Model translations
-- `legesher-i18n-python-zh`: Chinese Simplified - 81 builtins, Aya AI Model translations
-- And more... (additional packs in development)
+| Code | Language   | Native Name      | RTL | Status       |
+| ---- | ---------- | ---------------- | --- | ------------ |
+| ar   | Arabic     | العربية          | Yes | Experimental |
+| da   | Danish     | Dansk            | No  | Experimental |
+| de   | German     | Deutsch          | No  | Experimental |
+| el   | Greek      | Ελληνικά         | No  | Experimental |
+| en   | English    | English          | No  | Experimental |
+| es   | Spanish    | Español          | No  | Experimental |
+| fi   | Finnish    | Suomi            | No  | Experimental |
+| fr   | French     | Français         | No  | Experimental |
+| he   | Hebrew     | עברית            | Yes | Experimental |
+| hi   | Hindi      | हिन्दी           | No  | Experimental |
+| hu   | Hungarian  | Magyar           | No  | Experimental |
+| id   | Indonesian | Bahasa Indonesia | No  | Experimental |
+| it   | Italian    | Italiano         | No  | Experimental |
+| ja   | Japanese   | 日本語           | No  | Experimental |
+| ko   | Korean     | 한국어           | No  | Experimental |
+| ms   | Malay      | Bahasa Melayu    | No  | Experimental |
+| nl   | Dutch      | Nederlands       | No  | Experimental |
+| no   | Norwegian  | Norsk            | No  | Experimental |
+| pl   | Polish     | Polski           | No  | Experimental |
+| pt   | Portuguese | Português        | No  | Experimental |
+| ru   | Russian    | Русский          | No  | Experimental |
+| sv   | Swedish    | Svenska          | No  | Experimental |
+| th   | Thai       | ไทย              | No  | Experimental |
+| tr   | Turkish    | Türkçe           | No  | Experimental |
+| vi   | Vietnamese | Tiếng Việt       | No  | Experimental |
+| zh   | Chinese    | 中文             | No  | Experimental |
+
+All packs have 37 keywords and 81 builtins. Translations generated via Aya AI Model (except English reference).
 
 ### Independent Releases
 
@@ -236,7 +301,7 @@ a previous version using the `extends` field.
 
 **Structure:**
 
-```
+```text
 libs/i18n/language-packs/python/{lang}/legesher_i18n_python_{lang}/packs/
 ├── 3.10.yml   # Base file with ALL translations
 ├── 3.11.yml   # extends: 3.10.yml (only new/changed terms)
@@ -276,8 +341,40 @@ exceptions: {} # Empty = inherits all from 3.12
 5. Update root `pyproject.toml`:
    - Add to `[tool.uv.sources]` section
    - Add to `[tool.uv.workspace]` members
-6. Set version to match current release (0.0.2)
+6. Set version appropriately (check existing pack versions; currently 0.0.1–0.0.2)
 7. Run `uv sync` to install in development mode
+
+### i18n CLI Commands
+
+The `legesher-i18n` CLI provides language pack management:
+
+```bash
+# Validate language packs
+legesher-i18n validate path/to/pack.yml
+legesher-i18n validate path/to/pack.yml --strict
+
+# Show pack versions
+legesher-i18n show es
+legesher-i18n show ar --target python
+
+# Registry commands
+legesher-i18n registry list
+legesher-i18n registry validate --lang es
+
+# Export commands
+legesher-i18n export json --lang es
+legesher-i18n export csv --lang ar
+```
+
+### i18n Infrastructure Features
+
+The `legesher-i18n` package includes:
+
+- **Language Registry**: Centralized metadata in `libs/i18n/legesher_i18n/languages.json`
+- **Translation API**: Multi-provider support (install with `pip install legesher-i18n[api]`)
+  - Providers: Anthropic (Claude), Google Translate, DeepL, LibreTranslate
+- **Caching**: Thread-safe LRU caching for fast pack loading
+- **Schema Validation**: Pydantic-based validation with security checks
 
 ## Development Guidelines
 
@@ -292,7 +389,9 @@ exceptions: {} # Empty = inherits all from 3.12
 - Each package should have its own test suite
 - Run tests from package directories or use `uv run pytest` with specific paths
 - Integration tests should consider cross-package functionality
-- Releases can happen individually for each of the sub packages. For the main Legesher package, releases should pass integration tests with the updated versions of the sub packages before it can be released. Documentation should also be included for each of the changes.
+- Releases can happen individually for each of the sub packages. For the main Legesher package, releases should
+  pass integration tests with the updated versions of the sub packages before it can be released. Documentation
+  should also be included for each of the changes.
 
 ### Code Organization
 
@@ -311,19 +410,17 @@ exceptions: {} # Empty = inherits all from 3.12
 
 ### Milestones
 
-- **v0.0.x** (current - Pre-Beta): ✅ **FEATURE-COMPLETE** - All core features implemented:
+- **v0.4.x** (current - Pre-Beta): Feature-complete with experimental language packs:
   - Two translator backends (token & tree-sitter)
-  - 27 language packs with version inheritance
-  - Complete CLI suite (translate, run, git, metadata)
-  - Full LSP server with 4 providers
+  - 26 language packs with version inheritance (all experimental)
+  - Complete CLI suite (init, translate, run, git, metadata)
+  - Full LSP server with 4 providers (pygls 2.0)
   - VS Code extension with telemetry/feedback
   - MLCP (cultural comments) support
-  - Comprehensive test coverage (255+ tests)
-- **v0.1.0** (next - Beta Release): First community beta with validated language packs
+  - 100+ test files across packages
 - **v1.0.0** (planned): Major release after community validation:
-  - Community-confirmed language pack translations
-  - Package registry
-  - Web UI
+  - Community-validated language packs (experimental → accepted)
+  - Package registry (see `docs/src/content/docs/architecture/language-pack-registry.md` - draft)
   - Additional IDE integrations (Zed, PyCharm)
 
 ### Issue Labels
@@ -337,24 +434,24 @@ exceptions: {} # Empty = inherits all from 3.12
 ### Essential Files
 
 - [CLAUDE.md](CLAUDE.md) - This file (AI assistant guidance)
-- [WORKING_WITH_AI_GUIDE.md](docs/WORKING_WITH_AI_GUIDE.md) - Guide for working with AI assistants
 - Root `pyproject.toml` - Workspace configuration
 - [README.md](README.md) - Project overview
 
 ### Key Documentation
 
-Documentation is being developed in `docs/src/content/docs/`:
+**Note**: The `docs/` folder contains some out-of-date content. Always verify against source code.
 
-- Architecture guides (in development)
-- MLCP (Multilingual Code Protocol) specification (planned)
-- Implementation roadmap (planned)
-- Language pack registry design (planned)
+**Planning/Draft Documents** (not fully implemented):
 
-Current documentation:
+- `docs/src/content/docs/specifications/mlcp-v1.md` - MLCP protocol draft specification
+- `docs/src/content/docs/architecture/language-pack-registry.md` - Registry architecture (planned Q3 2026)
+- `docs/src/content/docs/architecture/implementation-roadmap.md` - Development timeline
 
-- [Getting Started](docs/src/content/docs/index.mdx) - Project overview and quick start
-- [Example Guides](docs/src/content/docs/guides/) - Usage examples
-- [API Reference](docs/src/content/docs/reference/) - API documentation
+**Source of Truth** (use these instead of docs/):
+
+- Package README.md files in `libs/*/README.md`
+- `pyproject.toml` files for versions and dependencies
+- `libs/i18n/legesher_i18n/languages.json` for language metadata
 
 ### Key Architectural Decisions
 
@@ -408,7 +505,8 @@ uv run pytest tests/benchmarks/ --benchmark-only
 uv run pytest tests/benchmarks/ --benchmark-compare
 ```
 
-**Future Languages**: TypeScript support coming in Phase 2C (CORE-421 through CORE-427). The abstraction provides clear extension points for new programming languages.
+**Future Languages**: TypeScript support is planned (see CORE-421 and related issues in backlog). The abstraction
+provides clear extension points for new programming languages.
 
 Architectural rationale and detailed design decisions will be documented as the project evolves.
 
@@ -416,10 +514,11 @@ Architectural rationale and detailed design decisions will be documented as the 
 
 ### Project Context
 
-- This monorepo is in **early development phase** - packages have scaffold structure
-- Planning and architecture documentation is being developed iteratively
+- This monorepo is **production-ready (pre-beta)** with feature-complete packages
+- 26 language packs available (all experimental, awaiting community validation)
 - Implementation follows the tier system (Tier 1 → Tier 2 → Tier 3 → Tier 4)
 - Issues are tracked in Linear workspace with package and phase labels
+- See package-specific CLAUDE.md files in `libs/*/CLAUDE.md` for detailed guidance
 
 ### When Requesting Changes
 

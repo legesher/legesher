@@ -1,6 +1,9 @@
 # Python Context Documents
 
-This directory contains comprehensive translation context documents for Python keywords, builtin types, and builtin functions. Each document provides detailed linguistic and technical guidance to help AI translation models and human translators create accurate, consistent translations across multiple languages.
+This directory contains comprehensive translation context documents for Python keywords,
+builtin types, and builtin functions. Each document provides detailed linguistic and
+technical guidance to help AI translation models and human translators create accurate,
+consistent translations across multiple languages.
 
 ## Overview
 
@@ -72,7 +75,8 @@ Essential functions organized by purpose:
 `abs`, `round`, `pow`, `divmod`
 
 **Conversion Functions:**
-`int`, `str`, `float`, `bool`, `list`, `dict`, `tuple`, `set`, `frozenset`, `bytes`, `bytearray`, `complex`, `chr`, `ord`, `bin`, `hex`, `oct`, `ascii`, `repr`, `format`
+`int`, `str`, `float`, `bool`, `list`, `dict`, `tuple`, `set`, `frozenset`, `bytes`,
+`bytearray`, `complex`, `chr`, `ord`, `bin`, `hex`, `oct`, `ascii`, `repr`, `format`
 
 **Attribute Access:**
 `getattr`, `setattr`, `hasattr`, `delattr`, `vars`, `dir`
@@ -196,7 +200,8 @@ When adding or updating context documents:
 
 ## License
 
-These context documents are part of the Legesher project and share the same open-source license. See the root LICENSE file for details.
+These context documents are part of the Legesher project and share the same open-source
+license. See the root LICENSE file for details.
 
 ## Contact
 
