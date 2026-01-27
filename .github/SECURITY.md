@@ -2,7 +2,8 @@
 
 ## Supported Versions
 
-We take security seriously across all Legesher packages. The table below shows which versions are currently receiving security updates:
+We take security seriously across all Legesher packages. The table below shows which
+versions are currently receiving security updates:
 
 | Package          | Version | Supported          |
 | ---------------- | ------- | ------------------ |

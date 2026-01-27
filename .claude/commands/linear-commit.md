@@ -77,7 +77,7 @@ git diff --staged
 
 Use this format for Linear integration:
 
-```
+```text
 <type>(<scope>): <subject>
 
 <body>
@@ -107,7 +107,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 **Example**:
 
-```
+```text
 feat(i18n): implement version-aware language pack loader
 
 Implement automatic Python version detection with priority-based
@@ -150,21 +150,17 @@ commit_sha = git_get_latest_commit_sha()
 commit_msg = git_get_commit_message(commit_sha)
 
 # Add comment to Linear issue
-mcp__MCP_DOCKER__create_comment(
-    issueId=issue_id,
-    body=f"""## Commit Created
+comment_body = f"""## Commit Created
 
 **Commit**: `{commit_sha[:7]}`
+
 **Message**:
-```
-
-{commit_msg}
-
-```
+> {commit_msg.replace(chr(10), chr(10) + '> ')}
 
 [View commit](https://github.com/legesher/legesher/commit/{commit_sha})
 """
-)
+
+mcp__MCP_DOCKER__create_comment(issueId=issue_id, body=comment_body)
 ```
 
 ### 8. Move Linear Issue State (Optional)
@@ -238,7 +234,7 @@ git checkout -b feature/leg-123-version-aware-packs
 
 ### Feature Implementation
 
-```
+```text
 feat(i18n): add Spanish language pack
 
 Implement complete Python 3.10-3.13 keyword mappings for Spanish
@@ -253,7 +249,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Bug Fix
 
-```
+```text
 fix(core): prevent infinite loop in AST transformer
 
 Add max depth check (100 levels) to prevent stack overflow when
@@ -268,7 +264,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Test Addition
 
-```
+```text
 test(i18n): add version detector comprehensive tests
 
 Add tests for auto-detection priority:
