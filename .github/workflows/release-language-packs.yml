@@ -27,6 +27,72 @@ permissions:
   pull-requests: write
 
 jobs:
+  lint:
+    name: Lint & Validate
+    runs-on: ubuntu-latest
+    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock'))"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+
+  test:
+    name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock'))"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.10', '3.13']
+        exclude:
+          # Only test 3.13 on macOS/Windows to save credits
+          - os: macos-latest
+            python-version: '3.10'
+          - os: windows-latest
+            python-version: '3.10'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run i18n tests
+        run: uv run pytest libs/i18n/tests/ -v
+
   detect-changed-packs:
     name: Detect Changed Language Packs
     runs-on: ubuntu-latest
@@ -54,7 +120,7 @@ jobs:
   release-pack:
     name: Release ${{ matrix.pack }}
     runs-on: ubuntu-latest
-    needs: detect-changed-packs
+    needs: [lint, test, detect-changed-packs]
     if: needs.detect-changed-packs.outputs.packs != '[]'
     strategy:
       matrix:
@@ -121,6 +187,7 @@ jobs:
   release-manual:
     name: Manual Release ${{ github.event.inputs.target }}-${{ github.event.inputs.language }}
     runs-on: ubuntu-latest
+    needs: [lint, test]
     if: github.event_name == 'workflow_dispatch'
 
     steps:
