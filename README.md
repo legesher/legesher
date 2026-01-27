@@ -15,7 +15,7 @@
 [![i18n: MIT](https://img.shields.io/badge/i18n-MIT-green.svg)](libs/i18n/LICENSE)
 [![VS Code: MIT](https://img.shields.io/badge/vscode-MIT-green.svg)](libs/vs-code/LICENSE)
 [![Legesher: Dual](https://img.shields.io/badge/legesher-MIT%20%7C%20Commercial-orange.svg)](libs/legesher/LICENSE)
-[![Pride: Proprietary](https://img.shields.io/badge/pride-Proprietary-red.svg)](libs/pride/LICENSE)
+[![Home: Proprietary](https://img.shields.io/badge/home-Proprietary-red.svg)](libs/home/LICENSE)
 
 ## About Legesher
 
@@ -75,7 +75,7 @@ These packages are freely available under the MIT License. Community contributio
 
 ### 🔒 Proprietary (Source Available)
 
-- **[legesher-pride](libs/pride/)** - Community showcase and premium features
+- **[legesher-home](libs/home/)** - Digital home and community platform
   - Source code visible for transparency and security review
   - Commercial license required for use
 
@@ -220,7 +220,7 @@ These packages are released together with the same version:
 These packages can release independently:
 
 - `legesher-vs-code` v0.0.1 - VS Code extension
-- `legesher-pride` v0.0.1 - Community platform
+- `legesher-home` v0.0.1 - Digital home and community platform
 
 This allows rapid iteration on apps while maintaining foundation stability. Apps use semantic version constraints (e.g.,
 `legesher>=0.0.1,<0.1.0`) to ensure compatibility.

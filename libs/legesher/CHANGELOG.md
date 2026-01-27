@@ -267,7 +267,7 @@ legesher/
 - **legesher-core**: Token translation engine, git filters, metadata tracking
 - **legesher-i18n**: Language pack system with Python keyword translations
 - **legesher-language-server**: LSP server for IDE integration (future)
-- **legesher-pride**: Community platform and tools (future)
+- **legesher-home**: Digital home and community platform (future)
 
 ---
 

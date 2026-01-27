@@ -137,9 +137,9 @@ cd libs/{package} && uv run pytest -v --cov
 
 **Monorepo**:
 
-- [ ] Changes in correct package (core, i18n, legesher, vs-code, pride)
+- [ ] Changes in correct package (core, i18n, legesher, vs-code, home)
 - [ ] No circular dependencies between packages
-- [ ] Tier hierarchy respected (core → i18n → legesher → pride)
+- [ ] Tier hierarchy respected (core → i18n → legesher → home)
 
 **Architecture**:
 

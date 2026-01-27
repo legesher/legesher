@@ -7,7 +7,7 @@ This document describes how to release Legesher packages using our hybrid versio
 Legesher uses a **hybrid versioning strategy**:
 
 - **Foundation Suite** (core, i18n, legesher) - Synchronized versioning
-- **Application Packages** (vs-code, pride) - Independent versioning
+- **Application Packages** (vs-code, home) - Independent versioning
 - **Language Packs** (i18n-python-es, i18n-python-ar, etc.) - Independent versioning
 
 All releases are automated using [python-semantic-release](https://python-semantic-release.readthedocs.io/) and follow
@@ -32,7 +32,7 @@ The foundation packages are released together with the same version number:
 Application packages can be released independently on their own schedule:
 
 - `legesher-vs-code` - VS Code extension backend
-- `legesher-pride` - Community platform
+- `legesher-home` - Digital home and community platform
 
 **When to release:** As needed for bug fixes, features, or integrations.
 
@@ -96,14 +96,14 @@ This script will:
 
 ### Option 2: Release Individual App
 
-Release vs-code or pride independently:
+Release vs-code or home independently:
 
 ```bash
 # Release VS Code extension
 ./scripts/release-app.sh vs-code
 
-# Release Pride platform
-./scripts/release-app.sh pride
+# Release Home platform
+./scripts/release-app.sh home
 ```
 
 This script will:
@@ -152,12 +152,12 @@ This ensures core, i18n, and legesher all have the same version as the root pypr
 
 Versions are determined automatically based on conventional commits since the last release:
 
-| Commit Type | Version Bump | Example |
-|-------------|--------------|---------|
-| `feat:` | Minor (0.1.0 → 0.2.0) | New feature |
-| `fix:` | Patch (0.1.0 → 0.1.1) | Bug fix |
-| `BREAKING CHANGE:` | Major (0.1.0 → 1.0.0) | Breaking change |
-| `docs:`, `chore:`, etc. | None | No version bump |
+| Commit Type             | Version Bump          | Example         |
+| ----------------------- | --------------------- | --------------- |
+| `feat:`                 | Minor (0.1.0 → 0.2.0) | New feature     |
+| `fix:`                  | Patch (0.1.0 → 0.1.1) | Bug fix         |
+| `BREAKING CHANGE:`      | Major (0.1.0 → 1.0.0) | Breaking change |
+| `docs:`, `chore:`, etc. | None                  | No version bump |
 
 **Note:** During 0.x.x development, breaking changes bump minor version (0.1.0 → 0.2.0) not major.
 
@@ -260,7 +260,7 @@ git commit -m "chore(vs-code): update foundation dependencies to v0.2.0"
 # 4. Release VS Code
 ./scripts/release-app.sh vs-code
 
-# 5. Repeat for pride
+# 5. Repeat for home
 ```
 
 ## Testing Releases (Dry Run)
@@ -340,7 +340,7 @@ Each package has its own CHANGELOG.md:
 - `libs/i18n/CHANGELOG.md`
 - `libs/legesher/CHANGELOG.md`
 - `libs/vs-code/CHANGELOG.md`
-- `libs/pride/CHANGELOG.md`
+- `libs/home/CHANGELOG.md`
 
 Changelogs are updated automatically by semantic-release:
 
@@ -357,7 +357,7 @@ Tags follow these formats:
 
 - Foundation: `v{version}` (e.g., `v0.2.0`)
 - VS Code: `vs-code-v{version}` (e.g., `vs-code-v0.2.0`)
-- Pride: `pride-v{version}` (e.g., `pride-v0.1.0`)
+- Home: `home-v{version}` (e.g., `home-v0.1.0`)
 
 To view all tags:
 
@@ -370,7 +370,7 @@ To view tags for specific package:
 ```bash
 git tag -l "v*"           # Foundation releases
 git tag -l "vs-code-v*"   # VS Code releases
-git tag -l "pride-v*"     # Pride releases
+git tag -l "home-v*"      # Home releases
 ```
 
 ## CI/CD Automation
@@ -398,7 +398,7 @@ Releases trigger automatically when you push to `main` and files in watched dire
 
 **Applications** (`release-apps.yml`):
 
-- **Triggers when:** Changes to `libs/vs-code/` or `libs/pride/`
+- **Triggers when:** Changes to `libs/vs-code/` or `libs/home/`
 - **Creates tag:** `{app}-v{version}` (e.g., `vs-code-v0.2.0`)
 - **Releases:** Only changed applications
 
@@ -528,13 +528,13 @@ These features are planned for future implementation:
 
 ### Near-Term (Phase 3-4, Next 3-6 Months)
 
-1. **Automated Dependency Updates (Dependabot)** - *CORE-440 (planned)*
+1. **Automated Dependency Updates (Dependabot)** - _CORE-440 (planned)_
    - Weekly PRs for security updates
    - Automatic minor/patch version bumps
    - Grouped updates per ecosystem (Python, GitHub Actions)
    - **When:** After beta launch (Week 12+)
 
-2. **VS Code Marketplace Publishing** - *CORE-441 (planned)*
+2. **VS Code Marketplace Publishing** - _CORE-441 (planned)_
    - Auto-publish extension on `vs-code-v*` tag
    - Deploy to VS Code Marketplace and Open VSX
    - **When:** Phase 2D (Multi-Language IDE ready)
@@ -555,7 +555,7 @@ These features are planned for future implementation:
    - RSS feed for release notes
    - **When:** During beta program (Week 12-16)
 
-4. **Documentation Site Auto-Deployment** - *CORE-442 (planned)*
+4. **Documentation Site Auto-Deployment** - _CORE-442 (planned)_
    - Deploy docs.legesher.io on release
    - Versioned documentation (v0.1, v0.2, etc.)
    - Automatic API reference generation
@@ -563,7 +563,7 @@ These features are planned for future implementation:
 
 ### Mid-Term (v0.5-v1.0, 6-12 Months)
 
-1. **Docker Image Publishing** - *CORE-443 (planned)*
+1. **Docker Image Publishing** - _CORE-443 (planned)_
    - Language server container images
    - Registry backend Docker images
    - Multi-platform builds (amd64, arm64)

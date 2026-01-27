@@ -4,13 +4,13 @@
 
 We take security seriously across all Legesher packages. The table below shows which versions are currently receiving security updates:
 
-| Package | Version | Supported |
-| ------- | ------- | --------- |
-| legesher-core | 0.0.x | :white_check_mark: |
-| legesher-i18n | 0.0.x | :white_check_mark: |
-| legesher-vs-code | 0.0.x | :white_check_mark: |
-| legesher | 0.0.x | :white_check_mark: |
-| legesher-pride | 0.0.x | :white_check_mark: |
+| Package          | Version | Supported          |
+| ---------------- | ------- | ------------------ |
+| legesher-core    | 0.0.x   | :white_check_mark: |
+| legesher-i18n    | 0.0.x   | :white_check_mark: |
+| legesher-vs-code | 0.0.x   | :white_check_mark: |
+| legesher         | 0.0.x   | :white_check_mark: |
+| legesher-home    | 0.0.x   | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
@@ -122,7 +122,7 @@ Additional recommendations:
 ### Multi-License Structure
 
 - **Open source packages** (core, i18n, vs-code) are publicly auditable
-- **Proprietary packages** (pride) source code is visible but usage is restricted
+- **Proprietary packages** (home) source code is visible but usage is restricted
 - **All packages** are subject to the same security review standards
 
 ### Data Handling

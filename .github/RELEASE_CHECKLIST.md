@@ -38,7 +38,7 @@ Releases happen automatically when you merge to `main`:
 # GitHub Actions automatically releases changed packs
 ```
 
-**Applications** (vs-code, pride):
+**Applications** (vs-code, home):
 
 ```bash
 # Merge PR that touches app

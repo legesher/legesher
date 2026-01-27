@@ -85,7 +85,7 @@ Use **Conventional Commits** format:
 
 **Scope** (optional): Package or component affected
 
-- `core`, `i18n`, `legesher`, `vs-code`, `pride`
+- `core`, `i18n`, `legesher`, `vs-code`, `home`
 - Or: `auth`, `api`, `cli`, etc.
 
 **Subject** (required):

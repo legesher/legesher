@@ -31,7 +31,7 @@ body:
       Please note which packages accept community contributions:
       - ✅ Open Source (MIT): core, i18n, vs-code (contributions welcome!)
       - ⚠️ Dual License: legesher (free tier contributions welcome)
-      - ❌ Proprietary: pride (no external contributions)
+      - ❌ Proprietary: home (no external contributions)
     options:
     - label: I understand the licensing structure and contribution policy
       required: true

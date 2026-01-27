@@ -38,7 +38,7 @@ You are helping initialize and plan work on a Linear issue for the Legesher proj
    - Check [planning/architecture/complete-architecture-guide.md]
      (private-working-memory) for relevant decisions
    - Review package tier system to understand dependencies
-   - Identify affected packages (core, i18n, legesher, vs-code, pride)
+   - Identify affected packages (core, i18n, legesher, vs-code, home)
 
 4. **Check constraints and requirements**
    - Security: Handles source code - critical security required
@@ -166,28 +166,35 @@ Break down into clear, sequential steps:
    ### Scope
 
    **In Scope:**
+
    - [List items explicitly in this ticket]
 
    **Out of Scope (Future Tickets):**
+
    - [List items for future work]
 
    ### Prerequisites
+
    - [List any blocking issues]
 
    ### Implementation Steps
+
    1. [Detailed step]
    2. [Detailed step]
-   ...
+      ...
 
    ### Testing Plan
+
    - [Test categories and coverage]
 
    ### Acceptance Criteria
+
    - [ ] [Criterion 1]
    - [ ] [Criterion 2]
-   ...
+         ...
 
    ### Questions/Blockers
+
    - [Any ambiguities or dependencies]
 
    **Next Steps:** Begin implementation following plan above.

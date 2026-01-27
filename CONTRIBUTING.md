@@ -66,7 +66,7 @@ features are welcome.
 
 ### Proprietary Packages
 
-- **`libs/pride/`** - Community features and project showcase
+- **`libs/home/`** - Digital home and community platform
 
 These packages are source-available but proprietary. We do NOT accept external contributions to these packages at this time.
 
@@ -477,7 +477,7 @@ automatically validated by pre-commit hooks and enables automated version manage
 - `legesher` - Main package/CLI
 - `language-server` - Language Server Protocol implementation
 - `vs-code` - VS Code extension
-- `pride` - Pride/community features
+- `home` - Digital home/community features
 - `i18n-python-es` - Spanish language pack
 - `i18n-python-ar` - Arabic language pack
 
@@ -526,7 +526,7 @@ The interactive helper will:
 ### Version Numbers
 
 - **Foundation Suite** (`core`, `i18n`, `legesher`): Synchronized versions
-- **App Packages** (`vs-code`, `pride`): Independent versions
+- **App Packages** (`vs-code`, `home`): Independent versions
 - **Language Packs** (`i18n-python-*`): Independent versions
 
 See [README.md](README.md#versioning-strategy) for complete versioning strategy.

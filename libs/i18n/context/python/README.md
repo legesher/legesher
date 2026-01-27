@@ -29,7 +29,9 @@ Each context document follows a standardized 11-section template:
 ## Coverage by Category
 
 ### Keywords (35 documents)
+
 Control flow, conditional, loop control, exception handling, scope, and more:
+
 - Conditionals: `if`, `elif`, `else`
 - Loops: `for`, `while`, `break`, `continue`
 - Pattern Matching (3.10+): `match`, `case`, `_` (wildcard)
@@ -44,7 +46,9 @@ Control flow, conditional, loop control, exception handling, scope, and more:
 - Placeholder: `pass`
 
 ### Builtin Types (27 documents)
+
 Core data types, type constructors, and exception classes:
+
 - Boolean/None: `True`, `False`, `None`
 - Numeric: `int`, `float`, `complex`
 - Sequences: `str`, `list`, `tuple`, `range`, `bytes`, `bytearray`
@@ -55,6 +59,7 @@ Core data types, type constructors, and exception classes:
 - Common Exceptions: `ValueError`, `TypeError`, `KeyError`, `IndexError`, `AttributeError`, `NameError`, `RuntimeError`
 
 ### Builtin Functions (59 documents)
+
 Essential functions organized by purpose:
 
 **Type Checking & Introspection:**
@@ -130,6 +135,7 @@ Documents are calibrated by translation difficulty:
 ## File Naming Convention
 
 All files use **lowercase** naming to match Python's syntax:
+
 - Keywords: `if.md`, `for.md`, `class.md`
 - Builtin types: `int.md`, `str.md`, `list.md`
 - Builtin functions: `print.md`, `len.md`, `range.md`
@@ -142,6 +148,7 @@ All context documents follow the linguistic standards defined in:
 `/home/user/legesher/libs/i18n/docs/linguistic-standards.md`
 
 Key principles:
+
 - Prefer verbs for action-oriented terms (functions, methods)
 - Preserve proper nouns and technical acronyms (ASCII, Unicode)
 - Maintain consistency within semantic clusters
@@ -151,6 +158,7 @@ Key principles:
 ## Quality Assurance
 
 Each document includes:
+
 - ✅ Comprehensive code examples (3 per document)
 - ✅ Multi-language translation guidance (4+ languages)
 - ✅ Etymology and rationale
@@ -161,10 +169,11 @@ Each document includes:
 ## Integration with Legesher
 
 These context documents integrate with:
+
 - **legesher-core**: Token-based transformer uses context for accurate translation
 - **legesher-i18n**: Language pack generation references these documents
 - **legesher-vs-code**: IDE integration displays context-aware tooltips
-- **legesher-pride**: Community translation efforts use these as reference
+- **legesher-home**: Community translation efforts use these as reference
 
 ## Contributing
 
@@ -192,8 +201,9 @@ These context documents are part of the Legesher project and share the same open
 ## Contact
 
 For questions, suggestions, or contributions:
-- GitHub: https://github.com/legesher/legesher
-- Documentation: https://docs.legesher.io
+
+- GitHub: <https://github.com/legesher/legesher>
+- Documentation: <https://docs.legesher.io>
 - Community: Join our discussions and contribute to making programming accessible in every language
 
 ---

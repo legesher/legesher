@@ -29,7 +29,7 @@ Create a well-structured commit that automatically updates the related Linear is
 current_branch=$(git branch --show-current)
 
 # Extract Linear issue ID (case insensitive)
-issue_id=$(echo "$current_branch" | grep -oiE '(leg|core|i18n|pride|vsc)-[0-9]+' | head -1)
+issue_id=$(echo "$current_branch" | grep -oiE '(leg|core|i18n|home|vsc)-[0-9]+' | head -1)
 
 if [ -n "$issue_id" ]; then
   echo "Found Linear issue: $issue_id"
@@ -103,7 +103,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - `package:i18n` → `(i18n)`
 - `package:legesher` → `(legesher)`
 - `package:vs-code` → `(vs-code)`
-- `package:pride` → `(pride)`
+- `package:home` → `(home)`
 
 **Example**:
 

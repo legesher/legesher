@@ -44,7 +44,7 @@ legesher-i18n-python-vi = { path = "./libs/i18n/language-packs/python/vi", edita
 legesher-i18n-python-zh = { path = "./libs/i18n/language-packs/python/zh", editable = true }
 legesher = { path = "./libs/legesher", editable = true }
 legesher-language-server = { path = "./libs/language-server", editable = true }
-legesher-pride = { path = "./libs/pride", editable = true }
+legesher-home = { path = "./libs/home", editable = true }
 legesher-vs-code = { path = "./libs/vs-code", editable = true }
 
 [dependency-groups]
@@ -158,7 +158,7 @@ choices = [
 [[tool.commitizen.customize.questions]]
 type = "input"
 name = "scope"
-message = "Scope (package name: core, i18n, legesher, language-server, vs-code, pride, i18n-python-ar, i18n-python-es, i18n-python-en, i18n-python-fr, i18n-python-zh) [optional]:"
+message = "Scope (package name: core, i18n, legesher, language-server, vs-code, home, i18n-python-ar, i18n-python-es, i18n-python-en, i18n-python-fr, i18n-python-zh) [optional]:"
 
 [[tool.commitizen.customize.questions]]
 type = "input"
