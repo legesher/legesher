@@ -42,7 +42,7 @@ Notice how natural this looks! You're using Spanish keywords like `definir` (def
 Now let's translate this code to English so Python can run it:
 
 ```bash
-legesher translate hola_mundo.py --source es --target en --output hello_world.py
+legesher translate hola_mundo.py --from es --to en --output hello_world.py
 ```
 
 Legesher will create `hello_world.py` with the translated code:
@@ -81,7 +81,7 @@ Success! Your Spanish code ran through Python.
 Want to convert English code back to Spanish? Easy:
 
 ```bash
-legesher translate hello_world.py --source en --target es --output hola_mundo_nuevo.py
+legesher translate hello_world.py --from en --to es --output hola_mundo_nuevo.py
 ```
 
 This creates a Spanish version from the English code. You can go back and forth as much as you need.
@@ -152,120 +152,127 @@ Language packs are installed as Python packages:
 
 ### Available Languages
 
-Currently, Legesher supports:
+Legesher currently supports 26 languages (all experimental, awaiting community validation):
 
-| Code | Language | Status     |
-|------|----------|------------|
-| en   | English  | Built-in   |
-| es   | Spanish  | Available  |
-| ar   | Arabic   | Available  |
+| Code | Language   | Native Name      | RTL |
+|------|------------|------------------|-----|
+| ar   | Arabic     | العربية          | Yes |
+| da   | Danish     | Dansk            | No  |
+| de   | German     | Deutsch          | No  |
+| el   | Greek      | Ελληνικά         | No  |
+| en   | English    | English          | No  |
+| es   | Spanish    | Español          | No  |
+| fi   | Finnish    | Suomi            | No  |
+| fr   | French     | Français         | No  |
+| he   | Hebrew     | עברית            | Yes |
+| hi   | Hindi      | हिन्दी           | No  |
+| hu   | Hungarian  | Magyar           | No  |
+| id   | Indonesian | Bahasa Indonesia | No  |
+| it   | Italian    | Italiano         | No  |
+| ja   | Japanese   | 日本語           | No  |
+| ko   | Korean     | 한국어           | No  |
+| ms   | Malay      | Bahasa Melayu    | No  |
+| nl   | Dutch      | Nederlands       | No  |
+| no   | Norwegian  | Norsk            | No  |
+| pl   | Polish     | Polski           | No  |
+| pt   | Portuguese | Português        | No  |
+| ru   | Russian    | Русский          | No  |
+| sv   | Swedish    | Svenska          | No  |
+| th   | Thai       | ไทย              | No  |
+| tr   | Turkish    | Türkçe           | No  |
+| vi   | Vietnamese | Tiếng Việt       | No  |
+| zh   | Chinese    | 中文             | No  |
 
-More languages coming soon! You can also create your own (see [Translation Guide](translation-guide.md)).
+Want to create your own? See the [Translation Guide](translation-guide.md).
 
 ### Version-Aware Language Packs
 
 Language packs are **version-aware** - they know which Python version you're using:
 
-```bash
-# Python 3.8 - no walrus operator
-legesher translate code.py --source es --target en --python-version 3.8
+Language packs support Python 3.10 through 3.14 with version inheritance. The translate command
+automatically uses the appropriate translations for your installed Python version.
 
-# Python 3.10 - includes match/case statements
-legesher translate code.py --source es --target en --python-version 3.10
-```
-
-If you don't specify a version, Legesher uses your current Python version:
+If you need a specific Python version's keywords, configure it during project setup:
 
 ```bash
-python --version  # Python 3.11.5
-legesher translate code.py --source es --target en  # Uses 3.11 keywords
+legesher init --python-version 3.10
 ```
-
-This ensures your translations are accurate for your Python environment.
 
 ## CLI Commands Overview
 
-Let's explore the main Legesher commands.
+Here are the main Legesher commands. For full details, run `legesher --help`.
 
 ### translate: Convert Between Languages
 
-The main command you'll use:
+The primary command you'll use:
 
 ```bash
 # Basic translation
-legesher translate input.py --source es --target en --output output.py
-
-# Shorter version (auto-detect language)
-legesher translate input.py --target en -o output.py
+legesher translate input.py --from es --to en --output output.py
 
 # Translate to stdout (no file created)
-legesher translate input.py --source es --target en
+legesher translate input.py --from es --to en
 
 # Batch translate a directory
-legesher translate src/ --source es --target en --output dist/
+legesher translate src/ --from es --to en --output dist/
 ```
 
 Options:
 
-- `--source`, `-s`: Source language code (auto-detected if omitted)
-- `--target`, `-t`: Target language code (required)
-- `--output`, `-o`: Output file or directory (stdout if omitted)
-- `--python-version`: Python version for translation (default: current)
-- `--in-place`: Overwrite the input file
+- `--from`: Source language code (default: en)
+- `--to`: Target language code (required)
+- `--output`: Output file or directory (stdout if omitted)
 
-### config: Manage Settings
+### run: Execute Native Language Code Directly
 
-Configure Legesher for your project:
+Skip the translation step and run your code in one command:
 
 ```bash
-# Set default language for your project
-legesher config set language es
+# Run a Spanish Python file directly
+legesher run hola_mundo.py --lang es
 
-# Set Python version
-legesher config set python-version 3.11
-
-# View current configuration
-legesher config list
-
-# View all available settings
-legesher config --help
+# Run with arguments passed to the script
+legesher run hola_mundo.py --lang es --args "--verbose"
 ```
 
-Configuration is stored in `.legesher.json` in your project root:
+### init: Set Up a Legesher Project
 
-```json
-{
-  "language": "es",
-  "python_version": "3.11",
-  "git_integration": true
-}
-```
-
-### info: Check Language Packs
-
-See what language packs are installed:
+Initialize Legesher configuration for your project:
 
 ```bash
-# List all installed language packs
-legesher info
+# Interactive setup (recommended)
+legesher init
 
-# Show details for a specific language
-legesher info es
+# Pre-select languages and skip prompts
+legesher init -l es -l ar --git --ai-context
 ```
 
-Example output:
+This creates a `.legesher/config.yml` file with your project settings.
 
-```text
-Installed Language Packs:
-  es (Spanish) - v1.0.0
-    Python versions: 3.8, 3.9, 3.10, 3.11, 3.12
-    Keywords: 35
-    Built-ins: 68
+### git: Transparent Translation in Git
 
-  ar (Arabic) - v1.0.0
-    Python versions: 3.8, 3.9, 3.10, 3.11, 3.12
-    Keywords: 35
-    Built-ins: 68
+Store code in English in git while working in your native language:
+
+```bash
+# Set up git filters for Spanish
+legesher git setup --language es
+
+# Check current git filter status
+legesher git status
+```
+
+See [Git Workflow Guide](git-workflow.md) for details.
+
+### metadata: Track Translation History
+
+View and manage translation metadata for your project:
+
+```bash
+# List tracked files
+legesher metadata list
+
+# Show metadata for a specific file
+legesher metadata show hola_mundo.py
 ```
 
 ## Try a More Complex Example
@@ -302,7 +309,7 @@ si __nombre__ == "__principal__":
 Save this as `calculadora.py`, then translate and run:
 
 ```bash
-legesher translate calculadora.py --source es --target en --output calculator.py
+legesher translate calculadora.py --from es --to en --output calculator.py
 python calculator.py
 ```
 
@@ -376,11 +383,11 @@ pip install legesher-i18n-python-ar  # Arabic
 
 ### "Translation failed: Syntax error"
 
-Your source code has a syntax error. Check that it's valid in the source language:
+Your source code has a syntax error. Check that your code uses valid keywords
+from the language pack. You can verify installed packs with:
 
 ```bash
-# For Spanish code
-legesher validate hola_mundo.py --language es
+pip show legesher-i18n-python-es
 ```
 
 ### "Unsupported Python version"
@@ -388,13 +395,13 @@ legesher validate hola_mundo.py --language es
 The language pack doesn't support your Python version. Check available versions:
 
 ```bash
-legesher info es
+pip show legesher-i18n-python-es
 ```
 
-Then specify a supported version:
+Re-initialize your project with a supported version:
 
 ```bash
-legesher translate code.py --source es --target en --python-version 3.11
+legesher init --python-version 3.11
 ```
 
 ## Summary
