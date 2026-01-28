@@ -246,27 +246,23 @@ Legesher version 0.1.0
 
 If you see this, congratulations! Legesher is installed successfully.
 
-### Step 2: Check Available Languages
+### Step 2: Check Installed Language Packs
 
-List the installed language packs:
+Verify your language packs are installed:
 
 ```bash
-legesher languages list
+pip show legesher-i18n-python-es
 ```
 
 **Expected output:**
 
 ```text
-Available languages:
-  - Spanish (es) - Python 3.10-3.13
-  - Arabic (ar) - Python 3.10-3.13
+Name: legesher-i18n-python-es
+Version: 0.0.1
+...
 ```
 
-If you haven't installed any language packs, you'll see:
-
-```text
-No language packs installed. Install one with: pip install legesher-i18n-python-<language>
-```
+If the package is not found, install it with `pip install legesher-i18n-python-es`.
 
 ### Step 3: Run a Quick Test
 
@@ -274,7 +270,7 @@ Create a simple test file:
 
 ```bash
 echo "imprimir('Hola mundo')" > test_es.py
-legesher run test_es.py
+legesher run test_es.py --lang es
 ```
 
 **Expected output:**
