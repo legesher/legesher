@@ -92,33 +92,14 @@ uv pip install legesher
 ```text
 Resolved 5 packages in 1.2s
 Installed 5 packages in 0.8s
- + legesher==0.1.0
- + legesher-core==0.1.0
- + legesher-i18n==0.1.0
+ + legesher==0.4.0
+ + legesher-core==0.4.0
+ + legesher-i18n==0.4.0
  + ...
 ```
 
-#### Step 3: Install Language Packs (Optional)
-
-Install language packs for the languages you want to code in:
-
-**For Spanish:**
-
-```bash
-uv pip install legesher-i18n-python-es
-```
-
-**For Arabic:**
-
-```bash
-uv pip install legesher-i18n-python-ar
-```
-
-**For all languages:**
-
-```bash
-uv pip install legesher[all]
-```
+All 26 language packs are bundled with `legesher-i18n` by default — no separate
+installation is needed.
 
 ### Method 2: Using pip
 
@@ -151,27 +132,8 @@ pip install legesher
 
 **Note for permission errors:** Use `pip install --user legesher` to install for your user only.
 
-#### Step 3: Install Language Packs (Optional)
-
-Install language packs for the languages you want to code in:
-
-**For Spanish:**
-
-```bash
-pip install legesher-i18n-python-es
-```
-
-**For Arabic:**
-
-```bash
-pip install legesher-i18n-python-ar
-```
-
-**For all languages:**
-
-```bash
-pip install legesher[all]
-```
+All 26 language packs are bundled with `legesher-i18n` by default — no separate
+installation is needed.
 
 ### Method 3: Development Installation
 
@@ -241,30 +203,12 @@ legesher --version
 **Expected output:**
 
 ```text
-Legesher version 0.1.0
+legesher, version 0.4.0
 ```
 
 If you see this, congratulations! Legesher is installed successfully.
 
-### Step 2: Check Installed Language Packs
-
-Verify your language packs are installed:
-
-```bash
-pip show legesher-i18n-python-es
-```
-
-**Expected output:**
-
-```text
-Name: legesher-i18n-python-es
-Version: 0.0.1
-...
-```
-
-If the package is not found, install it with `pip install legesher-i18n-python-es`.
-
-### Step 3: Run a Quick Test
+### Step 2: Run a Quick Test
 
 Create a simple test file:
 

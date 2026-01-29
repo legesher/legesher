@@ -42,6 +42,10 @@ classifiers = [
 legesher-i18n = "legesher_i18n.cli:cli"
 legesher-api = "legesher_i18n.api.cli:main"
 
+[tool.pdm.build]
+includes = ["legesher_i18n/"]
+custom-hook = "pdm_build.py"
+
 [tool.uv.sources]
 legesher-core = { path = "../core", editable = true }
 

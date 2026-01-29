@@ -9,8 +9,10 @@ Example:
     $ legesher translate src/ --from es --to en --output translated/
 """
 
+import json
 import shutil
 import sys
+from importlib.resources import files as resource_files
 from pathlib import Path
 from typing import Optional
 
@@ -20,7 +22,30 @@ from legesher_core import TokenTranslator
 from legesher_core.exceptions import TranslationError
 
 
-@click.command()
+def _load_languages_metadata() -> dict[str, dict]:
+    """Load language metadata from legesher_i18n's languages.json."""
+    try:
+        languages_file = resource_files("legesher_i18n").joinpath("languages.json")
+        data = json.loads(languages_file.read_text(encoding="utf-8"))
+        return data.get("languages", {})
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ModuleNotFoundError):
+        return {}
+
+
+def _build_supported_languages_text() -> str:
+    """Build formatted text listing all supported languages for help output."""
+    langs = _load_languages_metadata()
+    if not langs:
+        return "    en  English\n    es  Spanish\n    ar  Arabic\n    hi  Hindi"
+    lines = [
+        f"    {code:4s}{info.get('name', code.upper())}"
+        for code, info in sorted(langs.items())
+        if isinstance(info, dict)
+    ]
+    return "\n".join(lines)
+
+
+@click.command(epilog="\b\nSupported Languages:\n" + _build_supported_languages_text())
 @click.argument("input", type=click.Path(exists=True), required=False)
 @click.option(
     "--from",
@@ -66,13 +91,6 @@ def translate(
 
         # Translate a directory recursively
         $ legesher translate src/ --from es --to en --output translated/
-
-    \b
-    Supported Languages:
-        en  English
-        es  Spanish
-        ar  Arabic
-        hi  Hindi
     """
     try:
         # Load translator based on translation direction
@@ -329,11 +347,14 @@ def _get_available_languages() -> list[str]:
     """Get list of available language codes.
 
     Returns:
-        List of available language codes (e.g., ['en', 'es', 'ar', 'hi'])
+        List of available language codes (e.g., ['en', 'es', 'ar'])
     """
     try:
         # Try to get from TokenTranslator if available
         return TokenTranslator.list_available_languages()
     except AttributeError:
-        # Fallback to known languages
+        # Fallback to languages.json metadata
+        langs = _load_languages_metadata()
+        if langs:
+            return sorted(langs.keys())
         return ["en", "es", "ar", "hi"]
