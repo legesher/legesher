@@ -7,6 +7,9 @@ Example:
     $ legesher translate input.py --from es --to en
 """
 
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as get_version
+
 import click
 
 from legesher.cli import git as git_module
@@ -16,8 +19,16 @@ from legesher.cli import run as run_module
 from legesher.cli import translate
 
 
+def _get_legesher_version() -> str:
+    """Get the installed legesher package version with fallback."""
+    try:
+        return get_version("legesher")
+    except PackageNotFoundError:
+        return "0.0.0-dev"
+
+
 @click.group()
-@click.version_option(version="0.0.1", prog_name="legesher")
+@click.version_option(version=_get_legesher_version(), prog_name="legesher")
 def cli():
     """Legesher - Code in your native language.
 

@@ -128,6 +128,33 @@ class LanguagePackLoader:
         self.pack_root = pack_root
         self._discovered_packs: dict[str, Path] | None = None
 
+    @staticmethod
+    def _scan_pack_root(root: Path, discovered: dict[str, Path], label: str) -> None:
+        """Scan a pack root directory and add discovered packs.
+
+        Iterates over {root}/{target}/{lang}/legesher_i18n_{target}_{lang}/packs/
+        and registers each valid pack in *discovered* (skipping duplicates).
+
+        Args:
+            root: Directory containing target/lang subdirectories.
+            discovered: Accumulator dict; new packs are added in-place.
+            label: Human-readable source label for debug logging.
+        """
+        for target_dir in root.iterdir():
+            if target_dir.is_dir():
+                target = target_dir.name
+                for lang_dir in target_dir.iterdir():
+                    if lang_dir.is_dir():
+                        module_name = f"legesher_i18n_{target}_{lang_dir.name}"
+                        module_dir = lang_dir / module_name
+                        if module_dir.exists() and (module_dir / "packs").exists():
+                            pack_key = f"{target}-{lang_dir.name}"
+                            if pack_key not in discovered:
+                                discovered[pack_key] = module_dir
+                                logger.debug(
+                                    f"Discovered {label} pack: {pack_key} at {module_dir}"
+                                )
+
     def _discover_packs(self) -> dict[str, Path]:
         """Discover all available language packs from monorepo and installed packages.
 
@@ -155,22 +182,14 @@ class LanguagePackLoader:
         # Path: libs/i18n/language-packs/{target}/{lang}/legesher_i18n_{target}_{lang}/
         monorepo_root = Path(__file__).parent.parent / "language-packs"
         if monorepo_root.exists():
-            for target_dir in monorepo_root.iterdir():
-                if target_dir.is_dir():
-                    target = target_dir.name
-                    for lang_dir in target_dir.iterdir():
-                        if lang_dir.is_dir():
-                            # Check for module directory inside lang directory
-                            module_name = f"legesher_i18n_{target}_{lang_dir.name}"
-                            module_dir = lang_dir / module_name
-                            if module_dir.exists() and (module_dir / "packs").exists():
-                                pack_key = f"{target}-{lang_dir.name}"
-                                discovered[pack_key] = module_dir
-                                logger.debug(
-                                    f"Discovered monorepo pack: {pack_key} at {module_dir}"
-                                )
+            self._scan_pack_root(monorepo_root, discovered, "monorepo")
 
-        # 2. Check installed packages using importlib
+        # 2. Check bundled packs inside legesher_i18n package
+        bundled_root = Path(__file__).parent / "bundled_packs"
+        if bundled_root.exists() and bundled_root.resolve() != monorepo_root.resolve():
+            self._scan_pack_root(bundled_root, discovered, "bundled")
+
+        # 3. Check installed packages using importlib
         # Package naming: legesher-i18n-{target}-{lang} -> legesher_i18n_{target}_{lang}
         try:
             for dist in importlib.metadata.distributions():

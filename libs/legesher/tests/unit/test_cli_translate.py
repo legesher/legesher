@@ -12,6 +12,7 @@ Test Coverage Target: 90%+ of CLI code
 """
 
 import os
+import re
 import stat
 from unittest.mock import MagicMock, patch
 
@@ -73,7 +74,88 @@ class TestTranslateCommandBasics:
 
         assert result.exit_code == 0
         assert "legesher" in result.output.lower()
-        assert "0.0.1" in result.output
+        assert re.search(r"\d+\.\d+\.\d+", result.output), (
+            f"Expected version string in output, got: {result.output!r}"
+        )
+
+
+class TestLanguageHelpers:
+    """Test language metadata loading and help text generation."""
+
+    def test_load_languages_metadata_returns_all_languages(self):
+        """Verify _load_languages_metadata returns all 26 supported languages."""
+        from legesher.cli.translate import _load_languages_metadata
+
+        langs = _load_languages_metadata()
+        assert isinstance(langs, dict)
+        assert len(langs) == 26
+        # Spot-check a few languages
+        assert "en" in langs
+        assert "es" in langs
+        assert "ar" in langs
+        assert "zh" in langs
+        # Each entry should be a dict with a 'name' key
+        for code, info in langs.items():
+            assert isinstance(info, dict), f"Language {code} is not a dict"
+            assert "name" in info, f"Language {code} missing 'name'"
+
+    def test_load_languages_metadata_fallback_on_missing_module(self):
+        """Verify graceful fallback when legesher_i18n is not importable."""
+        from legesher.cli.translate import _load_languages_metadata
+
+        with patch(
+            "legesher.cli.translate.resource_files",
+            side_effect=ModuleNotFoundError("no module"),
+        ):
+            result = _load_languages_metadata()
+            assert result == {}
+
+    def test_build_supported_languages_text_contains_all_languages(self):
+        """Verify help text lists all 26 languages."""
+        from legesher.cli.translate import _build_supported_languages_text
+
+        text = _build_supported_languages_text()
+        lines = [line.strip() for line in text.strip().splitlines() if line.strip()]
+        assert len(lines) == 26
+        # Check alphabetical order
+        codes = [line.split()[0] for line in lines]
+        assert codes == sorted(codes)
+
+    def test_build_supported_languages_text_fallback(self):
+        """Verify fallback text when metadata is unavailable."""
+        from legesher.cli.translate import _build_supported_languages_text
+
+        with patch("legesher.cli.translate._load_languages_metadata", return_value={}):
+            text = _build_supported_languages_text()
+            assert "en" in text
+            assert "English" in text
+            assert "es" in text
+            assert "Spanish" in text
+
+    def test_translate_help_lists_supported_languages(self):
+        """Verify translate --help epilog includes supported languages."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["translate", "--help"])
+
+        assert result.exit_code == 0
+        assert "Supported Languages:" in result.output
+        # Spot-check a few languages appear in the output
+        assert "Arabic" in result.output
+        assert "English" in result.output
+        assert "Spanish" in result.output
+        assert "Chinese" in result.output
+
+    def test_get_available_languages_fallback_uses_metadata(self):
+        """Verify _get_available_languages falls back to languages.json."""
+        from legesher.cli.translate import _get_available_languages
+
+        with patch("legesher.cli.translate.TokenTranslator") as mock_translator:
+            mock_translator.list_available_languages.side_effect = AttributeError
+            result = _get_available_languages()
+            assert isinstance(result, list)
+            assert len(result) == 26
+            assert "en" in result
+            assert "ar" in result
 
 
 class TestSingleFileTranslation:
