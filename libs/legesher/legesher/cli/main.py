@@ -12,6 +12,7 @@ from importlib.metadata import version as get_version
 
 import click
 
+from legesher.cli import config_cmd
 from legesher.cli import git as git_module
 from legesher.cli import init as init_module
 from legesher.cli import metadata as metadata_module
@@ -58,6 +59,7 @@ cli.add_command(translate.translate)
 cli.add_command(run_module.run)
 cli.add_command(git_module.git)
 cli.add_command(metadata_module.metadata)
+cli.add_command(config_cmd.config)
 
 
 if __name__ == "__main__":
