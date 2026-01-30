@@ -125,12 +125,22 @@ def init(
         py_version = detected_version
         click.echo(f"✓ Detected Python version: {py_version} (from pyproject.toml)")
     else:
-        py_version = questionary.text(
-            "Python version (e.g., 3.13):",
-            default="3.13",
-        ).ask()
-        if not py_version:
-            click.echo(click.style("\n❌ Setup cancelled.", fg="red"))
+        if sys.stdin.isatty():
+            py_version = questionary.text(
+                "Python version (e.g., 3.13):",
+                default="3.13",
+            ).ask()
+            if not py_version:
+                click.echo(click.style("\n❌ Setup cancelled.", fg="red"))
+                sys.exit(1)
+        else:
+            click.echo(
+                click.style(
+                    "❌ Cannot detect Python version in non-interactive mode.",
+                    fg="red",
+                )
+            )
+            click.echo("   Use --python-version / -p to specify it.")
             sys.exit(1)
 
     click.echo()
@@ -140,22 +150,35 @@ def init(
         selected_languages = list(language)
         click.echo(f"✓ Using pre-selected languages: {', '.join(selected_languages)}")
     else:
-        selected_languages = _select_languages()
-        if not selected_languages:
-            click.echo(click.style("\n❌ Setup cancelled.", fg="red"))
+        if sys.stdin.isatty():
+            selected_languages = _select_languages()
+            if not selected_languages:
+                click.echo(click.style("\n❌ Setup cancelled.", fg="red"))
+                sys.exit(1)
+        else:
+            click.echo(
+                click.style(
+                    "❌ No languages specified in non-interactive mode.",
+                    fg="red",
+                )
+            )
+            click.echo("   Use --language / -l to specify languages.")
             sys.exit(1)
 
     click.echo()
 
     # Step 3: Git integration
     if git is None:
-        git_enabled = questionary.confirm(
-            "Set up git filters for canonical English storage?",
-            default=True,
-        ).ask()
-        if git_enabled is None:
-            click.echo(click.style("\n❌ Setup cancelled.", fg="red"))
-            sys.exit(1)
+        if sys.stdin.isatty():
+            git_enabled = questionary.confirm(
+                "Set up git filters for canonical English storage?",
+                default=True,
+            ).ask()
+            if git_enabled is None:
+                click.echo(click.style("\n❌ Setup cancelled.", fg="red"))
+                sys.exit(1)
+        else:
+            git_enabled = True
     else:
         git_enabled = git
 
@@ -168,13 +191,16 @@ def init(
 
     # Step 4: AI context generation
     if ai_context is None:
-        ai_enabled = questionary.confirm(
-            "Generate AI assistant context files? (helps Claude Code, Copilot, etc.)",
-            default=True,
-        ).ask()
-        if ai_enabled is None:
-            click.echo(click.style("\n❌ Setup cancelled.", fg="red"))
-            sys.exit(1)
+        if sys.stdin.isatty():
+            ai_enabled = questionary.confirm(
+                "Generate AI assistant context files? (helps Claude Code, Copilot, etc.)",
+                default=True,
+            ).ask()
+            if ai_enabled is None:
+                click.echo(click.style("\n❌ Setup cancelled.", fg="red"))
+                sys.exit(1)
+        else:
+            ai_enabled = True
     else:
         ai_enabled = ai_context
 
