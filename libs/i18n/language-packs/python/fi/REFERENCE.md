@@ -4,6 +4,7 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
+
 > Write Python code in Finnish. This guide shows the Finnish keywords to use for Legesher to understand your code.
 
 ## Language Details
@@ -140,6 +141,7 @@ Python's built-in functions and types in Finnish.
 | `sum` | `summa` |
 | `super` | `yläluokka` |
 | `tuple` | `tupla` |
+| `type` | `type` |
 | `vars` | `variaable` |
 | `zip` | `sijoita` |
 
@@ -181,7 +183,7 @@ Exception classes for error handling.
 | `indexerror` | `indexerrori` |
 | `interruptederror` | `kesäyhteensopimuksen` |
 | `ioerror` | `iovirhe` |
-| `isadirectoryerror` | `isädirکتorivirhe` |
+| `isadirectoryerror` | `hakemistovirhe` |
 | `keyboardinterrupt` | `näkyvä_avautumin` |
 | `keyerror` | `avaimenvääritys` |
 | `lookuperror` | `jälkikärsimyssä` |

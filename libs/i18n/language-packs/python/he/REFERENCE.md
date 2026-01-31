@@ -87,13 +87,13 @@ Python's built-in functions and types in Hebrew.
 | `bytes` | `בתים` |
 | `callable` | `קריאה` |
 | `chr` | `תו` |
-| `classmethod` | `התרגוםשלclassmethod` |
+| `classmethod` | `שיטתמחלקה` |
 | `compile` | `להפוךלקוד` |
 | `complex` | `מורכב` |
 | `delattr` | `מחיקהשלתכונה` |
 | `dict` | `מילון` |
 | `dir` | `התרגוםלמונח` |
-| `divmod` | `делитומוד` |
+| `divmod` | `חלוקהושארית` |
 | `ellipsis` | `הנקודהפסיק` |
 | `enumerate` | `לספור` |
 | `eval` | `הערכה` |
@@ -101,7 +101,7 @@ Python's built-in functions and types in Hebrew.
 | `filter` | `לסנן` |
 | `float` | `צף` |
 | `format` | `הפורמט` |
-| `frozenset` | `קפואset` |
+| `frozenset` | `קבוצהקפואה` |
 | `getattr` | `הגטטרייז` |
 | `globals` | `התרגוםשלהמונח` |
 | `hasattr` | `יש_תכונה` |
@@ -119,7 +119,7 @@ Python's built-in functions and types in Hebrew.
 | `locals` | `התרגוםלמונח` |
 | `map` | `מפה` |
 | `max` | `הערךהמקסימלי` |
-| `memoryview` | `view_זיכרון` |
+| `memoryview` | `תצוגתזיכרון` |
 | `min` | `הערךהקטןביותר` |
 | `next` | `הבא` |
 | `notimplemented` | `לאמיושם` |
@@ -129,7 +129,7 @@ Python's built-in functions and types in Hebrew.
 | `ord` | `אורד` |
 | `pow` | `העלכושר` |
 | `print` | `הדפס` |
-| `property` | `התרגוםשלהמונח"property"` |
+| `property` | `מאפיין` |
 | `range` | `טווח` |
 | `repr` | `ייצוג` |
 | `reversed` | `הפוך` |
@@ -143,6 +143,7 @@ Python's built-in functions and types in Hebrew.
 | `sum` | `סכום` |
 | `super` | `סופר` |
 | `tuple` | `טופל` |
+| `type` | `type` |
 | `vars` | `משתנים` |
 | `zip` | `למזג` |
 
@@ -170,7 +171,7 @@ Exception classes for error handling.
 | `deprecationwarning` | `אזהרת_דעיכה` |
 | `encodingwarning` | `אזהרת_קידוד` |
 | `environmenterror` | `שגיאתסביבה` |
-| `eoferror` | `שגיאתeoferror` |
+| `eoferror` | `שגיאתסוףקובץ` |
 | `exception` | `חריגה` |
 | `exceptiongroup` | `קבוצתחריגים` |
 | `fileexistserror` | `שגיאתקיוםקובץ` |
@@ -211,11 +212,11 @@ Exception classes for error handling.
 | `taberror` | `טאברור` |
 | `timeouterror` | `שגיאהבזמןהמתנה` |
 | `typeerror` | `שגיאתסוג` |
-| `unboundlocalerror` | `שגיאת_unboundlocalerror` |
+| `unboundlocalerror` | `שגיאתמשתנהמקומילאמאוגד` |
 | `unicodedecodeerror` | `שגיאתפיוטונידיקודהאוהי` |
 | `unicodeencodeerror` | `אֶסְקַרֵפראֱמֶתאָחוֹר` |
 | `unicodeerror` | `שגיאתיוניקוד` |
-| `unicodetranslateerror` | `שגיאתתרגוםUnicode` |
+| `unicodetranslateerror` | `שגיאתתרגוםיוניקוד` |
 | `unicodewarning` | `אזהרתיוניקוד` |
 | `userwarning` | `אזהרת_משתמש` |
 | `valueerror` | `ערךשגוי` |

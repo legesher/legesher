@@ -89,7 +89,7 @@ builtins:
   locals: المتغيراتالمحلية
   map: الخريطة
   max: الحدالأقصى
-  memoryview: view_ذاكرة
+  memoryview: عرضالذاكرة
   min: الأدنى
   next: التالي
   notimplemented: غير_مُنفَذ
@@ -115,6 +115,7 @@ builtins:
   tuple: التوبلي
   vars: الحصولعلىالمتغيرات
   zip: التجميع
+  type: نوع
 exceptions:
   arithmeticerror: خطأحسابي
   assertionerror: خطأالتأكيد

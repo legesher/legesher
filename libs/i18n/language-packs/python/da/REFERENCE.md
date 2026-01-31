@@ -4,6 +4,7 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
+
 > Write Python code in Danish. This guide shows the Danish keywords to use for Legesher to understand your code.
 
 ## Language Details
@@ -140,6 +141,7 @@ Python's built-in functions and types in Danish.
 | `sum` | `summe` |
 | `super` | `superen` |
 | `tuple` | `tupel` |
+| `type` | `type` |
 | `vars` | `variabler` |
 | `zip` | `samlet` |
 

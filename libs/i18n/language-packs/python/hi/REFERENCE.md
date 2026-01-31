@@ -4,6 +4,7 @@
 ![Script](https://img.shields.io/badge/Script-Devanagari-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
+
 > Write Python code in Hindi. This guide shows the Hindi keywords to use for Legesher to understand your code.
 
 ## Language Details
@@ -140,6 +141,7 @@ Python's built-in functions and types in Hindi.
 | `sum` | `जोड़ना` |
 | `super` | `सुपर` |
 | `tuple` | `टपल` |
+| `type` | `type` |
 | `vars` | `परिभाषितकरना` |
 | `zip` | `ज़िप` |
 

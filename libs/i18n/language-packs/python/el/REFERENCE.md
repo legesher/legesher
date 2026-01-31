@@ -4,6 +4,7 @@
 ![Script](https://img.shields.io/badge/Script-Greek-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
+
 > Write Python code in Greek. This guide shows the Greek keywords to use for Legesher to understand your code.
 
 ## Language Details
@@ -78,9 +79,9 @@ Python's built-in functions and types in Greek.
 | `any` | `οποιοσδήποτε` |
 | `ascii` | `ασκί` |
 | `bin` | `δυναμικό` |
-| `bool` | `τοboolean` |
+| `bool` | `μπουλ` |
 | `breakpoint` | `διακοπή_σημείου_παύσης` |
-| `bytearray` | `κυμαίνονταςByte` |
+| `bytearray` | `πίνακας_ψηφιολέξεων` |
 | `bytes` | `κυανος` |
 | `callable` | `καλή_χρήση` |
 | `chr` | `χαρακτήρας` |
@@ -97,8 +98,8 @@ Python's built-in functions and types in Greek.
 | `exec` | `εκτέλεση` |
 | `filter` | `φίλτρο` |
 | `float` | `διατυπωμένος` |
-| `format` | `τοformat` |
-| `frozenset` | `τοfrozenset` |
+| `format` | `μορφοποίηση` |
+| `frozenset` | `παγωμένο_σύνολο` |
 | `getattr` | `λησμονώ_χρήση_απόκτησης_χαρακτηριστικού` |
 | `globals` | `παγκόσμιος` |
 | `hasattr` | `έχειχαρακτηριστικό` |
@@ -139,7 +140,8 @@ Python's built-in functions and types in Greek.
 | `str` | `στρ` |
 | `sum` | `σύνολο` |
 | `super` | `υπερ` |
-| `tuple` | `τοtuple` |
+| `tuple` | `πλειάδα` |
+| `type` | `type` |
 | `vars` | `variabiles` |
 | `zip` | `συνδεις` |
 
@@ -154,11 +156,11 @@ Exception classes for error handling.
 | `attributeerror` | `Σφάλμα_Χαρακτηριστικού` |
 | `baseexception` | `βασική_εξαίρεση` |
 | `baseexceptiongroup` | `βασική_εξαίρεση_ομάδα` |
-| `basegeneratorexit` | `basegeneratorέξοδος` |
-| `blockingioerror` | `σταματητικοςIOMsg` |
+| `basegeneratorexit` | `βασική_έξοδος_γεννήτριας` |
+| `blockingioerror` | `σφάλμα_αποκλεισμού_εε` |
 | `brokenpipeerror` | `κατάληψηΣφαλμέτηςΕποπτείας` |
 | `buffererror` | `σφαλεμά_προσωρινής_ζώνης_δεδομένων` |
-| `byteswarning` | `προειδοποίησηbyteswarning` |
+| `byteswarning` | `προειδοποίηση_ψηφιολέξεων` |
 | `childprocesserror` | `σφάλμα_παιδιού_διαδικασίας` |
 | `connectionabortederror` | `σύνδεσμοςΑκολουθητήςΣφαίρας` |
 | `connectionerror` | `σφάλμα_σύνδεσης` |
@@ -180,7 +182,7 @@ Exception classes for error handling.
 | `indentationerror` | `κεντρισμοςΣφαλμα` |
 | `indexerror` | `Σφάλμαευρετηρίου` |
 | `interruptederror` | `σφάλμαδιακοπής` |
-| `ioerror` | `σφάλμαIO` |
+| `ioerror` | `σφάλμα_εισόδου_εξόδου` |
 | `isadirectoryerror` | `είσαιΔιαρκείαΑρχείου` |
 | `keyboardinterrupt` | `διακοπή_με_κλειδαριά` |
 | `keyerror` | `σφάλμακλειδιού` |
@@ -190,7 +192,7 @@ Exception classes for error handling.
 | `nameerror` | `Σφάλμαονόματος` |
 | `notadirectoryerror` | `δενΕίναικατάλογος` |
 | `notimplementederror` | `σφάλμα_μη_υλοποίησης` |
-| `oserror` | `σφάλμαΟS` |
+| `oserror` | `σφάλμα_λειτουργικού` |
 | `overflowerror` | `σφραγίδαυπερχείλισης` |
 | `pendingdeprecationwarning` | `ειδοποίηση_για_ακυρότητα` |
 | `permissionerror` | `σφάλμα_άδειας` |
@@ -209,11 +211,11 @@ Exception classes for error handling.
 | `timeouterror` | `σφάλμαχρονικούορίου` |
 | `typeerror` | `τύπος_σφάλματος` |
 | `unboundlocalerror` | `απαράδεκτητοπικήμεταβλητή` |
-| `unicodedecodeerror` | `σφάλμααποκωδικοποίησηςUnicode` |
-| `unicodeencodeerror` | `κατάστροφηΚωδικούUnicode` |
-| `unicodeerror` | `σφάλμαUnicode` |
-| `unicodetranslateerror` | `κατάλογοςUnicodeΣφάλμα` |
-| `unicodewarning` | `προσοχήUnicode` |
+| `unicodedecodeerror` | `σφάλμα_αποκωδικοποίησης_γιούνικοντ` |
+| `unicodeencodeerror` | `σφάλμα_κωδικοποίησης_γιούνικοντ` |
+| `unicodeerror` | `σφάλμα_γιούνικοντ` |
+| `unicodetranslateerror` | `σφάλμα_μετάφρασης_γιούνικοντ` |
+| `unicodewarning` | `προειδοποίηση_γιούνικοντ` |
 | `userwarning` | `προειδοποίηση_χρήστη` |
 | `valueerror` | `ValueError` |
 | `warning` | `προειδοποίηση` |

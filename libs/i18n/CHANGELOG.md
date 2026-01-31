@@ -9,12 +9,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-01-31
+
 ### Added
 
 - **Bundle Language Packs in i18n Wheel** (CORE-559)
   - Language pack YAML files now included directly in the `legesher-i18n` wheel
   - Users no longer need to install separate language pack packages
   - All 26 language packs available out of the box
+
+### Fixed
+
+- **Fix 33 mixed-script translations across 5 language packs** (CORE-531)
+  - Greek (el): 15 entries — remove Latin characters, fully translate to Greek
+  - Hebrew (he): 8 entries — remove Latin/Cyrillic, fix `property` invalid identifier (had `"` quotes)
+  - Russian (ru): 8 entries — remove Latin characters, fully translate to Cyrillic
+  - Arabic (ar): 1 entry — fix `memoryview` mixed Latin+Arabic
+  - Finnish (fi): 1 entry — fix `isadirectoryerror` mixed scripts
+- **Fix Japanese `in` keyword** (CORE-531): `～が～の中にある` → `含む` (valid Python identifier)
+- **Add missing `type` builtin** to Spanish (`tipo`) and Arabic (`نوع`) packs (CORE-531)
 
 ## [0.4.0] - 2026-01-27
 

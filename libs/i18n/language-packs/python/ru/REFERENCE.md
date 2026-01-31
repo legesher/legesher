@@ -4,6 +4,7 @@
 ![Script](https://img.shields.io/badge/Script-Cyrillic-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
+
 > Write Python code in Russian. This guide shows the Russian keywords to use for Legesher to understand your code.
 
 ## Language Details
@@ -76,7 +77,7 @@ Python's built-in functions and types in Russian.
 | `all` | `все` |
 | `anext` | `следующий` |
 | `any` | `каждый` |
-| `ascii` | `аsci` |
+| `ascii` | `аски` |
 | `bin` | `бинарный` |
 | `bool` | `булев` |
 | `breakpoint` | `отрывнойпункт` |
@@ -93,7 +94,7 @@ Python's built-in functions and types in Russian.
 | `divmod` | `дивмод` |
 | `ellipsis` | `запятые` |
 | `enumerate` | `перечисление` |
-| `eval` | `evalюировать` |
+| `eval` | `вычислить` |
 | `exec` | `выполнить` |
 | `filter` | `фильтр` |
 | `float` | `флоат` |
@@ -110,7 +111,7 @@ Python's built-in functions and types in Russian.
 | `int` | `целоечисло` |
 | `isinstance` | `являетсяИсключением` |
 | `issubclass` | `подкласс` |
-| `iter` | `iterировать` |
+| `iter` | `итератор` |
 | `len` | `длина` |
 | `list` | `список` |
 | `locals` | `локальныепеременные` |
@@ -140,6 +141,7 @@ Python's built-in functions and types in Russian.
 | `sum` | `сумма` |
 | `super` | `супер` |
 | `tuple` | `кортеж` |
+| `type` | `type` |
 | `vars` | `переменные` |
 | `zip` | `сжатие` |
 
@@ -163,11 +165,11 @@ Exception classes for error handling.
 | `connectionabortederror` | `отказотсоединения` |
 | `connectionerror` | `ошибкаподключения` |
 | `connectionrefusederror` | `отказотподключения` |
-| `connectionreseterror` | `reset_ошибка_соединения` |
+| `connectionreseterror` | `ошибка_сброса_соединения` |
 | `deprecationwarning` | `предупреждениеобустаревании` |
 | `encodingwarning` | `предупреждениекодирования` |
 | `environmenterror` | `ошибкасреды` |
-| `eoferror` | `ошибкаEO` |
+| `eoferror` | `ошибка_конца_файла` |
 | `exception` | `исключение` |
 | `exceptiongroup` | `группировкаисключений` |
 | `fileexistserror` | `ошибкасуществованияфайла` |
@@ -188,7 +190,7 @@ Exception classes for error handling.
 | `memoryerror` | `ошибкапамяти` |
 | `modulenotfounderror` | `ошибкамодуляненайдена` |
 | `nameerror` | `Ошибкаимени` |
-| `notadirectoryerror` | `ошибка_не_явления_каталогa` |
+| `notadirectoryerror` | `ошибка_не_каталог` |
 | `notimplementederror` | `ошибканереализации` |
 | `oserror` | `ошибкасистемы` |
 | `overflowerror` | `ошибкапереполнения` |
@@ -210,9 +212,9 @@ Exception classes for error handling.
 | `typeerror` | `типошаг` |
 | `unboundlocalerror` | `неопределенныйлокальныйошибок` |
 | `unicodedecodeerror` | `ошибкадекодированияунитногокода` |
-| `unicodeencodeerror` | `ошибкаУнicodeКодирования` |
+| `unicodeencodeerror` | `ошибка_кодирования_юникод` |
 | `unicodeerror` | `ошибкауниткодирования` |
-| `unicodetranslateerror` | `ошибкапереводаUnicode` |
+| `unicodetranslateerror` | `ошибка_перевода_юникод` |
 | `unicodewarning` | `уникодПредупреждение` |
 | `userwarning` | `предупреждение_пользователя` |
 | `valueerror` | `ValueError` |

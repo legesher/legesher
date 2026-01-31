@@ -177,11 +177,37 @@ class TokenTranslator:
                     f"cultural comment(s) from source"
                 )
 
-            # Translate tokens
+            # Translate tokens (index-based for compound keyword lookahead)
             translated_tokens = []
-            for tok in tokens:
+            i = 0
+            while i < len(tokens):
+                tok = tokens[i]
+
                 # Check if this is a NAME token (keyword, builtin, or identifier)
                 if tok.type == tokenize.NAME:
+                    # Check for compound keyword: NAME + OP("*") → e.g., "except*"
+                    compound_key = f"{tok.string}*"
+                    compound_val = self.mapper.get_keyword(compound_key)
+                    if (
+                        compound_val
+                        and i + 1 < len(tokens)
+                        and tokens[i + 1].type == tokenize.OP
+                        and tokens[i + 1].string == "*"
+                    ):
+                        # Strip trailing * from translation (the * OP token is kept)
+                        translated_val = (
+                            compound_val[:-1]
+                            if compound_val.endswith("*")
+                            else compound_val
+                        )
+                        new_tok = tokenize.TokenInfo(
+                            tok.type, translated_val, tok.start, tok.end, tok.line
+                        )
+                        translated_tokens.append(new_tok)
+                        translated_tokens.append(tokens[i + 1])  # keep the * OP
+                        i += 2
+                        continue
+
                     # Try to translate as keyword first
                     translated = self.mapper.get_keyword(tok.string)
                     if translated and translated != tok.string:
@@ -190,6 +216,7 @@ class TokenTranslator:
                             tok.type, translated, tok.start, tok.end, tok.line
                         )
                         translated_tokens.append(new_tok)
+                        i += 1
                         continue
 
                     # Try to translate as builtin
@@ -200,10 +227,12 @@ class TokenTranslator:
                             tok.type, translated, tok.start, tok.end, tok.line
                         )
                         translated_tokens.append(new_tok)
+                        i += 1
                         continue
 
                 # Keep token unchanged (identifiers, operators, etc.)
                 translated_tokens.append(tok)
+                i += 1
 
             # Reconstruct code from translated tokens
             result = tokenize.untokenize(translated_tokens)

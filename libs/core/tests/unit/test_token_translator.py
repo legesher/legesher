@@ -131,3 +131,39 @@ if True:
 
         # Ensure we can encode/decode without errors
         translated.encode("utf-8").decode("utf-8")
+
+
+class TestCompoundKeywordLookahead:
+    """Test compound keyword handling (e.g., except*)."""
+
+    @pytest.fixture
+    def compound_translator(self):
+        """Translator with except* compound keyword mapping."""
+        keywords = {
+            "except": "ماعدا",
+            "except*": "استثناء*",
+            "try": "التجربة",
+        }
+        builtins = {"print": "طَبْع"}
+        return TokenTranslator(keyword_map=keywords, builtin_map=builtins)
+
+    def test_except_star_uses_compound_mapping(self, compound_translator):
+        """except* should use the compound keyword mapping, not the base except."""
+        code = "try:\n    pass\nexcept* ValueError:\n    pass"
+        translated = compound_translator.translate_code(code)
+        assert "استثناء" in translated
+        assert "ماعدا" not in translated  # should NOT use base except mapping
+
+    def test_regular_except_still_works(self, compound_translator):
+        """Regular except (without *) should use base mapping."""
+        code = "try:\n    pass\nexcept ValueError:\n    pass"
+        translated = compound_translator.translate_code(code)
+        assert "ماعدا" in translated
+        assert "استثناء" not in translated
+
+    def test_except_star_round_trip(self, compound_translator):
+        """Compound keyword translates and the * is preserved."""
+        code = "try:\n    pass\nexcept* ValueError:\n    pass"
+        translated = compound_translator.translate_code(code)
+        # The * operator should still be present
+        assert "*" in translated

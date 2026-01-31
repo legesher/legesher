@@ -55,7 +55,7 @@ builtins:
   compile: להפוךלקוד
   delattr: מחיקהשלתכונה
   dir: התרגוםלמונח
-  divmod: делитומוד
+  divmod: חלוקהושארית
   enumerate: לספור
   eval: הערכה
   exec: הביצועשל
@@ -96,16 +96,16 @@ builtins:
   bool: בוליאני
   bytearray: ARRY_OF_BYTE
   bytes: בתים
-  classmethod: התרגוםשלclassmethod
+  classmethod: שיטתמחלקה
   complex: מורכב
   dict: מילון
   float: צף
-  frozenset: קפואset
+  frozenset: קבוצהקפואה
   int: שלם
   list: רשימה
-  memoryview: view_זיכרון
+  memoryview: תצוגתזיכרון
   object: עצם
-  property: התרגוםשלהמונח"property"
+  property: מאפיין
   set: קבוצה
   staticmethod: שיטהסטטית
   str: מִסְטְרִי
@@ -131,7 +131,7 @@ exceptions:
   keyerror: שגיאתמפתח
   attributeerror: שגיאתתכונה
   nameerror: שגיאתשם
-  unboundlocalerror: שגיאת_unboundlocalerror
+  unboundlocalerror: שגיאתמשתנהמקומילאמאוגד
   oserror: שגיאתמערכתההפעלה
   blockingioerror: שגיאתקלטפלטחסימתי
   childprocesserror: שגיאת_תהליך_משני
@@ -157,7 +157,7 @@ exceptions:
   unicodeerror: שגיאתיוניקוד
   unicodedecodeerror: שגיאתפיוטונידיקודהאוהי
   unicodeencodeerror: אֶסְקַרֵפראֱמֶתאָחוֹר
-  unicodetranslateerror: שגיאתתרגוםUnicode
+  unicodetranslateerror: שגיאתתרגוםיוניקוד
   runtimeerror: שגיאתריצה
   notimplementederror: שגיאתלא_יישום
   recursionerror: שגיאהשלחזרה
@@ -165,7 +165,7 @@ exceptions:
   assertionerror: טעותבטוען
   memoryerror: שגיאתזיכרון
   buffererror: שגיאת_בופר
-  eoferror: שגיאתeoferror
+  eoferror: שגיאתסוףקובץ
   syntaxerror: שגיאתתחביר
   indentationerror: שגיאת_הטמעה
   taberror: טאברור
