@@ -2,7 +2,7 @@
 """
 Language Pack Analysis Script
 
-Analyzes all 27 Python language packs to detect:
+Analyzes all 26 Python language packs to detect:
 - Multi-word translations (spaces)
 - Punctuation in translations (/, -, :, .)
 - Duplicate translations (same value for different terms)
@@ -19,7 +19,7 @@ import json
 import unicodedata
 
 
-# Language codes for all 27 packs
+# Language codes for all 26 packs
 LANGUAGES = [
     "ar",
     "da",
@@ -437,7 +437,7 @@ def get_language_name(code):
 
 def main():
     """Main analysis function."""
-    print("🔍 Analyzing 27 Python language packs...\n")
+    print("🔍 Analyzing 26 Python language packs...\n")
 
     all_issues = {}
 

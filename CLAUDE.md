@@ -400,6 +400,42 @@ The `legesher-i18n` package includes:
 - Editor integrations isolated in their respective packages
 - Shared utilities and types in `libs/core/`
 
+### Release Process
+
+When bumping package versions or creating a release, follow these steps:
+
+1. **Update the package's CHANGELOG.md** (`libs/<package>/CHANGELOG.md`)
+   - Move `[Unreleased]` items into a new version heading with today's date
+   - Use Keep a Changelog format: Added, Changed, Fixed, Removed
+   - Reference Linear issue IDs (e.g., CORE-559)
+
+2. **Update the root CHANGELOG.md**
+   - Add a new version entry with the **Package Versions table** showing every package's version
+   - Mark packages that changed with "Yes" in the Changed column
+   - Summarize changes as bullet points below the table
+
+3. **Bump the version** in `pyproject.toml` (or `package.json` for vs-code)
+
+4. **A pre-commit hook** (`check-changelog-on-version-bump`) enforces this:
+   - If a `pyproject.toml` or `package.json` version field changes, the corresponding
+     `CHANGELOG.md` and root `CHANGELOG.md` must also be staged
+   - Bypass with `git commit --no-verify` if needed
+
+**Package version table template** (for root CHANGELOG.md):
+
+```markdown
+### Package Versions
+
+| Package                  | Version | Changed? |
+| ------------------------ | ------- | -------- |
+| legesher-core            | x.y.z   | —        |
+| legesher-i18n            | x.y.z   | Yes      |
+| legesher (CLI)           | x.y.z   | —        |
+| legesher-language-server | x.y.z   | —        |
+| legesher-vscode          | x.y.z   | —        |
+| legesher-home            | x.y.z   | —        |
+```
+
 ## Project Management
 
 ### Linear Integration

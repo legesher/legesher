@@ -9,19 +9,106 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Package Versions
+
+| Package                  | Version | Changed? |
+| ------------------------ | ------- | -------- |
+| legesher-core            | 0.4.0   | —        |
+| legesher-i18n            | 0.4.0   | Yes      |
+| legesher (CLI)           | 0.4.0   | Yes      |
+| legesher-language-server | 0.1.1   | Yes      |
+| legesher-vscode          | 0.1.1   | —        |
+| legesher-home            | 0.1.0   | —        |
+
+### Changed
+
+- **legesher-language-server**: Bump to 0.1.1 for pygls 2.0 migration (CORE-448)
+- **legesher-i18n**: Bundle all 26 language pack YAML files directly in the i18n wheel (CORE-559)
+- **legesher CLI**: Add `legesher config` command (CORE-563),
+  non-interactive `legesher init` (CORE-562), fix `--version` (CORE-560),
+  dynamic language help text (CORE-561)
+- **Docs**: Fix CLI flags `--from`/`--to`, remove non-existent commands, update config references (CORE-564–566)
+- **CI**: Add cross-platform lint and test workflows
+
+## [0.4.0] - 2026-01-27
+
+### Package Versions
+
+| Package                  | Version | Changed? |
+| ------------------------ | ------- | -------- |
+| legesher-core            | 0.4.0   | —        |
+| legesher-i18n            | 0.4.0   | —        |
+| legesher (CLI)           | 0.4.0   | —        |
+| legesher-language-server | 0.1.0   | —        |
+| legesher-vscode          | 0.1.1   | —        |
+| legesher-home            | 0.1.0   | Yes      |
+
+### Changed
+
+- **legesher-home**: Renamed from `legesher-pride` to `legesher-home` (CORE-515)
+- Version bump across all foundation packages to 0.4.0
+
+## [0.3.0] - 2026-01-26
+
+### Package Versions
+
+| Package                  | Version       | Changed? |
+| ------------------------ | ------------- | -------- |
+| legesher-core            | 0.3.0         | —        |
+| legesher-i18n            | 0.3.0 (0.2.1) | Yes      |
+| legesher (CLI)           | 0.3.0         | —        |
+| legesher-language-server | 0.1.0         | —        |
+| legesher-vscode          | 0.1.1         | —        |
+| legesher-home            | 0.1.0         | —        |
+
 ### Added
 
-- **Comprehensive Documentation Expansion** ([#37](https://github.com/madiedgar/legesher/pull/37), CORE-440)
-  - **Beginner Guides**: Installation, getting started, and git workflow guides
-  - **Translation Guide**: Language pack creation guide for contributors
-  - **Glossary**: Technical terms dictionary with 29 entries
-  - **Architecture Diagrams**: 5 Mermaid diagrams (package arch, translation flow, git workflow, LSP, pack inheritance)
-  - **FAQ**: 35+ questions across 7 categories
-  - **Code of Conduct**: Contributor Covenant 2.1 with multilingual programming focus
-  - **Roadmap**: v0.1.0 through v1.0.0+ with community involvement details
-  - **CLI Documentation**: Complete legesher package README with 5 main commands
-  - Improves onboarding experience for new users and contributors
-  - All documentation follows markdown best practices with 120-char line limit
+- **legesher-i18n**: Keyword Registry CLI Tool with export, validate, and REFERENCE.md auto-generation (CORE-555)
+
+## [0.2.0] - 2026-01-26
+
+### Package Versions
+
+| Package                  | Version | Changed? |
+| ------------------------ | ------- | -------- |
+| legesher-core            | 0.2.0   | —        |
+| legesher-i18n            | 0.2.0   | Yes      |
+| legesher (CLI)           | 0.2.0   | —        |
+| legesher-language-server | 0.1.0   | —        |
+| legesher-vscode          | 0.1.1   | —        |
+| legesher-home            | 0.1.0   | —        |
+
+### Added
+
+- **legesher-i18n**: Complete all 26 language translations via Aya AI Model pipeline (CORE-530)
+- **legesher-i18n**: Python 3.14 language pack support, Spanish YAML boolean fix
+
+## [0.1.1] - 2026-01-23
+
+### Package Versions
+
+| Package                  | Version | Changed? |
+| ------------------------ | ------- | -------- |
+| legesher-core            | 0.1.1   | —        |
+| legesher-i18n            | 0.1.1   | Yes      |
+| legesher (CLI)           | 0.1.1   | —        |
+| legesher-language-server | 0.1.0   | —        |
+| legesher-vscode          | 0.1.1   | Yes      |
+| legesher-home            | 0.1.0   | —        |
+
+### Fixed
+
+- **legesher-i18n**: Fix YAML exporter term_type from database (CORE-460)
+
+### Added
+
+- **legesher-i18n**: REFERENCE.md quick guides for all 25 language packs
+- **legesher-vscode**: Onboarding dialog, translation panel, language selection, telemetry, feedback system (CORE-477)
+- **legesher-vscode**: CI build pipeline with esbuild
+
+### Removed
+
+- **legesher-i18n**: Legacy language pack archives
 
 ## [0.1.0] - 2025-11-07
 
@@ -30,221 +117,71 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 The inaugural release of Legesher as a unified monorepo, enabling developers to code
 in their native language instead of English.
 
----
+### Package Versions
 
-## Package Releases
+| Package                  | Version | Changed? |
+| ------------------------ | ------- | -------- |
+| legesher-core            | 0.1.0   | Yes      |
+| legesher-i18n            | 0.1.0   | Yes      |
+| legesher (CLI)           | 0.1.0   | Yes      |
+| legesher-language-server | 0.1.0   | Yes      |
+| legesher-vscode          | 0.1.0   | Yes      |
 
-### Foundation Suite (v0.1.0) - Synchronized Release
+See individual package changelogs for full details:
 
-Core packages released together with matching version numbers:
-
-- **[legesher-core v0.1.0](libs/core/CHANGELOG.md)** - Translation engine
-  - Token-based transformation with 91% test coverage
-  - Git filter system for multilingual workflows
-  - Metadata tracking for translation history
-  - Spanish and Arabic language support
-  - See [full changelog](libs/core/CHANGELOG.md)
-
-- **[legesher-i18n v0.1.0](libs/i18n/CHANGELOG.md)** - Language pack system
-  - Version-aware packs for Python 3.10-3.13
-  - Translation API integration (DeepL, Google, LibreTranslate)
-  - Comprehensive validation and CLI tools
-  - Auto-update workflow for Python releases
-  - See [full changelog](libs/i18n/CHANGELOG.md)
-
-- **[legesher v0.1.0](libs/legesher/CHANGELOG.md)** - CLI tools
-  - `legesher translate` command for file/directory translation
-  - `legesher git` commands for repository setup
-  - Configuration management system
-  - Metadata visualization tools
-  - See [full changelog](libs/legesher/CHANGELOG.md)
-
-- **[legesher-language-server v0.1.0](libs/language-server/CHANGELOG.md)** - LSP implementation
-  - Complete LSP server foundation
-  - Hover, completion, and diagnostic providers
-  - Pylance integration (Phase 1 complete)
-  - 4,559 test lines with high coverage
-  - See [full changelog](libs/language-server/CHANGELOG.md)
-
-### Language Packs (v0.0.1) - Independent Releases
-
-Language-specific translation packs released independently:
-
-- **[legesher-i18n-python-es v0.0.1](libs/i18n-python-es/CHANGELOG.md)** - Spanish
-  - 37 keyword translations
-  - 34 built-in function translations
-  - Version-aware for Python 3.10-3.13
-  - See [full changelog](libs/i18n-python-es/CHANGELOG.md)
-
-- **[legesher-i18n-python-ar v0.0.1](libs/i18n-python-ar/CHANGELOG.md)** - Arabic
-  - 37 keyword translations with RTL support
-  - 34 built-in function translations
-  - Version-aware for Python 3.10-3.13
-  - See [full changelog](libs/i18n-python-ar/CHANGELOG.md)
+- [legesher-core](libs/core/CHANGELOG.md) — Translation engine, git filters, metadata tracking
+- [legesher-i18n](libs/i18n/CHANGELOG.md) — Language pack system, translation API, validation CLI
+- [legesher (CLI)](libs/legesher/CHANGELOG.md) — translate, git, metadata commands
+- [legesher-language-server](libs/language-server/CHANGELOG.md) — LSP with hover, completion, diagnostics
+- [legesher-vscode](libs/vs-code/CHANGELOG.md) — VS Code extension with LSP client
 
 ---
 
-## Release Highlights
+## Project Overview
 
 ### Language Support
 
-- **2 Languages**: Spanish (es), Arabic (ar)
-- **RTL Support**: Full right-to-left text handling for Arabic
-- **Version-Aware**: Automatic adaptation to Python 3.10, 3.11, 3.12, 3.13
+- **26 Languages**: ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it,
+  ja, ko, ms, nl, no, pl, pt, ru, sv, th, tr, vi, zh
+- **RTL Support**: Full right-to-left text handling for Arabic and Hebrew
+- **Version-Aware**: Python 3.10, 3.11, 3.12, 3.13, 3.14 with pack inheritance
 
-### Testing & Quality
+### Translation Engine
 
-- **255 Tests** in legesher-core (91% coverage)
-- **187 Tests** in legesher-i18n (99.97% pass rate)
-- **66 Tests** in legesher CLI (97% coverage)
-- **4,559 Test Lines** in language server
-- **Multi-OS**: Linux, macOS, Windows
-- **Multi-Python**: 3.10, 3.11, 3.12, 3.13
-
-### Git Integration
-
-- **Canonical English Storage**: Repository stores English, developers see their language
-- **Automatic Translation**: On checkout, code translates to developer's preferred language
-- **Zero Conflicts**: No merge conflicts from keyword differences
-- **Multilingual Teams**: Spanish → English repo → Arabic workflow
+- **Token-Based Translator**: Preserves all formatting and comments (<2ms per file)
+- **Tree-sitter Translator**: AST-based, production-ready (~160us for medium files)
+- **Round-Trip Fidelity**: 100% (EN to ES to EN is byte-identical)
+- **Git Filters**: Canonical English storage with automatic translation on checkout
 
 ### IDE Integration
 
-- **Language Server Protocol**: Works with any LSP-compatible editor
-- **Hover Documentation**: Translated docstrings and keyword info
-- **IntelliSense**: Localized auto-completion
-- **Diagnostics**: Error messages in native language
-- **Pylance Integration**: Advanced type checking (Phase 1 complete)
+- **Language Server**: Full LSP with hover, completion, diagnostics, semantic tokens
+- **VS Code Extension**: Onboarding, translation panel, language selection, telemetry
+- **Editor-Agnostic**: LSP design supports any compatible editor
 
-### Automation
+### CLI Tools
 
-- **CI/CD Pipeline** ([#10](https://github.com/madiedgar/legesher/pull/10))
-  - Automated testing on push/PR
-  - Multi-OS and multi-Python testing
-  - Code coverage reporting
+- `legesher translate` — file, directory, and stdin/stdout translation
+- `legesher run` — execute native-language Python directly
+- `legesher git setup/status` — configure git filter integration
+- `legesher config` — project configuration management
+- `legesher init` — interactive and non-interactive project setup
+- `legesher metadata` — translation history and audit trail
 
-- **Semantic Release** ([#34](https://github.com/madiedgar/legesher/pull/34))
-  - Automated version bumping
-  - Conventional commits enforcement
-  - CHANGELOG generation
-  - Hybrid versioning strategy
+### Infrastructure
 
-- **Release Workflows**
-  - Foundation suite releases
-  - Independent language pack releases
-  - PyPI publishing ready
-
-- **Python Language Pack Updates** ([#20](https://github.com/madiedgar/legesher/pull/20))
-  - Monitors Python.org for new releases
-  - Auto-generates base language packs
-  - Creates translation issues for community
-
----
-
-## Technical Achievements
-
-### Performance
-
-- **Translation Speed**: <2ms per file average
-- **Round-Trip Fidelity**: 100% (EN→ES→EN is byte-identical)
-- **Hover Response**: <5ms
-- **Completion Response**: <10ms
-- **Source Mapping**: O(log n) with SHA256 caching
-- **Memory Usage**: <50MB for typical projects
-
-### Architecture
-
-- **Token-Based Transformation**: Preserves all formatting and comments
-- **Tree-sitter Foundation**: Prepared for incremental parsing
-- **LSP Implementation**: Editor-agnostic design
-- **Version-Aware Packs**: Dynamic loading based on Python version
-- **Metadata System**: Privacy-first translation history tracking
-
-### Security
-
-- **Privacy-First**: All translation local by default
-- **No Code Storage**: Metadata contains only file paths and timestamps
-- **Path Traversal Protection**: Security validation in pack loading
-- **Circular Inheritance Detection**: Prevents infinite loops
-- **Schema Validation**: Pydantic-based validation for all config files
-
----
-
-## Infrastructure
-
-### Repository Setup
-
-- **Monorepo Structure**: Unified workspace with 8 packages
-- **UV Package Manager**: Modern Python tooling
-- **Pre-commit Hooks**: ruff, black, mypy, markdownlint
-- **Code Quality**: Enforced linting and formatting
-
-### Development Workflow
-
-- **Conventional Commits**: Enforced via commitlint
-- **Automated Testing**: 30% minimum coverage (increasing to 90%)
-- **Semantic Versioning**: Automated based on commit messages
-- **Pull Request Flow**: Protected main branch with required reviews
-
-### Documentation
-
-- **Comprehensive CHANGELOGs**: All packages fully documented
-- **Architecture Docs**: Complete technical specifications
-- **API Documentation**: All public APIs documented
-- **Contributing Guidelines**: Clear contribution process
-- **Linguistic Standards**: Translation quality guidelines
-
----
-
-## What's Next?
-
-### Immediate (Phase 2A Completion)
-
-- **Pylance Integration Phase 2-4**: Complete LSP communication and testing
-- **VS Code Extension**: First production-ready IDE integration
-- **Beta Program**: Community testing and feedback
-
-### Short-Term (Phase 2B-2D)
-
-- **Tree-sitter Migration**: Performance improvements for real-time IDE translation
-- **TypeScript Support**: JavaScript/TypeScript as second language
-- **Multi-Language IDE**: Test language switching in single environment
-
-### Long-Term (Phase 3-4)
-
-- **Additional Languages**: French, German, Hindi, Chinese, and more
-- **Community Infrastructure**: Language pack registry and review system
-- **MLCP Registry**: Central repository for community language packs
-
-See individual package CHANGELOGs for detailed implementation status:
-
-- [legesher-core](libs/core/CHANGELOG.md)
-- [legesher-i18n](libs/i18n/CHANGELOG.md)
-- [legesher](libs/legesher/CHANGELOG.md)
-- [legesher-language-server](libs/language-server/CHANGELOG.md)
-
----
-
-## Breaking Changes
-
-**None** - This is the first public release.
-
----
-
-## Migration Guide
-
-**Not applicable** - First release has no migrations.
+- **Monorepo**: UV workspace with 6 packages and pdm-backend builds
+- **CI/CD**: Cross-platform lint and test workflows, semantic release
+- **Pre-commit**: ruff, markdownlint, YAML validation, changelog enforcement
+- **Testing**: 1,686+ automated tests across all packages
 
 ---
 
 ## Contributors
 
-This release was made possible by:
-
-- **Madison Edgar** ([@madiedgar](https://github.com/madiedgar)) - Lead developer
-- **Historical Contributors**: All contributors from the original Legesher repositories (2019-2024)
-
-Special thanks to the community for 24 preserved language branches and 312 community translations that informed this release.
+- **Madison Edgar** ([@madiedgar](https://github.com/madiedgar)) — Lead developer
+- **Historical Contributors**: All contributors from the original
+  Legesher repositories (2019-2024)
 
 ---
 
@@ -252,16 +189,7 @@ Special thanks to the community for 24 preserved language branches and 312 commu
 
 - [GitHub Repository](https://github.com/madiedgar/legesher)
 - [Issue Tracker](https://github.com/madiedgar/legesher/issues)
-- [Pull Requests](https://github.com/madiedgar/legesher/pulls)
-- [Releases](https://github.com/madiedgar/legesher/releases)
-
----
-
-## Support
-
-- **Report Issues**: [GitHub Issues](https://github.com/madiedgar/legesher/issues/new)
-- **Documentation**: See individual package CHANGELOGs
-- **Discussions**: [GitHub Discussions](https://github.com/madiedgar/legesher/discussions)
+- [Documentation](https://docs.legesher.io)
 
 ---
 

@@ -73,6 +73,14 @@ repos:
     name: Validate Language Pack YAML
     pass_filenames: true
 
+  # Changelog enforcement: require CHANGELOG updates when version bumps
+  - entry: uv run python scripts/check_changelog_on_version_bump.py
+    files: (pyproject\.toml|package\.json|CHANGELOG\.md)$
+    id: check-changelog-on-version-bump
+    language: system
+    name: Check CHANGELOG updated on version bump
+    pass_filenames: false
+
   # Regenerate REFERENCE.md when language pack YAML files change
   - entry: uv run python scripts/generate_reference_docs.py
     files: ^libs/i18n/language-packs/.*/packs/.*\.yml$

@@ -9,6 +9,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Bundle Language Packs in i18n Wheel** (CORE-559)
+  - Language pack YAML files now included directly in the `legesher-i18n` wheel
+  - Users no longer need to install separate language pack packages
+  - All 26 language packs available out of the box
+
+## [0.4.0] - 2026-01-27
+
+### Changed
+
+- Version bumped to align with monorepo release
+- No functional changes beyond 0.2.1 for i18n infrastructure
+
 ## [0.2.1] - 2026-01-26
 
 ### Added

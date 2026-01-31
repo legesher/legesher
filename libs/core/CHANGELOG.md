@@ -7,6 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 <!--next-version-placeholder-->
 
+## [0.4.0] - 2026-01-27
+
+### Changed
+
+- Version bumped to align with monorepo release (no functional changes to core since 0.1.0)
+
 ## [0.1.0] - 2025-11-07
 
 ### Added
@@ -44,7 +50,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Automatic Python version detection from environment
   - Version-aware translation loading (Python 3.10, 3.11, 3.12, 3.13)
   - Intelligent caching for improved performance on repeated translations
-  - Supports version-specific keywords (match/case, except*, type parameter syntax)
+  - Supports version-specific keywords (match/case, except\*, type parameter syntax)
   - Fallback mechanism for missing or incomplete translations
 
 - **Metadata Tracking System** ([#29](https://github.com/madiedgar/legesher/pull/29), [a51bfa4](https://github.com/madiedgar/legesher/commit/a51bfa4))
