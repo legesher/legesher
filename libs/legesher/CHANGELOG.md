@@ -7,6 +7,36 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 <!--next-version-placeholder-->
 
+## [Unreleased]
+
+### Added
+
+- **`legesher config` Command** (CORE-563)
+  - `legesher config list` to display current configuration
+  - `legesher config get <key>` to retrieve specific settings
+  - `legesher config set <key> <value>` to update settings
+  - Reads from `.legesher/config.yml`
+
+- **Non-Interactive `legesher init` Mode** (CORE-562)
+  - `legesher init` now works in non-TTY environments (CI/scripts)
+  - All options provided via flags skip interactive prompts
+  - Flags: `-l/--language`, `--no-git`, `--no-ai-context`
+
+### Fixed
+
+- **`legesher --version` Shows Correct Version** (CORE-560)
+  - Now uses `importlib.metadata.version()` instead of hardcoded string
+
+- **Dynamic Language Help Text** (CORE-561)
+  - `legesher translate --help` now shows all 26 supported languages
+  - Dynamically generated from installed language packs
+
+## [0.4.0] - 2026-01-27
+
+### Changed
+
+- Version bumped to align with monorepo release (no functional changes to CLI since 0.1.0)
+
 ## [0.1.0] - 2025-11-07
 
 ### Added

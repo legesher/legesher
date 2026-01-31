@@ -8,8 +8,8 @@ Production-ready translation engine for multilingual Python with two complete tr
 
 - **Two Translator Backends**: Choose between token-based or tree-sitter AST-based translation
 - **Complete Keyword Translation**: All 37 Python keywords (3.10-3.14)
-- **27+ Languages Supported**: Via independent language pack system (ar, da, de, el, en, es, fi, fr, he, hi, hu, id,
-  it, ja, ko, ms, nl, no, pl, pt, ru, sv, th, tr, vi, zh, and more)
+- **26 Languages Supported**: Via independent language pack system (ar, da, de, el, en, es, fi, fr, he, hi, hu, id,
+  it, ja, ko, ms, nl, no, pl, pt, ru, sv, th, tr, vi, zh)
 - **Perfect Formatting**: Preserves indentation, comments, docstrings
 - **Lossless Round-Trip**: EN→ES→EN translation is byte-identical
 - **RTL Language Support**: Arabic, Hebrew with UTF-8 encoding
@@ -40,7 +40,7 @@ back_to_english = es_to_en.translate_code(spanish)
 
 # List available languages
 languages = TokenTranslator.list_available_languages()
-# [('ar', 'Arabic'), ('da', 'Danish'), ('de', 'German'), ... (27+ languages)]
+# [('ar', 'Arabic'), ('da', 'Danish'), ('de', 'German'), ... (26 languages)]
 ```
 
 ### Choosing a Translator Backend

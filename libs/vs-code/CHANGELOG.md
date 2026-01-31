@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--next-version-placeholder-->
 
+## 0.1.1 (2026-01-27)
+
+### Added
+
+- **Onboarding Dialog** (CORE-477)
+  - Welcome dialog on first Python file open with language selection
+  - ML training consent dialog (opt-in, GDPR compliant)
+  - Reset onboarding command for testing
+  - "Learn More" link to privacy documentation
+
+- **Translation Panel** (CORE-361)
+  - Side-by-side English/translated code view
+  - Syntax highlighting via Prism.js
+  - Copy button with feedback
+  - Accessible from context menu and editor title bar
+
+- **Language Selection**
+  - Status bar language indicator
+  - Quick-pick menu with 26 languages
+  - Command palette language selection
+
+- **Telemetry & Feedback System**
+  - Anonymous usage telemetry via Azure Application Insights
+  - Separate ML training consent toggle
+  - Feedback command with sentiment selection
+  - Respects VS Code global telemetry settings
+
+- **Semantic Token Highlighting**
+  - Python keyword, class, function, variable, and parameter scopes
+
+### Changed
+
+- **Build System**: Migrated to esbuild for faster builds
+- **CI**: Added Node.js build pipeline replacing VS Code release workflow
+
 ## 0.1.0 (2025-11-07)
 
 ### Added

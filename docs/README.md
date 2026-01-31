@@ -19,7 +19,7 @@ language instead of English. The documentation covers:
 
 ## 🎯 Key Features Documented
 
-- **27 Language Packs**: Support for ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms, nl, no, pl, pt,
+- **26 Language Packs**: Support for ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms, nl, no, pl, pt,
   ru, sv, th, tr, vi, zh
 - **Two Translator Backends**: Token-based and tree-sitter AST-based implementations
 - **Full LSP Implementation**: Hover, completion, diagnostics, semantic tokens
@@ -56,9 +56,9 @@ Static assets, like favicons, can be placed in the `public/` directory.
 
 All commands are run from the root of the project, from a terminal:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
+| Command                | Action                                           |
+| :--------------------- | :----------------------------------------------- |
+| `pnpm install`         | Installs dependencies                            |
 | `pnpm dev`             | Starts local dev server at `localhost:4321`      |
 | `pnpm build`           | Build your production site to `./dist/`          |
 | `pnpm preview`         | Preview your build locally, before deploying     |

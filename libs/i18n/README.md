@@ -1,6 +1,6 @@
 # legesher-i18n
 
-Industrial-strength internationalization infrastructure with 27 language packs, version-aware inheritance,
+Industrial-strength internationalization infrastructure with 26 language packs, version-aware inheritance,
 and multi-provider translation API for multilingual programming.
 
 **Status**: Production-Ready (Pre-Beta) | **Version**: 0.2.x | **Python**: 3.10-3.14
@@ -10,8 +10,8 @@ and multi-provider translation API for multilingual programming.
 The `legesher-i18n` package provides the core internationalization infrastructure for Legesher,
 enabling developers to code in their native language. It includes:
 
-- **27 Complete Language Packs**: Support for ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms, nl,
-  no, pl, pt, ru, sv, th, tr, vi, zh, and more
+- **26 Complete Language Packs**: Support for ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms, nl,
+  no, pl, pt, ru, sv, th, tr, vi, zh
 - **Version-Aware Language Packs**: Automatic adaptation to Python 3.10-3.14 with inheritance
 - **Auto-Detection**: Detects Python version from `pyproject.toml`, `.python-version`, or runtime
 - **Pack Inheritance**: Child packs inherit from parents, defining only what's new
@@ -68,7 +68,7 @@ Language packs automatically adapt to different Python versions:
 
 ### Supported Languages
 
-**27 complete language packs** - All support Python 3.10-3.14 with version inheritance:
+**26 complete language packs** - All support Python 3.10-3.14 with version inheritance:
 
 - **Arabic (ar)**: 37 keywords, 81 builtins - Aya AI Model translations
 - **Danish (da)**: 37 keywords, 81 builtins - Aya AI Model translations

@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 <!--next-version-placeholder-->
 
-## [Unreleased]
+## [0.1.1] - 2026-01-27
 
 ### Changed
 
@@ -221,9 +221,9 @@ legesher-lsp --target-lang es --log-level DEBUG
 
 ```typescript
 const serverOptions: ServerOptions = {
-  command: 'legesher-lsp',
-  args: ['--target-lang', targetLang],
-  options: { env: { LEGESHER_LOG_LEVEL: 'DEBUG' } }
+  command: "legesher-lsp",
+  args: ["--target-lang", targetLang],
+  options: { env: { LEGESHER_LOG_LEVEL: "DEBUG" } },
 };
 ```
 
