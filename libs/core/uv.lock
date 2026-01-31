@@ -419,7 +419,7 @@ wheels = [
 
 [[package]]
 name = "legesher-core"
-version = "0.1.0"
+version = "0.4.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -460,7 +460,7 @@ dev = [
 
 [[package]]
 name = "legesher-i18n"
-version = "0.1.0"
+version = "0.4.0"
 source = { editable = "../i18n" }
 dependencies = [
     { name = "anthropic" },
@@ -476,6 +476,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "accelerate", marker = "extra == 'ml'", specifier = ">=0.20.0" },
     { name = "anthropic", specifier = ">=0.72.1" },
     { name = "click", specifier = ">=8.0.0" },
     { name = "deepl", marker = "extra == 'api'", specifier = ">=1.16.0" },
@@ -488,9 +489,12 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "redis", marker = "extra == 'api'", specifier = ">=5.0.0" },
     { name = "rich", specifier = ">=13.0.0" },
+    { name = "sentencepiece", marker = "extra == 'ml'", specifier = ">=0.1.99" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0.0" },
+    { name = "torch", marker = "extra == 'ml'", specifier = ">=2.0.0" },
+    { name = "transformers", marker = "extra == 'ml'", specifier = ">=4.30.0" },
 ]
-provides-extras = ["api"]
+provides-extras = ["api", "ml"]
 
 [package.metadata.requires-dev]
 dev = [

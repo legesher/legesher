@@ -21,7 +21,7 @@ keywords:
   global: グローバル
   if: もし
   import: インポート
-  in: ～が～の中にある
+  in: 含む
   is: である
   lambda: ラムダ
   nonlocal: 非ローカル

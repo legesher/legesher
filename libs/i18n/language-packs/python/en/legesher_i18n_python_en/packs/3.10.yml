@@ -121,6 +121,7 @@ builtins:
   str: str
   super: super
   tuple: tuple
+  type: type
 
   # Special constants
   ellipsis: ellipsis

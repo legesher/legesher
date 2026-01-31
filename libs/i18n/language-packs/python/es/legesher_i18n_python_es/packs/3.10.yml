@@ -111,6 +111,7 @@ builtins:
   tuple: tupla
   vars: devuelve_el_diccionario_de_variables
   zip: acopiar
+  type: tipo
 exceptions:
   arithmeticerror: erroraritmético
   assertionerror: errordeaserción

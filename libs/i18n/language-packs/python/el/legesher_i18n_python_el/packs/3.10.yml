@@ -60,7 +60,7 @@ builtins:
   eval: αξιολόγηση
   exec: εκτέλεση
   filter: φίλτρο
-  format: τοformat
+  format: μορφοποίηση
   getattr: λησμονώ_χρήση_απόκτησης_χαρακτηριστικού
   globals: παγκόσμιος
   hasattr: έχειχαρακτηριστικό
@@ -93,14 +93,14 @@ builtins:
   sum: σύνολο
   vars: variabiles
   zip: συνδεις
-  bool: τοboolean
-  bytearray: κυμαίνονταςByte
+  bool: μπουλ
+  bytearray: πίνακας_ψηφιολέξεων
   bytes: κυανος
   classmethod: ηκλάσημεθόδου
   complex: σύνθετός
   dict: λεξικόςπίνακας
   float: διατυπωμένος
-  frozenset: τοfrozenset
+  frozenset: παγωμένο_σύνολο
   int: κείμενο
   list: λίστα
   memoryview: πινακαςΣυνειδησης
@@ -110,14 +110,14 @@ builtins:
   staticmethod: στατικήμέθοδος
   str: στρ
   super: υπερ
-  tuple: τοtuple
+  tuple: πλειάδα
   ellipsis: τοελλειξίριο
   notimplemented: μηΥλοποιημένο
   aiter: αιτητής
   anext: επόμενο
 exceptions:
   baseexception: βασική_εξαίρεση
-  basegeneratorexit: basegeneratorέξοδος
+  basegeneratorexit: βασική_έξοδος_γεννήτριας
   exception: εξαίρεση
   generatorexit: εξόδου_γεννήτριας
   systemexit: διακοπή_συστήματος
@@ -132,8 +132,8 @@ exceptions:
   attributeerror: Σφάλμα_Χαρακτηριστικού
   nameerror: Σφάλμαονόματος
   unboundlocalerror: απαράδεκτητοπικήμεταβλητή
-  oserror: σφάλμαΟS
-  blockingioerror: σταματητικοςIOMsg
+  oserror: σφάλμα_λειτουργικού
+  blockingioerror: σφάλμα_αποκλεισμού_εε
   childprocesserror: σφάλμα_παιδιού_διαδικασίας
   connectionerror: σφάλμα_σύνδεσης
   brokenpipeerror: κατάληψηΣφαλμέτηςΕποπτείας
@@ -154,10 +154,10 @@ exceptions:
   stopasynciteration: διακοπή_ασύγχρονης_επανάληψης
   typeerror: τύπος_σφάλματος
   valueerror: ValueError
-  unicodeerror: σφάλμαUnicode
-  unicodedecodeerror: σφάλμααποκωδικοποίησηςUnicode
-  unicodeencodeerror: κατάστροφηΚωδικούUnicode
-  unicodetranslateerror: κατάλογοςUnicodeΣφάλμα
+  unicodeerror: σφάλμα_γιούνικοντ
+  unicodedecodeerror: σφάλμα_αποκωδικοποίησης_γιούνικοντ
+  unicodeencodeerror: σφάλμα_κωδικοποίησης_γιούνικοντ
+  unicodetranslateerror: σφάλμα_μετάφρασης_γιούνικοντ
   runtimeerror: σφάλμαΕκτελήσεως
   notimplementederror: σφάλμα_μη_υλοποίησης
   recursionerror: αναδρομήσφάλματος
@@ -170,7 +170,7 @@ exceptions:
   indentationerror: κεντρισμοςΣφαλμα
   taberror: ταμπλάρο
   environmenterror: σφάλμα_περιβάλλοντος
-  ioerror: σφάλμαIO
+  ioerror: σφάλμα_εισόδου_εξόδου
   warning: προειδοποίηση
   userwarning: προειδοποίηση_χρήστη
   deprecationwarning: αποκλεισμόςπροειδοποίησης
@@ -179,8 +179,8 @@ exceptions:
   runtimewarning: προειδοποίηση_εκτέλεσης
   futurewarning: προειδοποίηση_για_το_μελλον
   importwarning: προειδοποίηση_εισαγωγής
-  unicodewarning: προσοχήUnicode
-  byteswarning: προειδοποίησηbyteswarning
+  unicodewarning: προειδοποίηση_γιούνικοντ
+  byteswarning: προειδοποίηση_ψηφιολέξεων
   resourcewarning: προειδοποίηση_πόρων
 metadata:
   python_version_min: '3.10'

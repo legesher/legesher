@@ -43,7 +43,7 @@ builtins:
   abs: абсолютноезначение
   all: все
   any: каждый
-  ascii: аsci
+  ascii: аски
   bin: бинарный
   breakpoint: отрывнойпункт
   callable: призываемый
@@ -53,7 +53,7 @@ builtins:
   dir: списокАтрибутов
   divmod: дивмод
   enumerate: перечисление
-  eval: evalюировать
+  eval: вычислить
   exec: выполнить
   filter: фильтр
   format: формат
@@ -67,7 +67,7 @@ builtins:
   input: ввод
   isinstance: являетсяИсключением
   issubclass: подкласс
-  iter: iterировать
+  iter: итератор
   len: длина
   locals: локальныепеременные
   map: мапировать
@@ -135,12 +135,12 @@ exceptions:
   brokenpipeerror: бракнопайперор
   connectionabortederror: отказотсоединения
   connectionrefusederror: отказотподключения
-  connectionreseterror: reset_ошибка_соединения
+  connectionreseterror: ошибка_сброса_соединения
   fileexistserror: ошибкасуществованияфайла
   filenotfounderror: ошибка_не_найдена_файла
   interruptederror: ошибкапрерывания
   isadirectoryerror: ошибкаПапки
-  notadirectoryerror: ошибка_не_явления_каталогa
+  notadirectoryerror: ошибка_не_каталог
   permissionerror: ошибкаразрешения
   processlookuperror: ошибкаПроцесса
   timeouterror: таймаут
@@ -152,8 +152,8 @@ exceptions:
   valueerror: ValueError
   unicodeerror: ошибкауниткодирования
   unicodedecodeerror: ошибкадекодированияунитногокода
-  unicodeencodeerror: ошибкаУнicodeКодирования
-  unicodetranslateerror: ошибкапереводаUnicode
+  unicodeencodeerror: ошибка_кодирования_юникод
+  unicodetranslateerror: ошибка_перевода_юникод
   runtimeerror: runtime_error
   notimplementederror: ошибканереализации
   recursionerror: рекурсионнаяошибка
@@ -161,7 +161,7 @@ exceptions:
   assertionerror: ошибкаутверждения
   memoryerror: ошибкапамяти
   buffererror: ошибкабуфера
-  eoferror: ошибкаEO
+  eoferror: ошибка_конца_файла
   syntaxerror: синтаксическаяошибка
   indentationerror: ошибкаотступа
   taberror: ошибкатабулятора

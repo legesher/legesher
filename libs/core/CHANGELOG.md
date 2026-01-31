@@ -9,10 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-01-31
+
 ### Fixed
 
 - Fix `GitFilter` passing `python_version` as wrong keyword argument
   (`python_version=` → `programming_language_version=`) when loading language packs
+- Fix `TokenTranslator` compound keyword handling for `except*` (CORE-531)
+  - Python's tokenizer splits `except*` into `NAME("except")` + `OP("*")`
+  - Add index-based lookahead to detect and translate compound keywords correctly
 
 ### Changed
 

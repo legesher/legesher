@@ -4,6 +4,7 @@
 ![Script](https://img.shields.io/badge/Script-Japanese%20%28Kanji%2C%20Hiragana%2C%20Katakana%29-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
+
 > Write Python code in Japanese. This guide shows the Japanese keywords to use for Legesher to understand your code.
 
 ## Language Details
@@ -47,7 +48,7 @@ These are Python's reserved words translated to Japanese.
 | `global` | `グローバル` |
 | `if` | `もし` |
 | `import` | `インポート` |
-| `in` | `～が～の中にある` |
+| `in` | `含む` |
 | `is` | `である` |
 | `lambda` | `ラムダ` |
 | `match` | `マッチ` |
@@ -140,6 +141,7 @@ Python's built-in functions and types in Japanese.
 | `sum` | `合計` |
 | `super` | `スーパー` |
 | `tuple` | `タプル` |
+| `type` | `type` |
 | `vars` | `変数` |
 | `zip` | `ジップ` |
 
@@ -238,9 +240,9 @@ Here's an example showing Japanese Python code with Legesher:
         戻り値 n * 階乗(n - 1)
 
 定義する メイン():
-    数値リスト = [整数(x) ループ x ～が～の中にある 範囲(6)]
+    数値リスト = [整数(x) ループ x 含む 範囲(6)]
 
-    ループ 数値 ～が～の中にある 数値リスト:
+    ループ 数値 含む 数値リスト:
         結果 = 階乗(数値)
         印刷(f"{数値}! = {結果}")
 

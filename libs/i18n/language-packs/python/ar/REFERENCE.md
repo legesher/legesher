@@ -68,7 +68,7 @@ These are Python's reserved words translated to Arabic.
 | `with` | `مع` |
 | `yield` | `تَرْجِع` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (72 terms)
 
 Python's built-in functions and types in Arabic.
 
@@ -119,7 +119,7 @@ Python's built-in functions and types in Arabic.
 | `locals` | `المتغيراتالمحلية` |
 | `map` | `الخريطة` |
 | `max` | `الحدالأقصى` |
-| `memoryview` | `view_ذاكرة` |
+| `memoryview` | `عرضالذاكرة` |
 | `min` | `الأدنى` |
 | `next` | `التالي` |
 | `notimplemented` | `غير_مُنفَذ` |
@@ -143,6 +143,7 @@ Python's built-in functions and types in Arabic.
 | `sum` | `المجموع` |
 | `super` | `السوبر` |
 | `tuple` | `التوبلي` |
+| `type` | `نوع` |
 | `vars` | `الحصولعلىالمتغيرات` |
 | `zip` | `التجميع` |
 

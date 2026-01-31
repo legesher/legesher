@@ -4,6 +4,7 @@
 ![Script](https://img.shields.io/badge/Script-Hangul-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
+
 > Write Python code in Korean. This guide shows the Korean keywords to use for Legesher to understand your code.
 
 ## Language Details
@@ -140,6 +141,7 @@ Python's built-in functions and types in Korean.
 | `sum` | `합계` |
 | `super` | `슈퍼` |
 | `tuple` | `튜플` |
+| `type` | `type` |
 | `vars` | `변수` |
 | `zip` | `자바` |
 

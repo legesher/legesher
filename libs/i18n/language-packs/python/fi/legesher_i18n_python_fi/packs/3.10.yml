@@ -139,7 +139,7 @@ exceptions:
   fileexistserror: tietolaman_väärin_määritelystä
   filenotfounderror: tietystäpuuttumatonvirhe
   interruptederror: kesäyhteensopimuksen
-  isadirectoryerror: isädirکتorivirhe
+  isadirectoryerror: hakemistovirhe
   notadirectoryerror: ei_rekisteri_minkä_siirryttävää_hakemistoa
   permissionerror: oikeudenviesti
   processlookuperror: processlookupvirhe

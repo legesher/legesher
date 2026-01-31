@@ -13,12 +13,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.4.0   | —        |
-| legesher-i18n            | 0.4.0   | Yes      |
+| legesher-core            | 0.4.1   | Yes      |
+| legesher-i18n            | 0.4.1   | Yes      |
 | legesher (CLI)           | 0.4.0   | Yes      |
 | legesher-language-server | 0.1.1   | Yes      |
 | legesher-vscode          | 0.1.1   | —        |
 | legesher-home            | 0.1.0   | —        |
+
+### Fixed
+
+- **legesher-i18n**: Fix 33 mixed-script translations across Greek, Hebrew, Russian, Arabic, Finnish packs (CORE-531)
+- **legesher-i18n**: Fix Japanese `in` keyword invalid identifier, add missing `type` builtin to es/ar (CORE-531)
+- **legesher-core**: Fix `TokenTranslator` compound keyword (`except*`) lookahead handling (CORE-531)
 
 ### Changed
 

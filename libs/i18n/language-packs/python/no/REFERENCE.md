@@ -4,6 +4,7 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
+
 > Write Python code in Norwegian. This guide shows the Norwegian keywords to use for Legesher to understand your code.
 
 ## Language Details
@@ -140,6 +141,7 @@ Python's built-in functions and types in Norwegian.
 | `sum` | `summe` |
 | `super` | `supp` |
 | `tuple` | `tuplet` |
+| `type` | `type` |
 | `vars` | `variabler` |
 | `zip` | `zippe` |
 

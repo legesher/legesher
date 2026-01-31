@@ -97,7 +97,7 @@ from .translation_tracker import TranslationTracker
 from .tree_sitter.translator import TreeSitterTranslator
 from .types import CulturalComment, CulturalCommentMetadata, Translator
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 __all__ = [
     # Translation engine
