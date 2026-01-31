@@ -1,6 +1,8 @@
 # Adding Support for New Programming Languages
 
-This guide explains how to extend Legesher to support new programming languages beyond Python using the language abstraction interface introduced in [CORE-415](https://linear.app/legesher/issue/CORE-415).
+This guide explains how to extend Legesher to support new programming languages
+beyond Python using the language abstraction interface introduced in
+[CORE-415](https://linear.app/legesher/issue/CORE-415).
 
 ## Architecture Overview
 
@@ -139,7 +141,8 @@ Create a test suite in `libs/core/tests/typescript/`:
 # tests/typescript/test_typescript_translator.py
 import pytest
 from legesher_core import create_translator
-from tests.data.keyword_maps_spanish import TYPESCRIPT_KEYWORDS, TYPESCRIPT_BUILTINS
+# Keyword/builtin maps are loaded from language pack YAML files via conftest.py fixtures
+# See libs/core/tests/conftest.py for the pattern
 
 def test_typescript_basic_translation():
     translator = create_translator(

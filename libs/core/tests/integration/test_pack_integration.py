@@ -22,18 +22,18 @@ from legesher_i18n.exceptions import PackNotFoundError
 class TestFromLanguagePack:
     """Test TokenTranslator.from_language_pack() factory method."""
 
-    def test_spanish_pack_loads(self):
+    def test_spanish_pack_loads(self, spanish_keywords):
         """Test Spanish pack loads from YAML and translates correctly."""
         translator = TokenTranslator.from_language_pack("es")
 
         code = "def greet(): return 'Hello'"
         result = translator.translate_code(code)
 
-        assert "definir" in result
-        assert "retornar" in result
+        assert spanish_keywords["def"] in result
+        assert spanish_keywords["return"] in result
         assert "greet" in result  # Identifiers not translated
 
-    def test_arabic_pack_loads(self):
+    def test_arabic_pack_loads(self, arabic_keywords, arabic_builtins):
         """Test Arabic pack loads and translates (RTL language)."""
         translator = TokenTranslator.from_language_pack("ar")
 
@@ -41,10 +41,10 @@ class TestFromLanguagePack:
         result = translator.translate_code(code)
 
         # Arabic keywords should be present
-        assert "تعريف" in result  # def
-        assert "طباعة" in result  # print
+        assert arabic_keywords["def"] in result
+        assert arabic_builtins["print"] in result
 
-    def test_arabic_comprehensive(self):
+    def test_arabic_comprehensive(self, arabic_keywords):
         """Test Arabic pack with more comprehensive code."""
         translator = TokenTranslator.from_language_pack("ar")
 
@@ -52,7 +52,7 @@ class TestFromLanguagePack:
         result = translator.translate_code(code)
 
         # Arabic keywords should be present
-        assert "صنف" in result  # class
+        assert arabic_keywords["class"] in result
 
     def test_auto_detects_python_version(self):
         """Test that Python version is auto-detected from runtime."""
@@ -143,7 +143,7 @@ class TestBidirectionalTranslation:
         assert "def calculate_tax" in back
         assert "return tax" in back
 
-    def test_reverse_preserves_builtins(self):
+    def test_reverse_preserves_builtins(self, spanish_builtins):
         """Test that reverse() works for builtins too."""
         en_to_es = TokenTranslator.from_language_pack("es")
         es_to_en = en_to_es.reverse()
@@ -152,8 +152,8 @@ class TestBidirectionalTranslation:
         spanish = en_to_es.translate_code(english)
 
         # Should have Spanish builtins
-        assert "imprimir" in spanish
-        assert "longitud" in spanish
+        assert spanish_builtins["print"] in spanish
+        assert spanish_builtins["len"] in spanish
 
         # Reverse back
         back = es_to_en.translate_code(spanish)
@@ -190,7 +190,7 @@ class TestErrorHandling:
 class TestThreadSafety:
     """Test thread-safe pack loading."""
 
-    def test_concurrent_pack_loading(self):
+    def test_concurrent_pack_loading(self, spanish_keywords):
         """Test 100 concurrent calls to load same pack."""
 
         def load_pack():
@@ -206,7 +206,7 @@ class TestThreadSafety:
         # All should work
         for translator in translators:
             result = translator.translate_code("def foo(): pass")
-            assert "definir" in result
+            assert spanish_keywords["def"] in result
 
     def test_concurrent_different_languages(self):
         """Test concurrent loading of different language packs."""
@@ -320,7 +320,7 @@ class TestBackwardCompatibility:
         assert "definir" in result
         assert "retornar" in result
 
-    def test_old_and_new_api_coexist(self):
+    def test_old_and_new_api_coexist(self, spanish_keywords):
         """Test that both APIs can be used in same codebase."""
         # Old API
         old_translator = TokenTranslator(
@@ -338,7 +338,7 @@ class TestBackwardCompatibility:
         new_result = new_translator.translate_code(code)
 
         assert "definir" in old_result
-        assert "definir" in new_result
+        assert spanish_keywords["def"] in new_result
 
 
 class TestPerformance:
@@ -395,7 +395,7 @@ class TestPerformance:
 class TestLanguagePackIntegration:
     """Test actual language pack content integration."""
 
-    def test_spanish_comprehensive(self):
+    def test_spanish_comprehensive(self, spanish_keywords):
         """Test comprehensive Spanish translation."""
         translator = TokenTranslator.from_language_pack("es")
 
@@ -418,13 +418,13 @@ class Calculator:
         result = translator.translate_code(code)
 
         # Check keywords
-        assert "definir" in result  # def
-        assert "retornar" in result  # return
-        assert "clase" in result  # class
-        assert "si" in result or "sí" in result  # if
-        assert "sino" in result  # else
+        assert spanish_keywords["def"] in result
+        assert spanish_keywords["return"] in result
+        assert spanish_keywords["class"] in result
+        assert spanish_keywords["if"] in result
+        assert spanish_keywords["else"] in result
 
-    def test_arabic_rtl_handling(self):
+    def test_arabic_rtl_handling(self, arabic_keywords, arabic_builtins):
         """Test Arabic pack with RTL script."""
         translator = TokenTranslator.from_language_pack("ar")
 
@@ -432,13 +432,13 @@ class Calculator:
         result = translator.translate_code(code)
 
         # Arabic keywords should be present
-        assert "تعريف" in result  # def (ta'rif)
-        assert "طباعة" in result  # print (tiba'a)
+        assert arabic_keywords["def"] in result
+        assert arabic_builtins["print"] in result
 
         # Identifiers should be preserved
         assert "hello" in result
 
-    def test_arabic_comprehensive_code(self):
+    def test_arabic_comprehensive_code(self, arabic_keywords):
         """Test Arabic pack with comprehensive code."""
         translator = TokenTranslator.from_language_pack("ar")
 
@@ -453,5 +453,5 @@ if True:
         result = translator.translate_code(code)
 
         # Arabic keywords should be present
-        assert "تعريف" in result  # def
-        assert "إذا" in result  # if
+        assert arabic_keywords["def"] in result
+        assert arabic_keywords["if"] in result

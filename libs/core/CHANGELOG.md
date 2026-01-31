@@ -7,6 +7,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 <!--next-version-placeholder-->
 
+## [Unreleased]
+
+### Fixed
+
+- Fix `GitFilter` passing `python_version` as wrong keyword argument
+  (`python_version=` → `programming_language_version=`) when loading language packs
+
+### Changed
+
+- Migrate all test fixtures from hardcoded translation maps to real YAML language pack data via `LanguagePackLoader`
+
 ## [0.4.0] - 2026-01-27
 
 ### Changed

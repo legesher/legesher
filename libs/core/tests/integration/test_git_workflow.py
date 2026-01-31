@@ -77,12 +77,12 @@ def arabic_filter():
 class TestGitFilterWorkflow:
     """Test complete git filter workflow."""
 
-    def test_spanish_clean_filter(self, spanish_filter):
+    def test_spanish_clean_filter(self, spanish_filter, spanish_keywords):
         """Test clean filter translates Spanish to English."""
         spanish_code = (
-            "definir calcular_suma(a, b):\n"
-            "    resultado = a + b\n"
-            "    retornar resultado\n"
+            f"{spanish_keywords['def']} calcular_suma(a, b):\n"
+            f"    resultado = a + b\n"
+            f"    {spanish_keywords['return']} resultado\n"
         )
 
         input_stream = io.StringIO(spanish_code)
@@ -101,7 +101,7 @@ class TestGitFilterWorkflow:
         assert "calcular_suma" in english_code
         assert "resultado" in english_code
 
-    def test_spanish_smudge_filter(self, spanish_filter):
+    def test_spanish_smudge_filter(self, spanish_filter, spanish_keywords):
         """Test smudge filter translates English to Spanish."""
         english_code = (
             "def calculate_sum(a, b):\n    result = a + b\n    return result\n"
@@ -116,20 +116,20 @@ class TestGitFilterWorkflow:
         spanish_code = output_stream.getvalue()
 
         # Verify Spanish keywords
-        assert "definir" in spanish_code
-        assert "retornar" in spanish_code
+        assert spanish_keywords["def"] in spanish_code
+        assert spanish_keywords["return"] in spanish_code
 
         # Verify identifiers preserved
         assert "calculate_sum" in spanish_code
         assert "result" in spanish_code
 
-    def test_round_trip_spanish(self, spanish_filter):
+    def test_round_trip_spanish(self, spanish_filter, spanish_keywords):
         """Test Spanish → English → Spanish preserves semantics."""
         original = (
-            "definir fibonacci(n):\n"
-            "    si n <= 1:\n"
-            "        retornar n\n"
-            "    retornar fibonacci(n - 1) + fibonacci(n - 2)\n"
+            f"{spanish_keywords['def']} fibonacci(n):\n"
+            f"    {spanish_keywords['if']} n <= 1:\n"
+            f"        {spanish_keywords['return']} n\n"
+            f"    {spanish_keywords['return']} fibonacci(n - 1) + fibonacci(n - 2)\n"
         )
 
         # Clean: Spanish → English
@@ -150,16 +150,16 @@ class TestGitFilterWorkflow:
         result = output2.getvalue()
 
         # Verify Spanish keywords restored
-        assert "definir" in result
-        assert "si" in result
-        assert "retornar" in result
+        assert spanish_keywords["def"] in result
+        assert spanish_keywords["if"] in result
+        assert spanish_keywords["return"] in result
 
         # Verify identifier preserved
         assert "fibonacci" in result
 
-    def test_round_trip_arabic(self, arabic_filter):
+    def test_round_trip_arabic(self, arabic_filter, arabic_keywords, arabic_builtins):
         """Test Arabic → English → Arabic preserves semantics."""
-        original = "تعريف مرحبا(اسم):\n    طباعة(اسم)\n    إرجاع صحيح\n"
+        original = f"{arabic_keywords['def']} مرحبا(اسم):\n    {arabic_builtins['print']}(اسم)\n    {arabic_keywords['return']} {arabic_keywords['True']}\n"
 
         # Clean: Arabic → English
         input1 = io.StringIO(original)
@@ -169,7 +169,6 @@ class TestGitFilterWorkflow:
 
         # Verify English
         assert "def" in english
-        assert "print" in english or "طباعة" in english  # May not translate
         assert "return" in english
         assert "True" in english
 
@@ -180,27 +179,29 @@ class TestGitFilterWorkflow:
         result = output2.getvalue()
 
         # Verify Arabic keywords restored
-        assert "تعريف" in result
-        assert "إرجاع" in result
+        assert arabic_keywords["def"] in result
+        assert arabic_keywords["return"] in result
 
-    def test_multiple_functions(self, spanish_filter):
+    def test_multiple_functions(self, spanish_filter, spanish_keywords):
         """Test translating file with multiple functions."""
-        spanish_code = """
-definir suma(a, b):
-    retornar a + b
+        d = spanish_keywords["def"]
+        r = spanish_keywords["return"]
+        spanish_code = f"""
+{d} suma(a, b):
+    {r} a + b
 
-definir resta(a, b):
-    retornar a - b
+{d} resta(a, b):
+    {r} a - b
 
-definir multiplicar(a, b):
-    retornar a * b
+{d} multiplicar(a, b):
+    {r} a * b
 
 # Función principal
-definir principal():
+{d} principal():
     x = suma(5, 3)
     y = resta(10, 4)
     z = multiplicar(x, y)
-    retornar z
+    {r} z
 """
 
         # Clean
@@ -220,13 +221,15 @@ definir principal():
         result = output_stream2.getvalue()
 
         # Verify Spanish restored
-        assert result.count("definir") >= 4
-        assert result.count("retornar") >= 4
+        assert result.count(d) >= 4
+        assert result.count(r) >= 4
 
-    def test_preserves_docstrings(self, spanish_filter):
+    def test_preserves_docstrings(self, spanish_filter, spanish_keywords):
         """Test that docstrings are preserved."""
-        spanish_code = '''
-definir saludar(nombre):
+        d = spanish_keywords["def"]
+        r = spanish_keywords["return"]
+        spanish_code = f'''
+{d} saludar(nombre):
     """
     Saluda a una persona por su nombre.
 
@@ -236,7 +239,7 @@ definir saludar(nombre):
     Returns:
         Un mensaje de saludo
     """
-    retornar f"Hola, {nombre}!"
+    {r} f"Hola, {{nombre}}!"
 '''
 
         # Clean then smudge
@@ -252,15 +255,18 @@ definir saludar(nombre):
         # Docstring should be preserved
         assert "Saluda a una persona" in result or '"""' in result
 
-    def test_preserves_class_definitions(self, spanish_filter):
+    def test_preserves_class_definitions(self, spanish_filter, spanish_keywords):
         """Test that class definitions are translated correctly."""
-        spanish_code = """
-clase Persona:
-    definir __init__(self, nombre):
+        c = spanish_keywords["class"]
+        d = spanish_keywords["def"]
+        r = spanish_keywords["return"]
+        spanish_code = f"""
+{c} Persona:
+    {d} __init__(self, nombre):
         self.nombre = nombre
 
-    definir saludar(self):
-        retornar f"Hola, soy {self.nombre}"
+    {d} saludar(self):
+        {r} f"Hola, soy {{self.nombre}}"
 """
 
         # Clean
@@ -280,22 +286,29 @@ clase Persona:
         result = output_stream2.getvalue()
 
         # Verify Spanish restored
-        assert "clase" in result
-        assert "definir" in result
+        assert c in result
+        assert d in result
 
-    def test_handles_complex_control_flow(self, spanish_filter):
+    def test_handles_complex_control_flow(self, spanish_filter, spanish_keywords):
         """Test complex control flow structures."""
-        spanish_code = """
-definir procesar_numeros(numeros):
+        d = spanish_keywords["def"]
+        r = spanish_keywords["return"]
+        f_ = spanish_keywords["for"]
+        in_ = spanish_keywords["in"]
+        if_ = spanish_keywords["if"]
+        elif_ = spanish_keywords["elif"]
+        else_ = spanish_keywords["else"]
+        spanish_code = f"""
+{d} procesar_numeros(numeros):
     resultado = []
-    para num en numeros:
-        si num > 0:
+    {f_} num {in_} numeros:
+        {if_} num > 0:
             resultado.agregar(num * 2)
-        sino si num < 0:
+        {elif_} num < 0:
             resultado.agregar(num * -1)
-        sino:
+        {else_}:
             resultado.agregar(0)
-    retornar resultado
+    {r} resultado
 """
 
         # Clean then smudge
@@ -315,8 +328,8 @@ definir procesar_numeros(numeros):
         result = output2.getvalue()
 
         # Verify Spanish control flow restored
-        assert "para" in result
-        assert "si" in result
+        assert f_ in result
+        assert if_ in result
 
     def test_empty_file(self, spanish_filter):
         """Test handling of empty file."""
@@ -343,13 +356,13 @@ definir procesar_numeros(numeros):
         result = output_stream.getvalue()
         assert "#" in result  # Comments preserved
 
-    def test_mixed_language_identifiers(self, spanish_filter):
+    def test_mixed_language_identifiers(self, spanish_filter, spanish_keywords):
         """Test handling of mixed language identifiers."""
         # Code with Spanish keywords but English identifiers
-        mixed_code = """
-definir calculate_total(price, quantity):
+        mixed_code = f"""
+{spanish_keywords["def"]} calculate_total(price, quantity):
     total = price * quantity
-    retornar total
+    {spanish_keywords["return"]} total
 """
 
         # Clean
@@ -385,9 +398,9 @@ class TestErrorRecovery:
         result = output_stream.getvalue()
         assert len(result) > 0
 
-    def test_incomplete_code(self, spanish_filter):
+    def test_incomplete_code(self, spanish_filter, spanish_keywords):
         """Test handling of incomplete code."""
-        incomplete = "definir test():\n    ret"
+        incomplete = f"{spanish_keywords['def']} test():\n    ret"
 
         input_stream = io.StringIO(incomplete)
         output_stream = io.StringIO()
@@ -397,12 +410,14 @@ class TestErrorRecovery:
         # Should succeed
         assert exit_code == 0
 
-    def test_very_large_file(self, spanish_filter):
+    def test_very_large_file(self, spanish_filter, spanish_keywords):
         """Test handling of large file."""
         # Generate a large file (1000 functions)
+        d = spanish_keywords["def"]
+        r = spanish_keywords["return"]
         large_code = ""
         for i in range(1000):
-            large_code += f"definir func_{i}():\n    retornar {i}\n\n"
+            large_code += f"{d} func_{i}():\n    {r} {i}\n\n"
 
         input_stream = io.StringIO(large_code)
         output_stream = io.StringIO()
@@ -414,12 +429,14 @@ class TestErrorRecovery:
         assert len(result) > 0
         assert "def" in result
 
-    def test_unicode_in_strings(self, spanish_filter):
+    def test_unicode_in_strings(self, spanish_filter, spanish_keywords):
         """Test handling of Unicode characters in strings."""
-        unicode_code = """
-definir test():
+        d = spanish_keywords["def"]
+        r = spanish_keywords["return"]
+        unicode_code = f"""
+{d} test():
     mensaje = "Hola! ¿Cómo estás? 你好 مرحبا"
-    retornar mensaje
+    {r} mensaje
 """
 
         # Clean then smudge
