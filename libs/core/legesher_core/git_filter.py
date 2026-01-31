@@ -158,7 +158,7 @@ class GitFilter:
                 en_to_local = create_translator_from_language_pack(
                     programming_language="python",
                     natural_language=language,
-                    python_version=self.python_version,
+                    programming_language_version=self.python_version,
                     use_tree_sitter=use_tree_sitter,  # Respects environment if None
                 )
 

@@ -2,64 +2,63 @@
 
 Tests that EN → ES → EN and EN → AR → EN translations are lossless,
 ensuring the translation engine preserves code semantics perfectly.
+Uses real language pack translations.
 """
 
 import pytest
 
 from legesher_core.transformer import TokenTranslator
-from tests.data.keyword_maps_spanish import (
-    SPANISH_KEYWORDS,
-    SPANISH_BUILTINS,
-    ENGLISH_KEYWORDS,
-    ENGLISH_BUILTINS,
-)
-from tests.data.keyword_maps_arabic import (
-    ARABIC_KEYWORDS,
-    ARABIC_BUILTINS,
-    ENGLISH_KEYWORDS as AR_ENGLISH_KEYWORDS,
-    ENGLISH_BUILTINS as AR_ENGLISH_BUILTINS,
-)
 
 
 class TestRoundTripTranslation:
     """Test suite for round-trip translation (lossless verification)."""
 
     @pytest.fixture
-    def en_to_es_translator(self):
+    def en_to_es_translator(self, spanish_keywords, spanish_builtins):
         """English to Spanish translator."""
         return TokenTranslator(
-            keyword_map=SPANISH_KEYWORDS, builtin_map=SPANISH_BUILTINS
+            keyword_map=spanish_keywords, builtin_map=spanish_builtins
         )
 
     @pytest.fixture
-    def es_to_en_translator(self):
+    def es_to_en_translator(
+        self, english_keywords_from_spanish, english_builtins_from_spanish
+    ):
         """Spanish to English translator."""
         return TokenTranslator(
-            keyword_map=ENGLISH_KEYWORDS, builtin_map=ENGLISH_BUILTINS
+            keyword_map=english_keywords_from_spanish,
+            builtin_map=english_builtins_from_spanish,
         )
 
     @pytest.fixture
-    def en_to_ar_translator(self):
+    def en_to_ar_translator(self, arabic_keywords, arabic_builtins):
         """English to Arabic translator."""
-        return TokenTranslator(keyword_map=ARABIC_KEYWORDS, builtin_map=ARABIC_BUILTINS)
+        return TokenTranslator(keyword_map=arabic_keywords, builtin_map=arabic_builtins)
 
     @pytest.fixture
-    def ar_to_en_translator(self):
+    def ar_to_en_translator(
+        self, english_keywords_from_arabic, english_builtins_from_arabic
+    ):
         """Arabic to English translator."""
         return TokenTranslator(
-            keyword_map=AR_ENGLISH_KEYWORDS, builtin_map=AR_ENGLISH_BUILTINS
+            keyword_map=english_keywords_from_arabic,
+            builtin_map=english_builtins_from_arabic,
         )
 
     def test_simple_function_round_trip_spanish(
-        self, en_to_es_translator, es_to_en_translator
+        self,
+        en_to_es_translator,
+        es_to_en_translator,
+        spanish_keywords,
+        spanish_builtins,
     ):
         """Test EN → ES → EN for simple function."""
         original = "def greet():\n    print('Hello')"
 
         # Translate to Spanish
         spanish = en_to_es_translator.translate_code(original, "en", "es")
-        assert "definir" in spanish
-        assert "imprimir" in spanish
+        assert spanish_keywords["def"] in spanish
+        assert spanish_builtins["print"] in spanish
 
         # Translate back to English
         back_to_english = es_to_en_translator.translate_code(spanish, "es", "en")
@@ -99,15 +98,15 @@ class TestRoundTripTranslation:
         assert "# This is a comment" in spanish  # Comment unchanged
 
     def test_simple_function_round_trip_arabic(
-        self, en_to_ar_translator, ar_to_en_translator
+        self, en_to_ar_translator, ar_to_en_translator, arabic_keywords, arabic_builtins
     ):
         """Test EN → AR → EN for simple function (RTL)."""
         original = "def greet():\n    print('Hello')"
 
         # Translate to Arabic
         arabic = en_to_ar_translator.translate_code(original, "en", "ar")
-        assert "تعريف" in arabic
-        assert "طباعة" in arabic
+        assert arabic_keywords["def"] in arabic
+        assert arabic_builtins["print"] in arabic
 
         # Translate back to English
         back_to_english = ar_to_en_translator.translate_code(arabic, "ar", "en")
@@ -150,7 +149,6 @@ class TestRoundTripTranslation:
         lines = original.split("\n")
         back_lines = back_to_english.split("\n")
         for orig_line, back_line in zip(lines, back_lines):
-            # Count leading spaces
             orig_indent = len(orig_line) - len(orig_line.lstrip())
             back_indent = len(back_line) - len(back_line.lstrip())
             assert orig_indent == back_indent
@@ -204,7 +202,6 @@ async def process():
         back_to_english = es_to_en_translator.translate_code(spanish, "es", "en")
 
         assert original == back_to_english
-        # Verify blank lines count
         assert original.count("\n\n") == back_to_english.count("\n\n")
 
     def test_round_trip_unicode_identifiers(
@@ -217,34 +214,31 @@ async def process():
         back_to_english = es_to_en_translator.translate_code(spanish, "es", "en")
 
         assert original == back_to_english
-        assert "café" in spanish  # Unicode identifier preserved
-        assert "☕" in spanish  # Unicode in string preserved
+        assert "café" in spanish
+        assert "☕" in spanish
 
-    def test_arabic_unicode_not_corrupted(self, en_to_ar_translator):
+    def test_arabic_unicode_not_corrupted(self, en_to_ar_translator, arabic_keywords):
         """Test that Arabic Unicode survives tokenization."""
         original = "def calculate_tax(income):\n    return income * 0.25"
 
-        # Translate to Arabic
         arabic = en_to_ar_translator.translate_code(original, "en", "ar")
 
-        # Verify Arabic characters are valid UTF-8
         arabic_bytes = arabic.encode("utf-8")
         decoded = arabic_bytes.decode("utf-8")
         assert decoded == arabic
 
-        # Verify specific Arabic keywords present
-        assert "تعريف" in arabic  # def
-        assert "إرجاع" in arabic  # return
+        assert arabic_keywords["def"] in arabic
+        assert arabic_keywords["return"] in arabic
 
-    def test_round_trip_mixed_ltr_rtl(self, en_to_ar_translator, ar_to_en_translator):
+    def test_round_trip_mixed_ltr_rtl(
+        self, en_to_ar_translator, ar_to_en_translator, arabic_keywords
+    ):
         """Test round-trip with mixed LTR/RTL content."""
-        # English identifiers with Arabic keywords
         original = "def calculate_tax(income):\n    return income * rate"
 
         arabic = en_to_ar_translator.translate_code(original, "en", "ar")
 
-        # Arabic keywords + English identifiers
-        assert "تعريف" in arabic
+        assert arabic_keywords["def"] in arabic
         assert "calculate_tax" in arabic
         assert "income" in arabic
 

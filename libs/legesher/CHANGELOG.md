@@ -31,6 +31,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - `legesher translate --help` now shows all 26 supported languages
   - Dynamically generated from installed language packs
 
+### Changed
+
+- Migrate all test fixtures from hardcoded translation maps to real YAML language pack data via `LanguagePackLoader`
+- Fix `test_all_spanish_keywords_work` to use fixture values instead of shadowed hardcoded list
+
 ## [0.4.0] - 2026-01-27
 
 ### Changed

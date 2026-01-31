@@ -7,7 +7,6 @@ and provides regression detection for future changes.
 import pytest
 
 from legesher_core import TokenTranslator, TreeSitterTranslator
-from tests.data.keyword_maps_spanish import SPANISH_BUILTINS, SPANISH_KEYWORDS
 
 # Test code samples of varying complexity
 SMALL_CODE = """
@@ -107,44 +106,46 @@ class Pipeline:
     ],
     ids=["token", "tree-sitter"],
 )
-def translator_impl(request):
+def translator_impl(request, spanish_keywords, spanish_builtins):
     """Parametrized translator implementations for benchmarking."""
     name, klass = request.param
-    instance = klass(keyword_map=SPANISH_KEYWORDS, builtin_map=SPANISH_BUILTINS)
+    instance = klass(keyword_map=spanish_keywords, builtin_map=spanish_builtins)
     return name, instance
 
 
 class TestSmallCodeBenchmarks:
     """Benchmarks for small code samples (10-50 LOC)."""
 
-    def test_benchmark_small_code(self, benchmark, translator_impl):
+    def test_benchmark_small_code(
+        self, benchmark, translator_impl, spanish_keywords, spanish_builtins
+    ):
         """Benchmark translation of small code sample."""
         name, translator = translator_impl
         result = benchmark(translator.translate_code, SMALL_CODE, "en", "es")
-        assert "definir" in result
-        assert "imprimir" in result
+        assert spanish_keywords["def"] in result
+        assert spanish_builtins["print"] in result
 
 
 class TestMediumCodeBenchmarks:
     """Benchmarks for medium code samples (100-500 LOC)."""
 
-    def test_benchmark_medium_code(self, benchmark, translator_impl):
+    def test_benchmark_medium_code(self, benchmark, translator_impl, spanish_keywords):
         """Benchmark translation of medium code sample."""
         name, translator = translator_impl
         result = benchmark(translator.translate_code, MEDIUM_CODE, "en", "es")
-        assert "clase" in result
-        assert "definir" in result
+        assert spanish_keywords["class"] in result
+        assert spanish_keywords["def"] in result
 
 
 class TestLargeCodeBenchmarks:
     """Benchmarks for large code samples (500+ LOC)."""
 
-    def test_benchmark_large_code(self, benchmark, translator_impl):
+    def test_benchmark_large_code(self, benchmark, translator_impl, spanish_keywords):
         """Benchmark translation of large code sample."""
         name, translator = translator_impl
         result = benchmark(translator.translate_code, LARGE_CODE, "en", "es")
-        assert "desde" in result  # from
-        assert "importar" in result  # import
+        assert spanish_keywords["from"] in result
+        assert spanish_keywords["import"] in result
 
 
 class TestRoundTripBenchmarks:
@@ -167,26 +168,26 @@ class TestRoundTripBenchmarks:
 class TestComparativePerformance:
     """Direct comparison tests between translators."""
 
-    def test_token_small(self, benchmark):
+    def test_token_small(self, benchmark, spanish_keywords, spanish_builtins):
         """Baseline: TokenTranslator on small code."""
-        translator = TokenTranslator(SPANISH_KEYWORDS, SPANISH_BUILTINS)
+        translator = TokenTranslator(spanish_keywords, spanish_builtins)
         result = benchmark(translator.translate_code, SMALL_CODE, "en", "es")
-        assert "definir" in result
+        assert spanish_keywords["def"] in result
 
-    def test_tree_sitter_small(self, benchmark):
+    def test_tree_sitter_small(self, benchmark, spanish_keywords, spanish_builtins):
         """TreeSitter: TreeSitterTranslator on small code."""
-        translator = TreeSitterTranslator(SPANISH_KEYWORDS, SPANISH_BUILTINS)
+        translator = TreeSitterTranslator(spanish_keywords, spanish_builtins)
         result = benchmark(translator.translate_code, SMALL_CODE, "en", "es")
-        assert "definir" in result
+        assert spanish_keywords["def"] in result
 
-    def test_token_medium(self, benchmark):
+    def test_token_medium(self, benchmark, spanish_keywords, spanish_builtins):
         """Baseline: TokenTranslator on medium code."""
-        translator = TokenTranslator(SPANISH_KEYWORDS, SPANISH_BUILTINS)
+        translator = TokenTranslator(spanish_keywords, spanish_builtins)
         result = benchmark(translator.translate_code, MEDIUM_CODE, "en", "es")
-        assert "clase" in result
+        assert spanish_keywords["class"] in result
 
-    def test_tree_sitter_medium(self, benchmark):
+    def test_tree_sitter_medium(self, benchmark, spanish_keywords, spanish_builtins):
         """TreeSitter: TreeSitterTranslator on medium code."""
-        translator = TreeSitterTranslator(SPANISH_KEYWORDS, SPANISH_BUILTINS)
+        translator = TreeSitterTranslator(spanish_keywords, spanish_builtins)
         result = benchmark(translator.translate_code, MEDIUM_CODE, "en", "es")
-        assert "clase" in result
+        assert spanish_keywords["class"] in result

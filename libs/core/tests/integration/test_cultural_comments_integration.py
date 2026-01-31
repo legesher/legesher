@@ -11,26 +11,26 @@ from legesher_core import (
     CulturalCommentProvider,
     TokenTranslator,
 )
-from tests.data.keyword_maps_spanish import SPANISH_KEYWORDS, SPANISH_BUILTINS
-from tests.data.keyword_maps_arabic import ARABIC_KEYWORDS, ARABIC_BUILTINS
 
 
 class TestTokenTranslatorIntegration:
     """Test cultural comments integration with TokenTranslator."""
 
     @pytest.fixture
-    def spanish_translator(self):
+    def spanish_translator(self, spanish_keywords, spanish_builtins):
         """Create a translator configured for Spanish."""
         return TokenTranslator(
-            keyword_map=SPANISH_KEYWORDS, builtin_map=SPANISH_BUILTINS
+            keyword_map=spanish_keywords, builtin_map=spanish_builtins
         )
 
     @pytest.fixture
-    def arabic_translator(self):
+    def arabic_translator(self, arabic_keywords, arabic_builtins):
         """Create a translator configured for Arabic."""
-        return TokenTranslator(keyword_map=ARABIC_KEYWORDS, builtin_map=ARABIC_BUILTINS)
+        return TokenTranslator(keyword_map=arabic_keywords, builtin_map=arabic_builtins)
 
-    def test_translator_preserves_cultural_comments(self, spanish_translator):
+    def test_translator_preserves_cultural_comments(
+        self, spanish_translator, spanish_keywords
+    ):
         """Test that translation preserves cultural comments unchanged."""
         code = """
 #@culture[es]: "rango" puede significar "rank" o "range"
@@ -43,7 +43,7 @@ def calculate_range(n):
         assert "#@culture[es]:" in translated
         assert "rango" in translated
         # Keywords should be translated
-        assert "definir" in translated
+        assert spanish_keywords["def"] in translated
 
     def test_translator_returns_metadata(self, spanish_translator):
         """Test that translator can return cultural comment metadata."""
@@ -250,20 +250,20 @@ def foo(): pass
 class TestEndToEndScenarios:
     """Test realistic end-to-end scenarios."""
 
-    def test_spanish_developer_workflow(self):
+    def test_spanish_developer_workflow(self, spanish_keywords, spanish_builtins):
         """Test workflow: Spanish developer writes code with cultural notes."""
         # Spanish developer writes code with cultural context
-        spanish_code = """
+        spanish_code = f"""
 #@culture[es]: "rango" en este contexto significa "range" (intervalo)
-definir calcular_suma(limite):
+{spanish_keywords["def"]} calcular_suma(limite):
     total = 0
-    para i en rango(limite):
+    {spanish_keywords["for"]} i {spanish_keywords["in"]} {spanish_builtins["range"]}(limite):
         total += i
-    retornar total
+    {spanish_keywords["return"]} total
 """
         # Create English translator to see what English dev would see
-        english_keywords = {v: k for k, v in SPANISH_KEYWORDS.items()}
-        english_builtins = {v: k for k, v in SPANISH_BUILTINS.items()}
+        english_keywords = {v: k for k, v in spanish_keywords.items()}
+        english_builtins = {v: k for k, v in spanish_builtins.items()}
         translator = TokenTranslator(english_keywords, english_builtins)
 
         # Translate to English

@@ -77,7 +77,7 @@ class TestCLIBasics:
         """Test CLI version command."""
         result = runner.invoke(cli, ["--version"])
         assert result.exit_code == 0
-        assert "0.2.1" in result.output
+        assert "0.4.0" in result.output
 
 
 class TestValidateCommand:
