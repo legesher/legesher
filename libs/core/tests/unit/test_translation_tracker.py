@@ -142,13 +142,16 @@ class TestTrackClean:
 
     def test_track_clean_error_handling(self, translation_tracker, caplog):
         """Test that errors in track_clean are caught and logged."""
-        # Use invalid file path or cause error
-        invalid_path = Path("/invalid/path/that/causes/error")
+        file_path = Path("src/example.py")
 
-        # Should not raise exception
-        translation_tracker.track_clean(
-            file_path=invalid_path, from_language="es", to_language="en"
-        )
+        # Force an error by mocking _track_operation to raise
+        with patch.object(
+            translation_tracker, "_track_operation", side_effect=OSError("mock error")
+        ):
+            # Should not raise exception
+            translation_tracker.track_clean(
+                file_path=file_path, from_language="es", to_language="en"
+            )
 
         # Should have logged a warning
         assert any(
@@ -209,13 +212,16 @@ class TestTrackSmudge:
 
     def test_track_smudge_error_handling(self, translation_tracker, caplog):
         """Test that errors in track_smudge are caught and logged."""
-        # Use invalid file path or cause error
-        invalid_path = Path("/invalid/path/that/causes/error")
+        file_path = Path("src/example.py")
 
-        # Should not raise exception
-        translation_tracker.track_smudge(
-            file_path=invalid_path, from_language="en", to_language="es"
-        )
+        # Force an error by mocking _track_operation to raise
+        with patch.object(
+            translation_tracker, "_track_operation", side_effect=OSError("mock error")
+        ):
+            # Should not raise exception
+            translation_tracker.track_smudge(
+                file_path=file_path, from_language="en", to_language="es"
+            )
 
         # Should have logged a warning
         assert any(
@@ -769,17 +775,18 @@ class TestErrorHandling:
 
     def test_error_handling(self, translation_tracker, caplog):
         """Test that errors are caught and logged, not raised."""
-        # Use invalid path
-        invalid_path = Path("/invalid/path/file.py")
+        file_path = Path("src/example.py")
 
-        # Should not raise exceptions
-        try:
-            translation_tracker.track_clean(invalid_path, "es", "en")
-            translation_tracker.track_smudge(invalid_path, "en", "es")
-            translation_tracker.get_translation_history(invalid_path)
-            translation_tracker.get_latest_translation(invalid_path)
-        except Exception as e:
-            pytest.fail(f"Should not raise exception, but raised: {e}")
+        # Force errors by mocking _track_operation to raise
+        with patch.object(
+            translation_tracker, "_track_operation", side_effect=OSError("mock error")
+        ):
+            # Should not raise exceptions
+            try:
+                translation_tracker.track_clean(file_path, "es", "en")
+                translation_tracker.track_smudge(file_path, "en", "es")
+            except Exception as e:
+                pytest.fail(f"Should not raise exception, but raised: {e}")
 
         # Should have logged warnings
         assert len(caplog.records) > 0

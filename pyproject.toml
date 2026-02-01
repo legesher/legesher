@@ -7,45 +7,63 @@ authors = [
     {name = "Madison (Pfaff) Edgar",email = "7844510+madiedgar@users.noreply.github.com"}
 ]
 requires-python = ">=3.10,<4.0"
-dependencies = []
+dependencies = [
+    "legesher-core",
+    "legesher-i18n",
+    "legesher",
+    "legesher-language-server",
+    "legesher-home",
+    "legesher-vs-code",
+]
 readme = "README.md"
 
 [project.urls]
 repository = "https://www.github.com/legesher/legesher"
 
+[tool.uv.workspace]
+members = [
+    "libs/core",
+    "libs/i18n",
+    "libs/i18n/language-packs/python/*",
+    "libs/legesher",
+    "libs/language-server",
+    "libs/home",
+    "libs/vs-code",
+]
+
 [tool.uv.sources]
-legesher-core = { path = "./libs/core", editable = true }
-legesher-i18n = { path = "./libs/i18n", editable = true }
-legesher-i18n-python-ar = { path = "./libs/i18n/language-packs/python/ar", editable = true }
-legesher-i18n-python-da = { path = "./libs/i18n/language-packs/python/da", editable = true }
-legesher-i18n-python-de = { path = "./libs/i18n/language-packs/python/de", editable = true }
-legesher-i18n-python-el = { path = "./libs/i18n/language-packs/python/el", editable = true }
-legesher-i18n-python-en = { path = "./libs/i18n/language-packs/python/en", editable = true }
-legesher-i18n-python-es = { path = "./libs/i18n/language-packs/python/es", editable = true }
-legesher-i18n-python-fi = { path = "./libs/i18n/language-packs/python/fi", editable = true }
-legesher-i18n-python-fr = { path = "./libs/i18n/language-packs/python/fr", editable = true }
-legesher-i18n-python-he = { path = "./libs/i18n/language-packs/python/he", editable = true }
-legesher-i18n-python-hi = { path = "./libs/i18n/language-packs/python/hi", editable = true }
-legesher-i18n-python-hu = { path = "./libs/i18n/language-packs/python/hu", editable = true }
-legesher-i18n-python-id = { path = "./libs/i18n/language-packs/python/id", editable = true }
-legesher-i18n-python-it = { path = "./libs/i18n/language-packs/python/it", editable = true }
-legesher-i18n-python-ja = { path = "./libs/i18n/language-packs/python/ja", editable = true }
-legesher-i18n-python-ko = { path = "./libs/i18n/language-packs/python/ko", editable = true }
-legesher-i18n-python-ms = { path = "./libs/i18n/language-packs/python/ms", editable = true }
-legesher-i18n-python-nl = { path = "./libs/i18n/language-packs/python/nl", editable = true }
-legesher-i18n-python-no = { path = "./libs/i18n/language-packs/python/no", editable = true }
-legesher-i18n-python-pl = { path = "./libs/i18n/language-packs/python/pl", editable = true }
-legesher-i18n-python-pt = { path = "./libs/i18n/language-packs/python/pt", editable = true }
-legesher-i18n-python-ru = { path = "./libs/i18n/language-packs/python/ru", editable = true }
-legesher-i18n-python-sv = { path = "./libs/i18n/language-packs/python/sv", editable = true }
-legesher-i18n-python-th = { path = "./libs/i18n/language-packs/python/th", editable = true }
-legesher-i18n-python-tr = { path = "./libs/i18n/language-packs/python/tr", editable = true }
-legesher-i18n-python-vi = { path = "./libs/i18n/language-packs/python/vi", editable = true }
-legesher-i18n-python-zh = { path = "./libs/i18n/language-packs/python/zh", editable = true }
-legesher = { path = "./libs/legesher", editable = true }
-legesher-language-server = { path = "./libs/language-server", editable = true }
-legesher-home = { path = "./libs/home", editable = true }
-legesher-vs-code = { path = "./libs/vs-code", editable = true }
+legesher-core = { workspace = true }
+legesher-i18n = { workspace = true }
+legesher-i18n-python-ar = { workspace = true }
+legesher-i18n-python-da = { workspace = true }
+legesher-i18n-python-de = { workspace = true }
+legesher-i18n-python-el = { workspace = true }
+legesher-i18n-python-en = { workspace = true }
+legesher-i18n-python-es = { workspace = true }
+legesher-i18n-python-fi = { workspace = true }
+legesher-i18n-python-fr = { workspace = true }
+legesher-i18n-python-he = { workspace = true }
+legesher-i18n-python-hi = { workspace = true }
+legesher-i18n-python-hu = { workspace = true }
+legesher-i18n-python-id = { workspace = true }
+legesher-i18n-python-it = { workspace = true }
+legesher-i18n-python-ja = { workspace = true }
+legesher-i18n-python-ko = { workspace = true }
+legesher-i18n-python-ms = { workspace = true }
+legesher-i18n-python-nl = { workspace = true }
+legesher-i18n-python-no = { workspace = true }
+legesher-i18n-python-pl = { workspace = true }
+legesher-i18n-python-pt = { workspace = true }
+legesher-i18n-python-ru = { workspace = true }
+legesher-i18n-python-sv = { workspace = true }
+legesher-i18n-python-th = { workspace = true }
+legesher-i18n-python-tr = { workspace = true }
+legesher-i18n-python-vi = { workspace = true }
+legesher-i18n-python-zh = { workspace = true }
+legesher = { workspace = true }
+legesher-language-server = { workspace = true }
+legesher-home = { workspace = true }
+legesher-vs-code = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -56,6 +74,7 @@ dev = [
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",
     "pytest-cov>=7.0.0",
+    "pytest-benchmark>=4.0.0",
     "python-semantic-release>=9.0.0",
     "commitizen>=4.9.1",
 ]

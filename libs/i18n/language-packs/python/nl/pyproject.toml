@@ -31,9 +31,6 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-[tool.uv.sources]
-legesher-i18n = { path = "../../../", editable = true }
-
 [tool.semantic_release]
 version_variable = "legesher_i18n_python_nl/__init__.py:__version__"
 version_toml = "pyproject.toml:project.version"
