@@ -51,15 +51,15 @@ class TestLanguageMetrics:
         assert 0.0 <= metrics.average_agreement <= 1.0
 
     @pytest.mark.asyncio
-    async def test_language_metrics_sources_coverage(
-        self, calculator, spanish_results
-    ):
+    async def test_language_metrics_sources_coverage(self, calculator, spanish_results):
         """Test source coverage tracking."""
         metrics = calculator.calculate_language_metrics(spanish_results)
 
         # Should have coverage for multiple sources
         assert len(metrics.sources_coverage) > 0
-        assert "claude" in metrics.sources_coverage or "gpt4o" in metrics.sources_coverage
+        assert (
+            "claude" in metrics.sources_coverage or "gpt4o" in metrics.sources_coverage
+        )
 
     @pytest.mark.asyncio
     async def test_language_metrics_conflicts(self, calculator, spanish_results):
@@ -126,9 +126,7 @@ class TestSourceMetrics:
         return results
 
     @pytest.mark.asyncio
-    async def test_calculate_source_metrics_claude(
-        self, calculator, spanish_results
-    ):
+    async def test_calculate_source_metrics_claude(self, calculator, spanish_results):
         """Test calculating metrics for Claude."""
         metrics = calculator.calculate_source_metrics("claude", spanish_results)
 
@@ -139,9 +137,7 @@ class TestSourceMetrics:
         assert "es" in metrics.languages_covered
 
     @pytest.mark.asyncio
-    async def test_source_metrics_agreement_tracking(
-        self, calculator, spanish_results
-    ):
+    async def test_source_metrics_agreement_tracking(self, calculator, spanish_results):
         """Test agreement tracking."""
         metrics = calculator.calculate_source_metrics("claude", spanish_results)
 
@@ -166,7 +162,10 @@ class TestSourceMetrics:
 
         # Should have word type distribution
         if metrics.word_type_distribution:
-            assert "verb" in metrics.word_type_distribution or "noun" in metrics.word_type_distribution
+            assert (
+                "verb" in metrics.word_type_distribution
+                or "noun" in metrics.word_type_distribution
+            )
 
     @pytest.mark.asyncio
     async def test_compare_sources(self, calculator, spanish_results):

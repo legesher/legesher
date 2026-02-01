@@ -6,14 +6,11 @@ Reports can be generated for individual languages or cross-language comparisons.
 
 from typing import List, Dict, Optional
 from pathlib import Path
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import Environment, FileSystemLoader
 
 from ..comparison.models import ComparisonResult
 from ..comparison.metrics import (
     MetricsCalculator,
-    LanguageMetrics,
-    CrossLanguageMetrics,
-    SourceMetrics,
 )
 
 
@@ -40,8 +37,8 @@ class ReportGenerator:
         self.metrics_calculator = MetricsCalculator()
 
         # Add custom filters
-        self.env.filters['percentage'] = self._format_percentage
-        self.env.filters['decimal'] = self._format_decimal
+        self.env.filters["percentage"] = self._format_percentage
+        self.env.filters["decimal"] = self._format_decimal
 
     def _format_percentage(self, value: float) -> str:
         """Format float as percentage string (0.75 -> 75.0%)."""

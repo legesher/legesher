@@ -47,7 +47,7 @@ includes = ["legesher_i18n/"]
 custom-hook = "pdm_build.py"
 
 [tool.uv.sources]
-legesher-core = { path = "../core", editable = true }
+legesher-core = { workspace = true }
 
 [project.optional-dependencies]
 # Translation API providers (optional)

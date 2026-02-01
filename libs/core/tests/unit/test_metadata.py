@@ -17,6 +17,8 @@ Test Coverage:
 Coverage Target: >90%
 """
 
+import sys
+
 import pytest
 from pathlib import Path
 from datetime import UTC, datetime
@@ -548,6 +550,9 @@ class TestAtomicWrite:
         assert metadata_path.exists()
         assert not temp_path.exists()
 
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="chmod doesn't restrict writes on Windows"
+    )
     def test_atomic_write_cleanup_on_error(self, metadata_manager, temp_repo):
         """Test that temp files are cleaned up on write errors."""
         file_path = Path("src/example.py")
@@ -671,7 +676,7 @@ class TestYamlOperations:
         metadata_manager._write_yaml(yaml_file, data)
 
         # Read it back
-        with open(yaml_file, "r") as f:
+        with open(yaml_file, "r", encoding="utf-8") as f:
             loaded = yaml.safe_load(f)
 
         assert loaded == data

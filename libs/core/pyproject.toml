@@ -87,4 +87,4 @@ extend-exclude = "tests/fixtures/sample_spanish.py"
 extend-exclude = ["tests/fixtures/sample_spanish.py"]
 
 [tool.uv.sources]
-legesher-i18n = { path = "../i18n", editable = true }
+legesher-i18n = { workspace = true }

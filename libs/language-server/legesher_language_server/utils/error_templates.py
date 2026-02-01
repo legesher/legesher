@@ -229,7 +229,7 @@ class ErrorMessageTemplates:
                 },
                 "free_variable": {
                     "en": "free variable '{var}' referenced before assignment in enclosing scope",
-                    "es": "variable libre '{var}' referenciada antes de asignación en ámbito circundante",
+                    "es": "variable libre '{var}' referenciada antes de asignación en ámbito circundante",  # noqa: E501
                     "ar": "متغير حر '{var}' مشار إليه قبل الإسناد في النطاق المحيط",
                 },
             },
@@ -304,7 +304,7 @@ class ErrorMessageTemplates:
                 },
                 "not_enough_values": {
                     "en": "not enough values to unpack (expected {expected}, got {actual})",
-                    "es": "no hay suficientes valores para desempaquetar (se esperaban {expected}, se obtuvieron {actual})",
+                    "es": "no hay suficientes valores para desempaquetar (se esperaban {expected}, se obtuvieron {actual})",  # noqa: E501
                     "ar": "قيم غير كافية لفك الحزمة (متوقع {expected}، حصل على {actual})",
                 },
                 "too_many_values": {

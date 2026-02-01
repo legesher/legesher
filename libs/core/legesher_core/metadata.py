@@ -177,7 +177,7 @@ class MetadataManager:
         timestamp = datetime.now(UTC).isoformat()
 
         metadata: FileMetadata = {
-            "file": str(relative_path),
+            "file": relative_path.as_posix(),
             "original_language": original_language,
             "canonical_language": "en",  # Always English in git
             "python_version": python_version,
@@ -491,7 +491,7 @@ class MetadataManager:
                 )
 
             # Atomic rename
-            temp_path.rename(path)
+            temp_path.replace(path)
             logger.debug(f"Wrote YAML file atomically: {path}")
 
         except OSError as e:

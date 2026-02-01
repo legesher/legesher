@@ -32,9 +32,9 @@ classifiers = [
 ]
 
 [tool.uv.sources]
-legesher = { path = "../legesher", editable = true }
-legesher-core = { path = "../core", editable = true }
-legesher-i18n = { path = "../i18n", editable = true }
+legesher = { workspace = true }
+legesher-core = { workspace = true }
+legesher-i18n = { workspace = true }
 
 [tool.semantic_release]
 version_variable = "legesher-vs-code/__init__.py:__version__"

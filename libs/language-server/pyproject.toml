@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-legesher-i18n = { path = "../i18n", editable = true }
+legesher-i18n = { workspace = true }
 
 [project.optional-dependencies]
 dev = [

@@ -148,15 +148,11 @@ MOCK_SPANISH_TRANSLATIONS = {
             0.70,
             rationale="Misunderstood as verb instead of noun",
         ),
-        "aya23": Translation(
-            "class", "clase", "aya23", "es", "noun", "singular", 0.95
-        ),
+        "aya23": Translation("class", "clase", "aya23", "es", "noun", "singular", 0.95),
     },
     # Length differs significantly
     "is": {
-        "community": Translation(
-            "is", "es", "community", "es", "verb", "present", 1.0
-        ),
+        "community": Translation("is", "es", "community", "es", "verb", "present", 1.0),
         "claude": Translation("is", "es", "claude", "es", "verb", "present", 0.99),
         "gpt4o": Translation(
             "is",
@@ -172,7 +168,9 @@ MOCK_SPANISH_TRANSLATIONS = {
     },
     # Additional common terms
     "if": {
-        "community": Translation("if", "si", "community", "es", "conjunction", None, 1.0),
+        "community": Translation(
+            "if", "si", "community", "es", "conjunction", None, 1.0
+        ),
         "claude": Translation("if", "si", "claude", "es", "conjunction", None, 0.99),
         "gpt4o": Translation("if", "si", "gpt4o", "es", "conjunction", None, 0.98),
         "aya23": Translation("if", "si", "aya23", "es", "conjunction", None, 0.97),
@@ -187,23 +185,15 @@ MOCK_SPANISH_TRANSLATIONS = {
         "gpt4o": Translation(
             "else", "de lo contrario", "gpt4o", "es", "phrase", None, 0.75
         ),
-        "aya23": Translation(
-            "else", "sino", "aya23", "es", "conjunction", None, 0.92
-        ),
+        "aya23": Translation("else", "sino", "aya23", "es", "conjunction", None, 0.92),
     },
     "for": {
         "community": Translation(
             "for", "para", "community", "es", "preposition", None, 1.0
         ),
-        "claude": Translation(
-            "for", "para", "claude", "es", "preposition", None, 0.98
-        ),
-        "gpt4o": Translation(
-            "for", "para", "gpt4o", "es", "preposition", None, 0.96
-        ),
-        "aya23": Translation(
-            "for", "para", "aya23", "es", "preposition", None, 0.94
-        ),
+        "claude": Translation("for", "para", "claude", "es", "preposition", None, 0.98),
+        "gpt4o": Translation("for", "para", "gpt4o", "es", "preposition", None, 0.96),
+        "aya23": Translation("for", "para", "aya23", "es", "preposition", None, 0.94),
     },
     "while": {
         "community": Translation(
@@ -232,9 +222,7 @@ MOCK_ARABIC_TRANSLATIONS = {
             "def", "تعريف", "claude", "ar", "verb", "infinitive", 0.97
         ),
         "gpt4o": Translation("def", "وظيفة", "gpt4o", "ar", "noun", None, 0.80),
-        "aya23": Translation(
-            "def", "تعريف", "aya23", "ar", "verb", "infinitive", 0.93
-        ),
+        "aya23": Translation("def", "تعريف", "aya23", "ar", "verb", "infinitive", 0.93),
     },
     "print": {
         "community": Translation(
@@ -275,9 +263,7 @@ MOCK_ARABIC_TRANSLATIONS = {
         "community": Translation(
             "if", "إذا", "community", "ar", "conjunction", None, 1.0
         ),
-        "claude": Translation(
-            "if", "إذا", "claude", "ar", "conjunction", None, 0.99
-        ),
+        "claude": Translation("if", "إذا", "claude", "ar", "conjunction", None, 0.99),
         "gpt4o": Translation("if", "إذا", "gpt4o", "ar", "conjunction", None, 0.98),
         "aya23": Translation("if", "إذا", "aya23", "ar", "conjunction", None, 0.97),
     },
@@ -288,12 +274,8 @@ MOCK_ARABIC_TRANSLATIONS = {
         "claude": Translation(
             "else", "وإلا", "claude", "ar", "conjunction", None, 0.96
         ),
-        "gpt4o": Translation(
-            "else", "خلاف ذلك", "gpt4o", "ar", "phrase", None, 0.80
-        ),
-        "aya23": Translation(
-            "else", "وإلا", "aya23", "ar", "conjunction", None, 0.93
-        ),
+        "gpt4o": Translation("else", "خلاف ذلك", "gpt4o", "ar", "phrase", None, 0.80),
+        "aya23": Translation("else", "وإلا", "aya23", "ar", "conjunction", None, 0.93),
     },
 }
 
@@ -301,17 +283,13 @@ MOCK_ARABIC_TRANSLATIONS = {
 # Chinese Mock Data (logographic script)
 MOCK_CHINESE_TRANSLATIONS = {
     "def": {
-        "community": Translation(
-            "def", "定义", "community", "zh", "verb", None, 1.0
-        ),
+        "community": Translation("def", "定义", "community", "zh", "verb", None, 1.0),
         "claude": Translation("def", "定义", "claude", "zh", "verb", None, 0.98),
         "gpt4o": Translation("def", "函数", "gpt4o", "zh", "noun", None, 0.85),
         "aya23": Translation("def", "定义", "aya23", "zh", "verb", None, 0.95),
     },
     "print": {
-        "community": Translation(
-            "print", "打印", "community", "zh", "verb", None, 1.0
-        ),
+        "community": Translation("print", "打印", "community", "zh", "verb", None, 1.0),
         "claude": Translation("print", "打印", "claude", "zh", "verb", None, 0.99),
         "gpt4o": Translation("print", "打印", "gpt4o", "zh", "verb", None, 0.97),
         "aya23": Translation("print", "打印", "aya23", "zh", "verb", None, 0.96),

@@ -2,15 +2,10 @@
 
 import pytest
 import pytest_asyncio
-from pathlib import Path
-import tempfile
 
 from legesher_i18n.reports.generator import ReportGenerator
 from legesher_i18n.comparison.models import (
-    ComparisonResult,
     Translation,
-    DifferenceAnalysis,
-    LinguisticAnalysis,
 )
 from legesher_i18n.comparison.comparator import TranslationComparator
 
@@ -387,9 +382,7 @@ class TestReportGenerator:
         assert "ES" in report
 
     @pytest.mark.asyncio
-    async def test_report_markdown_formatting(
-        self, generator, sample_results_spanish
-    ):
+    async def test_report_markdown_formatting(self, generator, sample_results_spanish):
         """Test report uses proper markdown formatting."""
         report = generator.generate_language_report("es", sample_results_spanish)
 
@@ -472,15 +465,11 @@ class TestReportGenerator:
     async def test_template_exists(self, generator):
         """Test that required templates exist."""
         # Check language report template
-        language_template_path = (
-            generator.template_dir / "language_report.md.j2"
-        )
+        language_template_path = generator.template_dir / "language_report.md.j2"
         assert language_template_path.exists()
 
         # Check cross-language report template
-        cross_template_path = (
-            generator.template_dir / "cross_language_report.md.j2"
-        )
+        cross_template_path = generator.template_dir / "cross_language_report.md.j2"
         assert cross_template_path.exists()
 
     @pytest.mark.asyncio
@@ -559,9 +548,7 @@ class TestReportGeneratorIntegration:
         return results
 
     @pytest.mark.asyncio
-    async def test_full_language_report_spanish(
-        self, full_spanish_results, tmp_path
-    ):
+    async def test_full_language_report_spanish(self, full_spanish_results, tmp_path):
         """Test complete Spanish language report with real data."""
         generator = ReportGenerator()
         report = generator.generate_language_report("es", full_spanish_results)

@@ -31,7 +31,7 @@ def mock_response():
     response = MagicMock()
     response.content = [
         MagicMock(
-            text='''```json
+            text="""```json
 {
   "translation": "definir",
   "word_type": "verb",
@@ -40,7 +40,7 @@ def mock_response():
   "alternatives": ["función", "def"],
   "rationale": "Infinitive verb form is standard for Python keywords"
 }
-```'''
+```"""
         )
     ]
     response.usage = MagicMock(input_tokens=150, output_tokens=50)
@@ -74,9 +74,7 @@ class TestAnthropicProviderInit:
 
     def test_init_without_anthropic_package(self):
         """Test initialization fails without anthropic package."""
-        with patch(
-            "legesher_i18n.api.providers.anthropic.AsyncAnthropic", None
-        ):
+        with patch("legesher_i18n.api.providers.anthropic.AsyncAnthropic", None):
             with pytest.raises(ImportError, match="anthropic package not installed"):
                 AnthropicProvider(api_key="test")
 
@@ -192,9 +190,7 @@ class TestTranslation:
     @pytest.mark.asyncio
     async def test_translate_unsupported_language(self, provider):
         """Test translation with unsupported language."""
-        with pytest.raises(
-            UnsupportedLanguageError, match="does not support en-xx"
-        ):
+        with pytest.raises(UnsupportedLanguageError, match="does not support en-xx"):
             await provider.translate("def", "en", "xx")
 
     @pytest.mark.asyncio
@@ -217,7 +213,7 @@ class TestSemanticAnalysis:
         response = MagicMock()
         response.content = [
             MagicMock(
-                text='''```json
+                text="""```json
 {
   "similarity_scores": {
     "definir": 0.95,
@@ -228,16 +224,14 @@ class TestSemanticAnalysis:
   "recommendation": "Use 'definir' - most natural infinitive verb",
   "analysis": "All are valid but 'definir' is most idiomatic"
 }
-```'''
+```"""
             )
         ]
         response.usage = MagicMock(input_tokens=200, output_tokens=80)
         return response
 
     @pytest.mark.asyncio
-    async def test_semantic_similarity_basic(
-        self, provider, mock_similarity_response
-    ):
+    async def test_semantic_similarity_basic(self, provider, mock_similarity_response):
         """Test basic semantic similarity analysis."""
         provider.client.messages.create = AsyncMock(
             return_value=mock_similarity_response
@@ -287,14 +281,14 @@ class TestJSONParsing:
 
     def test_parse_json_with_code_block(self, provider):
         """Test parsing JSON from markdown code block."""
-        content = '''Here is the translation:
+        content = """Here is the translation:
 ```json
 {
   "translation": "imprimir",
   "confidence": 0.99
 }
 ```
-Hope that helps!'''
+Hope that helps!"""
 
         result = provider._parse_json_response(content)
         assert result["translation"] == "imprimir"
@@ -302,11 +296,11 @@ Hope that helps!'''
 
     def test_parse_json_without_language_tag(self, provider):
         """Test parsing JSON from code block without language tag."""
-        content = '''```
+        content = """```
 {
   "translation": "devolver"
 }
-```'''
+```"""
 
         result = provider._parse_json_response(content)
         assert result["translation"] == "devolver"
@@ -321,7 +315,7 @@ Hope that helps!'''
 
     def test_parse_json_with_newlines(self, provider):
         """Test parsing JSON with newlines."""
-        content = '''```json
+        content = """```json
 {
   "translation": "retornar",
   "word_type": "verb",
@@ -330,7 +324,7 @@ Hope that helps!'''
     "regresar"
   ]
 }
-```'''
+```"""
 
         result = provider._parse_json_response(content)
         assert result["translation"] == "retornar"
@@ -416,9 +410,7 @@ class TestPromptBuilding:
 
     def test_build_similarity_prompt(self, provider):
         """Test semantic similarity prompt."""
-        prompt = provider._build_similarity_prompt(
-            "def", ["definir", "función"], "es"
-        )
+        prompt = provider._build_similarity_prompt("def", ["definir", "función"], "es")
 
         assert "Spanish" in prompt
         assert '"def"' in prompt

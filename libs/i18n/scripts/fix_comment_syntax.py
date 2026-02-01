@@ -108,7 +108,9 @@ def fix_multiline_quoted_comments(content: str) -> tuple[str, int]:
         fix_count += 1
         return f"{indent}{key}: {clean_value}  # {comment}"
 
-    fixed_content = re.sub(pattern, replace_match, content, flags=re.MULTILINE | re.DOTALL)
+    fixed_content = re.sub(
+        pattern, replace_match, content, flags=re.MULTILINE | re.DOTALL
+    )
     return fixed_content, fix_count
 
 
