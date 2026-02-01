@@ -252,6 +252,7 @@ Type constructors (`int`, `float`, `complex`, `bool`, `str`) should use consiste
 **Example:**
 
 If you translate types as nouns:
+
 - `int` → `entero` (integer - noun)
 - `float` → `flotante` (floating - noun/adjective)
 - `complex` → `complejo` (complex - noun/adjective) ✅
@@ -263,6 +264,7 @@ NOT: `int` noun + `complex` verb (inconsistent ❌)
 **This term works WITH:**
 
 1. **`complex` + arithmetic**: Standard operations
+
 ```python
 z1 = 3 + 4j
 z2 = 1 + 2j
@@ -271,6 +273,7 @@ z1 * z2  # Multiplication
 ```
 
 2. **`complex` + methods**: Complex number operations
+
 ```python
 z = 3 + 4j
 z.conjugate()  # Complex conjugate
@@ -321,7 +324,7 @@ z = cmath.exp(1j * cmath.pi)  # ≈ -1 (Euler's identity)
 - Clear distinction from "complicated"
 - **AI confidence should be HIGH**
 
-### Why LOW for `complex`:
+### Why LOW for `complex`
 
 - Universal mathematical concept taught globally
 - "Complex number" is standard terminology in all languages

@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Devanagari-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Hindi. This guide shows the Hindi keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Hindi |
 | **Native Name** | हिन्दी |
 | **Script** | Devanagari |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Hindi.
 
 | English | Hindi |
-|---------|--------|
+| ------- | ------ |
 | `and` | `और` |
 | `as` | `जैसे` |
 | `assert` | `परिभाषितकरना` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Hindi.
 Python's built-in functions and types in Hindi.
 
 | English | Hindi |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `अभि` |
 | `aiter` | `अभिसंगतआयटेर` |
 | `all` | `सभी` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Hindi.
 Exception classes for error handling.
 
 | English | Hindi |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `अरिथमेटिकत्रुटि` |
 | `assertionerror` | `अवालंबनत्रुटि` |
 | `attributeerror` | `अत्रिभाष्यत्रुटि` |

@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Hungarian. This guide shows the Hungarian keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Hungarian |
 | **Native Name** | Magyar |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Hungarian.
 
 | English | Hungarian |
-|---------|--------|
+| ------- | ------ |
 | `and` | `és` |
 | `as` | `mint` |
 | `assert` | `fejléntesnítés` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Hungarian.
 Python's built-in functions and types in Hungarian.
 
 | English | Hungarian |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `absz` |
 | `aiter` | `asynchronos_iterator` |
 | `all` | `az_összes_elemet` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Hungarian.
 Exception classes for error handling.
 
 | English | Hungarian |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `aritmetikai_hiba` |
 | `assertionerror` | `az_ellenőrzési_hiba` |
 | `attributeerror` | `attributetori` |

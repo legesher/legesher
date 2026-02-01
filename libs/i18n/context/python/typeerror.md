@@ -291,12 +291,14 @@ raise TypeError("Expected number")
 Translating `TypeError` involves moderate complexity:
 
 **Moderate aspects:**
+
 - Compound term with two clear components
 - "Error" typically has established translation
 - "Type" is fundamental programming concept
 - Pattern must match other `*Error` exceptions
 
 **Challenges:**
+
 - "Type" has multiple meanings in English (must choose data type sense)
 - Compound structure varies by language (word order, connectors)
 - Must maintain perfect consistency with entire `*Error` family

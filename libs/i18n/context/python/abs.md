@@ -249,12 +249,14 @@ NOT: `absoluto` (math term) + `hacer_redondo` (colloquial phrase) ❌
 **This term works WITH:**
 
 1. **`abs` with negative numbers**: Remove sign
+
 ```python
 abs(-10)  # 10
 abs(-3.14)  # 3.14
 ```
 
 2. **`abs` for distance**: Calculate differences
+
 ```python
 distance = abs(x1 - x2)  # Always positive
 ```
@@ -312,7 +314,7 @@ deviations = [abs(v - target) for v in values]  # [5, 5, 10, 10]
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `abs`:
+### Why EASY for `abs`
 
 - Universal mathematical concept (taught in basic math globally)
 - "Absolute value" is standard term in mathematics worldwide

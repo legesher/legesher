@@ -263,6 +263,7 @@ Spanish: `variable_global`/`locales` (different structures)
 **This term works WITH:**
 
 1. **`globals` + `locals`**: Compare scopes
+
 ```python
 x = "global"
 
@@ -275,6 +276,7 @@ func()
 ```
 
 2. **`globals` + dynamic access**: Create/modify variables
+
 ```python
 # Create variable dynamically
 globals()['dynamic_var'] = "created at runtime"
@@ -340,7 +342,7 @@ print("At module level:", globals() == locals())  # True
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `globals`:
+### Why MEDIUM for `globals`
 
 - "Global" has multiple meanings (worldwide, scope)
 - Need plural form which varies by language

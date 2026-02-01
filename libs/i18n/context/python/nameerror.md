@@ -261,6 +261,7 @@ All exception classes ending in "Error" should use the same structure in transla
 **Example:**
 
 Spanish exception pattern:
+
 - `NameError` → `ErrorDeNombre` ✅
 - `AttributeError` → `ErrorDeAtributo` ✅
 - `KeyError` → `ErrorDeClave` ✅
@@ -334,7 +335,7 @@ print(y)  # Raises NameError
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `NameError`:
+### Why MEDIUM for `NameError`
 
 - "Name" has multiple meanings (personal, brand, reputation, identifier)
 - Need to convey compound concept (name + error)

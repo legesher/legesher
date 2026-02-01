@@ -243,12 +243,14 @@ NOT: `Verdadero` (adj) + `No` (particle for False) - inconsistent ❌
 **This term works WITH:**
 
 1. **Comparisons return `True`**:
+
 ```python
 result = (5 > 3)  # True
 is_equal = (x == y)
 ```
 
 2. **Boolean operators use `True`**:
+
 ```python
 result = True and False  # False
 result = True or False   # True
@@ -286,7 +288,7 @@ can_proceed = has_permission and is_verified  # True if both true
 - No ambiguity in logical context
 - **AI confidence should be HIGH**
 
-### Why EASY for `True`:
+### Why EASY for `True`
 
 - Universal concept (truth exists in all cultures)
 - "True" is standard logical term

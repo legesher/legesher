@@ -12,7 +12,7 @@ This guide explains how to integrate the newly created documentation into the Le
 
 ### 1. Documentation Files (5 files)
 
-```
+```text
 libs/i18n/
 ├── TRANSLATION_COMPARISON.md         [NEW] Comprehensive technical documentation (600+ lines)
 ├── README_COMPARISON_SECTION.md      [NEW] Section to add to README.md (350+ lines)
@@ -23,7 +23,7 @@ libs/i18n/
 
 ### 2. Example Reports (3 files)
 
-```
+```text
 libs/i18n/examples/                   [NEW DIRECTORY]
 ├── README.md                         [NEW] How to read and use reports (250+ lines)
 ├── spanish_comparison_report.md      [NEW] Spanish translation analysis (400+ lines)
@@ -32,7 +32,7 @@ libs/i18n/examples/                   [NEW DIRECTORY]
 
 ### 3. Integration Files (2 files)
 
-```
+```text
 libs/i18n/
 ├── DOCUMENTATION_SUMMARY.md          [NEW] Complete summary of updates
 └── INTEGRATION_GUIDE.md              [NEW] This file - integration instructions
@@ -112,7 +112,6 @@ legesher-i18n report es --output spanish_report.md
 **Example Reports**: See [examples/](./examples/)
 **Quick Reference**: See [COMPARISON_QUICKREF.md](./COMPARISON_QUICKREF.md)
 **Architecture**: See [COMPARISON_ARCHITECTURE.md](./COMPARISON_ARCHITECTURE.md)
-```
 
 ### Step 3: Update Documentation Index
 
@@ -142,16 +141,19 @@ If there's a documentation index or table of contents, add entries:
 Ensure all documents properly link to each other:
 
 #### From Main README
+
 - Link to `TRANSLATION_COMPARISON.md` for detailed docs
 - Link to `examples/` for example reports
 - Link to `COMPARISON_QUICKREF.md` for quick reference
 
 #### From TRANSLATION_COMPARISON.md
+
 - Link back to main README
 - Link to example reports
 - Link to other documentation (translation-api.md, etc.)
 
 #### From Examples
+
 - Link to main documentation
 - Link to API documentation
 - Link to contributing guides
@@ -210,9 +212,11 @@ cd /home/user/legesher/docs
 ### Overview of Files
 
 #### TRANSLATION_COMPARISON.md (Main Documentation)
+
 **Purpose**: Comprehensive technical documentation
 **Audience**: Developers using the comparison system
 **Content**:
+
 - System overview and features
 - Architecture explanation
 - Complete API documentation
@@ -222,14 +226,17 @@ cd /home/user/legesher/docs
 - Contributing guidelines
 
 **When to use**:
+
 - Implementing comparison functionality
 - Understanding system architecture
 - Detailed API reference
 
 #### README_COMPARISON_SECTION.md (README Addition)
+
 **Purpose**: User-friendly overview for main README
 **Audience**: New users discovering the comparison system
 **Content**:
+
 - Feature highlights
 - Quick start (Python and CLI)
 - How it works (4-step process)
@@ -238,14 +245,17 @@ cd /home/user/legesher/docs
 - Troubleshooting
 
 **When to use**:
+
 - Getting started quickly
 - First exposure to comparison system
 - Quick examples
 
 #### COMPARISON_QUICKREF.md (Quick Reference)
+
 **Purpose**: One-page cheat sheet
 **Audience**: Experienced users who need quick reminders
 **Content**:
+
 - All CLI commands with examples
 - Python API snippets
 - Configuration options
@@ -254,14 +264,17 @@ cd /home/user/legesher/docs
 - File locations
 
 **When to use**:
+
 - Quick command lookup
 - Remembering API syntax
 - Common workflows
 
 #### COMPARISON_ARCHITECTURE.md (Architecture)
+
 **Purpose**: Visual system architecture
 **Audience**: Contributors, architects, advanced users
 **Content**:
+
 - System architecture diagram
 - Data flow diagrams
 - Component interactions
@@ -270,20 +283,24 @@ cd /home/user/legesher/docs
 - Security considerations
 
 **When to use**:
+
 - Understanding system design
 - Contributing new features
 - Debugging issues
 - Planning integrations
 
 #### examples/ (Example Reports)
+
 **Purpose**: Real-world report examples
 **Audience**: Anyone evaluating translations
 **Content**:
+
 - Spanish comparison report (detailed)
 - Multi-language summary (comparative)
 - Examples README (how to use reports)
 
 **When to use**:
+
 - Understanding report structure
 - Seeing realistic data
 - Learning interpretation
@@ -292,12 +309,14 @@ cd /home/user/legesher/docs
 ## Key Features Documented
 
 ### 1. Multi-Provider Comparison
+
 - Claude (Anthropic) integration
 - GPT-4o (OpenAI) planned
 - Aya 23 (Cohere) planned
 - Community translation baseline
 
 ### 2. Quality Metrics
+
 - Agreement score (0-1)
 - Consensus rate (percentage)
 - Consistency score (pattern matching)
@@ -305,18 +324,21 @@ cd /home/user/legesher/docs
 - Conflict detection (automatic)
 
 ### 3. Report Generation
+
 - Markdown reports (human-readable)
 - HTML reports (web-friendly)
 - JSON data (machine-readable)
 - CSV exports (analysis-friendly)
 
 ### 4. CLI Tools
+
 - `compare` - Run comparison
 - `report` - Generate report
 - `metrics` - View/export metrics
 - `compare-multi` - Multi-language comparison
 
 ### 5. Database Integration
+
 - Historical tracking
 - Trend analysis
 - Provider performance
@@ -335,6 +357,7 @@ cd /home/user/legesher/docs
 ### CLI Examples (12)
 
 Covering:
+
 - Basic comparison commands
 - Report generation in multiple formats
 - Metrics viewing and export
@@ -348,12 +371,14 @@ Covering:
 ### Spanish Comparison Report
 
 **Metrics**:
+
 - 35 keywords analyzed
 - 28 consensus translations (80%)
 - 7 conflicts (3 low, 3 medium, 1 high)
 - Average agreement: 0.85 (85%)
 
 **Insights**:
+
 - Control flow keywords have 100% agreement
 - Compound keywords (elif, None) show conflicts
 - Claude: 94% agreement with community
@@ -364,12 +389,14 @@ Covering:
 **Languages**: Spanish, Arabic, Chinese
 
 **Key Findings**:
+
 - Chinese: Highest agreement (91%)
 - Arabic: Unique RTL challenges (78%)
 - Spanish: Good balance (85%)
 - Universal conflicts identified
 
 **Provider Performance**:
+
 - Claude: Best overall (93% avg)
 - Aya 23: Best for Arabic (92%)
 - GPT-4o: Strong in Western languages (90% avg)

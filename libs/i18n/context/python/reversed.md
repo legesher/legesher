@@ -241,6 +241,7 @@ Functions returning transformed iterators (`reversed`, `sorted`, `enumerate`, `z
 **Example:**
 
 If you translate `reversed` as past participle ("invertido"), then:
+
 - `sorted` should also be past participle ("ordenado")
 - `.reverse()` method should use verb form ("invertir")
 - NOT: `reversed` participle + `sorted` verb (inconsistent ❌)
@@ -250,12 +251,14 @@ If you translate `reversed` as past participle ("invertido"), then:
 **This term works WITH:**
 
 1. **`reversed` + iteration**: Memory-efficient backward iteration
+
 ```python
 for item in reversed(my_list):
     print(item)
 ```
 
 2. **`reversed` + conversion**: Create reversed copies
+
 ```python
 reversed_list = list(reversed(original))
 reversed_string = "".join(reversed(text))
@@ -298,7 +301,7 @@ print(numbers)  # [5, 4, 3, 2, 1]
 - Slight complexity in choosing right grammatical form
 - **AI confidence should be HIGH**
 
-### Why LOW for `reversed`:
+### Why LOW for `reversed`
 
 - Universal concept (reversing order exists in all languages)
 - "Reverse" is basic spatial/order concept

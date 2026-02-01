@@ -278,6 +278,7 @@ Translating `NotImplemented` requires understanding several nuances:
 4. **Technical Context:** Understanding Python's operator protocol helps choose the right linguistic form
 
 The difficulty is MEDIUM because:
+
 - The compound structure translates relatively directly across most languages
 - The past participle form exists in Indo-European languages
 - BUT requires understanding the subtle difference between return value vs exception

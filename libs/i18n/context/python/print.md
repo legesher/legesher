@@ -236,12 +236,14 @@ NOT: `imprimir` (verb) + `tamaño` (noun for len) - inconsistent ❌
 **This term works WITH:**
 
 1. **`print` + `input`**: Classic I/O pair for interactive programs
+
 ```python
 name = input("Enter name: ")
 print("Hello,", name)
 ```
 
 2. **`print` + f-strings**: Modern formatting pattern
+
 ```python
 x = 5
 y = 10
@@ -249,6 +251,7 @@ print(f"Result: {x + y}")
 ```
 
 3. **`print` + `file` parameter**: Redirecting output
+
 ```python
 with open("log.txt", "w") as f:
     print("Log entry", file=f)
@@ -285,7 +288,7 @@ print(f"Name: {name}, Age: {age}")
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `print`:
+### Why EASY for `print`
 
 - Universal computing concept
 - Well-established translations in all languages

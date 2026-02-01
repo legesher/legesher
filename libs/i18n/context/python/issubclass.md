@@ -257,6 +257,7 @@ The compound term is Python-specific with one clear meaning. Your translation sh
 **Consistency rule:**
 
 CRITICAL: `isinstance` and `issubclass` MUST use identical verb translation (the `is` part) and parallel structure:
+
 - If `isinstance` = `es_instancia`, then `issubclass` = `es_subclase`
 - If `isinstance` = `هو_نموذج`, then `issubclass` = `هو_صنف_فرعي`
 - Same verb, same structure, different noun

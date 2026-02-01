@@ -210,6 +210,7 @@ NO (in logical context)
 **"Or" is unambiguous in logical contexts:**
 
 In natural language, "or" can mean:
+
 1. Inclusive OR (A or B or both)
 2. Exclusive OR (A or B but not both - sometimes "either...or")
 
@@ -240,12 +241,14 @@ Spanish: `y` (and), `o` (or), `no` (not) - all basic conjunctions/particles ✅
 **This term works WITH:**
 
 1. **`or` in conditionals**:
+
 ```python
 if condition1 or condition2:
     execute()
 ```
 
 2. **`or` for default values**:
+
 ```python
 name = user_input or "Anonymous"
 config = settings.get('key') or default
@@ -286,7 +289,7 @@ can_access = has_permission or is_owner or is_public
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `or`:
+### Why EASY for `or`
 
 - Universal concept (logical disjunction in all languages)
 - Basic conjunction word exists in every language

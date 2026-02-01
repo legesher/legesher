@@ -18,7 +18,8 @@ def temp_db():
     db = TranslationDatabase(db_path=db_path)
     yield db
 
-    # Cleanup
+    # Close DB before cleanup to avoid Windows file-locking errors
+    db.close()
     Path(db_path).unlink(missing_ok=True)
 
 

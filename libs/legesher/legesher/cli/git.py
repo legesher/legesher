@@ -423,7 +423,7 @@ def _initialize_metadata(repo_root: Path, track_metadata: bool) -> None:
         try:
             from legesher_core.metadata import MetadataManager
 
-            manager = MetadataManager(repo_root)
+            MetadataManager(repo_root)
             click.echo("✓ Metadata system initialized successfully")
         except Exception as e:
             click.echo(

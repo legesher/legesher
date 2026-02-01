@@ -168,19 +168,19 @@ Most Python programmers never use `__import__` directly. It's primarily for Pyth
 
 **Arabic:**
 
-- **Translation:** `__استيراد__` (__istīrād__)
+- **Translation:** `__استيراد__` (**istīrād**)
 - **Form:** Verbal noun (masdar) with dunder
 - **Why it works:** Uses same term as `import` keyword with double underscores, maintaining consistency and special function marking
 
 **Chinese:**
 
-- **Translation:** `__导入__` (__dǎorù__)
+- **Translation:** `__导入__` (**dǎorù**)
 - **Form:** Verb with dunder markers
 - **Why it works:** Same term as `import` (导入) with preserved underscores, clear it's the low-level version of import
 
 **Hindi:**
 
-- **Translation:** `__आयात__` (__āyāt__)
+- **Translation:** `__आयात__` (**āyāt**)
 - **Form:** Infinitive with dunder
 - **Why it works:** Matches `import` translation with special markers, consistent terminology
 
@@ -200,7 +200,7 @@ Most Python programmers never use `__import__` directly. It's primarily for Pyth
 
 **Mistake 3: Adding explanatory text**
 
-- **Wrong:** `__importar_bajo_nivel__` (Spanish - "__import_low_level__")
+- **Wrong:** `__importar_bajo_nivel__` (Spanish - "**import_low_level**")
 - **Why wrong:** Function names should be concise; explanatory text belongs in documentation, not the identifier
 - **Right:** `__importar__` (concise, relies on `__` to signal special nature)
 

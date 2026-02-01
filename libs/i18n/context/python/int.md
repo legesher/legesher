@@ -275,7 +275,7 @@ binary_num = int("1010", 2)
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `int`:
+### Why EASY for `int`
 
 - "Integer" is a universal mathematical concept
 - Every language teaches integers in basic mathematics

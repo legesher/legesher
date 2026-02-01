@@ -287,12 +287,14 @@ return next_item
 Translating `StopIteration` involves moderate complexity:
 
 **Moderate aspects:**
+
 - Compound term requires understanding both components
 - "Stop" has clear translations across languages (command/imperative)
 - "Iteration" is established CS vocabulary in most languages
 - Need to maintain compound structure without becoming too verbose
 
 **Challenges:**
+
 - Must convey control flow signal, not error condition
 - Some languages may prefer different word orders for compounds
 - Balance between literal translation and idiomatic phrasing

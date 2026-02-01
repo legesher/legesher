@@ -232,6 +232,7 @@ String methods (`format`, `replace`, `join`, `split`) should all use infinitive 
 **Example:**
 
 If you translate `format` as infinitive ("formatear"), then:
+
 - `replace` should also be infinitive ("reemplazar")
 - `join` should also be infinitive ("unir")
 - NOT: `format` infinitive + `replace` noun (inconsistent ❌)
@@ -241,12 +242,14 @@ If you translate `format` as infinitive ("formatear"), then:
 **This term works WITH:**
 
 1. **`format` + string templates**: Create formatted output
+
 ```python
 "{} + {} = {}".format(2, 3, 5)
 "Name: {name}".format(name="Alice")
 ```
 
 2. **`format` + f-strings (modern alternative)**: Python 3.6+ provides f-strings as syntactic sugar
+
 ```python
 # format method (traditional)
 "Hello, {}".format(name)
@@ -288,7 +291,7 @@ name, age = "Bob", 25
 - Minor variation in whether to use verb or noun form
 - **AI confidence should be HIGH with proper form selection**
 
-### Why LOW for `format`:
+### Why LOW for `format`
 
 - "Format" is standard computing terminology worldwide
 - Most languages borrowed or adapted this term

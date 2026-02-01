@@ -223,6 +223,7 @@ YES
 **Example:**
 
 English "import" can mean:
+
 1. "Import coffee from Colombia" (trade - physical goods) ❌ Related metaphor
 2. "import math" in code (load module) ✅ **This is the Python meaning**
 3. "A matter of great import" (significance - archaic) ❌
@@ -257,12 +258,14 @@ Spanish: `desde modulo importar nombre como alias` - grammatically coherent ✅
 **This term works WITH:**
 
 1. **`import` alone**:
+
 ```python
 import module
 module.function()
 ```
 
 2. **`from ... import ...`**:
+
 ```python
 from module import name
 name()
@@ -337,7 +340,7 @@ math = __import__(module_name)
 - Universal in programming
 - **AI confidence should be HIGH**
 
-### Why EASY for `import`:
+### Why EASY for `import`
 
 - Universal concept (loading external code)
 - "Import" (bring in from outside) exists in most languages

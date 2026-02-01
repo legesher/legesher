@@ -244,12 +244,14 @@ NOT: `suma` (noun) + `obtener_máximo` (verb phrase) ❌
 **This term works WITH:**
 
 1. **`sum` + numeric iterables**: Add numbers
+
 ```python
 total = sum([1, 2, 3, 4, 5])
 price_total = sum(prices)
 ```
 
 2. **`sum` + generator expressions**: Lazy evaluation
+
 ```python
 even_sum = sum(x for x in range(10) if x % 2 == 0)
 ```
@@ -296,7 +298,7 @@ average = sum(numbers) / len(numbers)  # 20.0
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `sum`:
+### Why EASY for `sum`
 
 - Universal mathematical concept (all cultures use addition)
 - "Sum" is basic arithmetic term taught globally

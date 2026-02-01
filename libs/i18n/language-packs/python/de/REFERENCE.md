@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in German. This guide shows the German keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | German |
 | **Native Name** | Deutsch |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to German.
 
 | English | German |
-|---------|--------|
+| ------- | ------ |
 | `and` | `und` |
 | `as` | `als` |
 | `assert` | `assertieren` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to German.
 Python's built-in functions and types in German.
 
 | English | German |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `absoluter_Wert` |
 | `aiter` | `asynchrone_itor` |
 | `all` | `alle` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in German.
 Exception classes for error handling.
 
 | English | German |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `arithmetischerFehler` |
 | `assertionerror` | `Assertionfehler` |
 | `attributeerror` | `Attributfehler` |

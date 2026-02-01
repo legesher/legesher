@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Indonesian. This guide shows the Indonesian keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Indonesian |
 | **Native Name** | Bahasa Indonesia |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Indonesian.
 
 | English | Indonesian |
-|---------|--------|
+| ------- | ------ |
 | `and` | `dan` |
 | `as` | `sebagai` |
 | `assert` | `mengklaim` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Indonesian.
 Python's built-in functions and types in Indonesian.
 
 | English | Indonesian |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `nilaimutlak` |
 | `aiter` | `pengulangan_asinkron` |
 | `all` | `semua` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Indonesian.
 Exception classes for error handling.
 
 | English | Indonesian |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `kesalahanaritmatika` |
 | `assertionerror` | `kesalahanasersi` |
 | `attributeerror` | `ErrorAtribut` |

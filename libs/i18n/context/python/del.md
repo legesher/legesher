@@ -249,12 +249,14 @@ NOT: `definir` (verb) + `eliminación` (noun) ❌
 **This term works WITH:**
 
 1. **Variables:** `del variable_name`
+
 ```python
 x = 10
 del x  # Remove x from namespace
 ```
 
 2. **Collection items:** `del collection[key/index]`
+
 ```python
 del my_list[0]  # Remove first element
 del my_dict["key"]  # Remove dictionary key
@@ -304,7 +306,7 @@ del x, y, z  # Delete multiple names
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `del`:
+### Why MEDIUM for `del`
 
 - Universal concept (deletion/removal exists in all languages)
 - Most languages have "delete" or "remove" verbs

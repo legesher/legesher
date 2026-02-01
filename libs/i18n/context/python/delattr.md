@@ -188,7 +188,7 @@ Common use cases include dynamic cleanup (remove temporary attributes), attribut
 
 **Key behaviors:**
 
-1. **Triggers __delattr__:** Calls object's `__delattr__(name)` magic method if defined. Allows custom deletion behavior. Default behavior removes from instance `__dict__`. Can be overridden for logging, validation, or side effects.
+1. **Triggers **delattr**:** Calls object's `__delattr__(name)` magic method if defined. Allows custom deletion behavior. Default behavior removes from instance `__dict__`. Can be overridden for logging, validation, or side effects.
 
 2. **Raises AttributeError:** If attribute doesn't exist, raises `AttributeError`. Always check with `hasattr()` first for safe deletion. Exception includes attribute name in message for debugging.
 
@@ -310,6 +310,7 @@ The attr-family (`getattr`, `setattr`, `hasattr`, `delattr`) MUST use identical 
 **Example:**
 
 ✅ **Consistent (Spanish):**
+
 - `getattr` → `obtener_atributo`
 - `setattr` → `establecer_atributo`
 - `hasattr` → `tiene_atributo`
@@ -317,6 +318,7 @@ The attr-family (`getattr`, `setattr`, `hasattr`, `delattr`) MUST use identical 
 All use "atributo" ✅
 
 ❌ **Inconsistent:**
+
 - `getattr` → `obtener_atributo` (uses "atributo")
 - `delattr` → `eliminar_propiedad` (uses "propiedad")
 Different terms ❌ WRONG!
@@ -326,12 +328,14 @@ Different terms ❌ WRONG!
 **This term works WITH:**
 
 1. **`hasattr` + `delattr`**: Safe deletion pattern
+
 ```python
 if hasattr(obj, "temp"):
 delattr(obj, "temp")
 ```
 
 2. **`delattr` + cleanup**: Remove temporary attributes
+
 ```python
 for attr in temp_attrs:
 delattr(obj, attr)

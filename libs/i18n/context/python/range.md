@@ -245,12 +245,14 @@ NOT: `rango` (noun) + `crear_lista` (verb phrase) ❌
 **This term works WITH:**
 
 1. **`for` loop + `range`**: Most common usage pattern
+
 ```python
 for i in range(10):
     print(i)
 ```
 
 2. **`enumerate` + `range`**: Getting both index and value
+
 ```python
 items = ['a', 'b', 'c']
 for i in range(len(items)):

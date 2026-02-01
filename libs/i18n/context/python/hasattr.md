@@ -265,6 +265,7 @@ The attr-family (`getattr`, `setattr`, `hasattr`, `delattr`) MUST use the same w
 **Example:**
 
 ✅ **Consistent (Spanish):**
+
 - `getattr` → `obtener_atributo`
 - `setattr` → `establecer_atributo`
 - `hasattr` → `tiene_atributo`
@@ -272,6 +273,7 @@ The attr-family (`getattr`, `setattr`, `hasattr`, `delattr`) MUST use the same w
 All use "atributo" ✅
 
 ❌ **Inconsistent:**
+
 - `getattr` → `obtener_atributo` (uses "atributo")
 - `hasattr` → `tiene_propiedad` (uses "propiedad")
 Different terms ❌ WRONG!
@@ -281,12 +283,14 @@ Different terms ❌ WRONG!
 **This term works WITH:**
 
 1. **`hasattr` + defensive access**: Check before accessing
+
 ```python
 if hasattr(obj, "method"):
     obj.method()
 ```
 
 2. **`hasattr` + duck typing**: Test for interface
+
 ```python
 if hasattr(obj, "read") and hasattr(obj, "write"):
     # Treat as file-like object
@@ -370,7 +374,7 @@ def process(obj):
 - Must coordinate with getattr/setattr family
 - **AI confidence should be HIGH**
 
-### Why LOW for `hasattr`:
+### Why LOW for `hasattr`
 
 - Simple verb + noun compound
 - "Has" is universal verb for possession

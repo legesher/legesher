@@ -256,12 +256,14 @@ NOT: `potencia` (noun) + `hacer_absoluto` (verb phrase) ❌
 **This term works WITH:**
 
 1. **`pow` for basic exponentiation**: Raise to power
+
 ```python
 pow(2, 8)  # 256 (2⁸)
 pow(5, 3)  # 125 (5³)
 ```
 
 2. **`pow` with modulo**: Cryptographic operations
+
 ```python
 pow(base, exp, mod)  # (base^exp) % mod
 ```
@@ -327,7 +329,7 @@ ciphertext = pow(message, public_exponent, modulus)
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `pow`:
+### Why EASY for `pow`
 
 - Universal mathematical concept (exponentiation)
 - "Power" is standard term in mathematics globally

@@ -205,6 +205,7 @@ NO
 "Boolean" specifically refers to George Boole's logical system and the true/false data type in computing. There are no other common meanings.
 
 **Your translation should:**
+
 - Honor George Boole's name (transliteration common)
 - OR use word for "logical" if that's CS education standard
 - Capture the two-valued logic concept
@@ -234,12 +235,14 @@ Spanish: `booleano`, `entero`, `flotante`, `cadena` - all nouns/adjectives-as-no
 **This term works WITH:**
 
 1. **`bool` + comparisons**: Boolean results
+
 ```python
 result = (5 > 3)  # True
 is_equal = (x == y)  # bool value
 ```
 
 2. **`bool()` conversion**: Truthiness evaluation
+
 ```python
 bool(10)    # True
 bool(0)     # False
@@ -280,7 +283,7 @@ result = not False       # True
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `bool`:
+### Why EASY for `bool`
 
 - Universal concept (true/false logic exists in all languages)
 - "Boolean" is standard CS term globally (after George Boole)

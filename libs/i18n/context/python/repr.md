@@ -239,12 +239,14 @@ NOT: `representar` (verb) + `cadena` (noun) + `formatear` (verb) ❌ (inconsiste
 **This term works WITH:**
 
 1. **`repr` for debugging**: Show object structure
+
 ```python
 print(repr("hello\n"))  # 'hello\n' (shows escape)
 print(repr([1, 2, 3]))  # [1, 2, 3]
 ```
 
 2. **`repr` vs `str`**: Different purposes
+
 ```python
 s = "Line1\nLine2"
 print(str(s))   # Shows with actual newline
@@ -294,7 +296,7 @@ class Book:
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `repr`:
+### Why MEDIUM for `repr`
 
 - "Representation" is a common word with multiple meanings
 - Need computing-specific term for object representation

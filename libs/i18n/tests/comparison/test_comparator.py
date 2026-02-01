@@ -4,10 +4,8 @@ import pytest
 from unittest.mock import AsyncMock
 
 from legesher_i18n.comparison.comparator import TranslationComparator
-from legesher_i18n.comparison.models import Translation, DifferenceAnalysis
 from tests.comparison.fixtures.mock_translations import (
     get_mock_translations_for_term,
-    MOCK_SPANISH_TRANSLATIONS,
 )
 
 

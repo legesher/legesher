@@ -237,6 +237,7 @@ YES
 **Example:**
 
 English "with" can mean:
+
 1. "A house with two bedrooms" (having/possessing) ❌
 2. "with open('file')" (using/managing resource) ✅ **This is the Python meaning**
 3. "I went with friends" (accompaniment) ✅ Related concept
@@ -272,12 +273,14 @@ Spanish: `con open('file') como f:` - grammatically coherent ✅
 **This term works WITH:**
 
 1. **with for file handling**:
+
 ```python
 with open("file.txt") as f:
     data = f.read()
 ```
 
 2. **with for resource management**:
+
 ```python
 with lock:
     critical_section()
@@ -366,7 +369,7 @@ with suppress(FileNotFoundError):
 - Common programming pattern
 - **AI confidence should be HIGH**
 
-### Why EASY for `with`:
+### Why EASY for `with`
 
 - Universal concept (temporary association)
 - "With" preposition exists in every language

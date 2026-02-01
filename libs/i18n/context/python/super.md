@@ -292,11 +292,13 @@ Object-oriented terms should use consistent metaphors. If "class" uses formal OO
 **Example:**
 
 ✅ **Consistent (Chinese):**
+
 - `class` → `类` (class)
 - `super` → `父类` (parent class)
 - Consistent family/hierarchy metaphor ✅
 
 ❌ **Inconsistent:**
+
 - `class` → `类` (class)
 - `super` → `更好` (better - quality not hierarchy)
 - Mixed metaphors ❌
@@ -306,6 +308,7 @@ Object-oriented terms should use consistent metaphors. If "class" uses formal OO
 **This term works WITH:**
 
 1. **`super()` + `__init__`**: Initialize parent class
+
 ```python
 class Child(Parent):
 def __init__(self):
@@ -313,6 +316,7 @@ super().__init__()
 ```
 
 2. **`super()` + method override**: Extend parent method
+
 ```python
 class Child(Parent):
 def method(self):

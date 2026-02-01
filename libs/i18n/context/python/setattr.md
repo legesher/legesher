@@ -242,6 +242,7 @@ The attr-family (`getattr`, `setattr`, `hasattr`, `delattr`) MUST use the same w
 **Example:**
 
 ✅ **Consistent (Spanish):**
+
 - `getattr` → `obtener_atributo`
 - `setattr` → `establecer_atributo`
 - `hasattr` → `tiene_atributo`
@@ -249,6 +250,7 @@ The attr-family (`getattr`, `setattr`, `hasattr`, `delattr`) MUST use the same w
 All use "atributo" ✅
 
 ❌ **Inconsistent:**
+
 - `getattr` → `obtener_atributo` (uses "atributo")
 - `setattr` → `establecer_propiedad` (uses "propiedad")
 Different terms ❌ WRONG!
@@ -258,12 +260,14 @@ Different terms ❌ WRONG!
 **This term works WITH:**
 
 1. **`setattr` + dynamic modification**: Runtime attribute assignment
+
 ```python
 attr_name = "status"
 setattr(obj, attr_name, "active")
 ```
 
 2. **`setattr` + object construction**: Build objects from data
+
 ```python
 for key, value in data.items():
     setattr(obj, key, value)
@@ -337,7 +341,7 @@ def copy_attributes(source, target, attrs):
 - Must coordinate with getattr/hasattr family
 - **AI confidence should be HIGH**
 
-### Why LOW for `setattr`:
+### Why LOW for `setattr`
 
 - Simple verb + noun compound
 - "Set" is universal programming term for assignment

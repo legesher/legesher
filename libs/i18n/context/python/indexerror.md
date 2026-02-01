@@ -252,6 +252,7 @@ All exception classes ending in "Error" should use the same structure in transla
 **Example:**
 
 Spanish exception pattern:
+
 - `IndexError` → `ErrorDeÍndice` ✅
 - `KeyError` → `ErrorDeClave` ✅
 - `AttributeError` → `ErrorDeAtributo` ✅
@@ -322,7 +323,7 @@ print(empty[0])  # Raises IndexError
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `IndexError`:
+### Why MEDIUM for `IndexError`
 
 - "Index" has multiple meanings (book index, economic index, anatomy, position)
 - Need to convey compound concept (index + error)

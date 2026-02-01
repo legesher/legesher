@@ -116,7 +116,7 @@ This is useful for callbacks, validation, and duck typing. Before calling an obj
 
 1. **Returns boolean:** Always returns `True` or `False`. No exceptions raised. Safe to use on any object. `True` means you can use parentheses to call it; `False` means calling would raise `TypeError`.
 
-2. **Checks __call__ attribute:** Tests if object's type has `__call__` method. Functions/methods naturally have this. Classes are callable (calling creates instance). Regular instances need explicit `__call__` to be callable.
+2. **Checks **call** attribute:** Tests if object's type has `__call__` method. Functions/methods naturally have this. Classes are callable (calling creates instance). Regular instances need explicit `__call__` to be callable.
 
 3. **Doesn't test signature:** `callable()` only checks IF object can be called, not HOW (parameters, return type). An object can be callable but still raise `TypeError` if called with wrong arguments.
 
@@ -149,7 +149,7 @@ This is useful for callbacks, validation, and duck typing. Before calling an obj
 
 - ❌ Using verb "to call" - this tests capability, not performs calling
 - ❌ Using noun "call" - wrong part of speech for boolean predicate
-- ❌ Using "function" - too narrow (classes and objects with __call__ also callable)
+- ❌ Using "function" - too narrow (classes and objects with **call** also callable)
 
 ---
 
@@ -236,6 +236,7 @@ Predicate functions (`callable`, `isinstance`, `hasattr`, `issubclass`) should u
 **Example:**
 
 If you use adjective pattern:
+
 - `callable` → `invocable` (adjective)
 - `hasattr` → `tiene_atributo` (verb+noun) ⚠️
 - Better: keep all consistent in question/adjective form
@@ -245,12 +246,14 @@ If you use adjective pattern:
 **This term works WITH:**
 
 1. **`callable` + validation**: Check before calling
+
 ```python
 if callable(func):
     result = func()
 ```
 
 2. **`callable` + duck typing**: Verify callable objects
+
 ```python
 callbacks = [f for f in objects if callable(f)]
 ```
@@ -307,7 +310,7 @@ if callable(obj):
 - "Callable" well-understood in programming
 - **AI confidence should be HIGH**
 
-### Why LOW for `callable`:
+### Why LOW for `callable`
 
 - "Callable" is standard programming terminology
 - -able suffix pattern exists in many languages
@@ -332,7 +335,7 @@ Minor consideration: Ensure translation uses adjective form appropriate for pred
 
 - [ ] Captures INVOCABLE capability concept?
 - [ ] Understood as testing whether object can be called?
-- [ ] Includes all callable types (functions, classes, __call__ objects)?
+- [ ] Includes all callable types (functions, classes, **call** objects)?
 
 ### 2. Linguistic Correctness
 

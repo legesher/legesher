@@ -4,7 +4,7 @@ Visual overview of the Legesher translation comparison system architecture.
 
 ## System Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                     Translation Comparison System                           │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -149,7 +149,7 @@ Visual overview of the Legesher translation comparison system architecture.
 
 ## Data Flow
 
-```
+```text
 1. Input Collection
    ┌─────────────────────────────────────────────────────────────┐
    │ Keywords: ["if", "else", "elif", "while", "for", ...]      │
@@ -207,7 +207,7 @@ Visual overview of the Legesher translation comparison system architecture.
 
 ### Comparison Workflow
 
-```
+```text
 User Request
     │
     ├──> TranslationComparator.compare()
@@ -244,7 +244,7 @@ User Request
 
 ### Provider Communication
 
-```
+```text
 TranslationComparator
          │
          ├─────────────────────────────────────┐
@@ -280,7 +280,7 @@ TranslationComparator
 
 ### Core Models
 
-```
+```text
 ComparisonConfig
 ├── language: str
 ├── python_version: str
@@ -318,7 +318,7 @@ TranslationConflict
 
 ### Data Flow Through Models
 
-```
+```text
 Input Data
     │
     ├─> ComparisonConfig (Configuration)
@@ -354,7 +354,7 @@ ReportGenerator
 
 ## CLI Architecture
 
-```
+```text
 Command Line Interface
          │
          ├─> legesher-i18n compare
@@ -392,7 +392,7 @@ Command Line Interface
 
 ## API Architecture
 
-```
+```text
 Python API
     │
     ├─> legesher_i18n.comparison
@@ -419,7 +419,7 @@ Python API
 
 ### External Systems
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │  Legesher Translation Comparison System                     │
 └─────────────────────────────────────────────────────────────┘
@@ -454,7 +454,7 @@ Python API
 
 ### Future Extensions
 
-```
+```text
 Current System
     │
     ├─> [PLANNED] Language Server Protocol
@@ -474,7 +474,7 @@ Current System
 
 ### Caching Strategy
 
-```
+```text
 Request
     │
     ├─> Check cache
@@ -493,7 +493,7 @@ Request
 
 ### Batch Processing
 
-```
+```text
 Keywords: [k1, k2, k3, k4, k5, k6, k7, k8, k9, k10]
                 │
                 ├─> Batch 1: [k1, k2, k3]
@@ -508,7 +508,7 @@ Keywords: [k1, k2, k3, k4, k5, k6, k7, k8, k9, k10]
 
 ## Security Considerations
 
-```
+```text
 API Key Management
     │
     ├─> Environment variables (recommended)
@@ -536,7 +536,7 @@ Data Privacy
 
 ### Adding New Providers
 
-```
+```text
 1. Create provider class
    ├── Inherit from TranslationProvider
    ├── Implement translate_keywords()
@@ -554,7 +554,7 @@ Data Privacy
 
 ### Adding New Metrics
 
-```
+```text
 1. Add calculation method
    ├── Add to MetricsCalculator
    └── Implement calculation logic

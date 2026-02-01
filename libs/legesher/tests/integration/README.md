@@ -160,7 +160,7 @@ def test_translation_equivalence(tmp_path):
 
 ## Test Organization
 
-```
+```text
 tests/integration/
 ├── __init__.py                    # Package initialization
 ├── test_cli_integration.py        # Main test file (1300+ lines)

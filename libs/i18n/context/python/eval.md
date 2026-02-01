@@ -239,6 +239,7 @@ In general English, "evaluate" can mean assess, judge, or appraise in many conte
 **Consistency rule:**
 
 While `eval` and `exec` are related, they should be distinguishable:
+
 - `eval` = evaluate expression to get value (returns result)
 - `exec` = execute statements (returns None)
 

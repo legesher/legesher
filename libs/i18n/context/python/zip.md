@@ -242,6 +242,7 @@ English "zip" can mean:
 **Your translation should capture meaning #5: combining sequences by pairing corresponding elements, like how a zipper combines two sides.**
 
 **Translation strategy:**
+
 - If your language has adopted "zip" as a technical term → use it
 - If translating, focus on combining/pairing/packaging concept
 - Avoid confusion with file compression (ZIP files)
@@ -273,12 +274,14 @@ NOT: `empaquetar` (verb) + `empaquetado` (participle) ❌
 **This term works WITH:**
 
 1. **Parallel iteration**: Primary use case
+
 ```python
 for name, age in zip(names, ages):
     print(name, age)
 ```
 
 2. **Creating dictionaries**: Combining keys and values
+
 ```python
 keys = ['a', 'b', 'c']
 values = [1, 2, 3]

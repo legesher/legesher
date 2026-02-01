@@ -256,12 +256,14 @@ NOT: `ordenado` (participle) + `invertir` (infinitive) ❌
 **This term works WITH:**
 
 1. **List sorting**: Primary use case
+
 ```python
 numbers = [3, 1, 4]
 result = sorted(numbers)  # New sorted list
 ```
 
 2. **Custom sorting with key**: Advanced sorting
+
 ```python
 words = ["apple", "pie", "zoo"]
 by_length = sorted(words, key=len)

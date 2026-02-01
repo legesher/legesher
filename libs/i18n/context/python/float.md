@@ -139,6 +139,7 @@ Common uses include measurements (temperature, distance), financial calculations
 | Hindi | Transliterated | "फ्लोट" (borrowed term) |
 
 **Primary recommendation:** Most languages either:
+
 1. Use adjective "floating" as a noun (flotante, floating)
 2. Use compound "floating-point" (Gleitkommazahl, 浮点)
 3. Transliterate "float" as a technical term
@@ -252,6 +253,7 @@ NOT: `flotante` (noun) + `crear_entero` (verb phrase) ❌
 **This term works WITH:**
 
 1. **Type conversion**: Converting between numeric types
+
 ```python
 x = float(42)      # int to float: 42.0
 y = int(3.7)       # float to int: 3 (truncates)
@@ -259,6 +261,7 @@ z = float("3.14")  # string to float
 ```
 
 2. **Mathematical operations**: Automatic type promotion
+
 ```python
 result = 5 + 2.5   # int + float = float (7.5)
 ratio = 7 / 2      # Always returns float (3.5)

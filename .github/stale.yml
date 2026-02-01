@@ -10,7 +10,7 @@ daysUntilClose: 14
 # exemptLabels:
 
 # Label to use when marking as stale
-staleLabel: Status: Stale
+staleLabel: 'Status: Stale'
 # Comment to post when marking as stale. Set to `false` to disable
 markComment: >
   👏 Thanks for your contribution!

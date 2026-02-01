@@ -331,6 +331,7 @@ Meta-programming functions that work with code (`compile`, `exec`, `eval`) shoul
 **Example:**
 
 ✅ **Consistent (Spanish):**
+
 - `compile` → `compilar` (infinitive)
 - `exec` → `ejecutar` (infinitive)
 - `eval` → `evaluar` (infinitive)

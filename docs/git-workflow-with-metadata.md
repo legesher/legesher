@@ -4,7 +4,9 @@ How Legesher's git filters work with the metadata system to provide seamless mul
 
 ## Overview
 
-Legesher uses git filters to automatically translate code between your working directory language and the canonical repository language (English by default). The metadata system tracks every translation operation, providing a complete audit trail.
+Legesher uses git filters to automatically translate code between your working directory language and
+the canonical repository language (English by default). The metadata system tracks every translation
+operation, providing a complete audit trail.
 
 ## Git Filter Architecture
 
@@ -12,7 +14,7 @@ Legesher uses git filters to automatically translate code between your working d
 
 When you commit code, the **clean filter** translates from your working language to the canonical language:
 
-```
+```text
 Working Directory (Spanish)        Git Repository (English)
 ─────────────────────────          ────────────────────────
 definir calcular(x):      ──→      def calcular(x):
@@ -31,7 +33,7 @@ definir calcular(x):      ──→      def calcular(x):
 
 When you checkout or pull code, the **smudge filter** translates from canonical to your working language:
 
-```
+```text
 Git Repository (English)           Working Directory (Spanish)
 ────────────────────────           ───────────────────────────
 def calcular(x):          ──→      definir calcular(x):
@@ -211,7 +213,7 @@ legesher metadata show src/calculator.py
 
 **Output:**
 
-```
+```text
 File: src/calculator.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Original Language:    es
@@ -350,7 +352,7 @@ legesher metadata history src/feature.py
 
 **Output:**
 
-```
+```text
 Translation History: src/feature.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━┓

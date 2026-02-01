@@ -140,7 +140,8 @@ If you encounter "No module named pytest":
 
 ## Metadata Tracking
 
-Legesher Core includes a comprehensive metadata tracking system that records translation history and git operations for audit trails and debugging.
+Legesher Core includes a comprehensive metadata tracking system that records
+translation history and git operations for audit trails and debugging.
 
 ### What is Metadata?
 

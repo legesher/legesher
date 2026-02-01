@@ -341,7 +341,7 @@ pass  # Ignore other events
 
 **Translation Difficulty: MEDIUM**
 
-### Why MEDIUM for `case`:
+### Why MEDIUM for `case`
 
 - Relatively new feature (Python 3.10+, introduced 2021)
 - Must distinguish from older `switch/case` in other languages

@@ -240,6 +240,7 @@ The compound term is Python-specific with one clear meaning. Your translation sh
 **Consistency rule:**
 
 The "is*" functions (`isinstance`, `issubclass`) MUST use the same verb translation as the `is` keyword:
+
 - If `is` = "es" (Spanish), then `isinstance` = "es_instancia" (not "está_instancia")
 - If `is` = "هو" (Arabic), then `isinstance` = "هو_نموذج" (same verb)
 

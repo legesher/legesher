@@ -166,7 +166,7 @@ class TestHoverProviderBuiltins:
         content = await provider._hover_builtin("print")
         assert content is not None
         assert "print" in content
-        assert "Python builtin" in content
+        assert "```python" in content  # Should have code block with signature
         # Should contain part of print's docstring
         assert "objects" in content.lower() or "print" in content.lower()
 
@@ -176,7 +176,7 @@ class TestHoverProviderBuiltins:
         content = await provider._hover_builtin("len")
         assert content is not None
         assert "len" in content
-        assert "Python builtin" in content
+        assert "```python" in content  # Should have code block with signature
 
     @pytest.mark.asyncio
     async def test_hover_list_builtin(self, provider):
@@ -184,7 +184,7 @@ class TestHoverProviderBuiltins:
         content = await provider._hover_builtin("list")
         assert content is not None
         assert "list" in content
-        assert "Python builtin" in content
+        assert "```python" in content  # Should have code block with signature
 
     @pytest.mark.asyncio
     async def test_hover_builtin_caching(self, provider):

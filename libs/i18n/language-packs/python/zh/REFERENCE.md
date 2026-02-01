@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Simplified%20Chinese%20%28Han%29-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Chinese. This guide shows the Chinese keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Chinese |
 | **Native Name** | 中文 |
 | **Script** | Simplified Chinese (Han) |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Chinese.
 
 | English | Chinese |
-|---------|--------|
+| ------- | ------ |
 | `and` | `和` |
 | `as` | `作为` |
 | `assert` | `断言` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Chinese.
 Python's built-in functions and types in Chinese.
 
 | English | Chinese |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `绝对值` |
 | `aiter` | `异步迭代器` |
 | `all` | `全` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Chinese.
 Exception classes for error handling.
 
 | English | Chinese |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `算术错误` |
 | `assertionerror` | `断言错误` |
 | `attributeerror` | `属性错误` |

@@ -248,6 +248,7 @@ N/A - "Nonlocal" is unambiguous in English. It's a technical term coined for pro
 **Translation clarity:**
 
 Since this is an unambiguous technical term, translations should maintain the negative structure ("non-" or "not") to distinguish clearly from both "local" and "global." The three-way distinction is crucial:
+
 - **local:** current function scope
 - **nonlocal:** enclosing function scope
 - **global:** module scope
@@ -271,6 +272,7 @@ Scope modifiers (`global`, `nonlocal`) should use consistent linguistic forms: a
 **Example:**
 
 Spanish scope hierarchy:
+
 - `local` (local - current function) - adjective
 - `no_local` (nonlocal - enclosing function) - negative adjective
 - `global` (global - module) - adjective
@@ -284,6 +286,7 @@ NOT: `local` (adjective) + `envolver` (verb - to enclose) + `global` (adjective)
 **This term works WITH:**
 
 1. **Nested functions and closures:**
+
 ```python
 def outer():
     x = 0
@@ -294,6 +297,7 @@ def outer():
 ```
 
 2. **Multiple enclosing variables:**
+
 ```python
 def factory():
     count = 0
@@ -380,7 +384,7 @@ def level1():
 - Concept doesn't exist universally
 - **AI confidence should be MEDIUM, human review recommended**
 
-### Why HARD for `nonlocal`:
+### Why HARD for `nonlocal`
 
 - Relatively new concept (Python 3.0+, 2008)
 - Not all languages have nested function scope modification

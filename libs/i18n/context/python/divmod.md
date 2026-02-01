@@ -216,6 +216,7 @@ NO (it's a specialized programming term)
 **Translation consideration:**
 
 Since "divmod" is a compound technical term, translations can:
+
 1. Keep "divmod" (widely recognized in programming)
 2. Create similar compound (div + remainder/mod in target language)
 3. Use abbreviation style matching target language conventions
@@ -241,6 +242,7 @@ Mathematical functions (`divmod`, `pow`, `abs`, `min`, `max`) should use consist
 **Example:**
 
 Spanish options:
+
 - Keep all: `pow`, `abs`, `divmod` ✅ (internationally consistent)
 - Translate all: `potencia`, `absoluto`, `divresto` ✅ (linguistically consistent)
 - Mix: `pow`, `absoluto`, `divmod` ⚠️ (less consistent but acceptable)
@@ -250,11 +252,13 @@ Spanish options:
 **This term works WITH:**
 
 1. **`divmod` + unpacking**: Common to unpack into two variables
+
 ```python
 quotient, remainder = divmod(17, 5)
 ```
 
 2. **`divmod` + time/unit conversions**: Practical application
+
 ```python
 hours, minutes = divmod(minutes_total, 60)
 ```
@@ -301,7 +305,7 @@ q, r = divmod(a, b)  # More efficient
 - Creating compound translation straightforward
 - **AI confidence should be HIGH to MEDIUM**
 
-### Why LOW for `divmod`:
+### Why LOW for `divmod`
 
 - Simple compound of two well-known operations
 - "divmod" recognized internationally in programming

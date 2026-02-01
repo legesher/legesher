@@ -233,6 +233,7 @@ YES
 **Example:**
 
 English "as" can mean:
+
 1. "As you were leaving..." (while/during) ❌
 2. "As you're here, help me" (because) ❌
 3. "import numpy as np" (under the name of / known as) ✅ **This is the Python meaning**
@@ -268,17 +269,20 @@ Spanish: `import numpy como np`, `except ValueError como e` - both grammatical �
 **This term works WITH:**
 
 1. **Import aliasing**:
+
 ```python
 import module as alias
 from module import name as alias
 ```
 
 2. **Exception binding**:
+
 ```python
 except Exception as var
 ```
 
 3. **Context manager binding**:
+
 ```python
 with resource as var
 ```
@@ -359,7 +363,7 @@ with my_context() as res:
 - Universal grammatical concept
 - **AI confidence should be HIGH**
 
-### Why EASY for `as`:
+### Why EASY for `as`
 
 - Universal concept (alternative naming)
 - "As" (in the role of) exists in most languages

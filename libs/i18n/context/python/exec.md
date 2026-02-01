@@ -251,10 +251,12 @@ In general English, "execute" can mean carry out a plan, put to death, or perfor
 **Consistency rule:**
 
 `exec` and `eval` MUST be clearly distinguishable because they serve different purposes:
+
 - `exec` = execute statements (no return value)
 - `eval` = evaluate expressions (returns value)
 
 Recommended pattern:
+
 - `exec` → "execute/run" (action-oriented)
 - `eval` → "evaluate/compute" (value-oriented)
 

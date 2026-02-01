@@ -240,12 +240,14 @@ Spanish: `binario`, `hex`, `octavo` ← Wrong! (mixed styles, wrong word)
 **This term works WITH:**
 
 1. **`oct` + integer input**: Convert to octal string
+
 ```python
 print(oct(64))     # '0o100'
 print(oct(511))    # '0o777'
 ```
 
 2. **`oct` + file permissions**: Unix chmod values
+
 ```python
 perm = 0o755  # Owner: rwx, Group: r-x, Others: r-x
 print(oct(perm))  # '0o755'
@@ -293,7 +295,7 @@ print(f"File permission: {clean}")
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `oct`:
+### Why MEDIUM for `oct`
 
 - "Octal" is standard computing term
 - But less common than hex/binary in modern code

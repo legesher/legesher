@@ -2,7 +2,9 @@
 
 ## Overview
 
-Several documentation pages are referenced in the Legesher docs but don't exist yet. This ticket tracks all missing documentation that needs to be created or reviewed for the docs.legesher.io site.
+Several documentation pages are referenced in the Legesher docs but
+don't exist yet. This ticket tracks all missing documentation that
+needs to be created or reviewed for the docs.legesher.io site.
 
 ## Missing Documentation Pages
 

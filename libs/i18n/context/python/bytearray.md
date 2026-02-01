@@ -236,6 +236,7 @@ NOT: `bytes`, `array_binario` ❌ (inconsistent roots)
 **This term works WITH:**
 
 1. **`bytearray` modification**: In-place changes
+
 ```python
 data = bytearray(b"Hello")
 data[0] = ord('J')  # Modify first byte
@@ -243,6 +244,7 @@ print(data)  # bytearray(b'Jello')
 ```
 
 2. **`bytearray` with bytes**: Conversion between mutable/immutable
+
 ```python
 immutable = bytes([1, 2, 3])
 mutable = bytearray(immutable)
@@ -295,7 +297,7 @@ buffer[0:5] = b"Start"
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `bytearray`:
+### Why MEDIUM for `bytearray`
 
 - Compound term requires translating two concepts
 - Decision: keep English vs translate both parts vs hybrid

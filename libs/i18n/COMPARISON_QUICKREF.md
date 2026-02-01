@@ -207,7 +207,7 @@ translations = provider.translate_keywords(
 
 ### Agreement Score
 
-```
+```text
 Score = (Matching Translations) / (Total Translations)
 ```
 
@@ -219,7 +219,7 @@ Score = (Matching Translations) / (Total Translations)
 
 ### Consensus Rate
 
-```
+```text
 Rate = (Keywords with ≥90% Agreement) / (Total Keywords)
 ```
 
@@ -325,18 +325,21 @@ for provider in results.providers:
 ## File Locations
 
 ### Documentation
+
 - Main docs: `TRANSLATION_COMPARISON.md`
 - Quick start: `README.md` (comparison section)
 - Examples: `examples/`
 - This reference: `COMPARISON_QUICKREF.md`
 
 ### Implementation
+
 - Comparison: `legesher_i18n/comparison/`
 - Providers: `legesher_i18n/api/providers/`
 - Reports: `legesher_i18n/reports/`
 - Database: `legesher_i18n/db/`
 
 ### Examples
+
 - Spanish report: `examples/spanish_comparison_report.md`
 - Multi-language: `examples/multi_language_summary.md`
 - Examples guide: `examples/README.md`
@@ -360,6 +363,7 @@ export DEFAULT_PYTHON_VERSION="3.13"
 ## Troubleshooting
 
 ### Low Agreement Scores
+
 ```python
 # Check configuration
 print(config.python_version)  # Verify correct version
@@ -371,6 +375,7 @@ for kw in results.keywords:
 ```
 
 ### API Rate Limiting
+
 ```python
 # Use batch processing
 provider.batch_translate(keywords, batch_size=5)
@@ -383,6 +388,7 @@ for batch in batches:
 ```
 
 ### Cultural Conflicts
+
 ```python
 # Include cultural analysis
 config.include_cultural_analysis = True
@@ -408,7 +414,7 @@ for conflict in high_conflicts:
 - Example reports: `examples/`
 - Translation API: `docs/translation-api.md`
 - Database schema: `docs/database-schema.md`
-- Issues: https://github.com/legesher/legesher/issues
+- Issues: <https://github.com/legesher/legesher/issues>
 
 ---
 

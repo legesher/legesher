@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Turkish. This guide shows the Turkish keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Turkish |
 | **Native Name** | Türkçe |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Turkish.
 
 | English | Turkish |
-|---------|--------|
+| ------- | ------ |
 | `and` | `ve` |
 | `as` | `eşdeğer` |
 | `assert` | `talepetmek` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Turkish.
 Python's built-in functions and types in Turkish.
 
 | English | Turkish |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `mutlakDeğer` |
 | `aiter` | `asenkron_itaratci` |
 | `all` | `herşey` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Turkish.
 Exception classes for error handling.
 
 | English | Turkish |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `aritmetikhata` |
 | `assertionerror` | `tartışmahatası` |
 | `attributeerror` | `öznitelikhatası` |

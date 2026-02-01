@@ -243,11 +243,13 @@ Chinese: `不可变集合`, `元组`, `字节串` - immutable types use consiste
 **This term works WITH:**
 
 1. **`frozenset` as dict key**: Immutability enables hashing
+
 ```python
 cache = {frozenset([1, 2]): "result"}
 ```
 
 2. **`frozenset` in sets**: Set of sets
+
 ```python
 set_of_sets = {frozenset([1, 2]), frozenset([3, 4])}
 ```
@@ -303,7 +305,7 @@ nested = {frozenset([1, 2]), frozenset([3, 4])}
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `frozenset`:
+### Why MEDIUM for `frozenset`
 
 - "Frozen" metaphor may not translate directly
 - Need to decide: use "frozen" literally or "immutable" conceptually

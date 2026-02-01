@@ -215,6 +215,7 @@ English "return" can mean:
 **Your translation should capture meaning #3: terminating function and sending a value back to the calling code.**
 
 Many languages distinguish:
+
 - Return to place (physical movement): volver, regreso
 - Return a value (function context): retornar, devolver
 
@@ -246,12 +247,14 @@ NOT: `retornar` (verb) + `pausa` (noun for break) ❌
 **This term works WITH:**
 
 1. **`def` + `return`**: Functions are defined to return values
+
 ```python
 def calculate(x):
     return x * 2
 ```
 
 2. **`return` + expression**: Returns computed values
+
 ```python
 def get_status():
     return "ready" if initialized else "waiting"
@@ -293,7 +296,7 @@ def get_coordinates():
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `return`:
+### Why EASY for `return`
 
 - Universal programming concept (all languages have function returns)
 - Clear semantic mapping in most languages

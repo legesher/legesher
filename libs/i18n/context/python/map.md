@@ -238,6 +238,7 @@ Functional programming operations (`map`, `filter`, `reduce`) should use consist
 **Example:**
 
 If you translate `map` as infinitive ("mapear"), then:
+
 - `filter` should also be infinitive ("filtrar")
 - `reduce` should also be infinitive ("reducir")
 - NOT: `map` infinitive + `filter` noun (inconsistent ❌)
@@ -247,11 +248,13 @@ If you translate `map` as infinitive ("mapear"), then:
 **This term works WITH:**
 
 1. **`map` + lambda**: Anonymous function transformation
+
 ```python
 map(lambda x: x * 2, numbers)
 ```
 
 2. **`map` + built-in functions**: Type conversion, operations
+
 ```python
 map(int, strings)
 map(str.upper, words)
@@ -295,7 +298,7 @@ upper_words = list(map(str.upper, words))
 - Some languages may need transliteration
 - **AI confidence should be HIGH to MEDIUM**
 
-### Why LOW for `map`:
+### Why LOW for `map`
 
 - "Map" is universal in functional programming
 - Standard mathematical concept (function mapping)

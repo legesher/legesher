@@ -220,6 +220,7 @@ English "else" can mean:
 **Your translation should capture meaning #3: the alternative action when a condition is not met.**
 
 Many languages have different words for:
+
 - "Else" as "other/different" (adjective)
 - "Else" as "otherwise" (conditional alternative)
 
@@ -250,6 +251,7 @@ If `else` → `sino` and `if` → `si`, then `elif` should be `sino_si` or simil
 **This term works WITH:**
 
 1. **`if` + `else`**: Basic conditional branching
+
 ```python
 if condition:
     do_something()
@@ -258,6 +260,7 @@ else:
 ```
 
 2. **`if` + `elif` + `else`**: Multi-way branching
+
 ```python
 if x > 0:
     print("positive")
@@ -306,7 +309,7 @@ else:
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `else`:
+### Why EASY for `else`
 
 - Universal conditional logic concept
 - Every language expresses "otherwise/if not"

@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Malay. This guide shows the Malay keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Malay |
 | **Native Name** | Bahasa Melayu |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Malay.
 
 | English | Malay |
-|---------|--------|
+| ------- | ------ |
 | `and` | `dan` |
 | `as` | `sebagai` |
 | `assert` | `mengakui` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Malay.
 Python's built-in functions and types in Malay.
 
 | English | Malay |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `darjat` |
 | `aiter` | `pengulangan_asinkron` |
 | `all` | `semua` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Malay.
 Exception classes for error handling.
 
 | English | Malay |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `kesalahanaritmetika` |
 | `assertionerror` | `kesalahanasersi` |
 | `attributeerror` | `kesalahanatribut` |

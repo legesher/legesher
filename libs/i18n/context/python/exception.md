@@ -234,6 +234,7 @@ English "exception" can mean:
 **Consistency rule:**
 
 All exception class names should:
+
 1. Be nouns or noun phrases
 2. Follow consistent capitalization (PascalCase in English → follow target language class naming)
 3. Use the same root word for "exception" across all exception classes
@@ -280,11 +281,13 @@ except Exception as e:
 Translating `Exception` has moderate complexity:
 
 **Easy aspects:**
+
 - Most languages have established technical term through CS education
 - Often cognates exist in Latin-derived languages (excepción, eccezione)
 - The concept of "exception" in programming is universal
 
 **Moderate challenges:**
+
 - Must distinguish from general language meaning of "exception" (special case)
 - Need to ensure consistency with ALL exception class names (ValueError, TypeError, etc.)
 - Some languages might overload "exception" and "error" - must distinguish

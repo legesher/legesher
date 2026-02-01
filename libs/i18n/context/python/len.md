@@ -100,7 +100,7 @@ Internally, `len()` doesn't iterate to count - most built-in types cache their l
 
 **Key behaviors:**
 
-1. **Calls __len__ method:** `len(obj)` is equivalent to `obj.__len__()`. Objects without `__len__()` raise `TypeError`. This makes `len()` part of Python's protocol-based design.
+1. **Calls **len** method:** `len(obj)` is equivalent to `obj.__len__()`. Objects without `__len__()` raise `TypeError`. This makes `len()` part of Python's protocol-based design.
 
 2. **Returns integer:** Always returns `int` type, never `float` or `None`. Empty collections return 0. There's no maximum limit (Python ints are unbounded).
 
@@ -239,6 +239,7 @@ NOT: `longitud` (noun) + `obtener_mínimo` (verb phrase) ❌
 **This term works WITH:**
 
 1. **`len` + sequences**: Measure collection sizes
+
 ```python
 print(len([1, 2, 3]))      # lists
 print(len("hello"))        # strings
@@ -246,6 +247,7 @@ print(len((1, 2)))         # tuples
 ```
 
 2. **`len` in conditionals**: Check if collection is empty
+
 ```python
 if len(data) == 0:
     print("No data")
@@ -287,7 +289,7 @@ if len(password) < 8:
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `len`:
+### Why EASY for `len`
 
 - Universal concept (all languages measure length/count)
 - "Length" is basic mathematical/physical term

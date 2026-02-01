@@ -78,7 +78,7 @@ help('for')  # Shows for loop documentation
 **Similar terms in this pattern:**
 
 1. `dir` - Lists attributes and methods of an object
-2. `vars` - Returns __dict__ attribute of an object
+2. `vars` - Returns **dict** attribute of an object
 3. `id` - Returns unique identifier of object
 4. `isinstance` - Checks object type
 
@@ -256,12 +256,14 @@ This mix is fine—follow what each represents
 **This term works WITH:**
 
 1. **Learning and exploration**: Discovering Python features
+
 ```python
 help(str)  # What can strings do?
 help(list.append)  # How does append work?
 ```
 
 2. **Documenting your code**: Displaying your docstrings
+
 ```python
 def my_func():
     """This is my function."""

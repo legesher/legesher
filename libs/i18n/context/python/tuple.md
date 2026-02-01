@@ -140,6 +140,7 @@ Tuples support all sequence operations except those that modify the sequence: in
 | Hindi | Transliterated noun | "टपल" - borrowed term |
 
 **Primary recommendation:** This is a specialized mathematical/CS term. Many languages either:
+
 1. Use a cognate/loan word from mathematics ("tupla", "Tupel", "tuple")
 2. Create a compound describing "ordered group" or "fixed sequence"
 3. Transliterate if no native equivalent exists
@@ -241,12 +242,14 @@ NOT: `lista` (noun) + `crear_tupla` (verb phrase) ❌
 **This term works WITH:**
 
 1. **Tuple unpacking**: Extracting values into variables
+
 ```python
 x, y, z = (1, 2, 3)
 name, age = ("Alice", 30)
 ```
 
 2. **Function returns**: Returning multiple values
+
 ```python
 def get_stats():
     return min_val, max_val, avg

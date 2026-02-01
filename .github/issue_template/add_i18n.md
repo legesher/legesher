@@ -10,7 +10,10 @@ assignees: ""
 
 ## Adding LANGUAGE to the Legesher Translations for Python
 
-In order to add this language to the project, complete the steps detailed in [the translation guide](https://docs.legesher.io/legesher-translations/translation-guide). (We are primarily working developing Legesher for the Python programming language. In the future we hope to add more programming languages in the future.)
+In order to add this language to the project, complete the steps detailed in
+[the translation guide](https://docs.legesher.io/legesher-translations/translation-guide).
+(We are primarily working developing Legesher for the Python programming language.
+In the future we hope to add more programming languages.)
 
 **To complete this issue**:
 

@@ -340,6 +340,7 @@ Introspection functions should use compatible terminology. If translating intros
 **Example:**
 
 ✅ **Consistent (conceptual):**
+
 - `dir` → `directorio` (listing of names)
 - `vars` → `variables` (dictionary of variables)
 - `help` → `ayuda` (help/assistance)

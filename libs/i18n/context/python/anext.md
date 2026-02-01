@@ -144,7 +144,7 @@ This is fundamental for manual control of async iteration. While `async for` loo
 **Key behaviors:**
 
 1. **Must be awaited:** Returns a coroutine that must be awaited to get the actual value, unlike sync `next()` which returns immediately.
-2. **Calls __anext__():** Invokes the async iterator's `__anext__()` method, which should be an async method returning the next value.
+2. **Calls **anext**():** Invokes the async iterator's `__anext__()` method, which should be an async method returning the next value.
 3. **Default value support:** Like `next()`, accepts optional default to return instead of raising `StopAsyncIteration` when exhausted.
 
 ---
@@ -258,6 +258,7 @@ The term is unambiguous - it's the async version of `next()` introduced in Pytho
 **Consistency rule:**
 
 The sync/async pairs must form a consistent pattern:
+
 - `iter` ↔ `aiter` (same relationship pattern)
 - `next` ↔ `anext` (same relationship pattern)
 

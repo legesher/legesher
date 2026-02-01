@@ -208,6 +208,7 @@ NO (abbreviated form)
 **"Dict" is unambiguous:**
 
 "Dict" is clearly short for "dictionary." While "dictionary" can mean:
+
 1. Book of words and definitions ✅ (metaphor source)
 2. Data structure of key-value pairs ✅ (Python meaning)
 
@@ -238,6 +239,7 @@ Spanish: `diccionario`, `lista`, `tupla`, `conjunto` - all nouns ✅
 **This term works WITH:**
 
 1. **`dict` + key access**: Lookup values
+
 ```python
 data = {"name": "Alice", "age": 30}
 print(data["name"])
@@ -245,6 +247,7 @@ data["city"] = "NYC"
 ```
 
 2. **`dict` + methods**: Manipulate mappings
+
 ```python
 person = {"name": "Alice"}
 person.update({"age": 30, "city": "NYC"})
@@ -293,7 +296,7 @@ squares = {x: x**2 for x in range(5)}
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `dict`:
+### Why EASY for `dict`
 
 - Universal concept (dictionaries exist in all languages)
 - "Dictionary" book metaphor is universal

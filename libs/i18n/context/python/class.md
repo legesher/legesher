@@ -250,6 +250,7 @@ Spanish: `definir` (def - verb), `clase` (class - noun) - acceptable because "cl
 **This term works WITH:**
 
 1. **`class` + `__init__`**: Class with initialization
+
 ```python
 class Person:
     def __init__(self, name):
@@ -257,6 +258,7 @@ class Person:
 ```
 
 2. **`class` + inheritance**: Extending classes
+
 ```python
 class Student(Person):
     pass
@@ -302,7 +304,7 @@ class Config:
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `class`:
+### Why EASY for `class`
 
 - Universal OOP concept
 - "Class" is standard term across all OOP languages

@@ -4,7 +4,7 @@
 daysUntilClose: 28
 
 # Label requiring a response
-responseRequiredLabel: Status: More Information Needed
+responseRequiredLabel: 'Status: More Information Needed'
 
 # Comment to post when closing an issue for lack of response. Set to `false` to disable.
 closeComment: >

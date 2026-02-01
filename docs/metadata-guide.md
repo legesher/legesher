@@ -16,7 +16,9 @@ Complete guide to understanding and using Legesher's metadata tracking system.
 
 ## Overview
 
-Legesher's metadata tracking system provides a comprehensive audit trail for all translation operations and git filter activities. Every file you translate gets a corresponding metadata file that records:
+Legesher's metadata tracking system provides a comprehensive audit trail for all
+translation operations and git filter activities. Every file you translate gets a
+corresponding metadata file that records:
 
 - What language it was originally written in
 - All translation operations performed
@@ -66,9 +68,10 @@ Metadata only contains file paths, language codes, timestamps, and version infor
 
 ### Where is Metadata Stored?
 
-Metadata is stored in the `.legesher/metadata/` directory at your repository root. The directory structure mirrors your source tree:
+Metadata is stored in the `.legesher/metadata/` directory at your repository root.
+The directory structure mirrors your source tree:
 
-```
+```text
 .legesher/
 └── metadata/
     ├── src/
@@ -166,7 +169,7 @@ legesher metadata show src/calculator.py
 
 **Example output:**
 
-```
+```text
 File: src/calculator.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Original Language:    es
@@ -206,7 +209,7 @@ legesher metadata history src/calculator.py
 
 **Example output:**
 
-```
+```text
 Translation History: src/calculator.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━┓
@@ -246,7 +249,7 @@ legesher metadata list
 
 **Example output:**
 
-```
+```text
 Tracked Files: 15
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━┓
@@ -273,7 +276,7 @@ legesher metadata validate src/calculator.py
 
 **Example output (valid):**
 
-```
+```text
 Validating metadata: src/calculator.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✓ Metadata is valid
@@ -288,7 +291,7 @@ Metadata Summary:
 
 **Example output (invalid):**
 
-```
+```text
 Validating metadata: src/unknown.py
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✗ Metadata is invalid or missing
@@ -310,7 +313,7 @@ legesher metadata raw src/calculator.py
 
 **Example output:**
 
-```
+```text
 Raw Metadata: src/calculator.py
 Location: /path/to/repo/.legesher/metadata/src/calculator.py.yml
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -392,7 +395,8 @@ metadata:
 
 **`track_in_git`** (boolean, default: `true`)
 
-Whether to track metadata files in git. When `true`, metadata is committed alongside source code. When `false`, add `.legesher/metadata/` to `.gitignore`.
+Whether to track metadata files in git. When `true`, metadata is committed alongside
+source code. When `false`, add `.legesher/metadata/` to `.gitignore`.
 
 **Example - Don't track in git:**
 
@@ -409,11 +413,13 @@ Then add to `.gitignore`:
 
 **`verbose_history`** (boolean, default: `false`)
 
-Include detailed information in history entries. When enabled, history entries may include additional context like file size, line count, etc. (future feature).
+Include detailed information in history entries. When enabled, history entries may
+include additional context like file size, line count, etc. (future feature).
 
 **`max_history_entries`** (integer, default: `100`)
 
-Maximum number of history entries to keep per file. Older entries are automatically removed when this limit is exceeded. Set to `0` for unlimited entries (not recommended).
+Maximum number of history entries to keep per file. Older entries are automatically
+removed when this limit is exceeded. Set to `0` for unlimited entries (not recommended).
 
 **Example - Limit history:**
 
@@ -925,7 +931,9 @@ echo "✅ Metadata migrated"
 
 ## Summary
 
-Legesher's metadata tracking system provides comprehensive audit trails for translation operations while maintaining privacy and security. It enables debugging, auditing, and understanding how multilingual codebases evolve over time.
+Legesher's metadata tracking system provides comprehensive audit trails for translation
+operations while maintaining privacy and security. It enables debugging, auditing, and
+understanding how multilingual codebases evolve over time.
 
 **Key Points:**
 

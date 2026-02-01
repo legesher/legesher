@@ -287,12 +287,14 @@ print("Please enter a valid age")
 Translating `ValueError` involves moderate complexity:
 
 **Moderate aspects:**
+
 - Compound term with two clear components
 - "Error" typically has established translation
 - "Value" is common programming term
 - Pattern must match other `*Error` exceptions
 
 **Challenges:**
+
 - "Value" can mean different things (must choose programming sense)
 - Compound structure varies by language (word order, connectors)
 - Must maintain consistency with entire `*Error` family

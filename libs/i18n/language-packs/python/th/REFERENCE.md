@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Thai-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Thai. This guide shows the Thai keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Thai |
 | **Native Name** | ไทย |
 | **Script** | Thai |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Thai.
 
 | English | Thai |
-|---------|--------|
+| ------- | ------ |
 | `and` | `และ` |
 | `as` | `เป็น` |
 | `assert` | `ยกเลิกข้อสมพันธ์` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Thai.
 Python's built-in functions and types in Thai.
 
 | English | Thai |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `ฟังก์ชันabs` |
 | `aiter` | `aiterator` |
 | `all` | `ทุกอย่าง` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Thai.
 Exception classes for error handling.
 
 | English | Thai |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `ข้อผิดพลาดเกี่ยวกับเครื่องสำหรับการทำคำและการประมाถนา` |
 | `assertionerror` | `ข้อสมพันธ์ที่ไม่ถูก` |
 | `attributeerror` | `ความผิดพลาดในการเก็บอัตรา` |

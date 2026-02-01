@@ -20,9 +20,18 @@ from legesher_language_server.config import LanguageServerConfig
 from legesher_language_server.providers.completion import (
     CompletionProvider,
     SymbolKind,
+    clear_caches,
     provide_completion,
 )
 from legesher_language_server.server import LegesherLanguageServer
+
+
+@pytest.fixture(autouse=True)
+def _clear_completion_caches():
+    """Clear completion/symbol caches between tests to prevent cross-test interference."""
+    clear_caches()
+    yield
+    clear_caches()
 
 
 class TestCompletionProviderKeywords:
@@ -728,7 +737,7 @@ def hello():
 x = 10
 """
         # Open document
-        server.document_manager.open_document(uri, code, 1)
+        server.document_manager.open_document(uri, code, 1, "python")
 
         # Get completions
         items = await provide_completion(server, uri, Position(line=5, character=0))
@@ -761,7 +770,7 @@ radius = 5.0
 result = calculate_area(radius)
 """
         # Open document
-        server.document_manager.open_document(uri, code, 1)
+        server.document_manager.open_document(uri, code, 1, "python")
 
         # Get completions at various positions
         position1 = Position(line=11, character=0)  # After all code

@@ -151,8 +151,7 @@ linguistic intuition.
 
 3. Start with this template:
 
-   ```yaml
-
+```yaml
 metadata:
   language: "Your Language Name"
   language_code: "xx"  # ISO 639-1 code
@@ -161,13 +160,11 @@ metadata:
   version: "1.0.0"
   contributors:
     - name: "Your Name"
-      email: "<your.email@example.com>"
+      email: "your.email@example.com"
   description: "Python 3.10 keywords and built-ins in Your Language"
 
 keywords:
-
-## Control Flow
-
+  # Control Flow
   if: ""
   else: ""
   elif: ""
@@ -177,15 +174,11 @@ keywords:
   continue: ""
   pass: ""
   return: ""
-
-## Definitions
-
+  # Definitions
   def: ""
   class: ""
   lambda: ""
-
-## Boolean & Logical
-
+  # Boolean & Logical
   True: ""
   False: ""
   None: ""
@@ -194,46 +187,32 @@ keywords:
   not: ""
   is: ""
   in: ""
-
-## Exception Handling
-
+  # Exception Handling
   try: ""
   except: ""
   finally: ""
   raise: ""
   assert: ""
-
-## Import & Scope
-
+  # Import & Scope
   import: ""
   from: ""
   as: ""
   global: ""
   nonlocal: ""
-
-## Context Managers
-
+  # Context Managers
   with: ""
-
-## Async (Python 3.5+)
-
+  # Async (Python 3.5+)
   async: ""
   await: ""
-
-## Other
-
+  # Other
   del: ""
   yield: ""
 
 builtins:
-
-## Essential I/O
-
+  # Essential I/O
   print: ""
   input: ""
-
-## Type Conversions
-
+  # Type Conversions
   int: ""
   float: ""
   str: ""
@@ -242,9 +221,7 @@ builtins:
   tuple: ""
   dict: ""
   set: ""
-
-## Utility Functions
-
+  # Utility Functions
   len: ""
   range: ""
   enumerate: ""
@@ -256,28 +233,21 @@ builtins:
   max: ""
   sorted: ""
   reversed: ""
-
-## Object Inspection
-
+  # Object Inspection
   type: ""
   isinstance: ""
   hasattr: ""
   getattr: ""
   setattr: ""
-
-## File Operations
-
+  # File Operations
   open: ""
-
-## Advanced
-
+  # Advanced
   help: ""
   dir: ""
   vars: ""
+```
 
-   ```
-
-4. Fill in translations for each keyword and built-in function.
+1. Fill in translations for each keyword and built-in function.
 
 ### Step 2: Test Your Translations
 

@@ -237,6 +237,7 @@ NOT: Using prepositions that don't pair naturally in the target language ❌
 **This term works WITH:**
 
 1. **`for` + `in`**: Inseparable pair in Python's for-loop syntax
+
 ```python
 my_list = [1, 2, 3]
 for item in my_list:
@@ -244,12 +245,14 @@ for item in my_list:
 ```
 
 2. **`for` + `range()`**: Common pattern for counting loops
+
 ```python
 for i in range(10):
     print(i)
 ```
 
 3. **`for` + `break`/`continue`**: Loop control statements
+
 ```python
 data = [1, 2, -3, 4]
 for x in data:
@@ -286,7 +289,7 @@ for x, y in [(1, 2), (3, 4)]: # unpacking tuples
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `for`:
+### Why EASY for `for`
 
 - Universal iteration concept
 - Most languages have "for each" constructions

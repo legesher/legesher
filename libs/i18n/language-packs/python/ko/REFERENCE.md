@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Hangul-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Korean. This guide shows the Korean keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Korean |
 | **Native Name** | 한국어 |
 | **Script** | Hangul |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Korean.
 
 | English | Korean |
-|---------|--------|
+| ------- | ------ |
 | `and` | `그리고` |
 | `as` | `알려주기` |
 | `assert` | `확인` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Korean.
 Python's built-in functions and types in Korean.
 
 | English | Korean |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `절댓값` |
 | `aiter` | `아이트리` |
 | `all` | `모두` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Korean.
 Exception classes for error handling.
 
 | English | Korean |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `산술오류` |
 | `assertionerror` | `명확한오류` |
 | `attributeerror` | `속성오류` |

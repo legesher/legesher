@@ -237,6 +237,7 @@ Functional programming operations (`filter`, `map`, `reduce`) should use consist
 **Example:**
 
 If you translate `filter` as infinitive ("filtrar"), then:
+
 - `map` should also be infinitive ("mapear")
 - `reduce` should also be infinitive ("reducir")
 - NOT: `filter` infinitive + `map` noun (inconsistent ❌)
@@ -246,11 +247,13 @@ If you translate `filter` as infinitive ("filtrar"), then:
 **This term works WITH:**
 
 1. **`filter` + lambda**: Conditional selection with anonymous function
+
 ```python
 filter(lambda x: x > 0, numbers)
 ```
 
 2. **`filter` + None**: Filter falsy values
+
 ```python
 filter(None, values)  # Removes 0, False, None, "", [], etc.
 ```
@@ -297,7 +300,7 @@ result = list(map(lambda x: x**2, filter(lambda x: x % 2 == 0, numbers)))
 - Cognates exist in many languages
 - **AI confidence should be HIGH**
 
-### Why LOW for `filter`:
+### Why LOW for `filter`
 
 - Filtering is universal concept (physical and computational)
 - "Filter" widely adopted in technical vocabulary globally

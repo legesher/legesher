@@ -249,12 +249,14 @@ NOT: `máximo` (superlative) + `más_pequeño` (comparative phrase) ❌
 **This term works WITH:**
 
 1. **`max` with comparables**: Find largest
+
 ```python
 max(5, 2, 8)  # 8
 max("zebra", "apple", "mango")  # "zebra"
 ```
 
 2. **`max` with key function**: Custom comparison
+
 ```python
 max(names, key=len)  # longest name
 max(points, key=lambda p: p.distance())
@@ -309,7 +311,7 @@ max_length = max(len(w) for w in words)  # 5
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `max`:
+### Why EASY for `max`
 
 - Universal mathematical concept (largest/maximum)
 - Standard term in mathematics globally
