@@ -1157,7 +1157,7 @@ wheels = [
 
 [[package]]
 name = "legesher"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "libs/legesher" }
 dependencies = [
     { name = "click" },
@@ -1202,7 +1202,7 @@ dev = [
 
 [[package]]
 name = "legesher-core"
-version = "0.4.1"
+version = "0.5.0"
 source = { editable = "libs/core" }
 dependencies = [
     { name = "click" },
@@ -1260,7 +1260,7 @@ requires-dist = [
 
 [[package]]
 name = "legesher-i18n"
-version = "0.4.1"
+version = "0.5.0"
 source = { editable = "libs/i18n" }
 dependencies = [
     { name = "anthropic" },
@@ -1670,7 +1670,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "legesher-monorepo"
-version = "0.4.1"
+version = "0.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "legesher" },
