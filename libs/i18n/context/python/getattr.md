@@ -242,6 +242,7 @@ The attr-family (`getattr`, `setattr`, `hasattr`, `delattr`) MUST use the same w
 **Example:**
 
 ✅ **Consistent (Spanish):**
+
 - `getattr` → `obtener_atributo`
 - `setattr` → `establecer_atributo`
 - `hasattr` → `tiene_atributo`
@@ -249,6 +250,7 @@ The attr-family (`getattr`, `setattr`, `hasattr`, `delattr`) MUST use the same w
 All use "atributo" ✅
 
 ❌ **Inconsistent:**
+
 - `getattr` → `obtener_propiedad` (uses "propiedad")
 - `setattr` → `establecer_atributo` (uses "atributo")
 Different terms ❌ WRONG!
@@ -258,12 +260,14 @@ Different terms ❌ WRONG!
 **This term works WITH:**
 
 1. **`getattr` + dynamic access**: Runtime attribute names
+
 ```python
 attr_name = "username"
 value = getattr(user, attr_name)
 ```
 
 2. **`getattr` + safe access**: With default value
+
 ```python
 value = getattr(config, "setting", default_value)
 ```
@@ -329,7 +333,7 @@ value = getattr(config, setting, None)
 - Must coordinate with setattr/hasattr family
 - **AI confidence should be HIGH**
 
-### Why LOW for `getattr`:
+### Why LOW for `getattr`
 
 - Simple verb + noun compound
 - "Get" is universal programming term

@@ -224,7 +224,7 @@ Let's walk through what you'd get from each of the 3 models when translating the
 
 **Raw API Response:**
 
-```
+```text
 TRANSLATION: definir
 FORM: infinitive
 CONFIDENCE: high
@@ -266,7 +266,8 @@ High confidence. This is straightforward with strong backing from CS education a
 | **Format** | XML (structured) | JSON (structured) | Plain text |
 | **Parsability** | Easy (XML parser) | Easy (JSON parser) | Moderate (regex) |
 
-**Key Observation:** All 3 models agree on **definir** with high confidence! This is a great sign - when models converge, it's usually the right answer.
+**Key Observation:** All 3 models agree on **definir** with high confidence!
+This is a great sign - when models converge, it's usually the right answer.
 
 ---
 
@@ -492,14 +493,11 @@ definir calcular_total(precio, impuesto):
 - **Regional testing:** Spain, Mexico, Argentina ✅
 - **Final approval:** 2025-10-28
 
-```
-
 ---
 
 ## Summary: The Complete Flow
 
-```
-
+```text
 1. API Requests (420 translations)
    ↓
 2. Raw Responses (XML, JSON, Text)
@@ -527,6 +525,7 @@ definir calcular_total(precio, impuesto):
 ## Timeline Estimate
 
 **With API (automated):**
+
 - Day 1: Submit batch API requests (30 min)
 - Day 2-3: Wait for responses (24-48 hours)
 - Day 4: Parse responses, generate review docs (2 hours)
@@ -537,6 +536,7 @@ definir calcular_total(precio, impuesto):
 **Total: ~2 weeks** (mostly waiting for community review)
 
 **With Claude Desktop (manual):**
+
 - Day 1-5: Generate 420 translations manually (10-20 hours)
 - Day 6-10: Community review
 - Day 11-12: Same as above
@@ -548,15 +548,18 @@ definir calcular_total(precio, impuesto):
 ## Next Steps for You
 
 **Right now (testing phase):**
+
 1. Test 2-3 translations in Claude Desktop
 2. See what quality you get
 3. Decide if prompts need refinement
 
 **Once prompts are validated:**
+
 - **Option A:** Continue manually (free, 10-20 hours)
 - **Option B:** Use API ($7.56, automated)
 
 **Either way, you'll get:**
+
 - 3 model suggestions per term
 - Community review process
 - Final language pack YAML files
@@ -565,6 +568,7 @@ definir calcular_total(precio, impuesto):
 ---
 
 **Want to see more examples?** I can show you what the output might look like for:
+
 - `True` (VALUE_CONSTANT - different pattern)
 - `isinstance` (builtin - compound term)
 - Arabic keyword (RTL language challenges)

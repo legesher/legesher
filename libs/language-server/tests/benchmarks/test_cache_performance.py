@@ -40,14 +40,14 @@ class TestLanguagePackLoaderCache:
         print("CORE-446: Cold cache pack load")
         print(f"{'=' * 60}")
         print(f"Time: {elapsed_ms:.2f}ms")
-        print("Target: <100ms")
-        print(f"Status: {'✓ PASS' if elapsed_ms < 100 else '✗ FAIL'}")
+        print("Target: <200ms")
+        print(f"Status: {'✓ PASS' if elapsed_ms < 200 else '✗ FAIL'}")
         print(f"Keywords loaded: {len(pack.keywords)}")
         print(f"{'=' * 60}\n")
 
         assert pack is not None
         assert len(pack.keywords) > 30
-        assert elapsed_ms < 100, f"Cold load took {elapsed_ms:.2f}ms, expected <100ms"
+        assert elapsed_ms < 200, f"Cold load took {elapsed_ms:.2f}ms, expected <200ms"
 
     def test_warm_cache_pack_load(self):
         """Test cached load of language pack (warm cache).

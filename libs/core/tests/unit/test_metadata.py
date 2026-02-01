@@ -685,6 +685,9 @@ class TestYamlOperations:
 class TestConcurrentAccess:
     """Tests for concurrent metadata access."""
 
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="os.replace() file-locking on Windows"
+    )
     def test_concurrent_access(self, metadata_manager):
         """Test that concurrent operations don't corrupt metadata.
 

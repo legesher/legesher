@@ -254,6 +254,7 @@ The term is a Python-specific compound with one clear meaning. Your translation 
 **Consistency rule:**
 
 The method decorators (`@classmethod`, `@staticmethod`, `@property`) MUST follow consistent naming patterns. The structure of `staticmethod` should mirror `classmethod`:
+
 - If `classmethod` = `método_clase`, then `staticmethod` = `método_estático`
 - If `classmethod` = `métodoclase`, then `staticmethod` = `métodoestático`
 - Same separator, same word order, same formality

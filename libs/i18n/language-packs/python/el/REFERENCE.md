@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Greek-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Greek. This guide shows the Greek keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Greek |
 | **Native Name** | Ελληνικά |
 | **Script** | Greek |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Greek.
 
 | English | Greek |
-|---------|--------|
+| ------- | ------ |
 | `and` | `και` |
 | `as` | `ως` |
 | `assert` | `διαταγήδιαβεβαίωσης` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Greek.
 Python's built-in functions and types in Greek.
 
 | English | Greek |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `απόλυτητιμή` |
 | `aiter` | `αιτητής` |
 | `all` | `όλους` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Greek.
 Exception classes for error handling.
 
 | English | Greek |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `αριθμητικόσφάλμα` |
 | `assertionerror` | `ασύνδετηκατάσταση` |
 | `attributeerror` | `Σφάλμα_Χαρακτηριστικού` |

@@ -224,6 +224,7 @@ YES (minor)
 **Example:**
 
 English "from" can mean:
+
 1. "From this point forward" (temporal) ❌
 2. "from math import sqrt" (source module) ✅ **This is the Python meaning**
 3. "Made from wood" (material) ❌ Related concept
@@ -259,11 +260,13 @@ Alternative word order if more natural: `importar sqrt desde math`
 **This term works WITH:**
 
 1. **`from ... import ...`**:
+
 ```python
 from module import name
 ```
 
 2. **`from ... import ... as ...`**:
+
 ```python
 from module import name as alias
 ```
@@ -347,7 +350,7 @@ from myapp.utils import helpers
 - Simple grammatical element
 - **AI confidence should be HIGH**
 
-### Why EASY for `from`:
+### Why EASY for `from`
 
 - Universal concept (source/origin)
 - "From" preposition exists in every language

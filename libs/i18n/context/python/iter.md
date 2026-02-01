@@ -240,12 +240,14 @@ Chinese: `迭代` (iter), `下一个` (next) - consistent sequential processing 
 **This term works WITH:**
 
 1. **`iter` + `next`**: Manual iteration control
+
 ```python
 it = iter([1, 2, 3])
 print(next(it))  # 1
 ```
 
 2. **`iter` with sentinel**: Function-based iteration
+
 ```python
 from random import randint
 dice = iter(lambda: randint(1, 6), 6)
@@ -321,7 +323,7 @@ print(it is g)  # True (generators are iterators)
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `iter`:
+### Why MEDIUM for `iter`
 
 - "Iterate" is a technical term with established translations
 - Some languages have multiple terms (iterate vs repeat vs traverse)

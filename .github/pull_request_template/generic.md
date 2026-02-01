@@ -1,9 +1,14 @@
+# Pull Request
+
 <!---
-Thanks for the pull request, kindly include a summary of the change(s) and refer the issue(s) being fixed, also include relevant motivation and context. Please make sure to list any dependencies (if any) that are required for this change.
+Thanks for the pull request, kindly include a summary of the change(s)
+and refer the issue(s) being fixed, also include relevant motivation
+and context. Please make sure to list any dependencies (if any) that
+are required for this change.
 --->
 
-> Make sure you go through the [Contributing guide](https://docs.legesher.io/the-official-things/contributing-guidelines).
-
+> Make sure you go through the
+> [Contributing guide](https://docs.legesher.io/the-official-things/contributing-guidelines).
 > Please delete options that are not relevant.
 
 ## Title
@@ -28,7 +33,6 @@ Describe your changes in detail
 --->
 
 > What does this PR do?
-
 > Recommendations for how to test this?
 
 ## Motivation and Context
@@ -37,7 +41,7 @@ Describe your changes in detail
 Why is this change required? What problem does it solve?
 --->
 
-# Checklist
+## Checklist
 
 <!---
 [ ] implies unchecked

@@ -239,12 +239,14 @@ Alternatively: all infinitive verbs if language prefers verb forms for functions
 **This term works WITH:**
 
 1. **`input` + `print`**: Interactive I/O loop
+
 ```python
 name = input("Enter name: ")
 print(f"Hello, {name}")
 ```
 
 2. **`input` + type conversion**: Getting typed data
+
 ```python
 age = int(input("Enter age: "))
 price = float(input("Enter price: "))
@@ -287,7 +289,7 @@ while True:
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `input`:
+### Why EASY for `input`
 
 - Universal I/O concept (all languages handle user input)
 - "Input" is standard technical term globally

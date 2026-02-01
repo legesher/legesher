@@ -212,6 +212,7 @@ English "string" can mean:
 **Your translation should capture meaning #3: a data type representing text/character sequences in computing.**
 
 Many languages distinguish between:
+
 - Physical string/rope (cuerda, حبل)
 - Text string data type (cadena, سلسلة)
 
@@ -281,7 +282,7 @@ name = input("Enter name: ")  # name is str type
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `str`:
+### Why EASY for `str`
 
 - "String" is a universal CS concept
 - Every programming language has strings

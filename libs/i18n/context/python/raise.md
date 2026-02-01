@@ -123,6 +123,7 @@ def validate(value):
 The `raise` statement creates an exception object and throws it, interrupting normal execution. Program stops at `raise` point and exception propagates up the call stack. If caught by `except`, that handler executes. If never caught, program terminates with traceback.
 
 Three forms of `raise`:
+
 1. `raise ExceptionType("message")` - Create and throw new exception
 2. `raise` (bare) - Re-raise currently handled exception (only in except block)
 3. `raise NewException(...) from original` - Chain exceptions (show causation)
@@ -238,6 +239,7 @@ YES
 **Example:**
 
 English "raise" can mean:
+
 1. "Raise the flag" (physical lift) ❌ Related metaphor
 2. "Raise kids" (bring up) ❌
 3. "Raise money" (collect) ❌
@@ -274,11 +276,13 @@ Spanish: `elevar ValueError` or `lanzar ValueError` - natural phrases ✅
 **This term works WITH:**
 
 1. **Raise with exception type**:
+
 ```python
 raise ValueError("Invalid input")
 ```
 
 2. **Bare raise (re-raise)**:
+
 ```python
 try:
     operation()
@@ -371,7 +375,7 @@ if __debug__:
 - Standard error handling pattern
 - **AI confidence should be HIGH**
 
-### Why EASY for `raise`:
+### Why EASY for `raise`
 
 - Universal concept (signaling errors)
 - "Raise" or "throw" verb exists in most languages

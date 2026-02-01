@@ -633,14 +633,6 @@ def generate_reference_md(
     # Generate example code
     example = generate_example_code(lang_code, keywords, builtins, exceptions)
 
-    # Build the markdown document
-    rtl_note = (
-        ">\n> **Note:** This is a right-to-left (RTL) language. "
-        "RTL support is currently a work in progress — we welcome your feedback!\n"
-        if rtl
-        else ""
-    )
-
     # Language metadata
     iso639_2 = lang_info.get("iso639_2", "")
     bcp47 = lang_info.get("bcp47", lang_code)
@@ -650,19 +642,43 @@ def generate_reference_md(
     # Status badge color
     status_color = "yellow" if status == "experimental" else "brightgreen"
 
+    # Build badge line
+    badges = (
+        f"![Legesher](https://img.shields.io/badge/Legesher-{lang_code}-blue?"
+        f"style=for-the-badge&logo=python&logoColor=white)\n"
+        f"![Script](https://img.shields.io/badge/Script-"
+        f"{script.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace(',', '%2C')}"
+        f"-green?style=for-the-badge)\n"
+        f"![Status](https://img.shields.io/badge/Status-{status.capitalize()}-"
+        f"{status_color}?style=for-the-badge)"
+    )
+    if rtl:
+        badges += (
+            "\n![RTL](https://img.shields.io/badge/Direction-RTL-orange?"
+            "style=for-the-badge)"
+        )
+
+    # Build blockquote section
+    blockquote = (
+        f"> Write Python code in {name}. This guide shows the {name} "
+        f"keywords to use for Legesher to understand your code."
+    )
+    if rtl:
+        blockquote += (
+            "\n>\n> **Note:** This is a right-to-left (RTL) language. "
+            "RTL support is currently a work in progress — we welcome your feedback!"
+        )
+
     content = f"""# {name} ({native}) - Python Quick Reference
 
-![Legesher](https://img.shields.io/badge/Legesher-{lang_code}-blue?style=for-the-badge&logo=python&logoColor=white)
-![Script](https://img.shields.io/badge/Script-{script.replace(" ", "%20").replace("(", "%28").replace(")", "%29").replace(",", "%2C")}-green?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-{status.capitalize()}-{status_color}?style=for-the-badge)
-{"![RTL](https://img.shields.io/badge/Direction-RTL-orange?style=for-the-badge)" if rtl else ""}
+{badges}
 
-> Write Python code in {name}. This guide shows the {name} keywords to use for Legesher to understand your code.
-{rtl_note}
+{blockquote}
+
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | {name} |
 | **Native Name** | {native} |
 | **Script** | {script} |
@@ -677,7 +693,7 @@ def generate_reference_md(
 These are Python's reserved words translated to {name}.
 
 | English | {name} |
-|---------|--------|
+| ------- | ------ |
 {chr(10).join(keyword_rows)}
 
 ## Built-in Functions ({len(builtins)} terms)
@@ -685,7 +701,7 @@ These are Python's reserved words translated to {name}.
 Python's built-in functions and types in {name}.
 
 | English | {name} |
-|---------|--------|
+| ------- | ------ |
 {chr(10).join(builtin_rows)}
 
 ## Exceptions ({len(exceptions)} terms)
@@ -693,7 +709,7 @@ Python's built-in functions and types in {name}.
 Exception classes for error handling.
 
 | English | {name} |
-|---------|--------|
+| ------- | ------ |
 {chr(10).join(exception_rows)}
 
 ## Example Code

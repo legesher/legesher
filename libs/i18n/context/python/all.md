@@ -255,12 +255,14 @@ NOT: `todos` (quantifier) + unrelated word for `any` ❌
 **This term works WITH:**
 
 1. **Condition checking**: Primary use case
+
 ```python
 if all(score >= 60 for score in scores):
     print("Everyone passed!")
 ```
 
 2. **Validation**: Checking requirements
+
 ```python
 if all([username, password, email]):
     print("All fields filled")

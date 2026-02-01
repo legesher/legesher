@@ -251,6 +251,7 @@ Spanish: `Verdadero`, `Falso`, `Ninguno` - all capitalized, but `Ninguno` distin
 **This term works WITH:**
 
 1. **`None` as default return**:
+
 ```python
 def func():
     print("Hello")
@@ -260,6 +261,7 @@ result = func()  # None
 ```
 
 2. **`None` testing with `is`**:
+
 ```python
 value = None
 if value is None:
@@ -303,7 +305,7 @@ if value == None:  # Works but not pythonic
 - No ambiguity in programming context
 - **AI confidence should be HIGH**
 
-### Why EASY for `None`:
+### Why EASY for `None`
 
 - Universal concept (absence/nothing exists in all languages)
 - Standard programming null value

@@ -261,6 +261,7 @@ NOT: `tipo` (noun) + `verificar_tipo` (verb phrase in function name) ❌
 **This term works WITH:**
 
 1. **Type checking**: Determining object types
+
 ```python
 x = 42
 if type(x) == int:  # Check exact type
@@ -272,6 +273,7 @@ if isinstance(x, int):
 ```
 
 2. **Type introspection**: Exploring object types
+
 ```python
 items = [1, "hello", 3.14, [], {}]
 for item in items:

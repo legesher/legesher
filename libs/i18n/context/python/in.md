@@ -229,6 +229,7 @@ YES
 **Example:**
 
 English "in" can mean:
+
 1. "The book is in the drawer" (physical location) - Related ✅
 2. "5 is in the list [1,5,9]" (membership) ✅ **Primary Python meaning**
 3. "That style is in right now" (fashionable) ❌
@@ -263,12 +264,14 @@ Spanish: `en` (in), `no en` or `not in` combined naturally ✅
 **This term works WITH:**
 
 1. **`in` for membership test**:
+
 ```python
 if value in collection:
     process(value)
 ```
 
 2. **`in` for iteration**:
+
 ```python
 for item in items:
     print(item)
@@ -328,7 +331,7 @@ if char in "aeiou" and char in word:
 - Universal preposition
 - **AI confidence should be HIGH**
 
-### Why EASY for `in`:
+### Why EASY for `in`
 
 - Universal concept (containment in all languages)
 - Basic locative preposition exists in every language

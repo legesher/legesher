@@ -232,6 +232,7 @@ YES
 **Example:**
 
 English "is" can mean:
+
 1. "There is a book" (existence) ❌
 2. "x is y" (identity - same object) ✅ **This is the Python meaning**
 3. "5 is 5" (equality) - NO, use `==` for this ❌
@@ -270,12 +271,14 @@ Spanish: `es` (is), `no es` or `is not` combined naturally ✅
 **This term works WITH:**
 
 1. **`is` with None**:
+
 ```python
 if value is None:
     handle_none()
 ```
 
 2. **`is` with singletons**:
+
 ```python
 if flag is True:
     process()
@@ -340,7 +343,7 @@ def process(data=None):
 - Universal grammatical concept
 - **AI confidence should be HIGH**
 
-### Why EASY for `is`:
+### Why EASY for `is`
 
 - Universal concept (identity/being in all languages)
 - Copula verb exists in every language

@@ -246,6 +246,7 @@ NOT: `id` → `identificar` (verb) + `type` → `tipo` (noun) ❌
 **This term works WITH:**
 
 1. **`id` + `is` operator**: Identity comparison
+
 ```python
 a = [1, 2]
 b = [1, 2]
@@ -254,6 +255,7 @@ print(id(a) == id(b))  # False (explicitly compare IDs)
 ```
 
 2. **`id` + debugging**: Track object instances
+
 ```python
 def process(data):
     print(f"Processing object {id(data)}")
@@ -294,7 +296,7 @@ cache[id(obj)] = obj  # Use ID as key to track objects
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `id`:
+### Why MEDIUM for `id`
 
 - "ID" is universal abbreviation in computing
 - But "identifier" vs "identity" nuance exists

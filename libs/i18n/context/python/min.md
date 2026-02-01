@@ -249,12 +249,14 @@ NOT: `mínimo` (superlative) + `más_grande` (comparative phrase) ❌
 **This term works WITH:**
 
 1. **`min` with comparables**: Find smallest
+
 ```python
 min(5, 2, 8)  # 2
 min("zebra", "apple", "mango")  # "apple"
 ```
 
 2. **`min` with key function**: Custom comparison
+
 ```python
 min(names, key=len)  # shortest name
 min(points, key=lambda p: p.distance())
@@ -305,7 +307,7 @@ range_span = max(numbers) - min(numbers)  # 9 - 1 = 8
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `min`:
+### Why EASY for `min`
 
 - Universal mathematical concept (smallest/minimum)
 - Standard term in mathematics globally

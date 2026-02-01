@@ -251,12 +251,14 @@ NOT: `Verdadero` + `No` - inconsistent forms ❌
 **This term works WITH:**
 
 1. **Comparisons return `False`**:
+
 ```python
 result = (5 > 10)  # False
 is_equal = (x != x)  # False
 ```
 
 2. **Boolean operators use `False`**:
+
 ```python
 result = True and False  # False
 result = False or False  # False
@@ -296,7 +298,7 @@ can_proceed = has_permission and not is_blocked  # False if blocked
 - No ambiguity in logical context
 - **AI confidence should be HIGH**
 
-### Why EASY for `False`:
+### Why EASY for `False`
 
 - Universal concept (falsehood exists in all cultures)
 - Natural opposite of "true"

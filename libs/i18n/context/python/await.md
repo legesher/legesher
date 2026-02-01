@@ -256,6 +256,7 @@ English "await" can mean:
 **Your translation should capture meaning #2-3: actively waiting for a specific asynchronous operation to complete, pausing the coroutine non-blockingly until the awaited result is ready.**
 
 Key semantic components:
+
 - **Active waiting:** Not passive, but purposeful expectation
 - **Specific target:** Waiting for a particular operation to complete
 - **Non-blocking:** Doesn't freeze the thread, allows concurrency
@@ -264,6 +265,7 @@ Key semantic components:
 **Comparison with "wait":**
 
 "Await" is more formal and active than "wait." In English:
+
 - "Wait" = general waiting (can be aimless)
 - "Await" = waiting for a specific expected event
 
@@ -288,6 +290,7 @@ Async keywords (`async`, `await`) should work together linguistically. If `async
 **Example:**
 
 Spanish:
+
 - `asíncrono` (async - adjective: asynchronous)
 - `esperar` (await - verb: to await)
 - `ceder` (yield - verb: to yield)
@@ -301,12 +304,14 @@ Adjective + verbs. ✅ Works together
 **This term works WITH:**
 
 1. **`async def`:** Async functions where await can be used
+
 ```python
 async def example():
     result = await some_coroutine()
 ```
 
 2. **Coroutines and Tasks:** Objects that can be awaited
+
 ```python
 await my_coroutine()
 await asyncio.create_task(my_coroutine())
@@ -393,7 +398,7 @@ async def delayed_action():
 - Concept doesn't exist universally
 - **AI confidence should be MEDIUM, human review recommended**
 
-### Why HARD for `await`:
+### Why HARD for `await`
 
 - Relatively new concept (Python 3.5+, 2015)
 - Async programming is advanced topic

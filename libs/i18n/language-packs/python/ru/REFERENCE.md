@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Cyrillic-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Russian. This guide shows the Russian keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Russian |
 | **Native Name** | Русский |
 | **Script** | Cyrillic |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Russian.
 
 | English | Russian |
-|---------|--------|
+| ------- | ------ |
 | `and` | `и` |
 | `as` | `как` |
 | `assert` | `утверждение` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Russian.
 Python's built-in functions and types in Russian.
 
 | English | Russian |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `абсолютноезначение` |
 | `aiter` | `айтер` |
 | `all` | `все` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Russian.
 Exception classes for error handling.
 
 | English | Russian |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `арифметическаяошибка` |
 | `assertionerror` | `ошибкаутверждения` |
 | `attributeerror` | `Ошибкаатрибута` |

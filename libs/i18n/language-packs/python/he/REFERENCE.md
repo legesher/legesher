@@ -12,7 +12,7 @@
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Hebrew |
 | **Native Name** | עברית |
 | **Script** | Hebrew |
@@ -27,7 +27,7 @@
 These are Python's reserved words translated to Hebrew.
 
 | English | Hebrew |
-|---------|--------|
+| ------- | ------ |
 | `and` | `וגם` |
 | `as` | `כאשר` |
 | `assert` | `להתאמת` |
@@ -73,7 +73,7 @@ These are Python's reserved words translated to Hebrew.
 Python's built-in functions and types in Hebrew.
 
 | English | Hebrew |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `הערךהמוחלט` |
 | `aiter` | `מעגלאיטרטורסינכרוני` |
 | `all` | `כל` |
@@ -152,7 +152,7 @@ Python's built-in functions and types in Hebrew.
 Exception classes for error handling.
 
 | English | Hebrew |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `שגיאתחשבון` |
 | `assertionerror` | `טעותבטוען` |
 | `attributeerror` | `שגיאתתכונה` |

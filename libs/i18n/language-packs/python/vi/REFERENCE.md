@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Vietnamese. This guide shows the Vietnamese keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Vietnamese |
 | **Native Name** | Tiếng Việt |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Vietnamese.
 
 | English | Vietnamese |
-|---------|--------|
+| ------- | ------ |
 | `and` | `và` |
 | `as` | `như` |
 | `assert` | `kiểmtra` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Vietnamese.
 Python's built-in functions and types in Vietnamese.
 
 | English | Vietnamese |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `sốtuyệtđối` |
 | `aiter` | `ktraiter` |
 | `all` | `tấtcả` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Vietnamese.
 Exception classes for error handling.
 
 | English | Vietnamese |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `lỗitínharít` |
 | `assertionerror` | `lỗikhẳngđịnh` |
 | `attributeerror` | `Lỗithuộctính` |

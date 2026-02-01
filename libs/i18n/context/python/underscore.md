@@ -313,7 +313,7 @@ x, _, z = get_coordinates()  # Only need x and z
 
 **Translation Difficulty: MEDIUM**
 
-### Why MEDIUM for `_`:
+### Why MEDIUM for `_`
 
 - Universal symbol (should stay unchanged)
 - BUT represents abstract concept (wildcard/throwaway)

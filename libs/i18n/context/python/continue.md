@@ -233,6 +233,7 @@ YES (minor ambiguity)
 **Example:**
 
 English "continue" can mean:
+
 1. "We'll continue after a break" (resume) ❌
 2. "Continue to next loop iteration" (skip rest, proceed) ✅ **This is the Python meaning**
 3. "Continue working hard" (persist) ❌
@@ -267,6 +268,7 @@ Spanish: `romper` (break loop), `continuar` (continue to next iteration), `retor
 **This term works WITH:**
 
 1. **`continue` in for loop**:
+
 ```python
 for item in items:
     if should_skip(item):
@@ -275,6 +277,7 @@ for item in items:
 ```
 
 2. **`continue` in while loop**:
+
 ```python
 while condition:
     value = get_value()
@@ -353,7 +356,7 @@ for item in items:
 - Universal in programming
 - **AI confidence should be HIGH**
 
-### Why EASY for `continue`:
+### Why EASY for `continue`
 
 - Universal concept (loop continuation)
 - "Continue" verb exists in most languages

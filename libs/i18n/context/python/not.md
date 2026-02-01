@@ -213,6 +213,7 @@ NO (in logical context)
 **"Not" is unambiguous in logical contexts:**
 
 In natural language, "not" can appear in various constructions:
+
 1. Simple negation: "not true"
 2. As part of contractions: "isn't," "won't"
 3. Emphatic: "certainly not!"
@@ -245,12 +246,14 @@ Spanish: `y` (and), `o` (or), `no` (not) - all basic conjunctions/particles ✅
 **This term works WITH:**
 
 1. **`not` in conditionals**:
+
 ```python
 if not condition:
     handle_false_case()
 ```
 
 2. **`not` with membership**:
+
 ```python
 if item not in collection:
     print("Not found")
@@ -303,7 +306,7 @@ if not all(checks):
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `not`:
+### Why EASY for `not`
 
 - Universal concept (negation in all languages)
 - Basic negation word exists in every language

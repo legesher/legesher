@@ -127,6 +127,7 @@ except:
 The `try` statement creates an exception-handling context. Code in the `try` block executes normally unless an exception occurs. If exception is raised, Python immediately stops executing the `try` block and searches for a matching `except` block. If found, the except block handles the error; if not, the exception propagates up.
 
 Exception handling structure:
+
 - `try:` - Protected code that might fail
 - `except ExceptionType:` - Handle specific exception (required, at least one)
 - `else:` - Runs if try succeeds (optional)
@@ -243,6 +244,7 @@ YES
 **Example:**
 
 English "try" can mean:
+
 1. "Try on this shirt" (test fit) ❌
 2. "try: risky_code()" (attempt execution, handle errors) ✅ **This is the Python meaning**
 3. "Try the case" (legal) ❌
@@ -278,6 +280,7 @@ Spanish: `intentar` (try), `excepto` (except), `sino` (else), `finalmente` (fina
 **This term works WITH:**
 
 1. **Basic try-except**:
+
 ```python
 try:
     risky_code()
@@ -286,6 +289,7 @@ except Exception:
 ```
 
 2. **Complete try-except-else-finally**:
+
 ```python
 try:
     code()
@@ -386,7 +390,7 @@ except Exception:
 - Standard programming pattern
 - **AI confidence should be HIGH**
 
-### Why EASY for `try`:
+### Why EASY for `try`
 
 - Universal concept (attempting with possible failure)
 - "Try" or "attempt" verb exists in every language

@@ -263,6 +263,7 @@ All exception classes ending in "Error" should use the same structure in transla
 **Example:**
 
 Spanish exception pattern:
+
 - `AttributeError` → `ErrorDeAtributo` ✅
 - `KeyError` → `ErrorDeClave` ✅
 - `NameError` → `ErrorDeNombre` ✅
@@ -336,7 +337,7 @@ result.method()  # Raises AttributeError: 'NoneType' object has no attribute 'me
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `AttributeError`:
+### Why MEDIUM for `AttributeError`
 
 - "Attribute" has multiple meanings (quality, HTML attribute, object property)
 - Need to convey compound concept (attribute + error)

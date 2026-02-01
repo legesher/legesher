@@ -261,6 +261,7 @@ Hash-related terminology should use the same root translation. If you translate 
 **Example:**
 
 Spanish: If using `dispersión` for `hash`, then:
+
 - "función de dispersión" (hash function)
 - "valor de dispersión" (hash value)
 - "tabla de dispersión" (hash table)
@@ -271,6 +272,7 @@ Consistency across all hash-related terms ✅
 **This term works WITH:**
 
 1. **`hash` for hashable objects**: Get fingerprint
+
 ```python
 hash(42)      # Integer
 hash("text")  # String
@@ -278,6 +280,7 @@ hash((1, 2))  # Tuple
 ```
 
 2. **`hash` in dict/set operations**: Enable fast lookup
+
 ```python
 # Dict uses hash for keys
 d = {key: value}  # Internally: hash(key)
@@ -369,7 +372,7 @@ print(isinstance({1: 2}, Hashable))  # False
 - Widely transliterated internationally
 - **AI confidence should be HIGH**
 
-### Why EASY for `hash`:
+### Why EASY for `hash`
 
 - Universal computing concept (hash functions)
 - Standard term in CS globally

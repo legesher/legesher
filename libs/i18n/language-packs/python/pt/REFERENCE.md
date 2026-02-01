@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Portuguese. This guide shows the Portuguese keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Portuguese |
 | **Native Name** | Português |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Portuguese.
 
 | English | Portuguese |
-|---------|--------|
+| ------- | ------ |
 | `and` | `e` |
 | `as` | `como` |
 | `assert` | `afirmar` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Portuguese.
 Python's built-in functions and types in Portuguese.
 
 | English | Portuguese |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `valorabsoluto` |
 | `aiter` | `iter_async` |
 | `all` | `todos` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Portuguese.
 Exception classes for error handling.
 
 | English | Portuguese |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `erroaritmético` |
 | `assertionerror` | `errodeafirmação` |
 | `attributeerror` | `errodeatributo` |

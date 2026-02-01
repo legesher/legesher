@@ -265,6 +265,7 @@ Spanish: `locales`/`variable_global` (different structures)
 **This term works WITH:**
 
 1. **`locals` + `globals`**: Compare scopes
+
 ```python
 x = "global"
 
@@ -277,6 +278,7 @@ func()
 ```
 
 2. **`locals` + `**kwargs`**: Pass locals as arguments
+
 ```python
 def format_message(name, age, city):
     template = "{name} is {age} years old from {city}"
@@ -334,7 +336,7 @@ show_scopes()
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `locals`:
+### Why MEDIUM for `locals`
 
 - "Local" has multiple meanings (people, place, scope)
 - Need plural form which varies by language

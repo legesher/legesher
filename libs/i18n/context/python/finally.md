@@ -221,6 +221,7 @@ English "finally" can mean:
 **Your translation should capture meaning #3: code that executes at the end of try-except sequence, guaranteed to run regardless of what happened in try/except blocks.**
 
 The key semantic components are:
+
 - **Temporal ordering:** Happens after try, except, else
 - **Guaranteed execution:** Runs regardless of exceptions, returns, breaks
 - **Finality:** This is the last phase of the try-except-finally structure
@@ -244,6 +245,7 @@ Exception handling keywords (`try`, `except`, `else`, `finally`) form a semantic
 **Example:**
 
 Python exception handling structure:
+
 ```python
 try:
     # attempt something
@@ -256,6 +258,7 @@ finally:
 ```
 
 Spanish should maintain parallel structure:
+
 - `intentar` (to try - infinitive verb)
 - `excepto` (except - conjunction/preposition)
 - `sino` or `else` (else - conjunction)
@@ -268,6 +271,7 @@ These work together; translations should feel cohesive as a unit.
 **This term works WITH:**
 
 1. **`try` + `finally`**: Minimal exception handling (no except needed)
+
 ```python
 try:
     risky_operation()
@@ -276,6 +280,7 @@ finally:
 ```
 
 2. **`try` + `except` + `finally`**: Complete exception handling
+
 ```python
 try:
     operation()
@@ -328,7 +333,7 @@ finally:
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `finally`:
+### Why MEDIUM for `finally`
 
 - Universal programming concept (exception handling is global)
 - Most languages have adverb meaning "finally/at last"

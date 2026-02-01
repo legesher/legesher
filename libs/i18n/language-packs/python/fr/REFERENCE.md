@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in French. This guide shows the French keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | French |
 | **Native Name** | Français |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to French.
 
 | English | French |
-|---------|--------|
+| ------- | ------ |
 | `and` | `et` |
 | `as` | `comme` |
 | `assert` | `affirmer` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to French.
 Python's built-in functions and types in French.
 
 | English | French |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `labsolu` |
 | `aiter` | `iterer` |
 | `all` | `tout` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in French.
 Exception classes for error handling.
 
 | English | French |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `erreurarithmétique` |
 | `assertionerror` | `erreurdassertion` |
 | `attributeerror` | `Erreurdattribut` |

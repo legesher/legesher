@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Danish. This guide shows the Danish keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Danish |
 | **Native Name** | Dansk |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Danish.
 
 | English | Danish |
-|---------|--------|
+| ------- | ------ |
 | `and` | `og` |
 | `as` | `som` |
 | `assert` | `kontroller` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Danish.
 Python's built-in functions and types in Danish.
 
 | English | Danish |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `absolutværdien` |
 | `aiter` | `iterer` |
 | `all` | `alle` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Danish.
 Exception classes for error handling.
 
 | English | Danish |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `aritmetiskfejl` |
 | `assertionerror` | `assertfejl` |
 | `attributeerror` | `attributfejl` |

@@ -45,8 +45,9 @@ class TestParameterTranslation:
         """Test translating signature with exception types."""
         trans = ParameterTranslation()
         result = trans.translate_signature("(exc=ValueError, retry=True)", "es")
-        # ValueError should match case-insensitively
-        assert "error de valor" in result.lower() or "valor incorrecto" in result.lower()
+        # ValueError should be translated (e.g., errordevalor in Spanish pack)
+        assert "valueerror" not in result.lower()  # Should be translated away
+        assert "verdadero" in result  # True → verdadero
 
     def test_translate_signature_camelcase_exception(self):
         """Test case-insensitive matching for CamelCase exceptions."""

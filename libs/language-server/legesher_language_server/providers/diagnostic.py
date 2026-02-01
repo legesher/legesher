@@ -10,7 +10,9 @@ Implementation for CORE-359.
 """
 
 import ast
+import io
 import re
+import tokenize
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -163,28 +165,60 @@ class DiagnosticProvider:
     def _translate_code_to_english(self, code: str) -> str:
         """Translate code from target language to English for parsing.
 
+        Uses Python's tokenizer to only replace NAME tokens, avoiding false
+        positives on variable names, string contents, and comments.
+
         Args:
             code: Source code in target language
 
         Returns:
             Code translated to English
         """
-        # If no translations loaded, return as-is
         if not self._keyword_translation_map:
             return code
 
-        # Simple word-by-word replacement
-        # This is a basic implementation - a proper tokenizer would be better
-        # but this works for keyword translation
-        import re
+        try:
+            tokens = list(tokenize.generate_tokens(io.StringIO(code).readline))
+        except (tokenize.TokenError, IndentationError, SyntaxError):
+            # Incomplete/invalid code — fall back to regex for best-effort
+            return self._translate_code_to_english_regex(code)
 
-        # Replace each keyword
+        # Collect replacements: (line, col_start, col_end, replacement)
+        # Then apply in reverse order to preserve offsets
+        lines = code.split("\n")
+        replacements: list[tuple[int, int, int, str]] = []
+
+        for tok in tokens:
+            if tok.type == tokenize.NAME and tok.string in self._keyword_translation_map:
+                row = tok.start[0] - 1  # Convert to 0-based
+                col_start = tok.start[1]
+                col_end = tok.end[1]
+                replacements.append(
+                    (row, col_start, col_end, self._keyword_translation_map[tok.string])
+                )
+
+        # Apply replacements in reverse order (right-to-left, bottom-to-top)
+        for row, col_start, col_end, replacement in reversed(replacements):
+            line = lines[row]
+            lines[row] = line[:col_start] + replacement + line[col_end:]
+
+        return "\n".join(lines)
+
+    def _translate_code_to_english_regex(self, code: str) -> str:
+        r"""Fallback regex-based translation for untokenizable code.
+
+        Note: \b word boundaries only match ASCII word characters, so this
+        fallback will silently skip non-Latin keywords (Arabic, Hebrew, etc.).
+        The tokenizer-first approach in _translate_code_to_english handles
+        all scripts correctly. This fallback is best-effort for broken code.
+        """
         translated = code
-        for target_keyword, english_keyword in self._keyword_translation_map.items():
-            # Use word boundaries to avoid partial replacements
+        # Sort by length descending to avoid partial matches
+        for target_keyword, english_keyword in sorted(
+            self._keyword_translation_map.items(), key=lambda x: len(x[0]), reverse=True
+        ):
             pattern = r"\b" + re.escape(target_keyword) + r"\b"
             translated = re.sub(pattern, english_keyword, translated)
-
         return translated
 
     async def get_diagnostics(self) -> list[Diagnostic]:

@@ -1,6 +1,8 @@
 # Translation Comparison System
 
-The Legesher i18n package includes a comprehensive translation comparison system that enables comparison of AI-generated translations with community translations, helping ensure high-quality language packs.
+The Legesher i18n package includes a comprehensive translation comparison system
+that enables comparison of AI-generated translations with community translations,
+helping ensure high-quality language packs.
 
 ## Table of Contents
 
@@ -142,7 +144,7 @@ legesher-i18n compare-multi es,ar,zh --summary
 
 ### Component Overview
 
-```
+```text
 legesher_i18n/
 ├── api/
 │   └── providers/
@@ -165,7 +167,7 @@ legesher_i18n/
 
 ### Data Flow
 
-```
+```text
 1. Translation Sources
    ├── AI Providers (Claude, GPT-4o, Aya 23)
    └── Community Translations

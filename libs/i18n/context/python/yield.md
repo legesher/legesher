@@ -248,6 +248,7 @@ English "yield" can mean:
 **Your translation should capture meaning #3-4: iteratively producing values, pausing between productions, enabling lazy evaluation and memory-efficient sequences.**
 
 Key semantic components:
+
 - **Production:** Creating/giving values
 - **Iterative:** Multiple times, not once
 - **Pause/resume:** Temporary suspension with state retention
@@ -274,6 +275,7 @@ Function output keywords (`return`, `yield`) should both use verb forms (infinit
 **Example:**
 
 Spanish:
+
 - `retornar` (return - verb: to return)
 - `ceder` (yield - verb: to yield)
 - `esperar` (await - verb: to wait/await)
@@ -287,6 +289,7 @@ NOT: `retornar` (verb) + `ceder` (verb) + `espera` (noun - wait/hope) ❌ Incons
 **This term works WITH:**
 
 1. **Generator iteration:** `next()`, `for` loop
+
 ```python
 def gen():
     yield 1
@@ -298,6 +301,7 @@ next(g)  # 2
 ```
 
 2. **`yield from`:** Delegate to sub-generator (Python 3.3+)
+
 ```python
 def sub():
     yield from range(5)
@@ -374,7 +378,7 @@ def echo():
 - Concept doesn't exist universally
 - **AI confidence should be MEDIUM, human review recommended**
 
-### Why HARD for `yield`:
+### Why HARD for `yield`
 
 - Advanced Python feature (generators are intermediate/advanced)
 - Not all languages have generator/yield concept

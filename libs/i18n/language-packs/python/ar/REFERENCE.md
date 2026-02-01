@@ -12,7 +12,7 @@
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Arabic |
 | **Native Name** | العربية |
 | **Script** | Arabic |
@@ -27,7 +27,7 @@
 These are Python's reserved words translated to Arabic.
 
 | English | Arabic |
-|---------|--------|
+| ------- | ------ |
 | `and` | `و` |
 | `as` | `كَمَا` |
 | `assert` | `التأكيد` |
@@ -73,7 +73,7 @@ These are Python's reserved words translated to Arabic.
 Python's built-in functions and types in Arabic.
 
 | English | Arabic |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `القيمةالمطلقة` |
 | `aiter` | `مُتَأَنِّي` |
 | `all` | `كل` |
@@ -152,7 +152,7 @@ Python's built-in functions and types in Arabic.
 Exception classes for error handling.
 
 | English | Arabic |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `خطأحسابي` |
 | `assertionerror` | `خطأالتأكيد` |
 | `attributeerror` | `خطأفيالسمة` |

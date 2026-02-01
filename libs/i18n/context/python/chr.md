@@ -258,6 +258,7 @@ NOT: `carácter` + `número_código` (breaks the inverse pattern) ❌
 **This term works WITH:**
 
 1. **`chr` and `ord` are inverses**: Convert between representations
+
 ```python
 chr(65)      # 'A'
 ord('A')     # 65
@@ -265,6 +266,7 @@ chr(ord('A')) == 'A'  # True
 ```
 
 2. **`chr` for character generation**: Create specific characters
+
 ```python
 alphabet = [chr(i) for i in range(65, 91)]
 ```
@@ -337,7 +339,7 @@ print(chr(34))  # '"' (double quote)
 - No ambiguity in computing context
 - **AI confidence should be HIGH**
 
-### Why EASY for `chr`:
+### Why EASY for `chr`
 
 - Universal computing concept (character encoding)
 - "Character" is standard term in CS globally

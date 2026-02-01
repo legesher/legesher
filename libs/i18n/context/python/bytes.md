@@ -231,12 +231,14 @@ NOT: `octetos`, `array_binario` ❌ (inconsistent roots)
 **This term works WITH:**
 
 1. **`bytes` from encoding**: String to binary
+
 ```python
 text = "Hello"
 binary = text.encode('utf-8')  # str -> bytes
 ```
 
 2. **`bytes` with decoding**: Binary to string
+
 ```python
 binary = b"Hello"
 text = binary.decode('utf-8')  # bytes -> str
@@ -288,7 +290,7 @@ back_to_text = utf8_bytes.decode('utf-8')
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `bytes`:
+### Why MEDIUM for `bytes`
 
 - Decision: keep English term vs translate vs transliterate
 - "Byte" is international but some languages have native terms

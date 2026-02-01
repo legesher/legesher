@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Swedish. This guide shows the Swedish keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Swedish |
 | **Native Name** | Svenska |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Swedish.
 
 | English | Swedish |
-|---------|--------|
+| ------- | ------ |
 | `and` | `och` |
 | `as` | `som` |
 | `assert` | `assertera` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Swedish.
 Python's built-in functions and types in Swedish.
 
 | English | Swedish |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `absolut_värde` |
 | `aiter` | `asynk_Iterator` |
 | `all` | `alla` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Swedish.
 Exception classes for error handling.
 
 | English | Swedish |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `aritmetiskfel` |
 | `assertionerror` | `asserteringsfel` |
 | `attributeerror` | `attributfeil` |

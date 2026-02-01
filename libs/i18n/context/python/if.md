@@ -206,6 +206,7 @@ English "if" can mean:
 **Your translation should capture meaning #3: hypothetical conditional testing, NOT permission or indirect questions.**
 
 Many languages distinguish between:
+
 - Conditional "if" (if X then Y)
 - Interrogative "if/whether" (I wonder if X)
 
@@ -240,6 +241,7 @@ If you translate `if` as conjunction ("si"), then:
 **This term works WITH:**
 
 1. **`if` + `elif` + `else`**: The complete conditional chain structure
+
 ```python
 x = 5
 if x > 0:
@@ -251,6 +253,7 @@ else:
 ```
 
 2. **`if` + boolean operators** (`and`, `or`, `not`): Compound conditions
+
 ```python
 age = 20
 has_license = True
@@ -290,7 +293,7 @@ if not x:         # negation
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `if`:
+### Why EASY for `if`
 
 - Universal programming concept
 - Every natural language has a conditional particle or conjunction

@@ -257,6 +257,7 @@ NOT: `objetar` (verb), `clase` (noun), `típico` (adjective) ❌
 **This term works WITH:**
 
 1. **`object` as base class**: All classes inherit from it
+
 ```python
 class MyClass(object):  # Explicit
     pass
@@ -268,6 +269,7 @@ print(isinstance(MyClass(), object))  # True
 ```
 
 2. **`object` for sentinel values**: Unique instances
+
 ```python
 MISSING = object()
 
@@ -322,7 +324,7 @@ print(dir(obj))  # Show all inherited methods
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `object`:
+### Why MEDIUM for `object`
 
 - "Object" is universal OOP term
 - But may conflict with other meanings (objective, grammar)

@@ -212,6 +212,7 @@ English "while" can mean:
 **Your translation should capture meaning #3: continuous repetition during the time that a condition is true.**
 
 Some languages distinguish:
+
 - Temporal simultaneous "while" (two things happening at once)
 - Conditional durative "while" (repeat as long as condition holds)
 
@@ -243,6 +244,7 @@ NOT: `mientras` (conjunction) + `iterar` (verb for "for") ❌
 **This term works WITH:**
 
 1. **`while` + condition + `break`**: Infinite loops with internal exit
+
 ```python
 while True:
     if should_exit:
@@ -250,6 +252,7 @@ while True:
 ```
 
 2. **`while` + `else`**: Loop with success/failure handling
+
 ```python
 attempts = 0
 while attempts < 3:
@@ -293,7 +296,7 @@ while not done:
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `while`:
+### Why EASY for `while`
 
 - Universal programming concept
 - Every language has temporal-conditional expressions

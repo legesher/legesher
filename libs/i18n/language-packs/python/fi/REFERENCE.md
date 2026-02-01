@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Finnish. This guide shows the Finnish keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Finnish |
 | **Native Name** | Suomi |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Finnish.
 
 | English | Finnish |
-|---------|--------|
+| ------- | ------ |
 | `and` | `ja` |
 | `as` | `kuten` |
 | `assert` | `varmistaa` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Finnish.
 Python's built-in functions and types in Finnish.
 
 | English | Finnish |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `absoluuti` |
 | `aiter` | `aiteri` |
 | `all` | `kaikki` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Finnish.
 Exception classes for error handling.
 
 | English | Finnish |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `aritmetinenvirhe` |
 | `assertionerror` | `väärentamatontunnus` |
 | `attributeerror` | `attribuutivirhe` |

@@ -332,7 +332,7 @@ process_3d(x, y, z)
 
 **Translation Difficulty: MEDIUM**
 
-### Why MEDIUM for `match`:
+### Why MEDIUM for `match`
 
 - Relatively new feature (Python 3.10+, introduced 2021)
 - Concept exists in other languages, but may be unfamiliar

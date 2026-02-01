@@ -227,12 +227,14 @@ NOT: `código_ascii`, `representación`, `cadena` ❌ (overcomplicating ASCII)
 **This term works WITH:**
 
 1. **`ascii` for safe representation**: Ensure ASCII-only output
+
 ```python
 text = "Café ☕"
 print(ascii(text))  # 'Caf\xe9 \u2615'
 ```
 
 2. **`ascii` vs `repr`**: ASCII-safe vs Unicode-aware
+
 ```python
 s = "Hello 世界"
 print(repr(s))   # 'Hello 世界' (Unicode intact)
@@ -285,7 +287,7 @@ print(ascii(user))  # User('Fran\xe7ois')
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `ascii`:
+### Why MEDIUM for `ascii`
 
 - Decision point: keep acronym vs transliterate vs translate
 - "ASCII" is internationally recognized but some languages prefer transliteration

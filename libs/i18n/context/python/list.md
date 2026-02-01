@@ -244,6 +244,7 @@ Spanish: `lista`, `tupla`, `diccionario`, `conjunto` - all nouns ✅
 **This term works WITH:**
 
 1. **`list` + indexing**: Access elements
+
 ```python
 items = [10, 20, 30]
 print(items[0])  # 10
@@ -251,6 +252,7 @@ items[1] = 25    # modify
 ```
 
 2. **`list` + methods**: Modify collections
+
 ```python
 numbers = [1, 2]
 numbers.append(3)
@@ -295,7 +297,7 @@ subset = items[1:3]
 - No ambiguity in technical context
 - **AI confidence should be HIGH**
 
-### Why EASY for `list`:
+### Why EASY for `list`
 
 - Universal concept (ordered collections exist everywhere)
 - "List" is common everyday word in most languages

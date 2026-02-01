@@ -54,6 +54,7 @@ repos:
   hooks:
   - id: markdownlint
     args: [--fix]
+    exclude: ^(\.claude/|libs/i18n/context/|libs/i18n/docs/|libs/vs-code/|scripts/|docs/src/content/|docs/development/)
 
   # YAML formatting
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks

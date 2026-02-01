@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Polish. This guide shows the Polish keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Polish |
 | **Native Name** | Polski |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Polish.
 
 | English | Polish |
-|---------|--------|
+| ------- | ------ |
 | `and` | `i` |
 | `as` | `jako` |
 | `assert` | `zapewnić` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Polish.
 Python's built-in functions and types in Polish.
 
 | English | Polish |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `wartosc_bez_znaku` |
 | `aiter` | `asynchroniczny_iterator` |
 | `all` | `wszystkie` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Polish.
 Exception classes for error handling.
 
 | English | Polish |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `błądarytmetyczny` |
 | `assertionerror` | `błądasercji` |
 | `attributeerror` | `błądatrybutu` |

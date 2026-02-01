@@ -208,7 +208,8 @@ while counter < len(results):
 
 ### Why This Matters
 
-The **most critical** aspect of Legesher is ensuring that translated code is **semantically identical** to the original. This means:
+The **most critical** aspect of Legesher is ensuring that translated code is
+**semantically identical** to the original. This means:
 
 1. **Same AST Structure** - The parsed abstract syntax tree is identical
 2. **Same Bytecode** - The compiled bytecode is identical (stricter test)
@@ -347,7 +348,7 @@ def calculate(x, y):
 
 **`complex_python_project`** - Complete project structure
 
-```
+```text
 project/
 ├── __init__.py
 ├── main.py

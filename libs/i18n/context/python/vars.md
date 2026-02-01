@@ -207,9 +207,9 @@ Common use cases: debugging (inspect all attributes at once), serialization (con
 
 **Key behaviors:**
 
-1. **Returns __dict__ directly:** `vars(obj)` returns `obj.__dict__`, not a copy. Modifications to returned dictionary modify the object. This is mutable view, not snapshot. `vars(obj)['new'] = value` adds attribute to object.
+1. **Returns **dict** directly:** `vars(obj)` returns `obj.__dict__`, not a copy. Modifications to returned dictionary modify the object. This is mutable view, not snapshot. `vars(obj)['new'] = value` adds attribute to object.
 
-2. **Requires __dict__:** Only works on objects with `__dict__` attribute. Objects with `__slots__`, built-in types (int, str, list), and some C extension objects don't have `__dict__`. Raises `TypeError` if no `__dict__`.
+2. **Requires **dict**:** Only works on objects with `__dict__` attribute. Objects with `__slots__`, built-in types (int, str, list), and some C extension objects don't have `__dict__`. Raises `TypeError` if no `__dict__`.
 
 3. **Class vs instance:** Calling `vars(obj)` on instance returns instance attributes only (not class attributes). Calling `vars(MyClass)` returns class namespace (methods, class variables, special attributes). Different dictionaries, different purposes.
 
@@ -330,6 +330,7 @@ Introspection functions should use related terminology. If translating "attribut
 **Example:**
 
 ✅ **Consistent (conceptual):**
+
 - `vars` → `variables` (collection of attributes)
 - `dir` → `directorio` (listing of attributes)
 - Related concepts, compatible terms ✅

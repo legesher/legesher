@@ -229,6 +229,7 @@ English "global" can mean:
 **Your translation should capture meaning #3: variable scope at the module level, accessible from all functions within that module, contrasting with local (function-level) scope.**
 
 The key semantic components are:
+
 - **Scope level:** Module-level, not function-level
 - **Accessibility:** Available to all functions in the module
 - **Contrast:** Opposite of "local" (function-specific)
@@ -254,6 +255,7 @@ Scope-related keywords and concepts should use consistent forms. If `global` is 
 **Example:**
 
 Spanish:
+
 - `global` (adjective) + `no_local` (adjective phrase) ✅ Consistent
 - NOT: `global` (adjective) + `localizar` (verb - to localize) ❌ Inconsistent
 
@@ -262,6 +264,7 @@ Spanish:
 **This term works WITH:**
 
 1. **Functions and assignment:** `global` enables functions to modify module-level variables
+
 ```python
 x = 0
 def increment():
@@ -270,6 +273,7 @@ def increment():
 ```
 
 2. **Multiple declarations:** Can declare several globals at once
+
 ```python
 def reset():
     global count, total, average
@@ -328,7 +332,7 @@ def add_player_score(score):
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `global`:
+### Why MEDIUM for `global`
 
 - Universal programming concept (scope exists in all languages)
 - Many languages use "global" as loanword in technical contexts

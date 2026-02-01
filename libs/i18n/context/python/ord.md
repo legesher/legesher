@@ -259,6 +259,7 @@ Both are computing terms that work together logically.
 **This term works WITH:**
 
 1. **`ord` and `chr` are inverses**: Convert between representations
+
 ```python
 ord('A')      # 65
 chr(65)       # 'A'
@@ -266,6 +267,7 @@ ord(chr(65)) == 65  # True
 ```
 
 2. **`ord` for comparisons**: Character ordering
+
 ```python
 is_uppercase = 65 <= ord(char) <= 90
 ```
@@ -359,7 +361,7 @@ sorted_chars = sorted(chars, key=ord)
 - No ambiguity in computing context
 - **AI confidence should be HIGH**
 
-### Why EASY for `ord`:
+### Why EASY for `ord`
 
 - Universal computing concept (character code points)
 - "Ordinal" is standard mathematical/CS term

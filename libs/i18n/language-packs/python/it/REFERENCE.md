@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Italian. This guide shows the Italian keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Italian |
 | **Native Name** | Italiano |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Italian.
 
 | English | Italian |
-|---------|--------|
+| ------- | ------ |
 | `and` | `e` |
 | `as` | `come` |
 | `assert` | `asserire` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Italian.
 Python's built-in functions and types in Italian.
 
 | English | Italian |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `valoreassoluto` |
 | `aiter` | `aiteratore` |
 | `all` | `tutto` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Italian.
 Exception classes for error handling.
 
 | English | Italian |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `errorearitmetico` |
 | `assertionerror` | `errorediasserzione` |
 | `attributeerror` | `AttributeError` |

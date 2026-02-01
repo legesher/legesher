@@ -12,7 +12,7 @@ def test_default_config():
     config = LanguageServerConfig()
 
     assert config.source_language == "en"
-    assert config.target_language == "es"
+    assert config.target_language == "en"
     assert config.python_version is None
     assert config.cache_size == 1000
     assert config.cache_ttl == 3600
@@ -81,9 +81,9 @@ def test_validate_languages():
     config = LanguageServerConfig(source_language="eng", target_language="es")
     assert config.validate_languages() is False
 
-    # Invalid codes (contains numbers)
-    config = LanguageServerConfig(source_language="e1", target_language="es")
-    assert config.validate_languages() is False
+    # Invalid codes (contains numbers) - field validator rejects non-alphabetic codes
+    with pytest.raises(ValueError):
+        LanguageServerConfig(source_language="e1", target_language="es")
 
 
 def test_cache_size_validation():

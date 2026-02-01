@@ -33,7 +33,7 @@ For implementation status details, see [DOCUMENTATION_AUDIT_2025.md](DOCUMENTATI
 
 Inside of your Astro + Starlight project, you'll see the following folders and files:
 
-```
+```text
 .
 ├── public/
 ├── src/
@@ -46,7 +46,8 @@ Inside of your Astro + Starlight project, you'll see the following folders and f
 └── tsconfig.json
 ```
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
+Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as
+a route based on its file name.
 
 Images can be added to `src/assets/` and embedded in Markdown with a relative link.
 
@@ -67,4 +68,5 @@ All commands are run from the root of the project, from a terminal:
 
 ## 👀 Want to learn more?
 
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+Check out [Starlight's docs](https://starlight.astro.build/), read [the Astro
+documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).

@@ -257,6 +257,7 @@ Mathematical and international technical terms (like Greek letters) should gener
 **Example:**
 
 If keeping `lambda` as loanword:
+
 - Also keep: `pi` (π), `delta` (Δ) if used in code
 - Don't mix: `lambda` (kept) + translating other Greek letters
 
@@ -265,6 +266,7 @@ If keeping `lambda` as loanword:
 **This term works WITH:**
 
 1. **Higher-order functions:** Functions that take functions as arguments
+
 ```python
 map(lambda x: x*2, [1, 2, 3])
 filter(lambda x: x > 0, numbers)
@@ -272,6 +274,7 @@ sorted(items, key=lambda x: x.name)
 ```
 
 2. **Immediate invocation:** Call lambda immediately (rare but valid)
+
 ```python
 result = (lambda x, y: x + y)(3, 4)  # 7
 ```
@@ -324,7 +327,7 @@ squares = list(map(lambda x: x**2, range(10)))
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `lambda`:
+### Why MEDIUM for `lambda`
 
 - International mathematical term (like π or Δ)
 - Most languages use "lambda" as-is

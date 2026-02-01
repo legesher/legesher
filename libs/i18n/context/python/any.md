@@ -249,12 +249,14 @@ NOT: `alguno` (determiner) + `verificar_todos` (verb phrase) ❌
 **This term works WITH:**
 
 1. **`any` + generator expressions**: Existence checks
+
 ```python
 has_adult = any(age >= 18 for age in ages)
 has_error = any(item.is_error() for item in results)
 ```
 
 2. **`any` vs `all`**: Logical pair
+
 ```python
 any([True, False])   # True (at least one)
 all([True, False])   # False (not all)
@@ -294,7 +296,7 @@ has_content = any(item for item in items if len(item) > 0)
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `any`:
+### Why EASY for `any`
 
 - Universal concept (existential quantification in all languages)
 - "Any" is basic logical/linguistic concept

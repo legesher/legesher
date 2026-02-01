@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Japanese%20%28Kanji%2C%20Hiragana%2C%20Katakana%29-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Japanese. This guide shows the Japanese keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Japanese |
 | **Native Name** | 日本語 |
 | **Script** | Japanese (Kanji, Hiragana, Katakana) |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Japanese.
 
 | English | Japanese |
-|---------|--------|
+| ------- | ------ |
 | `and` | `そして` |
 | `as` | `作為` |
 | `assert` | `アサーション` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Japanese.
 Python's built-in functions and types in Japanese.
 
 | English | Japanese |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `絶対値` |
 | `aiter` | `非同期イテレーター` |
 | `all` | `すべて` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Japanese.
 Exception classes for error handling.
 
 | English | Japanese |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `算数エラー` |
 | `assertionerror` | `アサーティブエラー` |
 | `attributeerror` | `属性エラー` |

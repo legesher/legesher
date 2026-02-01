@@ -250,12 +250,14 @@ Chinese: `下一个` (next), `迭代` (iter) - consistent iteration vocabulary �
 **This term works WITH:**
 
 1. **`next` with `iter`**: Manual iteration
+
 ```python
 it = iter([1, 2, 3])
 print(next(it))  # 1
 ```
 
 2. **`next` with default**: Avoid exceptions
+
 ```python
 it = iter([1])
 print(next(it, 'done'))  # 1
@@ -322,7 +324,7 @@ print(f"Rest: {list(items)}")  # [2, 3, 4]
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `next`:
+### Why MEDIUM for `next`
 
 - "Next" has multiple meanings (spatial, temporal, sequential)
 - Need to distinguish from "continue," "after," "forward"

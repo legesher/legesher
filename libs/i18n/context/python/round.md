@@ -251,12 +251,14 @@ Spanish: `redondear`, `convertir_a_entero`, `calcular_absoluto` - verb forms ✅
 **This term works WITH:**
 
 1. **`round` to integer**: Remove decimals
+
 ```python
 round(3.7)  # 4
 round(3.2)  # 3
 ```
 
 2. **`round` to precision**: Specify decimal places
+
 ```python
 round(3.14159, 2)  # 3.14
 round(1234.56, -2)  # 1200.0
@@ -321,7 +323,7 @@ rounded = [round(v, 2) for v in values]  # [3.14, 2.72, 1.41]
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `round`:
+### Why EASY for `round`
 
 - Universal mathematical concept (taught globally)
 - "Rounding" is standard term in mathematics

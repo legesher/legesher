@@ -269,6 +269,7 @@ Spanish: `si` (if), `sino` (else), `si_no_si` or `sino_si` (elif) - clear relati
 **This term works WITH:**
 
 1. **if-elif-else chain**:
+
 ```python
 if condition1:
     action1()
@@ -279,6 +280,7 @@ else:
 ```
 
 2. **Multiple elif branches**:
+
 ```python
 if condition1:
     action1()
@@ -378,7 +380,7 @@ elif other_outer:
 - Universal pattern in programming
 - **AI confidence should be HIGH**
 
-### Why EASY for `elif`:
+### Why EASY for `elif`
 
 - Compound of two simple concepts (else + if)
 - Both components have clear translations

@@ -250,6 +250,7 @@ NOT: `conjunto` (noun) + `crear_lista` (verb phrase) ❌
 **This term works WITH:**
 
 1. **Set operations**: Mathematical operations between sets
+
 ```python
 a = {1, 2, 3}
 b = {2, 3, 4}
@@ -258,6 +259,7 @@ intersection = a & b # {2, 3}
 ```
 
 2. **Membership testing**: Fast checking if item exists
+
 ```python
 if item in my_set:  # O(1) - very fast
     print("Found")

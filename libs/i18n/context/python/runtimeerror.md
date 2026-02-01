@@ -256,6 +256,7 @@ English "runtime" can mean:
 **Additional clarification:**
 
 "Runtime" in programming distinguishes from:
+
 - **Compile time:** When source code is converted to executable code
 - **Import time:** When Python loads modules
 - **Parse time:** When Python reads and parses syntax
@@ -282,6 +283,7 @@ All exception classes ending in "Error" should use the same structure in transla
 **Example:**
 
 Spanish exception pattern:
+
 - `RuntimeError` → `ErrorDeEjecución` ✅
 - `ValueError` → `ErrorDeValor` ✅
 - `TypeError` → `ErrorDeTipo` ✅
@@ -354,7 +356,7 @@ raise CustomRuntimeError("Custom runtime problem")
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `RuntimeError`:
+### Why MEDIUM for `RuntimeError`
 
 - "Runtime" is a compound technical term that may not translate directly
 - Need to convey temporal aspect (execution time) + error

@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Dutch. This guide shows the Dutch keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Dutch |
 | **Native Name** | Nederlands |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Dutch.
 
 | English | Dutch |
-|---------|--------|
+| ------- | ------ |
 | `and` | `en` |
 | `as` | `als` |
 | `assert` | `verifiëren` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Dutch.
 Python's built-in functions and types in Dutch.
 
 | English | Dutch |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `absoluut` |
 | `aiter` | `asynch_iterator` |
 | `all` | `alles` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Dutch.
 Exception classes for error handling.
 
 | English | Dutch |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `aritmetischefout` |
 | `assertionerror` | `assertiefout` |
 | `attributeerror` | `AttributeError` |

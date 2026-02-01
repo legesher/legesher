@@ -227,6 +227,7 @@ YES
 **Example:**
 
 English "pass" can mean:
+
 1. "Pass the ball" (transfer/move past) ❌
 2. "Pass the test" (succeed) ❌
 3. "I pass" in poker (decline turn) ✅ Related concept
@@ -262,12 +263,14 @@ Spanish: `pasar` (pass - do nothing), `romper` (break), `continuar` (continue), 
 **This term works WITH:**
 
 1. **`pass` in empty function**:
+
 ```python
 def stub():
     pass
 ```
 
 2. **`pass` in exception handling**:
+
 ```python
 try:
     operation()
@@ -339,7 +342,7 @@ def example():
 - Universal in programming
 - **AI confidence should be HIGH**
 
-### Why EASY for `pass`:
+### Why EASY for `pass`
 
 - Universal concept (null operation)
 - "Pass" or "skip" verb exists in most languages

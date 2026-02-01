@@ -113,7 +113,7 @@ Explicit slice objects make code more readable when you have meaningful slice pa
 
 2. **Returns slice object:** Can be stored in variables, passed as arguments, used multiple times. Object has `.start`, `.stop`, `.step` attributes for introspection.
 
-3. **Works with __getitem__:** Any object implementing `__getitem__` can accept slice objects. This makes slicing work uniformly across lists, tuples, strings, numpy arrays, and custom classes.
+3. **Works with **getitem**:** Any object implementing `__getitem__` can accept slice objects. This makes slicing work uniformly across lists, tuples, strings, numpy arrays, and custom classes.
 
 ---
 
@@ -247,12 +247,14 @@ Chinese: `切片` (slice), `范围` (range) - consistent noun/compound forms ✅
 **This term works WITH:**
 
 1. **`slice` for indexing**: Extract portions
+
 ```python
 s = slice(1, 4)
 print([0,1,2,3,4][s])  # [1, 2, 3]
 ```
 
 2. **`slice` with step**: Skip elements
+
 ```python
 every_two = slice(None, None, 2)
 print([0,1,2,3,4,5][every_two])  # [0, 2, 4]
@@ -311,7 +313,7 @@ data = record[DATA]
 - May need to choose between synonyms
 - **AI confidence should be MEDIUM-HIGH with context**
 
-### Why MEDIUM for `slice`:
+### Why MEDIUM for `slice`
 
 - "Slice" has physical meanings (food) and programming meanings
 - Need to choose between "slice," "portion," "section," "segment"

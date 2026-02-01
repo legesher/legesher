@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Norwegian. This guide shows the Norwegian keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Norwegian |
 | **Native Name** | Norsk |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Norwegian.
 
 | English | Norwegian |
-|---------|--------|
+| ------- | ------ |
 | `and` | `og` |
 | `as` | `som` |
 | `assert` | `sørge` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Norwegian.
 Python's built-in functions and types in Norwegian.
 
 | English | Norwegian |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `absoluttvurdere` |
 | `aiter` | `iterer` |
 | `all` | `alle` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Norwegian.
 Exception classes for error handling.
 
 | English | Norwegian |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `aritmetiskfeil` |
 | `assertionerror` | `assertionsfeil` |
 | `attributeerror` | `attributfeil` |

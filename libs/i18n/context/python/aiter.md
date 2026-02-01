@@ -160,7 +160,7 @@ This is essential for async programming when dealing with async generators, asyn
 
 **Key behaviors:**
 
-1. **Calls __aiter__():** Returns the result of calling the object's `__aiter__()` method, which should return an async iterator (object with `__anext__()` method).
+1. **Calls **aiter**():** Returns the result of calling the object's `__aiter__()` method, which should return an async iterator (object with `__anext__()` method).
 2. **Async equivalent of iter():** Mirrors `iter()` functionality but for asynchronous iteration protocol introduced in Python 3.5, standardized in 3.10.
 3. **Used with anext():** The returned async iterator is consumed with `await anext(iterator)` or `async for` loops.
 

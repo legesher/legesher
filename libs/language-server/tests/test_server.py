@@ -24,7 +24,7 @@ from lsprotocol.types import (
     HoverParams,
     InitializeParams,
     Position,
-    TextDocumentContentChangeEvent,
+    TextDocumentContentChangeWholeDocument,
     TextDocumentIdentifier,
     TextDocumentItem,
     VersionedTextDocumentIdentifier,
@@ -36,7 +36,11 @@ from legesher_language_server.server import LegesherLanguageServer, create_serve
 
 @pytest.fixture
 def config():
-    """Create test configuration."""
+    """Create test configuration.
+
+    Note: target_language="es" is required — completion and diagnostic tests
+    assert Spanish translations (e.g., "definir" for "def").
+    """
     return LanguageServerConfig(source_language="en", target_language="es", python_version="3.10")
 
 
@@ -94,7 +98,7 @@ async def test_document_change(server):
     # Change document
     change_params = DidChangeTextDocumentParams(
         text_document=VersionedTextDocumentIdentifier(uri="file:///test.py", version=2),
-        content_changes=[TextDocumentContentChangeEvent(text="updated")],
+        content_changes=[TextDocumentContentChangeWholeDocument(text="updated")],
     )
     await server.on_did_change(change_params)
 
@@ -150,8 +154,8 @@ async def test_hover_stub(server):
 
 
 @pytest.mark.asyncio
-async def test_completion_stub(server):
-    """Test completion provider stub (returns empty list until CORE-358)."""
+async def test_completion_returns_items(server):
+    """Test completion provider returns keyword and builtin completions."""
     # Open document
     open_params = DidOpenTextDocumentParams(
         text_document=TextDocumentItem(
@@ -168,21 +172,23 @@ async def test_completion_stub(server):
 
     result = await server.on_completion(completion_params)
 
-    # Should return empty list (stub implementation)
+    # Should return keyword and builtin completions
     assert result.is_incomplete is False
-    assert len(result.items) == 0
+    assert len(result.items) > 0
+    labels = [item.label for item in result.items]
+    assert "definir" in labels  # Spanish "def"
 
 
 @pytest.mark.asyncio
-async def test_diagnostic_stub(server):
-    """Test diagnostic provider stub (returns empty list until CORE-359)."""
-    # Open document
+async def test_diagnostic_returns_errors(server):
+    """Test diagnostic provider returns syntax errors."""
+    # Open document with syntax error
     open_params = DidOpenTextDocumentParams(
         text_document=TextDocumentItem(
             uri="file:///test.py",
             language_id="python",
             version=1,
-            text="def foo()\n  pass",  # Syntax error
+            text="def foo()\n  pass",  # Syntax error: missing colon
         )
     )
     await server.on_did_open(open_params)
@@ -194,9 +200,9 @@ async def test_diagnostic_stub(server):
 
     result = await server.on_diagnostic(diagnostic_params)
 
-    # Should return empty list (stub implementation)
+    # Should detect the syntax error
     assert result.kind == "full"
-    assert len(result.items) == 0
+    assert len(result.items) == 1
 
 
 @pytest.mark.asyncio

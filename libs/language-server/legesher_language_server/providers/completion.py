@@ -38,6 +38,15 @@ _completion_cache: dict[tuple[str, str], tuple[list[CompletionItem], list[Comple
 _symbol_cache: dict[tuple[str, int], list["Symbol"]] = {}
 
 
+def clear_caches() -> None:
+    """Clear completion and symbol caches.
+
+    Useful for testing and when language configuration changes.
+    """
+    _completion_cache.clear()
+    _symbol_cache.clear()
+
+
 class SymbolKind(Enum):
     """Symbol types that can be completed."""
 

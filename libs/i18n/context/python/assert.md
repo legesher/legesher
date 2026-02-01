@@ -239,6 +239,7 @@ YES
 **Example:**
 
 English "assert" can mean:
+
 1. "Assert dominance" (establish authority) ❌
 2. "Assert your rights" (claim) ❌
 3. "assert x > 0" (declare must be true, verify) ✅ **This is the Python meaning**
@@ -274,11 +275,13 @@ Spanish: `afirmar x > 0` - natural phrase ✅
 **This term works WITH:**
 
 1. **Basic assert**:
+
 ```python
 assert condition
 ```
 
 2. **Assert with message**:
+
 ```python
 assert condition, "Error message"
 ```
@@ -361,7 +364,7 @@ assert validate_internal_state(), "Debug check"
 - Standard debugging pattern
 - **AI confidence should be HIGH**
 
-### Why EASY for `assert`:
+### Why EASY for `assert`
 
 - Universal concept (declaring truth)
 - "Assert" or "affirm" verb exists in most languages

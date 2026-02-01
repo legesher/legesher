@@ -253,6 +253,7 @@ NO (in computing context)
 **"Not synchronized; operations that proceed independently without waiting for each other, enabling concurrency through non-blocking execution."**
 
 In non-computing contexts, "asynchronous" can mean:
+
 - General lack of synchronization
 - Not occurring at the same time (events)
 - Communication that doesn't require simultaneous presence (async messaging)
@@ -260,6 +261,7 @@ In non-computing contexts, "asynchronous" can mean:
 But in Python, "async" specifically means: **code that uses the async/await pattern for cooperative concurrent non-blocking I/O operations managed by an event loop.**
 
 **Key semantic components:**
+
 - **Non-blocking:** Operations don't wait idly, blocking the thread
 - **Concurrent:** Multiple operations in progress (not necessarily parallel)
 - **Cooperative:** Explicit `await` points for task switching
@@ -287,6 +289,7 @@ Async keywords (`async`, `await`) are paired and should work together linguistic
 **Example:**
 
 Spanish:
+
 - `asíncrono` (async - adjective: asynchronous)
 - `esperar` (await - verb: to await)
 - Together: "asíncrono def" creates async function, within which you can "esperar" ✅
@@ -298,18 +301,21 @@ Adjective + verb pair. Works cohesively.
 **This term works WITH:**
 
 1. **`async def`:** Declares coroutine functions
+
 ```python
 async def fetch():
     return await get_data()
 ```
 
 2. **`async with`:** Async context managers
+
 ```python
 async with aiohttp.ClientSession() as session:
     response = await session.get(url)
 ```
 
 3. **`async for`:** Async iteration
+
 ```python
 async for item in async_generator():
     process(item)
@@ -388,7 +394,7 @@ class AsyncResource:
 - Concept doesn't exist universally
 - **AI confidence should be MEDIUM, human review recommended**
 
-### Why HARD for `async`:
+### Why HARD for `async`
 
 - Modern concept (Python 3.5+, 2015; popularized by JavaScript 2017)
 - Not all programming languages have async/await

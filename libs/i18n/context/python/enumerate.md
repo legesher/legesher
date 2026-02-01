@@ -248,12 +248,14 @@ NOT: `enumerar` (verb) + `empaquetado` (participle) ❌
 **This term works WITH:**
 
 1. **For loops**: Primary usage context
+
 ```python
 for i, item in enumerate(items):
     print(i, item)
 ```
 
 2. **Zip function**: Combining enumerations
+
 ```python
 for i, (a, b) in enumerate(zip(list1, list2)):
     print(f"Pair {i}: {a}, {b}")

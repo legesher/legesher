@@ -233,6 +233,7 @@ YES
 **Example:**
 
 English "break" can mean:
+
 1. "Break a window" (physical breaking) ❌
 2. "Coffee break" (rest period) ❌
 3. "Break out of the loop" (exit/interrupt) ✅ **This is the Python meaning**
@@ -268,6 +269,7 @@ Spanish: `romper` (break loop), `continuar` (continue loop), `retornar` (return 
 **This term works WITH:**
 
 1. **`break` in for loop**:
+
 ```python
 for item in items:
     if condition:
@@ -275,6 +277,7 @@ for item in items:
 ```
 
 2. **`break` in while loop**:
+
 ```python
 while condition:
     if exit_condition:
@@ -343,7 +346,7 @@ for item in items:
 - Universal in programming
 - **AI confidence should be HIGH**
 
-### Why EASY for `break`:
+### Why EASY for `break`
 
 - Universal concept (loop termination)
 - "Break" metaphor translates well across languages

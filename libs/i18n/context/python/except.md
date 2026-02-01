@@ -237,6 +237,7 @@ YES
 **Example:**
 
 English "except" can mean:
+
 1. "All except one" (exclusion) ✅ Related concept
 2. "except ValueError:" (catch this error type) ✅ **This is the Python meaning**
 3. "Except if conditions change" (unless/but if) ❌
@@ -273,6 +274,7 @@ Spanish: `intentar` (try) and `excepto` (except) pair naturally ✅
 **This term works WITH:**
 
 1. **Basic try-except**:
+
 ```python
 try:
     code()
@@ -281,6 +283,7 @@ except Exception:
 ```
 
 2. **Except with binding**:
+
 ```python
 try:
     code()
@@ -380,7 +383,7 @@ except Exception:  # Catches errors, not system exits
 - Standard error handling pattern
 - **AI confidence should be HIGH**
 
-### Why EASY for `except`:
+### Why EASY for `except`
 
 - Universal concept (exception handling)
 - "Except" or "excluding" exists in most languages

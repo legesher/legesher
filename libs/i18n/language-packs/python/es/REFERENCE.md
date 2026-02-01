@@ -4,13 +4,12 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-
 > Write Python code in Spanish. This guide shows the Spanish keywords to use for Legesher to understand your code.
 
 ## Language Details
 
 | Attribute | Value |
-|-----------|-------|
+| --------- | ----- |
 | **Language** | Spanish |
 | **Native Name** | Español |
 | **Script** | Latin |
@@ -25,7 +24,7 @@
 These are Python's reserved words translated to Spanish.
 
 | English | Spanish |
-|---------|--------|
+| ------- | ------ |
 | `and` | `y` |
 | `as` | `como` |
 | `assert` | `afirmar` |
@@ -71,7 +70,7 @@ These are Python's reserved words translated to Spanish.
 Python's built-in functions and types in Spanish.
 
 | English | Spanish |
-|---------|--------|
+| ------- | ------ |
 | `abs` | `valorabsoluto` |
 | `aiter` | `iterador_asincrónico` |
 | `all` | `todo` |
@@ -150,7 +149,7 @@ Python's built-in functions and types in Spanish.
 Exception classes for error handling.
 
 | English | Spanish |
-|---------|--------|
+| ------- | ------ |
 | `arithmeticerror` | `erroraritmético` |
 | `assertionerror` | `errordeaserción` |
 | `attributeerror` | `Errordeatributo` |

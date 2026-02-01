@@ -210,6 +210,7 @@ NO (in logical context)
 **"And" is unambiguous in logical contexts:**
 
 In natural language, "and" can mean:
+
 1. Addition (A and B)
 2. Then (Come and see = come, then see)
 3. Emphasis (try and fix it)
@@ -241,12 +242,14 @@ Spanish: `y` (and), `o` (or), `no` (not) - all basic conjunctions/particles ✅
 **This term works WITH:**
 
 1. **`and` in conditionals**:
+
 ```python
 if condition1 and condition2:
     execute()
 ```
 
 2. **`and` with comparisons**:
+
 ```python
 if 0 < x < 100:  # Same as: x > 0 and x < 100
     process()
@@ -284,7 +287,7 @@ value = config and config.get('key') and process()
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `and`:
+### Why EASY for `and`
 
 - Universal concept (logical conjunction in all languages)
 - Basic conjunction word exists in every language

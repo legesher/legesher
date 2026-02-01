@@ -2,11 +2,13 @@
 
 ## Overview
 
-The Legesher Language Server provides LSP (Language Server Protocol) support for multilingual Python programming. It enables IDE features like hover tooltips, code completion, and diagnostics in the user's native language.
+The Legesher Language Server provides LSP (Language Server Protocol) support for
+multilingual Python programming. It enables IDE features like hover tooltips,
+code completion, and diagnostics in the user's native language.
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │  IDE/Editor (VS Code, Cursor, Zed)              │
 │  └─ LSP Client                                  │
@@ -93,7 +95,7 @@ The Legesher Language Server provides LSP (Language Server Protocol) support for
 
 ### Document Open Flow
 
-```
+```text
 1. IDE opens file
    ↓
 2. LSP: textDocument/didOpen notification
@@ -105,7 +107,7 @@ The Legesher Language Server provides LSP (Language Server Protocol) support for
 
 ### Translation Flow (CORE-357+)
 
-```
+```text
 1. User requests hover/completion
    ↓
 2. Provider retrieves DocumentState
@@ -121,7 +123,7 @@ The Legesher Language Server provides LSP (Language Server Protocol) support for
 
 ### Diagnostic Flow (CORE-359)
 
-```
+```text
 1. IDE sends textDocument/diagnostic request
    ↓
 2. provide_diagnostics() called
@@ -165,7 +167,7 @@ The Legesher Language Server provides LSP (Language Server Protocol) support for
 
 **Planned Architecture:**
 
-```
+```text
 User Code → AST Parser → Error Detection → Translation → LSP Diagnostic
                                                 ↓
                                         ErrorMessageTemplates ✅
@@ -284,13 +286,15 @@ See [Integration Guide](docs/integration-guide.md) for details.
 
 ### Overview
 
-The Pylance integration provides advanced Python intelligence (type checking, advanced hover, go-to-definition) for localized code through a translation proxy architecture.
+The Pylance integration provides advanced Python intelligence (type checking,
+advanced hover, go-to-definition) for localized code through a translation
+proxy architecture.
 
 **Status**: Foundation ✅ Complete | LSP Communication 🚧 In Progress
 
 ### Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │  User Code (Localized)                          │
 │  definir foo(x: entero) -> cadena:              │
@@ -321,7 +325,9 @@ The Pylance integration provides advanced Python intelligence (type checking, ad
 
 Bidirectional position mapping between localized and English code.
 
-**Purpose**: When keywords change length (e.g., `definir` (7) → `def` (3)), line/column positions shift. SourceMap tracks these shifts for accurate error reporting.
+**Purpose**: When keywords change length (e.g., `definir` (7) to `def` (3)),
+line/column positions shift. SourceMap tracks these shifts for accurate
+error reporting.
 
 **Algorithm**: Binary search for O(log n) position lookups.
 
@@ -432,7 +438,7 @@ await proxy.stop()  # Graceful Pyright termination
 
 #### Hover Example
 
-```
+```text
 1. User hovers at Position(0, 10) in Spanish code
       ↓
 2. Translate document to English (cached if unchanged)
@@ -452,7 +458,7 @@ await proxy.stop()  # Graceful Pyright termination
 
 #### Diagnostic Example
 
-```
+```text
 1. Document changed notification
       ↓
 2. Translate document to English + generate TypeAlias

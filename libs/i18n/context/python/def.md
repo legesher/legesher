@@ -232,12 +232,14 @@ Spanish: `definir` (def), `clase` (class), `retornar` (return) - verbs for actio
 **This term works WITH:**
 
 1. **`def` + parameters + `return`**: Complete function pattern
+
 ```python
 def calculate(x, y):
     return x + y
 ```
 
 2. **`def` + default arguments**: Flexible functions
+
 ```python
 def greet(name="World"):
     return f"Hello, {name}"
@@ -282,7 +284,7 @@ def outer():
 - No ambiguity
 - **AI confidence should be HIGH**
 
-### Why EASY for `def`:
+### Why EASY for `def`
 
 - Universal programming concept (all languages define functions)
 - "Define" is standard mathematical/logical term
