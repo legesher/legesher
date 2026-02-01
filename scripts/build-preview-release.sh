@@ -78,7 +78,7 @@ echo ""
 print_info "Building legesher-core..."
 cd libs/core
 rm -rf dist/
-uv build
+uv build -o dist
 cp dist/*.whl "${RELEASE_DIR}/"
 print_success "legesher-core built and copied"
 
@@ -86,7 +86,7 @@ print_success "legesher-core built and copied"
 print_info "Building legesher-i18n..."
 cd ../i18n
 rm -rf dist/
-uv build
+uv build -o dist
 cp dist/*.whl "${RELEASE_DIR}/"
 print_success "legesher-i18n built and copied"
 
@@ -94,7 +94,7 @@ print_success "legesher-i18n built and copied"
 print_info "Building legesher..."
 cd ../legesher
 rm -rf dist/
-uv build
+uv build -o dist
 cp dist/*.whl "${RELEASE_DIR}/"
 print_success "legesher built and copied"
 
@@ -102,7 +102,7 @@ print_success "legesher built and copied"
 print_info "Building legesher-language-server..."
 cd ../language-server
 rm -rf dist/
-uv build
+uv build -o dist
 cp dist/*.whl "${RELEASE_DIR}/"
 print_success "legesher-language-server built and copied"
 
@@ -116,7 +116,7 @@ for lang_dir in */; do
         print_info "Building language pack: ${lang}..."
         cd "${lang_dir}"
         rm -rf dist/
-        uv build
+        uv build -o dist
         cp dist/*.whl "${RELEASE_DIR}/"
         cd ..
         PACK_COUNT=$((PACK_COUNT + 1))
