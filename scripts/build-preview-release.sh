@@ -29,7 +29,6 @@ NC='\033[0m' # No Color
 # Configuration
 VERSION="${1:-0.1.0-beta.1}"
 PREVIEW_REPO="${2:-../Legesher/preview-repo}"
-RELEASE_DIR="${PREVIEW_REPO}/releases/v${VERSION}"
 
 print_header() {
     echo ""
@@ -63,6 +62,9 @@ fi
 
 print_success "Found preview repository at: ${PREVIEW_REPO}"
 
+# Resolve to absolute path so cd's don't break relative references
+RELEASE_DIR="$(cd "${PREVIEW_REPO}" && pwd)/releases/v${VERSION}"
+
 # Create release directory
 print_info "Creating release directory: ${RELEASE_DIR}"
 mkdir -p "${RELEASE_DIR}"
@@ -80,7 +82,7 @@ uv build
 cp dist/*.whl "${RELEASE_DIR}/"
 print_success "legesher-core built and copied"
 
-# Build i18n package (with all language packs)
+# Build i18n infrastructure package
 print_info "Building legesher-i18n..."
 cd ../i18n
 rm -rf dist/
@@ -104,9 +106,27 @@ uv build
 cp dist/*.whl "${RELEASE_DIR}/"
 print_success "legesher-language-server built and copied"
 
+# Build individual language packs
+print_info "Building language packs..."
+cd ../i18n/language-packs/python
+PACK_COUNT=0
+for lang_dir in */; do
+    lang="${lang_dir%/}"
+    if [ -f "${lang_dir}pyproject.toml" ]; then
+        print_info "Building language pack: ${lang}..."
+        cd "${lang_dir}"
+        rm -rf dist/
+        uv build
+        cp dist/*.whl "${RELEASE_DIR}/"
+        cd ..
+        PACK_COUNT=$((PACK_COUNT + 1))
+    fi
+done
+print_success "Built ${PACK_COUNT} language packs"
+
 # Build VS Code extension
 print_info "Building VS Code extension..."
-cd ../vs-code
+cd ../../../vs-code
 npm run package  # Creates .vsix file
 cp *.vsix "${RELEASE_DIR}/"
 print_success "VS Code extension built and copied"
