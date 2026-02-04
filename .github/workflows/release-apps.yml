@@ -97,6 +97,8 @@ jobs:
       - name: Build extension (production)
         if: steps.check-tag.outputs.exists == 'false'
         working-directory: libs/vs-code
+        env:
+          LEGESHER_TELEMETRY_CONNECTION_STRING: ${{ secrets.LEGESHER_TELEMETRY_CONNECTION_STRING }}
         run: |
           npm run compile:prod
           npm run package

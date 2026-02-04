@@ -105,6 +105,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         })
     );
 
+    // Register "Try Translation Panel" command (for walkthrough/demo)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('legesher.tryTranslationPanel', async () => {
+            LegesherTelemetry.trackCommand('tryTranslationPanel');
+            await tryTranslationPanel(context);
+        })
+    );
+
     // Register feedback command
     context.subscriptions.push(
         vscode.commands.registerCommand('legesher.giveFeedback', async () => {
@@ -324,6 +332,71 @@ async function showTranslationPanel(context: vscode.ExtensionContext): Promise<v
     await panelManager.show(editor.document);
 }
 
+/**
+ * Try the translation panel with a sample Python file
+ * Used in the walkthrough to give users an instant demo
+ */
+async function tryTranslationPanel(context: vscode.ExtensionContext): Promise<void> {
+    const config = getLanguageConfig();
+    const langName = getLanguageName(config.targetLanguage);
+
+    // Sample Python code that showcases various keywords and builtins
+    const sampleCode = `# Legesher Demo - See your code in ${langName}!
+# Hover over keywords to see translations
+
+def greet(name):
+    """Say hello to someone."""
+    if name:
+        print(f"Hello, {name}!")
+        return True
+    else:
+        print("Hello, World!")
+        return False
+
+class Calculator:
+    """A simple calculator class."""
+
+    def __init__(self):
+        self.result = 0
+
+    def add(self, x, y):
+        """Add two numbers."""
+        self.result = x + y
+        return self.result
+
+# Try it out!
+for i in range(3):
+    greet(f"User {i}")
+
+# Error handling example
+try:
+    value = int("not a number")
+except ValueError as e:
+    print(f"Caught an error: {e}")
+finally:
+    print("Done!")
+`;
+
+    // Create an untitled Python document with sample code
+    const doc = await vscode.workspace.openTextDocument({
+        content: sampleCode,
+        language: 'python'
+    });
+
+    // Show the document in the editor
+    const editor = await vscode.window.showTextDocument(doc, {
+        preview: false,
+        viewColumn: vscode.ViewColumn.One
+    });
+
+    // Allow VS Code to render editor before opening panel
+    const EDITOR_READY_DELAY_MS = 200;
+    await new Promise(resolve => setTimeout(resolve, EDITOR_READY_DELAY_MS));
+
+    // Open the translation panel
+    const panelManager = TranslationPanelManager.getInstance(context);
+    await panelManager.show(editor.document);
+}
 
 /**
  * Extension deactivation

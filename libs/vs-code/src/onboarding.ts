@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { LegesherTelemetry } from './telemetry';
 
 /**
  * Onboarding Manager for Legesher VS Code Extension
@@ -31,31 +32,24 @@ export class OnboardingManager {
             return; // Already onboarded
         }
 
-        // Step 1: Welcome message
-        const welcomeResult = await vscode.window.showInformationMessage(
-            '🌍 Welcome to Legesher!\n\n' +
-            'Code in your native language with full IDE support. ' +
-            'Let\'s get you set up!',
-            'Choose Your Language',
-            'Watch Tutorial',
-            'Skip Setup'
+        // Open the interactive walkthrough for a rich onboarding experience
+        await vscode.commands.executeCommand(
+            'workbench.action.openWalkthrough',
+            'legesher.legesher-vscode#legesher.welcome',
+            false // don't open in side bar
         );
 
-        if (welcomeResult === 'Choose Your Language') {
-            // Open language selector command
-            await vscode.commands.executeCommand('legesher.selectLanguage');
-        } else if (welcomeResult === 'Watch Tutorial') {
-            // Open getting started documentation
-            await vscode.env.openExternal(
-                vscode.Uri.parse('https://docs.legesher.io/getting-started')
-            );
-        }
+        // Track walkthrough opened
+        LegesherTelemetry.trackWalkthroughOpened();
 
-        // Step 2: ML training consent (separate from welcome)
-        await this.showMLTrainingConsent(context);
-
-        // Mark onboarding as complete
+        // Mark onboarding as complete (user can always re-access via Help > Get Started)
         await context.globalState.update(this.STORAGE_KEY, true);
+
+        // Show ML training consent after a brief delay (don't overwhelm on first open)
+        const ML_CONSENT_DELAY_MS = 5000;
+        setTimeout(() => {
+            this.showMLTrainingConsent(context);
+        }, ML_CONSENT_DELAY_MS);
     }
 
     /**
@@ -70,13 +64,7 @@ export class OnboardingManager {
         }
 
         const result = await vscode.window.showInformationMessage(
-            '🤝 Help Improve Legesher (Optional)\n\n' +
-            'Share anonymous feedback when you change translation suggestions. ' +
-            'This helps improve our models for everyone.\n\n' +
-            '✓ What we collect: Translation corrections (e.g., media → promedio)\n' +
-            '✓ Code context (function, variable, class)\n\n' +
-            '✗ What we DON\'T collect: Your code, file paths, or personal info\n\n' +
-            'You can change this anytime in settings.',
+            '🤝 Help improve Legesher translations? Share anonymous feedback when you correct suggestions. No code or personal info collected.',
             'Learn More',
             'Yes, Help Improve',
             'No Thanks'
@@ -88,12 +76,12 @@ export class OnboardingManager {
         if (result === 'Learn More') {
             // Open privacy policy
             await vscode.env.openExternal(
-                vscode.Uri.parse('https://docs.legesher.io/privacy#ml-training')
+                vscode.Uri.parse('https://github.com/legesher/preview-repo/blob/main/PRIVACY_POLICY.md')
             );
 
             // Show a follow-up dialog with just Yes/No (they've read the policy)
             const followUpResult = await vscode.window.showInformationMessage(
-                'Would you like to contribute to ML training?',
+                'Would you like to contribute usage data to Legesher so we can improve translations?',
                 'Yes, Help Improve',
                 'No Thanks'
             );

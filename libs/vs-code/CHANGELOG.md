@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--next-version-placeholder-->
 
+## 0.1.2 (2026-02-04)
+
+### Added
+
+- **Interactive Walkthrough**: 6-step onboarding experience for first-time users
+  - Welcome introduction to Legesher
+  - Installation guide linking to preview-repo docs
+  - Language selection with command integration
+  - Translation panel demo with sample Python code
+  - Hover translation tutorial
+  - Feedback collection step
+- **Try Translation Panel Command**: Demo command that creates sample Python file and opens translation panel
+- **Walkthrough Telemetry**: Track walkthrough opens and step completions
+- **Extension Icon**: Added marketplace icon for better visibility
+- **Production Telemetry**: Build system now embeds telemetry connection string for packaged releases
+- **Walkthrough Tests**: Comprehensive tests for sample code validation and step configuration
+
+### Changed
+
+- **Onboarding Flow**: Replaced dialog-based welcome with native VS Code walkthrough
+- **ML Consent Dialog**: Simplified to single-line message for better popup display
+- **Privacy URL**: Updated to point to GitHub PRIVACY_POLICY.md
+- **Feedback URL**: Default to legesher.io/go/vs-code-extension-survey
+- **Marketplace Metadata**: Updated categories to include "Language Packs", improved keywords for discoverability
+- **README**: Rewritten with installation links to preview-repo docs
+- **Build System**: Added dotenv integration to inject telemetry connection string at build time
+
 ## 0.1.1 (2026-01-27)
 
 ### Added

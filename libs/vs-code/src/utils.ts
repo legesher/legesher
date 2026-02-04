@@ -2,6 +2,7 @@
  * Utility functions for the Legesher VS Code extension
  */
 
+import { execFile } from 'child_process';
 import { Logger } from './logger';
 
 /**
@@ -27,7 +28,6 @@ export async function isServerAvailable(command: string): Promise<boolean> {
     }
 
     try {
-        const { execFile } = require('child_process');
         await new Promise<void>((resolve, reject) => {
             execFile(command, ['--version'], (error: Error | null) => {
                 if (error) {

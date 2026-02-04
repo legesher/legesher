@@ -47,7 +47,6 @@ export class LegesherTelemetry {
         // Get connection string at runtime (supports envFile in launch.json)
         const connectionString = getConnectionString();
         console.log('[Legesher Telemetry] Connection string present:', !!connectionString);
-        console.log('[Legesher Telemetry] Env var value:', connectionString ? `${connectionString.substring(0, 30)}...` : 'undefined');
 
         // Don't initialize without a connection string
         if (!connectionString) {
@@ -188,6 +187,27 @@ export class LegesherTelemetry {
         if (!reporter) return;
 
         reporter.sendTelemetryEvent('translationPanelOpened');
+    }
+
+    /**
+     * Track walkthrough step completion
+     * @param stepId - The walkthrough step ID (e.g., 'intro', 'selectLanguage')
+     */
+    static trackWalkthroughStep(stepId: string): void {
+        if (!reporter) return;
+
+        reporter.sendTelemetryEvent('walkthroughStepCompleted', {
+            stepId
+        });
+    }
+
+    /**
+     * Track walkthrough opened
+     */
+    static trackWalkthroughOpened(): void {
+        if (!reporter) return;
+
+        reporter.sendTelemetryEvent('walkthroughOpened');
     }
 
     /**

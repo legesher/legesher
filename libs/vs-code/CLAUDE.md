@@ -4,8 +4,8 @@ This file provides guidance for working with the `legesher-vscode` VS Code exten
 
 ## Package Overview
 
-**Version**: 0.1.1
-**Status**: Production-Ready (Pre-Beta)
+**Version**: 0.1.2
+**Status**: Preview
 **VS Code**: 1.85.0+
 **Language**: TypeScript
 
@@ -144,7 +144,7 @@ npm run package
 # Creates legesher-vscode-{version}.vsix
 
 # Install locally
-code --install-extension legesher-vscode-0.1.1.vsix
+code --install-extension legesher-vscode-0.1.2.vsix
 ```
 
 ## Architecture

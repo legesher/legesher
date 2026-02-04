@@ -1,0 +1,13 @@
+# 🌍 Legesher
+
+**Code Python in your native language**
+
+Support for **26 languages** including:
+- Arabic (العربية)
+- Hindi (हिन्दी)
+- Portuguese (Português)
+- Chinese (中文)
+- Spanish (Español)
+- And 21 more!
+
+Your code is automatically translated to canonical English for git, collaboration, and execution.

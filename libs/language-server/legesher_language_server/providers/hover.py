@@ -206,6 +206,10 @@ class HoverProvider:
     user function docstrings, and cultural comments.
     """
 
+    # Default Python version for language pack loading
+    # This should match the minimum supported Python version in i18n packs
+    DEFAULT_PYTHON_VERSION = "3.10"
+
     def __init__(
         self,
         source_lang: str,
@@ -230,11 +234,64 @@ class HoverProvider:
         # Use cached singleton to avoid reloading 174+ translations on every hover
         self.param_translator = get_param_translator()
 
-        # Load keyword translation map for target language
-        self._keyword_translation_map = self._load_keyword_translations()
+        # Load all translation maps in one pass (avoids redundant pack loading)
+        translations = self._load_all_translations()
+        self._keyword_translation_map = translations["keyword_reverse"]
+        self._keyword_forward_map = translations["keyword_forward"]
+        self._builtin_translation_map = translations["builtin_reverse"]
+        self._builtin_forward_map = translations["builtin_forward"]
 
-        # Load builtin translation map for target language
-        self._builtin_translation_map = self._load_builtin_translations()
+    def _load_all_translations(self) -> dict[str, dict[str, str]]:
+        """Load all translation maps in a single language pack load.
+
+        This consolidates what was previously 4 separate LanguagePackLoader.load()
+        calls into a single call, improving initialization performance.
+
+        Returns:
+            Dictionary with keys:
+                - "keyword_reverse": translated keywords -> English
+                - "keyword_forward": English -> translated keywords
+                - "builtin_reverse": translated builtins -> English
+                - "builtin_forward": English -> translated builtins
+        """
+        from legesher_i18n import LanguagePackLoader
+
+        result = {
+            "keyword_reverse": {},
+            "keyword_forward": {},
+            "builtin_reverse": {},
+            "builtin_forward": {},
+        }
+
+        try:
+            loader = LanguagePackLoader()
+            pack = loader.load(
+                language=self.target_lang,
+                target="python",
+                version=self.DEFAULT_PYTHON_VERSION,
+            )
+
+            # Build keyword maps (forward and reverse) from single pack load
+            for english, translated in pack.keywords.items():
+                result["keyword_forward"][english] = translated
+                result["keyword_reverse"][translated] = english
+
+            # Build builtin maps (forward and reverse) from single pack load
+            for english, translated in pack.builtins.items():
+                result["builtin_forward"][english] = translated
+                result["builtin_reverse"][translated] = english
+
+            logger.info(
+                f"Loaded {len(result['keyword_forward'])} keywords and "
+                f"{len(result['builtin_forward'])} builtins for hover provider "
+                f"(lang={self.target_lang})"
+            )
+
+        except Exception as e:
+            # If loading fails, return empty dicts (will fall back to English-only)
+            logger.warning(f"Failed to load translations for hover: {e}")
+
+        return result
 
     def _load_keyword_translations(self) -> dict[str, str]:
         """Load keyword translation map (target language -> English).
@@ -249,7 +306,11 @@ class HoverProvider:
 
         try:
             loader = LanguagePackLoader()
-            pack = loader.load(language=self.target_lang, target="python", version="3.10")
+            pack = loader.load(
+                language=self.target_lang,
+                target="python",
+                version=self.DEFAULT_PYTHON_VERSION,
+            )
 
             # Build reverse map: target language -> English
             for english, translated in pack.keywords.items():
@@ -268,6 +329,36 @@ class HoverProvider:
 
         return keyword_map
 
+    def _load_keyword_forward_translations(self) -> dict[str, str]:
+        """Load forward keyword translation map (English -> target language).
+
+        Returns:
+            Dictionary mapping English keywords to translated keywords
+            Example: {"def": "definir"}, {"def": "تعريف"}, {"def": "定义"}
+        """
+        from legesher_i18n import LanguagePackLoader
+
+        keyword_map = {}
+
+        try:
+            loader = LanguagePackLoader()
+            pack = loader.load(
+                language=self.target_lang,
+                target="python",
+                version=self.DEFAULT_PYTHON_VERSION,
+            )
+
+            # Build forward map: English -> target language
+            for english, translated in pack.keywords.items():
+                keyword_map[english] = translated
+
+            logger.debug(f"Loaded {len(keyword_map)} forward keyword translations")
+
+        except Exception as e:
+            logger.warning(f"Failed to load forward keyword translations: {e}")
+
+        return keyword_map
+
     def _load_builtin_translations(self) -> dict[str, str]:
         """Load builtin translation map (target language -> English).
 
@@ -281,7 +372,11 @@ class HoverProvider:
 
         try:
             loader = LanguagePackLoader()
-            pack = loader.load(language=self.target_lang, target="python", version="3.10")
+            pack = loader.load(
+                language=self.target_lang,
+                target="python",
+                version=self.DEFAULT_PYTHON_VERSION,
+            )
 
             # Build reverse map: target language -> English
             for english, translated in pack.builtins.items():
@@ -297,6 +392,36 @@ class HoverProvider:
             # If loading fails, return empty dict (will fall back to English-only builtins)
             logger.warning(f"Failed to load builtin translations for hover: {e}")
             pass
+
+        return builtin_map
+
+    def _load_builtin_forward_translations(self) -> dict[str, str]:
+        """Load forward builtin translation map (English -> target language).
+
+        Returns:
+            Dictionary mapping English builtins to translated builtins
+            Example: {"print": "imprimir"}, {"print": "طباعة"}
+        """
+        from legesher_i18n import LanguagePackLoader
+
+        builtin_map = {}
+
+        try:
+            loader = LanguagePackLoader()
+            pack = loader.load(
+                language=self.target_lang,
+                target="python",
+                version=self.DEFAULT_PYTHON_VERSION,
+            )
+
+            # Build forward map: English -> target language
+            for english, translated in pack.builtins.items():
+                builtin_map[english] = translated
+
+            logger.debug(f"Loaded {len(builtin_map)} forward builtin translations")
+
+        except Exception as e:
+            logger.warning(f"Failed to load forward builtin translations: {e}")
 
         return builtin_map
 
@@ -355,30 +480,48 @@ class HoverProvider:
     def _hover_keyword(self, keyword: str, original_keyword: str | None = None) -> str:
         """Get hover content for Python keyword.
 
+        Shows English documentation first, then target language translation if available.
+
         Args:
-            keyword: Python keyword (e.g., 'def', 'class')
-            original_keyword: Original translated keyword if different (e.g., 'definir')
+            keyword: Python keyword in English (e.g., 'def', 'class')
+            original_keyword: Original translated keyword if hovering over translated code
 
         Returns:
-            Markdown-formatted keyword documentation
+            Markdown-formatted keyword documentation with translation
         """
-        # Get documentation in target language
-        doc = self.keyword_docs.get(keyword, self.target_lang)
+        # Always get English documentation first
+        english_doc = self.keyword_docs.get(keyword, "en") or "Python keyword"
 
-        if not doc:
-            # Fallback to English if translation not available
-            doc = self.keyword_docs.get(keyword, "en") or "Python keyword"
+        # Build the hover content - English info on top
+        if original_keyword:
+            # Hovering over translated keyword (e.g., परिभाषितकरना)
+            # Show: translated keyword (english equivalent)
+            content = f"**`{original_keyword}`** (`{keyword}`) — Python keyword\n\n{english_doc}"
+        else:
+            # Hovering over English keyword
+            content = f"**`{keyword}`** — Python keyword\n\n{english_doc}"
 
-        # Use original keyword in display if provided (e.g., show "definir" not "def")
-        display_keyword = original_keyword if original_keyword else keyword
+        # Add target language translation section if available and different from English
+        if self.target_lang != "en" and self.target_lang != self.source_lang:
+            translated_keyword = self._keyword_forward_map.get(keyword)
+            if translated_keyword and translated_keyword != keyword:
+                # Get target language documentation if available
+                target_doc = self.keyword_docs.get(keyword, self.target_lang)
+
+                # Add dividing line and translation
+                content += "\n\n---\n\n"
+                content += f"**Legesher ({self.target_lang}):** `{translated_keyword}`"
+
+                # Add target language documentation if different from English
+                if target_doc and target_doc != english_doc:
+                    content += f"\n\n{target_doc}"
 
         logger.debug(
             f"Hover keyword: keyword={keyword}, original={original_keyword}, "
-            f"display={display_keyword}"
+            f"target_lang={self.target_lang}"
         )
 
-        # Format as markdown
-        return f"**`{display_keyword}`** — Python keyword\n\n{doc}"
+        return content
 
     def _is_builtin(self, name: str) -> bool:
         """Check if name is a Python builtin.
@@ -394,12 +537,14 @@ class HoverProvider:
     async def _hover_builtin(self, name: str, original_name: str | None = None) -> str | None:
         """Get hover content for builtin function/class.
 
+        Shows English documentation first, then target language translation if available.
+
         Args:
             name: Builtin name in English (e.g., 'print', 'len', 'list')
-            original_name: Original translated name if different (e.g., 'imprimir')
+            original_name: Original translated name if hovering over translated code
 
         Returns:
-            Markdown-formatted docstring or None
+            Markdown-formatted docstring with translation or None
 
         Note:
             Uses LRU cached function for performance (CORE-442/CORE-443).
@@ -407,8 +552,8 @@ class HoverProvider:
         # Use original name for display if provided
         display_name = original_name if original_name else name
 
-        # Call cached function (CORE-442/CORE-443)
-        return _get_builtin_doc_cached(
+        # Call cached function for base content (CORE-442/CORE-443)
+        content = _get_builtin_doc_cached(
             name=name,
             display_name=display_name,
             source_lang=self.source_lang,
@@ -416,6 +561,19 @@ class HoverProvider:
             builtin_docs=self.builtin_docs,
             param_translator=self.param_translator,
         )
+
+        if not content:
+            return None
+
+        # Add target language translation section if available and different from English
+        if self.target_lang != "en" and self.target_lang != self.source_lang:
+            translated_name = self._builtin_forward_map.get(name)
+            if translated_name and translated_name != name and not original_name:
+                # Only add translation section when hovering over English builtin
+                # (not when already hovering over translated builtin)
+                content += f"\n\n---\n\n**Legesher ({self.target_lang}):** `{translated_name}`"
+
+        return content
 
     def _hover_user_defined(self, name: str) -> str | None:
         """Get hover content for user-defined function/class.

@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 
 // Get feedback URL at runtime to support envFile in launch.json during development
 function getFeedbackUrl(): string {
-    return process.env.LEGESHER_FEEDBACK_URL || '';
+    return process.env.LEGESHER_FEEDBACK_URL || 'https://legesher.io/go/vs-code-extension-survey';
 }
 
 // Configuration
@@ -33,8 +33,8 @@ const FEEDBACK_CONFIG = {
 
     // Prompt messages
     messages: {
-        firstPrompt: "Welcome to Legesher! We'd love your first impressions. Would you like to share quick feedback?",
-        secondPrompt: "You've been using Legesher for a week! How's your experience coding in your native language?",
+        firstPrompt: "Welcome to Legesher! We'd love your first impressions. Would you care to share quick feedback?",
+        secondPrompt: "You've been using Legesher for a week! How's your experience been coding in your native language?",
         giveFeedback: "Give Feedback",
         notNow: "Not Now",
         dontAskAgain: "Don't Ask Again"

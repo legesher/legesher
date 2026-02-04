@@ -12,7 +12,7 @@
         "${workspaceFolder}/out/**/*.js"
       ],
       "envFile": "${workspaceFolder}/../../.env",
-      "preLaunchTask": "${defaultBuildTask}"
+      "preLaunchTask": "npm: compile"
     },
     {
       "name": "Extension Tests",
@@ -25,7 +25,7 @@
       "outFiles": [
         "${workspaceFolder}/out/test/**/*.js"
       ],
-      "preLaunchTask": "${defaultBuildTask}"
+      "preLaunchTask": "npm: compile"
     }
   ]
 }
