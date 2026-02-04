@@ -5,6 +5,9 @@ node_modules/
 out/
 *.vsix
 
+# VS Code test runner cache
+.vscode-test/
+
 # Package manager files (package-lock.json committed for reproducible CI builds)
 yarn.lock
 pnpm-lock.yaml

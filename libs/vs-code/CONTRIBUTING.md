@@ -100,7 +100,7 @@ Create a `.vsix` file for distribution:
 npm run package
 ```
 
-This creates `legesher-vscode-0.1.0.vsix` that can be installed in VS Code.
+This creates `legesher-vscode-0.1.2.vsix` that can be installed in VS Code.
 
 ## Making Changes
 

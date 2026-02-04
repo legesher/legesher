@@ -17,7 +17,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 | legesher-i18n            | 0.4.1   | Yes      |
 | legesher (CLI)           | 0.4.0   | Yes      |
 | legesher-language-server | 0.1.1   | Yes      |
-| legesher-vscode          | 0.1.1   | —        |
+| legesher-vscode          | 0.1.2   | Yes      |
 | legesher-home            | 0.1.0   | —        |
 
 ### Fixed
@@ -28,6 +28,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **legesher-vscode**: Release v0.1.2 with marketplace improvements (CORE-558)
+  - Add extension icon for better visibility
+  - Inject telemetry connection string at build time
+  - Fix security issue: remove connection string from logs
+  - Update README and marketplace metadata
 - **legesher-language-server**: Bump to 0.1.1 for pygls 2.0 migration (CORE-448)
 - **legesher-i18n**: Bundle all 26 language pack YAML files directly in the i18n wheel (CORE-559)
 - **legesher CLI**: Add `legesher config` command (CORE-563),

@@ -4,7 +4,6 @@
     {
       "type": "npm",
       "script": "watch",
-      "problemMatcher": "$tsc-watch",
       "isBackground": true,
       "presentation": {
         "reveal": "never"
@@ -12,12 +11,32 @@
       "group": {
         "kind": "build",
         "isDefault": true
+      },
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^✘ \\[ERROR\\] (.+)$",
+          "message": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^\\[build\\] started$",
+          "endsPattern": "^\\[build\\] finished$"
+        }
       }
     },
     {
       "type": "npm",
       "script": "compile",
-      "problemMatcher": "$tsc",
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^✘ \\[ERROR\\] (.+)$",
+          "message": 1
+        }
+      },
       "group": "build",
       "label": "npm: compile"
     }

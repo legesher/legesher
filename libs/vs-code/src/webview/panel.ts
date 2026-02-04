@@ -157,13 +157,14 @@ export class TranslationPanelManager {
                 vscode.window.showInformationMessage('Translation copied to clipboard');
                 break;
 
-            case 'refresh':
+            case 'refresh': {
                 // Refresh translation for active editor
                 const editor = vscode.window.activeTextEditor;
                 if (editor) {
                     await this.updateTranslation(editor.document);
                 }
                 break;
+            }
 
             case 'error':
                 // Errors from webview are handled by the webview itself

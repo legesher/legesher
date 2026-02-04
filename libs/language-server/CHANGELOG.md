@@ -7,6 +7,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 <!--next-version-placeholder-->
 
+## [Unreleased]
+
+### Changed
+
+- **Hover Provider Performance**: Consolidated 4 `LanguagePackLoader.load()` calls into 1
+- **Hover Provider Code Quality**: Extracted hardcoded Python version `"3.10"` to `DEFAULT_PYTHON_VERSION` class constant
+
+### Added
+
+- **Bilingual Hover Format**: Hover shows English documentation first, then target language translation
+  - Format: `**keyword** — Python keyword` + English doc + divider + `**Legesher ({lang}):** translated`
+  - Applies to both keywords and builtins
+
 ## [0.1.1] - 2026-01-27
 
 ### Changed

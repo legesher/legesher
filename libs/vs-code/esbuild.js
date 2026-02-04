@@ -1,9 +1,18 @@
 const esbuild = require('esbuild');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
+
+// Get telemetry connection string for production builds
+const telemetryConnectionString = process.env.LEGESHER_TELEMETRY_CONNECTION_STRING || '';
+if (production && telemetryConnectionString) {
+    console.log('[build] Telemetry connection string will be embedded in production build');
+} else if (production && !telemetryConnectionString) {
+    console.warn('[build] WARNING: No telemetry connection string found - telemetry will be disabled in production');
+}
 
 /**
  * Copy a file, creating parent directories as needed
@@ -111,6 +120,10 @@ async function main() {
         outfile: 'out/extension.js',
         external: ['vscode'],
         logLevel: 'info',
+        // Inject environment variables at build time for production
+        define: {
+            'process.env.LEGESHER_TELEMETRY_CONNECTION_STRING': JSON.stringify(telemetryConnectionString),
+        },
         plugins: [
             copyAssetsPlugin,
             esbuildProblemMatcherPlugin

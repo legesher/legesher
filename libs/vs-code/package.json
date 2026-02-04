@@ -2,7 +2,8 @@
   "name": "legesher-vscode",
   "displayName": "Legesher - Code in Your Language",
   "description": "Write Python code in your native language with real-time translation",
-  "version": "0.1.1",
+  "icon": "images/icon.png",
+  "version": "0.1.2",
   "publisher": "legesher",
   "author": {
     "name": "Madison Edgar",
@@ -23,7 +24,7 @@
   "categories": [
     "Programming Languages",
     "Education",
-    "Other"
+    "Language Packs"
   ],
   "keywords": [
     "legesher",
@@ -32,7 +33,10 @@
     "localization",
     "python",
     "translation",
-    "education"
+    "native language",
+    "accessibility",
+    "non-english",
+    "beginner"
   ],
   "activationEvents": [
     "onLanguage:python"
@@ -199,6 +203,10 @@
       {
         "command": "legesher.resetOnboarding",
         "title": "Legesher: Reset Onboarding (Debug)"
+      },
+      {
+        "command": "legesher.tryTranslationPanel",
+        "title": "Legesher: Try Translation Panel (Demo)"
       }
     ],
     "menus": {
@@ -216,7 +224,73 @@
           "group": "navigation"
         }
       ]
-    }
+    },
+    "walkthroughs": [
+      {
+        "id": "legesher.welcome",
+        "title": "Get Started with Legesher",
+        "description": "Code in your native language with full Python IDE support",
+        "steps": [
+          {
+            "id": "legesher.welcome.intro",
+            "title": "Welcome to Legesher 🌍",
+            "description": "Legesher enables you to code Python in your native language.💻 We currently support 26 languages (like Arabic, Hindi, Portuguese) with plans to expand to new languages and dialects. The possibilities are endless when technology speaks your language. \n\nExplore and innovate freely! Currently, your code is automatically translated to canonical English for git, collaboration, and execution.",
+            "media": {
+              "markdown": "images/walkthrough/welcome.md"
+            }
+          },
+          {
+            "id": "legesher.welcome.install",
+            "title": "Install the Full Legesher Suite",
+            "description": "This extension provides **visual feedback** - syntax highlighting, hover translations, and the translation panel.\n\nTo actually **write and run code** in your native language, you'll need the full Legesher package suite. Follow the installation instructions to get started.\n\n[View Installation Instructions](https://github.com/legesher/preview-repo/blob/main/docs/INSTALLATION.md)",
+            "media": {
+              "markdown": "images/walkthrough/install.md"
+            }
+          },
+          {
+            "id": "legesher.welcome.selectLanguage",
+            "title": "Choose Your Target Language",
+            "description": "Select a natural language you want to code in. You can change this anytime.\n\n[Select Language](command:legesher.selectLanguage)",
+            "media": {
+              "markdown": "images/walkthrough/language.md"
+            },
+            "completionEvents": [
+              "onCommand:legesher.selectLanguage"
+            ]
+          },
+          {
+            "id": "legesher.welcome.translationPanel",
+            "title": "View Translations Side-by-Side",
+            "description": "See your code translated in real-time with a side-by-side panel. Click below to open a sample Python file with the translation panel.\n\n[Try It Now](command:legesher.tryTranslationPanel)",
+            "media": {
+              "markdown": "images/walkthrough/translation-panel.md"
+            },
+            "completionEvents": [
+              "onCommand:legesher.tryTranslationPanel"
+            ]
+          },
+          {
+            "id": "legesher.welcome.hover",
+            "title": "Hover for Translations",
+            "description": "Hover over any Python keyword or builtin to see its translation in your target language and in the source language.\n\nTry hovering over `def`, `print`, or `if` in any Python file!",
+            "media": {
+              "markdown": "images/walkthrough/hover.md"
+            }
+          },
+          {
+            "id": "legesher.welcome.feedback",
+            "title": "Help Us Improve",
+            "description": "Found a translation that could be better? Let us know! Your feedback helps make Legesher more accurate for everyone.\n\n[Give Feedback](command:legesher.giveFeedback)",
+            "media": {
+              "markdown": "images/walkthrough/feedback.md"
+            },
+            "completionEvents": [
+              "onCommand:legesher.giveFeedback"
+            ]
+          }
+        ]
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile:prod",
@@ -226,23 +300,32 @@
     "watch": "node esbuild.js --watch",
     "lint": "eslint src --ext ts",
     "pretest": "npm run compile && npm run lint",
+    "test": "vscode-test",
+    "test:unit": "mocha --require ts-node/register 'test/unit/**/*.test.ts'",
     "package": "vsce package"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
+    "@types/mocha": "^10.0.9",
     "@types/node": "^20.10.0",
+    "@types/sinon": "^17.0.3",
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
     "@vscode/vsce": "^2.22.0",
+    "dotenv": "^17.2.3",
     "esbuild": "^0.24.0",
     "eslint": "^8.54.0",
+    "mocha": "^10.7.3",
+    "sinon": "^19.0.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "@types/prismjs": "^1.26.5",
     "@vscode/extension-telemetry": "^1.2.0",
-    "dotenv": "^17.2.3",
     "js-yaml": "^4.1.1",
     "prismjs": "^1.30.0",
     "vscode-languageclient": "^9.0.1"
