@@ -6,13 +6,6 @@
 
 <!-- DEVELOPMENT BADGES -->
 <p align="center" style="margin-bottom: 5px; margin-top: 5px;">
-    <!-- Commenting out the build status until we have our first version released
-    <a href="https://travis-ci.com/legesher/legesher">
-        <img src="https://img.shields.io/travis/com/legesher/legesher?style=flat-square&labelColor=black&logo=travis&logoColor=white" alt="macOS Build Status"></a>
-    <a href="https://ci.appveyor.com/project/madiedgar/legesher">
-        <img src="https://img.shields.io/appveyor/ci/madiedgar/legesher?style=flat-square&labelColor=black&logo=appveyor&logoColor=white" alt="Windows Build Status"></a> -->
-    <a href="https://david-dm.org/legesher/legesher">
-        <img src="https://img.shields.io/david/legesher/legesher?style=flat-square&labelColor=black" alt="David Dependency Status"></a>
     <a href="http://makeapullrequest.com">
         <img src="https://img.shields.io/badge/pull_requests-welcome-brightgreen.svg?style=flat-square&labelColor=black" alt="Pull Requests Welcome"></a>
     <a href="https://github.com/legesher/legesher/issues?q=is%3Aopen+is%3Aissue+label%3A%22Good+First+Issue%22">
@@ -21,7 +14,7 @@
 <!-- SUPPORT BADGES -->
 <p align="center" style="margin-bottom: 5px;>
     <a href="https://github.com/legesher/legesher" alt="Repository">
-        <img src="https://img.shields.io/badge/Tree_Sitter_Legesher_Python-0.0.1-f58977.svg?style=flat-square&labelColor=black&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgNTAxLjE3IDUwMS4xNyI+PGRlZnM+PGNsaXBQYXRoIGlkPSJjbGlwLXBhdGgiPjxlbGxpcHNlIGN4PSIxNzUuMjMiIGN5PSIyNTAuMTMiIHJ4PSIzNS45OCIgcnk9IjQxLjg5IiBmaWxsPSJub25lIi8+PC9jbGlwUGF0aD48Y2xpcFBhdGggaWQ9ImNsaXAtcGF0aC0yIj48ZWxsaXBzZSBjeD0iMzI0LjIiIGN5PSIyNTAuMTMiIHJ4PSIzNS45OCIgcnk9IjQxLjg5IiBmaWxsPSJub25lIi8+PC9jbGlwUGF0aD48L2RlZnM+PHRpdGxlPlBlZ2d5LUhlYWRzaG90QWxwaGE8L3RpdGxlPjxnIHN0eWxlPSJpc29sYXRpb246aXNvbGF0ZSI+PGcgaWQ9IkxheWVyXzEiIGRhdGEtbmFtZT0iTGF5ZXIgMSI+PHBhdGggZD0iTTE2Mi40OCwzNjRjNzYuODgsNTEuNjUsMzYuNywyNTMuNDYsMjAxLDI1Mi4wOHM3Ni44My05NS4xLDc2LjgzLTk1LjEtMTksNDYuNjctNjguNywxMy41OC03MC0xNDUtNDEuMDktMTY0LjRTMTYyLjQ4LDM2NCwxNjIuNDgsMzY0WiIgZmlsbD0iI2ZmODk3NiIvPjxwYXRoIGQ9Ik0zMjIuNjEsNDU2YzEsMy42NSwyLjA5LDYuMTYsMy4zOSw3LjY5LTEyLjQ0LTQwLTEyLjIxLTgyLjMyLDQuNTYtOTMuNTcsMTQuODUtMTAtMjkuNzYtMTEuMzEtNzYuNzMtMTAuMjhsLTEwLjQyLDUuODYtMywyOS44M1MzMDkuMTUsNDA0LjUxLDMyMi42MSw0NTZaIiBmaWxsPSIjZjQ4ODc3IiBvcGFjaXR5PSIwLjUiIHN0eWxlPSJtaXgtYmxlbmQtbW9kZTptdWx0aXBseSIvPjxjaXJjbGUgY3g9IjI1MC41NSIgY3k9IjI1Ni45MSIgcj0iMTM4LjYyIiBmaWxsPSIjZmY4OTc2Ii8+PGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAtcGF0aCkiPjxlbGxpcHNlIGN4PSIxNzUuMjMiIGN5PSIyNTAuMTMiIHJ4PSIzNS45OCIgcnk9IjQxLjg5IiBmaWxsPSIjZmZmIi8+PGVsbGlwc2UgY3g9IjE4NS4zNyIgY3k9IjI0OS4xNCIgcng9IjMzLjAxIiByeT0iMzguNDMiIGZpbGw9IiMyNjI2MjYiLz48L2c+PGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAtcGF0aC0yKSI+PGVsbGlwc2UgY3g9IjMyNC4yIiBjeT0iMjUwLjEzIiByeD0iMzUuOTgiIHJ5PSI0MS44OSIgZmlsbD0iI2ZmZiIvPjxlbGxpcHNlIGN4PSIzMTQuMDYiIGN5PSIyNDkuMTQiIHJ4PSIzMy4wMSIgcnk9IjM4LjQzIiBmaWxsPSIjMjYyNjI2Ii8+PC9nPjxwb2x5Z29uIHBvaW50cz0iMTQwLjUzIDI4NC45NCAzNjAuMjggMjg0Ljk0IDMyMi4yMyAzMTYuMDIgMTY3LjkyIDMxOS4yMSAxNDAuNTMgMjg0Ljk0IiBmaWxsPSIjZmY4OTc2Ii8+PHBhdGggZD0iTTE5Ni4zNCwyNzMuN3MyMi4zMy0yNC45Miw1NS0yNC45Miw1My4yNCwyNC45Miw1My4yNCwyNC45Mi0xMiw1Ni40Mi01NC4xLDU2LjQyUzE5Ni4zNCwyNzMuNywxOTYuMzQsMjczLjdaIiBmaWxsPSIjZmJjNDk5Ii8+PHBhdGggZD0iTTE5Ni4zNCwyNzMuN3MyMi4zMy0yNC45Miw1NS0yNC45Miw1My4yNCwyNC45Miw1My4yNCwyNC45Mi0xMiwyOS43LTU0LjEsMjkuN1MxOTYuMzQsMjczLjcsMTk2LjM0LDI3My43WiIgZmlsbD0iI2ZkZTRkMyIvPjxwb2x5Z29uIHBvaW50cz0iMTQ0LjEgMjMzLjg3IDE2Ni4yOCAyNDcuNzQgMTQyLjUxIDI2MC4wMiAxNDQuMSAyMzMuODciIGZpbGw9IiNmZmYiLz48cG9seWdvbiBwb2ludHM9IjM1NS4zMyAyMzMuODcgMzMzLjE0IDI0Ny43NCAzNTYuOTEgMjYwLjAyIDM1NS4zMyAyMzMuODciIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMjExLjEsMTIzLjgyczQ1LTIzLDU5LjY5LTIzLDEwLjQ3LDIzLDEwLjQ3LDIzWiIgZmlsbD0iI2ZmODk3NiIvPjxwYXRoIGQ9Ik0zNTIuMzYsMTE0LjY0YTkuNDMsOS40MywwLDAsMSw0LjE1LTE1Ljg5YzYuNDctMS42MSwxNi4xMi0uNzEsMzAuMDgsNy40NiwxOSwxMS4xMSwxOS4zMSwyNy4wNiwxNi4zLDM4LjM2LTEuODMsNi44OS0xMC41Niw5LjEtMTUuNjYsNC4xMloiIGZpbGw9IiMyNjI2MjYiLz48cGF0aCBkPSJNMTU0LjM5LDExNC42NGE5LjQzLDkuNDMsMCwwLDAtNC4xNS0xNS44OWMtNi40Ny0xLjYxLTE2LjEyLS43MS0zMC4wOCw3LjQ2LTE5LDExLjExLTE5LjMxLDI3LjA2LTE2LjMsMzguMzYsMS44Myw2Ljg5LDEwLjU2LDkuMSwxNS42Niw0LjEyWiIgZmlsbD0iIzI2MjYyNiIvPjwvZz48L2c+PC9zdmc+" /></a>
+        <img src="https://img.shields.io/badge/Legesher 2.0.0-f58977.svg?style=flat-square&labelColor=black&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgNTAxLjE3IDUwMS4xNyI+PGRlZnM+PGNsaXBQYXRoIGlkPSJjbGlwLXBhdGgiPjxlbGxpcHNlIGN4PSIxNzUuMjMiIGN5PSIyNTAuMTMiIHJ4PSIzNS45OCIgcnk9IjQxLjg5IiBmaWxsPSJub25lIi8+PC9jbGlwUGF0aD48Y2xpcFBhdGggaWQ9ImNsaXAtcGF0aC0yIj48ZWxsaXBzZSBjeD0iMzI0LjIiIGN5PSIyNTAuMTMiIHJ4PSIzNS45OCIgcnk9IjQxLjg5IiBmaWxsPSJub25lIi8+PC9jbGlwUGF0aD48L2RlZnM+PHRpdGxlPlBlZ2d5LUhlYWRzaG90QWxwaGE8L3RpdGxlPjxnIHN0eWxlPSJpc29sYXRpb246aXNvbGF0ZSI+PGcgaWQ9IkxheWVyXzEiIGRhdGEtbmFtZT0iTGF5ZXIgMSI+PHBhdGggZD0iTTE2Mi40OCwzNjRjNzYuODgsNTEuNjUsMzYuNywyNTMuNDYsMjAxLDI1Mi4wOHM3Ni44My05NS4xLDc2LjgzLTk1LjEtMTksNDYuNjctNjguNywxMy41OC03MC0xNDUtNDEuMDktMTY0LjRTMTYyLjQ4LDM2NCwxNjIuNDgsMzY0WiIgZmlsbD0iI2ZmODk3NiIvPjxwYXRoIGQ9Ik0zMjIuNjEsNDU2YzEsMy42NSwyLjA5LDYuMTYsMy4zOSw3LjY5LTEyLjQ0LTQwLTEyLjIxLTgyLjMyLDQuNTYtOTMuNTcsMTQuODUtMTAtMjkuNzYtMTEuMzEtNzYuNzMtMTAuMjhsLTEwLjQyLDUuODYtMywyOS44M1MzMDkuMTUsNDA0LjUxLDMyMi42MSw0NTZaIiBmaWxsPSIjZjQ4ODc3IiBvcGFjaXR5PSIwLjUiIHN0eWxlPSJtaXgtYmxlbmQtbW9kZTptdWx0aXBseSIvPjxjaXJjbGUgY3g9IjI1MC41NSIgY3k9IjI1Ni45MSIgcj0iMTM4LjYyIiBmaWxsPSIjZmY4OTc2Ii8+PGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAtcGF0aCkiPjxlbGxpcHNlIGN4PSIxNzUuMjMiIGN5PSIyNTAuMTMiIHJ4PSIzNS45OCIgcnk9IjQxLjg5IiBmaWxsPSIjZmZmIi8+PGVsbGlwc2UgY3g9IjE4NS4zNyIgY3k9IjI0OS4xNCIgcng9IjMzLjAxIiByeT0iMzguNDMiIGZpbGw9IiMyNjI2MjYiLz48L2c+PGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAtcGF0aC0yKSI+PGVsbGlwc2UgY3g9IjMyNC4yIiBjeT0iMjUwLjEzIiByeD0iMzUuOTgiIHJ5PSI0MS44OSIgZmlsbD0iI2ZmZiIvPjxlbGxpcHNlIGN4PSIzMTQuMDYiIGN5PSIyNDkuMTQiIHJ4PSIzMy4wMSIgcnk9IjM4LjQzIiBmaWxsPSIjMjYyNjI2Ii8+PC9nPjxwb2x5Z29uIHBvaW50cz0iMTQwLjUzIDI4NC45NCAzNjAuMjggMjg0Ljk0IDMyMi4yMyAzMTYuMDIgMTY3LjkyIDMxOS4yMSAxNDAuNTMgMjg0Ljk0IiBmaWxsPSIjZmY4OTc2Ii8+PHBhdGggZD0iTTE5Ni4zNCwyNzMuN3MyMi4zMy0yNC45Miw1NS0yNC45Miw1My4yNCwyNC45Miw1My4yNCwyNC45Mi0xMiw1Ni40Mi01NC4xLDU2LjQyUzE5Ni4zNCwyNzMuNywxOTYuMzQsMjczLjdaIiBmaWxsPSIjZmJjNDk5Ii8+PHBhdGggZD0iTTE5Ni4zNCwyNzMuN3MyMi4zMy0yNC45Miw1NS0yNC45Miw1My4yNCwyNC45Miw1My4yNCwyNC45Mi0xMiwyOS43LTU0LjEsMjkuN1MxOTYuMzQsMjczLjcsMTk2LjM0LDI3My43WiIgZmlsbD0iI2ZkZTRkMyIvPjxwb2x5Z29uIHBvaW50cz0iMTQ0LjEgMjMzLjg3IDE2Ni4yOCAyNDcuNzQgMTQyLjUxIDI2MC4wMiAxNDQuMSAyMzMuODciIGZpbGw9IiNmZmYiLz48cG9seWdvbiBwb2ludHM9IjM1NS4zMyAyMzMuODcgMzMzLjE0IDI0Ny43NCAzNTYuOTEgMjYwLjAyIDM1NS4zMyAyMzMuODciIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMjExLjEsMTIzLjgyczQ1LTIzLDU5LjY5LTIzLDEwLjQ3LDIzLDEwLjQ3LDIzWiIgZmlsbD0iI2ZmODk3NiIvPjxwYXRoIGQ9Ik0zNTIuMzYsMTE0LjY0YTkuNDMsOS40MywwLDAsMSw0LjE1LTE1Ljg5YzYuNDctMS42MSwxNi4xMi0uNzEsMzAuMDgsNy40NiwxOSwxMS4xMSwxOS4zMSwyNy4wNiwxNi4zLDM4LjM2LTEuODMsNi44OS0xMC41Niw5LjEtMTUuNjYsNC4xMloiIGZpbGw9IiMyNjI2MjYiLz48cGF0aCBkPSJNMTU0LjM5LDExNC42NGE5LjQzLDkuNDMsMCwwLDAtNC4xNS0xNS44OWMtNi40Ny0xLjYxLTE2LjEyLS43MS0zMC4wOCw3LjQ2LTE5LDExLjExLTE5LjMxLDI3LjA2LTE2LjMsMzguMzYsMS44Myw2Ljg5LDEwLjU2LDkuMSwxNS42Niw0LjEyWiIgZmlsbD0iIzI2MjYyNiIvPjwvZz48L2c+PC9zdmc+" /></a>
     <!-- <a href="https://github.com/legesher/legesher/graphs/contributors" alt="Contributors">
         <img src="https://img.shields.io/github/contributors/legesher/legesher?style=flat-square&color=f58977&labelColor=black" /></a> -->
     <a href="#the-community" alt="All Contributors">
@@ -32,21 +25,21 @@
 </p>
 <!-- SOCIAL BADGES -->
 <p align="center">
-    <a href="https://github.com/legesher">
+    <a href="https://buttondown.com/legesher">
+        <img src="https://img.shields.io/badge/-Newsletter-black?style=flat-square&logo=rss&logoColor=7ed2e7"
+            alt="Subscribe to Newsletter"></a>
+    <a href="https://legesher.io/go/slack">
+        <img src="https://img.shields.io/badge/-Join%20Slack-black?style=flat-square&logo=slack&logoColor=7ed2e7"
+            alt="Join Slack"></a>
+    <a href="https://legesher.io/go/github">
         <img src="https://img.shields.io/badge/-Contribute-black?style=flat-square&logo=github&logoColor=7ed2e7"
-            alt="Contribute on Github"></a>
-    <a href="https://discord.gg/DkVjVDP">
-        <img src="https://img.shields.io/badge/-Chat-black?style=flat-square&logo=discord&logoColor=7ed2e7"
-            alt="chat on Discord"></a>
-    <a href="https://www.instagram.com/legesher/">
-        <img src="https://img.shields.io/badge/-Connect-black?style=flat-square&logo=instagram&logoColor=7ed2e7"
-            alt="follow on Instagram"></a>
-    <a href="https://twitter.com/intent/follow?screen_name=legesherio">
-        <img src="https://img.shields.io/badge/-Tweet-black?style=flat-square&logo=twitter&logoColor=7ed2e7"
-            alt="follow on Twitter"></a>
-    <a href="https://mailchi.mp/083d8b2e0e12/legesher-landing-page">
-        <img src="https://img.shields.io/badge/-Subscribe-black?style=flat-square&logo=mailchimp&logoColor=7ed2e7"
-            alt="Subscribe on Mailchimp"></a>    
+            alt="Contribute on GitHub"></a>
+    <a href="https://legesher.io/go/instagram">
+        <img src="https://img.shields.io/badge/-Follow-black?style=flat-square&logo=instagram&logoColor=7ed2e7"
+            alt="Follow on Instagram"></a>
+    <a href="https://x.com/legesherio">
+        <img src="https://img.shields.io/badge/-Follow-black?style=flat-square&logo=x&logoColor=7ed2e7"
+            alt="Follow on X"></a>
 </p>
 <!-- SOCIAL MEDIA -->
 
