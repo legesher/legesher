@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { TelemetryReporter } from '@vscode/extension-telemetry';
 import { isPythonKeyword, getEnglishKeyword } from './keywords';
+import { Logger } from './logger';
 
 /**
  * Telemetry module for Legesher VS Code extension
@@ -13,13 +14,19 @@ import { isPythonKeyword, getEnglishKeyword } from './keywords';
 
 // Azure Application Insights connection string
 // Read at runtime to support envFile in launch.json during development
-// In production, this should be injected at build time
+// In production, this is injected at build time by esbuild's define option
 function getConnectionString(): string {
     return process.env.LEGESHER_TELEMETRY_CONNECTION_STRING || '';
 }
 
 let reporter: TelemetryReporter | undefined;
 let isInitialized = false;
+
+/** Known command names for type-safe telemetry tracking */
+type TrackedCommand = 'restartServer' | 'selectLanguage' | 'showTranslationPanel' | 'tryTranslationPanel' | 'giveFeedback';
+
+/** Known error types for type-safe error tracking */
+type TrackedErrorType = 'serverError' | 'serverConnectionClosed' | 'serverNotInstalled' | 'serverStartFailed' | 'translationFailed';
 
 /**
  * Legesher Telemetry - tracks anonymous usage to improve the extension
@@ -35,22 +42,30 @@ export class LegesherTelemetry {
             return;
         }
 
+        // Check if VS Code global telemetry is enabled
+        // @vscode/extension-telemetry silently drops events when this is false
+        const vscodeTelemetryEnabled = vscode.env.isTelemetryEnabled;
+        Logger.info(`Telemetry: VS Code isTelemetryEnabled = ${vscodeTelemetryEnabled}`);
+        if (!vscodeTelemetryEnabled) {
+            Logger.warn('Telemetry: VS Code global telemetry is disabled (vscode.env.isTelemetryEnabled is false) - events will not be sent by the telemetry reporter');
+        }
+
         // Check if telemetry is enabled in extension settings
         const config = vscode.workspace.getConfiguration('legesher');
         const telemetryEnabled = config.get<boolean>('telemetry.enabled', true);
 
         if (!telemetryEnabled) {
-            console.log('[Legesher Telemetry] Disabled via extension settings');
+            Logger.info('Telemetry: Disabled via legesher.telemetry.enabled setting');
             return;
         }
 
         // Get connection string at runtime (supports envFile in launch.json)
         const connectionString = getConnectionString();
-        console.log('[Legesher Telemetry] Connection string present:', !!connectionString);
+        Logger.info(`Telemetry: Connection string present = ${!!connectionString}`);
 
         // Don't initialize without a connection string
         if (!connectionString) {
-            console.log('[Legesher Telemetry] No connection string configured (set LEGESHER_TELEMETRY_CONNECTION_STRING) - telemetry disabled');
+            Logger.warn('Telemetry: No connection string configured (set LEGESHER_TELEMETRY_CONNECTION_STRING) - telemetry disabled');
             return;
         }
 
@@ -58,9 +73,9 @@ export class LegesherTelemetry {
             reporter = new TelemetryReporter(connectionString);
             context.subscriptions.push(reporter);
             isInitialized = true;
-            console.log('[Legesher Telemetry] Initialized successfully');
+            Logger.info('Telemetry: Initialized successfully');
         } catch (error) {
-            console.error('[Legesher Telemetry] Failed to initialize:', error);
+            Logger.error('Telemetry: Failed to initialize:', error);
         }
     }
 
@@ -77,11 +92,18 @@ export class LegesherTelemetry {
     static trackActivation(language: string): void {
         if (!reporter) return;
 
-        reporter.sendTelemetryEvent('extensionActivated', {
-            targetLanguage: language,
-            vscodeVersion: vscode.version,
-            extensionVersion: vscode.extensions.getExtension('legesher.legesher-vscode')?.packageJSON?.version || 'unknown'
-        });
+        try {
+            const props = {
+                targetLanguage: language,
+                vscodeVersion: vscode.version,
+                extensionVersion: vscode.extensions.getExtension('legesher.legesher-vscode')?.packageJSON?.version || 'unknown'
+            };
+            Logger.info(`Telemetry: Sending extensionActivated event (lang=${language})`);
+            reporter.sendTelemetryEvent('extensionActivated', props);
+            Logger.info('Telemetry: extensionActivated event sent');
+        } catch (error) {
+            Logger.error('Telemetry: Error sending extensionActivated:', error);
+        }
     }
 
     /**
@@ -90,34 +112,46 @@ export class LegesherTelemetry {
     static trackLanguageChange(fromLanguage: string, toLanguage: string): void {
         if (!reporter) return;
 
-        reporter.sendTelemetryEvent('languageChanged', {
-            fromLanguage,
-            toLanguage
-        });
+        try {
+            reporter.sendTelemetryEvent('languageChanged', {
+                fromLanguage,
+                toLanguage
+            });
+        } catch (error) {
+            Logger.error('Telemetry: Error sending languageChanged:', error);
+        }
     }
 
     /**
      * Track feature usage
-     * @param feature - The feature used (completion, hover, diagnostic, panel, run)
+     * @param feature - The feature used (completion, hover, panel, semanticTokens)
      */
-    static trackFeatureUsed(feature: 'completion' | 'hover' | 'diagnostic' | 'panel' | 'run' | 'semanticTokens'): void {
+    static trackFeatureUsed(feature: 'completion' | 'hover' | 'panel' | 'semanticTokens'): void {
         if (!reporter) return;
 
-        reporter.sendTelemetryEvent('featureUsed', {
-            feature
-        });
+        try {
+            reporter.sendTelemetryEvent('featureUsed', {
+                feature
+            });
+        } catch (error) {
+            Logger.error('Telemetry: Error sending featureUsed:', error);
+        }
     }
 
     /**
      * Track command execution
-     * @param command - The command executed
+     * @param command - The command executed (restricted to known commands)
      */
-    static trackCommand(command: string): void {
+    static trackCommand(command: TrackedCommand): void {
         if (!reporter) return;
 
-        reporter.sendTelemetryEvent('commandExecuted', {
-            command
-        });
+        try {
+            reporter.sendTelemetryEvent('commandExecuted', {
+                command
+            });
+        } catch (error) {
+            Logger.error('Telemetry: Error sending commandExecuted:', error);
+        }
     }
 
     /**
@@ -128,25 +162,38 @@ export class LegesherTelemetry {
     static trackServerConnection(success: boolean, durationMs: number): void {
         if (!reporter) return;
 
-        reporter.sendTelemetryEvent('serverConnected', {
-            success: success.toString()
-        }, {
-            durationMs
-        });
+        try {
+            reporter.sendTelemetryEvent('serverConnected', {
+                success: success.toString()
+            }, {
+                durationMs
+            });
+        } catch (error) {
+            Logger.error('Telemetry: Error sending serverConnected:', error);
+        }
     }
 
     /**
      * Track errors (non-PII)
-     * @param errorType - Type of error (e.g., 'serverCrash', 'translationFailed')
-     * @param context - Additional context (no PII!)
+     * @param errorType - Type of error (restricted to known error types)
+     * @param context - Additional context (sanitized to remove potential PII)
      */
-    static trackError(errorType: string, context?: string): void {
+    static trackError(errorType: TrackedErrorType, context?: string): void {
         if (!reporter) return;
 
-        reporter.sendTelemetryErrorEvent('errorOccurred', {
-            errorType,
-            context: context || 'none'
-        });
+        // Strip potential PII: file paths and email addresses
+        const safeContext = context
+            ? context.replace(/\/[\w/.\\-]+/g, '<path>').replace(/[\w.-]+@[\w.-]+/g, '<email>')
+            : 'none';
+
+        try {
+            reporter.sendTelemetryErrorEvent('errorOccurred', {
+                errorType,
+                context: safeContext
+            });
+        } catch (error) {
+            Logger.error('Telemetry: Error sending errorOccurred:', error);
+        }
     }
 
     /**
@@ -156,9 +203,13 @@ export class LegesherTelemetry {
     static trackCompletionProvided(count: number): void {
         if (!reporter) return;
 
-        reporter.sendTelemetryEvent('completionProvided', {}, {
-            itemCount: count
-        });
+        try {
+            reporter.sendTelemetryEvent('completionProvided', {}, {
+                itemCount: count
+            });
+        } catch (error) {
+            Logger.error('Telemetry: Error sending completionProvided:', error);
+        }
     }
 
     /**
@@ -173,10 +224,14 @@ export class LegesherTelemetry {
         if (isPythonKeyword(keyword)) {
             // Normalize to English keyword for consistent analytics
             const englishKeyword = getEnglishKeyword(keyword);
-            reporter.sendTelemetryEvent('hoverProvided', {
-                keyword: englishKeyword,
-                originalKeyword: keyword !== englishKeyword ? keyword : undefined
-            });
+            try {
+                reporter.sendTelemetryEvent('hoverProvided', {
+                    keyword: englishKeyword,
+                    originalKeyword: keyword !== englishKeyword ? keyword : undefined
+                });
+            } catch (error) {
+                Logger.error('Telemetry: Error sending hoverProvided:', error);
+            }
         }
     }
 
@@ -186,19 +241,29 @@ export class LegesherTelemetry {
     static trackPanelOpened(): void {
         if (!reporter) return;
 
-        reporter.sendTelemetryEvent('translationPanelOpened');
+        try {
+            reporter.sendTelemetryEvent('translationPanelOpened');
+        } catch (error) {
+            Logger.error('Telemetry: Error sending translationPanelOpened:', error);
+        }
     }
 
     /**
-     * Track walkthrough step completion
-     * @param stepId - The walkthrough step ID (e.g., 'intro', 'selectLanguage')
+     * Track feedback prompt response
+     * @param promptType - Which feedback prompt was shown ('first' or 'second')
+     * @param response - User's response ('gaveFeedback', 'deferred', 'optedOut')
      */
-    static trackWalkthroughStep(stepId: string): void {
+    static trackFeedbackResponse(promptType: 'first' | 'second' | 'manual', response: 'gaveFeedback' | 'deferred' | 'optedOut'): void {
         if (!reporter) return;
 
-        reporter.sendTelemetryEvent('walkthroughStepCompleted', {
-            stepId
-        });
+        try {
+            reporter.sendTelemetryEvent('feedbackResponse', {
+                promptType,
+                response
+            });
+        } catch (error) {
+            Logger.error('Telemetry: Error sending feedbackResponse:', error);
+        }
     }
 
     /**
@@ -207,7 +272,11 @@ export class LegesherTelemetry {
     static trackWalkthroughOpened(): void {
         if (!reporter) return;
 
-        reporter.sendTelemetryEvent('walkthroughOpened');
+        try {
+            reporter.sendTelemetryEvent('walkthroughOpened');
+        } catch (error) {
+            Logger.error('Telemetry: Error sending walkthroughOpened:', error);
+        }
     }
 
     /**

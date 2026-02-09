@@ -120,10 +120,13 @@ async function main() {
         outfile: 'out/extension.js',
         external: ['vscode'],
         logLevel: 'info',
-        // Inject environment variables at build time for production
-        define: {
-            'process.env.LEGESHER_TELEMETRY_CONNECTION_STRING': JSON.stringify(telemetryConnectionString),
-        },
+        // Inject telemetry connection string at build time for production only.
+        // In development, leave process.env intact so launch.json envFile works at runtime.
+        ...(production ? {
+            define: {
+                'process.env.LEGESHER_TELEMETRY_CONNECTION_STRING': JSON.stringify(telemetryConnectionString),
+            },
+        } : {}),
         plugins: [
             copyAssetsPlugin,
             esbuildProblemMatcherPlugin

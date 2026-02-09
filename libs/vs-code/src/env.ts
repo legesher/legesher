@@ -3,6 +3,11 @@
  *
  * Loads environment variables from .env file in development.
  * In production (packaged extension), env vars should be injected at build time.
+ *
+ * NOTE: The telemetry connection string (LEGESHER_TELEMETRY_CONNECTION_STRING) is
+ * injected at BUILD TIME by esbuild's `define` option for production builds.
+ * Runtime .env loading only affects variables NOT injected at build time,
+ * such as LEGESHER_FEEDBACK_URL, or for development with envFile in launch.json.
  */
 
 import * as fs from 'fs';
@@ -20,17 +25,7 @@ export function loadEnvVariables(extensionPath: string): void {
         return;
     }
 
-    // Debug: write to temp file
-    const debugLog = (msg: string) => {
-        try {
-            fs.appendFileSync('/tmp/env-debug.log', `${new Date().toISOString()} ${msg}\n`);
-        } catch (e) {
-            // Ignore
-        }
-        console.log(msg);
-    };
-
-    debugLog(`[Legesher Env] Extension path: ${extensionPath}`);
+    console.log('[Legesher Env] Loading environment configuration...');
 
     // Try to find .env file in monorepo root
     const possiblePaths = [
@@ -40,13 +35,9 @@ export function loadEnvVariables(extensionPath: string): void {
         path.join(extensionPath, '.env'),
     ];
 
-    debugLog(`[Legesher Env] Checking paths: ${possiblePaths.join(', ')}`);
-
     for (const envPath of possiblePaths) {
-        const exists = fs.existsSync(envPath);
-        debugLog(`[Legesher Env] Checking: ${envPath} (exists: ${exists})`);
-        if (exists) {
-            debugLog(`[Legesher Env] Loading environment variables from: ${envPath}`);
+        if (fs.existsSync(envPath)) {
+            console.log('[Legesher Env] Found .env file, loading variables...');
             try {
                 const envContent = fs.readFileSync(envPath, 'utf8');
                 const lines = envContent.split('\n');
@@ -71,18 +62,16 @@ export function loadEnvVariables(extensionPath: string): void {
                     }
                 }
 
-                debugLog('[Legesher Env] Environment variables loaded successfully');
-                debugLog(`[Legesher Env] LEGESHER_TELEMETRY_CONNECTION_STRING: ${process.env.LEGESHER_TELEMETRY_CONNECTION_STRING ? 'SET' : 'NOT SET'}`);
-                debugLog(`[Legesher Env] LEGESHER_FEEDBACK_URL: ${process.env.LEGESHER_FEEDBACK_URL ? 'SET' : 'NOT SET'}`);
+                console.log('[Legesher Env] Environment variables loaded successfully');
                 _envLoaded = true;
                 return;
             } catch (error) {
-                debugLog(`[Legesher Env] Error loading .env file: ${error}`);
+                console.log(`[Legesher Env] Error loading .env file: ${error}`);
             }
         }
     }
 
-    debugLog(`[Legesher Env] No .env file found (checked: ${possiblePaths.join(', ')})`);
+    console.log('[Legesher Env] No .env file found');
     _envLoaded = true;
 }
 

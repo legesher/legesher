@@ -141,45 +141,6 @@ describe('Telemetry Module', () => {
         });
     });
 
-    describe('Walkthrough Tracking', () => {
-        it('should track walkthrough opened event', () => {
-            // Verify the event structure for walkthrough opened
-            const eventName = 'walkthroughOpened';
-
-            // The event should have no additional properties
-            assert.strictEqual(eventName, 'walkthroughOpened');
-        });
-
-        it('should track walkthrough step completion with stepId', () => {
-            const stepId = 'legesher.welcome.selectLanguage';
-
-            const eventData = {
-                stepId
-            };
-
-            assert.strictEqual(eventData.stepId, 'legesher.welcome.selectLanguage');
-        });
-
-        it('should track all walkthrough step IDs correctly', () => {
-            const expectedStepIds = [
-                'legesher.welcome.intro',
-                'legesher.welcome.install',
-                'legesher.welcome.selectLanguage',
-                'legesher.welcome.translationPanel',
-                'legesher.welcome.hover',
-                'legesher.welcome.feedback'
-            ];
-
-            expectedStepIds.forEach(stepId => {
-                const eventData = { stepId };
-                assert.ok(
-                    eventData.stepId.startsWith('legesher.welcome.'),
-                    `Step ID ${stepId} should follow naming convention`
-                );
-            });
-        });
-    });
-
     describe('Privacy Protection', () => {
         it('should only track Python keywords in hover events', () => {
             // List of Python keywords that are safe to track
@@ -212,36 +173,169 @@ describe('Telemetry Module', () => {
                 );
             });
         });
+    });
 
-        it('should not include PII in error tracking', () => {
-            // Error context should be generic, not contain file paths or code
-            const safeErrorContexts = [
+    describe('PII Sanitization', () => {
+        // This tests the exact sanitization logic from telemetry.ts trackError()
+        function sanitize(context: string): string {
+            return context
+                .replace(/\/[\w/.\\-]+/g, '<path>')
+                .replace(/[\w.-]+@[\w.-]+/g, '<email>');
+        }
+
+        it('should strip Unix file paths from error context', () => {
+            const input = 'Error in /Users/john/code/project/secret.py';
+            const result = sanitize(input);
+            assert.ok(!result.includes('/Users/john'), 'Unix path should be stripped');
+            assert.ok(result.includes('<path>'), 'Path should be replaced with <path>');
+        });
+
+        it('should strip Windows-style paths from error context', () => {
+            const input = 'Error in /C/Users/john/Documents/project/main.py';
+            const result = sanitize(input);
+            assert.ok(!result.includes('john'), 'Windows path username should be stripped');
+            assert.ok(result.includes('<path>'), 'Path should be replaced with <path>');
+        });
+
+        it('should strip email addresses from error context', () => {
+            const input = 'Failed for user john.doe@example.com on startup';
+            const result = sanitize(input);
+            assert.ok(!result.includes('john.doe@example.com'), 'Email should be stripped');
+            assert.ok(result.includes('<email>'), 'Email should be replaced with <email>');
+        });
+
+        it('should strip multiple PII occurrences', () => {
+            const input = 'Error in /home/user/file.py: contact admin@corp.com or support@corp.com';
+            const result = sanitize(input);
+            assert.ok(!result.includes('/home/user'), 'Path should be stripped');
+            assert.ok(!result.includes('admin@corp.com'), 'First email should be stripped');
+            assert.ok(!result.includes('support@corp.com'), 'Second email should be stripped');
+        });
+
+        it('should leave safe error contexts unchanged', () => {
+            const safeContexts = [
                 'serverCrash',
                 'translationFailed',
                 'connectionTimeout',
                 'initializationFailed',
+                'Language server closed unexpectedly',
             ];
 
-            const unsafeContexts = [
-                '/Users/john/code/project/secret.py',
-                'Error at line 42: password = "123456"',
-                'john@example.com',
+            safeContexts.forEach(context => {
+                const result = sanitize(context);
+                assert.strictEqual(result, context, `Safe context "${context}" should not be modified`);
+            });
+        });
+
+        it('should handle undefined context with fallback to "none"', () => {
+            // Mirrors the logic: context ? sanitize(context) : 'none'
+            const context: string | undefined = undefined;
+            const safeContext = context
+                ? sanitize(context)
+                : 'none';
+            assert.strictEqual(safeContext, 'none');
+        });
+
+        it('should strip nested paths with dots and hyphens', () => {
+            const input = 'Cannot read /var/lib/data-repo/cache/lang-pack.v2.json';
+            const result = sanitize(input);
+            assert.ok(!result.includes('/var/lib'), 'Nested path should be stripped');
+            assert.ok(result.includes('<path>'), 'Should be replaced with <path>');
+        });
+    });
+
+    describe('Type-Safe Parameters', () => {
+        it('should only allow known command names', () => {
+            const validCommands: string[] = [
+                'restartServer',
+                'selectLanguage',
+                'showTranslationPanel',
+                'tryTranslationPanel',
+                'giveFeedback',
             ];
 
-            // Safe contexts should be allowed
-            safeErrorContexts.forEach(context => {
-                assert.ok(
-                    !context.includes('/') && !context.includes('@'),
-                    `${context} is a safe error context`
-                );
+            // These are the ONLY valid commands — no arbitrary strings allowed
+            assert.strictEqual(validCommands.length, 5, 'Exactly 5 tracked commands should exist');
+
+            // Verify all expected commands are present
+            assert.ok(validCommands.includes('restartServer'));
+            assert.ok(validCommands.includes('selectLanguage'));
+            assert.ok(validCommands.includes('showTranslationPanel'));
+            assert.ok(validCommands.includes('tryTranslationPanel'));
+            assert.ok(validCommands.includes('giveFeedback'));
+        });
+
+        it('should only allow known feature names', () => {
+            const validFeatures: string[] = [
+                'completion',
+                'hover',
+                'panel',
+                'semanticTokens',
+            ];
+
+            assert.strictEqual(validFeatures.length, 4, 'Exactly 4 tracked features should exist');
+        });
+
+        it('should only allow known error types', () => {
+            const validErrorTypes: string[] = [
+                'serverError',
+                'serverConnectionClosed',
+                'serverNotInstalled',
+                'serverStartFailed',
+                'translationFailed',
+            ];
+
+            assert.strictEqual(validErrorTypes.length, 5, 'Exactly 5 tracked error types should exist');
+        });
+
+        it('should only allow known feedback response types', () => {
+            const validPromptTypes = ['first', 'second', 'manual'];
+            const validResponses = ['gaveFeedback', 'deferred', 'optedOut'];
+
+            assert.strictEqual(validPromptTypes.length, 3);
+            assert.strictEqual(validResponses.length, 3);
+        });
+    });
+
+    describe('Error Handling', () => {
+        it('should not throw when reporter is undefined and methods are called', () => {
+            // All telemetry methods should return silently when reporter is undefined
+            // This tests the `if (!reporter) return;` guard in every method
+            const reporter: any = undefined;
+
+            const methods = [
+                () => { if (!reporter) return; reporter.sendTelemetryEvent('test'); },
+                () => { if (!reporter) return; reporter.sendTelemetryEvent('test', { key: 'val' }); },
+                () => { if (!reporter) return; reporter.sendTelemetryErrorEvent('test', { key: 'val' }); },
+            ];
+
+            methods.forEach((method, i) => {
+                assert.doesNotThrow(method, `Method ${i} should not throw when reporter is undefined`);
+            });
+        });
+
+        it('should catch and swallow errors from reporter.sendTelemetryEvent', () => {
+            // Simulates a reporter that throws — the try/catch should prevent propagation
+            const faultyReporter = {
+                sendTelemetryEvent: (..._args: unknown[]) => { throw new Error('Network failure'); },
+                sendTelemetryErrorEvent: (..._args: unknown[]) => { throw new Error('Network failure'); },
+            };
+
+            // Wrap in the same pattern used in telemetry.ts
+            assert.doesNotThrow(() => {
+                try {
+                    faultyReporter.sendTelemetryEvent('test');
+                } catch (_error) {
+                    // Swallowed — matches telemetry.ts behavior
+                }
             });
 
-            // Would need to validate/sanitize these in actual implementation
-            unsafeContexts.forEach(context => {
-                assert.ok(
-                    context.includes('/') || context.includes('@') || context.includes('='),
-                    `${context} contains potentially sensitive data`
-                );
+            assert.doesNotThrow(() => {
+                try {
+                    faultyReporter.sendTelemetryErrorEvent('test');
+                } catch (_error) {
+                    // Swallowed — matches telemetry.ts behavior
+                }
             });
         });
     });

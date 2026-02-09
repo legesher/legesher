@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--next-version-placeholder-->
 
+## 0.1.3 (2026-02-09)
+
+### Fixed
+
+- **Telemetry Pipeline**: Fix zero events reaching Azure Application Insights (CORE-590)
+  - Bundle `@vscode/extension-telemetry` instead of externalizing it — root cause of zero events
+  - Inject connection string at build time (production only), runtime env for development
+  - Add try/catch error handling to all 11 telemetry methods
+- **Missing Telemetry**: Add tracking to previously untracked error paths
+  - LSP server errors and connection drops (`client.ts`)
+  - Translation panel failures (`panel.ts`)
+  - Server not installed path (`extension.ts`)
+  - Feedback prompt responses — gave feedback, deferred, opted out (`feedback.ts`)
+- **Security**: Remove `/tmp/env-debug.log` debug artifact from `env.ts` that leaked extension paths
+- **PII Leakage**: Remove filesystem paths from `env.ts` log messages
+- **Telemetry Logging**: Fix misleading telemetry disabled message; `trackActivation` returns silently when reporter is undefined
+- **Build Script**: Use case-insensitive grep for connection string validation
+- **Tests**: Remove stale walkthrough step tests referencing dead code
+
+### Added
+
+- **Feedback Telemetry**: New `trackFeedbackResponse()` method tracks user responses to feedback prompts
+- **Feedback Logging**: Add `Logger.info` calls to feedback.ts for local debugging when telemetry is disabled
+- **Build Validation**: Preview release script validates telemetry module is bundled and connection string embedded
+- **PII Sanitization**: `trackError()` strips file paths and email addresses before sending
+- **Type-Safe Parameters**: `TrackedCommand`, `TrackedErrorType` union types restrict parameters to known values
+- **Telemetry Diagnostics**: Log `isTelemetryEnabled`, reporter type, and active status during initialization
+- **Tests**: PII sanitization tests (Unix paths, Windows paths, emails, multiple occurrences, safe contexts)
+
+### Changed
+
+- **Dead Code Removal**: Remove unused `trackWalkthroughStep` and `WalkthroughStepId` (moved to CORE-591)
+- **Feature Types**: Remove unused `diagnostic` and `run` feature values (moved to CORE-592)
+- **.vscodeignore**: Reorganized with section comments; added `.env` exclusion from `.vsix` package
+
 ## 0.1.2 (2026-02-04)
 
 ### Added

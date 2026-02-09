@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { LegesherTelemetry } from './telemetry';
+import { Logger } from './logger';
 
 /**
  * Feedback collection module for Legesher VS Code extension
@@ -202,17 +204,20 @@ export class LegesherFeedback {
                 vscode.window.showInformationMessage(
                     "Thank you for helping improve Legesher! Your feedback is invaluable."
                 );
-                console.log(`[Legesher Feedback] User opened feedback form (${promptType} prompt)`);
+                Logger.info(`Feedback: User opened feedback form (${promptType} prompt)`);
+                LegesherTelemetry.trackFeedbackResponse(promptType, 'gaveFeedback');
                 break;
 
             case FEEDBACK_CONFIG.messages.dontAskAgain:
                 this.context.globalState.update(STORAGE_KEYS.dontAskAgain, true);
-                console.log('[Legesher Feedback] User opted out of feedback prompts');
+                Logger.info('Feedback: User opted out of feedback prompts');
+                LegesherTelemetry.trackFeedbackResponse(promptType, 'optedOut');
                 break;
 
             case FEEDBACK_CONFIG.messages.notNow:
             default:
-                console.log(`[Legesher Feedback] User deferred feedback (${promptType} prompt)`);
+                Logger.info(`Feedback: User deferred feedback (${promptType} prompt)`);
+                LegesherTelemetry.trackFeedbackResponse(promptType, 'deferred');
                 break;
         }
     }
@@ -239,6 +244,8 @@ export class LegesherFeedback {
             await vscode.env.openExternal(vscode.Uri.parse(FEEDBACK_CONFIG.feedbackFormUrl));
             // Only mark first feedback as given - don't skip the 7-day prompt
             this.context.globalState.update(STORAGE_KEYS.firstFeedbackGiven, true);
+            Logger.info('Feedback: User opened feedback form (manual)');
+            LegesherTelemetry.trackFeedbackResponse('manual', 'gaveFeedback');
             vscode.window.showInformationMessage(
                 "Thank you for your feedback!"
             );

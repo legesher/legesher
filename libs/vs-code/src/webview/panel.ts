@@ -3,6 +3,7 @@ import { translateDocument } from './translator';
 // [Copilot Review Fix] Removed unused import getAvailableLanguages
 import { getLanguageNativeName, getLanguageConfig, getRtlLanguageCodes } from '../config';
 import { getTranslations, getEnglishKeywordsSet, getEnglishBuiltinsSet } from '../keywords';
+import { LegesherTelemetry } from '../telemetry';
 
 /**
  * Message types sent from webview to extension
@@ -72,6 +73,10 @@ export class TranslationPanelManager {
 
             // Set initial HTML
             this.panel.webview.html = this.getWebviewContent();
+
+            // Track panel opened
+            LegesherTelemetry.trackPanelOpened();
+            LegesherTelemetry.trackFeatureUsed('panel');
         }
 
         // Load and display translation
@@ -142,6 +147,7 @@ export class TranslationPanelManager {
                 data: { message: errorMessage }
             });
 
+            LegesherTelemetry.trackError('translationFailed', errorMessage);
             vscode.window.showErrorMessage(`Translation failed: ${errorMessage}`);
         }
     }

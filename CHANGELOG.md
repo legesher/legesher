@@ -17,11 +17,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 | legesher-i18n            | 0.4.1   | Yes      |
 | legesher (CLI)           | 0.4.0   | Yes      |
 | legesher-language-server | 0.1.1   | Yes      |
-| legesher-vscode          | 0.1.2   | Yes      |
+| legesher-vscode          | 0.1.3   | Yes      |
 | legesher-home            | 0.1.0   | —        |
 
 ### Fixed
 
+- **legesher-vscode**: Fix telemetry pipeline — zero events reaching Azure Application Insights (CORE-590)
+  - Bundle `@vscode/extension-telemetry` instead of externalizing it (root cause)
+  - Add try/catch error handling to all 11 telemetry methods, PII sanitization, type-safe union types
+  - Add missing telemetry to LSP errors, translation failures, feedback responses, server-not-installed path
+  - Remove `/tmp/env-debug.log` security artifact, filesystem paths from log messages
+  - Add feedback `Logger.info` calls, telemetry diagnostic logging, build validation in preview script
+  - Remove dead code (`trackWalkthroughStep`, unused feature values) — tracked in CORE-591, CORE-592
 - **legesher-i18n**: Fix 33 mixed-script translations across Greek, Hebrew, Russian, Arabic, Finnish packs (CORE-531)
 - **legesher-i18n**: Fix Japanese `in` keyword invalid identifier, add missing `type` builtin to es/ar (CORE-531)
 - **legesher-core**: Fix `TokenTranslator` compound keyword (`except*`) lookahead handling (CORE-531)
