@@ -215,6 +215,23 @@ Commands are invoked with `/command-name` in Claude Code.
 
 **When to use**: Before releases, or continuously as features are completed
 
+#### `/cycle-retro {cycle-number}`
+
+**Generate cycle retrospective document** from Linear cycle data.
+
+**What it does**:
+
+- Pulls all completed issues from a Linear cycle
+- Categorizes work by type, package, and impact
+- Analyzes cycle metrics (completion rate, velocity, scope changes)
+- Creates a Linear document linked to the project
+- Posts a project update to the project feed
+- Supports `--dry-run` mode for previewing before creating artifacts
+
+**When to use**: At the end of each cycle or beginning of the next one
+
+**Examples**: `/cycle-retro 14`, `/cycle-retro previous`, `/cycle-retro 14 --dry-run`
+
 ### Documentation Commands
 
 #### `/pr {description}`

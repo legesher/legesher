@@ -110,6 +110,7 @@ Use slash commands in Claude Code with `/command-name`:
 - `/linear-commit {issue-id}` - Commit with Linear integration
 - `/changelog {version}` - Update CHANGELOG.md
 - `/pr {description}` - Create comprehensive pull request
+- `/cycle-retro {cycle-number}` - Generate cycle retrospective document from Linear data
 
 ### Quality & Documentation
 
