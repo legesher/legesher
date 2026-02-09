@@ -1,13 +1,25 @@
+# Development and testing
 .vscode/**
 .vscode-test/**
 src/**
-.gitignore
+
+# Build configuration
+esbuild.js
+tsconfig.json
 .eslintrc.json
 .prettierrc
+
+# Source maps and TypeScript sources
 **/*.map
 **/*.ts
-tsconfig.json
-*.vsix
-.DS_Store
-esbuild.js
+
+# Packages and artifacts
 node_modules/**
+*.vsix
+
+# Secrets and environment
+.env
+
+# OS and editor files
+.DS_Store
+.gitignore

@@ -37,6 +37,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // Initialize telemetry (respects user settings)
     LegesherTelemetry.initialize(context);
+    Logger.info(`Telemetry: Active = ${LegesherTelemetry.isActive()}`);
 
     // Initialize feedback system (two-stage: first session + 7 days)
     initializeFeedback(context);
@@ -173,6 +174,9 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
 
         if (!serverAvailable) {
             // Server not available - this is expected in early development
+            const durationMs = Date.now() - startTime;
+            LegesherTelemetry.trackServerConnection(false, durationMs);
+            LegesherTelemetry.trackError('serverNotInstalled');
             statusBarItem.text = "$(warning) Legesher";
             statusBarItem.tooltip = "Legesher: Language server not installed (extension features limited)";
             Logger.warn(`Language server '${serverCommand}' not found. Extension will run with limited functionality.`);

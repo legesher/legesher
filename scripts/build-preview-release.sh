@@ -128,6 +128,23 @@ print_success "Built ${PACK_COUNT} language packs"
 print_info "Building VS Code extension..."
 cd ../../../vs-code
 npm run package  # Creates .vsix file
+
+# Validate telemetry connection string was embedded in production build
+if grep -qi "InstrumentationKey" out/extension.js 2>/dev/null || grep -qi "ingestionendpoint" out/extension.js 2>/dev/null; then
+    print_success "Telemetry connection string embedded in build"
+else
+    echo -e "${YELLOW}⚠${NC}  WARNING: Telemetry connection string NOT found in build output"
+    echo "   Set LEGESHER_TELEMETRY_CONNECTION_STRING in .env or environment"
+    echo "   Telemetry will be disabled in this build"
+fi
+
+# Validate telemetry module is bundled (not externalized)
+if grep -q 'require.*@vscode/extension-telemetry' out/extension.js 2>/dev/null; then
+    print_error "ERROR: @vscode/extension-telemetry is externalized - it must be bundled!"
+    echo "   Check esbuild.js external array - remove @vscode/extension-telemetry"
+    exit 1
+fi
+
 cp *.vsix "${RELEASE_DIR}/"
 print_success "VS Code extension built and copied"
 

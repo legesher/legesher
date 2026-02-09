@@ -7,6 +7,7 @@ import {
 } from 'vscode-languageclient/node';
 import { getLanguageConfig } from './config';
 import { Logger } from './logger';
+import { LegesherTelemetry } from './telemetry';
 
 /**
  * Create and configure the Language Server Protocol client
@@ -64,12 +65,36 @@ export function createLanguageClient(
         // Middleware to customize LSP behavior (can be extended later)
         middleware: {
             // Semantic tokens middleware (CORE-450)
-            // Automatically enabled when server advertises semantic tokens capability
             provideDocumentSemanticTokens: async (document, token, next) => {
                 Logger.debug(`Semantic tokens requested for: ${document.uri.toString()}`);
                 const result = await next(document, token);
                 if (result) {
                     Logger.debug(`Semantic tokens received: ${result.data.length} integers`);
+                    LegesherTelemetry.trackFeatureUsed('semanticTokens');
+                }
+                return result;
+            },
+            // Completion middleware - track when completions are provided
+            provideCompletionItem: async (document, position, context, token, next) => {
+                const result = await next(document, position, context, token);
+                if (result) {
+                    const count = Array.isArray(result) ? result.length : result.items.length;
+                    LegesherTelemetry.trackCompletionProvided(count);
+                    LegesherTelemetry.trackFeatureUsed('completion');
+                }
+                return result;
+            },
+            // Hover middleware - track when hover info is provided
+            provideHover: async (document, position, token, next) => {
+                const result = await next(document, position, token);
+                if (result) {
+                    LegesherTelemetry.trackFeatureUsed('hover');
+                    // Extract hovered word for keyword tracking
+                    const wordRange = document.getWordRangeAtPosition(position);
+                    if (wordRange) {
+                        const word = document.getText(wordRange);
+                        LegesherTelemetry.trackHoverProvided(word);
+                    }
                 }
                 return result;
             },
@@ -87,11 +112,13 @@ export function createLanguageClient(
         errorHandler: {
             error: (error, message, count) => {
                 Logger.error('Language server error', { error, message, count });
+                LegesherTelemetry.trackError('serverError', String(message));
                 // Return ErrorAction.Continue to keep trying
                 return { action: 1 }; // ErrorAction.Continue = 1
             },
             closed: () => {
                 Logger.warn('Language server connection closed');
+                LegesherTelemetry.trackError('serverConnectionClosed');
                 // Don't auto-restart - let manual restart handle it
                 // This prevents conflicts when changing languages
                 return { action: 2 }; // CloseAction.DoNotRestart = 2
