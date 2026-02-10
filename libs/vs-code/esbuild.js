@@ -30,10 +30,59 @@ function copyFile(src, dest) {
 }
 
 /**
+ * Copy language pack YAML files so they're bundled with the extension.
+ * Without this, packaged extensions (VSIX) can't find the language packs
+ * since they only exist in the monorepo at libs/i18n/language-packs/.
+ */
+function copyLanguagePacks() {
+    const languagePacksSrc = path.join(__dirname, '..', '..', 'libs', 'i18n', 'language-packs', 'python');
+    const languagePacksDest = path.join(__dirname, 'language-packs');
+
+    if (!fs.existsSync(languagePacksSrc)) {
+        const message = `Language packs source not found: ${languagePacksSrc}`;
+        if (production) {
+            throw new Error(message);
+        }
+        console.warn(`Warning: ${message}`);
+        return;
+    }
+
+    // Clean stale copies so removed language packs don't persist across rebuilds
+    if (fs.existsSync(languagePacksDest)) {
+        fs.rmSync(languagePacksDest, { recursive: true });
+    }
+
+    let copiedCount = 0;
+    const languages = fs.readdirSync(languagePacksSrc, { withFileTypes: true })
+        .filter(entry => entry.isDirectory())
+        .map(entry => entry.name);
+
+    for (const lang of languages) {
+        // Only copy the base 3.10.yml file (other versions use inheritance)
+        const srcFile = path.join(
+            languagePacksSrc, lang, `legesher_i18n_python_${lang}`, 'packs', '3.10.yml'
+        );
+        const destFile = path.join(
+            languagePacksDest, lang, `legesher_i18n_python_${lang}`, 'packs', '3.10.yml'
+        );
+
+        if (fs.existsSync(srcFile)) {
+            copyFile(srcFile, destFile);
+            copiedCount++;
+        }
+    }
+
+    console.log(`Copied ${copiedCount} language packs to language-packs/`);
+}
+
+/**
  * Copy webview assets and prismjs files to output directory
  */
 function copyAssets() {
     const outDir = path.join(__dirname, 'out');
+
+    // Copy language packs for bundled extension support
+    copyLanguagePacks();
 
     // Copy webview UI assets
     const webviewSrc = path.join(__dirname, 'src', 'webview', 'ui');

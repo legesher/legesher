@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { getTranslations } from '../keywords';
 
+// Track which languages we've already warned about to avoid log spam
+const _warnedLanguages = new Set<string>();
+
 /**
  * Translate a Python document to the target language.
  *
@@ -51,7 +54,14 @@ async function simulateTranslation(code: string, targetLanguage: string): Promis
     const translations = getTranslations(targetLanguage);
 
     if (!translations) {
-        // Default: return original code (English or unsupported language)
+        if (!_warnedLanguages.has(targetLanguage)) {
+            _warnedLanguages.add(targetLanguage);
+            console.warn(
+                `[Legesher] No translations found for language "${targetLanguage}". ` +
+                'Language packs may not be bundled with the extension. ' +
+                'Rebuild the extension to copy language packs.'
+            );
+        }
         return code;
     }
 

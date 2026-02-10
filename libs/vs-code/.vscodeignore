@@ -17,6 +17,9 @@ tsconfig.json
 node_modules/**
 *.vsix
 
+# NOTE: language-packs/ must NOT be excluded — it contains bundled YAML
+# files required at runtime for keyword translations (see esbuild.js)
+
 # Secrets and environment
 .env
 

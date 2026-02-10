@@ -17,11 +17,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 | legesher-i18n            | 0.4.1   | Yes      |
 | legesher (CLI)           | 0.4.0   | Yes      |
 | legesher-language-server | 0.1.1   | Yes      |
-| legesher-vscode          | 0.1.3   | Yes      |
+| legesher-vscode          | 0.1.4   | Yes      |
 | legesher-home            | 0.1.0   | —        |
 
 ### Fixed
 
+- **legesher-vscode**: Fix Translation View showing English on both panels — bundle language pack YAML files in VSIX (CORE-602)
 - **legesher-vscode**: Fix telemetry pipeline — zero events reaching Azure Application Insights (CORE-590)
   - Bundle `@vscode/extension-telemetry` instead of externalizing it (root cause)
   - Add try/catch error handling to all 11 telemetry methods, PII sanitization, type-safe union types

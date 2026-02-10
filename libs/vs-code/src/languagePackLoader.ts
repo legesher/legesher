@@ -43,12 +43,13 @@ let _englishKeywordsCache: string[] | null = null;
 // Separate caches for keywords vs builtins (for syntax highlighting)
 let _pythonKeywordsCache: Set<string> | null = null;
 let _pythonBuiltinsCache: Set<string> | null = null;
+let _pathErrorLogged = false;
 
 /**
  * Get the path to the language packs directory
  * Supports both development (monorepo) and packaged extension contexts
  */
-function getLanguagePacksPath(extensionPath: string): string {
+function getLanguagePacksPath(extensionPath: string): string | null {
     // In development: extensionPath is libs/vs-code
     // Language packs are at ../../libs/i18n/language-packs/python
     const devPath = path.join(extensionPath, '..', '..', 'libs', 'i18n', 'language-packs', 'python');
@@ -62,9 +63,23 @@ function getLanguagePacksPath(extensionPath: string): string {
         return bundledPath;
     }
 
-    // Fallback: try relative to extension root
+    // Fallback: monorepo root (when extensionPath is the repo root, not libs/vs-code)
     const fallbackPath = path.join(extensionPath, 'libs', 'i18n', 'language-packs', 'python');
-    return fallbackPath;
+    if (fs.existsSync(fallbackPath)) {
+        return fallbackPath;
+    }
+
+    if (!_pathErrorLogged) {
+        _pathErrorLogged = true;
+        console.error(
+            `[Legesher] Language packs not found. Searched:\n` +
+            `  - ${devPath}\n` +
+            `  - ${bundledPath}\n` +
+            `  - ${fallbackPath}\n` +
+            `Rebuild the extension with 'npm run compile' to bundle language packs.`
+        );
+    }
+    return null;
 }
 
 /**
@@ -105,6 +120,11 @@ export function loadAllTranslations(extensionPath: string): KeywordTranslations 
     const translations: KeywordTranslations = {};
     const languagePacksPath = getLanguagePacksPath(extensionPath);
 
+    if (!languagePacksPath) {
+        _translationsCache = translations;
+        return translations;
+    }
+
     // Supported languages from centralized language registry (single source of truth)
     // Uses getActiveLanguageCodes() to include both 'available' and 'experimental' status
     const supportedLanguages = getActiveLanguageCodes();
@@ -133,7 +153,7 @@ export function loadAllTranslations(extensionPath: string): KeywordTranslations 
 
     // If no packs loaded, log a warning
     if (Object.keys(translations).length === 0) {
-        console.warn(`[Legesher] No language packs found at ${languagePacksPath}`);
+        console.warn(`[Legesher] No language packs loaded from ${languagePacksPath}`);
     }
 
     _translationsCache = translations;
@@ -255,27 +275,30 @@ export function getEnglishKeywordsSet(extensionPath: string): Set<string> {
     }
 
     const languagePacksPath = getLanguagePacksPath(extensionPath);
-    const packPath = path.join(
-        languagePacksPath,
-        'en',
-        'legesher_i18n_python_en',
-        'packs',
-        '3.10.yml'
-    );
+    if (languagePacksPath) {
+        const packPath = path.join(
+            languagePacksPath,
+            'en',
+            'legesher_i18n_python_en',
+            'packs',
+            '3.10.yml'
+        );
 
-    const pack = loadLanguagePack(packPath);
-    if (pack && pack.keywords) {
-        _pythonKeywordsCache = new Set(Object.keys(pack.keywords));
-    } else {
-        // Fallback: hardcoded Python 3.10+ keywords
-        _pythonKeywordsCache = new Set([
-            'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await',
-            'break', 'case', 'class', 'continue', 'def', 'del', 'elif', 'else',
-            'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in',
-            'is', 'lambda', 'match', 'nonlocal', 'not', 'or', 'pass', 'raise',
-            'return', 'try', 'while', 'with', 'yield'
-        ]);
+        const pack = loadLanguagePack(packPath);
+        if (pack && pack.keywords) {
+            _pythonKeywordsCache = new Set(Object.keys(pack.keywords));
+            return _pythonKeywordsCache;
+        }
     }
+
+    // Fallback: hardcoded Python 3.10+ keywords
+    _pythonKeywordsCache = new Set([
+        'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await',
+        'break', 'case', 'class', 'continue', 'def', 'del', 'elif', 'else',
+        'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in',
+        'is', 'lambda', 'match', 'nonlocal', 'not', 'or', 'pass', 'raise',
+        'return', 'try', 'while', 'with', 'yield'
+    ]);
 
     return _pythonKeywordsCache;
 }
@@ -290,32 +313,35 @@ export function getEnglishBuiltinsSet(extensionPath: string): Set<string> {
     }
 
     const languagePacksPath = getLanguagePacksPath(extensionPath);
-    const packPath = path.join(
-        languagePacksPath,
-        'en',
-        'legesher_i18n_python_en',
-        'packs',
-        '3.10.yml'
-    );
+    if (languagePacksPath) {
+        const packPath = path.join(
+            languagePacksPath,
+            'en',
+            'legesher_i18n_python_en',
+            'packs',
+            '3.10.yml'
+        );
 
-    const pack = loadLanguagePack(packPath);
-    if (pack && pack.builtins) {
-        _pythonBuiltinsCache = new Set(Object.keys(pack.builtins));
-    } else {
-        // Fallback: hardcoded Python builtins
-        _pythonBuiltinsCache = new Set([
-            'abs', 'aiter', 'all', 'any', 'anext', 'ascii', 'bin', 'bool',
-            'breakpoint', 'bytearray', 'bytes', 'callable', 'chr', 'classmethod',
-            'compile', 'complex', 'delattr', 'dict', 'dir', 'divmod', 'enumerate',
-            'eval', 'exec', 'filter', 'float', 'format', 'frozenset', 'getattr',
-            'globals', 'hasattr', 'hash', 'help', 'hex', 'id', 'input', 'int',
-            'isinstance', 'issubclass', 'iter', 'len', 'list', 'locals', 'map',
-            'max', 'memoryview', 'min', 'next', 'object', 'oct', 'open', 'ord',
-            'pow', 'print', 'property', 'range', 'repr', 'reversed', 'round',
-            'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 'sum',
-            'super', 'tuple', 'type', 'vars', 'zip'
-        ]);
+        const pack = loadLanguagePack(packPath);
+        if (pack && pack.builtins) {
+            _pythonBuiltinsCache = new Set(Object.keys(pack.builtins));
+            return _pythonBuiltinsCache;
+        }
     }
+
+    // Fallback: hardcoded Python builtins
+    _pythonBuiltinsCache = new Set([
+        'abs', 'aiter', 'all', 'any', 'anext', 'ascii', 'bin', 'bool',
+        'breakpoint', 'bytearray', 'bytes', 'callable', 'chr', 'classmethod',
+        'compile', 'complex', 'delattr', 'dict', 'dir', 'divmod', 'enumerate',
+        'eval', 'exec', 'filter', 'float', 'format', 'frozenset', 'getattr',
+        'globals', 'hasattr', 'hash', 'help', 'hex', 'id', 'input', 'int',
+        'isinstance', 'issubclass', 'iter', 'len', 'list', 'locals', 'map',
+        'max', 'memoryview', 'min', 'next', 'object', 'oct', 'open', 'ord',
+        'pow', 'print', 'property', 'range', 'repr', 'reversed', 'round',
+        'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 'sum',
+        'super', 'tuple', 'type', 'vars', 'zip'
+    ]);
 
     return _pythonBuiltinsCache;
 }
@@ -329,4 +355,5 @@ export function clearCache(): void {
     _englishKeywordsCache = null;
     _pythonKeywordsCache = null;
     _pythonBuiltinsCache = null;
+    _pathErrorLogged = false;
 }
