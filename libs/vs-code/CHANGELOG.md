@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--next-version-placeholder-->
 
+## 0.1.4 (2026-02-10)
+
+### Fixed
+
+- **Translation View**: Fix both panels showing English — language pack YAML files now bundled in VSIX (CORE-602)
+  - Add `copyLanguagePacks()` to esbuild build process to copy 26 base `3.10.yml` files into extension root
+  - Fix `getLanguagePacksPath()` fallback returning unchecked non-existent path
+  - Production builds fail-fast when language packs source is missing
+  - Log-once diagnostics for path resolution errors and missing translations
+  - Idempotent builds with stale `language-packs/` cleanup
+  - `.vscodeignore` safeguard comment protecting `language-packs/` from exclusion
+
 ## 0.1.3 (2026-02-09)
 
 ### Fixed

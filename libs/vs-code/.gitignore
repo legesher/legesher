@@ -4,6 +4,7 @@ node_modules/
 # Build output
 out/
 *.vsix
+language-packs/
 
 # VS Code test runner cache
 .vscode-test/
