@@ -13,40 +13,77 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.4.1   | Yes      |
-| legesher-i18n            | 0.4.1   | Yes      |
-| legesher (CLI)           | 0.4.0   | Yes      |
-| legesher-language-server | 0.1.1   | Yes      |
+| legesher-core            | 0.5.0   | —        |
+| legesher-i18n            | 0.5.0   | —        |
+| legesher (CLI)           | 0.5.0   | —        |
+| legesher-language-server | 0.1.1   | —        |
 | legesher-vscode          | 0.1.4   | Yes      |
 | legesher-home            | 0.1.0   | —        |
 
 ### Fixed
 
-- **legesher-vscode**: Fix Translation View showing English on both panels — bundle language pack YAML files in VSIX (CORE-602)
-- **legesher-vscode**: Fix telemetry pipeline — zero events reaching Azure Application Insights (CORE-590)
-  - Bundle `@vscode/extension-telemetry` instead of externalizing it (root cause)
-  - Add try/catch error handling to all 11 telemetry methods, PII sanitization, type-safe union types
-  - Add missing telemetry to LSP errors, translation failures, feedback responses, server-not-installed path
-  - Remove `/tmp/env-debug.log` security artifact, filesystem paths from log messages
-  - Add feedback `Logger.info` calls, telemetry diagnostic logging, build validation in preview script
-  - Remove dead code (`trackWalkthroughStep`, unused feature values) — tracked in CORE-591, CORE-592
-- **legesher-i18n**: Fix 33 mixed-script translations across Greek, Hebrew, Russian, Arabic, Finnish packs (CORE-531)
-- **legesher-i18n**: Fix Japanese `in` keyword invalid identifier, add missing `type` builtin to es/ar (CORE-531)
-- **legesher-core**: Fix `TokenTranslator` compound keyword (`except*`) lookahead handling (CORE-531)
+- **legesher-vscode**: Fix Translation View showing English on both
+  panels — bundle language pack YAML files in VSIX (CORE-602)
+- **legesher-vscode**: Fix telemetry pipeline — zero events reaching
+  Azure Application Insights (CORE-590)
+  - Bundle `@vscode/extension-telemetry` instead of externalizing it
+  - Add try/catch error handling to all 11 telemetry methods, PII
+    sanitization, type-safe union types
+  - Add missing telemetry to LSP errors, translation failures, feedback
+    responses, server-not-installed path
+  - Remove `/tmp/env-debug.log` security artifact, filesystem paths from
+    log messages
+  - Add feedback `Logger.info` calls, telemetry diagnostic logging,
+    build validation in preview script
+  - Remove dead code (`trackWalkthroughStep`, unused feature values) —
+    tracked in CORE-591, CORE-592
 
 ### Changed
 
-- **legesher-vscode**: Release v0.1.2 with marketplace improvements (CORE-558)
+- **CI**: Auto-stamp changelogs on foundation release (CORE-608)
+  - Add `scripts/stamp-changelog-release.py` to stamp `[Unreleased]`
+    headings and update Package Versions table
+  - Add stamp step to `release-foundation.yml` workflow
+- **legesher-vscode**: Release v0.1.2 with marketplace improvements
+  (CORE-558)
   - Add extension icon for better visibility
   - Inject telemetry connection string at build time
   - Fix security issue: remove connection string from logs
   - Update README and marketplace metadata
-- **legesher-language-server**: Bump to 0.1.1 for pygls 2.0 migration (CORE-448)
-- **legesher-i18n**: Bundle all 26 language pack YAML files directly in the i18n wheel (CORE-559)
+
+## [0.5.0] - 2026-02-01
+
+### Package Versions
+
+| Package                  | Version | Changed? |
+| ------------------------ | ------- | -------- |
+| legesher-core            | 0.5.0   | Yes      |
+| legesher-i18n            | 0.5.0   | Yes      |
+| legesher (CLI)           | 0.5.0   | Yes      |
+| legesher-language-server | 0.1.1   | Yes      |
+| legesher-vscode          | 0.1.1   | —        |
+| legesher-home            | 0.1.0   | —        |
+
+### Fixed
+
+- **legesher-i18n**: Fix 33 mixed-script translations across Greek,
+  Hebrew, Russian, Arabic, Finnish packs (CORE-531)
+- **legesher-i18n**: Fix Japanese `in` keyword invalid identifier, add
+  missing `type` builtin to es/ar (CORE-531)
+- **legesher-core**: Fix `TokenTranslator` compound keyword (`except*`)
+  lookahead handling (CORE-531)
+
+### Changed
+
+- **legesher-language-server**: Bump to 0.1.1 for pygls 2.0 migration
+  (CORE-448)
+- **legesher-i18n**: Bundle all 26 language pack YAML files directly in
+  the i18n wheel (CORE-559)
 - **legesher CLI**: Add `legesher config` command (CORE-563),
-  non-interactive `legesher init` (CORE-562), fix `--version` (CORE-560),
-  dynamic language help text (CORE-561)
-- **Docs**: Fix CLI flags `--from`/`--to`, remove non-existent commands, update config references (CORE-564–566)
+  non-interactive `legesher init` (CORE-562), fix `--version`
+  (CORE-560), dynamic language help text (CORE-561)
+- **Docs**: Fix CLI flags `--from`/`--to`, remove non-existent commands,
+  update config references (CORE-564–566)
 - **CI**: Add cross-platform lint and test workflows
 
 ## [0.4.0] - 2026-01-27

@@ -20,7 +20,7 @@ jobs:
   lint:
     name: Lint & Validate
     runs-on: ubuntu-latest
-    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock'))"
+    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock') && !contains(github.event.head_commit.message, 'docs(changelog): stamp'))"
 
     steps:
       - name: Checkout code
@@ -49,7 +49,7 @@ jobs:
     name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
-    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock'))"
+    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock') && !contains(github.event.head_commit.message, 'docs(changelog): stamp'))"
     strategy:
       fail-fast: false
       matrix:
@@ -96,7 +96,7 @@ jobs:
     name: Release Foundation (core, i18n, legesher)
     runs-on: ubuntu-latest
     needs: [lint, test]
-    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock'))"
+    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock') && !contains(github.event.head_commit.message, 'docs(changelog): stamp'))"
 
     steps:
       - name: Checkout code
@@ -160,15 +160,27 @@ jobs:
           if [ -n "$(git status --porcelain uv.lock)" ]; then
             git add uv.lock
             git commit -m "chore: update uv.lock after version bump"
-            git push origin main
           fi
+
+      - name: Stamp changelogs
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: |
+          python scripts/stamp-changelog-release.py
+          git add CHANGELOG.md libs/core/CHANGELOG.md libs/i18n/CHANGELOG.md libs/legesher/CHANGELOG.md
+          if [ -n "$(git diff --cached --name-only)" ]; then
+            git commit -m "docs(changelog): stamp release [CORE-608]"
+          fi
+
+      - name: Push release commits
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: git push origin main
 
       - name: Create GitHub Release
         if: steps.semantic-release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "🚀 Creating GitHub Release..."
+          echo "Creating GitHub Release..."
           uv run semantic-release publish
 
       - name: Build packages
