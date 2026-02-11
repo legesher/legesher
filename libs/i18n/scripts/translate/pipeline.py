@@ -217,11 +217,7 @@ class TranslationPipeline:
 
         # Initialize database
         self.db = TranslationDatabase(
-            db_path=(
-                str(config.output_db)
-                if config.output_db
-                else ".legesher/translations.db"
-            )
+            db_path=str(config.output_db) if config.output_db else None
         )
 
         # Initialize YAML exporter
@@ -314,14 +310,15 @@ class TranslationPipeline:
 
                         # Check if translation already exists (skip_existing)
                         if self.config.skip_existing:
-                            term_type = classify_term(term, python_version="3.13")
-                            existing = self.db.get_translation(
+                            existing = self.db.get_translations_for_term(
+                                term_name=term,
                                 language_code=language,
-                                term=term,
-                                term_type=term_type,
-                                source=model_name,
                             )
-                            if existing:
+                            # Filter to check if this specific model already contributed
+                            model_existing = [
+                                t for t in existing if t["source"] == model_name
+                            ]
+                            if model_existing:
                                 logger.debug(
                                     f"Skipping '{term}' ({language}, {model_name}) - already exists"
                                 )
@@ -409,21 +406,22 @@ class TranslationPipeline:
         # Store in database (CORE-399 integration)
         if not self.config.dry_run:
             try:
-                import json
-
-                # Get proper term_type from term_classifier
+                # Get or create the term in the terms table
                 term_type = classify_term(term, python_version="3.13")
+                term_id = self.db.get_or_create_term(
+                    name=term,
+                    programming_language="python",
+                    category=term_type,
+                )
 
-                translation_id = self.db.upsert_translation(
+                translation_id = self.db.add_translation(
+                    term_id=term_id,
                     language_code=language,
-                    term=term,
-                    term_type=term_type,
                     translation=translation.translation,
                     source=model_name,
                     word_type=translation.word_type,
                     word_form=translation.form,
                     model_rationale=translation.rationale,
-                    alternatives_considered=json.dumps(translation.alternatives),
                     confidence=(
                         "high"
                         if translation.confidence >= 0.8

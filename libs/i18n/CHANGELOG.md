@@ -9,6 +9,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **Consolidate Translation Databases** (CORE-594)
+  - Redesign from flat single-table schema to normalized 4-table schema
+    (`terms`, `languages`, `translations`, `selected_translations`)
+  - Consolidate 3 drifted SQLite databases into one source of truth:
+    179 terms, 38 languages, 2,445 translations, 4,527 selected translations
+  - Rewrite `TranslationDatabase` API to use `term_id` foreign keys with
+    cascading deletes instead of string-based `term`/`term_type` columns
+  - Add `selected_translations` table decoupling active translation choices from suggestion sources
+  - Add `terms` table with `UNIQUE(name, programming_language)` for multi-language extensibility
+  - Add `languages` table preserving all 26 YAML pack languages + 12 legacy community languages
+  - Update `pipeline.py`, `import_yaml_to_db.py`, `yaml_exporter.py` for new schema
+  - Add CLI `db` subcommands: `init`, `stats`, `vacuum`
+  - Rewrite test suite for new schema (40 unit tests, 4 integration tests)
+
+## [0.5.0] - 2026-02-01
+
+### Changed
+
+- Version bumped to align with monorepo v0.5.0 release
+- No functional changes beyond 0.4.1 for i18n infrastructure
+
 ## [0.4.1] - 2026-01-31
 
 ### Added

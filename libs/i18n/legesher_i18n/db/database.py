@@ -1,7 +1,7 @@
-"""Translation database for storing and managing translations with community reviews.
+"""Translation database for storing and managing translations.
 
-This module provides the TranslationDatabase class for managing translation data,
-including translations, reviews, deep contexts, and linguistic standards.
+This module provides the TranslationDatabase class for managing translation data
+with the consolidated schema: terms, languages, translations, selected_translations.
 """
 
 import logging
@@ -19,10 +19,10 @@ class TranslationDatabase:
     SQLite-based database for translation storage with connection pooling.
 
     This database stores:
-    - Core translations with metadata and confidence scores
-    - Community reviews and feedback on translations
-    - Deep contexts and etymology for programming terms
-    - Linguistic standards and guidelines per language
+    - Terms: canonical list of reserved words (extensible across programming languages)
+    - Languages: language registry with ISO standards and script metadata
+    - Translations: one row per translation suggestion (per term, per language, per source)
+    - Selected translations: which translation is currently active for YAML packs
 
     Features:
     - Thread-safe operations with connection pooling
@@ -30,20 +30,23 @@ class TranslationDatabase:
     - Automatic schema initialization
     - Foreign key support with cascading deletes
 
-    Default storage location: .legesher/translations.db
+    Default storage location: libs/i18n/legesher_i18n/db/translations.db
     """
 
-    def __init__(self, db_path: str = ".legesher/translations.db"):
+    def __init__(self, db_path: str | Path | None = None):
         """
         Initialize Translation Database.
 
         Args:
-            db_path: Path to SQLite database file (default: .legesher/translations.db)
+            db_path: Path to SQLite database file. Defaults to
+                     libs/i18n/legesher_i18n/db/translations.db
         """
-        self.db_path = db_path
+        if db_path is None:
+            db_path = str(Path(__file__).parent / "translations.db")
+        self.db_path = str(db_path)
 
         # Ensure directory exists
-        db_dir = Path(db_path).parent
+        db_dir = Path(self.db_path).parent
         db_dir.mkdir(parents=True, exist_ok=True)
 
         # Connection pooling: maintain persistent connection per thread
@@ -102,23 +105,15 @@ class TranslationDatabase:
         Initialize translation database with complete schema.
 
         Creates all required tables and indexes:
-        - translations: Core translation data
-        - reviews: Community feedback
-        - deep_contexts: Etymology and explanations
-        - linguistic_standards: Language-specific guidelines
-
-        Indexes are created for optimized lookups.
+        - terms: canonical list of reserved words
+        - languages: language registry
+        - translations: translation suggestions
+        - selected_translations: active translations for YAML packs
         """
         conn = sqlite3.connect(self.db_path)
-
-        # Enable foreign key support
         conn.execute("PRAGMA foreign_keys=ON")
 
-        # Get all schema statements
-        schema_statements = get_schema()
-
-        # Execute each statement
-        for statement in schema_statements:
+        for statement in get_schema():
             conn.execute(statement)
 
         conn.commit()
@@ -127,466 +122,155 @@ class TranslationDatabase:
         logger.debug(f"Translation database initialized at {self.db_path}")
 
     # ===========================
-    # Deep Context CRUD Operations
+    # Term Operations
     # ===========================
 
-    def add_deep_context(
+    def get_term_by_name(
         self,
-        term: str,
-        term_type: str,
-        etymology: str | None = None,
-        explanation_simple: str | None = None,
-        explanation_beginner: str | None = None,
-        explanation_intermediate: str | None = None,
-        explanation_expert: str | None = None,
-        concept_agnostic: str | None = None,
-        translation_guidance: str | None = None,
-    ) -> int:
-        """Add deep context for a term.
+        name: str,
+        programming_language: str = "python",
+    ) -> dict | None:
+        """Get a term by its name and programming language.
 
         Args:
-            term: The programming term (e.g., "class", "def")
-            term_type: Type of term (keyword, builtin, etc.)
-            etymology: Origin and history of the term
-            explanation_simple: Simple explanation for non-programmers
-            explanation_beginner: Explanation for beginner programmers
-            explanation_intermediate: Explanation for intermediate programmers
-            explanation_expert: Explanation for expert programmers
-            concept_agnostic: Language-agnostic concept description
-            translation_guidance: Guidelines for translating this term
+            name: The term name (e.g., "def", "print", "ValueError")
+            programming_language: Programming language (default: "python")
 
         Returns:
-            The context ID of the newly added deep context
-
-        Raises:
-            sqlite3.IntegrityError: If term already exists (UNIQUE constraint)
+            Dictionary with term fields, or None if not found
         """
         conn = self._get_connection()
         conn.row_factory = sqlite3.Row
 
         cursor = conn.execute(
-            """
-            INSERT INTO deep_contexts (
-                term, term_type, etymology, explanation_simple,
-                explanation_beginner, explanation_intermediate,
-                explanation_expert, concept_agnostic, translation_guidance
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                term,
-                term_type,
-                etymology,
-                explanation_simple,
-                explanation_beginner,
-                explanation_intermediate,
-                explanation_expert,
-                concept_agnostic,
-                translation_guidance,
-            ),
-        )
-
-        conn.commit()
-        context_id = cursor.lastrowid
-        logger.debug(f"Added deep context for term '{term}' with ID {context_id}")
-        return context_id
-
-    def get_deep_context(self, term: str) -> dict | None:
-        """Get deep context for a term.
-
-        Args:
-            term: The programming term to look up
-
-        Returns:
-            Dictionary with all context fields or None if not found.
-            Keys include: id, term, term_type, etymology, explanation_simple,
-            explanation_beginner, explanation_intermediate, explanation_expert,
-            concept_agnostic, translation_guidance, created_at, updated_at
-        """
-        conn = self._get_connection()
-        conn.row_factory = sqlite3.Row
-
-        cursor = conn.execute(
-            """
-            SELECT * FROM deep_contexts WHERE term = ?
-            """,
-            (term,),
+            "SELECT * FROM terms WHERE name = ? AND programming_language = ?",
+            (name, programming_language),
         )
 
         row = cursor.fetchone()
-        if row is None:
-            logger.debug(f"No deep context found for term '{term}'")
-            return None
+        conn.row_factory = None
+        if row:
+            return dict(row)
+        return None
 
-        return dict(row)
-
-    def update_deep_context(self, term: str, **fields) -> bool:
-        """Update deep context for a term.
-
-        Args:
-            term: The programming term to update
-            **fields: Fields to update (etymology, explanation_simple, etc.)
-
-        Returns:
-            True if updated, False if not found
-
-        Note:
-            Also updates the updated_at timestamp automatically
-        """
-        if not fields:
-            logger.warning("No fields provided for update")
-            return False
-
-        # Build SET clause dynamically
-        valid_fields = {
-            "term_type",
-            "etymology",
-            "explanation_simple",
-            "explanation_beginner",
-            "explanation_intermediate",
-            "explanation_expert",
-            "concept_agnostic",
-            "translation_guidance",
-        }
-
-        # Filter to valid fields only
-        update_fields = {k: v for k, v in fields.items() if k in valid_fields}
-
-        if not update_fields:
-            logger.warning(f"No valid fields provided for update: {fields.keys()}")
-            return False
-
-        set_clause = ", ".join([f"{field} = ?" for field in update_fields])
-        values = list(update_fields.values())
-
-        conn = self._get_connection()
-        cursor = conn.execute(
-            f"""
-            UPDATE deep_contexts
-            SET {set_clause}, updated_at = datetime('now')
-            WHERE term = ?
-            """,
-            values + [term],
-        )
-
-        conn.commit()
-        updated = cursor.rowcount > 0
-
-        if updated:
-            logger.debug(f"Updated deep context for term '{term}'")
-        else:
-            logger.debug(f"No deep context found to update for term '{term}'")
-
-        return updated
-
-    # ===========================
-    # Linguistic Standards CRUD Operations
-    # ===========================
-
-    def add_linguistic_standard(
+    def get_or_create_term(
         self,
-        language_code: str,
-        language_family: str | None = None,
-        action_keyword_form: str | None = None,
-        state_keyword_form: str | None = None,
-        constant_form: str | None = None,
-        guidelines: str | None = None,
+        name: str,
+        programming_language: str = "python",
+        category: str = "unknown",
+        subcategory: str | None = None,
     ) -> int:
-        """Add linguistic standards for a language.
+        """Get existing term ID or create a new term.
 
         Args:
-            language_code: ISO 639-1 language code (e.g., "es", "zh")
-            language_family: Language family (e.g., "Romance", "Sino-Tibetan")
-            action_keyword_form: Guidelines for action keywords (verbs)
-            state_keyword_form: Guidelines for state keywords (conditions)
-            constant_form: Guidelines for constant naming
-            guidelines: General translation guidelines for the language
+            name: The term name
+            programming_language: Programming language (default: "python")
+            category: Term category (used only if creating)
+            subcategory: Term subcategory (used only if creating)
 
         Returns:
-            The standard ID of the newly added linguistic standard
-
-        Raises:
-            sqlite3.IntegrityError: If language_code already exists (UNIQUE constraint)
+            The term ID
         """
-        conn = self._get_connection()
-        conn.row_factory = sqlite3.Row
+        existing = self.get_term_by_name(name, programming_language)
+        if existing:
+            return existing["id"]
 
+        conn = self._get_connection()
         cursor = conn.execute(
             """
-            INSERT INTO linguistic_standards (
-                language_code, language_family, action_keyword_form,
-                state_keyword_form, constant_form, guidelines
-            ) VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO terms (name, programming_language, category, subcategory)
+            VALUES (?, ?, ?, ?)
             """,
-            (
-                language_code,
-                language_family,
-                action_keyword_form,
-                state_keyword_form,
-                constant_form,
-                guidelines,
-            ),
+            (name, programming_language, category, subcategory),
         )
-
         conn.commit()
-        standard_id = cursor.lastrowid
+        term_id: int = cursor.lastrowid  # type: ignore[assignment]
         logger.debug(
-            f"Added linguistic standard for language '{language_code}' with ID {standard_id}"
+            f"Created term '{name}' ({programming_language}) with ID {term_id}"
         )
-        return standard_id
+        return term_id
 
-    def get_linguistic_standard(self, language_code: str) -> dict | None:
-        """Get linguistic standards for a language.
+    def get_terms(
+        self,
+        programming_language: str | None = None,
+        category: str | None = None,
+    ) -> list[dict]:
+        """Get terms with optional filters.
 
         Args:
-            language_code: ISO 639-1 language code (e.g., "es", "zh")
+            programming_language: Filter by programming language
+            category: Filter by category
 
         Returns:
-            Dictionary with all standard fields or None if not found.
-            Keys include: id, language_code, language_family, action_keyword_form,
-            state_keyword_form, constant_form, guidelines, created_at, updated_at
+            List of term dictionaries
         """
         conn = self._get_connection()
         conn.row_factory = sqlite3.Row
 
-        cursor = conn.execute(
-            """
-            SELECT * FROM linguistic_standards WHERE language_code = ?
-            """,
-            (language_code,),
-        )
+        query = "SELECT * FROM terms WHERE 1=1"
+        params: list = []
 
+        if programming_language is not None:
+            query += " AND programming_language = ?"
+            params.append(programming_language)
+
+        if category is not None:
+            query += " AND category = ?"
+            params.append(category)
+
+        query += " ORDER BY name"
+        cursor = conn.execute(query, params)
+        rows = cursor.fetchall()
+        conn.row_factory = None
+        return [dict(row) for row in rows]
+
+    # ===========================
+    # Language Operations
+    # ===========================
+
+    def get_language(self, code: str) -> dict | None:
+        """Get a language by its code.
+
+        Args:
+            code: ISO 639-1 language code (e.g., "es", "ar")
+
+        Returns:
+            Dictionary with language fields, or None if not found
+        """
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+
+        cursor = conn.execute("SELECT * FROM languages WHERE code = ?", (code,))
         row = cursor.fetchone()
-        if row is None:
-            logger.debug(f"No linguistic standard found for language '{language_code}'")
-            return None
+        conn.row_factory = None
+        if row:
+            return dict(row)
+        return None
 
-        return dict(row)
-
-    def update_linguistic_standard(self, language_code: str, **fields) -> bool:
-        """Update linguistic standards for a language.
-
-        Args:
-            language_code: ISO 639-1 language code to update
-            **fields: Fields to update (language_family, action_keyword_form, etc.)
-
-        Returns:
-            True if updated, False if not found
-
-        Note:
-            Also updates the updated_at timestamp automatically
-        """
-        if not fields:
-            logger.warning("No fields provided for update")
-            return False
-
-        # Build SET clause dynamically
-        valid_fields = {
-            "language_family",
-            "action_keyword_form",
-            "state_keyword_form",
-            "constant_form",
-            "guidelines",
-        }
-
-        # Filter to valid fields only
-        update_fields = {k: v for k, v in fields.items() if k in valid_fields}
-
-        if not update_fields:
-            logger.warning(f"No valid fields provided for update: {fields.keys()}")
-            return False
-
-        set_clause = ", ".join([f"{field} = ?" for field in update_fields])
-        values = list(update_fields.values())
-
-        conn = self._get_connection()
-        cursor = conn.execute(
-            f"""
-            UPDATE linguistic_standards
-            SET {set_clause}, updated_at = datetime('now')
-            WHERE language_code = ?
-            """,
-            values + [language_code],
-        )
-
-        conn.commit()
-        updated = cursor.rowcount > 0
-
-        if updated:
-            logger.debug(f"Updated linguistic standard for language '{language_code}'")
-        else:
-            logger.debug(
-                f"No linguistic standard found to update for language '{language_code}'"
-            )
-
-        return updated
-
-    # ===========================
-    # Review CRUD Operations
-    # ===========================
-
-    def add_review(
-        self,
-        translation_id: int,
-        reviewer_github: str | None = None,
-        reviewer_proficiency: str | None = None,
-        regional_variant: str | None = None,
-        vote: str | None = None,
-        emoji: str | None = None,
-        comment: str | None = None,
-        suggested_translation: str | None = None,
-        alternatives_suggested: str | None = None,
-        review_source: str | None = None,
-        github_issue_url: str | None = None,
-    ) -> int:
-        """Add a review for a translation.
+    def get_languages(self, has_yaml_pack: bool | None = None) -> list[dict]:
+        """Get all languages with optional filter.
 
         Args:
-            translation_id: ID of the translation being reviewed
-            reviewer_github: GitHub username of the reviewer
-            reviewer_proficiency: Proficiency level in the language (e.g., 'native', 'fluent', 'intermediate')
-            regional_variant: Regional variant of the language (e.g., 'mx', 'es', 'ar')
-            vote: Review vote (e.g., 'approve', 'request_changes', 'comment')
-            emoji: Emoji reaction to the translation
-            comment: Text comment on the translation
-            suggested_translation: Alternative translation suggested by reviewer
-            alternatives_suggested: Other alternative translations considered
-            review_source: Source of the review (e.g., 'github', 'web_ui', 'cli')
-            github_issue_url: URL to GitHub issue for this review
+            has_yaml_pack: If set, filter by whether language has a YAML pack
 
         Returns:
-            The review ID of the newly created review
-
-        Raises:
-            sqlite3.IntegrityError: If translation_id doesn't exist (foreign key constraint violation)
+            List of language dictionaries
         """
         conn = self._get_connection()
         conn.row_factory = sqlite3.Row
 
-        try:
-            cursor = conn.execute(
-                """
-                INSERT INTO reviews (
-                    translation_id,
-                    reviewer_github,
-                    reviewer_proficiency,
-                    regional_variant,
-                    vote,
-                    emoji,
-                    comment,
-                    suggested_translation,
-                    alternatives_suggested,
-                    review_source,
-                    github_issue_url
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    translation_id,
-                    reviewer_github,
-                    reviewer_proficiency,
-                    regional_variant,
-                    vote,
-                    emoji,
-                    comment,
-                    suggested_translation,
-                    alternatives_suggested,
-                    review_source,
-                    github_issue_url,
-                ),
-            )
-            conn.commit()
-            review_id = cursor.lastrowid
-            logger.debug(f"Added review {review_id} for translation {translation_id}")
-            return review_id
-        except sqlite3.IntegrityError as e:
-            conn.rollback()
-            logger.error(f"Failed to add review for translation {translation_id}: {e}")
-            raise
+        query = "SELECT * FROM languages WHERE 1=1"
+        params: list = []
 
-    def get_reviews(self, translation_id: int) -> list[dict]:
-        """Get all reviews for a specific translation.
+        if has_yaml_pack is not None:
+            query += " AND has_yaml_pack = ?"
+            params.append(1 if has_yaml_pack else 0)
 
-        Args:
-            translation_id: ID of the translation
-
-        Returns:
-            List of review dictionaries. Returns empty list if no reviews found.
-            Each review dict contains all review fields including:
-            - id, translation_id, reviewer_github, reviewer_proficiency,
-            - regional_variant, vote, emoji, comment, suggested_translation,
-            - alternatives_suggested, review_source, github_issue_url, created_at
-        """
-        conn = self._get_connection()
-        conn.row_factory = sqlite3.Row
-
-        cursor = conn.execute(
-            """
-            SELECT * FROM reviews
-            WHERE translation_id = ?
-            ORDER BY created_at DESC
-            """,
-            (translation_id,),
-        )
-
+        query += " ORDER BY code"
+        cursor = conn.execute(query, params)
         rows = cursor.fetchall()
-        reviews = [dict(row) for row in rows]
-
-        logger.debug(
-            f"Retrieved {len(reviews)} reviews for translation {translation_id}"
-        )
-        return reviews
-
-    def get_reviews_by_reviewer(self, reviewer_github: str) -> list[dict]:
-        """Get all reviews by a specific reviewer.
-
-        Args:
-            reviewer_github: GitHub username of the reviewer
-
-        Returns:
-            List of review dictionaries. Returns empty list if no reviews found.
-            Each review dict contains all review fields including:
-            - id, translation_id, reviewer_github, reviewer_proficiency,
-            - regional_variant, vote, emoji, comment, suggested_translation,
-            - alternatives_suggested, review_source, github_issue_url, created_at
-        """
-        conn = self._get_connection()
-        conn.row_factory = sqlite3.Row
-
-        cursor = conn.execute(
-            """
-            SELECT * FROM reviews
-            WHERE reviewer_github = ?
-            ORDER BY created_at DESC
-            """,
-            (reviewer_github,),
-        )
-
-        rows = cursor.fetchall()
-        reviews = [dict(row) for row in rows]
-
-        logger.debug(f"Retrieved {len(reviews)} reviews by reviewer {reviewer_github}")
-        return reviews
-
-    def delete_review(self, review_id: int) -> bool:
-        """Delete a review by ID.
-
-        Args:
-            review_id: ID of the review to delete
-
-        Returns:
-            True if the review was deleted, False if review_id was not found
-        """
-        conn = self._get_connection()
-
-        cursor = conn.execute("DELETE FROM reviews WHERE id = ?", (review_id,))
-        conn.commit()
-
-        deleted = cursor.rowcount > 0
-        if deleted:
-            logger.debug(f"Deleted review {review_id}")
-        else:
-            logger.debug(f"Review {review_id} not found for deletion")
-
-        return deleted
+        conn.row_factory = None
+        return [dict(row) for row in rows]
 
     # ===========================
     # Translation CRUD Operations
@@ -594,206 +278,81 @@ class TranslationDatabase:
 
     def add_translation(
         self,
+        term_id: int,
         language_code: str,
-        term: str,
-        term_type: str,
         translation: str,
         source: str,
+        model_version: str | None = None,
         word_type: str | None = None,
         word_form: str | None = None,
-        model_rationale: str | None = None,
-        alternatives_considered: str | None = None,
         confidence: str | None = None,
+        model_rationale: str | None = None,
         created_by: str | None = None,
     ) -> int:
-        """Add a new translation to the database.
+        """Add a translation suggestion to the database.
+
+        Each distinct suggestion gets its own row. If a model returns 3
+        different options for "True" in Russian, that's 3 rows. Duplicate
+        suggestions (same term_id, language_code, source, translation) are
+        silently ignored.
 
         Args:
+            term_id: Foreign key to terms table
             language_code: Target language code (e.g., 'es', 'ar', 'zh')
-            term: The English term being translated
-            term_type: Type of term (keyword, builtin, operator, etc.)
             translation: The translated term
-            source: Source of translation (community, aya23, claude, etc.)
+            source: Source of translation (e.g., 'aya', 'community', 'anthropic')
+            model_version: Optional model version (e.g., 'aya-101', 'claude-3.5-sonnet')
             word_type: Optional grammatical word type
             word_form: Optional word form variation
-            model_rationale: Optional AI model reasoning for translation
-            alternatives_considered: Optional alternative translations considered
             confidence: Optional confidence level (high, medium, low)
+            model_rationale: Optional AI model reasoning for translation
             created_by: Optional creator identifier
 
         Returns:
-            The translation ID (primary key)
-
-        Raises:
-            sqlite3.IntegrityError: If duplicate (language_code, term, term_type, source)
+            The translation ID, or 0 if the suggestion already existed
         """
         conn = self._get_connection()
         cursor = conn.execute(
             """
-            INSERT INTO translations (
-                language_code, term, term_type, translation, source,
-                word_type, word_form, model_rationale, alternatives_considered,
-                confidence, created_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
+            INSERT OR IGNORE INTO translations (
+                term_id, language_code, translation, source,
+                model_version, word_type, word_form, confidence,
+                model_rationale, created_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
             (
+                term_id,
                 language_code,
-                term,
-                term_type,
                 translation,
                 source,
+                model_version,
                 word_type,
                 word_form,
-                model_rationale,
-                alternatives_considered,
                 confidence,
+                model_rationale,
                 created_by,
             ),
         )
         conn.commit()
 
-        translation_id = cursor.lastrowid
-        logger.debug(
-            f"Added translation: {term} -> {translation} "
-            f"({language_code}, {term_type}, source: {source}, id: {translation_id})"
-        )
-
-        return translation_id
-
-    def upsert_translation(
-        self,
-        language_code: str,
-        term: str,
-        term_type: str,
-        translation: str,
-        source: str,
-        word_type: str | None = None,
-        word_form: str | None = None,
-        model_rationale: str | None = None,
-        alternatives_considered: str | None = None,
-        confidence: str | None = None,
-        created_by: str | None = None,
-    ) -> int:
-        """Add or update a translation in the database.
-
-        If a translation with the same (language_code, term, term_type, source)
-        already exists, it will be updated. Otherwise, a new translation is inserted.
-
-        Args:
-            language_code: Target language code (e.g., 'es', 'ar', 'zh')
-            term: The English term being translated
-            term_type: Type of term (keyword, builtin, operator, etc.)
-            translation: The translated term
-            source: Source of translation (community, aya23, claude, etc.)
-            word_type: Optional grammatical word type
-            word_form: Optional word form variation
-            model_rationale: Optional AI model reasoning for translation
-            alternatives_considered: Optional alternative translations considered
-            confidence: Optional confidence level (high, medium, low)
-            created_by: Optional creator identifier
-
-        Returns:
-            The translation ID (primary key)
-        """
-        conn = self._get_connection()
-
-        # Check if translation exists
-        existing = self.get_translation(language_code, term, term_type, source)
-
-        if existing:
-            # Update existing translation
-            conn.execute(
-                """
-                UPDATE translations SET
-                    translation = ?,
-                    word_type = ?,
-                    word_form = ?,
-                    model_rationale = ?,
-                    alternatives_considered = ?,
-                    confidence = ?,
-                    created_by = ?,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE language_code = ? AND term = ? AND term_type = ? AND source = ?
-            """,
-                (
-                    translation,
-                    word_type,
-                    word_form,
-                    model_rationale,
-                    alternatives_considered,
-                    confidence,
-                    created_by,
-                    language_code,
-                    term,
-                    term_type,
-                    source,
-                ),
-            )
-            conn.commit()
-            translation_id = existing["id"]
+        if cursor.rowcount == 0:
             logger.debug(
-                f"Updated translation: {term} -> {translation} "
-                f"({language_code}, {term_type}, source: {source}, id: {translation_id})"
+                f"Duplicate translation skipped: term_id={term_id} -> {translation} "
+                f"({language_code}, source: {source})"
             )
-        else:
-            # Insert new translation
-            translation_id = self.add_translation(
-                language_code=language_code,
-                term=term,
-                term_type=term_type,
-                translation=translation,
-                source=source,
-                word_type=word_type,
-                word_form=word_form,
-                model_rationale=model_rationale,
-                alternatives_considered=alternatives_considered,
-                confidence=confidence,
-                created_by=created_by,
-            )
+            return 0
 
+        translation_id: int = cursor.lastrowid  # type: ignore[assignment]
+        logger.debug(
+            f"Added translation: term_id={term_id} -> {translation} "
+            f"({language_code}, source: {source}, id: {translation_id})"
+        )
         return translation_id
 
-    def get_translation(
+    def get_translations(
         self,
-        language_code: str,
-        term: str,
-        term_type: str,
-        source: str,
-    ) -> dict | None:
-        """Get a specific translation.
-
-        Args:
-            language_code: Target language code
-            term: The English term
-            term_type: Type of term
-            source: Source of translation
-
-        Returns:
-            Dictionary with all translation fields, or None if not found
-        """
-        conn = self._get_connection()
-        conn.row_factory = sqlite3.Row
-
-        cursor = conn.execute(
-            """
-            SELECT * FROM translations
-            WHERE language_code = ? AND term = ? AND term_type = ? AND source = ?
-        """,
-            (language_code, term, term_type, source),
-        )
-
-        row = cursor.fetchone()
-        conn.row_factory = None  # Reset row factory
-
-        if row:
-            return dict(row)
-        return None
-
-    def get_all_translations(
-        self,
+        term_id: int | None = None,
         language_code: str | None = None,
-        term: str | None = None,
-        term_type: str | None = None,
         source: str | None = None,
     ) -> list[dict]:
         """Query translations with optional filters.
@@ -801,9 +360,8 @@ class TranslationDatabase:
         All parameters are optional. Provide any combination to filter results.
 
         Args:
+            term_id: Filter by term ID
             language_code: Filter by target language code
-            term: Filter by English term
-            term_type: Filter by term type
             source: Filter by translation source
 
         Returns:
@@ -812,21 +370,16 @@ class TranslationDatabase:
         conn = self._get_connection()
         conn.row_factory = sqlite3.Row
 
-        # Build dynamic query based on provided filters
         query = "SELECT * FROM translations WHERE 1=1"
-        params = []
+        params: list = []
+
+        if term_id is not None:
+            query += " AND term_id = ?"
+            params.append(term_id)
 
         if language_code is not None:
             query += " AND language_code = ?"
             params.append(language_code)
-
-        if term is not None:
-            query += " AND term = ?"
-            params.append(term)
-
-        if term_type is not None:
-            query += " AND term_type = ?"
-            params.append(term_type)
 
         if source is not None:
             query += " AND source = ?"
@@ -834,9 +387,72 @@ class TranslationDatabase:
 
         cursor = conn.execute(query, params)
         rows = cursor.fetchall()
-        conn.row_factory = None  # Reset row factory
-
+        conn.row_factory = None
         return [dict(row) for row in rows]
+
+    def get_translations_joined(
+        self,
+        language_code: str | None = None,
+        source: str | None = None,
+    ) -> list[dict]:
+        """Query translations joined with term info.
+
+        Returns translation rows enriched with term name and category,
+        useful for export workflows that need term metadata.
+
+        Args:
+            language_code: Filter by target language code
+            source: Filter by translation source
+
+        Returns:
+            List of dicts with translation fields plus 'term' and 'term_type' keys
+        """
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+
+        query = """
+            SELECT t.*, terms.name AS term, terms.category AS term_type
+            FROM translations t
+            JOIN terms ON t.term_id = terms.id
+            WHERE 1=1
+        """
+        params: list = []
+
+        if language_code is not None:
+            query += " AND t.language_code = ?"
+            params.append(language_code)
+
+        if source is not None:
+            query += " AND t.source = ?"
+            params.append(source)
+
+        cursor = conn.execute(query, params)
+        rows = cursor.fetchall()
+        conn.row_factory = None
+        return [dict(row) for row in rows]
+
+    def get_translations_for_term(
+        self,
+        term_name: str,
+        language_code: str,
+        programming_language: str = "python",
+    ) -> list[dict]:
+        """Get all translation suggestions for a term+language combination.
+
+        Convenience method that looks up the term by name first.
+
+        Args:
+            term_name: The term name (e.g., "def", "print")
+            language_code: Target language code
+            programming_language: Programming language (default: "python")
+
+        Returns:
+            List of translation dictionaries (all suggestions from all sources)
+        """
+        term = self.get_term_by_name(term_name, programming_language)
+        if term is None:
+            return []
+        return self.get_translations(term_id=term["id"], language_code=language_code)
 
     def update_translation(
         self,
@@ -854,41 +470,30 @@ class TranslationDatabase:
 
         Returns:
             True if translation was updated, False if not found
-
-        Example:
-            db.update_translation(
-                translation_id=123,
-                translation="nueva_traducción",
-                confidence="high"
-            )
         """
         if not fields:
             logger.warning("No fields provided to update_translation")
             return False
 
-        # Valid fields that can be updated (exclude id, created_at)
         valid_fields = {
+            "term_id",
             "language_code",
-            "term",
-            "term_type",
             "translation",
             "source",
+            "model_version",
             "word_type",
             "word_form",
-            "model_rationale",
-            "alternatives_considered",
             "confidence",
+            "model_rationale",
             "created_by",
         }
 
-        # Filter out invalid fields
         update_fields = {k: v for k, v in fields.items() if k in valid_fields}
 
         if not update_fields:
             logger.warning("No valid fields provided to update_translation")
             return False
 
-        # Build UPDATE query dynamically
         set_clause = ", ".join([f"{field} = ?" for field in update_fields.keys()])
         set_clause += ", updated_at = datetime('now')"
 
@@ -908,13 +513,8 @@ class TranslationDatabase:
             logger.debug(f"Translation {translation_id} not found for update")
             return False
 
-    def delete_translation(
-        self,
-        translation_id: int,
-    ) -> bool:
+    def delete_translation(self, translation_id: int) -> bool:
         """Delete a translation by ID.
-
-        Cascade deletes associated reviews due to foreign key constraint.
 
         Args:
             translation_id: The translation ID to delete
@@ -929,14 +529,202 @@ class TranslationDatabase:
         conn.commit()
 
         if cursor.rowcount > 0:
-            logger.debug(
-                f"Deleted translation {translation_id} (and cascade-deleted reviews)"
-            )
+            logger.debug(f"Deleted translation {translation_id}")
             return True
         else:
             logger.debug(f"Translation {translation_id} not found for deletion")
             return False
 
-    # Additional methods to be implemented in future phases:
-    # - search_translations()
-    # - get_stats()
+    # ===========================
+    # Selected Translation Operations
+    # ===========================
+
+    def get_selected(
+        self,
+        term_id: int,
+        language_code: str,
+    ) -> dict | None:
+        """Get the selected (active) translation for a term+language.
+
+        Args:
+            term_id: The term ID
+            language_code: Target language code
+
+        Returns:
+            Dictionary with selected translation fields, or None if not found
+        """
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+
+        cursor = conn.execute(
+            """
+            SELECT st.*, t.name as term_name, t.category as term_category
+            FROM selected_translations st
+            JOIN terms t ON t.id = st.term_id
+            WHERE st.term_id = ? AND st.language_code = ?
+            """,
+            (term_id, language_code),
+        )
+
+        row = cursor.fetchone()
+        conn.row_factory = None
+        if row:
+            return dict(row)
+        return None
+
+    def get_selected_by_name(
+        self,
+        term_name: str,
+        language_code: str,
+        programming_language: str = "python",
+    ) -> dict | None:
+        """Get the selected translation for a term by name.
+
+        Convenience method that looks up the term by name first.
+
+        Args:
+            term_name: The term name (e.g., "def", "print")
+            language_code: Target language code
+            programming_language: Programming language (default: "python")
+
+        Returns:
+            Dictionary with selected translation fields, or None if not found
+        """
+        term = self.get_term_by_name(term_name, programming_language)
+        if term is None:
+            return None
+        return self.get_selected(term["id"], language_code)
+
+    def set_selected(
+        self,
+        term_id: int,
+        language_code: str,
+        translation: str,
+        selected_by: str | None = None,
+        selection_reason: str | None = None,
+    ) -> int:
+        """Set or update the selected translation for a term+language.
+
+        Uses INSERT OR REPLACE to ensure exactly one selection per term+language.
+
+        Args:
+            term_id: The term ID
+            language_code: Target language code
+            translation: The chosen translation text
+            selected_by: Who/what made the selection
+            selection_reason: Why this translation was chosen
+
+        Returns:
+            The selected_translation ID
+        """
+        conn = self._get_connection()
+        cursor = conn.execute(
+            """
+            INSERT OR REPLACE INTO selected_translations (
+                term_id, language_code, translation,
+                selected_by, selection_reason
+            ) VALUES (?, ?, ?, ?, ?)
+            """,
+            (term_id, language_code, translation, selected_by, selection_reason),
+        )
+        conn.commit()
+
+        row_id: int = cursor.lastrowid  # type: ignore[assignment]
+        logger.debug(
+            f"Set selected translation: term_id={term_id}, "
+            f"lang={language_code} -> {translation}"
+        )
+        return row_id
+
+    def get_all_selected(
+        self,
+        language_code: str | None = None,
+        category: str | None = None,
+    ) -> list[dict]:
+        """Get all selected translations with optional filters.
+
+        Args:
+            language_code: Filter by target language code
+            category: Filter by term category (e.g., "keyword", "builtin_func")
+
+        Returns:
+            List of selected translation dictionaries with joined term info
+        """
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+
+        query = """
+            SELECT st.*, t.name as term_name, t.category as term_category,
+                   t.subcategory as term_subcategory,
+                   t.programming_language
+            FROM selected_translations st
+            JOIN terms t ON t.id = st.term_id
+            WHERE 1=1
+        """
+        params: list = []
+
+        if language_code is not None:
+            query += " AND st.language_code = ?"
+            params.append(language_code)
+
+        if category is not None:
+            query += " AND t.category = ?"
+            params.append(category)
+
+        query += " ORDER BY t.name"
+        cursor = conn.execute(query, params)
+        rows = cursor.fetchall()
+        conn.row_factory = None
+        return [dict(row) for row in rows]
+
+    def remove_selected(self, term_id: int, language_code: str) -> bool:
+        """Remove the selected translation for a term+language.
+
+        Args:
+            term_id: The term ID
+            language_code: Target language code
+
+        Returns:
+            True if removed, False if not found
+        """
+        conn = self._get_connection()
+        cursor = conn.execute(
+            "DELETE FROM selected_translations WHERE term_id = ? AND language_code = ?",
+            (term_id, language_code),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+
+    # ===========================
+    # Statistics
+    # ===========================
+
+    def get_stats(self) -> dict:
+        """Get database statistics.
+
+        Returns:
+            Dictionary with counts for each table and breakdowns
+        """
+        conn = self._get_connection()
+
+        stats: dict = {}
+        for table in ("terms", "languages", "translations", "selected_translations"):
+            stats[f"{table}_count"] = conn.execute(
+                f"SELECT COUNT(*) FROM {table}"
+            ).fetchone()[0]
+
+        stats["languages_with_packs"] = conn.execute(
+            "SELECT COUNT(*) FROM languages WHERE has_yaml_pack = 1"
+        ).fetchone()[0]
+
+        rows = conn.execute(
+            "SELECT source, COUNT(*) FROM translations GROUP BY source"
+        ).fetchall()
+        stats["translations_by_source"] = {row[0]: row[1] for row in rows}
+
+        rows = conn.execute(
+            "SELECT category, COUNT(*) FROM terms GROUP BY category"
+        ).fetchall()
+        stats["terms_by_category"] = {row[0]: row[1] for row in rows}
+
+        return stats

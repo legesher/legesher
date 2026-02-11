@@ -14,11 +14,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
 | legesher-core            | 0.5.0   | —        |
-| legesher-i18n            | 0.5.0   | —        |
+| legesher-i18n            | 0.5.0   | Yes      |
 | legesher (CLI)           | 0.5.0   | —        |
 | legesher-language-server | 0.1.1   | —        |
 | legesher-vscode          | 0.1.4   | Yes      |
 | legesher-home            | 0.1.0   | —        |
+
+### Added
+
+- **legesher-i18n**: Consolidate 3 translation databases into normalized
+  4-table schema with `selected_translations` tracking (CORE-594)
 
 ### Fixed
 

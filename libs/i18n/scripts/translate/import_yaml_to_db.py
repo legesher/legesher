@@ -27,7 +27,6 @@ import yaml
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from legesher_i18n.db import TranslationDatabase
-from scripts.translate.term_classifier import classify_term
 
 logging.basicConfig(
     level=logging.INFO,
@@ -76,6 +75,14 @@ def import_yaml_file(
             if not isinstance(section_data, dict):
                 continue
 
+            # Map YAML section to term category
+            section_to_category = {
+                "keywords": "keyword",
+                "builtins": "builtin_func",
+                "exceptions": "exception",
+            }
+            category = section_to_category.get(section, "unknown")
+
             for term, translation in section_data.items():
                 # Skip comments
                 if term.startswith("#"):
@@ -86,23 +93,25 @@ def import_yaml_file(
                     skipped += 1
                     continue
 
-                # Get term type
-                term_type = classify_term(term, python_version="3.13")
-
                 if dry_run:
                     logger.debug(f"  Would import: {term} -> {translation}")
                     imported += 1
                     continue
 
                 try:
-                    # Use upsert to handle existing entries
-                    db.upsert_translation(
+                    # Get or create the term in the terms table
+                    term_id = db.get_or_create_term(
+                        name=term,
+                        programming_language="python",
+                        category=category,
+                    )
+
+                    db.add_translation(
+                        term_id=term_id,
                         language_code=language_code,
-                        term=term,
-                        term_type=term_type,
                         translation=str(translation),
-                        source="yaml-import",  # Mark as imported from YAML
-                        confidence="high",  # Existing translations are trusted
+                        source="yaml-import",
+                        confidence="high",
                         created_by="yaml-import",
                     )
                     imported += 1
@@ -187,8 +196,8 @@ def main():
     parser.add_argument(
         "--db-path",
         type=Path,
-        default=Path(".legesher/translations.db"),
-        help="Path to translation database",
+        default=None,
+        help="Path to translation database (default: package db)",
     )
     parser.add_argument(
         "--verbose",
@@ -203,8 +212,8 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
 
     # Initialize database
-    db = TranslationDatabase(db_path=str(args.db_path))
-    logger.info(f"Using database: {args.db_path}")
+    db = TranslationDatabase(db_path=str(args.db_path) if args.db_path else None)
+    logger.info(f"Using database: {db.db_path}")
 
     # Get list of languages to import
     if args.languages:

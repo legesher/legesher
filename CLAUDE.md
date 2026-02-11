@@ -238,6 +238,27 @@ The packages have a logical dependency hierarchy defined in the architecture:
 When making changes, consider impact on dependent packages. Build order should follow the tier system
 (Tier 1 → Tier 2 → Tier 3 → Tier 4).
 
+## Translation Database
+
+The i18n package uses a consolidated SQLite database (`libs/i18n/legesher_i18n/db/translations.db`) with 4 tables.
+See `libs/i18n/CLAUDE.md` for full schema details and query examples.
+
+**Tables summary:**
+
+| Table | Purpose | Key Constraint |
+| ----- | ------- | -------------- |
+| `terms` | Canonical reserved words (cross-language) | `UNIQUE(name, programming_language)` |
+| `languages` | Language registry (38 languages: 26 with YAML packs, 12 legacy) | `code` PK (ISO 639-1) |
+| `translations` | All translation suggestions (complete catalog) | `UNIQUE(term_id, language_code, source, translation)` |
+| `selected_translations` | Active translation per term+language for YAML packs | `UNIQUE(term_id, language_code)` |
+
+**Key design decisions:**
+
+- `translations` is the complete catalog — every suggestion lives here, including the active YAML pack values
+- `selected_translations` tracks which translation is currently chosen (decouples selection from suggestion)
+- Duplicate suggestions from the same source are silently ignored (`INSERT OR IGNORE`)
+- All foreign keys use cascading deletes; WAL mode enabled for concurrent access
+
 ## Language Pack Organization
 
 Language packs are organized hierarchically within `libs/i18n/` for independent versioning and releases:

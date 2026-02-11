@@ -1,5 +1,11 @@
-"""Unit tests for translation database."""
+"""Unit tests for translation database (consolidated schema).
 
+Tests the 4-table schema: terms, languages, translations, selected_translations.
+See CORE-594 for migration details. Deferred tables (reviews, deep_contexts,
+linguistic_standards) tracked in CORE-595.
+"""
+
+import sqlite3
 import tempfile
 from pathlib import Path
 
@@ -19,153 +25,414 @@ class TestTranslationDatabase:
             db_path = str(Path(tmpdir) / "test_translations.db")
             db_instance = TranslationDatabase(db_path=db_path)
             yield db_instance
-            # Explicitly close connections before temp directory cleanup (important on Windows)
             db_instance.close()
 
-    def test_database_initialization(self, db):
-        """Test that database and tables are created."""
-        # Verify the database was initialized
-        assert db is not None
-        assert hasattr(db, "close")
+    # ===========================
+    # Database Initialization
+    # ===========================
 
-        # Verify tables exist by attempting to query them
-        # This will be expanded in Phase 2 to check specific schema
+    def test_database_initialization(self, db):
+        """Test that database and all 4 tables are created."""
+        assert db is not None
         conn = db._get_connection()
         cursor = conn.cursor()
 
-        # Check if translations table exists
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='translations'"
-        )
-        assert cursor.fetchone() is not None
+        # Verify all 4 tables exist
+        for table in ("terms", "languages", "translations", "selected_translations"):
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+                (table,),
+            )
+            assert cursor.fetchone() is not None, f"Table '{table}' should exist"
 
-        # Check if reviews table exists
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='reviews'"
-        )
-        assert cursor.fetchone() is not None
+    def test_database_wal_mode(self, db):
+        """Test that WAL mode is enabled for concurrent access."""
+        conn = db._get_connection()
+        result = conn.execute("PRAGMA journal_mode").fetchone()
+        assert result[0] == "wal"
+
+    def test_database_foreign_keys_enabled(self, db):
+        """Test that foreign keys are enforced."""
+        conn = db._get_connection()
+        result = conn.execute("PRAGMA foreign_keys").fetchone()
+        assert result[0] == 1
 
     def test_database_path_creation(self, db):
         """Test that database file is created at specified path."""
-        # The database should have a valid path
-        assert hasattr(db, "db_path") or hasattr(db, "_db_path")
-        # Path validation will be expanded in Phase 2
+        assert hasattr(db, "db_path")
+        assert Path(db.db_path).exists()
 
-    # Placeholder tests for CRUD operations (to be filled in Phase 2)
+    def test_database_default_path(self):
+        """Test that default path resolves to translations.db inside the package db directory."""
+        expected_dir = Path(__file__).parent.parent.parent / "legesher_i18n" / "db"
+        db = TranslationDatabase()
+        try:
+            assert Path(db.db_path).parent == expected_dir
+            assert Path(db.db_path).name == "translations.db"
+        finally:
+            db.close()
+
+    # ===========================
+    # Term CRUD Tests
+    # ===========================
+
+    def test_get_or_create_term_creates_new(self, db):
+        """Test creating a new term via get_or_create_term."""
+        term_id = db.get_or_create_term(
+            name="class",
+            programming_language="python",
+            category="keyword",
+            subcategory="structure",
+        )
+        assert term_id > 0
+
+    def test_get_or_create_term_returns_existing(self, db):
+        """Test that get_or_create_term returns existing ID for duplicate."""
+        id1 = db.get_or_create_term(
+            name="def", programming_language="python", category="keyword"
+        )
+        id2 = db.get_or_create_term(
+            name="def", programming_language="python", category="keyword"
+        )
+        assert id1 == id2
+
+    def test_get_or_create_term_different_languages(self, db):
+        """Test that same term name in different programming languages creates separate entries."""
+        id_python = db.get_or_create_term(
+            name="class", programming_language="python", category="keyword"
+        )
+        id_ts = db.get_or_create_term(
+            name="class", programming_language="typescript", category="keyword"
+        )
+        assert id_python != id_ts
+
+    def test_get_term_by_name(self, db):
+        """Test retrieving a term by name."""
+        db.get_or_create_term(
+            name="return", programming_language="python", category="keyword"
+        )
+
+        term = db.get_term_by_name("return")
+        assert term is not None
+        assert term["name"] == "return"
+        assert term["programming_language"] == "python"
+        assert term["category"] == "keyword"
+        assert "id" in term
+        assert "created_at" in term
+
+    def test_get_term_by_name_not_found(self, db):
+        """Test that non-existent term returns None."""
+        term = db.get_term_by_name("nonexistent_term")
+        assert term is None
+
+    def test_get_terms_all(self, db):
+        """Test retrieving all terms."""
+        db.get_or_create_term(
+            name="if", programming_language="python", category="keyword"
+        )
+        db.get_or_create_term(
+            name="print", programming_language="python", category="builtin_func"
+        )
+        db.get_or_create_term(
+            name="ValueError", programming_language="python", category="exception"
+        )
+
+        terms = db.get_terms()
+        assert len(terms) == 3
+
+    def test_get_terms_by_category(self, db):
+        """Test filtering terms by category."""
+        db.get_or_create_term(
+            name="if", programming_language="python", category="keyword"
+        )
+        db.get_or_create_term(
+            name="for", programming_language="python", category="keyword"
+        )
+        db.get_or_create_term(
+            name="print", programming_language="python", category="builtin_func"
+        )
+
+        keywords = db.get_terms(category="keyword")
+        assert len(keywords) == 2
+        assert all(t["category"] == "keyword" for t in keywords)
+
+    def test_get_terms_by_programming_language(self, db):
+        """Test filtering terms by programming language."""
+        db.get_or_create_term(
+            name="def", programming_language="python", category="keyword"
+        )
+        db.get_or_create_term(
+            name="function", programming_language="typescript", category="keyword"
+        )
+
+        python_terms = db.get_terms(programming_language="python")
+        assert len(python_terms) == 1
+        assert python_terms[0]["name"] == "def"
+
+    def test_term_unique_constraint(self, db):
+        """Test that UNIQUE(name, programming_language) is enforced."""
+        db.get_or_create_term(
+            name="class", programming_language="python", category="keyword"
+        )
+
+        # Direct insert should fail
+        conn = db._get_connection()
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute(
+                "INSERT INTO terms (name, programming_language, category) VALUES (?, ?, ?)",
+                ("class", "python", "keyword"),
+            )
+
+    # ===========================
+    # Language Operations Tests
+    # ===========================
+
+    def test_get_language(self, db):
+        """Test retrieving a language by code."""
+        # Insert a language directly
+        conn = db._get_connection()
+        conn.execute(
+            """INSERT INTO languages (code, name, native_name, direction, status)
+               VALUES (?, ?, ?, ?, ?)""",
+            ("es", "Spanish", "Español", "ltr", "experimental"),
+        )
+        conn.commit()
+
+        lang = db.get_language("es")
+        assert lang is not None
+        assert lang["code"] == "es"
+        assert lang["name"] == "Spanish"
+        assert lang["native_name"] == "Español"
+        assert lang["direction"] == "ltr"
+        assert lang["status"] == "experimental"
+
+    def test_get_language_not_found(self, db):
+        """Test that non-existent language returns None."""
+        lang = db.get_language("xx")
+        assert lang is None
+
+    def test_get_languages(self, db):
+        """Test retrieving all languages."""
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name, has_yaml_pack) VALUES (?, ?, ?, ?)",
+            ("es", "Spanish", "Español", 1),
+        )
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name, has_yaml_pack) VALUES (?, ?, ?, ?)",
+            ("ar", "Arabic", "العربية", 1),
+        )
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name, has_yaml_pack) VALUES (?, ?, ?, ?)",
+            ("bn", "Bengali", "বাংলা", 0),
+        )
+        conn.commit()
+
+        all_langs = db.get_languages()
+        assert len(all_langs) == 3
+
+        with_packs = db.get_languages(has_yaml_pack=True)
+        assert len(with_packs) == 2
+
+        without_packs = db.get_languages(has_yaml_pack=False)
+        assert len(without_packs) == 1
+        assert without_packs[0]["code"] == "bn"
+
+    # ===========================
+    # Translation CRUD Tests
+    # ===========================
 
     def test_add_translation(self, db):
-        """Test adding a translation to the database."""
-        # Add a translation with all fields
+        """Test adding a translation suggestion."""
+        term_id = db.get_or_create_term(
+            name="class", programming_language="python", category="keyword"
+        )
+
+        # Ensure the language exists
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
         translation_id = db.add_translation(
+            term_id=term_id,
             language_code="es",
-            term="class",
-            term_type="keyword",
             translation="clase",
             source="community",
             word_type="noun",
             word_form="singular",
-            model_rationale="Translates to 'class' in Spanish as a category/group",
-            alternatives_considered="grupo, categoría",
             confidence="high",
+            model_rationale="Direct translation of 'class' as category",
             created_by="test_user",
         )
 
-        # Verify it was added with a valid ID
         assert translation_id > 0
 
-        # Verify we can retrieve it
-        result = db.get_translation(
-            language_code="es", term="class", term_type="keyword", source="community"
+    def test_add_multiple_translations_same_term(self, db):
+        """Test that each model suggestion gets its own row."""
+        term_id = db.get_or_create_term(
+            name="if", programming_language="python", category="keyword"
         )
-        assert result is not None
-        assert result["translation"] == "clase"
-        assert result["word_type"] == "noun"
-        assert result["word_form"] == "singular"
-        assert result["confidence"] == "high"
-        assert result["created_by"] == "test_user"
 
-    def test_get_translation(self, db):
-        """Test retrieving a translation by language and term."""
-        # Add a translation first
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        id1 = db.add_translation(
+            term_id=term_id, language_code="es", translation="si", source="community"
+        )
+        id2 = db.add_translation(
+            term_id=term_id, language_code="es", translation="si", source="aya"
+        )
+        id3 = db.add_translation(
+            term_id=term_id, language_code="es", translation="cuando", source="claude"
+        )
+
+        assert len({id1, id2, id3}) == 3
+
+    def test_get_translations_by_term_id(self, db):
+        """Test querying translations by term_id."""
+        term_id = db.get_or_create_term(
+            name="def", programming_language="python", category="keyword"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("ar", "Arabic", "العربية"),
+        )
+        conn.commit()
+
         db.add_translation(
+            term_id=term_id,
             language_code="es",
-            term="lambda",
-            term_type="keyword",
-            translation="lambda",
-            source="community",
-            confidence="medium",
-        )
-
-        # Retrieve it
-        result = db.get_translation(
-            language_code="es", term="lambda", term_type="keyword", source="community"
-        )
-
-        assert result is not None
-        assert result["language_code"] == "es"
-        assert result["term"] == "lambda"
-        assert result["term_type"] == "keyword"
-        assert result["translation"] == "lambda"
-        assert result["source"] == "community"
-        assert result["confidence"] == "medium"
-        assert "id" in result
-        assert "created_at" in result
-        assert "updated_at" in result
-
-    def test_get_all_translations_for_term(self, db):
-        """Test retrieving all translations for a specific term."""
-        # Add multiple translations for the same term
-        db.add_translation(
-            language_code="es",
-            term="if",
-            term_type="keyword",
-            translation="si",
-            source="community",
-        )
-        db.add_translation(
-            language_code="es",
-            term="if",
-            term_type="keyword",
-            translation="si",
-            source="aya23",
-        )
-        db.add_translation(
-            language_code="ar",
-            term="if",
-            term_type="keyword",
-            translation="إذا",
+            translation="definir",
             source="community",
         )
+        db.add_translation(
+            term_id=term_id, language_code="ar", translation="عرّف", source="community"
+        )
 
-        # Get all translations for "if"
-        results = db.get_all_translations(term="if")
-        assert len(results) == 3
+        results = db.get_translations(term_id=term_id)
+        assert len(results) == 2
 
-        # Get Spanish translations for "if"
-        results = db.get_all_translations(language_code="es", term="if")
+    def test_get_translations_by_language(self, db):
+        """Test querying translations by language code."""
+        id1 = db.get_or_create_term(
+            name="if", programming_language="python", category="keyword"
+        )
+        id2 = db.get_or_create_term(
+            name="for", programming_language="python", category="keyword"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        db.add_translation(
+            term_id=id1, language_code="es", translation="si", source="community"
+        )
+        db.add_translation(
+            term_id=id2, language_code="es", translation="para", source="community"
+        )
+
+        results = db.get_translations(language_code="es")
         assert len(results) == 2
         assert all(r["language_code"] == "es" for r in results)
 
-        # Get specific source
-        results = db.get_all_translations(
-            language_code="es", term="if", term_type="keyword", source="community"
+    def test_get_translations_by_source(self, db):
+        """Test querying translations by source."""
+        term_id = db.get_or_create_term(
+            name="print", programming_language="python", category="builtin_func"
         )
-        assert len(results) == 1
-        assert results[0]["source"] == "community"
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        db.add_translation(
+            term_id=term_id,
+            language_code="es",
+            translation="imprimir",
+            source="community",
+        )
+        db.add_translation(
+            term_id=term_id, language_code="es", translation="imprimir", source="aya"
+        )
+
+        community = db.get_translations(source="community")
+        assert len(community) == 1
+        assert community[0]["source"] == "community"
+
+    def test_get_translations_for_term_by_name(self, db):
+        """Test get_translations_for_term convenience method."""
+        term_id = db.get_or_create_term(
+            name="return", programming_language="python", category="keyword"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        db.add_translation(
+            term_id=term_id,
+            language_code="es",
+            translation="retornar",
+            source="community",
+        )
+        db.add_translation(
+            term_id=term_id, language_code="es", translation="devolver", source="aya"
+        )
+
+        results = db.get_translations_for_term(term_name="return", language_code="es")
+        assert len(results) == 2
+
+    def test_get_translations_for_term_not_found(self, db):
+        """Test get_translations_for_term returns empty for unknown term."""
+        results = db.get_translations_for_term(
+            term_name="nonexistent", language_code="es"
+        )
+        assert results == []
 
     def test_update_translation(self, db):
         """Test updating an existing translation."""
-        # Add a translation
+        term_id = db.get_or_create_term(
+            name="continue", programming_language="python", category="keyword"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
         translation_id = db.add_translation(
+            term_id=term_id,
             language_code="es",
-            term="continue",
-            term_type="keyword",
             translation="continuar",
             source="community",
             confidence="low",
         )
 
-        # Update some fields
         updated = db.update_translation(
             translation_id,
             translation="seguir",
@@ -173,136 +440,344 @@ class TestTranslationDatabase:
             word_type="verb",
             model_rationale="Updated based on community feedback",
         )
-
         assert updated is True
 
         # Verify updates
-        result = db.get_translation(
-            language_code="es", term="continue", term_type="keyword", source="community"
-        )
+        results = db.get_translations(term_id=term_id, language_code="es")
+        assert len(results) >= 1
+        result = [r for r in results if r["id"] == translation_id][0]
         assert result["translation"] == "seguir"
         assert result["confidence"] == "high"
         assert result["word_type"] == "verb"
         assert result["model_rationale"] == "Updated based on community feedback"
-        assert result["term"] == "continue"  # unchanged
 
     def test_delete_translation(self, db):
         """Test deleting a translation."""
-        # Add a translation
+        term_id = db.get_or_create_term(
+            name="raise", programming_language="python", category="keyword"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
         translation_id = db.add_translation(
+            term_id=term_id,
             language_code="es",
-            term="raise",
-            term_type="keyword",
             translation="levantar",
             source="community",
         )
 
-        # Delete it
         deleted = db.delete_translation(translation_id)
         assert deleted is True
 
         # Verify it's gone
-        result = db.get_translation(
-            language_code="es", term="raise", term_type="keyword", source="community"
+        results = db.get_translations(term_id=term_id, language_code="es")
+        assert len(results) == 0
+
+    def test_delete_translation_not_found(self, db):
+        """Test deleting non-existent translation returns False."""
+        deleted = db.delete_translation(99999)
+        assert deleted is False
+
+    def test_translation_foreign_key_term(self, db):
+        """Test that translations require valid term_id."""
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
         )
-        assert result is None
+        conn.commit()
 
-    def test_add_review(self, db):
-        """Test adding a review for a translation."""
+        with pytest.raises(sqlite3.IntegrityError):
+            db.add_translation(
+                term_id=99999,
+                language_code="es",
+                translation="test",
+                source="test",
+            )
 
-        # First, add a translation using the proper method
-        translation_id = db.add_translation(
+    def test_translation_foreign_key_language(self, db):
+        """Test that translations require valid language_code."""
+        term_id = db.get_or_create_term(
+            name="if", programming_language="python", category="keyword"
+        )
+
+        with pytest.raises(sqlite3.IntegrityError):
+            db.add_translation(
+                term_id=term_id,
+                language_code="xx",  # non-existent language
+                translation="test",
+                source="test",
+            )
+
+    # ===========================
+    # Selected Translations Tests
+    # ===========================
+
+    def test_set_selected(self, db):
+        """Test setting a selected translation for a term+language pair."""
+        term_id = db.get_or_create_term(
+            name="def", programming_language="python", category="keyword"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        result_id = db.set_selected(
+            term_id=term_id,
             language_code="es",
-            term="class",
-            term_type="keyword",
-            translation="clase",
+            translation="definir",
+            selected_by="pipeline",
+            selection_reason="Highest confidence from Aya model",
+        )
+        assert result_id > 0
+
+    def test_set_selected_replaces_existing(self, db):
+        """Test that set_selected replaces previous selection (UNIQUE constraint)."""
+        term_id = db.get_or_create_term(
+            name="if", programming_language="python", category="keyword"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        db.set_selected(term_id=term_id, language_code="es", translation="si")
+        db.set_selected(term_id=term_id, language_code="es", translation="cuando")
+
+        selected = db.get_selected(term_id=term_id, language_code="es")
+        assert selected is not None
+        assert selected["translation"] == "cuando"
+
+    def test_get_selected(self, db):
+        """Test retrieving selected translation by term_id + language."""
+        term_id = db.get_or_create_term(
+            name="for", programming_language="python", category="keyword"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        db.set_selected(term_id=term_id, language_code="es", translation="para")
+
+        selected = db.get_selected(term_id=term_id, language_code="es")
+        assert selected is not None
+        assert selected["translation"] == "para"
+        assert selected["term_id"] == term_id
+        assert selected["language_code"] == "es"
+
+    def test_get_selected_not_found(self, db):
+        """Test get_selected returns None when no selection exists."""
+        selected = db.get_selected(term_id=99999, language_code="es")
+        assert selected is None
+
+    def test_get_selected_by_name(self, db):
+        """Test get_selected_by_name convenience method."""
+        term_id = db.get_or_create_term(
+            name="while", programming_language="python", category="keyword"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        db.set_selected(term_id=term_id, language_code="es", translation="mientras")
+
+        selected = db.get_selected_by_name(term_name="while", language_code="es")
+        assert selected is not None
+        assert selected["translation"] == "mientras"
+
+    def test_get_selected_by_name_not_found(self, db):
+        """Test get_selected_by_name returns None for unknown term."""
+        selected = db.get_selected_by_name(term_name="nonexistent", language_code="es")
+        assert selected is None
+
+    def test_get_all_selected(self, db):
+        """Test retrieving all selected translations for a language."""
+        id1 = db.get_or_create_term(
+            name="if", programming_language="python", category="keyword"
+        )
+        id2 = db.get_or_create_term(
+            name="for", programming_language="python", category="keyword"
+        )
+        id3 = db.get_or_create_term(
+            name="print", programming_language="python", category="builtin_func"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        db.set_selected(term_id=id1, language_code="es", translation="si")
+        db.set_selected(term_id=id2, language_code="es", translation="para")
+        db.set_selected(term_id=id3, language_code="es", translation="imprimir")
+
+        all_selected = db.get_all_selected(language_code="es")
+        assert len(all_selected) == 3
+
+    def test_remove_selected(self, db):
+        """Test removing a selected translation."""
+        term_id = db.get_or_create_term(
+            name="class", programming_language="python", category="keyword"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        db.set_selected(term_id=term_id, language_code="es", translation="clase")
+
+        removed = db.remove_selected(term_id=term_id, language_code="es")
+        assert removed is True
+
+        # Verify it's gone
+        selected = db.get_selected(term_id=term_id, language_code="es")
+        assert selected is None
+
+    def test_remove_selected_not_found(self, db):
+        """Test removing non-existent selected translation returns False."""
+        removed = db.remove_selected(term_id=99999, language_code="es")
+        assert removed is False
+
+    # ===========================
+    # Cascade Delete Tests
+    # ===========================
+
+    def test_cascade_delete_translations_on_term_delete(self, db):
+        """Test that deleting a term cascades to delete its translations."""
+        term_id = db.get_or_create_term(
+            name="lambda", programming_language="python", category="keyword"
+        )
+
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        db.add_translation(
+            term_id=term_id,
+            language_code="es",
+            translation="lambda",
             source="community",
         )
-
-        # Add a review for this translation
-        review_id = db.add_review(
-            translation_id=translation_id,
-            reviewer_github="testuser",
-            reviewer_proficiency="native",
-            regional_variant="mx",
-            vote="approve",
-            emoji="👍",
-            comment="This is a great translation!",
-            suggested_translation=None,
-            alternatives_suggested=None,
-            review_source="github",
-            github_issue_url="https://github.com/legesher/legesher/issues/123",
+        db.add_translation(
+            term_id=term_id, language_code="es", translation="lambda", source="aya"
         )
 
-        # Verify the review was added
-        assert review_id > 0
+        # Verify translations exist
+        translations = db.get_translations(term_id=term_id)
+        assert len(translations) == 2
 
-        # Retrieve the review to verify it was stored correctly
-        reviews = db.get_reviews(translation_id)
-        assert len(reviews) == 1
-        assert reviews[0]["id"] == review_id
-        assert reviews[0]["translation_id"] == translation_id
-        assert reviews[0]["reviewer_github"] == "testuser"
-        assert reviews[0]["reviewer_proficiency"] == "native"
-        assert reviews[0]["regional_variant"] == "mx"
-        assert reviews[0]["vote"] == "approve"
-        assert reviews[0]["emoji"] == "👍"
-        assert reviews[0]["comment"] == "This is a great translation!"
-        assert reviews[0]["review_source"] == "github"
-        assert (
-            reviews[0]["github_issue_url"]
-            == "https://github.com/legesher/legesher/issues/123"
+        # Delete the term directly
+        conn.execute("DELETE FROM terms WHERE id = ?", (term_id,))
+        conn.commit()
+
+        # Verify translations were cascade deleted
+        translations_after = db.get_translations(term_id=term_id)
+        assert len(translations_after) == 0
+
+    def test_cascade_delete_selected_on_term_delete(self, db):
+        """Test that deleting a term cascades to delete selected translations."""
+        term_id = db.get_or_create_term(
+            name="break", programming_language="python", category="keyword"
         )
 
-    def test_get_reviews_for_translation(self, db):
-        """Test retrieving reviews for a translation."""
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
 
-        # First, add a translation using the proper method
-        translation_id = db.add_translation(
-            language_code="es",
-            term="def",
-            term_type="keyword",
-            translation="def",
-            source="community",
+        db.set_selected(term_id=term_id, language_code="es", translation="romper")
+
+        # Delete term
+        conn.execute("DELETE FROM terms WHERE id = ?", (term_id,))
+        conn.commit()
+
+        # Verify selected was cascade deleted
+        selected = db.get_selected(term_id=term_id, language_code="es")
+        assert selected is None
+
+    # ===========================
+    # Stats Tests
+    # ===========================
+
+    def test_get_stats_empty(self, db):
+        """Test get_stats on empty database."""
+        stats = db.get_stats()
+        assert stats["terms_count"] == 0
+        assert stats["languages_count"] == 0
+        assert stats["translations_count"] == 0
+        assert stats["selected_translations_count"] == 0
+
+    def test_get_stats_with_data(self, db):
+        """Test get_stats with populated data."""
+        id1 = db.get_or_create_term(
+            name="if", programming_language="python", category="keyword"
+        )
+        id2 = db.get_or_create_term(
+            name="print", programming_language="python", category="builtin_func"
         )
 
-        # Add multiple reviews for this translation
-        review_id_1 = db.add_review(
-            translation_id=translation_id,
-            reviewer_github="user1",
-            comment="Good translation",
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name, has_yaml_pack) VALUES (?, ?, ?, ?)",
+            ("es", "Spanish", "Español", 1),
         )
-        review_id_2 = db.add_review(
-            translation_id=translation_id,
-            reviewer_github="user2",
-            comment="Could be better",
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name, has_yaml_pack) VALUES (?, ?, ?, ?)",
+            ("ar", "Arabic", "العربية", 0),
         )
-        review_id_3 = db.add_review(
-            translation_id=translation_id, reviewer_github="user3", comment="Perfect!"
+        conn.commit()
+
+        db.add_translation(
+            term_id=id1, language_code="es", translation="si", source="community"
         )
+        db.add_translation(
+            term_id=id2, language_code="es", translation="imprimir", source="aya"
+        )
+        db.set_selected(term_id=id1, language_code="es", translation="si")
 
-        # Retrieve all reviews for this translation
-        reviews = db.get_reviews(translation_id)
-        assert len(reviews) == 3
+        stats = db.get_stats()
+        assert stats["terms_count"] == 2
+        assert stats["languages_count"] == 2
+        assert stats["languages_with_packs"] == 1
+        assert stats["translations_count"] == 2
+        assert stats["selected_translations_count"] == 1
+        assert "terms_by_category" in stats
+        assert stats["terms_by_category"]["keyword"] == 1
+        assert stats["terms_by_category"]["builtin_func"] == 1
 
-        # Verify reviews are returned in descending order by created_at (most recent first)
-        # The IDs should be in reverse order if created sequentially
-        review_ids = [r["id"] for r in reviews]
-        assert review_id_3 in review_ids
-        assert review_id_2 in review_ids
-        assert review_id_1 in review_ids
-
-        # Test getting reviews for non-existent translation
-        empty_reviews = db.get_reviews(99999)
-        assert len(empty_reviews) == 0
-
-    def test_get_translation_with_best_score(self, db):
-        """Test retrieving translation with highest review score."""
-        pytest.skip("Will be implemented in Phase 2")
-
-    def test_source_filtering(self, db):
-        """Test filtering translations by source (community, aya23, etc)."""
-        pytest.skip("Will be implemented in Phase 2")
+    # ===========================
+    # Placeholder Tests (Phase 2)
+    # ===========================
 
     def test_concurrent_access(self, db):
         """Test database handles concurrent access correctly."""
@@ -312,458 +787,6 @@ class TestTranslationDatabase:
         """Test transaction rollback on error."""
         pytest.skip("Will be implemented in Phase 2")
 
-    # ===========================
-    # Deep Context CRUD Tests
-    # ===========================
-
-    def test_add_deep_context(self, db):
-        """Test adding deep context for a programming term."""
-        context_id = db.add_deep_context(
-            term="class",
-            term_type="keyword",
-            etymology="From Latin 'classis' meaning group or division",
-            explanation_simple="A blueprint for creating objects",
-            explanation_beginner="Classes are templates that define attributes and methods",
-            explanation_intermediate="Classes support OOP with inheritance and encapsulation",
-            explanation_expert="Classes are first-class objects with metaclass customization",
-            concept_agnostic="Object-oriented programming construct for encapsulation",
-            translation_guidance="Translate based on 'group' or 'category' concepts",
-        )
-
-        assert context_id > 0
-
-        # Verify it was added
-        context = db.get_deep_context("class")
-        assert context is not None
-        assert context["term"] == "class"
-        assert context["term_type"] == "keyword"
-        assert context["etymology"] == "From Latin 'classis' meaning group or division"
-
-    def test_add_deep_context_minimal_fields(self, db):
-        """Test adding deep context with only required fields."""
-        context_id = db.add_deep_context(term="def", term_type="keyword")
-
-        assert context_id > 0
-
-        # Verify it was added
-        context = db.get_deep_context("def")
-        assert context is not None
-        assert context["term"] == "def"
-        assert context["term_type"] == "keyword"
-        assert context["etymology"] is None
-
-    def test_add_deep_context_unique_constraint(self, db):
-        """Test that adding duplicate term raises IntegrityError."""
-        import sqlite3
-
-        db.add_deep_context(term="class", term_type="keyword")
-
-        # Attempting to add same term should raise IntegrityError
-        with pytest.raises(sqlite3.IntegrityError):
-            db.add_deep_context(term="class", term_type="keyword")
-
-    def test_get_deep_context(self, db):
-        """Test retrieving deep context by term."""
-        # Add a context first
-        db.add_deep_context(
-            term="return",
-            term_type="keyword",
-            etymology="From re- (back) + turn",
-            explanation_simple="Exit a function with a value",
-            concept_agnostic="Control flow statement for function exit",
-        )
-
-        # Retrieve it
-        context = db.get_deep_context("return")
-
-        assert context is not None
-        assert context["term"] == "return"
-        assert context["term_type"] == "keyword"
-        assert context["etymology"] == "From re- (back) + turn"
-        assert context["explanation_simple"] == "Exit a function with a value"
-        assert context["concept_agnostic"] == "Control flow statement for function exit"
-        assert "id" in context
-        assert "created_at" in context
-        assert "updated_at" in context
-
-    def test_get_deep_context_not_found(self, db):
-        """Test retrieving non-existent deep context returns None."""
-        context = db.get_deep_context("nonexistent")
-        assert context is None
-
-    def test_update_deep_context(self, db):
-        """Test updating deep context fields."""
-        # Add a context
-        db.add_deep_context(
-            term="lambda",
-            term_type="keyword",
-            etymology="From Greek letter λ (lambda)",
-            explanation_simple="Anonymous function",
-        )
-
-        # Update some fields
-        updated = db.update_deep_context(
-            "lambda",
-            etymology="From Greek letter λ (lambda) used in lambda calculus",
-            explanation_beginner="A small anonymous function for simple operations",
-            translation_guidance="Use mathematical function terminology",
-        )
-
-        assert updated is True
-
-        # Verify updates
-        context = db.get_deep_context("lambda")
-        assert (
-            context["etymology"]
-            == "From Greek letter λ (lambda) used in lambda calculus"
-        )
-        assert (
-            context["explanation_beginner"]
-            == "A small anonymous function for simple operations"
-        )
-        assert (
-            context["translation_guidance"] == "Use mathematical function terminology"
-        )
-        assert context["explanation_simple"] == "Anonymous function"  # unchanged
-
-    def test_update_deep_context_not_found(self, db):
-        """Test updating non-existent deep context returns False."""
-        updated = db.update_deep_context("nonexistent", etymology="Some etymology")
-        assert updated is False
-
-    def test_update_deep_context_no_fields(self, db):
-        """Test updating with no fields returns False."""
-        db.add_deep_context(term="if", term_type="keyword")
-
-        updated = db.update_deep_context("if")
-        assert updated is False
-
-    def test_update_deep_context_invalid_fields(self, db):
-        """Test updating with invalid field names returns False."""
-        db.add_deep_context(term="while", term_type="keyword")
-
-        updated = db.update_deep_context(
-            "while", invalid_field="value", another_invalid="value"
-        )
-        assert updated is False
-
-    def test_update_deep_context_mixed_valid_invalid_fields(self, db):
-        """Test updating with mix of valid and invalid fields."""
-        db.add_deep_context(term="for", term_type="keyword")
-
-        updated = db.update_deep_context(
-            "for", etymology="Valid update", invalid_field="Should be ignored"
-        )
-        assert updated is True
-
-        context = db.get_deep_context("for")
-        assert context["etymology"] == "Valid update"
-
-    # ===========================
-    # Linguistic Standards CRUD Tests
-    # ===========================
-
-    def test_add_linguistic_standard(self, db):
-        """Test adding linguistic standards for a language."""
-        standard_id = db.add_linguistic_standard(
-            language_code="es",
-            language_family="Romance",
-            action_keyword_form="infinitive",
-            state_keyword_form="noun",
-            constant_form="UPPERCASE",
-            guidelines="Use infinitive forms for action keywords",
-        )
-
-        assert standard_id > 0
-
-        # Verify it was added
-        standard = db.get_linguistic_standard("es")
-        assert standard is not None
-        assert standard["language_code"] == "es"
-        assert standard["language_family"] == "Romance"
-        assert standard["action_keyword_form"] == "infinitive"
-
-    def test_add_linguistic_standard_minimal_fields(self, db):
-        """Test adding linguistic standard with only required field."""
-        standard_id = db.add_linguistic_standard(language_code="fr")
-
-        assert standard_id > 0
-
-        # Verify it was added
-        standard = db.get_linguistic_standard("fr")
-        assert standard is not None
-        assert standard["language_code"] == "fr"
-        assert standard["language_family"] is None
-
-    def test_add_linguistic_standard_unique_constraint(self, db):
-        """Test that adding duplicate language_code raises IntegrityError."""
-        import sqlite3
-
-        db.add_linguistic_standard(language_code="es")
-
-        # Attempting to add same language_code should raise IntegrityError
-        with pytest.raises(sqlite3.IntegrityError):
-            db.add_linguistic_standard(language_code="es")
-
-    def test_get_linguistic_standard(self, db):
-        """Test retrieving linguistic standards by language code."""
-        # Add a standard first
-        db.add_linguistic_standard(
-            language_code="zh",
-            language_family="Sino-Tibetan",
-            action_keyword_form="verb",
-            state_keyword_form="adjective",
-            constant_form="UPPERCASE",
-            guidelines="Use descriptive characters for keywords",
-        )
-
-        # Retrieve it
-        standard = db.get_linguistic_standard("zh")
-
-        assert standard is not None
-        assert standard["language_code"] == "zh"
-        assert standard["language_family"] == "Sino-Tibetan"
-        assert standard["action_keyword_form"] == "verb"
-        assert standard["state_keyword_form"] == "adjective"
-        assert standard["constant_form"] == "UPPERCASE"
-        assert standard["guidelines"] == "Use descriptive characters for keywords"
-        assert "id" in standard
-        assert "created_at" in standard
-        assert "updated_at" in standard
-
-    def test_get_linguistic_standard_not_found(self, db):
-        """Test retrieving non-existent linguistic standard returns None."""
-        standard = db.get_linguistic_standard("nonexistent")
-        assert standard is None
-
-    def test_update_linguistic_standard(self, db):
-        """Test updating linguistic standard fields."""
-        # Add a standard
-        db.add_linguistic_standard(
-            language_code="ar", language_family="Semitic", action_keyword_form="verb"
-        )
-
-        # Update some fields
-        updated = db.update_linguistic_standard(
-            "ar",
-            language_family="Afro-Asiatic",
-            state_keyword_form="noun",
-            guidelines="Use Arabic script naturally with right-to-left flow",
-        )
-
-        assert updated is True
-
-        # Verify updates
-        standard = db.get_linguistic_standard("ar")
-        assert standard["language_family"] == "Afro-Asiatic"
-        assert standard["state_keyword_form"] == "noun"
-        assert (
-            standard["guidelines"]
-            == "Use Arabic script naturally with right-to-left flow"
-        )
-        assert standard["action_keyword_form"] == "verb"  # unchanged
-
-    def test_update_linguistic_standard_not_found(self, db):
-        """Test updating non-existent linguistic standard returns False."""
-        updated = db.update_linguistic_standard(
-            "nonexistent", language_family="Some family"
-        )
-        assert updated is False
-
-    def test_update_linguistic_standard_no_fields(self, db):
-        """Test updating with no fields returns False."""
-        db.add_linguistic_standard(language_code="ja")
-
-        updated = db.update_linguistic_standard("ja")
-        assert updated is False
-
-    def test_update_linguistic_standard_invalid_fields(self, db):
-        """Test updating with invalid field names returns False."""
-        db.add_linguistic_standard(language_code="ko")
-
-        updated = db.update_linguistic_standard(
-            "ko", invalid_field="value", another_invalid="value"
-        )
-        assert updated is False
-
-    def test_update_linguistic_standard_mixed_valid_invalid_fields(self, db):
-        """Test updating with mix of valid and invalid fields."""
-        db.add_linguistic_standard(language_code="pt")
-
-        updated = db.update_linguistic_standard(
-            "pt", language_family="Romance", invalid_field="Should be ignored"
-        )
-        assert updated is True
-
-        standard = db.get_linguistic_standard("pt")
-        assert standard["language_family"] == "Romance"
-
-    # ===========================
-    # Review CRUD Tests
-    # ===========================
-
-    def test_add_review_minimal_fields(self, db):
-        """Test adding a review with only required field (translation_id)."""
-
-        # Add a translation first using the proper method
-        translation_id = db.add_translation(
-            language_code="es",
-            term="return",
-            term_type="keyword",
-            translation="retornar",
-            source="community",
-        )
-
-        # Add a review with minimal fields
-        review_id = db.add_review(translation_id=translation_id)
-
-        assert review_id > 0
-
-        # Verify the review was added with NULL values for optional fields
-        reviews = db.get_reviews(translation_id)
-        assert len(reviews) == 1
-        assert reviews[0]["translation_id"] == translation_id
-        assert reviews[0]["reviewer_github"] is None
-        assert reviews[0]["comment"] is None
-
-    def test_add_review_foreign_key_constraint(self, db):
-        """Test that adding a review with non-existent translation_id raises IntegrityError."""
-        import sqlite3
-
-        # Attempt to add review for non-existent translation
-        with pytest.raises(sqlite3.IntegrityError):
-            db.add_review(translation_id=99999, comment="This should fail")
-
-    def test_get_reviews_by_reviewer(self, db):
-        """Test retrieving all reviews by a specific reviewer."""
-
-        # Add two translations using the proper method
-        translation_id_1 = db.add_translation(
-            language_code="es",
-            term="if",
-            term_type="keyword",
-            translation="si",
-            source="community",
-        )
-
-        translation_id_2 = db.add_translation(
-            language_code="es",
-            term="else",
-            term_type="keyword",
-            translation="sino",
-            source="community",
-        )
-
-        # Add reviews from different reviewers
-        db.add_review(
-            translation_id=translation_id_1,
-            reviewer_github="alice",
-            comment="Great work!",
-        )
-        db.add_review(
-            translation_id=translation_id_2,
-            reviewer_github="alice",
-            comment="Looks good",
-        )
-        db.add_review(
-            translation_id=translation_id_1,
-            reviewer_github="bob",
-            comment="Could be improved",
-        )
-
-        # Get all reviews by alice
-        alice_reviews = db.get_reviews_by_reviewer("alice")
-        assert len(alice_reviews) == 2
-        assert all(r["reviewer_github"] == "alice" for r in alice_reviews)
-
-        # Get all reviews by bob
-        bob_reviews = db.get_reviews_by_reviewer("bob")
-        assert len(bob_reviews) == 1
-        assert bob_reviews[0]["reviewer_github"] == "bob"
-
-        # Get reviews by non-existent reviewer
-        no_reviews = db.get_reviews_by_reviewer("nonexistent")
-        assert len(no_reviews) == 0
-
-    def test_delete_review(self, db):
-        """Test deleting a review by ID."""
-
-        # Add a translation using the proper method
-        translation_id = db.add_translation(
-            language_code="es",
-            term="while",
-            term_type="keyword",
-            translation="mientras",
-            source="community",
-        )
-
-        # Add a review
-        review_id = db.add_review(
-            translation_id=translation_id,
-            reviewer_github="testuser",
-            comment="Test review",
-        )
-
-        # Verify the review exists
-        reviews = db.get_reviews(translation_id)
-        assert len(reviews) == 1
-
-        # Delete the review
-        deleted = db.delete_review(review_id)
-        assert deleted is True
-
-        # Verify the review was deleted
-        reviews = db.get_reviews(translation_id)
-        assert len(reviews) == 0
-
-        # Try to delete again (should return False)
-        deleted_again = db.delete_review(review_id)
-        assert deleted_again is False
-
-        # Try to delete non-existent review
-        deleted_nonexistent = db.delete_review(99999)
-        assert deleted_nonexistent is False
-
-    def test_cascade_delete_reviews_on_translation_delete(self, db):
-        """Test that deleting a translation cascades to delete its reviews."""
-
-        # Add a translation using the proper method
-        translation_id = db.add_translation(
-            language_code="es",
-            term="for",
-            term_type="keyword",
-            translation="para",
-            source="community",
-        )
-
-        # Add multiple reviews for this translation
-        review_id_1 = db.add_review(
-            translation_id=translation_id, reviewer_github="user1", comment="Review 1"
-        )
-        review_id_2 = db.add_review(
-            translation_id=translation_id, reviewer_github="user2", comment="Review 2"
-        )
-        review_id_3 = db.add_review(
-            translation_id=translation_id, reviewer_github="user3", comment="Review 3"
-        )
-
-        # Verify reviews exist
-        reviews = db.get_reviews(translation_id)
-        assert len(reviews) == 3
-
-        # Delete the translation using raw SQL to test CASCADE
-        conn = db._get_connection()
-        conn.execute("DELETE FROM translations WHERE id = ?", (translation_id,))
-        conn.commit()
-
-        # Verify reviews were cascade deleted
-        reviews_after = db.get_reviews(translation_id)
-        assert len(reviews_after) == 0
-
-        # Verify reviews don't exist in the database at all
-        result = conn.execute(
-            "SELECT COUNT(*) FROM reviews WHERE id IN (?, ?, ?)",
-            (review_id_1, review_id_2, review_id_3),
-        )
-        count = result.fetchone()[0]
-        assert count == 0
+    def test_source_filtering(self, db):
+        """Test filtering translations by source (community, aya, claude, etc)."""
+        pytest.skip("Will be implemented in Phase 2")

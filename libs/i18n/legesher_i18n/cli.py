@@ -27,6 +27,9 @@ from .pack_loader import LanguagePackLoader, LanguagePack
 from .schema_validator import SchemaValidator
 from .db import TranslationDatabase
 
+# Default database path — resolved once so Click's exists=True check works
+_DEFAULT_DB_PATH = Path(__file__).parent / "db" / "translations.db"
+
 # Global console instance - can be replaced with quiet version
 console = Console()
 
@@ -518,12 +521,12 @@ def db():
 @db.command()
 @click.option(
     "--db-path",
-    default=".legesher/translations.db",
-    help="Path to database file",
+    default=None,
+    help="Path to database file (default: package db)",
     type=click.Path(path_type=Path),
 )
 @click.option("--quiet", "-q", is_flag=True, help="Suppress output (for CI/scripts)")
-def init(db_path: Path, quiet: bool):
+def init(db_path: Path | None, quiet: bool):
     """Initialize the translation database.
 
     Creates the database file and all required tables if they don't exist.
@@ -536,19 +539,26 @@ def init(db_path: Path, quiet: bool):
     """
     out = get_console(quiet)
     try:
-        out.print(f"[cyan]Initializing database at:[/cyan] {db_path}")
+        # Resolve the path before instantiation to check pre-existence
+        if db_path:
+            resolved_path = Path(db_path).resolve()
+        else:
+            resolved_path = (Path(__file__).parent / "db" / "translations.db").resolve()
 
-        # Check if database already exists
-        if db_path.exists():
-            out.print(f"[yellow]Database already exists at:[/yellow] {db_path}")
+        already_exists = resolved_path.exists()
+
+        out.print(f"[cyan]Initializing database at:[/cyan] {resolved_path}")
+
+        database = TranslationDatabase(db_path=str(db_path) if db_path else None)
+
+        if already_exists:
+            out.print(f"[yellow]Database already exists at:[/yellow] {resolved_path}")
             out.print("[dim]Tables will be created if they don't exist.[/dim]")
 
-        # Initialize database
-        database = TranslationDatabase(db_path=str(db_path))
         database.close()
 
         out.print("✅ [green]Database initialized successfully![/green]")
-        out.print(f"\n[dim]Location: {db_path}[/dim]")
+        out.print(f"\n[dim]Location: {resolved_path}[/dim]")
 
     except Exception as e:
         out.print(f"❌ [red]Error initializing database:[/red] {e}")
@@ -560,15 +570,15 @@ def init(db_path: Path, quiet: bool):
 @db.command()
 @click.option(
     "--db-path",
-    default=".legesher/translations.db",
-    help="Path to database file",
+    default=_DEFAULT_DB_PATH,
+    help="Path to database file (default: package db)",
     type=click.Path(exists=True, path_type=Path),
 )
 @click.option("--quiet", "-q", is_flag=True, help="Suppress output (for CI/scripts)")
 def stats(db_path: Path, quiet: bool):
     """Show database statistics.
 
-    Displays counts of translations, reviews, and other data by source and language.
+    Displays counts of terms, translations, selected translations, and languages.
 
     Examples:
 
@@ -579,14 +589,9 @@ def stats(db_path: Path, quiet: bool):
     out = get_console(quiet)
     try:
         database = TranslationDatabase(db_path=str(db_path))
+        db_stats = database.get_stats()
 
-        # Get statistics
         conn = database._get_connection()
-
-        # Total translations
-        total_translations = conn.execute(
-            "SELECT COUNT(*) FROM translations"
-        ).fetchone()[0]
 
         # Translations by source
         source_stats = conn.execute(
@@ -608,19 +613,6 @@ def stats(db_path: Path, quiet: bool):
         """
         ).fetchall()
 
-        # Total reviews
-        total_reviews = conn.execute("SELECT COUNT(*) FROM reviews").fetchone()[0]
-
-        # Total deep contexts
-        total_contexts = conn.execute("SELECT COUNT(*) FROM deep_contexts").fetchone()[
-            0
-        ]
-
-        # Total linguistic standards
-        total_standards = conn.execute(
-            "SELECT COUNT(*) FROM linguistic_standards"
-        ).fetchone()[0]
-
         database.close()
 
         # Display overview
@@ -631,12 +623,29 @@ def stats(db_path: Path, quiet: bool):
         summary_table.add_column("Metric", style="cyan")
         summary_table.add_column("Count", justify="right", style="green")
 
-        summary_table.add_row("Total Translations", str(total_translations))
-        summary_table.add_row("Total Reviews", str(total_reviews))
-        summary_table.add_row("Deep Contexts", str(total_contexts))
-        summary_table.add_row("Linguistic Standards", str(total_standards))
+        summary_table.add_row("Terms", str(db_stats["terms_count"]))
+        summary_table.add_row("Languages", str(db_stats["languages_count"]))
+        summary_table.add_row(
+            "  With YAML Packs", str(db_stats["languages_with_packs"])
+        )
+        summary_table.add_row(
+            "Translation Suggestions", str(db_stats["translations_count"])
+        )
+        summary_table.add_row(
+            "Selected Translations", str(db_stats["selected_translations_count"])
+        )
 
         out.print(summary_table)
+
+        # Terms by category
+        if db_stats.get("terms_by_category"):
+            out.print("\n[bold]Terms by Category[/bold]\n")
+            cat_table = Table()
+            cat_table.add_column("Category", style="cyan")
+            cat_table.add_column("Count", justify="right", style="green")
+            for cat, count in sorted(db_stats["terms_by_category"].items()):
+                cat_table.add_row(cat, str(count))
+            out.print(cat_table)
 
         # Translations by source
         if source_stats:
@@ -662,7 +671,7 @@ def stats(db_path: Path, quiet: bool):
 
             out.print(lang_table)
 
-        out.print(f"\n[dim]Database: {db_path}[/dim]\n")
+        out.print(f"\n[dim]Database: {database.db_path}[/dim]\n")
 
     except FileNotFoundError:
         out.print(f"❌ [red]Error:[/red] Database not found at {db_path}")
@@ -678,8 +687,8 @@ def stats(db_path: Path, quiet: bool):
 @db.command()
 @click.option(
     "--db-path",
-    default=".legesher/translations.db",
-    help="Path to database file",
+    default=_DEFAULT_DB_PATH,
+    help="Path to database file (default: package db)",
     type=click.Path(exists=True, path_type=Path),
 )
 @click.option("--quiet", "-q", is_flag=True, help="Suppress output (for CI/scripts)")
@@ -696,19 +705,20 @@ def vacuum(db_path: Path, quiet: bool):
     """
     out = get_console(quiet)
     try:
-        out.print(f"[cyan]Optimizing database:[/cyan] {db_path}")
-
         database = TranslationDatabase(db_path=str(db_path))
+        resolved_path = Path(database.db_path)
+        out.print(f"[cyan]Optimizing database:[/cyan] {resolved_path}")
+
         conn = database._get_connection()
 
         # Get size before
-        size_before = db_path.stat().st_size
+        size_before = resolved_path.stat().st_size
 
         # Run VACUUM
         conn.execute("VACUUM")
 
         # Get size after
-        size_after = db_path.stat().st_size
+        size_after = resolved_path.stat().st_size
 
         database.close()
 

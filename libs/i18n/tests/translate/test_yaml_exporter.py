@@ -9,6 +9,42 @@ from legesher_i18n.db import TranslationDatabase
 from scripts.translate.yaml_exporter import YAMLExporter
 
 
+def _add_language(db, code):
+    """Helper to ensure a language exists in the database."""
+    names = {
+        "es": ("Spanish", "Español"),
+        "fr": ("French", "Français"),
+        "de": ("German", "Deutsch"),
+        "ja": ("Japanese", "日本語"),
+        "ko": ("Korean", "한국어"),
+        "tr": ("Turkish", "Türkçe"),
+    }
+    name, native_name = names.get(code, (code.upper(), code.upper()))
+    conn = db._get_connection()
+    conn.execute(
+        "INSERT OR IGNORE INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+        (code, name, native_name),
+    )
+    conn.commit()
+
+
+def _add_translation(db, language_code, term, term_type, translation, source):
+    """Helper that wraps the new schema API to mirror old add_translation interface.
+
+    Creates the language (if needed), gets or creates the term, and adds the translation.
+    """
+    _add_language(db, language_code)
+    term_id = db.get_or_create_term(
+        name=term, programming_language="python", category=term_type
+    )
+    return db.add_translation(
+        term_id=term_id,
+        language_code=language_code,
+        translation=translation,
+        source=source,
+    )
+
+
 @pytest.fixture
 def temp_db():
     """Create a temporary database for testing."""
@@ -76,20 +112,8 @@ class TestYAMLExporterMerge:
             yaml.dump(existing_data, f, allow_unicode=True, sort_keys=False)
 
         # Add new translations to database (only 2 new terms)
-        temp_db.add_translation(
-            language_code="es",
-            term="if",
-            term_type="keyword",
-            translation="si",
-            source="aya",
-        )
-        temp_db.add_translation(
-            language_code="es",
-            term="abs",
-            term_type="builtin",
-            translation="absoluto",
-            source="aya",
-        )
+        _add_translation(temp_db, "es", "if", "keyword", "si", "aya")
+        _add_translation(temp_db, "es", "abs", "builtin_func", "absoluto", "aya")
 
         # Write using _write_yaml_pack to trigger merge
         exporter._write_yaml_pack(
@@ -312,18 +336,12 @@ class TestYAMLExporterMerge:
         translations = [
             ("es", "def", "keyword", "definir", "aya"),
             ("es", "return", "keyword", "retornar", "aya"),
-            ("es", "print", "builtin", "imprimir", "aya"),
+            ("es", "print", "builtin_func", "imprimir", "aya"),
             ("es", "ValueError", "exception", "ErrorDeValor", "aya"),
         ]
 
         for lang, term, term_type, translation, source in translations:
-            temp_db.add_translation(
-                language_code=lang,
-                term=term,
-                term_type=term_type,
-                translation=translation,
-                source=source,
-            )
+            _add_translation(temp_db, lang, term, term_type, translation, source)
 
         # Export (this creates all version files)
         pack_dir = (
@@ -344,13 +362,7 @@ class TestYAMLExporterMerge:
         )
 
         # Now add more translations and re-export (should merge)
-        temp_db.add_translation(
-            language_code="es",
-            term="if",
-            term_type="keyword",
-            translation="si",
-            source="aya",
-        )
+        _add_translation(temp_db, "es", "if", "keyword", "si", "aya")
 
         exporter._write_yaml_pack(
             filepath=pack_dir / "3.10.yml",
@@ -378,7 +390,7 @@ class TestYAMLExporterMerge:
 class TestYAMLExporterRegressions:
     """Test regressions and bug fixes."""
 
-    def test_turkish_duplicate_bug_fix(self, exporter, temp_output_dir, temp_db):
+    def test_turkish_duplicate_bug_fix(self, exporter, temp_output_dir):
         """Regression test for Turkish duplicate bug that replaced entire file.
 
         This bug occurred when re-translating 3 duplicate terms - the entire
@@ -484,31 +496,15 @@ class TestYAMLExporterTermTypeFromDB:
         """Verify exporter uses stored term_type, not re-classification."""
         exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
 
-        # Add translations with explicit term_types
-        temp_db.add_translation(
-            language_code="es",
-            term="def",
-            term_type="keyword",  # Stored type
-            translation="definir",
-            source="test",
-        )
-        temp_db.add_translation(
-            language_code="es",
-            term="print",
-            term_type="builtin_func",  # Stored type
-            translation="imprimir",
-            source="test",
-        )
-        temp_db.add_translation(
-            language_code="es",
-            term="ValueError",
-            term_type="exception",  # Stored type - lowercase
-            translation="ErrorDeValor",
-            source="test",
+        # Add translations with explicit term_types (category in new schema)
+        _add_translation(temp_db, "es", "def", "keyword", "definir", "test")
+        _add_translation(temp_db, "es", "print", "builtin_func", "imprimir", "test")
+        _add_translation(
+            temp_db, "es", "ValueError", "exception", "ErrorDeValor", "test"
         )
 
         # Build term map and classify
-        translations = temp_db.get_all_translations(language_code="es")
+        translations = temp_db.get_translations_joined(language_code="es")
         term_map = exporter._build_term_map(translations)
         classified = exporter._classify_terms(term_map)
 
@@ -522,26 +518,33 @@ class TestYAMLExporterTermTypeFromDB:
     def test_fallback_for_empty_term_type(self, temp_db, temp_output_dir, caplog):
         """Verify fallback classification when term_type is empty string.
 
-        Note: The database schema has term_type NOT NULL, so we test with
-        empty string which is valid SQL but should trigger fallback.
+        In the new schema, term_type comes from terms.category via JOIN.
+        We insert a term with empty category to trigger the fallback.
         """
         import logging
 
         exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
 
-        # Manually insert a translation with empty term_type (simulating bad data)
+        # Insert a term with empty category and a translation for it
+        _add_language(temp_db, "es")
         conn = temp_db._get_connection()
         conn.execute(
-            """
-            INSERT INTO translations (language_code, term, term_type, translation, source)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            ("es", "return", "", "retornar", "legacy"),  # Empty string term_type
+            "INSERT INTO terms (name, programming_language, category) VALUES (?, ?, ?)",
+            ("return", "python", ""),  # Empty string category
+        )
+        conn.commit()
+        term_id = conn.execute(
+            "SELECT id FROM terms WHERE name = ? AND programming_language = ?",
+            ("return", "python"),
+        ).fetchone()[0]
+        conn.execute(
+            "INSERT INTO translations (term_id, language_code, translation, source) VALUES (?, ?, ?, ?)",
+            (term_id, "es", "retornar", "legacy"),
         )
         conn.commit()
 
         # Get translations and classify
-        translations = temp_db.get_all_translations(language_code="es")
+        translations = temp_db.get_translations_joined(language_code="es")
         term_map = exporter._build_term_map(translations)
 
         with caplog.at_level(logging.WARNING):
@@ -561,18 +564,25 @@ class TestYAMLExporterTermTypeFromDB:
 
         exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
 
-        # Insert translation with invalid term_type
+        # Insert a term with invalid category and a translation for it
+        _add_language(temp_db, "es")
         conn = temp_db._get_connection()
         conn.execute(
-            """
-            INSERT INTO translations (language_code, term, term_type, translation, source)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            ("es", "for", "invalid_type_xyz", "para", "bad_source"),
+            "INSERT INTO terms (name, programming_language, category) VALUES (?, ?, ?)",
+            ("for", "python", "invalid_type_xyz"),
+        )
+        conn.commit()
+        term_id = conn.execute(
+            "SELECT id FROM terms WHERE name = ? AND programming_language = ?",
+            ("for", "python"),
+        ).fetchone()[0]
+        conn.execute(
+            "INSERT INTO translations (term_id, language_code, translation, source) VALUES (?, ?, ?, ?)",
+            (term_id, "es", "para", "bad_source"),
         )
         conn.commit()
 
-        translations = temp_db.get_all_translations(language_code="es")
+        translations = temp_db.get_translations_joined(language_code="es")
         term_map = exporter._build_term_map(translations)
 
         with caplog.at_level(logging.WARNING):
@@ -591,15 +601,11 @@ class TestYAMLExporterTermTypeFromDB:
         exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
 
         # Add special constant with explicit term_type
-        temp_db.add_translation(
-            language_code="es",
-            term="ellipsis",
-            term_type="special_constant",
-            translation="puntos_suspensivos",
-            source="test",
+        _add_translation(
+            temp_db, "es", "ellipsis", "special_constant", "puntos_suspensivos", "test"
         )
 
-        translations = temp_db.get_all_translations(language_code="es")
+        translations = temp_db.get_translations_joined(language_code="es")
         term_map = exporter._build_term_map(translations)
         classified = exporter._classify_terms(term_map)
 
@@ -615,15 +621,9 @@ class TestYAMLExporterTermTypeFromDB:
         """Verify builtin_type term_type maps to builtins section."""
         exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
 
-        temp_db.add_translation(
-            language_code="es",
-            term="str",
-            term_type="builtin_type",
-            translation="cadena",
-            source="test",
-        )
+        _add_translation(temp_db, "es", "str", "builtin_type", "cadena", "test")
 
-        translations = temp_db.get_all_translations(language_code="es")
+        translations = temp_db.get_translations_joined(language_code="es")
         term_map = exporter._build_term_map(translations)
         classified = exporter._classify_terms(term_map)
 
@@ -636,15 +636,9 @@ class TestYAMLExporterTermTypeFromDB:
         exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
 
         # Add only a keyword - no builtins or exceptions
-        temp_db.add_translation(
-            language_code="es",
-            term="if",
-            term_type="keyword",
-            translation="si",
-            source="test",
-        )
+        _add_translation(temp_db, "es", "if", "keyword", "si", "test")
 
-        translations = temp_db.get_all_translations(language_code="es")
+        translations = temp_db.get_translations_joined(language_code="es")
         term_map = exporter._build_term_map(translations)
         classified = exporter._classify_terms(term_map)
 
@@ -658,15 +652,9 @@ class TestYAMLExporterTermTypeFromDB:
         exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
 
         # Add translations with helper and unknown types
-        temp_db.add_translation(
-            language_code="es",
-            term="README",
-            term_type="helper",
-            translation="LEEME",
-            source="test",
-        )
+        _add_translation(temp_db, "es", "README", "helper", "LEEME", "test")
 
-        translations = temp_db.get_all_translations(language_code="es")
+        translations = temp_db.get_translations_joined(language_code="es")
         term_map = exporter._build_term_map(translations)
         classified = exporter._classify_terms(term_map)
 
@@ -689,16 +677,12 @@ class TestYAMLExporterTermTypeFromDB:
         ]
 
         for term, term_type, translation in test_terms:
-            temp_db.add_translation(
-                language_code="es",
-                term=term,
-                term_type=term_type,
-                translation=translation,
-                source="pipeline_test",
+            _add_translation(
+                temp_db, "es", term, term_type, translation, "pipeline_test"
             )
 
         # Export and classify
-        translations = temp_db.get_all_translations(language_code="es")
+        translations = temp_db.get_translations_joined(language_code="es")
         term_map = exporter._build_term_map(translations)
         classified = exporter._classify_terms(term_map)
 
@@ -713,22 +697,10 @@ class TestYAMLExporterTermTypeFromDB:
         """Verify re-exporting produces the same classification result."""
         exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
 
-        temp_db.add_translation(
-            language_code="es",
-            term="class",
-            term_type="keyword",
-            translation="clase",
-            source="test",
-        )
-        temp_db.add_translation(
-            language_code="es",
-            term="len",
-            term_type="builtin_func",
-            translation="longitud",
-            source="test",
-        )
+        _add_translation(temp_db, "es", "class", "keyword", "clase", "test")
+        _add_translation(temp_db, "es", "len", "builtin_func", "longitud", "test")
 
-        translations = temp_db.get_all_translations(language_code="es")
+        translations = temp_db.get_translations_joined(language_code="es")
         term_map = exporter._build_term_map(translations)
 
         # Classify twice

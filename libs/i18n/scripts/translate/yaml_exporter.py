@@ -128,8 +128,8 @@ class YAMLExporter:
             logger.info(f"Language pack {language_code} already exists, skipping")
             return lang_dir
 
-        # Get all translations for this language
-        translations = self.db.get_all_translations(
+        # Get all translations for this language (joined with term info)
+        translations = self.db.get_translations_joined(
             language_code=language_code, source=source
         )
 
@@ -725,7 +725,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
         Returns:
             Dictionary mapping language_code -> output_directory_path
         """
-        all_translations = self.db.get_all_translations()
+        all_translations = self.db.get_translations_joined()
         language_codes = {trans["language_code"] for trans in all_translations}
 
         logger.info(f"Exporting {len(language_codes)} languages: {language_codes}")

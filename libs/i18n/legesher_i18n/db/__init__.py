@@ -2,18 +2,20 @@
 
 from .database import TranslationDatabase
 from .schema import (
-    DEEP_CONTEXTS_TABLE,
-    LINGUISTIC_STANDARDS_TABLE,
-    REVIEWS_TABLE,
+    INDEXES,
+    LANGUAGES_TABLE,
+    SELECTED_TRANSLATIONS_TABLE,
+    TERMS_TABLE,
     TRANSLATIONS_TABLE,
     get_schema,
 )
 
 __all__ = [
     "TranslationDatabase",
+    "TERMS_TABLE",
+    "LANGUAGES_TABLE",
     "TRANSLATIONS_TABLE",
-    "REVIEWS_TABLE",
-    "DEEP_CONTEXTS_TABLE",
-    "LINGUISTIC_STANDARDS_TABLE",
+    "SELECTED_TRANSLATIONS_TABLE",
+    "INDEXES",
     "get_schema",
 ]
