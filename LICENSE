@@ -1,6 +1,6 @@
 Legesher Multi-License Repository
 
-Copyright (c) 2025 Madison (Pfaff) Edgar
+Copyright (c) 2025-2026 Madison (Pfaff) Edgar
 
 ================================================================================
 
@@ -12,6 +12,7 @@ PACKAGE LICENSING OVERVIEW:
 1. OPEN SOURCE PACKAGES (MIT License)
    - libs/core/       Core translation engine and shared utilities
    - libs/i18n/       Internationalization and language data
+   - libs/language-server/  Language Server Protocol implementation
    - libs/vs-code/    VS Code editor integration
 
    These packages are freely available under the MIT License.
@@ -25,7 +26,7 @@ PACKAGE LICENSING OVERVIEW:
                  and advanced functionality
 
 3. PROPRIETARY PACKAGES (Source Available)
-   - libs/pride/      Community features and project showcase
+   - libs/home/       Community features and project showcase
 
    These packages are source-available for reference and security review only.
    Commercial use requires a separate license agreement.
@@ -51,7 +52,7 @@ DEFAULT LICENSE (if not otherwise specified):
 Unless explicitly stated otherwise in a package-specific LICENSE file,
 all code in this repository is:
 
-Copyright (c) 2025 Madison (Pfaff) Edgar
+Copyright (c) 2025-2026 Madison (Pfaff) Edgar
 
 All rights reserved. This code is proprietary and confidential.
 Unauthorized copying, modification, distribution, or use is strictly prohibited.
