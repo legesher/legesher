@@ -3,28 +3,56 @@ SOURCES:
 - Anthropic Claude Code Best Practices: https://www.anthropic.com/engineering/claude-code-best-practices
 - Git commit best practices
 - Conventional Commits: https://www.conventionalcommits.org/
+- Linear API MCP integration
 -->
 
 # Create Commit: $ARGUMENTS
 
-**Goal**: Create a well-structured git commit for: $ARGUMENTS
+**Goal**: Create a well-structured git commit with Linear integration. Auto-detects the Linear issue from the branch name or arguments, links the commit back to the issue, and keeps Linear in sync.
 
 ## Instructions
 
-Follow best practices for git commits with clear, descriptive messages.
+Create a focused, conventional commit. If a Linear issue is detected, use its labels to infer commit type/scope and post a comment back to the issue after committing.
 
 ## Steps
 
-### 1. Review Changes
+### 1. Identify Linear Issue (Auto-Detect)
+
+**Check in order:**
+
+1. If `$ARGUMENTS` contains an issue ID (e.g., `CORE-123`), use that
+2. If the current branch name contains an issue ID, extract it
+3. If neither, proceed without Linear integration (plain commit)
+
+```bash
+# Get current branch
+current_branch=$(git branch --show-current)
+
+# Extract Linear issue ID (case insensitive)
+issue_id=$(echo "$current_branch" | grep -oiE '(core|local|i18n|home|vsc|api)-[0-9]+' | head -1)
+```
+
+### 2. Fetch Linear Issue Details (If Found)
+
+If a Linear issue was identified, fetch its context:
+
+```python
+issue = mcp__linear__get_issue(id=issue_id)
+
+# Extract from issue:
+# - title, description, labels → infer type and scope
+# - current state → determine state transition after commit
+# - project, cycle → context for commit body
+```
+
+**If no Linear issue found**, skip to Step 3 and infer type/scope from the code changes and `$ARGUMENTS`.
+
+### 3. Review Changes
 
 ```bash
 # See what's changed
 git status
-
-# Review diff
 git diff
-
-# Check staged changes
 git diff --staged
 ```
 
@@ -32,34 +60,18 @@ git diff --staged
 - Verify: No debug code, console.log, or secrets included
 - Check: No unintended changes to other files
 
-### 2. Stage Changes Selectively
-
-**Stage specific files**:
+### 4. Stage Changes Selectively
 
 ```bash
+# Stage specific files — keep commits focused on ONE logical change
 git add libs/{package}/{file}.py
 git add tests/test_{feature}.py
-```
 
-**Stage parts of files** (if needed):
-
-```bash
-git add -p {file}  # Interactive staging
-```
-
-**Best practice**: Keep commits focused on ONE logical change.
-
-### 3. Review Staged Changes
-
-```bash
+# Review staged changes
 git diff --staged
 ```
 
-- Ensure: Only related changes are staged
-- Verify: Changes form a logical unit
-- Check: No accidental staging of unwanted changes
-
-### 4. Write Commit Message
+### 5. Generate Commit Message
 
 Use **Conventional Commits** format:
 
@@ -68,25 +80,42 @@ Use **Conventional Commits** format:
 
 <body>
 
-<footer>
+Refs CORE-123
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ```
 
-**Type** (required):
+**Type** (required) — infer from Linear labels when available:
 
-- `feat`: New feature
-- `fix`: Bug fix
-- `refactor`: Code restructuring (no behavior change)
-- `test`: Adding or updating tests
-- `docs`: Documentation only
-- `style`: Code style/formatting (no logic change)
-- `perf`: Performance improvement
-- `chore`: Maintenance tasks (deps, config)
-- `ci`: CI/CD changes
+| Linear Label | Commit Type | Description |
+|---|---|---|
+| `type:bug` | `fix` | Bug fix |
+| `type:feature` | `feat` | New feature |
+| `type:docs` | `docs` | Documentation only |
+| `type:refactor` | `refactor` | Code restructuring (no behavior change) |
+| `type:test` | `test` | Adding or updating tests |
+| `type:chore` | `chore` | Maintenance tasks (deps, config) |
+| `type:ci` | `ci` | CI/CD changes |
+| _(no label)_ | `style` | Code style/formatting |
+| _(no label)_ | `perf` | Performance improvement |
 
-**Scope** (optional): Package or component affected
+**Scope** (optional) — infer from Linear labels or changed files:
 
-- `core`, `i18n`, `legesher`, `vs-code`, `home`
-- Or: `auth`, `api`, `cli`, etc.
+| Linear Label | Scope |
+|---|---|
+| `pkg:core` | `(core)` |
+| `pkg:i18n` | `(i18n)` |
+| `pkg:cli` | `(legesher)` |
+| `pkg:language-server` | `(language-server)` |
+| `pkg:vs-code` | `(vs-code)` |
+| `pkg:api` | `(api)` |
+| `pkg:home` | `(home)` |
+| `pkg:docs` | `(docs)` |
+| `pkg:preview` | `(preview)` |
+
+If no label, infer from which `libs/` directory the changes touch.
+
+Additional scopes: `ci`, `deps`
 
 **Subject** (required):
 
@@ -95,106 +124,90 @@ Use **Conventional Commits** format:
 - Max 72 characters
 - Lowercase (except proper nouns)
 
-**Body** (optional but recommended):
+**Body** (recommended):
 
 - Explain WHAT changed and WHY
 - Wrap at 72 characters
-- Separate from subject with blank line
+- Include any implementation details, design decisions, or context from the conversation that would be useful for future reference
 
-**Footer** (optional):
+**Footer** (required when Linear issue exists):
 
+- Work-in-progress: `Refs CORE-123`
+- Completion: `Fixes CORE-123` or `Closes CORE-123`
 - Breaking changes: `BREAKING CHANGE: description`
-- Issue references: `Closes #123` or `Fixes #456`
-- Co-authored-by: For pair programming
-
-### 5. Example Commit Messages
-
-**Simple feature**:
-
-```text
-feat(i18n): add version-aware language pack loader
-
-Implement loader that automatically selects correct language pack
-based on Python version. Supports inheritance across versions.
-```
-
-**Bug fix**:
-
-```text
-fix(core): prevent infinite loop in AST transformer
-
-Add max depth check to prevent stack overflow when processing
-deeply nested AST nodes.
-
-Fixes #234
-```
-
-**Breaking change**:
-
-```text
-feat(api): change language pack API to async
-
-BREAKING CHANGE: LanguagePackLoader.load() is now async.
-All callers must use `await loader.load()`.
-
-Migration guide: docs/migration/v0.2.md
-```
-
-**Test commit**:
-
-```text
-test(i18n): add comprehensive version detector tests
-
-Add tests for auto-detection priority:
-- pyproject.toml
-- .python-version file
-- runtime fallback
-```
-
-**Multiple changes** (break into separate commits if possible):
-
-```text
-feat(i18n): add Spanish and Arabic language packs
-
-Add complete Python 3.10-3.13 keyword mappings for Spanish (es)
-and Arabic (ar) with cultural comments and RTL support.
-
-Includes:
-- Base packs for Python 3.10
-- Inheritance chain for 3.11, 3.12, 3.13
-- Comprehensive test coverage
-```
+- Co-authored-by: Always include the Claude co-author line
 
 ### 6. Create Commit
 
-**With short message**:
-
-```bash
-git commit -m "feat(i18n): add version-aware language pack loader"
-```
-
-**With body** (use heredoc for multiline):
-
 ```bash
 git commit -m "$(cat <<'EOF'
-feat(i18n): add version-aware language pack loader
+feat(i18n): implement version-aware language pack loader
 
-Implement loader that automatically selects correct language pack
-based on Python version. Supports inheritance across versions.
+Implement automatic Python version detection with priority-based
+resolution (pyproject.toml → .python-version → runtime). Add
+inheritance support for language packs to reduce duplication.
 
-Closes #123
+Refs CORE-123
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 EOF
 )"
 ```
 
-**Or open editor**:
+### 7. Update Linear Issue (If Found)
 
-```bash
-git commit
-# Editor opens, write message there
+**Only runs when a Linear issue was detected in Step 1.**
+
+Post a commit comment to the Linear issue:
+
+```python
+commit_sha = git_get_latest_commit_sha()
+commit_msg = git_get_commit_message(commit_sha)
+
+comment_body = f"""## Commit Created
+
+**Commit**: `{commit_sha[:7]}`
+
+**Message**:
+> {commit_msg.replace(chr(10), chr(10) + '> ')}
+
+[View commit](https://github.com/MadiEdgar/legesher/commit/{commit_sha})
+"""
+
+mcp__linear__create_comment(issueId=issue_id, body=comment_body)
 ```
 
-### 7. Verify Commit
+**State transition** — suggest based on context:
+
+Linear workspace states (Core team):
+
+| State | Type | Emoji |
+|-------|------|-------|
+| Backlog | backlog | — |
+| To Be Groomed | backlog | 🗺 |
+| Blocked | backlog | 🛑 |
+| Planned | unstarted | 📅 |
+| Ready | unstarted | 🧼 |
+| In Progress | started | 🏗️ |
+| In Review | started | 🚩 |
+| Done | completed | ✅ |
+| Canceled | canceled | ❌ |
+| Duplicate | canceled | ❕ |
+
+| Situation | Transition |
+|---|---|
+| First commit for issue | `Ready` / `Planned` → `In Progress` |
+| Bug fix completed | `In Progress` → `In Review` |
+| Feature completed | `In Progress` → `In Review` |
+| Tests added (not complete) | Keep `In Progress` |
+| Docs updated (if docs were the task) | `In Progress` → `In Review` |
+
+```python
+# Only if state transition is appropriate
+mcp__linear__update_issue(id=issue_id, state="In Progress")
+```
+
+### 8. Verify Commit
 
 ```bash
 # View most recent commit
@@ -204,21 +217,13 @@ git log -1
 git show HEAD
 ```
 
-- Check: Message is clear and follows conventions
-- Verify: Changes match the description
-- Ensure: No mistakes before pushing
-
-### 8. Amend if Needed (Before Pushing)
-
-**Fix commit message**:
+### 9. Amend if Needed (Before Pushing)
 
 ```bash
+# Fix commit message
 git commit --amend -m "corrected message"
-```
 
-**Add forgotten changes**:
-
-```bash
+# Add forgotten changes
 git add {forgotten-file}
 git commit --amend --no-edit
 ```
@@ -227,93 +232,80 @@ git commit --amend --no-edit
 
 ## Pre-Commit Checklist
 
-Before committing, verify:
-
 - [ ] Code follows project conventions
 - [ ] Tests pass: `uv run pytest`
 - [ ] Linting passes: `uv run ruff check .`
-- [ ] Formatting is correct: `uv run black --check .`
-- [ ] Type checking passes: `uv run mypy .`
-- [ ] No debug code or console.log left behind
+- [ ] No debug code left behind
 - [ ] No secrets or sensitive data in commit
-- [ ] Documentation updated if needed
+- [ ] Commit references correct Linear issue (if applicable)
+- [ ] Linear issue state updated appropriately
 - [ ] CHANGELOG.md updated for user-facing changes
+
+## Example Workflows
+
+### With Linear issue (auto-detected from branch)
+
+```bash
+# Branch: CORE-435-validate-transformer-migrated-packs
+/commit
+
+# Claude will:
+# 1. Detect CORE-435 from branch name
+# 2. Fetch issue details and labels
+# 3. Review git changes
+# 4. Generate commit message with type/scope from labels
+# 5. Create commit with "Refs CORE-435" footer
+# 6. Post commit comment to CORE-435 in Linear
+# 7. Suggest state transition
+```
+
+### With explicit Linear issue
+
+```bash
+/commit CORE-435
+```
+
+### Without Linear issue (plain commit)
+
+```bash
+# Branch: main or feature/quick-fix
+/commit fix typo in README
+
+# Claude will:
+# 1. No Linear issue found — proceed with plain commit
+# 2. Review git changes
+# 3. Generate conventional commit message
+# 4. Create commit (no Linear integration)
+```
 
 ## Commit Message Anti-Patterns
 
-**❌ Avoid**:
+**Avoid**:
 
-```bash
-# Too vague
-git commit -m "fix stuff"
-git commit -m "update code"
-git commit -m "changes"
+- `fix stuff`, `update code`, `changes` — too vague
+- `bug fix`, `wip` — not descriptive
+- `added feature`, `fixed bug` — past tense (use imperative)
 
-# Not descriptive
-git commit -m "bug fix"
-git commit -m "wip"
+**Good**:
 
-# Past tense
-git commit -m "added feature"
-git commit -m "fixed bug"
-```
+- `feat(core): add token-based AST transformer`
+- `fix(i18n): prevent path traversal in pack loader`
+- `test(api): add edge case tests for null inputs`
 
-**✅ Good**:
+## Linear MCP Functions Used
 
-```bash
-git commit -m "feat(core): add token-based AST transformer"
-git commit -m "fix(i18n): prevent path traversal in pack loader"
-git commit -m "test(api): add edge case tests for null inputs"
-```
-
-## Git History Best Practices
-
-**Atomic Commits**: One logical change per commit
-
-- Easier to review
-- Easier to revert if needed
-- Easier to understand history
-
-**Clear Messages**: Future you (and contributors) will thank you
-
-- Explains WHY, not just WHAT
-- Provides context for decisions
-- References related issues/PRs
-
-**Clean History**: Before creating PR
-
-- Squash "fix typo" commits
-- Squash "wip" commits
-- Keep meaningful commits separate
-- Use interactive rebase: `git rebase -i main`
-
-## For Solo Founders
-
-Your commit messages are:
-
-- **Documentation**: They explain your thinking
-- **Debugging tool**: Track when bugs were introduced
-- **Onboarding material**: Help future contributors understand
-- **Project diary**: Record of your journey
-
-Write them as if you're explaining to a collaborator (or future you).
-
-## For Open Source Projects
-
-Good commits:
-
-- **Attract contributors**: Show professionalism and organization
-- **Enable reviews**: Reviewers can understand changes quickly
-- **Build trust**: Clear history shows care and attention
-- **Teach practices**: New contributors learn from your example
+1. **Get issue details**: `mcp__linear__get_issue(id=issue_id)`
+2. **Add comment**: `mcp__linear__create_comment(issueId, body)`
+3. **Update state**: `mcp__linear__update_issue(id, state)`
+4. **List issue statuses**: `mcp__linear__list_issue_statuses(team)`
 
 ## Deliverable
 
-Create a commit with:
+Create a commit that:
 
-- Clear, descriptive message following Conventional Commits
-- Focused, atomic changes
-- Passes all quality checks
-- References relevant issues
+- Follows Conventional Commits format
+- References Linear issue (when detected) with full traceability
+- Updates Linear issue with commit comment and state transition
+- Is focused, atomic, and passes all quality checks
 
-Remember: Commits are permanent. Make them count.
+Remember: Good commits mean your git history and Linear issues tell the same story.

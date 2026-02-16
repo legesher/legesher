@@ -6,39 +6,49 @@ description: Initialize work on a Linear issue with comprehensive planning and s
 
 You are helping initialize and plan work on a Linear issue for the Legesher project.
 
+**Arguments**: `$ARGUMENTS`
+
+## Quick Mode Detection
+
+If `$ARGUMENTS` contains `--quick` (e.g., `/init-linear-issue CORE-435 --quick`):
+- **Skip Phases 2 and 3** (scope analysis and planning)
+- Execute Phase 1 (gather context) and Phase 4 (update Linear + create branch) immediately
+- Use the existing issue description as the implementation plan
+- Post a brief "Starting work" comment instead of a full plan
+- This is for issues that already have a clear plan or are being resumed
+
 ## Phase 1: Gather Context (REQUIRED - DO NOT SKIP)
 
 1. **Fetch the Linear issue details** using Linear MCP tools
 
    **Available tools:**
-   - `mcp__linear-server__get_issue` - Get detailed issue information
-   - `mcp__linear-server__list_issues` - Search and filter issues
-   - `mcp__linear-server__update_issue` - Update issue status, assignee, etc.
-   - `mcp__linear-server__create_comment` - Add planning comments
-   - `mcp__linear-server__list_comments` - View issue comments
-   - Plus: teams, projects, cycles, labels, users, and more
+   - `mcp__linear__get_issue` - Get detailed issue information (use `includeRelations: true`)
+   - `mcp__linear__list_issues` - Search and filter issues
+   - `mcp__linear__update_issue` - Update issue status, assignee, etc.
+   - `mcp__linear__create_comment` - Add planning comments
+   - `mcp__linear__list_comments` - View issue comments and prior discussion
+   - `mcp__linear__list_cycles` - Get current cycle for assignment
+   - Plus: teams, projects, labels, users, and more
 
    **Usage:** Use the issue identifier (e.g., "CORE-438" or full ID)
 
    **Get from issue:**
    - Full description and acceptance criteria
    - Current status, priority, and estimate
-   - Dependencies (parent/blocking issues)
+   - Dependencies (parent/blocking issues via `includeRelations`)
    - Labels, assignee, cycle, project
    - Attachments and git branch name
-   - Related comments and context
+   - Related comments and context — **read ALL comments** for prior discussion, decisions, and implementation details
 
 2. **Locate issue in roadmap context** (Reference only - not source of truth)
    - The Linear issue is the source of truth for task details
-   - Roadmap docs in private-working-memory are helpful for understanding context
-   - Check [planning/architecture/implementation-roadmap.md](private-working-memory) to understand which phase/week
+   - Check CLAUDE.md for architectural context and package tier system
    - Use roadmap to understand dependencies and what comes before/after
 
 3. **Review architectural context**
-   - Check [planning/architecture/complete-architecture-guide.md]
-     (private-working-memory) for relevant decisions
+   - Check CLAUDE.md for relevant architectural decisions
    - Review package tier system to understand dependencies
-   - Identify affected packages (core, i18n, legesher, vs-code, home)
+   - Identify affected packages (core, i18n, legesher/cli, language-server, vs-code, api, home, docs, preview)
 
 4. **Check constraints and requirements**
    - Security: Handles source code - critical security required
@@ -48,6 +58,8 @@ You are helping initialize and plan work on a Linear issue for the Legesher proj
    - Extensibility: Design for multiple languages, not just Python
 
 ## Phase 2: Analyze Scope (CRITICAL THINKING)
+
+> **Skip this phase in `--quick` mode.**
 
 ### Think critically about scope boundaries
 
@@ -83,6 +95,8 @@ For the given Linear issue:
 Madison to create.**
 
 ## Phase 3: Create Comprehensive Plan
+
+> **Skip this phase in `--quick` mode.**
 
 Develop a detailed step-by-step implementation plan including:
 
@@ -121,10 +135,10 @@ Break down into clear, sequential steps:
 
 - Branch naming: `<ISSUE-KEY>-<short-description>`
   - Example: `CORE-435-validate-transformer-migrated-packs`
-  - Use the Linear issue key (e.g., CORE-435, PRIDE-12)
+  - Use the Linear issue key (e.g., CORE-435)
   - Short description should be kebab-case
   - One branch per Linear issue
-- Commit message format
+- Commit message format (see `/commit` command)
 - PR requirements
 
 ### Acceptance Criteria Checklist
@@ -133,91 +147,174 @@ Break down into clear, sequential steps:
 - Ensure every criterion is addressed
 - Note any ambiguities or questions
 
-## Phase 4: Update Linear Issue
+### Point Estimate
 
-**After plan is approved by Madison:**
+Based on the implementation plan, recommend a Fibonacci estimate:
 
-1. **Update issue status in Linear**
+| Points | Meaning |
+|--------|---------|
+| 1 | Trivial — config change, typo fix, one-liner |
+| 2 | Small — single file, straightforward logic |
+| 3 | Medium — a few files, some complexity |
+| 5 | Large — multiple files, cross-package, needs design |
+| 8 | Very large — significant feature, multiple packages |
+| 13 | Epic-sized — consider breaking into sub-issues |
 
-   Use `mcp__linear-server__update_issue` to update:
-   - Status: Change to "In Progress" (or appropriate state)
-   - Assignee: Set if not already assigned
-   - Branch: Link the git branch name
-   - Any other relevant fields
+## Phase 4: Update Linear Issue (REQUIRED)
 
-2. **Add planning comment to Linear**
+**After plan is approved by Madison (or immediately in `--quick` mode):**
 
-   Use `mcp__linear-server__create_comment` to post the implementation plan.
+### 4a. Fill out ALL issue metadata
 
-   Include in comment:
-   - Scope boundaries (In/Out of scope)
-   - Link to created branch
-   - Acceptance criteria checklist
-   - Questions or blockers
+Use `mcp__linear__update_issue` to set **every** field:
 
-   Format:
+**IMPORTANT: The `labels` parameter REPLACES all existing labels.** You must read the issue's current labels first and merge them with new ones to avoid losing existing labels.
 
-   ```markdown
-   ## Implementation Plan
+```python
+# Step 1: Read existing labels so we don't overwrite them
+issue = mcp__linear__get_issue(id=issue_id)
+existing_labels = issue["labels"]  # e.g., ["needs:grooming"]
 
-   **Branch:** `<ISSUE-KEY>-short-description`
-   **Status:** In Progress
+# Step 2: Merge existing + new labels (deduplicated)
+new_labels = list(set(existing_labels + ["pkg:xxx", "area:yyy", "type:zzz"]))
+# Remove any labels that should be replaced (e.g., remove "needs:grooming" now that work is starting)
+new_labels = [l for l in new_labels if l != "needs:grooming"]
 
-   ### Scope
+# Step 3: Update issue with merged labels
+mcp__linear__update_issue(
+    id=issue_id,
+    state="In Progress",
+    assignee="me",
+    cycle=current_cycle,         # Use mcp__linear__list_cycles to find current cycle
+    estimate=fibonacci_estimate, # From Phase 3 analysis (or ask Madison in --quick mode if missing)
+    labels=new_labels,           # Merged labels — never overwrite blindly
+)
+```
 
-   **In Scope:**
+**Required metadata checklist:**
 
-   - [List items explicitly in this ticket]
+- [ ] **Status**: → `In Progress`
+- [ ] **Assignee**: → Madison (use `"me"`)
+- [ ] **Cycle**: → Current active cycle (fetch via `mcp__linear__list_cycles`)
+- [ ] **Estimate**: → Fibonacci points from plan analysis
+- [ ] **Labels**: → At least one `pkg:*` label + relevant `area:*` and `type:*` labels
+- [ ] **Project**: → Verify issue is in the correct project (if applicable)
 
-   **Out of Scope (Future Tickets):**
+### 4b. Rename issue title to follow convention
 
-   - [List items for future work]
+Issue titles should follow the format: `[package:subcategory] Title`
 
-   ### Prerequisites
+- Examples: `[vs-code:telemetry] Fix event tracking`, `[i18n:packs] Add dunder translations`
+- Use the `pkg:*` label as the package prefix
+- Subcategory should describe the area of work (e.g., bug, feature, release, epic)
 
-   - [List any blocking issues]
+### 4c. Post implementation plan as comment
 
-   ### Implementation Steps
+**This is critical — the plan MUST be documented on the issue.**
 
-   1. [Detailed step]
-   2. [Detailed step]
+Use `mcp__linear__create_comment` to post the full implementation plan.
+
+**Full mode** — post the complete plan:
+
+```markdown
+## Implementation Plan
+
+**Branch:** `<ISSUE-KEY>-short-description`
+**Estimate:** X points
+**Status:** In Progress
+**Assigned:** Madison
+
+### Scope
+
+**In Scope:**
+
+- [List items explicitly in this ticket]
+
+**Out of Scope (Future Tickets):**
+
+- [List items for future work]
+
+### Prerequisites
+
+- [List any blocking issues]
+
+### Implementation Steps
+
+1. [Detailed step]
+2. [Detailed step]
+   ...
+
+### Testing Plan
+
+- [Test categories and coverage]
+
+### Key Decisions & Context
+
+- [Any decisions made during planning discussion]
+- [Implementation details from conversation]
+- [Trade-offs considered and rationale]
+
+### Acceptance Criteria
+
+- [ ] [Criterion 1]
+- [ ] [Criterion 2]
       ...
 
-   ### Testing Plan
+### Questions/Blockers
 
-   - [Test categories and coverage]
+- [Any ambiguities or dependencies]
 
-   ### Acceptance Criteria
+**Next Steps:** Begin implementation following plan above.
+```
 
-   - [ ] [Criterion 1]
-   - [ ] [Criterion 2]
-         ...
+**Quick mode** — post a brief start comment:
 
-   ### Questions/Blockers
+```markdown
+## Work Started
 
-   - [Any ambiguities or dependencies]
+**Branch:** `<ISSUE-KEY>-short-description`
+**Status:** In Progress
 
-   **Next Steps:** Begin implementation following plan above.
-   ```
+Resuming work on this issue. Implementation details are in the issue description.
+```
 
-3. **Create git branch**
-   - Branch naming format: `<ISSUE-KEY>-<short-description>`
-   - Example: `git checkout -b CORE-435-validate-transformer-migrated-packs`
-   - Ensure branch is based on latest main/master
-   - One branch per Linear issue for focused PRs
+### 4d. Document discussion context
 
-4. **Summarize for Madison**
-   - Provide concise summary of plan
-   - Highlight any concerns or questions
-   - List any new tickets that should be created
-   - Confirm ready to start implementation
+**Important:** If there were any implementation details, design decisions, questions, or helpful context discussed during this conversation, **add them as a comment on the Linear issue**. This ensures:
+
+- Decisions are preserved even if the chat session is lost
+- Future contributors can understand the reasoning
+- The Linear issue is the single source of truth
+
+### 4e. Create git branch
+
+```bash
+git checkout -b <ISSUE-KEY>-<short-description>
+# Example: git checkout -b CORE-435-validate-transformer-migrated-packs
+```
+
+- Ensure branch is based on latest main
+- One branch per Linear issue for focused PRs
+
+### 4f. Summarize for Madison
+
+- Provide concise summary of plan
+- Highlight any concerns or questions
+- List any new tickets that should be created
+- Confirm ready to start implementation
 
 ## Phase 5: Implementation Readiness
 
-Before starting implementation:
+Before starting implementation, verify ALL of these:
 
-- [ ] Linear issue status updated to "In Progress"
-- [ ] Planning comment posted to Linear
+- [ ] Linear issue status set to "In Progress"
+- [ ] Assignee set to Madison
+- [ ] Added to current cycle
+- [ ] Point estimate assigned
+- [ ] Labels applied (`pkg:*`, `area:*`, `type:*`)
+- [ ] Issue title follows `[package:subcategory] Title` convention
+- [ ] Implementation plan posted as comment on Linear issue
+- [ ] Discussion context documented on the issue
 - [ ] Git branch created and checked out
 - [ ] Scope boundaries clearly defined
 - [ ] Dependencies identified
@@ -229,11 +326,13 @@ Before starting implementation:
 1. **Stay in scope** - Only build what the ticket explicitly requires
 2. **Think ahead** - Identify future work but don't implement it now
 3. **Question assumptions** - If acceptance criteria are unclear, ask
-4. **Consider roadmap** - Understand where this fits in the bigger picture
-5. **Document thoroughly** - Leave a clear trail in Linear and git
+4. **Document everything** - Leave a clear trail in Linear (plan, decisions, context)
+5. **Fill out metadata** - Every issue should have estimate, labels, assignee, cycle
 6. **Test everything** - Write tests alongside implementation
 
 ## Example Usage
+
+### Full planning mode (new feature, needs design)
 
 ```bash
 /init-linear-issue CORE-435
@@ -241,16 +340,34 @@ Before starting implementation:
 
 The assistant will:
 
+1. Fetch CORE-435 from Linear (with all comments and relations)
+2. Analyze scope boundaries and dependencies
+3. Create comprehensive plan with estimate
+4. Wait for Madison's approval
+5. Set all metadata: status, assignee, cycle, estimate, labels
+6. Rename title to `[package:subcategory]` convention
+7. Post full implementation plan as comment on CORE-435
+8. Create git branch: `CORE-435-validate-transformer-migrated-packs`
+9. Begin implementation
+
+### Quick mode (clear task, just start working)
+
+```bash
+/init-linear-issue CORE-435 --quick
+```
+
+The assistant will:
+
 1. Fetch CORE-435 from Linear
-2. Analyze roadmap context (Phase 1, dependencies on CORE-354)
-3. Create comprehensive plan with scope boundaries
-4. Wait for approval
-5. Update Linear status to "In Progress"
-6. Post plan as comment in Linear
-7. Create git branch: `CORE-435-validate-transformer-migrated-packs`
-8. Begin implementation
+2. Set all metadata: status → In Progress, assignee → me, cycle → current, labels
+3. Rename title if needed
+4. Post brief "Work Started" comment
+5. Create git branch
+6. Begin implementation immediately
 
 ---
 
 **Remember:** This command prioritizes thoughtful planning over quick
-implementation. Take time to understand context and scope boundaries.
+implementation. Use `--quick` only when the issue already has a clear plan.
+The Linear issue must always be the single source of truth — document
+everything there.
