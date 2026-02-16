@@ -20,7 +20,7 @@ Test Design:
 """
 
 import subprocess
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -366,7 +366,7 @@ class TestTranslationRecording:
         record: TranslationRecord = {
             "language": "en",
             "method": "token_transformer",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "commit_sha": "abc123",
             "translator_version": "0.1.0",
             "python_version": "3.13",
@@ -396,7 +396,7 @@ class TestTranslationRecording:
             record: TranslationRecord = {
                 "language": lang,
                 "method": "token_transformer",
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "commit_sha": f"commit{i}",
                 "translator_version": "0.1.0",
                 "python_version": "3.13",
@@ -429,7 +429,7 @@ class TestTranslationRecording:
         record: TranslationRecord = {
             "language": "en",
             "method": "token_transformer",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "commit_sha": None,
             "translator_version": "0.1.0",
             "python_version": "3.13",
@@ -465,7 +465,7 @@ class TestHistoryTracking:
             "action": "clean",
             "from_language": "es",
             "to_language": "en",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "commit_sha": "abc123",
         }
         metadata_manager.add_history_entry(Path("src/main.py"), entry)
@@ -493,7 +493,7 @@ class TestHistoryTracking:
             "action": "smudge",
             "from_language": "en",
             "to_language": "es",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "commit_sha": "abc123",
         }
         metadata_manager.add_history_entry(Path("src/main.py"), entry)
@@ -529,7 +529,7 @@ class TestHistoryTracking:
                 "action": action,
                 "from_language": from_lang,
                 "to_language": to_lang,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "commit_sha": commit,
             }
             metadata_manager.add_history_entry(Path("src/main.py"), entry)
@@ -579,7 +579,7 @@ class TestRoundTripWithMetadata:
             "action": "clean",
             "from_language": "es",
             "to_language": "en",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "commit_sha": "test123",
         }
         metadata_manager.add_history_entry(Path("src/calculator.py"), clean_entry)
@@ -595,7 +595,7 @@ class TestRoundTripWithMetadata:
             "action": "smudge",
             "from_language": "en",
             "to_language": "es",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "commit_sha": "test123",
         }
         metadata_manager.add_history_entry(Path("src/calculator.py"), smudge_entry)
@@ -645,7 +645,7 @@ class TestMultipleFiles:
                 "action": "clean",
                 "from_language": "es",
                 "to_language": "en",
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "commit_sha": f"commit{i}",
             }
             metadata_manager.add_history_entry(Path(rel_path), entry)
@@ -753,7 +753,7 @@ class TestErrorHandling:
         record: TranslationRecord = {
             "language": "en",
             "method": "token_transformer",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "commit_sha": None,
             "translator_version": "0.1.0",
             "python_version": "3.13",
@@ -867,7 +867,7 @@ class TestAtomicOperations:
                 "action": "clean",
                 "from_language": "es",
                 "to_language": "en",
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "commit_sha": f"commit{i}",
             }
             metadata_manager.add_history_entry(Path("src/main.py"), entry)
@@ -910,7 +910,7 @@ class TestGitIntegration:
             "action": "clean",
             "from_language": "es",
             "to_language": "en",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "commit_sha": None,  # Will be set after commit
         }
         metadata_manager.add_history_entry(Path("src/calculator.py"), entry)
@@ -941,7 +941,7 @@ class TestGitIntegration:
             "action": "clean",
             "from_language": "es",
             "to_language": "en",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "commit_sha": commit_sha,
         }
         metadata_manager.add_history_entry(Path("src/main.py"), entry)

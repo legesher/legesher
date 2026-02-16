@@ -24,7 +24,7 @@ Usage:
 import asyncio
 import json
 import sys
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -255,7 +255,7 @@ def generate_json_output(
     """Generate JSON output from results."""
     output = {
         "language": language,
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "summary": {
             "total_terms": metrics.total_terms,
             "average_agreement": metrics.average_agreement,

@@ -21,7 +21,7 @@ import sys
 
 import pytest
 from pathlib import Path
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 import yaml
 import threading
 import time
@@ -190,11 +190,11 @@ class TestCreateMetadata:
         """Test that timestamps are properly formatted ISO 8601."""
         file_path = Path("src/example.py")
 
-        before = datetime.now(UTC)
+        before = datetime.now(timezone.utc)
         metadata = metadata_manager.create_metadata(
             file_path, original_language="es", python_version="3.13"
         )
-        after = datetime.now(UTC)
+        after = datetime.now(timezone.utc)
 
         # Parse timestamp (ISO 8601 format with timezone)
         created_at = datetime.fromisoformat(metadata["created_at"])

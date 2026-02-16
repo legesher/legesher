@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from typing import Literal, Optional, Dict, List
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 
 
 @dataclass
@@ -131,7 +131,9 @@ class ComparisonResult:
     differences: DifferenceAnalysis
     linguistic_analysis: LinguisticAnalysis
     recommendation: str  # Human-readable recommendation
-    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    timestamp: str = field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
 
     def get_unique_translations(self) -> List[str]:
         """Get list of unique translation texts."""

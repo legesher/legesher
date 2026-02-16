@@ -42,7 +42,7 @@ Example:
 """
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -174,7 +174,7 @@ class MetadataManager:
         """
         metadata_path = self._get_metadata_path(file_path)
         relative_path = self._get_relative_path(file_path)
-        timestamp = datetime.now(UTC).isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
 
         metadata: FileMetadata = {
             "file": relative_path.as_posix(),
@@ -232,7 +232,7 @@ class MetadataManager:
                 )
 
         # Update timestamp
-        metadata["updated_at"] = datetime.now(UTC).isoformat()
+        metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
 
         metadata_path = self._get_metadata_path(file_path)
         self._write_yaml(metadata_path, metadata)
@@ -268,7 +268,7 @@ class MetadataManager:
             return
 
         metadata["translations"].append(record)
-        metadata["updated_at"] = datetime.now(UTC).isoformat()
+        metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
 
         metadata_path = self._get_metadata_path(file_path)
         self._write_yaml(metadata_path, metadata)
@@ -306,7 +306,7 @@ class MetadataManager:
             return
 
         metadata["history"].append(entry)
-        metadata["updated_at"] = datetime.now(UTC).isoformat()
+        metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
 
         metadata_path = self._get_metadata_path(file_path)
         self._write_yaml(metadata_path, metadata)
