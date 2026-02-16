@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Status
 
 **Current Phase**: Production-Ready (Pre-Beta)
-**Version**: 0.4.0 (foundation packages), 0.1.1 (apps)
-**Last Updated**: 2026-01-27
+**Version**: 0.5.0 (foundation packages), 0.1.4 (vs-code), 0.1.1 (language-server)
+**Last Updated**: 2026-02-15
 
 This is an active monorepo with **production-ready implementations** across all major packages. The project has
 evolved significantly beyond initial planning and now features comprehensive test coverage, 26 supported language packs
@@ -14,7 +14,7 @@ evolved significantly beyond initial planning and now features comprehensive tes
 
 **Version Strategy:**
 
-- **v0.4.x** (current): Pre-beta with 26 experimental language packs awaiting community validation
+- **v0.5.x** (current): Pre-beta with 26 experimental language packs awaiting community validation
 - **v1.0.0**: Major release after community validation with accepted language packs
 - Language packs: **experimental** (current, works but unvalidated) → **accepted** (community validated)
 
@@ -62,15 +62,15 @@ Zed and JetBrains PyCharm etc.
 
 - Additional IDE integrations: Zed, JetBrains PyCharm
 
-**Package Status** (as of 2026-01-27):
+**Package Status** (as of 2026-02-11):
 
 | Package             | Version | Status           | Description                                                     |
 | ------------------- | ------- | ---------------- | --------------------------------------------------------------- |
-| **core**            | 0.4.0   | Production-ready | Token & tree-sitter translators, git filters, cultural comments |
-| **i18n**            | 0.4.0   | Production-ready | 26 language packs (experimental), translation API, caching      |
-| **legesher**        | 0.4.0   | Production-ready | CLI suite (init, translate, run, git, metadata), runtime hooks  |
-| **language-server** | 0.1.0   | Production-ready | Full LSP with hover, completion, diagnostics, semantic tokens   |
-| **vs-code**         | 0.1.1   | Production-ready | Extension with telemetry/feedback, all 26 languages supported   |
+| **core**            | 0.5.0   | Production-ready | Token & tree-sitter translators, git filters, cultural comments |
+| **i18n**            | 0.5.0   | Production-ready | 26 language packs (experimental), translation API, caching      |
+| **legesher**        | 0.5.0   | Production-ready | CLI suite (init, translate, run, git, metadata), runtime hooks  |
+| **language-server** | 0.1.1   | Production-ready | Full LSP with hover, completion, diagnostics, semantic tokens   |
+| **vs-code**         | 0.1.4   | Production-ready | Extension with telemetry/feedback, all 26 languages supported   |
 | **home**            | 0.1.0   | Minimal scaffold | Digital home for community features and project showcase        |
 
 **Language pack versions**: 0.0.1–0.0.2 (see each pack's `pyproject.toml` for exact version)
@@ -467,7 +467,7 @@ When bumping package versions or creating a release, follow these steps:
 
 ### Milestones
 
-- **v0.4.x** (current - Pre-Beta): Feature-complete with experimental language packs:
+- **v0.5.x** (current - Pre-Beta): Feature-complete with experimental language packs:
   - Two translator backends (token & tree-sitter)
   - 26 language packs with version inheritance (all experimental)
   - Complete CLI suite (init, translate, run, git, metadata)
@@ -482,9 +482,19 @@ When bumping package versions or creating a release, follow these steps:
 
 ### Issue Labels
 
-- `package:core`, `package:i18n`, `package:legesher`, `package:vs-code`, `package:home`
-- `phase:1-foundation`, `phase:2-dev-tools`, `phase:3-community`, `phase:4-registry`
-- `priority:high`, `priority:medium`, `priority:low`
+- **Package**: `pkg:core`, `pkg:i18n`, `pkg:cli`, `pkg:language-server`, `pkg:vs-code`, `pkg:home`, `pkg:docs`,
+  `pkg:preview`, `pkg:api`
+- **Area**: `area:telemetry`, `area:translation`, `area:git`, `area:ci-cd`, `area:website`, `area:security`, `area:monetization`
+- **Type**: `type:epic`, `type:test`, `type:release`
+- **Triage**: `needs:triage`, `needs:review`, `needs:grooming`
+- **Contribution**: `contrib:code`, `contrib:docs`, `contrib:localization`, `contrib:design`, `contrib:community`
+- **Business**: `biz:applications`, `biz:partnerships`, `biz:coaching`
+- **Platform**: `platform:saas-api`, `platform:slack`, `platform:buttondown`, `platform:huggingface`, `platform:instagram`
+
+### Issue Naming Convention
+
+Format: `[package/category:subcategory] Issue title`
+Examples: `[vs-code:telemetry] Fix event tracking`, `[i18n:packs] Add dunder translations`
 
 ## Quick Reference
 
