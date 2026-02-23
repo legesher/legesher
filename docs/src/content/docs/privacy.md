@@ -59,8 +59,8 @@ This data helps us:
 
 Under GDPR and CCPA, you have the right to:
 
-- **Access** your data (contact: <privacy@legesher.io>)
-- **Delete** your data (contact: <privacy@legesher.io>)
+- **Access** your data (contact: <privacy@legesher.com>)
+- **Delete** your data (contact: <privacy@legesher.com>)
 - **Export** your data in machine-readable format
 - **Opt out** at any time via settings
 
@@ -72,7 +72,7 @@ Under GDPR and CCPA, you have the right to:
 
 ## Contact
 
-Questions about privacy? Email us at **<privacy@legesher.io>**
+Questions about privacy? Email us at **<privacy@legesher.com>**
 
 ---
 

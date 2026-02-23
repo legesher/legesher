@@ -511,7 +511,7 @@ We'd love to hear from you!
 
 - **Issues:** [github.com/legesher/legesher/issues](https://github.com/legesher/legesher/issues)
 - **Discussions:** [github.com/legesher/legesher/discussions](https://github.com/legesher/legesher/discussions)
-- **Email:** <hello@legesher.io>
+- **Email:** <hello@legesher.com>
 - **Twitter:** [@legesher](https://twitter.com/legesher)
 
 ---
