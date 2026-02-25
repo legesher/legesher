@@ -8,10 +8,36 @@ on:
         description: 'Package to publish'
         required: true
         type: choice
+        # Language pack options must match libs/i18n/legesher_i18n/languages.json (source of truth)
         options:
           - foundation
-          - i18n-python-es
+          - all-language-packs
           - i18n-python-ar
+          - i18n-python-da
+          - i18n-python-de
+          - i18n-python-el
+          - i18n-python-en
+          - i18n-python-es
+          - i18n-python-fi
+          - i18n-python-fr
+          - i18n-python-he
+          - i18n-python-hi
+          - i18n-python-hu
+          - i18n-python-id
+          - i18n-python-it
+          - i18n-python-ja
+          - i18n-python-ko
+          - i18n-python-ms
+          - i18n-python-nl
+          - i18n-python-no
+          - i18n-python-pl
+          - i18n-python-pt
+          - i18n-python-ru
+          - i18n-python-sv
+          - i18n-python-th
+          - i18n-python-tr
+          - i18n-python-vi
+          - i18n-python-zh
           - vs-code
           - home
       environment:
@@ -32,11 +58,28 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.event.inputs.environment }}
-      url: ${{ github.event.inputs.environment == 'pypi' && format('https://pypi.org/p/legesher-{0}', github.event.inputs.package) || format('https://test.pypi.org/p/legesher-{0}', github.event.inputs.package) }}
+      url: >-
+        ${{
+          (github.event.inputs.package == 'foundation' || github.event.inputs.package == 'all-language-packs')
+          && (github.event.inputs.environment == 'pypi'
+            && 'https://pypi.org/search/?q=legesher'
+            || 'https://test.pypi.org/search/?q=legesher')
+          || (github.event.inputs.environment == 'pypi'
+            && format('https://pypi.org/p/legesher-{0}', github.event.inputs.package)
+            || format('https://test.pypi.org/p/legesher-{0}', github.event.inputs.package))
+        }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Load language list from source of truth
+        id: langs
+        run: |
+          # Extract language codes from the canonical languages.json registry
+          LANGS=$(python3 -c "import json; print(' '.join(sorted(json.load(open('libs/i18n/legesher_i18n/languages.json'))['languages'].keys())))")
+          echo "list=$LANGS" >> "$GITHUB_OUTPUT"
+          echo "Loaded languages: $LANGS"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -53,25 +96,59 @@ jobs:
           uv pip install --system build twine
 
       - name: Build packages
+        env:
+          PACKAGE: ${{ github.event.inputs.package }}
+          ALL_LANGS: ${{ steps.langs.outputs.list }}
         run: |
-          if [ "${{ github.event.inputs.package }}" = "foundation" ]; then
-            echo "📦 Building foundation packages..."
-            uv build -p libs/core
-            uv build -p libs/i18n
-            uv build -p libs/legesher
+          mkdir -p dist
 
-            # Collect all foundation dist files
-            mkdir -p dist
+          if [ "$PACKAGE" = "foundation" ]; then
+            echo "📦 Building foundation packages..."
+            uv build libs/core
+            uv build libs/i18n
+            uv build libs/legesher
             cp libs/core/dist/* dist/
             cp libs/i18n/dist/* dist/
             cp libs/legesher/dist/* dist/
-          else
-            echo "📦 Building ${{ github.event.inputs.package }}..."
-            uv build -p libs/${{ github.event.inputs.package }}
 
-            # Copy to root dist for twine
-            mkdir -p dist
-            cp libs/${{ github.event.inputs.package }}/dist/* dist/
+          elif [ "$PACKAGE" = "all-language-packs" ]; then
+            echo "📦 Building all language packs..."
+            FAILED=""
+            for lang in $ALL_LANGS; do
+              echo "  Building i18n-python-$lang..."
+              if uv build "libs/i18n/language-packs/python/$lang"; then
+                cp "libs/i18n/language-packs/python/$lang/dist/"* dist/
+              else
+                echo "  ERROR: Failed to build i18n-python-$lang"
+                FAILED="$FAILED $lang"
+              fi
+            done
+            if [ -n "$FAILED" ]; then
+              echo ""
+              echo "❌ Failed to build:$FAILED"
+              exit 1
+            fi
+
+          elif echo "$PACKAGE" | grep -q '^i18n-python-'; then
+            LANG_CODE="${PACKAGE#i18n-python-}"
+            # Validate against source of truth
+            if ! echo " $ALL_LANGS " | grep -Fq " $LANG_CODE "; then
+              echo "ERROR: Unknown language code: $LANG_CODE"
+              exit 1
+            fi
+            echo "📦 Building $PACKAGE..."
+            uv build "libs/i18n/language-packs/python/$LANG_CODE"
+            cp "libs/i18n/language-packs/python/$LANG_CODE/dist/"* dist/
+
+          else
+            # Only allow known non-language-pack packages
+            case "$PACKAGE" in
+              vs-code|home) ;;
+              *) echo "ERROR: Unknown package: $PACKAGE"; exit 1 ;;
+            esac
+            echo "📦 Building $PACKAGE..."
+            uv build "libs/$PACKAGE"
+            cp "libs/$PACKAGE/dist/"* dist/
           fi
 
       - name: Check distribution
@@ -86,7 +163,7 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
         run: |
           echo "🚀 Publishing to TestPyPI..."
-          twine upload --repository testpypi dist/* --verbose
+          twine upload --repository testpypi dist/*
 
       - name: Publish to PyPI
         if: github.event.inputs.environment == 'pypi'
@@ -95,32 +172,46 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           echo "🚀 Publishing to PyPI..."
-          twine upload dist/* --verbose
+          twine upload dist/*
 
       - name: Verify installation (TestPyPI)
         if: github.event.inputs.environment == 'testpypi'
+        env:
+          PACKAGE: ${{ github.event.inputs.package }}
+          ALL_LANGS: ${{ steps.langs.outputs.list }}
         run: |
           echo "✅ Published to TestPyPI successfully!"
           echo ""
           echo "To test installation:"
-          if [ "${{ github.event.inputs.package }}" = "foundation" ]; then
+          if [ "$PACKAGE" = "foundation" ]; then
             echo "  pip install --index-url https://test.pypi.org/simple/ legesher-core"
             echo "  pip install --index-url https://test.pypi.org/simple/ legesher-i18n"
             echo "  pip install --index-url https://test.pypi.org/simple/ legesher"
+          elif [ "$PACKAGE" = "all-language-packs" ]; then
+            for lang in $ALL_LANGS; do
+              echo "  pip install --index-url https://test.pypi.org/simple/ legesher-i18n-python-$lang"
+            done
           else
-            echo "  pip install --index-url https://test.pypi.org/simple/ legesher-${{ github.event.inputs.package }}"
+            echo "  pip install --index-url https://test.pypi.org/simple/ legesher-$PACKAGE"
           fi
 
       - name: Verify installation (PyPI)
         if: github.event.inputs.environment == 'pypi'
+        env:
+          PACKAGE: ${{ github.event.inputs.package }}
+          ALL_LANGS: ${{ steps.langs.outputs.list }}
         run: |
           echo "✅ Published to PyPI successfully!"
           echo ""
           echo "To install:"
-          if [ "${{ github.event.inputs.package }}" = "foundation" ]; then
+          if [ "$PACKAGE" = "foundation" ]; then
             echo "  pip install legesher-core"
             echo "  pip install legesher-i18n"
             echo "  pip install legesher"
+          elif [ "$PACKAGE" = "all-language-packs" ]; then
+            for lang in $ALL_LANGS; do
+              echo "  pip install legesher-i18n-python-$lang"
+            done
           else
-            echo "  pip install legesher-${{ github.event.inputs.package }}"
+            echo "  pip install legesher-$PACKAGE"
           fi
