@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'libs/i18n-python-**/**'
+      - 'libs/i18n/language-packs/python/**'
   workflow_dispatch:
     inputs:
       target:
@@ -17,9 +17,34 @@ on:
         description: 'Language code (e.g., es, ar)'
         required: true
         type: choice
+        # Options must match libs/i18n/legesher_i18n/languages.json (source of truth)
         options:
-          - es
           - ar
+          - da
+          - de
+          - el
+          - en
+          - es
+          - fi
+          - fr
+          - he
+          - hi
+          - hu
+          - id
+          - it
+          - ja
+          - ko
+          - ms
+          - nl
+          - "no"
+          - pl
+          - pt
+          - ru
+          - sv
+          - th
+          - tr
+          - vi
+          - zh
 
 permissions:
   contents: write
@@ -105,20 +130,27 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Load language list from source of truth
+        id: langs
+        run: |
+          VALID_LANGS=$(python3 -c "import json; print('|'.join(sorted(json.load(open('libs/i18n/legesher_i18n/languages.json'))['languages'].keys())))")
+          echo "regex=$VALID_LANGS" >> $GITHUB_OUTPUT
+          echo "Valid languages: $VALID_LANGS"
+
       - name: Detect changed language packs
         id: detect
         run: |
           # Get changed files
           CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
 
-          # Find changed language pack directories
-          PACKS=$(echo "$CHANGED_FILES" | grep -E '^libs/i18n-python-(es|ar)/' | cut -d/ -f2 | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          # Find changed language pack directories (validated against source of truth)
+          PACKS=$(echo "$CHANGED_FILES" | { grep -E "^libs/i18n/language-packs/python/(${{ steps.langs.outputs.regex }})/" || true; } | cut -d/ -f5 | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
 
           echo "Changed packs: $PACKS"
           echo "packs=$PACKS" >> $GITHUB_OUTPUT
 
   release-pack:
-    name: Release ${{ matrix.pack }}
+    name: Release i18n-python-${{ matrix.pack }}
     runs-on: ubuntu-latest
     needs: [lint, test, detect-changed-packs]
     if: needs.detect-changed-packs.outputs.packs != '[]'
@@ -153,19 +185,19 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Release language pack
-        working-directory: libs/${{ matrix.pack }}
+        working-directory: libs/i18n/language-packs/python/${{ matrix.pack }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "📦 Releasing ${{ matrix.pack }}..."
+          echo "📦 Releasing i18n-python-${{ matrix.pack }}..."
           if ! uv run semantic-release version --verbose; then
-            echo "ℹ️ No release needed for ${{ matrix.pack }}"
+            echo "ℹ️ No release needed for i18n-python-${{ matrix.pack }}"
             exit 0
           fi
 
       - name: Create GitHub Release
         if: success()
-        working-directory: libs/${{ matrix.pack }}
+        working-directory: libs/i18n/language-packs/python/${{ matrix.pack }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -174,14 +206,14 @@ jobs:
       - name: Build package
         if: success()
         run: |
-          uv build -p libs/${{ matrix.pack }}
+          uv build -p libs/i18n/language-packs/python/${{ matrix.pack }}
 
       - name: Upload build artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.pack }}-dist-${{ github.sha }}
-          path: libs/${{ matrix.pack }}/dist/
+          name: i18n-python-${{ matrix.pack }}-dist-${{ github.sha }}
+          path: libs/i18n/language-packs/python/${{ matrix.pack }}/dist/
           retention-days: 90
 
   release-manual:
@@ -217,7 +249,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Release language pack
-        working-directory: libs/i18n-${{ github.event.inputs.target }}-${{ github.event.inputs.language }}
+        working-directory: libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -229,7 +261,7 @@ jobs:
 
       - name: Create GitHub Release
         if: success()
-        working-directory: libs/i18n-${{ github.event.inputs.target }}-${{ github.event.inputs.language }}
+        working-directory: libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -238,12 +270,12 @@ jobs:
       - name: Build package
         if: success()
         run: |
-          uv build -p libs/i18n-${{ github.event.inputs.target }}-${{ github.event.inputs.language }}
+          uv build -p libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
 
       - name: Upload build artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: i18n-${{ github.event.inputs.target }}-${{ github.event.inputs.language }}-dist-${{ github.sha }}
-          path: libs/i18n-${{ github.event.inputs.target }}-${{ github.event.inputs.language }}/dist/
+          path: libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}/dist/
           retention-days: 90
