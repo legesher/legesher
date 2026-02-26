@@ -123,22 +123,24 @@ Additional recommendations:
 
 ### Multi-License Structure
 
-- **Open source packages** (core, i18n, vs-code) are publicly auditable
-- **Proprietary packages** (home) source code is visible but usage is restricted
+- **Open source packages** (core, i18n, language-server, vs-code) are MIT-licensed and publicly auditable
+- **Dual-licensed package** (legesher CLI) is MIT for free tier, commercial license for premium features
+- **Proprietary package** (home) is source-available but usage is restricted
 - **All packages** are subject to the same security review standards
 
 ### Data Handling
 
-- **Local translation**: No data leaves your machine (free tier)
-- **Cloud features**: Data transmitted to Legesher servers (premium tier)
-- **Encryption**: All cloud communications use TLS 1.3+
+- **Local-first**: All code translation and analysis happens locally on your machine
+- **No cloud dependency**: Legesher does not require any cloud services to function
 - **Privacy**: See our [Privacy Policy](https://legesher.io/privacy) for details
 
 ### VS Code Extension
 
-- **Permissions**: Extension requests minimal VS Code API permissions
-- **No telemetry** in open source version (configurable in premium)
-- **Local execution**: Code analysis happens locally by default
+- **Permissions**: Extension requests minimal VS Code API permissions, scoped to Python files
+- **Telemetry**: Anonymous usage telemetry is enabled by default via Azure Application
+  Insights. It can be disabled in settings (`legesher.telemetry.enabled`) and respects
+  VS Code's global telemetry setting. No personally identifiable information (PII) is collected.
+- **Local execution**: Code analysis happens locally — the language server runs as a local process with no network calls
 
 ## Security Contacts
 
@@ -162,13 +164,16 @@ No security advisories have been published yet. When we do publish them, they wi
 
 ## Compliance and Certifications
 
-We are working towards:
+**Current:**
 
-- SOC 2 Type II compliance (for cloud services)
-- GDPR compliance (data privacy)
+- **GDPR compliant**: We comply with the EU General Data Protection Regulation.
+  See our [Privacy Policy](https://legesher.io/privacy) for details on data collection,
+  processing, and your rights.
+
+**Planned:**
+
+- SOC 2 Type II compliance (when cloud services launch)
 - Regular third-party security audits
-
-A dedicated security status page is planned for a future release.
 
 ## Security-Related Dependencies
 
