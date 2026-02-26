@@ -52,13 +52,13 @@ builtins:
   delattr: tabortettattribut
   dir: direktori
   divmod: divMod
-  enumerate: lista
+  enumerate: uppräkna
   eval: utvärdera
   exec: exekvering
   filter: filtera
   format: formatera_värde
   getattr: attfåtillgångtillettattribut
-  globals: globala
+  globals: globalavärden
   hasattr: attha
   hash: hasha
   help: hjelp
@@ -94,7 +94,7 @@ builtins:
   bytes: byteData
   classmethod: classmethodMetod
   complex: komplex
-  dict: ordning
+  dict: ordbok
   float: flytta
   frozenset: frozensett
   int: ent

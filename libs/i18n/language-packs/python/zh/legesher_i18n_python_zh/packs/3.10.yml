@@ -129,7 +129,7 @@ exceptions:
   deprecationwarning: 弃用警告
   environmenterror: 环境错误
   eoferror: 错误
-  exception: 异常
+  exception: 异常情况
   fileexistserror: 文件已存在错误
   filenotfounderror: 文件未找到错误
   floatingpointerror: 浮点数错误

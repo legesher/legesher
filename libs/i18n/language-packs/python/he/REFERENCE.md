@@ -60,13 +60,13 @@ These are Python's reserved words translated to Hebrew.
 | `or` | `או` |
 | `pass` | `לעבור` |
 | `raise` | `להעלות` |
-| `return` | `להחזיר` |
+| `return` | `החזר` |
 | `True` | `אמת` |
 | `try` | `לנסות` |
 | `type` | `סוג` |
 | `while` | `בעוד` |
 | `with` | `עם` |
-| `yield` | `להחזיר` |
+| `yield` | `הוצא` |
 
 ## Built-in Functions (71 terms)
 
@@ -76,9 +76,9 @@ Python's built-in functions and types in Hebrew.
 | ------- | ------ |
 | `abs` | `הערךהמוחלט` |
 | `aiter` | `מעגלאיטרטורסינכרוני` |
-| `all` | `כל` |
+| `all` | `הכל` |
 | `anext` | `הבאאקסט` |
-| `any` | `כל` |
+| `any` | `כל_ערך` |
 | `ascii` | `אסצי` |
 | `bin` | `בינארי` |
 | `bool` | `בוליאני` |
@@ -92,7 +92,7 @@ Python's built-in functions and types in Hebrew.
 | `complex` | `מורכב` |
 | `delattr` | `מחיקהשלתכונה` |
 | `dict` | `מילון` |
-| `dir` | `התרגוםלמונח` |
+| `dir` | `תיקיה` |
 | `divmod` | `חלוקהושארית` |
 | `ellipsis` | `הנקודהפסיק` |
 | `enumerate` | `לספור` |
@@ -116,7 +116,7 @@ Python's built-in functions and types in Hebrew.
 | `iter` | `אִיטֵר` |
 | `len` | `אורך` |
 | `list` | `רשימה` |
-| `locals` | `התרגוםלמונח` |
+| `locals` | `טבלת_ערכים_מקומיים` |
 | `map` | `מפה` |
 | `max` | `הערךהמקסימלי` |
 | `memoryview` | `תצוגתזיכרון` |
@@ -237,9 +237,9 @@ Here's an example showing Hebrew Python code with Legesher:
     אם n < 0:
         להעלות ערךשגוי("מספרים שליליים אינם מותרים")
     אם_אלו n == 0 או n == 1:
-        להחזיר 1
+        החזר 1
     אחרת:
-        להחזיר n * עצרת(n - 1)
+        החזר n * עצרת(n - 1)
 
 להגדיר ראשי():
     מספרים = [שלם(x) לכל x ב טווח(6)]

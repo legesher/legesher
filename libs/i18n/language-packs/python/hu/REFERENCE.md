@@ -36,7 +36,7 @@ These are Python's reserved words translated to Hungarian.
 | `continue` | `folytatja` |
 | `def` | `definíró` |
 | `del` | `töröl` |
-| `elif` | `ha` |
+| `elif` | `különbenha` |
 | `else` | `more` |
 | `except` | `kivéve` |
 | `except*` | `kivéve` |
@@ -88,7 +88,7 @@ Python's built-in functions and types in Hungarian.
 | `compile` | `kompilál` |
 | `complex` | `komplex` |
 | `delattr` | `törölni` |
-| `dict` | `készlet` |
+| `dict` | `szótár` |
 | `dir` | `objektum_szerinti_listázás` |
 | `divmod` | `osztás_maradék` |
 | `ellipsis` | `határozat` |
@@ -100,13 +100,13 @@ Python's built-in functions and types in Hungarian.
 | `format` | `formátolni` |
 | `frozenset` | `frozensethalmaz` |
 | `getattr` | `attributet` |
-| `globals` | `globális` |
+| `globals` | `globálisak` |
 | `hasattr` | `elemezik` |
 | `hash` | `hash_alapitanyag` |
 | `help` | `dokumentáció` |
 | `hex` | `hexa` |
 | `id` | `az_objekt_egyedi_azonosítója` |
-| `input` | `beállítás` |
+| `input` | `bemenet` |
 | `int` | `eg` |
 | `isinstance` | `típusellenőr` |
 | `issubclass` | `a_podrevezés` |
@@ -126,7 +126,7 @@ Python's built-in functions and types in Hungarian.
 | `ord` | `betű_kód` |
 | `pow` | `határozás` |
 | `print` | `nyomtat` |
-| `property` | `térség` |
+| `property` | `tulajdonság` |
 | `range` | `térség` |
 | `repr` | `reprezentáció` |
 | `reversed` | `fordításra` |
@@ -233,7 +233,7 @@ definíró faktorialis(n):
     """Számítsd ki n faktoriálisát."""
     ha n < 0:
         fejrekezni Értétvéltesés("Negatív számok nem engedélyezettek")
-    ha n == 0 vagy n == 1:
+    különbenha n == 0 vagy n == 1:
         visszajátszásra 1
     more:
         visszajátszásra n * faktorialis(n - 1)

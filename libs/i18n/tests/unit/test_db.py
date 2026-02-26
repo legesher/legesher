@@ -790,3 +790,204 @@ class TestTranslationDatabase:
     def test_source_filtering(self, db):
         """Test filtering translations by source (community, aya, claude, etc)."""
         pytest.skip("Will be implemented in Phase 2")
+
+    # ===========================
+    # Collision Detection Tests (CORE-605)
+    # ===========================
+
+    def _setup_collision_fixture(self, db):
+        """Helper: create two terms with the same selected translation in 'es'."""
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        id1 = db.get_or_create_term(
+            name="if", programming_language="python", category="keyword"
+        )
+        id2 = db.get_or_create_term(
+            name="elif", programming_language="python", category="keyword"
+        )
+        return id1, id2
+
+    def test_find_collisions_empty(self, db):
+        """Test that a clean database has no collisions."""
+        collisions = db.find_collisions()
+        assert collisions == []
+
+    def test_find_collisions_detects_collision(self, db):
+        """Test that two terms with the same selected translation are detected."""
+        id1, id2 = self._setup_collision_fixture(db)
+
+        # Both terms select the same translation "si"
+        db.set_selected(
+            term_id=id1, language_code="es", translation="si", allow_collision=True
+        )
+        db.set_selected(
+            term_id=id2, language_code="es", translation="si", allow_collision=True
+        )
+
+        collisions = db.find_collisions()
+        assert len(collisions) == 1
+        assert collisions[0]["translation"] == "si"
+        assert collisions[0]["language_code"] == "es"
+        assert len(collisions[0]["terms"]) == 2
+        term_names = {t["term_name"] for t in collisions[0]["terms"]}
+        assert term_names == {"if", "elif"}
+
+    def test_find_collisions_three_way(self, db):
+        """Test detection of a three-way collision."""
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("hi", "Hindi", "हिन्दी"),
+        )
+        conn.commit()
+
+        id1 = db.get_or_create_term(
+            name="assert", programming_language="python", category="keyword"
+        )
+        id2 = db.get_or_create_term(
+            name="def", programming_language="python", category="keyword"
+        )
+        id3 = db.get_or_create_term(
+            name="vars", programming_language="python", category="builtin_func"
+        )
+
+        for tid in (id1, id2, id3):
+            db.set_selected(
+                term_id=tid,
+                language_code="hi",
+                translation="same",
+                allow_collision=True,
+            )
+
+        collisions = db.find_collisions()
+        assert len(collisions) == 1
+        assert len(collisions[0]["terms"]) == 3
+
+    def test_find_collisions_filter_by_language(self, db):
+        """Test that language filter returns only collisions for that language."""
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("fi", "Finnish", "Suomi"),
+        )
+        conn.commit()
+
+        id1 = db.get_or_create_term(
+            name="and", programming_language="python", category="keyword"
+        )
+        id2 = db.get_or_create_term(
+            name="or", programming_language="python", category="keyword"
+        )
+        id3 = db.get_or_create_term(
+            name="if", programming_language="python", category="keyword"
+        )
+        id4 = db.get_or_create_term(
+            name="elif", programming_language="python", category="keyword"
+        )
+
+        # Finnish collision: "ja" for and + or
+        db.set_selected(
+            term_id=id1, language_code="fi", translation="ja", allow_collision=True
+        )
+        db.set_selected(
+            term_id=id2, language_code="fi", translation="ja", allow_collision=True
+        )
+        # Spanish collision: "si" for if + elif
+        db.set_selected(
+            term_id=id3, language_code="es", translation="si", allow_collision=True
+        )
+        db.set_selected(
+            term_id=id4, language_code="es", translation="si", allow_collision=True
+        )
+
+        # Filter by Finnish
+        fi_collisions = db.find_collisions(language_code="fi")
+        assert len(fi_collisions) == 1
+        assert fi_collisions[0]["language_code"] == "fi"
+
+        # Filter by Spanish
+        es_collisions = db.find_collisions(language_code="es")
+        assert len(es_collisions) == 1
+        assert es_collisions[0]["language_code"] == "es"
+
+        # All collisions
+        all_collisions = db.find_collisions()
+        assert len(all_collisions) == 2
+
+    def test_find_collisions_scoped_by_programming_language(self, db):
+        """Test that Python and TypeScript terms sharing a translation don't collide."""
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+        py_id = db.get_or_create_term(
+            name="def", programming_language="python", category="keyword"
+        )
+        ts_id = db.get_or_create_term(
+            name="function", programming_language="typescript", category="keyword"
+        )
+
+        # Same translation for different programming languages
+        db.set_selected(
+            term_id=py_id,
+            language_code="es",
+            translation="definir",
+            allow_collision=True,
+        )
+        db.set_selected(
+            term_id=ts_id,
+            language_code="es",
+            translation="definir",
+            allow_collision=True,
+        )
+
+        # Should NOT be a collision within Python scope
+        py_collisions = db.find_collisions(programming_language="python")
+        assert len(py_collisions) == 0
+
+        # Should NOT be a collision within TypeScript scope
+        ts_collisions = db.find_collisions(programming_language="typescript")
+        assert len(ts_collisions) == 0
+
+    def test_set_selected_rejects_collision(self, db):
+        """Test that set_selected raises ValueError on collision by default."""
+        id1, id2 = self._setup_collision_fixture(db)
+
+        db.set_selected(term_id=id1, language_code="es", translation="si")
+
+        with pytest.raises(ValueError, match="Collision"):
+            db.set_selected(term_id=id2, language_code="es", translation="si")
+
+    def test_set_selected_allows_collision_flag(self, db):
+        """Test that allow_collision=True bypasses the collision check."""
+        id1, id2 = self._setup_collision_fixture(db)
+
+        db.set_selected(term_id=id1, language_code="es", translation="si")
+
+        # Should NOT raise
+        result_id = db.set_selected(
+            term_id=id2, language_code="es", translation="si", allow_collision=True
+        )
+        assert result_id > 0
+
+    def test_set_selected_replacing_own_translation_no_false_positive(self, db):
+        """Test that updating a term's own translation doesn't trigger collision."""
+        id1, _ = self._setup_collision_fixture(db)
+
+        db.set_selected(term_id=id1, language_code="es", translation="si")
+
+        # Updating the same term to the same translation should NOT raise
+        result_id = db.set_selected(term_id=id1, language_code="es", translation="si")
+        assert result_id > 0

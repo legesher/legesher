@@ -42,7 +42,7 @@ keywords:
 builtins:
   abs: absoluttvurdere
   all: alle
-  any: alle
+  any: enhver
   ascii: asciiKonvertering
   bin: binær_konvertering
   breakpoint: pausepunkt

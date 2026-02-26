@@ -177,7 +177,7 @@ Exception classes for error handling.
 | `futurewarning` | `미래경고` |
 | `generatorexit` | `제네레이터종료` |
 | `importerror` | `수입오류` |
-| `importwarning` | `경고` |
+| `importwarning` | `가져오기경고` |
 | `indentationerror` | `인덴트오류` |
 | `indexerror` | `인덱스오류` |
 | `interruptederror` | `중단오류` |

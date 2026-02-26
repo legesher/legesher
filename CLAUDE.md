@@ -73,7 +73,7 @@ Zed and JetBrains PyCharm etc.
 | **vs-code**         | 0.1.4   | Production-ready | Extension with telemetry/feedback, all 26 languages supported   |
 | **home**            | 0.1.0   | Minimal scaffold | Digital home for community features and project showcase        |
 
-**Language pack versions**: 0.0.1–0.0.2 (see each pack's `pyproject.toml` for exact version)
+**Language pack versions**: 0.0.1–0.0.3 (see each pack's `pyproject.toml` for exact version)
 
 All packages have test suites with 100+ test files across core, i18n, legesher, and language-server packages.
 
@@ -374,7 +374,7 @@ exceptions: {} # Empty = inherits all from 3.12
 5. Update root `pyproject.toml`:
    - Add to `[tool.uv.sources]` section
    - Add to `[tool.uv.workspace]` members
-6. Set version appropriately (check existing pack versions; currently 0.0.1–0.0.2)
+6. Set version appropriately (check existing pack versions; currently 0.0.1–0.0.3)
 7. Run `uv sync` to install in development mode
 
 ### i18n CLI Commands

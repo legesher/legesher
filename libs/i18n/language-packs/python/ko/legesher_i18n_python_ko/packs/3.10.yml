@@ -178,7 +178,7 @@ exceptions:
   syntaxwarning: 구문경고
   runtimewarning: 실행시간경고
   futurewarning: 미래경고
-  importwarning: 경고
+  importwarning: 가져오기경고
   unicodewarning: 유니코드경고
   byteswarning: 바이트경고
   resourcewarning: 리소스경고

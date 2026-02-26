@@ -47,7 +47,7 @@ builtins:
   abs: القيمةالمطلقة
   aiter: مُتَأَنِّي
   all: كل
-  anext: التالي
+  anext: التالي_غير_متزامن
   any: أي
   ascii: أسكي
   bin: البينري
@@ -60,7 +60,7 @@ builtins:
   classmethod: الطريقة_التصنيفية
   compile: تجميع
   complex: المركب
-  delattr: حذف
+  delattr: حذف_خاصية
   dict: القاموس
   dir: الدليل
   divmod: القياس_المودولي

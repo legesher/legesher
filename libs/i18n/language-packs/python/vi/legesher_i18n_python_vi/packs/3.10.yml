@@ -64,7 +64,7 @@ builtins:
   help: giúp
   hex: hệlục
   id: đườngdẫn
-  input: nhập
+  input: đầuvào
   isinstance: là_một_loại
   issubclass: hiệu_ứng_con_của
   iter: hànhtrình

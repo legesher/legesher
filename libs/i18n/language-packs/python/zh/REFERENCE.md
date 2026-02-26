@@ -169,7 +169,7 @@ Exception classes for error handling.
 | `encodingwarning` | `编码警告` |
 | `environmenterror` | `环境错误` |
 | `eoferror` | `错误` |
-| `exception` | `异常` |
+| `exception` | `异常情况` |
 | `exceptiongroup` | `异常组` |
 | `fileexistserror` | `文件已存在错误` |
 | `filenotfounderror` | `文件未找到错误` |

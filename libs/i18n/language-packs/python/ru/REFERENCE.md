@@ -74,7 +74,7 @@ Python's built-in functions and types in Russian.
 | `abs` | `абсолютноезначение` |
 | `aiter` | `айтер` |
 | `all` | `все` |
-| `anext` | `следующий` |
+| `anext` | `следующийасинх` |
 | `any` | `каждый` |
 | `ascii` | `аски` |
 | `bin` | `бинарный` |
@@ -193,7 +193,7 @@ Exception classes for error handling.
 | `notimplementederror` | `ошибканереализации` |
 | `oserror` | `ошибкасистемы` |
 | `overflowerror` | `ошибкапереполнения` |
-| `pendingdeprecationwarning` | `предупреждениеобустаревании` |
+| `pendingdeprecationwarning` | `ожидаемоепредупреждениеобустаревании` |
 | `permissionerror` | `ошибкаразрешения` |
 | `processlookuperror` | `ошибкаПроцесса` |
 | `recursionerror` | `рекурсионнаяошибка` |

@@ -75,7 +75,7 @@ Python's built-in functions and types in Norwegian.
 | `aiter` | `iterer` |
 | `all` | `alle` |
 | `anext` | `neste` |
-| `any` | `alle` |
+| `any` | `enhver` |
 | `ascii` | `asciiKonvertering` |
 | `bin` | `binær_konvertering` |
 | `bool` | `boolean` |

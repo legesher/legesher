@@ -37,7 +37,7 @@ These are Python's reserved words translated to Turkish.
 | `def` | `tanımla` |
 | `del` | `sil` |
 | `elif` | `eğer_de` |
-| `else` | `değil` |
+| `else` | `yoksa` |
 | `except` | `yada` |
 | `except*` | `except` |
 | `False` | `yanlış` |
@@ -74,11 +74,11 @@ Python's built-in functions and types in Turkish.
 | `abs` | `mutlakDeğer` |
 | `aiter` | `asenkron_itaratci` |
 | `all` | `herşey` |
-| `anext` | `sonraki` |
+| `anext` | `sonrakiasenkron` |
 | `any` | `herhangibir` |
 | `ascii` | `asciiDegerleri` |
 | `bin` | `ikilikSistemden` |
-| `bool` | `doğru` |
+| `bool` | `mantıksal` |
 | `breakpoint` | `kesmenoktası` |
 | `bytearray` | `byteDizisi` |
 | `bytes` | `baytlar` |
@@ -123,7 +123,7 @@ Python's built-in functions and types in Turkish.
 | `object` | `nesne` |
 | `oct` | `oktal` |
 | `open` | `açmak` |
-| `ord` | `karakter` |
+| `ord` | `sıra` |
 | `pow` | `üçüncükuvvet` |
 | `print` | `yazdır` |
 | `property` | `özellik` |
@@ -235,7 +235,7 @@ tanımla faktoriyel(n):
         yükselt Değerhatası("Negatif sayılara izin verilmiyor")
     eğer_de n == 0 veya n == 1:
         dönüş 1
-    değil:
+    yoksa:
         dönüş n * faktoriyel(n - 1)
 
 tanımla ana():

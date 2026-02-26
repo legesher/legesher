@@ -12,7 +12,7 @@ keywords:
   continue: continuar
   def: definir
   del: apagar
-  elif: senão
+  elif: senãose
   else: senão
   except: excepto
   finally: finalmente
@@ -110,7 +110,7 @@ builtins:
   ellipsis: ellipse
   notimplemented: nãoimplementado
   aiter: iter_async
-  anext: próximo
+  anext: próximoasync
 exceptions:
   baseexception: BaseException
   basegeneratorexit: basegeradordesaída

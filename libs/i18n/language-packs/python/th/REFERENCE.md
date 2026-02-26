@@ -26,7 +26,7 @@ These are Python's reserved words translated to Thai.
 | English | Thai |
 | ------- | ------ |
 | `and` | `และ` |
-| `as` | `เป็น` |
+| `as` | `ในฐานะ` |
 | `assert` | `ยกเลิกข้อสมพันธ์` |
 | `async` | `อันเสียง` |
 | `await` | `คำแต่งอาการ` |
@@ -92,7 +92,7 @@ Python's built-in functions and types in Thai.
 | `dir` | `ดิร์` |
 | `divmod` | `ดิวมอด` |
 | `ellipsis` | `อิลิสเซียม` |
-| `enumerate` | `เลือก` |
+| `enumerate` | `นับรายการ` |
 | `eval` | `พิมัญเครื่องคำeval` |
 | `exec` | `ซับเทริก` |
 | `filter` | `ฟิลเตอร์` |
@@ -254,7 +254,7 @@ Here's an example showing Thai Python code with Legesher:
     # สาธิต try/except
     ลอง:
         แฟกทอเรียล(-1)
-    เลือก ข้อผิดพลาดค่า เป็น ข้อผิดพลาด:
+    เลือก ข้อผิดพลาดค่า ในฐานะ ข้อผิดพลาด:
         เจตนา(f"ข้อผิดพลาด: {ข้อผิดพลาด}")
     ทำเสมอ:
         เจตนา("เสร็จสิ้น!")

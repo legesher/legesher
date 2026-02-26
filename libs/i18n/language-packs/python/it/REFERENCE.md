@@ -123,7 +123,7 @@ Python's built-in functions and types in Italian.
 | `object` | `oggetto` |
 | `oct` | `ottale` |
 | `open` | `aprire` |
-| `ord` | `carattere` |
+| `ord` | `ordinale` |
 | `pow` | `lapotenza` |
 | `print` | `stampa` |
 | `property` | `proprietà` |

@@ -8,7 +8,7 @@ version: '3.10'
 keywords:
   and: और
   as: जैसे
-  assert: परिभाषितकरना
+  assert: जोर
   async: अग्रिम
   await: प्रतीक्षाकरें
   break: ब्रेककरना
@@ -53,7 +53,7 @@ builtins:
   callable: कॉलेबल
   chr: चार्क्टर
   compile: कोडकंपाइलकरना
-  delattr: हटाना
+  delattr: गुण_हटाना
   dir: दिखाएँ
   divmod: दिवमोड
   enumerate: सूचीबद्धकरना
@@ -62,7 +62,7 @@ builtins:
   filter: चुनना
   format: फ़ॉर्मेट
   getattr: अट्रिब्यूटप्राप्तकरना
-  globals: वैश्विक
+  globals: ग्लोबल्स
   hasattr: हैसैट्ट
   hash: हैश
   help: मददकरें
@@ -91,7 +91,7 @@ builtins:
   slice: स्लाइस
   sorted: सॉर्टेड
   sum: जोड़ना
-  vars: परिभाषितकरना
+  vars: जिसका
   zip: ज़िप
   bool: बूलियन
   bytearray: बाइटएरे
@@ -114,7 +114,7 @@ builtins:
   ellipsis: त्रिकोणीय
   notimplemented: नाकियागया
   aiter: अभिसंगतआयटेर
-  anext: अगला
+  anext: अगला_असमकालिक
 exceptions:
   baseexception: बेसएक्सपेक्शन
   basegeneratorexit: बेसजेनरेटरएक्सिट

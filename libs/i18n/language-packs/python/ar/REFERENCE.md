@@ -77,7 +77,7 @@ Python's built-in functions and types in Arabic.
 | `abs` | `القيمةالمطلقة` |
 | `aiter` | `مُتَأَنِّي` |
 | `all` | `كل` |
-| `anext` | `التالي` |
+| `anext` | `التالي_غير_متزامن` |
 | `any` | `أي` |
 | `ascii` | `أسكي` |
 | `bin` | `البينري` |
@@ -90,7 +90,7 @@ Python's built-in functions and types in Arabic.
 | `classmethod` | `الطريقة_التصنيفية` |
 | `compile` | `تجميع` |
 | `complex` | `المركب` |
-| `delattr` | `حذف` |
+| `delattr` | `حذف_خاصية` |
 | `dict` | `القاموس` |
 | `dir` | `الدليل` |
 | `divmod` | `القياس_المودولي` |

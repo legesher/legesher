@@ -7,7 +7,7 @@ target: python
 version: '3.10'
 keywords:
   and: และ
-  as: เป็น
+  as: ในฐานะ
   assert: ยกเลิกข้อสมพันธ์
   async: อันเสียง
   await: คำแต่งอาการ
@@ -56,7 +56,7 @@ builtins:
   delattr: ลบอัตราสิดสุดของข้อมูล
   dir: ดิร์
   divmod: ดิวมอด
-  enumerate: เลือก
+  enumerate: นับรายการ
   eval: พิมัญเครื่องคำeval
   exec: ซับเทริก
   filter: ฟิลเตอร์

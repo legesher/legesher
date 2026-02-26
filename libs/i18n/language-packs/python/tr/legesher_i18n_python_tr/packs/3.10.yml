@@ -13,7 +13,7 @@ keywords:
   def: tanımla
   del: sil
   elif: eğer_de
-  else: değil
+  else: yoksa
   except: yada
   finally: sonunda
   for: için
@@ -76,7 +76,7 @@ builtins:
   next: sonraki
   oct: oktal
   open: açmak
-  ord: karakter
+  ord: sıra
   pow: üçüncükuvvet
   print: yazdır
   range: aralık
@@ -89,7 +89,7 @@ builtins:
   sum: toplam
   vars: değişkenler
   zip: birleştir
-  bool: doğru
+  bool: mantıksal
   bytearray: byteDizisi
   bytes: baytlar
   classmethod: sınıfyöntemi
@@ -110,7 +110,7 @@ builtins:
   ellipsis: ellipsiz
   notimplemented: yapılamaz
   aiter: asenkron_itaratci
-  anext: sonraki
+  anext: sonrakiasenkron
 exceptions:
   baseexception: temelistisna
   basegeneratorexit: basegeneratorçıkışı

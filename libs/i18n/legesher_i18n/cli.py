@@ -742,6 +742,92 @@ def vacuum(db_path: Path, quiet: bool):
         sys.exit(1)
 
 
+@db.command()
+@click.option(
+    "--db-path",
+    default=None,
+    help="Path to database file (default: package db)",
+    type=click.Path(path_type=Path),
+)
+@click.option(
+    "--language",
+    "-l",
+    default=None,
+    help="Filter by language code (e.g., fi, el, hu)",
+)
+@click.option("--json-output", "--json", is_flag=True, help="Output as JSON")
+@click.option("--quiet", "-q", is_flag=True, help="Suppress output (for CI/scripts)")
+def collisions(
+    db_path: Path | None, language: str | None, json_output: bool, quiet: bool
+):
+    """Detect translation collisions in the database.
+
+    A collision occurs when the same translated word is the selected
+    translation for 2+ different Python terms in the same language.
+    Collisions break round-trip translation because the translator
+    cannot determine which English keyword to map back to.
+
+    Examples:
+
+        legesher-i18n db collisions
+
+        legesher-i18n db collisions --language fi
+
+        legesher-i18n db collisions --json
+    """
+    out = get_console(quiet)
+    database = None
+    try:
+        database = TranslationDatabase(db_path=str(db_path) if db_path else None)
+        results = database.find_collisions(language_code=language)
+
+        if json_output:
+            click.echo(json.dumps(results, ensure_ascii=False, indent=2))
+            if results:
+                sys.exit(1)  # Non-zero exit for CI integration
+            return
+
+        if not results:
+            out.print("✅ [green]No translation collisions found.[/green]")
+            return
+
+        # Count unique languages
+        languages = {c["language_code"] for c in results}
+        total_terms = sum(len(c["terms"]) for c in results)
+
+        out.print(
+            f"[yellow]Translation Collisions[/yellow] "
+            f"({len(results)} groups across {len(languages)} languages)\n"
+        )
+
+        for collision in results:
+            lang = collision["language_code"]
+            trans = collision["translation"]
+            terms = collision["terms"]
+            term_names = ", ".join(t["term_name"] for t in terms)
+            categories = ", ".join(t["category"] for t in terms)
+            out.print(f'  [{lang}] "{trans}" -> {term_names} ({categories})')
+
+        out.print(
+            f"\n[dim]Total: {len(results)} collision groups, "
+            f"{total_terms} affected terms[/dim]"
+        )
+        sys.exit(1)  # Non-zero exit for CI integration
+
+    except FileNotFoundError:
+        out.print(f"❌ [red]Error:[/red] Database not found at {db_path}")
+        out.print("\n[dim]Run 'legesher-i18n db init' to create the database.[/dim]")
+        sys.exit(1)
+    except Exception as e:
+        out.print(f"❌ [red]Error detecting collisions:[/red] {e}")
+        if "--debug" in sys.argv:
+            raise
+        sys.exit(1)
+    finally:
+        if database is not None:
+            database.close()
+
+
 # Add db group to main CLI
 cli.add_command(db)
 

@@ -27,7 +27,7 @@ These are Python's reserved words translated to Hindi.
 | ------- | ------ |
 | `and` | `और` |
 | `as` | `जैसे` |
-| `assert` | `परिभाषितकरना` |
+| `assert` | `जोर` |
 | `async` | `अग्रिम` |
 | `await` | `प्रतीक्षाकरें` |
 | `break` | `ब्रेककरना` |
@@ -74,7 +74,7 @@ Python's built-in functions and types in Hindi.
 | `abs` | `अभि` |
 | `aiter` | `अभिसंगतआयटेर` |
 | `all` | `सभी` |
-| `anext` | `अगला` |
+| `anext` | `अगला_असमकालिक` |
 | `any` | `कोईभी` |
 | `ascii` | `असीआई` |
 | `bin` | `बाइनरी` |
@@ -87,7 +87,7 @@ Python's built-in functions and types in Hindi.
 | `classmethod` | `क्लासविथमेथड` |
 | `compile` | `कोडकंपाइलकरना` |
 | `complex` | `समिश्र` |
-| `delattr` | `हटाना` |
+| `delattr` | `गुण_हटाना` |
 | `dict` | `डिक्शनरी` |
 | `dir` | `दिखाएँ` |
 | `divmod` | `दिवमोड` |
@@ -100,7 +100,7 @@ Python's built-in functions and types in Hindi.
 | `format` | `फ़ॉर्मेट` |
 | `frozenset` | `अपरिवर्तनीयसेट` |
 | `getattr` | `अट्रिब्यूटप्राप्तकरना` |
-| `globals` | `वैश्विक` |
+| `globals` | `ग्लोबल्स` |
 | `hasattr` | `हैसैट्ट` |
 | `hash` | `हैश` |
 | `help` | `मददकरें` |
@@ -141,7 +141,7 @@ Python's built-in functions and types in Hindi.
 | `super` | `सुपर` |
 | `tuple` | `टपल` |
 | `type` | `type` |
-| `vars` | `परिभाषितकरना` |
+| `vars` | `जिसका` |
 | `zip` | `ज़िप` |
 
 ## Exceptions (69 terms)

@@ -88,11 +88,11 @@ Python's built-in functions and types in Swedish.
 | `compile` | `kompilera` |
 | `complex` | `komplex` |
 | `delattr` | `tabortettattribut` |
-| `dict` | `ordning` |
+| `dict` | `ordbok` |
 | `dir` | `direktori` |
 | `divmod` | `divMod` |
 | `ellipsis` | `ellipsen` |
-| `enumerate` | `lista` |
+| `enumerate` | `uppräkna` |
 | `eval` | `utvärdera` |
 | `exec` | `exekvering` |
 | `filter` | `filtera` |
@@ -100,7 +100,7 @@ Python's built-in functions and types in Swedish.
 | `format` | `formatera_värde` |
 | `frozenset` | `frozensett` |
 | `getattr` | `attfåtillgångtillettattribut` |
-| `globals` | `globala` |
+| `globals` | `globalavärden` |
 | `hasattr` | `attha` |
 | `hash` | `hasha` |
 | `help` | `hjelp` |

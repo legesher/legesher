@@ -76,7 +76,7 @@ builtins:
   next: ilprossimo
   oct: ottale
   open: aprire
-  ord: carattere
+  ord: ordinale
   pow: lapotenza
   print: stampa
   range: intervallo

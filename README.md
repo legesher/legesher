@@ -249,7 +249,7 @@ This allows rapid iteration on apps while maintaining foundation stability.
 
 26 language packs are released independently, allowing each language community to iterate at their own pace:
 
-- `legesher-i18n-python-{lang}` v0.0.1-0.0.2 - Translations for Python
+- `legesher-i18n-python-{lang}` v0.0.1-0.0.3 - Translations for Python
 - Supported: ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms, nl, no, pl, pt, ru, sv, th, tr, vi, zh
 
 Each pack supports Python 3.10-3.14 with version-aware inheritance. All packs currently have **experimental** status,

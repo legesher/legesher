@@ -62,7 +62,7 @@ These are Python's reserved words translated to Polish.
 | `try` | `próbować` |
 | `type` | `typ` |
 | `while` | `podczas` |
-| `with` | `z` |
+| `with` | `przy` |
 | `yield` | `wprowadzać` |
 
 ## Built-in Functions (71 terms)
@@ -74,7 +74,7 @@ Python's built-in functions and types in Polish.
 | `abs` | `wartosc_bez_znaku` |
 | `aiter` | `asynchroniczny_iterator` |
 | `all` | `wszystkie` |
-| `anext` | `następny` |
+| `anext` | `następnyasync` |
 | `any` | `dowolny` |
 | `ascii` | `asciiZnak` |
 | `bin` | `binarny` |
@@ -169,7 +169,7 @@ Exception classes for error handling.
 | `encodingwarning` | `ostrzeżeniedotyczącekodowania` |
 | `environmenterror` | `błądśrodowiskowy` |
 | `eoferror` | `błąd` |
-| `exception` | `wyjątek` |
+| `exception` | `wyjątekklasa` |
 | `exceptiongroup` | `grupawyjątków` |
 | `fileexistserror` | `błądistniejącegopliku` |
 | `filenotfounderror` | `błąd_nieznanego_pliku` |

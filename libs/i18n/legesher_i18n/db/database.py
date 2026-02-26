@@ -602,10 +602,13 @@ class TranslationDatabase:
         translation: str,
         selected_by: str | None = None,
         selection_reason: str | None = None,
+        allow_collision: bool = False,
     ) -> int:
         """Set or update the selected translation for a term+language.
 
         Uses INSERT OR REPLACE to ensure exactly one selection per term+language.
+        By default, checks that the translation doesn't collide with another
+        term in the same programming language.
 
         Args:
             term_id: The term ID
@@ -613,11 +616,37 @@ class TranslationDatabase:
             translation: The chosen translation text
             selected_by: Who/what made the selection
             selection_reason: Why this translation was chosen
+            allow_collision: If True, skip the collision check
 
         Returns:
             The selected_translation ID
+
+        Raises:
+            ValueError: If the translation collides with another term's
+                selected translation in the same language and programming
+                language (unless allow_collision=True)
         """
         conn = self._get_connection()
+
+        if not allow_collision:
+            existing = conn.execute(
+                """SELECT st.term_id, t.name
+                   FROM selected_translations st
+                   JOIN terms t ON t.id = st.term_id
+                   WHERE st.language_code = ? AND st.translation = ?
+                     AND st.term_id != ?
+                     AND t.programming_language = (
+                       SELECT programming_language FROM terms WHERE id = ?
+                     )""",
+                (language_code, translation, term_id, term_id),
+            ).fetchone()
+            if existing:
+                raise ValueError(
+                    f"Collision: '{translation}' already selected for term "
+                    f"'{existing[1]}' (id={existing[0]}) in language "
+                    f"'{language_code}'"
+                )
+
         cursor = conn.execute(
             """
             INSERT OR REPLACE INTO selected_translations (
@@ -728,3 +757,83 @@ class TranslationDatabase:
         stats["terms_by_category"] = {row[0]: row[1] for row in rows}
 
         return stats
+
+    # ===========================
+    # Collision Detection
+    # ===========================
+
+    def find_collisions(
+        self,
+        language_code: str | None = None,
+        programming_language: str = "python",
+    ) -> list[dict]:
+        """Find selected translations where the same text maps to 2+ terms.
+
+        A collision means round-trip translation is broken — the translator
+        cannot determine which English keyword to map back to.
+
+        Scoped to a single programming language so that Python and TypeScript
+        terms sharing a translation are NOT treated as collisions.
+
+        Args:
+            language_code: Filter by language (None = all languages)
+            programming_language: Filter by programming language
+
+        Returns:
+            List of collision dicts, each containing:
+            - language_code: the affected language
+            - translation: the colliding translated text
+            - terms: list of dicts with term_id, term_name, category
+        """
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+
+        query = """
+            SELECT s.language_code, s.translation,
+                   GROUP_CONCAT(t.id, '|') as term_ids,
+                   GROUP_CONCAT(t.name, '|') as term_names,
+                   GROUP_CONCAT(t.category, '|') as categories
+            FROM selected_translations s
+            JOIN terms t ON s.term_id = t.id
+            WHERE t.programming_language = ?
+        """
+        params: list = [programming_language]
+
+        if language_code is not None:
+            query += " AND s.language_code = ?"
+            params.append(language_code)
+
+        query += """
+            GROUP BY s.language_code, s.translation
+            HAVING COUNT(DISTINCT s.term_id) > 1
+            ORDER BY s.language_code, COUNT(DISTINCT s.term_id) DESC
+        """
+
+        cursor = conn.execute(query, params)
+        rows = cursor.fetchall()
+        conn.row_factory = None
+
+        collisions = []
+        for row in rows:
+            term_ids = row["term_ids"].split("|")
+            term_names = row["term_names"].split("|")
+            categories = row["categories"].split("|")
+
+            terms = [
+                {
+                    "term_id": int(tid),
+                    "term_name": name,
+                    "category": cat,
+                }
+                for tid, name, cat in zip(term_ids, term_names, categories)
+            ]
+
+            collisions.append(
+                {
+                    "language_code": row["language_code"],
+                    "translation": row["translation"],
+                    "terms": terms,
+                }
+            )
+
+        return collisions

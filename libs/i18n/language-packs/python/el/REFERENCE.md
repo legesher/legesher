@@ -36,7 +36,7 @@ These are Python's reserved words translated to Greek.
 | `continue` | `συνέχισε` |
 | `def` | `δε` |
 | `del` | `διαγραφή` |
-| `elif` | `αν` |
+| `elif` | `αλλάν` |
 | `else` | `αλλιώς` |
 | `except` | `εκτός` |
 | `except*` | `εκτός` |
@@ -44,7 +44,7 @@ These are Python's reserved words translated to Greek.
 | `finally` | `τελικά` |
 | `for` | `για` |
 | `from` | `από` |
-| `global` | `παγκόσμιος` |
+| `global` | `καθολικός` |
 | `if` | `αν` |
 | `import` | `εισαγωγή` |
 | `in` | `εν` |
@@ -100,13 +100,13 @@ Python's built-in functions and types in Greek.
 | `format` | `μορφοποίηση` |
 | `frozenset` | `παγωμένο_σύνολο` |
 | `getattr` | `λησμονώ_χρήση_απόκτησης_χαρακτηριστικού` |
-| `globals` | `παγκόσμιος` |
+| `globals` | `καθολικά` |
 | `hasattr` | `έχειχαρακτηριστικό` |
 | `hash` | `χασάπης` |
 | `help` | `βοήθεια` |
 | `hex` | `εξαγωνικό` |
 | `id` | `ηταυτότητα` |
-| `input` | `εισαγωγή` |
+| `input` | `καταχώρηση` |
 | `int` | `κείμενο` |
 | `isinstance` | `είναιΕκτιμητής` |
 | `issubclass` | `είναι_υποκλάση` |
@@ -137,7 +137,7 @@ Python's built-in functions and types in Greek.
 | `sorted` | `ταξινομημένος` |
 | `staticmethod` | `στατικήμέθοδος` |
 | `str` | `στρ` |
-| `sum` | `σύνολο` |
+| `sum` | `άρθροισμα` |
 | `super` | `υπερ` |
 | `tuple` | `πλειάδα` |
 | `type` | `type` |
@@ -233,7 +233,7 @@ Here's an example showing Greek Python code with Legesher:
     """Υπολογισμός παραγοντικού του n."""
     αν n < 0:
         ανυψώστε ValueError("Οι αρνητικοί αριθμοί δεν επιτρέπονται")
-    αν n == 0 ή n == 1:
+    αλλάν n == 0 ή n == 1:
         επιστροφή 1
     αλλιώς:
         επιστροφή n * παραγοντικό(n - 1)

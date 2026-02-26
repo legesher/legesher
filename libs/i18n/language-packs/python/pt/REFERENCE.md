@@ -36,7 +36,7 @@ These are Python's reserved words translated to Portuguese.
 | `continue` | `continuar` |
 | `def` | `definir` |
 | `del` | `apagar` |
-| `elif` | `senão` |
+| `elif` | `senãose` |
 | `else` | `senão` |
 | `except` | `excepto` |
 | `except*` | `exceptar` |
@@ -74,7 +74,7 @@ Python's built-in functions and types in Portuguese.
 | `abs` | `valorabsoluto` |
 | `aiter` | `iter_async` |
 | `all` | `todos` |
-| `anext` | `próximo` |
+| `anext` | `próximoasync` |
 | `any` | `qualquer` |
 | `ascii` | `asciiToString` |
 | `bin` | `binário` |
@@ -233,7 +233,7 @@ definir fatorial(n):
     """Calcular o fatorial de n."""
     se n < 0:
         elevar ValueError("Números negativos não são permitidos")
-    senão n == 0 ou n == 1:
+    senãose n == 0 ou n == 1:
         retornar 1
     senão:
         retornar n * fatorial(n - 1)

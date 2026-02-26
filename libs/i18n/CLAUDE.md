@@ -192,15 +192,15 @@ translation data. Schema defined in `legesher_i18n/db/schema.py`.
 
 Extensible across programming languages. Python's `def` and a future TypeScript `function` are separate rows.
 
-| Column | Type | Notes |
-| ------ | ---- | ----- |
-| `id` | INTEGER PK | Auto-increment |
-| `name` | TEXT NOT NULL | e.g., `def`, `True`, `print` |
-| `programming_language` | TEXT NOT NULL | e.g., `python` |
-| `category` | TEXT NOT NULL | `keyword`, `builtin_func`, `builtin_type`, `special_constant`, `exception` |
-| `subcategory` | TEXT | Keywords: `control_flow`, `iteration`, `structure`, etc. Exceptions: `base`, `arithmetic`, etc. |
-| `version_added` | TEXT | Python version when term was introduced |
-| `description` | TEXT | Optional human-readable description |
+| Column                 | Type          | Notes                                                                                           |
+| ---------------------- | ------------- | ----------------------------------------------------------------------------------------------- |
+| `id`                   | INTEGER PK    | Auto-increment                                                                                  |
+| `name`                 | TEXT NOT NULL | e.g., `def`, `True`, `print`                                                                    |
+| `programming_language` | TEXT NOT NULL | e.g., `python`                                                                                  |
+| `category`             | TEXT NOT NULL | `keyword`, `builtin_func`, `builtin_type`, `special_constant`, `exception`                      |
+| `subcategory`          | TEXT          | Keywords: `control_flow`, `iteration`, `structure`, etc. Exceptions: `base`, `arithmetic`, etc. |
+| `version_added`        | TEXT          | Python version when term was introduced                                                         |
+| `description`          | TEXT          | Optional human-readable description                                                             |
 
 **Constraint:** `UNIQUE(name, programming_language)`
 
@@ -208,33 +208,33 @@ Extensible across programming languages. Python's `def` and a future TypeScript 
 
 38 languages total: 26 with YAML packs, 12 legacy community languages.
 
-| Column | Type | Notes |
-| ------ | ---- | ----- |
-| `code` | TEXT PK | ISO 639-1 (e.g., `es`, `ar`, `zh`) |
-| `name` | TEXT NOT NULL | English name |
-| `native_name` | TEXT NOT NULL | Native script name |
-| `direction` | TEXT | `ltr` or `rtl` |
-| `status` | TEXT | `experimental` or `accepted` |
-| `has_yaml_pack` | BOOLEAN | Whether a YAML language pack exists |
-| `iso639_2`, `bcp47`, `family`, `script`, `numeral_system` | TEXT | Extended metadata |
+| Column                                                    | Type          | Notes                               |
+| --------------------------------------------------------- | ------------- | ----------------------------------- |
+| `code`                                                    | TEXT PK       | ISO 639-1 (e.g., `es`, `ar`, `zh`)  |
+| `name`                                                    | TEXT NOT NULL | English name                        |
+| `native_name`                                             | TEXT NOT NULL | Native script name                  |
+| `direction`                                               | TEXT          | `ltr` or `rtl`                      |
+| `status`                                                  | TEXT          | `experimental` or `accepted`        |
+| `has_yaml_pack`                                           | BOOLEAN       | Whether a YAML language pack exists |
+| `iso639_2`, `bcp47`, `family`, `script`, `numeral_system` | TEXT          | Extended metadata                   |
 
 #### `translations` — Complete catalog of translation suggestions
 
 Every suggestion lives here — model-generated candidates AND active YAML pack values.
 
-| Column | Type | Notes |
-| ------ | ---- | ----- |
-| `id` | INTEGER PK | Auto-increment |
-| `term_id` | INTEGER FK | References `terms(id)` ON DELETE CASCADE |
-| `language_code` | TEXT FK | References `languages(code)` ON DELETE CASCADE |
-| `translation` | TEXT NOT NULL | The translated text |
-| `source` | TEXT NOT NULL | Origin: `aya`, `community`, `anthropic`, `yaml_pack`, etc. |
-| `model_version` | TEXT | e.g., `aya-101`, `claude-3.5-sonnet` |
-| `word_type` | TEXT | Grammatical word type |
-| `word_form` | TEXT | Word form variation |
-| `confidence` | TEXT | `high`, `medium`, `low` |
-| `model_rationale` | TEXT | AI model reasoning |
-| `created_by` | TEXT | Creator identifier |
+| Column            | Type          | Notes                                                      |
+| ----------------- | ------------- | ---------------------------------------------------------- |
+| `id`              | INTEGER PK    | Auto-increment                                             |
+| `term_id`         | INTEGER FK    | References `terms(id)` ON DELETE CASCADE                   |
+| `language_code`   | TEXT FK       | References `languages(code)` ON DELETE CASCADE             |
+| `translation`     | TEXT NOT NULL | The translated text                                        |
+| `source`          | TEXT NOT NULL | Origin: `aya`, `community`, `anthropic`, `yaml_pack`, etc. |
+| `model_version`   | TEXT          | e.g., `aya-101`, `claude-3.5-sonnet`                       |
+| `word_type`       | TEXT          | Grammatical word type                                      |
+| `word_form`       | TEXT          | Word form variation                                        |
+| `confidence`      | TEXT          | `high`, `medium`, `low`                                    |
+| `model_rationale` | TEXT          | AI model reasoning                                         |
+| `created_by`      | TEXT          | Creator identifier                                         |
 
 **Constraint:** `UNIQUE(term_id, language_code, source, translation)` — prevents duplicate suggestions
 from the same source. `INSERT OR IGNORE` in `add_translation()` silently skips duplicates.
@@ -243,26 +243,27 @@ from the same source. `INSERT OR IGNORE` in `add_translation()` silently skips d
 
 Tracks which translation is currently chosen for YAML packs. Decouples "what we chose" from "who suggested it."
 
-| Column | Type | Notes |
-| ------ | ---- | ----- |
-| `id` | INTEGER PK | Auto-increment |
-| `term_id` | INTEGER FK | References `terms(id)` ON DELETE CASCADE |
-| `language_code` | TEXT FK | References `languages(code)` ON DELETE CASCADE |
-| `translation` | TEXT NOT NULL | The chosen translation text |
-| `selected_by` | TEXT | Who/what made the selection |
-| `selection_reason` | TEXT | Why this translation was chosen |
+| Column             | Type          | Notes                                          |
+| ------------------ | ------------- | ---------------------------------------------- |
+| `id`               | INTEGER PK    | Auto-increment                                 |
+| `term_id`          | INTEGER FK    | References `terms(id)` ON DELETE CASCADE       |
+| `language_code`    | TEXT FK       | References `languages(code)` ON DELETE CASCADE |
+| `translation`      | TEXT NOT NULL | The chosen translation text                    |
+| `selected_by`      | TEXT          | Who/what made the selection                    |
+| `selection_reason` | TEXT          | Why this translation was chosen                |
 
 **Constraint:** `UNIQUE(term_id, language_code)` — exactly one active translation per term+language.
 
 ### Source Values
 
-| Source | Meaning |
-| ------ | ------- |
-| `yaml_pack` | Backfilled from current YAML language packs |
-| `aya` | Generated by the Aya AI model |
-| `community` | Human community contributions (legacy) |
-| `anthropic` | Generated by Anthropic Claude models |
-| `unknown` | Legacy rows where source was not recorded |
+| Source      | Meaning                                                              |
+| ----------- | -------------------------------------------------------------------- |
+| `yaml_pack` | Backfilled from current YAML language packs                          |
+| `aya`       | Generated by the Aya AI model                                        |
+| `community` | Human community contributions (legacy)                               |
+| `claude`    | Generated by Claude for collision resolution or translation pipeline |
+| `anthropic` | Generated by Anthropic Claude models (translation API provider)      |
+| `unknown`   | Legacy rows where source was not recorded                            |
 
 ### Key API Methods (`TranslationDatabase`)
 
@@ -323,21 +324,70 @@ ORDER BY tm.name, t.source;
 
 ### Database Key Files
 
-| File | Purpose |
-| ---- | ------- |
-| `legesher_i18n/db/schema.py` | Table definitions and indexes |
-| `legesher_i18n/db/database.py` | `TranslationDatabase` class with all CRUD methods |
-| `legesher_i18n/db/translations.db` | The consolidated SQLite database |
-| `scripts/translate/pipeline.py` | Translation pipeline (stores suggestions via `add_translation`) |
-| `scripts/translate/import_yaml_to_db.py` | Bulk YAML-to-DB import utility |
-| `scripts/translate/yaml_exporter.py` | DB-to-YAML export (uses `get_translations_joined`) |
+| File                                     | Purpose                                                         |
+| ---------------------------------------- | --------------------------------------------------------------- |
+| `legesher_i18n/db/schema.py`             | Table definitions and indexes                                   |
+| `legesher_i18n/db/database.py`           | `TranslationDatabase` class with all CRUD methods               |
+| `legesher_i18n/db/translations.db`       | The consolidated SQLite database                                |
+| `scripts/translate/pipeline.py`          | Translation pipeline (stores suggestions via `add_translation`) |
+| `scripts/translate/import_yaml_to_db.py` | Bulk YAML-to-DB import utility                                  |
+| `scripts/translate/yaml_exporter.py`     | DB-to-YAML export (uses `get_translations_joined`)              |
+
+### Collision Prevention (CORE-605)
+
+A **collision** occurs when the same translated text is the selected translation for 2+ different Python terms
+in the same language — this breaks round-trip translation (the reverse translator can't determine which English
+keyword to map back to).
+
+**Detection:**
+
+```python
+db = TranslationDatabase()
+collisions = db.find_collisions()                          # All languages
+collisions = db.find_collisions(language_code="fi")        # Single language
+collisions = db.find_collisions(programming_language="python")  # Scoped by language (default)
+```
+
+Collisions are scoped by `programming_language` — Python's `def` and a future TypeScript `function` sharing
+a translation are NOT collisions (different runtime contexts).
+
+**Prevention:**
+
+`set_selected()` includes a collision guard (default on). Attempting to select a translation that's already
+active for another term in the same programming language raises `ValueError`:
+
+```python
+db.set_selected(term_id=1, language_code="fi", translation="ja")
+db.set_selected(term_id=2, language_code="fi", translation="ja")  # ValueError!
+
+# Escape hatch for migrations:
+db.set_selected(term_id=2, language_code="fi", translation="ja", allow_collision=True)
+```
+
+**CLI:**
+
+```bash
+uv run legesher-i18n db collisions                    # Human-readable report
+uv run legesher-i18n db collisions --language fi       # Filter by language
+uv run legesher-i18n db collisions --json              # Machine-readable output
+```
+
+**Resolution patterns for new languages** — use these disambiguation strategies:
+
+- `anext` vs `next`: prefix with async equivalent (e.g., Finnish `seuraava` → `seuraavaasync`)
+- `global` vs `globals`: use plural/function form for `globals`
+- `if` vs `elif`: compound "else+if" for `elif`
+- `except` vs `exception`: class form suffix for `exception`
+- `chr` vs `ord`: use distinct descriptive words (character vs ordinal)
+- `import` vs `input`: more specific word for `input` (entry/data input)
 
 ### Database CLI Commands
 
 ```bash
-uv run legesher-i18n db stats     # Show row counts and coverage
-uv run legesher-i18n db init      # Initialize (or verify) database
-uv run legesher-i18n db vacuum    # Compact the database file
+uv run legesher-i18n db stats      # Show row counts and coverage
+uv run legesher-i18n db init       # Initialize (or verify) database
+uv run legesher-i18n db vacuum     # Compact the database file
+uv run legesher-i18n db collisions # Check for translation collisions
 
 # Direct SQLite access
 sqlite3 legesher_i18n/db/translations.db ".tables"
@@ -348,5 +398,5 @@ sqlite3 legesher_i18n/db/translations.db ".schema translations"
 
 - **Language metadata**: `legesher_i18n/languages.json`
 - **Translation data**: `legesher_i18n/db/translations.db`
-- **Pack versions**: Defined in each pack's `pyproject.toml` file (currently 0.0.1–0.0.2)
+- **Pack versions**: Defined in each pack's `pyproject.toml` file (currently 0.0.1–0.0.3)
 - **Python version keywords**: `language-packs/python/version-index.yml`

@@ -163,10 +163,13 @@ class LanguagePackValidator:
                     translation_to_terms[value_part].append(key)
 
         # Check for duplicate translations (same translation used for different terms)
+        # Collisions break round-trip translation — upgraded from warning to error
+        # in CORE-605 after resolving all existing collisions
         for translation, terms in translation_to_terms.items():
             if len(terms) > 1:
-                self.warnings.append(
-                    f"Duplicate translation '{translation}' used for: {', '.join(terms)}"
+                self.errors.append(
+                    f"Collision: translation '{translation}' used for multiple terms: "
+                    f"{', '.join(terms)}. Each term must have a unique translation."
                 )
 
         return len(self.errors) == 0

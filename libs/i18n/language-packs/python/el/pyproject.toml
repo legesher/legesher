@@ -12,7 +12,7 @@ dependencies = [
     "legesher-i18n>=0.2.0,<1.0.0",
 ]
 name = "legesher-i18n-python-el"
-version = "0.0.2"
+version = "0.0.3"
 description = "Greek language pack for Python in Legesher"
 readme = "README.md"
 keywords = ["legesher", "i18n", "greek", "python", "translation", "multilingual"]

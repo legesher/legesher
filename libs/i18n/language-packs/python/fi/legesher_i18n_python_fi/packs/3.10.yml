@@ -26,7 +26,7 @@ keywords:
   lambda: luuppi
   nonlocal: luonnonlaite
   not: ei
-  or: ja
+  or: tai
   pass: yritä
   raise: nousia
   return: valita
@@ -42,7 +42,7 @@ keywords:
 builtins:
   abs: absoluuti
   all: kaikki
-  any: kaikki
+  any: mikätahansa
   ascii: asciiKoodit
   bin: kymmenelimi_sisaltyy_binaariseksi
   breakpoint: peenäynti

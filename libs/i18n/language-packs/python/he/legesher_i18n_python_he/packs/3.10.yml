@@ -33,11 +33,11 @@ keywords:
   or: או
   pass: לעבור
   raise: להעלות
-  return: להחזיר
+  return: החזר
   try: לנסות
   while: בעוד
   with: עם
-  yield: להחזיר
+  yield: הוצא
   None: אין
   'True': אמת
   'False': כוזב
@@ -45,8 +45,8 @@ keywords:
   case: מקרה
 builtins:
   abs: הערךהמוחלט
-  all: כל
-  any: כל
+  all: הכל
+  any: כל_ערך
   ascii: אסצי
   bin: בינארי
   breakpoint: השהייה
@@ -54,7 +54,7 @@ builtins:
   chr: תו
   compile: להפוךלקוד
   delattr: מחיקהשלתכונה
-  dir: התרגוםלמונח
+  dir: תיקיה
   divmod: חלוקהושארית
   enumerate: לספור
   eval: הערכה
@@ -73,7 +73,7 @@ builtins:
   issubclass: היש_תת_מחלקה
   iter: אִיטֵר
   len: אורך
-  locals: התרגוםלמונח
+  locals: טבלת_ערכים_מקומיים
   map: מפה
   max: הערךהמקסימלי
   min: הערךהקטןביותר

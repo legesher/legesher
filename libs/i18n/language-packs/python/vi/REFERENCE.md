@@ -106,7 +106,7 @@ Python's built-in functions and types in Vietnamese.
 | `help` | `giúp` |
 | `hex` | `hệlục` |
 | `id` | `đườngdẫn` |
-| `input` | `nhập` |
+| `input` | `đầuvào` |
 | `int` | `sốnguyên` |
 | `isinstance` | `là_một_loại` |
 | `issubclass` | `hiệu_ứng_con_của` |

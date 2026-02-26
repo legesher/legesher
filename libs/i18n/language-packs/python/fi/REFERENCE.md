@@ -54,7 +54,7 @@ These are Python's reserved words translated to Finnish.
 | `None` | `tähtiäntä` |
 | `nonlocal` | `luonnonlaite` |
 | `not` | `ei` |
-| `or` | `ja` |
+| `or` | `tai` |
 | `pass` | `yritä` |
 | `raise` | `nousia` |
 | `return` | `valita` |
@@ -75,7 +75,7 @@ Python's built-in functions and types in Finnish.
 | `aiter` | `aiteri` |
 | `all` | `kaikki` |
 | `anext` | `anextiä` |
-| `any` | `kaikki` |
+| `any` | `mikätahansa` |
 | `ascii` | `asciiKoodit` |
 | `bin` | `kymmenelimi_sisaltyy_binaariseksi` |
 | `bool` | `tietotyyppiBooleaani` |
@@ -233,7 +233,7 @@ määritellä kertoma(n):
     """Laske n:n kertoma."""
     jos n < 0:
         nousia Arvovirhe("Negatiiviset luvut eivät ole sallittuja")
-    muuttujilla n == 0 ja n == 1:
+    muuttujilla n == 0 tai n == 1:
         valita 1
     muuttuja:
         valita n * kertoma(n - 1)

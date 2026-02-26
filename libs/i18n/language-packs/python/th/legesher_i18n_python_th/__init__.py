@@ -4,7 +4,7 @@ This package provides Thai translations for Python keywords and built-ins,
 supporting Python versions 3.10 through 3.14.
 """
 
-__version__ = "0.0.1"
+__version__ = "0.0.3"
 
 from pathlib import Path
 

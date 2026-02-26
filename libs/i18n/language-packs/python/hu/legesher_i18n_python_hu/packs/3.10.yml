@@ -12,7 +12,7 @@ keywords:
   continue: folytatja
   def: definíró
   del: töröl
-  elif: ha
+  elif: különbenha
   else: more
   except: kivéve
   finally: finalizálás
@@ -58,13 +58,13 @@ builtins:
   filter: filtrozálás
   format: formátolni
   getattr: attributet
-  globals: globális
+  globals: globálisak
   hasattr: elemezik
   hash: hash_alapitanyag
   help: dokumentáció
   hex: hexa
   id: az_objekt_egyedi_azonosítója
-  input: beállítás
+  input: bemenet
   isinstance: típusellenőr
   issubclass: a_podrevezés
   iter: iteráció
@@ -94,14 +94,14 @@ builtins:
   bytes: bajtok
   classmethod: the_classmethod
   complex: komplex
-  dict: készlet
+  dict: szótár
   float: tizedesegyenes
   frozenset: frozensethalmaz
   int: eg
   list: lista
   memoryview: memóriavény
   object: objektum
-  property: térség
+  property: tulajdonság
   set: készlet
   staticmethod: statický_člen
   str: sztring

@@ -110,7 +110,7 @@ builtins:
   ellipsis: запятые
   notimplemented: нереализовано
   aiter: айтер
-  anext: следующий
+  anext: следующийасинх
 exceptions:
   baseexception: базовоеисключение
   basegeneratorexit: выходбазогенератора
@@ -170,7 +170,7 @@ exceptions:
   warning: предупреждение
   userwarning: предупреждение_пользователя
   deprecationwarning: предупреждениеобустаревании
-  pendingdeprecationwarning: предупреждениеобустаревании
+  pendingdeprecationwarning: ожидаемоепредупреждениеобустаревании
   syntaxwarning: синтаксическоепредупреждение
   runtimewarning: ошибкаВремяВыполнения
   futurewarning: предупреждениеобудущем

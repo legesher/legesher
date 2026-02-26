@@ -32,7 +32,7 @@ keywords:
   return: zwrot
   try: próbować
   while: podczas
-  with: z
+  with: przy
   yield: wprowadzać
   None: nic
   'True': prawda
@@ -110,11 +110,11 @@ builtins:
   ellipsis: spójnik
   notimplemented: niezaimplementowane
   aiter: asynchroniczny_iterator
-  anext: następny
+  anext: następnyasync
 exceptions:
   baseexception: BazaWyjątku
   basegeneratorexit: wyjściepodstawowegogeneratora
-  exception: wyjątek
+  exception: wyjątekklasa
   generatorexit: wyjściegeneratora
   systemexit: wyjściezsystemu
   keyboardinterrupt: przerwanieklawiatury

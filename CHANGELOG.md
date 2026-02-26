@@ -27,6 +27,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **legesher-i18n**: Resolve 41 translation collisions across 17 languages
+  where the same translated word mapped to 2+ Python terms, breaking
+  round-trip translation (CORE-605)
+  - Add `find_collisions()` API and `db collisions` CLI command
+  - Add collision guard to `set_selected()` preventing future collisions
+  - Upgrade pre-commit YAML validator from warnings to errors for duplicates
+  - Bump affected language packs to v0.0.3: ar, el, fi, he, hi, hu, it,
+    ko, no, pl, pt, ru, sv, th, tr, vi, zh
 - **legesher-vscode**: Fix Translation View showing English on both
   panels — bundle language pack YAML files in VSIX (CORE-602)
 - **legesher-vscode**: Fix telemetry pipeline — zero events reaching

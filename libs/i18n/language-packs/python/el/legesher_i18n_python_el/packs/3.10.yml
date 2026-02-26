@@ -16,13 +16,13 @@ keywords:
   continue: συνέχισε
   def: δε
   del: διαγραφή
-  elif: αν
+  elif: αλλάν
   else: αλλιώς
   except: εκτός
   finally: τελικά
   for: για
   from: από
-  global: παγκόσμιος
+  global: καθολικός
   if: αν
   import: εισαγωγή
   in: εν
@@ -62,13 +62,13 @@ builtins:
   filter: φίλτρο
   format: μορφοποίηση
   getattr: λησμονώ_χρήση_απόκτησης_χαρακτηριστικού
-  globals: παγκόσμιος
+  globals: καθολικά
   hasattr: έχειχαρακτηριστικό
   hash: χασάπης
   help: βοήθεια
   hex: εξαγωνικό
   id: ηταυτότητα
-  input: εισαγωγή
+  input: καταχώρηση
   isinstance: είναιΕκτιμητής
   issubclass: είναι_υποκλάση
   iter: ιτερ
@@ -90,7 +90,7 @@ builtins:
   setattr: τοναορίσετεέναχαρακτηριστικό
   slice: τοτμήμα
   sorted: ταξινομημένος
-  sum: σύνολο
+  sum: άρθροισμα
   vars: variabiles
   zip: συνδεις
   bool: μπουλ
