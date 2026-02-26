@@ -238,6 +238,18 @@ The packages have a logical dependency hierarchy defined in the architecture:
 When making changes, consider impact on dependent packages. Build order should follow the tier system
 (Tier 1 → Tier 2 → Tier 3 → Tier 4).
 
+### License Boundary
+
+`libs/home/` (`legesher-home`) is **proprietary** (`LicenseRef-Proprietary`). All other packages in Tiers 1–3 are
+MIT-licensed (or MIT/Commercial dual-licensed). To prevent license contamination:
+
+- **MIT packages MUST NOT import from `legesher_home`** — no `import legesher_home` or `from legesher_home` in
+  `libs/core/`, `libs/i18n/`, `libs/language-server/`, `libs/vs-code/`, or `libs/legesher/`
+- **No dependency references** — MIT package `pyproject.toml` files must not list `legesher-home` as a dependency
+- **One-way dependency only** — `legesher-home` may depend on MIT packages, but never the reverse
+
+Enforced by a pre-commit hook (`check-license-boundary`) and an `import-linter` contract (`uv run lint-imports`).
+
 ## Translation Database
 
 The i18n package uses a consolidated SQLite database (`libs/i18n/legesher_i18n/db/translations.db`) with 4 tables.
@@ -245,12 +257,12 @@ See `libs/i18n/CLAUDE.md` for full schema details and query examples.
 
 **Tables summary:**
 
-| Table | Purpose | Key Constraint |
-| ----- | ------- | -------------- |
-| `terms` | Canonical reserved words (cross-language) | `UNIQUE(name, programming_language)` |
-| `languages` | Language registry (38 languages: 26 with YAML packs, 12 legacy) | `code` PK (ISO 639-1) |
-| `translations` | All translation suggestions (complete catalog) | `UNIQUE(term_id, language_code, source, translation)` |
-| `selected_translations` | Active translation per term+language for YAML packs | `UNIQUE(term_id, language_code)` |
+| Table                   | Purpose                                                         | Key Constraint                                        |
+| ----------------------- | --------------------------------------------------------------- | ----------------------------------------------------- |
+| `terms`                 | Canonical reserved words (cross-language)                       | `UNIQUE(name, programming_language)`                  |
+| `languages`             | Language registry (38 languages: 26 with YAML packs, 12 legacy) | `code` PK (ISO 639-1)                                 |
+| `translations`          | All translation suggestions (complete catalog)                  | `UNIQUE(term_id, language_code, source, translation)` |
+| `selected_translations` | Active translation per term+language for YAML packs             | `UNIQUE(term_id, language_code)`                      |
 
 **Key design decisions:**
 

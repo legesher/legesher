@@ -77,6 +77,7 @@ dev = [
     "pytest-benchmark>=4.0.0",
     "python-semantic-release>=9.0.0",
     "commitizen>=4.9.1",
+    "import-linter>=2.0",
 ]
 
 [build-system]
@@ -189,3 +190,25 @@ type = "confirm"
 name = "is_breaking_change"
 message = "Is this a BREAKING CHANGE?"
 default = false
+
+# License boundary enforcement (AST-based import analysis)
+# Run with: uv run lint-imports
+[tool.importlinter]
+root_packages = [
+    "legesher_core",
+    "legesher_i18n",
+    "legesher",
+]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "MIT packages must not import proprietary legesher-home"
+type = "forbidden"
+source_modules = [
+    "legesher_core",
+    "legesher_i18n",
+    "legesher",
+]
+forbidden_modules = [
+    "legesher_home",
+]
