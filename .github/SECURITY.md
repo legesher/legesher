@@ -132,7 +132,7 @@ Additional recommendations:
 - **Local translation**: No data leaves your machine (free tier)
 - **Cloud features**: Data transmitted to Legesher servers (premium tier)
 - **Encryption**: All cloud communications use TLS 1.3+
-- **Privacy**: See our [Privacy Policy](https://legesher.io/privacy) for details
+- **Privacy**: Local-first by default; no data leaves your machine unless you opt into cloud features
 
 ### VS Code Extension
 
@@ -168,7 +168,7 @@ We are working towards:
 - GDPR compliance (data privacy)
 - Regular third-party security audits
 
-Current status updates available at: <https://legesher.io/security>
+A dedicated security status page is planned for a future release.
 
 ## Security-Related Dependencies
 
