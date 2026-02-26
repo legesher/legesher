@@ -132,7 +132,7 @@ Additional recommendations:
 - **Local translation**: No data leaves your machine (free tier)
 - **Cloud features**: Data transmitted to Legesher servers (premium tier)
 - **Encryption**: All cloud communications use TLS 1.3+
-- **Privacy**: Local-first by default; no data leaves your machine unless you opt into cloud features
+- **Privacy**: See our [Privacy Policy](https://legesher.io/privacy) for details
 
 ### VS Code Extension
 
