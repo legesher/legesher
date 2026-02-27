@@ -1,0 +1,67 @@
+# Auto-merge Dependabot patch updates for non-security-critical dependencies.
+#
+# Security design:
+#   - Uses `pull_request` (NOT pull_request_target) to avoid granting write
+#     tokens to untrusted code.
+#   - dependabot/fetch-metadata independently verifies that all commits in the
+#     PR were authored by Dependabot.
+#   - Repository scope check prevents confused-deputy attacks from forks.
+#   - Explicit deny-list blocks auto-merge for packages that handle source code,
+#     AST parsing, or data deserialization.
+#   - `gh pr merge --auto` respects branch protection rules — the PR only merges
+#     after ALL required status checks pass.
+#
+# Prerequisites:
+#   Branch protection rules MUST be enabled on `main` with required status
+#   checks for the auto-merge gate to be effective. Without branch protection,
+#   --auto may merge immediately.
+#
+# References:
+#   - https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/automating-dependabot-with-github-actions
+#   - https://github.com/dependabot/fetch-metadata
+
+name: Dependabot Auto-Merge
+
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.base.repo.full_name == github.repository
+
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2.3.0
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      # Auto-merge only semver-patch updates, excluding security-critical
+      # packages that handle source code, AST parsing, or deserialization.
+      #
+      # Deny-list (always require manual review):
+      #   Python:  tree-sitter, tree-sitter-python, pydantic, pyyaml,
+      #            anthropic, ollama
+      #   Node.js: js-yaml, vscode-languageclient, prismjs
+      - name: Auto-merge patch updates
+        if: >-
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' &&
+          !contains(steps.metadata.outputs.dependency-names, 'tree-sitter') &&
+          !contains(steps.metadata.outputs.dependency-names, 'pydantic') &&
+          !contains(steps.metadata.outputs.dependency-names, 'pyyaml') &&
+          !contains(steps.metadata.outputs.dependency-names, 'anthropic') &&
+          !contains(steps.metadata.outputs.dependency-names, 'ollama') &&
+          !contains(steps.metadata.outputs.dependency-names, 'js-yaml') &&
+          !contains(steps.metadata.outputs.dependency-names, 'vscode-languageclient') &&
+          !contains(steps.metadata.outputs.dependency-names, 'prismjs')
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
