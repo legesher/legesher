@@ -617,6 +617,8 @@ Architectural rationale and detailed design decisions will be documented as the 
 - **Privacy**: Local-first approach for code translation (cloud optional, never required)
 - **Performance**: Real-time translation in IDE requires fast AST transformation
 - **Git Compatibility**: All git workflows must work seamlessly with canonical English storage
+- **DCO Sign-off**: All commits must include a `Signed-off-by` trailer. Always use `git commit -s` when
+  creating commits. See `CONTRIBUTING.md` for details.
 
 ### Common Workflows
 

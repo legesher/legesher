@@ -1,14 +1,19 @@
 # Pull Request
 
 ## Description
+
 <!-- Provide a clear and concise description of your changes -->
 
 ## Related Issues
+
 <!-- Link to any related issues using #issue-number -->
+
 Closes #
 
 ## Package(s) Affected
+
 <!-- Check all that apply -->
+
 - [ ] legesher-core (Core translation engine)
 - [ ] legesher-i18n (Language data)
 - [ ] legesher-vs-code (VS Code extension)
@@ -17,7 +22,9 @@ Closes #
 - [ ] CI/CD
 
 ## Type of Change
+
 <!-- Check all that apply -->
+
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
@@ -28,6 +35,10 @@ Closes #
 - [ ] Build/CI changes
 
 ## License and Contribution Agreement
+
+### DCO Sign-off (Required)
+
+- [ ] All commits in this PR are signed off (`git commit -s`). See [DCO requirements](../CONTRIBUTING.md#developer-certificate-of-origin-dco).
 
 ### For Open Source Packages (core, i18n, vs-code)
 
@@ -44,6 +55,7 @@ Closes #
 - [ ] This PR only affects documentation or non-code files
 
 ## Testing
+
 <!-- Describe the tests you ran to verify your changes -->
 
 - [ ] I have added tests that prove my fix is effective or that my feature works
@@ -78,14 +90,17 @@ Closes #
 - [ ] I have added tests for new language support
 
 ## Breaking Changes
+
 <!-- If this PR introduces breaking changes, describe them here -->
 
 None / N/A
 
 ## Additional Notes
+
 <!-- Any additional information that reviewers should know -->
 
 ## Screenshots (if applicable)
+
 <!-- Add screenshots to help explain your changes -->
 
 ## Checklist

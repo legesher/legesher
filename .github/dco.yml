@@ -1,0 +1,9 @@
+# Configuration for CNCF DCO2 GitHub App
+# https://github.com/cncf/dco2
+#
+# The Developer Certificate of Origin (DCO) requires all commits to include
+# a Signed-off-by trailer (git commit -s). See CONTRIBUTING.md for details.
+
+allowRemediationCommits:
+  individual: true
+  thirdParty: true

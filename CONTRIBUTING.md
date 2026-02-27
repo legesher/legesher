@@ -207,6 +207,130 @@ By contributing to the `legesher` package, you agree that:
 We do NOT require copyright assignment. You retain copyright to your contributions, but you grant Legesher a perpetual
 license to use your contributions under the project's license terms.
 
+## Developer Certificate of Origin (DCO)
+
+The DCO sign-off supplements (does not replace) the contribution agreement above. The agreement governs the license
+terms for your contribution; the DCO certifies your right to submit it.
+
+All contributions to Legesher must be signed off under the
+[Developer Certificate of Origin (DCO) v1.1](https://developercertificate.org/). By signing off, you certify that you
+have the right to submit your contribution under the project's license terms.
+
+### What is the DCO?
+
+The DCO is a lightweight, per-commit certification used by the Linux kernel, CNCF projects, Node.js, and many other
+major open source projects. It is not a CLA — you do not sign a separate document. Instead, you add a `Signed-off-by`
+trailer to each commit.
+
+### DCO 1.1 Full Text
+
+```text
+Developer Certificate of Origin
+Version 1.1
+
+Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
+
+Everyone is permitted to copy and distribute verbatim copies of this
+license document, but changing it is not allowed.
+
+
+Developer's Certificate of Origin 1.1
+
+By making a contribution to this project, I certify that:
+
+(a) The contribution was created in whole or in part by me and I
+    have the right to submit it under the open source license
+    indicated in the file; or
+
+(b) The contribution is based upon previous work that, to the best
+    of my knowledge, is covered under an appropriate open source
+    license and I have the right under that license to submit that
+    work with modifications, whether created in whole or in part
+    by me, under the same open source license (unless I am
+    permitted to submit under a different license), as indicated
+    in the file; or
+
+(c) The contribution was provided directly to me by some other
+    person who certified (a), (b) or (c) and I have not modified
+    it.
+
+(d) I understand and agree that this project and the contribution
+    are public and that a record of the contribution (including all
+    personal information I submit with it, including my sign-off) is
+    maintained indefinitely and may be redistributed consistent with
+    this project or the open source license(s) involved.
+```
+
+### How to Sign Off Your Commits
+
+Add a `Signed-off-by` trailer to every commit. The easiest way is the `-s` flag:
+
+```bash
+git commit -s -m "feat(core): add new feature"
+```
+
+This appends a line like:
+
+```text
+Signed-off-by: Your Name <your.email@example.com>
+```
+
+The email must match your Git author email. Check with:
+
+```bash
+git config user.email
+```
+
+### Fixing Forgotten Sign-offs
+
+**Last commit only:**
+
+```bash
+git commit --amend -s --no-edit
+git push --force-with-lease
+```
+
+**Multiple commits:**
+
+```bash
+git rebase --signoff HEAD~N
+git push --force-with-lease
+```
+
+Replace `N` with the number of commits to fix.
+
+**Remediation commit (no history rewrite):**
+
+If you prefer not to rewrite history, you can create a remediation commit. Our DCO bot (CNCF/DCO2) supports both
+individual and third-party remediation commits.
+
+Individual remediation (you fix your own commits):
+
+```text
+DCO remediation commit for Your Name <your.email@example.com>
+
+I, Your Name <your.email@example.com>, hereby add my Signed-off-by to this commit: <COMMIT_SHA>
+
+Signed-off-by: Your Name <your.email@example.com>
+```
+
+Third-party remediation (a maintainer fixes on your behalf):
+
+```text
+Third-party DCO remediation commit for Contributor <contributor@example.com>
+
+On behalf of Contributor <contributor@example.com>, I, Maintainer <maintainer@example.com>, hereby add my Signed-off-by to this commit: <COMMIT_SHA>
+
+Signed-off-by: Maintainer <maintainer@example.com>
+```
+
+See the [DCO2 documentation](https://github.com/cncf/dco2) for full details on remediation commit formats.
+
+### Automated Enforcement
+
+All pull requests are checked by the [CNCF DCO2](https://github.com/cncf/dco2) GitHub App. PRs with unsigned commits
+will not pass the DCO status check. Bot accounts (Dependabot, GitHub Actions, etc.) are automatically exempted.
+
 ## Code of Conduct
 
 ### Our Standards
