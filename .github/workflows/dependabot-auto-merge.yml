@@ -1,4 +1,10 @@
-# Auto-merge Dependabot patch updates for non-security-critical dependencies.
+# Auto-approve Dependabot patch updates for non-security-critical dependencies.
+#
+# Current behavior (no branch protection):
+#   Approves safe patch PRs so they only need a manual merge click.
+#   To enable full auto-merge, add branch protection with required status
+#   checks on `main` and change the final step from `gh pr review --approve`
+#   to `gh pr merge --auto --squash`.
 #
 # Security design:
 #   - Uses `pull_request` (NOT pull_request_target) to avoid granting write
@@ -6,21 +12,14 @@
 #   - dependabot/fetch-metadata independently verifies that all commits in the
 #     PR were authored by Dependabot.
 #   - Repository scope check prevents confused-deputy attacks from forks.
-#   - Explicit deny-list blocks auto-merge for packages that handle source code,
-#     AST parsing, or data deserialization.
-#   - `gh pr merge --auto` respects branch protection rules — the PR only merges
-#     after ALL required status checks pass.
-#
-# Prerequisites:
-#   Branch protection rules MUST be enabled on `main` with required status
-#   checks for the auto-merge gate to be effective. Without branch protection,
-#   --auto may merge immediately.
+#   - Explicit deny-list blocks auto-approve for packages that handle source
+#     code, AST parsing, or data deserialization.
 #
 # References:
 #   - https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/automating-dependabot-with-github-actions
 #   - https://github.com/dependabot/fetch-metadata
 
-name: Dependabot Auto-Merge
+name: Dependabot Auto-Approve
 
 on: pull_request
 
@@ -43,14 +42,14 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      # Auto-merge only semver-patch updates, excluding security-critical
+      # Auto-approve only semver-patch updates, excluding security-critical
       # packages that handle source code, AST parsing, or deserialization.
       #
       # Deny-list (always require manual review):
       #   Python:  tree-sitter, tree-sitter-python, pydantic, pyyaml,
       #            anthropic, ollama
       #   Node.js: js-yaml, vscode-languageclient, prismjs
-      - name: Auto-merge patch updates
+      - name: Auto-approve patch updates
         if: >-
           steps.metadata.outputs.update-type == 'version-update:semver-patch' &&
           !contains(steps.metadata.outputs.dependency-names, 'tree-sitter') &&
@@ -61,7 +60,7 @@ jobs:
           !contains(steps.metadata.outputs.dependency-names, 'js-yaml') &&
           !contains(steps.metadata.outputs.dependency-names, 'vscode-languageclient') &&
           !contains(steps.metadata.outputs.dependency-names, 'prismjs')
-        run: gh pr merge --auto --squash "$PR_URL"
+        run: gh pr review --approve "$PR_URL" --body "Auto-approved — safe semver-patch update (not on deny-list)."
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
