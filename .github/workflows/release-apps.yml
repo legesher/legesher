@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           cache: 'npm'
           cache-dependency-path: libs/vs-code/package-lock.json
@@ -61,12 +61,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           cache: 'npm'
           cache-dependency-path: libs/vs-code/package-lock.json
@@ -130,7 +130,7 @@ jobs:
 
       - name: Upload artifact (backup)
         if: steps.check-tag.outputs.exists == 'false'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: legesher-vscode-${{ steps.version.outputs.version }}
           path: libs/vs-code/*.vsix
@@ -149,9 +149,9 @@ jobs:
   #   if: needs.release.result == 'success'
   #   steps:
   #     - name: Checkout code
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v6
   #     - name: Set up Node.js
-  #       uses: actions/setup-node@v4
+  #       uses: actions/setup-node@v6
   #       with:
   #         node-version: '20'
   #     - name: Install dependencies

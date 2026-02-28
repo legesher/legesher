@@ -22,9 +22,10 @@ updates:
       - MadiEdgar
     open-pull-requests-limit: 10
     groups:
-      python-minor-patch:
+      python-all:
         applies-to: version-updates
         update-types:
+          - major
           - minor
           - patch
       python-security:
@@ -51,9 +52,10 @@ updates:
       - MadiEdgar
     open-pull-requests-limit: 5
     groups:
-      docs-minor-patch:
+      docs-all:
         applies-to: version-updates
         update-types:
+          - major
           - minor
           - patch
 
@@ -74,9 +76,10 @@ updates:
       - MadiEdgar
     open-pull-requests-limit: 5
     groups:
-      vscode-minor-patch:
+      vscode-all:
         applies-to: version-updates
         update-types:
+          - major
           - minor
           - patch
 

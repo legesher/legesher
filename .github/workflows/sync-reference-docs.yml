@@ -24,10 +24,10 @@ jobs:
 
     steps:
       - name: Checkout monorepo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Checkout preview repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: legesher/preview-repo
           token: ${{ secrets.PREVIEW_REPO_PAT }}

@@ -37,7 +37,7 @@ export async function translateDocument(
         return translated;
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        throw new Error(`Translation failed: ${errorMessage}`);
+        throw Object.assign(new Error(`Translation failed: ${errorMessage}`), { cause: error });
     }
 }
 
