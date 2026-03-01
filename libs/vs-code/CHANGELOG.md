@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--next-version-placeholder-->
 
+## 0.1.5 (2026-03-01)
+
+### Changed
+
+- **Dependencies**: Update `@vscode/extension-telemetry` 1.5.0 → 1.5.1
+- **Dependencies**: Update `@vscode/vsce` 2.32.0 → 3.7.1, eslint 8 → 10, mocha 10 → 11, sinon 19 → 21
+- **Dependencies**: Pin `@types/node` to ^20.0.0 and `@types/vscode` to 1.85.0 (match runtime targets)
+- **Dependencies**: Update esbuild 0.24.2 → 0.27.3, dotenv 17.2.3 → 17.3.1
+
 ## 0.1.4 (2026-02-10)
 
 ### Fixed

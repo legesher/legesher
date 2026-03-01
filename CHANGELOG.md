@@ -9,24 +9,33 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-03-01
+
+> Includes changes from individually-released packages since v0.5.0:
+> vs-code 0.1.2–0.1.5, language-server 0.1.2.
+
 ### Package Versions
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.5.0   | —        |
-| legesher-i18n            | 0.5.0   | Yes      |
-| legesher (CLI)           | 0.5.0   | —        |
-| legesher-language-server | 0.1.1   | —        |
-| legesher-vscode          | 0.1.4   | Yes      |
+| legesher-core            | 0.5.1   | Yes      |
+| legesher-i18n            | 0.5.1   | Yes      |
+| legesher (CLI)           | 0.5.1   | —        |
+| legesher-language-server | 0.1.2   | Yes      |
+| legesher-vscode          | 0.1.5   | Yes      |
 | legesher-home            | 0.1.0   | —        |
 
 ### Added
 
 - **legesher-i18n**: Consolidate 3 translation databases into normalized
   4-table schema with `selected_translations` tracking (CORE-594)
+- **legesher-language-server**: Bilingual hover format showing English docs
+  first, then target language translation
 
 ### Fixed
 
+- **legesher-core**: Replace `datetime.UTC` with `timezone.utc` for
+  Python 3.10 compatibility (CORE-662)
 - **legesher-i18n**: Resolve 41 translation collisions across 17 languages
   where the same translated word mapped to 2+ Python terms, breaking
   round-trip translation (CORE-605)
@@ -35,6 +44,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Upgrade pre-commit YAML validator from warnings to errors for duplicates
   - Bump affected language packs to v0.0.3: ar, el, fi, he, hi, hu, it,
     ko, no, pl, pt, ru, sv, th, tr, vi, zh
+- **legesher-language-server**: Add MIT LICENSE file (CORE-622)
+- **legesher-language-server**: Fix invalid author email domain (CORE-665)
 - **legesher-vscode**: Fix Translation View showing English on both
   panels — bundle language pack YAML files in VSIX (CORE-602)
 - **legesher-vscode**: Fix telemetry pipeline — zero events reaching
@@ -63,6 +74,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Inject telemetry connection string at build time
   - Fix security issue: remove connection string from logs
   - Update README and marketplace metadata
+- **legesher-vscode**: Update dependencies — `@vscode/extension-telemetry`
+  1.5.0 → 1.5.1, `@vscode/vsce` 2.32.0 → 3.7.1, eslint 8 → 10
+- **legesher-language-server**: Consolidate hover provider
+  `LanguagePackLoader.load()` calls (4 → 1)
 
 ## [0.5.0] - 2026-02-01
 

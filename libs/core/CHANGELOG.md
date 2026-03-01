@@ -9,6 +9,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-03-01
+
+### Fixed
+
+- Replace `datetime.UTC` with `timezone.utc` for Python 3.10 compatibility (CORE-662)
+  - `datetime.UTC` is a Python 3.11+ alias; `timezone.utc` works since Python 3.2
+  - Fixes `ImportError` on Ubuntu 22.04 with Python 3.10.12
+
+## [0.5.0] - 2026-02-01
+
+### Changed
+
+- Version bumped to align with monorepo v0.5.0 release
+
 ## [0.4.1] - 2026-01-31
 
 ### Fixed

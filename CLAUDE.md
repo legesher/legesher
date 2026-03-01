@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Status
 
 **Current Phase**: Production-Ready (Pre-Beta)
-**Version**: 0.5.0 (foundation packages), 0.1.4 (vs-code), 0.1.1 (language-server)
-**Last Updated**: 2026-02-15
+**Version**: 0.5.1 (foundation packages), 0.1.5 (vs-code), 0.1.2 (language-server)
+**Last Updated**: 2026-03-01
 
 This is an active monorepo with **production-ready implementations** across all major packages. The project has
 evolved significantly beyond initial planning and now features comprehensive test coverage, 26 supported language packs
@@ -62,15 +62,15 @@ Zed and JetBrains PyCharm etc.
 
 - Additional IDE integrations: Zed, JetBrains PyCharm
 
-**Package Status** (as of 2026-02-11):
+**Package Status** (as of 2026-03-01):
 
 | Package             | Version | Status           | Description                                                     |
 | ------------------- | ------- | ---------------- | --------------------------------------------------------------- |
-| **core**            | 0.5.0   | Production-ready | Token & tree-sitter translators, git filters, cultural comments |
-| **i18n**            | 0.5.0   | Production-ready | 26 language packs (experimental), translation API, caching      |
-| **legesher**        | 0.5.0   | Production-ready | CLI suite (init, translate, run, git, metadata), runtime hooks  |
-| **language-server** | 0.1.1   | Production-ready | Full LSP with hover, completion, diagnostics, semantic tokens   |
-| **vs-code**         | 0.1.4   | Production-ready | Extension with telemetry/feedback, all 26 languages supported   |
+| **core**            | 0.5.1   | Production-ready | Token & tree-sitter translators, git filters, cultural comments |
+| **i18n**            | 0.5.1   | Production-ready | 26 language packs (experimental), translation API, caching      |
+| **legesher**        | 0.5.1   | Production-ready | CLI suite (init, translate, run, git, metadata), runtime hooks  |
+| **language-server** | 0.1.2   | Production-ready | Full LSP with hover, completion, diagnostics, semantic tokens   |
+| **vs-code**         | 0.1.5   | Production-ready | Extension with telemetry/feedback, all 26 languages supported   |
 | **home**            | 0.1.0   | Minimal scaffold | Digital home for community features and project showcase        |
 
 **Language pack versions**: 0.0.1–0.0.3 (see each pack's `pyproject.toml` for exact version)

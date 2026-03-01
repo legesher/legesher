@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-03-01
+
+### Changed
+
+- Version bumped to align with monorepo v0.5.1 release (no functional changes)
+
+## [0.5.0] - 2026-02-01
+
 ### Added
 
 - **`legesher config` Command** (CORE-563)

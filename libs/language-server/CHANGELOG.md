@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-03-01
+
+### Fixed
+
+- Add MIT LICENSE file — package was legally unusable without it (CORE-622)
+- Fix invalid author email domain in pyproject.toml (CORE-665)
+
 ### Changed
 
 - **Hover Provider Performance**: Consolidated 4 `LanguagePackLoader.load()` calls into 1

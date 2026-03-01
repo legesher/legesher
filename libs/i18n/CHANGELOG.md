@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-03-01
+
 ### Changed
 
 - **Consolidate Translation Databases** (CORE-594)
@@ -24,6 +26,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Update `pipeline.py`, `import_yaml_to_db.py`, `yaml_exporter.py` for new schema
   - Add CLI `db` subcommands: `init`, `stats`, `vacuum`
   - Rewrite test suite for new schema (40 unit tests, 4 integration tests)
+
+### Fixed
+
+- **Resolve 41 translation collisions across 17 languages** (CORE-605)
+  - Same translated word mapped to 2+ Python terms, breaking round-trip translation
+  - Add `find_collisions()` API and `db collisions` CLI command
+  - Add collision guard to `set_selected()` preventing future collisions
+  - Upgrade pre-commit YAML validator from warnings to errors for duplicates
+  - Bump affected packs to v0.0.3: ar, el, fi, he, hi, hu, it, ko, no, pl, pt,
+    ru, sv, th, tr, vi, zh
+- Replace `datetime.UTC` with `timezone.utc` for Python 3.10 compatibility (CORE-662)
 
 ## [0.5.0] - 2026-02-01
 
