@@ -2,71 +2,49 @@
 
 [![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
 
-**Status**: Production-Ready MVP (v0.9)
-**Last Updated**: December 3, 2025
+**Site**: [docs.legesher.io](https://docs.legesher.io)
+**Deployed via**: Vercel (static adapter)
 
-This directory contains the official Legesher documentation site built with Astro and Starlight.
+This directory contains the official Legesher documentation site built with [Astro](https://astro.build) and [Starlight](https://starlight.astro.build).
 
-## 📚 Documentation Overview
-
-Legesher is a production-ready multilingual programming system that enables developers to code in their native
-language instead of English. The documentation covers:
-
-- **Architecture**: System design, diagrams, and implementation details
-- **Guides**: Getting started, installation, git workflow, translation guide
-- **Reference**: API documentation and examples
-- **Development**: CI/CD, pre-commit hooks, contributing guidelines
-
-## 🎯 Key Features Documented
-
-- **26 Language Packs**: Support for ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms, nl, no, pl, pt,
-  ru, sv, th, tr, vi, zh
-- **Two Translator Backends**: Token-based and tree-sitter AST-based implementations
-- **Full LSP Implementation**: Hover, completion, diagnostics, semantic tokens
-- **VS Code Extension**: Complete extension with telemetry and feedback systems
-- **CLI Tools**: translate, run, git, metadata commands
-- **Git Integration**: Clean/smudge filters for canonical English storage
-
-For implementation status details, see [DOCUMENTATION_AUDIT_2025.md](DOCUMENTATION_AUDIT_2025.md).
-
-## 🚀 Project Structure
-
-Inside of your Astro + Starlight project, you'll see the following folders and files:
+## Project Structure
 
 ```text
-.
-├── public/
+docs/
+├── public/                     # Static assets (favicon, CNAME)
 ├── src/
-│   ├── assets/
-│   ├── content/
-│   │   ├── docs/
-│   └── content.config.ts
-├── astro.config.mjs
+│   ├── assets/                 # Images (Peggy branding, screenshots)
+│   └── content/
+│       └── docs/               # Starlight site pages (.md / .mdx)
+│           ├── index.mdx       # Homepage
+│           ├── getting-started.md
+│           ├── why-legesher.md
+│           ├── privacy.md
+│           └── reference/
+│               └── supported-languages.md
+├── astro.config.mjs            # Astro + Starlight configuration
 ├── package.json
 └── tsconfig.json
 ```
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as
-a route based on its file name.
+**Site pages** live in `src/content/docs/` — each `.md` or `.mdx` file becomes a route.
 
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
+**Developer reference docs** — see CORE-577 for the plan to add more pages to this site.
 
-Static assets, like favicons, can be placed in the `public/` directory.
+## Commands
 
-## 🧞 Commands
+All commands are run from the `docs/` directory:
 
-All commands are run from the root of the project, from a terminal:
+| Command          | Action                                      |
+| :--------------- | :------------------------------------------ |
+| `pnpm install`   | Install dependencies                        |
+| `pnpm dev`       | Start local dev server at `localhost:4321`   |
+| `pnpm build`     | Build production site to `./dist/`           |
+| `pnpm preview`   | Preview production build locally             |
 
-| Command                | Action                                           |
-| :--------------------- | :----------------------------------------------- |
-| `pnpm install`         | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+## Adding Content
 
-## 👀 Want to learn more?
-
-Check out [Starlight's docs](https://starlight.astro.build/), read [the Astro
-documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+- Add new pages as `.md` or `.mdx` files in `src/content/docs/`
+- Update the sidebar in `astro.config.mjs` to include new pages
+- Images go in `src/assets/` and are referenced with relative imports
+- Run `pnpm build` to verify — Starlight will fail if any sidebar slug references a missing file

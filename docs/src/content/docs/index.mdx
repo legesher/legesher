@@ -1,92 +1,61 @@
 ---
-title: Welcome to Legesher
+title: Welcome to Legesher Docs
 description: Code in your native language - multilingual programming tools for everyone
 template: splash
 hero:
-  tagline: Empowering developers to code in their native language instead of English
+  tagline: Making code truly universal. Code in your native language + collaborate with the world.
   image:
-    file: ../../assets/houston.webp
+    file: ../../assets/Peggy-default@4x.png
   actions:
     - text: Get Started
       link: /getting-started/
       icon: right-arrow
       variant: primary
-    - text: Planning Summary
-      link: /planning_summary/
+    - text: Supported Languages
+      link: /reference/supported-languages/
       icon: document
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Overview
+## What is Legesher?
 
-Legesher is a collection of developer tools and packages that enable developers to code in their native language instead of English. From creation within an IDE to collaboration across projects and git histories, Legesher's tools remove English as the prerequisite of coding.
+Programming languages are predominately in English: `def`, `print`, `if`, `return`. That means millions of developers worldwide must learn English before they can learn to code.
 
-## Key Documents
+Legesher changes the foundation of programming. Write Python in your own language: `definir` instead of `def`, `imprimir` instead of `print`, `si` instead of `if`, and innovate without ideas getting lost in translation. Your multilingual code runs as standard Python, integrates with git, and collaborates seamlessly with teammates coding in other natural languages.
 
-<CardGrid stagger>
-	<Card title="Getting Started" icon="rocket">
-		Install the VS Code extension and start coding in your native language.
-		[Quick Start Guide →](/getting-started/)
+{/* VISUAL: [Demo 4] Code snippet shown in 6 languages side-by-side (Arabic, Japanese, Chinese, Spanish, French, Hindi) */}
+
+## How It Works
+
+<CardGrid>
+	<Card title="Write in your language" icon="pencil">
+		Install the VS Code extension, pick your language, and start coding. Legesher provides autocomplete, hover documentation, and diagnostics, all in your native language.
 	</Card>
-	<Card title="Privacy Policy" icon="information">
-		Learn about data collection, ML training consent, and GDPR compliance.
-		[Read Privacy Policy →](/privacy/)
-	</Card>
-	<Card title="Planning Summary" icon="document">
-		Project architecture, implementation phases, and roadmap.
-		[Read Planning Summary →](/planning_summary/)
-	</Card>
-	<Card title="MLCP v1.0 Specification" icon="star">
-		The Multilingual Code Protocol - an open standard for multilingual programming.
-		[Read Specification →](/specifications/mlcp-v1/)
-	</Card>
-	<Card title="Language Pack Registry" icon="setting">
-		Architecture for the community-driven language pack registry.
-		[Read Architecture →](/architecture/language-pack-registry/)
-	</Card>
-	<Card title="Implementation Roadmap" icon="list-format">
-		Detailed implementation plan with tasks, timeline, and priorities.
-		[Read Roadmap →](/architecture/implementation-roadmap/)
+	<Card title="Collaborate across languages" icon="open-book">
+		Code is stored in English in git, so teammates can each work in their own language. Legesher translates automatically in both directions, no manual conversion needed.
 	</Card>
 </CardGrid>
 
-## Architecture Highlights
+{/* VISUAL: [Demo 10] GIF: autocomplete suggesting translated keywords in Spanish */}
 
-### Multilingual Code Protocol (MLCP)
+## 26 Languages Supported
 
-A standardized protocol that enables:
-- Language pack discovery and distribution
-- Code translation between natural languages
-- IDE and tooling integration
-- Community-driven translation validation
+Legesher translates Python keywords, builtins, and exceptions into 26 languages. All language packs are in experimental status. Translations work and are ready to use, with community validation underway.
 
-### Version-Aware Language Packs
+العربية (Arabic) · 中文 (Chinese) · Dansk (Danish) · Nederlands (Dutch) · English · Suomi (Finnish) · Français (French) · Deutsch (German) · Ελληνικά (Greek) · עברית (Hebrew) · हिन्दी (Hindi) · Magyar (Hungarian) · Bahasa Indonesia (Indonesian) · Italiano (Italian) · 日本語 (Japanese) · 한국어 (Korean) · Bahasa Melayu (Malay) · Norsk (Norwegian) · Polski (Polish) · Português (Portuguese) · Русский (Russian) · Español (Spanish) · Svenska (Swedish) · ไทย (Thai) · Türkçe (Turkish) · Tiếng Việt (Vietnamese)
 
-Support for multiple Python versions (3.10+) with automatic adaptation:
-- Pack inheritance system
-- Auto-detection of Python version
-- Compatibility tracking
-- Auto-update on new releases
+[View full language details](/reference/supported-languages/)
 
-### Git Integration
+## Explore the Docs
 
-Seamless version control with multilingual code:
-- Canonical English storage
-- Developer-specific language views
-- Dual-language commit messages
-- Translation metadata tracking
-
-### Language Server Protocol
-
-IDE-agnostic support via LSP:
-- Works with VS Code, Cursor, Windsurf, Zed, PyCharm
-- Real-time translation
-- Localized IntelliSense
-- Cultural context annotations
-
-## Getting Started
-
-Ready to code in your native language? Follow our [Getting Started Guide](/getting-started/) to install the VS Code extension and start using Legesher today!
-
-For privacy information and data collection details, see our [Privacy Policy](/privacy/).
+<CardGrid stagger>
+	<Card title="Quick Start" icon="rocket">
+		Install the extension and write your first program in under 5 minutes.
+		[Get started](/getting-started/)
+	</Card>
+	<Card title="Supported Languages" icon="translate">
+		All 26 languages with native names, RTL support, and translation status.
+		[View languages](/reference/supported-languages/)
+	</Card>
+</CardGrid>

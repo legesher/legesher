@@ -3,8 +3,6 @@ title: Getting Started with Legesher
 description: Quick start guide for coding in your native language with Legesher
 ---
 
-# Getting Started with Legesher
-
 Welcome to Legesher! This guide will help you start coding in your native language.
 
 ## Quick Start
@@ -22,37 +20,46 @@ Or install manually:
 code --install-extension legesher.legesher-vscode
 ```
 
+<!-- VISUAL: Screenshot of VS Code marketplace showing the Legesher extension -->
+
 ### 2. Select Your Language
 
 After installation, you'll see a welcome dialog. Click **"Choose Your Language"** to select your preferred coding language.
 
 Or manually:
 
-1. Open Command Palette (⌘⇧P or Ctrl+Shift+P)
+1. Open Command Palette (Cmd+Shift+P or Ctrl+Shift+P)
 2. Type "Legesher: Select Language"
 3. Choose your language from the list
+
+<!-- VISUAL: [Demo 7] GIF/screenshot of the language selector dropdown in command palette -->
 
 ### 3. Start Coding
 
 Open a Python file and start typing! Legesher will:
 
-- ✅ Provide keyword suggestions in your language
-- ✅ Show hover documentation in your language
-- ✅ Translate Python builtins
-- ✅ Support IntelliSense in your native language
+- Provide keyword suggestions in your language
+- Show hover documentation in your language
+- Translate Python builtins and exceptions
+- Support IntelliSense in your native language
+
+<!-- VISUAL: [Demo 10] GIF of autocomplete suggesting translated keywords in action -->
 
 ## Supported Languages
 
-Legesher currently supports Python 3.10+ with translations in:
+Legesher currently supports Python 3.10+ with translations in **26 languages**:
 
-- **Arabic** (العربية)
-- **Chinese Simplified** (简体中文)
-- **English** (English)
-- **French** (Français)
-- **Spanish** (Español)
-- And 20+ more languages!
+- **Arabic** (العربية) · **Chinese** (中文) · **Danish** (Dansk)
+- **Dutch** (Nederlands) · **English** (English) · **Finnish** (Suomi)
+- **French** (Français) · **German** (Deutsch) · **Greek** (Ελληνικά)
+- **Hebrew** (עברית) · **Hindi** (हिन्दी) · **Hungarian** (Magyar)
+- **Indonesian** (Bahasa Indonesia) · **Italian** (Italiano) · **Japanese** (日本語)
+- **Korean** (한국어) · **Malay** (Bahasa Melayu) · **Norwegian** (Norsk)
+- **Polish** (Polski) · **Portuguese** (Português) · **Russian** (Русский)
+- **Spanish** (Español) · **Swedish** (Svenska) · **Thai** (ไทย)
+- **Turkish** (Türkçe) · **Vietnamese** (Tiếng Việt)
 
-See [Language Codes](/language-codes/) for the complete list.
+See [Supported Languages](/reference/supported-languages/) for the complete list with details.
 
 ## Features
 
@@ -61,13 +68,35 @@ See [Language Codes](/language-codes/) for the complete list.
 Write Python keywords in your native language:
 
 ```python
-# Spanish example
-función saludar(nombre):
-    imprimir(f"¡Hola, {nombre}!")
+# Spanish example: keywords, control flow, and error handling
+definir saludar(nombre):
+    mensaje = f"¡Hola, {nombre}! Bienvenido a Legesher."
+    imprimir(mensaje)
+    devolver mensaje
 
-si __nombre__ == "__principal__":
-    saludar("Mundo")
+definir saludar_con_edad(nombre, edad):
+    si edad < 18:
+        categoria = "joven"
+    si_no edad < 65:
+        categoria = "adulto"
+    sino:
+        categoria = "sabio"
+    imprimir(f"¡Hola, {categoria} {nombre}!")
+    devolver categoria
+
+definir ejemplo_manejo_errores():
+    probar:
+        resultado = 100 / entero(entrada("Número: "))
+        imprimir(f"Resultado: {resultado}")
+    excepto errordedivisiónporcero:
+        imprimir("Error: No se puede dividir por cero.")
+    excepto errordevalor:
+        imprimir("Error: Ingresa un número válido.")
+    finalmente:
+        imprimir("Operación completada.")
 ```
+
+<!-- VISUAL: [Demo 9] GIF of hover tooltip showing definir → def with documentation -->
 
 ### Git Integration
 
@@ -77,6 +106,8 @@ Your code is stored in English in git, but you see it in your language:
 - **Git storage:** English (for universal collaboration)
 - **Automatic translation:** Both directions, seamlessly
 
+<!-- VISUAL: [Demo 15] Clean/smudge filter flow diagram showing local ↔ git translation -->
+
 ### IntelliSense Support
 
 Get completions, hover docs, and diagnostics in your language:
@@ -84,6 +115,8 @@ Get completions, hover docs, and diagnostics in your language:
 - Type `imprimir` and see suggestions for `print()`
 - Hover over functions to see localized documentation
 - Error messages in your language
+
+<!-- VISUAL: [Demo 11] Screenshot of semantic token highlighting with translated keywords -->
 
 ## Settings
 
@@ -107,7 +140,7 @@ Control what data Legesher collects:
 }
 ```
 
-[Learn more about privacy →](/privacy/)
+[Learn more about privacy](/privacy/)
 
 ### Language Selection
 
@@ -122,26 +155,26 @@ Change your coding language anytime:
 
 1. Check that you have Python installed
 2. Open a `.py` file to trigger activation
-3. Check the Output panel: View → Output → Select "Legesher Language Server"
+3. Check the Output panel: View > Output > Select "Legesher Language Server"
 
 ### Translations not showing?
 
 1. Verify language selection: Check status bar
-2. Restart language server: Command Palette → "Legesher: Restart Language Server"
+2. Restart language server: Command Palette > "Legesher: Restart Language Server"
 3. Check for errors in Output panel
+
+<!-- VISUAL: [Demo 13] Screenshot of status bar showing connection indicator states -->
 
 ### Need help?
 
-- 📖 [Read the FAQ](/faq/)
-- 🐛 [Report an issue](https://github.com/legesher/legesher/issues)
-- 💬 [Join our community](https://discord.gg/legesher)
+- [Report an issue](https://github.com/legesher/legesher/issues)
+- [Join our community](https://legesher.io/go/slack)
 
 ## What's Next?
 
-- Learn about [version-aware language packs](/guides/language-packs/)
-- Understand [git workflow with Legesher](/guides/git-workflow/)
-- Contribute translations via the [community platform](/guides/community-contributions/)
+- Browse all [supported languages](/reference/supported-languages/)
+- [Contribute](https://github.com/legesher/legesher/blob/main/CONTRIBUTING.md) translations or code on GitHub
 
 ---
 
-**Ready to code?** Open a Python file and start typing in your language! 🚀
+**Ready to code?** Open a Python file and start typing in your language!

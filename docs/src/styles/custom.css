@@ -1,0 +1,6 @@
+@import '@fontsource-variable/noto-sans';
+
+:root {
+	--sl-font: 'Noto Sans Variable', sans-serif;
+	--sl-font-system: 'Noto Sans Variable', sans-serif;
+}

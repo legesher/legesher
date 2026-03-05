@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@astrojs/starlight": "^0.37.6",
+    "@astrojs/vercel": "^8.1.4",
+    "@fontsource-variable/noto-sans": "^5.2.10",
     "astro": "^5.18.0",
     "sharp": "^0.34.5"
   },
