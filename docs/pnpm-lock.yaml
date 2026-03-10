@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@astrojs/starlight':
-        specifier: ^0.37.6
-        version: 0.37.6(astro@5.18.0(@vercel/functions@2.2.13)(rollup@4.59.0)(typescript@5.8.2))
+        specifier: ^0.37.7
+        version: 0.37.7(astro@5.18.0(@vercel/functions@2.2.13)(rollup@4.59.0)(typescript@5.8.2))
       '@astrojs/vercel':
-        specifier: ^8.1.4
-        version: 8.2.11(astro@5.18.0(@vercel/functions@2.2.13)(rollup@4.59.0)(typescript@5.8.2))(rollup@4.59.0)
+        specifier: ^9.0.4
+        version: 9.0.4(astro@5.18.0(@vercel/functions@2.2.13)(rollup@4.59.0)(typescript@5.8.2))(rollup@4.59.0)
       '@fontsource-variable/noto-sans':
         specifier: ^5.2.10
         version: 5.2.10
@@ -28,9 +28,6 @@ packages:
 
   '@astrojs/compiler@2.13.1':
     resolution: {integrity: sha512-f3FN83d2G/v32ipNClRKgYv30onQlMZX1vCeZMjPsMMPl1mDpmbl0+N5BYo4S/ofzqJyS5hvwacEo0CCVDn/Qg==}
-
-  '@astrojs/internal-helpers@0.7.4':
-    resolution: {integrity: sha512-lDA9MqE8WGi7T/t2BMi+EAXhs4Vcvr94Gqx3q15cFEz8oFZMO4/SFBqYr/UcmNlvW+35alowkVj+w9VhLvs5Cw==}
 
   '@astrojs/internal-helpers@0.7.5':
     resolution: {integrity: sha512-vreGnYSSKhAjFJCWAwe/CNhONvoc5lokxtRoZims+0wa3KbHBdPHSSthJsKxPd8d/aic6lWKpRTYGY/hsgK6EA==}
@@ -51,8 +48,8 @@ packages:
   '@astrojs/sitemap@3.7.0':
     resolution: {integrity: sha512-+qxjUrz6Jcgh+D5VE1gKUJTA3pSthuPHe6Ao5JCxok794Lewx8hBFaWHtOnN0ntb2lfOf7gvOi9TefUswQ/ZVA==}
 
-  '@astrojs/starlight@0.37.6':
-    resolution: {integrity: sha512-wQrKwH431q+8FsLBnNQeG+R36TMtEGxTQ2AuiVpcx9APcazvL3n7wVW8mMmYyxX0POjTnxlcWPkdMGR3Yj1L+w==}
+  '@astrojs/starlight@0.37.7':
+    resolution: {integrity: sha512-KyBnou8aKIlPJUSNx6a1SN7XyH22oj/VAvTGC+Edld4Bnei1A//pmCRTBvSrSeoGrdUjK0ErFUfaEhhO1bPfDg==}
     peerDependencies:
       astro: ^5.5.0
 
@@ -60,8 +57,8 @@ packages:
     resolution: {integrity: sha512-UFBgfeldP06qu6khs/yY+q1cDAaArM2/7AEIqQ9Cuvf7B1hNLq0xDrZkct+QoIGyjq56y8IaE2I3CTvG99mlhQ==}
     engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0}
 
-  '@astrojs/vercel@8.2.11':
-    resolution: {integrity: sha512-PGtWHvHYMkT8ftSR3yuR7oyf/oPvOv8AfhCFlSQg318hfpalSEPND9mjbdQGpMeZz3KtvvOnHyYwqmu5V8MSHg==}
+  '@astrojs/vercel@9.0.4':
+    resolution: {integrity: sha512-Nn5c0CODcx69FnNUhAcAhlDQ/Je2lLrlPmbMMI77ZvLMfyZI5NZyKD7MiKEeaYK/VTnx6fNI5rFHm6seqEPRtQ==}
     peerDependencies:
       astro: ^5.0.0
 
@@ -852,8 +849,8 @@ packages:
       '@aws-sdk/credential-provider-web-identity':
         optional: true
 
-  '@vercel/nft@0.30.3':
-    resolution: {integrity: sha512-UEq+eF0ocEf9WQCV1gktxKhha36KDs7jln5qii6UpPf5clMqDc0p3E7d9l2Smx0i9Pm1qpq4S4lLfNl97bbv6w==}
+  '@vercel/nft@0.30.4':
+    resolution: {integrity: sha512-wE6eAGSXScra60N2l6jWvNtVK0m+sh873CpfZW4KI2v8EHuUQp+mSEi4T+IcdPCSEDgCdAS/7bizbhQlkjzrSA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1760,6 +1757,10 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
+  postcss@8.5.8:
+    resolution: {integrity: sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==}
+    engines: {node: ^10 || ^12 || >=14}
+
   prismjs@1.30.0:
     resolution: {integrity: sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==}
     engines: {node: '>=6'}
@@ -1873,6 +1874,10 @@ packages:
     resolution: {integrity: sha512-1n3r/tGXO6b6VXMdFT54SHzT9ytu9yr7TaELowdYpMqY/Ao7EnlQGmAQ1+RatX7Tkkdm6hONI2owqNx2aZj5Sw==}
     engines: {node: '>=11.0.0'}
 
+  sax@1.5.0:
+    resolution: {integrity: sha512-21IYA3Q5cQf089Z6tgaUTr7lDAyzoTPx5HRtbhsME8Udispad8dC/+sziTNugOEx54ilvatQ9YCzl4KQLPcRHA==}
+    engines: {node: '>=11.0.0'}
+
   semver@7.7.4:
     resolution: {integrity: sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==}
     engines: {node: '>=10'}
@@ -1900,8 +1905,8 @@ packages:
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
 
-  sitemap@8.0.2:
-    resolution: {integrity: sha512-LwktpJcyZDoa0IL6KT++lQ53pbSrx2c9ge41/SeLTyqy2XUNA6uR4+P9u5IVo5lPeL2arAcOKn1aZAxoYbCKlQ==}
+  sitemap@8.0.3:
+    resolution: {integrity: sha512-9Ew1tR2WYw8RGE2XLy7GjkusvYXy8Rg6y8TYuBuQMfIEdGcWoJpY2Wr5DzsEiL/TKCw56+YKTCCUHglorEYK+A==}
     engines: {node: '>=14.0.0', npm: '>=6.0.0'}
     hasBin: true
 
@@ -1957,8 +1962,8 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  tar@7.5.9:
-    resolution: {integrity: sha512-BTLcK0xsDh2+PUe9F6c2TlRp4zOOBMTkoQHQIWSIzI0R7KG46uEwq4OPk2W7bZcprBMsuaeFsqwYr7pjh6CuHg==}
+  tar@7.5.11:
+    resolution: {integrity: sha512-ChjMH33/KetonMTAtpYdgUFr0tbz69Fp2v7zWxQfYZX4g5ZN2nOBXm1R2xyA+lMIKrLKIoKAwFj93jE/avX9cQ==}
     engines: {node: '>=18'}
 
   tiny-inflate@1.0.3:
@@ -2251,8 +2256,6 @@ snapshots:
 
   '@astrojs/compiler@2.13.1': {}
 
-  '@astrojs/internal-helpers@0.7.4': {}
-
   '@astrojs/internal-helpers@0.7.5': {}
 
   '@astrojs/markdown-remark@6.3.10':
@@ -2279,7 +2282,7 @@ snapshots:
       unist-util-visit-parents: 6.0.2
       vfile: 6.0.3
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   '@astrojs/mdx@4.3.13(astro@5.18.0(@vercel/functions@2.2.13)(rollup@4.59.0)(typescript@5.8.2))':
     dependencies:
@@ -2298,7 +2301,7 @@ snapshots:
       unist-util-visit: 5.1.0
       vfile: 6.0.3
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   '@astrojs/prism@3.3.0':
     dependencies:
@@ -2306,11 +2309,11 @@ snapshots:
 
   '@astrojs/sitemap@3.7.0':
     dependencies:
-      sitemap: 8.0.2
+      sitemap: 8.0.3
       stream-replace-string: 2.0.0
       zod: 3.25.76
 
-  '@astrojs/starlight@0.37.6(astro@5.18.0(@vercel/functions@2.2.13)(rollup@4.59.0)(typescript@5.8.2))':
+  '@astrojs/starlight@0.37.7(astro@5.18.0(@vercel/functions@2.2.13)(rollup@4.59.0)(typescript@5.8.2))':
     dependencies:
       '@astrojs/markdown-remark': 6.3.10
       '@astrojs/mdx': 4.3.13(astro@5.18.0(@vercel/functions@2.2.13)(rollup@4.59.0)(typescript@5.8.2))
@@ -2342,7 +2345,7 @@ snapshots:
       unist-util-visit: 5.1.0
       vfile: 6.0.3
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   '@astrojs/telemetry@3.3.0':
     dependencies:
@@ -2354,30 +2357,30 @@ snapshots:
       is-wsl: 3.1.1
       which-pm-runs: 1.1.0
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
-  '@astrojs/vercel@8.2.11(astro@5.18.0(@vercel/functions@2.2.13)(rollup@4.59.0)(typescript@5.8.2))(rollup@4.59.0)':
+  '@astrojs/vercel@9.0.4(astro@5.18.0(@vercel/functions@2.2.13)(rollup@4.59.0)(typescript@5.8.2))(rollup@4.59.0)':
     dependencies:
-      '@astrojs/internal-helpers': 0.7.4
+      '@astrojs/internal-helpers': 0.7.5
       '@vercel/analytics': 1.6.1
       '@vercel/functions': 2.2.13
-      '@vercel/nft': 0.30.3(rollup@4.59.0)
+      '@vercel/nft': 0.30.4(rollup@4.59.0)
       '@vercel/routing-utils': 5.3.3
       astro: 5.18.0(@vercel/functions@2.2.13)(rollup@4.59.0)(typescript@5.8.2)
       esbuild: 0.25.12
       tinyglobby: 0.2.15
     transitivePeerDependencies:
-    - '@aws-sdk/credential-provider-web-identity'
-    - '@remix-run/react'
-    - '@sveltejs/kit'
-    - encoding
-    - next
-    - react
-    - rollup
-    - supports-color
-    - svelte
-    - vue
-    - vue-router
+      - '@aws-sdk/credential-provider-web-identity'
+      - '@remix-run/react'
+      - '@sveltejs/kit'
+      - encoding
+      - next
+      - react
+      - rollup
+      - supports-color
+      - svelte
+      - vue
+      - vue-router
 
   '@babel/helper-string-parser@7.27.1': {}
 
@@ -2568,8 +2571,8 @@ snapshots:
       hast-util-to-html: 9.0.5
       hast-util-to-text: 4.0.2
       hastscript: 9.0.1
-      postcss: 8.5.6
-      postcss-nested: 6.2.0(postcss@8.5.6)
+      postcss: 8.5.8
+      postcss-nested: 6.2.0(postcss@8.5.8)
       unist-util-visit: 5.1.0
       unist-util-visit-parents: 6.0.2
 
@@ -2707,10 +2710,10 @@ snapshots:
       node-fetch: 2.7.0
       nopt: 8.1.0
       semver: 7.7.4
-      tar: 7.5.9
+      tar: 7.5.11
     transitivePeerDependencies:
-    - encoding
-    - supports-color
+      - encoding
+      - supports-color
 
   '@mdx-js/mdx@3.1.1':
     dependencies:
@@ -2740,7 +2743,7 @@ snapshots:
       unist-util-visit: 5.1.0
       vfile: 6.0.3
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   '@oslojs/encoding@1.1.0': {}
 
@@ -2929,7 +2932,7 @@ snapshots:
     dependencies:
       '@vercel/oidc': 2.0.2
 
-  '@vercel/nft@0.30.3(rollup@4.59.0)':
+  '@vercel/nft@0.30.4(rollup@4.59.0)':
     dependencies:
       '@mapbox/node-pre-gyp': 2.0.3
       '@rollup/pluginutils': 5.3.0(rollup@4.59.0)
@@ -2944,9 +2947,9 @@ snapshots:
       picomatch: 4.0.3
       resolve-from: 5.0.0
     transitivePeerDependencies:
-    - encoding
-    - rollup
-    - supports-color
+      - encoding
+      - rollup
+      - supports-color
 
   '@vercel/oidc@2.0.2':
     dependencies:
@@ -3084,39 +3087,39 @@ snapshots:
     optionalDependencies:
       sharp: 0.34.5
     transitivePeerDependencies:
-    - '@azure/app-configuration'
-    - '@azure/cosmos'
-    - '@azure/data-tables'
-    - '@azure/identity'
-    - '@azure/keyvault-secrets'
-    - '@azure/storage-blob'
-    - '@capacitor/preferences'
-    - '@deno/kv'
-    - '@netlify/blobs'
-    - '@planetscale/database'
-    - '@types/node'
-    - '@upstash/redis'
-    - '@vercel/blob'
-    - '@vercel/functions'
-    - '@vercel/kv'
-    - aws4fetch
-    - db0
-    - idb-keyval
-    - ioredis
-    - jiti
-    - less
-    - lightningcss
-    - rollup
-    - sass
-    - sass-embedded
-    - stylus
-    - sugarss
-    - supports-color
-    - terser
-    - tsx
-    - typescript
-    - uploadthing
-    - yaml
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@types/node'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - db0
+      - idb-keyval
+      - ioredis
+      - jiti
+      - less
+      - lightningcss
+      - rollup
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - typescript
+      - uploadthing
+      - yaml
 
   async-sema@3.1.1: {}
 
@@ -3604,7 +3607,7 @@ snapshots:
       unist-util-position: 5.0.0
       zwitch: 2.0.4
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   hast-util-to-html@9.0.5:
     dependencies:
@@ -3638,7 +3641,7 @@ snapshots:
       unist-util-position: 5.0.0
       vfile-message: 4.0.3
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   hast-util-to-parse5@8.0.1:
     dependencies:
@@ -3686,7 +3689,7 @@ snapshots:
       agent-base: 7.1.4
       debug: 4.4.3
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   i18next@23.16.8:
     dependencies:
@@ -3780,7 +3783,7 @@ snapshots:
       stringify-entities: 4.0.4
       unist-util-visit-parents: 6.0.2
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   mdast-util-find-and-replace@3.0.2:
     dependencies:
@@ -3804,7 +3807,7 @@ snapshots:
       micromark-util-types: 2.0.2
       unist-util-stringify-position: 4.0.0
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   mdast-util-gfm-autolink-literal@2.0.1:
     dependencies:
@@ -3822,7 +3825,7 @@ snapshots:
       mdast-util-to-markdown: 2.1.2
       micromark-util-normalize-identifier: 2.0.1
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   mdast-util-gfm-strikethrough@2.0.0:
     dependencies:
@@ -3830,7 +3833,7 @@ snapshots:
       mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   mdast-util-gfm-table@2.0.0:
     dependencies:
@@ -3840,7 +3843,7 @@ snapshots:
       mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   mdast-util-gfm-task-list-item@2.0.0:
     dependencies:
@@ -3849,7 +3852,7 @@ snapshots:
       mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   mdast-util-gfm@3.1.0:
     dependencies:
@@ -3861,7 +3864,7 @@ snapshots:
       mdast-util-gfm-task-list-item: 2.0.0
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   mdast-util-mdx-expression@2.0.1:
     dependencies:
@@ -3872,7 +3875,7 @@ snapshots:
       mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   mdast-util-mdx-jsx@3.2.0:
     dependencies:
@@ -3889,7 +3892,7 @@ snapshots:
       unist-util-stringify-position: 4.0.0
       vfile-message: 4.0.3
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   mdast-util-mdx@3.0.0:
     dependencies:
@@ -3899,7 +3902,7 @@ snapshots:
       mdast-util-mdxjs-esm: 2.0.1
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   mdast-util-mdxjs-esm@2.0.1:
     dependencies:
@@ -3910,7 +3913,7 @@ snapshots:
       mdast-util-from-markdown: 2.0.3
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   mdast-util-phrasing@4.1.0:
     dependencies:
@@ -4221,7 +4224,7 @@ snapshots:
       micromark-util-symbol: 2.0.1
       micromark-util-types: 2.0.2
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   minimatch@9.0.9:
     dependencies:
@@ -4347,9 +4350,9 @@ snapshots:
 
   picomatch@4.0.3: {}
 
-  postcss-nested@6.2.0(postcss@8.5.6):
+  postcss-nested@6.2.0(postcss@8.5.8):
     dependencies:
-      postcss: 8.5.6
+      postcss: 8.5.8
       postcss-selector-parser: 6.1.2
 
   postcss-selector-parser@6.1.2:
@@ -4358,6 +4361,12 @@ snapshots:
       util-deprecate: 1.0.2
 
   postcss@8.5.6:
+    dependencies:
+      nanoid: 3.3.11
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
+
+  postcss@8.5.8:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -4445,7 +4454,7 @@ snapshots:
       '@types/hast': 3.0.4
       hast-util-to-estree: 3.1.3
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   rehype-stringify@10.0.1:
     dependencies:
@@ -4467,7 +4476,7 @@ snapshots:
       micromark-extension-directive: 3.0.2
       unified: 11.0.5
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   remark-gfm@4.0.1:
     dependencies:
@@ -4478,14 +4487,14 @@ snapshots:
       remark-stringify: 11.0.0
       unified: 11.0.5
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   remark-mdx@3.1.1:
     dependencies:
       mdast-util-mdx: 3.0.0
       micromark-extension-mdxjs: 3.0.0
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   remark-parse@11.0.0:
     dependencies:
@@ -4494,7 +4503,7 @@ snapshots:
       micromark-util-types: 2.0.2
       unified: 11.0.5
     transitivePeerDependencies:
-    - supports-color
+      - supports-color
 
   remark-rehype@11.1.2:
     dependencies:
@@ -4577,6 +4586,8 @@ snapshots:
 
   sax@1.4.4: {}
 
+  sax@1.5.0: {}
+
   semver@7.7.4: {}
 
   sharp@0.34.5:
@@ -4631,12 +4642,12 @@ snapshots:
 
   sisteransi@1.0.5: {}
 
-  sitemap@8.0.2:
+  sitemap@8.0.3:
     dependencies:
       '@types/node': 17.0.45
       '@types/sax': 1.2.7
       arg: 5.0.2
-      sax: 1.4.4
+      sax: 1.5.0
 
   smol-toml@1.6.0: {}
 
@@ -4697,7 +4708,7 @@ snapshots:
       picocolors: 1.1.1
       sax: 1.4.4
 
-  tar@7.5.9:
+  tar@7.5.11:
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
       chownr: 3.0.0
