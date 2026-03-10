@@ -1,11 +1,16 @@
 """AI translation models for CORE-394 pipeline."""
 
 from .base import Translation, TranslationModel, TranslationRequest
+from .hf_profiles import HF_PROFILES, HFModelProfile, get_profile, list_profiles
 
 __all__ = [
     "Translation",
     "TranslationModel",
     "TranslationRequest",
+    "HFModelProfile",
+    "HF_PROFILES",
+    "get_profile",
+    "list_profiles",
 ]
 
 # Optional: Aya-101 HuggingFace model (local, requires transformers/torch)
@@ -23,3 +28,12 @@ try:
     __all__.append("AyaInferenceAPIModel")
 except ImportError:
     pass  # huggingface_hub not installed - model unavailable
+
+# Generic HuggingFace models — always importable.
+# Heavy dependencies (transformers, torch, huggingface_hub) are deferred to runtime.
+# Use HuggingFaceModel.check_dependencies() / HuggingFaceAPIModel.check_dependencies()
+# to verify availability before instantiation.
+from .huggingface_model import HuggingFaceModel  # noqa: F401
+from .huggingface_api_model import HuggingFaceAPIModel  # noqa: F401
+
+__all__.extend(["HuggingFaceModel", "HuggingFaceAPIModel"])

@@ -9,6 +9,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Generic HuggingFace Translation Engine** (CORE-686)
+  - `HFModelProfile` dataclass + registry for pluggable model configuration —
+    adding a new HF model requires only ~10 lines of profile config
+  - `HuggingFaceModel` — generic local inference engine with lazy model loading,
+    device auto-detection (CUDA/MPS/CPU), and retry with exponential backoff
+  - `HuggingFaceAPIModel` — generic HF Inference API engine with rate limiting
+  - 4 pre-registered Tiny Aya (3.35B) profiles: earth, fire, water, global
+    (CohereLabs/tiny-aya-{variant}) for Amharic, Urdu, and other underserved languages
+  - New CLI flags: `--models hf|hf-api|tiny-aya|tiny-aya-api`,
+    `--hf-profile <name>`, `--tiny-aya-variant earth|fire|water|global`
+  - `DEFAULT_LANGUAGE_NAMES` mapping with 70+ languages (ISO 639-1 and 639-3)
+  - 40 unit tests covering profiles, registry, prompt builder, dry-run translations,
+    and pipeline validation — all run without ML dependencies
+
 ## [0.5.1] - 2026-03-01
 
 ### Changed

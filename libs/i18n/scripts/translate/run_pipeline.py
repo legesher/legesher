@@ -36,11 +36,39 @@ def parse_args():
     parser.add_argument(
         "--models",
         nargs="+",
-        choices=["claude", "aya", "aya101-hf", "aya-api", "ollama"],
+        choices=[
+            "claude",
+            "aya",
+            "aya101-hf",
+            "aya-api",
+            "ollama",
+            "hf",
+            "hf-api",
+            "tiny-aya",
+            "tiny-aya-api",
+        ],
         default=["claude", "aya"],
         help="AI models to use for translation. "
-        "aya101-hf requires transformers/torch (~16GB RAM). "
-        "aya-api uses HF Inference API (cloud, requires HF_TOKEN env var).",
+        "hf/tiny-aya: generic HuggingFace local model (requires transformers/torch). "
+        "hf-api/tiny-aya-api: HuggingFace Inference API (requires HF_TOKEN). "
+        "Use --hf-profile or --tiny-aya-variant to select the model.",
+    )
+
+    parser.add_argument(
+        "--hf-profile",
+        type=str,
+        default=None,
+        help="HuggingFace model profile name (e.g., 'tiny-aya-earth'). "
+        "Use with --models hf or --models hf-api. "
+        "Also overrides the default profile for --models tiny-aya / tiny-aya-api.",
+    )
+
+    parser.add_argument(
+        "--tiny-aya-variant",
+        choices=["earth", "fire", "water", "global"],
+        default="earth",
+        help="Tiny Aya regional variant. Default: earth (West Asian/African languages). "
+        "fire: South Asian, water: European/Asia Pacific, global: balanced.",
     )
 
     parser.add_argument(
@@ -121,6 +149,8 @@ async def main_async(args):
         context_dir=args.context_dir,
         output_db=args.output_db,
         skip_existing=args.skip_existing,
+        hf_profile=args.hf_profile,
+        tiny_aya_variant=args.tiny_aya_variant,
     )
 
     logger.info("Starting translation pipeline...")

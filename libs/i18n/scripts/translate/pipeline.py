@@ -31,6 +31,7 @@ from .term_classifier import get_all_terms_by_category, classify_term
 from .models.base import TranslationRequest, TranslationModel
 from .models.claude_model import ClaudeModel
 from .models.aya_model import AyaModel
+from .models.hf_profiles import get_profile
 from .yaml_exporter import YAMLExporter
 from .validators import TranslationValidator
 
@@ -57,6 +58,11 @@ try:
     HAS_OLLAMA = True
 except ImportError:
     HAS_OLLAMA = False
+
+# Generic HuggingFace models — always importable (they defer heavy deps to runtime)
+from .models.huggingface_model import HuggingFaceModel
+from .models.huggingface_api_model import HuggingFaceAPIModel
+
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -88,6 +94,8 @@ class PipelineConfig:
     output_db: Optional[Path] = None
     skip_existing: bool = True
     ollama_model: str = "aya"  # Ollama model name (aya, command-r, qwen2.5, etc.)
+    hf_profile: Optional[str] = None  # HuggingFace model profile name
+    tiny_aya_variant: str = "earth"  # Tiny Aya variant (earth, fire, water, global)
 
     def __post_init__(self):
         """Set defaults."""
@@ -260,6 +268,67 @@ class TranslationPipeline:
                 model=config.ollama_model,
                 dry_run=config.dry_run,
             )
+
+        # Generic HuggingFace local model (profile-based)
+        wants_hf = "hf" in config.models
+        wants_tiny_aya = "tiny-aya" in config.models
+        if wants_hf or wants_tiny_aya:
+            if not config.dry_run:
+                HuggingFaceModel.check_dependencies()
+            # Explicit hf selection: always requires --hf-profile
+            if wants_hf:
+                if not config.hf_profile:
+                    raise ValueError(
+                        "--models hf requires --hf-profile to specify which model "
+                        "to use. Example: --models hf --hf-profile tiny-aya-earth"
+                    )
+                hf_profile = get_profile(config.hf_profile)
+                self.models["hf"] = HuggingFaceModel(
+                    profile=hf_profile,
+                    dry_run=config.dry_run,
+                )
+            # Tiny Aya: default to tiny-aya-{variant} if no explicit profile
+            if wants_tiny_aya:
+                if config.hf_profile:
+                    tiny_aya_profile = get_profile(config.hf_profile)
+                else:
+                    profile_name = f"tiny-aya-{config.tiny_aya_variant}"
+                    tiny_aya_profile = get_profile(profile_name)
+                self.models["tiny-aya"] = HuggingFaceModel(
+                    profile=tiny_aya_profile,
+                    dry_run=config.dry_run,
+                )
+
+        # Generic HuggingFace API model (profile-based)
+        wants_hf_api = "hf-api" in config.models
+        wants_tiny_aya_api = "tiny-aya-api" in config.models
+        if wants_hf_api or wants_tiny_aya_api:
+            if not config.dry_run:
+                HuggingFaceAPIModel.check_dependencies()
+            # Explicit hf-api selection: always requires --hf-profile
+            if wants_hf_api:
+                if not config.hf_profile:
+                    raise ValueError(
+                        "--models hf-api requires --hf-profile to specify which "
+                        "model to use. "
+                        "Example: --models hf-api --hf-profile tiny-aya-earth"
+                    )
+                hf_api_profile = get_profile(config.hf_profile)
+                self.models["hf-api"] = HuggingFaceAPIModel(
+                    profile=hf_api_profile,
+                    dry_run=config.dry_run,
+                )
+            # Tiny Aya API: default to tiny-aya-{variant} if no explicit profile
+            if wants_tiny_aya_api:
+                if config.hf_profile:
+                    tiny_aya_api_profile = get_profile(config.hf_profile)
+                else:
+                    profile_name = f"tiny-aya-{config.tiny_aya_variant}"
+                    tiny_aya_api_profile = get_profile(profile_name)
+                self.models["tiny-aya-api"] = HuggingFaceAPIModel(
+                    profile=tiny_aya_api_profile,
+                    dry_run=config.dry_run,
+                )
 
         logger.info(f"Pipeline initialized with models: {list(self.models.keys())}")
         logger.info(f"Target languages: {config.languages}")
