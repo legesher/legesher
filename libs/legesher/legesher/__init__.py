@@ -1,3 +1,3 @@
 """Legesher - Multilingual code editor and CLI tools."""
 
-__version__ = "0.5.1"
+__version__ = "0.6.0"
