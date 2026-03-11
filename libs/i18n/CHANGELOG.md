@@ -13,25 +13,37 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- **3 New Language Packs** (CORE-687)
-  - Amharic (am) (CORE-690)
-  - Sinhala (si) (CORE-1128)
-  - Urdu (ur, RTL) (CORE-1071)
-  - All packs: 37 keywords, 72 builtins, 66 exceptions, Python 3.10–3.14
-  - Total supported languages: 26 → 29
-- **Generic HuggingFace Translation Engine** (CORE-686)
-  - `HFModelProfile` dataclass + registry for pluggable model configuration —
-    adding a new HF model requires only ~10 lines of profile config
-  - `HuggingFaceModel` — generic local inference engine with lazy model loading,
+- **3 new language packs** — expanding Legesher from 26 → 29 supported
+  languages (CORE-687)
+  - **Amharic (አማርኛ)**: First Ge'ez-script language — complete Python
+    3.10–3.14 translations (37 keywords, 72 builtins, 66 exceptions) with
+    zero collisions. Translation source: Claude AI Model (CORE-690)
+  - **Sinhala (සිංහල)**: First South Asian script language — complete Python
+    3.10–3.14 translations (37 keywords, 72 builtins, 66 exceptions) with
+    zero collisions. Translation source: Claude AI Model (CORE-1128)
+  - **Urdu (اردو)**: Third RTL language in Legesher (joining Arabic and
+    Hebrew) — complete Python 3.10–3.14 translations (37 keywords, 72
+    builtins, 66 exceptions) with zero collisions. Translation source: Tiny
+    Aya AI Model (CORE-1071)
+  - 540 new translations imported into the translation database (180 per
+    language, 0 collisions across all 29 languages)
+  - Translation database updated: 40 total languages (29 YAML packs + 11
+    legacy community)
+- **Generic HuggingFace translation engine** — pluggable architecture for
+  AI-powered translations, making it trivial to add new models (CORE-686)
+  - `HFModelProfile` dataclass + registry — adding a new HF model requires
+    only ~10 lines of profile config
+  - `HuggingFaceModel` — local inference engine with lazy model loading,
     device auto-detection (CUDA/MPS/CPU), and retry with exponential backoff
-  - `HuggingFaceAPIModel` — generic HF Inference API engine with rate limiting
+  - `HuggingFaceAPIModel` — cloud inference engine via HF Inference API with
+    built-in rate limiting
   - 4 pre-registered Tiny Aya (3.35B) profiles: earth, fire, water, global
-    (CohereLabs/tiny-aya-{variant}) for Amharic, Urdu, and other underserved languages
+    (CohereLabs/tiny-aya-{variant}) targeting underserved languages
   - New CLI flags: `--models hf|hf-api|tiny-aya|tiny-aya-api`,
     `--hf-profile <name>`, `--tiny-aya-variant earth|fire|water|global`
   - `DEFAULT_LANGUAGE_NAMES` mapping with 70+ languages (ISO 639-1 and 639-3)
-  - 40 unit tests covering profiles, registry, prompt builder, dry-run translations,
-    and pipeline validation — all run without ML dependencies
+  - 40 unit tests covering profiles, registry, prompt builder, dry-run
+    translations, and pipeline validation — all run without ML dependencies
 
 ## [0.5.1] - 2026-03-01
 

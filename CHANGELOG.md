@@ -13,12 +13,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- **legesher-i18n**: Add 3 new language packs — Amharic (am), Sinhala (si),
-  Urdu (ur) — bringing total from 26 → 29 supported languages (CORE-687)
-  - Amharic (am): 37 keywords, 72 builtins, 66 exceptions (CORE-690)
-  - Sinhala (si): 37 keywords, 72 builtins, 66 exceptions (CORE-1128)
-  - Urdu (ur, RTL): 37 keywords, 72 builtins, 66 exceptions (CORE-1071)
-  - All packs support Python 3.10–3.14 with version inheritance
+- **legesher-i18n**: 3 new language packs — Amharic (am), Sinhala (si), and Urdu (ur),
+  expanding Legesher from 26 → 29 supported languages (CORE-687)
+  - **Amharic (አማርኛ)**: First Ge'ez-script language in Legesher — 37 keywords,
+    72 builtins, 66 exceptions across Python 3.10–3.14 (CORE-690)
+  - **Sinhala (සිංහල)**: First South Asian script language — 37 keywords,
+    72 builtins, 66 exceptions across Python 3.10–3.14 (CORE-1128)
+  - **Urdu (اردو)**: Third RTL language (joining Arabic and Hebrew) — 37 keywords,
+    72 builtins, 66 exceptions across Python 3.10–3.14 (CORE-1071)
+  - Zero translation collisions across all 29 languages
+  - 540 new translations added to the translation database
+- **legesher-i18n**: Generic HuggingFace translation engine with pluggable model profiles,
+  enabling new AI translation models to be added with ~10 lines of config (CORE-686)
+  - Local inference engine with lazy model loading and device auto-detection
+    (CUDA/MPS/CPU)
+  - HF Inference API engine with rate limiting for cloud-based translation
+  - 4 pre-registered Tiny Aya (3.35B) profiles for underserved languages
+  - New CLI flags: `--models hf|hf-api|tiny-aya|tiny-aya-api`,
+    `--hf-profile <name>`, `--tiny-aya-variant earth|fire|water|global`
+- **docs**: Vercel deployment for docs.legesher.io with Astro adapter (CORE-1194)
 
 ## [0.5.1] - 2026-03-01
 
