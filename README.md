@@ -48,14 +48,15 @@ population who don't speak English as their first language. Developers must lear
 
 **v0.4.x - Pre-Beta Release** (2026-02)
 
-- **Languages:** 26 supported languages (all experimental, awaiting community validation):
-  - Arabic, Chinese, Danish, Dutch, English, Finnish, French, German, Greek, Hebrew, Hindi, Hungarian, Indonesian,
-    Italian, Japanese, Korean, Malay, Norwegian, Polish, Portuguese, Russian, Spanish, Swedish, Thai, Turkish, Vietnamese
+- **Languages:** 29 supported languages (all experimental, awaiting community validation):
+  - Amharic, Arabic, Chinese, Danish, Dutch, English, Finnish, French, German, Greek, Hebrew, Hindi, Hungarian,
+    Indonesian, Italian, Japanese, Korean, Malay, Norwegian, Polish, Portuguese, Russian, Sinhala, Spanish, Swedish,
+    Thai, Turkish, Urdu, Vietnamese
 - **Target:** Python 3.10-3.14
 - **Translation:** Two backends - Token-based (~140μs) and Tree-sitter AST-based (~160μs)
 - **Git:** Clean/smudge filters for multilingual workflows
 - **IDE:** Full LSP server with hover, completion, diagnostics, semantic tokens
-- **VS Code:** Production-ready extension (v0.1.2) with 26 language support
+- **VS Code:** Production-ready extension (v0.1.2) with 29 language support
 - **Tests:** 100+ test files across core, i18n, legesher, and language-server packages
 
 ## Licensing
@@ -146,7 +147,7 @@ The Legesher VS Code extension is available and production-ready (pre-beta):
    - In VS Code: Extensions → `...` menu → "Install from VSIX..."
 
 2. **Features included:**
-   - Language selector with 26 languages
+   - Language selector with 29 languages
    - Translation panel (side-by-side view)
    - Syntax highlighting for translated code
    - Onboarding flow with language selection
@@ -164,7 +165,8 @@ See [libs/vs-code/README.md](libs/vs-code/README.md) for full documentation.
 ### Core Translation Engine
 
 - **37 Python Keywords:** Complete coverage of Python 3.10-3.14 keywords
-- **81 Built-in Functions:** Translated standard library functions
+- **72 Built-in Functions:** Translated standard library functions
+- **66 Exception Classes:** Translated exception hierarchy
 - **Two Translation Backends:** Token-based (simple, stable) and Tree-sitter (AST-based, production-ready)
 - **Lossless Round-Trip:** EN→ES→EN produces byte-identical output
 - **Format Preservation:** Maintains all indentation, blank lines, comments, docstrings
@@ -175,7 +177,7 @@ See [legesher-core](libs/core/README.md) for details.
 
 ### Language Pack System
 
-- **26 Languages:** All major world languages supported (experimental status)
+- **29 Languages:** All major world languages supported (experimental status)
 - **Version-Aware:** Automatically adapts to Python 3.10, 3.11, 3.12, 3.13, 3.14
 - **Pack Inheritance:** Version files inherit from previous versions, minimizing duplication
 - **Translation API:** Optional multi-provider translation (Anthropic, DeepL, Google, LibreTranslate)
@@ -247,10 +249,11 @@ This allows rapid iteration on apps while maintaining foundation stability.
 
 ### Language Packs (Independent)
 
-26 language packs are released independently, allowing each language community to iterate at their own pace:
+29 language packs are released independently, allowing each language community to iterate at their own pace:
 
 - `legesher-i18n-python-{lang}` v0.0.1-0.0.3 - Translations for Python
-- Supported: ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms, nl, no, pl, pt, ru, sv, th, tr, vi, zh
+- Supported: am, ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms, nl, no, pl, pt, ru, si, sv, th,
+  tr, ur, vi, zh
 
 Each pack supports Python 3.10-3.14 with version-aware inheritance. All packs currently have **experimental** status,
 awaiting community validation before being marked as **accepted**.

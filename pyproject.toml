@@ -34,6 +34,7 @@ members = [
 [tool.uv.sources]
 legesher-core = { workspace = true }
 legesher-i18n = { workspace = true }
+legesher-i18n-python-am = { workspace = true }
 legesher-i18n-python-ar = { workspace = true }
 legesher-i18n-python-da = { workspace = true }
 legesher-i18n-python-de = { workspace = true }
@@ -55,9 +56,11 @@ legesher-i18n-python-no = { workspace = true }
 legesher-i18n-python-pl = { workspace = true }
 legesher-i18n-python-pt = { workspace = true }
 legesher-i18n-python-ru = { workspace = true }
+legesher-i18n-python-si = { workspace = true }
 legesher-i18n-python-sv = { workspace = true }
 legesher-i18n-python-th = { workspace = true }
 legesher-i18n-python-tr = { workspace = true }
+legesher-i18n-python-ur = { workspace = true }
 legesher-i18n-python-vi = { workspace = true }
 legesher-i18n-python-zh = { workspace = true }
 legesher = { workspace = true }

@@ -17,6 +17,7 @@ export interface LanguageMetadata {
 }
 
 export type LanguageCode =
+    'am' |
     'ar' |
     'da' |
     'de' |
@@ -38,15 +39,18 @@ export type LanguageCode =
     'pl' |
     'pt' |
     'ru' |
+    'si' |
     'sv' |
     'th' |
     'tr' |
+    'ur' |
     'vi' |
     'zh';
 
 export const CANONICAL_LANGUAGE: LanguageCode = 'en';
 
 export const LANGUAGE_METADATA: Record<LanguageCode, LanguageMetadata> = {
+    'am': { name: 'Amharic', native: 'አማርኛ', iso639_2: 'amh', bcp47: 'am', rtl: false, status: 'experimental' },
     'ar': { name: 'Arabic', native: 'العربية', iso639_2: 'ara', bcp47: 'ar', rtl: true, status: 'experimental' },
     'da': { name: 'Danish', native: 'Dansk', iso639_2: 'dan', bcp47: 'da', rtl: false, status: 'experimental' },
     'de': { name: 'German', native: 'Deutsch', iso639_2: 'deu', bcp47: 'de', rtl: false, status: 'experimental' },
@@ -68,9 +72,11 @@ export const LANGUAGE_METADATA: Record<LanguageCode, LanguageMetadata> = {
     'pl': { name: 'Polish', native: 'Polski', iso639_2: 'pol', bcp47: 'pl', rtl: false, status: 'experimental' },
     'pt': { name: 'Portuguese', native: 'Português', iso639_2: 'por', bcp47: 'pt', rtl: false, status: 'experimental' },
     'ru': { name: 'Russian', native: 'Русский', iso639_2: 'rus', bcp47: 'ru', rtl: false, status: 'experimental' },
+    'si': { name: 'Sinhala', native: 'සිංහල', iso639_2: 'sin', bcp47: 'si', rtl: false, status: 'experimental' },
     'sv': { name: 'Swedish', native: 'Svenska', iso639_2: 'swe', bcp47: 'sv', rtl: false, status: 'experimental' },
     'th': { name: 'Thai', native: 'ไทย', iso639_2: 'tha', bcp47: 'th', rtl: false, status: 'experimental' },
     'tr': { name: 'Turkish', native: 'Türkçe', iso639_2: 'tur', bcp47: 'tr', rtl: false, status: 'experimental' },
+    'ur': { name: 'Urdu', native: 'اردو', iso639_2: 'urd', bcp47: 'ur', rtl: true, status: 'experimental' },
     'vi': { name: 'Vietnamese', native: 'Tiếng Việt', iso639_2: 'vie', bcp47: 'vi', rtl: false, status: 'experimental' },
     'zh': { name: 'Chinese', native: '中文', iso639_2: 'zho', bcp47: 'zh-Hans', rtl: false, status: 'experimental' },
 };

@@ -3,6 +3,14 @@
   "_comment": "This is the single source of truth for language metadata. Do not edit generated files directly.",
   "canonical_language": "en",
   "languages": {
+    "am": {
+      "name": "Amharic",
+      "native": "አማርኛ",
+      "iso639_2": "amh",
+      "bcp47": "am",
+      "rtl": false,
+      "status": "experimental"
+    },
     "ar": {
       "name": "Arabic",
       "native": "العربية",
@@ -171,6 +179,14 @@
       "rtl": false,
       "status": "experimental"
     },
+    "si": {
+      "name": "Sinhala",
+      "native": "සිංහල",
+      "iso639_2": "sin",
+      "bcp47": "si",
+      "rtl": false,
+      "status": "experimental"
+    },
     "sv": {
       "name": "Swedish",
       "native": "Svenska",
@@ -193,6 +209,14 @@
       "iso639_2": "tur",
       "bcp47": "tr",
       "rtl": false,
+      "status": "experimental"
+    },
+    "ur": {
+      "name": "Urdu",
+      "native": "اردو",
+      "iso639_2": "urd",
+      "bcp47": "ur",
+      "rtl": true,
       "status": "experimental"
     },
     "vi": {

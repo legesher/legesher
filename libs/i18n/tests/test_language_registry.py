@@ -21,7 +21,6 @@ from legesher_i18n import (
     is_supported_language,
 )
 
-
 # Path to the source JSON file
 LANGUAGES_JSON = Path(__file__).parent.parent / "legesher_i18n" / "languages.json"
 
@@ -120,9 +119,9 @@ class TestGetActiveLanguageCodes:
             )
 
     def test_all_current_languages_are_active(self):
-        """Verify all 26 languages are currently active (all experimental)."""
+        """Verify all 29 languages are currently active (all experimental)."""
         active_codes = get_active_language_codes()
-        assert len(active_codes) == 26
+        assert len(active_codes) == 29
 
 
 class TestGetAvailableLanguageCodes:

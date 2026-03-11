@@ -15,6 +15,7 @@ members = [
     "legesher-core",
     "legesher-home",
     "legesher-i18n",
+    "legesher-i18n-python-am",
     "legesher-i18n-python-ar",
     "legesher-i18n-python-da",
     "legesher-i18n-python-de",
@@ -36,9 +37,11 @@ members = [
     "legesher-i18n-python-pl",
     "legesher-i18n-python-pt",
     "legesher-i18n-python-ru",
+    "legesher-i18n-python-si",
     "legesher-i18n-python-sv",
     "legesher-i18n-python-th",
     "legesher-i18n-python-tr",
+    "legesher-i18n-python-ur",
     "legesher-i18n-python-vi",
     "legesher-i18n-python-zh",
     "legesher-language-server",
@@ -1485,6 +1488,17 @@ dev = [
 ]
 
 [[package]]
+name = "legesher-i18n-python-am"
+version = "0.0.1"
+source = { editable = "libs/i18n/language-packs/python/am" }
+dependencies = [
+    { name = "legesher-i18n" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "legesher-i18n", specifier = ">=0.2.0,<1.0.0" }]
+
+[[package]]
 name = "legesher-i18n-python-ar"
 version = "0.0.3"
 source = { editable = "libs/i18n/language-packs/python/ar" }
@@ -1716,6 +1730,17 @@ dependencies = [
 requires-dist = [{ name = "legesher-i18n", specifier = ">=0.2.0,<1.0.0" }]
 
 [[package]]
+name = "legesher-i18n-python-si"
+version = "0.0.1"
+source = { editable = "libs/i18n/language-packs/python/si" }
+dependencies = [
+    { name = "legesher-i18n" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "legesher-i18n", specifier = ">=0.2.0,<1.0.0" }]
+
+[[package]]
 name = "legesher-i18n-python-sv"
 version = "0.0.3"
 source = { editable = "libs/i18n/language-packs/python/sv" }
@@ -1741,6 +1766,17 @@ requires-dist = [{ name = "legesher-i18n", specifier = ">=0.2.0,<1.0.0" }]
 name = "legesher-i18n-python-tr"
 version = "0.0.3"
 source = { editable = "libs/i18n/language-packs/python/tr" }
+dependencies = [
+    { name = "legesher-i18n" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "legesher-i18n", specifier = ">=0.2.0,<1.0.0" }]
+
+[[package]]
+name = "legesher-i18n-python-ur"
+version = "0.0.1"
+source = { editable = "libs/i18n/language-packs/python/ur" }
 dependencies = [
     { name = "legesher-i18n" },
 ]

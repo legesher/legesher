@@ -11,6 +11,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **3 New Language Packs** (CORE-687)
+  - Amharic (am) (CORE-690)
+  - Sinhala (si) (CORE-1128)
+  - Urdu (ur, RTL) (CORE-1071)
+  - All packs: 37 keywords, 72 builtins, 66 exceptions, Python 3.10–3.14
+  - Total supported languages: 26 → 29
 - **Generic HuggingFace Translation Engine** (CORE-686)
   - `HFModelProfile` dataclass + registry for pluggable model configuration —
     adding a new HF model requires only ~10 lines of profile config

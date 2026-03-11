@@ -1,6 +1,6 @@
 # legesher-i18n
 
-Industrial-strength internationalization infrastructure with 26 language packs, version-aware inheritance,
+Industrial-strength internationalization infrastructure with 29 language packs, version-aware inheritance,
 and multi-provider translation API for multilingual programming.
 
 **Status**: Production-Ready (Pre-Beta) | **Version**: 0.2.x | **Python**: 3.10-3.14
@@ -10,8 +10,8 @@ and multi-provider translation API for multilingual programming.
 The `legesher-i18n` package provides the core internationalization infrastructure for Legesher,
 enabling developers to code in their native language. It includes:
 
-- **26 Complete Language Packs**: Support for ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms, nl,
-  no, pl, pt, ru, sv, th, tr, vi, zh
+- **29 Complete Language Packs**: Support for am, ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it, ja, ko, ms,
+  nl, no, pl, pt, ru, si, sv, th, tr, ur, vi, zh
 - **Version-Aware Language Packs**: Automatic adaptation to Python 3.10-3.14 with inheritance
 - **Auto-Detection**: Detects Python version from `pyproject.toml`, `.python-version`, or runtime
 - **Pack Inheritance**: Child packs inherit from parents, defining only what's new
@@ -68,35 +68,37 @@ Language packs automatically adapt to different Python versions:
 
 ### Supported Languages
 
-**26 complete language packs** - All support Python 3.10-3.14 with version inheritance:
+**29 complete language packs** - All support Python 3.10-3.14 with version inheritance:
 
-- **Arabic (ar)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Danish (da)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **German (de)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Greek (el)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **English (en)**: 37 keywords, 81 builtins - Canonical reference implementation
-- **Spanish (es)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Finnish (fi)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **French (fr)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Hebrew (he)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Hindi (hi)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Hungarian (hu)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Indonesian (id)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Italian (it)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Japanese (ja)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Korean (ko)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Malay (ms)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Dutch (nl)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Norwegian (no)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Polish (pl)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Portuguese (pt)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Russian (ru)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Swedish (sv)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Thai (th)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Turkish (tr)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Vietnamese (vi)**: 37 keywords, 81 builtins - Aya AI Model translations
-- **Chinese Simplified (zh)**: 37 keywords, 81 builtins - Aya AI Model translations
-- And more...
+- **Amharic (am)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
+- **Arabic (ar)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Danish (da)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **German (de)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Greek (el)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **English (en)**: 37 keywords, 72 builtins, 66 exceptions - Canonical reference
+- **Spanish (es)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Finnish (fi)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **French (fr)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Hebrew (he)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Hindi (hi)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Hungarian (hu)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Indonesian (id)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Italian (it)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Japanese (ja)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Korean (ko)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Malay (ms)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Dutch (nl)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Norwegian (no)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Polish (pl)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Portuguese (pt)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Russian (ru)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Sinhala (si)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
+- **Swedish (sv)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Thai (th)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Turkish (tr)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Urdu (ur)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
+- **Vietnamese (vi)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Chinese Simplified (zh)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
 
 Each language pack is independently versioned at `libs/i18n/language-packs/python/{lang}/`
 

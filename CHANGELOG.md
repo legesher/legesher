@@ -9,6 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **legesher-i18n**: Add 3 new language packs — Amharic (am), Sinhala (si),
+  Urdu (ur) — bringing total from 26 → 29 supported languages (CORE-687)
+  - Amharic (am): 37 keywords, 72 builtins, 66 exceptions (CORE-690)
+  - Sinhala (si): 37 keywords, 72 builtins, 66 exceptions (CORE-1128)
+  - Urdu (ur, RTL): 37 keywords, 72 builtins, 66 exceptions (CORE-1071)
+  - All packs support Python 3.10–3.14 with version inheritance
+
 ## [0.5.1] - 2026-03-01
 
 > Includes changes from individually-released packages since v0.5.0:
@@ -225,9 +234,9 @@ See individual package changelogs for full details:
 
 ### Language Support
 
-- **26 Languages**: ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it,
-  ja, ko, ms, nl, no, pl, pt, ru, sv, th, tr, vi, zh
-- **RTL Support**: Full right-to-left text handling for Arabic and Hebrew
+- **29 Languages**: am, ar, da, de, el, en, es, fi, fr, he, hi, hu, id, it,
+  ja, ko, ms, nl, no, pl, pt, ru, si, sv, th, tr, ur, vi, zh
+- **RTL Support**: Full right-to-left text handling for Arabic, Hebrew, and Urdu
 - **Version-Aware**: Python 3.10, 3.11, 3.12, 3.13, 3.14 with pack inheritance
 
 ### Translation Engine

@@ -8,12 +8,12 @@ This file provides guidance for working with the `legesher-i18n` package.
 **Status**: Production-Ready (Pre-Beta)
 **Python**: >=3.10,<4.0
 
-Internationalization infrastructure with 26 language packs, version-aware inheritance,
+Internationalization infrastructure with 29 language packs, version-aware inheritance,
 and multi-provider translation API.
 
 ## Key Capabilities
 
-- **26 Language Packs**: All in experimental status (see `languages.json`)
+- **29 Language Packs**: All in experimental status (see `languages.json`)
 - **Version-Aware Loading**: Automatic Python 3.10-3.14 adaptation
 - **Pack Inheritance**: Child packs inherit from parents, reducing duplication
 - **Translation API**: Multi-provider support (Anthropic, Google, DeepL, LibreTranslate)
@@ -38,7 +38,7 @@ libs/i18n/
 │       └── dashboard.py      # Usage dashboard
 ├── language-packs/
 │   └── python/
-│       ├── ar/, da/, de/, ...  # 26 language packs
+│       ├── am/, ar/, da/, de/, ...  # 29 language packs
 │       └── version-index.yml   # Python version inheritance
 └── tests/
 ```
@@ -173,7 +173,7 @@ result = await coordinator.translate("Hello", "en", "es")
 
 ### Language Status
 
-All 26 languages are currently **experimental**:
+All 29 languages are currently **experimental**:
 
 - Translations work but await community validation
 - Status defined in `languages.json`
@@ -206,7 +206,7 @@ Extensible across programming languages. Python's `def` and a future TypeScript 
 
 #### `languages` — Language registry
 
-38 languages total: 26 with YAML packs, 12 legacy community languages.
+40 languages total: 29 with YAML packs, 11 legacy community languages.
 
 | Column                                                    | Type          | Notes                               |
 | --------------------------------------------------------- | ------------- | ----------------------------------- |

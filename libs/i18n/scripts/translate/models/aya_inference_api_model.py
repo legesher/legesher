@@ -307,6 +307,8 @@ class AyaInferenceAPIModel(TranslationModel):
         # Language code to full name mapping
         # Supports both ISO 639-1 (2-letter) and ISO 639-2 (3-letter) codes
         language_names = {
+            "am": "Amharic",
+            "amh": "Amharic",
             "ar": "Arabic",
             "bn": "Bengali",
             "ben": "Bengali",
@@ -330,6 +332,8 @@ class AyaInferenceAPIModel(TranslationModel):
             "pl": "Polish",
             "pt": "Portuguese",
             "ru": "Russian",
+            "si": "Sinhala",
+            "sin": "Sinhala",
             "sv": "Swedish",
             "sw": "Swahili",
             "swa": "Swahili",
