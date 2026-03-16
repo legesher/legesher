@@ -4,7 +4,8 @@
 ![Script](https://img.shields.io/badge/Script-Hangul-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-> Write Python code in Korean. This guide shows the Korean keywords to use for Legesher to understand your code.
+> Write Python code in Korean. This guide shows the Korean keywords
+> to use for Legesher to understand your code.
 
 ## Language Details
 

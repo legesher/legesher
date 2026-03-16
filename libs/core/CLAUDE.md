@@ -15,9 +15,9 @@ between natural languages.
 
 - **Two Translator Backends**: TokenTranslator (~140μs) and TreeSitterTranslator (~160μs)
 - **Python Keywords**: Full support for Python 3.10 keyword set (37 keywords)
-- **26 Languages**: Via language pack system
+- **51 Languages**: Via language pack system
 - **Perfect Round-Trip**: EN→ES→EN translation is byte-identical
-- **RTL Support**: Arabic, Hebrew with UTF-8 encoding
+- **RTL Support**: Arabic, Hebrew, Persian, Urdu with UTF-8 encoding
 - **Git Integration**: Clean/smudge filters with metadata tracking
 - **Cultural Comments**: MLCP protocol support
 

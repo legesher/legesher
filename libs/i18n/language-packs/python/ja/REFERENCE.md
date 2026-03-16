@@ -4,7 +4,8 @@
 ![Script](https://img.shields.io/badge/Script-Japanese%20%28Kanji%2C%20Hiragana%2C%20Katakana%29-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-> Write Python code in Japanese. This guide shows the Japanese keywords to use for Legesher to understand your code.
+> Write Python code in Japanese. This guide shows the Japanese keywords
+> to use for Legesher to understand your code.
 
 ## Language Details
 

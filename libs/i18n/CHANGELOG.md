@@ -9,6 +9,33 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **22 new language packs** — expanding Legesher from 29 → 51 supported
+  languages (CORE-675, CORE-707)
+  - **Bengali (বাংলা)** (CORE-718), **Bosnian (Bosanski)** (CORE-720),
+    **Catalan (Català)** (CORE-735), **Croatian (Hrvatski)** (CORE-742),
+    **Czech (Čeština)** (CORE-744), **Galician (Galego)** (CORE-756),
+    **Gujarati (ગુજરાતી)** (CORE-764), **Irish (Gaeilge)** (CORE-769),
+    **Kannada (ಕನ್ನಡ)** (CORE-795), **Latvian (Latviešu)** (CORE-807),
+    **Macedonian (Македонски)** (CORE-808)
+  - **Malayalam (മലയാളം)** (CORE-837), **Mongolian (Монгол)** (CORE-848),
+    **Burmese (မြန်မာ)** (CORE-853), **Persian (فارسی)** (CORE-860),
+    **Romanian (Română)** (CORE-879), **Scottish Gaelic (Gàidhlig)** (CORE-905),
+    **Serbian (Српски)** (CORE-906), **Sundanese (Basa Sunda)** (CORE-915),
+    **Telugu (తెలుగు)** (CORE-954), **Uzbek (O'zbek)** (CORE-961),
+    **Welsh (Cymraeg)** (CORE-962)
+  - Each pack includes complete Python 3.10–3.14 translations (37 keywords,
+    72 builtins, 66 exceptions) with version inheritance
+  - 3,850 new translations (175 per language × 22 languages)
+  - Zero collisions across all 51 languages
+  - Translation sources: Aya-101 AI Model (21 packs), Claude AI (Bosnian)
+  - Persian (fa) is the 4th RTL language (joining Arabic, Hebrew, Urdu)
+  - 3 Celtic languages added: Irish, Scottish Gaelic, Welsh
+- **Language registry**: 22 new entries in `languages.json` with full metadata
+  (native names, ISO 639-2 codes, script/family/numeral system)
+- **REFERENCE.md**: Generated translation reference docs for all 22 new packs
+
 ## [0.6.0] - 2026-03-11
 
 ### Added

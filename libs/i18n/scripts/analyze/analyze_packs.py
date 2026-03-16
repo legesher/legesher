@@ -2,9 +2,9 @@
 """
 Language Pack Analysis Script
 
-Analyzes all 26 Python language packs to detect:
+Analyzes all 51 Python language packs to detect:
 - Multi-word translations (spaces)
-- Punctuation in translations (/, -, :, .)
+- Punctuation in translations (/, -, :, ., ,, ;)
 - Duplicate translations (same value for different terms)
 - Untranslated/placeholder terms
 - Capitalization issues (True/False/None)
@@ -19,32 +19,57 @@ import json
 import unicodedata
 
 
-# Language codes for all 26 packs
+# Language codes for all 51 packs
 LANGUAGES = [
+    "am",
     "ar",
+    "bn",
+    "bs",
+    "ca",
+    "cs",
+    "cy",
     "da",
     "de",
     "el",
     "en",
     "es",
+    "fa",
     "fi",
     "fr",
+    "ga",
+    "gd",
+    "gl",
+    "gu",
     "he",
     "hi",
+    "hr",
     "hu",
     "id",
     "it",
     "ja",
+    "kn",
     "ko",
+    "lv",
+    "mk",
+    "ml",
+    "mn",
     "ms",
+    "my",
     "nl",
     "no",
     "pl",
     "pt",
+    "ro",
     "ru",
+    "si",
+    "sr",
+    "su",
     "sv",
+    "te",
     "th",
     "tr",
+    "ur",
+    "uz",
     "vi",
     "zh",
 ]
@@ -59,12 +84,23 @@ PLACEHOLDER_PATTERNS = [
 
 # Scripts without uppercase/lowercase distinction
 NON_CASE_SCRIPTS = {
+    "am": "Amharic/Ge'ez",
     "ar": "Arabic",
+    "bn": "Bengali",
+    "fa": "Persian/Arabic",
+    "gu": "Gujarati",
     "he": "Hebrew",
     "hi": "Hindi/Devanagari",
     "ja": "Japanese",
+    "kn": "Kannada",
     "ko": "Korean",
+    "ml": "Malayalam",
+    "mn": "Mongolian/Cyrillic",
+    "my": "Burmese",
+    "si": "Sinhala",
+    "te": "Telugu",
     "th": "Thai",
+    "ur": "Urdu/Arabic",
     "zh": "Chinese",
 }
 
@@ -437,7 +473,7 @@ def get_language_name(code):
 
 def main():
     """Main analysis function."""
-    print("🔍 Analyzing 26 Python language packs...\n")
+    print("🔍 Analyzing 51 Python language packs...\n")
 
     all_issues = {}
 

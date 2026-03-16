@@ -5,7 +5,8 @@
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 ![RTL](https://img.shields.io/badge/Direction-RTL-orange?style=for-the-badge)
 
-> Write Python code in Urdu. This guide shows the Urdu keywords to use for Legesher to understand your code.
+> Write Python code in Urdu. This guide shows the Urdu keywords
+> to use for Legesher to understand your code.
 >
 > **Note:** This is a right-to-left (RTL) language. RTL support is currently a work in progress — we welcome your feedback!
 

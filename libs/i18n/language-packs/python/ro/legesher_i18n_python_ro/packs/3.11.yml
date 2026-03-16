@@ -1,0 +1,21 @@
+language: ro
+target: python
+version: '3.11'
+extends: 3.10.yml
+keywords:
+  except*: exceptează*
+exceptions:
+  baseexceptiongroup: grup_excepții_bază
+  encodingwarning: avertisment_codificare
+  exceptiongroup: grup_excepții
+metadata:
+  python_version_min: '3.11'
+  python_version_max: '3.13'
+  compatibility_tested:
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  last_updated: '2026-03-15'
+  community_reviewed: false
+  author: Legesher Team
+  license: MIT

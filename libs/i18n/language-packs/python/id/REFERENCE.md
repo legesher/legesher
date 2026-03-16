@@ -4,7 +4,8 @@
 ![Script](https://img.shields.io/badge/Script-Latin-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-> Write Python code in Indonesian. This guide shows the Indonesian keywords to use for Legesher to understand your code.
+> Write Python code in Indonesian. This guide shows the Indonesian keywords
+> to use for Legesher to understand your code.
 
 ## Language Details
 

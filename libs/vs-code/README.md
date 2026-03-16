@@ -2,13 +2,13 @@
 
 Write Python code in your native language with real-time translation and IDE support.
 
-**Version**: 0.1.2 | **Languages**: 26 | **VS Code**: 1.85.0+ | **Status**: Preview
+**Version**: 0.1.2 | **Languages**: 51 | **VS Code**: 1.85.0+ | **Status**: Preview
 
 ## What This Extension Does
 
 The Legesher VS Code extension provides the UI and editor integration for coding Python in your native language:
 
-- **Language Selector**: Choose from 26 supported languages via status bar or command palette
+- **Language Selector**: Choose from 51 supported languages via status bar or command palette
 - **Translation Panel**: Side-by-side view of your code in English and your selected language
 - **Onboarding Flow**: First-time setup wizard for language selection and preferences
 - **Status Indicators**: Visual feedback for connection status and current language

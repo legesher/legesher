@@ -19,6 +19,46 @@
       "rtl": true,
       "status": "experimental"
     },
+    "bn": {
+      "name": "Bengali",
+      "native": "বাংলা",
+      "iso639_2": "ben",
+      "bcp47": "bn",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "bs": {
+      "name": "Bosnian",
+      "native": "Bosanski",
+      "iso639_2": "bos",
+      "bcp47": "bs",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "ca": {
+      "name": "Catalan",
+      "native": "Català",
+      "iso639_2": "cat",
+      "bcp47": "ca",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "cs": {
+      "name": "Czech",
+      "native": "Čeština",
+      "iso639_2": "ces",
+      "bcp47": "cs",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "cy": {
+      "name": "Welsh",
+      "native": "Cymraeg",
+      "iso639_2": "cym",
+      "bcp47": "cy",
+      "rtl": false,
+      "status": "experimental"
+    },
     "da": {
       "name": "Danish",
       "native": "Dansk",
@@ -59,6 +99,14 @@
       "rtl": false,
       "status": "experimental"
     },
+    "fa": {
+      "name": "Persian",
+      "native": "فارسی",
+      "iso639_2": "fas",
+      "bcp47": "fa",
+      "rtl": true,
+      "status": "experimental"
+    },
     "fi": {
       "name": "Finnish",
       "native": "Suomi",
@@ -75,6 +123,38 @@
       "rtl": false,
       "status": "experimental"
     },
+    "ga": {
+      "name": "Irish",
+      "native": "Gaeilge",
+      "iso639_2": "gle",
+      "bcp47": "ga",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "gd": {
+      "name": "Scottish Gaelic",
+      "native": "Gàidhlig",
+      "iso639_2": "gla",
+      "bcp47": "gd",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "gl": {
+      "name": "Galician",
+      "native": "Galego",
+      "iso639_2": "glg",
+      "bcp47": "gl",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "gu": {
+      "name": "Gujarati",
+      "native": "ગુજરાતી",
+      "iso639_2": "guj",
+      "bcp47": "gu",
+      "rtl": false,
+      "status": "experimental"
+    },
     "he": {
       "name": "Hebrew",
       "native": "עברית",
@@ -88,6 +168,14 @@
       "native": "हिन्दी",
       "iso639_2": "hin",
       "bcp47": "hi",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "hr": {
+      "name": "Croatian",
+      "native": "Hrvatski",
+      "iso639_2": "hrv",
+      "bcp47": "hr",
       "rtl": false,
       "status": "experimental"
     },
@@ -123,6 +211,14 @@
       "rtl": false,
       "status": "experimental"
     },
+    "kn": {
+      "name": "Kannada",
+      "native": "ಕನ್ನಡ",
+      "iso639_2": "kan",
+      "bcp47": "kn",
+      "rtl": false,
+      "status": "experimental"
+    },
     "ko": {
       "name": "Korean",
       "native": "한국어",
@@ -131,11 +227,51 @@
       "rtl": false,
       "status": "experimental"
     },
+    "lv": {
+      "name": "Latvian",
+      "native": "Latviešu",
+      "iso639_2": "lav",
+      "bcp47": "lv",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "mk": {
+      "name": "Macedonian",
+      "native": "Македонски",
+      "iso639_2": "mkd",
+      "bcp47": "mk",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "ml": {
+      "name": "Malayalam",
+      "native": "മലയാളം",
+      "iso639_2": "mal",
+      "bcp47": "ml",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "mn": {
+      "name": "Mongolian",
+      "native": "Монгол",
+      "iso639_2": "mon",
+      "bcp47": "mn",
+      "rtl": false,
+      "status": "experimental"
+    },
     "ms": {
       "name": "Malay",
       "native": "Bahasa Melayu",
       "iso639_2": "msa",
       "bcp47": "ms",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "my": {
+      "name": "Burmese",
+      "native": "မြန်မာ",
+      "iso639_2": "mya",
+      "bcp47": "my",
       "rtl": false,
       "status": "experimental"
     },
@@ -171,6 +307,14 @@
       "rtl": false,
       "status": "experimental"
     },
+    "ro": {
+      "name": "Romanian",
+      "native": "Română",
+      "iso639_2": "ron",
+      "bcp47": "ro",
+      "rtl": false,
+      "status": "experimental"
+    },
     "ru": {
       "name": "Russian",
       "native": "Русский",
@@ -187,11 +331,35 @@
       "rtl": false,
       "status": "experimental"
     },
+    "sr": {
+      "name": "Serbian",
+      "native": "Српски",
+      "iso639_2": "srp",
+      "bcp47": "sr",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "su": {
+      "name": "Sundanese",
+      "native": "Basa Sunda",
+      "iso639_2": "sun",
+      "bcp47": "su",
+      "rtl": false,
+      "status": "experimental"
+    },
     "sv": {
       "name": "Swedish",
       "native": "Svenska",
       "iso639_2": "swe",
       "bcp47": "sv",
+      "rtl": false,
+      "status": "experimental"
+    },
+    "te": {
+      "name": "Telugu",
+      "native": "తెలుగు",
+      "iso639_2": "tel",
+      "bcp47": "te",
       "rtl": false,
       "status": "experimental"
     },
@@ -217,6 +385,14 @@
       "iso639_2": "urd",
       "bcp47": "ur",
       "rtl": true,
+      "status": "experimental"
+    },
+    "uz": {
+      "name": "Uzbek",
+      "native": "O'zbek",
+      "iso639_2": "uzb",
+      "bcp47": "uz",
+      "rtl": false,
       "status": "experimental"
     },
     "vi": {

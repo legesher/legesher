@@ -1,0 +1,24 @@
+# Burmese Language Pack for Python 3.11+
+# Extends 3.10 pack and adds except* for exception groups
+
+language: my
+target: python
+version: '3.11'
+extends: 3.10.yml
+keywords:
+  except*: ခြွင်းချက်*
+exceptions:
+  baseexceptiongroup: အခြေခံခြွင်းချက်အုပ်စု
+  encodingwarning: ကုဒ်ပြောင်းသတိပေး
+  exceptiongroup: ခြွင်းချက်အုပ်စု
+metadata:
+  python_version_min: '3.11'
+  python_version_max: '3.13'
+  compatibility_tested:
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  last_updated: '2026-03-15'
+  community_reviewed: false
+  author: Legesher Team
+  license: MIT

@@ -1,0 +1,18 @@
+# Serbian Language Pack for Python 3.13+
+# Extends 3.12 pack (no new keywords in 3.13)
+
+language: sr
+target: python
+version: '3.13'
+extends: 3.12.yml
+keywords: {}
+exceptions: {}
+metadata:
+  python_version_min: '3.13'
+  python_version_max: '3.13'
+  compatibility_tested:
+  - '3.13'
+  last_updated: '2026-03-15'
+  community_reviewed: false
+  author: Legesher Team
+  license: MIT

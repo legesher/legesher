@@ -9,18 +9,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Last Updated**: 2026-03-01
 
 This is an active monorepo with **production-ready implementations** across all major packages. The project has
-evolved significantly beyond initial planning and now features comprehensive test coverage, 29 supported language packs
+evolved significantly beyond initial planning and now features comprehensive test coverage, 51 supported language packs
 (all in experimental status), complete LSP implementation, and a fully functional VS Code extension.
 
 **Version Strategy:**
 
-- **v0.5.x** (current): Pre-beta with 29 experimental language packs awaiting community validation
+- **v0.5.x** (current): Pre-beta with 51 experimental language packs awaiting community validation
 - **v1.0.0**: Major release after community validation with accepted language packs
 - Language packs: **experimental** (current, works but unvalidated) → **accepted** (community validated)
 
 **Language Status** (source of truth: `libs/i18n/legesher_i18n/languages.json`):
 
-- **29 supported languages** - All currently in experimental status
+- **51 supported languages** - All currently in experimental status
 - Experimental = translations work but await community validation
 - Accepted = community-validated translations (future milestone)
 
@@ -47,8 +47,9 @@ Zed and JetBrains PyCharm etc.
   - `legesher/`: Main package with primary API and functionality
   - `i18n/`: Internationalization infrastructure AND language pack packages
     - `legesher_i18n/`: Core infrastructure (pack loading, validation, translation API)
-    - `language-packs/python/`: **29 independently versioned Python language packs** (am, ar, da, de, el, en, es, fi, fr,
-      he, hi, hu, id, it, ja, ko, ms, nl, no, pl, pt, ru, si, sv, th, tr, ur, vi, zh)
+    - `language-packs/python/`: **51 independently versioned Python language packs** (am, ar, bn, bs, ca, cs, cy, da, de,
+      el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it, ja, kn, ko, lv, mk, ml, mn, ms, my, nl, no, pl,
+      pt, ro, ru, si, sr, su, sv, te, th, tr, ur, uz, vi, zh)
     - `language-packs-archive/`: Legacy community translations (see private-working-memory repo)
   - `home/`: Digital home and community platform (`legesher-home`)
   - `vs-code/`: VS Code editor integration for Python language (`legesher-vs-code`)
@@ -67,10 +68,10 @@ Zed and JetBrains PyCharm etc.
 | Package             | Version | Status           | Description                                                     |
 | ------------------- | ------- | ---------------- | --------------------------------------------------------------- |
 | **core**            | 0.5.1   | Production-ready | Token & tree-sitter translators, git filters, cultural comments |
-| **i18n**            | 0.5.1   | Production-ready | 29 language packs (experimental), translation API, caching      |
+| **i18n**            | 0.5.1   | Production-ready | 51 language packs (experimental), translation API, caching      |
 | **legesher**        | 0.5.1   | Production-ready | CLI suite (init, translate, run, git, metadata), runtime hooks  |
 | **language-server** | 0.1.2   | Production-ready | Full LSP with hover, completion, diagnostics, semantic tokens   |
-| **vs-code**         | 0.1.5   | Production-ready | Extension with telemetry/feedback, all 29 languages supported   |
+| **vs-code**         | 0.1.5   | Production-ready | Extension with telemetry/feedback, all 51 languages supported   |
 | **home**            | 0.1.0   | Minimal scaffold | Digital home for community features and project showcase        |
 
 **Language pack versions**: 0.0.1–0.0.3 (see each pack's `pyproject.toml` for exact version)
@@ -260,7 +261,7 @@ See `libs/i18n/CLAUDE.md` for full schema details and query examples.
 | Table                   | Purpose                                                         | Key Constraint                                        |
 | ----------------------- | --------------------------------------------------------------- | ----------------------------------------------------- |
 | `terms`                 | Canonical reserved words (cross-language)                       | `UNIQUE(name, programming_language)`                  |
-| `languages`             | Language registry (40 languages: 29 with YAML packs, 11 legacy) | `code` PK (ISO 639-1)                                 |
+| `languages`             | Language registry (62 languages: 51 with YAML packs, 11 legacy) | `code` PK (ISO 639-1)                                 |
 | `translations`          | All translation suggestions (complete catalog)                  | `UNIQUE(term_id, language_code, source, translation)` |
 | `selected_translations` | Active translation per term+language for YAML packs             | `UNIQUE(term_id, language_code)`                      |
 
@@ -285,39 +286,61 @@ libs/i18n/language-packs/{programming-language}/{natural-language}/
 
 ### Current Language Packs
 
-**29 supported language packs** (all experimental) - Support Python 3.10-3.14 with version inheritance:
+**51 supported language packs** (all experimental) - Support Python 3.10-3.14 with version inheritance:
 
-| Code | Language   | Native Name      | RTL | Status       |
-| ---- | ---------- | ---------------- | --- | ------------ |
-| am   | Amharic    | አማርኛ             | No  | Experimental |
-| ar   | Arabic     | العربية          | Yes | Experimental |
-| da   | Danish     | Dansk            | No  | Experimental |
-| de   | German     | Deutsch          | No  | Experimental |
-| el   | Greek      | Ελληνικά         | No  | Experimental |
-| en   | English    | English          | No  | Experimental |
-| es   | Spanish    | Español          | No  | Experimental |
-| fi   | Finnish    | Suomi            | No  | Experimental |
-| fr   | French     | Français         | No  | Experimental |
-| he   | Hebrew     | עברית            | Yes | Experimental |
-| hi   | Hindi      | हिन्दी           | No  | Experimental |
-| hu   | Hungarian  | Magyar           | No  | Experimental |
-| id   | Indonesian | Bahasa Indonesia | No  | Experimental |
-| it   | Italian    | Italiano         | No  | Experimental |
-| ja   | Japanese   | 日本語           | No  | Experimental |
-| ko   | Korean     | 한국어           | No  | Experimental |
-| ms   | Malay      | Bahasa Melayu    | No  | Experimental |
-| nl   | Dutch      | Nederlands       | No  | Experimental |
-| no   | Norwegian  | Norsk            | No  | Experimental |
-| pl   | Polish     | Polski           | No  | Experimental |
-| pt   | Portuguese | Português        | No  | Experimental |
-| ru   | Russian    | Русский          | No  | Experimental |
-| si   | Sinhala    | සිංහල            | No  | Experimental |
-| sv   | Swedish    | Svenska          | No  | Experimental |
-| th   | Thai       | ไทย              | No  | Experimental |
-| tr   | Turkish    | Türkçe           | No  | Experimental |
-| ur   | Urdu       | اردو             | Yes | Experimental |
-| vi   | Vietnamese | Tiếng Việt       | No  | Experimental |
-| zh   | Chinese    | 中文             | No  | Experimental |
+| Code | Language         | Native Name      | RTL | Status       |
+| ---- | ---------------- | ---------------- | --- | ------------ |
+| am   | Amharic          | አማርኛ             | No  | Experimental |
+| ar   | Arabic           | العربية          | Yes | Experimental |
+| bn   | Bengali          | বাংলা            | No  | Experimental |
+| bs   | Bosnian          | Bosanski         | No  | Experimental |
+| ca   | Catalan          | Català           | No  | Experimental |
+| cs   | Czech            | Čeština          | No  | Experimental |
+| cy   | Welsh            | Cymraeg          | No  | Experimental |
+| da   | Danish           | Dansk            | No  | Experimental |
+| de   | German           | Deutsch          | No  | Experimental |
+| el   | Greek            | Ελληνικά         | No  | Experimental |
+| en   | English          | English          | No  | Experimental |
+| es   | Spanish          | Español          | No  | Experimental |
+| fa   | Persian          | فارسی            | Yes | Experimental |
+| fi   | Finnish          | Suomi            | No  | Experimental |
+| fr   | French           | Français         | No  | Experimental |
+| ga   | Irish            | Gaeilge          | No  | Experimental |
+| gd   | Scottish Gaelic  | Gàidhlig         | No  | Experimental |
+| gl   | Galician         | Galego           | No  | Experimental |
+| gu   | Gujarati         | ગુજરાતી          | No  | Experimental |
+| he   | Hebrew           | עברית            | Yes | Experimental |
+| hi   | Hindi            | हिन्दी           | No  | Experimental |
+| hr   | Croatian         | Hrvatski         | No  | Experimental |
+| hu   | Hungarian        | Magyar           | No  | Experimental |
+| id   | Indonesian       | Bahasa Indonesia | No  | Experimental |
+| it   | Italian          | Italiano         | No  | Experimental |
+| ja   | Japanese         | 日本語           | No  | Experimental |
+| kn   | Kannada          | ಕನ್ನಡ            | No  | Experimental |
+| ko   | Korean           | 한국어           | No  | Experimental |
+| lv   | Latvian          | Latviešu         | No  | Experimental |
+| mk   | Macedonian       | Македонски       | No  | Experimental |
+| ml   | Malayalam        | മലയാളം           | No  | Experimental |
+| mn   | Mongolian        | Монгол           | No  | Experimental |
+| ms   | Malay            | Bahasa Melayu    | No  | Experimental |
+| my   | Burmese          | မြန်မာ           | No  | Experimental |
+| nl   | Dutch            | Nederlands       | No  | Experimental |
+| no   | Norwegian        | Norsk            | No  | Experimental |
+| pl   | Polish           | Polski           | No  | Experimental |
+| pt   | Portuguese       | Português        | No  | Experimental |
+| ro   | Romanian         | Română           | No  | Experimental |
+| ru   | Russian          | Русский          | No  | Experimental |
+| si   | Sinhala          | සිංහල            | No  | Experimental |
+| sr   | Serbian          | Српски           | No  | Experimental |
+| su   | Sundanese        | Basa Sunda       | No  | Experimental |
+| sv   | Swedish          | Svenska          | No  | Experimental |
+| te   | Telugu           | తెలుగు           | No  | Experimental |
+| th   | Thai             | ไทย              | No  | Experimental |
+| tr   | Turkish          | Türkçe           | No  | Experimental |
+| ur   | Urdu             | اردو             | Yes | Experimental |
+| uz   | Uzbek            | O'zbek           | No  | Experimental |
+| vi   | Vietnamese       | Tiếng Việt       | No  | Experimental |
+| zh   | Chinese          | 中文             | No  | Experimental |
 
 All packs have 37 keywords, 72 builtins, and 66 exceptions (at the 3.10 base).
 Translations generated via Aya AI Model (except English reference).
@@ -485,7 +508,7 @@ When bumping package versions or creating a release, follow these steps:
 
 - **v0.5.x** (current - Pre-Beta): Feature-complete with experimental language packs:
   - Two translator backends (token & tree-sitter)
-  - 29 language packs with version inheritance (all experimental)
+  - 51 language packs with version inheritance (all experimental)
   - Complete CLI suite (init, translate, run, git, metadata)
   - Full LSP server with 4 providers (pygls 2.0)
   - VS Code extension with telemetry/feedback
@@ -598,7 +621,7 @@ Architectural rationale and detailed design decisions will be documented as the 
 ### Project Context
 
 - This monorepo is **production-ready (pre-beta)** with feature-complete packages
-- 29 language packs available (all experimental, awaiting community validation)
+- 51 language packs available (all experimental, awaiting community validation)
 - Implementation follows the tier system (Tier 1 → Tier 2 → Tier 3 → Tier 4)
 - Issues are tracked in Linear workspace with package and phase labels
 - See package-specific CLAUDE.md files in `libs/*/CLAUDE.md` for detailed guidance

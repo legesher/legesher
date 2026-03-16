@@ -4,7 +4,8 @@
 ![Script](https://img.shields.io/badge/Script-Simplified%20Chinese%20%28Han%29-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-> Write Python code in Chinese. This guide shows the Chinese keywords to use for Legesher to understand your code.
+> Write Python code in Chinese. This guide shows the Chinese keywords
+> to use for Legesher to understand your code.
 
 ## Language Details
 

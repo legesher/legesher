@@ -83,12 +83,12 @@ class TestLanguageHelpers:
     """Test language metadata loading and help text generation."""
 
     def test_load_languages_metadata_returns_all_languages(self):
-        """Verify _load_languages_metadata returns all 29 supported languages."""
+        """Verify _load_languages_metadata returns all 51 supported languages."""
         from legesher.cli.translate import _load_languages_metadata
 
         langs = _load_languages_metadata()
         assert isinstance(langs, dict)
-        assert len(langs) == 29
+        assert len(langs) == 51
         # Spot-check a few languages
         assert "en" in langs
         assert "es" in langs
@@ -111,12 +111,12 @@ class TestLanguageHelpers:
             assert result == {}
 
     def test_build_supported_languages_text_contains_all_languages(self):
-        """Verify help text lists all 29 languages."""
+        """Verify help text lists all 51 languages."""
         from legesher.cli.translate import _build_supported_languages_text
 
         text = _build_supported_languages_text()
         lines = [line.strip() for line in text.strip().splitlines() if line.strip()]
-        assert len(lines) == 29
+        assert len(lines) == 51
         # Check alphabetical order
         codes = [line.split()[0] for line in lines]
         assert codes == sorted(codes)
@@ -153,7 +153,7 @@ class TestLanguageHelpers:
             mock_translator.list_available_languages.side_effect = AttributeError
             result = _get_available_languages()
             assert isinstance(result, list)
-            assert len(result) == 29
+            assert len(result) == 51
             assert "en" in result
             assert "ar" in result
 

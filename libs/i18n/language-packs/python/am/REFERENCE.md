@@ -4,7 +4,8 @@
 ![Script](https://img.shields.io/badge/Script-Ge'ez-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-> Write Python code in Amharic. This guide shows the Amharic keywords to use for Legesher to understand your code.
+> Write Python code in Amharic. This guide shows the Amharic keywords
+> to use for Legesher to understand your code.
 
 ## Language Details
 

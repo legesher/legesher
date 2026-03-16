@@ -47,17 +47,22 @@ Open a Python file and start typing! Legesher will:
 
 ## Supported Languages
 
-Legesher currently supports Python 3.10+ with translations in **26 languages**:
+Legesher currently supports Python 3.10+ with translations in **51 languages**, including:
 
-- **Arabic** (العربية) · **Chinese** (中文) · **Danish** (Dansk)
-- **Dutch** (Nederlands) · **English** (English) · **Finnish** (Suomi)
-- **French** (Français) · **German** (Deutsch) · **Greek** (Ελληνικά)
-- **Hebrew** (עברית) · **Hindi** (हिन्दी) · **Hungarian** (Magyar)
-- **Indonesian** (Bahasa Indonesia) · **Italian** (Italiano) · **Japanese** (日本語)
-- **Korean** (한국어) · **Malay** (Bahasa Melayu) · **Norwegian** (Norsk)
-- **Polish** (Polski) · **Portuguese** (Português) · **Russian** (Русский)
-- **Spanish** (Español) · **Swedish** (Svenska) · **Thai** (ไทย)
-- **Turkish** (Türkçe) · **Vietnamese** (Tiếng Việt)
+- **Amharic** (አማርኛ) · **Arabic** (العربية) · **Bengali** (বাংলা) · **Bosnian** (Bosanski)
+- **Catalan** (Català) · **Chinese** (中文) · **Croatian** (Hrvatski) · **Czech** (Čeština)
+- **Danish** (Dansk) · **Dutch** (Nederlands) · **English** · **Finnish** (Suomi)
+- **French** (Français) · **Galician** (Galego) · **German** (Deutsch) · **Greek** (Ελληνικά)
+- **Gujarati** (ગુજરાતી) · **Hebrew** (עברית) · **Hindi** (हिन्दी) · **Hungarian** (Magyar)
+- **Indonesian** (Bahasa Indonesia) · **Irish** (Gaeilge) · **Italian** (Italiano)
+- **Japanese** (日本語) · **Kannada** (ಕನ್ನಡ) · **Korean** (한국어) · **Latvian** (Latviešu)
+- **Macedonian** (Македонски) · **Malay** (Bahasa Melayu) · **Malayalam** (മലയാളം)
+- **Mongolian** (Монгол) · **Norwegian** (Norsk) · **Persian** (فارسی) · **Polish** (Polski)
+- **Portuguese** (Português) · **Romanian** (Română) · **Russian** (Русский)
+- **Scottish Gaelic** (Gàidhlig) · **Serbian** (Српски) · **Sinhala** (සිංහල)
+- **Spanish** (Español) · **Sundanese** (Basa Sunda) · **Swedish** (Svenska)
+- **Telugu** (తెలుగు) · **Thai** (ไทย) · **Turkish** (Türkçe) · **Urdu** (اردو)
+- **Uzbek** (O'zbek) · **Vietnamese** (Tiếng Việt) · **Welsh** (Cymraeg)
 
 See [Supported Languages](/reference/supported-languages/) for the complete list with details.
 

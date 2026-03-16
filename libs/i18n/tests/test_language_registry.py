@@ -119,9 +119,9 @@ class TestGetActiveLanguageCodes:
             )
 
     def test_all_current_languages_are_active(self):
-        """Verify all 29 languages are currently active (all experimental)."""
+        """Verify all 51 languages are currently active (all experimental)."""
         active_codes = get_active_language_codes()
-        assert len(active_codes) == 29
+        assert len(active_codes) == 51
 
 
 class TestGetAvailableLanguageCodes:

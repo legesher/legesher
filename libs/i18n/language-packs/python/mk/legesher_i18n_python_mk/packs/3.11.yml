@@ -1,0 +1,24 @@
+# Macedonian Language Pack for Python 3.11+
+# Extends 3.10 pack and adds except* for exception groups
+
+language: mk
+target: python
+version: '3.11'
+extends: 3.10.yml
+keywords:
+  except*: освен_ѕвезда
+exceptions:
+  baseexceptiongroup: основенисклучокгрупа
+  encodingwarning: предупредувањезакодирање
+  exceptiongroup: исклучокгрупа
+metadata:
+  python_version_min: '3.11'
+  python_version_max: '3.13'
+  compatibility_tested:
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  last_updated: '2026-03-15'
+  community_reviewed: false
+  author: Legesher Team
+  license: MIT

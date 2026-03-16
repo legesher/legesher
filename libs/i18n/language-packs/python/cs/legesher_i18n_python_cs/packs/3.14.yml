@@ -1,0 +1,18 @@
+# Czech Language Pack for Python 3.14+
+# Extends 3.13 pack (Python 3.14 in development)
+
+language: cs
+target: python
+version: '3.14'
+extends: 3.13.yml
+keywords: {}
+exceptions: {}
+metadata:
+  python_version_min: '3.14'
+  python_version_max: '3.14'
+  compatibility_tested:
+  - '3.14'
+  last_updated: '2026-03-15'
+  community_reviewed: false
+  author: Legesher Team (Claude AI Model)
+  license: MIT

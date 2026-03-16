@@ -136,7 +136,7 @@ Add to GitHub Actions workflow:
 
 While the benchmarks focus on latency, memory usage is also important:
 
-- **Estimated in-memory size**: ~26 MB for all language packs
+- **Estimated in-memory size**: ~51 MB for all language packs
 - **LRU cache limits**:
   - LanguagePackLoader: maxsize=32 packs
   - Hover provider: maxsize=128 entries

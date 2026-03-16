@@ -1,0 +1,20 @@
+# Macedonian Language Pack for Python 3.12+
+# Extends 3.11 pack and adds 'type' keyword for type parameters
+
+language: mk
+target: python
+version: '3.12'
+extends: 3.11.yml
+keywords:
+  type: типизирај
+exceptions: {}
+metadata:
+  python_version_min: '3.12'
+  python_version_max: '3.13'
+  compatibility_tested:
+  - '3.12'
+  - '3.13'
+  last_updated: '2026-03-15'
+  community_reviewed: false
+  author: Legesher Team
+  license: MIT

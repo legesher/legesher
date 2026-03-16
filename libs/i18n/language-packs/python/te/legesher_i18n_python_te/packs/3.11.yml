@@ -1,0 +1,22 @@
+# Telugu Language Pack for Python 3.11+
+# Extends 3.10 pack and adds except* for exception groups
+
+language: te
+target: python
+version: '3.11'
+extends: 3.10.yml
+keywords:
+  except*: మినహాయింపుగుంపు
+exceptions:
+  exceptiongroup: మినహాయింపుసమూహం
+  baseexceptiongroup: మూలమినహాయింపుసమూహం
+  encodingwarning: సంకేతనహెచ్చరిక
+metadata:
+  python_version_min: '3.11'
+  python_version_max: '3.14'
+  compatibility_tested:
+  - '3.11'
+  last_updated: '2026-03-15'
+  community_reviewed: false
+  author: Legesher Team (Aya AI Model)
+  license: MIT

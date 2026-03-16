@@ -1,0 +1,24 @@
+# Malayalam Language Pack for Python 3.11+
+# Extends 3.10 pack and adds except* for exception groups
+
+language: ml
+target: python
+version: '3.11'
+extends: 3.10.yml
+keywords:
+  except*: ഒഴികെ*
+exceptions:
+  baseexceptiongroup: അടിസ്ഥാനവിശേഷഗണം
+  encodingwarning: എൻകോഡിംഗ്മുന്നറിയിപ്പ്
+  exceptiongroup: വിശേഷഗണം
+metadata:
+  python_version_min: '3.11'
+  python_version_max: '3.13'
+  compatibility_tested:
+  - '3.11'
+  - '3.12'
+  - '3.13'
+  last_updated: '2026-03-15'
+  community_reviewed: false
+  author: Legesher Team (Claude AI Model)
+  license: MIT

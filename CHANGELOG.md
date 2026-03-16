@@ -9,6 +9,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **legesher-i18n**: 22 new language packs — expanding Legesher from 29 → 51
+  supported languages (CORE-675, CORE-707)
+  - Bengali, Bosnian, Catalan, Croatian, Czech, Galician, Gujarati, Irish,
+    Kannada, Latvian, Macedonian, Malayalam, Mongolian, Burmese, Persian,
+    Romanian, Scottish Gaelic, Serbian, Sundanese, Telugu, Uzbek, Welsh
+  - 3,850 new translations with zero collisions across all 51 languages
+  - Each pack: 37 keywords, 72 builtins, 66 exceptions (Python 3.10–3.14)
+  - Translation sources: Aya-101 AI Model (21 packs), Claude AI (Bosnian)
+  - Persian (fa) is the 4th RTL language; 3 Celtic languages added (ga, gd, cy)
+
+### Changed
+
+- Updated all documentation, tests, and configuration references from 29 → 51
+  languages across root CLAUDE.md, README.md, libs/i18n, libs/legesher,
+  libs/vs-code, and docs site
+
 ## [0.6.0] - 2026-03-11
 
 ### Added
