@@ -76,8 +76,8 @@ def generate_typescript(data: dict) -> str:
     # Add each language
     for code in codes:
         lang = languages[code]
-        name = lang["name"]
-        native = lang["native"]
+        name = lang["name"].replace("\\", "\\\\").replace("'", "\\'")
+        native = lang["native"].replace("\\", "\\\\").replace("'", "\\'")
         iso639_2 = lang["iso639_2"]
         bcp47 = lang["bcp47"]
         rtl = "true" if lang["rtl"] else "false"

@@ -19,30 +19,55 @@ on:
         type: choice
         # Options must match libs/i18n/legesher_i18n/languages.json (source of truth)
         options:
+          - am
           - ar
+          - bn
+          - bs
+          - ca
+          - cs
+          - cy
           - da
           - de
           - el
           - en
           - es
+          - fa
           - fi
           - fr
+          - ga
+          - gd
+          - gl
+          - gu
           - he
           - hi
+          - hr
           - hu
           - id
           - it
           - ja
+          - kn
           - ko
+          - lv
+          - mk
+          - ml
+          - mn
           - ms
+          - my
           - nl
           - "no"
           - pl
           - pt
+          - ro
           - ru
+          - si
+          - sr
+          - su
           - sv
+          - te
           - th
           - tr
+          - ur
+          - uz
           - vi
           - zh
 
@@ -185,31 +210,34 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Release language pack
+        id: version
         working-directory: libs/i18n/language-packs/python/${{ matrix.pack }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "📦 Releasing i18n-python-${{ matrix.pack }}..."
-          if ! uv run semantic-release version --verbose; then
+          if python -m semantic_release version --verbose; then
+            echo "released=true" >> $GITHUB_OUTPUT
+          else
             echo "ℹ️ No release needed for i18n-python-${{ matrix.pack }}"
-            exit 0
+            echo "released=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Create GitHub Release
-        if: success()
+        if: steps.version.outputs.released == 'true'
         working-directory: libs/i18n/language-packs/python/${{ matrix.pack }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          uv run semantic-release publish --verbose
+          python -m semantic_release publish --verbose
 
       - name: Build package
-        if: success()
+        if: steps.version.outputs.released == 'true'
         run: |
-          uv build -p libs/i18n/language-packs/python/${{ matrix.pack }}
+          uv build --no-build-isolation -p libs/i18n/language-packs/python/${{ matrix.pack }}
 
       - name: Upload build artifacts
-        if: success()
+        if: steps.version.outputs.released == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: i18n-python-${{ matrix.pack }}-dist-${{ github.sha }}
@@ -249,31 +277,34 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Release language pack
+        id: version
         working-directory: libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "📦 Releasing i18n-${{ github.event.inputs.target }}-${{ github.event.inputs.language }}..."
-          if ! uv run semantic-release version --verbose; then
+          if python -m semantic_release version --verbose; then
+            echo "released=true" >> $GITHUB_OUTPUT
+          else
             echo "ℹ️ No release needed"
-            exit 0
+            echo "released=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Create GitHub Release
-        if: success()
+        if: steps.version.outputs.released == 'true'
         working-directory: libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          uv run semantic-release publish --verbose
+          python -m semantic_release publish --verbose
 
       - name: Build package
-        if: success()
+        if: steps.version.outputs.released == 'true'
         run: |
-          uv build -p libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
+          uv build --no-build-isolation -p libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
 
       - name: Upload build artifacts
-        if: success()
+        if: steps.version.outputs.released == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: i18n-${{ github.event.inputs.target }}-${{ github.event.inputs.language }}-dist-${{ github.sha }}
