@@ -74,3 +74,21 @@ def english_keywords_from_arabic(arabic_keywords):
 def english_builtins_from_arabic(arabic_builtins):
     """Reverse map: Arabic → English builtins."""
     return {v: k for k, v in arabic_builtins.items()}
+
+
+@pytest.fixture(scope="session")
+def chinese_pack(language_pack_loader):
+    """Load the Chinese language pack for Python 3.10 (base)."""
+    return language_pack_loader.load("zh", target="python", version="3.10")
+
+
+@pytest.fixture(scope="session")
+def chinese_keywords(chinese_pack):
+    """Chinese keyword translations from real language pack."""
+    return chinese_pack.keywords
+
+
+@pytest.fixture(scope="session")
+def chinese_builtins(chinese_pack):
+    """Chinese builtin translations from real language pack."""
+    return chinese_pack.builtins

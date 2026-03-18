@@ -162,17 +162,17 @@ class TreeSitterTranslator:
             # Parse code with tree-sitter
             tree = self.parser.parse(source_code)
 
-            # Get source as bytes for position calculations
-            source_bytes = source_code.encode("utf-8")
+            # Build byte→char mapping for character-level replacement
+            byte_to_char = self._build_byte_to_char_map(source_code)
 
             # Collect replacements as (start_byte, end_byte, new_text) tuples
             replacements = []
 
             # Walk the tree to find keywords and builtins
-            self._find_translations(tree.root_node, source_bytes, replacements)
+            self._find_translations(tree.root_node, replacements)
 
-            # Apply replacements in reverse order to maintain byte positions
-            result = self._apply_replacements(source_bytes, replacements)
+            # Apply replacements at character level to avoid UTF-8 round-trip issues
+            result = self._apply_replacements(source_code, byte_to_char, replacements)
 
             # Handle metadata if requested
             if return_metadata:
@@ -193,23 +193,36 @@ class TreeSitterTranslator:
                 return source_code, CulturalCommentMetadata()
             return source_code
 
+        except UnicodeError as e:
+            # Safety net: encode("utf-8") can fail on surrogate characters
+            logger.warning(
+                f"Unicode error during tree-sitter translation, "
+                f"returning original code: {e}"
+            )
+            if return_metadata:
+                return source_code, CulturalCommentMetadata()
+            return source_code
+
         except Exception as e:
             # Catch-all for unexpected errors
             logger.error(f"Translation failed unexpectedly: {e}")
             raise InvalidCodeError(f"Failed to translate code: {e}") from e
 
-    def _find_translations(self, node, source_bytes: bytes, replacements: list) -> None:
+    def _find_translations(self, node, replacements: list) -> None:
         """Recursively find and collect keyword and builtin translations.
 
         Args:
             node: Tree-sitter node to search
-            source_bytes: Source code as bytes
             replacements: List to append (start, end, replacement) tuples
         """
         # Python keywords that appear as node text (not types)
         # These are the nodes where we check the text directly
         if node.type in ["identifier", "true", "false", "none"]:
-            text = node.text.decode("utf-8")
+            try:
+                text = node.text.decode("utf-8")
+            except UnicodeDecodeError:
+                logger.debug(f"Skipping node with non-UTF-8 content: {node.type}")
+                return
 
             # Try to translate as keyword first
             translated = self.mapper.get_keyword(text)
@@ -263,7 +276,11 @@ class TreeSitterTranslator:
             "match",
             "case",
         ]:
-            text = node.text.decode("utf-8")
+            try:
+                text = node.text.decode("utf-8")
+            except UnicodeDecodeError:
+                logger.debug(f"Skipping node with non-UTF-8 content: {node.type}")
+                return
             translated = self.mapper.get_keyword(text)
             if translated and translated != text:
                 replacements.append((node.start_byte, node.end_byte, translated))
@@ -271,16 +288,49 @@ class TreeSitterTranslator:
 
         # Recursively search children
         for child in node.children:
-            self._find_translations(child, source_bytes, replacements)
+            self._find_translations(child, replacements)
 
-    def _apply_replacements(self, source_bytes: bytes, replacements: list) -> str:
-        """Apply text replacements while preserving positions.
+    @staticmethod
+    def _build_byte_to_char_map(source_code: str) -> dict[int, int]:
+        """Build a mapping from UTF-8 byte offsets to character offsets.
 
-        Replacements are applied in reverse order (end → start) to maintain
-        byte positions throughout the process.
+        Since tree-sitter works at the byte level but Python strings are
+        character-indexed, this mapping allows converting tree-sitter's byte
+        positions to string positions for character-level replacement.
 
         Args:
-            source_bytes: Original source code as bytes
+            source_code: Source code as Python str
+
+        Returns:
+            Dict mapping byte offset → character offset
+        """
+        byte_to_char = {}
+        byte_idx = 0
+        for char_idx, char in enumerate(source_code):
+            byte_to_char[byte_idx] = char_idx
+            byte_idx += len(char.encode("utf-8"))
+        byte_to_char[byte_idx] = len(source_code)  # End sentinel
+        return byte_to_char
+
+    def _apply_replacements(
+        self,
+        source_code: str,
+        byte_to_char: dict[int, int],
+        replacements: list,
+    ) -> str:
+        """Apply text replacements using character-level positions.
+
+        Converts tree-sitter byte positions to character positions via
+        byte_to_char mapping, then applies replacements on the Python str
+        directly. This avoids UTF-8 encode/decode round-trips that can fail
+        on source files containing unusual byte sequences.
+
+        Replacements are applied in reverse order (end → start) to maintain
+        position validity throughout the process.
+
+        Args:
+            source_code: Original source code as str
+            byte_to_char: Mapping from byte offsets to character offsets
             replacements: List of (start_byte, end_byte, new_text) tuples
 
         Returns:
@@ -289,15 +339,13 @@ class TreeSitterTranslator:
         # Sort replacements by start position (descending) to apply in reverse
         replacements.sort(reverse=True, key=lambda x: x[0])
 
-        # Convert to bytearray for efficient modification
-        result = bytearray(source_bytes)
+        result = source_code
+        for start_byte, end_byte, new_text in replacements:
+            start_char = byte_to_char[start_byte]
+            end_char = byte_to_char[end_byte]
+            result = result[:start_char] + new_text + result[end_char:]
 
-        # Apply each replacement
-        for start, end, new_text in replacements:
-            result[start:end] = new_text.encode("utf-8")
-
-        # Convert back to string
-        return result.decode("utf-8")
+        return result
 
     def translate_file(self, file_path: Path, target_lang: str) -> str:
         """Translate a Python file to target language.

@@ -382,6 +382,202 @@ class TestTreeSitterTranslatorErrorHandling:
         assert spanish_keywords["return"] in translated
 
 
+class TestTreeSitterUTF8Encoding:
+    """Test suite for UTF-8 encoding edge cases (CORE-799).
+
+    Validates that TreeSitterTranslator handles source files containing
+    non-standard byte sequences in string literals, especially when
+    translating to multi-byte languages (Chinese, Arabic, etc.).
+    """
+
+    @pytest.fixture
+    def chinese_translator(self, chinese_keywords, chinese_builtins):
+        """Create a translator configured for Chinese."""
+        return TreeSitterTranslator(
+            keyword_map=chinese_keywords, builtin_map=chinese_builtins
+        )
+
+    @pytest.fixture
+    def arabic_translator(self, arabic_keywords, arabic_builtins):
+        """Create a translator configured for Arabic."""
+        return TreeSitterTranslator(
+            keyword_map=arabic_keywords, builtin_map=arabic_builtins
+        )
+
+    @pytest.fixture
+    def spanish_translator(self, spanish_keywords, spanish_builtins):
+        """Create a translator configured for Spanish."""
+        return TreeSitterTranslator(
+            keyword_map=spanish_keywords, builtin_map=spanish_builtins
+        )
+
+    def test_control_char_u009f_with_chinese(
+        self, chinese_translator, chinese_keywords
+    ):
+        """U+009F control character in string literal + CJK translation.
+
+        This is the exact character from The Stack bug reports. The string
+        contains U+009F which is valid Python but encodes to multi-byte UTF-8.
+        With CJK translations (multi-byte replacements), the old byte-level
+        approach would corrupt the output.
+        """
+        code = 'x = "\u009f"\ndef foo():\n    return True'
+        result = chinese_translator.translate_code(code, "en", "zh")
+
+        # Keywords must be translated (not returned as original)
+        assert "def" not in result
+        assert "return" not in result
+        assert "True" not in result
+        assert chinese_keywords["def"] in result
+        assert chinese_keywords["return"] in result
+        assert chinese_keywords["True"] in result
+
+        # String content must be preserved
+        assert "\u009f" in result
+
+        # Result must be valid UTF-8
+        result.encode("utf-8").decode("utf-8")
+
+    def test_mixed_multibyte_content_preserved(
+        self, chinese_translator, chinese_keywords
+    ):
+        """Code with emoji, CJK in strings, and translatable keywords."""
+        code = 'def greet():\n    msg = "Hello 世界 🎉"\n    return True'
+        result = chinese_translator.translate_code(code, "en", "zh")
+
+        assert chinese_keywords["def"] in result
+        assert chinese_keywords["return"] in result
+        assert chinese_keywords["True"] in result
+        assert "世界" in result
+        assert "🎉" in result
+        assert "greet" in result  # function name unchanged
+
+    def test_rtl_with_control_characters(self, arabic_translator, arabic_keywords):
+        """Arabic translations with U+009F and other control characters."""
+        code = 'x = "\u009f\u0080"\ndef process():\n    if True:\n        return False'
+        result = arabic_translator.translate_code(code, "en", "ar")
+
+        assert arabic_keywords["def"] in result
+        assert arabic_keywords["if"] in result
+        assert arabic_keywords["True"] in result
+        assert arabic_keywords["return"] in result
+        assert arabic_keywords["False"] in result
+        assert "\u009f" in result
+        assert "\u0080" in result
+
+        result.encode("utf-8").decode("utf-8")
+
+    def test_multiple_non_ascii_chars_near_keywords(
+        self, chinese_translator, chinese_keywords
+    ):
+        """Control characters \\x80, \\x8f, \\x9f in string literals near keywords."""
+        code = (
+            'a = "\u0080"\n'
+            "if True:\n"
+            '    b = "\u008f"\n'
+            '    c = "\u009f"\n'
+            "    return False\n"
+        )
+        result = chinese_translator.translate_code(code, "en", "zh")
+
+        assert chinese_keywords["if"] in result
+        assert chinese_keywords["True"] in result
+        assert chinese_keywords["return"] in result
+        assert chinese_keywords["False"] in result
+        assert "\u0080" in result
+        assert "\u008f" in result
+        assert "\u009f" in result
+
+    def test_large_file_with_scattered_control_chars(
+        self, chinese_translator, chinese_keywords
+    ):
+        """50+ line file with control characters among many keywords."""
+        lines = []
+        for i in range(20):
+            lines.append(f"def func_{i}(x):")
+            lines.append(f"    if x > {i}:")
+            lines.append("        return True")
+            if i % 7 == 0:
+                lines.append(f'    note = "data\u009f{i}"')
+            lines.append("")
+
+        code = "\n".join(lines)
+        result = chinese_translator.translate_code(code, "en", "zh")
+
+        assert "def" not in result
+        assert chinese_keywords["def"] in result
+        assert chinese_keywords["if"] in result
+        assert chinese_keywords["return"] in result
+        assert "\u009f" in result
+
+        result.encode("utf-8").decode("utf-8")
+
+    def test_byte_to_char_map_ascii(self):
+        """Byte-to-char mapping for pure ASCII is identity."""
+        source = "def foo(): return 42"
+        mapping = TreeSitterTranslator._build_byte_to_char_map(source)
+
+        for i in range(len(source)):
+            assert mapping[i] == i
+        assert mapping[len(source)] == len(source)
+
+    def test_byte_to_char_map_multibyte(self):
+        """Byte-to-char mapping handles multi-byte characters correctly."""
+        # "a" (1 byte) + "é" (2 bytes) + "中" (3 bytes) + "🎉" (4 bytes)
+        source = "aé中🎉"
+        mapping = TreeSitterTranslator._build_byte_to_char_map(source)
+
+        # 'a' at byte 0 → char 0
+        assert mapping[0] == 0
+        # 'é' at byte 1 → char 1
+        assert mapping[1] == 1
+        # '中' at byte 3 → char 2
+        assert mapping[3] == 2
+        # '🎉' at byte 6 → char 3
+        assert mapping[6] == 3
+        # End sentinel at byte 10 → char 4
+        assert mapping[10] == 4
+
+    def test_byte_to_char_map_control_chars(self):
+        """Byte-to-char mapping handles U+009F (2-byte UTF-8) correctly."""
+        # U+009F encodes as C2 9F in UTF-8 (2 bytes)
+        source = "a\u009fb"
+        mapping = TreeSitterTranslator._build_byte_to_char_map(source)
+
+        assert mapping[0] == 0  # 'a' at byte 0
+        assert mapping[1] == 1  # U+009F at byte 1
+        assert mapping[3] == 2  # 'b' at byte 3
+        assert mapping[4] == 3  # end sentinel
+
+    def test_round_trip_with_control_chars_chinese(
+        self, chinese_translator, chinese_keywords
+    ):
+        """EN→ZH→EN round-trip preserves code with control characters."""
+        original = 'def foo():\n    x = "\u009f"\n    return True'
+
+        translated = chinese_translator.translate_code(original, "en", "zh")
+        assert chinese_keywords["def"] in translated
+
+        reversed_t = chinese_translator.reverse()
+        back = reversed_t.translate_code(translated, "zh", "en")
+
+        assert "def" in back
+        assert "return" in back
+        assert "True" in back
+        assert "\u009f" in back
+
+    def test_spanish_ascii_translations_unaffected(
+        self, spanish_translator, spanish_keywords
+    ):
+        """Spanish (ASCII-only translations) still works with control chars."""
+        code = 'x = "\u009f"\ndef foo():\n    return True'
+        result = spanish_translator.translate_code(code, "en", "es")
+
+        assert spanish_keywords["def"] in result
+        assert spanish_keywords["return"] in result
+        assert "\u009f" in result
+
+
 class TestTreeSitterVsTokenComparison:
     """Tests comparing TreeSitter vs Token-based approaches."""
 

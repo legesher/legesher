@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-03-18
+
+- Version bump to align with foundation suite (no functional changes)
+
 ## [0.7.1] - 2026-03-16
 
 ## [0.7.0] - 2026-03-16

@@ -9,6 +9,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-03-18
+
+### Fixed
+
+- Fix TreeSitterTranslator crashing with `InvalidCodeError` on ~0.6% of Python files
+  containing non-UTF-8 bytes (e.g., U+009F) in string literals when translating to
+  multi-byte languages like Chinese, Arabic, Urdu, Amharic (CORE-799)
+  - Root cause: byte-level `bytearray` splice + `decode("utf-8")` corrupted output when
+    multi-byte translations shifted byte offsets past non-ASCII string content
+  - Fix: switch `_apply_replacements()` to character-level string operations via a
+    byte→char offset map, eliminating the encode/decode round-trip
+  - Verified: 0 failures on 1,000 files from The Stack (was 7/1,000)
+
 ## [0.7.1] - 2026-03-16
 
 ## [0.7.0] - 2026-03-16

@@ -9,6 +9,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-03-18
+
+### Package Versions
+
+| Package                  | Version | Changed? |
+| ------------------------ | ------- | -------- |
+| legesher-core            | 0.7.2   | Yes      |
+| legesher-i18n            | 0.7.2   | —        |
+| legesher (CLI)           | 0.7.2   | —        |
+| legesher-language-server | 0.1.2   | —        |
+| legesher-vscode          | 0.1.5   | —        |
+| legesher-home            | 0.1.0   | —        |
+
+### Fixed
+
+- **legesher-core**: Fix TreeSitterTranslator crashing on ~0.6% of Python files with
+  non-UTF-8 bytes in string literals when translating to multi-byte languages (CORE-799)
+
 ## [0.7.1] - 2026-03-16
 
 ## [0.7.0] - 2026-03-16
