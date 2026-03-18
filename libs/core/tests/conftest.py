@@ -7,7 +7,17 @@ the same translations that end users will experience.
 
 import pytest
 
+from legesher_core.transformer import TokenTranslator
+from legesher_core.tree_sitter import TreeSitterTranslator
 from legesher_i18n import LanguagePackLoader
+
+
+@pytest.fixture(
+    params=[TokenTranslator, TreeSitterTranslator], ids=["token", "tree-sitter"]
+)
+def translator_class(request):
+    """Parametrized fixture for testing both translator implementations."""
+    return request.param
 
 
 @pytest.fixture(scope="session")
@@ -92,3 +102,15 @@ def chinese_keywords(chinese_pack):
 def chinese_builtins(chinese_pack):
     """Chinese builtin translations from real language pack."""
     return chinese_pack.builtins
+
+
+@pytest.fixture(scope="session")
+def english_keywords_from_chinese(chinese_keywords):
+    """Reverse map: Chinese → English keywords."""
+    return {v: k for k, v in chinese_keywords.items()}
+
+
+@pytest.fixture(scope="session")
+def english_builtins_from_chinese(chinese_builtins):
+    """Reverse map: Chinese → English builtins."""
+    return {v: k for k, v in chinese_builtins.items()}

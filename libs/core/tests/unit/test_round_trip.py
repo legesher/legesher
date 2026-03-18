@@ -244,3 +244,214 @@ async def process():
 
         back = ar_to_en_translator.translate_code(arabic, "ar", "en")
         assert original == back
+
+
+class TestRoundTripWhitespace:
+    """Tests documenting CRLF normalization behavior (CORE-1160).
+
+    The translator's normalize_newlines() converts \\r\\n → \\n during
+    translation. This is expected behavior — canonical storage uses LF.
+    Round-trip is lossless for LF-only input; CRLF input normalizes to LF.
+    """
+
+    @pytest.fixture
+    def en_to_es(self, translator_class, spanish_keywords, spanish_builtins):
+        return translator_class(
+            keyword_map=spanish_keywords, builtin_map=spanish_builtins
+        )
+
+    @pytest.fixture
+    def es_to_en(
+        self,
+        translator_class,
+        english_keywords_from_spanish,
+        english_builtins_from_spanish,
+    ):
+        return translator_class(
+            keyword_map=english_keywords_from_spanish,
+            builtin_map=english_builtins_from_spanish,
+        )
+
+    def test_crlf_normalized_to_lf(self, en_to_es, es_to_en):
+        """CRLF input produces LF output — expected normalization (CORE-1160)."""
+        crlf_code = "def foo():\r\n    return True\r\n"
+        lf_code = "def foo():\n    return True\n"
+
+        spanish = en_to_es.translate_code(crlf_code, "en", "es")
+        back = es_to_en.translate_code(spanish, "es", "en")
+
+        # Round-trip normalizes CRLF to LF — this is intentional
+        assert "\r\n" not in back
+        assert back == lf_code
+
+    def test_lf_only_round_trips_perfectly(self, en_to_es, es_to_en):
+        """LF-only code round-trips without any modification."""
+        original = "def foo():\n    return True\n"
+
+        spanish = en_to_es.translate_code(original, "en", "es")
+        back = es_to_en.translate_code(spanish, "es", "en")
+
+        assert original == back
+
+    def test_trailing_newline_preserved(self, en_to_es, es_to_en):
+        """Trailing newline is preserved through round-trip."""
+        original = "def foo():\n    pass\n"
+
+        spanish = en_to_es.translate_code(original, "en", "es")
+        back = es_to_en.translate_code(spanish, "es", "en")
+
+        assert original == back
+        assert back.endswith("\n")
+
+    def test_blank_lines_preserved(self, en_to_es, es_to_en):
+        """Blank lines between code blocks are preserved."""
+        original = "def foo():\n    pass\n\n\ndef bar():\n    pass\n"
+
+        spanish = en_to_es.translate_code(original, "en", "es")
+        back = es_to_en.translate_code(spanish, "es", "en")
+
+        assert original == back
+
+    def test_multiple_trailing_newlines_preserved(self, en_to_es, es_to_en):
+        """Multiple trailing newlines are preserved."""
+        original = "def foo():\n    pass\n\n\n"
+
+        spanish = en_to_es.translate_code(original, "en", "es")
+        back = es_to_en.translate_code(spanish, "es", "en")
+
+        assert original == back
+
+    def test_mixed_crlf_lf_normalized(self, en_to_es, es_to_en):
+        """Mixed CRLF and LF lines are all normalized to LF."""
+        mixed = "def foo():\r\n    x = 1\n    return x\r\n"
+        expected = "def foo():\n    x = 1\n    return x\n"
+
+        spanish = en_to_es.translate_code(mixed, "en", "es")
+        back = es_to_en.translate_code(spanish, "es", "en")
+
+        assert "\r\n" not in back
+        assert back == expected
+
+
+class TestLatinScriptCollision:
+    """Tests documenting Latin-script reverse collision (CORE-704).
+
+    When Spanish translations of builtins are common English words (e.g.,
+    ``todo`` = ``all``, ``tipo`` = ``type``, ``objeto`` = ``object``,
+    ``entrada`` = ``input``), the reverse translator incorrectly maps
+    English variable names that happen to match Spanish builtins back to
+    their English builtin equivalents.
+
+    Non-Latin scripts (e.g., Chinese) are immune because CJK characters
+    never appear as identifiers in English source code.
+    """
+
+    @pytest.fixture
+    def en_to_es(self, translator_class, spanish_keywords, spanish_builtins):
+        return translator_class(
+            keyword_map=spanish_keywords, builtin_map=spanish_builtins
+        )
+
+    @pytest.fixture
+    def es_to_en(
+        self,
+        translator_class,
+        english_keywords_from_spanish,
+        english_builtins_from_spanish,
+    ):
+        return translator_class(
+            keyword_map=english_keywords_from_spanish,
+            builtin_map=english_builtins_from_spanish,
+        )
+
+    @pytest.fixture
+    def en_to_zh(self, translator_class, chinese_keywords, chinese_builtins):
+        return translator_class(
+            keyword_map=chinese_keywords, builtin_map=chinese_builtins
+        )
+
+    @pytest.fixture
+    def zh_to_en(
+        self,
+        translator_class,
+        english_keywords_from_chinese,
+        english_builtins_from_chinese,
+    ):
+        return translator_class(
+            keyword_map=english_keywords_from_chinese,
+            builtin_map=english_builtins_from_chinese,
+        )
+
+    @pytest.mark.xfail(
+        reason="CORE-704: Latin-script reverse collision — "
+        "'todo' variable incorrectly mapped to 'all' builtin",
+        strict=True,
+    )
+    def test_todo_variable_collides_with_spanish_all(self, en_to_es, es_to_en):
+        """Variable named 'todo' (Spanish for 'all') breaks round-trip."""
+        original = 'todo = []\ntodo.append("buy milk")\nprint(todo)'
+
+        spanish = en_to_es.translate_code(original, "en", "es")
+        back = es_to_en.translate_code(spanish, "es", "en")
+
+        assert original == back
+
+    @pytest.mark.xfail(
+        reason="CORE-704: Latin-script reverse collision — "
+        "'tipo' variable incorrectly mapped to 'type' builtin",
+        strict=True,
+    )
+    def test_tipo_variable_collides_with_spanish_type(self, en_to_es, es_to_en):
+        """Variable named 'tipo' (Spanish for 'type') breaks round-trip."""
+        original = "tipo = 'A'\nprint(tipo)"
+
+        spanish = en_to_es.translate_code(original, "en", "es")
+        back = es_to_en.translate_code(spanish, "es", "en")
+
+        assert original == back
+
+    @pytest.mark.xfail(
+        reason="CORE-704: Latin-script reverse collision — "
+        "'objeto' variable incorrectly mapped to 'object' builtin",
+        strict=True,
+    )
+    def test_objeto_variable_collides_with_spanish_object(self, en_to_es, es_to_en):
+        """Variable named 'objeto' (Spanish for 'object') breaks round-trip."""
+        original = "objeto = {}\nobjeto['key'] = 1"
+
+        spanish = en_to_es.translate_code(original, "en", "es")
+        back = es_to_en.translate_code(spanish, "es", "en")
+
+        assert original == back
+
+    @pytest.mark.xfail(
+        reason="CORE-704: Latin-script reverse collision — "
+        "'entrada' variable incorrectly mapped to 'input' builtin",
+        strict=True,
+    )
+    def test_entrada_variable_collides_with_spanish_input(self, en_to_es, es_to_en):
+        """Variable named 'entrada' (Spanish for 'input') breaks round-trip."""
+        original = "entrada = 42\nprint(entrada)"
+
+        spanish = en_to_es.translate_code(original, "en", "es")
+        back = es_to_en.translate_code(spanish, "es", "en")
+
+        assert original == back
+
+    def test_chinese_immune_to_collision(self, en_to_zh, zh_to_en):
+        """Same variables round-trip perfectly with Chinese (non-Latin immune)."""
+        original = 'todo = []\ntodo.append("buy milk")\nprint(todo)'
+
+        chinese = en_to_zh.translate_code(original, "en", "zh")
+        back = zh_to_en.translate_code(chinese, "zh", "en")
+
+        assert original == back
+
+    def test_spanish_without_collision_variables(self, en_to_es, es_to_en):
+        """Code without collision-prone variable names round-trips perfectly."""
+        original = "result = []\nresult.append(42)\nprint(result)"
+
+        spanish = en_to_es.translate_code(original, "en", "es")
+        back = es_to_en.translate_code(spanish, "es", "en")
+
+        assert original == back

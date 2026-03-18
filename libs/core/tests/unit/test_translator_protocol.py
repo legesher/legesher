@@ -9,14 +9,6 @@ import pytest
 from legesher_core import Translator, TokenTranslator, TreeSitterTranslator
 
 
-@pytest.fixture(
-    params=[TokenTranslator, TreeSitterTranslator], ids=["token", "tree-sitter"]
-)
-def translator_class(request):
-    """Parametrized fixture for testing both translator implementations."""
-    return request.param
-
-
 @pytest.fixture
 def translator_instance(translator_class, spanish_keywords, spanish_builtins):
     """Create a translator instance for testing."""
