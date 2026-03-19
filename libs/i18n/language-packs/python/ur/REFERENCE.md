@@ -144,7 +144,7 @@ Python's built-in functions and types in Urdu.
 | `sum` | `کل` |
 | `super` | `بالائی` |
 | `tuple` | `ٹپل` |
-| `type` | `قسم` |
+| `type` | `نوعیت` |
 | `vars` | `متغیرات_لاؤ` |
 | `zip` | `جوڑا` |
 
@@ -219,7 +219,7 @@ Exception classes for error handling.
 | `unicodeerror` | `یونیکوڈغلطی` |
 | `unicodetranslateerror` | `یونیکوڈترجمہغلطی` |
 | `unicodewarning` | `یونیکوڈانتباہ` |
-| `userwarning` | `صارفانتباہ` |
+| `userwarning` | `صارفاطلاع` |
 | `valueerror` | `قدرغلطی` |
 | `warning` | `انتباہ` |
 | `zerodivisionerror` | `صفرتقسیمغلطی` |

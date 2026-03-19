@@ -5,6 +5,29 @@ All notable changes to this language pack.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2026-03-19
+
+### Fixed
+
+- **Native Speaker Review (NextME14)**: Fixed 33 incorrect translations identified during community review [AYA-160]
+  - **Keywords (14)**: Replaced English words and meaningless characters with proper Chinese
+    - `elif`: `elseif` → `否则如果` (was English, not Chinese)
+    - `lambda`: `玪抑` → `拉姆达` (meaningless characters)
+    - `False`/`True`/`None`/`break`/`except`/`for`/`global`/`nonlocal`/`pass`/`raise`/`with`: corrected per reviewer
+  - **Builtins (7)**: Removed English prefixes and fixed incomplete translations
+    - `dir`: `dir_列出属性和方法` → `列出属性和方法` (removed English prefix)
+    - `type`: added `类型` (was missing from builtins section)
+    - `min`/`ord`/`sorted`/`super`/`zip`: corrected per reviewer
+  - **Exceptions (12)**: Replaced English text and standardized Unicode terminology
+    - `notadirectoryerror`: `Nosuchfileordirectory` → `非目录错误` (was fully English)
+    - `valueerror`: `ValueError` → `值错误` (was fully English)
+    - All Unicode exceptions now use `统一码` (Unicode Consortium's official Simplified Chinese term)
+    - `eoferror`/`exception`/`isadirectoryerror`/`oserror`/`taberror`: corrected per reviewer
+
+### Added
+
+- Community review suggestions added to translations.db with source `community_review`
+
 ## [0.0.3] - 2026-02-25
 
 ### Fixed

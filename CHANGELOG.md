@@ -9,6 +9,31 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Language Pack Versions
+
+| Pack           | Version | Changed? |
+| -------------- | ------- | -------- |
+| i18n-python-zh | 0.0.4   | Yes      |
+| i18n-python-es | 0.0.3   | Yes      |
+| i18n-python-ur | 0.0.2   | Yes      |
+
+### Fixed
+
+- **i18n-python-zh**: 33 translation corrections from native speaker review (NextME14) — removed
+  English words (`elseif`, `ValueError`, `Nosuchfileordirectory`), fixed meaningless characters
+  (`玪抑` for lambda), standardized Unicode exceptions to use `统一码` (AYA-160)
+- **i18n-python-es**: 5 quality fixes — replaced placeholder text (`eltérminotraducido`),
+  non-words (`ipsislo`), and verbose descriptions with proper Spanish translations (AYA-160)
+- **i18n-python-ur**: Applied 2 native speaker ([@rafaym1](https://github.com/rafaym1))
+  suggestions — `type` and `userwarning` translations updated (AYA-160)
+
+### Added
+
+- Community review translation suggestions added to translations.db for zh, ur, and es
+  with source `community_review` (NextME14 zh review,
+  [@sarr266](https://github.com/sarr266)/[@rafaym1](https://github.com/rafaym1)
+  ur reviews, Universal Python ur alternatives, Latino es alternatives)
+
 ## [0.7.2] - 2026-03-18
 
 ### Package Versions

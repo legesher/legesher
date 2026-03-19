@@ -31,42 +31,42 @@ These are Python's reserved words translated to Chinese.
 | `assert` | `断言` |
 | `async` | `异步` |
 | `await` | `等待` |
-| `break` | `中断` |
+| `break` | `终止` |
 | `case` | `情况` |
 | `class` | `类` |
 | `continue` | `继续` |
 | `def` | `定义` |
 | `del` | `删除` |
-| `elif` | `elseif` |
+| `elif` | `否则如果` |
 | `else` | `否则` |
-| `except` | `异常` |
+| `except` | `除外` |
 | `except*` | `多重捕获*` |
-| `False` | `假` |
+| `False` | `错误` |
 | `finally` | `最后` |
-| `for` | `循环` |
+| `for` | `对于` |
 | `from` | `从` |
-| `global` | `全局` |
+| `global` | `全球` |
 | `if` | `如果` |
 | `import` | `导入` |
 | `in` | `在` |
 | `is` | `是` |
-| `lambda` | `玪抑` |
+| `lambda` | `拉姆达` |
 | `match` | `匹配` |
-| `None` | `没有` |
-| `nonlocal` | `非局部` |
+| `None` | `无` |
+| `nonlocal` | `非本地` |
 | `not` | `不` |
 | `or` | `或` |
-| `pass` | `空操作` |
-| `raise` | `引发` |
+| `pass` | `过` |
+| `raise` | `提出` |
 | `return` | `返回` |
-| `True` | `真` |
+| `True` | `真实` |
 | `try` | `尝试` |
 | `type` | `类型` |
 | `while` | `当` |
-| `with` | `使用` |
+| `with` | `跟` |
 | `yield` | `产生` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (72 terms)
 
 Python's built-in functions and types in Chinese.
 
@@ -90,7 +90,7 @@ Python's built-in functions and types in Chinese.
 | `complex` | `复数` |
 | `delattr` | `删除属性` |
 | `dict` | `字典` |
-| `dir` | `dir_列出属性和方法` |
+| `dir` | `列出属性和方法` |
 | `divmod` | `除模` |
 | `ellipsis` | `省略号` |
 | `enumerate` | `枚举` |
@@ -118,13 +118,13 @@ Python's built-in functions and types in Chinese.
 | `map` | `映射` |
 | `max` | `最大值` |
 | `memoryview` | `内存视图` |
-| `min` | `最小` |
+| `min` | `最小值` |
 | `next` | `下一个` |
 | `notimplemented` | `未实现` |
 | `object` | `对象` |
 | `oct` | `八进制` |
 | `open` | `打开` |
-| `ord` | `字符编码` |
+| `ord` | `顺序` |
 | `pow` | `幂` |
 | `print` | `打印` |
 | `property` | `属性` |
@@ -135,15 +135,15 @@ Python's built-in functions and types in Chinese.
 | `set` | `集合` |
 | `setattr` | `设置属性` |
 | `slice` | `切片` |
-| `sorted` | `排序的` |
+| `sorted` | `排序` |
 | `staticmethod` | `静态方法` |
 | `str` | `字符串` |
 | `sum` | `求和` |
-| `super` | `超` |
+| `super` | `超类` |
 | `tuple` | `元组` |
-| `type` | `type` |
+| `type` | `类型` |
 | `vars` | `变量字典` |
-| `zip` | `组合` |
+| `zip` | `压缩` |
 
 ## Exceptions (69 terms)
 
@@ -169,8 +169,8 @@ Exception classes for error handling.
 | `deprecationwarning` | `弃用警告` |
 | `encodingwarning` | `编码警告` |
 | `environmenterror` | `环境错误` |
-| `eoferror` | `错误` |
-| `exception` | `异常情况` |
+| `eoferror` | `文件结束错误` |
+| `exception` | `异常` |
 | `exceptiongroup` | `异常组` |
 | `fileexistserror` | `文件已存在错误` |
 | `filenotfounderror` | `文件未找到错误` |
@@ -183,16 +183,16 @@ Exception classes for error handling.
 | `indexerror` | `越界访问错误` |
 | `interruptederror` | `中断错误` |
 | `ioerror` | `IO错误` |
-| `isadirectoryerror` | `文件或目录不存在` |
+| `isadirectoryerror` | `是目录错误` |
 | `keyboardinterrupt` | `键盘中断` |
 | `keyerror` | `键错误` |
 | `lookuperror` | `查找错误` |
 | `memoryerror` | `内存错误` |
 | `modulenotfounderror` | `模块未找到错误` |
 | `nameerror` | `名称错误` |
-| `notadirectoryerror` | `Nosuchfileordirectory` |
+| `notadirectoryerror` | `非目录错误` |
 | `notimplementederror` | `未实现错误` |
-| `oserror` | `os错误` |
+| `oserror` | `操作系统错误` |
 | `overflowerror` | `溢出错误` |
 | `pendingdeprecationwarning` | `待删除警告` |
 | `permissionerror` | `权限错误` |
@@ -207,17 +207,17 @@ Exception classes for error handling.
 | `syntaxerror` | `语法错误` |
 | `syntaxwarning` | `语法警告` |
 | `systemexit` | `系统退出` |
-| `taberror` | `标签错误` |
+| `taberror` | `制表符错误` |
 | `timeouterror` | `超时错误` |
 | `typeerror` | `类型错误` |
 | `unboundlocalerror` | `未绑定局部错误` |
-| `unicodedecodeerror` | `Unicode解码错误` |
-| `unicodeencodeerror` | `unicodeencode错误` |
-| `unicodeerror` | `unicode错误` |
-| `unicodetranslateerror` | `unicodetranslate错误` |
-| `unicodewarning` | `unicode警告` |
+| `unicodedecodeerror` | `统一码解码错误` |
+| `unicodeencodeerror` | `统一码编码错误` |
+| `unicodeerror` | `统一码错误` |
+| `unicodetranslateerror` | `统一码转换错误` |
+| `unicodewarning` | `统一码警告` |
 | `userwarning` | `用户警告` |
-| `valueerror` | `ValueError` |
+| `valueerror` | `值错误` |
 | `warning` | `警告` |
 | `zerodivisionerror` | `零除数错误` |
 
@@ -233,16 +233,16 @@ Here's an example showing Chinese Python code with Legesher:
 定义 阶乘(n):
     """计算n的阶乘。"""
     如果 n < 0:
-        引发 ValueError("不允许负数")
-    elseif n == 0 或 n == 1:
+        提出 值错误("不允许负数")
+    否则如果 n == 0 或 n == 1:
         返回 1
     否则:
         返回 n * 阶乘(n - 1)
 
 定义 主函数():
-    数字列表 = [整数(x) 循环 x 在 范围(6)]
+    数字列表 = [整数(x) 对于 x 在 范围(6)]
 
-    循环 数字 在 数字列表:
+    对于 数字 在 数字列表:
         结果 = 阶乘(数字)
         打印(f"{数字}! = {结果}")
 
@@ -255,7 +255,7 @@ Here's an example showing Chinese Python code with Legesher:
     # 演示try/except
     尝试:
         阶乘(-1)
-    异常 ValueError 作为 错误:
+    除外 值错误 作为 错误:
         打印(f"错误： {错误}")
     最后:
         打印("完成！")

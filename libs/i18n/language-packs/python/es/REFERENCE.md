@@ -82,7 +82,7 @@ Python's built-in functions and types in Spanish.
 | `bool` | `booleano` |
 | `breakpoint` | `puntodeinterrupción` |
 | `bytearray` | `conjuntoDeBytes` |
-| `bytes` | `secuencia_inmutable_de_bytes` |
+| `bytes` | `bytes_inmutables` |
 | `callable` | `llamable` |
 | `chr` | `carácter` |
 | `classmethod` | `métododeclase` |
@@ -92,7 +92,7 @@ Python's built-in functions and types in Spanish.
 | `dict` | `diccionario` |
 | `dir` | `directorio` |
 | `divmod` | `division_con_resta` |
-| `ellipsis` | `ipsislo` |
+| `ellipsis` | `elipsis` |
 | `enumerate` | `elenumerar` |
 | `eval` | `evalúo` |
 | `exec` | `ejecutar` |
@@ -101,7 +101,7 @@ Python's built-in functions and types in Spanish.
 | `format` | `formatear` |
 | `frozenset` | `conjuntocongelado` |
 | `getattr` | `obtenerelatributo` |
-| `globals` | `eltérminotraducido` |
+| `globals` | `globales` |
 | `hasattr` | `teneratributo` |
 | `hash` | `resumen_hash` |
 | `help` | `ayuda` |
@@ -125,7 +125,7 @@ Python's built-in functions and types in Spanish.
 | `oct` | `octal` |
 | `open` | `abrir` |
 | `ord` | `ordinal` |
-| `pow` | `elevaraunapotencia` |
+| `pow` | `potencia` |
 | `print` | `imprimir` |
 | `property` | `propiedad` |
 | `range` | `rango` |
@@ -142,7 +142,7 @@ Python's built-in functions and types in Spanish.
 | `super` | `superClase` |
 | `tuple` | `tupla` |
 | `type` | `tipo` |
-| `vars` | `devuelve_el_diccionario_de_variables` |
+| `vars` | `variables` |
 | `zip` | `acopiar` |
 
 ## Exceptions (69 terms)

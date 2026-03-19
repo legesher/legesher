@@ -115,7 +115,7 @@ builtins:
   tuple: ٹپل
   vars: متغیرات_لاؤ
   zip: جوڑا
-  type: قسم
+  type: نوعیت
 exceptions:
   arithmeticerror: حسابیغلطی
   assertionerror: تصدیقغلطی
@@ -179,7 +179,7 @@ exceptions:
   unicodeerror: یونیکوڈغلطی
   unicodetranslateerror: یونیکوڈترجمہغلطی
   unicodewarning: یونیکوڈانتباہ
-  userwarning: صارفانتباہ
+  userwarning: صارفاطلاع
   valueerror: قدرغلطی
   warning: انتباہ
   zerodivisionerror: صفرتقسیمغلطی

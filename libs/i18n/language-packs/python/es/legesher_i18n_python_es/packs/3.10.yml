@@ -50,7 +50,7 @@ builtins:
   bool: booleano
   breakpoint: puntodeinterrupción
   bytearray: conjuntoDeBytes
-  bytes: secuencia_inmutable_de_bytes
+  bytes: bytes_inmutables
   callable: llamable
   chr: carácter
   classmethod: métododeclase
@@ -60,7 +60,7 @@ builtins:
   dict: diccionario
   dir: directorio
   divmod: division_con_resta
-  ellipsis: ipsislo
+  ellipsis: elipsis
   enumerate: elenumerar
   eval: evalúo
   exec: ejecutar
@@ -69,7 +69,7 @@ builtins:
   format: formatear
   frozenset: conjuntocongelado
   getattr: obtenerelatributo
-  globals: eltérminotraducido
+  globals: globales
   hasattr: teneratributo
   hash: resumen_hash
   help: ayuda
@@ -93,7 +93,7 @@ builtins:
   oct: octal
   open: abrir
   ord: ordinal
-  pow: elevaraunapotencia
+  pow: potencia
   print: imprimir
   property: propiedad
   range: rango
@@ -109,7 +109,7 @@ builtins:
   sum: sumar
   super: superClase
   tuple: tupla
-  vars: devuelve_el_diccionario_de_variables
+  vars: variables
   zip: acopiar
   type: tipo
 exceptions:
@@ -184,7 +184,7 @@ metadata:
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'
-  last_updated: '2026-01-26'
+  last_updated: '2026-03-19'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

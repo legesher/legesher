@@ -1944,7 +1944,7 @@ requires-dist = [{ name = "legesher-i18n", specifier = ">=0.2.0,<1.0.0" }]
 
 [[package]]
 name = "legesher-i18n-python-es"
-version = "0.0.2"
+version = "0.0.3"
 source = { editable = "libs/i18n/language-packs/python/es" }
 dependencies = [
     { name = "legesher-i18n" },
@@ -2340,7 +2340,7 @@ requires-dist = [{ name = "legesher-i18n", specifier = ">=0.2.0,<1.0.0" }]
 
 [[package]]
 name = "legesher-i18n-python-ur"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "libs/i18n/language-packs/python/ur" }
 dependencies = [
     { name = "legesher-i18n" },
@@ -2373,7 +2373,7 @@ requires-dist = [{ name = "legesher-i18n", specifier = ">=0.2.0,<1.0.0" }]
 
 [[package]]
 name = "legesher-i18n-python-zh"
-version = "0.0.3"
+version = "0.0.4"
 source = { editable = "libs/i18n/language-packs/python/zh" }
 dependencies = [
     { name = "legesher-i18n" },
