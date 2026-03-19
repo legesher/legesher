@@ -19,7 +19,7 @@
   },
   "homepage": "https://legesher.io",
   "engines": {
-    "vscode": "^1.85.0",
+    "vscode": "^1.110.0",
     "node": ">=20"
   },
   "categories": [
