@@ -1,0 +1,29 @@
+# This CITATION.cff file was generated based on the Legesher GitHub repository using ChatGPT.
+# For more information, see https://citation-file-format.github.io/
+
+cff-version: 1.2.0
+message: "If you use Legesher in your work, please cite it using this metadata."
+title: "Legesher: Because language shouldn't be a barrier to code"
+type: software
+authors:
+  - family-names: "Edgar"
+    given-names: "Madison"
+    alias: "madiedgar"
+  - family-names: "Buhai"
+    given-names: "Alex"
+identifiers:
+  - type: url
+    value: "https://github.com/legesher/legesher"
+repository-code: "https://github.com/legesher/legesher"
+url: "https://github.com/legesher/legesher"
+abstract: "Legesher is a developer tool that allows coding in any programming language using a native written language. It integrates with git and VS Code to enable code changes to focus on updates, not translation, aiming to lower barriers for non-native English speakers and diverse teams."
+keywords:
+  - "localization"
+  - "internationalization"
+  - "programming-languages"
+  - "developer-tools"
+  - "vscode-extension"
+  - "git-integration"
+license: "MIT"
+date-released: "2026-02-26"
+version: "0.0.0" # No official version tag found; using commit date as reference
