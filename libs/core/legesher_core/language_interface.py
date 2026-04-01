@@ -16,14 +16,14 @@ import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, Optional
 
-from .types import KeywordMap, BuiltinMap, Translator
+from .types import BuiltinMap, KeywordMap, TextTranslationBackend, Translator
 
 # Lazy loading: Only import translators when actually needed
 # This allows the module to be imported without requiring tree-sitter
 if TYPE_CHECKING:
     pass
 
-TranslatorBackend = Literal["token", "tree-sitter"]
+TranslatorBackend = Literal["token", "tree-sitter", "llm"]
 
 # Environment variable truthy values (case-insensitive)
 _TRUTHY_VALUES = frozenset(("true", "1", "yes", "on"))
@@ -56,6 +56,13 @@ def _get_tree_sitter_translator() -> type:
     from .tree_sitter.translator import TreeSitterTranslator
 
     return TreeSitterTranslator
+
+
+def _get_llm_translator() -> type:
+    """Lazy import of LLMTranslator."""
+    from .tree_sitter.llm_translator import LLMTranslator
+
+    return LLMTranslator
 
 
 @dataclass
@@ -112,6 +119,7 @@ def create_translator(
     builtin_map: BuiltinMap | None = None,
     programming_language_version: str = "3.13",
     use_tree_sitter: bool | None = None,
+    backend: TextTranslationBackend | None = None,
 ) -> Translator:
     """Factory function to create a translator instance.
 
@@ -168,7 +176,16 @@ def create_translator(
     should_use_ts = _should_use_tree_sitter(use_tree_sitter)
 
     if programming_language == "python":
-        if should_use_ts:
+        # If an LLM backend is provided, use LLMTranslator for full translation
+        if backend is not None:
+            LLMTranslator = _get_llm_translator()
+            return LLMTranslator(
+                keyword_map=keyword_map,
+                builtin_map=builtin_map,
+                backend=backend,
+                python_version=programming_language_version,
+            )
+        elif should_use_ts:
             TreeSitterTranslator = _get_tree_sitter_translator()
             return TreeSitterTranslator(
                 keyword_map=keyword_map,

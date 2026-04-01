@@ -9,8 +9,7 @@ because Python keywords cannot be used as TypedDict field names.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Protocol, TypedDict, Union, runtime_checkable
-
+from typing import Any, Literal, Optional, Protocol, TypedDict, Union, runtime_checkable
 
 # Type aliases for translation maps
 # We use dict[str, str] instead of TypedDict because Python keywords
@@ -447,5 +446,124 @@ class Translator(Protocol):
         Example:
             >>> info = translator.get_pack_info()
             >>> print(f"Language: {info['language']}, Keywords: {info['keyword_count']}")
+        """
+        ...
+
+
+# Translatable element types for LLM-powered full translation
+ElementKind = Literal["identifier", "comment", "docstring", "string"]
+IdentifierRole = Literal[
+    "function_name",
+    "class_name",
+    "parameter",
+    "variable",
+    "attribute",
+    "module",
+    "decorator_arg",
+    "other",
+]
+
+
+@dataclass(frozen=True)
+class TranslatableElement:
+    """A single translatable element extracted from the AST.
+
+    Represents an identifier, comment, docstring, or string literal
+    that can be translated by an LLM backend.
+    """
+
+    kind: ElementKind
+    text: str
+    start_byte: int
+    end_byte: int
+    role: IdentifierRole
+    context: dict[str, Any]
+    # For strings/docstrings: quote style and prefix
+    quote_style: Optional[str] = None  # "'", '"', '"""', "'''"
+    prefix: Optional[str] = None  # "f", "r", "b", etc.
+
+
+@dataclass
+class TranslationScope:
+    """Configuration for which element types to translate.
+
+    Allows toggling translation of each category independently.
+    Supports future partial translation modes (e.g., translate identifiers
+    but annotate comments instead of replacing them).
+    """
+
+    translate_identifiers: bool = True
+    translate_comments: bool = True
+    translate_docstrings: bool = True
+    translate_strings: bool = True
+
+
+@runtime_checkable
+class TextTranslationBackend(Protocol):
+    """Protocol for LLM-based text translation backends.
+
+    Defines a synchronous interface for translating text using LLM models.
+    Core defines this protocol; concrete implementations live in libs/i18n/
+    (e.g., Anthropic, Cohere Aya, OpenAI-compatible local models).
+
+    Implementations should handle async LLM calls internally
+    (e.g., via asyncio.run()) to satisfy this sync interface.
+
+    Example:
+        >>> class MockBackend:
+        ...     def translate_text(self, text, source_lang, target_lang, context=None):
+        ...         return f"translated_{text}"
+        ...     def translate_batch(self, items, source_lang, target_lang):
+        ...         return [f"translated_{item['text']}" for item in items]
+        >>> backend = MockBackend()
+        >>> isinstance(backend, TextTranslationBackend)
+        True
+    """
+
+    def translate_text(
+        self,
+        text: str,
+        source_lang: str,
+        target_lang: str,
+        context: Optional[dict[str, Any]] = None,
+    ) -> str:
+        """Translate a single piece of text.
+
+        Args:
+            text: The text to translate (identifier, comment, string, etc.)
+            source_lang: Source language code (e.g., "en")
+            target_lang: Target language code (e.g., "es", "zh", "ur")
+            context: Optional translation context with keys like:
+                - role: Identifier role (function_name, parameter, etc.)
+                - surrounding_code: Code snippet for semantic context
+                - naming_convention: snake_case, PascalCase, etc.
+                - type_hint: Type annotation if available
+                - docstring: Related docstring if available
+                - glossary: Dict of already-translated identifiers
+
+        Returns:
+            Translated text string
+        """
+        ...
+
+    def translate_batch(
+        self,
+        items: list[dict[str, Any]],
+        source_lang: str,
+        target_lang: str,
+    ) -> list[str]:
+        """Translate a batch of items for efficiency.
+
+        Each item is a dict with at least a "text" key and optional "context" key.
+
+        Args:
+            items: List of dicts, each with:
+                - text (str): The text to translate
+                - context (dict, optional): Translation context (see translate_text)
+            source_lang: Source language code
+            target_lang: Target language code
+
+        Returns:
+            List of translated strings in the same order as input items
         """
         ...

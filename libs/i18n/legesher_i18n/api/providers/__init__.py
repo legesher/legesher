@@ -13,6 +13,8 @@ from .anthropic import AnthropicProvider
 from .deepl import DeepLProvider
 from .google import GoogleTranslateProvider
 from .libretranslate import LibreTranslateProvider
+from .cohere_aya import CohereAyaProvider
+from .openai_compat import OpenAICompatProvider
 
 __all__ = [
     "TranslationProvider",
@@ -23,7 +25,9 @@ __all__ = [
     "AuthenticationError",
     "UnsupportedLanguageError",
     "AnthropicProvider",
+    "CohereAyaProvider",
     "DeepLProvider",
     "GoogleTranslateProvider",
     "LibreTranslateProvider",
+    "OpenAICompatProvider",
 ]

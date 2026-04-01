@@ -72,13 +72,32 @@ legesher translate input.py --to es --output salida.py
 legesher translate src/ --to es --recursive
 ```
 
+**Full LLM Translation** (translates identifiers, comments, strings, docstrings):
+
+```bash
+# Full translation with Anthropic Claude
+legesher translate src/ --to es --full --llm-backend anthropic
+
+# Full translation with local model (vLLM, Ollama, llama.cpp)
+legesher translate src/ --to ur --full --llm-backend openai-compat \
+    --llm-base-url http://localhost:8000
+
+# Batch with cross-file consistency and resume
+legesher translate src/ --to zh --full \
+    --identifier-map .legesher/identifier_map.json \
+    --checkpoint .legesher/checkpoint.txt
+```
+
 **Options:**
 
 - `--to LANG`: Target language code (required)
 - `--from LANG`: Source language code (auto-detected if not specified)
 - `--output PATH`: Output file path (default: overwrite input)
-- `--recursive, -r`: Process directories recursively
-- `--force, -f`: Overwrite existing files without confirmation
+- `--full`: Enable full LLM translation (identifiers, comments, strings, docstrings)
+- `--llm-backend`: LLM backend: `anthropic`, `cohere-aya`, or `openai-compat` (default: anthropic)
+- `--llm-base-url`: Base URL for openai-compat backend (e.g., `http://localhost:8000`)
+- `--identifier-map PATH`: Load/save identifier glossary for cross-file consistency
+- `--checkpoint PATH`: Resume interrupted batch jobs
 
 **Example Output:**
 

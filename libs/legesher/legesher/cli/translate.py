@@ -45,6 +45,50 @@ def _build_supported_languages_text() -> str:
     return "\n".join(lines)
 
 
+def _create_llm_backend(llm_backend: str, llm_base_url: Optional[str]):
+    """Create an LLM backend based on CLI options.
+
+    Args:
+        llm_backend: Backend name (anthropic, cohere-aya, openai-compat)
+        llm_base_url: Optional base URL for openai-compat backend
+
+    Returns:
+        TextTranslationBackend instance
+    """
+    from legesher_i18n.api import TranslationCoordinator
+    from legesher_i18n.api.backends import ProviderBackendAdapter
+
+    if llm_backend == "anthropic":
+        from legesher_i18n.api.providers import AnthropicProvider
+
+        coordinator = TranslationCoordinator(providers=[AnthropicProvider()])
+    elif llm_backend == "cohere-aya":
+        from legesher_i18n.api.providers import CohereAyaProvider
+
+        coordinator = TranslationCoordinator(providers=[CohereAyaProvider()])
+    elif llm_backend == "openai-compat":
+        from legesher_i18n.api.providers import OpenAICompatProvider
+
+        kwargs = {}
+        if llm_base_url:
+            kwargs["base_url"] = llm_base_url
+        coordinator = TranslationCoordinator(providers=[OpenAICompatProvider(**kwargs)])
+    else:
+        raise click.BadParameter(
+            f"Unknown LLM backend: {llm_backend}. "
+            "Supported: anthropic, cohere-aya, openai-compat"
+        )
+
+    # Map CLI names (hyphenated) to provider .name attributes (underscored)
+    provider_name_map = {
+        "anthropic": "anthropic",
+        "cohere-aya": "cohere_aya",
+        "openai-compat": "openai_compat",
+    }
+    preferred = provider_name_map.get(llm_backend, llm_backend)
+    return ProviderBackendAdapter(coordinator, preferred_provider=preferred)
+
+
 @click.command(epilog="\b\nSupported Languages:\n" + _build_supported_languages_text())
 @click.argument("input", type=click.Path(exists=True), required=False)
 @click.option(
@@ -65,11 +109,47 @@ def _build_supported_languages_text() -> str:
     type=click.Path(),
     help="Output file or directory path",
 )
+@click.option(
+    "--full",
+    is_flag=True,
+    default=False,
+    help="Enable full LLM translation (identifiers, comments, strings, docstrings)",
+)
+@click.option(
+    "--llm-backend",
+    type=click.Choice(["anthropic", "cohere-aya", "openai-compat"]),
+    default="anthropic",
+    help="LLM backend for --full translation",
+    show_default=True,
+)
+@click.option(
+    "--llm-base-url",
+    type=str,
+    default=None,
+    help="Base URL for openai-compat backend (e.g., http://localhost:8000)",
+)
+@click.option(
+    "--identifier-map",
+    type=click.Path(),
+    default=None,
+    help="Path to load/save identifier map for cross-file consistency",
+)
+@click.option(
+    "--checkpoint",
+    type=click.Path(),
+    default=None,
+    help="Path to checkpoint file for resuming batch jobs (plain text, one path per line)",
+)
 def translate(
     input: Optional[str],
     source_lang: str,
     target_lang: str,
     output: Optional[str],
+    full: bool,
+    llm_backend: str,
+    llm_base_url: Optional[str],
+    identifier_map: Optional[str],
+    checkpoint: Optional[str],
 ):
     """Translate Python code between natural languages.
 
@@ -91,24 +171,71 @@ def translate(
 
         # Translate a directory recursively
         $ legesher translate src/ --from es --to en --output translated/
+
+        # Full LLM translation (identifiers, comments, strings)
+        $ legesher translate src/ --to es --full --llm-backend anthropic
+
+        # Full translation with local model
+        $ legesher translate src/ --to ur --full --llm-backend openai-compat \\
+            --llm-base-url http://localhost:8000
+
+        # Resume interrupted batch with identifier map
+        $ legesher translate src/ --to zh --full \\
+            --identifier-map .legesher/identifier_map.json \\
+            --checkpoint .legesher/checkpoint.txt
     """
     try:
-        # Load translator based on translation direction
-        # TokenTranslator contains maps FROM English TO target language
-        # For en->X translation, load target pack and use it directly
-        # For X->en translation, load source pack and use reverse()
-        if source_lang == "en":
+        # Load translator based on translation direction and mode
+        if full:
+            # Full LLM translation requires English source (tree-sitter parses English grammar)
+            if source_lang != "en":
+                click.echo(
+                    f"Error: --full mode requires English source (--from en). "
+                    f"Got --from {source_lang}. Translate to English first, "
+                    f"then use --full to translate to {target_lang}.",
+                    err=True,
+                )
+                sys.exit(1)
+            backend = _create_llm_backend(llm_backend, llm_base_url)
+
+            from legesher_core import create_translator
+            from legesher_i18n import LanguagePackLoader
+
+            loader = LanguagePackLoader()
+            pack = loader.load(target_lang, target="python")
+
+            # Load identifier map for cross-file consistency
+            id_map = None
+            if identifier_map:
+                from legesher_core.tree_sitter.identifier_map import IdentifierMap
+
+                id_map = IdentifierMap.load_or_create(Path(identifier_map))
+
+            translator = create_translator(
+                "python",
+                keyword_map=pack.keywords,
+                builtin_map=pack.builtins,
+                backend=backend,
+            )
+
+            # Inject identifier map if provided
+            if id_map is not None:
+                translator.identifier_map = id_map
+
+            click.echo(
+                f"Full translation mode: {llm_backend} backend, "
+                f"{source_lang} → {target_lang}",
+                err=True,
+            )
+        elif source_lang == "en":
+            # Standard keyword-only translation
             translator = TokenTranslator.from_language_pack(target_lang)
         else:
             # Translating from non-English to English (or another language)
-            # Load the source language pack and reverse it
             source_translator = TokenTranslator.from_language_pack(source_lang)
             if target_lang == "en":
                 translator = source_translator.reverse()
             else:
-                # Non-English to non-English (e.g., es->ar)
-                # Need to go through English: es->en->ar
-                # First translate to English, then to target
                 raise NotImplementedError(
                     f"Direct translation from {source_lang} to {target_lang} "
                     "is not yet supported. Please translate to English first, "
@@ -124,10 +251,26 @@ def translate(
             _handle_file(translator, input, source_lang, target_lang, output)
         elif Path(input).is_dir():
             # Directory mode
-            _handle_directory(translator, input, source_lang, target_lang, output)
+            _handle_directory(
+                translator,
+                input,
+                source_lang,
+                target_lang,
+                output,
+                checkpoint_path=checkpoint,
+            )
         else:
             click.echo(f"Error: Invalid input: {input}", err=True)
             sys.exit(1)
+
+        # Save identifier map after translation (if using --full + --identifier-map)
+        if full and identifier_map and hasattr(translator, "identifier_map"):
+            translator.identifier_map.save(Path(identifier_map))
+            click.echo(
+                f"Saved identifier map: {len(translator.identifier_map)} identifiers "
+                f"→ {identifier_map}",
+                err=True,
+            )
 
     except KeyError:
         # Language not supported
@@ -254,6 +397,7 @@ def _handle_directory(
     source_lang: str,
     target_lang: str,
     output_dir: Optional[str],
+    checkpoint_path: Optional[str] = None,
 ):
     """Handle recursive directory translation.
 
@@ -286,14 +430,32 @@ def _handle_directory(
     # Create output directory
     output_path.mkdir(parents=True, exist_ok=True)
 
+    # Load checkpoint (completed files to skip)
+    completed_files: set[str] = set()
+    if checkpoint_path and Path(checkpoint_path).exists():
+        completed_files = set(
+            Path(checkpoint_path).read_text(encoding="utf-8").strip().splitlines()
+        )
+        if completed_files:
+            click.echo(
+                f"Resuming: {len(completed_files)} files already completed",
+                err=True,
+            )
+
     # Translate each file
     success_count = 0
     error_count = 0
+    skipped_count = 0
 
     for i, py_file in enumerate(py_files, 1):
         # Calculate relative path
         rel_path = py_file.relative_to(input_path)
         output_file = output_path / rel_path
+
+        # Skip if already completed (checkpoint resume)
+        if str(rel_path) in completed_files:
+            skipped_count += 1
+            continue
 
         # Create output directory for this file
         output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -323,6 +485,11 @@ def _handle_directory(
             click.echo(" ✓")
             success_count += 1
 
+            # Save checkpoint after each successful file
+            if checkpoint_path:
+                with open(checkpoint_path, "a", encoding="utf-8") as cp:
+                    cp.write(str(rel_path) + "\n")
+
         except UnicodeDecodeError:
             click.echo(" ✗ Error: Could not decode as UTF-8", err=True)
             error_count += 1
@@ -337,7 +504,10 @@ def _handle_directory(
             continue
 
     # Summary
-    click.echo(f"\n✓ Translated {success_count}/{len(py_files)} files")
+    total = len(py_files)
+    click.echo(f"\n✓ Translated {success_count}/{total} files")
+    if skipped_count > 0:
+        click.echo(f"  Skipped {skipped_count} (already completed)")
     if error_count > 0:
         click.echo(f"✗ {error_count} files failed", err=True)
         sys.exit(1)

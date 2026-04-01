@@ -39,7 +39,7 @@ def cli():
 
     \b
     Examples:
-        # Translate a single file
+        # Translate a single file (keywords/builtins only)
         $ legesher translate input.py --from es --to en --output output.py
 
         # Translate from stdin to stdout
@@ -47,6 +47,9 @@ def cli():
 
         # Translate an entire directory
         $ legesher translate src/ --from es --to en --output translated/
+
+        # Full LLM translation (identifiers, comments, strings)
+        $ legesher translate src/ --to es --full --llm-backend anthropic
 
     For more information, visit: https://legesher.io
     """

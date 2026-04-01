@@ -9,6 +9,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Cohere Aya API translation provider (`CohereAyaProvider`) for hosted Aya models (AYA-191)
+- OpenAI-compatible translation provider (`OpenAICompatProvider`) for local models —
+  works with vLLM, Ollama, llama.cpp, LocalAI (AYA-191)
+- `ProviderBackendAdapter` bridging async `TranslationCoordinator` to sync
+  `TextTranslationBackend` protocol from legesher-core (AYA-191)
+
+### Fixed
+
+- Cohere/OpenAI-compat provider exceptions wrapped in `TranslationError` for
+  coordinator fallback handling (AYA-191)
+- OpenAI-compat provider handles `base_url` with or without `/v1` suffix (AYA-191)
+- OpenAI-compat catches JSON decode and response shape errors as `TranslationError` (AYA-191)
+- Batch adapter returns original text for failed translations instead of empty strings (AYA-191)
+
 ## [0.7.3] - 2026-03-19
 
 ## [0.7.2] - 2026-03-18

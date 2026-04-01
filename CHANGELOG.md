@@ -9,6 +9,44 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **core**: Full LLM-powered code translation — translate identifiers, comments, docstrings,
+  and string literals via pluggable LLM backends (AYA-191, #189)
+  - `LLMTranslator`: composes TreeSitterTranslator (keywords/builtins) with LLM backend
+  - `TranslatableExtractor`: AST walker extracting all translatable elements with context
+  - `IdentifierMap`: cross-file/cross-language translation glossary with JSON persistence
+  - `IdentifierValidator`: Python identifier validation with RTL/Unicode support
+  - `TranslationLogger`: JSONL training data collection for future model fine-tuning
+  - `TextTranslationBackend` protocol: dependency inversion for LLM backends
+  - `TranslationScope`: toggle translation of identifiers/comments/docstrings/strings
+- **i18n**: Cohere Aya API translation provider for hosted Aya models (AYA-191)
+- **i18n**: OpenAI-compatible translation provider for local models — works with vLLM,
+  Ollama, llama.cpp, LocalAI, or any `/v1/chat/completions` endpoint (AYA-191)
+- **i18n**: `ProviderBackendAdapter` bridging async TranslationCoordinator to sync
+  TextTranslationBackend protocol (AYA-191)
+- **cli**: `--full` flag for `legesher translate` enabling LLM translation (AYA-191)
+- **cli**: `--llm-backend` option (anthropic, cohere-aya, openai-compat) (AYA-191)
+- **cli**: `--llm-base-url` for custom OpenAI-compatible endpoints (AYA-191)
+- **cli**: `--identifier-map` for cross-file translation consistency (AYA-191)
+- **cli**: `--checkpoint` for resuming interrupted batch translation jobs (AYA-191)
+
+### Fixed
+
+- **core**: Escape closing quote sequences in LLM string/docstring translations to prevent
+  breaking out of string literals (AYA-191)
+- **core**: Handle multi-line LLM comment responses by prefixing each line with `#` (AYA-191)
+- **core**: F-string `string_content` nodes reconstructed as raw text instead of
+  re-wrapping in quotes (AYA-191, #191)
+- **core**: Comment text sent to LLM without `#` prefix, preventing double `##` in output (AYA-191, #191)
+- **i18n**: Cohere/OpenAI-compat provider exceptions wrapped in `TranslationError` for
+  coordinator fallback handling (AYA-191)
+- **i18n**: OpenAI-compat provider handles `base_url` with or without `/v1` suffix (AYA-191)
+- **i18n**: Batch adapter returns original text for failed translations, preventing
+  IdentifierMap poisoning with empty strings (AYA-191)
+- **cli**: `--full` mode enforces English source (`--from en`) with clear error (AYA-191)
+- **cli**: Provider name mapping for `--llm-backend` CLI values (AYA-191)
+
 ## [0.7.3] - 2026-03-19
 
 ### Language Pack Versions

@@ -94,8 +94,15 @@ from .metadata import MetadataManager
 from .token_mapper import TokenMapper
 from .transformer import TokenTranslator
 from .translation_tracker import TranslationTracker
+from .tree_sitter.llm_translator import LLMTranslator
 from .tree_sitter.translator import TreeSitterTranslator
-from .types import CulturalComment, CulturalCommentMetadata, Translator
+from .types import (
+    CulturalComment,
+    CulturalCommentMetadata,
+    TextTranslationBackend,
+    TranslationScope,
+    Translator,
+)
 
 __version__ = "0.7.3"
 
@@ -103,7 +110,10 @@ __all__ = [
     # Translation engine
     "TokenTranslator",
     "TreeSitterTranslator",
+    "LLMTranslator",
     "TokenMapper",
+    "TextTranslationBackend",
+    "TranslationScope",
     # Language abstraction interface (CORE-415)
     "Translator",
     "TranslatorBackend",

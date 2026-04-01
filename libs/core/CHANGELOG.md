@@ -9,6 +9,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Full LLM-powered code translation via `LLMTranslator` — composes TreeSitterTranslator
+  with pluggable `TextTranslationBackend` for translating identifiers, comments, docstrings,
+  and strings (AYA-191)
+- `TranslatableExtractor`: walks tree-sitter AST and extracts all translatable elements
+  with role context (function_name, parameter, variable, etc.)
+- `IdentifierMap`: cross-file/cross-language translation glossary with JSON persistence
+- `IdentifierValidator`: validates translated identifiers for Python syntax, keyword
+  collisions, and mixed-script detection (RTL/Unicode support)
+- `TranslationLogger`: JSONL training data collection for future model fine-tuning
+- `TextTranslationBackend` protocol: dependency inversion allowing LLM implementations
+  in libs/i18n without circular imports
+- `TranslationScope`: toggle translation of identifiers/comments/docstrings/strings
+- Factory extended: `create_translator(backend=...)` returns `LLMTranslator`
+
+### Fixed
+
+- Escape closing quote sequences in LLM string/docstring translations (AYA-191)
+- Handle multi-line LLM comment responses with per-line `#` prefix (AYA-191)
+- F-string `string_content` nodes reconstructed as raw text (AYA-191)
+- Comment text sent to LLM without `#` prefix, preventing double `##` (AYA-191)
+
 ## [0.7.3] - 2026-03-19
 
 ## [0.7.2] - 2026-03-18

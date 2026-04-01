@@ -214,7 +214,7 @@ See [legesher-language-server](libs/language-server/README.md) for LSP documenta
 ### CLI Tools
 
 - **`legesher init`:** Initialize Legesher in a project
-- **`legesher translate`:** Translate files or directories
+- **`legesher translate`:** Translate files or directories (keywords only, or `--full` for LLM-powered full translation)
 - **`legesher run`:** Run translated Python files directly
 - **`legesher git setup`:** Initialize git integration
 - **`legesher git clean/smudge`:** Git filter commands

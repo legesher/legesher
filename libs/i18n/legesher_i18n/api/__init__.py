@@ -38,4 +38,8 @@ __all__ = [
     "UsageRecord",
     # Dashboard
     "DashboardGenerator",
+    # Backend adapter
+    "ProviderBackendAdapter",
 ]
+
+from .backends import ProviderBackendAdapter

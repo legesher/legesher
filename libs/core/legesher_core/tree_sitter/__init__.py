@@ -12,11 +12,21 @@ Components:
 See: https://tree-sitter.github.io/tree-sitter/
 """
 
+from .extractor import TranslatableExtractor
+from .identifier_map import IdentifierMap
+from .identifier_validator import IdentifierValidator
+from .llm_translator import LLMTranslator
 from .parser import PythonParser, TreeSitterError
+from .translation_logger import TranslationLogger
 from .translator import TreeSitterTranslator
 
 __all__ = [
+    "IdentifierMap",
+    "IdentifierValidator",
+    "LLMTranslator",
     "PythonParser",
+    "TranslatableExtractor",
+    "TranslationLogger",
     "TreeSitterError",
     "TreeSitterTranslator",
 ]

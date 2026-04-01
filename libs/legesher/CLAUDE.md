@@ -45,7 +45,7 @@ libs/legesher/
 ### translate - Convert Code
 
 ```bash
-# Translate file
+# Translate file (keywords/builtins only)
 legesher translate input.py --from es --to en --output output.py
 
 # Translate directory
@@ -59,6 +59,21 @@ legesher translate input.py --to en -o output.py
 
 # Pipe translation
 cat input.py | legesher translate --from es --to en
+
+# Full LLM translation (identifiers, comments, strings, docstrings)
+legesher translate src/ --to es --full --llm-backend anthropic
+
+# Full translation with local model (vLLM, Ollama, llama.cpp)
+legesher translate src/ --to ur --full --llm-backend openai-compat \
+    --llm-base-url http://localhost:8000
+
+# Full translation with Cohere Aya
+legesher translate src/ --to zh --full --llm-backend cohere-aya
+
+# Batch with cross-file consistency and resume support
+legesher translate src/ --to zh --full \
+    --identifier-map .legesher/identifier_map.json \
+    --checkpoint .legesher/checkpoint.txt
 ```
 
 ### git - Repository Integration

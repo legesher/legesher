@@ -9,6 +9,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `--full` flag for `legesher translate` enabling LLM-powered full code translation
+  (identifiers, comments, docstrings, strings) (AYA-191)
+- `--llm-backend` option: choose between `anthropic`, `cohere-aya`, `openai-compat`
+- `--llm-base-url` for custom OpenAI-compatible endpoints (local models)
+- `--identifier-map` for cross-file translation consistency (JSON glossary)
+- `--checkpoint` for resuming interrupted batch translation jobs (plaintext, one path per line)
+
+### Fixed
+
+- `--full` mode enforces English source (`--from en`) with clear error message (AYA-191)
+- Provider name mapping for `--llm-backend` CLI values to provider `.name` attributes (AYA-191)
+
 ## [0.7.3] - 2026-03-19
 
 ## [0.7.2] - 2026-03-18
