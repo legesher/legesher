@@ -198,7 +198,7 @@ def translate(
                 sys.exit(1)
             backend = _create_llm_backend(llm_backend, llm_base_url)
 
-            from legesher_core import TokenTranslator, create_translator
+            from legesher_core import create_translator
 
             # Load keyword/builtin maps via TokenTranslator (uses the working pack loader)
             base_translator = TokenTranslator.from_language_pack(target_lang)
