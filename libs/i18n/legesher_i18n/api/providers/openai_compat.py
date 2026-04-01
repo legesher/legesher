@@ -157,7 +157,9 @@ class OpenAICompatProvider(TranslationProvider):
             source_lang=source_lang,
             target_lang=target_lang,
             provider=self.name,
+            confidence=0.8,
             billed_characters=billed_chars,
+            quality_score=7.5,
             timestamp=datetime.now(),
             metadata={
                 "model": self._model,

@@ -198,11 +198,10 @@ def translate(
                 sys.exit(1)
             backend = _create_llm_backend(llm_backend, llm_base_url)
 
-            from legesher_core import create_translator
-            from legesher_i18n import LanguagePackLoader
+            from legesher_core import TokenTranslator, create_translator
 
-            loader = LanguagePackLoader()
-            pack = loader.load(target_lang, target="python")
+            # Load keyword/builtin maps via TokenTranslator (uses the working pack loader)
+            base_translator = TokenTranslator.from_language_pack(target_lang)
 
             # Load identifier map for cross-file consistency
             id_map = None
@@ -213,8 +212,8 @@ def translate(
 
             translator = create_translator(
                 "python",
-                keyword_map=pack.keywords,
-                builtin_map=pack.builtins,
+                keyword_map=base_translator.mapper.keyword_map,
+                builtin_map=base_translator.mapper.builtin_map,
                 backend=backend,
             )
 
