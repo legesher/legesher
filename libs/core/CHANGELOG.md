@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-04-02
+
 ### Added
 
 - Full LLM-powered code translation via `LLMTranslator` — composes TreeSitterTranslator
