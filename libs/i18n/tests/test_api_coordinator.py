@@ -44,9 +44,13 @@ class MockProvider(TranslationProvider):
         return True
 
     async def translate(
-        self, text: str, source_lang: str, target_lang: str
+        self,
+        text: str,
+        source_lang: str,
+        target_lang: str,
+        context: Optional[dict] = None,
     ) -> TranslationResult:
-        self.translate_calls.append((text, source_lang, target_lang))
+        self.translate_calls.append((text, source_lang, target_lang, context))
 
         if self._should_fail:
             raise TranslationError(f"{self.name} failed")

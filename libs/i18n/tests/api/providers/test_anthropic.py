@@ -151,11 +151,19 @@ class TestTranslation:
 
         assert result.text == "definir"
 
-        # Verify context was included in prompt
+        # Verify prompt was constructed — branch on which path was taken
         call_args = provider.client.messages.create.call_args
-        prompt = call_args.kwargs["messages"][0]["content"]
-        assert "ADDITIONAL CONTEXT" in prompt
-        assert "Keyword for defining functions" in prompt
+        kwargs = call_args.kwargs
+        prompt = kwargs["messages"][0]["content"]
+
+        if "system" in kwargs:
+            # PromptBuilder path: system prompt has style guide markers
+            assert "Critical Rules" in kwargs["system"]
+            assert "`def`" in prompt  # term appears in identifier table
+        else:
+            # Legacy path: context embedded in prompt body
+            assert "ADDITIONAL CONTEXT" in prompt
+            assert "Keyword for defining functions" in prompt
 
     @pytest.mark.asyncio
     async def test_translate_tracks_usage(self, provider, mock_response):
