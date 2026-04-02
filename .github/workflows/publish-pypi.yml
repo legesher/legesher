@@ -51,6 +51,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -158,21 +159,13 @@ jobs:
 
       - name: Publish to TestPyPI
         if: github.event.inputs.environment == 'testpypi'
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        run: |
-          echo "🚀 Publishing to TestPyPI..."
-          twine upload --repository testpypi dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
 
       - name: Publish to PyPI
         if: github.event.inputs.environment == 'pypi'
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          echo "🚀 Publishing to PyPI..."
-          twine upload dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Verify installation (TestPyPI)
         if: github.event.inputs.environment == 'testpypi'
