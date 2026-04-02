@@ -1,7 +1,9 @@
-"""Tests for semantic tokens provider (CORE-450).
+"""Tests for semantic tokens provider (CORE-450, CORE-709).
 
 Tests cover:
 - Basic keyword highlighting for Spanish, Arabic, Chinese
+- Builtin highlighting (CORE-709)
+- Exception highlighting (CORE-709)
 - Edge cases: strings, comments, mixed languages
 - Token encoding correctness
 - Performance requirements (<100ms for 1000 lines)
@@ -11,6 +13,8 @@ import time
 
 from legesher_language_server.config import LanguageServerConfig
 from legesher_language_server.providers.semantic_tokens import (
+    TOKEN_TYPE_CLASS,
+    TOKEN_TYPE_FUNCTION,
     TOKEN_TYPE_KEYWORD,
     SemanticTokensProvider,
     provide_semantic_tokens,
@@ -37,7 +41,7 @@ clase MiClase:
         )
 
         # Force load keyword mappings
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
 
         # Get tokens (synchronous)
         tokens = provider.get_semantic_tokens()
@@ -65,7 +69,7 @@ clase MiClase:
             document_uri="file:///test.py",
         )
 
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
         # Should find: تعريف, إرجاع
@@ -74,8 +78,8 @@ clase MiClase:
     def test_keywords_in_strings_ignored(self):
         """Test that keywords inside strings are NOT highlighted."""
         code = """definir test():
-    cadena = "definir devolver clase"
-    devolver cadena
+    resultado = "definir devolver clase"
+    devolver resultado
 """
         provider = SemanticTokensProvider(
             source_lang="en",
@@ -84,15 +88,15 @@ clase MiClase:
             document_uri="file:///test.py",
         )
 
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
         # Should find only: definir, devolver (not the ones in string)
-        # cadena is a builtin translation but we're only highlighting keywords in Phase 1
+        # "resultado" is not a keyword/builtin/exception
         assert len(tokens) == 2
 
-        # Verify tokens are NOT in the string line
-        for line, char, length, token_type, modifiers in tokens:
+        # Verify no tokens are on the string line
+        for line, _char, _length, _token_type, _modifiers in tokens:
             assert line != 1  # Line 1 has the string
 
     def test_keywords_in_comments_ignored(self):
@@ -109,7 +113,7 @@ definir test():
             document_uri="file:///test.py",
         )
 
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
         # Should find only: definir, devolver (not the ones in comments)
@@ -133,7 +137,7 @@ definir spanish_func():
             document_uri="file:///test.py",
         )
 
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
         # Should find: def, return, definir, devolver (all 4)
@@ -156,7 +160,7 @@ sino:
             document_uri="file:///test.py",
         )
 
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
         # Should find: si, y, devolver, verdadero, sino, devolver, falso
@@ -175,7 +179,7 @@ sino:
             document_uri="file:///test.py",
         )
 
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
         # Should return partial tokens collected before error
@@ -191,7 +195,7 @@ sino:
             document_uri="file:///test.py",
         )
 
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
         assert len(tokens) == 0
@@ -208,7 +212,7 @@ sino:
             document_uri="file:///test.py",
         )
 
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
         encoded = provider.encode_tokens(tokens)
 
@@ -238,7 +242,7 @@ sino:
             document_uri="file:///test.py",
         )
 
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
         encoded = provider.encode_tokens(tokens)
 
@@ -263,7 +267,7 @@ sino:
             document_uri="file:///test.py",
         )
 
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
         # Should return empty list (no keywords loaded)
@@ -290,7 +294,7 @@ sino:
             document_uri="file:///test.py",
         )
 
-        provider._load_keyword_mappings()
+        provider._load_token_mappings()
 
         # Measure time
         start = time.perf_counter()
@@ -312,6 +316,118 @@ sino:
         assert elapsed_ms < 100, f"Performance requirement failed: {elapsed_ms:.2f}ms"
 
         print(f"✓ Performance test passed: {elapsed_ms:.2f}ms for 1000 lines")
+
+    def test_spanish_builtins_highlighted(self):
+        """Test that translated builtins get correct token types (CORE-709).
+
+        Builtin functions (print→imprimir) get TOKEN_TYPE_FUNCTION (yellow).
+        Builtin types (float→flotante) get TOKEN_TYPE_CLASS (teal).
+        """
+        code = """imprimir("hola")
+x = flotante(3)
+z = entrada("prompt")
+"""
+        provider = SemanticTokensProvider(
+            source_lang="en",
+            target_lang="es",
+            document_text=code,
+            document_uri="file:///test.py",
+        )
+
+        provider._load_token_mappings()
+        tokens = provider.get_semantic_tokens()
+
+        # imprimir (print) and entrada (input) are builtin functions → FUNCTION
+        func_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_FUNCTION]
+        assert len(func_tokens) == 2
+
+        # flotante (float) is a builtin type → CLASS
+        type_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_CLASS]
+        assert len(type_tokens) == 1
+
+    def test_spanish_exceptions_highlighted(self):
+        """Test that translated exceptions get TOKEN_TYPE_CLASS (CORE-709)."""
+        code = """probar:
+    pasar
+excepto errordevalor:
+    pasar
+"""
+        provider = SemanticTokensProvider(
+            source_lang="en",
+            target_lang="es",
+            document_text=code,
+            document_uri="file:///test.py",
+        )
+
+        provider._load_token_mappings()
+        tokens = provider.get_semantic_tokens()
+
+        # Find the exception token
+        exception_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_CLASS]
+        assert len(exception_tokens) >= 1
+
+        # Verify errordevalor is classified as CLASS
+        error_token = exception_tokens[0]
+        assert error_token[2] == len("errordevalor")  # length
+
+    def test_mixed_keywords_builtins_exceptions(self):
+        """Test all three token categories in one function (CORE-709)."""
+        code = """definir procesar():
+    probar:
+        imprimir(flotante(entrada("num")))
+    excepto errordevalor:
+        devolver nulo
+"""
+        provider = SemanticTokensProvider(
+            source_lang="en",
+            target_lang="es",
+            document_text=code,
+            document_uri="file:///test.py",
+        )
+
+        provider._load_token_mappings()
+        tokens = provider.get_semantic_tokens()
+
+        keyword_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_KEYWORD]
+        func_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_FUNCTION]
+        class_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_CLASS]
+
+        # Keywords: definir, probar, excepto, devolver, nulo
+        assert len(keyword_tokens) >= 5
+        # Builtin functions: imprimir, entrada
+        assert len(func_tokens) >= 2
+        # CLASS tokens: errordevalor (exception) + flotante (builtin type)
+        assert len(class_tokens) >= 2
+
+    def test_english_builtins_in_mixed_code(self):
+        """Test English builtins are highlighted when target is Spanish (CORE-709)."""
+        code = """print("hello")
+definir test():
+    devolver float(42)
+"""
+        provider = SemanticTokensProvider(
+            source_lang="en",
+            target_lang="es",
+            document_text=code,
+            document_uri="file:///test.py",
+        )
+
+        provider._load_token_mappings()
+        tokens = provider.get_semantic_tokens()
+
+        # Helper to extract token name from source
+        def token_name(t: tuple) -> str:
+            return code.splitlines()[t[0]][t[1] : t[1] + t[2]]
+
+        # "print" is a builtin function → TOKEN_TYPE_FUNCTION
+        func_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_FUNCTION]
+        func_names = [token_name(t) for t in func_tokens]
+        assert "print" in func_names
+
+        # "float" is a builtin type → TOKEN_TYPE_CLASS
+        class_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_CLASS]
+        class_names = [token_name(t) for t in class_tokens]
+        assert "float" in class_names
 
 
 class TestSemanticTokensIntegration:

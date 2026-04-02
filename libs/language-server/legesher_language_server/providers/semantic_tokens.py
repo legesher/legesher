@@ -1,12 +1,13 @@
-"""Semantic tokens provider for syntax highlighting translated keywords.
+"""Semantic tokens provider for syntax highlighting translated code.
 
-This module provides LSP semantic token highlighting for translated Python keywords.
-Uses Python's tokenize module for accurate, fast token parsing that automatically
-handles strings, comments, and other edge cases.
+This module provides LSP semantic token highlighting for translated Python keywords,
+builtins, and exceptions. Uses Python's tokenize module for accurate, fast token
+parsing that automatically handles strings, comments, and other edge cases.
 
-Implementation for CORE-450.
+Implementation for CORE-450, extended by CORE-709 (builtins + exceptions).
 """
 
+import builtins as builtins_module
 import io
 import logging
 import tokenize
@@ -25,6 +26,17 @@ TOKEN_TYPE_CLASS = 1
 TOKEN_TYPE_FUNCTION = 2
 TOKEN_TYPE_VARIABLE = 3
 TOKEN_TYPE_PARAMETER = 4
+
+# Pre-compute lowercase→proper-case map for Python builtins.
+# Used to resolve YAML lowercase keys (e.g., "valueerror") to Python names ("ValueError"),
+# and to distinguish builtin types (int, str) from builtin functions (print, len).
+_BUILTIN_CASE_MAP: dict[str, str] = {}
+_BUILTIN_TYPE_NAMES_LOWER: set[str] = set()
+for _name in dir(builtins_module):
+    _obj = getattr(builtins_module, _name, None)
+    _BUILTIN_CASE_MAP[_name.lower()] = _name
+    if isinstance(_obj, type):
+        _BUILTIN_TYPE_NAMES_LOWER.add(_name.lower())
 
 
 def provide_semantic_tokens(server: "LegesherLanguageServer", uri: str) -> SemanticTokens | None:
@@ -89,15 +101,18 @@ class SemanticTokensProvider:
         self.document_text = document_text
         self.document_uri = document_uri
 
-        # Lazy-load keyword mappings
+        # Lazy-load token mappings (keywords, builtins, exceptions)
         self._translated_keywords: set[str] | None = None
         self._reverse_keyword_map: dict[str, str] | None = None
+        self._translated_builtin_types: set[str] | None = None
+        self._translated_builtin_funcs: set[str] | None = None
+        self._translated_exceptions: set[str] | None = None
 
-    def _load_keyword_mappings(self) -> None:
-        """Load keyword mappings from language pack (lazy initialization).
+    def _load_token_mappings(self) -> None:
+        """Load keyword, builtin, and exception mappings from language pack.
 
         This loads the language pack on first use to avoid initialization overhead.
-        Creates both a set for fast lookup and reverse map for translation.
+        Creates fast lookup sets for keywords, builtins, and exceptions.
         """
         if self._translated_keywords is not None:
             return  # Already loaded
@@ -123,8 +138,40 @@ class SemanticTokensProvider:
             # Create fast lookup set
             self._translated_keywords = set(self._reverse_keyword_map.keys())
 
+            # Build builtin sets, splitting types (int, str) from functions (print, len)
+            # so VS Code colors them differently (teal vs yellow)
+            builtin_type_names: set[str] = set()
+            builtin_func_names: set[str] = set()
+            for english_lower, translated in pack.builtins.items():
+                proper_name = _BUILTIN_CASE_MAP.get(english_lower)
+                if english_lower in _BUILTIN_TYPE_NAMES_LOWER:
+                    builtin_type_names.add(translated)
+                    builtin_type_names.add(english_lower)  # English fallback (lowercase)
+                    if proper_name is not None:
+                        builtin_type_names.add(proper_name)  # Properly-cased (e.g., Ellipsis)
+                else:
+                    builtin_func_names.add(translated)
+                    builtin_func_names.add(english_lower)  # English fallback (lowercase)
+                    if proper_name is not None:
+                        builtin_func_names.add(proper_name)  # Properly-cased (e.g., NotImplemented)
+            self._translated_builtin_types = builtin_type_names
+            self._translated_builtin_funcs = builtin_func_names
+
+            # Build exceptions set: translated exception names + English exceptions
+            exception_names = set(pack.exceptions.values())
+            # Add properly-cased English exceptions for mixed-language code
+            # YAML keys are lowercase (e.g., "valueerror") but Python uses "ValueError"
+            for lowercase_key in pack.exceptions.keys():
+                proper_name = _BUILTIN_CASE_MAP.get(lowercase_key)
+                if proper_name is not None:
+                    exception_names.add(proper_name)
+            self._translated_exceptions = exception_names
+
             logger.debug(
-                f"Loaded {len(self._translated_keywords)} keywords "
+                f"Loaded {len(self._translated_keywords)} keywords, "
+                f"{len(self._translated_builtin_types)} builtin types, "
+                f"{len(self._translated_builtin_funcs)} builtin funcs, "
+                f"{len(self._translated_exceptions)} exceptions "
                 f"for language '{self.target_lang}'"
             )
 
@@ -133,6 +180,9 @@ class SemanticTokensProvider:
             # Fallback to empty sets
             self._translated_keywords = set()
             self._reverse_keyword_map = {}
+            self._translated_builtin_types = set()
+            self._translated_builtin_funcs = set()
+            self._translated_exceptions = set()
 
     def get_semantic_tokens(self) -> list[tuple[int, int, int, int, int]]:
         """Parse document and extract semantic tokens.
@@ -147,11 +197,21 @@ class SemanticTokensProvider:
             - Fast (O(n) single pass)
         """
         # Ensure keyword mappings are loaded
-        self._load_keyword_mappings()
+        self._load_token_mappings()
 
-        if not self._translated_keywords:
-            # No keywords loaded - return empty list
+        if (
+            not self._translated_keywords
+            and not self._translated_builtin_types
+            and not self._translated_builtin_funcs
+            and not self._translated_exceptions
+        ):
             return []
+
+        # After _load_token_mappings(), all sets are guaranteed non-None
+        assert self._translated_keywords is not None
+        assert self._translated_builtin_types is not None
+        assert self._translated_builtin_funcs is not None
+        assert self._translated_exceptions is not None
 
         tokens: list[tuple[int, int, int, int, int]] = []
 
@@ -165,17 +225,25 @@ class SemanticTokensProvider:
                 if tok.type != tokenize.NAME:
                     continue
 
-                # Check if token is a translated keyword
+                # Classify token: keyword, exception, builtin type, or builtin function
                 if tok.string in self._translated_keywords:
-                    # Token is a keyword! Add to semantic tokens
-                    # LSP uses 0-based line numbers, tokenize uses 1-based
-                    line = tok.start[0] - 1
-                    char = tok.start[1]
-                    length = len(tok.string)
                     token_type = TOKEN_TYPE_KEYWORD
-                    modifiers = 0  # No modifiers in Phase 1
+                elif tok.string in self._translated_exceptions:
+                    token_type = TOKEN_TYPE_CLASS
+                elif tok.string in self._translated_builtin_types:
+                    token_type = TOKEN_TYPE_CLASS
+                elif tok.string in self._translated_builtin_funcs:
+                    token_type = TOKEN_TYPE_FUNCTION
+                else:
+                    continue
 
-                    tokens.append((line, char, length, token_type, modifiers))
+                # LSP uses 0-based line numbers, tokenize uses 1-based
+                line = tok.start[0] - 1
+                char = tok.start[1]
+                length = len(tok.string)
+                modifiers = 0
+
+                tokens.append((line, char, length, token_type, modifiers))
 
         except tokenize.TokenError as e:
             # Document has syntax errors - tokenize fails
