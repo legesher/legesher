@@ -5,7 +5,7 @@ import logging
 import os
 from collections import deque
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Dict, Optional
 
 try:
     import deepl
@@ -170,6 +170,7 @@ class DeepLProvider(TranslationProvider):
         text: str,
         source_lang: str,
         target_lang: str,
+        context: Optional[Dict] = None,
     ) -> TranslationResult:
         """
         Translate text using DeepL API.

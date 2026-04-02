@@ -17,6 +17,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `--llm-base-url` for custom OpenAI-compatible endpoints (local models)
 - `--identifier-map` for cross-file translation consistency (JSON glossary)
 - `--checkpoint` for resuming interrupted batch translation jobs (plaintext, one path per line)
+- `--llm-model` for specifying model name with openai-compat backend
+  (e.g., `--llm-model aya:latest`) (CORE-706)
+- `--no-identifier-map` flag for batch-translating unrelated files independently
+  without cross-contamination (CORE-706)
+- Auto-save IdentifierMap to `.legesher/identifier_map.json` by default in `--full`
+  mode — committable to git as a living project dictionary (CORE-706)
 
 ### Fixed
 

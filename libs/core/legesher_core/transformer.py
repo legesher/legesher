@@ -389,10 +389,19 @@ class TokenTranslator:
             f"{len(pack.builtins)} builtins) for Python {pack.version}"
         )
 
-        # Create translator with loaded maps
+        # Merge exceptions into builtin_map (PascalCase remapping)
+        from .utils import merge_exception_translations
+
+        builtin_map = pack.builtins
+        if hasattr(pack, "exceptions") and pack.exceptions:
+            builtin_map = merge_exception_translations(pack.builtins, pack.exceptions)
+            logger.debug(
+                f"Merged {len(pack.exceptions)} exception translations into builtin map"
+            )
+
         return cls(
             keyword_map=pack.keywords,
-            builtin_map=pack.builtins,
+            builtin_map=builtin_map,
             python_version=python_version,
         )
 

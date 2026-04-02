@@ -66,6 +66,18 @@ class ClaudeModel(TranslationModel):
 
         self.client = AsyncAnthropic(api_key=self.api_key) if not self.dry_run else None
 
+        # Try to load PromptBuilder for style-guide-aware prompts
+        self._prompt_builder = None
+        try:
+            from legesher_i18n.style_guides import StyleGuideLoader
+            from legesher_i18n.prompt_builder import PromptBuilder
+
+            loader = StyleGuideLoader()
+            self._prompt_builder = PromptBuilder(loader)
+            logger.info("PromptBuilder loaded — style-guide-aware prompts enabled")
+        except Exception as exc:
+            logger.debug("PromptBuilder not available, using legacy prompts: %s", exc)
+
         logger.info(
             f"Initialized Claude model: {model} (dry_run={dry_run}, max_retries={max_retries})"
         )
@@ -84,8 +96,9 @@ class ClaudeModel(TranslationModel):
             Estimated cost in USD
         """
         # Estimate token counts
-        prompt = self._build_prompt(request)
-        estimated_input_tokens = len(prompt) // 4  # Rough estimate: 1 token ≈ 4 chars
+        system_prompt, user_prompt = self._build_prompt_pair(request)
+        total_chars = len(system_prompt or "") + len(user_prompt)
+        estimated_input_tokens = total_chars // 4  # Rough estimate: 1 token ≈ 4 chars
         estimated_output_tokens = 200  # Conservative estimate for JSON response
 
         input_cost = estimated_input_tokens * self.INPUT_COST_PER_TOKEN
@@ -108,7 +121,8 @@ class ClaudeModel(TranslationModel):
         if self.dry_run:
             return self._mock_translation(request)
 
-        prompt = self._build_prompt(request)
+        # Build prompt — use PromptBuilder when available for style-guide-aware prompts
+        system_prompt, user_prompt = self._build_prompt_pair(request)
 
         # Retry with exponential backoff
         last_exception = None
@@ -119,11 +133,15 @@ class ClaudeModel(TranslationModel):
                     f"(attempt {attempt + 1}/{self.max_retries})"
                 )
 
-                response = await self.client.messages.create(
-                    model=self.model,
-                    max_tokens=self.max_tokens,
-                    messages=[{"role": "user", "content": prompt}],
-                )
+                api_kwargs = {
+                    "model": self.model,
+                    "max_tokens": self.max_tokens,
+                    "messages": [{"role": "user", "content": user_prompt}],
+                }
+                if system_prompt:
+                    api_kwargs["system"] = system_prompt
+
+                response = await self.client.messages.create(**api_kwargs)
 
                 # Extract response text
                 response_text = response.content[0].text
@@ -181,8 +199,77 @@ class ClaudeModel(TranslationModel):
             raise last_exception
         raise Exception("Translation failed after all retries")
 
+    def _build_prompt_pair(
+        self, request: TranslationRequest
+    ) -> tuple[Optional[str], str]:
+        """Build a (system_prompt, user_prompt) pair for the API call.
+
+        When PromptBuilder is available, delegates to it for style-guide-aware
+        prompts using the ``system`` parameter.  Otherwise falls back to the
+        legacy single-prompt approach (system=None, user=full prompt).
+
+        Args:
+            request: Translation request
+
+        Returns:
+            Tuple of (system_prompt_or_None, user_prompt)
+        """
+        if self._prompt_builder is not None:
+            try:
+                # Wrap the single term as an identifier for PromptBuilder
+                identifier = {
+                    "text": request.term,
+                    "role": "keyword",
+                    "context": {},
+                }
+                # Feed any existing context/standards through the context dict
+                if request.context:
+                    identifier["context"]["deep_context"] = request.context
+                if request.linguistic_standards:
+                    identifier["context"]["linguistic_standards"] = (
+                        request.linguistic_standards
+                    )
+
+                system, user = self._prompt_builder.build_identifier_prompt(
+                    identifiers=[identifier],
+                    target_lang=request.target_language,
+                    existing_glossary={},
+                )
+
+                # Append the JSON output format expected by _parse_json_response
+                user += (
+                    "\n\nIMPORTANT: For EACH identifier, also provide linguistic "
+                    "metadata. Respond with ONLY valid JSON in this format:\n"
+                    "{\n"
+                    '  "translation": "the translated term",\n'
+                    '  "word_type": "verb|noun|adjective|preposition|conjunction|etc",\n'
+                    '  "form": "infinitive|present|singular|etc",\n'
+                    '  "confidence": 0.95,\n'
+                    '  "alternatives": ["alternative1", "alternative2"],\n'
+                    '  "rationale": "Brief explanation (2-3 sentences)"\n'
+                    "}\n"
+                    "Do not wrap JSON in markdown code blocks."
+                )
+
+                logger.debug(
+                    "Using PromptBuilder for '%s' -> %s",
+                    request.term,
+                    request.target_language,
+                )
+                return system, user
+
+            except Exception as exc:
+                logger.warning(
+                    "PromptBuilder failed for '%s', falling back to legacy prompt: %s",
+                    request.term,
+                    exc,
+                )
+
+        # Legacy fallback: entire prompt in the user message
+        return None, self._build_prompt(request)
+
     def _build_prompt(self, request: TranslationRequest) -> str:
-        """Build translation prompt for Claude.
+        """Build translation prompt for Claude (legacy fallback).
 
         Args:
             request: Translation request

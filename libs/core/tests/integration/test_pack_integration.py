@@ -455,3 +455,92 @@ if True:
         # Arabic keywords should be present
         assert arabic_keywords["def"] in result
         assert arabic_keywords["if"] in result
+
+
+class TestExceptionTranslation:
+    """Test that exception names are loaded and translated."""
+
+    def test_exceptions_loaded_into_builtin_map(self):
+        """Exceptions should be merged into the builtin map with PascalCase keys."""
+        translator = TokenTranslator.from_language_pack("es")
+        assert translator.mapper.get_builtin("ValueError") is not None
+        assert translator.mapper.get_builtin("TypeError") is not None
+        assert translator.mapper.get_builtin("IndexError") is not None
+
+    def test_exception_translation_in_code(self):
+        """Exception names in except clauses should be translated."""
+        translator = TokenTranslator.from_language_pack("es")
+
+        code = """
+try:
+    x = int("abc")
+except ValueError:
+    print("bad value")
+"""
+        result = translator.translate_code(code)
+
+        # ValueError should be translated, not left as English
+        assert "ValueError" not in result
+        # The Spanish translation should be present
+        ve_translation = translator.mapper.get_builtin("ValueError")
+        assert ve_translation in result
+
+    def test_multiple_exceptions_translated(self):
+        """Multiple exception types in the same code should all translate."""
+        translator = TokenTranslator.from_language_pack("zh")
+
+        code = """
+try:
+    pass
+except (ValueError, TypeError, KeyError):
+    pass
+"""
+        result = translator.translate_code(code)
+
+        assert "ValueError" not in result
+        assert "TypeError" not in result
+        assert "KeyError" not in result
+
+    def test_exception_round_trip(self):
+        """Exception translation should survive round-trip EN→ES→EN."""
+        en_to_es = TokenTranslator.from_language_pack("es")
+        es_to_en = en_to_es.reverse()
+
+        original = """
+try:
+    x = 1 / 0
+except ZeroDivisionError:
+    pass
+"""
+        spanish = en_to_es.translate_code(original)
+        assert "ZeroDivisionError" not in spanish
+
+        back = es_to_en.translate_code(spanish)
+        assert "ZeroDivisionError" in back
+
+    @pytest.mark.parametrize("lang", ["es", "zh", "ur"])
+    def test_common_exceptions_translated_per_language(self, lang):
+        """Common exceptions should translate in all 3 target languages."""
+        translator = TokenTranslator.from_language_pack(lang)
+
+        for exc_name in [
+            "ValueError",
+            "TypeError",
+            "KeyError",
+            "IndexError",
+            "RuntimeError",
+        ]:
+            translation = translator.mapper.get_builtin(exc_name)
+            assert translation is not None, (
+                f"{exc_name} not found in {lang} builtin map"
+            )
+            assert translation != exc_name, f"{exc_name} not translated in {lang}"
+
+    def test_exception_count_in_pack_info(self):
+        """Pack info builtin_count should now include exceptions."""
+        translator = TokenTranslator.from_language_pack("es")
+        info = translator.get_pack_info()
+
+        # Builtins + exceptions should be significantly more than builtins alone
+        # Typical: ~72 builtins + ~69 exceptions = ~141
+        assert info["builtin_count"] > 100

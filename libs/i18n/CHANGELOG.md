@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Per-language coding style guides (PEP 8 equivalents) for zh, es, ur with hierarchical
+  YAML files: `python.yml` (base) -> `_ltr/_rtl.yml` (direction) -> `{lang}.yml` (CORE-706)
+- `StyleGuideLoader`: loads and deep-merges hierarchical style guide files with in-memory caching
+  and RTL auto-detection from `languages.json` (CORE-706)
+- `PromptBuilder`: provider-agnostic prompt composition returning cacheable
+  `(system_prompt, user_prompt)` tuples with language framing, style rules, identifier
+  glossary, and string preservation rules (CORE-706)
+- Shared `response_parser.parse_llm_response()` for extracting translations from
+  JSON responses across all LLM providers (CORE-706)
+- `context` parameter added to `TranslationProvider.translate()` base class and all
+  6 provider implementations for forwarding PromptBuilder context (CORE-706)
+- PromptBuilder wired into Anthropic, OpenAI-compat, and Cohere Aya providers (CORE-706)
 - Cohere Aya API translation provider (`CohereAyaProvider`) for hosted Aya models (AYA-191)
 - OpenAI-compatible translation provider (`OpenAICompatProvider`) for local models —
   works with vLLM, Ollama, llama.cpp, LocalAI (AYA-191)
@@ -19,6 +31,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Backend adapter forwards per-item context to providers instead of discarding it;
+  uses batch API when no context is present for performance (CORE-706)
+- Coordinator skips cache when context is provided (different prompts per context) (CORE-706)
 - Cohere/OpenAI-compat provider exceptions wrapped in `TranslationError` for
   coordinator fallback handling (AYA-191)
 - OpenAI-compat provider handles `base_url` with or without `/v1` suffix (AYA-191)

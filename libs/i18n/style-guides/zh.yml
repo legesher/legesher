@@ -1,0 +1,169 @@
+# zh.yml — Chinese Simplified style guide for Legesher translations
+# Extends base Python conventions and LTR text direction.
+# Targets Simplified Chinese (简体中文) as used in mainland China.
+
+language: zh
+extends:
+- python.yml
+- _ltr.yml
+version: 0.1.0
+status: experimental
+
+# ---------------------------------------------------------------------------
+# Precedent
+# ---------------------------------------------------------------------------
+# Programming languages with Chinese keywords already exist — notably
+# 文言 (wenyan-lang) and 易语言 (EPL). Legesher follows established CS
+# education terminology from Chinese universities and textbooks.
+
+# ---------------------------------------------------------------------------
+# Naming conventions
+# ---------------------------------------------------------------------------
+naming:
+  snake_case:
+    usage: variables, functions, methods
+    rule: >
+      Characters naturally concatenate without separators.
+      Underscores are OPTIONAL but acceptable for clarity in long names.
+    examples:
+    - 定义 (define)
+    - 打印 (print)
+    - 计算总和 or 计算_总和 (calculate_sum)
+
+  pascal_case:
+    usage: class names, exception names
+    rule: >
+      No case distinction in Chinese — concatenate characters directly.
+      Word boundaries are implicit from character meaning.
+    examples:
+    - 值错误 (ValueError)
+    - 类型错误 (TypeError)
+    - 文件未找到错误 (FileNotFoundError)
+
+  upper_snake_case:
+    usage: constants
+    rule: No case distinction — use underscores or context to indicate constants
+    examples:
+    - 最大值 (MAX_VALUE)
+    - 真 (True)
+
+  compound_words:
+    strategy: concatenate
+    detail: >
+      Chinese characters naturally concatenate. Two-character compounds are
+      preferred when they exist (定义, 打印, 返回). Three or four characters
+      are acceptable for compound concepts (类型错误, 值错误).
+      Underscores are a fallback for unusually long terms.
+    preferred_length: 2 characters when possible
+    max_length: 4 characters preferred, 6 characters maximum
+
+  word_boundaries:
+    strategy: character-count
+    detail: >
+      No explicit word boundary markers needed. Each Chinese character is
+      a meaningful unit. Readers parse boundaries from character semantics.
+
+# ---------------------------------------------------------------------------
+# Script rules
+# ---------------------------------------------------------------------------
+script:
+  native_required: true
+  variant: Simplified Chinese (简体中文)
+  detail: >
+    Use Simplified Chinese characters as standard in mainland China.
+    Do NOT use Traditional Chinese (繁體) unless creating a separate
+    zh-Hant language pack.
+
+  latin_mixing:
+    rule: >
+      Acceptable ONLY for universal technical abbreviations (API, HTTP, URL).
+      All keyword and builtin translations must use Chinese characters.
+
+  accent_handling:
+    rule: Not applicable — Chinese does not use diacritics in written form
+
+  display_width:
+    rule: >
+      Chinese characters are double-width (fullwidth). When checking line length,
+      count each Chinese character as 2 columns. PEP 8's 79-character limit
+      becomes roughly 39 Chinese characters per line.
+
+# ---------------------------------------------------------------------------
+# Translation conventions
+# ---------------------------------------------------------------------------
+translation:
+  register: cs-education-standard
+  detail: >
+    Use established CS education terms from Chinese university textbooks.
+    These are the terms students learn in introductory programming courses.
+  good_examples:
+  - 定义 (dinyi - define) — standard textbook term
+  - 打印 (dayin - print) — universally understood
+  - 返回 (fanhui - return) — standard in all CS contexts
+  - 导入 (daoru - import) — standard technical term
+  bad_examples:
+  - 界说 (jieshuo) — too literary/classical for 'define'
+  - 弄 (nong) — too casual/colloquial for any technical term
+  - 印出 — Taiwanese variant, use 打印 for Simplified Chinese
+
+  verb_form:
+    rule: Use dictionary form — Chinese does not conjugate verbs
+    detail: >
+      Chinese verbs have no tense, mood, or conjugation. Use the base
+      dictionary form for all action keywords.
+    examples:
+    - 定义 (define)
+    - 返回 (return)
+    - 打印 (print)
+
+  noun_form:
+    rule: Use base form — Chinese does not inflect nouns for number
+    detail: >
+      Chinese nouns have no singular/plural distinction. Use the base form.
+    examples:
+    - 列表 (list)
+    - 字典 (dictionary)
+    - 字符串 (string)
+
+  transliteration:
+    policy: AVOID — translate the CONCEPT, not the English sound
+    detail: >
+      Do NOT transliterate English words into pinyin or phonetic Chinese.
+      Find the established Chinese CS term for the concept.
+    bad_examples:
+    - 普林特 (pulinte) — phonetic rendering of 'print', use 打印 instead
+    - 瑞特恩 (ruiteen) — phonetic rendering of 'return', use 返回 instead
+
+  compound_consistency:
+    rule: >
+      Compound terms must follow consistent patterns.
+      get/set/del families should use parallel structures:
+      获取属性 / 设置属性 / 删除属性 (getattr / setattr / delattr).
+      是实例 / 是子类 (isinstance / issubclass).
+
+# ---------------------------------------------------------------------------
+# Formatting conventions
+# ---------------------------------------------------------------------------
+formatting:
+  comment_prefix: '#'
+
+  docstring_style:
+    rule: Triple-quoted strings with Chinese text, standard PEP 257 structure
+    example: |
+      """计算两个数的总和。
+
+      参数:
+          甲: 第一个数
+          乙: 第二个数
+
+      返回:
+          两个数的总和
+      """
+
+  punctuation:
+    rule: >
+      Use ASCII punctuation for all programming constructs.
+      Do NOT use fullwidth punctuation in code:
+      no fullwidth comma (，), no fullwidth period (。),
+      no fullwidth parentheses (（）), no fullwidth colon (：).
+      Chinese punctuation is acceptable ONLY inside string literals and comments.

@@ -128,3 +128,38 @@ def is_rtl_language(lang_code: str) -> bool:
     }
 
     return lang_code.lower() in RTL_LANGUAGES
+
+
+def merge_exception_translations(
+    builtin_map: dict[str, str],
+    exceptions: dict[str, str],
+) -> dict[str, str]:
+    """Merge exception translations into a builtin map with PascalCase keys.
+
+    Language packs store exception keys lowercase (``valueerror``) but Python
+    uses PascalCase (``ValueError``).  This function remaps using Python's
+    actual builtin exception names.
+
+    Args:
+        builtin_map: Existing builtin translations (will not be mutated).
+        exceptions: Exception translations from the language pack (lowercase keys).
+
+    Returns:
+        New dict with builtins + exceptions merged.
+    """
+    import builtins as _builtins
+
+    merged = dict(builtin_map)
+
+    # Build lowercase → PascalCase lookup from Python's actual exception names
+    pascal_map = {}
+    for name in dir(_builtins):
+        obj = getattr(_builtins, name, None)
+        if isinstance(obj, type) and issubclass(obj, BaseException):
+            pascal_map[name.lower()] = name
+
+    for lower_name, translation in exceptions.items():
+        canonical = pascal_map.get(lower_name, lower_name)
+        merged[canonical] = translation
+
+    return merged

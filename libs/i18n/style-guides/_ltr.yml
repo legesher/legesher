@@ -1,0 +1,64 @@
+# _ltr.yml — Left-to-right text direction conventions
+# Applies to all LTR-script languages (Latin, CJK, Devanagari, etc.).
+# Language-specific guides extend this file alongside python.yml.
+
+language: _ltr
+extends:
+- python.yml
+version: 0.1.0
+status: experimental
+
+# ---------------------------------------------------------------------------
+# Text direction
+# ---------------------------------------------------------------------------
+naming:
+  text_direction: left-to-right
+  detail: >
+    Source code is written and read left-to-right.
+    No special bidirectional handling is required.
+    Standard keyboard input is assumed.
+
+# ---------------------------------------------------------------------------
+# Script conventions for LTR languages
+# ---------------------------------------------------------------------------
+script:
+  native_required: true
+  latin_mixing:
+    rule: >
+      Latin script mixing is natural in LTR languages.
+      Technical abbreviations (API, HTTP, URL) may remain in Latin.
+      Identifiers should prefer native script but Latin fallback is acceptable
+      for universally recognized terms.
+
+  accent_handling:
+    rule: Preserve all native accents and diacritics as-is
+
+  bidirectional:
+    handling: none
+    detail: No bidirectional text handling needed for LTR scripts
+
+# ---------------------------------------------------------------------------
+# Translation conventions (LTR-specific)
+# ---------------------------------------------------------------------------
+translation:
+  register: inherited from python.yml
+  verb_form: inherited from python.yml
+  noun_form: inherited from python.yml
+  transliteration:
+    policy: inherited from python.yml
+
+# ---------------------------------------------------------------------------
+# Formatting conventions (LTR-specific)
+# ---------------------------------------------------------------------------
+formatting:
+  comment_prefix: '#'
+  docstring_style:
+    rule: Standard triple-quoted docstrings, text flows left-to-right
+
+  punctuation:
+    rule: >
+      Use standard ASCII punctuation for all programming constructs.
+      No special punctuation considerations for LTR scripts.
+
+  alignment:
+    rule: Standard left-aligned code with PEP 8 indentation (4 spaces)

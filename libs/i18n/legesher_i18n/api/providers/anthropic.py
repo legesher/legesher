@@ -128,6 +128,17 @@ class AnthropicProvider(TranslationProvider):
         # Cache for semantic analysis results (to avoid duplicate API calls)
         self._semantic_cache: Dict[str, Dict] = {}
 
+        # Try to initialize PromptBuilder for enhanced prompts
+        self._prompt_builder = None
+        try:
+            from legesher_i18n.style_guides import StyleGuideLoader
+            from legesher_i18n.prompt_builder import PromptBuilder
+
+            loader = StyleGuideLoader()
+            self._prompt_builder = PromptBuilder(loader)
+        except Exception as exc:
+            logger.debug("PromptBuilder not available, using legacy prompts: %s", exc)
+
     def is_available(self) -> bool:
         """Check if Anthropic is configured and ready."""
         if not self.client:
@@ -186,16 +197,46 @@ class AnthropicProvider(TranslationProvider):
                 f"Anthropic does not support {source_lang}-{target_lang}"
             )
 
-        # Build translation prompt
-        prompt = self._build_translation_prompt(text, target_lang, context)
+        # Build translation prompt, using PromptBuilder if available
+        use_prompt_builder = self._prompt_builder and context
+        if use_prompt_builder:
+            glossary = context.get("glossary", {})
+            kind = context.get("kind")
+
+            if kind:  # text element (comment/docstring/string)
+                system_prompt, user_prompt = self._prompt_builder.build_text_prompt(
+                    texts=[{"text": text, "kind": kind, "context": context}],
+                    target_lang=target_lang,
+                    identifier_glossary=glossary,
+                )
+            else:  # identifier
+                system_prompt, user_prompt = (
+                    self._prompt_builder.build_identifier_prompt(
+                        identifiers=[
+                            {
+                                "text": text,
+                                "role": context.get("role", "unknown"),
+                                "context": context,
+                            }
+                        ],
+                        target_lang=target_lang,
+                        existing_glossary=glossary,
+                    )
+                )
+        else:
+            system_prompt = None
+            user_prompt = self._build_translation_prompt(text, target_lang, context)
 
         # Call Claude API with retry logic
         async def api_call():
-            return await self.client.messages.create(
-                model=self.model,
-                max_tokens=self.max_tokens,
-                messages=[{"role": "user", "content": prompt}],
-            )
+            kwargs = {
+                "model": self.model,
+                "max_tokens": self.max_tokens,
+                "messages": [{"role": "user", "content": user_prompt}],
+            }
+            if system_prompt:
+                kwargs["system"] = system_prompt
+            return await self.client.messages.create(**kwargs)
 
         try:
             response = await self._call_api_with_retry(api_call)

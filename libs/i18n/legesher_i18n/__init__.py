@@ -33,8 +33,48 @@ from .schema_validator import (
     LanguagePackSchema,
     SchemaValidator,
 )
+from .prompt_builder import PromptBuilder
+from .style_guides import StyleGuideLoader
 from .version_detector import PythonVersionDetector
 from .version_index import PythonVersionInfo, VersionIndex
+
+__all__ = [
+    # Core pack loading
+    "LanguagePack",
+    "LanguagePackLoader",
+    # Prompt building
+    "PromptBuilder",
+    "StyleGuideLoader",
+    # Language registry
+    "CANONICAL_LANGUAGE",
+    "LANGUAGE_METADATA",
+    "get_language_name",
+    "get_native_name",
+    "is_rtl_language",
+    "is_supported_language",
+    "get_available_language_codes",
+    "get_active_language_codes",
+    "get_rtl_language_codes",
+    # Schema & validation
+    "LanguagePackMetadata",
+    "LanguagePackSchema",
+    "SchemaValidator",
+    # Version detection
+    "PythonVersionDetector",
+    "PythonVersionInfo",
+    "VersionIndex",
+    # Exceptions
+    "CircularInheritanceError",
+    "InheritanceError",
+    "LanguagePackError",
+    "MaxInheritanceDepthError",
+    "PackNotFoundError",
+    "PackValidationError",
+    "PathTraversalError",
+    "UnsupportedVersionError",
+    "VersionDetectionError",
+    "VersionIndexError",
+]
 
 __version__ = "0.7.3"
 

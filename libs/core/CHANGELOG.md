@@ -27,6 +27,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Load exception translations (ValueError, TypeError, etc.) into TokenTranslator
+  builtin map — previously existed in packs but were silently dropped. PascalCase
+  remapping from lowercase YAML keys (CORE-706)
+- Pass IdentifierMap glossary to text element translation (Step 3->4 context flow)
+  so docstrings/comments use the same terms as translated identifiers (CORE-706)
 - Escape closing quote sequences in LLM string/docstring translations (AYA-191)
 - Handle multi-line LLM comment responses with per-line `#` prefix (AYA-191)
 - F-string `string_content` nodes reconstructed as raw text (AYA-191)

@@ -91,7 +91,11 @@ class TranslationProvider(ABC):
 
     @abstractmethod
     async def translate(
-        self, text: str, source_lang: str, target_lang: str
+        self,
+        text: str,
+        source_lang: str,
+        target_lang: str,
+        context: Optional[Dict] = None,
     ) -> TranslationResult:
         """
         Perform translation with quality metrics.

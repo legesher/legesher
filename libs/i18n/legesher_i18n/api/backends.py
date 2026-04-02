@@ -90,6 +90,7 @@ class ProviderBackendAdapter:
                 source_lang=source_lang,
                 target_lang=target_lang,
                 preferred_provider=self._preferred_provider,
+                context=context,
             )
         )
         return result.text
@@ -102,26 +103,56 @@ class ProviderBackendAdapter:
     ) -> list[str]:
         """Translate a batch of items synchronously.
 
-        Uses the coordinator's batch API for all items. Per-item context
-        (role, glossary, surrounding code) is currently not forwarded to
-        the coordinator — this will be addressed when the coordinator
-        interface is extended to accept structured context.
-
-        Note: Items may include a "context" dict, but it is not used by
-        this adapter yet. The LLMTranslator includes context in the
-        IdentifierMap glossary for cross-item consistency.
+        When items carry context (glossary, kind, role), translates each
+        item individually so per-item context reaches the provider via
+        the PromptBuilder.  Falls back to the coordinator's batch API
+        when no context is present, preserving batching performance.
         """
-        texts = [item["text"] for item in items]
-        results = _run_async(
-            self._coordinator.translate_batch(
-                texts=texts,
-                source_lang=source_lang,
-                target_lang=target_lang,
-            )
+        # Only use per-item path when context carries PromptBuilder-relevant
+        # data (glossary, element kind, or identifier role).
+        # Empty context dicts use the fast batch path.
+        has_prompt_context = any(
+            item.get("context", {}).get("glossary")
+            or item.get("context", {}).get("kind")
+            or item.get("context", {}).get("role")
+            for item in items
         )
-        # Return original text for failed items to avoid poisoning IdentifierMap
-        # with empty strings (coordinator returns provider="error" on failure)
-        return [
-            r.text if r.text and r.provider != "error" else original
-            for r, original in zip(results, texts)
-        ]
+
+        if not has_prompt_context:
+            # Fast path: no context to forward, use batch API
+            texts = [item["text"] for item in items]
+            results = _run_async(
+                self._coordinator.translate_batch(
+                    texts=texts,
+                    source_lang=source_lang,
+                    target_lang=target_lang,
+                )
+            )
+            return [
+                r.text if r.text and r.provider != "error" else original
+                for r, original in zip(results, texts)
+            ]
+
+        # Per-item path: forward context to providers
+        results = []
+        for item in items:
+            text = item["text"]
+            context = item.get("context")
+            try:
+                result = _run_async(
+                    self._coordinator.translate(
+                        text=text,
+                        source_lang=source_lang,
+                        target_lang=target_lang,
+                        preferred_provider=self._preferred_provider,
+                        context=context,
+                    )
+                )
+                if result.text and result.provider != "error":
+                    results.append(result.text)
+                else:
+                    results.append(text)
+            except Exception:
+                logger.warning("Translation failed for item: %s...", text[:50])
+                results.append(text)
+        return results

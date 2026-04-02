@@ -279,9 +279,14 @@ class LLMTranslator:
         if not to_translate:
             return []
 
-        # Batch translate
+        # Batch translate — include identifier glossary so text elements
+        # (comments, docstrings, strings) use the same terms as translated identifiers
+        glossary = self.identifier_map.get_glossary(target_lang)
         items = [
-            {"text": elem.text, "context": {**elem.context, "kind": elem.kind}}
+            {
+                "text": elem.text,
+                "context": {**elem.context, "kind": elem.kind, "glossary": glossary},
+            }
             for elem in to_translate
         ]
         translations = self.backend.translate_batch(items, source_lang, target_lang)

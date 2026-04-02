@@ -115,6 +115,7 @@ class TranslationCoordinator:
         skip_cache: bool = False,
         preferred_provider: Optional[str] = None,
         max_length: int = 10000,
+        context: Optional[Dict] = None,
     ) -> TranslationResult:
         """
         Translate text with automatic quality-based fallback.
@@ -126,6 +127,8 @@ class TranslationCoordinator:
             skip_cache: Skip cache lookup (default: False)
             preferred_provider: Try this provider first
             max_length: Maximum text length (default: 10000 characters)
+            context: Optional context dict (glossary, kind, style guide)
+                forwarded to providers that support it
 
         Returns:
             TranslationResult with translated text and metadata
@@ -154,8 +157,9 @@ class TranslationCoordinator:
                 "Configure API keys or start LibreTranslate server."
             )
 
-        # Check cache first
-        if not skip_cache:
+        # Check cache first — skip cache when context is provided since the
+        # PromptBuilder produces different prompts depending on context
+        if not skip_cache and context is None:
             cached = self.cache.get(text, source_lang, target_lang)
             if cached:
                 logger.info(f"Cache hit: {source_lang}->{target_lang}")
@@ -198,7 +202,9 @@ class TranslationCoordinator:
                     f"(attempt {i + 1}/{self.max_fallback_attempts})"
                 )
 
-                result = await provider.translate(text, source_lang, target_lang)
+                result = await provider.translate(
+                    text, source_lang, target_lang, context=context
+                )
 
                 # Validate quality
                 if self.quality_validator.validate(result, text):

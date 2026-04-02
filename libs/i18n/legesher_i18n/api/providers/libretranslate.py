@@ -3,7 +3,7 @@
 import logging
 import os
 from datetime import datetime
-from typing import Optional
+from typing import Dict, Optional
 
 try:
     import httpx
@@ -131,6 +131,7 @@ class LibreTranslateProvider(TranslationProvider):
         text: str,
         source_lang: str,
         target_lang: str,
+        context: Optional[Dict] = None,
     ) -> TranslationResult:
         """
         Translate text using LibreTranslate API.

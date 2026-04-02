@@ -45,12 +45,17 @@ def _build_supported_languages_text() -> str:
     return "\n".join(lines)
 
 
-def _create_llm_backend(llm_backend: str, llm_base_url: Optional[str]):
+def _create_llm_backend(
+    llm_backend: str,
+    llm_base_url: Optional[str],
+    llm_model: Optional[str] = None,
+):
     """Create an LLM backend based on CLI options.
 
     Args:
         llm_backend: Backend name (anthropic, cohere-aya, openai-compat)
         llm_base_url: Optional base URL for openai-compat backend
+        llm_model: Optional model name for openai-compat backend
 
     Returns:
         TextTranslationBackend instance
@@ -72,6 +77,8 @@ def _create_llm_backend(llm_backend: str, llm_base_url: Optional[str]):
         kwargs = {}
         if llm_base_url:
             kwargs["base_url"] = llm_base_url
+        if llm_model:
+            kwargs["model"] = llm_model
         coordinator = TranslationCoordinator(providers=[OpenAICompatProvider(**kwargs)])
     else:
         raise click.BadParameter(
@@ -129,10 +136,22 @@ def _create_llm_backend(llm_backend: str, llm_base_url: Optional[str]):
     help="Base URL for openai-compat backend (e.g., http://localhost:8000)",
 )
 @click.option(
+    "--llm-model",
+    type=str,
+    default=None,
+    help="Model name for openai-compat backend (e.g., aya:latest, aya-expanse:8b)",
+)
+@click.option(
     "--identifier-map",
     type=click.Path(),
     default=None,
-    help="Path to load/save identifier map for cross-file consistency",
+    help="Path to load/save identifier map (default: .legesher/identifier_map.json)",
+)
+@click.option(
+    "--no-identifier-map",
+    is_flag=True,
+    default=False,
+    help="Disable identifier map (for translating unrelated files independently)",
 )
 @click.option(
     "--checkpoint",
@@ -148,7 +167,9 @@ def translate(
     full: bool,
     llm_backend: str,
     llm_base_url: Optional[str],
+    llm_model: Optional[str],
     identifier_map: Optional[str],
+    no_identifier_map: bool,
     checkpoint: Optional[str],
 ):
     """Translate Python code between natural languages.
@@ -196,7 +217,7 @@ def translate(
                     err=True,
                 )
                 sys.exit(1)
-            backend = _create_llm_backend(llm_backend, llm_base_url)
+            backend = _create_llm_backend(llm_backend, llm_base_url, llm_model)
 
             from legesher_core import create_translator
 
@@ -204,8 +225,11 @@ def translate(
             base_translator = TokenTranslator.from_language_pack(target_lang)
 
             # Load identifier map for cross-file consistency
+            # Default to .legesher/identifier_map.json unless --no-identifier-map
             id_map = None
-            if identifier_map:
+            if not no_identifier_map:
+                if identifier_map is None:
+                    identifier_map = ".legesher/identifier_map.json"
                 from legesher_core.tree_sitter.identifier_map import IdentifierMap
 
                 id_map = IdentifierMap.load_or_create(Path(identifier_map))
@@ -217,7 +241,7 @@ def translate(
                 backend=backend,
             )
 
-            # Inject identifier map if provided
+            # Inject identifier map for cross-file consistency
             if id_map is not None:
                 translator.identifier_map = id_map
 

@@ -13,7 +13,7 @@ Users serve any model and point this provider at the endpoint.
 import logging
 import os
 from datetime import datetime
-from typing import Optional
+from typing import Dict, Optional
 
 import httpx
 
@@ -77,6 +77,17 @@ class OpenAICompatProvider(TranslationProvider):
         self._total_tokens_in = 0
         self._total_tokens_out = 0
 
+        # Try to initialize PromptBuilder for style-guide-aware prompts
+        self._prompt_builder = None
+        try:
+            from legesher_i18n.style_guides import StyleGuideLoader
+            from legesher_i18n.prompt_builder import PromptBuilder
+
+            loader = StyleGuideLoader()
+            self._prompt_builder = PromptBuilder(loader)
+        except Exception as exc:
+            logger.debug("PromptBuilder not available, using legacy prompts: %s", exc)
+
     def is_available(self) -> bool:
         # Can't easily check without making a request — assume available
         return True
@@ -86,17 +97,49 @@ class OpenAICompatProvider(TranslationProvider):
         return True
 
     async def translate(
-        self, text: str, source_lang: str, target_lang: str
+        self,
+        text: str,
+        source_lang: str,
+        target_lang: str,
+        context: Optional[Dict] = None,
     ) -> TranslationResult:
-        system_prompt = _SYSTEM_PROMPT.format(
-            source_lang=source_lang, target_lang=target_lang
-        )
+        # Use PromptBuilder when available and context is provided
+        if self._prompt_builder and context:
+            glossary = context.get("glossary", {})
+            kind = context.get("kind")
+
+            if kind:  # text element (comment/docstring/string)
+                system_prompt, user_prompt = self._prompt_builder.build_text_prompt(
+                    texts=[{"text": text, "kind": kind, "context": context}],
+                    target_lang=target_lang,
+                    identifier_glossary=glossary,
+                )
+            else:  # identifier
+                system_prompt, user_prompt = (
+                    self._prompt_builder.build_identifier_prompt(
+                        identifiers=[
+                            {
+                                "text": text,
+                                "role": context.get("role", "unknown"),
+                                "context": context,
+                            }
+                        ],
+                        target_lang=target_lang,
+                        existing_glossary=glossary,
+                    )
+                )
+        else:
+            # Legacy fallback
+            system_prompt = _SYSTEM_PROMPT.format(
+                source_lang=source_lang, target_lang=target_lang
+            )
+            user_prompt = text
 
         payload = {
             "model": self._model,
             "messages": [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": text},
+                {"role": "user", "content": user_prompt},
             ],
             "temperature": 0.1,
             "max_tokens": 4096,
@@ -136,11 +179,15 @@ class OpenAICompatProvider(TranslationProvider):
 
         # Extract translated text with safe error handling
         try:
-            translated_text = data["choices"][0]["message"]["content"].strip()
+            raw_text = data["choices"][0]["message"]["content"].strip()
         except (KeyError, IndexError, TypeError) as e:
             raise TranslationError(
                 f"Unexpected response shape from {self._base_url}: {e}"
             ) from e
+
+        # When PromptBuilder was used, the LLM response is JSON — extract
+        # the translation value(s) from it
+        translated_text = self._parse_response(raw_text, text, context)
 
         # Track usage
         usage = data.get("usage", {})
@@ -168,6 +215,20 @@ class OpenAICompatProvider(TranslationProvider):
                 "tokens_out": tokens_out,
             },
         )
+
+    @staticmethod
+    def _parse_response(
+        raw_text: str,
+        original_text: str,
+        context: Optional[Dict],
+    ) -> str:
+        """Extract the translation from an LLM response.
+
+        Delegates to the shared :func:`response_parser.parse_llm_response`.
+        """
+        from .response_parser import parse_llm_response
+
+        return parse_llm_response(raw_text, original_text, context)
 
     async def get_usage(self) -> Optional[UsageStats]:
         if self._total_requests == 0:

@@ -1,0 +1,131 @@
+# python.yml — Base PEP 8 conventions for Legesher translations
+# Applies to ALL language packs regardless of natural language or script.
+# Language-specific guides extend this file.
+
+language: python
+extends: []
+version: 0.1.0
+status: experimental
+
+# ---------------------------------------------------------------------------
+# Identifier naming rules
+# ---------------------------------------------------------------------------
+naming:
+  snake_case:
+    usage: variables, functions, methods, modules, parameters
+    rule: 'Lowercase words joined by underscores: mi_variable, calcular_suma'
+    unicode: Non-Latin scripts have no case — use underscores or concatenation
+
+  pascal_case:
+    usage: class names, exception names
+    rule: 'Each word starts with uppercase: ErrorDeValor, TypeError'
+    unicode: 'Non-Latin scripts concatenate words directly: 值错误'
+
+  upper_snake_case:
+    usage: constants
+    rule: 'All uppercase letters joined by underscores: MAX_VALOR, PI'
+    unicode: Non-Latin scripts concatenate or use underscores
+
+  compound_words:
+    strategy: concatenate
+    detail: >
+      Multi-word translations MUST remove spaces and join words directly.
+      If the result is unreadable, underscores are acceptable.
+      Preserve the original English term as an inline comment on first use.
+    max_words: 3
+    examples:
+    - isinstance -> es_instancia (underscore) or esInstancia (camel)
+    - hasattr -> tiene_atributo or 有属性
+
+  word_boundaries:
+    strategy: context-dependent
+    detail: >
+      Latin scripts: underscores or camelCase.
+      CJK scripts: characters naturally concatenate without separators.
+      Arabic/Brahmic scripts: underscores between logical words.
+
+# ---------------------------------------------------------------------------
+# Character and script rules
+# ---------------------------------------------------------------------------
+script:
+  native_required: true
+  detail: >
+    Identifiers MUST be valid Python identifiers (PEP 3131).
+    No spaces, no punctuation characters (/ - : . , ;).
+    Accents and diacritics ARE allowed (a, e, n, etc.).
+    Unicode letters from any script are valid.
+
+  latin_mixing:
+    rule: Avoid unless the term is a universal technical abbreviation (API, HTTP, URL)
+
+  accent_handling:
+    rule: Preserve all native accents and diacritics; do NOT strip them
+
+# ---------------------------------------------------------------------------
+# Translation conventions
+# ---------------------------------------------------------------------------
+translation:
+  register: technical-standard
+  detail: >
+    Use the term a CS student would encounter in a textbook or university course.
+    Avoid overly literary, archaic, or slang terms.
+
+  verb_form:
+    action_keywords: infinitive or imperative — whichever is standard in the target language
+    examples:
+    - def -> definir (Spanish infinitive)
+    - print -> imprimir (Spanish infinitive)
+    - return -> retornar (Spanish infinitive)
+
+  noun_form:
+    types_and_classes: singular noun form
+    examples:
+    - list -> lista (not listas)
+    - string -> cadena (not cadenas)
+
+  boolean_constants:
+    form: adjective or noun matching the language's convention
+    examples:
+    - True -> Verdadero (Spanish adjective)
+    - None -> Nulo / Ninguno
+
+  type_constructors:
+    nouns: 'Use noun form for type names: int -> entero, str -> cadena'
+    verbs: 'Use verb form for actions: print -> imprimir, return -> retornar'
+
+  transliteration:
+    policy: AVOID — translate the concept, not the English sound
+    detail: >
+      Do NOT transliterate English words into the target script.
+      Find the native-language term for the concept instead.
+      Example: 'print' should become the native word for 'print/display',
+      not a phonetic rendering of the English word.
+
+  compound_consistency:
+    rule: >
+      Compound terms (isinstance, hasattr, getattr, setattr, delattr) MUST use
+      a CONSISTENT strategy within a single language pack. If isinstance uses
+      verb+noun concatenation, then hasattr/getattr/setattr/delattr must follow
+      the same pattern.
+    pattern_families:
+    - 'get/set/del + attr: same verb+noun pattern for all three'
+    - 'is + type: same prefix strategy for isinstance, issubclass'
+    - 'has + property: same pattern for hasattr and similar'
+
+# ---------------------------------------------------------------------------
+# Formatting conventions
+# ---------------------------------------------------------------------------
+formatting:
+  comment_prefix: '#'
+  docstring_style:
+    rule: Use triple-quoted strings (""" or ''') for docstrings, written in the target language
+    detail: Follow the same structure as PEP 257 but in the native language
+
+  punctuation:
+    rule: >
+      All programming punctuation remains ASCII: ( ) : , . ; [ ] { } + - * / = < > ! @ # $ % ^ & | ~ `
+      Do NOT substitute language-specific punctuation variants.
+
+  line_length:
+    rule: Follow PEP 8 — 79 characters for code, 72 for docstrings/comments
+    note: CJK characters are typically double-width; count display width, not character count
