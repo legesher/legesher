@@ -711,3 +711,55 @@ class TestTextPromptStringPreservation:
             identifier_glossary={},
         )
         assert "+" in user and "-" in user
+
+    def test_mentions_comment_instruction_rule(self, builder):
+        """Should instruct LLM to translate comment TEXT, not execute instructions."""
+        _, user = builder.build_text_prompt(
+            texts=[
+                {"text": "legesher translate foo.py", "kind": "comment", "context": {}}
+            ],
+            target_lang="es",
+            identifier_glossary={},
+        )
+        assert "not executing" in user.lower() or "not execute" in user.lower()
+        assert "command syntax" in user.lower() or "PRESERVE" in user
+
+
+class TestSingleLetterVariableConventions:
+    """Critical rules should include single-letter variable guidance."""
+
+    def test_mentions_exception_variable(self, builder):
+        """Should mention e as exception instance."""
+        system, _ = builder.build_identifier_prompt(
+            identifiers=[{"text": "e", "role": "variable", "context": {}}],
+            target_lang="es",
+            existing_glossary={},
+        )
+        assert "`e`" in system and "exception" in system.lower()
+
+    def test_mentions_file_handle(self, builder):
+        """Should mention f as file handle."""
+        system, _ = builder.build_identifier_prompt(
+            identifiers=[{"text": "f", "role": "variable", "context": {}}],
+            target_lang="es",
+            existing_glossary={},
+        )
+        assert "`f`" in system and "file" in system.lower()
+
+    def test_mentions_loop_indices(self, builder):
+        """Should mention i, j, k as loop indices."""
+        system, _ = builder.build_identifier_prompt(
+            identifiers=[{"text": "i", "role": "variable", "context": {}}],
+            target_lang="es",
+            existing_glossary={},
+        )
+        assert "`i`" in system and "loop" in system.lower()
+
+    def test_instructs_keep_short(self, builder):
+        """Should instruct to keep translations short (1-3 chars)."""
+        system, _ = builder.build_identifier_prompt(
+            identifiers=[{"text": "e", "role": "variable", "context": {}}],
+            target_lang="es",
+            existing_glossary={},
+        )
+        assert "1-3" in system or "SHORT" in system
