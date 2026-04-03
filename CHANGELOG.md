@@ -9,12 +9,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **language-server**: Context-aware semantic tokens for class names, function names, and
+  first parameter (self/cls) in translated code — adds a state machine to the tokenizer
+  that colors `ListaCompleta` as a class name after `clase`, `__init__` as a function name
+  after `definir`, and `propio` as a parameter after `(` (CORE-895, #199)
+
 ## [0.8.1] - 2026-04-03
 
 ## [0.8.0] - 2026-04-02
 
 ### Added
 
+- **language-server**: Extend semantic tokens to highlight translated builtins and exceptions —
+  builtin types (`int`/`str`/`float`) colored as teal, builtin functions (`print`/`input`/`len`)
+  as yellow, exceptions (`ValueError`/`errordevalor`) as green (CORE-709, #194)
+- **i18n**: Per-language style guides and PromptBuilder for context-aware LLM translation
+  prompts (CORE-706, #193)
 - **core**: Full LLM-powered code translation — translate identifiers, comments, docstrings,
   and string literals via pluggable LLM backends (AYA-191, #189)
   - `LLMTranslator`: composes TreeSitterTranslator (keywords/builtins) with LLM backend

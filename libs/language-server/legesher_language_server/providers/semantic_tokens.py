@@ -1,10 +1,11 @@
 """Semantic tokens provider for syntax highlighting translated code.
 
 This module provides LSP semantic token highlighting for translated Python keywords,
-builtins, and exceptions. Uses Python's tokenize module for accurate, fast token
-parsing that automatically handles strings, comments, and other edge cases.
+builtins, exceptions, class names, function names, and first function parameters.
+Uses Python's tokenize module with a lightweight state machine for context-aware
+token classification.
 
-Implementation for CORE-450, extended by CORE-709 (builtins + exceptions).
+Implementation for CORE-450, extended by CORE-709 and CORE-895.
 """
 
 import builtins as builtins_module
@@ -26,6 +27,13 @@ TOKEN_TYPE_CLASS = 1
 TOKEN_TYPE_FUNCTION = 2
 TOKEN_TYPE_VARIABLE = 3
 TOKEN_TYPE_PARAMETER = 4
+
+# State machine states for context-aware token classification (CORE-895)
+_STATE_NORMAL = 0
+_STATE_AFTER_CLASS = 1  # Just saw 'class'/'clase' keyword
+_STATE_AFTER_DEF = 2  # Just saw 'def'/'definir' keyword
+_STATE_AFTER_FUNC_NAME = 3  # Just saw function name, waiting for '('
+_STATE_EXPECT_FIRST_PARAM = 4  # Just saw '(' after function name
 
 # Pre-compute lowercase→proper-case map for Python builtins.
 # Used to resolve YAML lowercase keys (e.g., "valueerror") to Python names ("ValueError"),
@@ -187,14 +195,13 @@ class SemanticTokensProvider:
     def get_semantic_tokens(self) -> list[tuple[int, int, int, int, int]]:
         """Parse document and extract semantic tokens.
 
+        Uses a state machine to provide context-aware classification:
+        - After 'class'/'clase': next NAME → class name (TOKEN_TYPE_CLASS)
+        - After 'def'/'definir': next NAME → function name (TOKEN_TYPE_FUNCTION)
+        - After function name + '(': first NAME → first param/self (TOKEN_TYPE_PARAMETER)
+
         Returns:
             List of tokens as tuples: (line, char, length, token_type, modifiers)
-
-        Note:
-            Uses Python's tokenize module for accurate parsing that:
-            - Automatically skips strings and comments
-            - Handles all Python syntax edge cases
-            - Fast (O(n) single pass)
         """
         # Ensure keyword mappings are loaded
         self._load_token_mappings()
@@ -212,38 +219,86 @@ class SemanticTokensProvider:
         assert self._translated_builtin_types is not None
         assert self._translated_builtin_funcs is not None
         assert self._translated_exceptions is not None
+        assert self._reverse_keyword_map is not None
 
         tokens: list[tuple[int, int, int, int, int]] = []
+        state = _STATE_NORMAL
+        prev_op_is_dot = False  # Track '.' to suppress class/def on member access
 
         try:
-            # Tokenize document
-            # tokenize requires bytes, convert to StringIO wrapped in BytesIO
             readline = io.BytesIO(self.document_text.encode("utf-8")).readline
 
             for tok in tokenize.tokenize(readline):
-                # Only process NAME tokens (identifiers/keywords)
-                if tok.type != tokenize.NAME:
-                    continue
+                if tok.type == tokenize.NAME:
+                    # Context-aware classification via state machine
+                    if state == _STATE_AFTER_CLASS:
+                        # Class name following 'class'/'clase'
+                        token_type = TOKEN_TYPE_CLASS
+                        state = _STATE_NORMAL
+                    elif state == _STATE_AFTER_DEF:
+                        # Function name following 'def'/'definir'
+                        token_type = TOKEN_TYPE_FUNCTION
+                        state = _STATE_AFTER_FUNC_NAME
+                    elif state == _STATE_EXPECT_FIRST_PARAM:
+                        # First parameter (self/cls/propio)
+                        token_type = TOKEN_TYPE_PARAMETER
+                        state = _STATE_NORMAL
+                    elif tok.string in self._translated_keywords:
+                        token_type = TOKEN_TYPE_KEYWORD
+                        english = self._reverse_keyword_map.get(tok.string)
+                        # Only trigger class/def state on statement keywords,
+                        # not member access (obj.clase) or assignment (clase = 1)
+                        if english == "class" and not prev_op_is_dot:
+                            state = _STATE_AFTER_CLASS
+                        elif english == "def" and not prev_op_is_dot:
+                            state = _STATE_AFTER_DEF
+                        else:
+                            state = _STATE_NORMAL
+                    elif tok.string in self._translated_exceptions:
+                        token_type = TOKEN_TYPE_CLASS
+                        state = _STATE_NORMAL
+                    elif tok.string in self._translated_builtin_types:
+                        token_type = TOKEN_TYPE_CLASS
+                        state = _STATE_NORMAL
+                    elif tok.string in self._translated_builtin_funcs:
+                        token_type = TOKEN_TYPE_FUNCTION
+                        state = _STATE_NORMAL
+                    else:
+                        # Unrecognized identifier — keep AFTER_FUNC_NAME
+                        # (waiting for '(') but reset other transitional states
+                        if state != _STATE_AFTER_FUNC_NAME:
+                            state = _STATE_NORMAL
+                        continue
 
-                # Classify token: keyword, exception, builtin type, or builtin function
-                if tok.string in self._translated_keywords:
-                    token_type = TOKEN_TYPE_KEYWORD
-                elif tok.string in self._translated_exceptions:
-                    token_type = TOKEN_TYPE_CLASS
-                elif tok.string in self._translated_builtin_types:
-                    token_type = TOKEN_TYPE_CLASS
-                elif tok.string in self._translated_builtin_funcs:
-                    token_type = TOKEN_TYPE_FUNCTION
+                    # LSP uses 0-based line numbers, tokenize uses 1-based
+                    line = tok.start[0] - 1
+                    char = tok.start[1]
+                    length = len(tok.string)
+                    tokens.append((line, char, length, token_type, 0))
+                    prev_op_is_dot = False
+
+                elif tok.type == tokenize.OP:
+                    # OP tokens drive state transitions but are never emitted
+                    if state == _STATE_AFTER_FUNC_NAME and tok.string == "(":
+                        state = _STATE_EXPECT_FIRST_PARAM
+                    elif state in (
+                        _STATE_AFTER_CLASS,
+                        _STATE_AFTER_DEF,
+                        _STATE_EXPECT_FIRST_PARAM,
+                    ):
+                        state = _STATE_NORMAL
+                    prev_op_is_dot = tok.string == "."
                 else:
-                    continue
-
-                # LSP uses 0-based line numbers, tokenize uses 1-based
-                line = tok.start[0] - 1
-                char = tok.start[1]
-                length = len(tok.string)
-                modifiers = 0
-
-                tokens.append((line, char, length, token_type, modifiers))
+                    # NEWLINE, COMMENT, etc. — reset transitional states
+                    # Keep AFTER_FUNC_NAME across NL/INDENT for line continuations
+                    # like `def foo \\\n    (self): ...`
+                    if state in (_STATE_AFTER_CLASS, _STATE_AFTER_DEF):
+                        state = _STATE_NORMAL
+                    elif state == _STATE_AFTER_FUNC_NAME and tok.type not in (
+                        tokenize.NL,
+                        tokenize.INDENT,
+                    ):
+                        state = _STATE_NORMAL
 
         except tokenize.TokenError as e:
             # Document has syntax errors - tokenize fails

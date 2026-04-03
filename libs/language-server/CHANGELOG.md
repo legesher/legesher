@@ -9,6 +9,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Semantic Tokens — Context-Aware Highlighting** (CORE-895, #199)
+  - Class names after `class`/`clase` highlighted as `TOKEN_TYPE_CLASS` (teal)
+  - Function names after `def`/`definir` highlighted as `TOKEN_TYPE_FUNCTION` (yellow)
+  - First parameter (self/cls/propio) highlighted as `TOKEN_TYPE_PARAMETER` (blue)
+  - Lightweight state machine using `_reverse_keyword_map` for keyword resolution
+  - Works for all 51 supported languages including RTL scripts
+
+- **Semantic Tokens — Builtins & Exceptions** (CORE-709, #194)
+  - Translated builtin functions (`print`→`imprimir`) highlighted as `TOKEN_TYPE_FUNCTION` (yellow)
+  - Translated builtin types (`int`→`entero`, `float`→`flotante`) highlighted as `TOKEN_TYPE_CLASS` (teal)
+  - Translated exceptions (`ValueError`→`errordevalor`) highlighted as `TOKEN_TYPE_CLASS` (teal)
+  - English builtins/exceptions highlighted in mixed-language code
+  - Pre-computed `_BUILTIN_CASE_MAP` for O(1) exception name resolution
+
 ## [0.1.2] - 2026-03-01
 
 ### Fixed

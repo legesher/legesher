@@ -1,9 +1,10 @@
-"""Tests for semantic tokens provider (CORE-450, CORE-709).
+"""Tests for semantic tokens provider (CORE-450, CORE-709, CORE-895).
 
 Tests cover:
 - Basic keyword highlighting for Spanish, Arabic, Chinese
 - Builtin highlighting (CORE-709)
 - Exception highlighting (CORE-709)
+- Context-aware: class names, function names, first param (CORE-895)
 - Edge cases: strings, comments, mixed languages
 - Token encoding correctness
 - Performance requirements (<100ms for 1000 lines)
@@ -16,6 +17,7 @@ from legesher_language_server.providers.semantic_tokens import (
     TOKEN_TYPE_CLASS,
     TOKEN_TYPE_FUNCTION,
     TOKEN_TYPE_KEYWORD,
+    TOKEN_TYPE_PARAMETER,
     SemanticTokensProvider,
     provide_semantic_tokens,
 )
@@ -46,16 +48,24 @@ clase MiClase:
         # Get tokens (synchronous)
         tokens = provider.get_semantic_tokens()
 
-        # Should find: definir, devolver, clase, pasar
-        assert len(tokens) == 4
+        # Should find: definir, saludar, devolver, clase, MiClase, pasar
+        assert len(tokens) == 6
 
-        # Verify first token (definir)
+        # Verify first token (definir) — keyword
         line, char, length, token_type, modifiers = tokens[0]
-        assert line == 0  # First line
-        assert char == 0  # First character
+        assert line == 0
+        assert char == 0
         assert length == len("definir")
         assert token_type == TOKEN_TYPE_KEYWORD
         assert modifiers == 0
+
+        # Second token (saludar) — function name after def
+        assert tokens[1][3] == TOKEN_TYPE_FUNCTION
+
+        # clase — keyword, MiClase — class name
+        class_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_CLASS]
+        assert len(class_tokens) == 1
+        assert class_tokens[0][2] == len("MiClase")
 
     def test_arabic_keywords_basic(self):
         """Test basic Arabic keyword highlighting."""
@@ -72,8 +82,11 @@ clase MiClase:
         provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
-        # Should find: تعريف, إرجاع
-        assert len(tokens) == 2
+        # Should find: تعريف (def), مرحبا (func name), إرجاع (return)
+        assert len(tokens) == 3
+        assert tokens[0][3] == TOKEN_TYPE_KEYWORD  # تعريف
+        assert tokens[1][3] == TOKEN_TYPE_FUNCTION  # مرحبا (func name)
+        assert tokens[2][3] == TOKEN_TYPE_KEYWORD  # إرجاع
 
     def test_keywords_in_strings_ignored(self):
         """Test that keywords inside strings are NOT highlighted."""
@@ -91,9 +104,9 @@ clase MiClase:
         provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
-        # Should find only: definir, devolver (not the ones in string)
-        # "resultado" is not a keyword/builtin/exception
-        assert len(tokens) == 2
+        # Should find: definir (keyword), test (func name), devolver (keyword)
+        # Not the keywords inside the string
+        assert len(tokens) == 3
 
         # Verify no tokens are on the string line
         for line, _char, _length, _token_type, _modifiers in tokens:
@@ -116,8 +129,8 @@ definir test():
         provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
-        # Should find only: definir, devolver (not the ones in comments)
-        assert len(tokens) == 2
+        # Should find: definir, test (func name), devolver (not the ones in comments)
+        assert len(tokens) == 3
 
         # Verify first token is on line 1 (not line 0 which is comment)
         assert tokens[0][0] == 1
@@ -140,8 +153,10 @@ definir spanish_func():
         provider._load_token_mappings()
         tokens = provider.get_semantic_tokens()
 
-        # Should find: def, return, definir, devolver (all 4)
-        assert len(tokens) == 4
+        # Should find: def, english_func, return, definir, spanish_func, devolver
+        assert len(tokens) == 6
+        func_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_FUNCTION]
+        assert len(func_tokens) == 2  # english_func, spanish_func
 
     def test_multiline_statements(self):
         """Test keywords in multiline statements."""
@@ -216,21 +231,27 @@ sino:
         tokens = provider.get_semantic_tokens()
         encoded = provider.encode_tokens(tokens)
 
-        # Each token should be 5 integers: [deltaLine, deltaChar, length, type, modifiers]
-        assert len(encoded) % 5 == 0
+        # 3 tokens × 5 integers: definir, test, devolver
+        assert len(encoded) == 15
 
         # First token: definir at line 0, char 0
-        assert encoded[0] == 0  # deltaLine (absolute for first token)
-        assert encoded[1] == 0  # deltaChar (absolute for first token)
+        assert encoded[0] == 0  # deltaLine
+        assert encoded[1] == 0  # deltaChar
         assert encoded[2] == len("definir")  # length
         assert encoded[3] == TOKEN_TYPE_KEYWORD  # token type
         assert encoded[4] == 0  # modifiers
 
-        # Second token: devolver at line 1, char 4 (after indentation)
-        # Delta from previous token: line changes, so char is absolute
-        assert encoded[5] == 1  # deltaLine (moved 1 line down)
-        assert encoded[6] == 4  # deltaChar (absolute on new line)
-        assert encoded[7] == len("devolver")  # length
+        # Second token: test at line 0, char 8 (function name after def)
+        assert encoded[5] == 0  # deltaLine (same line)
+        assert encoded[6] == 8  # deltaChar (relative: 8 - 0 = 8)
+        assert encoded[7] == len("test")  # length
+        assert encoded[8] == TOKEN_TYPE_FUNCTION  # function name
+
+        # Third token: devolver at line 1, char 4
+        assert encoded[10] == 1  # deltaLine (new line)
+        assert encoded[11] == 4  # deltaChar (absolute on new line)
+        assert encoded[12] == len("devolver")  # length
+        assert encoded[13] == TOKEN_TYPE_KEYWORD
 
     def test_same_line_tokens_delta(self):
         """Test delta encoding for multiple tokens on same line."""
@@ -309,8 +330,8 @@ sino:
         )
 
         # Verify tokens were found
-        # 250 functions × (definir, si, verdadero, devolver) = 1000 tokens
-        assert len(tokens) == 1000
+        # 250 functions × (definir, func_N, si, verdadero, devolver) = 1250 tokens
+        assert len(tokens) == 1250
 
         # Performance requirement: <100ms
         assert elapsed_ms < 100, f"Performance requirement failed: {elapsed_ms:.2f}ms"
@@ -394,8 +415,8 @@ excepto errordevalor:
 
         # Keywords: definir, probar, excepto, devolver, nulo
         assert len(keyword_tokens) >= 5
-        # Builtin functions: imprimir, entrada
-        assert len(func_tokens) >= 2
+        # FUNCTION tokens: procesar (func name) + imprimir, entrada (builtins)
+        assert len(func_tokens) >= 3
         # CLASS tokens: errordevalor (exception) + flotante (builtin type)
         assert len(class_tokens) >= 2
 
@@ -429,6 +450,153 @@ definir test():
         class_names = [token_name(t) for t in class_tokens]
         assert "float" in class_names
 
+    def test_class_name_highlighted(self):
+        """Test class name after 'clase' gets TOKEN_TYPE_CLASS (CORE-895)."""
+        code = """clase MiClase:
+    pasar
+"""
+        provider = SemanticTokensProvider(
+            source_lang="en",
+            target_lang="es",
+            document_text=code,
+            document_uri="file:///test.py",
+        )
+
+        provider._load_token_mappings()
+        tokens = provider.get_semantic_tokens()
+
+        # clase (keyword) + MiClase (class name) + pasar (keyword)
+        assert len(tokens) == 3
+        assert tokens[0][3] == TOKEN_TYPE_KEYWORD  # clase
+        assert tokens[1][3] == TOKEN_TYPE_CLASS  # MiClase
+        assert tokens[1][2] == len("MiClase")
+        assert tokens[2][3] == TOKEN_TYPE_KEYWORD  # pasar
+
+    def test_function_name_highlighted(self):
+        """Test function name after 'definir' gets TOKEN_TYPE_FUNCTION (CORE-895)."""
+        code = """definir mi_funcion():
+    pasar
+"""
+        provider = SemanticTokensProvider(
+            source_lang="en",
+            target_lang="es",
+            document_text=code,
+            document_uri="file:///test.py",
+        )
+
+        provider._load_token_mappings()
+        tokens = provider.get_semantic_tokens()
+
+        # definir (keyword) + mi_funcion (func name) + pasar (keyword)
+        assert len(tokens) == 3
+        assert tokens[0][3] == TOKEN_TYPE_KEYWORD  # definir
+        assert tokens[1][3] == TOKEN_TYPE_FUNCTION  # mi_funcion
+        assert tokens[1][2] == len("mi_funcion")
+
+    def test_dunder_function_name_highlighted(self):
+        """Test __init__ after 'definir' gets TOKEN_TYPE_FUNCTION (CORE-895)."""
+        code = """definir __init__(propio):
+    pasar
+"""
+        provider = SemanticTokensProvider(
+            source_lang="en",
+            target_lang="es",
+            document_text=code,
+            document_uri="file:///test.py",
+        )
+
+        provider._load_token_mappings()
+        tokens = provider.get_semantic_tokens()
+
+        # definir (keyword) + __init__ (func name) + propio (first param) + pasar (keyword)
+        assert len(tokens) == 4
+        assert tokens[1][3] == TOKEN_TYPE_FUNCTION  # __init__
+        assert tokens[1][2] == len("__init__")
+        assert tokens[2][3] == TOKEN_TYPE_PARAMETER  # propio
+
+    def test_first_param_highlighted(self):
+        """Test first param gets TOKEN_TYPE_PARAMETER, second does not (CORE-895)."""
+        code = """definir metodo(propio, x):
+    pasar
+"""
+        provider = SemanticTokensProvider(
+            source_lang="en",
+            target_lang="es",
+            document_text=code,
+            document_uri="file:///test.py",
+        )
+
+        provider._load_token_mappings()
+        tokens = provider.get_semantic_tokens()
+
+        # definir (keyword) + metodo (func) + propio (param) + pasar (keyword)
+        # 'x' is NOT emitted (not a keyword/builtin/exception/contextual)
+        assert len(tokens) == 4
+        param_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_PARAMETER]
+        assert len(param_tokens) == 1
+        assert param_tokens[0][2] == len("propio")
+
+    def test_class_with_method(self):
+        """Test full class with method — class name, func name, first param (CORE-895)."""
+        code = """clase ListaCompleta:
+    definir __init__(propio):
+        pasar
+
+    definir agregar(propio, elemento):
+        pasar
+"""
+        provider = SemanticTokensProvider(
+            source_lang="en",
+            target_lang="es",
+            document_text=code,
+            document_uri="file:///test.py",
+        )
+
+        provider._load_token_mappings()
+        tokens = provider.get_semantic_tokens()
+
+        class_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_CLASS]
+        func_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_FUNCTION]
+        param_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_PARAMETER]
+        keyword_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_KEYWORD]
+
+        # Class: ListaCompleta
+        assert len(class_tokens) == 1
+        # Functions: __init__, agregar
+        assert len(func_tokens) == 2
+        # Params: propio × 2
+        assert len(param_tokens) == 2
+        # Keywords: clase, definir × 2, pasar × 2
+        assert len(keyword_tokens) == 5
+
+    def test_english_class_def_context(self):
+        """Test context-aware works for English class/def in mixed code (CORE-895)."""
+        code = """class Foo:
+    def bar(self):
+        pass
+"""
+        provider = SemanticTokensProvider(
+            source_lang="en",
+            target_lang="es",
+            document_text=code,
+            document_uri="file:///test.py",
+        )
+
+        provider._load_token_mappings()
+        tokens = provider.get_semantic_tokens()
+
+        # class (kw) + Foo (class name) + def (kw) + bar (func name) + self (param) + pass (kw)
+        assert len(tokens) == 6
+
+        class_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_CLASS]
+        assert len(class_tokens) == 1  # Foo
+
+        func_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_FUNCTION]
+        assert len(func_tokens) == 1  # bar
+
+        param_tokens = [t for t in tokens if t[3] == TOKEN_TYPE_PARAMETER]
+        assert len(param_tokens) == 1  # self
+
 
 class TestSemanticTokensIntegration:
     """Integration tests with language server."""
@@ -452,8 +620,8 @@ class TestSemanticTokensIntegration:
 
         assert result is not None
         assert len(result.data) > 0
-        # Should have 2 tokens × 5 integers = 10
-        assert len(result.data) == 10
+        # Should have 3 tokens × 5 integers = 15 (definir, test, devolver)
+        assert len(result.data) == 15
 
     def test_missing_document(self):
         """Test semantic tokens for non-existent document."""
