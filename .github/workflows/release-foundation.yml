@@ -16,6 +16,9 @@ permissions:
   issues: write
   pull-requests: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   lint:
     name: Lint & Validate
@@ -190,9 +193,9 @@ jobs:
         if: steps.semantic-release.outputs.release_created == 'true'
         run: |
           echo "📦 Building foundation packages..."
-          cd libs/core && uv build && cd ../..
-          cd libs/i18n && uv build && cd ../..
-          cd libs/legesher && uv build && cd ../..
+          uv build --package legesher-core --out-dir libs/core/dist/
+          uv build --package legesher-i18n --out-dir libs/i18n/dist/
+          uv build --package legesher --out-dir libs/legesher/dist/
 
       - name: Upload build artifacts
         if: steps.semantic-release.outputs.release_created == 'true'
