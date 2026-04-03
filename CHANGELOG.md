@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-04-03
+
 ## [0.8.0] - 2026-04-02
 
 ### Added
@@ -82,9 +84,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.8.0   | Yes      |
-| legesher-i18n            | 0.8.0   | —        |
-| legesher (CLI)           | 0.8.0   | —        |
+| legesher-core            | 0.8.1   | Yes      |
+| legesher-i18n            | 0.8.1   | —        |
+| legesher (CLI)           | 0.8.1   | —        |
 | legesher-language-server | 0.1.2   | —        |
 | legesher-vscode          | 0.1.5   | —        |
 | legesher-home            | 0.1.0   | —        |
