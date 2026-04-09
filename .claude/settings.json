@@ -1,9 +1,17 @@
 {
-  "$schema": "https://claude.ai/schemas/settings.json",
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "mcp__linear__save_project",
+      "mcp__linear__list_initiatives",
+      "mcp__linear__research"
+    ],
+    "deny": [],
+    "ask": []
+  },
   "hooks": {
     "PostToolUse": [
       {
-        "description": "Auto-format Python files after editing",
         "matcher": "Edit|Write",
         "hooks": [
           {
@@ -13,7 +21,6 @@
         ]
       },
       {
-        "description": "Auto-format Markdown files after editing",
         "matcher": "Edit|Write",
         "hooks": [
           {
@@ -25,7 +32,6 @@
     ],
     "PreToolUse": [
       {
-        "description": "Log all bash commands for debugging",
         "matcher": "Bash",
         "hooks": [
           {
@@ -33,12 +39,16 @@
             "command": "jq -r '.tool_input.command' | { read cmd; echo \"[$(date '+%Y-%m-%d %H:%M:%S')] $cmd\" >> ~/.claude/bash_history.log; }"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/block-push-to-main.sh"
+          }
+        ]
       }
     ]
-  },
-  "permissions": {
-    "ask": [],
-    "allow": [],
-    "deny": []
   }
 }

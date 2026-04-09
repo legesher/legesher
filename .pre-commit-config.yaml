@@ -62,7 +62,7 @@ repos:
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent=2]
-    exclude: ^(\.github/workflows/.*\.yml|\.github/dependabot\.yml|libs/language-server/tests/fixtures/language_packs/invalid/.*\.yml|libs/i18n/language-packs/.*/packs/.*\.yml)$      # Don't auto-format GitHub Actions, Dependabot config, invalid test fixtures, or language pack files
+    exclude: ^(\.github/workflows/.*\.yml|\.github/dependabot\.yml|libs/language-server/tests/fixtures/language_packs/invalid/.*\.yml|libs/i18n/language-packs/.*/packs/.*\.yml|.*pnpm-lock\.yaml)$      # Don't auto-format GitHub Actions, Dependabot config, invalid test fixtures, language pack files, or pnpm lockfiles (auto-generated)
 
   # Custom language pack YAML validation
 - repo: local
