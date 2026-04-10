@@ -437,7 +437,7 @@ Planned for future phases:
 
 ## Support
 
-- **Issue**: [CORE-394 on Linear](https://linear.app/legesher/issue/CORE-394)
+- **Issue**: CORE-394
 - **Documentation**: [Legesher Docs](https://docs.legesher.io)
 - **Repository**: [github.com/madiedgar/legesher](https://github.com/madiedgar/legesher)
 

@@ -360,4 +360,4 @@ legesher-i18n validate programming_languages/python/3.13/es.yml --json
 
 **Maintained by:** Legesher Core Team
 **License:** Apache 2.0 with Translation Exception
-**Issue:** [CORE-348](https://linear.app/legesher/issue/CORE-348)
+**Issue:** CORE-348

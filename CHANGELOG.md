@@ -18,6 +18,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   that colors `ListaCompleta` as a class name after `clase`, `__init__` as a function name
   after `definir`, and `propio` as a parameter after `(` (CORE-895, #199)
 
+### Security
+
+- **repo**: Pre-open-source security audit remediations (CORE-721, #206) — harden
+  `.gitignore` with crypto/credential file patterns (`*.key`, `*.pem`, `*.p12`, `*.pfx`,
+  `credentials.json`, `secrets/`), re-enable CodeQL workflow with push/PR/weekly triggers
+  (was `workflow_dispatch` only), and remove private Linear workspace URLs from source
+  code and documentation. Full audit found no secrets in git history, clean OWASP review,
+  and license boundary intact.
+
 ## [0.8.1] - 2026-04-03
 
 ## [0.8.0] - 2026-04-02

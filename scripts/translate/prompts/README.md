@@ -119,14 +119,14 @@ This directory contains three model-specific prompts for AI-assisted translation
 
 ## Comparative Analysis
 
-| Feature | Claude | GPT-4 | Aya |
-|---------|--------|-------|-----|
-| **Reasoning Depth** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
-| **Structured Output** | ⭐⭐⭐⭐ (XML) | ⭐⭐⭐⭐⭐ (JSON mode) | ⭐⭐⭐ (text) |
-| **Multilingual Strength** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **Cost Efficiency** | ⭐⭐⭐⭐ (Batch API) | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **Speed** | ⭐⭐⭐ (12-24h batch) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **Cultural Nuance** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Feature                   | Claude                | GPT-4                  | Aya           |
+| ------------------------- | --------------------- | ---------------------- | ------------- |
+| **Reasoning Depth**       | ⭐⭐⭐⭐⭐            | ⭐⭐⭐⭐               | ⭐⭐⭐        |
+| **Structured Output**     | ⭐⭐⭐⭐ (XML)        | ⭐⭐⭐⭐⭐ (JSON mode) | ⭐⭐⭐ (text) |
+| **Multilingual Strength** | ⭐⭐⭐⭐              | ⭐⭐⭐⭐               | ⭐⭐⭐⭐⭐    |
+| **Cost Efficiency**       | ⭐⭐⭐⭐ (Batch API)  | ⭐⭐⭐                 | ⭐⭐⭐⭐⭐    |
+| **Speed**                 | ⭐⭐⭐ (12-24h batch) | ⭐⭐⭐⭐⭐             | ⭐⭐⭐⭐      |
+| **Cultural Nuance**       | ⭐⭐⭐⭐              | ⭐⭐⭐⭐               | ⭐⭐⭐⭐⭐    |
 
 ---
 
@@ -270,12 +270,12 @@ Before running full batch translations:
 
 **With all 3 models (4 languages, 105 terms each):**
 
-| Model | Processing Time | Cost |
-|-------|----------------|------|
-| Claude Batch API | 12-24 hours | $7.56 |
-| GPT-4o Standard API | 2-4 hours | $11.97 |
-| Aya (Cohere) | 2-4 hours | ~$1-2 |
-| **Total** | **24-48 hours** | **~$21** |
+| Model               | Processing Time | Cost     |
+| ------------------- | --------------- | -------- |
+| Claude Batch API    | 12-24 hours     | $7.56    |
+| GPT-4o Standard API | 2-4 hours       | $11.97   |
+| Aya (Cohere)        | 2-4 hours       | ~$1-2    |
+| **Total**           | **24-48 hours** | **~$21** |
 
 **Parallelization:**
 
@@ -350,7 +350,7 @@ Pattern: ACTION_KEYWORD
 ---
 
 **Maintained by:** Legesher Team
-**Related Issues:** [CORE-354](https://linear.app/legesher/issue/CORE-354)
+**Related Issues:** CORE-354
 **See also:**
 
 - [../i18n/docs/linguistic-standards.md](../i18n/docs/linguistic-standards.md)

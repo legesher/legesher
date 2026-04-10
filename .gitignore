@@ -181,6 +181,14 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# Security: credential and certificate files
+*.key
+*.pem
+*.p12
+*.pfx
+credentials.json
+secrets/
+
 # Claude Code personal files (keep shared commands/agents in git)
 .claude/scratchpads/
 .claude/settings.local.json

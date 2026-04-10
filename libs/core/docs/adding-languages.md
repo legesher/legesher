@@ -1,8 +1,7 @@
 # Adding Support for New Programming Languages
 
 This guide explains how to extend Legesher to support new programming languages
-beyond Python using the language abstraction interface introduced in
-[CORE-415](https://linear.app/legesher/issue/CORE-415).
+beyond Python using the language abstraction interface introduced in CORE-415.
 
 ## Architecture Overview
 
@@ -253,7 +252,7 @@ TypeScript support is being implemented in CORE-421 through CORE-427 following t
 - CORE-426: Testing & benchmarks
 - CORE-427: Documentation
 
-Track progress: <https://linear.app/legesher/project/typescript-support>
+See the [Legesher docs](https://docs.legesher.io) for progress.
 
 ## Questions?
 

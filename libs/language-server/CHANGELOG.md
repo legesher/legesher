@@ -47,7 +47,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- **pygls 2.0 Migration** ([CORE-448](https://linear.app/legesher/issue/CORE-448))
+- **pygls 2.0 Migration** (CORE-448)
   - Upgraded from pygls 1.3.1 to pygls 2.0.0 for Python 3.13 compatibility
   - Updated import path: `pygls.server.LanguageServer` → `pygls.lsp.server.LanguageServer`
   - Upgraded lsprotocol from 2023.0.1 to 2025.0.0

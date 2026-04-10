@@ -42,10 +42,10 @@ Template for creating comprehensive context documents for each Python term:
 
 ## Related Issues
 
-- [CORE-354](https://linear.app/legesher/issue/CORE-354) - Create 4 Initial Language Packs
-- [CORE-391](https://linear.app/legesher/issue/CORE-391) - Translation Migration Epic
-- [CORE-392](https://linear.app/legesher/issue/CORE-392) - Linguistic Standards
-- [CORE-393](https://linear.app/legesher/issue/CORE-393) - Deep Context Documents
+- CORE-354 — Create 4 Initial Language Packs
+- CORE-391 — Translation Migration Epic
+- CORE-392 — Linguistic Standards
+- CORE-393 — Deep Context Documents
 
 ---
 
