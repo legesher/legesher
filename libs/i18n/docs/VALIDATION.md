@@ -50,7 +50,7 @@ metadata:
   author: "Your Name"
   last_updated: "2025-01-04"
   python_version_min: "3.10"
-  license: "MIT"
+  license: "Apache-2.0"
 ```
 
 ### 2. Duplicate Detection

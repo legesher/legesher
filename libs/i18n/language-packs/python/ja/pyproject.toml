@@ -6,7 +6,7 @@ build-backend = "pdm.backend"
 authors = [
     {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
 ]
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "legesher-i18n>=0.2.0,<1.0.0",
@@ -19,7 +19,7 @@ keywords = ["legesher", "i18n", "japanese", "python", "translation", "multilingu
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",

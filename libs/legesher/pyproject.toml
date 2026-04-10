@@ -6,7 +6,7 @@ build-backend = "pdm.backend"
 authors = [
     {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
 ]
-license = {text = "MIT OR LicenseRef-Commercial"}
+license = {text = "Apache-2.0 OR LicenseRef-Commercial"}
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "click>=8.0.0",

@@ -227,12 +227,12 @@ Translation:
 
 ### Total Costs (Estimated)
 
-| Scope | Translations | Claude Cost | Aya Cost | Total |
-|-------|-------------|-------------|----------|-------|
-| Test (3 terms × 3 langs) | 18 | $0.08 | $0.00 | $0.08 |
-| Small (10 terms × 5 langs) | 100 | $0.45 | $0.00 | $0.45 |
-| Medium (50 terms × 12 langs) | 1,200 | $5.40 | $0.00 | $5.40 |
-| **Full (105 terms × 24 langs)** | **5,040** | **$22.68** | **$0.00** | **$22.68** |
+| Scope                           | Translations | Claude Cost | Aya Cost  | Total      |
+| ------------------------------- | ------------ | ----------- | --------- | ---------- |
+| Test (3 terms × 3 langs)        | 18           | $0.08       | $0.00     | $0.08      |
+| Small (10 terms × 5 langs)      | 100          | $0.45       | $0.00     | $0.45      |
+| Medium (50 terms × 12 langs)    | 1,200        | $5.40       | $0.00     | $5.40      |
+| **Full (105 terms × 24 langs)** | **5,040**    | **$22.68**  | **$0.00** | **$22.68** |
 
 **Note**: Actual costs may vary based on context length and response size.
 
@@ -443,4 +443,4 @@ Planned for future phases:
 
 ## License
 
-MIT License - See [LICENSE](../../../../LICENSE) for details.
+Apache License 2.0 - See [LICENSE](../../../../LICENSE) for details.

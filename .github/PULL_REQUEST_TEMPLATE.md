@@ -42,8 +42,8 @@ Closes #
 
 ### For Open Source Packages (core, i18n, vs-code)
 
-- [ ] I understand my contribution will be licensed under the MIT License
-- [ ] I have the right to submit this code under the MIT License
+- [ ] I understand my contribution will be licensed under the Apache License 2.0
+- [ ] I have the right to submit this code under the Apache License 2.0
 
 ### For Dual-Licensed Package (legesher)
 

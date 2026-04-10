@@ -398,4 +398,4 @@ cat programming_languages/python/version-index.yml
 
 ## License
 
-MIT License - See root LICENSE file
+Apache License 2.0 - See root LICENSE file

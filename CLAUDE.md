@@ -242,12 +242,12 @@ When making changes, consider impact on dependent packages. Build order should f
 ### License Boundary
 
 `libs/home/` (`legesher-home`) is **proprietary** (`LicenseRef-Proprietary`). All other packages in Tiers 1–3 are
-MIT-licensed (or MIT/Commercial dual-licensed). To prevent license contamination:
+Apache-2.0-licensed (or Apache-2.0/Commercial dual-licensed). To prevent license contamination:
 
-- **MIT packages MUST NOT import from `legesher_home`** — no `import legesher_home` or `from legesher_home` in
+- **Apache-2.0 packages MUST NOT import from `legesher_home`** — no `import legesher_home` or `from legesher_home` in
   `libs/core/`, `libs/i18n/`, `libs/language-server/`, `libs/vs-code/`, or `libs/legesher/`
-- **No dependency references** — MIT package `pyproject.toml` files must not list `legesher-home` as a dependency
-- **One-way dependency only** — `legesher-home` may depend on MIT packages, but never the reverse
+- **No dependency references** — Apache-2.0 package `pyproject.toml` files must not list `legesher-home` as a dependency
+- **One-way dependency only** — `legesher-home` may depend on Apache-2.0 packages, but never the reverse
 
 Enforced by a pre-commit hook (`check-license-boundary`) and an `import-linter` contract (`uv run lint-imports`).
 
@@ -288,59 +288,59 @@ libs/i18n/language-packs/{programming-language}/{natural-language}/
 
 **51 supported language packs** (all experimental) - Support Python 3.10-3.14 with version inheritance:
 
-| Code | Language         | Native Name      | RTL | Status       |
-| ---- | ---------------- | ---------------- | --- | ------------ |
-| am   | Amharic          | አማርኛ             | No  | Experimental |
-| ar   | Arabic           | العربية          | Yes | Experimental |
-| bn   | Bengali          | বাংলা            | No  | Experimental |
-| bs   | Bosnian          | Bosanski         | No  | Experimental |
-| ca   | Catalan          | Català           | No  | Experimental |
-| cs   | Czech            | Čeština          | No  | Experimental |
-| cy   | Welsh            | Cymraeg          | No  | Experimental |
-| da   | Danish           | Dansk            | No  | Experimental |
-| de   | German           | Deutsch          | No  | Experimental |
-| el   | Greek            | Ελληνικά         | No  | Experimental |
-| en   | English          | English          | No  | Experimental |
-| es   | Spanish          | Español          | No  | Experimental |
-| fa   | Persian          | فارسی            | Yes | Experimental |
-| fi   | Finnish          | Suomi            | No  | Experimental |
-| fr   | French           | Français         | No  | Experimental |
-| ga   | Irish            | Gaeilge          | No  | Experimental |
-| gd   | Scottish Gaelic  | Gàidhlig         | No  | Experimental |
-| gl   | Galician         | Galego           | No  | Experimental |
-| gu   | Gujarati         | ગુજરાતી          | No  | Experimental |
-| he   | Hebrew           | עברית            | Yes | Experimental |
-| hi   | Hindi            | हिन्दी           | No  | Experimental |
-| hr   | Croatian         | Hrvatski         | No  | Experimental |
-| hu   | Hungarian        | Magyar           | No  | Experimental |
-| id   | Indonesian       | Bahasa Indonesia | No  | Experimental |
-| it   | Italian          | Italiano         | No  | Experimental |
-| ja   | Japanese         | 日本語           | No  | Experimental |
-| kn   | Kannada          | ಕನ್ನಡ            | No  | Experimental |
-| ko   | Korean           | 한국어           | No  | Experimental |
-| lv   | Latvian          | Latviešu         | No  | Experimental |
-| mk   | Macedonian       | Македонски       | No  | Experimental |
-| ml   | Malayalam        | മലയാളം           | No  | Experimental |
-| mn   | Mongolian        | Монгол           | No  | Experimental |
-| ms   | Malay            | Bahasa Melayu    | No  | Experimental |
-| my   | Burmese          | မြန်မာ           | No  | Experimental |
-| nl   | Dutch            | Nederlands       | No  | Experimental |
-| no   | Norwegian        | Norsk            | No  | Experimental |
-| pl   | Polish           | Polski           | No  | Experimental |
-| pt   | Portuguese       | Português        | No  | Experimental |
-| ro   | Romanian         | Română           | No  | Experimental |
-| ru   | Russian          | Русский          | No  | Experimental |
-| si   | Sinhala          | සිංහල            | No  | Experimental |
-| sr   | Serbian          | Српски           | No  | Experimental |
-| su   | Sundanese        | Basa Sunda       | No  | Experimental |
-| sv   | Swedish          | Svenska          | No  | Experimental |
-| te   | Telugu           | తెలుగు           | No  | Experimental |
-| th   | Thai             | ไทย              | No  | Experimental |
-| tr   | Turkish          | Türkçe           | No  | Experimental |
-| ur   | Urdu             | اردو             | Yes | Experimental |
-| uz   | Uzbek            | O'zbek           | No  | Experimental |
-| vi   | Vietnamese       | Tiếng Việt       | No  | Experimental |
-| zh   | Chinese          | 中文             | No  | Experimental |
+| Code | Language        | Native Name      | RTL | Status       |
+| ---- | --------------- | ---------------- | --- | ------------ |
+| am   | Amharic         | አማርኛ             | No  | Experimental |
+| ar   | Arabic          | العربية          | Yes | Experimental |
+| bn   | Bengali         | বাংলা            | No  | Experimental |
+| bs   | Bosnian         | Bosanski         | No  | Experimental |
+| ca   | Catalan         | Català           | No  | Experimental |
+| cs   | Czech           | Čeština          | No  | Experimental |
+| cy   | Welsh           | Cymraeg          | No  | Experimental |
+| da   | Danish          | Dansk            | No  | Experimental |
+| de   | German          | Deutsch          | No  | Experimental |
+| el   | Greek           | Ελληνικά         | No  | Experimental |
+| en   | English         | English          | No  | Experimental |
+| es   | Spanish         | Español          | No  | Experimental |
+| fa   | Persian         | فارسی            | Yes | Experimental |
+| fi   | Finnish         | Suomi            | No  | Experimental |
+| fr   | French          | Français         | No  | Experimental |
+| ga   | Irish           | Gaeilge          | No  | Experimental |
+| gd   | Scottish Gaelic | Gàidhlig         | No  | Experimental |
+| gl   | Galician        | Galego           | No  | Experimental |
+| gu   | Gujarati        | ગુજરાતી          | No  | Experimental |
+| he   | Hebrew          | עברית            | Yes | Experimental |
+| hi   | Hindi           | हिन्दी           | No  | Experimental |
+| hr   | Croatian        | Hrvatski         | No  | Experimental |
+| hu   | Hungarian       | Magyar           | No  | Experimental |
+| id   | Indonesian      | Bahasa Indonesia | No  | Experimental |
+| it   | Italian         | Italiano         | No  | Experimental |
+| ja   | Japanese        | 日本語           | No  | Experimental |
+| kn   | Kannada         | ಕನ್ನಡ            | No  | Experimental |
+| ko   | Korean          | 한국어           | No  | Experimental |
+| lv   | Latvian         | Latviešu         | No  | Experimental |
+| mk   | Macedonian      | Македонски       | No  | Experimental |
+| ml   | Malayalam       | മലയാളം           | No  | Experimental |
+| mn   | Mongolian       | Монгол           | No  | Experimental |
+| ms   | Malay           | Bahasa Melayu    | No  | Experimental |
+| my   | Burmese         | မြန်မာ           | No  | Experimental |
+| nl   | Dutch           | Nederlands       | No  | Experimental |
+| no   | Norwegian       | Norsk            | No  | Experimental |
+| pl   | Polish          | Polski           | No  | Experimental |
+| pt   | Portuguese      | Português        | No  | Experimental |
+| ro   | Romanian        | Română           | No  | Experimental |
+| ru   | Russian         | Русский          | No  | Experimental |
+| si   | Sinhala         | සිංහල            | No  | Experimental |
+| sr   | Serbian         | Српски           | No  | Experimental |
+| su   | Sundanese       | Basa Sunda       | No  | Experimental |
+| sv   | Swedish         | Svenska          | No  | Experimental |
+| te   | Telugu          | తెలుగు           | No  | Experimental |
+| th   | Thai            | ไทย              | No  | Experimental |
+| tr   | Turkish         | Türkçe           | No  | Experimental |
+| ur   | Urdu            | اردو             | Yes | Experimental |
+| uz   | Uzbek           | O'zbek           | No  | Experimental |
+| vi   | Vietnamese      | Tiếng Việt       | No  | Experimental |
+| zh   | Chinese         | 中文             | No  | Experimental |
 
 All packs have 37 keywords, 72 builtins, and 66 exceptions (at the 3.10 base).
 Translations generated via Aya AI Model (except English reference).

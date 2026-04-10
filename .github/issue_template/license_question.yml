@@ -9,8 +9,8 @@ body:
       Have a question about Legesher's licensing model? We're here to help!
 
       ## Quick Reference
-      - **Open Source (MIT)**: core, i18n, vs-code - free for any use
-      - **Dual License**: legesher - free tier (MIT) or premium (Commercial)
+      - **Open Source (Apache 2.0)**: core, i18n, vs-code - free for any use
+      - **Dual License**: legesher - free tier (Apache 2.0) or premium (Commercial)
       - **Proprietary**: home - commercial license required
 
       See [LICENSE](../../LICENSE) for full details.
@@ -24,7 +24,7 @@ body:
     - What features are included in the free tier?
     - How do I purchase a commercial license?
     - Can I contribute to proprietary packages?
-    - What's the difference between MIT and dual-license?
+    - What's the difference between Apache 2.0 and dual-license?
     - Can I redistribute/resell this software?
     - Enterprise licensing inquiry
     - OEM/embedded licensing inquiry
@@ -38,9 +38,9 @@ body:
     label: Which package(s) is your question about?
     multiple: true
     options:
-    - legesher-core (MIT)
-    - legesher-i18n (MIT)
-    - legesher-vs-code (MIT)
+    - legesher-core (Apache 2.0)
+    - legesher-i18n (Apache 2.0)
+    - legesher-vs-code (Apache 2.0)
     - legesher (Dual License)
     - legesher-home (Proprietary)
     - Not sure / General question

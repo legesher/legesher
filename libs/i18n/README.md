@@ -366,7 +366,7 @@ libs/i18n/
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file
+Apache License 2.0 - see [LICENSE](LICENSE) file
 
 ## Links
 

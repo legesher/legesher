@@ -879,4 +879,4 @@ Customize report templates in `legesher_i18n/reports/templates/`:
 
 ## License
 
-This translation comparison system is part of the Legesher project and is licensed under the MIT License.
+This translation comparison system is part of the Legesher project and is licensed under the Apache License 2.0.

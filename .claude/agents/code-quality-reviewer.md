@@ -44,7 +44,7 @@ When invoked, analyze the files in the current diff or the specific files provid
 - Use `legesher_core` Protocols for translator interfaces
 - Use `legesher_i18n` for language pack loading
 - Follow the tier system: core → i18n → legesher/vs-code → home
-- Never import `legesher_home` from MIT packages
+- Never import `legesher_home` from Apache-2.0 packages
 - Use `pdm-backend` for package building
 - Use `uv` for dependency management
 - Use Pydantic for schemas and validation

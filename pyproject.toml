@@ -230,7 +230,7 @@ root_packages = [
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
-name = "MIT packages must not import proprietary legesher-home"
+name = "Apache-2.0 packages must not import proprietary legesher-home"
 type = "forbidden"
 source_modules = [
     "legesher_core",

@@ -123,8 +123,8 @@ Additional recommendations:
 
 ### Multi-License Structure
 
-- **Open source packages** (core, i18n, language-server, vs-code) are MIT-licensed and publicly auditable
-- **Dual-licensed package** (legesher CLI) is MIT for free tier, commercial license for premium features
+- **Open source packages** (core, i18n, language-server, vs-code) are Apache-2.0-licensed and publicly auditable
+- **Dual-licensed package** (legesher CLI) is Apache 2.0 for free tier, commercial license for premium features
 - **Proprietary package** (home) is source-available but usage is restricted
 - **All packages** are subject to the same security review standards
 

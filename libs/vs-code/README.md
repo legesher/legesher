@@ -49,12 +49,12 @@ For complete installation instructions (VS Code extension + Python packages), se
 
 ## Commands
 
-| Command                             | Description                        |
-| ----------------------------------- | ---------------------------------- |
-| `Legesher: Select Language`         | Choose your target language        |
-| `Legesher: Show Translation Panel`  | Open side-by-side translation view |
-| `Legesher: Restart Language Server` | Reconnect to the language server   |
-| `Legesher: Give Feedback`           | Submit feedback about the extension|
+| Command                             | Description                         |
+| ----------------------------------- | ----------------------------------- |
+| `Legesher: Select Language`         | Choose your target language         |
+| `Legesher: Show Translation Panel`  | Open side-by-side translation view  |
+| `Legesher: Restart Language Server` | Reconnect to the language server    |
+| `Legesher: Give Feedback`           | Submit feedback about the extension |
 
 ## Configuration
 
@@ -112,4 +112,4 @@ vi (Vietnamese)  zh (Chinese)
 ---
 
 **Author**: Madison Edgar - Legesher
-**License**: [MIT](./LICENSE)
+**License**: [Apache 2.0](./LICENSE)

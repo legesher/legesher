@@ -9,7 +9,6 @@ from legesher_i18n.schema_validator import (
 )
 from legesher_i18n.exceptions import PackValidationError
 
-
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
@@ -454,7 +453,7 @@ class TestEnhancedCompleteness:
                 "last_updated": "2025-10-23",
                 "python_version_min": "3.10",
                 "author": "Test Author",
-                "license": "MIT",
+                "license": "Apache-2.0",
             },
         }
 

@@ -11,10 +11,10 @@
 
 **Package Licenses:**
 
-[![Core: MIT](https://img.shields.io/badge/core-MIT-green.svg)](libs/core/LICENSE)
-[![i18n: MIT](https://img.shields.io/badge/i18n-MIT-green.svg)](libs/i18n/LICENSE)
-[![VS Code: MIT](https://img.shields.io/badge/vscode-MIT-green.svg)](libs/vs-code/LICENSE)
-[![Legesher: Dual](https://img.shields.io/badge/legesher-MIT%20%7C%20Commercial-orange.svg)](libs/legesher/LICENSE)
+[![Core: Apache 2.0](https://img.shields.io/badge/core-Apache%202.0-green.svg)](libs/core/LICENSE)
+[![i18n: Apache 2.0](https://img.shields.io/badge/i18n-Apache%202.0-green.svg)](libs/i18n/LICENSE)
+[![VS Code: Apache 2.0](https://img.shields.io/badge/vscode-Apache%202.0-green.svg)](libs/vs-code/LICENSE)
+[![Legesher: Dual](https://img.shields.io/badge/legesher-Apache%202.0%20%7C%20Commercial-orange.svg)](libs/legesher/LICENSE)
 [![Home: Proprietary](https://img.shields.io/badge/home-Proprietary-red.svg)](libs/home/LICENSE)
 
 ## About Legesher
@@ -65,18 +65,18 @@ population who don't speak English as their first language. Developers must lear
 
 This repository uses a **multi-license structure** to support both an open protocol and commercial features:
 
-### 📖 Open Source (MIT License)
+### 📖 Open Source (Apache License 2.0)
 
 - **[legesher-core](libs/core/)** - Core translation engine
 - **[legesher-i18n](libs/i18n/)** - Language data and dictionaries
 - **[legesher-vs-code](libs/vs-code/)** - VS Code extension
 
-These packages are freely available under the MIT License. Community contributions welcome!
+These packages are freely available under the Apache License 2.0. Community contributions welcome!
 
-### 🎯 Dual Licensed (MIT + Commercial)
+### 🎯 Dual Licensed (Apache 2.0 + Commercial)
 
 - **[legesher](libs/legesher/)** - Main CLI and library
-  - **Free Tier**: MIT License for local translation
+  - **Free Tier**: Apache 2.0 License for local translation
   - **Premium Tier**: Commercial license for cloud sync, team features, and advanced tooling
 
 ### 🔒 Proprietary (Source Available)
@@ -85,7 +85,8 @@ These packages are freely available under the MIT License. Community contributio
   - Source code visible for transparency and security review
   - Commercial license required for use
 
-See the [LICENSE](LICENSE) file for complete details.
+See [LICENSING.md](LICENSING.md) for the complete per-package license breakdown,
+or the [LICENSE](LICENSE) file for the Apache 2.0 terms.
 
 ## Quick Start in 5 Minutes
 

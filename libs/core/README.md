@@ -247,4 +247,4 @@ See the [metadata module documentation](legesher_core/metadata.py) for complete 
 
 ## License
 
-MIT License
+Apache License 2.0

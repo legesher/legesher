@@ -457,7 +457,7 @@ class YAMLExporter:
             "last_updated": datetime.now().strftime("%Y-%m-%d"),
             "community_reviewed": existing_metadata.get("community_reviewed", False),
             "author": existing_metadata.get("author", "Legesher Team (Aya AI Model)"),
-            "license": existing_metadata.get("license", "MIT"),
+            "license": existing_metadata.get("license", "Apache-2.0"),
         }
 
         with open(filepath, "w", encoding="utf-8") as f:
@@ -513,7 +513,7 @@ build-backend = "pdm.backend"
 authors = [
     {{name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}}
 ]
-license = {{text = "MIT"}}
+license = {{text = "Apache-2.0"}}
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "legesher-i18n>=0.0.1,<0.1.0",
@@ -526,7 +526,7 @@ keywords = ["legesher", "i18n", "{lang_name.lower()}", "python", "translation", 
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -659,7 +659,7 @@ Translation guidelines:
 
 ## License
 
-MIT License - See [LICENSE](../../../LICENSE) for details.
+Apache License 2.0 - See [LICENSE](../../../LICENSE) for details.
 
 ## Version History
 

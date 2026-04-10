@@ -47,7 +47,7 @@ Stuck? Don't hesitate to ask! We're here to help:
 
 This repository contains packages with different licenses. Please review the licensing structure before contributing:
 
-### Open Source Packages (MIT License)
+### Open Source Packages (Apache License 2.0)
 
 We welcome community contributions to these packages:
 
@@ -55,14 +55,14 @@ We welcome community contributions to these packages:
 - **`libs/i18n/`** - Internationalization and language data
 - **`libs/vs-code/`** - VS Code editor integration
 
-These packages are fully open source under the MIT License. Your contributions will be licensed under the same terms.
+These packages are freely available under the Apache License 2.0. Your contributions will be licensed under the same terms.
 
-### Dual-Licensed Package (MIT + Commercial)
+### Dual-Licensed Package (Apache 2.0 + Commercial)
 
 - **`libs/legesher/`** - Main package with CLI and primary API
 
-The free tier features use the MIT License. Premium features require a commercial license. Contributions to free tier
-features are welcome.
+The free tier features use the Apache License 2.0. Premium features require a commercial license.
+Contributions to free tier features are welcome.
 
 ### Proprietary Packages
 
@@ -185,11 +185,11 @@ pnpm dev
 
 ## Contributor License Agreement
 
-### For Open Source Packages (MIT Licensed)
+### For Open Source Packages (Apache-2.0 Licensed)
 
-By contributing to MIT-licensed packages (`core`, `i18n`, `vs-code`), you agree that:
+By contributing to Apache-2.0-licensed packages (`core`, `i18n`, `vs-code`), you agree that:
 
-1. Your contributions will be licensed under the MIT License
+1. Your contributions will be licensed under the Apache License 2.0
 2. You have the right to license your contribution under these terms
 3. You understand your contributions become part of the public open source project
 
@@ -197,7 +197,7 @@ By contributing to MIT-licensed packages (`core`, `i18n`, `vs-code`), you agree 
 
 By contributing to the `legesher` package, you agree that:
 
-1. Your contributions to free tier features will be licensed under MIT
+1. Your contributions to free tier features will be licensed under Apache 2.0
 2. Your contributions may also be used in the commercial/premium tier
 3. Legesher retains the right to use your contributions in both the free and commercial versions
 4. You will be credited as a contributor

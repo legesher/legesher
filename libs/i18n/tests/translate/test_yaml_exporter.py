@@ -104,7 +104,7 @@ class TestYAMLExporterMerge:
                 "last_updated": "2024-01-01",
                 "community_reviewed": True,
                 "author": "Original Author",
-                "license": "MIT",
+                "license": "Apache-2.0",
             },
         }
 
