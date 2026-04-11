@@ -6,7 +6,6 @@ Used by the translation pipeline to ensure generated translations are valid.
 
 import re
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
@@ -22,8 +21,8 @@ class ValidationResult:
     """
 
     is_valid: bool
-    errors: List[str]
-    warnings: List[str]
+    errors: list[str]
+    warnings: list[str]
     translation: str
     term: str
 
@@ -220,7 +219,7 @@ class TranslationValidator:
         self,
         language_code: str,
         translations: dict,
-    ) -> tuple[List[ValidationResult], dict]:
+    ) -> tuple[list[ValidationResult], dict]:
         """Validate an entire language pack.
 
         Args:
@@ -293,7 +292,7 @@ class TranslationValidator:
 
         return False
 
-    def print_summary(self, results: List[ValidationResult]) -> None:
+    def print_summary(self, results: list[ValidationResult]) -> None:
         """Print validation summary.
 
         Args:

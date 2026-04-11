@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ _FENCE_END = re.compile(r"\s*```$")
 def parse_llm_response(
     raw_text: str,
     original_text: str,
-    context: Optional[dict[str, Any]],
+    context: dict[str, Any] | None,
 ) -> str:
     """Extract the translation from an LLM response.
 

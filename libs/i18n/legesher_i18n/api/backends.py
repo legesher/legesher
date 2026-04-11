@@ -9,7 +9,7 @@ as an LLM backend for full code translation.
 import asyncio
 import concurrent.futures
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from .coordinator import TranslationCoordinator
 
@@ -62,7 +62,7 @@ class ProviderBackendAdapter:
     def __init__(
         self,
         coordinator: TranslationCoordinator,
-        preferred_provider: Optional[str] = None,
+        preferred_provider: str | None = None,
     ) -> None:
         """Initialize the adapter.
 
@@ -78,7 +78,7 @@ class ProviderBackendAdapter:
         text: str,
         source_lang: str,
         target_lang: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> str:
         """Translate a single piece of text synchronously.
 

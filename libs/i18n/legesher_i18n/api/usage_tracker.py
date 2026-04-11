@@ -6,7 +6,6 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +122,7 @@ class UsageTracker:
             f"{record.characters} chars (${record.cost_usd:.4f})"
         )
 
-    def record_batch(self, records: List[UsageRecord]):
+    def record_batch(self, records: list[UsageRecord]):
         """
         Record multiple usage events in a single transaction for better performance.
 
@@ -171,9 +170,9 @@ class UsageTracker:
 
     def get_usage_stats(
         self,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-    ) -> Dict:
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> dict:
         """
         Get usage statistics for a time period.
 
@@ -315,8 +314,8 @@ class UsageTracker:
     def export_csv(
         self,
         filepath: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ):
         """
         Export usage data to CSV.
@@ -365,7 +364,7 @@ class UsageTracker:
 
         logger.info(f"Exported usage data to {filepath}")
 
-    def get_recent_usage(self, limit: int = 100) -> List[UsageRecord]:
+    def get_recent_usage(self, limit: int = 100) -> list[UsageRecord]:
         """
         Get recent usage records.
 

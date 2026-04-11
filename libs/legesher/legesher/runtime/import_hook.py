@@ -42,7 +42,7 @@ import threading
 import importlib.abc
 import importlib.machinery
 from pathlib import Path
-from typing import Optional, Dict, Tuple, Any
+from typing import Any
 from collections import OrderedDict
 
 from legesher_core import TokenTranslator
@@ -86,12 +86,12 @@ class _TranslationCache:
         Args:
             max_size: Maximum number of cache entries
         """
-        self._cache: OrderedDict[Tuple[str, int], bytes] = OrderedDict()
+        self._cache: OrderedDict[tuple[str, int], bytes] = OrderedDict()
         self._max_size = max(0, max_size)  # Validate non-negative
         self._stats = {"hits": 0, "misses": 0, "evictions": 0}
         self._lock = threading.Lock()  # Instance-specific lock
 
-    def get(self, key: Tuple[str, int]) -> Optional[bytes]:
+    def get(self, key: tuple[str, int]) -> bytes | None:
         """Get value from cache (thread-safe, LRU update).
 
         Args:
@@ -110,7 +110,7 @@ class _TranslationCache:
             self._stats["misses"] += 1
             return None
 
-    def set(self, key: Tuple[str, int], value: bytes) -> None:
+    def set(self, key: tuple[str, int], value: bytes) -> None:
         """Store value in cache with LRU eviction (thread-safe).
 
         Args:
@@ -134,7 +134,7 @@ class _TranslationCache:
             self._cache.clear()
             self._stats = {"hits": 0, "misses": 0, "evictions": 0}
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics (thread-safe).
 
         Returns:
@@ -345,7 +345,7 @@ class LegesherLoader(importlib.abc.SourceLoader):
         return False
 
 
-def _get_cache_size(explicit_size: Optional[int] = None) -> int:
+def _get_cache_size(explicit_size: int | None = None) -> int:
     """Resolve cache size from configuration sources.
 
     Precedence (highest to lowest):
@@ -390,9 +390,7 @@ def _get_cache_size(explicit_size: Optional[int] = None) -> int:
     return 128
 
 
-def install_import_hook(
-    language: Optional[str] = None, cache_size: Optional[int] = None
-):
+def install_import_hook(language: str | None = None, cache_size: int | None = None):
     """Install the Legesher import hook for native language execution.
 
     Args:
@@ -449,7 +447,7 @@ def is_hook_installed() -> bool:
     return any(isinstance(finder, LegesherMetaPathFinder) for finder in sys.meta_path)
 
 
-def get_installed_language() -> Optional[str]:
+def get_installed_language() -> str | None:
     """Get the language of the installed import hook.
 
     Returns:
@@ -461,7 +459,7 @@ def get_installed_language() -> Optional[str]:
     return None
 
 
-def get_cache_stats() -> Optional[Dict[str, Any]]:
+def get_cache_stats() -> dict[str, Any] | None:
     """Get cache statistics from the installed import hook.
 
     Returns:

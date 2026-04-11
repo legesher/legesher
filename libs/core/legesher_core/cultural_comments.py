@@ -28,7 +28,7 @@ import io
 import logging
 import re
 import tokenize
-from typing import Iterable, Optional
+from collections.abc import Iterable
 
 from .types import CulturalComment, CulturalCommentMetadata
 
@@ -199,7 +199,7 @@ class CulturalCommentParser:
             logger.info(f"Tokenization error (incomplete code?): {e}")
             return CulturalCommentMetadata()
 
-    def validate_syntax(self, comment: str) -> tuple[bool, Optional[tuple[str, str]]]:
+    def validate_syntax(self, comment: str) -> tuple[bool, tuple[str, str] | None]:
         """Validate cultural comment syntax.
 
         Checks if a comment string matches the cultural comment pattern

@@ -128,7 +128,7 @@ class TestYAMLExporterMerge:
         )
 
         # Read the merged file
-        with open(yaml_file, "r", encoding="utf-8") as f:
+        with open(yaml_file, encoding="utf-8") as f:
             merged_data = yaml.safe_load(f)
 
         # Verify all original translations are preserved
@@ -180,7 +180,7 @@ class TestYAMLExporterMerge:
         )
 
         # Verify new translation replaced old one
-        with open(yaml_file, "r", encoding="utf-8") as f:
+        with open(yaml_file, encoding="utf-8") as f:
             merged_data = yaml.safe_load(f)
 
         assert merged_data["keywords"]["def"] == "definir"  # New translation
@@ -208,7 +208,7 @@ class TestYAMLExporterMerge:
         # Verify file was created
         assert yaml_file.exists()
 
-        with open(yaml_file, "r", encoding="utf-8") as f:
+        with open(yaml_file, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         assert data["keywords"]["def"] == "définir"
@@ -235,7 +235,7 @@ class TestYAMLExporterMerge:
         )
 
         # Verify valid YAML was written
-        with open(yaml_file, "r", encoding="utf-8") as f:
+        with open(yaml_file, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         assert data["keywords"]["def"] == "definieren"
@@ -278,7 +278,7 @@ class TestYAMLExporterMerge:
             header="# Test",
         )
 
-        with open(yaml_file, "r", encoding="utf-8") as f:
+        with open(yaml_file, encoding="utf-8") as f:
             merged_data = yaml.safe_load(f)
 
         # Verify preserved fields
@@ -320,7 +320,7 @@ class TestYAMLExporterMerge:
             header="# Test",
         )
 
-        with open(yaml_file, "r", encoding="utf-8") as f:
+        with open(yaml_file, encoding="utf-8") as f:
             merged_data = yaml.safe_load(f)
 
         # Verify sections were populated
@@ -376,7 +376,7 @@ class TestYAMLExporterMerge:
         )
 
         # Verify merge worked
-        with open(pack_dir / "3.10.yml", "r", encoding="utf-8") as f:
+        with open(pack_dir / "3.10.yml", encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         # All translations should be present
@@ -453,7 +453,7 @@ class TestYAMLExporterRegressions:
         )
 
         # Read merged file
-        with open(yaml_file, "r", encoding="utf-8") as f:
+        with open(yaml_file, encoding="utf-8") as f:
             merged_data = yaml.safe_load(f)
 
         # BUG REGRESSION TEST: All original translations should be preserved

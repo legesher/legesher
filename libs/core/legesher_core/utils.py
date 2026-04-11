@@ -32,7 +32,7 @@ def validate_utf8_encoding(file_path: Path) -> str:
 
     try:
         # Try to read file as UTF-8
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             f.read()
         return "utf-8"
     except UnicodeDecodeError as e:

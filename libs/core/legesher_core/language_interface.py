@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Literal
 
 from .types import BuiltinMap, KeywordMap, TextTranslationBackend, Translator
 
@@ -252,7 +252,7 @@ def create_translator_from_config(
 def create_translator_from_language_pack(
     programming_language: str,
     natural_language: str,
-    programming_language_version: Optional[str] = None,
+    programming_language_version: str | None = None,
     use_tree_sitter: bool | None = None,
 ) -> Translator:
     """Convenience factory for creating translators from language packs.

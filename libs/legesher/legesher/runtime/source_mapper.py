@@ -12,7 +12,6 @@ This enables:
 """
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
 
 
 @dataclass
@@ -45,9 +44,9 @@ class LegesherSourceMapper:
     def __init__(self):
         """Initialize the source mapper with empty mappings."""
         # Map: (filename, english_line) -> native_line
-        self._mappings: Dict[Tuple[str, int], int] = {}
+        self._mappings: dict[tuple[str, int], int] = {}
         # Map: filename -> native_source
-        self._native_sources: Dict[str, str] = {}
+        self._native_sources: dict[str, str] = {}
 
     def register_mapping(self, filename: str, native_source: str, english_source: str):
         """Register a source mapping for a file.
@@ -74,7 +73,7 @@ class LegesherSourceMapper:
             if nat_line_no <= len(native_lines):
                 self._mappings[(filename, eng_line_no)] = nat_line_no
 
-    def get_native_line(self, filename: str, english_line: int) -> Optional[int]:
+    def get_native_line(self, filename: str, english_line: int) -> int | None:
         """Get native language line number from English line number.
 
         Args:
@@ -86,7 +85,7 @@ class LegesherSourceMapper:
         """
         return self._mappings.get((filename, english_line))
 
-    def get_native_source_line(self, filename: str, line_no: int) -> Optional[str]:
+    def get_native_source_line(self, filename: str, line_no: int) -> str | None:
         """Get native source code line.
 
         Args:
@@ -149,7 +148,7 @@ class LegesherSourceMapper:
         """
         return list(self._native_sources.keys())
 
-    def get_line_count(self, filename: str) -> Optional[int]:
+    def get_line_count(self, filename: str) -> int | None:
         """Get the number of lines in the native source file.
 
         Args:

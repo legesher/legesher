@@ -1,7 +1,6 @@
 """Quality validation for translation results with automatic fallback logic."""
 
 import logging
-from typing import List, Optional
 
 from .providers.base import TranslationResult
 
@@ -93,8 +92,8 @@ class QualityValidator:
         return True
 
     def get_best_translation(
-        self, results: List[TranslationResult], source_text: str = ""
-    ) -> Optional[TranslationResult]:
+        self, results: list[TranslationResult], source_text: str = ""
+    ) -> TranslationResult | None:
         """
         Select best translation from multiple provider results.
 

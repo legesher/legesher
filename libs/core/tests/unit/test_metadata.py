@@ -676,7 +676,7 @@ class TestYamlOperations:
         metadata_manager._write_yaml(yaml_file, data)
 
         # Read it back
-        with open(yaml_file, "r", encoding="utf-8") as f:
+        with open(yaml_file, encoding="utf-8") as f:
             loaded = yaml.safe_load(f)
 
         assert loaded == data

@@ -13,7 +13,6 @@ import logging
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
 
@@ -66,7 +65,7 @@ def git():
 )
 def git_setup(
     language: str,
-    python_version: Optional[str],
+    python_version: str | None,
     use_global: bool,
     track_metadata: bool,
 ):

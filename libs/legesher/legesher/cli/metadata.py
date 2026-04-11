@@ -438,7 +438,7 @@ def raw(file_path: str, repo: str):
             sys.exit(1)
 
         # Read raw YAML
-        with open(metadata_path, "r", encoding="utf-8") as f:
+        with open(metadata_path, encoding="utf-8") as f:
             yaml_content = f.read()
 
         # Display header

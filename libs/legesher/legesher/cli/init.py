@@ -15,7 +15,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Sequence
+from collections.abc import Sequence
 
 import click
 import questionary

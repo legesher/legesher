@@ -80,7 +80,7 @@ def fix_yaml_file(file_path: Path, lang: str, dry_run: bool = False) -> int:
     if not file_path.exists():
         return 0
 
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
     fix_count = 0

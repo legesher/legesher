@@ -1,7 +1,6 @@
 """Tree-sitter parser wrapper for Python code."""
 
 import logging
-from typing import Optional
 
 from tree_sitter import Language, Parser, Query, Tree
 import tree_sitter_python
@@ -103,7 +102,7 @@ class PythonParser:
     def parse_incremental(
         self,
         source_code: str | bytes,
-        old_tree: Optional[Tree] = None,
+        old_tree: Tree | None = None,
         encoding: str = "utf-8",
     ) -> Tree:
         """Parse code incrementally using previous tree.

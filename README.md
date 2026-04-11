@@ -3,8 +3,8 @@
 **Code in Your Native Language** - Programming tools that break down the English language barrier
 
 [![All Contributors](https://img.shields.io/github/all-contributors/legesher/legesher?color=ee8449&style=flat-square)](#contributors)
-[![CI](https://github.com/legesher/legesher/workflows/CI/badge.svg)](https://github.com/legesher/legesher/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-91%25-brightgreen.svg)](https://github.com/legesher/legesher/actions)
+[![CI](https://github.com/madiedgar/legesher/actions/workflows/ci.yml/badge.svg)](https://github.com/madiedgar/legesher/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/madiedgar/legesher/branch/main/graph/badge.svg)](https://codecov.io/gh/madiedgar/legesher)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue.svg)](https://www.python.org/downloads/)
 [![License: Multi](https://img.shields.io/badge/license-Multi-blue.svg)](LICENSE)
 [![PyPI](https://img.shields.io/badge/PyPI-coming%20soon-orange.svg)](https://pypi.org/)

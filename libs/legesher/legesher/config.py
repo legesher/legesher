@@ -74,7 +74,7 @@ class LegesherConfig:
     def __init__(
         self,
         language: str = "en",
-        python_version: Optional[str] = None,
+        python_version: str | None = None,
         git_canonical_language: str = "en",
         git_filter_enabled: bool = True,
         metadata_enabled: bool = True,
@@ -182,7 +182,7 @@ class LegesherConfig:
 
     @classmethod
     def load_project_config(
-        cls, repo_root: Optional[Path] = None
+        cls, repo_root: Path | None = None
     ) -> tuple[Optional["LegesherConfig"], bool]:
         """Load project-level configuration from .legesher/config.yml.
 
@@ -211,7 +211,7 @@ class LegesherConfig:
             return (None, False)
 
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 data = yaml.safe_load(f) or {}
 
             logger.info(f"Loaded project config from {config_path}")
@@ -239,7 +239,7 @@ class LegesherConfig:
             return (None, False)
 
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 data = yaml.safe_load(f) or {}
 
             logger.info(f"Loaded user config from {config_path}")
@@ -250,7 +250,7 @@ class LegesherConfig:
             return (None, False)
 
     @classmethod
-    def load(cls, repo_root: Optional[Path] = None) -> "LegesherConfig":
+    def load(cls, repo_root: Path | None = None) -> "LegesherConfig":
         """Load configuration with precedence: project > user > defaults.
 
         This method loads configuration from both project and user config files,
@@ -288,7 +288,7 @@ class LegesherConfig:
 
         return cls.from_dict(merged_data)
 
-    def save_project_config(self, repo_root: Optional[Path] = None) -> Path:
+    def save_project_config(self, repo_root: Path | None = None) -> Path:
         """Save configuration to project .legesher/config.yml.
 
         Args:
@@ -344,7 +344,7 @@ class LegesherConfig:
         return config_path
 
     @staticmethod
-    def _find_repo_root(start_path: Optional[Path] = None) -> Path:
+    def _find_repo_root(start_path: Path | None = None) -> Path:
         """Find git repository root by searching for .git directory.
 
         Args:
@@ -445,7 +445,7 @@ def get_language_for_git_filter() -> str:
     return config.language
 
 
-def get_python_version() -> Optional[str]:
+def get_python_version() -> str | None:
     """Get the Python version from configuration.
 
     Returns:

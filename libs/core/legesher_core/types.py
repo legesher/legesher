@@ -9,7 +9,7 @@ because Python keywords cannot be used as TypedDict field names.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal, Optional, Protocol, TypedDict, Union, runtime_checkable
+from typing import Any, Literal, Protocol, TypedDict, runtime_checkable
 
 # Type aliases for translation maps
 # We use dict[str, str] instead of TypedDict because Python keywords
@@ -353,7 +353,7 @@ class Translator(Protocol):
         source_lang: str = "en",
         target_lang: str = "es",
         return_metadata: bool = False,
-    ) -> Union[str, tuple[str, "CulturalCommentMetadata"]]:
+    ) -> str | tuple[str, "CulturalCommentMetadata"]:
         """Translate Python source code from one language to another.
 
         Args:
@@ -402,7 +402,7 @@ class Translator(Protocol):
 
     @classmethod
     def from_language_pack(
-        cls, language: str, python_version: Optional[str] = None
+        cls, language: str, python_version: str | None = None
     ) -> "Translator":
         """Create translator from a language pack.
 
@@ -433,7 +433,7 @@ class Translator(Protocol):
         """
         ...
 
-    def get_pack_info(self) -> dict[str, Union[str, int]]:
+    def get_pack_info(self) -> dict[str, str | int]:
         """Get information about the loaded language pack.
 
         Returns:
@@ -479,8 +479,8 @@ class TranslatableElement:
     role: IdentifierRole
     context: dict[str, Any]
     # For strings/docstrings: quote style and prefix
-    quote_style: Optional[str] = None  # "'", '"', '"""', "'''"
-    prefix: Optional[str] = None  # "f", "r", "b", etc.
+    quote_style: str | None = None  # "'", '"', '"""', "'''"
+    prefix: str | None = None  # "f", "r", "b", etc.
 
 
 @dataclass
@@ -525,7 +525,7 @@ class TextTranslationBackend(Protocol):
         text: str,
         source_lang: str,
         target_lang: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> str:
         """Translate a single piece of text.
 

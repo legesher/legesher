@@ -11,7 +11,7 @@ version-index.yml to provide complete term sets for any Python version.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field, field_validator
@@ -54,7 +54,7 @@ class PythonVersionInfo(BaseModel):
     removed_builtins: list[str] = Field(default_factory=list)
     added_exceptions: list[str] = Field(default_factory=list)
     removed_exceptions: list[str] = Field(default_factory=list)
-    base: Optional[str] = None
+    base: str | None = None
 
     @field_validator("version")
     @classmethod
@@ -80,7 +80,7 @@ class VersionIndexSchema(BaseModel):
     """Schema for version-index.yml file."""
 
     python_versions: dict[str, dict[str, Any]]
-    auto_update: Optional[AutoUpdateConfig] = None
+    auto_update: AutoUpdateConfig | None = None
 
     def to_version_infos(self) -> dict[str, PythonVersionInfo]:
         """Convert raw dict to PythonVersionInfo objects."""
@@ -104,8 +104,8 @@ class VersionIndex:
     """Manages the Python version index and inheritance chains."""
 
     versions: dict[str, PythonVersionInfo] = field(default_factory=dict)
-    auto_update_config: Optional[AutoUpdateConfig] = None
-    _index_path: Optional[Path] = None
+    auto_update_config: AutoUpdateConfig | None = None
+    _index_path: Path | None = None
 
     @classmethod
     def load(cls, index_path: Path) -> "VersionIndex":
@@ -126,7 +126,7 @@ class VersionIndex:
             )
 
         try:
-            with open(index_path, "r", encoding="utf-8") as f:
+            with open(index_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
 
             if not data:

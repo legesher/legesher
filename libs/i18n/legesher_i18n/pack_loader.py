@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -50,11 +50,11 @@ class LanguagePack:
     keywords: dict[str, str] = field(default_factory=dict)
     builtins: dict[str, str] = field(default_factory=dict)
     exceptions: dict[str, str] = field(default_factory=dict)
-    metadata: Optional[LanguagePackMetadata] = None
-    extends: Optional[str] = None
+    metadata: LanguagePackMetadata | None = None
+    extends: str | None = None
     inheritance_chain: list[str] = field(default_factory=list)
 
-    def get_keyword_translation(self, keyword: str) -> Optional[str]:
+    def get_keyword_translation(self, keyword: str) -> str | None:
         """Get translation for a specific keyword.
 
         Args:
@@ -65,7 +65,7 @@ class LanguagePack:
         """
         return self.keywords.get(keyword)
 
-    def get_builtin_translation(self, builtin: str) -> Optional[str]:
+    def get_builtin_translation(self, builtin: str) -> str | None:
         """Get translation for a specific builtin function.
 
         Args:
@@ -76,7 +76,7 @@ class LanguagePack:
         """
         return self.builtins.get(builtin)
 
-    def get_exception_translation(self, exception: str) -> Optional[str]:
+    def get_exception_translation(self, exception: str) -> str | None:
         """Get translation for a specific exception type.
 
         Args:
@@ -114,7 +114,7 @@ class LanguagePackLoader:
     This loader is thread-safe and uses LRU caching for performance.
     """
 
-    def __init__(self, pack_root: Optional[Path] = None):
+    def __init__(self, pack_root: Path | None = None):
         """Initialize the loader.
 
         Args:
@@ -228,7 +228,7 @@ class LanguagePackLoader:
         self,
         language: str,
         target: str = "python",
-        version: Optional[str] = None,
+        version: str | None = None,
     ) -> LanguagePack:
         """Load a language pack with full inheritance resolution.
 
@@ -283,9 +283,7 @@ class LanguagePackLoader:
 
         return pack
 
-    def _get_pack_path(
-        self, language: str, target: str, version: Optional[str]
-    ) -> Path:
+    def _get_pack_path(self, language: str, target: str, version: str | None) -> Path:
         """Build path to language pack file.
 
         First checks discovered packs (monorepo or installed packages).
@@ -357,7 +355,7 @@ class LanguagePackLoader:
         visited_copy.add(pack_path_str)
 
         # Load current pack
-        with open(pack_path, "r", encoding="utf-8") as f:
+        with open(pack_path, encoding="utf-8") as f:
             current_data = yaml.safe_load(f)
 
         if not current_data:
@@ -523,7 +521,7 @@ class LanguagePackLoader:
                 lang_name = lang_code.upper()
                 if metadata_path.exists():
                     try:
-                        with open(metadata_path, "r", encoding="utf-8") as f:
+                        with open(metadata_path, encoding="utf-8") as f:
                             data = yaml.safe_load(f)
                             lang_name = data.get("metadata", {}).get("name", lang_name)
                     except (
@@ -558,7 +556,7 @@ class LanguagePackLoader:
 
                     # Try to load metadata to get full language name
                     try:
-                        with open(pack_file, "r", encoding="utf-8") as f:
+                        with open(pack_file, encoding="utf-8") as f:
                             data = yaml.safe_load(f)
                             lang_name = data.get("metadata", {}).get(
                                 "name", lang_code.upper()
@@ -593,7 +591,7 @@ class LanguagePackLoader:
                                 continue
 
                             try:
-                                with open(pack_file, "r", encoding="utf-8") as f:
+                                with open(pack_file, encoding="utf-8") as f:
                                     data = yaml.safe_load(f)
                                     lang_name = data.get("metadata", {}).get(
                                         "name", lang_code.upper()

@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any
 
 
 @dataclass
@@ -14,12 +14,12 @@ class TranslationResult:
     source_lang: str
     target_lang: str
     provider: str
-    confidence: Optional[float] = None  # 0.0-1.0 if provider supports it
-    billed_characters: Optional[int] = None
-    quality_score: Optional[float] = None  # 0-10 expected quality
+    confidence: float | None = None  # 0.0-1.0 if provider supports it
+    billed_characters: int | None = None
+    quality_score: float | None = None  # 0-10 expected quality
     cached: bool = False
     timestamp: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)  # Provider-specific data
+    metadata: dict[str, Any] = field(default_factory=dict)  # Provider-specific data
 
 
 @dataclass
@@ -28,7 +28,7 @@ class UsageStats:
 
     total_requests: int
     total_characters: int
-    characters_by_provider: Dict[str, int]
+    characters_by_provider: dict[str, int]
     cost_estimate_usd: float
     period_start: datetime
     period_end: datetime
@@ -95,7 +95,7 @@ class TranslationProvider(ABC):
         text: str,
         source_lang: str,
         target_lang: str,
-        context: Optional[Dict] = None,
+        context: dict | None = None,
     ) -> TranslationResult:
         """
         Perform translation with quality metrics.
@@ -117,7 +117,7 @@ class TranslationProvider(ABC):
         pass
 
     @abstractmethod
-    async def get_usage(self) -> Optional[UsageStats]:
+    async def get_usage(self) -> UsageStats | None:
         """
         Get provider usage stats (if supported).
 

@@ -4,7 +4,6 @@ This module provides comprehensive metrics and statistics for analyzing
 translation comparison results across multiple languages and terms.
 """
 
-from typing import Dict, List, Optional
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 
@@ -23,7 +22,7 @@ class LanguageMetrics:
     low_agreement: int  # <50%
     needs_review: int
     average_agreement: float
-    sources_coverage: Dict[str, int] = field(
+    sources_coverage: dict[str, int] = field(
         default_factory=dict
     )  # source -> term count
     word_type_conflicts: int = 0
@@ -31,7 +30,7 @@ class LanguageMetrics:
     length_conflicts: int = 0
     semantic_conflicts: int = 0
 
-    def get_agreement_distribution(self) -> Dict[str, float]:
+    def get_agreement_distribution(self) -> dict[str, float]:
         """Get percentage distribution of agreement levels."""
         if self.total_terms == 0:
             return {
@@ -62,11 +61,11 @@ class SourceMetrics:
     source: str
     total_translations: int
     average_confidence: float
-    languages_covered: List[str] = field(default_factory=list)
+    languages_covered: list[str] = field(default_factory=list)
     agreement_with_community: int = 0  # How often it agrees with community
     agreement_with_others: int = 0  # How often it agrees with other AI sources
     unique_translations: int = 0  # Translations only this source has
-    word_type_distribution: Dict[str, int] = field(default_factory=dict)
+    word_type_distribution: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass
@@ -77,18 +76,18 @@ class CrossLanguageMetrics:
     total_terms: int
     total_comparisons: int
     overall_average_agreement: float
-    best_language: Optional[str] = None  # Language with highest agreement
-    worst_language: Optional[str] = None  # Language with lowest agreement
-    most_consistent_source: Optional[str] = None
-    least_consistent_source: Optional[str] = None
-    languages_by_agreement: Dict[str, float] = field(default_factory=dict)
+    best_language: str | None = None  # Language with highest agreement
+    worst_language: str | None = None  # Language with lowest agreement
+    most_consistent_source: str | None = None
+    least_consistent_source: str | None = None
+    languages_by_agreement: dict[str, float] = field(default_factory=dict)
 
 
 class MetricsCalculator:
     """Calculate comprehensive metrics from comparison results."""
 
     def calculate_language_metrics(
-        self, results: List[ComparisonResult]
+        self, results: list[ComparisonResult]
     ) -> LanguageMetrics:
         """
         Calculate metrics for a single language.
@@ -159,7 +158,7 @@ class MetricsCalculator:
         )
 
     def calculate_source_metrics(
-        self, source: str, results: List[ComparisonResult]
+        self, source: str, results: list[ComparisonResult]
     ) -> SourceMetrics:
         """
         Calculate metrics for a single translation source.
@@ -242,7 +241,7 @@ class MetricsCalculator:
         )
 
     def calculate_cross_language_metrics(
-        self, results_by_language: Dict[str, List[ComparisonResult]]
+        self, results_by_language: dict[str, list[ComparisonResult]]
     ) -> CrossLanguageMetrics:
         """
         Calculate metrics comparing across all languages.
@@ -327,8 +326,8 @@ class MetricsCalculator:
         )
 
     def get_top_disagreements(
-        self, results: List[ComparisonResult], limit: int = 10
-    ) -> List[ComparisonResult]:
+        self, results: list[ComparisonResult], limit: int = 10
+    ) -> list[ComparisonResult]:
         """
         Get top terms with most disagreement.
 
@@ -343,8 +342,8 @@ class MetricsCalculator:
         return sorted_results[:limit]
 
     def get_terms_needing_review(
-        self, results: List[ComparisonResult]
-    ) -> List[ComparisonResult]:
+        self, results: list[ComparisonResult]
+    ) -> list[ComparisonResult]:
         """
         Get all terms that need human review.
 
@@ -356,7 +355,7 @@ class MetricsCalculator:
         """
         return [r for r in results if r.needs_review()]
 
-    def get_conflict_summary(self, results: List[ComparisonResult]) -> Dict[str, int]:
+    def get_conflict_summary(self, results: list[ComparisonResult]) -> dict[str, int]:
         """
         Get summary of conflict types.
 
@@ -383,8 +382,8 @@ class MetricsCalculator:
         }
 
     def generate_summary(
-        self, results_by_language: Dict[str, List[ComparisonResult]]
-    ) -> Dict:
+        self, results_by_language: dict[str, list[ComparisonResult]]
+    ) -> dict:
         """
         Generate comprehensive summary of all metrics.
 

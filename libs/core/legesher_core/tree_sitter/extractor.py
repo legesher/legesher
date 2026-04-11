@@ -7,7 +7,6 @@ LLM translation.
 
 import logging
 import re
-from typing import Optional
 
 from ..token_mapper import TokenMapper
 from ..types import IdentifierRole, TranslatableElement
@@ -643,7 +642,7 @@ class TranslatableExtractor:
         end = min(len(source_lines), line_num + radius + 1)
         return "\n".join(source_lines[start:end])
 
-    def _get_type_hint(self, node) -> Optional[str]:
+    def _get_type_hint(self, node) -> str | None:
         """Get the type hint for an identifier if available."""
         parent = node.parent
         if parent is None:
@@ -658,7 +657,7 @@ class TranslatableExtractor:
                         pass
         return None
 
-    def _get_associated_docstring(self, node) -> Optional[str]:
+    def _get_associated_docstring(self, node) -> str | None:
         """Get the docstring of the function/class this identifier names."""
         parent = node.parent  # function_definition or class_definition
         if parent is None:
@@ -685,7 +684,7 @@ class TranslatableExtractor:
         return None
 
     @staticmethod
-    def _parse_string_delimiters(text: str) -> tuple[Optional[str], Optional[str]]:
+    def _parse_string_delimiters(text: str) -> tuple[str | None, str | None]:
         """Parse a string literal to extract quote style and prefix.
 
         Returns:
@@ -712,7 +711,7 @@ class TranslatableExtractor:
 
     @staticmethod
     def _strip_string_delimiters(
-        text: str, _quote_style: Optional[str] = None, _prefix: Optional[str] = None
+        text: str, _quote_style: str | None = None, _prefix: str | None = None
     ) -> str:
         """Strip prefix and quotes from a string literal to get content."""
         remaining = text

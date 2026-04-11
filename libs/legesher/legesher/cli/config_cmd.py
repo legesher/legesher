@@ -42,7 +42,7 @@ def _find_config_path() -> Path:
 def _load_config() -> tuple[dict, Path]:
     """Load config file and return data + path."""
     config_path = _find_config_path()
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
     return data, config_path
 

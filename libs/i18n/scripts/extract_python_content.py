@@ -42,7 +42,7 @@ import keyword
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 try:
     import requests
@@ -59,7 +59,7 @@ except ImportError:
 class PythonContentExtractor:
     """Extract localizable content from Python."""
 
-    def __init__(self, python_version: Optional[str] = None):
+    def __init__(self, python_version: str | None = None):
         """
         Initialize extractor.
 
@@ -74,7 +74,7 @@ class PythonContentExtractor:
 
         self.full_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
 
-    def extract_keywords(self) -> Dict[str, List[str]]:
+    def extract_keywords(self) -> dict[str, list[str]]:
         """
         Extract Python keywords (hard and soft).
 
@@ -90,7 +90,7 @@ class PythonContentExtractor:
             "all": sorted(hard_keywords + soft_keywords),
         }
 
-    def extract_builtin_functions(self) -> Dict[str, Dict[str, Any]]:
+    def extract_builtin_functions(self) -> dict[str, dict[str, Any]]:
         """
         Extract built-in functions with docstrings.
 
@@ -121,7 +121,7 @@ class PythonContentExtractor:
 
         return functions
 
-    def extract_builtin_types(self) -> Dict[str, Dict[str, Any]]:
+    def extract_builtin_types(self) -> dict[str, dict[str, Any]]:
         """
         Extract built-in types with docstrings.
 
@@ -150,7 +150,7 @@ class PythonContentExtractor:
 
         return types
 
-    def extract_all(self) -> Dict[str, Any]:
+    def extract_all(self) -> dict[str, Any]:
         """
         Extract all localizable content.
 
@@ -188,7 +188,7 @@ class PythonContentExtractor:
         }
 
     @staticmethod
-    def _get_signature(obj: Any) -> Optional[str]:
+    def _get_signature(obj: Any) -> str | None:
         """Get function signature as string."""
         try:
             sig = inspect.signature(obj)
@@ -330,7 +330,7 @@ class GitHubExtractor:
         self.version = version
         self.tag = f"v{version}.0"
 
-    def fetch_keyword_list(self) -> Dict[str, List[str]]:
+    def fetch_keyword_list(self) -> dict[str, list[str]]:
         """
         Fetch keyword list from GitHub.
 
@@ -358,7 +358,7 @@ class GitHubExtractor:
         }
 
     @staticmethod
-    def _parse_kwlist(content: str, list_name: str) -> List[str]:
+    def _parse_kwlist(content: str, list_name: str) -> list[str]:
         """
         Parse keyword list from keyword.py source.
 
@@ -394,7 +394,7 @@ class GitHubExtractor:
 
         return keywords
 
-    def extract_all(self) -> Dict[str, Any]:
+    def extract_all(self) -> dict[str, Any]:
         """
         Extract all available content from GitHub.
 
@@ -425,7 +425,7 @@ class GitHubExtractor:
         }
 
 
-def save_to_json(data: Dict[str, Any], output_path: Path) -> None:
+def save_to_json(data: dict[str, Any], output_path: Path) -> None:
     """
     Save extracted data to JSON file.
 
@@ -488,7 +488,7 @@ def main():
 
 
 def extract_version(
-    version: str, method: str, output_path: Optional[Path], pretty: bool
+    version: str, method: str, output_path: Path | None, pretty: bool
 ) -> None:
     """
     Extract content for a single Python version.
@@ -526,7 +526,7 @@ def extract_version(
         sys.exit(1)
 
 
-def print_summary(data: Dict[str, Any]) -> None:
+def print_summary(data: dict[str, Any]) -> None:
     """Print a pretty summary of extracted data."""
     print("\n" + "=" * 60)
     print(f"Python {data['python_version']} Localization Content")

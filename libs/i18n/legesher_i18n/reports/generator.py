@@ -4,9 +4,8 @@ This module generates markdown reports from comparison results using Jinja2 temp
 Reports can be generated for individual languages or cross-language comparisons.
 """
 
-from typing import List, Dict, Optional
 from pathlib import Path
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ..comparison.models import ComparisonResult
 from ..comparison.metrics import (
@@ -17,7 +16,7 @@ from ..comparison.metrics import (
 class ReportGenerator:
     """Generate markdown reports from translation comparison results."""
 
-    def __init__(self, template_dir: Optional[Path] = None):
+    def __init__(self, template_dir: Path | None = None):
         """
         Initialize report generator.
 
@@ -29,8 +28,12 @@ class ReportGenerator:
             template_dir = Path(__file__).parent / "templates"
 
         self.template_dir = template_dir
+        # autoescape mitigates XSS if any template is ever rendered as HTML.
+        # Current templates output markdown, but select_autoescape turns on
+        # escaping for html/xml extensions if they're added later.
         self.env = Environment(
             loader=FileSystemLoader(str(template_dir)),
+            autoescape=select_autoescape(["html", "htm", "xml"]),
             trim_blocks=True,
             lstrip_blocks=True,
         )
@@ -51,7 +54,7 @@ class ReportGenerator:
     def generate_language_report(
         self,
         language: str,
-        results: List[ComparisonResult],
+        results: list[ComparisonResult],
         include_top_disagreements: int = 10,
     ) -> str:
         """
@@ -101,7 +104,7 @@ class ReportGenerator:
 
     def generate_cross_language_report(
         self,
-        results_by_language: Dict[str, List[ComparisonResult]],
+        results_by_language: dict[str, list[ComparisonResult]],
         include_top_per_language: int = 5,
     ) -> str:
         """
@@ -183,7 +186,7 @@ class ReportGenerator:
     def generate_and_save_language_report(
         self,
         language: str,
-        results: List[ComparisonResult],
+        results: list[ComparisonResult],
         output_path: Path,
         include_top_disagreements: int = 10,
     ) -> str:
@@ -207,7 +210,7 @@ class ReportGenerator:
 
     def generate_and_save_cross_language_report(
         self,
-        results_by_language: Dict[str, List[ComparisonResult]],
+        results_by_language: dict[str, list[ComparisonResult]],
         output_path: Path,
         include_top_per_language: int = 5,
     ) -> str:

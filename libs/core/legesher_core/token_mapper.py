@@ -4,8 +4,6 @@ This module provides the TokenMapper class which abstracts language map lookups,
 preparing for future integration with the version-aware language pack system (CORE-345).
 """
 
-from typing import Optional
-
 
 class TokenMapper:
     """Abstract translation map lookup for keywords and builtins.
@@ -54,7 +52,7 @@ class TokenMapper:
         self.keyword_map = keyword_map
         self.builtin_map = builtin_map
 
-    def get_keyword(self, keyword: str) -> Optional[str]:
+    def get_keyword(self, keyword: str) -> str | None:
         """Get translated keyword, or None if not found.
 
         Args:
@@ -71,7 +69,7 @@ class TokenMapper:
         """
         return self.keyword_map.get(keyword)
 
-    def get_builtin(self, builtin: str) -> Optional[str]:
+    def get_builtin(self, builtin: str) -> str | None:
         """Get translated builtin function name, or None if not found.
 
         Args:

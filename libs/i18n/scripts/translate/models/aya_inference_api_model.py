@@ -22,7 +22,6 @@ import asyncio
 import logging
 import os
 import time
-from typing import Optional
 
 from .base import Translation, TranslationModel, TranslationRequest
 from .json_utils import parse_json_response
@@ -64,7 +63,7 @@ class AyaInferenceAPIModel(TranslationModel):
     def __init__(
         self,
         model: str = DEFAULT_MODEL,
-        hf_token: Optional[str] = None,
+        hf_token: str | None = None,
         dry_run: bool = False,
         rate_limit_delay: float = 1.0,
         max_retries: int = 3,

@@ -65,7 +65,7 @@ def fix_yaml_file(yaml_path: Path, dry_run: bool = False) -> list[str]:
     fixes = []
 
     try:
-        with open(yaml_path, "r", encoding="utf-8") as f:
+        with open(yaml_path, encoding="utf-8") as f:
             content = f.read()
             data = yaml.safe_load(content)
 

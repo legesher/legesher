@@ -13,7 +13,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from rich.console import Console
 from rich.progress import (
@@ -84,17 +83,17 @@ class PipelineConfig:
         skip_existing: If True, skip terms that already have translations
     """
 
-    models: List[str] = None  # ['claude', 'aya']
-    languages: List[str] = None  # ['es', 'ar', 'fr', ...]
-    terms: Optional[List[str]] = None  # If None, use all from manifest
+    models: list[str] = None  # ['claude', 'aya']
+    languages: list[str] = None  # ['es', 'ar', 'fr', ...]
+    terms: list[str] | None = None  # If None, use all from manifest
     dry_run: bool = False
     max_budget: float = 100.0  # Stop at $100 (safety margin)
-    context_dir: Optional[Path] = None
-    standards_file: Optional[Path] = None
-    output_db: Optional[Path] = None
+    context_dir: Path | None = None
+    standards_file: Path | None = None
+    output_db: Path | None = None
     skip_existing: bool = True
     ollama_model: str = "aya"  # Ollama model name (aya, command-r, qwen2.5, etc.)
-    hf_profile: Optional[str] = None  # HuggingFace model profile name
+    hf_profile: str | None = None  # HuggingFace model profile name
     tiny_aya_variant: str = "earth"  # Tiny Aya variant (earth, fire, water, global)
 
     def __post_init__(self):
@@ -145,9 +144,9 @@ class PipelineStats:
     validation_errors: int = 0
     validation_warnings: int = 0
     total_cost: float = 0.0
-    cost_by_model: Dict[str, float] = None
+    cost_by_model: dict[str, float] = None
     start_time: datetime = None
-    end_time: Optional[datetime] = None
+    end_time: datetime | None = None
 
     def __post_init__(self):
         """Initialize nested dicts."""
@@ -235,7 +234,7 @@ class TranslationPipeline:
         self.validator = TranslationValidator()
 
         # Initialize models
-        self.models: Dict[str, TranslationModel] = {}
+        self.models: dict[str, TranslationModel] = {}
         if "claude" in config.models:
             self.models["claude"] = ClaudeModel(dry_run=config.dry_run)
         if "aya" in config.models:
@@ -508,7 +507,7 @@ class TranslationPipeline:
             f"Translated '{term}' -> '{translation.translation}' ({language}, {model_name})"
         )
 
-    def _get_terms_to_translate(self) -> List[str]:
+    def _get_terms_to_translate(self) -> list[str]:
         """Get list of terms to translate.
 
         Uses term_classifier as the source of truth for all Python terms.

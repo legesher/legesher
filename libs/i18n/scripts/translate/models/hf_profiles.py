@@ -14,12 +14,12 @@ Profiles configure:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional
+from collections.abc import Callable
 
 from .base import TranslationRequest
 
 # Comprehensive language code → name mapping (merged from all existing models)
-DEFAULT_LANGUAGE_NAMES: Dict[str, str] = {
+DEFAULT_LANGUAGE_NAMES: dict[str, str] = {
     # ISO 639-1 codes (used by Legesher language packs)
     "ar": "Arabic",
     "da": "Danish",
@@ -202,7 +202,7 @@ class HFModelProfile:
     model_id: str
     architecture: str = "causal"
     use_chat_template: bool = True
-    generation_params: Dict = field(
+    generation_params: dict = field(
         default_factory=lambda: {
             "temperature": 0.1,
             "max_new_tokens": 4096,
@@ -211,10 +211,10 @@ class HFModelProfile:
         }
     )
     dtype: str = "bfloat16"
-    context_max_chars: Optional[int] = 800
-    standards_max_chars: Optional[int] = 500
-    prompt_builder: Optional[Callable] = None
-    language_names: Optional[Dict[str, str]] = None
+    context_max_chars: int | None = 800
+    standards_max_chars: int | None = 500
+    prompt_builder: Callable | None = None
+    language_names: dict[str, str] | None = None
 
     def get_language_name(self, code: str) -> str:
         """Resolve a language code to its human-readable name."""
@@ -294,7 +294,7 @@ Respond with ONLY a valid JSON object (no markdown, no extra text):
 # Profile Registry
 # ---------------------------------------------------------------------------
 
-HF_PROFILES: Dict[str, HFModelProfile] = {}
+HF_PROFILES: dict[str, HFModelProfile] = {}
 
 
 def register_profile(profile: HFModelProfile) -> None:
@@ -327,7 +327,7 @@ def get_profile(name: str) -> HFModelProfile:
     return HF_PROFILES[name]
 
 
-def list_profiles() -> List[str]:
+def list_profiles() -> list[str]:
     """Return sorted list of registered profile names."""
     return sorted(HF_PROFILES.keys())
 

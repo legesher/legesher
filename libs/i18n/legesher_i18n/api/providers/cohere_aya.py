@@ -9,7 +9,6 @@ Install: pip install cohere
 import logging
 import os
 from datetime import datetime
-from typing import Dict, Optional
 
 from .base import (
     AuthenticationError,
@@ -50,7 +49,7 @@ class CohereAyaProvider(TranslationProvider):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         model: str = "c4ai-aya-expanse-32b",
     ) -> None:
         self._api_key = api_key or os.getenv("COHERE_API_KEY")
@@ -101,7 +100,7 @@ class CohereAyaProvider(TranslationProvider):
         text: str,
         source_lang: str,
         target_lang: str,
-        context: Optional[Dict] = None,
+        context: dict | None = None,
     ) -> TranslationResult:
         client = self._get_client()
 
@@ -185,14 +184,14 @@ class CohereAyaProvider(TranslationProvider):
     def _parse_response(
         raw_text: str,
         original_text: str,
-        context: Optional[Dict],
+        context: dict | None,
     ) -> str:
         """Extract the translation from an LLM response."""
         from .response_parser import parse_llm_response
 
         return parse_llm_response(raw_text, original_text, context)
 
-    async def get_usage(self) -> Optional[UsageStats]:
+    async def get_usage(self) -> UsageStats | None:
         if self._total_requests == 0:
             return None
         total_chars = (self._total_tokens_in + self._total_tokens_out) * 4

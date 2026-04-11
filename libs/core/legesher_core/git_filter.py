@@ -17,7 +17,8 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional, TextIO
+from typing import TYPE_CHECKING, Optional, TextIO
+from collections.abc import Callable
 
 from .exceptions import InvalidCodeError
 from .language_interface import create_translator_from_language_pack
@@ -71,12 +72,12 @@ class GitFilter:
     def __init__(
         self,
         language: str,
-        python_version: Optional[str] = None,
+        python_version: str | None = None,
         canonical_language: str = "en",
         use_tree_sitter: bool | None = None,
-        translator_factory: Optional[Callable[[str, str], Translator]] = None,
+        translator_factory: Callable[[str, str], Translator] | None = None,
         metadata_manager: Optional["MetadataManager"] = None,
-        file_path: Optional[str] = None,
+        file_path: str | None = None,
     ) -> None:
         """Initialize git filter for a specific language.
 
@@ -378,7 +379,7 @@ class GitFilter:
                 exc_info=True,
             )
 
-    def _get_current_commit_sha(self) -> Optional[str]:
+    def _get_current_commit_sha(self) -> str | None:
         """Get current git commit SHA.
 
         Returns:
@@ -441,7 +442,7 @@ class GitFilter:
         return f"{version_info.major}.{version_info.minor}"
 
 
-def clean_filter(language: str, python_version: Optional[str] = None) -> int:
+def clean_filter(language: str, python_version: str | None = None) -> int:
     """Clean filter entry point for git (local → canonical).
 
     This is a convenience function for use as a git filter command:
@@ -462,7 +463,7 @@ def clean_filter(language: str, python_version: Optional[str] = None) -> int:
     return filter.clean()
 
 
-def smudge_filter(language: str, python_version: Optional[str] = None) -> int:
+def smudge_filter(language: str, python_version: str | None = None) -> int:
     """Smudge filter entry point for git (canonical → local).
 
     This is a convenience function for use as a git filter command:

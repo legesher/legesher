@@ -62,7 +62,7 @@ def import_yaml_file(
     skipped = 0
 
     try:
-        with open(yaml_path, "r", encoding="utf-8") as f:
+        with open(yaml_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         if not data:

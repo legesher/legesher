@@ -11,7 +11,7 @@ implements the Translator protocol for polymorphic usage.
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 from ..exceptions import InvalidCodeError
 from ..token_mapper import TokenMapper
@@ -63,9 +63,9 @@ class LLMTranslator:
         builtin_map: dict[str, str],
         backend: TextTranslationBackend,
         python_version: str = "3.13",
-        identifier_map: Optional[IdentifierMap] = None,
-        scope: Optional[TranslationScope] = None,
-        translation_logger: Optional[TranslationLogger] = None,
+        identifier_map: IdentifierMap | None = None,
+        scope: TranslationScope | None = None,
+        translation_logger: TranslationLogger | None = None,
     ) -> None:
         """Initialize the LLM translator.
 
@@ -99,7 +99,7 @@ class LLMTranslator:
         source_lang: str = "en",
         target_lang: str = "es",
         return_metadata: bool = False,
-    ) -> Union[str, tuple[str, CulturalCommentMetadata]]:
+    ) -> str | tuple[str, CulturalCommentMetadata]:
         """Translate Python source code with full LLM translation.
 
         Pipeline:
@@ -477,8 +477,8 @@ class LLMTranslator:
     def from_language_pack(
         cls,
         language: str,
-        python_version: Optional[str] = None,
-        backend: Optional[TextTranslationBackend] = None,
+        python_version: str | None = None,
+        backend: TextTranslationBackend | None = None,
     ) -> "LLMTranslator":
         """Create LLM translator from a language pack.
 
@@ -524,7 +524,7 @@ class LLMTranslator:
         loader = LanguagePackLoader()
         return loader.list_available_languages()
 
-    def get_pack_info(self) -> dict[str, Union[str, int]]:
+    def get_pack_info(self) -> dict[str, str | int]:
         """Get information about the loaded language pack."""
         return {
             "language": "unknown",

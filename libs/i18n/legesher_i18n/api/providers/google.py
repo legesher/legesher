@@ -5,7 +5,6 @@ import logging
 import os
 from collections import deque
 from datetime import datetime, timedelta
-from typing import Dict, Optional
 
 try:
     from google.cloud import translate_v2 as translate
@@ -163,8 +162,8 @@ class GoogleTranslateProvider(TranslationProvider):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        project_id: Optional[str] = None,
+        api_key: str | None = None,
+        project_id: str | None = None,
         max_requests_per_second: int = 10,
     ):
         """
@@ -190,7 +189,7 @@ class GoogleTranslateProvider(TranslationProvider):
         self.total_requests = 0
 
         # Initialize client
-        self.client: Optional[translate.Client] = None
+        self.client: translate.Client | None = None
         try:
             if self.api_key:
                 # Use API key authentication
@@ -235,7 +234,7 @@ class GoogleTranslateProvider(TranslationProvider):
         text: str,
         source_lang: str,
         target_lang: str,
-        context: Optional[Dict] = None,
+        context: dict | None = None,
     ) -> TranslationResult:
         """
         Translate text using Google Cloud Translation API.
@@ -329,7 +328,7 @@ class GoogleTranslateProvider(TranslationProvider):
 
             raise TranslationError(f"Google Translate failed: {e}")
 
-    async def get_usage(self) -> Optional[UsageStats]:
+    async def get_usage(self) -> UsageStats | None:
         """
         Get Google Translate usage stats.
 

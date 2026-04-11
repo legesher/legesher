@@ -6,7 +6,6 @@ import json
 import logging
 import os
 import re
-from typing import Dict, List, Optional
 
 try:
     from anthropic import AsyncAnthropic
@@ -83,7 +82,7 @@ class AnthropicProvider(TranslationProvider):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         model: str = "claude-3-5-sonnet-20241022",
         max_tokens: int = 1024,
     ):
@@ -114,7 +113,7 @@ class AnthropicProvider(TranslationProvider):
         self.total_requests = 0
 
         # Initialize client if key available
-        self.client: Optional[AsyncAnthropic] = None
+        self.client: AsyncAnthropic | None = None
         if self.api_key:
             try:
                 self.client = AsyncAnthropic(api_key=self.api_key)
@@ -126,7 +125,7 @@ class AnthropicProvider(TranslationProvider):
         self.output_cost_per_token = 15.0 / 1_000_000  # $15/1M output tokens
 
         # Cache for semantic analysis results (to avoid duplicate API calls)
-        self._semantic_cache: Dict[str, Dict] = {}
+        self._semantic_cache: dict[str, dict] = {}
 
         # Try to initialize PromptBuilder for enhanced prompts
         self._prompt_builder = None
@@ -169,7 +168,7 @@ class AnthropicProvider(TranslationProvider):
         text: str,
         source_lang: str,
         target_lang: str,
-        context: Optional[Dict] = None,
+        context: dict | None = None,
     ) -> TranslationResult:
         """
         Translate text using Claude API.
@@ -302,9 +301,9 @@ class AnthropicProvider(TranslationProvider):
     async def analyze_semantic_similarity(
         self,
         term: str,
-        translations: List[str],
+        translations: list[str],
         language: str,
-    ) -> Dict:
+    ) -> dict:
         """
         Analyze if different translations are semantically equivalent.
 
@@ -393,7 +392,7 @@ class AnthropicProvider(TranslationProvider):
                     f"Semantic analysis failed for term '{term}' in '{language}' (comparing {len(translations)} translations): {e}"
                 )
 
-    async def get_usage(self) -> Optional[UsageStats]:
+    async def get_usage(self) -> UsageStats | None:
         """
         Get Anthropic API usage stats.
 
@@ -429,7 +428,7 @@ class AnthropicProvider(TranslationProvider):
         return input_cost + output_cost
 
     def _generate_cache_key(
-        self, term: str, translations: List[str], language: str
+        self, term: str, translations: list[str], language: str
     ) -> str:
         """
         Generate cache key for semantic analysis.
@@ -445,7 +444,9 @@ class AnthropicProvider(TranslationProvider):
         # Sort translations to ensure consistent cache key regardless of order
         sorted_translations = sorted(translations)
         key_str = f"{term}:{language}:{':'.join(sorted_translations)}"
-        return hashlib.md5(key_str.encode()).hexdigest()
+        # MD5 is used here for cache keying only, not for any security purpose.
+        # usedforsecurity=False signals intent and silences bandit B324.
+        return hashlib.md5(key_str.encode(), usedforsecurity=False).hexdigest()
 
     def clear_semantic_cache(self):
         """Clear the semantic analysis cache."""
@@ -513,7 +514,7 @@ class AnthropicProvider(TranslationProvider):
         )
 
     def _build_translation_prompt(
-        self, term: str, language: str, context: Optional[Dict]
+        self, term: str, language: str, context: dict | None
     ) -> str:
         """Build prompt for translation task."""
         # Map language codes to full names
@@ -584,7 +585,7 @@ Respond ONLY with the JSON object, no additional text."""
         return prompt
 
     def _build_similarity_prompt(
-        self, term: str, translations: List[str], language: str
+        self, term: str, translations: list[str], language: str
     ) -> str:
         """Build prompt for semantic similarity analysis."""
         lang_names = {
@@ -634,7 +635,7 @@ Respond ONLY with the JSON object, no additional text."""
 
         return prompt
 
-    def _parse_json_response(self, content: str) -> Dict:
+    def _parse_json_response(self, content: str) -> dict:
         """
         Extract and parse JSON from Claude's response.
 

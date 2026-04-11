@@ -26,7 +26,6 @@ import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import click
 from rich.console import Console
@@ -82,7 +81,7 @@ class CostTracker:
             )
             self.warned = True
 
-    def get_summary(self) -> Dict:
+    def get_summary(self) -> dict:
         """Get cost summary."""
         return {
             "total_cost": self.total_cost,
@@ -94,8 +93,8 @@ class CostTracker:
 
 
 def load_mock_translations(
-    language: str, term: Optional[str] = None
-) -> Dict[str, Dict[str, Translation]]:
+    language: str, term: str | None = None
+) -> dict[str, dict[str, Translation]]:
     """
     Load mock translation data.
 
@@ -122,11 +121,11 @@ def load_mock_translations(
 
 async def run_comparison(
     language: str,
-    term: Optional[str],
+    term: str | None,
     use_mock: bool,
     use_anthropic: bool,
     cost_tracker: CostTracker,
-) -> List[ComparisonResult]:
+) -> list[ComparisonResult]:
     """
     Run translation comparison for a language.
 
@@ -194,7 +193,7 @@ async def run_comparison(
     return results
 
 
-def display_results_table(results: List[ComparisonResult], language: str):
+def display_results_table(results: list[ComparisonResult], language: str):
     """Display results in a rich table."""
     table = Table(title=f"Translation Comparison Results - {language.upper()}")
 
@@ -250,7 +249,7 @@ def display_metrics_summary(metrics, language: str):
 
 
 def generate_json_output(
-    results: List[ComparisonResult], metrics, language: str
+    results: list[ComparisonResult], metrics, language: str
 ) -> str:
     """Generate JSON output from results."""
     output = {
@@ -338,9 +337,9 @@ def cli():
 )
 def compare(
     language: tuple,
-    term: Optional[str],
+    term: str | None,
     mock: bool,
-    output: Optional[str],
+    output: str | None,
     format: str,
     use_anthropic: bool,
     cost_warning: float,

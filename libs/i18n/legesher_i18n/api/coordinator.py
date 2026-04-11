@@ -3,7 +3,6 @@
 import logging
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from .cache import CacheBackend, SQLiteCache
 from .providers.base import (
@@ -46,10 +45,10 @@ class TranslationCoordinator:
 
     def __init__(
         self,
-        providers: Optional[List[TranslationProvider]] = None,
-        cache: Optional[CacheBackend] = None,
-        usage_tracker: Optional[UsageTracker] = None,
-        quality_validator: Optional[QualityValidator] = None,
+        providers: list[TranslationProvider] | None = None,
+        cache: CacheBackend | None = None,
+        usage_tracker: UsageTracker | None = None,
+        quality_validator: QualityValidator | None = None,
         max_fallback_attempts: int = 3,
     ):
         """
@@ -81,9 +80,7 @@ class TranslationCoordinator:
             f"{[p.name for p in self.available_providers]}"
         )
 
-    def add_provider(
-        self, provider: TranslationProvider, priority: Optional[int] = None
-    ):
+    def add_provider(self, provider: TranslationProvider, priority: int | None = None):
         """
         Add a translation provider.
 
@@ -113,9 +110,9 @@ class TranslationCoordinator:
         source_lang: str,
         target_lang: str,
         skip_cache: bool = False,
-        preferred_provider: Optional[str] = None,
+        preferred_provider: str | None = None,
         max_length: int = 10000,
-        context: Optional[Dict] = None,
+        context: dict | None = None,
     ) -> TranslationResult:
         """
         Translate text with automatic quality-based fallback.
@@ -260,11 +257,11 @@ class TranslationCoordinator:
 
     async def translate_batch(
         self,
-        texts: List[str],
+        texts: list[str],
         source_lang: str,
         target_lang: str,
         skip_cache: bool = False,
-    ) -> List[TranslationResult]:
+    ) -> list[TranslationResult]:
         """
         Translate multiple texts in batch.
 
@@ -309,8 +306,8 @@ class TranslationCoordinator:
         self,
         source_lang: str,
         target_lang: str,
-        preferred_provider: Optional[str] = None,
-    ) -> List[TranslationProvider]:
+        preferred_provider: str | None = None,
+    ) -> list[TranslationProvider]:
         """
         Order providers by preference based on quality scores.
 
@@ -351,13 +348,13 @@ class TranslationCoordinator:
 
         return ordered
 
-    def get_cache_stats(self) -> Dict:
+    def get_cache_stats(self) -> dict:
         """Get cache statistics."""
         return self.cache.get_stats()
 
     def get_usage_stats(
-        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
-    ) -> Dict:
+        self, start_date: datetime | None = None, end_date: datetime | None = None
+    ) -> dict:
         """
         Get usage statistics.
 
@@ -378,7 +375,7 @@ class TranslationCoordinator:
         logger.info(f"Cleared {deleted} cached translations")
         return deleted
 
-    async def get_provider_usage(self) -> Dict[str, Dict]:
+    async def get_provider_usage(self) -> dict[str, dict]:
         """
         Get usage statistics from all providers.
 

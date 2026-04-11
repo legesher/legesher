@@ -24,7 +24,6 @@ import time
 import urllib.request
 import urllib.error
 from pathlib import Path
-from typing import Optional
 
 import yaml
 from packaging.version import Version, InvalidVersion
@@ -79,7 +78,7 @@ def validate_version_string(version_str: str) -> bool:
 
 def get_latest_github_release_with_retry(
     verbose: bool = False, max_retries: int = MAX_RETRIES
-) -> Optional[str]:
+) -> str | None:
     """
     Query GitHub API with retry logic for rate limiting.
 
@@ -116,7 +115,7 @@ def get_latest_github_release_with_retry(
     return None
 
 
-def _fetch_github_releases(verbose: bool = False) -> Optional[str]:
+def _fetch_github_releases(verbose: bool = False) -> str | None:
     """
     Internal function to fetch releases from GitHub (no retry logic).
 
@@ -184,7 +183,7 @@ def _fetch_github_releases(verbose: bool = False) -> Optional[str]:
     return latest_version
 
 
-def get_latest_github_release(verbose: bool = False) -> Optional[str]:
+def get_latest_github_release(verbose: bool = False) -> str | None:
     """
     Query GitHub API for latest CPython release with retry logic.
 
@@ -222,7 +221,7 @@ def get_version_index_path() -> Path:
     return version_index
 
 
-def get_our_latest_version(verbose: bool = False) -> Optional[str]:
+def get_our_latest_version(verbose: bool = False) -> str | None:
     """
     Get latest version from version-index.yml.
 
@@ -241,7 +240,7 @@ def get_our_latest_version(verbose: bool = False) -> Optional[str]:
             return None
 
         # Read and parse YAML
-        with open(version_index_path, "r") as f:
+        with open(version_index_path) as f:
             data = yaml.safe_load(f)
 
         # Get all Python versions

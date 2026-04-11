@@ -8,7 +8,6 @@ while leveraging tree-sitter for better performance and error handling.
 import logging
 import sys
 from pathlib import Path
-from typing import Optional, Union
 
 from .parser import PythonParser, TreeSitterError
 from ..exceptions import InvalidCodeError
@@ -109,7 +108,7 @@ class TreeSitterTranslator:
         source_lang: str = "en",
         target_lang: str = "es",
         return_metadata: bool = False,
-    ) -> Union[str, tuple[str, CulturalCommentMetadata]]:
+    ) -> str | tuple[str, CulturalCommentMetadata]:
         """Translate Python source code from one language to another.
 
         This method translates Python keywords and builtin function names while
@@ -374,7 +373,7 @@ class TreeSitterTranslator:
         encoding = validate_utf8_encoding(file_path)
 
         # Read file contents
-        with open(file_path, "r", encoding=encoding) as f:
+        with open(file_path, encoding=encoding) as f:
             source_code = f.read()
 
         # Translate code (source_lang defaults to "en")
@@ -414,7 +413,7 @@ class TreeSitterTranslator:
     def from_language_pack(
         cls,
         language: str,
-        python_version: Optional[str] = None,
+        python_version: str | None = None,
     ) -> "TreeSitterTranslator":
         """Create translator from language pack with version awareness.
 
@@ -515,7 +514,7 @@ class TreeSitterTranslator:
         loader = LanguagePackLoader()
         return loader.list_available_languages(target="python")
 
-    def get_pack_info(self) -> dict[str, Union[str, int]]:
+    def get_pack_info(self) -> dict[str, str | int]:
         """Get information about the translator's language maps.
 
         Returns:

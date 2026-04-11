@@ -7,7 +7,7 @@ translation models used in CORE-394.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
@@ -29,7 +29,7 @@ class Translation:
     """
 
     translation: str
-    alternatives: List[str] = field(default_factory=list)
+    alternatives: list[str] = field(default_factory=list)
     rationale: str = ""
     word_type: str = ""
     form: str = ""
@@ -40,7 +40,7 @@ class Translation:
     output_tokens: int = 0
     confidence: float = 1.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for database storage."""
         return {
             "translation": self.translation,
@@ -70,8 +70,8 @@ class TranslationRequest:
 
     term: str
     target_language: str
-    context: Optional[str] = None
-    linguistic_standards: Optional[str] = None
+    context: str | None = None
+    linguistic_standards: str | None = None
 
 
 class TranslationModel(ABC):

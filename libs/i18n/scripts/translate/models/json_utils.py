@@ -7,12 +7,11 @@ multiple translation model implementations (Aya-101 HF, Aya Inference API, etc.)
 import json
 import logging
 import re
-from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 
-def parse_json_response(response_text: str) -> Dict:
+def parse_json_response(response_text: str) -> dict:
     """Parse JSON from model response with multiple fallback strategies.
 
     Args:
@@ -63,7 +62,7 @@ def parse_json_response(response_text: str) -> Dict:
     raise ValueError("Failed to parse JSON after trying all strategies")
 
 
-def repair_json(json_str: str) -> Optional[Dict]:
+def repair_json(json_str: str) -> dict | None:
     """Attempt to repair malformed JSON.
 
     Args:
@@ -96,7 +95,7 @@ def repair_json(json_str: str) -> Optional[Dict]:
     return None
 
 
-def extract_fields_from_text(text: str) -> Dict:
+def extract_fields_from_text(text: str) -> dict:
     """Extract translation fields from text using regex patterns.
 
     This is a fallback for when JSON parsing fails completely.

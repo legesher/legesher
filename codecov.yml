@@ -1,0 +1,22 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 90%
+        threshold: 2%
+        informational: true
+    patch:
+      default:
+        target: 90%
+        informational: true
+
+comment:
+  layout: reach,diff,flags,files,footer
+  behavior: default
+  require_changes: false
+
+ignore:
+- '**/tests/**'
+- '**/test_*.py'
+- libs/i18n/language-packs/**
+- libs/i18n/language-packs-archive/**

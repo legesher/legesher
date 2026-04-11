@@ -13,7 +13,6 @@ Users serve any model and point this provider at the endpoint.
 import logging
 import os
 from datetime import datetime
-from typing import Dict, Optional
 
 import httpx
 
@@ -62,9 +61,9 @@ class OpenAICompatProvider(TranslationProvider):
 
     def __init__(
         self,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
         model: str = "default",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         timeout: float = 120.0,
     ) -> None:
         self._base_url = (
@@ -101,7 +100,7 @@ class OpenAICompatProvider(TranslationProvider):
         text: str,
         source_lang: str,
         target_lang: str,
-        context: Optional[Dict] = None,
+        context: dict | None = None,
     ) -> TranslationResult:
         # Use PromptBuilder when available and context is provided
         if self._prompt_builder and context:
@@ -220,7 +219,7 @@ class OpenAICompatProvider(TranslationProvider):
     def _parse_response(
         raw_text: str,
         original_text: str,
-        context: Optional[Dict],
+        context: dict | None,
     ) -> str:
         """Extract the translation from an LLM response.
 
@@ -230,7 +229,7 @@ class OpenAICompatProvider(TranslationProvider):
 
         return parse_llm_response(raw_text, original_text, context)
 
-    async def get_usage(self) -> Optional[UsageStats]:
+    async def get_usage(self) -> UsageStats | None:
         if self._total_requests == 0:
             return None
         total_chars = (self._total_tokens_in + self._total_tokens_out) * 4

@@ -3,7 +3,6 @@
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import pytest
 
@@ -48,7 +47,7 @@ class MockProvider(TranslationProvider):
         text: str,
         source_lang: str,
         target_lang: str,
-        context: Optional[dict] = None,
+        context: dict | None = None,
     ) -> TranslationResult:
         self.translate_calls.append((text, source_lang, target_lang, context))
 
@@ -66,7 +65,7 @@ class MockProvider(TranslationProvider):
             timestamp=datetime.now(),
         )
 
-    async def get_usage(self) -> Optional[UsageStats]:
+    async def get_usage(self) -> UsageStats | None:
         return None
 
     def get_quality_score(self, source_lang: str, target_lang: str) -> float:

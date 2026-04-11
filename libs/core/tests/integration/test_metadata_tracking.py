@@ -227,7 +227,7 @@ def read_metadata_yaml(metadata_path: Path) -> dict:
     Returns:
         dict: Parsed metadata
     """
-    with open(metadata_path, "r", encoding="utf-8") as f:
+    with open(metadata_path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 

@@ -11,7 +11,6 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +91,7 @@ class IdentifierMap:
         self._map: dict[str, dict[str, str]] = {}
         # Maps: source_identifier -> {target_lang: translated_identifier}
 
-    def get(self, identifier: str, target_lang: str) -> Optional[str]:
+    def get(self, identifier: str, target_lang: str) -> str | None:
         """Get the translation for an identifier in a target language."""
         translations = self._map.get(identifier)
         if translations is None:

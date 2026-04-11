@@ -5,7 +5,7 @@ language packs and version indexes conform to the expected schema.
 """
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -21,13 +21,13 @@ SOFT_KEYWORDS = {"except*"}
 class LanguagePackMetadata(BaseModel):
     """Metadata section of a language pack."""
 
-    python_version_min: Optional[str] = None
-    python_version_max: Optional[str] = None
+    python_version_min: str | None = None
+    python_version_max: str | None = None
     compatibility_tested: list[str] = Field(default_factory=list)
-    last_updated: Optional[str] = None
+    last_updated: str | None = None
     community_reviewed: bool = False
-    author: Optional[str] = None
-    license: Optional[str] = None
+    author: str | None = None
+    license: str | None = None
 
 
 class CulturalNote(BaseModel):
@@ -51,7 +51,7 @@ class LanguagePackSchema(BaseModel):
     version: str = Field(..., pattern=r"^\d+\.\d+$")
 
     # MLCP v1.0 Optional Fields
-    extends: Optional[str] = None
+    extends: str | None = None
     keywords: dict[str, str] = Field(default_factory=dict)
     builtins: dict[str, str] = Field(default_factory=dict)
     exceptions: dict[str, str] = Field(default_factory=dict)
@@ -62,7 +62,7 @@ class LanguagePackSchema(BaseModel):
     cultural_notes: list[CulturalNote] = Field(default_factory=list)
 
     # Metadata
-    metadata: Optional[LanguagePackMetadata] = None
+    metadata: LanguagePackMetadata | None = None
 
     @field_validator("language")
     @classmethod
@@ -96,7 +96,7 @@ class LanguagePackSchema(BaseModel):
 
     @field_validator("extends")
     @classmethod
-    def validate_extends_path(cls, v: Optional[str]) -> Optional[str]:
+    def validate_extends_path(cls, v: str | None) -> str | None:
         """Validate extends path for security (prevent path traversal).
 
         Allows one level up for version inheritance (e.g., ../3.10/es.yml)
@@ -269,7 +269,7 @@ class SchemaValidator:
     @staticmethod
     def check_completeness(
         pack_schema: LanguagePackSchema,
-        expected_keywords: Optional[set[str]] = None,
+        expected_keywords: set[str] | None = None,
     ) -> list[str]:
         """Check if a language pack is complete.
 
@@ -369,7 +369,7 @@ class SchemaValidator:
     @staticmethod
     def check_completeness_enhanced(
         pack_schema: LanguagePackSchema,
-        version_index_path: Optional[Path] = None,
+        version_index_path: Path | None = None,
     ) -> dict[str, Any]:
         """Enhanced completeness checking with version-index integration.
 
@@ -696,7 +696,7 @@ class SchemaValidator:
     @staticmethod
     def get_validation_report(
         pack_schema: LanguagePackSchema,
-        expected_keywords: Optional[set[str]] = None,
+        expected_keywords: set[str] | None = None,
     ) -> dict[str, Any]:
         """Generate a comprehensive validation report for a pack.
 

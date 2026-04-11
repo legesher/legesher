@@ -14,7 +14,6 @@ import shutil
 import sys
 from importlib.resources import files as resource_files
 from pathlib import Path
-from typing import Optional
 
 import click
 
@@ -47,8 +46,8 @@ def _build_supported_languages_text() -> str:
 
 def _create_llm_backend(
     llm_backend: str,
-    llm_base_url: Optional[str],
-    llm_model: Optional[str] = None,
+    llm_base_url: str | None,
+    llm_model: str | None = None,
 ):
     """Create an LLM backend based on CLI options.
 
@@ -160,17 +159,17 @@ def _create_llm_backend(
     help="Path to checkpoint file for resuming batch jobs (plain text, one path per line)",
 )
 def translate(
-    input: Optional[str],
+    input: str | None,
     source_lang: str,
     target_lang: str,
-    output: Optional[str],
+    output: str | None,
     full: bool,
     llm_backend: str,
-    llm_base_url: Optional[str],
-    llm_model: Optional[str],
-    identifier_map: Optional[str],
+    llm_base_url: str | None,
+    llm_model: str | None,
+    identifier_map: str | None,
     no_identifier_map: bool,
-    checkpoint: Optional[str],
+    checkpoint: str | None,
 ):
     """Translate Python code between natural languages.
 
@@ -313,7 +312,7 @@ def _handle_stdin(
     translator: TokenTranslator,
     source_lang: str,
     target_lang: str,
-    output: Optional[str],
+    output: str | None,
 ):
     """Handle translation from stdin.
 
@@ -356,7 +355,7 @@ def _handle_file(
     input_path: str,
     source_lang: str,
     target_lang: str,
-    output_path: Optional[str],
+    output_path: str | None,
 ):
     """Handle single file translation.
 
@@ -419,8 +418,8 @@ def _handle_directory(
     input_dir: str,
     source_lang: str,
     target_lang: str,
-    output_dir: Optional[str],
-    checkpoint_path: Optional[str] = None,
+    output_dir: str | None,
+    checkpoint_path: str | None = None,
 ):
     """Handle recursive directory translation.
 

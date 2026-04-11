@@ -12,7 +12,6 @@ Example:
 import shlex
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
 
@@ -26,7 +25,7 @@ from legesher_core import TokenTranslator
 @click.argument("script", type=click.Path(exists=True))
 @click.option("--lang", help="Language code (default: auto-detect from config)")
 @click.option("--args", help="Arguments to pass to script (space-separated)")
-def run(script: str, lang: Optional[str], args: Optional[str]):
+def run(script: str, lang: str | None, args: str | None):
     """Execute native language Python code.
 
     ⚠️  SECURITY WARNING: This executes arbitrary Python code with full system access.

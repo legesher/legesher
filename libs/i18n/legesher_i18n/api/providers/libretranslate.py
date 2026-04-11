@@ -3,7 +3,6 @@
 import logging
 import os
 from datetime import datetime
-from typing import Dict, Optional
 
 try:
     import httpx
@@ -79,8 +78,8 @@ class LibreTranslateProvider(TranslationProvider):
 
     def __init__(
         self,
-        host: Optional[str] = None,
-        api_key: Optional[str] = None,
+        host: str | None = None,
+        api_key: str | None = None,
         timeout: float = 10.0,
     ):
         """
@@ -131,7 +130,7 @@ class LibreTranslateProvider(TranslationProvider):
         text: str,
         source_lang: str,
         target_lang: str,
-        context: Optional[Dict] = None,
+        context: dict | None = None,
     ) -> TranslationResult:
         """
         Translate text using LibreTranslate API.
@@ -229,7 +228,7 @@ class LibreTranslateProvider(TranslationProvider):
                 raise
             raise TranslationError(f"LibreTranslate failed: {e}")
 
-    async def get_usage(self) -> Optional[UsageStats]:
+    async def get_usage(self) -> UsageStats | None:
         """
         Get LibreTranslate usage stats.
 

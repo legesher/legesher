@@ -15,7 +15,6 @@ Usage:
 
 import logging
 import os
-from typing import Optional
 
 import httpx
 
@@ -50,7 +49,7 @@ class OllamaModel(TranslationModel):
     def __init__(
         self,
         model: str = DEFAULT_MODEL,
-        host: Optional[str] = None,
+        host: str | None = None,
         dry_run: bool = False,
         timeout: float = 120.0,
     ):

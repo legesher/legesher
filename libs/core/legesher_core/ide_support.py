@@ -15,8 +15,6 @@ Example:
     💬 [ES] "rango" puede significar "rank" o "range"
 """
 
-from typing import Optional
-
 from .cultural_comments import CulturalCommentParser
 from .types import CulturalComment
 
@@ -85,8 +83,8 @@ class CulturalCommentProvider:
         self.metadata = parser.parse_from_source(source_code)
 
     def get_hover_text(
-        self, line: int, language_preference: Optional[str] = None
-    ) -> Optional[str]:
+        self, line: int, language_preference: str | None = None
+    ) -> str | None:
         """Get formatted hover text for a line.
 
         Formats cultural comments for display in IDE hover tooltips.

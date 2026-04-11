@@ -102,13 +102,21 @@ jobs:
         run: uv sync
 
       - name: Run core tests
-        run: uv run pytest libs/core/tests/ -v
+        run: uv run pytest libs/core/tests/ -v --cov=legesher_core --cov-report=xml:coverage-core.xml
 
       - name: Run i18n tests
-        run: uv run pytest libs/i18n/tests/ -v
+        run: uv run pytest libs/i18n/tests/ -v --cov=legesher_i18n --cov-report=xml:coverage-i18n.xml
 
       - name: Run legesher tests
-        run: uv run pytest libs/legesher/tests/ -v
+        run: uv run pytest libs/legesher/tests/ -v --cov=legesher --cov-report=xml:coverage-legesher.xml
 
       - name: Run language-server tests
-        run: uv run pytest libs/language-server/tests/ -v
+        run: uv run pytest libs/language-server/tests/ -v --cov=legesher_language_server --cov-report=xml:coverage-ls.xml
+
+      - name: Upload coverage reports to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage-core.xml,coverage-i18n.xml,coverage-legesher.xml,coverage-ls.xml
+          fail_ci_if_error: false

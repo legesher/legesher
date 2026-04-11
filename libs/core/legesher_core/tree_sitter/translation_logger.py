@@ -12,7 +12,7 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class TranslationLogger:
                      (e.g., .legesher/translation_logs)
         """
         self.base_dir = base_dir
-        self._batch_dir: Optional[Path] = None
+        self._batch_dir: Path | None = None
         self._batch_metadata: dict[str, Any] = {}
         self._identifier_file = None
         self._text_file = None
@@ -137,7 +137,7 @@ class TranslationLogger:
         target_lang: str,
         role: str,
         naming_convention: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> None:
         """Log a translated identifier pair."""
         if self._identifier_file is None:
@@ -162,7 +162,7 @@ class TranslationLogger:
         target: str,
         target_lang: str,
         kind: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> None:
         """Log a translated text pair (comment, docstring, or string)."""
         if self._text_file is None:
@@ -185,8 +185,8 @@ class TranslationLogger:
         identifier: str,
         first_attempt: str,
         failure_reason: str,
-        retry_result: Optional[str] = None,
-        retry_valid: Optional[bool] = None,
+        retry_result: str | None = None,
+        retry_valid: bool | None = None,
     ) -> None:
         """Log a validation failure for training data."""
         if self._failure_file is None:

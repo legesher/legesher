@@ -5,7 +5,6 @@ import logging
 import os
 from collections import deque
 from datetime import datetime, timedelta
-from typing import Dict, Optional
 
 try:
     import deepl
@@ -77,7 +76,7 @@ class DeepLProvider(TranslationProvider):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         max_requests_per_second: int = 10,
     ):
         """
@@ -105,7 +104,7 @@ class DeepLProvider(TranslationProvider):
         self.total_requests = 0
 
         # Initialize translator if key available
-        self.translator: Optional[deepl.Translator] = None
+        self.translator: deepl.Translator | None = None
         if self.api_key:
             try:
                 self.translator = deepl.Translator(self.api_key)
@@ -170,7 +169,7 @@ class DeepLProvider(TranslationProvider):
         text: str,
         source_lang: str,
         target_lang: str,
-        context: Optional[Dict] = None,
+        context: dict | None = None,
     ) -> TranslationResult:
         """
         Translate text using DeepL API.
@@ -245,7 +244,7 @@ class DeepLProvider(TranslationProvider):
         except Exception as e:
             raise TranslationError(f"DeepL unexpected error: {e}")
 
-    async def get_usage(self) -> Optional[UsageStats]:
+    async def get_usage(self) -> UsageStats | None:
         """
         Get DeepL API usage stats.
 

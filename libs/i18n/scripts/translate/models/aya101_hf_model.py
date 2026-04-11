@@ -6,7 +6,6 @@ massively multilingual model (101 languages) from Cohere via Hugging Face.
 
 import asyncio
 import logging
-from typing import Optional
 
 from .base import Translation, TranslationModel, TranslationRequest
 from .json_utils import parse_json_response
@@ -37,11 +36,11 @@ class Aya101HuggingFaceModel(TranslationModel):
     def __init__(
         self,
         model_name: str = "CohereLabs/aya-101",  # Correct repository name
-        device: Optional[str] = None,
+        device: str | None = None,
         dry_run: bool = False,
         max_retries: int = 3,
         retry_delay: float = 2.0,
-        cache_dir: Optional[str] = None,
+        cache_dir: str | None = None,
     ):
         """Initialize Aya-101 model.
 

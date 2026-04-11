@@ -23,7 +23,7 @@ import sys
 from dataclasses import asdict, dataclass
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 try:
     import yaml
@@ -45,10 +45,10 @@ class TranslationResult:
     translation: str
     source: str  # 'reused' or 'translated'
     confidence: str  # 'high', 'medium', 'low'
-    similar_to: Optional[str] = None
-    notes: Optional[str] = None
+    similar_to: str | None = None
+    notes: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return asdict(self)
 
@@ -68,8 +68,8 @@ class MockTranslator:
     def translate(
         self,
         item: str,
-        context: Optional[str] = None,
-        glossary: Optional[Dict[str, str]] = None,
+        context: str | None = None,
+        glossary: dict[str, str] | None = None,
     ) -> str:
         """
         Mock translation (returns {item}__{language}).
@@ -109,8 +109,8 @@ class DeepLTranslator:
     def translate(
         self,
         item: str,
-        context: Optional[str] = None,
-        glossary: Optional[Dict[str, str]] = None,
+        context: str | None = None,
+        glossary: dict[str, str] | None = None,
     ) -> str:
         """
         Translate using DeepL API.
@@ -164,8 +164,8 @@ class GoogleTranslator:
     def translate(
         self,
         item: str,
-        context: Optional[str] = None,
-        glossary: Optional[Dict[str, str]] = None,
+        context: str | None = None,
+        glossary: dict[str, str] | None = None,
     ) -> str:
         """
         Translate using Google Translate API.
@@ -203,7 +203,7 @@ class SmartTranslator:
         self,
         target_language: str,
         api_provider: str = "mock",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
     ):
         """
         Initialize translator.
@@ -232,7 +232,7 @@ class SmartTranslator:
 
     def load_previous_pack(
         self, version: str, language_pack_dir: Path
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Load language pack from previous Python version.
 
@@ -274,7 +274,7 @@ class SmartTranslator:
         print(f"No previous language pack found in {pack_dir}", file=sys.stderr)
         return {}
 
-    def _load_keywords_yaml(self, yaml_path: Path) -> Dict[str, str]:
+    def _load_keywords_yaml(self, yaml_path: Path) -> dict[str, str]:
         """
         Load keywords from YAML file.
 
@@ -284,7 +284,7 @@ class SmartTranslator:
         Returns:
             Dict mapping English terms to translations
         """
-        with open(yaml_path, "r", encoding="utf-8") as f:
+        with open(yaml_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         translations = {}
@@ -302,8 +302,8 @@ class SmartTranslator:
         return translations
 
     def identify_new_items(
-        self, new_content: Dict[str, Any], existing_pack: Dict[str, str]
-    ) -> List[str]:
+        self, new_content: dict[str, Any], existing_pack: dict[str, str]
+    ) -> list[str]:
         """
         Identify items not in existing pack.
 
@@ -345,7 +345,7 @@ class SmartTranslator:
 
         return sorted(set(new_items))
 
-    def find_similar_items(self, item: str, existing_pack: Dict[str, str]) -> List[str]:
+    def find_similar_items(self, item: str, existing_pack: dict[str, str]) -> list[str]:
         """
         Find similar items in existing pack for context.
 
@@ -385,8 +385,8 @@ class SmartTranslator:
     def translate_item(
         self,
         item: str,
-        context: Optional[str] = None,
-        glossary: Optional[Dict[str, str]] = None,
+        context: str | None = None,
+        glossary: dict[str, str] | None = None,
     ) -> str:
         """
         Translate a single item using translation API.
@@ -422,10 +422,10 @@ class SmartTranslator:
     def generate_translations(
         self,
         version: str,
-        content: Dict[str, Any],
+        content: dict[str, Any],
         language_pack_dir: Path,
         dry_run: bool = False,
-    ) -> Dict[str, TranslationResult]:
+    ) -> dict[str, TranslationResult]:
         """
         Generate translations for all content.
 
@@ -537,8 +537,8 @@ class SmartTranslator:
         return results
 
     def calculate_statistics(
-        self, results: Dict[str, TranslationResult]
-    ) -> Dict[str, Any]:
+        self, results: dict[str, TranslationResult]
+    ) -> dict[str, Any]:
         """
         Calculate statistics about translation operation.
 
@@ -576,7 +576,7 @@ class SmartTranslator:
         }
 
 
-def save_translations(results: Dict[str, TranslationResult], output_path: Path) -> None:
+def save_translations(results: dict[str, TranslationResult], output_path: Path) -> None:
     """
     Save translation results to JSON.
 
@@ -595,7 +595,7 @@ def save_translations(results: Dict[str, TranslationResult], output_path: Path) 
     print(f"\n✓ Saved translations to: {output_path}")
 
 
-def print_statistics(stats: Dict[str, Any]) -> None:
+def print_statistics(stats: dict[str, Any]) -> None:
     """
     Print statistics summary.
 
@@ -690,7 +690,7 @@ def main():
         sys.exit(1)
 
     print(f"Loading content from: {content_path}")
-    with open(content_path, "r", encoding="utf-8") as f:
+    with open(content_path, encoding="utf-8") as f:
         content = json.load(f)
 
     # Initialize translator

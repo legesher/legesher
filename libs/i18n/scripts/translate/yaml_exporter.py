@@ -10,7 +10,6 @@ Exports to hierarchical format:
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import yaml
 
@@ -94,7 +93,7 @@ class YAMLExporter:
 
     def export_language(
         self, language_code: str, source: str = None, overwrite: bool = False
-    ) -> Optional[Path]:
+    ) -> Path | None:
         """Export translations for a language to hierarchical pack structure.
 
         Creates:
@@ -161,14 +160,14 @@ class YAMLExporter:
         logger.info(f"Exported language pack for '{language_code}' to {lang_dir}")
         return lang_dir
 
-    def _build_term_map(self, translations: List[Dict]) -> Dict[str, Dict]:
+    def _build_term_map(self, translations: list[dict]) -> dict[str, dict]:
         """Build a map of terms to their best translations.
 
         Priority logic:
         1. Prefer actual translations (term != translation) over untranslated (term == translation)
         2. Among translations of same "translated" status, prefer higher confidence
         """
-        term_map: Dict[str, Dict] = {}
+        term_map: dict[str, dict] = {}
 
         for trans in translations:
             term = trans["term"]
@@ -200,7 +199,7 @@ class YAMLExporter:
 
         return term_map
 
-    def _classify_terms(self, term_map: Dict[str, Dict]) -> Dict[str, Dict[str, str]]:
+    def _classify_terms(self, term_map: dict[str, dict]) -> dict[str, dict[str, str]]:
         """Classify terms into YAML sections using stored term_type from database.
 
         This method uses the term_type stored in the database as the single source
@@ -218,7 +217,7 @@ class YAMLExporter:
             and dictionaries of term -> translation as values.
         """
         # Initialize output sections dynamically based on TERM_TYPE_YAML_SECTIONS
-        sections: Dict[str, Dict[str, str]] = {}
+        sections: dict[str, dict[str, str]] = {}
         python_version = "3.13"  # Use latest for fallback classification
 
         for term, trans in term_map.items():
@@ -271,7 +270,7 @@ class YAMLExporter:
         return result
 
     def _export_version_packs(
-        self, language_code: str, classified: Dict, packs_dir: Path
+        self, language_code: str, classified: dict, packs_dir: Path
     ):
         """Export version-aware YAML pack files."""
         lang_name = get_language_name(language_code)
@@ -400,10 +399,10 @@ class YAMLExporter:
         filepath: Path,
         language_code: str,
         version: str,
-        extends: Optional[str],
-        keywords: Dict,
-        builtins: Dict,
-        exceptions: Dict,
+        extends: str | None,
+        keywords: dict,
+        builtins: dict,
+        exceptions: dict,
         header: str,
     ):
         """Write a single YAML pack file, merging with existing content if present."""
@@ -411,7 +410,7 @@ class YAMLExporter:
         existing_data = {}
         if filepath.exists():
             try:
-                with open(filepath, "r", encoding="utf-8") as f:
+                with open(filepath, encoding="utf-8") as f:
                     existing_data = yaml.safe_load(f) or {}
                 logger.debug(f"Merging with existing {filepath}")
             except Exception as e:
@@ -570,7 +569,7 @@ exclude_commit_patterns = [
         toml_file.write_text(toml_content, encoding="utf-8")
         logger.debug(f"Wrote {toml_file}")
 
-    def _generate_readme(self, language_code: str, lang_dir: Path, classified: Dict):
+    def _generate_readme(self, language_code: str, lang_dir: Path, classified: dict):
         """Generate README.md for the language pack."""
         lang_name, native_name = NATURAL_LANGUAGE_NAMES.get(
             language_code, (language_code.upper(), language_code)
@@ -713,8 +712,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
         logger.debug(f"Wrote {changelog_file}")
 
     def export_all_languages(
-        self, sources: List[str] = None, overwrite: bool = False
-    ) -> Dict[str, Path]:
+        self, sources: list[str] = None, overwrite: bool = False
+    ) -> dict[str, Path]:
         """Export translations for all languages in database.
 
         Args:

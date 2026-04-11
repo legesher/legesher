@@ -155,8 +155,28 @@ exclude = [
 ]
 
 [tool.ruff.lint]
+# Ruff default rules (E4, E7, E9, F) plus pyupgrade (UP) for modern Python syntax.
+# UP rules replace the standalone pyupgrade tool — they enforce Python 3.10+ idioms
+# like `X | None` over `Optional[X]`, `list[str]` over `List[str]`, etc.
+select = ["E4", "E7", "E9", "F", "UP"]
 # Allow undefined names in demo files that intentionally trigger errors
 per-file-ignores = { "libs/legesher/examples/*" = ["F821"] }
+
+[tool.bandit]
+# Security linting for Python source. Run via `uv run bandit -r libs/ -c pyproject.toml`.
+# Integrated in CI via .github/workflows/security.yml.
+exclude_dirs = [
+    "tests",
+    ".venv",
+    "libs/i18n/language-packs",
+    "libs/i18n/language-packs-archive",
+    "libs/legesher/examples",
+    "libs/vs-code/.vscode-test",  # Downloaded VS Code test fixtures, not our code
+    "libs/core/htmlcov",           # pytest-cov HTML output
+]
+skips = [
+    "B101",  # assert_used — asserts are common/safe in non-test code too
+]
 
 [tool.commitizen]
 name = "cz_conventional_commits"

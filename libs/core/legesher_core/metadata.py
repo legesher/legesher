@@ -444,7 +444,7 @@ class MetadataManager:
             ...     print(data["file"])
         """
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
                 if not isinstance(data, dict):
                     logger.warning(f"YAML file {path} did not contain a dict")

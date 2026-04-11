@@ -16,7 +16,6 @@ Usage:
 
 import asyncio
 import logging
-from typing import Optional
 
 from .base import Translation, TranslationModel, TranslationRequest
 from .hf_profiles import HFModelProfile, default_prompt_builder
@@ -54,11 +53,11 @@ class HuggingFaceModel(TranslationModel):
     def __init__(
         self,
         profile: HFModelProfile,
-        device: Optional[str] = None,
+        device: str | None = None,
         dry_run: bool = False,
         max_retries: int = 3,
         retry_delay: float = 2.0,
-        cache_dir: Optional[str] = None,
+        cache_dir: str | None = None,
     ):
         """Initialize generic HuggingFace model.
 

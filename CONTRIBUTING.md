@@ -413,11 +413,95 @@ cd libs/core && uv run pytest -m integration
 
 All pull requests automatically run tests via GitHub Actions:
 
-- **Python versions**: 3.10, 3.11, 3.12, 3.13
+- **Python versions**: 3.10 and 3.13 (3.10 on Ubuntu; 3.13 on Ubuntu, macOS, Windows)
 - **Operating systems**: Ubuntu, macOS, Windows
 - **Coverage threshold**: 30% (will increase to 90% as codebase matures)
 
 Tests must pass on all platforms before merging to `main`.
+
+#### CI Dependency Caching
+
+CI jobs use `astral-sh/setup-uv@v7` with `enable-cache: true`, which caches the
+`uv` package cache between runs. The cache key is derived automatically from
+`uv.lock`, so cache invalidation happens whenever dependencies change. You
+don't need to configure anything when adding new jobs — just use `setup-uv`
+with `enable-cache: true`.
+
+Cache behavior:
+
+- Cache hits save 1-3 minutes per job on dependency install
+- Cache invalidates automatically on `uv.lock` changes
+- GitHub Actions retains caches for 7 days of inactivity
+- Cache limit is 10 GB per repository
+
+#### Coverage Reporting (Codecov)
+
+The test job in `ci.yml` runs `pytest` with `--cov` flags and generates
+per-package XML coverage reports. The Ubuntu + Python 3.13 matrix cell
+uploads these to Codecov via `codecov/codecov-action@v5` on every PR and
+push to main.
+
+View coverage:
+
+- **PR comments**: Codecov bot posts a comment on every PR showing coverage
+  delta and any files with changed coverage
+- **Dashboard**: <https://codecov.io/gh/madiedgar/legesher> (update to
+  `Legesher/legesher` when the repo transitions public)
+- **Badge**: See the coverage badge at the top of the main README
+
+Coverage targets are defined in `codecov.yml` and are **informational only** —
+they won't block PRs. The target is 90% with a 2% tolerance.
+
+If you see "Codecov token not found" in CI logs, make sure the `CODECOV_TOKEN`
+secret is configured in repository Settings → Secrets → Actions.
+
+#### Security Scanning (Bandit)
+
+Every PR runs `bandit` over `libs/` via `.github/workflows/security.yml` to
+catch common Python security issues (SQL injection, weak crypto, unsafe
+deserialization, etc.).
+
+**Running bandit locally:**
+
+```bash
+# Full scan (all severities)
+uv run --with "bandit[toml]" bandit -r libs/ -c pyproject.toml
+
+# High severity only (what CI enforces)
+uv run --with "bandit[toml]" bandit -r libs/ -c pyproject.toml --severity-level high
+```
+
+CI enforcement: **bandit fails the build on High-severity findings only**.
+Medium and Low findings are reported in CI logs but do not block the build.
+This reflects a gradual rollout — see CORE-1067 for the triage effort to
+tighten enforcement to Medium.
+
+**Handling false positives:** If bandit flags code that is safe by design,
+add an inline `# nosec` comment with a rule code and justification:
+
+```python
+# nosec B603 - subprocess called with static list args, no shell injection risk
+result = subprocess.run(["git", "log"], check=True)
+```
+
+Never use a bare `# nosec` — always include the rule code and reason.
+
+#### Modern Python Syntax (Ruff UP rules)
+
+The ruff linter is configured with `select = ["E4", "E7", "E9", "F", "UP"]`,
+which includes pyupgrade (`UP`) rules. These enforce modern Python 3.10+
+idioms:
+
+- `X | None` over `Optional[X]`
+- `list[str]` over `List[str]`
+- `dict[str, int]` over `Dict[str, int]`
+
+Run locally:
+
+```bash
+uv run ruff check libs/
+uv run ruff check --fix libs/   # Auto-fix most issues
+```
 
 #### Writing Tests
 

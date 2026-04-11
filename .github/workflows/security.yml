@@ -1,0 +1,46 @@
+name: Security
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bandit:
+    name: Bandit (Python security linter)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Install bandit
+        run: uv pip install --system "bandit[toml]"
+
+      # Bandit runs in informational mode: findings are reported in the logs,
+      # but the job only fails if a High-severity issue is introduced. The 2
+      # existing High-severity findings were fixed in the PR that introduced
+      # this workflow. Medium/Low findings are tracked in a follow-up ticket.
+      - name: Run bandit security scan (High severity blocks CI)
+        run: bandit -r libs/ -c pyproject.toml --severity-level high
+
+      - name: Run bandit full report (informational)
+        if: always()
+        run: bandit -r libs/ -c pyproject.toml || true

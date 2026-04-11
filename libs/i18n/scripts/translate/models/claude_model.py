@@ -9,7 +9,6 @@ import json
 import logging
 import os
 import re
-from typing import Optional
 
 from anthropic import AsyncAnthropic, APIError, RateLimitError
 
@@ -35,7 +34,7 @@ class ClaudeModel(TranslationModel):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         model: str = "claude-3-5-sonnet-20241022",
         max_tokens: int = 1024,
         dry_run: bool = False,
@@ -199,9 +198,7 @@ class ClaudeModel(TranslationModel):
             raise last_exception
         raise Exception("Translation failed after all retries")
 
-    def _build_prompt_pair(
-        self, request: TranslationRequest
-    ) -> tuple[Optional[str], str]:
+    def _build_prompt_pair(self, request: TranslationRequest) -> tuple[str | None, str]:
         """Build a (system_prompt, user_prompt) pair for the API call.
 
         When PromptBuilder is available, delegates to it for style-guide-aware

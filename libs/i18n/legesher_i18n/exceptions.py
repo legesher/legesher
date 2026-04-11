@@ -4,8 +4,6 @@ This module defines exception classes for language pack loading, validation,
 version detection, and inheritance resolution.
 """
 
-from typing import Optional
-
 
 class LanguagePackError(Exception):
     """Base exception for all language pack-related errors."""
@@ -22,7 +20,7 @@ class PackNotFoundError(LanguagePackError):
         target: str,
         version: str,
         pack_path: str,
-        available_languages: Optional[list[tuple[str, str]]] = None,
+        available_languages: list[tuple[str, str]] | None = None,
     ):
         self.language = language
         self.target = target

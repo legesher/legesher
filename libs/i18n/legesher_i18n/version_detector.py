@@ -18,7 +18,6 @@ try:
     import tomllib
 except ModuleNotFoundError:
     import tomli as tomllib  # type: ignore[import-not-found, no-redef]
-from typing import Optional
 
 from packaging.specifiers import SpecifierSet
 
@@ -30,7 +29,7 @@ class PythonVersionDetector:
 
     DEFAULT_VERSION = "3.13"  # Fallback if detection fails
 
-    def detect(self, project_path: Optional[Path] = None) -> str:
+    def detect(self, project_path: Path | None = None) -> str:
         """Detect Python version using all available strategies.
 
         Detection priority:
@@ -75,7 +74,7 @@ class PythonVersionDetector:
         # Strategy 4: Default
         return self.DEFAULT_VERSION
 
-    def detect_from_pyproject(self, project_path: Path) -> Optional[str]:
+    def detect_from_pyproject(self, project_path: Path) -> str | None:
         """Detect Python version from pyproject.toml requires-python field.
 
         Parses the requires-python field and extracts the minimum or target
@@ -113,7 +112,7 @@ class PythonVersionDetector:
         except Exception as e:
             raise VersionDetectionError(f"Failed to read pyproject.toml: {e}")
 
-    def _parse_requires_python(self, requires_python: str) -> Optional[str]:
+    def _parse_requires_python(self, requires_python: str) -> str | None:
         """Parse requires-python field to extract version.
 
         Args:
@@ -144,7 +143,7 @@ class PythonVersionDetector:
 
             return None
 
-    def detect_from_file(self, project_path: Path) -> Optional[str]:
+    def detect_from_file(self, project_path: Path) -> str | None:
         """Detect Python version from .python-version file.
 
         This file is commonly used by pyenv and other version managers.

@@ -22,7 +22,6 @@ Dependencies: CORE-354 (Translation Migration), CORE-343 (Transformer), CORE-345
 
 import pytest
 import time
-from typing import Dict
 
 from legesher_core.transformer import TokenTranslator
 from legesher_i18n.pack_loader import LanguagePackLoader, LanguagePack
@@ -88,7 +87,7 @@ def pack_loader():
 
 
 @pytest.fixture(scope="module")
-def all_language_packs(pack_loader) -> Dict[str, LanguagePack]:
+def all_language_packs(pack_loader) -> dict[str, LanguagePack]:
     """Load all available language packs for Python 3.13.
 
     Returns:
@@ -109,7 +108,7 @@ def all_language_packs(pack_loader) -> Dict[str, LanguagePack]:
 
 
 @pytest.fixture
-def translators(all_language_packs) -> Dict[str, TokenTranslator]:
+def translators(all_language_packs) -> dict[str, TokenTranslator]:
     """Create translators for all loaded language packs.
 
     Returns:

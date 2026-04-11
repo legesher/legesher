@@ -14,7 +14,6 @@ Example:
 
 import sys
 import traceback
-from typing import Dict, Optional
 
 from legesher.config import LegesherConfig
 from legesher.runtime.source_mapper import get_source_mapper
@@ -42,7 +41,7 @@ class LegesherErrorHandler:
         self.exception_names = self._load_exception_translations()
         self.message_templates = self._load_message_templates()
 
-    def _load_exception_translations(self) -> Dict[str, str]:
+    def _load_exception_translations(self) -> dict[str, str]:
         """Load exception type name translations.
 
         TODO: Add exception names to language packs in future
@@ -53,7 +52,7 @@ class LegesherErrorHandler:
         """
         return {}
 
-    def _load_message_templates(self) -> Dict[str, str]:
+    def _load_message_templates(self) -> dict[str, str]:
         """Load error message templates for common errors.
 
         TODO: Add message templates to language packs
@@ -134,7 +133,7 @@ class LegesherErrorHandler:
         return message
 
 
-def install_error_handler(language: Optional[str] = None):
+def install_error_handler(language: str | None = None):
     """Install native language exception handler.
 
     This replaces sys.excepthook with a custom handler that shows

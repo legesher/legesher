@@ -3,7 +3,6 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
 
 from .usage_tracker import UsageTracker
 
@@ -41,8 +40,8 @@ class DashboardGenerator:
     def generate(
         self,
         output_path: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         title: str = "Legesher Translation API Usage Dashboard",
     ):
         """
@@ -67,7 +66,7 @@ class DashboardGenerator:
 
         logger.info(f"Dashboard generated: {output_path}")
 
-    def _generate_html(self, stats: Dict, title: str) -> str:
+    def _generate_html(self, stats: dict, title: str) -> str:
         """Generate HTML dashboard content."""
         period = stats.get("period", {})
         total = stats.get("total", {})

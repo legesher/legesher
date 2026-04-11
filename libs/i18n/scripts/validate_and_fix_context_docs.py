@@ -20,7 +20,6 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple, Set
 from dataclasses import dataclass, field
 
 
@@ -29,9 +28,9 @@ class ValidationResult:
     """Stores validation results for a document."""
 
     filename: str
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    info: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    info: list[str] = field(default_factory=list)
     is_valid: bool = True
 
 
@@ -55,9 +54,9 @@ class ContextDocValidator:
     def __init__(self, docs_dir: Path, fix_mode: bool = False):
         self.docs_dir = docs_dir
         self.fix_mode = fix_mode
-        self.results: List[ValidationResult] = []
+        self.results: list[ValidationResult] = []
 
-    def validate_all(self) -> Tuple[int, int, int]:
+    def validate_all(self) -> tuple[int, int, int]:
         """Validate all context documents. Returns (valid_count, error_count, warning_count)."""
         md_files = sorted(self.docs_dir.glob("*.md"))
         # Exclude README.md
@@ -115,7 +114,7 @@ class ContextDocValidator:
 
         return result
 
-    def check_code_blocks(self, content: str, term: str) -> List[str]:
+    def check_code_blocks(self, content: str, term: str) -> list[str]:
         """Check Python code blocks for correct indentation."""
         issues = []
 
@@ -192,7 +191,7 @@ class ContextDocValidator:
 
         return fixed_content
 
-    def check_template_structure(self, content: str) -> List[str]:
+    def check_template_structure(self, content: str) -> list[str]:
         """Check if all required sections are present."""
         missing = []
         for section in self.REQUIRED_SECTIONS:
@@ -202,7 +201,7 @@ class ContextDocValidator:
                 missing.append(section)
         return missing
 
-    def check_cross_references(self, content: str) -> Set[str]:
+    def check_cross_references(self, content: str) -> set[str]:
         """Check if cross-referenced terms have documents."""
         # Find terms mentioned in cross-references section
         cross_ref_section = re.search(
@@ -300,7 +299,7 @@ class ContextDocValidator:
         return result
 
     def fix_index_json(
-        self, actual_files: Set[str], index_data: Dict, index_path: Path
+        self, actual_files: set[str], index_data: dict, index_path: Path
     ):
         """Regenerate index.json to match actual files."""
         # Keep existing entries that have matching files

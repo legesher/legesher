@@ -134,7 +134,7 @@ def analyze_language_pack(lang_code):
     if not pack_path.exists():
         return None
 
-    with open(pack_path, "r", encoding="utf-8") as f:
+    with open(pack_path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
     issues = {

@@ -7,7 +7,7 @@ detailed comparison results with recommendations.
 
 import logging
 from collections import Counter
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .models import (
     ComparisonResult,
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class TranslationComparator:
     """Compare translations from multiple sources."""
 
-    def __init__(self, anthropic_provider: Optional[AnthropicProvider] = None):
+    def __init__(self, anthropic_provider: AnthropicProvider | None = None):
         """
         Initialize comparator.
 
@@ -38,7 +38,7 @@ class TranslationComparator:
         self,
         term: str,
         language: str,
-        translations: Dict[str, Translation],
+        translations: dict[str, Translation],
     ) -> ComparisonResult:
         """
         Compare translations for a single term.
@@ -107,7 +107,7 @@ class TranslationComparator:
             recommendation=recommendation,
         )
 
-    def calculate_agreement(self, translations: Dict[str, Translation]) -> float:
+    def calculate_agreement(self, translations: dict[str, Translation]) -> float:
         """
         Calculate agreement score 0.0-1.0.
 
@@ -145,7 +145,7 @@ class TranslationComparator:
         return most_common_count / len(translations)
 
     def identify_differences(
-        self, translations: Dict[str, Translation]
+        self, translations: dict[str, Translation]
     ) -> DifferenceAnalysis:
         """
         Identify and categorize differences.
@@ -187,7 +187,7 @@ class TranslationComparator:
         )
 
     def analyze_linguistics(
-        self, translations: Dict[str, Translation]
+        self, translations: dict[str, Translation]
     ) -> LinguisticAnalysis:
         """
         Analyze linguistic properties.
@@ -255,7 +255,7 @@ class TranslationComparator:
 
     def _generate_recommendation(
         self,
-        translations: Dict[str, Translation],
+        translations: dict[str, Translation],
         agreement: float,
         differences: DifferenceAnalysis,
         linguistic: LinguisticAnalysis,
@@ -325,7 +325,7 @@ class TranslationComparator:
         self,
         terms: list[str],
         language: str,
-        translations_by_term: Dict[str, Dict[str, Translation]],
+        translations_by_term: dict[str, dict[str, Translation]],
     ) -> list[ComparisonResult]:
         """
         Compare translations for multiple terms.
@@ -347,7 +347,7 @@ class TranslationComparator:
                 results.append(result)
         return results
 
-    def get_summary_statistics(self, results: list[ComparisonResult]) -> Dict[str, Any]:
+    def get_summary_statistics(self, results: list[ComparisonResult]) -> dict[str, Any]:
         """
         Get summary statistics for a list of comparison results.
 

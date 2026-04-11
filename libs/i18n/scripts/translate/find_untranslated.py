@@ -29,7 +29,6 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
@@ -92,7 +91,7 @@ def find_untranslated_in_yaml(
     untranslated = []
 
     try:
-        with open(yaml_path, "r", encoding="utf-8") as f:
+        with open(yaml_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         if not data:
@@ -134,7 +133,7 @@ def find_untranslated_in_yaml(
 def count_terms_in_yaml(yaml_path: Path) -> int:
     """Count total terms in a YAML file."""
     try:
-        with open(yaml_path, "r", encoding="utf-8") as f:
+        with open(yaml_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         if not data:
@@ -197,7 +196,7 @@ def scan_language(lang_dir: Path, language: str) -> LanguageReport:
 
 
 def scan_all_languages(
-    skip_languages: Optional[set[str]] = None,
+    skip_languages: set[str] | None = None,
 ) -> dict[str, LanguageReport]:
     """Scan all language packs for untranslated entries.
 

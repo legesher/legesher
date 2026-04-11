@@ -9,7 +9,7 @@ To add or modify languages, edit languages.json and run:
 
 import json
 from pathlib import Path
-from typing import Dict, Literal, TypedDict
+from typing import Literal, TypedDict
 
 # Path to the canonical language data
 _LANGUAGES_JSON = Path(__file__).parent / "languages.json"
@@ -26,7 +26,7 @@ class LanguageMetadata(TypedDict):
     status: Literal["available", "experimental", "deprecated"]
 
 
-def _load_languages() -> tuple[Dict[str, LanguageMetadata], str]:
+def _load_languages() -> tuple[dict[str, LanguageMetadata], str]:
     """Load language metadata from JSON file.
 
     Returns:
@@ -35,7 +35,7 @@ def _load_languages() -> tuple[Dict[str, LanguageMetadata], str]:
     with open(_LANGUAGES_JSON, encoding="utf-8") as f:
         data = json.load(f)
 
-    languages: Dict[str, LanguageMetadata] = {}
+    languages: dict[str, LanguageMetadata] = {}
     for code, meta in data["languages"].items():
         languages[code] = {
             "name": meta["name"],

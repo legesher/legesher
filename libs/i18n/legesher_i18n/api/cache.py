@@ -8,7 +8,6 @@ import threading
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +16,7 @@ class CacheBackend(ABC):
     """Abstract base class for cache backends."""
 
     @abstractmethod
-    def get(self, text: str, source_lang: str, target_lang: str) -> Optional[str]:
+    def get(self, text: str, source_lang: str, target_lang: str) -> str | None:
         """Retrieve cached translation."""
         pass
 
@@ -145,7 +144,7 @@ class SQLiteCache(CacheBackend):
 
         logger.debug(f"SQLite cache initialized at {self.db_path}")
 
-    def get(self, text: str, source_lang: str, target_lang: str) -> Optional[str]:
+    def get(self, text: str, source_lang: str, target_lang: str) -> str | None:
         """Retrieve cached translation if not expired."""
         key = self._make_key(text, source_lang, target_lang)
 
@@ -284,7 +283,7 @@ class RedisCache(CacheBackend):
         host: str = "localhost",
         port: int = 6379,
         db: int = 0,
-        password: Optional[str] = None,
+        password: str | None = None,
         ttl_seconds: int = 604800,
     ):
         """
@@ -322,7 +321,7 @@ class RedisCache(CacheBackend):
             logger.error(f"Failed to connect to Redis at {host}:{port}: {e}")
             raise
 
-    def get(self, text: str, source_lang: str, target_lang: str) -> Optional[str]:
+    def get(self, text: str, source_lang: str, target_lang: str) -> str | None:
         """Retrieve cached translation from Redis."""
         key = self._make_key(text, source_lang, target_lang)
 

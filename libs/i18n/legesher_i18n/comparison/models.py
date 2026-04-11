@@ -1,7 +1,7 @@
 """Data models for translation comparison and analysis."""
 
 from dataclasses import dataclass, field
-from typing import Literal, Optional, Dict, List
+from typing import Literal
 from datetime import datetime, timezone
 
 
@@ -13,11 +13,11 @@ class Translation:
     translation: str  # Translated term (e.g., "definir")
     source: Literal["community", "aya23", "claude", "gpt4o"]
     language: str  # Target language code (e.g., "es")
-    word_type: Optional[str] = None  # verb, noun, adjective, etc.
-    form: Optional[str] = None  # infinitive, present, singular, etc.
+    word_type: str | None = None  # verb, noun, adjective, etc.
+    form: str | None = None  # infinitive, present, singular, etc.
     confidence: float = 1.0  # 0.0-1.0 confidence score
-    rationale: Optional[str] = None  # Explanation of translation choice
-    alternatives: Optional[List[str]] = None  # Alternative translations
+    rationale: str | None = None  # Explanation of translation choice
+    alternatives: list[str] | None = None  # Alternative translations
 
     def __post_init__(self):
         """Validate confidence is 0-1."""
@@ -48,7 +48,7 @@ class DifferenceAnalysis:
     form_differs: bool  # Do translations have different grammatical forms?
     length_differs_significantly: bool  # Significant length variation?
     completely_different_words: bool  # All unique translations?
-    semantic_equivalence: Optional[float] = None  # 0.0-1.0, from Claude analysis
+    semantic_equivalence: float | None = None  # 0.0-1.0, from Claude analysis
 
     def has_differences(self) -> bool:
         """Check if any differences exist."""
@@ -83,12 +83,12 @@ class DifferenceAnalysis:
 class LinguisticAnalysis:
     """Linguistic properties of translations."""
 
-    word_types: Dict[str, str] = field(default_factory=dict)  # source -> word_type
-    forms: Dict[str, str] = field(default_factory=dict)  # source -> form
-    lengths: Dict[str, int] = field(default_factory=dict)  # source -> char count
-    scripts: Dict[str, str] = field(default_factory=dict)  # source -> script type
+    word_types: dict[str, str] = field(default_factory=dict)  # source -> word_type
+    forms: dict[str, str] = field(default_factory=dict)  # source -> form
+    lengths: dict[str, int] = field(default_factory=dict)  # source -> char count
+    scripts: dict[str, str] = field(default_factory=dict)  # source -> script type
 
-    def get_dominant_word_type(self) -> Optional[str]:
+    def get_dominant_word_type(self) -> str | None:
         """Get most common word type."""
         if not self.word_types:
             return None
@@ -98,7 +98,7 @@ class LinguisticAnalysis:
         counts = Counter(self.word_types.values())
         return counts.most_common(1)[0][0] if counts else None
 
-    def get_dominant_form(self) -> Optional[str]:
+    def get_dominant_form(self) -> str | None:
         """Get most common grammatical form."""
         if not self.forms:
             return None
@@ -115,7 +115,7 @@ class LinguisticAnalysis:
 
         return sum(self.lengths.values()) / len(self.lengths)
 
-    def get_script_types(self) -> List[str]:
+    def get_script_types(self) -> list[str]:
         """Get unique script types used."""
         return list(set(self.scripts.values()))
 
@@ -126,7 +126,7 @@ class ComparisonResult:
 
     term: str  # Python term being compared
     language: str  # Target language code
-    translations: Dict[str, Translation]  # source -> Translation
+    translations: dict[str, Translation]  # source -> Translation
     agreement_score: float  # 0.0-1.0 (1.0 = perfect agreement)
     differences: DifferenceAnalysis
     linguistic_analysis: LinguisticAnalysis
@@ -135,7 +135,7 @@ class ComparisonResult:
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
 
-    def get_unique_translations(self) -> List[str]:
+    def get_unique_translations(self) -> list[str]:
         """Get list of unique translation texts."""
         return list(set(t.translation for t in self.translations.values()))
 
@@ -151,7 +151,7 @@ class ComparisonResult:
         counts = Counter(translation_texts)
         return counts.most_common(1)[0][1] if counts else 0
 
-    def get_most_common_translation(self) -> Optional[str]:
+    def get_most_common_translation(self) -> str | None:
         """Get the most commonly agreed upon translation."""
         from collections import Counter
 
@@ -159,7 +159,7 @@ class ComparisonResult:
         counts = Counter(translation_texts)
         return counts.most_common(1)[0][0] if counts else None
 
-    def get_community_translation(self) -> Optional[Translation]:
+    def get_community_translation(self) -> Translation | None:
         """Get community translation if available."""
         return self.translations.get("community")
 
@@ -183,7 +183,7 @@ class ComparisonResult:
         confidences = [t.confidence for t in self.translations.values()]
         return (min(confidences), max(confidences))
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""
         return {
             "term": self.term,
