@@ -9,6 +9,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **ci**: Split lint and test jobs out of `release-foundation.yml` and
+  `release-language-packs.yml` into a new unified `.github/workflows/ci.yml`
+  (CORE-1122). The new workflow runs on `pull_request` and `push` to main, giving
+  contributors fast automated feedback on PRs for the first time. Release
+  workflows now only handle the release pipeline. PR runs use a tiered matrix
+  (ubuntu-only) to save credits; push-to-main keeps the full matrix as a
+  pre-merge safety net. Concurrency control cancels stale PR runs on new pushes
+  but never cancels main runs. Unblocks PR #207 (CORE-388/389/390) — its
+  Codecov integration can activate once rebased on new main.
+
+### Fixed
+
+- **legesher**: `ruff format` drift on `libs/legesher/tests/unit/test_cli_translate.py`
+  cleared to keep the new PR-triggered CI green on its first run (CORE-1122).
+
 ## [0.9.0] - 2026-04-10
 
 ### Added

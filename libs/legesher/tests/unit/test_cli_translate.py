@@ -419,10 +419,8 @@ class TestDirectoryTranslation:
 
         # Mock translator
         mock_translator = MagicMock()
-        mock_translator.translate_code.side_effect = (
-            lambda code, src, tgt: code.replace("definir", "def").replace(
-                "retornar", "return"
-            )
+        mock_translator.translate_code.side_effect = lambda code, src, tgt: (
+            code.replace("definir", "def").replace("retornar", "return")
         )
         mock_translator_class.from_language_pack.return_value = mock_translator
         mock_translator.reverse.return_value = mock_translator
@@ -472,8 +470,8 @@ class TestDirectoryTranslation:
 
         # Mock translator
         mock_translator = MagicMock()
-        mock_translator.translate_code.side_effect = (
-            lambda code, src, tgt: code.replace("definir", "def")
+        mock_translator.translate_code.side_effect = lambda code, src, tgt: (
+            code.replace("definir", "def")
         )
         mock_translator_class.from_language_pack.return_value = mock_translator
         mock_translator.reverse.return_value = mock_translator
@@ -1179,8 +1177,8 @@ class TestProgressAndFeedback:
 
         # Mock translator
         mock_translator = MagicMock()
-        mock_translator.translate_code.side_effect = (
-            lambda code, src, tgt: code.replace("definir", "def")
+        mock_translator.translate_code.side_effect = lambda code, src, tgt: (
+            code.replace("definir", "def")
         )
         mock_translator_class.from_language_pack.return_value = mock_translator
         mock_translator.reverse.return_value = mock_translator

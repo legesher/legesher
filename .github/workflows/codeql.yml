@@ -39,3 +39,11 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ matrix.language }}"
+          # SARIF upload requires GitHub Code Scanning, which requires GitHub
+          # Advanced Security on private repos. This repo is on GitHub Free
+          # until CORE-758 (org transfer), so upload fails until then.
+          # `upload: ${{ !github.event.repository.private }}` self-heals when
+          # the repo goes public — no code change needed at CORE-758. Critically,
+          # this only suppresses the SARIF upload — real CodeQL analysis errors
+          # still fail the step. Tracked in CORE-1122 + CORE-758.
+          upload: ${{ !github.event.repository.private }}

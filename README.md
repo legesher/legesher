@@ -3,7 +3,7 @@
 **Code in Your Native Language** - Programming tools that break down the English language barrier
 
 [![All Contributors](https://img.shields.io/github/all-contributors/legesher/legesher?color=ee8449&style=flat-square)](#contributors)
-[![Tests](https://github.com/legesher/legesher/workflows/Tests/badge.svg)](https://github.com/legesher/legesher/actions/workflows/test.yml)
+[![CI](https://github.com/legesher/legesher/workflows/CI/badge.svg)](https://github.com/legesher/legesher/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-91%25-brightgreen.svg)](https://github.com/legesher/legesher/actions)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue.svg)](https://www.python.org/downloads/)
 [![License: Multi](https://img.shields.io/badge/license-Multi-blue.svg)](LICENSE)
