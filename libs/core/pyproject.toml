@@ -15,7 +15,7 @@ dependencies = [
     "tree-sitter-python>=0.21.0",
 ]
 name = "legesher-core"
-version = "0.9.0"
+version = "0.9.1"
 description = "Core library for Legesher Monorepo"
 readme = "README.md"
 keywords = ["translation", "i18n", "programming", "multilingual", "code-translation"]
