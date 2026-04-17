@@ -238,11 +238,12 @@ Before submitting a new language:
 - [ ] Documentation updated
 - [ ] CI tests pass
 
-## Example: TypeScript (Phase 2C)
+## Example: TypeScript (Planned)
 
-TypeScript support is being implemented in CORE-421 through CORE-427 following this pattern.
+TypeScript support is tracked in the internal roadmap as CORE-421 through CORE-427
+and would follow this same pattern. It is not currently scheduled.
 
-**Tickets**:
+**Planned tickets**:
 
 - CORE-421: TypeScript grammar integration
 - CORE-422: TypeScript language packs (ES, AR, ZH)
@@ -251,8 +252,6 @@ TypeScript support is being implemented in CORE-421 through CORE-427 following t
 - CORE-425: Interface/type declarations
 - CORE-426: Testing & benchmarks
 - CORE-427: Documentation
-
-See the [Legesher docs](https://docs.legesher.io) for progress.
 
 ## Questions?
 

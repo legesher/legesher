@@ -147,7 +147,7 @@ class TestCreateTranslatorUnsupportedLanguages:
     def test_create_translator_typescript_not_implemented(self):
         with pytest.raises(NotImplementedError) as exc_info:
             create_translator("typescript", {}, {})
-        assert "TypeScript support coming in Phase 2C" in str(exc_info.value)
+        assert "TypeScript support is not currently implemented" in str(exc_info.value)
         assert "CORE-421" in str(exc_info.value)
 
     def test_create_translator_unsupported_language(self):
@@ -243,7 +243,8 @@ class TestCreateTranslatorFromLanguagePack:
     def test_create_translator_from_language_pack_typescript_not_implemented(self):
         with pytest.raises(NotImplementedError) as exc_info:
             create_translator_from_language_pack("typescript", "es")
-        assert "TypeScript support coming in Phase 2C" in str(exc_info.value)
+        assert "TypeScript support is not currently implemented" in str(exc_info.value)
+        assert "CORE-421" in str(exc_info.value)
 
     def test_create_translator_from_language_pack_with_version(self):
         translator = create_translator_from_language_pack(

@@ -201,9 +201,9 @@ def create_translator(
             )
     elif programming_language == "typescript":
         raise NotImplementedError(
-            "TypeScript support coming in Phase 2C (CORE-421 through CORE-427). "
-            "This will include TypeScript grammar, language packs, and tree-sitter integration. "
-            "See https://docs.legesher.io for progress."
+            "TypeScript support is not currently implemented. "
+            "Tracked as CORE-421 through CORE-427 in our internal roadmap; "
+            "not currently scheduled."
         )
     else:
         supported = list(get_supported_languages().keys())
@@ -304,8 +304,9 @@ def create_translator_from_language_pack(
             )
     elif programming_language == "typescript":
         raise NotImplementedError(
-            "TypeScript support coming in Phase 2C (CORE-421 through CORE-427). "
-            "See https://docs.legesher.io for progress."
+            "TypeScript support is not currently implemented. "
+            "Tracked as CORE-421 through CORE-427 in our internal roadmap; "
+            "not currently scheduled."
         )
     else:
         supported = list(get_supported_languages().keys())
