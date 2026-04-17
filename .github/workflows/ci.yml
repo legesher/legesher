@@ -32,10 +32,21 @@ jobs:
   lint:
     name: Lint & Validate
     runs-on: ubuntu-latest
-    # Skip-gate preserved from release-foundation.yml: auto-release commits
-    # on main (chore(release), chore: update uv.lock, docs(changelog): stamp)
-    # should not retrigger the suite. Only fires on push; irrelevant on PRs.
-    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock') && !contains(github.event.head_commit.message, 'docs(changelog): stamp'))"
+    # Skip-gate: semantic-release auto-commits on main should not retrigger
+    # the suite. Uses `startsWith` (not `contains`) because squash-merged PR
+    # commit messages embed the full PR body — if the body happens to mention
+    # any of these strings (e.g., this very comment!), `contains` would match
+    # inside the body and the whole workflow would skip itself. `startsWith`
+    # only matches the conventional-commit prefix at the start of the subject
+    # line, which is where semantic-release actually puts it:
+    #   * "chore(release): X.Y.Z"
+    #   * "chore: update uv.lock after version bump"
+    #   * "docs(changelog): stamp release [CORE-608]"
+    # Regression shipped in PR #208 (the CORE-1122 merge commit) — its
+    # squash-body mentioned all three prefixes in a bullet list, tripping
+    # the skip-gate on the very commit that introduced this workflow.
+    # Only fires on `push`; irrelevant on `pull_request`.
+    if: "github.event_name != 'push' || (!startsWith(github.event.head_commit.message, 'chore(release)') && !startsWith(github.event.head_commit.message, 'chore: update uv.lock') && !startsWith(github.event.head_commit.message, 'docs(changelog): stamp'))"
 
     steps:
       - name: Checkout code
@@ -67,7 +78,9 @@ jobs:
     name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
-    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock') && !contains(github.event.head_commit.message, 'docs(changelog): stamp'))"
+    # Same skip-gate as the `lint` job above — see its comment for why this
+    # uses `startsWith` instead of `contains`.
+    if: "github.event_name != 'push' || (!startsWith(github.event.head_commit.message, 'chore(release)') && !startsWith(github.event.head_commit.message, 'chore: update uv.lock') && !startsWith(github.event.head_commit.message, 'docs(changelog): stamp'))"
     strategy:
       fail-fast: false
       matrix:
