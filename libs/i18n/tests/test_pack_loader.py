@@ -13,8 +13,6 @@ from legesher_i18n.exceptions import (
     PathTraversalError,
 )
 
-# Real language packs directory
-LANG_PACKS_DIR = Path(__file__).parent.parent / "programming_languages"
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
@@ -23,7 +21,7 @@ class TestLanguagePackLoading:
 
     def test_load_spanish_pack(self):
         """Test loading Spanish language pack for Python 3.10."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
         pack = loader.load("es", "python", "3.10")
 
         assert pack.language == "es"
@@ -35,7 +33,7 @@ class TestLanguagePackLoading:
 
     def test_load_arabic_pack(self):
         """Test loading Arabic language pack."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
         pack = loader.load("ar", "python", "3.10")
 
         assert pack.language == "ar"
@@ -44,7 +42,7 @@ class TestLanguagePackLoading:
 
     def test_load_nonexistent_pack(self):
         """Test error for nonexistent pack."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
 
         with pytest.raises(PackNotFoundError) as exc_info:
             loader.load("xx", "python", "3.10")
@@ -53,7 +51,7 @@ class TestLanguagePackLoading:
 
     def test_pack_immutability(self):
         """Test that LanguagePack is immutable (frozen dataclass)."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
         pack = loader.load("es", "python", "3.10")
 
         # Should not be able to modify
@@ -66,7 +64,7 @@ class TestPackInheritance:
 
     def test_inheritance_keyword_merging(self):
         """Test that child pack inherits and overrides parent keywords."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
 
         # Load 3.10 pack (base)
         _ = loader.load("es", "python", "3.10")
@@ -85,7 +83,7 @@ class TestPackInheritance:
 
     def test_multi_level_inheritance(self):
         """Test inheritance through multiple levels."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
 
         # 3.13 inherits from 3.12, which inherits from 3.11, which inherits from 3.10
         pack_313 = loader.load("es", "python", "3.13")
@@ -100,7 +98,7 @@ class TestPackInheritance:
 
     def test_inheritance_builtins(self):
         """Test that builtins are also inherited."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
 
         pack_311 = loader.load("es", "python", "3.11")
 
@@ -120,7 +118,7 @@ class TestPackCaching:
 
     def test_cache_hit(self):
         """Test that packs are cached after first load."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
 
         # Load pack twice
         pack1 = loader.load("es", "python", "3.10")
@@ -135,7 +133,7 @@ class TestPackCaching:
 
     def test_cache_clear(self):
         """Test cache clearing."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
 
         # Load and cache
         loader.load("es", "python", "3.10")
@@ -151,7 +149,7 @@ class TestLanguagePackMethods:
 
     def test_get_keyword_translation(self):
         """Test getting keyword translations."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
         pack = loader.load("es", "python", "3.10")
 
         assert pack.get_keyword_translation("def") == "definir"
@@ -160,7 +158,7 @@ class TestLanguagePackMethods:
 
     def test_get_builtin_translation(self):
         """Test getting builtin translations."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
         pack = loader.load("es", "python", "3.10")
 
         assert pack.get_builtin_translation("print") == "imprimir"
@@ -169,7 +167,7 @@ class TestLanguagePackMethods:
 
     def test_has_keyword(self):
         """Test keyword existence checking."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
         pack = loader.load("es", "python", "3.10")
 
         assert pack.has_keyword("def")
@@ -178,7 +176,7 @@ class TestLanguagePackMethods:
 
     def test_repr(self):
         """Test __repr__ method."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
         pack = loader.load("es", "python", "3.10")
 
         repr_str = repr(pack)
@@ -259,6 +257,21 @@ class TestPathTraversalIntegration:
         with pytest.raises((PackValidationError, yaml.YAMLError)):
             loader._resolve_inheritance(child, set())
 
+    def test_dotdot_substring_in_filename_not_blocked(self, traversal_packs_dir):
+        """CORE-1187: benign filenames containing ``..`` must not trip
+        ``PathTraversalError``.
+
+        The pre-CORE-1187 call site did ``".." in extends`` (substring
+        match), which spuriously routed ``foo..bar.yml`` through the
+        traversal path. The component check should let it proceed; the
+        load then fails with ``PackValidationError`` because the file
+        doesn't exist, which is the correct error for a missing parent.
+        """
+        child = traversal_packs_dir(extends_value="foo..bar.yml")
+        loader = LanguagePackLoader()
+        with pytest.raises(PackValidationError):
+            loader._resolve_inheritance(child, set())
+
 
 class TestInheritanceEdgeCases:
     """Non-security edge cases that close adjacent coverage gaps (CORE-1143)."""
@@ -285,7 +298,7 @@ class TestPackLoaderEdgeCases:
 
     def test_empty_keywords_section(self):
         """Test pack with empty keywords (like 3.13/es.yml)."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
 
         # 3.13 has empty keywords section but inherits everything
         pack = loader.load("es", "python", "3.13")
@@ -296,7 +309,7 @@ class TestPackLoaderEdgeCases:
 
     def test_metadata_inheritance(self):
         """Test that metadata is properly set from child pack."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
 
         pack = loader.load("es", "python", "3.11")
 
@@ -305,7 +318,7 @@ class TestPackLoaderEdgeCases:
 
     def test_loader_repr(self):
         """Test LanguagePackLoader __repr__."""
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
         repr_str = repr(loader)
 
         assert "LanguagePackLoader" in repr_str

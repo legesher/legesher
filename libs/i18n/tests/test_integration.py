@@ -11,7 +11,6 @@ from legesher_i18n import (
 )
 from legesher_i18n.exceptions import PackNotFoundError
 
-
 LANG_PACKS_DIR = Path(__file__).parent.parent / "language-packs"
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -96,7 +95,7 @@ class TestVersionIndexIntegration:
         index = VersionIndex.load(index_path)
 
         # Load packs and verify keywords match index
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
 
         # Check 3.11 pack has except* as indicated in index
         pack_311 = loader.load("es", "python", "3.11")
@@ -110,7 +109,7 @@ class TestVersionIndexIntegration:
         index_path = LANG_PACKS_DIR / "python" / "version-index.yml"
         index = VersionIndex.load(index_path)
 
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
         pack = loader.load("es", "python", "3.13")
 
         # Inheritance chain should align with version index
@@ -133,7 +132,7 @@ class TestPerformance:
         """Test that pack loading is reasonably fast."""
         import time
 
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
 
         start = time.time()
         _ = loader.load("es", "python", "3.13")
@@ -147,7 +146,7 @@ class TestPerformance:
         """Test that cached loading is fast."""
         import time
 
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
 
         # First load (cache miss)
         pack1 = loader.load("es", "python", "3.10")
@@ -233,7 +232,7 @@ class TestRealWorldScenarios:
         version = detector.detect(project_path)
 
         # Load pack for that version
-        loader = LanguagePackLoader(pack_root=LANG_PACKS_DIR)
+        loader = LanguagePackLoader()
         pack = loader.load("es", "python", version)
 
         # Provide completions

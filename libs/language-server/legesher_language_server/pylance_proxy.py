@@ -52,13 +52,7 @@ def _get_pack_loader() -> LanguagePackLoader:
     """
     global _pack_loader
     if _pack_loader is None:
-        try:
-            _pack_loader = LanguagePackLoader()
-        except Exception as e:
-            logger.error(f"Failed to initialize LanguagePackLoader: {e}")
-            # Graceful degradation - loader with nonexistent root
-            # Will return None for all translations, allowing pass-through mode
-            _pack_loader = LanguagePackLoader(pack_root=Path("/tmp/nonexistent_legesher_packs"))
+        _pack_loader = LanguagePackLoader()
     return _pack_loader
 
 
@@ -484,7 +478,10 @@ class PylanceProxy:
             # Send hover request to Pyright
             hover_params = {
                 "textDocument": {"uri": uri},
-                "position": {"line": english_pos.line, "character": english_pos.character},
+                "position": {
+                    "line": english_pos.line,
+                    "character": english_pos.character,
+                },
             }
 
             response = await self._send_request("textDocument/hover", hover_params)

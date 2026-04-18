@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field, field_validator
 
 from .exceptions import PackValidationError, VersionIndexError
 
-
 # Soft keywords that contain special characters but are valid Python syntax
 # These are special cases that bypass the normal identifier validation
 # Reference: https://docs.python.org/3/reference/lexical_analysis.html#soft-keywords
@@ -313,12 +312,22 @@ class SchemaValidator:
         return warnings
 
     @staticmethod
-    def validate_inheritance_path(extends_path: str, current_pack_path: Path) -> Path:
+    def validate_inheritance_path(
+        extends_path: str,
+        current_pack_path: Path,
+        sandbox_root: Path,
+    ) -> Path:
         """Validate and resolve an inheritance path.
+
+        The sandbox check is unconditional: the resolved path must stay
+        within ``sandbox_root``. Callers pick the sandbox root appropriate
+        for the pack layout in use — currently always the ``packs/``
+        directory that contains the current pack file.
 
         Args:
             extends_path: Path from extends field (relative)
             current_pack_path: Path to current pack file
+            sandbox_root: Directory that the resolved path must stay within
 
         Returns:
             Resolved absolute path to parent pack
@@ -331,25 +340,18 @@ class SchemaValidator:
             pack_dir = current_pack_path.parent
             resolved = (pack_dir / extends_path).resolve()
 
-            # Security check: Ensure resolved path doesn't escape pack directory
-            # Get the root packs directory (e.g., legesher_i18n_python_ar/packs/)
-            pack_root = current_pack_path
-            while pack_root.parent.name != "packs" and pack_root.parent != pack_root:
-                pack_root = pack_root.parent
-
-            if pack_root.parent.name == "packs":
-                packs_dir = pack_root.parent
-
-                # Ensure resolved path is within packs directory
-                try:
-                    resolved.relative_to(packs_dir)
-                except ValueError:
-                    raise PackValidationError(
-                        str(current_pack_path),
-                        [
-                            f"Path traversal detected: {extends_path} escapes pack directory"
-                        ],
-                    )
+            # Ensure resolved path is within the sandbox, regardless of layout
+            sandbox_resolved = sandbox_root.resolve()
+            try:
+                resolved.relative_to(sandbox_resolved)
+            except ValueError:
+                raise PackValidationError(
+                    str(current_pack_path),
+                    [
+                        f"Path traversal detected: {extends_path} escapes sandbox "
+                        f"root {sandbox_resolved}"
+                    ],
+                )
 
             # Check if file exists
             if not resolved.exists():

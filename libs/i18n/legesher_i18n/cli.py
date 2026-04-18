@@ -308,20 +308,10 @@ def validate(pack_file: Path, strict: bool, quiet: bool):
         # Try to load the pack with inheritance
         out.print("\n[cyan]Loading pack with inheritance...[/cyan]")
 
-        # Determine pack root from file path
-        # Navigate up to find the 'programming_languages' directory
-        current = pack_file.parent
-        pack_root = None
-        while current.parent != current:
-            if current.name == "programming_languages":
-                pack_root = current  # The programming_languages directory itself
-                break
-            current = current.parent
-
         # Try to load pack (may fail on security checks, which is OK for validation)
         pack = None
         try:
-            loader = LanguagePackLoader(pack_root=pack_root)
+            loader = LanguagePackLoader()
             pack = loader.load(
                 language=pack_schema.language,
                 target=pack_schema.target,
@@ -594,24 +584,20 @@ def stats(db_path: Path, quiet: bool):
         conn = database._get_connection()
 
         # Translations by source
-        source_stats = conn.execute(
-            """
+        source_stats = conn.execute("""
             SELECT source, COUNT(*) as count
             FROM translations
             GROUP BY source
             ORDER BY count DESC
-        """
-        ).fetchall()
+        """).fetchall()
 
         # Translations by language
-        language_stats = conn.execute(
-            """
+        language_stats = conn.execute("""
             SELECT language_code, COUNT(*) as count
             FROM translations
             GROUP BY language_code
             ORDER BY count DESC
-        """
-        ).fetchall()
+        """).fetchall()
 
         database.close()
 

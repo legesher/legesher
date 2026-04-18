@@ -18,6 +18,7 @@ from .exceptions import (
     CircularInheritanceError,
     MaxInheritanceDepthError,
     PackNotFoundError,
+    PackValidationError,
     PathTraversalError,
 )
 from .schema_validator import LanguagePackMetadata, SchemaValidator
@@ -114,18 +115,13 @@ class LanguagePackLoader:
     This loader is thread-safe and uses LRU caching for performance.
     """
 
-    def __init__(self, pack_root: Path | None = None):
+    def __init__(self) -> None:
         """Initialize the loader.
 
-        Args:
-            pack_root: Root directory for language packs
-                      (defaults to libs/i18n/programming_languages/)
+        Packs are discovered from two locations (see :meth:`_discover_packs`):
+        the in-repo monorepo layout under ``libs/i18n/language-packs/`` and
+        installed distributions named ``legesher-i18n-{target}-{lang}``.
         """
-        if pack_root is None:
-            # Default to package's programming_languages directory
-            pack_root = Path(__file__).parent.parent / "programming_languages"
-
-        self.pack_root = pack_root
         self._discovered_packs: dict[str, Path] | None = None
 
     @staticmethod
@@ -286,8 +282,9 @@ class LanguagePackLoader:
     def _get_pack_path(self, language: str, target: str, version: str | None) -> Path:
         """Build path to language pack file.
 
-        First checks discovered packs (monorepo or installed packages).
-        Falls back to legacy pack_root structure for backward compatibility.
+        Resolves against discovered packs (monorepo or installed packages).
+        Returns the expected pack location even when the file does not exist
+        so the caller can report a helpful ``PackNotFoundError``.
 
         Args:
             language: Language code
@@ -295,32 +292,21 @@ class LanguagePackLoader:
             version: Version string (or None for default)
 
         Returns:
-            Path to pack file
+            Path to pack file (may not exist)
         """
-        # Try discovered packs first (new structure)
         discovered = self._discover_packs()
         pack_key = f"{target}-{language}"
 
         if pack_key in discovered:
             pack_dir = discovered[pack_key]
-            if version:
-                # New structure: {pack_dir}/packs/{version}.yml
-                pack_path = pack_dir / "packs" / f"{version}.yml"
-            else:
-                # New structure: {pack_dir}/packs/default.yml
-                pack_path = pack_dir / "packs" / "default.yml"
+            filename = f"{version}.yml" if version else "default.yml"
+            return pack_dir / "packs" / filename
 
-            # Check if pack exists in new structure
-            if pack_path.exists():
-                return pack_path
-
-        # Fallback to legacy structure for backward compatibility
-        if version:
-            # Legacy: programming_languages/python/3.10/es.yml
-            return self.pack_root / target / version / f"{language}.yml"
-        else:
-            # Legacy: programming_languages/python/es.yml
-            return self.pack_root / target / f"{language}.yml"
+        # Pack wasn't discovered — return a synthetic path so the caller's
+        # existence check fails with a ``PackNotFoundError`` that names the
+        # target/lang/version the user asked for.
+        filename = f"{version}.yml" if version else "default.yml"
+        return Path(f"<not-discovered>/{target}-{language}/packs/{filename}")
 
     def _resolve_inheritance(
         self,
@@ -367,12 +353,48 @@ class LanguagePackLoader:
         extends = current_data.get("extends")
 
         if extends:
-            # Security check: prevent path traversal
-            if ".." in extends and not self._is_safe_parent_path(extends):
+            # Security check: prevent path traversal. Normalize separators so
+            # Windows-style `..\\foo.yml` is caught the same as posix-style
+            # `../foo.yml`, then split into components. Using a component
+            # check instead of a substring match avoids false positives on
+            # benign filenames that happen to contain `..` (e.g. "foo..bar.yml").
+            # Variants this layer does NOT catch — URL-encoded (`..%2Fpasswd`),
+            # fullwidth (`\uff0e\uff0e\uff0fpasswd`), etc. — are intentionally
+            # left to the authoritative layer-3 enforcement in
+            # SchemaValidator.validate_inheritance_path, which resolves the
+            # path and checks `relative_to(sandbox_root)`. Those variants
+            # aren't interpreted as traversal by the filesystem, so they
+            # resolve to benign (non-existent) filenames and fail safely.
+            normalized = extends.replace("\\", "/")
+            extends_parts = [p for p in normalized.split("/") if p]
+            if ".." in extends_parts and not self._is_safe_parent_path(extends):
                 raise PathTraversalError(extends)
 
+            # Derive the sandbox root for layer-3 enforcement: the
+            # ``packs/`` directory of the current pack. All packs live in
+            # ``<module>/packs/<version>.yml`` layouts (monorepo or
+            # installed) so the walk-up always finds a ``packs/`` parent.
+            sandbox_root = pack_path
+            while (
+                sandbox_root.parent.name != "packs"
+                and sandbox_root.parent != sandbox_root
+            ):
+                sandbox_root = sandbox_root.parent
+            if sandbox_root.parent.name != "packs":
+                # Unexpected layout — refuse to process rather than falling
+                # back to a lax sandbox.
+                raise PackValidationError(
+                    str(pack_path),
+                    [
+                        f"Cannot derive sandbox root: pack is not inside a 'packs/' directory: {pack_path}"
+                    ],
+                )
+            sandbox_root = sandbox_root.parent
+
             # Resolve parent pack path
-            parent_path = SchemaValidator.validate_inheritance_path(extends, pack_path)
+            parent_path = SchemaValidator.validate_inheritance_path(
+                extends, pack_path, sandbox_root
+            )
 
             # Recursively load parent
             parent_data, parent_chain = self._resolve_inheritance(
@@ -394,10 +416,10 @@ class LanguagePackLoader:
 
         Allows ``../X.Y/lang.yml`` for going up to parent version, but not
         escaping the language packs directory entirely. This is a heuristic
-        prefix check; the authoritative sandbox enforcement for monorepo-
-        layout packs is performed by
-        :meth:`SchemaValidator.validate_inheritance_path` which resolves the
-        path and verifies it stays within the packs directory.
+        prefix check; the authoritative sandbox enforcement is performed by
+        :meth:`SchemaValidator.validate_inheritance_path`, which resolves
+        the path and verifies it stays within the sandbox root passed by
+        the caller.
 
         Args:
             extends: Extends path from pack
@@ -481,8 +503,7 @@ class LanguagePackLoader:
     def list_available_languages(self, target: str = "python") -> list[tuple[str, str]]:
         """List all available language packs for a target language.
 
-        First checks discovered packs (monorepo or installed packages).
-        Falls back to legacy pack_root structure for backward compatibility.
+        Iterates over discovered packs (monorepo or installed packages).
 
         Note: This method performs filesystem operations (globbing, file I/O, YAML parsing)
         which can be expensive. Results are computed fresh on each call since language
@@ -501,9 +522,7 @@ class LanguagePackLoader:
             [('es', 'Spanish'), ('ar', 'Arabic'), ('hi', 'Hindi')]
         """
         languages: list[tuple[str, str]] = []
-        seen_codes: set[str] = set()
 
-        # 1. Check discovered packs (new structure)
         discovered = self._discover_packs()
         for pack_key, pack_dir in discovered.items():
             # Extract target and language from pack_key (e.g., "python-ar")
@@ -538,80 +557,6 @@ class LanguagePackLoader:
                         pass
 
                 languages.append((lang_code, lang_name))
-                seen_codes.add(lang_code)
-
-        # 2. Fallback to legacy structure (for backward compatibility)
-        target_dir = self.pack_root / target
-
-        if target_dir.exists():
-            # Scan for .yml files in target directory
-            for pack_file in target_dir.glob("*.yml"):
-                if pack_file.is_file():
-                    lang_code = pack_file.stem
-
-                    # Skip version-index file (not a language pack)
-                    if lang_code == "version-index":
-                        continue
-
-                    # Skip if already discovered in new structure
-                    if lang_code in seen_codes:
-                        continue
-
-                    # Try to load metadata to get full language name
-                    try:
-                        with open(pack_file, encoding="utf-8") as f:
-                            data = yaml.safe_load(f)
-                            lang_name = data.get("metadata", {}).get(
-                                "name", lang_code.upper()
-                            )
-                    except (
-                        OSError,
-                        yaml.YAMLError,
-                        KeyError,
-                        TypeError,
-                        AttributeError,
-                    ):
-                        # Fall back to language code if file can't be read, parsed,
-                        # or has unexpected structure
-                        lang_name = lang_code.upper()
-
-                    languages.append((lang_code, lang_name))
-                    seen_codes.add(lang_code)
-
-            # Also check versioned packs in legacy structure
-            for version_dir in target_dir.iterdir():
-                if version_dir.is_dir():
-                    for pack_file in version_dir.glob("*.yml"):
-                        if pack_file.is_file():
-                            lang_code = pack_file.stem
-
-                            # Skip version-index file
-                            if lang_code == "version-index":
-                                continue
-
-                            # Skip if already found
-                            if lang_code in seen_codes:
-                                continue
-
-                            try:
-                                with open(pack_file, encoding="utf-8") as f:
-                                    data = yaml.safe_load(f)
-                                    lang_name = data.get("metadata", {}).get(
-                                        "name", lang_code.upper()
-                                    )
-                            except (
-                                OSError,
-                                yaml.YAMLError,
-                                KeyError,
-                                TypeError,
-                                AttributeError,
-                            ):
-                                # Fall back to language code if file can't be read, parsed,
-                                # or has unexpected structure
-                                lang_name = lang_code.upper()
-
-                            languages.append((lang_code, lang_name))
-                            seen_codes.add(lang_code)
 
         return sorted(languages, key=lambda x: x[0])
 
@@ -622,7 +567,6 @@ class LanguagePackLoader:
             len(self._discovered_packs) if self._discovered_packs is not None else 0
         )
         return (
-            f"LanguagePackLoader(pack_root={self.pack_root}, "
-            f"discovered_packs={discovered_count}, "
+            f"LanguagePackLoader(discovered_packs={discovered_count}, "
             f"cache_size={info.currsize}/{info.maxsize})"
         )
