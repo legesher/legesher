@@ -1,4 +1,8 @@
 {
+  "overrides": {
+    "diff": "^8.0.3",
+    "serialize-javascript": "^7.0.5"
+  },
   "name": "legesher-vscode",
   "displayName": "Legesher - Code in Your Language",
   "description": "Write Python code in your native language with real-time translation",
@@ -352,7 +356,7 @@
     "lint": "eslint src/",
     "pretest": "npm run compile && npm run lint",
     "test": "vscode-test",
-    "test:unit": "mocha --require ts-node/register 'test/unit/**/*.test.ts'",
+    "test:unit": "TS_NODE_PROJECT=test/tsconfig.json mocha --require ts-node/register 'test/unit/**/*.test.ts'",
     "package": "vsce package"
   },
   "devDependencies": {
