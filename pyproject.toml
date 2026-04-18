@@ -106,6 +106,7 @@ dev = [
     "datasets>=4.8.2",
     "huggingface-hub>=1.10.1",
     "psutil>=7.2.2",
+    "vulture>=2.16",
 ]
 
 [build-system]

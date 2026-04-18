@@ -1,0 +1,19 @@
+# .vulture_allowlist — justifications for vulture false positives
+#
+# Run manually (informational — not yet wired into CI):
+#
+# uv run --with vulture vulture \
+#   libs/core/legesher_core \
+#   libs/i18n/legesher_i18n \
+#   libs/legesher/legesher \
+#   libs/language-server/legesher_language_server \
+#   .vulture_allowlist --min-confidence 80
+#
+# CI enforcement will be added as a tiny follow-up once CORE-1143 lands
+# (which deletes the `current_path` parameter in pack_loader.py that would
+# otherwise need a second allowlist entry).
+
+# importlib.abc.MetaPathFinder.find_spec protocol parameter — called
+# positionally by Python's import machinery during module reload.
+# Removing would break the ABC contract.
+target  # libs/legesher/legesher/runtime/import_hook.py:181 (find_spec)
