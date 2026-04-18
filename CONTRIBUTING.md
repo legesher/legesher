@@ -25,7 +25,8 @@ Not sure where to start? Here are beginner-friendly ways to contribute:
 2. **Translate Language Packs:** Native speaker of a language we don't support yet? Create a language pack!
 3. **Report Bugs:** Found something broken? Open an issue with reproduction steps.
 4. **Answer Questions:** Help other users in GitHub Discussions.
-5. **Good First Issues:** Look for issues tagged `good-first-issue` - these are designed for newcomers.
+5. **Good First Issues:** Look for issues tagged
+   [`good first issue`](../../issues?q=label%3A%22good+first+issue%22) — designed for newcomers.
 
 ### Resources for Beginners
 
@@ -89,6 +90,8 @@ These packages are source-available but proprietary. We do NOT accept external c
 4. Create a feature branch from `main`
 
 #### Development Setup
+
+> **Quick start?** See [DEVELOPMENT.md](DEVELOPMENT.md) for a streamlined setup guide.
 
 ```bash
 # Clone your fork

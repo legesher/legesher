@@ -1,0 +1,141 @@
+name: Language Pack Review
+description: Review translations for an existing language pack
+title: '[Review]: LANGUAGE (Python)'
+labels: [good first issue, help wanted]
+body:
+- type: markdown
+  attributes:
+    value: |
+      Thank you for helping review translations! Your perspective as a native or fluent speaker
+      is invaluable for ensuring translation quality.
+
+      **How reviewing works:** You'll check translations in a language pack's YAML file and leave
+      feedback using emoji notation. See the review guide below for details.
+
+- type: dropdown
+  id: language
+  attributes:
+    label: Language being reviewed
+    description: Which language pack are you reviewing?
+    options:
+    - Amharic (am)
+    - Arabic (ar)
+    - Bengali (bn)
+    - Bosnian (bs)
+    - Burmese (my)
+    - Catalan (ca)
+    - Chinese (zh)
+    - Croatian (hr)
+    - Czech (cs)
+    - Danish (da)
+    - Dutch (nl)
+    - English (en)
+    - Finnish (fi)
+    - French (fr)
+    - Galician (gl)
+    - German (de)
+    - Greek (el)
+    - Gujarati (gu)
+    - Hebrew (he)
+    - Hindi (hi)
+    - Hungarian (hu)
+    - Indonesian (id)
+    - Irish (ga)
+    - Italian (it)
+    - Japanese (ja)
+    - Kannada (kn)
+    - Korean (ko)
+    - Latvian (lv)
+    - Macedonian (mk)
+    - Malay (ms)
+    - Malayalam (ml)
+    - Mongolian (mn)
+    - Norwegian (no)
+    - Persian (fa)
+    - Polish (pl)
+    - Portuguese (pt)
+    - Romanian (ro)
+    - Russian (ru)
+    - Scottish Gaelic (gd)
+    - Serbian (sr)
+    - Sinhala (si)
+    - Spanish (es)
+    - Sundanese (su)
+    - Swedish (sv)
+    - Telugu (te)
+    - Thai (th)
+    - Turkish (tr)
+    - Urdu (ur)
+    - Uzbek (uz)
+    - Vietnamese (vi)
+    - Welsh (cy)
+    - Other
+  validations:
+    required: true
+
+- type: dropdown
+  id: python-version
+  attributes:
+    label: Python version reviewed
+    description: Which Python version's pack did you review? (Start with 3.10 — it has the base translations.)
+    options:
+    - 3.10 (base — contains all translations)
+    - '3.11'
+    - '3.12'
+    - '3.13'
+    - '3.14'
+    multiple: true
+  validations:
+    required: true
+
+- type: textarea
+  id: qualifications
+  attributes:
+    label: Reviewer qualifications
+    description: Tell us about your connection to this language
+    placeholder: |
+      e.g., Native speaker of Arabic (Egyptian dialect), fluent in Modern Standard Arabic.
+      Computer science student familiar with programming terminology.
+  validations:
+    required: true
+
+- type: textarea
+  id: review-notes
+  attributes:
+    label: Review notes
+    description: |
+      Use the emoji notation below for each translation you reviewed:
+      - ✅ **Agree** — the translation is accurate and natural
+      - ❓ **Alternative** — you think there may be a better translation (explain)
+      - 🤔 **Unsure** — you're not sure if a good translation exists for this concept
+
+      List the keywords, builtins, or exceptions you reviewed with your feedback.
+    placeholder: |
+      **Keywords:**
+      - `def` → `definir` ✅ natural and widely understood
+      - `return` → `regresar` ❓ consider `devolver` — more precise for returning a value
+      - `yield` → `ceder` 🤔 no direct equivalent in this context
+
+      **Builtins:**
+      - `print` → `imprimir` ✅
+      - `input` → `entrada` ❓ consider `leer` for readability
+  validations:
+    required: true
+
+- type: textarea
+  id: additional
+  attributes:
+    label: Additional context
+    description: |
+      Any cultural or linguistic context that might help? Dialect considerations?
+      Suggestions for how programming concepts are taught in this language?
+
+- type: checkboxes
+  id: confirmations
+  attributes:
+    label: Reviewer confirmation
+    options:
+    - label: I am a native or fluent speaker of this language
+      required: true
+    - label: I agree to follow this project's [Code of Conduct](../../CODE_OF_CONDUCT.md)
+      required: true

@@ -1,0 +1,97 @@
+name: Add New Language
+description: Request or contribute a new language translation
+title: '[New Language]: LANGUAGE (Python)'
+labels: [help wanted]
+body:
+- type: markdown
+  attributes:
+    value: |
+      Want to add a new language to Legesher? We'd love your help!
+
+      Legesher currently supports 51 languages for Python. If your language isn't on the list,
+      you can help us add it. See the [Contributing Guide](../../CONTRIBUTING.md)
+      for how to get started, and look at an existing pack (e.g., `libs/i18n/language-packs/python/es/`)
+      for the expected structure.
+
+- type: input
+  id: language-name
+  attributes:
+    label: Language name
+    description: The English name and native name of the language
+    placeholder: e.g., Swahili (Kiswahili)
+  validations:
+    required: true
+
+- type: input
+  id: iso-code
+  attributes:
+    label: ISO 639-1 code
+    description: The two-letter language code (e.g., "sw" for Swahili)
+    placeholder: e.g., sw
+  validations:
+    required: true
+
+- type: dropdown
+  id: rtl
+  attributes:
+    label: Text direction
+    description: Does this language use right-to-left (RTL) text?
+    options:
+    - Left-to-right (LTR)
+    - Right-to-left (RTL)
+  validations:
+    required: true
+
+- type: dropdown
+  id: contribution-type
+  attributes:
+    label: How would you like to contribute?
+    description: Are you requesting this language or ready to translate?
+    options:
+    - I can provide translations (native/fluent speaker)
+    - I'm requesting this language (I can't translate it myself)
+  validations:
+    required: true
+
+- type: textarea
+  id: qualifications
+  attributes:
+    label: Language qualifications
+    description: If you're offering to translate, describe your connection to this language
+    placeholder: |
+      e.g., Native Swahili speaker from Kenya, software engineer with 5 years experience.
+
+- type: textarea
+  id: initial-translations
+  attributes:
+    label: Initial translation samples (optional)
+    description: |
+      If you'd like to give us a head start, provide translations for a few Python keywords.
+      This helps us understand your translation approach.
+    placeholder: |
+      - `def` → your_translation
+      - `class` → your_translation
+      - `return` → your_translation
+      - `if` → your_translation
+      - `else` → your_translation
+      - `for` → your_translation
+      - `while` → your_translation
+      - `import` → your_translation
+      - `True` → your_translation
+      - `False` → your_translation
+
+- type: textarea
+  id: cultural-context
+  attributes:
+    label: Cultural or linguistic context
+    description: |
+      Anything we should know about translating programming concepts into this language?
+      Multiple dialects? Script considerations? How is programming typically taught?
+
+- type: checkboxes
+  id: terms
+  attributes:
+    label: Confirmation
+    options:
+    - label: I agree to follow this project's [Code of Conduct](../../CODE_OF_CONDUCT.md)
+      required: true
