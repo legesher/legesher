@@ -1,5 +1,7 @@
 """Tests for pack_loader module."""
 
+import textwrap
+
 import pytest
 import yaml
 from pathlib import Path
@@ -14,6 +16,11 @@ from legesher_i18n.exceptions import (
 )
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
+
+
+def _write_yml(path: Path, body: str) -> None:
+    """Write dedented YAML to *path*. Mirrors the conftest `_write_pack` helper."""
+    path.write_text(textwrap.dedent(body).lstrip(), encoding="utf-8")
 
 
 class TestLanguagePackLoading:
@@ -165,6 +172,47 @@ class TestLanguagePackMethods:
         assert pack.get_builtin_translation("len") == "longitud"
         assert pack.get_builtin_translation("nonexistent") is None
 
+    def test_get_exception_translation_falls_back_to_original_case(self):
+        """Exception lookup tries lowercase first, then the original-case key.
+
+        The lowercase-first convention is a translation-table internal detail;
+        the fallback path exists so callers can pass either canonical form.
+        Also pins the ``or``-based fallthrough for falsy values: an empty
+        translation string is treated as falsy and falls through to the
+        original-case lookup, which is the current intended semantics for
+        packs that partially populate both keys.
+        """
+        from legesher_i18n.pack_loader import LanguagePack
+
+        # Only original-case entry, no lowercase
+        pack = LanguagePack(
+            language="es",
+            target="python",
+            version="3.10",
+            exceptions={"ValueError": "ErrorDeValor"},
+        )
+        assert pack.get_exception_translation("ValueError") == "ErrorDeValor"
+        # Lowercase-only entry also works via the first branch
+        pack2 = LanguagePack(
+            language="es",
+            target="python",
+            version="3.10",
+            exceptions={"valueerror": "errordevalor"},
+        )
+        assert pack2.get_exception_translation("ValueError") == "errordevalor"
+        # Empty lowercase value falls through to the original-case key
+        # (`or` treats "" as falsy — intentional for packs that partially
+        # populate both keys without wanting the lowercase entry to win).
+        pack3 = LanguagePack(
+            language="es",
+            target="python",
+            version="3.10",
+            exceptions={"valueerror": "", "ValueError": "ErrorDeValor"},
+        )
+        assert pack3.get_exception_translation("ValueError") == "ErrorDeValor"
+        # Missing altogether
+        assert pack.get_exception_translation("TypeError") is None
+
     def test_has_keyword(self):
         """Test keyword existence checking."""
         loader = LanguagePackLoader()
@@ -292,6 +340,46 @@ class TestInheritanceEdgeCases:
         assert data == {}
         assert len(chain) == 1
 
+    def test_pack_outside_packs_dir_refuses_inheritance(self, tmp_path):
+        """CORE-1112 / CORE-1187: cover the defensive raise that fires when
+        a pack with an ``extends`` field isn't inside a ``packs/`` directory.
+
+        This path is unreachable through the public ``load()`` API (all 51
+        real packs live in the monorepo ``packs/`` layout) but guards
+        against future layout changes that would otherwise silently skip
+        the sandbox derivation. ``_resolve_inheritance`` is called
+        directly to exercise it.
+        """
+        # Base sibling in the same directory (no packs/ ancestor)
+        _write_yml(
+            tmp_path / "base.yml",
+            """
+            language: es
+            target: python
+            version: "3.10"
+            keywords: {}
+            builtins: {}
+            exceptions: {}
+            """,
+        )
+        # Child extends the base, but neither is inside a packs/ dir
+        child = tmp_path / "child.yml"
+        _write_yml(
+            child,
+            """
+            language: es
+            target: python
+            version: "3.11"
+            extends: base.yml
+            keywords: {}
+            builtins: {}
+            exceptions: {}
+            """,
+        )
+        loader = LanguagePackLoader()
+        with pytest.raises(PackValidationError, match="Cannot derive sandbox root"):
+            loader._resolve_inheritance(child, set())
+
 
 class TestPackLoaderEdgeCases:
     """Test edge cases and error handling."""
@@ -322,3 +410,27 @@ class TestPackLoaderEdgeCases:
         repr_str = repr(loader)
 
         assert "LanguagePackLoader" in repr_str
+
+    def test_list_available_languages_handles_unreadable_metadata(self, tmp_path):
+        """CORE-1112: cover the except branch in ``list_available_languages``
+        that falls back to the uppercased language code when a discovered
+        pack's metadata YAML can't be parsed.
+
+        Builds a fake discovered pack with an invalid ``default.yml`` and
+        injects it directly into ``_discovered_packs`` so the method walks
+        the broken-metadata path without needing a real installed dist.
+        """
+        fake_pack_dir = tmp_path / "legesher_i18n_python_zz"
+        (fake_pack_dir / "packs").mkdir(parents=True)
+        (fake_pack_dir / "packs" / "default.yml").write_text(
+            ":\n:invalid-yaml:\n", encoding="utf-8"
+        )
+
+        loader = LanguagePackLoader()
+        loader._discovered_packs = {"python-zz": fake_pack_dir}
+
+        results = loader.list_available_languages("python")
+        # The fake pack still appears in results, with the fallback name
+        # (uppercased language code) since metadata parsing failed.
+        fake_entry = [(code, name) for code, name in results if code == "zz"]
+        assert fake_entry == [("zz", "ZZ")]

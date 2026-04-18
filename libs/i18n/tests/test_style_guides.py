@@ -376,3 +376,84 @@ class TestLanguageCodeValidation:
         """Codes longer than 3 chars should be rejected."""
         with pytest.raises(ValueError, match="Invalid language code"):
             loader.load("english")
+
+
+class TestLoadErrorPaths:
+    """CORE-1112: coverage for error-handling branches in StyleGuideLoader.
+
+    The merge loop in ``load()`` is defensive: missing files are skipped
+    with a warning, non-dict YAML payloads are skipped with a warning,
+    and YAML/OS errors are logged and moved past so one broken file
+    doesn't tank the whole hierarchy.
+    """
+
+    def test_missing_hierarchy_file_is_skipped(self, tmp_path, caplog):
+        """A style_guides_dir with only python.yml (no _ltr.yml and no
+        language-specific file) should log "file not found" and still
+        return a merged dict for the files that do exist."""
+        import logging
+
+        (tmp_path / "python.yml").write_text(
+            "formatting:\n  comment_prefix: '#'\n", encoding="utf-8"
+        )
+        from legesher_i18n.style_guides import StyleGuideLoader
+
+        loader = StyleGuideLoader(style_guides_dir=tmp_path)
+        with caplog.at_level(logging.WARNING):
+            result = loader.load("xx")  # xx isn't a real language
+        assert result == {"formatting": {"comment_prefix": "#"}}
+        assert any("not found" in rec.message for rec in caplog.records)
+
+    def test_non_dict_yaml_payload_is_skipped(self, tmp_path, caplog):
+        """Style guide files that don't parse to a dict should be skipped
+        with a warning, not silently merged as garbage."""
+        import logging
+
+        (tmp_path / "python.yml").write_text(
+            "- this\n- is\n- a\n- list\n", encoding="utf-8"
+        )
+        from legesher_i18n.style_guides import StyleGuideLoader
+
+        loader = StyleGuideLoader(style_guides_dir=tmp_path)
+        with caplog.at_level(logging.WARNING):
+            result = loader.load("en")
+        assert result == {}
+        assert any("did not parse as a dict" in rec.message for rec in caplog.records)
+
+    def test_malformed_yaml_is_logged_and_skipped(self, tmp_path, caplog):
+        """A YAML parse error on one file should log an error and continue
+        loading the rest of the hierarchy."""
+        import logging
+
+        (tmp_path / "python.yml").write_text(
+            "formatting:\n  comment_prefix: '#'\n", encoding="utf-8"
+        )
+        (tmp_path / "en.yml").write_text(":\n:invalid:\n", encoding="utf-8")
+        from legesher_i18n.style_guides import StyleGuideLoader
+
+        loader = StyleGuideLoader(style_guides_dir=tmp_path)
+        with caplog.at_level(logging.ERROR):
+            result = loader.load("en")
+        assert result == {"formatting": {"comment_prefix": "#"}}
+        assert any("Error parsing" in rec.message for rec in caplog.records)
+
+    def test_load_rtl_set_handles_missing_languages_json(
+        self, tmp_path, monkeypatch, caplog
+    ):
+        """If languages.json can't be loaded, the RTL set falls back to
+        empty and every language is treated as LTR."""
+        import logging
+
+        from legesher_i18n import style_guides as style_guides_module
+
+        monkeypatch.setattr(
+            style_guides_module, "_LANGUAGES_JSON", tmp_path / "does-not-exist.json"
+        )
+
+        loader = style_guides_module.StyleGuideLoader(style_guides_dir=tmp_path)
+        with caplog.at_level(logging.ERROR):
+            rtl_set = loader._load_rtl_set()
+        assert rtl_set == set()
+        assert any(
+            "Failed to load languages.json" in rec.message for rec in caplog.records
+        )

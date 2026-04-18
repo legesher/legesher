@@ -591,3 +591,236 @@ class TestMLCPConformance:
         result = SchemaValidator.check_mlcp_conformance(schema)
 
         assert result["checks"]["valid_version_format"] is True
+
+
+class TestCheckIdentifierValidity:
+    """CORE-1112: coverage for ``SchemaValidator.check_identifier_validity``.
+
+    The method validates that every translation in a pack (keywords,
+    builtins, exceptions) is a syntactically valid Python identifier —
+    required because the TokenTranslator feeds translations through
+    Python's ``tokenize`` module, which rejects whitespace-laden or
+    otherwise-malformed names.
+
+    In normal usage this check is redundant with Pydantic's field
+    validators (which reject invalid translations at schema construction
+    time). The method exists as defense-in-depth for callers that build
+    schemas via ``model_construct`` or otherwise bypass validation, so
+    these tests do the same to exercise every rejection branch.
+    """
+
+    def _make_schema(self, validate: bool = True, **overrides) -> LanguagePackSchema:
+        data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "keywords": {},
+            "builtins": {},
+            "exceptions": {},
+        }
+        data.update(overrides)
+        if validate:
+            return LanguagePackSchema(**data)
+        # Bypass field validators to reach the check_identifier_validity
+        # defense-in-depth branches
+        return LanguagePackSchema.model_construct(**data)
+
+    def test_all_valid_translations_pass(self):
+        schema = self._make_schema(
+            keywords={"def": "definir", "class": "clase"},
+            builtins={"print": "imprimir", "len": "longitud"},
+            exceptions={"ValueError": "ErrorDeValor"},
+        )
+        result = SchemaValidator.check_identifier_validity(schema)
+        assert result["passed"] is True
+        assert result["total_issues"] == 0
+        assert result["invalid_keywords"] == []
+        assert result["invalid_builtins"] == []
+        assert result["invalid_exceptions"] == []
+        assert result["issues"] == []
+
+    def test_leading_trailing_whitespace_rejected(self):
+        schema = self._make_schema(
+            validate=False,
+            keywords={"def": " definir"},
+            builtins={"print": "imprimir "},
+            exceptions={"ValueError": "\tErrorDeValor"},
+        )
+        result = SchemaValidator.check_identifier_validity(schema)
+        assert result["passed"] is False
+        assert result["total_issues"] == 3
+        for entry in (
+            result["invalid_keywords"]
+            + result["invalid_builtins"]
+            + result["invalid_exceptions"]
+        ):
+            assert entry["reason"] == "has leading/trailing whitespace"
+        # Issues list carries a human-readable entry per category
+        assert any("whitespace" in issue for issue in result["issues"])
+
+    def test_embedded_spaces_rejected(self):
+        schema = self._make_schema(
+            validate=False,
+            keywords={"def": "definir funcion"},
+        )
+        result = SchemaValidator.check_identifier_validity(schema)
+        assert result["passed"] is False
+        assert result["total_issues"] == 1
+        assert result["invalid_keywords"][0]["reason"] == "contains spaces"
+        assert any("contains spaces" in issue for issue in result["issues"])
+
+    def test_invalid_identifier_characters_rejected(self):
+        schema = self._make_schema(
+            validate=False,
+            keywords={"def": "123start"},  # can't start with digit
+            builtins={"print": "has-dash"},  # hyphens not allowed
+        )
+        result = SchemaValidator.check_identifier_validity(schema)
+        assert result["passed"] is False
+        assert result["total_issues"] == 2
+        assert (
+            result["invalid_keywords"][0]["reason"] == "not a valid Python identifier"
+        )
+        assert (
+            result["invalid_builtins"][0]["reason"] == "not a valid Python identifier"
+        )
+
+    def test_mixed_problems_are_all_reported(self):
+        schema = self._make_schema(
+            validate=False,
+            keywords={
+                "def": "definir",  # valid
+                "class": " clase",  # whitespace
+                "if": "if with space",  # space
+                "for": "123bad",  # invalid identifier
+            },
+        )
+        result = SchemaValidator.check_identifier_validity(schema)
+        assert result["passed"] is False
+        assert result["total_issues"] == 3
+        # Each category in the issues list carries the offending key
+        assert any("'class'" in issue for issue in result["issues"])
+        assert any("'if'" in issue for issue in result["issues"])
+        assert any("'for'" in issue for issue in result["issues"])
+
+    def test_soft_keyword_except_star_accepted(self):
+        """`except*` is a Python 3.11+ soft keyword and must be treated as
+        valid even though ``*`` isn't a regular identifier character.
+        Verifies the ``source_key=`` plumbing into ``_is_valid_identifier``.
+        """
+        schema = self._make_schema(keywords={"except*": "excepto*"})
+        result = SchemaValidator.check_identifier_validity(schema)
+        assert result["passed"] is True
+        assert result["total_issues"] == 0
+
+
+class TestCheckCompletenessEnhanced:
+    """CORE-1112: coverage for ``SchemaValidator.check_completeness_enhanced``.
+
+    Exercises the version-index load path (lines 409-416), the
+    missing-keyword computation when a version index is available
+    (lines 420-423), and each branch of the metadata completeness score.
+    """
+
+    def _schema(self, **overrides) -> LanguagePackSchema:
+        data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "keywords": {"def": "definir", "class": "clase"},
+            "builtins": {"print": "imprimir"},
+            "exceptions": {},
+        }
+        data.update(overrides)
+        return LanguagePackSchema(**data)
+
+    def test_no_version_index_path_falls_back_to_heuristic(self):
+        """Without a version_index_path, completeness defaults to 0.75 when
+        the pack has keywords (the benefit-of-the-doubt branch)."""
+        schema = self._schema()
+        result = SchemaValidator.check_completeness_enhanced(schema, None)
+        assert result["completeness_percentage"] == 0.75
+        assert result["missing_keywords"] == []
+
+    def test_version_index_path_does_not_exist_falls_back(self):
+        """A version_index_path that doesn't exist should skip the load
+        entirely and use the heuristic."""
+        schema = self._schema()
+        result = SchemaValidator.check_completeness_enhanced(
+            schema, Path("/nonexistent/version-index.yml")
+        )
+        assert result["completeness_percentage"] == 0.75
+
+    def test_version_index_load_populates_missing_keywords(self, tmp_path):
+        """A valid version-index.yml is loaded and used to compute missing
+        keywords and actual completeness percentage."""
+        # Minimal real-schema version-index: 3.10 has "match" and "case"
+        # as its added_keywords. The test schema defines neither, so both
+        # should be flagged as missing.
+        index_path = tmp_path / "version-index.yml"
+        index_path.write_text(
+            "python_versions:\n"
+            "  '3.10':\n"
+            "    added_keywords:\n"
+            "      - match\n"
+            "      - case\n"
+            "    added_builtins: []\n"
+            "    removed_keywords: []\n"
+            "    removed_builtins: []\n"
+            "    base:\n",
+            encoding="utf-8",
+        )
+        # VersionIndex.get_all_keywords returns the full standard set for
+        # the version (not just added_keywords), so a minimally-populated
+        # pack will show many missing keywords and a low completeness.
+        schema = self._schema()  # has only "def" and "class"
+        result = SchemaValidator.check_completeness_enhanced(schema, index_path)
+        missing = set(result["missing_keywords"])
+        assert "match" in missing  # declared in this version-index
+        assert "case" in missing
+        assert "def" not in missing  # defined in the schema
+        assert "class" not in missing
+        # Low but non-zero completeness
+        assert 0.0 < result["completeness_percentage"] < 0.2
+
+    def test_version_index_load_error_falls_back_silently(self, tmp_path):
+        """Broken version-index.yml should be caught by the except branch
+        and the method should degrade to the heuristic."""
+        index_path = tmp_path / "bad-index.yml"
+        index_path.write_text(":\n:invalid-yaml:\n", encoding="utf-8")
+        schema = self._schema()
+        result = SchemaValidator.check_completeness_enhanced(schema, index_path)
+        # Falls back to heuristic when load fails
+        assert result["completeness_percentage"] == 0.75
+
+    def test_missing_critical_builtins_recommendation(self):
+        """When critical builtins (print/len/range/...) are missing,
+        the method surfaces a recommendation."""
+        schema = self._schema(builtins={})
+        result = SchemaValidator.check_completeness_enhanced(schema, None)
+        assert any("critical builtins" in rec for rec in result["recommendations"])
+
+    def test_metadata_score_accumulates_all_fields(self):
+        """Fully populated metadata should max out the score (~1.0),
+        hitting every branch in the per-field scoring ladder."""
+        schema = self._schema(
+            metadata={
+                "last_updated": "2026-01-01",
+                "python_version_min": "3.10",
+                "python_version_max": "3.13",
+                "compatibility_tested": ["3.10", "3.11"],
+                "author": "test",
+                "license": "Apache-2.0",
+                "community_reviewed": True,
+            },
+        )
+        result = SchemaValidator.check_completeness_enhanced(schema, None)
+        # 7 fields × 0.14 each, capped at 1.0
+        assert result["metadata_score"] == pytest.approx(0.98, abs=0.01)
+
+    def test_no_keywords_no_metadata_surfaces_recommendations(self):
+        """Empty keywords/metadata should surface targeted recommendations."""
+        schema = self._schema(keywords={}, metadata=None)
+        result = SchemaValidator.check_completeness_enhanced(schema, None)
+        assert result["completeness_percentage"] == 0.0
+        assert any("No keywords" in rec for rec in result["recommendations"])
