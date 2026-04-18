@@ -368,7 +368,7 @@ class LanguagePackLoader:
 
         if extends:
             # Security check: prevent path traversal
-            if ".." in extends and not self._is_safe_parent_path(pack_path, extends):
+            if ".." in extends and not self._is_safe_parent_path(extends):
                 raise PathTraversalError(extends)
 
             # Resolve parent pack path
@@ -389,14 +389,17 @@ class LanguagePackLoader:
 
         return current_data, inheritance_chain
 
-    def _is_safe_parent_path(self, current_path: Path, extends: str) -> bool:
+    def _is_safe_parent_path(self, extends: str) -> bool:
         """Check if extends path is a safe relative parent path.
 
-        Allows ../X.Y/lang.yml for going up to parent version, but not
-        escaping the language packs directory entirely.
+        Allows ``../X.Y/lang.yml`` for going up to parent version, but not
+        escaping the language packs directory entirely. This is a heuristic
+        prefix check; the authoritative sandbox enforcement for monorepo-
+        layout packs is performed by
+        :meth:`SchemaValidator.validate_inheritance_path` which resolves the
+        path and verifies it stays within the packs directory.
 
         Args:
-            current_path: Current pack file path
             extends: Extends path from pack
 
         Returns:

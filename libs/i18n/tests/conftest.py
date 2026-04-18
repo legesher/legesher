@@ -1,12 +1,205 @@
 """Shared pytest fixtures for legesher-i18n tests."""
 
 import json
+import os
 import tempfile
+import textwrap
 from pathlib import Path
 
 import pytest
 
 from legesher_i18n.db import TranslationDatabase
+
+# ---------------------------------------------------------------------------
+# Path traversal / inheritance security fixtures (CORE-1143)
+# ---------------------------------------------------------------------------
+
+
+def _write_pack(path: Path, body: str) -> None:
+    """Write a YAML pack file, creating parent directories as needed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(textwrap.dedent(body).lstrip(), encoding="utf-8")
+
+
+def _build_packs_dir(root: Path, lang: str = "es") -> Path:
+    """Create the legesher_i18n_python_{lang}/packs directory under root.
+
+    Returns the ``packs`` directory path.
+    """
+    packs_dir = root / f"legesher_i18n_python_{lang}" / "packs"
+    packs_dir.mkdir(parents=True, exist_ok=True)
+    return packs_dir
+
+
+@pytest.fixture
+def traversal_packs_dir(tmp_path):
+    """Factory fixture for path-traversal test packs.
+
+    Returns a callable that writes a child pack whose ``extends`` value is
+    parametrizable. The callable returns the path to the child pack file.
+    """
+
+    def _factory(extends_value: str, lang: str = "es") -> Path:
+        packs_dir = _build_packs_dir(tmp_path, lang=lang)
+
+        _write_pack(
+            packs_dir / "3.10.yml",
+            f"""
+            language: {lang}
+            target: python
+            version: "3.10"
+            keywords:
+              def: definir
+            builtins: {{}}
+            exceptions: {{}}
+            """,
+        )
+
+        _write_pack(
+            packs_dir / "3.11.yml",
+            f"""
+            language: {lang}
+            target: python
+            version: "3.11"
+            extends: "{extends_value}"
+            keywords: {{}}
+            builtins: {{}}
+            exceptions: {{}}
+            """,
+        )
+
+        return packs_dir / "3.11.yml"
+
+    return _factory
+
+
+@pytest.fixture
+def circular_packs(tmp_path):
+    """Two pack files that extend each other — triggers CircularInheritanceError."""
+    packs_dir = _build_packs_dir(tmp_path)
+
+    _write_pack(
+        packs_dir / "a.yml",
+        """
+        language: es
+        target: python
+        version: "3.10"
+        extends: "b.yml"
+        keywords:
+          def: definir
+        builtins: {}
+        exceptions: {}
+        """,
+    )
+
+    _write_pack(
+        packs_dir / "b.yml",
+        """
+        language: es
+        target: python
+        version: "3.10"
+        extends: "a.yml"
+        keywords:
+          def: definir
+        builtins: {}
+        exceptions: {}
+        """,
+    )
+
+    return packs_dir / "a.yml"
+
+
+@pytest.fixture
+def deep_chain_packs(tmp_path):
+    """Chain of 12 packs (exceeds MAX_INHERITANCE_DEPTH=10)."""
+    packs_dir = _build_packs_dir(tmp_path)
+
+    # Base pack (no extends)
+    _write_pack(
+        packs_dir / "depth_0.yml",
+        """
+        language: es
+        target: python
+        version: "3.10"
+        keywords:
+          def: definir
+        builtins: {}
+        exceptions: {}
+        """,
+    )
+
+    # Chain of 11 more packs (total depth = 12, exceeds MAX_INHERITANCE_DEPTH=10)
+    for i in range(1, 12):
+        _write_pack(
+            packs_dir / f"depth_{i}.yml",
+            f"""
+            language: es
+            target: python
+            version: "3.10"
+            extends: "depth_{i - 1}.yml"
+            keywords: {{}}
+            builtins: {{}}
+            exceptions: {{}}
+            """,
+        )
+
+    return packs_dir / "depth_11.yml"
+
+
+@pytest.fixture
+def empty_pack(tmp_path):
+    """Pack file with empty/null YAML body."""
+    packs_dir = _build_packs_dir(tmp_path)
+    pack_file = packs_dir / "empty.yml"
+    pack_file.write_text("", encoding="utf-8")
+    return pack_file
+
+
+@pytest.fixture
+def symlink_escape_packs(tmp_path):
+    """Pack dir with a symlink pointing outside the sandbox."""
+    if not hasattr(os, "symlink"):
+        pytest.skip("symlinks not supported on this platform")
+
+    packs_dir = _build_packs_dir(tmp_path)
+
+    # Create a target file outside packs dir
+    outside = tmp_path / "outside" / "evil.yml"
+    _write_pack(
+        outside,
+        """
+        language: es
+        target: python
+        version: "3.10"
+        keywords:
+          def: hacked
+        builtins: {}
+        exceptions: {}
+        """,
+    )
+
+    # Symlink inside packs pointing outside
+    symlink_path = packs_dir / "parent.yml"
+    try:
+        symlink_path.symlink_to(outside)
+    except OSError:
+        pytest.skip("symlink creation failed (permissions or OS)")
+
+    # Child pack that extends the symlink
+    _write_pack(
+        packs_dir / "child.yml",
+        """
+        language: es
+        target: python
+        version: "3.11"
+        extends: "parent.yml"
+        keywords: {}
+        builtins: {}
+        exceptions: {}
+        """,
+    )
+
+    return packs_dir / "child.yml"
 
 
 @pytest.fixture

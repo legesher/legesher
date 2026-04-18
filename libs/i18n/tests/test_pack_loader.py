@@ -1,11 +1,17 @@
 """Tests for pack_loader module."""
 
 import pytest
+import yaml
 from pathlib import Path
 
 from legesher_i18n.pack_loader import LanguagePackLoader
-from legesher_i18n.exceptions import PackNotFoundError
-
+from legesher_i18n.exceptions import (
+    CircularInheritanceError,
+    MaxInheritanceDepthError,
+    PackNotFoundError,
+    PackValidationError,
+    PathTraversalError,
+)
 
 # Real language packs directory
 LANG_PACKS_DIR = Path(__file__).parent.parent / "programming_languages"
@@ -181,26 +187,97 @@ class TestLanguagePackMethods:
         assert "python" in repr_str
 
 
-class TestSecurityFeatures:
-    """Test security features like path traversal prevention."""
+class TestPathTraversalDefense:
+    """Unit tests for _is_safe_parent_path heuristic (CORE-1143).
 
-    def test_path_traversal_detection(self):
-        """Test that path traversal attempts are blocked."""
-        # This would require a malicious pack file with extends: "../../etc/passwd"
-        # The schema validator should catch this
-        pass  # Tested in test_schema_validator.py
+    Tests the simplified signature after dead-parameter removal:
+    ``_is_safe_parent_path(self, extends: str) -> bool``
+    """
 
-    def test_circular_inheritance_detection(self):
-        """Test circular inheritance detection."""
-        # Would need to create circular test fixtures
-        # For now, rely on real packs which don't have cycles
-        pass
+    @pytest.mark.parametrize(
+        "extends,expected",
+        [
+            ("../3.10/es.yml", True),
+            ("../3.10.yml", True),
+            ("../../etc/passwd", False),
+            ("../../../secrets.yml", False),
+            ("foo/../bar.yml", False),
+            ("foo/../../bar.yml", False),
+            ("..", False),
+            ("../", True),  # starts with ../ and count==1; heuristic allows it
+            ("..\\passwd", False),
+            ("..%2Fpasswd", False),
+            ("\u3002\u3002\uff0fpasswd", False),  # fullwidth ..／
+        ],
+    )
+    def test_is_safe_parent_path_branches(self, extends, expected):
+        loader = LanguagePackLoader()
+        assert loader._is_safe_parent_path(extends) is expected
 
-    def test_max_inheritance_depth(self):
-        """Test maximum inheritance depth limit."""
-        # Would need deeply nested test fixtures
-        # For now, our real packs are well within limits (depth ~4)
-        pass
+    def test_safe_parent_path_rejects_bare_dotdot(self):
+        loader = LanguagePackLoader()
+        assert loader._is_safe_parent_path("..") is False
+
+    def test_safe_parent_path_allows_single_level(self):
+        """Pin the True branch so future hardening doesn't break version inheritance."""
+        loader = LanguagePackLoader()
+        assert loader._is_safe_parent_path("../3.10/es.yml") is True
+
+
+class TestPathTraversalIntegration:
+    """End-to-end tests exercising _resolve_inheritance with tempdir YAML (CORE-1143)."""
+
+    def test_rejects_multi_level_parent_traversal(self, traversal_packs_dir):
+        child = traversal_packs_dir(extends_value="../../etc/passwd")
+        loader = LanguagePackLoader()
+        with pytest.raises(PathTraversalError):
+            loader._resolve_inheritance(child, set())
+
+    def test_rejects_embedded_dotdot(self, traversal_packs_dir):
+        child = traversal_packs_dir(extends_value="foo/../bar.yml")
+        loader = LanguagePackLoader()
+        with pytest.raises(PathTraversalError):
+            loader._resolve_inheritance(child, set())
+
+    def test_allows_sibling_extends(self, traversal_packs_dir):
+        """Sibling extends (no ..) should resolve normally."""
+        child = traversal_packs_dir(extends_value="3.10.yml")
+        loader = LanguagePackLoader()
+        data, chain = loader._resolve_inheritance(child, set())
+        assert "keywords" in data
+
+    def test_symlink_escaping_packs_dir_is_rejected(self, symlink_escape_packs):
+        """Symlink to outside packs dir should be rejected by some defense layer."""
+        loader = LanguagePackLoader()
+        with pytest.raises((PathTraversalError, PackValidationError)):
+            loader._resolve_inheritance(symlink_escape_packs, set())
+
+    def test_null_byte_in_extends_is_rejected(self, traversal_packs_dir):
+        child = traversal_packs_dir(extends_value="pack\x00.yml")
+        loader = LanguagePackLoader()
+        # Null byte is caught by YAML reader before pack loader sees it
+        with pytest.raises((PackValidationError, yaml.YAMLError)):
+            loader._resolve_inheritance(child, set())
+
+
+class TestInheritanceEdgeCases:
+    """Non-security edge cases that close adjacent coverage gaps (CORE-1143)."""
+
+    def test_circular_inheritance_raises(self, circular_packs):
+        loader = LanguagePackLoader()
+        with pytest.raises(CircularInheritanceError):
+            loader._resolve_inheritance(circular_packs, set())
+
+    def test_max_inheritance_depth_raises(self, deep_chain_packs):
+        loader = LanguagePackLoader()
+        with pytest.raises(MaxInheritanceDepthError):
+            loader._resolve_inheritance(deep_chain_packs, set())
+
+    def test_empty_yaml_pack_resolves(self, empty_pack):
+        loader = LanguagePackLoader()
+        data, chain = loader._resolve_inheritance(empty_pack, set())
+        assert data == {}
+        assert len(chain) == 1
 
 
 class TestPackLoaderEdgeCases:
