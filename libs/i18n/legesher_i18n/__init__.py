@@ -38,6 +38,8 @@ from .style_guides import StyleGuideLoader
 from .version_detector import PythonVersionDetector
 from .version_index import PythonVersionInfo, VersionIndex
 
+__version__ = "0.9.1"
+
 __all__ = [
     # Core pack loading
     "LanguagePack",
@@ -48,13 +50,13 @@ __all__ = [
     # Language registry
     "CANONICAL_LANGUAGE",
     "LANGUAGE_METADATA",
+    "get_active_language_codes",
+    "get_available_language_codes",
     "get_language_name",
     "get_native_name",
+    "get_rtl_language_codes",
     "is_rtl_language",
     "is_supported_language",
-    "get_available_language_codes",
-    "get_active_language_codes",
-    "get_rtl_language_codes",
     # Schema & validation
     "LanguagePackMetadata",
     "LanguagePackSchema",
@@ -74,42 +76,6 @@ __all__ = [
     "UnsupportedVersionError",
     "VersionDetectionError",
     "VersionIndexError",
-]
-
-__version__ = "0.9.1"
-
-__all__ = [
-    # Main classes
-    "LanguagePack",
-    "LanguagePackLoader",
-    "PythonVersionDetector",
-    "VersionIndex",
-    # Schema classes
-    "LanguagePackSchema",
-    "LanguagePackMetadata",
-    "SchemaValidator",
-    "PythonVersionInfo",
-    # Language registry (single source of truth)
-    "LANGUAGE_METADATA",
-    "CANONICAL_LANGUAGE",
-    "get_active_language_codes",
-    "get_available_language_codes",
-    "get_rtl_language_codes",
-    "get_language_name",
-    "get_native_name",
-    "is_rtl_language",
-    "is_supported_language",
-    # Exceptions
-    "LanguagePackError",
-    "PackNotFoundError",
-    "PackValidationError",
-    "InheritanceError",
-    "CircularInheritanceError",
-    "MaxInheritanceDepthError",
-    "PathTraversalError",
-    "VersionDetectionError",
-    "VersionIndexError",
-    "UnsupportedVersionError",
     # Convenience functions
     "load_language_pack",
 ]
