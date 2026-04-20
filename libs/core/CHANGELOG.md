@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Fill in Google-style docstrings on public symbols: `TranslationScope` gains an
+  `Attributes` section and `Example`; `TranslatorBackend` (`Literal` type alias) gains
+  Sphinx `#:` documentation explaining the three valid backend values. Both changes
+  are docstring-only; no code behavior changes. (CORE-1173)
+
 ## [0.9.2] - 2026-04-20
 
 ## [0.9.1] - 2026-04-17

@@ -25,7 +25,33 @@ from .exceptions import VersionDetectionError
 
 
 class PythonVersionDetector:
-    """Detects the Python version for a project using multiple strategies."""
+    """Detect the Python version for a project using multiple strategies.
+
+    Tries four strategies in priority order and returns the first match:
+
+    1. ``requires-python`` field in ``pyproject.toml``
+    2. ``.python-version`` file at the project root
+    3. Runtime ``sys.version_info``
+    4. ``DEFAULT_VERSION`` fallback
+
+    The detected version is used to select the correct version-aware
+    language pack (e.g., Python 3.13 packs differ from 3.10 packs on
+    newer keywords like ``type`` or ``match``).
+
+    Attributes:
+        DEFAULT_VERSION: Fallback version string returned if all strategies fail.
+
+    Example:
+        The returned value depends on the project's Python configuration.
+        In a project with ``requires-python = ">=3.13"`` in pyproject.toml::
+
+            >>> detector = PythonVersionDetector()
+            >>> detector.detect()
+            '3.13'
+
+        With no project config, detection falls through to the runtime
+        Python version, and finally to ``DEFAULT_VERSION``.
+    """
 
     DEFAULT_VERSION = "3.13"  # Fallback if detection fails
 

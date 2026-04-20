@@ -31,28 +31,26 @@ _LANGUAGES_JSON = Path(__file__).parent / "languages.json"
 
 
 class StyleGuideLoader:
-    """Loads and merges hierarchical YAML style guide files.
+    """Load and merge hierarchical YAML style guide files.
 
-    Style guides provide translation conventions organised in a
-    three-level hierarchy: base (Python) -> direction (LTR/RTL) ->
-    language-specific overrides.
+    Style guides provide translation conventions organised in a three-level
+    hierarchy: base (Python), then direction (LTR or RTL), then
+    language-specific overrides. Each level deep-merges on top of the
+    previous, with later files winning on key conflicts.
 
-    Example
-    -------
-    >>> loader = StyleGuideLoader()
-    >>> guide = loader.load("ar")  # merges python.yml + _rtl.yml + ar.yml
-    >>> guide["formatting"]["comment_prefix"]
-    '#'
+    Example:
+        >>> loader = StyleGuideLoader()
+        >>> guide = loader.load("ar")  # merges python.yml + _rtl.yml + ar.yml
+        >>> guide["formatting"]["comment_prefix"]
+        '#'
     """
 
     def __init__(self, style_guides_dir: Path | None = None) -> None:
         """Initialise the style guide loader.
 
-        Parameters
-        ----------
-        style_guides_dir:
-            Directory containing style guide YAML files.
-            Defaults to ``libs/i18n/style-guides/`` relative to this file.
+        Args:
+            style_guides_dir: Directory containing style guide YAML files.
+                Defaults to ``libs/i18n/style-guides/`` relative to this file.
         """
         if style_guides_dir is None:
             self.style_guides_dir = Path(__file__).parent.parent / "style-guides"
@@ -70,23 +68,16 @@ class StyleGuideLoader:
     def load(self, language_code: str) -> dict[str, Any]:
         """Load and deep-merge the style guide hierarchy for a language.
 
-        Parameters
-        ----------
-        language_code:
-            ISO 639-1 language code (e.g. ``"es"``, ``"ar"``).
-            Must be 2-3 lowercase ASCII letters.
+        Args:
+            language_code: ISO 639-1 language code (e.g. ``"es"``, ``"ar"``).
+                Must be 2-3 lowercase ASCII letters.
 
-        Returns
-        -------
-        dict[str, Any]
+        Returns:
             Merged style guide dictionary.
 
-        Raises
-        ------
-        FileNotFoundError
-            If the base ``python.yml`` file does not exist.
-        ValueError
-            If *language_code* is not a valid ISO 639-1 code.
+        Raises:
+            FileNotFoundError: If the base ``python.yml`` file does not exist.
+            ValueError: If ``language_code`` is not a valid ISO 639-1 code.
         """
         if not _LANG_CODE_RE.match(language_code):
             raise ValueError(
@@ -137,9 +128,7 @@ class StyleGuideLoader:
         the base ``python.yml`` and direction files (``_ltr.yml``,
         ``_rtl.yml``).
 
-        Returns
-        -------
-        list[str]
+        Returns:
             Sorted list of language codes.
         """
         if not self.style_guides_dir.exists():
@@ -171,20 +160,14 @@ class StyleGuideLoader:
           2. ``_rtl.yml`` or ``_ltr.yml`` (direction layer)
           3. ``{language_code}.yml`` (language-specific — optional)
 
-        Parameters
-        ----------
-        language_code:
-            ISO 639-1 language code.
+        Args:
+            language_code: ISO 639-1 language code.
 
-        Returns
-        -------
-        list[Path]
+        Returns:
             Ordered list of file paths to load and merge.
 
-        Raises
-        ------
-        FileNotFoundError
-            If ``python.yml`` does not exist.
+        Raises:
+            FileNotFoundError: If ``python.yml`` does not exist.
         """
         base = self.style_guides_dir / "python.yml"
         if not base.exists():
@@ -220,20 +203,15 @@ class StyleGuideLoader:
 
         For overlapping keys:
           - If both values are dicts, recurse.
-          - Otherwise the *override* value wins.
+          - Otherwise the ``override`` value wins.
 
         Neither input dict is mutated.
 
-        Parameters
-        ----------
-        base:
-            The base dictionary.
-        override:
-            The dictionary whose values take precedence.
+        Args:
+            base: The base dictionary.
+            override: The dictionary whose values take precedence.
 
-        Returns
-        -------
-        dict[str, Any]
+        Returns:
             A new merged dictionary.
         """
         merged = dict(base)

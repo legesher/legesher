@@ -9,6 +9,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Expand the package module docstring from a single description sentence into a full
+  Google-style block documenting LSP capabilities (Hover, Completion, Diagnostics,
+  Semantic Tokens), environment variable configuration, and an example launch command.
+  Fixes two inaccuracies caught in review: `LEGESHER_TARGET_LANG` default is `"en"`
+  (matches `config.py:191`), not `"es"`; and the package supports Python 3.10+ per
+  `requires-python`, not just 3.13+. Docstring-only; no code behavior changes.
+  (CORE-1173)
+
 ### Added
 
 - **Semantic Tokens — Context-Aware Highlighting** (CORE-895, #199)

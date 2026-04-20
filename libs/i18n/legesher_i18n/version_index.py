@@ -31,7 +31,6 @@ from .term_definitions import (
     SPECIAL_VALUES,
 )
 
-
 # Maximum inheritance chain depth to prevent infinite loops
 MAX_INHERITANCE_DEPTH = 10
 
@@ -45,7 +44,23 @@ class AutoUpdateConfig(BaseModel):
 
 
 class PythonVersionInfo(BaseModel):
-    """Metadata for a specific Python version."""
+    """Metadata for a specific Python version.
+
+    Captures keyword, builtin, and exception deltas between this Python
+    version and its base, so version-aware packs can resolve the term set
+    for any version without duplicating full term lists.
+
+    Attributes:
+        version: Python version string (e.g., ``"3.13"``).
+        added_keywords: Keywords introduced in this version.
+        removed_keywords: Keywords removed in this version.
+        added_builtins: Builtins introduced in this version.
+        removed_builtins: Builtins removed in this version.
+        added_exceptions: Exceptions introduced in this version.
+        removed_exceptions: Exceptions removed in this version.
+        base: Previous version to inherit from (e.g., ``"3.12"``), or None
+            for the root of the inheritance chain.
+    """
 
     version: str
     added_keywords: list[str] = Field(default_factory=list)
@@ -101,7 +116,25 @@ class VersionIndexSchema(BaseModel):
 
 @dataclass
 class VersionIndex:
-    """Manages the Python version index and inheritance chains."""
+    """Manage the Python version index and inheritance chains.
+
+    Loads ``version-index.yml`` to provide the canonical keyword, builtin,
+    and exception sets for each supported Python version, resolving
+    inheritance chains (e.g., 3.13 extends 3.12 extends 3.11 extends 3.10).
+
+    Attributes:
+        versions: Map of version string to PythonVersionInfo.
+        auto_update_config: Optional configuration for automatic index updates.
+
+    Example:
+        >>> from pathlib import Path
+        >>> index = VersionIndex.load(
+        ...     Path("libs/i18n/language-packs/python/version-index.yml")
+        ... )
+        >>> info = index.versions["3.12"]
+        >>> info.added_keywords
+        ['type']
+    """
 
     versions: dict[str, PythonVersionInfo] = field(default_factory=dict)
     auto_update_config: AutoUpdateConfig | None = None

@@ -23,6 +23,11 @@ from .types import BuiltinMap, KeywordMap, TextTranslationBackend, Translator
 if TYPE_CHECKING:
     pass
 
+#: Identifier for translator backends.
+#:
+#: Valid values are ``"token"`` (token-based, stable default),
+#: ``"tree-sitter"`` (AST-based, faster), and ``"llm"`` (LLM-powered full
+#: translation of identifiers, comments, and strings).
 TranslatorBackend = Literal["token", "tree-sitter", "llm"]
 
 # Environment variable truthy values (case-insensitive)

@@ -487,9 +487,22 @@ class TranslatableElement:
 class TranslationScope:
     """Configuration for which element types to translate.
 
-    Allows toggling translation of each category independently.
-    Supports future partial translation modes (e.g., translate identifiers
-    but annotate comments instead of replacing them).
+    Allows toggling translation of each element category independently for
+    LLM-powered full translation. Used by TreeSitterTranslator and LLMTranslator
+    to select which parts of the source code to pass to the translation backend.
+
+    Attributes:
+        translate_identifiers: Translate variable, function, and class names.
+        translate_comments: Translate inline and block comments.
+        translate_docstrings: Translate module, class, and function docstrings.
+        translate_strings: Translate string literals.
+
+    Example:
+        >>> scope = TranslationScope(translate_strings=False)
+        >>> scope.translate_identifiers
+        True
+        >>> scope.translate_strings
+        False
     """
 
     translate_identifiers: bool = True

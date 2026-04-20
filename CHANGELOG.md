@@ -9,7 +9,30 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **docs**: Google-style docstrings filled in for the public API surface that PyPI
+  consumers encounter via `help(symbol)` and IDE hover — `legesher_core` classes
+  (`TranslationScope`, `TranslatorBackend` type alias), `legesher_i18n` classes
+  (`LanguagePackLoader`, `PromptBuilder`, `StyleGuideLoader`, `LanguagePackMetadata`,
+  `LanguagePackSchema`, `SchemaValidator`, `PythonVersionDetector`, `PythonVersionInfo`,
+  `VersionIndex`), and the `legesher-language-server` module docstring. Each public
+  symbol now has structured `Args`, `Returns`, `Raises`, `Attributes`, and `Example`
+  sections where applicable, with translation-ready prose suitable for the future
+  multilingual API reference pipeline. Docstring-only — no behavior changes.
+  (CORE-1173, #225)
+
 ## [0.9.2] - 2026-04-20
+
+### Fixed
+
+- **i18n**: Collapse duplicate `__all__` assignment in `legesher_i18n/__init__.py`.
+  Python was re-binding on the second assignment so the first list was dead code, and
+  the two lists had silently drifted — `PromptBuilder` and `StyleGuideLoader` were
+  missing from the live `__all__`, and `load_language_pack` was missing from the dead
+  one. `from legesher_i18n import *` now correctly includes all 30 exported names.
+  Direct imports (`from legesher_i18n import PromptBuilder`) were unaffected.
+  (CORE-1174, #224)
 
 ## [0.9.1] - 2026-04-17
 

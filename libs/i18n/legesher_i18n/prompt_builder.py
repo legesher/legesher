@@ -187,15 +187,25 @@ _CRITICAL_RULES: list[str] = [
 class PromptBuilder:
     """Compose LLM translation prompts from style guides and context.
 
-    This is the central intelligence layer for composing translation
-    prompts.  It is provider-agnostic and returns
-    ``(system_prompt, user_prompt)`` tuples ready to be sent to any LLM.
+    Central intelligence layer for translation prompts. Provider-agnostic,
+    returns ``(system_prompt, user_prompt)`` tuples ready to be sent to any
+    LLM. The system prompt is static per language and suitable for caching;
+    the user prompt varies per call.
 
-    Parameters
-    ----------
-    style_guide_loader:
-        A :class:`StyleGuideLoader` instance used to fetch merged style
-        guide dictionaries for each target language.
+    Args:
+        style_guide_loader: StyleGuideLoader instance used to fetch merged
+            style guide dictionaries for each target language.
+
+    Example:
+        >>> from legesher_i18n.style_guides import StyleGuideLoader
+        >>> from legesher_i18n.prompt_builder import PromptBuilder
+        >>> loader = StyleGuideLoader()
+        >>> builder = PromptBuilder(loader)
+        >>> system, user = builder.build_identifier_prompt(
+        ...     identifiers=[{"text": "add_two", "role": "function_name", "context": {}}],
+        ...     target_lang="es",
+        ...     existing_glossary={},
+        ... )
     """
 
     def __init__(self, style_guide_loader: StyleGuideLoader) -> None:
@@ -213,22 +223,17 @@ class PromptBuilder:
     ) -> tuple[str, str]:
         """Build prompts for identifier batch translation.
 
-        Parameters
-        ----------
-        identifiers:
-            List of identifier dicts, each with keys ``text`` (str),
-            ``role`` (str -- e.g. ``"function_name"``, ``"parameter"``,
-            ``"variable"``, ``"class_name"``), and ``context`` (dict).
-        target_lang:
-            ISO 639-1 language code (e.g. ``"es"``, ``"ar"``).
-        existing_glossary:
-            Already-translated identifiers from ``IdentifierMap.get_glossary()``,
-            mapping original English text to its translation.
+        Args:
+            identifiers: List of identifier dicts, each with keys ``text`` (str),
+                ``role`` (str — e.g. ``"function_name"``, ``"parameter"``,
+                ``"variable"``, ``"class_name"``), and ``context`` (dict).
+            target_lang: ISO 639-1 language code (e.g. ``"es"``, ``"ar"``).
+            existing_glossary: Already-translated identifiers from
+                ``IdentifierMap.get_glossary()``, mapping original English
+                text to its translation.
 
-        Returns
-        -------
-        tuple[str, str]
-            ``(system_prompt, user_prompt)``
+        Returns:
+            Tuple of ``(system_prompt, user_prompt)``.
         """
         system = self._build_system_prompt(target_lang)
         user = self._build_identifier_user_prompt(
@@ -246,22 +251,17 @@ class PromptBuilder:
     ) -> tuple[str, str]:
         """Build prompts for text element batch translation.
 
-        Parameters
-        ----------
-        texts:
-            List of text dicts, each with keys ``text`` (str),
-            ``kind`` (str -- e.g. ``"comment"``, ``"docstring"``,
-            ``"string"``), and ``context`` (dict).
-        target_lang:
-            ISO 639-1 language code.
-        identifier_glossary:
-            ALL file identifiers from Step 3 (original -> translation),
-            so that text translations use the same terminology.
+        Args:
+            texts: List of text dicts, each with keys ``text`` (str),
+                ``kind`` (str — e.g. ``"comment"``, ``"docstring"``,
+                ``"string"``), and ``context`` (dict).
+            target_lang: ISO 639-1 language code.
+            identifier_glossary: All file identifiers from the identifier
+                translation step (original to translation), so text
+                translations use the same terminology.
 
-        Returns
-        -------
-        tuple[str, str]
-            ``(system_prompt, user_prompt)``
+        Returns:
+            Tuple of ``(system_prompt, user_prompt)``.
         """
         system = self._build_system_prompt(target_lang)
         user = self._build_text_user_prompt(
@@ -277,16 +277,11 @@ class PromptBuilder:
         Uses ``len(text) / 4`` as a simple chars-to-tokens approximation
         that works reasonably well across languages and tokenizers.
 
-        Parameters
-        ----------
-        system:
-            The system prompt text.
-        user:
-            The user prompt text.
+        Args:
+            system: The system prompt text.
+            user: The user prompt text.
 
-        Returns
-        -------
-        int
+        Returns:
             Estimated token count (rounded up).
         """
         total_chars = len(system) + len(user)

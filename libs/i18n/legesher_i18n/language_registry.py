@@ -1,9 +1,21 @@
 """Language metadata registry for Legesher i18n.
 
-This module provides centralized metadata about supported languages.
-The canonical source of truth is languages.json in this directory.
+Central API for looking up language metadata by code. The canonical source
+of truth is ``languages.json`` in this directory; this module loads it once
+at import time and exposes two module-level constants plus accessor helpers.
 
-To add or modify languages, edit languages.json and run:
+Module-level constants:
+    LANGUAGE_METADATA: Mapping of language code to metadata dict. Keys are
+        ISO 639-1 codes (e.g., ``"es"``, ``"ar"``). Each metadata dict has
+        ``name`` (English), ``native`` (native script), ``iso639_2``,
+        ``bcp47``, ``rtl`` (bool), and ``status`` (``"available"`` /
+        ``"experimental"`` / ``"deprecated"``).
+    CANONICAL_LANGUAGE: The language code treated as canonical for git
+        storage (typically ``"en"``). Translations are stored in git as
+        this language and translated on the fly for other locales.
+
+To add or modify languages, edit ``languages.json`` and run:
+
     uv run python libs/i18n/legesher_i18n/scripts/generate_languages.py
 """
 

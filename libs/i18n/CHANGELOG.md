@@ -9,7 +9,30 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Fill in Google-style docstrings on 10 public classes and the `language_registry`
+  module docstring: `LanguagePackLoader`, `PromptBuilder`, `StyleGuideLoader`,
+  `LanguagePackMetadata`, `LanguagePackSchema`, `SchemaValidator`,
+  `PythonVersionDetector`, `PythonVersionInfo`, `VersionIndex`. Converts remaining
+  NumPy-style section headers (`Parameters`/`Returns`/`Raises`) in `prompt_builder.py`
+  and `style_guides.py` methods to Google-style (`Args:`/`Returns:`/`Raises:`) for
+  consistency with the class-level docstrings. Document the `LANGUAGE_METADATA` and
+  `CANONICAL_LANGUAGE` module-level constants in `language_registry.py` since Python
+  constants cannot carry their own `__doc__`. Docstring-only; no code behavior
+  changes. (CORE-1173)
+
 ## [0.9.2] - 2026-04-20
+
+### Fixed
+
+- Collapse duplicate `__all__` assignment in `legesher_i18n/__init__.py` into one
+  canonical list of 30 exported names. The previous file declared `__all__` twice;
+  Python rebinds on the second assignment, so the first list was dead code. The two
+  lists had diverged — `PromptBuilder` and `StyleGuideLoader` were absent from the
+  live `__all__` while `load_language_pack` was absent from the dead one.
+  `from legesher_i18n import *` now includes all exported symbols. Direct imports
+  (`from legesher_i18n import PromptBuilder`) were unaffected. (CORE-1174, #224)
 
 ## [0.9.1] - 2026-04-17
 

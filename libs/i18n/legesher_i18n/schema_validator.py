@@ -18,7 +18,21 @@ SOFT_KEYWORDS = {"except*"}
 
 
 class LanguagePackMetadata(BaseModel):
-    """Metadata section of a language pack."""
+    """Metadata section of a language pack.
+
+    Optional descriptive fields that accompany the translations in a pack
+    YAML file. None of these fields affect translation behavior; they exist
+    for provenance, compatibility tracking, and community review workflows.
+
+    Attributes:
+        python_version_min: Minimum Python version the pack targets.
+        python_version_max: Maximum Python version the pack targets.
+        compatibility_tested: Python versions this pack has been validated against.
+        last_updated: ISO 8601 date of the last edit to this pack.
+        community_reviewed: True once the pack has passed community validation.
+        author: Pack contributor name or handle.
+        license: SPDX license identifier for the translations.
+    """
 
     python_version_min: str | None = None
     python_version_max: str | None = None
@@ -42,6 +56,19 @@ class LanguagePackSchema(BaseModel):
 
     Conforms to MLCP v1.0 specification for multilingual code protocol.
     Reference: private-working-memory/planning/architecture/mlcp-v1.md
+
+    Attributes:
+        language: Target natural language code (ISO 639-1 or 639-2).
+        target: Target programming language (e.g., ``"python"``).
+        version: Python version string (e.g., ``"3.13"``).
+        extends: Optional relative path to a parent pack for inheritance.
+        keywords: Python keyword translations (e.g., ``{"def": "definir"}``).
+        builtins: Built-in function and type translations.
+        exceptions: Exception class name translations.
+        operators: Operator translations (MLCP extended field).
+        standard_library: Stdlib symbol translations (MLCP extended field).
+        cultural_notes: Per-term cultural context notes.
+        metadata: Optional pack metadata block.
     """
 
     # MLCP v1.0 Core Required Fields
@@ -223,7 +250,23 @@ class LanguagePackSchema(BaseModel):
 
 
 class SchemaValidator:
-    """Utilities for validating language packs and checking completeness."""
+    """Validate language packs and check completeness against the canonical pack.
+
+    Wraps Pydantic validation with domain-specific checks: path-traversal
+    prevention for ``extends`` references, completeness scoring against the
+    English reference pack, and human-readable error messages suitable for
+    CLI output. All methods are static — the class is a namespace for
+    related validation routines.
+
+    Example:
+        >>> import yaml
+        >>> from pathlib import Path
+        >>> pack_path = Path("libs/i18n/language-packs/python/es/legesher_i18n_python_es/packs/3.10.yml")
+        >>> pack_data = yaml.safe_load(pack_path.read_text())
+        >>> schema = SchemaValidator.validate_pack(pack_data, pack_path)
+        >>> schema.language
+        'es'
+    """
 
     @staticmethod
     def validate_pack(pack_data: dict[str, Any], pack_path: Path) -> LanguagePackSchema:

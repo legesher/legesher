@@ -110,9 +110,19 @@ class LanguagePack:
 
 
 class LanguagePackLoader:
-    """Loads language packs with inheritance resolution and caching.
+    """Load language packs with inheritance resolution and caching.
 
-    This loader is thread-safe and uses LRU caching for performance.
+    Discovers packs from two locations: the in-repo monorepo layout under
+    ``libs/i18n/language-packs/`` and installed distributions named
+    ``legesher-i18n-{target}-{lang}``. Resolves ``extends:`` chains at load
+    time, merges parent keyword, builtin, and exception translations, and
+    caches results via LRU for repeated lookups. Thread-safe.
+
+    Example:
+        >>> loader = LanguagePackLoader()
+        >>> pack = loader.load("es", "python", "3.13")
+        >>> pack.get_keyword_translation("def")
+        'definir'
     """
 
     def __init__(self) -> None:
