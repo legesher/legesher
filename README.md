@@ -1,3 +1,12 @@
+> [!NOTE]
+> **🔧 Active Development** — Legesher is undergoing a major architecture update. The repositories in this organization represent the open source foundation that the next release will build on. A unified release with significant improvements from recent user testing is in progress and will be open-sourced in 2026.
+>
+> Follow along at **[legesher.io](https://legesher.io)** or join the community on **[Slack](https://legesher.io/go/slack)**.
+>
+> This repo's current state is pinned as the legacy release (`v0.1.0-legacy`) for reference.
+
+---
+
 <img src="/lib/images/README-EggPeggy.png" align="center"/>
 
 <h1 align="center">Legesher</h1>
@@ -18,7 +27,7 @@
     <!-- <a href="https://github.com/legesher/legesher/graphs/contributors" alt="Contributors">
         <img src="https://img.shields.io/github/contributors/legesher/legesher?style=flat-square&color=f58977&labelColor=black" /></a> -->
     <a href="#the-community" alt="All Contributors">
-        <img src="https://img.shields.io/badge/all_contributors-11-black?style=flat-square&color=f58977&labelColor=black" /></a>
+        <img src="https://img.shields.io/badge/all_contributors-16-black?style=flat-square&color=f58977&labelColor=black" /></a>
     <a href="https://github.com/sponsors/madiedgar" alt="Sponsors on Github">
         <img src="https://img.shields.io/badge/sponsor-madiedgar-black?style=flat-square&color=f58977&labelColor=black" /></a>
 
@@ -69,25 +78,35 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
 <table>
-  <tr>
-    <td align="center"><a href="http://withmadi.co"><img src="https://avatars0.githubusercontent.com/u/7844510?v=4" width="100px;" alt=""/><br /><sub><b>Madison (Pfaff) Edgar</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=madiedgar" title="Code">💻</a> <a href="#projectManagement-madiedgar" title="Project Management">📆</a></td>
-    <td align="center"><a href="https://github.com/Beomus"><img src="https://avatars1.githubusercontent.com/u/54792554?v=4" width="100px;" alt=""/><br /><sub><b>Beomus</b></sub></a><br /><a href="#marketing-Beomus" title="Marketing - People who help in marketing the repo/project">💌</a></td>
-    <td align="center"><a href="https://github.com/AlexandruBuhai"><img src="https://avatars3.githubusercontent.com/u/23296075?v=4" width="100px;" alt=""/><br /><sub><b>Alex Buhai</b></sub></a><br /><a href="#marketing-AlexandruBuhai" title="Marketing - People who help in marketing the repo/project">💌</a></td>
-    <td align="center"><a href="https://Korolr.me/"><img src="https://avatars0.githubusercontent.com/u/11715165?v=4" width="100px;" alt=""/><br /><sub><b>Alexsey Ramzaev</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=korolr" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/JasperBarzilaij"><img src="https://avatars2.githubusercontent.com/u/12871682?v=4" width="100px;" alt=""/><br /><sub><b>Jasper Barzilaij</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=JasperBarzilaij" title="Documentation">📖</a></td>
-    <td align="center"><a href="https://github.com/Spooky9"><img src="https://avatars2.githubusercontent.com/u/36751163?v=4" width="100px;" alt=""/><br /><sub><b>Sergio</b></sub></a><br /><a href="#content-Spooky9" title="Content">🖋</a></td>
-    <td align="center"><a href="http://jyeung.me"><img src="https://avatars3.githubusercontent.com/u/15700803?v=4" width="100px;" alt=""/><br /><sub><b>Jason Yeung</b></sub></a><br /><a href="#maintenance-jsonyeung" title="Maintenance">🚧</a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://github.com/underscoreanuj"><img src="https://avatars1.githubusercontent.com/u/30765911?v=4" width="100px;" alt=""/><br /><sub><b>Anuj Singh</b></sub></a><br /><a href="#projectManagement-underscoreanuj" title="Project Management">📆</a></td>
-    <td align="center"><a href="https://www.linkedin.com/in/tanejasaksham/"><img src="https://avatars3.githubusercontent.com/u/43172716?v=4" width="100px;" alt=""/><br /><sub><b>saksham taneja</b></sub></a><br /><a href="#ideas-sakshamtaneja21" title="Ideas, Planning, & Feedback">🤔</a></td>
-    <td align="center"><a href="https://github.com/Rutam21"><img src="https://avatars.githubusercontent.com/u/47860497?v=4" width="100px;" alt=""/><br /><sub><b>Rutam Prita Mishra</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=Rutam21" title="Documentation">📖</a></td>
-    <td align="center"><a href="https://github.com/atom19-i"><img src="https://avatars.githubusercontent.com/u/54570007?v=4" width="100px;" alt=""/><br /><sub><b>atom19-i</b></sub></a><br /><a href="https://github.com/madiedgar/legesher/commits?author=atom19-i" title="Documentation">📖</a></td>
-  </tr>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://withmadi.co"><img src="https://avatars0.githubusercontent.com/u/7844510?v=4?s=100" width="100px;" alt="Madison (Pfaff) Edgar"/><br /><sub><b>Madison (Pfaff) Edgar</b></sub></a><br /><a href="https://github.com/legesher/legesher/commits?author=madiedgar" title="Code">💻</a> <a href="#projectManagement-madiedgar" title="Project Management">📆</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Beomus"><img src="https://avatars1.githubusercontent.com/u/54792554?v=4?s=100" width="100px;" alt="Beomus"/><br /><sub><b>Beomus</b></sub></a><br /><a href="#marketing-Beomus" title="Marketing - People who help in marketing the repo/project">💌</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/AlexandruBuhai"><img src="https://avatars3.githubusercontent.com/u/23296075?v=4?s=100" width="100px;" alt="Alex Buhai"/><br /><sub><b>Alex Buhai</b></sub></a><br /><a href="#marketing-AlexandruBuhai" title="Marketing - People who help in marketing the repo/project">💌</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://Korolr.me/"><img src="https://avatars0.githubusercontent.com/u/11715165?v=4?s=100" width="100px;" alt="Alexsey Ramzaev"/><br /><sub><b>Alexsey Ramzaev</b></sub></a><br /><a href="https://github.com/legesher/legesher/commits?author=korolr" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/JasperBarzilaij"><img src="https://avatars2.githubusercontent.com/u/12871682?v=4?s=100" width="100px;" alt="Jasper Barzilaij"/><br /><sub><b>Jasper Barzilaij</b></sub></a><br /><a href="https://github.com/legesher/legesher/commits?author=JasperBarzilaij" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Spooky9"><img src="https://avatars2.githubusercontent.com/u/36751163?v=4?s=100" width="100px;" alt="Sergio"/><br /><sub><b>Sergio</b></sub></a><br /><a href="#content-Spooky9" title="Content">🖋</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://jyeung.me"><img src="https://avatars3.githubusercontent.com/u/15700803?v=4?s=100" width="100px;" alt="Jason Yeung"/><br /><sub><b>Jason Yeung</b></sub></a><br /><a href="#maintenance-jsonyeung" title="Maintenance">🚧</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/underscoreanuj"><img src="https://avatars1.githubusercontent.com/u/30765911?v=4?s=100" width="100px;" alt="Anuj Singh"/><br /><sub><b>Anuj Singh</b></sub></a><br /><a href="#projectManagement-underscoreanuj" title="Project Management">📆</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/tanejasaksham/"><img src="https://avatars3.githubusercontent.com/u/43172716?v=4?s=100" width="100px;" alt="saksham taneja"/><br /><sub><b>saksham taneja</b></sub></a><br /><a href="#ideas-sakshamtaneja21" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Rutam21"><img src="https://avatars.githubusercontent.com/u/47860497?v=4?s=100" width="100px;" alt="Rutam Prita Mishra"/><br /><sub><b>Rutam Prita Mishra</b></sub></a><br /><a href="https://github.com/legesher/legesher/commits?author=Rutam21" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/atom19-i"><img src="https://avatars.githubusercontent.com/u/54570007?v=4?s=100" width="100px;" alt="atom19-i"/><br /><sub><b>atom19-i</b></sub></a><br /><a href="https://github.com/legesher/legesher/commits?author=atom19-i" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/npang4"><img src="https://avatars.githubusercontent.com/u/45026037?v=4?s=100" width="100px;" alt="Nelson Pang"/><br /><sub><b>Nelson Pang</b></sub></a><br /><a href="https://github.com/legesher/legesher/commits?author=npang4" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Sayanta66"><img src="https://avatars.githubusercontent.com/u/53281158?v=4?s=100" width="100px;" alt="Sayanta Banerjee"/><br /><sub><b>Sayanta Banerjee</b></sub></a><br /><a href="#ideas-Sayanta66" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SaadBazaz"><img src="https://avatars.githubusercontent.com/u/51885228?v=4?s=100" width="100px;" alt="Saad A. Bazaz"/><br /><sub><b>Saad A. Bazaz</b></sub></a><br /><a href="https://github.com/legesher/legesher/commits?author=SaadBazaz" title="Documentation">📖</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/shahkv95"><img src="https://avatars.githubusercontent.com/u/35930270?v=4?s=100" width="100px;" alt="Kush Shah"/><br /><sub><b>Kush Shah</b></sub></a><br /><a href="https://github.com/legesher/legesher/issues?q=author%3Ashahkv95" title="Bug reports">🐛</a> <a href="#ideas-shahkv95" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Andrew-Chen-Wang"><img src="https://avatars.githubusercontent.com/u/60190294?v=4?s=100" width="100px;" alt="Andrew Chen Wang"/><br /><sub><b>Andrew Chen Wang</b></sub></a><br /><a href="#ideas-Andrew-Chen-Wang" title="Ideas, Planning, & Feedback">🤔</a></td>
+    </tr>
+  </tbody>
 </table>
 
-<!-- markdownlint-enable -->
+<!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
