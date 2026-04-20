@@ -50,7 +50,7 @@ class CulturalComment:
     column_offset: int
     raw_text: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate cultural comment fields."""
         # Validate language code is 2 lowercase letters
         if not isinstance(self.language, str) or len(self.language) != 2:
@@ -157,7 +157,7 @@ class CulturalCommentMetadata:
         """
         return set(self._language_index.keys())
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary for storage (e.g., git metadata).
 
         Returns:
@@ -180,7 +180,7 @@ class CulturalCommentMetadata:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "CulturalCommentMetadata":
+    def from_dict(cls, data: dict[str, Any]) -> "CulturalCommentMetadata":
         """Deserialize from dictionary.
 
         Args:

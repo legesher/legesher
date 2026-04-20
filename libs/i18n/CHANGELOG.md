@@ -11,6 +11,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- `mypy --strict` now passes on public API files (`__init__.py`, `pack_loader.py`,
+  `language_registry.py`, `version_detector.py`, `version_index.py`,
+  `schema_validator.py`, `prompt_builder.py`, `style_guides.py`, `exceptions.py`).
+  Fixes: added `dict[str, Any]` annotation to the `results` accumulator in
+  `SchemaValidator.check_completeness_enhanced` so `.append()` / numeric comparisons
+  on its values type-check; added `-> None` to `LanguagePackLoader.clear_cache`;
+  rewrote `get_language_name`, `get_native_name`, and `is_rtl_language` in
+  `language_registry.py` to narrow the TypedDict before chained `.get()` calls
+  (strict mode rejects the `.get(key, default)` default-as-dict pattern on
+  TypedDicts since the default must match the specific key's value type).
+- Added `py.typed` marker (PEP 561) so downstream consumers type-check imports
+  from `legesher_i18n` correctly. This also resolves cross-package type-check
+  errors in `legesher_core` that previously surfaced when it imported
+  `LanguagePackLoader`. (CORE-1183)
+
 - Fill in Google-style docstrings on 10 public classes and the `language_registry`
   module docstring: `LanguagePackLoader`, `PromptBuilder`, `StyleGuideLoader`,
   `LanguagePackMetadata`, `LanguagePackSchema`, `SchemaValidator`,

@@ -46,7 +46,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 from .types import FileMetadata, HistoryEntry, TranslationRecord
 
@@ -199,7 +199,7 @@ class MetadataManager:
 
         return metadata
 
-    def update_metadata(self, file_path: Path, updates: dict) -> None:
+    def update_metadata(self, file_path: Path, updates: dict[str, Any]) -> None:
         """Update existing metadata with partial updates.
 
         Reads existing metadata, applies updates, and writes back atomically.
@@ -426,7 +426,7 @@ class MetadataManager:
             )
             return file_path
 
-    def _read_yaml(self, path: Path) -> dict | None:
+    def _read_yaml(self, path: Path) -> dict[str, Any] | None:
         """Read and parse YAML file safely.
 
         Uses safe_load to prevent arbitrary code execution. Returns None

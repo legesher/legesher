@@ -24,6 +24,7 @@ Example:
 
 from pathlib import Path
 from datetime import datetime, timezone
+from typing import Any
 import subprocess
 import sys
 import logging
@@ -384,7 +385,7 @@ class TranslationTracker:
         # No existing record, add new one
         translations.append(new_record)
 
-    def _get_current_context(self) -> dict:
+    def _get_current_context(self) -> dict[str, Any]:
         """Gather current execution context.
 
         Collects information about the current environment including:

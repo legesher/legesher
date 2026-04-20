@@ -19,9 +19,13 @@ from typing import TYPE_CHECKING, Literal
 from .types import BuiltinMap, KeywordMap, TextTranslationBackend, Translator
 
 # Lazy loading: Only import translators when actually needed
-# This allows the module to be imported without requiring tree-sitter
+# This allows the module to be imported without requiring tree-sitter.
+# TYPE_CHECKING imports preserve precise return types on the _get_*_translator
+# helpers without forcing the heavy tree-sitter deps at module import time.
 if TYPE_CHECKING:
-    pass
+    from .transformer import TokenTranslator as _TokenTranslator
+    from .tree_sitter.llm_translator import LLMTranslator as _LLMTranslator
+    from .tree_sitter.translator import TreeSitterTranslator as _TreeSitterTranslator
 
 #: Identifier for translator backends.
 #:
@@ -49,21 +53,21 @@ def _should_use_tree_sitter(use_tree_sitter: bool | None) -> bool:
     return env_value in _TRUTHY_VALUES
 
 
-def _get_token_translator() -> type:
+def _get_token_translator() -> "type[_TokenTranslator]":
     """Lazy import of TokenTranslator."""
     from .transformer import TokenTranslator
 
     return TokenTranslator
 
 
-def _get_tree_sitter_translator() -> type:
+def _get_tree_sitter_translator() -> "type[_TreeSitterTranslator]":
     """Lazy import of TreeSitterTranslator."""
     from .tree_sitter.translator import TreeSitterTranslator
 
     return TreeSitterTranslator
 
 
-def _get_llm_translator() -> type:
+def _get_llm_translator() -> "type[_LLMTranslator]":
     """Lazy import of LLMTranslator."""
     from .tree_sitter.llm_translator import LLMTranslator
 
@@ -121,7 +125,7 @@ class TranslatorConfig:
 def create_translator(
     programming_language: str,
     keyword_map: KeywordMap,
-    builtin_map: BuiltinMap | None = None,
+    builtin_map: BuiltinMap,
     programming_language_version: str = "3.13",
     use_tree_sitter: bool | None = None,
     backend: TextTranslationBackend | None = None,
@@ -222,7 +226,7 @@ def create_translator(
 def create_translator_from_config(
     config: TranslatorConfig,
     keyword_map: KeywordMap,
-    builtin_map: BuiltinMap | None = None,
+    builtin_map: BuiltinMap,
 ) -> Translator:
     """Create a translator from a TranslatorConfig dataclass.
 

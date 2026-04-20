@@ -58,6 +58,21 @@ class TestCreateTranslator:
         assert spanish_keywords["def"] in result
         assert spanish_builtins["print"] in result
 
+    def test_create_translator_builtin_map_is_required(self, spanish_keywords):
+        """Regression test for CORE-1183 scope clarification.
+
+        Previously ``create_translator`` accepted ``builtin_map: BuiltinMap | None``,
+        but the underlying ``TokenMapper`` rejects both ``None`` and empty
+        ``{}`` with ``ValueError``. The Optional annotation was a lie — every
+        caller eventually raised at runtime. Tightened the signature so
+        ``builtin_map`` is required; passing ``None`` now fails at the type
+        checker instead of silently bubbling a cryptic runtime error. Empty
+        dicts still raise ``ValueError`` (documented behavior).
+        """
+        # TokenMapper rejects empty maps explicitly.
+        with pytest.raises(ValueError, match="builtin_map"):
+            create_translator("python", spanish_keywords, builtin_map={})
+
 
 class TestCreateTranslatorEnvironmentVariable:
     """Test environment variable support for create_translator."""

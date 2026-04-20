@@ -11,6 +11,7 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
     "click>=8.0.0",
     "legesher-i18n",
+    "pyyaml>=6.0",
     "tree-sitter>=0.20.4",
     "tree-sitter-python>=0.21.0",
 ]
@@ -35,6 +36,13 @@ classifiers = [
 
 [project.scripts]
 legesher-filter = "legesher_core.__main__:main"
+
+[tool.pdm.build]
+# Include the whole package directory so non-.py files ship in the wheel.
+# Specifically needed for PEP 561 `py.typed` marker — without an explicit
+# includes list, pdm-backend's default picks up only .py files and the
+# marker is silently stripped. Matches the pattern in libs/i18n/pyproject.toml.
+includes = ["legesher_core/"]
 
 [dependency-groups]
 dev = [

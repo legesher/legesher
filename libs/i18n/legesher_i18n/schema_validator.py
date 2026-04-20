@@ -437,7 +437,7 @@ class SchemaValidator:
             - recommendations: list - Actionable improvement suggestions
             - passed: bool - True if meets minimum threshold (90%)
         """
-        results = {
+        results: dict[str, Any] = {
             "completeness_percentage": 0.0,
             "missing_keywords": [],
             "missing_builtins": [],

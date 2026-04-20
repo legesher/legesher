@@ -237,7 +237,7 @@ class CulturalCommentProvider:
             >>> provider.get_all_languages()
             {'es', 'en', 'ar'}
         """
-        languages = set()
+        languages: set[str] = set()
         for comments_list in self.metadata.comments.values():
             languages.update(c.language for c in comments_list)
         return languages

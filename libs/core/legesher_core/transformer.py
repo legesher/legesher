@@ -10,6 +10,7 @@ import logging
 import sys
 import tokenize
 from pathlib import Path
+from typing import cast
 
 from .cultural_comments import CulturalCommentParser
 from .exceptions import InvalidCodeError
@@ -167,7 +168,7 @@ class TokenTranslator:
             tokens = list(tokenize.generate_tokens(io.StringIO(source_code).readline))
 
             # Extract cultural comment metadata if requested (for IDE integration)
-            cultural_metadata = None
+            cultural_metadata: CulturalCommentMetadata | None = None
             if return_metadata:
                 parser = CulturalCommentParser()
                 cultural_metadata = parser.parse_from_tokens(iter(tokens))
@@ -242,6 +243,11 @@ class TokenTranslator:
 
             # Return with or without metadata based on request
             if return_metadata:
+                # When return_metadata is True, cultural_metadata was
+                # populated above by parse_from_tokens (which returns a
+                # non-None CulturalCommentMetadata). Narrow explicitly to
+                # satisfy the tuple return contract.
+                assert cultural_metadata is not None
                 return result, cultural_metadata
             return result
 
@@ -287,9 +293,13 @@ class TokenTranslator:
         with open(file_path, encoding=encoding) as f:
             source_code = f.read()
 
-        # Translate code (source_lang defaults to "en")
-        return self.translate_code(
-            source_code, source_lang="en", target_lang=target_lang
+        # Translate code with default return_metadata=False; always returns
+        # str in that branch. mypy cannot narrow the union return of
+        # translate_code without @overload, so use typing.cast — honest about
+        # intent (no runtime check) and not stripped under python -O.
+        return cast(
+            str,
+            self.translate_code(source_code, source_lang="en", target_lang=target_lang),
         )
 
     def reverse(self) -> "TokenTranslator":
@@ -423,7 +433,8 @@ class TokenTranslator:
         from legesher_i18n import LanguagePackLoader
 
         loader = LanguagePackLoader()
-        return loader.list_available_languages(target="python")
+        result: list[tuple[str, str]] = loader.list_available_languages(target="python")
+        return result
 
     def get_pack_info(self) -> dict[str, str | int]:
         """Get information about the translator's language maps.

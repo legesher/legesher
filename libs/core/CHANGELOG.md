@@ -11,6 +11,47 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- `mypy --strict` now passes on public API files (`__init__.py`,
+  `language_interface.py`, `types.py`, `exceptions.py`, `metadata.py`,
+  `translation_tracker.py`, `ide_support.py`, `cultural_comments.py`,
+  `transformer.py`). Concrete fixes: added `dict[str, Any]` annotations on
+  `CulturalCommentMetadata.from_dict` and `.to_dict`, `MetadataManager.update_metadata`
+  and `._read_yaml`, `TranslationTracker._get_current_context`; typed the
+  `_get_*_translator` lazy-import helpers in `language_interface.py` using
+  `TYPE_CHECKING` imports so they return `type[TokenTranslator]` etc. rather than
+  generic `type`; added `set[str]` annotation to the local `languages`
+  accumulator in `CulturalCommentProvider.get_all_languages`; narrowed the
+  `is_valid and result is not None` branch in
+  `CulturalCommentParser.parse_from_tokens`; narrowed
+  `cultural_metadata: CulturalCommentMetadata | None` initialization in
+  `TokenTranslator.translate_code` and ensured the tuple return never includes
+  None via explicit `assert cultural_metadata is not None` before the tuple
+  construction; used `typing.cast(str, ...)` in
+  `TokenTranslator.translate_file` to narrow the union return of
+  `translate_code` for the `return_metadata=False` path (a full `@overload`
+  fix is deferred as follow-on because it ripples into the protocol + all
+  three concrete translators); annotated `__post_init__`'s return as `-> None`;
+  removed an unused `# type: ignore[import-untyped]` on the `yaml` import.
+- **API change** — `create_translator` and `create_translator_from_config` now
+  require `builtin_map` (was typed `BuiltinMap | None = None`). The previous
+  Optional annotation was misleading: `TokenMapper` explicitly rejects both
+  `None` and empty `{}` with `ValueError`, so every caller passing `None`
+  would have eventually raised at runtime. Tightening the signature moves the
+  error from runtime to the type checker, matching the actual contract. No
+  internal callers passed `None`; external callers (if any) get a clearer
+  failure earlier. (CORE-1183)
+- Added `py.typed` marker (PEP 561) plus `[tool.pdm.build]` package includes
+  so the marker ships in the wheel (the default pdm-backend build only
+  picks up `.py` files, silently dropping the marker). Downstream consumers
+  installing from PyPI now get type-checked imports from `legesher_core`.
+  (CORE-1183)
+- Declare `pyyaml>=6.0` as a direct dependency. `legesher_core.metadata`
+  imports `yaml` but `pyyaml` was only reaching the installed environment
+  transitively via `legesher-i18n`. Making the dependency direct means the
+  declared contract matches what the code imports, and `legesher-core` won't
+  break if that transitive path ever changes. No new packages added to the
+  lockfile — `pyyaml` was already resolved. (CORE-1183, PR #226 review)
+
 - Fill in Google-style docstrings on public symbols: `TranslationScope` gains an
   `Attributes` section and `Example`; `TranslatorBackend` (`Literal` type alias) gains
   Sphinx `#:` documentation explaining the three valid backend values. Both changes

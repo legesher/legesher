@@ -150,7 +150,7 @@ class CulturalCommentParser:
                 # Check if this is a cultural comment
                 is_valid, result = self.validate_syntax(tok.string)
 
-                if is_valid:
+                if is_valid and result is not None:
                     lang_code, content = result
                     # Note: Content length is already bounded by regex pattern
                     # (max 10,000 chars) to prevent ReDoS and memory exhaustion

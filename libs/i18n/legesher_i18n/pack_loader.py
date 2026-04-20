@@ -487,7 +487,7 @@ class LanguagePackLoader:
 
         return merged
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear the pack cache and discovered packs.
 
         Thread-safe cache clearing using lru_cache.cache_clear().

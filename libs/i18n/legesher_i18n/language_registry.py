@@ -74,7 +74,10 @@ def get_language_name(language_code: str) -> str:
     Returns:
         English name of the language, or uppercase code if unknown
     """
-    return LANGUAGE_METADATA.get(language_code, {}).get("name", language_code.upper())
+    metadata = LANGUAGE_METADATA.get(language_code)
+    if metadata is None:
+        return language_code.upper()
+    return metadata.get("name", language_code.upper())
 
 
 def get_native_name(language_code: str) -> str:
@@ -86,7 +89,10 @@ def get_native_name(language_code: str) -> str:
     Returns:
         Native name of the language, or uppercase code if unknown
     """
-    return LANGUAGE_METADATA.get(language_code, {}).get("native", language_code.upper())
+    metadata = LANGUAGE_METADATA.get(language_code)
+    if metadata is None:
+        return language_code.upper()
+    return metadata.get("native", language_code.upper())
 
 
 def is_rtl_language(language_code: str) -> bool:
@@ -98,7 +104,10 @@ def is_rtl_language(language_code: str) -> bool:
     Returns:
         True if language uses RTL script (e.g., Arabic, Hebrew)
     """
-    return LANGUAGE_METADATA.get(language_code, {}).get("rtl", False)
+    metadata = LANGUAGE_METADATA.get(language_code)
+    if metadata is None:
+        return False
+    return metadata.get("rtl", False)
 
 
 def is_supported_language(language_code: str) -> bool:

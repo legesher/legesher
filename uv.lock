@@ -1695,6 +1695,7 @@ source = { editable = "libs/core" }
 dependencies = [
     { name = "click" },
     { name = "legesher-i18n" },
+    { name = "pyyaml" },
     { name = "tree-sitter" },
     { name = "tree-sitter-python" },
 ]
@@ -1714,6 +1715,7 @@ dev = [
 requires-dist = [
     { name = "click", specifier = ">=8.0.0" },
     { name = "legesher-i18n", editable = "libs/i18n" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "tree-sitter", specifier = ">=0.20.4" },
     { name = "tree-sitter-python", specifier = ">=0.21.0" },
 ]
