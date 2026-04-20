@@ -1,85 +1,71 @@
 ---
-title: Privacy Policy
-description: Legesher privacy policy and data collection practices
+title: Privacy Policy — VS Code Extension & Documentation
+description: Product-specific privacy practices for the Legesher VS Code extension and documentation site
 ---
 
-# Privacy Policy
+**Last Updated:** April 20, 2026
 
-## Overview
+> **Looking for the company-wide policy?** General terms — including your rights, how to contact us,
+> retention periods, GDPR/CCPA/CPRA disclosures, and who we are — live in the
+> [company-wide Privacy Policy at www.legesher.io/privacy](https://www.legesher.io/privacy).
+> This page covers the product-specific details for the Legesher **VS Code extension** and this
+> **documentation site** (`docs.legesher.io`).
 
-Legesher is committed to protecting your privacy. This policy explains what data we collect and how we use it.
+## Scope of this page
 
-## Documentation Website (docs.legesher.io)
+This page supplements the [company-wide Privacy Policy](https://www.legesher.io/privacy) with details
+specific to:
 
-### Hosting
-
-This documentation site is hosted on [Vercel](https://vercel.com).
-Vercel processes standard server access logs (IP addresses, request
-timestamps, URLs) as part of normal hosting operations. See
-[Vercel's Privacy Policy](https://vercel.com/legal/privacy-policy)
-for details.
-
-### Analytics
-
-This site uses
-[Vercel Web Analytics](https://vercel.com/docs/analytics/privacy-policy),
-which is designed to be privacy-compliant:
-
-- **No cookies**: Vercel Web Analytics does not use cookies or any
-  client-side storage
-- **No personal identifiers**: Visitors are identified by an anonymous
-  hash that cannot be used to track individuals across sites
-- **No cross-site tracking**: Data cannot reconstruct browsing sessions
-  or identify individual users
-- **Aggregated data only**: We see page view counts, referrers,
-  geolocation (country/region level), device type, and browser,
-  all in aggregate
-
-Data collected per page view: URL, referrer, geolocation
-(country/region), device OS, browser, device type, and timestamp.
-No IP addresses, user agents, or personal information are stored.
-
-Because Vercel Web Analytics collects no personal data and uses no
-cookies, no consent banner is required under GDPR or ePrivacy
-regulations.
-
-### Fonts
-
-All fonts (Noto Sans) are self-hosted and served directly from
-docs.legesher.io. No third-party font services are used, so no data
-is shared with external providers when loading pages.
+- The **Legesher VS Code extension**, published to the VS Code Marketplace
+- The **Legesher documentation site** at `docs.legesher.io`
 
 ## VS Code Extension
 
-### Basic Telemetry (Optional)
+### Local processing
 
-When enabled, we collect anonymous usage statistics:
+Your source code is processed entirely **locally on your machine**. We never send your code to our
+servers or any third-party services. All translation, git filters, and IntelliSense features run
+100% offline.
+
+### Basic telemetry (optional)
+
+When enabled, we collect anonymous usage statistics to help us improve the product:
 
 - Extension activation events
-- Language selection
-- Error reports (no code content)
+- Feature usage frequency (which commands you use)
+- Language pack usage (which languages you translate to/from)
+- Extension performance metrics (startup time, responsiveness)
+- Error reports (crash reports, error messages — no code content)
 
-**Control:** `legesher.telemetry.enabled` setting (default: true)
+**What we do NOT collect:**
 
-### ML Training Data (Opt-in Only)
-
-You can optionally help improve Legesher's translation models by sharing anonymous feedback when you change our translation suggestions.
-
-#### What We Collect
-
-- **Translation corrections**: When you change a Legesher suggestion (e.g., "media" → "promedio")
-- **Code context**: High-level structure (function, variable, class)
-- **Operation type**: Basic categorization (arithmetic, string manipulation, etc.)
-
-#### What We DON'T Collect
-
-- ❌ Your actual code or file contents
-- ❌ File paths or directory structure
-- ❌ Personal information or credentials
+- ❌ Your source code or file contents
+- ❌ Personally identifiable information (name, email, IP address)
+- ❌ Project names or file paths
 - ❌ User-defined variable or function names
 - ❌ Literal values from your code
+- ❌ Sensitive data of any kind
 
-#### How It's Used
+**Control:** you can disable telemetry at any time in VS Code settings:
+
+```json
+{
+  "legesher.telemetry.enabled": false
+}
+```
+
+### ML training data (opt-in only)
+
+You can optionally help improve Legesher's translation models by sharing anonymous feedback when you
+change our translation suggestions.
+
+#### What we collect
+
+- **Translation corrections**: when you change a Legesher suggestion (e.g., "media" → "promedio")
+- **Code context**: high-level structure (function, variable, class)
+- **Operation type**: basic categorization (arithmetic, string manipulation, etc.)
+
+#### How it's used
 
 This data helps us:
 
@@ -91,29 +77,71 @@ This data helps us:
 
 - **Setting:** `legesher.telemetry.contributeToMLTraining`
 - **Default:** `false` (you must explicitly opt in)
-- **Change anytime:** VS Code Settings → Search "Legesher ML Training"
+- **Change anytime:** VS Code Settings → search "Legesher ML Training"
+
+### Telemetry storage
+
+- **Location:** Azure Application Insights (US region)
+- **Retention:** 90 days for telemetry; anonymized ML training data retained indefinitely
+- **Security:** industry-standard encryption (TLS 1.3 in transit, AES-256 at rest)
+
+### VS Code's own telemetry
+
+VS Code itself collects telemetry independently of Legesher. See the
+[VS Code Privacy Statement](https://code.visualstudio.com/docs/supporting/faq#_microsoft-privacy-statement)
+and VS Code telemetry settings.
+
+## Documentation Site (docs.legesher.io)
+
+### Hosting
+
+This documentation site is hosted on [Vercel](https://vercel.com). Vercel processes standard server
+access logs (IP addresses, request timestamps, URLs) as part of normal hosting operations. See
+[Vercel's Privacy Policy](https://vercel.com/legal/privacy-policy) for details.
+
+### Analytics
+
+This site uses [Vercel Web Analytics](https://vercel.com/docs/analytics/privacy-policy), which is
+designed to be privacy-compliant:
+
+- **No cookies:** Vercel Web Analytics does not use cookies or any client-side storage
+- **No personal identifiers:** visitors are identified by an anonymous hash that cannot be used to
+  track individuals across sites
+- **No cross-site tracking:** data cannot reconstruct browsing sessions or identify individual users
+- **Aggregated data only:** we see page view counts, referrers, geolocation (country/region level),
+  device type, and browser, all in aggregate
+
+Data collected per page view: URL, referrer, geolocation (country/region), device OS, browser, device
+type, and timestamp. No IP addresses, user agents, or personal information are stored.
+
+Because Vercel Web Analytics collects no personal data and uses no cookies, no consent banner is
+required under GDPR or ePrivacy regulations.
+
+### Fonts
+
+All fonts (Noto Sans) are self-hosted and served directly from `docs.legesher.io`. No third-party
+font services are used, so no data is shared with external providers when loading pages.
 
 ## GDPR & CCPA Compliance
 
-### Your Rights
+Your rights under GDPR, UK GDPR, CCPA/CPRA, and other regional privacy laws apply to both the
+anonymous telemetry and the opt-in ML training data described above. In particular, you may:
 
-Under GDPR and CCPA, you have the right to:
+- **Disable all telemetry** at any time via VS Code settings (see the _Control_ notes in each
+  section above) — the fastest way to stop data collection entirely
+- **Request access, correction, or deletion** of any data we have collected, by emailing
+  [privacy@legesher.com](mailto:privacy@legesher.com)
+- **Withdraw ML-training consent** by turning off `legesher.telemetry.contributeToMLTraining`;
+  future collection stops immediately, and you can request deletion of historical anonymous
+  contributions by emailing us
+- **Lodge a complaint** with your local Data Protection Authority (EEA) or the
+  [Information Commissioner's Office](https://ico.org.uk/make-a-complaint/) (UK) if you
+  believe we have handled your data improperly
 
-- **Access** your data (contact: <privacy@legesher.com>)
-- **Delete** your data (contact: <privacy@legesher.com>)
-- **Export** your data in machine-readable format
-- **Opt out** at any time via settings
+The full enumeration of your rights — including GDPR Articles 15–22, CCPA/CPRA categories, state
+privacy laws (Virginia, Colorado, Connecticut, Utah, Nevada), international transfer basis,
+retention periods, and who we are (Legesher Inc and Legesher Global Tech Limited) — lives in the
+[company-wide Privacy Policy](https://www.legesher.io/privacy).
 
-### Data Storage
-
-- **Location:** Azure Application Insights (US region)
-- **Retention:** 90 days for telemetry, anonymized ML data retained indefinitely
-- **Security:** Encrypted in transit (TLS) and at rest
-
-## Contact
-
-Questions about privacy? Email us at **<privacy@legesher.com>**
-
----
-
-**Last Updated:** March 5, 2026
+For privacy-specific questions about the extension or this docs site, email
+[privacy@legesher.com](mailto:privacy@legesher.com).
