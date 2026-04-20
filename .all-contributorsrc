@@ -1,6 +1,6 @@
 {
   "projectName": "legesher",
-  "projectOwner": "madiedgar",
+  "projectOwner": "legesher",
   "repoType": "github",
   "repoHost": "https://github.com",
   "files": [
@@ -114,6 +114,52 @@
       "profile": "https://github.com/atom19-i",
       "contributions": [
         "doc"
+      ]
+    },
+    {
+      "login": "npang4",
+      "name": "Nelson Pang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/45026037?v=4",
+      "profile": "https://github.com/npang4",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "Sayanta66",
+      "name": "Sayanta Banerjee",
+      "avatar_url": "https://avatars.githubusercontent.com/u/53281158?v=4",
+      "profile": "https://github.com/Sayanta66",
+      "contributions": [
+        "ideas"
+      ]
+    },
+    {
+      "login": "SaadBazaz",
+      "name": "Saad A. Bazaz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/51885228?v=4",
+      "profile": "https://github.com/SaadBazaz",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "shahkv95",
+      "name": "Kush Shah",
+      "avatar_url": "https://avatars.githubusercontent.com/u/35930270?v=4",
+      "profile": "https://github.com/shahkv95",
+      "contributions": [
+        "bug",
+        "ideas"
+      ]
+    },
+    {
+      "login": "Andrew-Chen-Wang",
+      "name": "Andrew Chen Wang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/60190294?v=4",
+      "profile": "https://github.com/Andrew-Chen-Wang",
+      "contributions": [
+        "ideas"
       ]
     }
   ],
