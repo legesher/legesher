@@ -40,33 +40,6 @@ See [libs/legesher/LICENSE](libs/legesher/LICENSE) for the full dual-license tex
 support, SLA guarantees. Contact [sales@legesher.com](mailto:sales@legesher.com) or visit
 [legesher.io/pricing](https://legesher.io/pricing).
 
-## Proprietary — Source Available
-
-The `legesher-home` package is **proprietary** and source-available for transparency and
-security review only. It is **not** covered by the root Apache 2.0 LICENSE. Commercial use
-requires a separate agreement.
-
-| Package         | Path                     | License                  |
-| --------------- | ------------------------ | ------------------------ |
-| `legesher-home` | [libs/home/](libs/home/) | `LicenseRef-Proprietary` |
-
-See [libs/home/LICENSE](libs/home/LICENSE) for the full proprietary license text.
-
-**Code visibility does not imply permission to use.** Contact
-[sales@legesher.com](mailto:sales@legesher.com) for licensing inquiries.
-
-## License Boundary Enforcement
-
-The separation between open-source and proprietary packages is enforced technically:
-
-- **Pre-commit hook** (`check-license-boundary`): blocks imports of `legesher_home` from any
-  Apache-2.0 package
-- **import-linter contract** (`uv run lint-imports`): enforces the same rule at CI time
-
-Apache-2.0 packages (`libs/core/`, `libs/i18n/`, `libs/language-server/`, `libs/vs-code/`,
-`libs/legesher/`) MUST NOT import from `legesher_home`. `legesher-home` may depend on
-Apache-2.0 packages, but never the reverse.
-
 ## Third-Party Dependencies
 
 Third-party dependency licenses are listed in each package's `pyproject.toml` (Python) or

@@ -65,12 +65,6 @@ These packages are freely available under the Apache License 2.0. Your contribut
 The free tier features use the Apache License 2.0. Premium features require a commercial license.
 Contributions to free tier features are welcome.
 
-### Proprietary Packages
-
-- **`libs/home/`** - Digital home and community platform
-
-These packages are source-available but proprietary. We do NOT accept external contributions to these packages at this time.
-
 ## How to Contribute
 
 ### 1. Reporting Issues
@@ -688,7 +682,6 @@ automatically validated by pre-commit hooks and enables automated version manage
 - `legesher` - Main package/CLI
 - `language-server` - Language Server Protocol implementation
 - `vs-code` - VS Code extension
-- `home` - Digital home/community features
 - `i18n-python-es` - Spanish language pack
 - `i18n-python-ar` - Arabic language pack
 
@@ -737,7 +730,7 @@ The interactive helper will:
 ### Version Numbers
 
 - **Foundation Suite** (`core`, `i18n`, `legesher`): Synchronized versions
-- **App Packages** (`vs-code`, `home`): Independent versions
+- **App Packages** (`vs-code`): Independent versions
 - **Language Packs** (`i18n-python-*`): Independent versions
 
 See [README.md](README.md#versioning-strategy) for complete versioning strategy.

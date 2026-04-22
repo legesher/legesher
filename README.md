@@ -15,7 +15,6 @@
 [![i18n: Apache 2.0](https://img.shields.io/badge/i18n-Apache%202.0-green.svg)](libs/i18n/LICENSE)
 [![VS Code: Apache 2.0](https://img.shields.io/badge/vscode-Apache%202.0-green.svg)](libs/vs-code/LICENSE)
 [![Legesher: Dual](https://img.shields.io/badge/legesher-Apache%202.0%20%7C%20Commercial-orange.svg)](libs/legesher/LICENSE)
-[![Home: Proprietary](https://img.shields.io/badge/home-Proprietary-red.svg)](libs/home/LICENSE)
 
 ## About Legesher
 
@@ -78,12 +77,6 @@ These packages are freely available under the Apache License 2.0. Community cont
 - **[legesher](libs/legesher/)** - Main CLI and library
   - **Free Tier**: Apache 2.0 License for local translation
   - **Premium Tier**: Commercial license for cloud sync, team features, and advanced tooling
-
-### 🔒 Proprietary (Source Available)
-
-- **[legesher-home](libs/home/)** - Digital home and community platform
-  - Source code visible for transparency and security review
-  - Commercial license required for use
 
 See [LICENSING.md](LICENSING.md) for the complete per-package license breakdown,
 or the [LICENSE](LICENSE) file for the Apache 2.0 terms.
@@ -246,7 +239,6 @@ These packages can release independently:
 
 - `legesher-vs-code` v0.1.2 - VS Code extension (production-ready)
 - `legesher-language-server` v0.1.0 - LSP server
-- `legesher-home` v0.1.0 - Digital home and community platform
 
 This allows rapid iteration on apps while maintaining foundation stability.
 

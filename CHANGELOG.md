@@ -9,6 +9,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Removed
+
+- **home**: Delete the empty `legesher-home` package scaffold (`libs/home/`) and
+  its license-boundary enforcement machinery from the monorepo. The package was
+  originally renamed from `legesher-pride` (CORE-515) as a placeholder for a
+  future "digital home and community platform," but never received an
+  implementation beyond a `__version__` string. Any future commercial or
+  community-platform work will be built outside this open-core monorepo so the
+  main repo stays cleanly Apache-2.0. Removes `libs/home/`,
+  `scripts/check_license_boundary.py`, the `[tool.importlinter]` contract, the
+  `check-license-boundary` pre-commit hook, the `home` commitizen scope, the
+  Tier 4 tier and License Boundary sections in `CLAUDE.md`, the proprietary
+  license section in `LICENSING.md` and `README.md`, and the `home` option in
+  `.github/workflows/publish-pypi.yml`. (CORE-1189)
+
 ### Changed
 
 - **core + i18n**: `mypy --strict` now passes on the public API surface (19 files

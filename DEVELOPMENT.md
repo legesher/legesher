@@ -33,14 +33,13 @@ If all tests pass, you're ready to contribute.
 
 All packages live under `libs/`:
 
-| Package             | Path                    | License                 | Description                                        |
-| ------------------- | ----------------------- | ----------------------- | -------------------------------------------------- |
-| **legesher-core**   | `libs/core/`            | Apache 2.0              | Translation engine, git filters, AST utilities     |
-| **legesher-i18n**   | `libs/i18n/`            | Apache 2.0              | 51 language packs, translation API, caching        |
-| **legesher** (CLI)  | `libs/legesher/`        | Apache 2.0 / Commercial | CLI tools: init, translate, run, git, metadata     |
-| **language-server** | `libs/language-server/` | Apache 2.0              | LSP server (hover, completion, diagnostics)        |
-| **vs-code**         | `libs/vs-code/`         | Apache 2.0              | VS Code extension                                  |
-| **home**            | `libs/home/`            | Proprietary             | Community platform (does not accept contributions) |
+| Package             | Path                    | License                 | Description                                    |
+| ------------------- | ----------------------- | ----------------------- | ---------------------------------------------- |
+| **legesher-core**   | `libs/core/`            | Apache 2.0              | Translation engine, git filters, AST utilities |
+| **legesher-i18n**   | `libs/i18n/`            | Apache 2.0              | 51 language packs, translation API, caching    |
+| **legesher** (CLI)  | `libs/legesher/`        | Apache 2.0 / Commercial | CLI tools: init, translate, run, git, metadata |
+| **language-server** | `libs/language-server/` | Apache 2.0              | LSP server (hover, completion, diagnostics)    |
+| **vs-code**         | `libs/vs-code/`         | Apache 2.0              | VS Code extension                              |
 
 > **Note:** Only Apache 2.0 and dual-licensed packages accept external contributions.
 > See [LICENSING.md](LICENSING.md) for details.
@@ -100,7 +99,7 @@ git commit -S -s -m "feat(core): add Finnish builtin translations"
 | `ci`       | CI/CD changes                                       |
 | `chore`    | Maintenance tasks                                   |
 
-**Scopes:** `core`, `i18n`, `legesher`, `language-server`, `vs-code`, `home`, `docs`
+**Scopes:** `core`, `i18n`, `legesher`, `language-server`, `vs-code`, `docs`
 
 ### 4. Push and open a PR
 

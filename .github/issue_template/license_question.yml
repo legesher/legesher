@@ -11,7 +11,6 @@ body:
       ## Quick Reference
       - **Open Source (Apache 2.0)**: core, i18n, vs-code - free for any use
       - **Dual License**: legesher - free tier (Apache 2.0) or premium (Commercial)
-      - **Proprietary**: home - commercial license required
 
       See [LICENSE](../../LICENSE) for full details.
 
@@ -23,7 +22,6 @@ body:
     - Can I use this for commercial projects?
     - What features are included in the free tier?
     - How do I purchase a commercial license?
-    - Can I contribute to proprietary packages?
     - What's the difference between Apache 2.0 and dual-license?
     - Can I redistribute/resell this software?
     - Enterprise licensing inquiry
@@ -42,7 +40,6 @@ body:
     - legesher-i18n (Apache 2.0)
     - legesher-vs-code (Apache 2.0)
     - legesher (Dual License)
-    - legesher-home (Proprietary)
     - Not sure / General question
   validations:
     required: true

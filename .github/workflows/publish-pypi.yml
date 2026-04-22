@@ -39,7 +39,6 @@ on:
           - i18n-python-vi
           - i18n-python-zh
           - vs-code
-          - home
       environment:
         description: 'Target environment'
         required: true
@@ -145,7 +144,7 @@ jobs:
           else
             # Only allow known non-language-pack packages
             case "$PACKAGE" in
-              vs-code|home) ;;
+              vs-code) ;;
               *) echo "ERROR: Unknown package: $PACKAGE"; exit 1 ;;
             esac
             echo "📦 Building $PACKAGE..."

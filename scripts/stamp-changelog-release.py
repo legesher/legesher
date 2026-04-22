@@ -37,7 +37,6 @@ PACKAGE_VERSIONS = {
     "legesher (CLI)": Path("libs/legesher/pyproject.toml"),
     "legesher-language-server": Path("libs/language-server/pyproject.toml"),
     "legesher-vscode": Path("libs/vs-code/package.json"),
-    "legesher-home": Path("libs/home/pyproject.toml"),
 }
 
 

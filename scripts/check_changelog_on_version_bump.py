@@ -16,7 +16,6 @@ PACKAGE_MAP = {
     "libs/i18n/pyproject.toml": "libs/i18n/CHANGELOG.md",
     "libs/legesher/pyproject.toml": "libs/legesher/CHANGELOG.md",
     "libs/language-server/pyproject.toml": "libs/language-server/CHANGELOG.md",
-    "libs/home/pyproject.toml": "libs/home/CHANGELOG.md",
     "libs/vs-code/package.json": "libs/vs-code/CHANGELOG.md",
 }
 

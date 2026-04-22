@@ -177,7 +177,6 @@ These context documents integrate with:
 - **legesher-core**: Token-based transformer uses context for accurate translation
 - **legesher-i18n**: Language pack generation references these documents
 - **legesher-vs-code**: IDE integration displays context-aware tooltips
-- **legesher-home**: Community translation efforts use these as reference
 
 ## Contributing
 

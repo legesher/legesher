@@ -71,9 +71,6 @@ jobs:
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
 
-      - name: Check license boundary (import-linter)
-        run: uv run lint-imports
-
   test:
     name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}

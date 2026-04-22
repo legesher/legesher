@@ -12,7 +12,6 @@ versions are currently receiving security updates:
 | legesher (CLI)           | 0.5.x   | :white_check_mark: |
 | legesher-language-server | 0.1.x   | :white_check_mark: |
 | legesher-vs-code         | 0.1.x   | :white_check_mark: |
-| legesher-home            | 0.1.x   | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
@@ -125,7 +124,6 @@ Additional recommendations:
 
 - **Open source packages** (core, i18n, language-server, vs-code) are Apache-2.0-licensed and publicly auditable
 - **Dual-licensed package** (legesher CLI) is Apache 2.0 for free tier, commercial license for premium features
-- **Proprietary package** (home) is source-available but usage is restricted
 - **All packages** are subject to the same security review standards
 
 ### Data Handling

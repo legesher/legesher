@@ -82,14 +82,6 @@ repos:
     name: Check CHANGELOG updated on version bump
     pass_filenames: false
 
-  # License boundary: Apache-2.0 packages must not import proprietary legesher-home
-  - entry: uv run python scripts/check_license_boundary.py
-    files: ^libs/(core|i18n|language-server|vs-code|legesher)/(.*\.py|pyproject\.toml)$
-    id: check-license-boundary
-    language: system
-    name: Check license boundary (no legesher-home in Apache-2.0 packages)
-    pass_filenames: true
-
   # Regenerate REFERENCE.md when language pack YAML files change
   - entry: uv run python scripts/generate_reference_docs.py
     files: ^libs/i18n/language-packs/.*/packs/.*\.yml$

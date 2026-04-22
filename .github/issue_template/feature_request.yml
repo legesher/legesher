@@ -31,7 +31,6 @@ body:
       Please note which packages accept community contributions:
       - ✅ Open Source (Apache 2.0): core, i18n, vs-code (contributions welcome!)
       - ⚠️ Dual License: legesher (free tier contributions welcome)
-      - ❌ Proprietary: home (no external contributions)
     options:
     - label: I understand the licensing structure and contribution policy
       required: true

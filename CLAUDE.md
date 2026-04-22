@@ -51,7 +51,6 @@ Zed and JetBrains PyCharm etc.
       el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it, ja, kn, ko, lv, mk, ml, mn, ms, my, nl, no, pl,
       pt, ro, ru, si, sr, su, sv, te, th, tr, ur, uz, vi, zh)
     - `language-packs-archive/`: Legacy community translations (see private-working-memory repo)
-  - `home/`: Digital home and community platform (`legesher-home`)
   - `vs-code/`: VS Code editor integration for Python language (`legesher-vs-code`)
     - Based on the `vscode-python` package (<https://github.com/microsoft/vscode-python>)
     - Provides language extensions for native language support within the editor
@@ -72,7 +71,6 @@ Zed and JetBrains PyCharm etc.
 | **legesher**        | 0.5.1   | Production-ready | CLI suite (init, translate, run, git, metadata), runtime hooks  |
 | **language-server** | 0.1.2   | Production-ready | Full LSP with hover, completion, diagnostics, semantic tokens   |
 | **vs-code**         | 0.1.5   | Production-ready | Extension with telemetry/feedback, all 51 languages supported   |
-| **home**            | 0.1.0   | Minimal scaffold | Digital home for community features and project showcase        |
 
 **Language pack versions**: 0.0.1–0.0.3 (see each pack's `pyproject.toml` for exact version)
 
@@ -208,7 +206,7 @@ Interactive commit helper with conventional commits:
 uv run cz commit
 ```
 
-Supported scopes: `core`, `i18n`, `legesher`, `language-server`, `vs-code`, `home`, `i18n-python-{lang}`
+Supported scopes: `core`, `i18n`, `legesher`, `language-server`, `vs-code`, `i18n-python-{lang}`
 
 ## Package Interdependencies
 
@@ -231,25 +229,8 @@ The packages have a logical dependency hierarchy defined in the architecture:
 - `legesher-vs-code`: Editor integration, depends on `core` and `i18n`
   - IDE extensions, language client/server
 
-**Tier 4 - Community**:
-
-- `legesher-home`: Digital home and community platform, depends on `core`, `i18n`, and `legesher`
-  - Community showcase projects
-
 When making changes, consider impact on dependent packages. Build order should follow the tier system
-(Tier 1 → Tier 2 → Tier 3 → Tier 4).
-
-### License Boundary
-
-`libs/home/` (`legesher-home`) is **proprietary** (`LicenseRef-Proprietary`). All other packages in Tiers 1–3 are
-Apache-2.0-licensed (or Apache-2.0/Commercial dual-licensed). To prevent license contamination:
-
-- **Apache-2.0 packages MUST NOT import from `legesher_home`** — no `import legesher_home` or `from legesher_home` in
-  `libs/core/`, `libs/i18n/`, `libs/language-server/`, `libs/vs-code/`, or `libs/legesher/`
-- **No dependency references** — Apache-2.0 package `pyproject.toml` files must not list `legesher-home` as a dependency
-- **One-way dependency only** — `legesher-home` may depend on Apache-2.0 packages, but never the reverse
-
-Enforced by a pre-commit hook (`check-license-boundary`) and an `import-linter` contract (`uv run lint-imports`).
+(Tier 1 → Tier 2 → Tier 3).
 
 ## Translation Database
 
@@ -493,7 +474,6 @@ When bumping package versions or creating a release, follow these steps:
 | legesher (CLI)           | x.y.z   | —        |
 | legesher-language-server | x.y.z   | —        |
 | legesher-vscode          | x.y.z   | —        |
-| legesher-home            | x.y.z   | —        |
 ```
 
 ## Project Management
@@ -622,7 +602,7 @@ Architectural rationale and detailed design decisions will be documented as the 
 
 - This monorepo is **production-ready (pre-beta)** with feature-complete packages
 - 51 language packs available (all experimental, awaiting community validation)
-- Implementation follows the tier system (Tier 1 → Tier 2 → Tier 3 → Tier 4)
+- Implementation follows the tier system (Tier 1 → Tier 2 → Tier 3)
 - Issues are tracked in Linear workspace with package and phase labels
 - See package-specific CLAUDE.md files in `libs/*/CLAUDE.md` for detailed guidance
 

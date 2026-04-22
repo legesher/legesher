@@ -12,7 +12,6 @@ dependencies = [
     "legesher-i18n",
     "legesher",
     "legesher-language-server",
-    "legesher-home",
     "legesher-vs-code",
 ]
 readme = "README.md"
@@ -27,7 +26,6 @@ members = [
     "libs/i18n/language-packs/python/*",
     "libs/legesher",
     "libs/language-server",
-    "libs/home",
     "libs/vs-code",
 ]
 
@@ -87,7 +85,6 @@ legesher-i18n-python-vi = { workspace = true }
 legesher-i18n-python-zh = { workspace = true }
 legesher = { workspace = true }
 legesher-language-server = { workspace = true }
-legesher-home = { workspace = true }
 legesher-vs-code = { workspace = true }
 
 [dependency-groups]
@@ -102,7 +99,6 @@ dev = [
     "pytest-benchmark>=4.0.0",
     "python-semantic-release>=9.0.0",
     "commitizen>=4.13.10",
-    "import-linter>=2.0",
     "datasets>=4.8.2",
     "huggingface-hub>=1.10.1",
     "psutil>=7.2.2",
@@ -227,7 +223,7 @@ choices = [
 [[tool.commitizen.customize.questions]]
 type = "input"
 name = "scope"
-message = "Scope (package name: core, i18n, legesher, language-server, vs-code, home, i18n-python-ar, i18n-python-es, i18n-python-en, i18n-python-fr, i18n-python-zh) [optional]:"
+message = "Scope (package name: core, i18n, legesher, language-server, vs-code, i18n-python-ar, i18n-python-es, i18n-python-en, i18n-python-fr, i18n-python-zh) [optional]:"
 
 [[tool.commitizen.customize.questions]]
 type = "input"
@@ -239,25 +235,3 @@ type = "confirm"
 name = "is_breaking_change"
 message = "Is this a BREAKING CHANGE?"
 default = false
-
-# License boundary enforcement (AST-based import analysis)
-# Run with: uv run lint-imports
-[tool.importlinter]
-root_packages = [
-    "legesher_core",
-    "legesher_i18n",
-    "legesher",
-]
-include_external_packages = true
-
-[[tool.importlinter.contracts]]
-name = "Apache-2.0 packages must not import proprietary legesher-home"
-type = "forbidden"
-source_modules = [
-    "legesher_core",
-    "legesher_i18n",
-    "legesher",
-]
-forbidden_modules = [
-    "legesher_home",
-]
