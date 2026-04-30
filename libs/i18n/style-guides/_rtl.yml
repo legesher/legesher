@@ -29,6 +29,11 @@ naming:
 # ---------------------------------------------------------------------------
 script:
   native_required: true
+  # Note: ``has_case_distinction`` lives in ``languages.json`` (next to
+  # ``rtl``) -- single source of truth for language script properties.
+  # Style guides can still override per-language by setting the field
+  # under ``script:``, but the default for the whole RTL family
+  # (no upper/lowercase distinction) is encoded in languages.json.
 
   latin_mixing:
     rule: >

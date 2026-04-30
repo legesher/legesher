@@ -220,6 +220,7 @@ class AnthropicProvider(TranslationProvider):
                         ],
                         target_lang=target_lang,
                         existing_glossary=glossary,
+                        forbidden_values=context.get("forbidden_values"),
                     )
                 )
         else:

@@ -25,11 +25,18 @@ from .base import (
 
 logger = logging.getLogger(__name__)
 
+# Fallback path used only when PromptBuilder fails to initialize.
+# Mirrors the no-explanation rule from PromptBuilder's `_CRITICAL_RULES`
+# so the legacy path gets the same trace-pollution anchoring (CORE-950).
 _SYSTEM_PROMPT = (
     "You are a precise translation engine for code-related content. "
     "Translate the given text from {source_lang} to {target_lang}. "
-    "Return ONLY the translated text, nothing else. "
-    "Do not add explanations, quotes, or formatting."
+    "Return ONLY the translated text -- no prefix, no suffix, no "
+    "explanation, no markup, no trace-format wrappers, and no "
+    "surrounding commentary. Do NOT emit patterns like "
+    "`__original_X_translation_Y_Explanation_...`, "
+    "`____translated_identifier_X____`, or JSON-style metadata "
+    "wrappers around the translation. Output the translation value alone."
 )
 
 
@@ -125,6 +132,7 @@ class OpenAICompatProvider(TranslationProvider):
                         ],
                         target_lang=target_lang,
                         existing_glossary=glossary,
+                        forbidden_values=context.get("forbidden_values"),
                     )
                 )
         else:

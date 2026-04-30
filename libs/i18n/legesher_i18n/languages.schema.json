@@ -34,7 +34,15 @@
   "$defs": {
     "languageMetadata": {
       "type": "object",
-      "required": ["name", "native", "iso639_2", "bcp47", "rtl", "status"],
+      "required": [
+        "name",
+        "native",
+        "iso639_2",
+        "bcp47",
+        "rtl",
+        "has_case_distinction",
+        "status"
+      ],
       "additionalProperties": false,
       "properties": {
         "name": {
@@ -60,6 +68,10 @@
         "rtl": {
           "type": "boolean",
           "description": "Whether the language uses right-to-left script"
+        },
+        "has_case_distinction": {
+          "type": "boolean",
+          "description": "Whether the language's primary script distinguishes upper/lowercase. False for Arabic-family, CJK, Brahmic, SE-Asian, and Ge'ez scripts; true for Latin, Cyrillic, Greek. Used by PromptBuilder (CORE-950) to substitute snake_case for PascalCase identifiers when the script can't represent case."
         },
         "status": {
           "type": "string",

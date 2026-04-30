@@ -20,12 +20,20 @@ from .base import (
 
 logger = logging.getLogger(__name__)
 
-# Translation system prompt
+# Translation system prompt — fallback path used only when PromptBuilder
+# fails to initialize. Empirical CORE-950 finding: lower-resource targets
+# (zh, ur) trigger trace-format pollution on weak prompts; the rule list
+# below mirrors PromptBuilder's `_CRITICAL_RULES` no-explanation entry so
+# both paths share the same failure-mode anchoring.
 _SYSTEM_PROMPT = (
     "You are a precise translation engine for code-related content. "
     "Translate the given text from {source_lang} to {target_lang}. "
-    "Return ONLY the translated text, nothing else. "
-    "Do not add explanations, quotes, or formatting."
+    "Return ONLY the translated text -- no prefix, no suffix, no "
+    "explanation, no markup, no trace-format wrappers, and no "
+    "surrounding commentary. Do NOT emit patterns like "
+    "`__original_X_translation_Y_Explanation_...`, "
+    "`____translated_identifier_X____`, or JSON-style metadata "
+    "wrappers around the translation. Output the translation value alone."
 )
 
 
@@ -127,6 +135,7 @@ class CohereAyaProvider(TranslationProvider):
                         ],
                         target_lang=target_lang,
                         existing_glossary=glossary,
+                        forbidden_values=context.get("forbidden_values"),
                     )
                 )
         else:
@@ -149,9 +158,11 @@ class CohereAyaProvider(TranslationProvider):
             # Parse JSON response when PromptBuilder was used
             translated_text = self._parse_response(raw_text, text, context)
 
-            # Track usage
-            tokens_in = getattr(response.usage, "input_tokens", 0) or 0
-            tokens_out = getattr(response.usage, "output_tokens", 0) or 0
+            # Track usage. Cohere V2 SDK 6.x exposes tokens at one of
+            # several attribute paths depending on the build (CORE-950);
+            # try them in priority order and fall back to legacy direct
+            # attributes for older SDKs.
+            tokens_in, tokens_out = self._read_token_counts(response.usage)
             self._total_tokens_in += tokens_in
             self._total_tokens_out += tokens_out
             self._total_requests += 1
@@ -190,6 +201,41 @@ class CohereAyaProvider(TranslationProvider):
         from .response_parser import parse_llm_response
 
         return parse_llm_response(raw_text, original_text, context)
+
+    @staticmethod
+    def _read_token_counts(usage: object) -> tuple[int, int]:
+        """Extract (tokens_in, tokens_out) from a Cohere V2 usage object.
+
+        The Cohere V2 SDK 6.x exposes token counts at one of several
+        attribute paths depending on the SDK build:
+
+        * ``usage.tokens.input_tokens`` / ``.output_tokens`` (V2 6.1.x)
+        * ``usage.billed_units.input_tokens`` / ``.output_tokens``
+          (alternate V2 build, also seen in some versions)
+        * ``usage.input_tokens`` / ``.output_tokens`` (legacy / V1)
+
+        Tries each path in priority order; falls back to ``(0, 0)`` if
+        none yield non-None values. Defensive against arbitrary mock
+        objects in tests via ``isinstance(_, int)`` guards on the
+        terminal attributes.
+        """
+
+        def _get_int(value: object) -> int | None:
+            return value if isinstance(value, int) else None
+
+        for nested_attr in ("tokens", "billed_units"):
+            nested = getattr(usage, nested_attr, None)
+            if nested is None:
+                continue
+            t_in = _get_int(getattr(nested, "input_tokens", None))
+            t_out = _get_int(getattr(nested, "output_tokens", None))
+            if t_in is not None or t_out is not None:
+                return (t_in or 0, t_out or 0)
+
+        # Legacy / V1 direct attributes.
+        t_in = _get_int(getattr(usage, "input_tokens", None))
+        t_out = _get_int(getattr(usage, "output_tokens", None))
+        return (t_in or 0, t_out or 0)
 
     async def get_usage(self) -> UsageStats | None:
         if self._total_requests == 0:

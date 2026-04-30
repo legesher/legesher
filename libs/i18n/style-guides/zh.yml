@@ -68,6 +68,9 @@ naming:
 # ---------------------------------------------------------------------------
 script:
   native_required: true
+  # Note: ``has_case_distinction: false`` for zh now lives in
+  # ``languages.json`` (single source of truth for language script
+  # properties). Override here only if zh needs a non-default value.
   variant: Simplified Chinese (简体中文)
   detail: >
     Use Simplified Chinese characters as standard in mainland China.

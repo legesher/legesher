@@ -35,7 +35,7 @@ class TestLanguagePackValidator:
     def test_validator_errors_on_duplicate_translations(self, validator, tmp_path):
         """Test that duplicate translations within a file cause errors (not warnings)."""
         yaml_content = """\
-language: test
+language: fi
 target: python
 version: '3.10'
 keywords:
@@ -62,7 +62,7 @@ metadata:
     def test_validator_no_error_on_unique_translations(self, validator, tmp_path):
         """Test that unique translations pass validation without errors."""
         yaml_content = """\
-language: test
+language: fi
 target: python
 version: '3.10'
 keywords:
@@ -88,7 +88,7 @@ metadata:
     def test_validator_cross_section_collision(self, validator, tmp_path):
         """Test that collisions across sections (keywords vs builtins) are detected."""
         yaml_content = """\
-language: test
+language: fi
 target: python
 version: '3.10'
 keywords:
@@ -108,10 +108,44 @@ metadata:
         collision_errors = [e for e in validator.errors if "Collision" in e]
         assert len(collision_errors) == 1
 
+    def test_no_duplicate_error_for_keyword_builtin_cross_collision(
+        self, validator, tmp_path
+    ):
+        """Regression for Copilot review on PR #237: a value appearing in
+        keywords AND builtins must produce exactly ONE error message,
+        not two (the previous in-script duplicate pass + the schema
+        validator's cross-section pass were both firing for the same
+        finding).
+        """
+        yaml_content = """\
+language: fi
+target: python
+version: '3.10'
+keywords:
+  and: sama
+builtins:
+  all: sama
+exceptions: {}
+metadata:
+  python_version_min: '3.10'
+  python_version_max: '3.14'
+"""
+        file_path = self._write_yaml(tmp_path, yaml_content)
+        is_valid = validator.validate_file(file_path)
+
+        assert is_valid is False
+        # Filter to errors mentioning "sama" (the colliding value) so we
+        # don't accidentally count unrelated errors.
+        sama_errors = [e for e in validator.errors if "sama" in e]
+        assert len(sama_errors) == 1, (
+            f"Expected exactly one error mentioning the colliding value 'sama', "
+            f"got {len(sama_errors)}: {sama_errors}"
+        )
+
     def test_validator_multiple_collisions(self, validator, tmp_path):
         """Test that multiple collision groups are all reported."""
         yaml_content = """\
-language: test
+language: fi
 target: python
 version: '3.10'
 keywords:

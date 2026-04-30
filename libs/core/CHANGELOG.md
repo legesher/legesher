@@ -9,6 +9,36 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **`LLMTranslator.forbidden_identifier_values` parameter** on `__init__`
+  (and threaded through `from_language_pack`). Aggregates pack
+  keyword/builtin/exception/reserved_word values into a flat list and
+  injects it into every identifier batch's `context.forbidden_values` so
+  the backend can pass it to `PromptBuilder` as a "do-not-propose" list.
+  Layer-1 prompt-side defense against pack collisions; complements the
+  layer-2 suffix recovery below. [CORE-950]
+- **`LLMTranslator._suffix_until_clean()` collision-recovery helper**.
+  `from_language_pack` now constructs a pack-aware `IdentifierMap` so
+  `.add()` raises `ValueError` on collisions; `_translate_identifiers`
+  catches and applies a numeric suffix (`_2` through `_9`), falling back
+  to a `hashlib.sha256`-derived suffix that walks 16 → 24 → 32 → 48 → 64
+  hex chars on the (astronomically unlikely) repeated collision case.
+  SHA-256 is process-stable so the IdentifierMap round-trips correctly
+  across runs (Copilot review caught the original `abs(hash(text)) % 10000`
+  use which would have broken determinism). [CORE-950]
+
+### Fixed
+
+- **`LLMTranslator.__init__` no longer silently discards a caller-provided
+  empty `IdentifierMap`**. Previously
+  `self.identifier_map = identifier_map or IdentifierMap()` evaluated
+  falsy on an empty-but-pack-aware map (because `IdentifierMap` defines
+  `__len__` and an empty map has length 0), replacing the caller's
+  instance with a fresh one without pack collision detection. Replaced
+  with an `is None` check. Surfaced while wiring up CORE-950 layer-2
+  collision detection. [CORE-950]
+
 ## [0.9.3] - 2026-04-29
 
 ### Added

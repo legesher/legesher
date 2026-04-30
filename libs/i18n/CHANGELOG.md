@@ -9,6 +9,87 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **PromptBuilder `forbidden_values` kwarg** on `build_identifier_prompt`.
+  Renders a "Reserved Translation Values" block in the user prompt so the
+  LLM is unlikely to propose a translation that collides with reserved pack
+  values (`keywords` / `builtins` / `exceptions` / `reserved_words` from
+  CORE-710). Caller passes the flat list; deduplication and a 500-entry cap
+  happen inside the formatter. Threaded end-to-end through the three
+  PromptBuilder-aware providers (`anthropic`, `cohere_aya`, `openai_compat`)
+  and `LLMTranslator._translate_identifiers`. [CORE-950]
+- **PromptBuilder `examples` kwarg** on `build_identifier_prompt` and
+  `build_text_prompt`. Few-shot anchoring via `[{"original": str,
+"translation": str}, ...]` rendered in the user prompt as a "Few-Shot
+  Examples" table. Capped at 25 entries (3-10 is the research sweet spot;
+  25 is generous headroom for callers anchoring on multiple term families).
+  Malformed entries are skipped with a `logger.warning` so a caller with a
+  typo (`origin` instead of `original`) gets a visible signal. [CORE-950]
+- **PromptBuilder `preserve_module_names` flag** on `__init__` (keyword-only,
+  default `False`). When `True`, the system prompt instructs the model to
+  leave module/library import names (`torch`, `numpy`, etc.) literally
+  unchanged. The default preserves Cond-5 full-translation behavior;
+  execution-targeted use cases flip the flag. [CORE-950]
+- **Script-aware `snake_case` substitute rule** (CORE-950). When the target
+  language's script lacks upper/lowercase distinction, `_CRITICAL_RULES`
+  emits a rule that overrides the base "PascalCase stays PascalCase"
+  guidance. Two-tier lookup: per-language style guide override
+  (`script.has_case_distinction`) wins; otherwise read from
+  `languages.json`'s new `has_case_distinction` field; default `True`.
+  Covers all 17 non-cased supported languages (Arabic family, CJK, Brahmic,
+  SE-Asian, Ge'ez). Empirically validated against `gemma3:12b` on `ja`
+  (clean Kanji) and `ur` (clean Urdu Nastaliq). [CORE-950]
+- **`languages.json` schema field**: `has_case_distinction: bool` for all
+  51 supported languages (sits next to `rtl`). Now the canonical source of
+  truth for language script properties; `LANGUAGE_CASE_DISTINCTION` is
+  loaded at module import. [CORE-950]
+- **Cross-section collision audit script**:
+  `libs/i18n/scripts/audit_collisions.py` runs both DB-level
+  (`legesher-i18n db collisions`) and pack-level
+  (`schema_validator.cross_section_collisions`) audits across the canonical
+  pack list derived from `languages.json`. Fails on missing or misnamed
+  packs (regression-protection contract). Wired into the `lint` job in
+  `.github/workflows/ci.yml`. [CORE-950]
+
+### Changed
+
+- **`_CRITICAL_RULES` no-trace-wrapper rule**: each translation value the
+  LLM emits must be the bare translation — explicitly forbids prefix /
+  suffix / explanation / markup / trace-format wrappers, citing the
+  `__original_X_translation_Y_Explanation_...` and
+  `____translated_identifier_X____` patterns observed empirically on
+  `gemma3:12b` zh+ur and Tiny Aya GGUF. Wording clarifies the rule applies
+  to individual values inside the response structure, not to the JSON
+  object/list output format. [CORE-950]
+- **Legacy fallback prompts** in `cohere_aya.py:_SYSTEM_PROMPT` and
+  `openai_compat.py:_SYSTEM_PROMPT` now carry the same no-trace-wrapper
+  guidance — the path that fires when `PromptBuilder` fails to initialize
+  no longer regresses to a weaker prompt. (Anthropic's legacy fallback
+  uses structured-JSON output and is unaffected.) [CORE-950]
+- **CohereAyaProvider token-count read path**: defensive multi-path lookup
+  (`usage.tokens.X` → `usage.billed_units.X` → direct attributes) covers
+  Cohere V2 SDK 6.x build variants. Fixes `tokens_in/tokens_out=0`
+  regression that broke `get_usage()` totals and `cost_estimate_usd`.
+  [CORE-950]
+- **`validate_language_pack_yaml.py` collision detection** uses
+  `SchemaValidator.check_duplicates()` as the single source of truth.
+  Previously the script's own ad-hoc duplicate pass produced double error
+  messages for cross-section collisions involving keyword/builtin/exception
+  pairs (Copilot review on PR #237). Side benefit: extends coverage to
+  reserved_words / operators / standard_library intra-section duplicates
+  that the local pass missed. [CORE-950]
+
+### Fixed
+
+- **Pre-commit hook now blocks cross-section collisions at YAML edit time**.
+  The existing `validate-language-pack-yaml` hook calls
+  `SchemaValidator.check_duplicates()`'s `cross_section_collisions` output
+  so a pack edit introducing the AYA-213 Cycle-4 Urdu failure mode (e.g.
+  `reserved_words.self` matching `keywords.in`) fails fast before commit.
+  Integration test in `tests/integration/test_validate_pack_yaml_cross_section.py`.
+  [CORE-950]
+
 ## [0.9.3] - 2026-04-29
 
 ### Added

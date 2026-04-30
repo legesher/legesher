@@ -48,6 +48,32 @@ def _load_language_names() -> dict[str, str]:
         return {}
 
 
+def _load_language_case_distinction() -> dict[str, bool]:
+    """Load language code -> ``has_case_distinction`` mapping from ``languages.json``.
+
+    CORE-950: scripts without upper/lowercase distinction (Arabic family,
+    Brahmic, CJK, SE-Asian, Ge'ez) need a substitute snake_case rule for
+    PascalCase identifiers. The canonical metadata lives next to ``rtl``
+    in ``languages.json`` so language script properties have one source
+    of truth. Returns an empty dict if the file is missing or malformed
+    -- callers default to ``True`` (case-distinguishing) which is safe
+    for the Latin/Cyrillic/Greek majority.
+    """
+    try:
+        with open(_LANGUAGES_JSON, encoding="utf-8") as fh:
+            data = json.load(fh)
+        return {
+            code: bool(meta["has_case_distinction"])
+            for code, meta in data.get("languages", {}).items()
+            if "has_case_distinction" in meta
+        }
+    except (OSError, json.JSONDecodeError, KeyError) as exc:
+        logger.warning(
+            "Failed to load has_case_distinction from languages.json: %s", exc
+        )
+        return {}
+
+
 # Built-in fallback so the module works even if languages.json is missing.
 _FALLBACK_LANGUAGE_NAMES: dict[str, str] = {
     "am": "Amharic",
@@ -106,6 +132,10 @@ _FALLBACK_LANGUAGE_NAMES: dict[str, str] = {
 # Merged at import time: languages.json values override fallback.
 LANGUAGE_NAMES: dict[str, str] = {**_FALLBACK_LANGUAGE_NAMES, **_load_language_names()}
 
+# Loaded at import time. Empty dict if ``languages.json`` is missing or
+# malformed; lookups fall through to the safe default (True). CORE-950.
+LANGUAGE_CASE_DISTINCTION: dict[str, bool] = _load_language_case_distinction()
+
 # ---------------------------------------------------------------------------
 # Native-language programming precedent framing
 # ---------------------------------------------------------------------------
@@ -160,6 +190,17 @@ NATIVE_LANG_EXAMPLES: dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 _CRITICAL_RULES: list[str] = [
+    (
+        "Each translation value you emit must be the bare translation -- "
+        "no prefix, no suffix, no explanation, no markup, no trace-format "
+        "wrappers (e.g. `__original_X_translation_Y_Explanation_...`, "
+        "`____translated_identifier_X____`, JSON-style metadata wrappers "
+        "like `{'original_name': ..., 'translated_name': ...}` around "
+        "individual values), and no surrounding commentary. The overall "
+        "response structure (JSON object or list, as specified per call) "
+        "is unaffected -- this rule applies to each individual translation "
+        "value inside that structure."
+    ),
     "All translations MUST be valid Python identifiers -- no spaces, no punctuation.",
     "snake_case identifiers stay snake_case, PascalCase stays PascalCase.",
     "Maintain consistent verb/noun choices across similar names.",
@@ -208,8 +249,27 @@ class PromptBuilder:
         ... )
     """
 
-    def __init__(self, style_guide_loader: StyleGuideLoader) -> None:
+    def __init__(
+        self,
+        style_guide_loader: StyleGuideLoader,
+        *,
+        preserve_module_names: bool = False,
+    ) -> None:
+        """Construct a PromptBuilder.
+
+        Args:
+            style_guide_loader: StyleGuideLoader instance.
+            preserve_module_names: When True, the system prompt instructs
+                the model to leave module/library import names (e.g.
+                ``torch``, ``numpy``) unchanged in the target translation.
+                Default False (full translation, used by Cond-5 training
+                data generation). Flip True for execution-targeted use
+                cases where translated code must run against a real
+                Python interpreter and imports have to resolve.
+                CORE-950.
+        """
         self._loader = style_guide_loader
+        self._preserve_module_names = preserve_module_names
 
     # ------------------------------------------------------------------
     # Public API
@@ -220,6 +280,8 @@ class PromptBuilder:
         identifiers: list[dict[str, Any]],
         target_lang: str,
         existing_glossary: dict[str, str],
+        forbidden_values: list[str] | None = None,
+        examples: list[dict[str, str]] | None = None,
     ) -> tuple[str, str]:
         """Build prompts for identifier batch translation.
 
@@ -231,6 +293,19 @@ class PromptBuilder:
             existing_glossary: Already-translated identifiers from
                 ``IdentifierMap.get_glossary()``, mapping original English
                 text to its translation.
+            forbidden_values: Optional list of translation values the LLM
+                MUST NOT propose for any identifier. Typically populated
+                by the caller from ``pack.keywords.values() +
+                pack.builtins.values() + pack.exceptions.values() +
+                pack.reserved_words.values()``. Passing these into the
+                prompt prevents collisions with reserved Python conventions
+                (e.g. ``self -> mismo``) that would silently break
+                round-trip translation. CORE-710 / CORE-950.
+            examples: Optional few-shot examples in the form
+                ``[{"original": str, "translation": str}, ...]``. Rendered
+                as a "Few-Shot Examples" block in the user prompt to
+                anchor the model on a specific style or term family.
+                CORE-950.
 
         Returns:
             Tuple of ``(system_prompt, user_prompt)``.
@@ -240,6 +315,8 @@ class PromptBuilder:
             identifiers,
             target_lang,
             existing_glossary,
+            forbidden_values,
+            examples,
         )
         return system, user
 
@@ -248,6 +325,7 @@ class PromptBuilder:
         texts: list[dict[str, Any]],
         target_lang: str,
         identifier_glossary: dict[str, str],
+        examples: list[dict[str, str]] | None = None,
     ) -> tuple[str, str]:
         """Build prompts for text element batch translation.
 
@@ -259,6 +337,8 @@ class PromptBuilder:
             identifier_glossary: All file identifiers from the identifier
                 translation step (original to translation), so text
                 translations use the same terminology.
+            examples: Optional few-shot examples (see
+                ``build_identifier_prompt`` for the format). CORE-950.
 
         Returns:
             Tuple of ``(system_prompt, user_prompt)``.
@@ -268,6 +348,7 @@ class PromptBuilder:
             texts,
             target_lang,
             identifier_glossary,
+            examples,
         )
         return system, user
 
@@ -303,7 +384,7 @@ class PromptBuilder:
         sections: list[str] = [
             self._build_framing(target_lang, lang_name),
             self._build_style_guide_section(target_lang),
-            self._build_critical_rules_section(),
+            self._build_critical_rules_section(target_lang),
         ]
         return "\n\n".join(sections)
 
@@ -363,11 +444,63 @@ class PromptBuilder:
 
         return "\n\n".join(parts)
 
-    def _build_critical_rules_section(self) -> str:
-        """Format the critical rules that always apply."""
+    def _build_critical_rules_section(self, target_lang: str) -> str:
+        """Format the critical rules that always apply.
+
+        Accepts ``target_lang`` so language-conditioned rules (e.g. the
+        script-aware naming-convention fallback added in CORE-950) can
+        opt in. The base set defined in ``_CRITICAL_RULES`` is always
+        emitted; conditional rules are appended after it.
+        """
         lines = ["## Critical Rules"]
         for rule in _CRITICAL_RULES:
             lines.append(f"- {rule}")
+
+        # CORE-950: override the base "PascalCase stays PascalCase" rule
+        # for non-cased scripts. Two-tier lookup so style guides can
+        # opt out (e.g., a future cased-script-only override) while the
+        # canonical metadata lives next to ``rtl`` in ``languages.json``:
+        #   1. Style guide's ``script.has_case_distinction`` (if set
+        #      explicitly to True/False, that wins).
+        #   2. ``languages.json``'s ``has_case_distinction`` field --
+        #      single source of truth for the 51 supported languages.
+        #   3. Default True (case-distinguishing) for unknown languages.
+        # Empirically: gemma3:12b on hi (no specific style guide) used
+        # to default to ``True`` and produced Latin transliteration
+        # (PaymentProcessor -> Chukavya_Pradhani); reading from
+        # languages.json fixes this for all 17 non-cased languages.
+        guide = self._loader.load(target_lang)
+        script = guide.get("script", {}) if isinstance(guide, dict) else {}
+        guide_has_case = script.get("has_case_distinction")
+        if guide_has_case is None:
+            has_case = LANGUAGE_CASE_DISTINCTION.get(target_lang, True)
+        else:
+            has_case = bool(guide_has_case)
+        if not has_case:
+            lines.append(
+                "- The target script has no case distinction. When a "
+                "PascalCase or camelCase identifier is requested, "
+                "substitute snake_case (underscore-separated words) in "
+                "the target script — Pascal/camel have no native "
+                "equivalent here. This rule overrides the base "
+                '"PascalCase stays PascalCase" rule above.'
+            )
+
+        # CORE-950: opt-in execution-mode flag. When set, module/library
+        # import names must round-trip unchanged so the translated code
+        # can resolve against the real Python interpreter.
+        if self._preserve_module_names:
+            lines.append(
+                "- Preserve module names: module/library import names "
+                "(e.g. `torch`, `numpy`, `requests`, `os`, `json`) MUST "
+                "be kept LITERALLY unchanged in the translation -- they "
+                "are not natural-language words. Imports must resolve "
+                "at runtime, so a translated module name would break "
+                "execution. This applies to identifiers whose role is "
+                '"module" or that appear in `import`/`from ... import` '
+                "statements."
+            )
+
         return "\n".join(lines)
 
     # ------------------------------------------------------------------
@@ -515,6 +648,8 @@ class PromptBuilder:
         identifiers: list[dict[str, Any]],
         target_lang: str,
         existing_glossary: dict[str, str],
+        forbidden_values: list[str] | None = None,
+        examples: list[dict[str, str]] | None = None,
     ) -> str:
         """Compose the user prompt for identifier translation."""
         lang_name = self._resolve_language_name(target_lang)
@@ -527,6 +662,16 @@ class PromptBuilder:
                 "Use consistent terminology:"
             )
             parts.append(self._format_glossary_table(existing_glossary))
+            parts.append("")
+
+        # Reserved values the LLM must avoid (CORE-710 / CORE-950).
+        if forbidden_values:
+            parts.append(self._format_forbidden_values_section(forbidden_values))
+            parts.append("")
+
+        # Few-shot examples (CORE-950).
+        if examples:
+            parts.append(self._format_examples_section(examples))
             parts.append("")
 
         # Identifiers to translate
@@ -565,6 +710,7 @@ class PromptBuilder:
         texts: list[dict[str, Any]],
         target_lang: str,
         identifier_glossary: dict[str, str],
+        examples: list[dict[str, str]] | None = None,
     ) -> str:
         """Compose the user prompt for text element translation."""
         lang_name = self._resolve_language_name(target_lang)
@@ -577,6 +723,11 @@ class PromptBuilder:
                 "as follows. Use the SAME terms in your translations:"
             )
             parts.append(self._format_glossary_table(identifier_glossary))
+            parts.append("")
+
+        # Few-shot examples (CORE-950).
+        if examples:
+            parts.append(self._format_examples_section(examples))
             parts.append("")
 
         # Texts to translate
@@ -637,6 +788,107 @@ class PromptBuilder:
         return name
 
     _MAX_GLOSSARY_ENTRIES = 500
+    _MAX_FORBIDDEN_VALUES = 500
+    # Few-shot research suggests 3-10 examples is the sweet spot for most
+    # tasks; 25 is generous headroom for callers who want to anchor on
+    # multiple term families (e.g., separate examples for nouns / verbs /
+    # compound words). Pathological inputs above this hit the truncation
+    # path with a warning.
+    _MAX_EXAMPLES = 25
+
+    @staticmethod
+    def _format_examples_section(examples: list[dict[str, str]]) -> str:
+        """Render a few-shot examples block for the user prompt.
+
+        Each example is a dict with ``original`` and ``translation`` keys.
+        Entries missing either key are skipped (with a ``logger.warning``
+        so a caller with a typo like ``origin`` instead of ``original``
+        gets a visible signal). Caps at ``_MAX_EXAMPLES`` to keep token
+        spend bounded -- truncation also logs a warning.
+        """
+        valid: list[tuple[str, str]] = []
+        skipped = 0
+        for ex in examples:
+            if isinstance(ex, dict) and ex.get("original") and ex.get("translation"):
+                valid.append((ex["original"], ex["translation"]))
+            else:
+                skipped += 1
+        if skipped:
+            logger.warning(
+                "Skipped %d malformed few-shot example entries "
+                "(each must be a dict with non-empty 'original' and "
+                "'translation' keys)",
+                skipped,
+            )
+        if not valid:
+            return ""
+
+        cap = PromptBuilder._MAX_EXAMPLES
+        if len(valid) > cap:
+            logger.warning(
+                "Few-shot examples truncated from %d to %d entries",
+                len(valid),
+                cap,
+            )
+            valid = valid[:cap]
+
+        lines = [
+            "### Few-Shot Examples",
+            "",
+            (
+                "Use these example translations as a style anchor. They "
+                "demonstrate the expected term family and word boundaries "
+                "for the target language."
+            ),
+            "",
+            "| Original | Translation |",
+            "|----------|-------------|",
+        ]
+        for original, translation in valid:
+            lines.append(f"| `{original}` | `{translation}` |")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _format_forbidden_values_section(forbidden_values: list[str]) -> str:
+        """Render the reserved-values block for an identifier prompt.
+
+        Deduplicates while preserving first-seen order so the output reads
+        consistently across runs and keeps token spend tight when the
+        caller passes the union of multiple pack sections. Caps the rendered
+        list at ``_MAX_FORBIDDEN_VALUES`` to keep prompt size bounded under
+        pathological inputs.
+        """
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for value in forbidden_values:
+            if value and value not in seen:
+                seen.add(value)
+                deduped.append(value)
+
+        cap = PromptBuilder._MAX_FORBIDDEN_VALUES
+        if len(deduped) > cap:
+            logger.warning(
+                "Forbidden-values list truncated from %d to %d entries",
+                len(deduped),
+                cap,
+            )
+            deduped = deduped[:cap]
+
+        lines = [
+            "### Reserved Translation Values (Do Not Use)",
+            "",
+            (
+                "These values are already used for Python keywords, builtins, "
+                "exceptions, or reserved conventions like `self`/`cls` in the "
+                "target language pack. Do NOT propose any of these as the "
+                "translation for an identifier — they would silently break "
+                "round-trip translation."
+            ),
+            "",
+        ]
+        for value in deduped:
+            lines.append(f"- `{value}`")
+        return "\n".join(lines)
 
     @staticmethod
     def _format_glossary_table(glossary: dict[str, str]) -> str:

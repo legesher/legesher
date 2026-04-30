@@ -8,6 +8,7 @@ This is the main entry point for Condition 5 (full translation) and
 implements the Translator protocol for polymorphic usage.
 """
 
+import hashlib
 import logging
 import sys
 from pathlib import Path
@@ -67,6 +68,7 @@ class LLMTranslator:
         identifier_map: IdentifierMap | None = None,
         scope: TranslationScope | None = None,
         translation_logger: TranslationLogger | None = None,
+        forbidden_identifier_values: list[str] | None = None,
     ) -> None:
         """Initialize the LLM translator.
 
@@ -83,6 +85,15 @@ class LLMTranslator:
             identifier_map: Optional pre-populated identifier map for consistency
             scope: Optional scope config to toggle what gets translated
             translation_logger: Optional logger for training data collection
+            forbidden_identifier_values: Optional flat list of translation
+                values the LLM must NOT propose as identifier translations.
+                Typically the union of pack ``keywords``, ``builtins``,
+                ``exceptions``, and ``reserved_words`` values. Threaded
+                into every identifier batch's ``context.forbidden_values``
+                so the backend can pass them to ``PromptBuilder``. Text
+                items (comments/docstrings/strings) do not receive this
+                list -- prose translations don't have collision risk.
+                CORE-710 / CORE-950.
         """
         self.keyword_translator = TreeSitterTranslator(
             keyword_map=keyword_map,
@@ -92,13 +103,21 @@ class LLMTranslator:
         )
         self.backend = backend
         self.mapper = TokenMapper(keyword_map, builtin_map, reserved_word_map)
-        self.identifier_map = identifier_map or IdentifierMap()
+        # Use ``is None`` rather than ``or`` because IdentifierMap defines
+        # __len__, so an empty (but caller-provided, possibly pack-aware)
+        # map evaluates falsy and would silently get replaced by a fresh
+        # one with no pack attached -- regression for CORE-950 collision
+        # detection.
+        self.identifier_map = (
+            identifier_map if identifier_map is not None else IdentifierMap()
+        )
         self.scope = scope or TranslationScope()
         self.validator = IdentifierValidator()
         self.extractor = TranslatableExtractor(self.mapper)
         self.parser = PythonParser()
         self.python_version = python_version
         self.translation_logger = translation_logger
+        self.forbidden_identifier_values = forbidden_identifier_values
 
     def translate_code(
         self,
@@ -204,6 +223,10 @@ class LLMTranslator:
                 if elem:
                     context = {**elem.context, "glossary": glossary}
                     context["role"] = elem.role
+                if self.forbidden_identifier_values:
+                    # CORE-950: hand the backend the reserved-values list
+                    # so it can pass forbidden_values=... to PromptBuilder.
+                    context["forbidden_values"] = self.forbidden_identifier_values
                 items.append({"text": text, "context": context})
 
             # Batch translate
@@ -232,7 +255,20 @@ class LLMTranslator:
                             retry_valid=self.validator.is_valid(translation),
                         )
 
-                self.identifier_map.add(text, target_lang, translation)
+                # CORE-950 layer 2: when the IdentifierMap is pack-aware,
+                # ``.add()`` raises ValueError on collisions with reserved
+                # pack values (keywords / builtins / exceptions /
+                # reserved_words). Wrap in try/except and apply a numeric
+                # suffix as a deterministic fallback so a single collision
+                # doesn't crash the whole batch. Layer 1 (forbidden_values
+                # in the prompt) makes this rare; the suffix is the
+                # safety net.
+                try:
+                    self.identifier_map.add(text, target_lang, translation)
+                except ValueError:
+                    translation = self._suffix_until_clean(
+                        text, target_lang, translation
+                    )
 
                 # Log for training data
                 if self.translation_logger:
@@ -353,6 +389,79 @@ class LLMTranslator:
                     )
 
         return replacements
+
+    def _suffix_until_clean(
+        self, text: str, target_lang: str, base: str, max_suffix: int = 9
+    ) -> str:
+        """Append a numeric suffix to ``base`` until ``IdentifierMap.add``
+        accepts it without a pack collision.
+
+        The pack-aware ``IdentifierMap`` raises ``ValueError`` when a
+        translation matches a reserved pack value. Reserved values are
+        translations of keywords / builtins / exceptions / reserved_words
+        from the language pack -- they don't typically end in ``_2`` or
+        similar, so a numeric suffix nearly always resolves the
+        collision in one step. The loop is bounded; a deterministic
+        hash-based suffix is the last-resort fallback.
+
+        Returns the suffixed translation that was successfully added.
+
+        Args:
+            text: Source identifier (used for the hash fallback).
+            target_lang: Target language code.
+            base: The collision-causing translation candidate.
+            max_suffix: Max numeric suffix to try before falling back to
+                a hash. Default 9 keeps the loop tight; reserved-value
+                collisions on suffixed forms are essentially impossible
+                in practice.
+
+        Returns:
+            The accepted translation value (already stored in the map).
+        """
+        for i in range(2, max_suffix + 1):
+            candidate = f"{base}_{i}"
+            try:
+                self.identifier_map.add(text, target_lang, candidate)
+                logger.warning(
+                    "Pack collision on %r -> %r; recovered with suffix -> %r",
+                    text,
+                    base,
+                    candidate,
+                )
+                return candidate
+            except ValueError:
+                continue
+
+        # Exhausted the small suffix range -- fall back to a stable
+        # SHA-256-derived suffix. Python's built-in ``hash()`` is
+        # process-randomized (PYTHONHASHSEED), which would break the
+        # round-trip property of the IdentifierMap across runs;
+        # SHA-256 is deterministic so the same source identifier always
+        # gets the same suffix. We extend the slice on the (1-in-10^19)
+        # case where the first 16 hex chars happen to also collide,
+        # walking through the full 64-char digest before giving up.
+        # Copilot review on PR #237 flagged the original `hash()` use.
+        stable = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        for slice_end in (16, 24, 32, 48, 64):
+            candidate = f"{base}_{stable[:slice_end]}"
+            try:
+                self.identifier_map.add(text, target_lang, candidate)
+                logger.warning(
+                    "Pack collision on %r -> %r exhausted suffix range; "
+                    "fell back to hash-suffixed %r",
+                    text,
+                    base,
+                    candidate,
+                )
+                return candidate
+            except ValueError:
+                continue
+
+        raise ValueError(
+            f"Could not recover from pack collision: {text!r} -> {base!r}. "
+            f"Even the SHA-256 hash-suffixed candidates collided. The pack "
+            f"contains a pathological number of reserved values."
+        )
 
     @staticmethod
     def _merge_replacements(
@@ -522,24 +631,38 @@ class LLMTranslator:
         # CORE-710: pull reserved_words from the pack if present (defaults to {})
         reserved_word_map = getattr(pack, "reserved_words", {}) or {}
 
-        # CORE-710 known limitation: the IdentifierMap is constructed
-        # without pack-aware collision detection. A pack-aware IdentifierMap
-        # would raise ValueError on .add() if the LLM proposes an identifier
-        # translation matching an existing reserved-word value (e.g., 'propio'
-        # for variable 'e' when self->'propio'). The LLMTranslator's batch
-        # translation loop at translate_code() does NOT wrap .add() in
-        # try/except, so a raised ValueError would crash the batch
-        # mid-translation — strictly worse than the (rare) latent
-        # collision risk. The right defense is in CORE-950 (prompt-builder
-        # hardening), which will include reserved-word values in the
-        # forbidden-values prompt context so the LLM is unlikely to
-        # propose them in the first place.
+        # CORE-950 two-layer collision defense (CORE-710 deferred this).
+        #
+        # Layer 1 (prompt): aggregate every reserved value the LLM could
+        # collide with -- keywords, builtins, exceptions, reserved_words --
+        # and pass them to the backend via per-item context.forbidden_values
+        # so PromptBuilder lists them in the identifier prompt. Makes
+        # collision proposals rare.
+        #
+        # Layer 2 (translator): construct a pack-aware IdentifierMap so
+        # ``.add()`` raises ValueError on any collision that slips
+        # through. _translate_identifiers wraps in try/except and applies
+        # numeric-suffix recovery so a single collision can't crash the
+        # batch.
+        forbidden_identifier_values: list[str] = []
+        for mapping in (
+            pack.keywords,
+            pack.builtins,
+            getattr(pack, "exceptions", {}) or {},
+            reserved_word_map,
+        ):
+            forbidden_identifier_values.extend(mapping.values())
+
+        identifier_map = IdentifierMap(pack=pack)
+
         return cls(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
             backend=backend,
             python_version=python_version,
             reserved_word_map=reserved_word_map,
+            forbidden_identifier_values=forbidden_identifier_values or None,
+            identifier_map=identifier_map,
         )
 
     @classmethod

@@ -22,6 +22,48 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
     files, plus 80+ new tests.
   - Performance: <5% regression on translator hot path (gated by
     `--benchmark-compare-fail=median:5%` in CI).
+- **Prompt-builder hardening + collision audit** ([CORE-950]): Closes the
+  systemic LLM trace-format pollution surfaced during the AYA-213 Cond-5
+  backend pilot (gemma3:12b emitted
+  `__original_X_translation_Y_Explanation_<essay>` markers on zh+ur; Tiny
+  Aya GGUF emitted `____translated_identifier_X____` residue). Also wires
+  the deferred CORE-710 pack-aware-collision plumbing end-to-end.
+  - **PromptBuilder API extensions**: new `forbidden_values` and `examples`
+    kwargs on `build_identifier_prompt` / `build_text_prompt`; new
+    `preserve_module_names` flag on `__init__`; new
+    `_CRITICAL_RULES.script_aware` substitute rule for non-cased scripts
+    (Arabic family, CJK, Brahmic, SE-Asian, Ge'ez — 17 supported languages).
+  - **`languages.json` schema**: `has_case_distinction: bool` field added
+    next to `rtl` for all 51 supported languages; canonical source of
+    truth for language script properties.
+  - **LLMTranslator collision recovery**: pack-aware `IdentifierMap` raises
+    `ValueError` on reserved-value collisions; `_translate_identifiers`
+    catches and applies numeric-suffix recovery, falling back to
+    SHA-256-derived suffixes (deterministic across runs). Empirically
+    fired in production on `ValueError → قدرغلطی → قدرغلطی_2` during
+    end-to-end gemma3:12b validation.
+  - **Cross-section collision guardrail**: extends pre-commit
+    `validate-language-pack-yaml` hook with
+    `SchemaValidator.check_duplicates()['cross_section_collisions']` (also
+    deduplicates intra-section findings); new
+    `libs/i18n/scripts/audit_collisions.py` runs both DB-level and
+    pack-level audits across the canonical pack list derived from
+    `languages.json`; new `lint`-job step in `.github/workflows/ci.yml`.
+  - **Hidden bug fix**: `LLMTranslator.__init__` previously silently
+    discarded caller-provided empty `IdentifierMap`s because
+    `IdentifierMap.__len__` evaluates to 0 for fresh instances and the
+    `or IdentifierMap()` fallback fired. Replaced with `is None` check.
+  - **Cohere V2 SDK token-count fix**: defensive multi-path read covers
+    SDK build variants; fixes `tokens_in/tokens_out=0` regression.
+  - Touches: `prompt_builder.py`, `style_guides.py`, `languages.json`,
+    `languages.schema.json`, `_rtl.yml`, `zh.yml`, three i18n providers
+    (`anthropic`, `cohere_aya`, `openai_compat`),
+    `tree_sitter/llm_translator.py`, `validate_language_pack_yaml.py`,
+    new `audit_collisions.py`, `.github/workflows/ci.yml`, plus 50+ new
+    tests across i18n + core.
+  - Empirical validation: end-to-end `gemma3:12b` translation of a
+    sample file to `ur` produces zero trace markers, 59.5% native-script
+    ratio, layer-2 collision recovery firing as designed.
 
 ### Package Versions
 

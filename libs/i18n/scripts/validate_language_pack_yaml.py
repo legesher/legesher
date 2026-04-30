@@ -71,9 +71,6 @@ class LanguagePackValidator:
             self.errors.append("Root element must be a dictionary")
             return False
 
-        # Track all translations to detect duplicates
-        translation_to_terms: dict[str, list[str]] = {}
-
         # Validate each section
         for section in ["keywords", "builtins", "exceptions"]:
             if section not in data:
@@ -155,21 +152,78 @@ class LanguagePackValidator:
                             f"{', '.join(scripts)}. Consider using a single script for consistency."
                         )
 
-                # Track translation for duplicate detection
-                if value_part:
-                    key = f"{section}.{term}"
-                    if value_part not in translation_to_terms:
-                        translation_to_terms[value_part] = []
-                    translation_to_terms[value_part].append(key)
+        # Collision detection (CORE-605, CORE-710, CORE-950).
+        #
+        # Single source of truth: ``SchemaValidator.check_duplicates()``.
+        # It surfaces both intra-section duplicates (e.g., two keywords
+        # mapping to the same value) AND cross-section collisions (e.g.,
+        # ``reserved_words.self`` matching ``keywords.in`` -- the
+        # AYA-213 Cycle-4 Urdu failure mode CORE-710 fixed). It covers
+        # all 6 sections: keywords / builtins / exceptions /
+        # reserved_words / operators / standard_library.
+        #
+        # The previous in-script duplicate pass only covered the first
+        # 3 sections AND emitted a duplicate error for any cross-section
+        # collision involving them (Copilot review on PR #237 flagged
+        # the noise). Replacing it with a single schema-validator call
+        # produces one clean error per distinct collision.
+        try:
+            from legesher_i18n.schema_validator import (
+                LanguagePackSchema,
+                SchemaValidator,
+            )
 
-        # Check for duplicate translations (same translation used for different terms)
-        # Collisions break round-trip translation — upgraded from warning to error
-        # in CORE-605 after resolving all existing collisions
-        for translation, terms in translation_to_terms.items():
-            if len(terms) > 1:
+            schema = LanguagePackSchema(**data)
+            dup = SchemaValidator.check_duplicates(schema)
+        except ImportError as exc:
+            self.errors.append(
+                f"Collision validation could not run: legesher-i18n not "
+                f"importable in this environment ({exc}). Install with "
+                f"'uv sync' in the venv used by pre-commit."
+            )
+        except Exception as exc:
+            # Surface the underlying error verbatim so the operator
+            # sees the actual root cause (malformed YAML, schema
+            # violation, etc.) rather than a misleading hint.
+            self.errors.append(
+                f"Collision validation failed: {type(exc).__name__}: {exc}"
+            )
+        else:
+            # Intra-section duplicates: each section reports its own
+            # ``{section}_duplicates`` list of {translation, source_terms}.
+            for section_name, key in [
+                ("keywords", "keyword_duplicates"),
+                ("builtins", "builtin_duplicates"),
+                ("exceptions", "exception_duplicates"),
+                ("reserved_words", "reserved_word_duplicates"),
+                ("operators", "operator_duplicates"),
+                ("standard_library", "stdlib_duplicates"),
+            ]:
+                for entry in dup.get(key, []):
+                    terms = ", ".join(
+                        f"{section_name}.{t}" for t in entry["source_terms"]
+                    )
+                    self.errors.append(
+                        f"Collision: translation '{entry['translation']}' used "
+                        f"for multiple terms: {terms}. Each term must have a "
+                        f"unique translation."
+                    )
+
+            # Cross-section collisions: same value in 2+ distinct sections.
+            # Message is prefixed with "Collision" (capital C) so the
+            # existing test_validate_yaml.py assertions
+            # ``"Collision" in error_message`` work uniformly across
+            # intra-section and cross-section findings.
+            for collision in dup.get("cross_section_collisions", []):
+                locations = ", ".join(
+                    f"{loc['section']}.{loc['source_key']}"
+                    for loc in collision.get("locations", [])
+                )
                 self.errors.append(
-                    f"Collision: translation '{translation}' used for multiple terms: "
-                    f"{', '.join(terms)}. Each term must have a unique translation."
+                    f"Collision across sections: translation "
+                    f"'{collision['translation']}' appears in multiple sections "
+                    f"({locations}). Each translation must be unique across "
+                    f"all pack sections."
                 )
 
         return len(self.errors) == 0

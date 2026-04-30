@@ -117,6 +117,20 @@ jobs:
       - name: Run i18n tests
         run: uv run pytest libs/i18n/tests/ -v --cov=legesher_i18n --cov-report=xml:coverage-i18n.xml
 
+      # CORE-950 collision guardrail. Pre-commit's
+      # validate-language-pack-yaml hook (configured at
+      # .pre-commit-config.yaml) catches cross-section collisions on
+      # CHANGED pack YAMLs at commit time. This CI step is the
+      # second layer: scans the WHOLE monorepo every PR so a collision
+      # introduced via a non-pack-edit path (e.g., DB import script
+      # change, schema migration) doesn't slip through. The audit
+      # logic lives in a Python script (not inline) so it stays
+      # shell-agnostic across the Linux/macOS/Windows test matrix and
+      # avoids YAML-block-scalar indentation pitfalls (Copilot review
+      # on PR #237).
+      - name: i18n collision audit (DB + all 51 packs)
+        run: uv run python libs/i18n/scripts/audit_collisions.py
+
       - name: Run legesher tests
         run: uv run pytest libs/legesher/tests/ -v --cov=legesher --cov-report=xml:coverage-legesher.xml
 
