@@ -179,6 +179,9 @@ exceptions:
   valueerror: eroare_valoare
   warning: avertisment
   zerodivisionerror: eroare_împărțire_zero
+reserved_words:
+  self: sine
+  cls: clasă_însăși
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.13'

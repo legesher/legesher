@@ -178,6 +178,9 @@ exceptions:
   unicodewarning: unicodevarning
   byteswarning: bytesvarnings
   resourcewarning: resursavvisning
+reserved_words:
+  self: sig_själv
+  cls: klass_själv
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

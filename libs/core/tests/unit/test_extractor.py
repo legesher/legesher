@@ -491,3 +491,159 @@ class TestTranslatableElement:
         )
         assert elem.quote_style is None
         assert elem.prefix is None
+
+
+class TestExtractorSkipsReservedWords:
+    """Test that the extractor skips self/cls so they don't reach the LLM (CORE-710)."""
+
+    def _build_extractor(self) -> TranslatableExtractor:
+        from legesher_core.token_mapper import TokenMapper
+
+        # Minimal mapper — enough for the extractor to differentiate
+        # keywords/builtins from user identifiers.
+        mapper = TokenMapper(
+            keyword_map={"def": "definir", "class": "clase", "return": "retornar"},
+            builtin_map={"print": "imprimir"},
+        )
+        return TranslatableExtractor(mapper)
+
+    def test_reserved_words_constant_contains_self_and_cls(self):
+        """The module-level constant lists exactly the conventions we skip."""
+        from legesher_core.tree_sitter.extractor import RESERVED_WORDS
+
+        assert RESERVED_WORDS == frozenset({"self", "cls"})
+
+    def test_self_in_method_signature_is_skipped(self):
+        """def __init__(self, x): self.x = x — self should never reach LLM."""
+        extractor = self._build_extractor()
+        code = "class Foo:\n    def __init__(self, x):\n        self.x = x\n"
+        elements = extractor.extract(code)
+        identifier_texts = [e.text for e in elements if e.kind == "identifier"]
+        assert "self" not in identifier_texts, (
+            f"Expected 'self' to be skipped; got identifiers: {identifier_texts}"
+        )
+
+    def test_cls_in_classmethod_is_skipped(self):
+        """@classmethod def make(cls): return cls() — cls should never reach LLM."""
+        extractor = self._build_extractor()
+        code = (
+            "class Foo:\n    @classmethod\n    def make(cls):\n        return cls()\n"
+        )
+        elements = extractor.extract(code)
+        identifier_texts = [e.text for e in elements if e.kind == "identifier"]
+        assert "cls" not in identifier_texts, (
+            f"Expected 'cls' to be skipped; got identifiers: {identifier_texts}"
+        )
+
+    def test_self_in_attribute_access_is_skipped(self):
+        """self.x references in method body should also be skipped (saves LLM tokens).
+
+        The translator's dispatch order (reserved_word_map before IdentifierMap)
+        ensures the substitution happens correctly at output time without
+        the LLM needing to see self at all.
+        """
+        extractor = self._build_extractor()
+        code = (
+            "class Foo:\n"
+            "    def increment(self):\n"
+            "        self.count = self.count + 1\n"
+        )
+        elements = extractor.extract(code)
+        identifier_texts = [e.text for e in elements if e.kind == "identifier"]
+        # self appears 3x in the source but should be 0x in extracted identifiers
+        assert identifier_texts.count("self") == 0
+        # but `count` (a real user identifier) should still be extracted
+        assert "count" in identifier_texts
+
+    def test_user_identifiers_still_surface_to_llm(self):
+        """Non-reserved identifiers (class/function/var names) still reach LLM."""
+        extractor = self._build_extractor()
+        code = "class Widget:\n    def render(self, height):\n        self.h = height\n"
+        elements = extractor.extract(code)
+        identifier_texts = [e.text for e in elements if e.kind == "identifier"]
+        assert "Widget" in identifier_texts
+        assert "render" in identifier_texts
+        assert "height" in identifier_texts
+        assert "h" in identifier_texts
+
+    def test_skip_applies_at_module_level_too(self):
+        """def foo(self): outside a class body — non-conventional but still skipped.
+
+        Pragmatic choice documented in the plan: we don't inspect decorators
+        or require a class ancestor. Treating self/cls consistently in all
+        positions matches the staticmethod edge case decision.
+        """
+        extractor = self._build_extractor()
+        code = "def helper(self):\n    return self\n"
+        elements = extractor.extract(code)
+        identifier_texts = [e.text for e in elements if e.kind == "identifier"]
+        assert "self" not in identifier_texts
+        # `helper` is still a real identifier
+        assert "helper" in identifier_texts
+
+    def test_keywords_still_take_precedence_over_reserved_word_skip(self):
+        """A literal Python keyword wins over reserved-word skip.
+
+        Defensive: if `def` were ever added to RESERVED_WORDS by mistake,
+        the keyword check (which runs first) would still prevent the
+        keyword from being extracted as a user identifier.
+        """
+        extractor = self._build_extractor()
+        code = "def foo():\n    pass\n"
+        elements = extractor.extract(code)
+        identifier_texts = [e.text for e in elements if e.kind == "identifier"]
+        # `def` is a keyword, not extracted; `foo` is a function name, extracted
+        assert "def" not in identifier_texts
+        assert "foo" in identifier_texts
+
+    def test_self_in_nested_class_body_is_skipped(self):
+        """Nested classes — `class A: class B: def foo(self):` — also skipped."""
+        extractor = self._build_extractor()
+        code = (
+            "class Outer:\n"
+            "    class Inner:\n"
+            "        def method(self):\n"
+            "            return self.value\n"
+        )
+        elements = extractor.extract(code)
+        identifier_texts = [e.text for e in elements if e.kind == "identifier"]
+        assert "self" not in identifier_texts
+        # Nested class names still extracted
+        assert "Outer" in identifier_texts
+        assert "Inner" in identifier_texts
+
+    def test_self_in_lambda_is_skipped(self):
+        """Lambda using self — `lambda self: self.x` — also skipped.
+
+        Edge case: lambdas inside classes (sometimes used for property
+        definitions) might bind self. Our skip-everywhere policy handles
+        this without special-casing.
+        """
+        extractor = self._build_extractor()
+        code = "f = lambda self: self.x\n"
+        elements = extractor.extract(code)
+        identifier_texts = [e.text for e in elements if e.kind == "identifier"]
+        assert "self" not in identifier_texts
+        # `f` and `x` (attribute) still extracted
+        assert "f" in identifier_texts
+
+    def test_skip_does_not_affect_non_reserved_short_identifiers(self):
+        """Single-letter identifiers like `e` (loop var) are NOT skipped.
+
+        The skip is ONLY for self/cls — short names like `e`, `x`, `i`
+        still go through identifier translation since they don't match
+        the reserved-word set.
+        """
+        extractor = self._build_extractor()
+        code = (
+            "def foo():\n"
+            "    try:\n"
+            "        pass\n"
+            "    except ValueError as e:\n"
+            "        x = e.args\n"
+        )
+        elements = extractor.extract(code)
+        identifier_texts = [e.text for e in elements if e.kind == "identifier"]
+        # `e` and `x` are user identifiers; should still surface to LLM
+        assert "e" in identifier_texts
+        assert "x" in identifier_texts

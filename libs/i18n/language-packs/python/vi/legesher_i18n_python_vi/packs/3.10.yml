@@ -178,6 +178,9 @@ exceptions:
   unicodewarning: cảnhbáounicode
   byteswarning: cảnhbáobyte
   resourcewarning: cảnhbáotàinguyên
+reserved_words:
+  self: bảnthân
+  cls: lớpbảnthân
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

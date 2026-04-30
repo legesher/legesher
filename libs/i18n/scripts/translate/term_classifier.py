@@ -31,6 +31,7 @@ from legesher_i18n.term_definitions import (  # noqa: F401
     EXCEPTIONS,
     EXCEPTIONS_3_11,
     SPECIAL_CONSTANTS,
+    RESERVED_WORDS,
     HELPER_TERMS,
     # Type system
     TermCategory,
@@ -39,6 +40,7 @@ from legesher_i18n.term_definitions import (  # noqa: F401
     get_keywords_for_version,
     get_builtins_for_version,
     get_exceptions_for_version,
+    get_reserved_words_for_version,
     classify_term,
     get_all_terms_by_category,
     is_python_term,
@@ -58,6 +60,7 @@ __all__ = [
     "EXCEPTIONS",
     "EXCEPTIONS_3_11",
     "SPECIAL_CONSTANTS",
+    "RESERVED_WORDS",
     "HELPER_TERMS",
     # Type system
     "TermCategory",
@@ -66,6 +69,7 @@ __all__ = [
     "get_keywords_for_version",
     "get_builtins_for_version",
     "get_exceptions_for_version",
+    "get_reserved_words_for_version",
     "classify_term",
     "get_all_terms_by_category",
     "is_python_term",

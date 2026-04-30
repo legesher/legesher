@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `Peringatan` |
 | `zerodivisionerror` | `KasalahanBagiNol` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Sundanese |
+| ------- | ------ |
+| `cls` | `kelas_sorangan` |
+| `self` | `sorangan` |
+
 ## Example Code
 
 Here's an example showing Sundanese Python code with Legesher:

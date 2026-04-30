@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `rabhadh` |
 | `zerodivisionerror` | `mearachd_roinneadh_le_neoni` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Scottish Gaelic |
+| ------- | ------ |
+| `cls` | `fèin_chlas` |
+| `self` | `fèin` |
+
 ## Example Code
 
 Here's an example showing Scottish Gaelic Python code with Legesher:

@@ -9,6 +9,30 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Reserved Words category** ([CORE-710]): Python conventions like `self`
+  and `cls` are now translated deterministically per language pack via a new
+  `reserved_words:` YAML section. Closes the AYA-213 Cycle-4 Urdu collision
+  failure mode (`self → میں` colliding with keyword `in → میں`).
+  - Touches: `term_definitions.py`, `schema_validator.py`, `pack_loader.py`,
+    `token_mapper.py`, `transformer.py`, `tree_sitter/translator.py`,
+    `tree_sitter/extractor.py`, `tree_sitter/identifier_map.py`,
+    `language_interface.py`, `semantic_tokens.py`, all 51 pack `3.10.yml`
+    files, plus 80+ new tests.
+  - Performance: <5% regression on translator hot path (gated by
+    `--benchmark-compare-fail=median:5%` in CI).
+
+### Package Versions
+
+| Package                  | Version | Changed? |
+| ------------------------ | ------- | -------- |
+| legesher-core            | 0.9.3   | Yes      |
+| legesher-i18n            | 0.9.3   | Yes      |
+| legesher (CLI)           | 0.9.3   | —        |
+| legesher-language-server | 0.1.3   | Yes      |
+| legesher-vscode          | 0.1.5   | —        |
+
 ### Removed
 
 - **home**: Delete the empty `legesher-home` package scaffold (`libs/home/`) and

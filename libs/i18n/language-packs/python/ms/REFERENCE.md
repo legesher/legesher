@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `perhatian` |
 | `zerodivisionerror` | `kesalahanpembagiannol` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Malay |
+| ------- | ------ |
+| `cls` | `kelasdiri` |
+| `self` | `diri` |
+
 ## Example Code
 
 Here's an example showing Malay Python code with Legesher:

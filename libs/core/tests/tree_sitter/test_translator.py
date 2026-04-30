@@ -624,3 +624,130 @@ class TestTreeSitterVsTokenComparison:
         assert spanish_keywords["def"] in token_result
         assert spanish_keywords["return"] in ts_result
         assert spanish_keywords["return"] in token_result
+
+
+class TestTreeSitterReservedWordDispatch:
+    """Test reserved_word_map dispatch in TreeSitterTranslator (CORE-710).
+
+    Mirrors TestReservedWordTranslation in test_token_translator.py to
+    confirm parity between the two backends. The Token + TreeSitter
+    backends should yield identical output for any code that uses only
+    keywords + builtins + reserved_words.
+    """
+
+    def test_constructor_backward_compat_no_reserved_word_map(self):
+        """Existing constructor (no reserved_word_map kwarg) still works."""
+        translator = TreeSitterTranslator(
+            keyword_map={"def": "definir"},
+            builtin_map={"print": "imprimir"},
+        )
+        assert translator.mapper.reserved_word_map == {}
+
+    def test_self_translation_via_reserved_word_map(self):
+        """self in method signature + body translates to pack value."""
+        translator = TreeSitterTranslator(
+            keyword_map={"def": "definir", "return": "retornar", "class": "clase"},
+            builtin_map={"print": "imprimir"},
+            reserved_word_map={"self": "propio"},
+        )
+        code = "class Foo:\n    def bar(self):\n        return self.x\n"
+        translated = translator.translate_code(code, "en", "es")
+        assert "propio" in translated
+        # Both signature AND attribute access render to same value
+        assert translated.count("propio") == 2
+
+    def test_cls_translation_in_classmethod(self):
+        """cls in classmethod signature + body translates to pack value."""
+        translator = TreeSitterTranslator(
+            keyword_map={"def": "definir", "return": "retornar", "class": "clase"},
+            builtin_map={"print": "imprimir"},
+            reserved_word_map={"cls": "clase_ref"},
+        )
+        code = "class Foo:\n    def make(cls):\n        return cls()\n"
+        translated = translator.translate_code(code, "en", "es")
+        assert "clase_ref" in translated
+        assert translated.count("clase_ref") == 2
+
+    def test_dispatch_order_keyword_wins_on_conflict(self):
+        """Synthetic conflict: keyword section wins over reserved_word section."""
+        translator = TreeSitterTranslator(
+            keyword_map={"self": "KEYWORD_WIN"},
+            builtin_map={"print": "imprimir"},
+            reserved_word_map={"self": "RESERVED_LOSE"},
+        )
+        translated = translator.translate_code("def foo(self): pass", "en", "es")
+        assert "KEYWORD_WIN" in translated
+        assert "RESERVED_LOSE" not in translated
+
+    def test_unmapped_self_remains_untranslated(self):
+        """Without reserved_word_map, self stays as-is (backward compat).
+
+        Pre-CORE-710 behavior: tree-sitter translates def → definir but
+        leaves self untouched since the pack doesn't ship reserved_words.
+        """
+        translator = TreeSitterTranslator(
+            keyword_map={"def": "definir"},
+            builtin_map={"print": "imprimir"},
+        )
+        translated = translator.translate_code("def foo(self): pass", "en", "es")
+        assert "definir" in translated
+        assert "self" in translated  # untouched
+
+    def test_round_trip_preserves_self(self):
+        """en → es → en restores self via reverse() of mapper."""
+        en_to_es = TreeSitterTranslator(
+            keyword_map={"def": "definir", "return": "retornar"},
+            builtin_map={"print": "imprimir"},
+            reserved_word_map={"self": "propio"},
+        )
+        es_to_en = en_to_es.reverse()
+        spanish = en_to_es.translate_code("def foo(self): return self.x", "en", "es")
+        english = es_to_en.translate_code(spanish, "es", "en")
+        assert "self" in english
+        assert "propio" not in english
+
+    def test_repr_includes_reserved_words_count(self):
+        """__repr__ surfaces reserved_words count for debug visibility."""
+        translator = TreeSitterTranslator(
+            keyword_map={"def": "definir"},
+            builtin_map={"print": "imprimir"},
+            reserved_word_map={"self": "propio", "cls": "clase"},
+        )
+        assert "reserved_words=2" in repr(translator)
+
+    def test_token_and_tree_sitter_parity_for_reserved_words(self):
+        """The two backends produce identical output for self/cls translation.
+
+        Locks in feature parity at the substitution layer. If a future
+        change lands reserved_word_map handling on one backend but not
+        the other, this test will catch it.
+        """
+        from legesher_core.transformer import TokenTranslator
+
+        kwargs = dict(
+            keyword_map={"def": "definir", "return": "retornar", "class": "clase"},
+            builtin_map={"print": "imprimir"},
+            reserved_word_map={"self": "propio", "cls": "clase_ref"},
+        )
+        token = TokenTranslator(**kwargs)
+        tree_sitter = TreeSitterTranslator(**kwargs)
+
+        code = (
+            "class Foo:\n"
+            "    def __init__(self):\n"
+            "        self.x = 1\n"
+            "    @classmethod\n"
+            "    def make(cls):\n"
+            "        return cls()\n"
+        )
+        token_out = token.translate_code(code, "en", "es")
+        ts_out = tree_sitter.translate_code(code, "en", "es")
+
+        # Both should translate self → propio and cls → clase_ref
+        assert "propio" in token_out
+        assert "propio" in ts_out
+        assert "clase_ref" in token_out
+        assert "clase_ref" in ts_out
+        # Both should have the same count of reserved-word substitutions
+        assert token_out.count("propio") == ts_out.count("propio")
+        assert token_out.count("clase_ref") == ts_out.count("clase_ref")

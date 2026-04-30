@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `анхааруулга` |
 | `zerodivisionerror` | `тэгдхуваахалдаа` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Mongolian |
+| ------- | ------ |
+| `cls` | `өөрийнАнги` |
+| `self` | `өөрөө` |
+
 ## Example Code
 
 Here's an example showing Mongolian Python code with Legesher:

@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-04-29
+
 ### Changed
 
 - Expand the package module docstring from a single description sentence into a full
@@ -20,6 +22,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   (CORE-1173)
 
 ### Added
+
+- **Reserved Words plumbing**: `SemanticTokensProvider` now lazy-loads
+  `pack.reserved_words` into a `_translated_reserved_words` set alongside
+  keywords/builtins/exceptions. Visual semantic-token styling is
+  foundational data path only — actual highlighting is deferred to
+  CORE-1060. [CORE-710]
 
 - **Semantic Tokens — Context-Aware Highlighting** (CORE-895, #199)
   - Class names after `class`/`clase` highlighted as `TOKEN_TYPE_CLASS` (teal)

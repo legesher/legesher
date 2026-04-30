@@ -179,6 +179,9 @@ exceptions:
   valueerror: errordevalor
   warning: advertencia
   zerodivisionerror: errordedivisiónporcero
+reserved_words:
+  self: mismo
+  cls: misma_clase
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.13'

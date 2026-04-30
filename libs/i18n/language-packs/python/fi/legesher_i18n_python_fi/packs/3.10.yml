@@ -178,6 +178,9 @@ exceptions:
   unicodewarning: unicodevarnua
   byteswarning: bajtivardi
   resourcewarning: resurssivarnauha
+reserved_words:
+  self: itse
+  cls: luokkaitse
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

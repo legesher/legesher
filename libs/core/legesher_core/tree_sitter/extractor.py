@@ -8,6 +8,8 @@ LLM translation.
 import logging
 import re
 
+from legesher_i18n.term_definitions import RESERVED_WORDS as _RESERVED_WORDS_SOURCE
+
 from ..token_mapper import TokenMapper
 from ..types import IdentifierRole, TranslatableElement
 from .parser import PythonParser
@@ -17,6 +19,14 @@ logger = logging.getLogger(__name__)
 
 # Dunder/magic methods that must NOT be translated
 DUNDER_PATTERN = re.compile(r"^__[a-zA-Z0-9]+__$")
+
+# Reserved words: Python conventions handled deterministically by the
+# language pack's reserved_words section rather than the LLM (CORE-710).
+# Single source of truth: legesher_i18n.term_definitions.RESERVED_WORDS.
+# Materialized as a frozenset at module load time for O(1) containment
+# checks on the extractor hot path. If the canonical list ever expands
+# beyond {self, cls}, this picks up the change automatically.
+RESERVED_WORDS = frozenset(_RESERVED_WORDS_SOURCE)
 
 # Standard library top-level module names (Python 3.10+)
 # Used to skip stdlib import names
@@ -471,6 +481,18 @@ class TranslatableExtractor:
         if self.mapper.get_keyword(text) is not None:
             return
         if self.mapper.get_builtin(text) is not None:
+            return
+
+        # CORE-710: skip reserved words (self, cls) in any AST position.
+        # They're translated deterministically by the language pack's
+        # reserved_words section at the translator level (see
+        # TokenMapper.get_reserved_word), so sending them to the LLM
+        # wastes tokens and risks inconsistent translations. Both
+        # parameter-position usages (`def foo(self):`) and body-position
+        # usages (`self.x`) are skipped — the translator's dispatch order
+        # (reserved_word_map before IdentifierMap) ensures correct
+        # substitution at output time regardless of where they appear.
+        if text in RESERVED_WORDS:
             return
 
         # Skip dunder/magic methods

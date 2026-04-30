@@ -178,6 +178,9 @@ exceptions:
   unicodewarning: ユニコード警告
   byteswarning: バイト警告
   resourcewarning: リソース警告
+reserved_words:
+  self: 自己
+  cls: 自クラス
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

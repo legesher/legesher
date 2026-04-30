@@ -12,7 +12,7 @@ dependencies = [
     "legesher-i18n>=0.2.0,<1.0.0",
 ]
 name = "legesher-i18n-python-ja"
-version = "0.0.2"
+version = "0.0.3"
 description = "Japanese language pack for Python in Legesher"
 readme = "README.md"
 keywords = ["legesher", "i18n", "japanese", "python", "translation", "multilingual"]

@@ -9,6 +9,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-04-29
+
+### Added
+
+- **Reserved Words**: New `reserved_word_map` parameter on `TokenTranslator`,
+  `TreeSitterTranslator`, `LLMTranslator`, and `create_translator()` factory;
+  threads through `TokenMapper` (with new `get_reserved_word()` /
+  `is_reserved_word()` methods). Translator dispatch order is
+  keyword → builtin → reserved_word → IdentifierMap. Walrus-operator
+  short-circuit on the hot path keeps the empty-map case at <5% benchmark
+  deltas. [CORE-710]
+- **Extractor**: `_extract_identifier()` skips `self`/`cls` so they never
+  reach the LLM — they're handled deterministically by the language pack's
+  reserved_words section. [CORE-710]
+- **IdentifierMap**: `validate_against_pack()` and pack-aware `add()` with
+  collision detection across keywords, builtins, exceptions, and
+  reserved_words. Raises `ValueError` with section identifier on collision
+  so callers can re-prompt or suffix. [CORE-710]
+
 ### Changed
 
 - `mypy --strict` now passes on public API files (`__init__.py`,

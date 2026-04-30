@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `သတိပေးချက်` |
 | `zerodivisionerror` | `သုညစားအမှား` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Burmese |
+| ------- | ------ |
+| `cls` | `အတန်းကိုယ်တိုင်` |
+| `self` | `ကိုယ်တိုင်` |
+
 ## Example Code
 
 Here's an example showing Burmese Python code with Legesher:

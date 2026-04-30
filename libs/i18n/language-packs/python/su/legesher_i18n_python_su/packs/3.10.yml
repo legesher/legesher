@@ -179,6 +179,9 @@ exceptions:
   unicodewarning: PeringatanUnikode
   byteswarning: PeringatanBait
   resourcewarning: PeringatanSumberdaya
+reserved_words:
+  self: sorangan
+  cls: kelas_sorangan
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

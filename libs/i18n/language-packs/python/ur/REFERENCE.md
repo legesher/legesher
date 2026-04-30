@@ -224,6 +224,17 @@ Exception classes for error handling.
 | `warning` | `انتباہ` |
 | `zerodivisionerror` | `صفرتقسیمغلطی` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Urdu |
+| ------- | ------ |
+| `cls` | `جماعتخود` |
+| `self` | `خود` |
+
 ## Example Code
 
 Here's an example showing Urdu Python code with Legesher:

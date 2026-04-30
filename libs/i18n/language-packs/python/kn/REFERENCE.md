@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `ಎಚ್ಚರಿಕೆ` |
 | `zerodivisionerror` | `ಶೂನ್ಯಭಾಗಾಕಾರದೋಷ` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Kannada |
+| ------- | ------ |
+| `cls` | `ಸ್ವವರ್ಗ` |
+| `self` | `ತಾನೇ` |
+
 ## Example Code
 
 Here's an example showing Kannada Python code with Legesher:

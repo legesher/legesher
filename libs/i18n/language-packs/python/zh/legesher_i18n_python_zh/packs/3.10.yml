@@ -179,6 +179,9 @@ exceptions:
   valueerror: 值错误
   warning: 警告
   zerodivisionerror: 零除数错误
+reserved_words:
+  self: 自身
+  cls: 类自身
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.13'

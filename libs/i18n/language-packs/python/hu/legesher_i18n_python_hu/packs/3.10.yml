@@ -178,6 +178,9 @@ exceptions:
   unicodewarning: unicodeavériség
   byteswarning: bajt_rőlévő_vágás
   resourcewarning: erőforrásfigyelmén
+reserved_words:
+  self: maga
+  cls: osztálymaga
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

@@ -1,13 +1,7 @@
-# English Language Pack for Python 3.10+
-# Base pack with all core keywords and Python 3.10 additions (match/case, aiter/anext)
-# English is the canonical language - all keywords map to themselves
-
 language: en
 target: python
 version: '3.10'
-
 keywords:
-  # Core keywords (Python 3.x)
   and: and
   as: as
   assert: assert
@@ -43,13 +37,9 @@ keywords:
   while: while
   with: with
   yield: yield
-
-  # Python 3.10+ specific (PEP 634: Structural Pattern Matching)
   match: match
   case: case
-
 builtins:
-  # Built-in functions
   abs: abs
   aiter: aiter
   all: all
@@ -101,8 +91,6 @@ builtins:
   sum: sum
   vars: vars
   zip: zip
-
-  # Built-in types
   bool: bool
   bytearray: bytearray
   bytes: bytes
@@ -122,11 +110,8 @@ builtins:
   super: super
   tuple: tuple
   type: type
-
-  # Special constants
   ellipsis: ellipsis
   notimplemented: notimplemented
-
 exceptions:
   arithmeticerror: arithmeticerror
   assertionerror: assertionerror
@@ -194,7 +179,9 @@ exceptions:
   valueerror: valueerror
   warning: warning
   zerodivisionerror: zerodivisionerror
-
+reserved_words:
+  self: self
+  cls: cls
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

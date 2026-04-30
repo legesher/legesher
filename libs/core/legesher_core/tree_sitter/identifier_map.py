@@ -7,10 +7,16 @@ multi-language storage, and JSON persistence.
 Inspired by translation memory in CAT tools and symbol tables in compilers.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from legesher_i18n.pack_loader import LanguagePack
 
 logger = logging.getLogger(__name__)
 
@@ -86,8 +92,22 @@ class IdentifierMap:
         >>> id_map.save(Path(".legesher/identifier_map.json"))
     """
 
-    def __init__(self, source_lang: str = "en"):
+    def __init__(
+        self,
+        source_lang: str = "en",
+        pack: LanguagePack | None = None,
+    ):
+        """Initialize the identifier map.
+
+        Args:
+            source_lang: Source language code (default: "en")
+            pack: Optional language pack used to detect collisions when
+                ``add()`` is called. If provided, any translation that
+                matches an existing keyword/builtin/exception/reserved_word
+                value in the pack will raise ``ValueError`` (CORE-710).
+        """
         self.source_lang = source_lang
+        self.pack = pack
         self._map: dict[str, dict[str, str]] = {}
         # Maps: source_identifier -> {target_lang: translated_identifier}
 
@@ -98,8 +118,82 @@ class IdentifierMap:
             return None
         return translations.get(target_lang)
 
-    def add(self, identifier: str, target_lang: str, translation: str) -> None:
-        """Add a translation for an identifier in a target language."""
+    def validate_against_pack(
+        self,
+        translation: str,
+        pack: LanguagePack,
+    ) -> str | None:
+        """Check whether ``translation`` collides with any reserved term in pack.
+
+        Reserved terms include keywords, builtins, exceptions, and reserved
+        words (CORE-710). A collision means the LLM-proposed identifier
+        translation matches the value of an existing pack entry, which would
+        break round-trip translation (the reverse mapper can't tell which
+        source key maps back).
+
+        Args:
+            translation: Candidate translated identifier
+            pack: LanguagePack to validate against
+
+        Returns:
+            None if no collision; otherwise a string identifying the colliding
+            section and source key, e.g. ``"keyword:def"`` or ``"reserved_word:self"``.
+
+        Example:
+            >>> imap = IdentifierMap()
+            >>> reason = imap.validate_against_pack("definir", pack)
+            >>> reason  # collides with the Spanish translation of `def`
+            'keyword:def'
+        """
+        for section, mapping in (
+            ("keyword", pack.keywords),
+            ("builtin", pack.builtins),
+            ("exception", pack.exceptions),
+            ("reserved_word", pack.reserved_words),
+        ):
+            for source_key, target_value in mapping.items():
+                if target_value == translation:
+                    return f"{section}:{source_key}"
+        return None
+
+    def add(
+        self,
+        identifier: str,
+        target_lang: str,
+        translation: str,
+        *,
+        pack: LanguagePack | None = None,
+    ) -> None:
+        """Add a translation for an identifier in a target language.
+
+        If a ``pack`` is supplied (or one was passed at construction), the
+        translation is validated against the pack's reserved terms first.
+        On collision, ``ValueError`` is raised so the caller can re-prompt
+        the LLM for an alternative or apply a suffix (e.g., ``error_var``).
+
+        Args:
+            identifier: Source identifier (e.g., ``"calculate_tax"``)
+            target_lang: Target language code (e.g., ``"es"``)
+            translation: Translated identifier
+            pack: Optional pack override for this call. When omitted, falls
+                back to ``self.pack`` (set at construction).
+
+        Raises:
+            ValueError: If ``translation`` collides with a reserved word,
+                keyword, builtin, or exception translation in the pack.
+                The message contains the substring ``"collision"`` and
+                identifies the colliding section.
+        """
+        pack_to_check = pack if pack is not None else self.pack
+        if pack_to_check is not None:
+            collision = self.validate_against_pack(translation, pack_to_check)
+            if collision is not None:
+                raise ValueError(
+                    f"Translation collision: {identifier!r} -> {translation!r} "
+                    f"matches reserved {collision} in pack "
+                    f"'{pack_to_check.language}'. Choose a different "
+                    f"translation or apply a suffix."
+                )
         if identifier not in self._map:
             self._map[identifier] = {}
         self._map[identifier][target_lang] = translation

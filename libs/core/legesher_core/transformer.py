@@ -59,6 +59,7 @@ class TokenTranslator:
         keyword_map: dict[str, str],
         builtin_map: dict[str, str],
         python_version: str = "3.13",
+        reserved_word_map: dict[str, str] | None = None,
     ) -> None:
         """Initialize translator with language maps and Python version.
 
@@ -66,18 +67,22 @@ class TokenTranslator:
             keyword_map: Dictionary mapping English keywords to target language
             builtin_map: Dictionary mapping English builtins to target language
             python_version: Python version string (default: "3.13")
+            reserved_word_map: Optional mapping of Python conventions like
+                ``self`` and ``cls`` to target language (CORE-710). Defaults
+                to empty so existing callers don't need to change.
 
         Raises:
-            ValueError: If maps are empty or None
+            ValueError: If keyword_map or builtin_map is empty or None.
 
         Example:
             >>> translator = TokenTranslator(
             ...     keyword_map={"def": "definir", "return": "retornar"},
             ...     builtin_map={"print": "imprimir"},
+            ...     reserved_word_map={"self": "propio", "cls": "clase"},
             ...     python_version="3.13"
             ... )
         """
-        self.mapper = TokenMapper(keyword_map, builtin_map)
+        self.mapper = TokenMapper(keyword_map, builtin_map, reserved_word_map)
         self.python_version = python_version
 
     def __repr__(self) -> str:
@@ -86,12 +91,13 @@ class TokenTranslator:
         Example:
             >>> translator = TokenTranslator({"def": "definir"}, {"print": "imprimir"})
             >>> repr(translator)
-            "TokenTranslator(keywords=1, builtins=1, python_version='3.13')"
+            "TokenTranslator(keywords=1, builtins=1, reserved_words=0, python_version='3.13')"
         """
         return (
             f"TokenTranslator("
             f"keywords={len(self.mapper.keyword_map)}, "
             f"builtins={len(self.mapper.builtin_map)}, "
+            f"reserved_words={len(self.mapper.reserved_word_map)}, "
             f"python_version={self.python_version!r})"
         )
 
@@ -230,6 +236,24 @@ class TokenTranslator:
                         i += 1
                         continue
 
+                    # Try to translate as reserved word (CORE-710: self, cls).
+                    # Short-circuit when the map is empty — most callers (and
+                    # all pre-CORE-710 ones) don't pass reserved_word_map, and
+                    # the extra dict.get() costs ~6% on the hot path otherwise.
+                    if reserved_word_map := self.mapper.reserved_word_map:
+                        translated = reserved_word_map.get(tok.string)
+                        if translated and translated != tok.string:
+                            new_tok = tokenize.TokenInfo(
+                                tok.type,
+                                translated,
+                                tok.start,
+                                tok.end,
+                                tok.line,
+                            )
+                            translated_tokens.append(new_tok)
+                            i += 1
+                            continue
+
                 # Keep token unchanged (identifiers, operators, etc.)
                 translated_tokens.append(tok)
                 i += 1
@@ -327,6 +351,7 @@ class TokenTranslator:
         return TokenTranslator(
             keyword_map=reversed_mapper.keyword_map,
             builtin_map=reversed_mapper.builtin_map,
+            reserved_word_map=reversed_mapper.reserved_word_map,
             python_version=self.python_version,
         )
 
@@ -408,9 +433,13 @@ class TokenTranslator:
                 f"Merged {len(pack.exceptions)} exception translations into builtin map"
             )
 
+        # CORE-710: pull reserved_words from the pack if present (defaults to {})
+        reserved_word_map = getattr(pack, "reserved_words", {}) or {}
+
         return cls(
             keyword_map=pack.keywords,
             builtin_map=builtin_map,
+            reserved_word_map=reserved_word_map,
             python_version=python_version,
         )
 

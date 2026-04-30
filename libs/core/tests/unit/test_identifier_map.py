@@ -309,3 +309,202 @@ class TestReassembleIdentifier:
 
     def test_unknown_convention_falls_back_to_lowercase(self):
         assert reassemble_identifier(["Foo", "Bar"], "unknown") == "foo_bar"
+
+
+class TestIdentifierMapPackCollisionDetection:
+    """Test validate_against_pack and pack-aware add() (CORE-710)."""
+
+    def _make_pack(self):
+        from legesher_i18n.pack_loader import LanguagePack
+
+        return LanguagePack(
+            language="es",
+            target="python",
+            version="3.10",
+            keywords={"def": "definir", "in": "en"},
+            builtins={"print": "imprimir", "len": "longitud"},
+            exceptions={"ValueError": "ErrorDeValor"},
+            reserved_words={"self": "propio", "cls": "clase_ref"},
+        )
+
+    def test_validate_against_pack_returns_none_when_safe(self):
+        """A novel translation that matches no pack term: no collision."""
+        pack = self._make_pack()
+        imap = IdentifierMap()
+        assert imap.validate_against_pack("calcular_impuesto", pack) is None
+
+    def test_validate_against_pack_detects_keyword_collision(self):
+        pack = self._make_pack()
+        imap = IdentifierMap()
+        assert imap.validate_against_pack("definir", pack) == "keyword:def"
+
+    def test_validate_against_pack_detects_builtin_collision(self):
+        pack = self._make_pack()
+        imap = IdentifierMap()
+        assert imap.validate_against_pack("imprimir", pack) == "builtin:print"
+
+    def test_validate_against_pack_detects_exception_collision(self):
+        pack = self._make_pack()
+        imap = IdentifierMap()
+        assert (
+            imap.validate_against_pack("ErrorDeValor", pack) == "exception:ValueError"
+        )
+
+    def test_validate_against_pack_detects_reserved_word_collision(self):
+        """Madison's test 6 motivating case: e → propio collides with self."""
+        pack = self._make_pack()
+        imap = IdentifierMap()
+        assert imap.validate_against_pack("propio", pack) == "reserved_word:self"
+
+    def test_add_with_pack_at_construction_raises_on_collision(self):
+        """Madison's test 6 skeleton: pack at construction, add raises on collide."""
+        pack = self._make_pack()
+        imap = IdentifierMap(pack=pack)
+        with pytest.raises(ValueError, match="collision|reserved"):
+            imap.add("e", "es", "propio")
+
+    def test_add_with_per_call_pack_raises_on_collision(self):
+        """Per-call pack override also triggers collision check."""
+        pack = self._make_pack()
+        imap = IdentifierMap()  # no pack at construction
+        with pytest.raises(ValueError, match="collision"):
+            imap.add("e", "es", "definir", pack=pack)
+
+    def test_add_without_pack_does_not_check(self):
+        """Backward-compat: existing 3-arg add() with no pack accepts any value."""
+        imap = IdentifierMap()
+        # Even a literal pack reserved value is accepted when no pack is given
+        imap.add("e", "es", "definir")
+        assert imap.get("e", "es") == "definir"
+
+    def test_add_with_pack_accepts_non_colliding_translation(self):
+        """Pack-aware add accepts translations that don't collide."""
+        pack = self._make_pack()
+        imap = IdentifierMap(pack=pack)
+        imap.add("calculate_tax", "es", "calcular_impuesto")
+        assert imap.get("calculate_tax", "es") == "calcular_impuesto"
+
+    def test_collision_message_identifies_section_and_key(self):
+        """The error message names the colliding section so callers can fix."""
+        pack = self._make_pack()
+        imap = IdentifierMap(pack=pack)
+        with pytest.raises(ValueError) as exc_info:
+            imap.add("e", "es", "propio")
+        assert "reserved_word:self" in str(exc_info.value)
+
+    def test_pack_attribute_is_stored_at_construction(self):
+        """The pack reference is exposed for callers who want to introspect it."""
+        pack = self._make_pack()
+        imap = IdentifierMap(pack=pack)
+        assert imap.pack is pack
+
+        imap_no_pack = IdentifierMap()
+        assert imap_no_pack.pack is None
+
+    def test_merge_does_not_run_pack_collision_check(self):
+        """merge() bypasses add() so pack-collision is not enforced.
+
+        Documenting current behavior: merging two maps trusts the inputs
+        (typical for translation-memory merges across runs). If a future
+        requirement is to validate during merge, that's a separate feature.
+        """
+        from legesher_core.tree_sitter.identifier_map import IdentifierMap
+
+        pack = self._make_pack()
+        imap_with_pack = IdentifierMap(pack=pack)
+
+        # Build a second map with a translation that WOULD collide if
+        # added through `add()` with the pack
+        other = IdentifierMap()
+        other.add("e", "es", "propio")  # 'propio' = pack's self translation
+
+        # merge() should NOT raise even though `propio` collides with pack
+        imap_with_pack.merge(other)
+        assert imap_with_pack.get("e", "es") == "propio"
+
+    def test_validate_against_pack_handles_empty_pack_dicts(self):
+        """A pack with empty keyword/builtin/exception/reserved_word dicts.
+
+        validate_against_pack should return None (no collisions possible
+        when the pack is empty). Edge case for very-early-stage packs.
+        """
+        from legesher_i18n.pack_loader import LanguagePack
+        from legesher_core.tree_sitter.identifier_map import IdentifierMap
+
+        empty_pack = LanguagePack(language="zz", target="python", version="3.10")
+        imap = IdentifierMap()
+        assert imap.validate_against_pack("anything", empty_pack) is None
+        assert imap.validate_against_pack("propio", empty_pack) is None
+
+    def test_validate_against_pack_with_empty_translation_returns_none(self):
+        """An empty-string translation matches no pack value, so returns None.
+
+        The caller is responsible for rejecting empty translations BEFORE
+        calling validate_against_pack — this method only checks collision,
+        not validity. Documenting current behavior so future callers know
+        not to rely on it for empty-string rejection.
+        """
+        from legesher_core.tree_sitter.identifier_map import IdentifierMap
+
+        pack = self._make_pack()
+        imap = IdentifierMap()
+        assert imap.validate_against_pack("", pack) is None
+
+    def test_validate_against_pack_section_priority_keyword_first(self):
+        """When a translation matches multiple sections, keyword-section wins.
+
+        Pin the order: keyword → builtin → exception → reserved_word.
+        Synthetic case: pack has 'shared' as the value in BOTH keyword
+        and reserved_word sections (impossible in real data due to
+        check_duplicates, but defensive).
+        """
+        from legesher_i18n.pack_loader import LanguagePack
+        from legesher_core.tree_sitter.identifier_map import IdentifierMap
+
+        pack = LanguagePack(
+            language="zz",
+            target="python",
+            version="3.10",
+            keywords={"def": "shared"},  # 'shared' matches keyword `def`
+            reserved_words={"self": "shared"},  # AND reserved_word `self`
+        )
+        imap = IdentifierMap()
+        # Keyword section is checked first → returns keyword:def
+        assert imap.validate_against_pack("shared", pack) == "keyword:def"
+
+    def test_pack_arg_persists_across_multiple_add_calls(self):
+        """The pack at construction is checked on every add() call."""
+        import pytest
+
+        from legesher_core.tree_sitter.identifier_map import IdentifierMap
+
+        pack = self._make_pack()
+        imap = IdentifierMap(pack=pack)
+        # First add succeeds (no collision)
+        imap.add("calculate_tax", "es", "calcular_impuesto")
+        # Second add with collision still raises (pack reference persists)
+        with pytest.raises(ValueError, match="collision"):
+            imap.add("e", "es", "propio")
+        # First add still in map
+        assert imap.get("calculate_tax", "es") == "calcular_impuesto"
+
+    def test_validate_against_pack_finds_first_collision_on_iteration_order(self):
+        """When a translation matches multiple values within ONE section.
+
+        Real-world impossible (check_duplicates rejects it) but pinning:
+        validate_against_pack returns the first match encountered during
+        iteration, which is dict-insertion-order in modern Python.
+        """
+        from legesher_i18n.pack_loader import LanguagePack
+        from legesher_core.tree_sitter.identifier_map import IdentifierMap
+
+        pack = LanguagePack(
+            language="zz",
+            target="python",
+            version="3.10",
+            keywords={"def": "shared", "class": "shared"},  # synthetic dup
+        )
+        imap = IdentifierMap()
+        result = imap.validate_against_pack("shared", pack)
+        # Returns one of the two; insertion order says "def" first
+        assert result == "keyword:def"

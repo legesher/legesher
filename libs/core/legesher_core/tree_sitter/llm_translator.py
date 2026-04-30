@@ -63,6 +63,7 @@ class LLMTranslator:
         builtin_map: dict[str, str],
         backend: TextTranslationBackend,
         python_version: str = "3.13",
+        reserved_word_map: dict[str, str] | None = None,
         identifier_map: IdentifierMap | None = None,
         scope: TranslationScope | None = None,
         translation_logger: TranslationLogger | None = None,
@@ -74,6 +75,11 @@ class LLMTranslator:
             builtin_map: Builtin translation mappings from language pack
             backend: LLM backend for translating identifiers/comments/strings
             python_version: Python version for version-aware packs
+            reserved_word_map: Optional mapping of Python conventions like
+                ``self`` and ``cls`` to target language (CORE-710). Threaded
+                through the inner ``TreeSitterTranslator`` and ``TokenMapper``
+                so the dispatch order substitutes self/cls deterministically
+                even though the extractor skips them from LLM input.
             identifier_map: Optional pre-populated identifier map for consistency
             scope: Optional scope config to toggle what gets translated
             translation_logger: Optional logger for training data collection
@@ -82,9 +88,10 @@ class LLMTranslator:
             keyword_map=keyword_map,
             builtin_map=builtin_map,
             python_version=python_version,
+            reserved_word_map=reserved_word_map,
         )
         self.backend = backend
-        self.mapper = TokenMapper(keyword_map, builtin_map)
+        self.mapper = TokenMapper(keyword_map, builtin_map, reserved_word_map)
         self.identifier_map = identifier_map or IdentifierMap()
         self.scope = scope or TranslationScope()
         self.validator = IdentifierValidator()
@@ -464,11 +471,14 @@ class LLMTranslator:
         """
         reversed_keyword = {v: k for k, v in self.mapper.keyword_map.items()}
         reversed_builtin = {v: k for k, v in self.mapper.builtin_map.items()}
+        # CORE-710: also reverse the reserved_word_map so round-trip restores self/cls.
+        reversed_reserved = {v: k for k, v in self.mapper.reserved_word_map.items()}
         return LLMTranslator(
             keyword_map=reversed_keyword,
             builtin_map=reversed_builtin,
             backend=self.backend,
             python_version=self.python_version,
+            reserved_word_map=reversed_reserved,
             identifier_map=self.identifier_map,
             scope=self.scope,
         )
@@ -509,11 +519,27 @@ class LLMTranslator:
         loader = LanguagePackLoader()
         pack = loader.load(language, target="python", version=python_version)
 
+        # CORE-710: pull reserved_words from the pack if present (defaults to {})
+        reserved_word_map = getattr(pack, "reserved_words", {}) or {}
+
+        # CORE-710 known limitation: the IdentifierMap is constructed
+        # without pack-aware collision detection. A pack-aware IdentifierMap
+        # would raise ValueError on .add() if the LLM proposes an identifier
+        # translation matching an existing reserved-word value (e.g., 'propio'
+        # for variable 'e' when self->'propio'). The LLMTranslator's batch
+        # translation loop at translate_code() does NOT wrap .add() in
+        # try/except, so a raised ValueError would crash the batch
+        # mid-translation — strictly worse than the (rare) latent
+        # collision risk. The right defense is in CORE-950 (prompt-builder
+        # hardening), which will include reserved-word values in the
+        # forbidden-values prompt context so the LLM is unlikely to
+        # propose them in the first place.
         return cls(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
             backend=backend,
             python_version=python_version,
+            reserved_word_map=reserved_word_map,
         )
 
     @classmethod

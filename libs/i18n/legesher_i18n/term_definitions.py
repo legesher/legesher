@@ -6,6 +6,9 @@ This module is the canonical source for:
 - All built-in types
 - All exceptions
 - All special constants
+- All reserved words (Python conventions like ``self`` and ``cls`` that are
+  treated deterministically by Legesher even though Python itself does not
+  reserve them)
 
 The version_index.py module imports these base terms and applies version deltas
 from version-index.yml to provide complete term sets for any Python version.
@@ -266,6 +269,19 @@ HELPER_TERMS = [
     "underscore",
 ]
 
+# Reserved Words - Python conventions that aren't true reserved words in the
+# language (Python's own reserved words live in KEYWORDS_BASE), but that
+# Legesher treats deterministically because they appear in canonical positions:
+#   - ``self``: first parameter of an instance method
+#   - ``cls``: first parameter of a classmethod
+# Translating these via the language pack (rather than the LLM) eliminates
+# drift across files and prevents collisions with pronoun/preposition
+# translations of real keywords (e.g., the Urdu ``in`` → ``میں`` collision).
+RESERVED_WORDS = [
+    "self",
+    "cls",
+]
+
 
 TermCategory = Literal[
     "keyword",
@@ -273,6 +289,7 @@ TermCategory = Literal[
     "builtin_type",
     "exception",
     "special_constant",
+    "reserved_word",
     "helper",
     "unknown",
 ]
@@ -285,6 +302,7 @@ TERM_TYPE_YAML_SECTIONS: dict[str, str | None] = {
     "builtin_type": "builtins",
     "exception": "exceptions",
     "special_constant": "builtins",
+    "reserved_word": "reserved_words",
     "helper": None,  # Excluded from YAML export
     "unknown": None,  # Excluded from YAML export
     # Future term types (not yet implemented):
@@ -350,6 +368,23 @@ def get_exceptions_for_version(version: str = "3.10") -> list[str]:
     return exceptions
 
 
+def get_reserved_words_for_version(version: str = "3.10") -> list[str]:
+    """Get all reserved words applicable to a specific Python version.
+
+    Reserved words (``self``, ``cls``) are Python conventions that are stable
+    across all supported Python versions, so the ``version`` argument is
+    accepted for API symmetry with the other ``get_*_for_version`` accessors
+    but does not affect the returned list.
+
+    Args:
+        version: Python version string (accepted for API symmetry; unused)
+
+    Returns:
+        List of reserved word strings
+    """
+    return RESERVED_WORDS.copy()
+
+
 def classify_term(term: str, python_version: str = "3.10") -> TermCategory:
     """Classify a Python term into its category.
 
@@ -359,7 +394,8 @@ def classify_term(term: str, python_version: str = "3.10") -> TermCategory:
 
     Returns:
         Category string: 'keyword', 'builtin_func', 'builtin_type',
-                        'exception', 'special_constant', 'helper', or 'unknown'
+                        'exception', 'special_constant', 'reserved_word',
+                        'helper', or 'unknown'
     """
     term_lower = term.lower()
 
@@ -383,6 +419,10 @@ def classify_term(term: str, python_version: str = "3.10") -> TermCategory:
     # Check special constants
     if term_lower in SPECIAL_CONSTANTS:
         return "special_constant"
+
+    # Check reserved words (Legesher conventions: self, cls)
+    if term_lower in RESERVED_WORDS:
+        return "reserved_word"
 
     # Check helper terms
     if term in HELPER_TERMS or term_lower in [h.lower() for h in HELPER_TERMS]:
@@ -409,6 +449,7 @@ def get_all_terms_by_category(
         "builtin_type": BUILTIN_TYPES.copy(),
         "exception": EXCEPTIONS.copy(),
         "special_constant": SPECIAL_CONSTANTS.copy(),
+        "reserved_word": RESERVED_WORDS.copy(),
         "helper": HELPER_TERMS.copy(),
     }
 
@@ -470,6 +511,7 @@ __all__ = [
     "EXCEPTIONS",
     "EXCEPTIONS_3_11",
     "SPECIAL_CONSTANTS",
+    "RESERVED_WORDS",
     "HELPER_TERMS",
     # Type system
     "TermCategory",
@@ -478,6 +520,7 @@ __all__ = [
     "get_keywords_for_version",
     "get_builtins_for_version",
     "get_exceptions_for_version",
+    "get_reserved_words_for_version",
     "classify_term",
     "get_all_terms_by_category",
     "is_python_term",

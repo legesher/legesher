@@ -165,12 +165,36 @@ class TranslationDatabase:
         Args:
             name: The term name
             programming_language: Programming language (default: "python")
-            category: Term category (used only if creating)
+            category: Term category (used only if creating). Must be one of
+                the canonical categories defined in
+                ``legesher_i18n.term_definitions.TermCategory`` —
+                ``keyword``, ``builtin_func``, ``builtin_type``,
+                ``exception``, ``special_constant``, ``reserved_word``,
+                ``helper``, or ``unknown``. CORE-710 added the
+                ``reserved_word`` category for ``self``/``cls``.
             subcategory: Term subcategory (used only if creating)
 
         Returns:
             The term ID
+
+        Raises:
+            ValueError: If ``category`` is not a recognized value. SQLite
+                accepts any string in the column, so this runtime check
+                guards against typos like ``"reserved_words"`` or
+                ``"reservedword"`` silently corrupting the table.
         """
+        # CORE-710: validate category against the canonical TermCategory set
+        # so a typo doesn't silently insert a ghost row that no consumer
+        # can find via the documented categories.
+        from ..term_definitions import is_valid_term_type
+
+        if not is_valid_term_type(category):
+            raise ValueError(
+                f"Unknown term category: {category!r}. Must be one of "
+                f"keyword, builtin_func, builtin_type, exception, "
+                f"special_constant, reserved_word, helper, unknown."
+            )
+
         existing = self.get_term_by_name(name, programming_language)
         if existing:
             return existing["id"]

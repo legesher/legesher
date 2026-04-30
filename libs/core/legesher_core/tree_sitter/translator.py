@@ -57,6 +57,7 @@ class TreeSitterTranslator:
         keyword_map: dict[str, str],
         builtin_map: dict[str, str],
         python_version: str = "3.13",
+        reserved_word_map: dict[str, str] | None = None,
     ) -> None:
         """Initialize translator with language maps and Python version.
 
@@ -64,19 +65,23 @@ class TreeSitterTranslator:
             keyword_map: Dictionary mapping English keywords to target language
             builtin_map: Dictionary mapping English builtins to target language
             python_version: Python version string (default: "3.13")
+            reserved_word_map: Optional mapping of Python conventions like
+                ``self`` and ``cls`` to target language (CORE-710). Defaults
+                to empty so existing callers don't need to change.
 
         Raises:
-            ValueError: If maps are empty or None
+            ValueError: If keyword_map or builtin_map is empty or None
             TreeSitterError: If parser initialization fails
 
         Example:
             >>> translator = TreeSitterTranslator(
             ...     keyword_map={"def": "definir", "return": "retornar"},
             ...     builtin_map={"print": "imprimir"},
+            ...     reserved_word_map={"self": "propio"},
             ...     python_version="3.13"
             ... )
         """
-        self.mapper = TokenMapper(keyword_map, builtin_map)
+        self.mapper = TokenMapper(keyword_map, builtin_map, reserved_word_map)
         self.python_version = python_version
 
         # Initialize tree-sitter parser
@@ -93,12 +98,13 @@ class TreeSitterTranslator:
         Example:
             >>> translator = TreeSitterTranslator({"def": "definir"}, {"print": "imprimir"})
             >>> repr(translator)
-            "TreeSitterTranslator(keywords=1, builtins=1, python_version='3.13')"
+            "TreeSitterTranslator(keywords=1, builtins=1, reserved_words=0, python_version='3.13')"
         """
         return (
             f"TreeSitterTranslator("
             f"keywords={len(self.mapper.keyword_map)}, "
             f"builtins={len(self.mapper.builtin_map)}, "
+            f"reserved_words={len(self.mapper.reserved_word_map)}, "
             f"python_version={self.python_version!r})"
         )
 
@@ -236,6 +242,17 @@ class TreeSitterTranslator:
                 if translated and translated != text:
                     replacements.append((node.start_byte, node.end_byte, translated))
                     logger.debug(f"Builtin match: '{text}' → '{translated}'")
+                # CORE-710 dispatch: reserved words (self, cls) AFTER builtins.
+                # Short-circuit on empty map to avoid the per-identifier dict
+                # lookup overhead for packs that don't ship reserved_words.
+                # Keywords still win on conflict (handled above with early return).
+                elif reserved_word_map := self.mapper.reserved_word_map:
+                    translated = reserved_word_map.get(text)
+                    if translated and translated != text:
+                        replacements.append(
+                            (node.start_byte, node.end_byte, translated)
+                        )
+                        logger.debug(f"Reserved word match: '{text}' → '{translated}'")
 
         # Special handling for keyword nodes that are part of statements
         # These keywords appear as terminal nodes with specific text
@@ -406,6 +423,7 @@ class TreeSitterTranslator:
         return TreeSitterTranslator(
             keyword_map=reversed_mapper.keyword_map,
             builtin_map=reversed_mapper.builtin_map,
+            reserved_word_map=reversed_mapper.reserved_word_map,
             python_version=self.python_version,
         )
 
@@ -487,9 +505,13 @@ class TreeSitterTranslator:
                 f"Merged {len(pack.exceptions)} exception translations into builtin map"
             )
 
+        # CORE-710: pull reserved_words from the pack if present (defaults to {})
+        reserved_word_map = getattr(pack, "reserved_words", {}) or {}
+
         return cls(
             keyword_map=pack.keywords,
             builtin_map=builtin_map,
+            reserved_word_map=reserved_word_map,
             python_version=python_version,
         )
 

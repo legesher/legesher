@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `varning` |
 | `zerodivisionerror` | `nolldelningstjänst` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Swedish |
+| ------- | ------ |
+| `cls` | `klass_själv` |
+| `self` | `sig_själv` |
+
 ## Example Code
 
 Here's an example showing Swedish Python code with Legesher:

@@ -12,7 +12,7 @@ dependencies = [
     "legesher-i18n>=0.2.0,<1.0.0",
 ]
 name = "legesher-i18n-python-gl"
-version = "0.0.1"
+version = "0.0.2"
 description = "Galician language pack for Python in Legesher"
 readme = "README.md"
 keywords = ["legesher", "i18n", "galician", "python", "translation", "multilingual"]

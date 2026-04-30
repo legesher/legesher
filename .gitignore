@@ -192,3 +192,7 @@ secrets/
 # Claude Code personal files (keep shared commands/agents in git)
 .claude/scratchpads/
 .claude/settings.local.json
+
+
+# pytest-benchmark cache (per-machine, not for VCS)
+.benchmarks/

@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `varování` |
 | `zerodivisionerror` | `chybadělení_nulou` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Czech |
+| ------- | ------ |
+| `cls` | `třídasama` |
+| `self` | `sebe` |
+
 ## Example Code
 
 Here's an example showing Czech Python code with Legesher:

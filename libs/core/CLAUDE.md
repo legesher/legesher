@@ -15,6 +15,11 @@ between natural languages.
 
 - **Two Translator Backends**: TokenTranslator (~140μs) and TreeSitterTranslator (~160μs)
 - **Python Keywords**: Full support for Python 3.10 keyword set (37 keywords)
+- **Reserved Words** (CORE-710): `self`/`cls` translated deterministically via
+  the language pack's `reserved_words` section. Both translators accept an
+  optional `reserved_word_map` constructor parameter; dispatch order is
+  `keyword → builtin → reserved_word → IdentifierMap`. The extractor skips
+  self/cls entirely so they don't reach the LLM.
 - **51 Languages**: Via language pack system
 - **Perfect Round-Trip**: EN→ES→EN translation is byte-identical
 - **RTL Support**: Arabic, Hebrew, Persian, Urdu with UTF-8 encoding
@@ -70,6 +75,14 @@ translator = create_translator("python", keyword_map, builtin_map)
 
 # Tree-sitter backend
 translator = create_translator("python", keyword_map, builtin_map, use_tree_sitter=True)
+
+# CORE-710: with reserved_word_map for self/cls translation
+translator = create_translator(
+    "python", keyword_map, builtin_map,
+    reserved_word_map={"self": "propio", "cls": "clase"},
+)
+# When using create_translator_from_language_pack(), the reserved_words
+# section is auto-loaded from the pack — no explicit kwarg needed.
 
 # Or via environment variable
 # export LEGESHER_USE_TREE_SITTER=true

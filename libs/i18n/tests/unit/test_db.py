@@ -991,3 +991,79 @@ class TestTranslationDatabase:
         # Updating the same term to the same translation should NOT raise
         result_id = db.set_selected(term_id=id1, language_code="es", translation="si")
         assert result_id > 0
+
+
+@pytest.mark.unit
+class TestTermCategoryValidation:
+    """get_or_create_term rejects unknown categories (CORE-710).
+
+    SQLite accepts any string in the category column. Without runtime
+    validation, a typo (`reserved_words`, `reservedword`) would silently
+    insert a ghost row that no consumer can find via the documented
+    categories. This pins the validation behavior.
+    """
+
+    def _make_db(self):
+        """Build a fresh on-disk DB for isolation."""
+        tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        tmp.close()
+        return TranslationDatabase(db_path=Path(tmp.name)), Path(tmp.name)
+
+    def test_canonical_categories_accepted(self):
+        """All canonical TermCategory values are accepted."""
+        db, path = self._make_db()
+        try:
+            for cat in (
+                "keyword",
+                "builtin_func",
+                "builtin_type",
+                "exception",
+                "special_constant",
+                "reserved_word",
+                "helper",
+                "unknown",
+            ):
+                tid = db.get_or_create_term(f"term_{cat}", "python", cat)
+                assert tid > 0
+        finally:
+            path.unlink()
+
+    def test_typo_reserved_words_plural_rejected(self):
+        """The exact typo from review feedback (reserved_words plural)."""
+        db, path = self._make_db()
+        try:
+            with pytest.raises(ValueError, match="Unknown term category"):
+                db.get_or_create_term("test_term", "python", "reserved_words")
+        finally:
+            path.unlink()
+
+    def test_typo_reservedword_no_underscore_rejected(self):
+        """Plausible typo (no underscore)."""
+        db, path = self._make_db()
+        try:
+            with pytest.raises(ValueError, match="Unknown term category"):
+                db.get_or_create_term("test_term2", "python", "reservedword")
+        finally:
+            path.unlink()
+
+    def test_completely_unknown_category_rejected(self):
+        """Random unknown values are rejected, not silently stored."""
+        db, path = self._make_db()
+        try:
+            with pytest.raises(ValueError, match="Unknown term category"):
+                db.get_or_create_term("test_term3", "python", "totally_made_up")
+        finally:
+            path.unlink()
+
+    def test_error_message_lists_valid_options(self):
+        """Error message names the valid categories so callers can fix."""
+        db, path = self._make_db()
+        try:
+            with pytest.raises(ValueError) as exc_info:
+                db.get_or_create_term("test_term4", "python", "wrong")
+            msg = str(exc_info.value)
+            # Each canonical category name appears in the message
+            for cat in ("keyword", "reserved_word", "exception", "unknown"):
+                assert cat in msg
+        finally:
+            path.unlink()

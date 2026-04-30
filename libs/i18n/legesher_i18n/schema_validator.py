@@ -65,6 +65,9 @@ class LanguagePackSchema(BaseModel):
         keywords: Python keyword translations (e.g., ``{"def": "definir"}``).
         builtins: Built-in function and type translations.
         exceptions: Exception class name translations.
+        reserved_words: Translations for Python conventions like ``self`` and
+            ``cls`` that aren't actual Python keywords but are treated
+            deterministically by Legesher (CORE-710).
         operators: Operator translations (MLCP extended field).
         standard_library: Stdlib symbol translations (MLCP extended field).
         cultural_notes: Per-term cultural context notes.
@@ -81,6 +84,7 @@ class LanguagePackSchema(BaseModel):
     keywords: dict[str, str] = Field(default_factory=dict)
     builtins: dict[str, str] = Field(default_factory=dict)
     exceptions: dict[str, str] = Field(default_factory=dict)
+    reserved_words: dict[str, str] = Field(default_factory=dict)
 
     # MLCP v1.0 Extended Optional Fields
     operators: dict[str, str] = Field(default_factory=dict)
@@ -154,11 +158,16 @@ class LanguagePackSchema(BaseModel):
         return v
 
     @field_validator(
-        "keywords", "builtins", "exceptions", "operators", "standard_library"
+        "keywords",
+        "builtins",
+        "exceptions",
+        "reserved_words",
+        "operators",
+        "standard_library",
     )
     @classmethod
     def validate_mappings(cls, v: dict[str, str]) -> dict[str, str]:
-        """Validate keyword/builtin/exception/operator/stdlib mappings.
+        """Validate keyword/builtin/exception/reserved_word/operator/stdlib mappings.
 
         Translations must be valid Python identifiers to work with the
         TokenTranslator, which uses Python's tokenize module.
@@ -538,6 +547,20 @@ class SchemaValidator:
         Detects when multiple source terms map to the same target translation,
         which can cause ambiguity when translating back to the source language.
 
+        Two classes of collision are detected:
+
+        1. **Intra-section duplicates** — two source terms in the SAME
+           section (e.g., two keywords) mapping to the same translation.
+           Each section produces its own ``{section}_duplicates`` list.
+        2. **Cross-section collisions** (CORE-710) — the SAME translation
+           value appears in TWO OR MORE different sections (e.g., a
+           ``reserved_words.self`` value matching a ``keywords.in`` value).
+           This is exactly the AYA-213 Cycle-4 Urdu failure mode the
+           reserved_words category was introduced to prevent: at runtime
+           the dispatch order resolves keyword first, so the
+           reserved-word value silently round-trips to the wrong source
+           token. ``cross_section_collisions`` lists these.
+
         Args:
             pack_schema: Validated language pack
 
@@ -546,12 +569,16 @@ class SchemaValidator:
             - passed: bool - True if no duplicates found
             - keyword_duplicates: list of conflicts in keywords
             - builtin_duplicates: list of conflicts in builtins
+            - exception_duplicates: list of conflicts in exceptions
+            - reserved_word_duplicates: list of conflicts in reserved words
             - operator_duplicates: list of conflicts in operators
             - stdlib_duplicates: list of conflicts in standard_library
+            - cross_section_collisions: list of values appearing in
+              multiple sections (CORE-710 reversibility guard)
         """
 
         def find_duplicate_values(mappings: dict[str, str]) -> list[dict[str, Any]]:
-            """Find values that appear multiple times."""
+            """Find values that appear multiple times within ONE section."""
             reverse_map: dict[str, list[str]] = {}
             for key, value in mappings.items():
                 if value in reverse_map:
@@ -572,18 +599,66 @@ class SchemaValidator:
 
             return duplicates
 
+        def find_cross_section_collisions(
+            sections: list[tuple[str, dict[str, str]]],
+        ) -> list[dict[str, Any]]:
+            """Find translation values appearing in two or more sections.
+
+            Each entry's ``locations`` lists every (section, source_key)
+            pair where the translation appears. Only collisions spanning
+            at least two distinct sections are reported — pure intra-section
+            duplicates are caught by ``find_duplicate_values`` above and
+            would double-count if included here.
+            """
+            by_value: dict[str, list[tuple[str, str]]] = {}
+            for section_name, mapping in sections:
+                for source_key, target_value in mapping.items():
+                    by_value.setdefault(target_value, []).append(
+                        (section_name, source_key)
+                    )
+
+            collisions = []
+            for translation, locations in by_value.items():
+                sections_seen = {section for section, _ in locations}
+                if len(sections_seen) > 1:
+                    collisions.append(
+                        {
+                            "translation": translation,
+                            "locations": [
+                                {"section": s, "source_key": k}
+                                for s, k in sorted(locations)
+                            ],
+                            "count": len(locations),
+                        }
+                    )
+            return collisions
+
         keyword_duplicates = find_duplicate_values(pack_schema.keywords)
         builtin_duplicates = find_duplicate_values(pack_schema.builtins)
         exception_duplicates = find_duplicate_values(pack_schema.exceptions)
+        reserved_word_duplicates = find_duplicate_values(pack_schema.reserved_words)
         operator_duplicates = find_duplicate_values(pack_schema.operators)
         stdlib_duplicates = find_duplicate_values(pack_schema.standard_library)
+
+        cross_section_collisions = find_cross_section_collisions(
+            [
+                ("keyword", pack_schema.keywords),
+                ("builtin", pack_schema.builtins),
+                ("exception", pack_schema.exceptions),
+                ("reserved_word", pack_schema.reserved_words),
+                ("operator", pack_schema.operators),
+                ("standard_library", pack_schema.standard_library),
+            ]
+        )
 
         total_duplicates = (
             len(keyword_duplicates)
             + len(builtin_duplicates)
             + len(exception_duplicates)
+            + len(reserved_word_duplicates)
             + len(operator_duplicates)
             + len(stdlib_duplicates)
+            + len(cross_section_collisions)
         )
 
         return {
@@ -591,8 +666,10 @@ class SchemaValidator:
             "keyword_duplicates": keyword_duplicates,
             "builtin_duplicates": builtin_duplicates,
             "exception_duplicates": exception_duplicates,
+            "reserved_word_duplicates": reserved_word_duplicates,
             "operator_duplicates": operator_duplicates,
             "stdlib_duplicates": stdlib_duplicates,
+            "cross_section_collisions": cross_section_collisions,
             "total_conflicts": total_duplicates,
         }
 
@@ -763,6 +840,7 @@ class SchemaValidator:
             "keywords_count": len(pack_schema.keywords),
             "builtins_count": len(pack_schema.builtins),
             "exceptions_count": len(pack_schema.exceptions),
+            "reserved_words_count": len(pack_schema.reserved_words),
             "warnings": warnings,
             "has_metadata": pack_schema.metadata is not None,
             "completeness_score": (
@@ -786,12 +864,14 @@ class SchemaValidator:
             - invalid_keywords: list - Keywords with invalid translations
             - invalid_builtins: list - Builtins with invalid translations
             - invalid_exceptions: list - Exceptions with invalid translations
+            - invalid_reserved_words: list - Reserved words with invalid translations
             - total_issues: int - Total number of invalid translations
             - issues: list - Human-readable issue descriptions
         """
         invalid_keywords = []
         invalid_builtins = []
         invalid_exceptions = []
+        invalid_reserved_words = []
         issues = []
 
         def check_mapping(
@@ -839,9 +919,15 @@ class SchemaValidator:
         invalid_keywords = check_mapping(pack_schema.keywords, "keyword")
         invalid_builtins = check_mapping(pack_schema.builtins, "builtin")
         invalid_exceptions = check_mapping(pack_schema.exceptions, "exception")
+        invalid_reserved_words = check_mapping(
+            pack_schema.reserved_words, "reserved_word"
+        )
 
         total_issues = (
-            len(invalid_keywords) + len(invalid_builtins) + len(invalid_exceptions)
+            len(invalid_keywords)
+            + len(invalid_builtins)
+            + len(invalid_exceptions)
+            + len(invalid_reserved_words)
         )
 
         return {
@@ -849,6 +935,7 @@ class SchemaValidator:
             "invalid_keywords": invalid_keywords,
             "invalid_builtins": invalid_builtins,
             "invalid_exceptions": invalid_exceptions,
+            "invalid_reserved_words": invalid_reserved_words,
             "total_issues": total_issues,
             "issues": issues,
         }

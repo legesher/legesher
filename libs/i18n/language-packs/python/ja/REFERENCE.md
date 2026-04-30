@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `警告` |
 | `zerodivisionerror` | `ゼロ除算エラー` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Japanese |
+| ------- | ------ |
+| `cls` | `自クラス` |
+| `self` | `自己` |
+
 ## Example Code
 
 Here's an example showing Japanese Python code with Legesher:

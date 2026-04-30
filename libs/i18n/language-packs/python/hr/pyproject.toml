@@ -12,7 +12,7 @@ dependencies = [
     "legesher-i18n>=0.2.0,<1.0.0",
 ]
 name = "legesher-i18n-python-hr"
-version = "0.0.1"
+version = "0.0.2"
 description = "Croatian language pack for Python in Legesher"
 readme = "README.md"
 keywords = ["legesher", "i18n", "croatian", "python", "translation", "multilingual"]

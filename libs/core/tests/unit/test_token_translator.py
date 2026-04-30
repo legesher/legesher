@@ -167,3 +167,107 @@ class TestCompoundKeywordLookahead:
         translated = compound_translator.translate_code(code)
         # The * operator should still be present
         assert "*" in translated
+
+
+class TestReservedWordTranslation:
+    """Test self/cls translation via reserved_word_map (CORE-710)."""
+
+    def test_constructor_backward_compat_no_reserved_word_map(self):
+        """Existing constructor (no reserved_word_map kwarg) still works."""
+        translator = TokenTranslator(
+            keyword_map={"def": "definir"},
+            builtin_map={"print": "imprimir"},
+        )
+        assert translator.mapper.reserved_word_map == {}
+
+    def test_self_translation_via_reserved_word_map(self):
+        """self in method signatures + body translates to pack value."""
+        translator = TokenTranslator(
+            keyword_map={"def": "definir", "return": "retornar"},
+            builtin_map={"print": "imprimir"},
+            reserved_word_map={"self": "propio"},
+        )
+        code = "def foo(self): return self.x"
+        translated = translator.translate_code(code, "en", "es")
+        assert "propio" in translated
+        # Both signature AND attribute access translate to the same value
+        assert translated.count("propio") == 2
+
+    def test_cls_translation_in_classmethod(self):
+        """cls in classmethod first-param + body translates to pack value."""
+        translator = TokenTranslator(
+            keyword_map={"def": "definir", "return": "retornar"},
+            builtin_map={"print": "imprimir"},
+            reserved_word_map={"cls": "clase_ref"},
+        )
+        code = "def make(cls): return cls()"
+        translated = translator.translate_code(code, "en", "es")
+        assert "clase_ref" in translated
+        assert translated.count("clase_ref") == 2
+
+    def test_dispatch_order_keyword_wins_on_conflict(self):
+        """Synthetic conflict: same key in keyword_map AND reserved_word_map.
+
+        Keyword section wins per the documented dispatch order.
+        """
+        translator = TokenTranslator(
+            keyword_map={"self": "KEYWORD_WIN"},
+            builtin_map={"print": "imprimir"},
+            reserved_word_map={"self": "RESERVED_LOSE"},
+        )
+        translated = translator.translate_code("def foo(self): pass", "en", "es")
+        assert "KEYWORD_WIN" in translated
+        assert "RESERVED_LOSE" not in translated
+
+    def test_unmapped_self_remains_untranslated(self):
+        """Without reserved_word_map, self stays as-is (backward compat).
+
+        Token translates def → definir but leaves self alone since the pack
+        omitted reserved_words. This matches pre-CORE-710 behavior.
+        """
+        translator = TokenTranslator(
+            keyword_map={"def": "definir"},
+            builtin_map={"print": "imprimir"},
+        )
+        translated = translator.translate_code("def foo(self): pass", "en", "es")
+        assert "definir" in translated
+        assert "self" in translated  # untouched
+
+    def test_round_trip_preserves_self(self):
+        """en → es → en restores self via reverse() of mapper."""
+        en_to_es = TokenTranslator(
+            keyword_map={"def": "definir", "return": "retornar"},
+            builtin_map={"print": "imprimir"},
+            reserved_word_map={"self": "propio"},
+        )
+        es_to_en = en_to_es.reverse()
+        spanish = en_to_es.translate_code("def foo(self): return self.x", "en", "es")
+        english = es_to_en.translate_code(spanish, "es", "en")
+        assert "self" in english
+        assert "propio" not in english
+
+    def test_repr_includes_reserved_words_count(self):
+        """__repr__ surfaces reserved_words count for debug visibility."""
+        translator = TokenTranslator(
+            keyword_map={"def": "definir"},
+            builtin_map={"print": "imprimir"},
+            reserved_word_map={"self": "propio", "cls": "clase"},
+        )
+        assert "reserved_words=2" in repr(translator)
+
+    def test_from_language_pack_picks_up_reserved_words(self):
+        """from_language_pack reads pack.reserved_words and threads to mapper.
+
+        Post-CORE-710: all 51 packs ship reserved_words with self/cls.
+        This test confirms the wire-up: from_language_pack reads pack.reserved_words
+        and forwards it to the TokenMapper so translation lookups succeed.
+        """
+        translator = TokenTranslator.from_language_pack("es", "3.13")
+        # Spanish pack ships self/cls translations
+        assert translator.mapper.reserved_word_map.get("self") is not None
+        assert translator.mapper.reserved_word_map.get("cls") is not None
+        # Sanity: get_reserved_word returns the same value as the underlying map
+        assert (
+            translator.mapper.get_reserved_word("self")
+            == (translator.mapper.reserved_word_map["self"])
+        )

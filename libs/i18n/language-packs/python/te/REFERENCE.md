@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `హెచ్చరిక` |
 | `zerodivisionerror` | `శూన్యభాగహారదోషం` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Telugu |
+| ------- | ------ |
+| `cls` | `తరగతిస్వయం` |
+| `self` | `స్వయం` |
+
 ## Example Code
 
 Here's an example showing Telugu Python code with Legesher:

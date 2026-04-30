@@ -19,6 +19,11 @@ and multi-provider translation API.
 - **Translation API**: Multi-provider support (Anthropic, Google, DeepL, LibreTranslate)
 - **Schema Validation**: Pydantic-based with security checks
 - **CLI Tools**: validate, show, registry, export commands
+- **Reserved Words** (CORE-710): `self`/`cls` translated deterministically
+  per pack via the new `reserved_words:` YAML section. Distinct from
+  `keywords:` because they're Python conventions (not actual reserved
+  words in the language). Eliminates LLM-driven self-reference drift
+  and keyword collisions (see `scripts/translate/prompts/reserved_words_prompt.md`).
 
 ## Directory Structure
 
@@ -192,15 +197,15 @@ translation data. Schema defined in `legesher_i18n/db/schema.py`.
 
 Extensible across programming languages. Python's `def` and a future TypeScript `function` are separate rows.
 
-| Column                 | Type          | Notes                                                                                           |
-| ---------------------- | ------------- | ----------------------------------------------------------------------------------------------- |
-| `id`                   | INTEGER PK    | Auto-increment                                                                                  |
-| `name`                 | TEXT NOT NULL | e.g., `def`, `True`, `print`                                                                    |
-| `programming_language` | TEXT NOT NULL | e.g., `python`                                                                                  |
-| `category`             | TEXT NOT NULL | `keyword`, `builtin_func`, `builtin_type`, `special_constant`, `exception`                      |
-| `subcategory`          | TEXT          | Keywords: `control_flow`, `iteration`, `structure`, etc. Exceptions: `base`, `arithmetic`, etc. |
-| `version_added`        | TEXT          | Python version when term was introduced                                                         |
-| `description`          | TEXT          | Optional human-readable description                                                             |
+| Column                 | Type          | Notes                                                                                                            |
+| ---------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `id`                   | INTEGER PK    | Auto-increment                                                                                                   |
+| `name`                 | TEXT NOT NULL | e.g., `def`, `True`, `print`                                                                                     |
+| `programming_language` | TEXT NOT NULL | e.g., `python`                                                                                                   |
+| `category`             | TEXT NOT NULL | `keyword`, `builtin_func`, `builtin_type`, `special_constant`, `exception`, `reserved_word` (CORE-710: self/cls) |
+| `subcategory`          | TEXT          | Keywords: `control_flow`, `iteration`, `structure`, etc. Exceptions: `base`, `arithmetic`, etc.                  |
+| `version_added`        | TEXT          | Python version when term was introduced                                                                          |
+| `description`          | TEXT          | Optional human-readable description                                                                              |
 
 **Constraint:** `UNIQUE(name, programming_language)`
 

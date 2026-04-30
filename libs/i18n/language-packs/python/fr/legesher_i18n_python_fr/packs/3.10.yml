@@ -178,6 +178,9 @@ exceptions:
   valueerror: valeurincorrecte
   warning: avertissement
   zerodivisionerror: erreurdedivisionparzéro
+reserved_words:
+  self: soi
+  cls: soiclasse
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.13'

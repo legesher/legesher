@@ -9,6 +9,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-04-29
+
+### Changed
+
+- Version bumped in lockstep with `legesher-core` and `legesher-i18n` for the
+  CORE-710 release cohort. No functional changes to the CLI itself; the new
+  `reserved_words` translation category flows transparently through this
+  package's `legesher translate` and `legesher run` commands via the
+  underlying `legesher-core` translator backends. [CORE-710]
+
 ## [0.9.2] - 2026-04-20
 
 ## [0.9.1] - 2026-04-17

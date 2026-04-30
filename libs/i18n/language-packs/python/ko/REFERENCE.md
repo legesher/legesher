@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `경고` |
 | `zerodivisionerror` | `零의나눗셈오류` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Korean |
+| ------- | ------ |
+| `cls` | `자기클래스` |
+| `self` | `자신` |
+
 ## Example Code
 
 Here's an example showing Korean Python code with Legesher:

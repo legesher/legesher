@@ -178,6 +178,9 @@ exceptions:
   unicodewarning: unicodeuyarısı
   byteswarning: baytuyarı
   resourcewarning: kaynakuyarı
+reserved_words:
+  self: kendi
+  cls: sınıfkendi
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.14'

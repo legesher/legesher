@@ -824,3 +824,281 @@ class TestCheckCompletenessEnhanced:
         result = SchemaValidator.check_completeness_enhanced(schema, None)
         assert result["completeness_percentage"] == 0.0
         assert any("No keywords" in rec for rec in result["recommendations"])
+
+
+class TestReservedWordsField:
+    """Test reserved_words schema field (CORE-710)."""
+
+    def test_reserved_words_optional_for_backward_compat(self):
+        """A pack without reserved_words: section validates and defaults to empty."""
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "keywords": {"def": "definir"},
+        }
+        schema = LanguagePackSchema(**pack_data)
+        assert schema.reserved_words == {}
+
+    def test_reserved_words_accepts_valid_translations(self):
+        """A pack with valid self/cls translations validates."""
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "reserved_words": {"self": "propio", "cls": "clase"},
+        }
+        schema = LanguagePackSchema(**pack_data)
+        assert schema.reserved_words == {"self": "propio", "cls": "clase"}
+
+    def test_reserved_words_rejects_value_with_whitespace(self):
+        """validate_mappings rejects multi-word values for reserved_words."""
+        import pytest
+        from pydantic import ValidationError
+
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "reserved_words": {"self": "propio mismo"},  # space → invalid identifier
+        }
+        with pytest.raises(ValidationError):
+            LanguagePackSchema(**pack_data)
+
+    def test_reserved_words_rejects_empty_value(self):
+        """Empty translations are rejected like any other category."""
+        import pytest
+        from pydantic import ValidationError
+
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "reserved_words": {"self": ""},
+        }
+        with pytest.raises(ValidationError):
+            LanguagePackSchema(**pack_data)
+
+    def test_check_duplicates_detects_reserved_word_duplicates(self):
+        """Duplicate translations within reserved_words are surfaced."""
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "reserved_words": {"self": "propio", "cls": "propio"},
+        }
+        schema = LanguagePackSchema(**pack_data)
+        result = SchemaValidator.check_duplicates(schema)
+        assert result["passed"] is False
+        assert len(result["reserved_word_duplicates"]) == 1
+        assert result["reserved_word_duplicates"][0]["translation"] == "propio"
+        assert set(result["reserved_word_duplicates"][0]["source_terms"]) == {
+            "cls",
+            "self",
+        }
+        assert result["total_conflicts"] >= 1
+
+    def test_check_duplicates_clean_when_reserved_words_unique(self):
+        """No duplicates surfaced when reserved_word translations are unique."""
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "reserved_words": {"self": "propio", "cls": "clase"},
+        }
+        schema = LanguagePackSchema(**pack_data)
+        result = SchemaValidator.check_duplicates(schema)
+        assert result["passed"] is True
+        assert result["reserved_word_duplicates"] == []
+
+    def test_check_identifier_validity_includes_reserved_words(self):
+        """check_identifier_validity exposes invalid_reserved_words list."""
+        # Valid case: result includes the key with empty list
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "reserved_words": {"self": "propio"},
+        }
+        schema = LanguagePackSchema(**pack_data)
+        result = SchemaValidator.check_identifier_validity(schema)
+        assert "invalid_reserved_words" in result
+        assert result["invalid_reserved_words"] == []
+        assert result["passed"] is True
+
+    def test_get_validation_report_includes_reserved_words_count(self):
+        """The validation report exposes reserved_words_count for symmetry."""
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "reserved_words": {"self": "propio", "cls": "clase"},
+        }
+        schema = LanguagePackSchema(**pack_data)
+        report = SchemaValidator.get_validation_report(schema)
+        assert "reserved_words_count" in report
+        assert report["reserved_words_count"] == 2
+
+    def test_get_validation_report_zero_reserved_words_when_absent(self):
+        """Backward-compat: reserved_words_count is 0 when section omitted."""
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "keywords": {"def": "definir"},
+        }
+        schema = LanguagePackSchema(**pack_data)
+        report = SchemaValidator.get_validation_report(schema)
+        assert report["reserved_words_count"] == 0
+
+
+class TestCrossSectionCollisions:
+    """Test cross-section collision detection in check_duplicates (CORE-710).
+
+    Pre-Copilot-review-fix: check_duplicates only detected duplicates
+    WITHIN each section. The AYA-213 Cycle-4 Urdu failure mode (a
+    reserved_word value matching a keyword value in the same pack) would
+    pass validation silently. These tests pin the cross-section detection.
+    """
+
+    def test_clean_pack_passes_cross_section_check(self):
+        """A pack with distinct values across all sections has no collisions."""
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "keywords": {"def": "definir", "class": "clase"},
+            "builtins": {"print": "imprimir"},
+            "exceptions": {"ValueError": "ErrorValor"},
+            "reserved_words": {"self": "propio", "cls": "claseref"},
+        }
+        schema = LanguagePackSchema(**pack_data)
+        result = SchemaValidator.check_duplicates(schema)
+        assert result["passed"] is True
+        assert result["cross_section_collisions"] == []
+
+    def test_keyword_reserved_word_collision_detected(self):
+        """The exact AYA-213 Cycle-4 Urdu failure mode.
+
+        keyword.in -> X and reserved_word.self -> X. At runtime the
+        translator dispatches keyword first, so the reserved-word value
+        silently round-trips to `in` instead of `self`. Pre-CORE-710 this
+        was the SyntaxError-on-round-trip bug. The validator must catch it.
+        """
+        pack_data = {
+            "language": "ur",
+            "target": "python",
+            "version": "3.10",
+            "keywords": {"in": "miyn"},  # Latin proxy for مین
+            "reserved_words": {"self": "miyn"},  # would collide
+        }
+        schema = LanguagePackSchema(**pack_data)
+        result = SchemaValidator.check_duplicates(schema)
+        assert result["passed"] is False
+        assert len(result["cross_section_collisions"]) == 1
+        col = result["cross_section_collisions"][0]
+        assert col["translation"] == "miyn"
+        assert col["count"] == 2
+        sections = {loc["section"] for loc in col["locations"]}
+        assert sections == {"keyword", "reserved_word"}
+
+    def test_keyword_builtin_collision_detected(self):
+        """Same value across keyword + builtin also flagged."""
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "keywords": {"def": "shared"},
+            "builtins": {"print": "shared"},
+        }
+        schema = LanguagePackSchema(**pack_data)
+        result = SchemaValidator.check_duplicates(schema)
+        assert result["passed"] is False
+        assert len(result["cross_section_collisions"]) == 1
+
+    def test_intra_section_dup_not_double_counted_as_cross_section(self):
+        """Two keywords mapping to same value: only intra-section counts.
+
+        cross_section_collisions only fires when a value appears in
+        TWO OR MORE DIFFERENT sections. Pure intra-section duplicates
+        are caught by find_duplicate_values and shouldn't be
+        double-counted in the cross-section list.
+        """
+        pack_data = {
+            "language": "es",
+            "target": "python",
+            "version": "3.10",
+            "keywords": {"def": "shared", "class": "shared"},  # intra-dup only
+        }
+        schema = LanguagePackSchema(**pack_data)
+        result = SchemaValidator.check_duplicates(schema)
+        assert result["passed"] is False
+        assert len(result["keyword_duplicates"]) == 1
+        # Cross-section list must NOT include this since both occurrences
+        # are in the same section
+        assert result["cross_section_collisions"] == []
+
+    def test_total_conflicts_includes_cross_section(self):
+        """total_conflicts must include cross-section collisions."""
+        pack_data = {
+            "language": "ur",
+            "target": "python",
+            "version": "3.10",
+            "keywords": {"in": "miyn", "def": "shared", "class": "shared"},
+            "reserved_words": {"self": "miyn"},
+        }
+        schema = LanguagePackSchema(**pack_data)
+        result = SchemaValidator.check_duplicates(schema)
+        # 1 intra-section keyword dup (def/class -> shared)
+        # 1 cross-section collision (miyn in keyword + reserved_word)
+        assert result["total_conflicts"] == 2
+
+    def test_three_way_cross_section_collision(self):
+        """A value in three sections is reported with all three locations."""
+        pack_data = {
+            "language": "zz",
+            "target": "python",
+            "version": "3.10",
+            "keywords": {"def": "X"},
+            "builtins": {"print": "X"},
+            "exceptions": {"ValueError": "X"},
+        }
+        schema = LanguagePackSchema(**pack_data)
+        result = SchemaValidator.check_duplicates(schema)
+        assert len(result["cross_section_collisions"]) == 1
+        col = result["cross_section_collisions"][0]
+        assert col["count"] == 3
+        sections = {loc["section"] for loc in col["locations"]}
+        assert sections == {"keyword", "builtin", "exception"}
+
+    def test_all_51_real_packs_have_no_cross_section_collisions(self):
+        """Real packs in the repo should be clean.
+
+        Regression guard: if a future pack edit introduces a cross-section
+        collision, this test fails so the issue is caught at PR time
+        rather than at runtime via the AYA-213 failure mode.
+        """
+        from pathlib import Path
+
+        import yaml
+
+        from legesher_i18n.language_registry import get_active_language_codes
+
+        packs_root = Path(__file__).parent.parent / "language-packs" / "python"
+        broken = []
+        for lang_code in get_active_language_codes():
+            yml = (
+                packs_root
+                / lang_code
+                / f"legesher_i18n_python_{lang_code}"
+                / "packs"
+                / "3.10.yml"
+            )
+            if not yml.exists():
+                continue
+            data = yaml.safe_load(yml.read_text(encoding="utf-8"))
+            schema = LanguagePackSchema(**data)
+            result = SchemaValidator.check_duplicates(schema)
+            if result["cross_section_collisions"]:
+                broken.append((lang_code, result["cross_section_collisions"]))
+        assert not broken, f"Cross-section collisions in real packs: {broken}"

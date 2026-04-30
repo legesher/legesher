@@ -4,6 +4,12 @@ All notable changes to this language pack.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.0.2] - 2026-04-29
+
+### Added
+
+- `self` and `cls` reserved word translations [CORE-710]
+
 ## [0.0.1] - 2026-03-15
 
 ### Added

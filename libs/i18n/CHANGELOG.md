@@ -9,6 +9,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-04-29
+
+### Added
+
+- **Reserved Words category**: New `reserved_words:` section in pack YAML
+  schema for translating Python conventions like `self` and `cls`
+  deterministically (CORE-710 closes the AYA-213 Cycle-4 Urdu
+  `self → میں` collision failure mode). All 51 packs ship with self/cls
+  translations selected via reflexive-pronoun framing. [CORE-710]
+- **Schema**: `LanguagePackSchema.reserved_words` field (optional,
+  defaults to empty); extended `check_duplicates`,
+  `check_identifier_validity`, `get_validation_report` with
+  reserved_word coverage. [CORE-710]
+- **Term system**: `TermCategory` Literal extended with
+  `"reserved_word"`; `RESERVED_WORDS = ["self", "cls"]` canonical list;
+  `get_reserved_words_for_version()` accessor;
+  `TERM_TYPE_YAML_SECTIONS` mapping includes
+  `"reserved_word" → "reserved_words"`. [CORE-710]
+- **Database**: `terms.category` accepts `reserved_word`; backfilled 16
+  missing language rows (`bs, ca, cs, fa, gd, gl, hr, kn, lv, mk, mn,
+my, ro, sr, su, uz`) into the languages table. [CORE-710]
+
 ### Changed
 
 - `mypy --strict` now passes on public API files (`__init__.py`, `pack_loader.py`,

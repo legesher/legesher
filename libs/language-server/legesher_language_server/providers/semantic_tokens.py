@@ -109,12 +109,16 @@ class SemanticTokensProvider:
         self.document_text = document_text
         self.document_uri = document_uri
 
-        # Lazy-load token mappings (keywords, builtins, exceptions)
+        # Lazy-load token mappings (keywords, builtins, exceptions, reserved_words)
         self._translated_keywords: set[str] | None = None
         self._reverse_keyword_map: dict[str, str] | None = None
         self._translated_builtin_types: set[str] | None = None
         self._translated_builtin_funcs: set[str] | None = None
         self._translated_exceptions: set[str] | None = None
+        # CORE-710: foundational data path for self/cls reserved words.
+        # The set is populated for downstream highlighting work (CORE-1060)
+        # but no semantic-token classification logic uses it here yet.
+        self._translated_reserved_words: set[str] | None = None
 
     def _load_token_mappings(self) -> None:
         """Load keyword, builtin, and exception mappings from language pack.
@@ -175,11 +179,21 @@ class SemanticTokensProvider:
                     exception_names.add(proper_name)
             self._translated_exceptions = exception_names
 
+            # CORE-710: load reserved_words (self, cls) for downstream
+            # highlighting (CORE-1060). Falls back to empty when the pack
+            # doesn't have the section. Includes both translated values and
+            # the canonical English keys (self, cls) so mixed-language code
+            # is highlighted consistently.
+            reserved_word_names = set(pack.reserved_words.values())
+            reserved_word_names.update(pack.reserved_words.keys())
+            self._translated_reserved_words = reserved_word_names
+
             logger.debug(
                 f"Loaded {len(self._translated_keywords)} keywords, "
                 f"{len(self._translated_builtin_types)} builtin types, "
                 f"{len(self._translated_builtin_funcs)} builtin funcs, "
-                f"{len(self._translated_exceptions)} exceptions "
+                f"{len(self._translated_exceptions)} exceptions, "
+                f"{len(self._translated_reserved_words)} reserved words "
                 f"for language '{self.target_lang}'"
             )
 
@@ -191,6 +205,7 @@ class SemanticTokensProvider:
             self._translated_builtin_types = set()
             self._translated_builtin_funcs = set()
             self._translated_exceptions = set()
+            self._translated_reserved_words = set()
 
     def get_semantic_tokens(self) -> list[tuple[int, int, int, int, int]]:
         """Parse document and extract semantic tokens.

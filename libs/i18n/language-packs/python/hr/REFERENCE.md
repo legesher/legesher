@@ -221,6 +221,17 @@ Exception classes for error handling.
 | `warning` | `upozorenje` |
 | `zerodivisionerror` | `greškadijeljenjasonulom` |
 
+## Reserved Words (2 terms)
+
+Python conventions like `self` and `cls` translated deterministically by the
+language pack rather than the LLM. Distinct from keywords because they aren't
+actual reserved words in the Python language. (CORE-710)
+
+| English | Croatian |
+| ------- | ------ |
+| `cls` | `samaklasa` |
+| `self` | `sebe` |
+
 ## Example Code
 
 Here's an example showing Croatian Python code with Legesher:
