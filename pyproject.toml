@@ -89,18 +89,18 @@ legesher-vs-code = { workspace = true }
 
 [dependency-groups]
 dev = [
-    "pre-commit>=3.5.0",
-    "ruff>=0.15.10",
+    "pre-commit>=4.6.0",
+    "ruff>=0.15.12",
     "black>=24.0.0",
-    "mypy>=1.20.1",
+    "mypy>=1.20.2",
     "pytest>=9.0.3",
     "pytest-asyncio>=1.2.0",
     "pytest-cov>=7.0.0",
     "pytest-benchmark>=4.0.0",
     "python-semantic-release>=9.0.0",
     "commitizen>=4.13.10",
-    "datasets>=4.8.2",
-    "huggingface-hub>=1.10.1",
+    "datasets>=4.8.5",
+    "huggingface-hub>=1.12.0",
     "psutil>=7.2.2",
     "vulture>=2.16",
 ]
