@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-05-01
+
 ### Fixed
 
 - **`test_translate_with_classes` integration test** ([CORE-1126]):
