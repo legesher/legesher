@@ -9,6 +9,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **`TestCrossSectionCollisionGate` Windows encoding bug**
+  ([CORE-1126]): three `pack_yml.write_text(...)` calls in the
+  CORE-950 integration tests were missing explicit
+  `encoding="utf-8"`. On Windows the system codepage (cp1252)
+  can't encode Arabic/Urdu pack content -> `UnicodeEncodeError`
+  before the validator was even invoked. Added explicit utf-8
+  encoding; tests pass cross-platform now. No product behavior
+  change.
+
 ## [0.10.0] - 2026-05-01
 
 ### Added

@@ -9,6 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **`test_translate_with_classes` integration test** ([CORE-1126]):
+  tightened assertion from the pre-CORE-710 `self`-preserved
+  contract to the strict post-CORE-710 contract (Spanish pack
+  translates `self -> mismo` via `reserved_words`). Test was
+  silently red on `main` since v0.10.0; release-foundation didn't
+  gate on CI so it shipped anyway. No product behavior change.
+
 ## [0.10.0] - 2026-05-01
 
 ## [0.9.3] - 2026-04-29

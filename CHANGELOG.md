@@ -9,6 +9,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **Stale CI tests** ([CORE-1126]): re-aligned two integration test
+  classes that had drifted from the features they were testing. The
+  legesher CLI test for class translation was asserting the
+  pre-CORE-710 contract (`self` preserved verbatim); tightened to
+  the post-CORE-710 contract (Spanish pack translates `self ->
+  mismo` via `reserved_words`). The i18n cross-section collision
+  gate tests were silently failing on Windows because
+  `pack_yml.write_text(...)` defaulted to the system codepage
+  (cp1252) and couldn't encode Arabic/Urdu pack content; added
+  explicit `encoding="utf-8"` to all three writes. No product
+  behavior change.
+
 ## [0.10.0] - 2026-05-01
 
 ### Added

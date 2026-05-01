@@ -69,7 +69,8 @@ class TestCrossSectionCollisionGate:
                 reserved_words:
                   self: "میں"
                   cls: "جماعت"
-                """).lstrip()
+                """).lstrip(),
+            encoding="utf-8",
         )
 
         result = _run_validator(pack_yml)
@@ -103,7 +104,8 @@ class TestCrossSectionCollisionGate:
                 reserved_words:
                   self: "خود"
                   cls: "جماعتخود"
-                """).lstrip()
+                """).lstrip(),
+            encoding="utf-8",
         )
 
         result = _run_validator(pack_yml)
@@ -130,7 +132,8 @@ class TestCrossSectionCollisionGate:
                 reserved_words:
                   self: "چھاپ"
                   cls: "جماعت"
-                """).lstrip()
+                """).lstrip(),
+            encoding="utf-8",
         )
 
         result = _run_validator(pack_yml)
