@@ -30,7 +30,7 @@ jobs:
   release:
     name: Release Foundation (core, i18n, legesher)
     runs-on: ubuntu-latest
-    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock') && !contains(github.event.head_commit.message, 'docs(changelog): stamp'))"
+    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock') && !contains(github.event.head_commit.message, 'docs(changelog): stamp release'))"
 
     steps:
       - name: Checkout code
@@ -136,3 +136,38 @@ jobs:
             libs/i18n/dist/
             libs/legesher/dist/
           retention-days: 90
+
+      # CORE-1155: semantic-release publish (above) attaches the
+      # `legesher-monorepo` metapackage wheel to the GitHub Release —
+      # that wheel is pure metadata (no .py files) and its declared deps
+      # aren't on PyPI, so anyone downloading it from the release page
+      # gets nothing useful. The actual built sub-package wheels exist
+      # (see "Build packages" above) but only land in the workflow
+      # artifact, which requires Actions auth to download. This step
+      # promotes them to release assets so the GitHub Release page is
+      # the source of truth for "the released artifacts".
+      - name: Attach foundation wheels to GitHub Release
+        if: steps.semantic-release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # The release was just created by `semantic-release publish`,
+          # so the most recent tag is what we want.
+          TAG=$(git describe --tags --abbrev=0)
+          echo "📤 Attaching real foundation wheels to release ${TAG}..."
+          gh release upload "${TAG}" \
+            libs/core/dist/*.whl libs/core/dist/*.tar.gz \
+            libs/i18n/dist/*.whl libs/i18n/dist/*.tar.gz \
+            libs/legesher/dist/*.whl libs/legesher/dist/*.tar.gz \
+            --clobber
+          # Defensive count: iterate dirs explicitly, only count if
+          # the dir exists. Avoids depending on bash assignment
+          # errexit semantics if a future change removes the
+          # `2>/dev/null` redirect or restructures the run block.
+          n=0
+          for dir in libs/core/dist libs/i18n/dist libs/legesher/dist; do
+            if [ -d "$dir" ]; then
+              n=$((n + $(find "$dir" -maxdepth 1 -type f | wc -l | tr -d ' ')))
+            fi
+          done
+          echo "✅ Attached ${n} files"
