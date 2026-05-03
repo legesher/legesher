@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-05-03
+
 ### Added
 
 - **PromptBuilder no-structured-format rule** ([CORE-1048]): Second,
@@ -103,9 +105,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.10.1  | Yes      |
-| legesher-i18n            | 0.10.1  | Yes      |
-| legesher (CLI)           | 0.10.1  | —        |
+| legesher-core            | 0.11.0  | Yes      |
+| legesher-i18n            | 0.11.0  | Yes      |
+| legesher (CLI)           | 0.11.0  | —        |
 | legesher-language-server | 0.1.3   | Yes      |
 | legesher-vscode          | 0.1.5   | —        |
 
