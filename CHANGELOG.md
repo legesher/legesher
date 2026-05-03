@@ -9,6 +9,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **PromptBuilder no-structured-format rule** ([CORE-1048]): Second,
+  narrower bullet appended to `_CRITICAL_RULES` that forbids wrapping a
+  translation in any structured key/value, label, JSON, or paired format,
+  and forbids joining the original identifier to the translation with
+  separators like `original_name_X_translated_name_Y`. Follow-up to
+  CORE-950: smaller models (`tiny-aya-global` 3.35B, observed on cond5 ur)
+  follow the "no explanation" rule but still emit labeled mappings — a
+  distinct prompt-following failure that the prior wording buried in a
+  single multi-clause bullet. Two distinct list items in the rendered
+  Markdown system prompt materially improve prompt-following salience for
+  small models. Universal rule (no per-model override). Touches
+  `libs/i18n/legesher_i18n/prompt_builder.py` plus a new
+  `libs/i18n/tests/test_prompt_builder_no_structured_format.py`.
+
 ## [0.10.1] - 2026-05-01
 
 ### Fixed
@@ -16,9 +32,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **Stale CI tests** ([CORE-1126]): re-aligned two integration test
   classes that had drifted from the features they were testing. The
   legesher CLI test for class translation was asserting the
-  pre-CORE-710 contract (`self` preserved verbatim); tightened to
-  the post-CORE-710 contract (Spanish pack translates `self ->
-  mismo` via `reserved_words`). The i18n cross-section collision
+  pre-CORE-710 contract (`self` preserved verbatim); tightened to the
+  post-CORE-710 contract (Spanish pack translates `self -> mismo` via
+  `reserved_words`). The i18n cross-section collision
   gate tests were silently failing on Windows because
   `pack_yml.write_text(...)` defaulted to the system codepage
   (cp1252) and couldn't encode Arabic/Urdu pack content; added

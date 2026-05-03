@@ -9,6 +9,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **PromptBuilder `_CRITICAL_RULES` "no structured/labeled output format"
+  rule** (CORE-1048). Second, narrower bullet appended to `_CRITICAL_RULES`
+  that explicitly forbids wrapping a translation in any structured
+  key/value, label, JSON, or paired format, and forbids joining the
+  original identifier to the translation with separators like
+  `original_name_X_translated_name_Y`. Smaller models (`tiny-aya-global`
+  3.35B params, observed on cond5 ur) follow the CORE-950 "no explanation"
+  rule but still emit labeled mappings — distinct failure mode that the
+  prior wording buried in a single multi-clause bullet. Two distinct list
+  items render as two distinct constraints, which materially improve
+  prompt-following salience for small models. Universal rule (no
+  per-model override). [CORE-1048]
+
 ## [0.10.1] - 2026-05-01
 
 ### Fixed

@@ -201,6 +201,25 @@ _CRITICAL_RULES: list[str] = [
         "is unaffected -- this rule applies to each individual translation "
         "value inside that structure."
     ),
+    # CORE-1048: Distinct from the rule above, which only mentions JSON-style
+    # `{'original_name': ..., 'translated_name': ...}` wrappers in passing
+    # within a multi-clause sentence. Empirically, smaller models
+    # (`tiny-aya-global`, 3.35B) follow the "no explanation" clause but emit
+    # `original_name_X_translated_name_Y` mappings -- a valid Python
+    # identifier that round-trips through AST validation but isn't a usable
+    # translation. Promoting the constraint to its own bullet renders it as a
+    # separate Markdown list item in the system prompt, which materially
+    # improves prompt-following salience for small models.
+    (
+        "Each translation value must be the bare translation -- a single "
+        "token sequence with no structured wrapper. Do NOT emit values "
+        "that pair the original with its translation, like "
+        "`original_name_X_translated_name_Y`. Do NOT wrap an individual "
+        "value in a key/value, label, JSON, or paired format. The "
+        "required JSON response structure (object or list, as specified "
+        "per call) is unaffected -- this rule applies to each individual "
+        "translation value inside that structure."
+    ),
     "All translations MUST be valid Python identifiers -- no spaces, no punctuation.",
     "snake_case identifiers stay snake_case, PascalCase stays PascalCase.",
     "Maintain consistent verb/noun choices across similar names.",
