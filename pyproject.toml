@@ -132,6 +132,12 @@ tag_format = "v{version}"
 build_command = "uv build"
 upload_to_vcs_release = true
 upload_to_pypi = false
+# Override python-semantic-release's hardcoded default of
+# `semantic-release <semantic-release>`. That bare-word author has no `@`,
+# so downstream tooling that validates commit authors (Vercel deploy gating,
+# etc.) rejects the release commit. The workflow's `git config user.email`
+# only affects shell-driven commits — semantic-release uses its own author.
+commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
 # Filter to foundation packages only
 [tool.semantic_release.commit_parser_options]

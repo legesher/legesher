@@ -46,6 +46,10 @@ branch = "main"
 tag_format = "vs-code-v{version}"
 upload_to_vcs_release = true
 upload_to_pypi = false
+# See root pyproject.toml — overrides python-semantic-release's invalid
+# default `semantic-release <semantic-release>` author so Vercel and other
+# email-validating tooling accept the release commit.
+commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
 [tool.semantic_release.commit_parser_options]
 allowed_tags = [
