@@ -9,6 +9,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **`CohereAyaProvider` error logs now surface exception class + SDK metadata**
+  ([CORE-870]). The previous `logger.error("Cohere Aya translation failed: %s", e)`
+  pattern called `str(e)` directly, which returns an empty body for some
+  cohere V2 SDK exceptions (notably `TooManyRequestsError`) whose message
+  lives on `.body` / `.headers` attributes. Result was log lines ending in
+  `Cohere Aya translation failed:` with nothing after the colon. Now every
+  error log + raised `TranslationError` includes `type(e).__name__`, falls
+  back to `repr(e)` when `str(e)` is empty, and surfaces `status_code` /
+  `code` / `x-debug-trace-id` from response headers when present. Logging
+  itself is wrapped in defensive try/except so a malformed exception can
+  never break the logger. Discovered while diagnosing AYA-213 cond5
+  failures: 18 of 28 logged failures rendered as empty errors that turned
+  out to be 429 rate limits in disguise. Touches
+  `libs/i18n/legesher_i18n/api/providers/cohere_aya.py` plus a new
+  `libs/i18n/tests/test_cohere_aya_error_fidelity.py` covering empty-str,
+  ApiError-shaped, non-empty-str, and broken-metadata cases.
+
 ## [0.11.1] - 2026-05-07
 
 ## [0.11.0] - 2026-05-03

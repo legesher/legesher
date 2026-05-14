@@ -9,6 +9,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **i18n**: `CohereAyaProvider` error logs and raised `TranslationError`
+  bodies now include the exception class name, fall back to `repr(e)`
+  when `str(e)` is empty, and surface `status_code` / `code` /
+  `x-debug-trace-id` when the SDK exception carries them ([CORE-870]).
+  Observability fix — does not change API success rate, request volume,
+  or cost. Surfaced 429s that had been masked as empty error messages
+  during AYA-213 cond5 diagnostic work. See `libs/i18n/CHANGELOG.md` for
+  full details.
+
 ## [0.11.1] - 2026-05-07
 
 ## [0.11.0] - 2026-05-03

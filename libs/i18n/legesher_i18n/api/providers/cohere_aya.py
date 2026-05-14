@@ -188,8 +188,37 @@ class CohereAyaProvider(TranslationProvider):
         except (AuthenticationError, TranslationError):
             raise
         except Exception as e:
-            logger.error("Cohere Aya translation failed: %s", e)
-            raise TranslationError(f"Cohere Aya translation failed: {e}") from e
+            # CORE-870: surface exception class + cohere SDK metadata so the
+            # log line is never just "Cohere Aya translation failed:" with
+            # nothing after the colon. Some SDK exceptions have an empty
+            # str() because the message lives on .body / .message attrs.
+            err_str = str(e) or repr(e)
+            err_class = type(e).__name__
+            extras: list[str] = []
+            for attr in ("status_code", "code"):
+                try:
+                    if hasattr(e, attr):
+                        extras.append(f"{attr}={getattr(e, attr)}")
+                except Exception:  # nosec B110 - logging must never raise
+                    pass
+            try:
+                headers = getattr(e, "headers", None) or {}
+                if isinstance(headers, dict):
+                    trace_id = headers.get("x-debug-trace-id")
+                    if trace_id:
+                        extras.append(f"trace_id={trace_id}")
+            except Exception:  # nosec B110 - logging must never raise
+                pass
+            extras_str = f" [{', '.join(extras)}]" if extras else ""
+            logger.error(
+                "Cohere Aya translation failed: %s: %s%s",
+                err_class,
+                err_str,
+                extras_str,
+            )
+            raise TranslationError(
+                f"Cohere Aya translation failed: {err_class}: {err_str}{extras_str}"
+            ) from e
 
     @staticmethod
     def _parse_response(
