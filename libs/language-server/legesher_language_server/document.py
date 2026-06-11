@@ -4,8 +4,37 @@ This module handles tracking open documents, their content, versions,
 and cached translations.
 """
 
+# TODO(CORE, deferred): The proportional interior mapping in source_map.py
+# (SourceMap._map_to_translated / _map_to_original) measures positions in
+# Python str characters, while LSP Position.character has no defined unit and
+# clients commonly count UTF-16 code units. For non-BMP characters (emoji,
+# astral CJK) this desyncs offsets. The full offset rework is out of scope for
+# this PR; see the xfail regression test
+# tests/test_source_map_offset_gap.py which captures the failing case so the
+# gap is tracked, not silently shipped.
+
 from dataclasses import dataclass, field
 from datetime import datetime
+
+
+def split_lines_lsp(text: str) -> list[str]:
+    r"""Split text into lines the way an LSP client counts them.
+
+    The LSP spec (and every mainstream editor) treats only ``\n``, ``\r\n``,
+    and a lone ``\r`` as line terminators. Python's ``str.splitlines()``
+    additionally splits on Unicode line/paragraph separators (U+2028, U+2029),
+    NEL (U+0085), vertical tab, form feed, and the file/group/record/unit
+    separators (U+001C-U+001F). A single editor line containing a U+2028 would
+    therefore become TWO Python lines, desyncing every line number the server
+    returns. This splitter matches the editor.
+    """
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    if not normalized:
+        return []
+    lines = normalized.split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+    return lines
 
 
 @dataclass
@@ -58,7 +87,7 @@ class DocumentState:
         Returns:
             Number of lines
         """
-        return len(self.text.splitlines())
+        return len(split_lines_lsp(self.text))
 
     def get_line(self, line_number: int) -> str | None:
         """Get specific line from document.
@@ -69,7 +98,7 @@ class DocumentState:
         Returns:
             Line content or None if line doesn't exist
         """
-        lines = self.text.splitlines()
+        lines = split_lines_lsp(self.text)
         if 0 <= line_number < len(lines):
             return lines[line_number]
         return None

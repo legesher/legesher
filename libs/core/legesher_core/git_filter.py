@@ -14,6 +14,7 @@ the code passes through unchanged.
 
 import logging
 import subprocess
+import unicodedata
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -21,6 +22,7 @@ from typing import TYPE_CHECKING, Optional, TextIO
 from collections.abc import Callable
 
 from .exceptions import InvalidCodeError
+from . import unicode_guard
 from .language_interface import create_translator_from_language_pack
 from .types import HistoryEntry, Translator
 
@@ -215,6 +217,33 @@ class GitFilter:
                 output_stream.write(source_code)
                 return 0
 
+            # Strip a leading BOM before processing (canonical storage is
+            # UTF-8 without BOM).
+            source_code = unicode_guard.strip_bom(source_code)
+
+            # FAIL CLOSED on Trojan Source (CVE-2021-42574). Bidi reordering
+            # controls and disallowed invisibles in code are rejected before we
+            # translate — never write attacker bytes into git. Legitimate
+            # ZWJ/ZWNJ inside string/comment content is allowlisted.
+            allowed = self._collect_string_comment_format_chars(source_code)
+            issues = unicode_guard.scan_text(source_code, allowed_format_chars=allowed)
+            blocking = [i for i in issues if i.kind in ("bidi", "invisible", "tatweel")]
+            if blocking:
+                first = blocking[0]
+                classification = {
+                    "bidi": "Trojan Source bidi reordering attack (CVE-2021-42574)",
+                    "invisible": "invisible/format-character attack",
+                    "tatweel": "tatweel padding character",
+                }.get(first.kind, "disallowed Unicode control")
+                sys.stderr.write(
+                    "legesher: refusing to stage source containing a "
+                    "disallowed Unicode control "
+                    f"({first.codepoint} {first.char_name} at offset "
+                    f"{first.offset}): {first.message}. Rejected as "
+                    f"{classification}.\n"
+                )
+                return 1
+
             logger.debug(
                 f"Clean filter: Translating {len(source_code)} bytes "
                 f"from {self.language} to {self.canonical_language}"
@@ -330,6 +359,42 @@ class GitFilter:
             )
             output_stream.write(source_code if "source_code" in locals() else "")
             return 0
+
+    @staticmethod
+    def _collect_string_comment_format_chars(source_code: str) -> set[str]:
+        """Collect non-bidi format chars (Cf) inside string/comment tokens.
+
+        Bidi reordering controls are intentionally NOT collected: they are
+        dangerous even inside literals for the Trojan Source attack, so
+        ``unicode_guard.scan_text`` always flags them. This only whitelists
+        non-bidi invisibles (e.g. ZWJ/ZWNJ in legitimate Indic/emoji text)
+        when they appear in literals/comments.
+        """
+        import io
+        import tokenize
+
+        allowed: set[str] = set()
+        try:
+            tokens = tokenize.generate_tokens(io.StringIO(source_code).readline)
+            for tok in tokens:
+                is_str_or_comment = tok.type in (
+                    tokenize.STRING,
+                    tokenize.COMMENT,
+                )
+                is_fstring_mid = (
+                    hasattr(tokenize, "FSTRING_MIDDLE")
+                    and tok.type == tokenize.FSTRING_MIDDLE
+                )
+                if is_str_or_comment or is_fstring_mid:
+                    for ch in tok.string:
+                        if (
+                            ch not in unicode_guard.BIDI_CONTROLS
+                            and unicodedata.category(ch) == "Cf"
+                        ):
+                            allowed.add(ch)
+        except (tokenize.TokenError, IndentationError, SyntaxError, ValueError):
+            return set()
+        return allowed
 
     def _record_metadata_history(
         self, action: str, from_language: str, to_language: str

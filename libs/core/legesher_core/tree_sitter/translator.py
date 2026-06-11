@@ -13,7 +13,12 @@ from .parser import PythonParser, TreeSitterError
 from ..exceptions import InvalidCodeError
 from ..token_mapper import TokenMapper
 from ..types import CulturalCommentMetadata
-from ..utils import validate_utf8_encoding, normalize_newlines
+from ..utils import (
+    validate_utf8_encoding,
+    normalize_newlines,
+    strip_bom,
+    check_coding_declaration,
+)
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -159,6 +164,17 @@ class TreeSitterTranslator:
             if return_metadata:
                 return source_code, CulturalCommentMetadata()
             return source_code
+
+        # Strip a leading BOM and warn on a non-UTF-8 coding declaration before
+        # processing — Legesher mandates UTF-8.
+        source_code = strip_bom(source_code)
+        bad_coding = check_coding_declaration(source_code)
+        if bad_coding is not None:
+            logger.warning(
+                "Non-UTF-8 PEP 263 coding declaration %r ignored; Legesher "
+                "mandates UTF-8 source",
+                bad_coding,
+            )
 
         # Normalize line endings for consistent processing
         source_code = normalize_newlines(source_code)

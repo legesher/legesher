@@ -211,9 +211,9 @@ class TestErrorHandling:
         tree2 = parser.parse(code, encoding="utf-8")
         assert tree2 is not None
 
-        # Test with other common encoding
-        tree3 = parser.parse(code, encoding="ascii")
-        assert tree3 is not None
+        # Non-UTF-8 encodings are rejected (Legesher mandates UTF-8)
+        with pytest.raises(TreeSitterError):
+            parser.parse(code, encoding="ascii")
 
     def test_parse_incremental_with_custom_encoding(self):
         """Test incremental parsing with custom encoding parameter."""
@@ -235,17 +235,16 @@ class TestErrorHandling:
         with pytest.raises(TreeSitterError) as exc_info:
             parser.parse("x = 42", encoding="invalid-encoding-xyz")
 
-        assert "Failed to encode source code" in str(exc_info.value)
+        assert "UTF-8" in str(exc_info.value)
 
     def test_parse_encoding_error(self):
         """Test that encoding errors are properly handled."""
         parser = PythonParser()
 
-        # Try to encode using ASCII (strict) with characters that need UTF-8
-        # We use characters that are valid in strings but would fail ASCII encoding
+        # Non-UTF-8 encodings fail closed rather than silently re-encoding.
         code = "x = 42  # comment"
-        tree = parser.parse(code, encoding="ascii")
-        assert tree is not None
+        with pytest.raises(TreeSitterError):
+            parser.parse(code, encoding="ascii")
 
 
 class TestRealWorldCode:

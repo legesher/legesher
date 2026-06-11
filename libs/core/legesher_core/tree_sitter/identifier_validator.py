@@ -7,7 +7,8 @@ handling for RTL scripts and mixed-script detection.
 
 import keyword
 import logging
-import unicodedata
+
+from ..script_lookup import get_script
 
 logger = logging.getLogger(__name__)
 
@@ -49,51 +50,8 @@ RTL_SCRIPTS = frozenset(
 
 
 def _get_script(char: str) -> str:
-    """Get the Unicode script of a character."""
-    try:
-        name = unicodedata.name(char, "")
-        # Simple heuristic based on character name
-        if "CJK" in name or "CHINESE" in name:
-            return "Han"
-        if "ARABIC" in name or "URDU" in name:
-            return "Arabic"
-        if "HEBREW" in name:
-            return "Hebrew"
-        if "DEVANAGARI" in name:
-            return "Devanagari"
-        if "LATIN" in name:
-            return "Latin"
-        if "CYRILLIC" in name:
-            return "Cyrillic"
-        if "GREEK" in name:
-            return "Greek"
-        if "HANGUL" in name:
-            return "Hangul"
-        if "KATAKANA" in name or "HIRAGANA" in name:
-            return "Japanese"
-        if "THAI" in name:
-            return "Thai"
-        if "GUJARATI" in name:
-            return "Gujarati"
-        if "GURMUKHI" in name:
-            return "Gurmukhi"
-        if "TELUGU" in name:
-            return "Telugu"
-        if "KANNADA" in name:
-            return "Kannada"
-        if "MALAYALAM" in name:
-            return "Malayalam"
-        if "SINHALA" in name:
-            return "Sinhala"
-        if "BENGALI" in name:
-            return "Bengali"
-        if "MYANMAR" in name:
-            return "Myanmar"
-        if "MONGOLIAN" in name:
-            return "Mongolian"
-    except ValueError:
-        pass
-    return "Unknown"
+    """Get the Unicode script of a character via the real script table."""
+    return get_script(char)
 
 
 class IdentifierValidator:
@@ -149,9 +107,29 @@ class IdentifierValidator:
             if char == "_" or char.isdigit():
                 continue
             script = _get_script(char)
-            if script != "Unknown":
+            if script not in ("Unknown", "Common"):
                 scripts.add(script)
         return len(scripts) > 1
+
+    def script_report(self, identifier: str) -> dict[str, object]:
+        """Return structured script information for an identifier.
+
+        Surfaces the actual scripts and a mixed-script flag to callers (e.g.
+        the LLM-translation pipeline) instead of only a buried warning string.
+        Does not change the validate() contract.
+
+        Returns:
+            A dict with keys ``scripts`` (sorted list[str]) and ``is_mixed``
+            (bool).
+        """
+        scripts: set[str] = set()
+        for char in identifier:
+            if char == "_" or char.isdigit():
+                continue
+            script = _get_script(char)
+            if script not in ("Unknown", "Common"):
+                scripts.add(script)
+        return {"scripts": sorted(scripts), "is_mixed": len(scripts) > 1}
 
     def validate(self, identifier: str) -> tuple[bool, list[str]]:
         """Validate an identifier and return detailed issues.

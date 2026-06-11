@@ -62,11 +62,17 @@ class PythonParser:
             >>> tree = parser.parse("x = 1 + 2")
             >>> print(tree.root_node.child_count)
             1
-            >>> # With custom encoding
-            >>> tree = parser.parse("x = 1 + 2", encoding="latin-1")
         """
         # Convert string to bytes if needed
         if isinstance(source_code, str):
+            # Legesher mandates UTF-8 for source. Fail closed on any non-UTF-8
+            # request rather than silently re-encoding, so multilingual (esp.
+            # RTL) code is never mangled and a wrong-encoding caller is caught.
+            normalized_encoding = encoding.lower().replace("_", "-")
+            if normalized_encoding not in ("utf-8", "utf8"):
+                raise TreeSitterError(
+                    f"Legesher source must be UTF-8; got encoding {encoding!r}"
+                )
             try:
                 source_bytes = source_code.encode(encoding)
             except (UnicodeEncodeError, LookupError) as e:
@@ -128,6 +134,14 @@ class PythonParser:
             >>> tree3 = parser.parse_incremental(code, tree2, encoding="latin-1")
         """
         if isinstance(source_code, str):
+            # Legesher mandates UTF-8 for source. Fail closed on any non-UTF-8
+            # request rather than silently re-encoding, so multilingual (esp.
+            # RTL) code is never mangled and a wrong-encoding caller is caught.
+            normalized_encoding = encoding.lower().replace("_", "-")
+            if normalized_encoding not in ("utf-8", "utf8"):
+                raise TreeSitterError(
+                    f"Legesher source must be UTF-8; got encoding {encoding!r}"
+                )
             try:
                 source_bytes = source_code.encode(encoding)
             except (UnicodeEncodeError, LookupError) as e:

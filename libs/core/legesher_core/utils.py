@@ -5,7 +5,14 @@ and other common operations used throughout the translation pipeline.
 """
 
 import ast
+import re
 from pathlib import Path
+
+# Byte-order mark (U+FEFF). Legesher mandates UTF-8 *without* BOM.
+_BOM = "﻿"
+
+# PEP 263 encoding declaration, e.g. ``# -*- coding: latin-1 -*-`` on line 1/2.
+_CODING_RE = re.compile(r"coding[:=]\s*([-\w.]+)")
 
 
 def validate_utf8_encoding(file_path: Path) -> str:
@@ -163,3 +170,32 @@ def merge_exception_translations(
         merged[canonical] = translation
 
     return merged
+
+
+def strip_bom(code: str) -> str:
+    """Strip a single leading byte-order mark (U+FEFF) from source text.
+
+    A leading BOM desyncs byte/char offsets and confuses PEP 263 detection, so
+    the translate path removes it. Interior U+FEFF is left untouched.
+    """
+    if code.startswith(_BOM):
+        return code[len(_BOM) :]
+    return code
+
+
+def check_coding_declaration(code: str) -> str | None:
+    """Return a non-UTF-8 PEP 263 coding declaration if present, else None.
+
+    Python only honours a coding declaration on the first or second physical
+    line. Legesher mandates UTF-8, so anything other than a UTF-8 alias is a
+    problem the caller should warn about or reject.
+    """
+    lines = code.split("\n", 2)[:2]
+    for line in lines:
+        match = _CODING_RE.search(line)
+        if match:
+            enc = match.group(1).lower().replace("_", "-")
+            if enc not in ("utf-8", "utf8"):
+                return match.group(1)
+            return None
+    return None
