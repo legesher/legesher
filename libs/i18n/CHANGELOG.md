@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Database**: Seeded 6 Ukrainian (`uk`) keyword/builtin translations from the
+  language-showcase work (`def`, `print`, `return`, `if`, `str`, `None`; source
+  `claude`) and set them as `uk`'s provisional selected translations — `uk`
+  previously had community suggestions but no selections. Drafts pending native
+  review; to be reused on the next `uk` translation run. [CORE-1299]
+
 ## [0.11.2] - 2026-05-14
 
 ### Changed
