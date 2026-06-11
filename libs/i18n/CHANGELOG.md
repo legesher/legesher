@@ -9,6 +9,62 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Unicode / script safety validation layer for language packs**
+  (51 -> 103 expansion hardening). A new `legesher_i18n/script_policy.py`
+  module is the single source of truth for which Unicode scripts and format
+  characters are legitimate in each of the 51 shipped languages, via a
+  per-language `ScriptPolicy` (allowed scripts, writing direction, allow-listed
+  format chars, NFKC normalization). Script detection (`scripts_of`) is built on
+  pure `unicodedata` — no new third-party dependency. `SchemaValidator` gains a
+  `Finding` dataclass and six new safety checks plus an aggregator:
+  - `check_normalization` — value must equal its NFC and NFKC forms (catches
+    Thai SARA AM / Lao U+0EB3 instability that breaks identifier round-tripping).
+  - `check_script_consistency` — rejects foreign-script bleed-through (e.g.
+    Chinese `布尔` in a Polish `bool`, Cyrillic in Thai, Hangul in Hindi) against
+    the per-language allowlist; default-deny for unregistered codes.
+  - `check_format_chars` — rejects bidi controls (U+202A-202E / U+2066-2069 /
+    U+200E / U+200F / U+061C), tatweel (U+0640), and the BOM (U+FEFF), plus any
+    `Cf` format char not explicitly allow-listed (Sinhala ZWJ, Persian/Urdu
+    ZWNJ).
+  - `check_keyword_collisions` — a translation must not equal (nor NFKC-fold to)
+    a live Python keyword/soft-keyword/builtin unless it is that key's own
+    target; catches the fullwidth `ｉｆ` -> `if` spoof and active-keyword
+    collisions (`globals` -> `global`, `except*` -> `except`, `print` -> `in`).
+  - `check_min_interpreter_identifier` — static XID membership check flagging
+    ZWJ/ZWNJ-bearing values (e.g. Sinhala conjuncts) whose pack declares a
+    minimum interpreter below 3.13. The boundary is the CPython version, not a
+    single Unicode version: 3.10/3.11/3.12 ship Unicode 13.0/14.0/15.0 and raise
+    `SyntaxError` on these, while 3.13+ (Unicode 15.1) accepts them as XID. Never
+    calls `compile()`, so the check is deterministic on any interpreter.
+  - `validate_pack_strict` — runs all of the above plus the previously-dead
+    `check_duplicates` and `check_identifier_validity` passes (the intentional
+    `keywords.type == builtins.type` duplicate is allow-listed).
+- **`legesher_i18n/scripts/audit_packs.py`** — audits every working-tree pack
+  with `validate_pack_strict`, prints a report grouped by language and
+  finding-code, and exits non-zero on findings. Runnable as
+  `python -m legesher_i18n.scripts.audit_packs [--lang CODE] [--quiet]`.
+- **`.github/workflows/validate-packs.yml`** — CI job running the audit in
+  **non-blocking** (`continue-on-error`) report mode while data-correction PRs
+  are still pending. Flips to blocking pre-103-expansion.
+- **New test suites** under `libs/i18n/tests/` (all green, synthetic fixtures):
+  `test_unicode_normalization.py`, `test_script_consistency.py`,
+  `test_format_chars.py`, `test_keyword_collisions.py`, `test_path_traversal.py`,
+  `test_min_interpreter_identifier.py`, `test_script_policy_coverage.py`
+  (asserts all 51 codes are policied + unknown -> default-deny), and
+  `test_new_language_onboarding.py` (a golden "what a new pack must satisfy"
+  checklist that doubles as onboarding docs).
+
+### Fixed
+
+- **Path-traversal guard in `LanguagePackLoader.load`.** The `version` argument
+  was joined directly into a pack filename (`{version}.yml`) with no validation,
+  making it a path-traversal primitive. `load` now validates `version` against
+  `^(\d+\.\d+|default)$` and raises `ValueError` for anything else, before any
+  filesystem access. `version=None` (load `default.yml`) is still accepted; the
+  `lru_cache` is preserved.
+
 ## [0.12.0] - 2026-06-11
 
 ## [0.11.3] - 2026-06-11

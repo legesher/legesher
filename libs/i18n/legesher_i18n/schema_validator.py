@@ -2,19 +2,83 @@
 
 This module provides Pydantic models and validation utilities for ensuring
 language packs and version indexes conform to the expected schema.
+
+In addition to the original (Pydantic-backed) validation, it provides a
+Unicode/script **safety** layer (``check_normalization``,
+``check_script_consistency``, ``check_format_chars``,
+``check_keyword_collisions``, ``check_min_interpreter_identifier``) plus a
+``validate_pack_strict`` aggregator that runs every safety check together with
+the previously-dead ``check_duplicates`` / ``check_identifier_validity``
+passes. These were added to harden the 51 -> 103 language expansion against the
+classes of corruption found in shipped machine-translated packs (NFKC
+instability, fullwidth keyword spoofs, foreign-script bleed-through, illegal
+bidi/format controls, and live-keyword collisions). See
+:mod:`legesher_i18n.script_policy` for the per-language allowlists.
 """
 
+import keyword
+import unicodedata
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
 from .exceptions import PackValidationError, VersionIndexError
+from .script_policy import (
+    ALWAYS_ALLOWED_SCRIPTS,
+    FORBIDDEN_FORMAT_CHARS,
+    has_policy,
+    policy_for,
+    scripts_of,
+)
 
 # Soft keywords that contain special characters but are valid Python syntax
 # These are special cases that bypass the normal identifier validation
 # Reference: https://docs.python.org/3/reference/lexical_analysis.html#soft-keywords
 SOFT_KEYWORDS = {"except*"}
+
+# Pack sections whose values are translation identifiers (the targets the
+# safety checks inspect). ``cultural_notes`` and ``metadata`` are excluded
+# because they are free prose / structured metadata, not identifiers.
+_TRANSLATION_SECTIONS = (
+    "keywords",
+    "builtins",
+    "exceptions",
+    "reserved_words",
+    "operators",
+    "standard_library",
+)
+
+# The one intentional cross-section duplicate: ``type`` is both a Python
+# keyword (3.12+ ``type`` statement) and a builtin. Packs translate both to the
+# same value on purpose, so the strict duplicate check allow-lists exactly this
+# (section, key) pair-up: ``keywords.type`` == ``builtins.type``.
+_ALLOWED_DUPLICATE_KEYS = frozenset({"type"})
+
+
+@dataclass(frozen=True)
+class Finding:
+    """A single validation finding from the script-safety layer.
+
+    Attributes:
+        severity: ``"error"`` or ``"warning"``. Errors are pack-corrupting;
+            warnings are advisory (none are emitted today but the field keeps
+            the report shape stable).
+        code: Stable machine-readable code (e.g. ``"nfkc-instability"``,
+            ``"foreign-script"``) for grouping and CI filtering.
+        location: Human-readable pointer to the offending value, usually
+            ``"{section}.{key}"`` (e.g. ``"builtins.bool"``). For a cross-section
+            finding (the same value colliding across sections) this is a
+            comma-separated list of such pointers (e.g.
+            ``"keywords.type, builtins.type"``).
+        message: Human-readable explanation of the problem.
+    """
+
+    severity: str
+    code: str
+    location: str
+    message: str
 
 
 class LanguagePackMetadata(BaseModel):
@@ -939,3 +1003,456 @@ class SchemaValidator:
             "total_issues": total_issues,
             "issues": issues,
         }
+
+    # ------------------------------------------------------------------
+    # Unicode / script safety layer (51 -> 103 expansion hardening).
+    #
+    # Each ``check_*`` below returns a list[Finding]; ``validate_pack_strict``
+    # aggregates them with the legacy duplicate / identifier checks. They are
+    # deliberately granular so callers (the audit script, tests) can run one in
+    # isolation. None of them load YAML or touch the filesystem — they operate
+    # purely on a validated, inheritance-merged ``LanguagePackSchema``.
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _iter_translation_items(
+        pack_schema: "LanguagePackSchema",
+    ) -> list[tuple[str, str, str]]:
+        """Yield ``(section, key, value)`` for every translation in the pack.
+
+        Covers all six identifier-bearing sections (keywords, builtins,
+        exceptions, reserved_words, operators, standard_library). Prose and
+        metadata are excluded.
+        """
+        items: list[tuple[str, str, str]] = []
+        for section in _TRANSLATION_SECTIONS:
+            mapping: dict[str, str] = getattr(pack_schema, section, {}) or {}
+            for key, value in mapping.items():
+                items.append((section, key, value))
+        return items
+
+    @staticmethod
+    def check_normalization(pack_schema: "LanguagePackSchema") -> list["Finding"]:
+        """Flag values that are not stable under NFC/NFKC normalization.
+
+        Rule: ``value == NFC(value) == NFKC(value)``. A value that changes under
+        either form is unstable: Python applies NFKC to identifiers at parse
+        time, so an unnormalized source value will not round-trip and may even
+        compile to a *different* identifier than the bytes on disk. Real example:
+        Thai SARA AM (U+0E33) and Lao U+0EB3 decompose under NFC/NFKC.
+
+        Returns a list of error :class:`Finding`. The ``*`` suffix of a
+        soft-keyword translation is stripped before checking so ``excepto*``
+        normalizes as ``excepto``.
+        """
+        findings: list[Finding] = []
+        for section, key, value in SchemaValidator._iter_translation_items(pack_schema):
+            core = value[:-1] if value.endswith("*") else value
+            nfc = unicodedata.normalize("NFC", core)
+            nfkc = unicodedata.normalize("NFKC", core)
+            if core != nfc or core != nfkc:
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="nfkc-instability",
+                        location=f"{section}.{key}",
+                        message=(
+                            f"Value '{value}' is not stable under Unicode "
+                            f"normalization (NFC='{nfc}', NFKC='{nfkc}'). "
+                            "Python NFKC-folds identifiers at parse time, so "
+                            "the source value will not round-trip."
+                        ),
+                    )
+                )
+        return findings
+
+    @staticmethod
+    def check_script_consistency(
+        pack_schema: "LanguagePackSchema",
+        language: str | None = None,
+    ) -> list["Finding"]:
+        """Flag values containing scripts outside the language's allowlist.
+
+        Uses :func:`legesher_i18n.script_policy.scripts_of` (pure unicodedata)
+        and the per-language allowlist in
+        :data:`legesher_i18n.script_policy.SCRIPT_POLICIES`. ``Common`` and
+        ``Inherited`` are always allowed. Catches foreign-script bleed-through
+        such as Chinese ``布尔`` inside a Polish ``bool`` or a stray Cyrillic
+        letter in a Thai value.
+
+        Args:
+            pack_schema: Validated, merged pack.
+            language: Language code to police against. Defaults to
+                ``pack_schema.language``. Default-deny: an unknown code yields a
+                single ``no-policy`` finding rather than silently passing.
+        """
+        lang = (language or pack_schema.language).lower()
+        if not has_policy(lang):
+            return [
+                Finding(
+                    severity="error",
+                    code="no-policy",
+                    location=f"<pack:{lang}>",
+                    message=(
+                        f"No script policy registered for '{lang}'. Add an "
+                        "entry to legesher_i18n.script_policy.SCRIPT_POLICIES "
+                        "before shipping this language."
+                    ),
+                )
+            ]
+
+        policy = policy_for(lang)
+        allowed = policy.scripts | ALWAYS_ALLOWED_SCRIPTS
+        findings: list[Finding] = []
+        for section, key, value in SchemaValidator._iter_translation_items(pack_schema):
+            # Format chars (ZWJ/ZWNJ/bidi/BOM) are policed separately; strip the
+            # language's explicitly-allowed ones so they don't muddy the script
+            # set, and drop a trailing soft-keyword ``*``.
+            core = value[:-1] if value.endswith("*") else value
+            cleaned = "".join(
+                ch for ch in core if ch not in policy.allowed_format_chars
+            )
+            present = scripts_of(cleaned)
+            offending = present - allowed
+            if offending:
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="foreign-script",
+                        location=f"{section}.{key}",
+                        message=(
+                            f"Value '{value}' contains script(s) "
+                            f"{sorted(offending)} not allowed for '{lang}' "
+                            f"(allowed: {sorted(policy.scripts)})."
+                        ),
+                    )
+                )
+        return findings
+
+    @staticmethod
+    def check_format_chars(
+        pack_schema: "LanguagePackSchema",
+        language: str | None = None,
+    ) -> list["Finding"]:
+        """Flag illegal Unicode format / bidi-control characters in values.
+
+        Rejects every character in
+        :data:`legesher_i18n.script_policy.FORBIDDEN_FORMAT_CHARS` (bidi
+        controls U+202A-202E / U+2066-2069 / U+200E / U+200F / U+061C, the
+        tatweel U+0640, and the BOM U+FEFF) plus any other Unicode ``Cf``
+        (format) character, *unless* the language's policy explicitly
+        allow-lists it. Today only Sinhala (ZWJ U+200D) and Persian/Urdu (ZWNJ
+        U+200C) allow a format char.
+
+        Args:
+            pack_schema: Validated, merged pack.
+            language: Language code. Defaults to ``pack_schema.language``.
+                Unknown codes fall back to an empty allowlist (deny all format
+                chars).
+        """
+        lang = (language or pack_schema.language).lower()
+        allowed_fmt: frozenset[str] = (
+            policy_for(lang).allowed_format_chars if has_policy(lang) else frozenset()
+        )
+
+        findings: list[Finding] = []
+        for section, key, value in SchemaValidator._iter_translation_items(pack_schema):
+            for ch in value:
+                if ch in allowed_fmt:
+                    continue
+                is_forbidden = ch in FORBIDDEN_FORMAT_CHARS
+                is_format_cat = unicodedata.category(ch) == "Cf"
+                if is_forbidden or is_format_cat:
+                    findings.append(
+                        Finding(
+                            severity="error",
+                            code="illegal-format-char",
+                            location=f"{section}.{key}",
+                            message=(
+                                f"Value '{value}' contains illegal format "
+                                f"character U+{ord(ch):04X} "
+                                f"({unicodedata.name(ch, 'UNNAMED')}). "
+                                "Bidi controls, tatweel, BOM, and unlisted "
+                                "zero-width joiners are not permitted."
+                            ),
+                        )
+                    )
+        return findings
+
+    @staticmethod
+    def check_keyword_collisions(
+        pack_schema: "LanguagePackSchema",
+    ) -> list["Finding"]:
+        """Flag values that collide with a *live* Python keyword or builtin.
+
+        A translation must not equal — nor NFKC-fold to — a real Python
+        keyword, soft keyword, or builtin name **unless** it is that key's own
+        English translation target (e.g. ``in`` legitimately translating the
+        ``in`` keyword). This catches two failure modes:
+
+        * **Active-keyword collision**: a translation for one term happens to be
+          another live keyword/builtin (e.g. a ``globals`` value rendered as
+          ``global``, an ``except*`` value rendered as ``except``, a ``print``
+          value rendered as ``in``) — at runtime the dispatch silently
+          mis-resolves.
+        * **Fullwidth spoof**: ``'ｉｆ'`` is ``str.isidentifier()``-True and
+          NFKC-folds to ``if``; the NFKC comparison catches it.
+
+        ``except*``-awareness: the self-exemption is **star-exact** — only
+        ``except*`` -> ``except*`` is exempt. ``except*`` -> ``except`` (star
+        dropped) is flagged, because the bare ``except`` collides with the live
+        keyword. Collision detection itself compares the star-stripped, NFKC-
+        folded core against the live-name set.
+        """
+        import builtins as _builtins
+
+        # ``__builtins__`` is a module in normal execution but a dict under
+        # exec/REPL; ``dir(_builtins)`` on the canonical module is reliable.
+        live_names = set(keyword.kwlist) | set(keyword.softkwlist) | set(dir(_builtins))
+
+        findings: list[Finding] = []
+        for section, key, value in SchemaValidator._iter_translation_items(pack_schema):
+            # Self-exemption is exact (star-aware): the value must equal the key
+            # verbatim. This keeps `except*` -> `except*` exempt while flagging
+            # `except*` -> `except`.
+            if value == key:
+                continue
+
+            core = value[:-1] if value.endswith("*") else value
+            folded = unicodedata.normalize("NFKC", core)
+
+            for candidate in {core, folded}:
+                if candidate not in live_names:
+                    continue
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="keyword-collision",
+                        location=f"{section}.{key}",
+                        message=(
+                            f"Value '{value}' collides with the live Python "
+                            f"name '{candidate}' (NFKC-folded), but this entry "
+                            f"translates '{key}'. A translation must not equal "
+                            "another keyword/builtin."
+                        ),
+                    )
+                )
+                break
+        return findings
+
+    # Characters that only became valid in identifiers on newer interpreters.
+    # The behavior boundary is CPython version, not a single Unicode version:
+    # 3.10/3.11/3.12 ship Unicode 13.0/14.0/15.0 and raise SyntaxError on these,
+    # while 3.13+ (Unicode 15.1) accepts them as XID — the exact Sinhala-ZWJ
+    # trap. We do a *static* membership test rather than calling ``compile()`` so
+    # the check is deterministic regardless of the interpreter running the gate.
+    # ZWJ (U+200D) is the load-bearing case; ZWNJ (U+200C) follows the same rule.
+    _XID_ONLY_FROM_CPYTHON_313: frozenset[str] = frozenset({"\u200d", "\u200c"})
+
+    @staticmethod
+    def check_min_interpreter_identifier(
+        pack_schema: "LanguagePackSchema",
+        language: str | None = None,
+        min_version: str | None = None,
+    ) -> list["Finding"]:
+        """Flag values that aren't valid identifiers on the pack's *minimum* CPython.
+
+        The Sinhala ZWJ trap: ``virama + ZWJ + consonant`` is a valid identifier
+        on CPython 3.13+ (Unicode 13.0 XID update) but a ``SyntaxError`` on
+        3.10-3.12. A value that requires a format char allow-listed by the
+        language's policy is therefore only safe if the pack declares a minimum
+        interpreter of 3.13 or newer.
+
+        This is a **static** XID check (never calls ``compile()``): if a value
+        contains any character in
+        :data:`SchemaValidator._XID_ONLY_FROM_CPYTHON_313` and the declared minimum
+        interpreter is < 3.13, it is flagged. Conservative by design — it errs
+        toward warning the maintainer rather than trusting the running
+        interpreter's Unicode version.
+
+        Args:
+            pack_schema: Validated, merged pack.
+            language: Unused today (kept for signature symmetry with the other
+                language-scoped checks and future per-language XID rules).
+            min_version: Minimum CPython version string (e.g. ``"3.10"``).
+                Defaults to ``pack_schema.metadata.python_version_min`` when
+                present, else the pack ``version``.
+        """
+        del language  # reserved for future per-language XID nuance
+        declared = min_version
+        if declared is None and pack_schema.metadata is not None:
+            declared = pack_schema.metadata.python_version_min
+        if declared is None:
+            declared = pack_schema.version
+
+        supports_unicode13_xid = SchemaValidator._version_at_least(declared, 3, 13)
+        if supports_unicode13_xid:
+            return []
+
+        findings: list[Finding] = []
+        for section, key, value in SchemaValidator._iter_translation_items(pack_schema):
+            offending = sorted(
+                {ch for ch in value if ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313}
+            )
+            if offending:
+                pretty = ", ".join(f"U+{ord(ch):04X}" for ch in offending)
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="min-interpreter-xid",
+                        location=f"{section}.{key}",
+                        message=(
+                            f"Value '{value}' uses {pretty}, which only became "
+                            f"a valid identifier character in CPython 3.13 "
+                            f"(Unicode 13.0 XID). The pack declares minimum "
+                            f"interpreter '{declared}'; this raises SyntaxError "
+                            "on 3.10-3.12. Raise python_version_min to '3.13'."
+                        ),
+                    )
+                )
+        return findings
+
+    @staticmethod
+    def _version_at_least(version: str | None, major: int, minor: int) -> bool:
+        """Return True if dotted *version* string is >= (major, minor).
+
+        Parses leading ``X.Y`` and ignores any suffix. Unparseable or None
+        versions return False (conservative: treat as too old).
+        """
+        if not version:
+            return False
+        parts = version.split(".")
+        try:
+            v_major = int(parts[0])
+            v_minor = int(parts[1]) if len(parts) > 1 else 0
+        except (ValueError, IndexError):
+            return False
+        return (v_major, v_minor) >= (major, minor)
+
+    @staticmethod
+    def _strict_duplicate_findings(
+        pack_schema: "LanguagePackSchema",
+    ) -> list["Finding"]:
+        """Wrap ``check_duplicates`` output as Findings, allow-listing type==type.
+
+        Intra-section duplicates and cross-section collisions both become
+        ``duplicate-target`` findings. The intentional ``keywords.type ==
+        builtins.type`` overlap is suppressed: it is the one duplicate the
+        language packs ship on purpose.
+        """
+        dup = SchemaValidator.check_duplicates(pack_schema)
+        findings: list[Finding] = []
+
+        section_map = {
+            "keyword_duplicates": "keywords",
+            "builtin_duplicates": "builtins",
+            "exception_duplicates": "exceptions",
+            "reserved_word_duplicates": "reserved_words",
+            "operator_duplicates": "operators",
+            "stdlib_duplicates": "standard_library",
+        }
+        for dup_key, section in section_map.items():
+            for entry in dup.get(dup_key, []):
+                terms = entry["source_terms"]
+                if set(terms) <= _ALLOWED_DUPLICATE_KEYS:
+                    continue
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="duplicate-target",
+                        location=f"{section}.{'/'.join(terms)}",
+                        message=(
+                            f"Translation '{entry['translation']}' is reused "
+                            f"for {len(terms)} terms in {section}: "
+                            f"{', '.join(terms)}."
+                        ),
+                    )
+                )
+
+        for collision in dup.get("cross_section_collisions", []):
+            keys = {loc["source_key"] for loc in collision.get("locations", [])}
+            if keys <= _ALLOWED_DUPLICATE_KEYS:
+                continue
+            locations = ", ".join(
+                f"{loc['section']}.{loc['source_key']}"
+                for loc in collision.get("locations", [])
+            )
+            findings.append(
+                Finding(
+                    severity="error",
+                    code="duplicate-target",
+                    location=locations,
+                    message=(
+                        f"Translation '{collision['translation']}' appears in "
+                        f"multiple sections ({locations}); each target must be "
+                        "unique across the resolved pack."
+                    ),
+                )
+            )
+        return findings
+
+    @staticmethod
+    def _strict_identifier_findings(
+        pack_schema: "LanguagePackSchema",
+    ) -> list["Finding"]:
+        """Wrap the legacy ``check_identifier_validity`` output as Findings."""
+        result = SchemaValidator.check_identifier_validity(pack_schema)
+        findings: list[Finding] = []
+        for section, dict_key in (
+            ("keywords", "invalid_keywords"),
+            ("builtins", "invalid_builtins"),
+            ("exceptions", "invalid_exceptions"),
+            ("reserved_words", "invalid_reserved_words"),
+        ):
+            for entry in result.get(dict_key, []):
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="invalid-identifier",
+                        location=f"{section}.{entry['key']}",
+                        message=(
+                            f"Value '{entry['value']}' {entry['reason']}; not a "
+                            "valid Python identifier."
+                        ),
+                    )
+                )
+        return findings
+
+    @staticmethod
+    def validate_pack_strict(
+        pack_schema: "LanguagePackSchema",
+        language: str | None = None,
+    ) -> list["Finding"]:
+        """Run every safety check and return all Findings (empty == clean).
+
+        Aggregates, in order:
+
+        1. :meth:`check_normalization`
+        2. :meth:`check_script_consistency`
+        3. :meth:`check_format_chars`
+        4. :meth:`check_keyword_collisions`
+        5. :meth:`check_min_interpreter_identifier`
+        6. the previously-dead :meth:`check_duplicates`
+           (via :meth:`_strict_duplicate_findings`, type==type allow-listed)
+        7. the previously-dead :meth:`check_identifier_validity`
+           (via :meth:`_strict_identifier_findings`)
+
+        Args:
+            pack_schema: Validated, inheritance-merged pack.
+            language: Language code to police against. Defaults to
+                ``pack_schema.language``.
+
+        Returns:
+            A flat ``list[Finding]``. An empty list means the pack passed every
+            safety check.
+        """
+        lang = language or pack_schema.language
+        findings: list[Finding] = []
+        findings += SchemaValidator.check_normalization(pack_schema)
+        findings += SchemaValidator.check_script_consistency(pack_schema, lang)
+        findings += SchemaValidator.check_format_chars(pack_schema, lang)
+        findings += SchemaValidator.check_keyword_collisions(pack_schema)
+        findings += SchemaValidator.check_min_interpreter_identifier(pack_schema, lang)
+        findings += SchemaValidator._strict_duplicate_findings(pack_schema)
+        findings += SchemaValidator._strict_identifier_findings(pack_schema)
+        return findings

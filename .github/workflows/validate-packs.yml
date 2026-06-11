@@ -1,0 +1,74 @@
+name: Validate Packs
+
+# Unicode/script safety audit for the language packs (51 -> 103 expansion gate).
+#
+# Runs legesher_i18n.scripts.audit_packs over every shipped pack and reports
+# NFKC-instability, foreign-script bleed-through, illegal bidi/format controls,
+# live-keyword collisions, min-interpreter XID traps, and duplicate targets.
+#
+# NON-BLOCKING for now: the step uses `continue-on-error: true` because the
+# shipped packs still contain known data defects that this gate intentionally
+# surfaces (data fixes are a separate workstream). The audit report is posted
+# to the job summary so maintainers can track the burn-down.
+#
+# Flip to blocking once data-correction PRs land (pre-103-expansion gate).
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'libs/i18n/language-packs/**'
+      - 'libs/i18n/legesher_i18n/script_policy.py'
+      - 'libs/i18n/legesher_i18n/schema_validator.py'
+      - 'libs/i18n/legesher_i18n/scripts/audit_packs.py'
+      - '.github/workflows/validate-packs.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'libs/i18n/language-packs/**'
+      - 'libs/i18n/legesher_i18n/script_policy.py'
+      - 'libs/i18n/legesher_i18n/schema_validator.py'
+      - 'libs/i18n/legesher_i18n/scripts/audit_packs.py'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  audit-packs:
+    name: Pack Unicode/script audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Audit language packs (non-blocking)
+        # continue-on-error: known data defects still present; this gate is
+        # informational until the data-correction PRs land.
+        # Flip to blocking once data-correction PRs land (pre-103-expansion gate).
+        continue-on-error: true
+        run: |
+          uv run python -m legesher_i18n.scripts.audit_packs \
+            | tee "$GITHUB_STEP_SUMMARY"
+        working-directory: libs/i18n

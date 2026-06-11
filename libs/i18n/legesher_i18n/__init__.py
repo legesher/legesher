@@ -29,10 +29,12 @@ from .language_registry import (
 )
 from .pack_loader import LanguagePack, LanguagePackLoader
 from .schema_validator import (
+    Finding,
     LanguagePackMetadata,
     LanguagePackSchema,
     SchemaValidator,
 )
+from .script_policy import ScriptPolicy, policy_for, scripts_of
 from .prompt_builder import PromptBuilder
 from .style_guides import StyleGuideLoader
 from .version_detector import PythonVersionDetector
@@ -58,9 +60,14 @@ __all__ = [
     "is_rtl_language",
     "is_supported_language",
     # Schema & validation
+    "Finding",
     "LanguagePackMetadata",
     "LanguagePackSchema",
     "SchemaValidator",
+    # Script policy (Unicode safety)
+    "ScriptPolicy",
+    "policy_for",
+    "scripts_of",
     # Version detection
     "PythonVersionDetector",
     "PythonVersionInfo",

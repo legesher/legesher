@@ -9,6 +9,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **i18n**: Unicode/script safety validation layer for language packs, ahead of
+  the 51 → 103 expansion. A per-language `script_policy.py` plus new
+  `SchemaValidator` checks (NFKC stability, foreign-script bleed-through,
+  bidi/format controls, live-keyword collisions, the Sinhala-ZWJ
+  min-interpreter trap) aggregated by `validate_pack_strict`, an
+  `audit_packs.py` CLI, a non-blocking `validate-packs` CI job, and 8 new test
+  suites. See `libs/i18n/CHANGELOG.md` for full details (PR #256).
+
+### Fixed
+
+- **i18n**: Path-traversal guard in `LanguagePackLoader.load` — the `version`
+  argument is validated against `^(\d+\.\d+|default)$` before any filesystem
+  access. See `libs/i18n/CHANGELOG.md` (PR #256).
+
+### Security
+
+- **i18n**: Pack validation gate detects Unicode/script attack classes across
+  all packs in report mode — Trojan-source bidi controls (CVE-2021-42574),
+  invisible-character / fullwidth keyword spoofs, and NFKC round-trip
+  corruption. See `libs/i18n/CHANGELOG.md` (PR #256).
+
 ## [0.12.0] - 2026-06-11
 
 ## [0.11.3] - 2026-06-11

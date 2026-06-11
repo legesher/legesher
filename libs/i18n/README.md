@@ -127,6 +127,58 @@ Each language pack is independently versioned at `libs/i18n/language-packs/pytho
 
 **Note**: Language packs are currently in pre-beta (v0.0.x) and awaiting community validation before v0.1.0 release.
 
+### Pack validation & script policy
+
+Beyond schema validation, packs are guarded by a Unicode/script **safety layer**
+that hardens the 51 → 103 language expansion against the corruption classes seen
+in machine-translated packs. The policy lives in
+`legesher_i18n/script_policy.py` — one `ScriptPolicy` per language declaring its
+allowed Unicode script(s), writing direction, and any legitimately-required
+format characters. `SchemaValidator.validate_pack_strict` runs every check and
+returns a list of `Finding`s (empty == clean):
+
+| Check | Catches |
+| --- | --- |
+| `check_normalization` | values that aren't NFC/NFKC-stable (e.g. Thai SARA AM) |
+| `check_script_consistency` | foreign-script bleed-through (Chinese in a Polish value, Cyrillic in Thai, …) |
+| `check_format_chars` | bidi controls, tatweel, BOM, and un-allow-listed zero-width joiners |
+| `check_keyword_collisions` | values that equal/NFKC-fold to a live keyword/builtin (incl. the fullwidth `ｉｆ`→`if` spoof) |
+| `check_min_interpreter_identifier` | ZWJ-bearing values whose pack declares a minimum interpreter < 3.13 |
+| `check_duplicates` / `check_identifier_validity` | duplicate targets and non-identifier values |
+
+Audit every working-tree pack:
+
+```bash
+# From libs/i18n/
+python -m legesher_i18n.scripts.audit_packs            # all packs
+python -m legesher_i18n.scripts.audit_packs --lang si  # one language
+```
+
+The `validate-packs` CI workflow runs this audit in **non-blocking** report mode
+while data-correction work is in flight; it flips to blocking before the 103
+expansion.
+
+#### Adding a language safely
+
+When onboarding a new script/language, satisfy the checklist encoded as a golden
+test in `tests/test_new_language_onboarding.py`:
+
+1. **Register a `ScriptPolicy`** in `SCRIPT_POLICIES` keyed by the ISO 639 code
+   — listing the orthography's Unicode script(s), `direction` (`"ltr"`/`"rtl"`),
+   and any required format char (only Sinhala ZWJ and Persian/Urdu ZWNJ today).
+   There is **no permissive fallback**: an unregistered code is default-denied.
+2. All translation values must stay within the declared script(s).
+3. Values must be NFC/NFKC-stable.
+4. No illegal format/bidi characters (only the policy's allow-listed ones).
+5. No value may equal a live Python keyword/builtin (except its own target).
+6. ZWJ-bearing values must declare `python_version_min >= 3.13`.
+7. No duplicate targets (except the intentional `keywords.type == builtins.type`).
+8. Add a coverage row by ensuring `tests/test_script_policy_coverage.py` passes
+   (it asserts every shipped pack code has a policy — a missing entry fails CI).
+
+The full "how to add a new language" walkthrough lives in the module docstring of
+`legesher_i18n/script_policy.py`.
+
 ### Translation API (Optional)
 
 Dynamic translation support for content not in language packs:

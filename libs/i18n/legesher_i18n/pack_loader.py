@@ -7,6 +7,7 @@ resolving inheritance chains, merging keyword translations, and caching results.
 import importlib.metadata
 import importlib.util
 import logging
+import re
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -27,6 +28,13 @@ logger = logging.getLogger(__name__)
 
 
 MAX_INHERITANCE_DEPTH = 10
+
+# A pack version is either an ``X.Y`` Python version or the literal ``default``.
+# ``_get_pack_path`` joins this directly into a filename (``{version}.yml``), so
+# an unvalidated value like ``../../../../etc/passwd`` would be a path-traversal
+# primitive. The loader validates ``version`` against this pattern before any
+# filesystem join (closes the gap; the ``extends`` field has its own guard).
+_VERSION_PATTERN = re.compile(r"^(\d+\.\d+|default)$")
 
 
 @dataclass(frozen=True)
@@ -292,7 +300,21 @@ class LanguagePackLoader:
             PackNotFoundError: If pack file doesn't exist (includes available languages)
             CircularInheritanceError: If circular inheritance detected
             MaxInheritanceDepthError: If inheritance too deep
+            ValueError: If ``version`` is not ``X.Y`` or ``"default"``
+                (path-traversal guard, since version is joined into a filename)
         """
+        # Path-traversal guard: ``version`` is joined directly into the pack
+        # filename, so reject anything that isn't a bare ``X.Y`` version or the
+        # literal ``default`` before touching the filesystem. ``None`` is fine
+        # (loads ``default.yml``). This is intentionally placed *before* the
+        # lru_cache-backed body runs so a malicious arg never reaches disk.
+        if version is not None and not _VERSION_PATTERN.match(version):
+            raise ValueError(
+                f"Invalid pack version '{version}': must match X.Y (e.g. "
+                "'3.13') or be 'default'. Refusing to join into a filename "
+                "(path-traversal guard)."
+            )
+
         # Build pack path
         pack_path = self._get_pack_path(language, target, version)
 
