@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-06-11
+
 ### Added
 
 - **i18n**: Unicode/script safety validation layer for language packs, ahead of
@@ -147,9 +149,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.12.0  | Yes      |
-| legesher-i18n            | 0.12.0  | Yes      |
-| legesher (CLI)           | 0.12.0  | —        |
+| legesher-core            | 0.13.0  | Yes      |
+| legesher-i18n            | 0.13.0  | Yes      |
+| legesher (CLI)           | 0.13.0  | —        |
 | legesher-language-server | 0.1.3   | Yes      |
 | legesher-vscode          | 0.1.5   | —        |
 
