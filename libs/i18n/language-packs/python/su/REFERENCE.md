@@ -40,7 +40,7 @@ These are Python's reserved words translated to Sundanese.
 | `elif` | `lamun_deui` |
 | `else` | `lamun_henteu` |
 | `except` | `iwal` |
-| `except*` | `iwal` |
+| `except*` | `iwal*` |
 | `False` | `Lepat` |
 | `finally` | `pamungkas` |
 | `for` | `keur` |

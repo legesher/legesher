@@ -5,6 +5,14 @@ All notable changes to this language pack.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.3] - 2026-06-11
+
+### Fixed
+
+- **`except*` token collision**: `except` and `except*` both mapped to the same
+  token (`iwal`), so round-tripping a normal `iwal:` except clause produced an
+  invalid bare `except*:`. Gave `except*` a distinct token (`iwal*`). [CORE-1297]
+
 ## [0.0.2] - 2026-04-29
 
 ### Added
