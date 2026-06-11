@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { randomBytes } from 'crypto';
 import { translateDocument } from './translator';
 // [Copilot Review Fix] Removed unused import getAvailableLanguages
 import { getLanguageNativeName, getLanguageConfig, getRtlLanguageCodes } from '../config';
@@ -277,12 +278,8 @@ export class TranslationPanelManager {
      * Generate a nonce for Content Security Policy.
      */
     private getNonce(): string {
-        let text = '';
-        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (let i = 0; i < 32; i++) {
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
-        }
-        return text;
+        // Cryptographically secure nonce for the webview CSP (base64 is a valid nonce charset).
+        return randomBytes(16).toString('base64');
     }
 
     /**
