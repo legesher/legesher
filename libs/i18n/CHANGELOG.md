@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-06-11
+
 ### Added
 
 - **Database**: Seeded 6 Ukrainian (`uk`) keyword/builtin translations from the
