@@ -1,7 +1,7 @@
 [project]
 name = "legesher-monorepo"
 # license = {}
-version = "0.11.2"
+version = "0.11.3"
 description = "Legesher Monorepo"
 authors = [
     {name = "Madison (Pfaff) Edgar",email = "7844510+madiedgar@users.noreply.github.com"}
