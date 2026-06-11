@@ -104,7 +104,7 @@ from .types import (
     Translator,
 )
 
-__version__ = "0.11.3"
+__version__ = "0.12.0"
 
 __all__ = [
     # Translation engine
