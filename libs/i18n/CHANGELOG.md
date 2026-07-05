@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-07-05
+
 ### Changed
 
 - **Context briefs cover every term and describe only the term.** 61 new
