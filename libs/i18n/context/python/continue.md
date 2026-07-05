@@ -95,13 +95,6 @@ while count < 5:
 
 **Pattern rule:** Loop control keywords should use verb forms expressing the control action. "Continue" means to proceed to the next iteration, skipping the current one.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `break` | romper | كسر | 打破 | तोड़ो |
-| `return` | retornar | ارجع | 返回 | वापसी |
-| `continue` | **continuar** | **استمر** | **继续** | **जारी** |
 
 ---
 
@@ -147,16 +140,7 @@ Important: `continue` only affects the innermost loop. In nested loops, outer lo
 - **Action vs State:** ACTION - command to proceed to next iteration
 - **Temporal aspect:** Instantaneous - immediate jump to next iteration
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb (imperative/infinitive) | "continuar", "continuer" - to continue |
-| Germanic (de, nl, sv) | Verb (infinitive) | "fortfahren", "verdergaan" - to continue/proceed |
-| Slavic (ru, pl, uk) | Verb (imperative) | "продолжить", "kontynuować" - to continue |
-| Arabic | Verb (imperative) | "استمر" - istamir (continue) |
-| Chinese | Verb | "继续" - jìxù (continue) |
-| Hindi | Verb/noun | "जारी" - jārī (continue/ongoing) |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to continue" or "to proceed" (imperative or infinitive depending on language conventions for commands). This should convey proceeding forward or maintaining momentum.
 
@@ -168,55 +152,6 @@ Important: `continue` only affects the innermost loop. In nested loops, outer lo
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `continuar`
-- **Form:** Verb (infinitive)
-- **Why it works:** "Continuar" means "to continue" in Spanish. Direct translation. Natural command form. Standard in Spanish programming. Clear meaning of proceeding to next iteration.
-
-**Arabic:**
-
-- **Translation:** `استمر` (istamir)
-- **Form:** Verb (imperative)
-- **Why it works:** "Istamir" means "continue/persist" (imperative). Direct command to continue. Natural in Arabic for proceeding forward. Used in Arabic programming contexts.
-
-**Chinese:**
-
-- **Translation:** `继续` (jìxù)
-- **Form:** Verb
-- **Why it works:** "Jìxù" means "continue/proceed." Two characters. Standard Chinese term for continuation. Clear meaning. Universally recognized.
-
-**Hindi:**
-
-- **Translation:** `जारी` (jārī)
-- **Form:** Adjective/verb (ongoing/continue)
-- **Why it works:** "Jārī" means "ongoing/continuing." Can function as command to continue. Natural in Hindi. Used in Hindi programming. Alternative: `जारी_रखो` (jārī rakho - "keep continuing") but simpler form preferred.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "next" instead of "continue"**
-
-- **Wrong:** `siguiente` (Spanish - "next")
-- **Why wrong:** While captures the idea of moving to next iteration, "continue" is the standard programming term across languages. "Next" is noun/adjective; need verb. Maintain "continue" for cross-language consistency.
-- **Right:** `continuar` (verb - to continue)
-
-**Mistake 2: Using "skip" which emphasizes skipping**
-
-- **Wrong:** `saltar` (Spanish - "skip/jump")
-- **Why wrong:** While `continue` does skip code, the emphasis is on continuing the loop, not on skipping. "Continue" is positive (proceed), "skip" is negative (omit). Programming convention uses "continue."
-- **Right:** `continuar` (emphasizes continuing, not skipping)
-
-**Mistake 3: Using noun form**
-
-- **Wrong:** `continuación` (Spanish - "continuation" - noun)
-- **Why wrong:** Keywords are commands (verbs), not nouns. Need action word. "Continue" is verb (imperative).
-- **Right:** `continuar` (verb)
-
----
 
 ## Ambiguity Resolution
 
@@ -259,9 +194,6 @@ Use the verb for continuing or proceeding forward in the context of repetition/c
 
 Loop control keywords (`break`, `continue`) should use action verbs. They should be distinct from each other: `break` exits loop entirely, `continue` skips to next iteration. Both are distinct from `return` (exit function).
 
-**Example:**
-
-Spanish: `romper` (break loop), `continuar` (continue to next iteration), `retornar` (return from function) - all distinct verbs ✅
 
 ### Functional relationships
 
@@ -420,25 +352,24 @@ for item in items:
 
 ```yaml
 term: continue
-language: es
-translation: continuar
-form: verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "continuar" means "to continue," directly expressing the concept of proceeding to the next iteration. Natural verb form used as command. Distinct from "romper" (break) and "retornar" (return). Standard in Spanish programming.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `siguiente` (next) - Wrong part of speech; need verb not noun
-2. `saltar` (skip) - Emphasizes skipping over continuing; "continue" is standard
-3. `proseguir` (proceed) - Valid but "continuar" more common
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Continue/proceed verbs are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

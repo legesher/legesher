@@ -85,13 +85,6 @@ import a  # If a imports b, and b imports a = circular dependency
 
 **Pattern rule:** Import/module keywords should use verbs expressing bringing in or loading external code. "Import" means to bring in from outside.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `from` | desde | من | 从 | से |
-| `as` | como | كـ | 作为 | के_रूप_में |
-| `import` | **importar** | **استيراد** | **导入** | **आयात** |
 
 ---
 
@@ -137,16 +130,7 @@ Import mechanism: Python maintains `sys.modules` cache of loaded modules. First 
 - **Action vs State:** ACTION - command to load external code
 - **Temporal aspect:** Instantaneous - immediate loading (or cached retrieval)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb (imperative/infinitive) | "importar", "importer" - to import |
-| Germanic (de, nl, sv) | Verb (infinitive) | "importieren", "importeren" - to import |
-| Slavic (ru, pl, uk) | Verb (imperative) | "импортировать", "importować" - to import |
-| Arabic | Verb (imperative) | "استيراد" - istīrād (import) |
-| Chinese | Verb compound | "导入" - dǎorù (lead in/import) |
-| Hindi | Verb/noun | "आयात" - āyāt (import) |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to import" or "to bring in" (imperative or infinitive). This should convey loading external resources.
 
@@ -158,55 +142,6 @@ Import mechanism: Python maintains `sys.modules` cache of loaded modules. First 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `importar`
-- **Form:** Verb (infinitive)
-- **Why it works:** "Importar" means "to import" in Spanish (bring in from outside). Direct translation of import metaphor. Standard in Spanish programming. Natural verb form.
-
-**Arabic:**
-
-- **Translation:** `استيراد` (istīrād)
-- **Form:** Verb (infinitive/noun)
-- **Why it works:** "Istīrād" means "import/importation." Standard Arabic term for bringing in from outside. Used in Arabic programming and technical contexts. Clear meaning.
-
-**Chinese:**
-
-- **Translation:** `导入` (dǎorù)
-- **Form:** Verb compound
-- **Why it works:** `导入` means "lead in/import." Standard Chinese term for importing. Two characters. Used in Chinese programming universally. Clear meaning of bringing external content in.
-
-**Hindi:**
-
-- **Translation:** `आयात` (āyāt)
-- **Form:** Noun/verb
-- **Why it works:** "Āyāt" means "import/importation." Standard Hindi term (from Sanskrit). Used in Hindi programming. Can function as command. Alternative: `लाओ` (lāo - bring) but `आयात` more technical.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "include" (C terminology)**
-
-- **Wrong:** `incluir` (Spanish - "to include")
-- **Why wrong:** "Include" is C/C++ preprocessor term with different semantics (textual inclusion). Python uses "import" (module loading). Different concepts need different words.
-- **Right:** `importar` (import, not include)
-
-**Mistake 2: Using "require" (other language's term)**
-
-- **Wrong:** `requerir` (Spanish - "to require")
-- **Why wrong:** "Require" is Ruby/JavaScript term. While similar, Python uses "import." Maintain language-specific terminology for consistency across Python translations.
-- **Right:** `importar` (Python's term)
-
-**Mistake 3: Using generic "load"**
-
-- **Wrong:** `cargar` (Spanish - "to load")
-- **Why wrong:** While "load" captures the concept, "import" is more specific - it's not just loading, it's bringing in external modules. "Import" is established programming terminology.
-- **Right:** `importar` (more specific than load)
-
----
 
 ## Ambiguity Resolution
 
@@ -244,14 +179,13 @@ Use the word for importing or bringing in from external sources (the trade/goods
 - [ ] `as` - Aliases imports; should work grammatically with import
 - [ ] `def`/`class` - Define internal code; contrast with importing external
 - [ ] Package/module terminology in documentation
+- [ ] `ImportError` - Exception raised on failed imports; must reuse this keyword's import root
+- [ ] `ModuleNotFoundError` - Subclass of ImportError; same import-root consistency
 
 **Consistency rule:**
 
 `import`, `from`, and `as` work together syntactically. Translations should form grammatical phrases: `from module import name as alias` should read naturally in target language.
 
-**Example:**
-
-Spanish: `desde modulo importar nombre como alias` - grammatically coherent ✅
 
 ### Functional relationships
 
@@ -404,25 +338,24 @@ math = __import__(module_name)
 
 ```yaml
 term: import
-language: es
-translation: importar
-form: verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "importar" means "to import" (bring in from outside), directly translating the concept of loading external modules. Standard in Spanish programming. Works grammatically with "desde" (from) and "como" (as).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `incluir` (include) - C terminology, not Python's
-2. `requerir` (require) - Ruby/JS terminology, maintain Python's term
-3. `cargar` (load) - Too generic; "import" more specific
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Import terminology is universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

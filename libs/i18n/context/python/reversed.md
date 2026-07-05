@@ -77,13 +77,6 @@ for n in reversed(Countdown(3)):
 
 **Pattern rule:** Iterator-generating functions should use past participle or adjective forms that describe the resulting state. "Reversed" describes how elements are accessed - in reverse order.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `sorted` | ordenado | مرتب | 排序 | क्रमबद्ध |
-| `enumerate` | enumerar | تعداد | 枚举 | गणना |
-| `reversed` | **invertido** | **معكوس** | **反转** | **उलटा** |
 
 ---
 
@@ -127,16 +120,7 @@ The function returns an iterator, not a list, making it memory-efficient. For la
 - **Action vs State:** STATE description - describes how iteration proceeds
 - **Temporal aspect:** Completed transformation - elements are in reversed order
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Past participle | "invertido", "inversé" - reversed state |
-| Germanic (de, nl, sv) | Past participle | "umgekehrt", "omgekeerd" - reversed |
-| Slavic (ru, pl, uk) | Past participle | "обратный" - reversed |
-| Arabic | Passive participle | "معكوس" - reversed/inverted |
-| Chinese | Verb compound | "反转" - reverse/flip |
-| Hindi | Past participle | "उलटा" - reversed/inverted |
+### Recommended Form
 
 **Primary recommendation:** Use past participle or adjective form meaning "reversed" or "inverted." This describes the state of the iteration order, not the action of reversing. Matches Python's pattern of using -ed forms for non-destructive transformations.
 
@@ -148,55 +132,6 @@ The function returns an iterator, not a list, making it memory-efficient. For la
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `invertido` or `revertido`
-- **Form:** Past participle
-- **Why it works:** "Invertido" is past participle of "invertir" (to reverse/invert). Describes state of reversed order. "Revertido" also works but "invertido" more common in Spanish programming for order reversal.
-
-**Arabic:**
-
-- **Translation:** `معكوس` (ma'kūs)
-- **Form:** Passive participle
-- **Why it works:** Means "reversed/inverted" in Arabic. Standard term for reversed order in Arabic mathematics and computing. Clear passive form indicating state.
-
-**Chinese:**
-
-- **Translation:** `反转` (fǎnzhuǎn) or `逆序` (nìxù)
-- **Form:** Verb compound
-- **Why it works:** 反转 = reverse/flip (general reversal). 逆序 = reverse order (specifically order reversal). Both standard in Chinese computing. 反转 more commonly used.
-
-**Hindi:**
-
-- **Translation:** `उलटा` (ulṭā) or `विपरीत` (viparīt)
-- **Form:** Adjective/past participle
-- **Why it works:** "उलटा" means reversed/upside-down, commonly used for order reversal. "विपरीत" means opposite/reverse, more formal. "उलटा" more natural for programming context.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using infinitive verb instead of past participle**
-
-- **Wrong:** `invertir` (Spanish infinitive - "to reverse")
-- **Why wrong:** `reversed()` returns reversed result, not the action. Should be past participle "invertido" (reversed), not infinitive "invertir" (to reverse). Compare: `sorted` not `sort`.
-- **Right:** `invertido` (past participle - reversed)
-
-**Mistake 2: Using same form as in-place method**
-
-- **Wrong:** `reverse` (keeping English, or using method verb form)
-- **Why wrong:** Python distinguishes `.reverse()` (method, modifies in-place) from `reversed()` (function, returns iterator). Translations should maintain this distinction.
-- **Right:** `invertido` (adjective/participle for function) vs `invertir` (verb for method)
-
-**Mistake 3: Using "backward" or "back" instead of "reversed"**
-
-- **Wrong:** `hacia_atrás` (Spanish - "toward back/backward")
-- **Why wrong:** Too descriptive/wordy. "Reversed" is more concise and technical. "Backward" is directional; "reversed" describes transformed order.
-- **Right:** `invertido` (reversed - concise technical term)
-
----
 
 ## Ambiguity Resolution
 
@@ -368,25 +303,24 @@ Minor consideration: Distinguish between function `reversed()` (returns iterator
 
 ```yaml
 term: reversed
-language: es
-translation: invertido
-form: past_participle
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "invertido" is the past participle of "invertir" (to reverse), describing the reversed state of iteration. This matches Python's pattern of using past participles for non-destructive transformations (like "sorted"). Distinguishes from the method `.reverse()` which would use verb form "invertir".
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `revertido` (reverted) - Also valid but "invertido" more common for order reversal
-2. `invertir` (infinitive) - Wrong form; should be past participle for state description
-3. `al_revés` (in reverse) - Too wordy; single word preferred
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Reversing order is a universal concept with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

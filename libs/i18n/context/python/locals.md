@@ -93,13 +93,6 @@ debug_point()
 
 **Pattern rule:** Introspection functions that access scope/namespace should use plural nouns representing the collection of items being accessed.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `globals` | globales | عمومية | 全局变量 | ग्लोबल्स |
-| `vars` | variables | متغيرات | 变量 | वेरिएबल्स |
-| `locals` | **locales** | **محلية** | **局部变量** | **लोकल्स** |
 
 ---
 
@@ -143,16 +136,7 @@ The returned dictionary is a snapshot. Modifying it generally doesn't affect act
 - **Action vs State:** STATE/COLLECTION - represents the set of local variables
 - **Temporal aspect:** Current state snapshot
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Plural adjective as noun | "locales", "locaux" - local ones |
-| Germanic (de, nl, sv) | Plural adjective as noun | "lokale", "lokalen" - local ones |
-| Slavic (ru, pl, uk) | Plural adjective as noun | "локальные", "lokalne" - local ones |
-| Arabic | Plural adjective | "محلية" (local ones) |
-| Chinese | Compound noun | "局部变量" - local variables |
-| Hindi | Loanword plural | "लोकल्स" - locals |
+### Recommended Form
 
 **Primary recommendation:** Use plural form of "local" as a noun (the local variables). Should parallel translation of `globals` for consistency.
 
@@ -164,55 +148,6 @@ The returned dictionary is a snapshot. Modifying it generally doesn't affect act
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `locales`
-- **Form:** Plural adjective as noun
-- **Why it works:** "Locales" means "local ones" (variables understood from context). Parallel to "globales" for `globals`. Natural and clear.
-
-**Arabic:**
-
-- **Translation:** `محلية` (maḥallīya)
-- **Form:** Plural adjective
-- **Why it works:** Means "local ones/local variables." Standard Arabic term. Parallels translation of `globals`.
-
-**Chinese:**
-
-- **Translation:** `局部变量` (jú bù biàn liàng)
-- **Form:** Compound noun
-- **Why it works:** 局部 (local/partial) + 变量 (variables). Clear and explicit. Standard term in Chinese programming.
-
-**Hindi:**
-
-- **Translation:** `स्थानीय` (sthānīya) or `लोकल्स` (lokalsa)
-- **Form:** Adjective plural or loanword
-- **Why it works:** "स्थानीय" means local. "लोकल्स" is common transliteration in Indian CS. Either works, should match `globals` style.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using singular form**
-
-- **Wrong:** `local` (Spanish - singular)
-- **Why wrong:** English uses plural "locals" to indicate collection. Should maintain plural in translation.
-- **Right:** `locales` (plural)
-
-**Mistake 2: Inconsistent with globals**
-
-- **Wrong:** Using "locales" when `globals` translated differently
-- **Why wrong:** `locals` and `globals` are parallel functions; translations should mirror each other's structure.
-- **Right:** Match the pattern used for `globals`
-
-**Mistake 3: Using "location" or "place"**
-
-- **Wrong:** `ubicación` (Spanish - "location")
-- **Why wrong:** "Local" in programming means scope-confined variables, not physical location.
-- **Right:** `locales` (local variables)
-
----
 
 ## Ambiguity Resolution
 
@@ -252,13 +187,6 @@ English "locals" can mean:
 
 `locals` and `globals` are complementary functions. Their translations MUST use parallel structure: if `globals` is plural adjective, `locals` should be too. Same grammatical form.
 
-**Example:**
-
-✅ **Consistent:**
-Spanish: `locales`/`globales` (both plural adjectives)
-
-❌ **Inconsistent:**
-Spanish: `locales`/`variable_global` (different structures)
 
 ### Functional relationships
 
@@ -400,25 +328,24 @@ show_scopes()
 
 ```yaml
 term: locals
-language: es
-translation: locales
-form: plural adjective as noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "locales" (plural of "local") naturally represents local variables. Parallels "globales" for `globals()`, maintaining the local/global distinction. Clear and standard in Spanish programming contexts.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `variables_locales` - More explicit but longer; "locales" sufficient
-2. `local` - Singular form; should be plural
-3. `ámbito_local` - Means "local scope"; but `locals` returns variables not scope concept
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - "Local" is standard programming term. Main consideration is ensuring parallel structure with `globals` translation.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

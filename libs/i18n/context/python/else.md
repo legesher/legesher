@@ -74,13 +74,6 @@ else:
 
 **Pattern rule:** Alternative clause keywords should use conjunction or particle forms expressing contrast or alternative. "Else" means "otherwise" or "in the other case."
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `if` | si | إذا | 如果 | यदि |
-| `elif` | sino_si | والا_إذا | 否则如果 | नहींतो_यदि |
-| `else` | **sino** | **والا** | **否则** | **नहींतो** |
 
 ---
 
@@ -126,16 +119,7 @@ The `else` keyword introduces an alternative execution path in Python's control 
 - **Action vs State:** Neither - it's a structural marker indicating alternative branch
 - **Temporal aspect:** Immediate - introduces alternative that executes if condition fails
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adversative conjunction | "sino", "sinon" - meaning "otherwise" |
-| Germanic (de, nl, sv) | Adversative conjunction/adverb | "sonst", "anders" - otherwise |
-| Slavic (ru, pl, uk) | Adversative conjunction | "иначе", "inaczej" - otherwise |
-| Arabic | Adversative particle | "والا" or "غير ذلك" - otherwise |
-| Chinese | Adversative conjunction | "否则" - otherwise/if not |
-| Hindi | Adversative conjunction | "नहीं तो" or "वरना" - otherwise |
+### Recommended Form
 
 **Primary recommendation:** Use your language's word for "otherwise" or "if not." This should be a conjunction or particle that introduces an alternative scenario. The word should feel like the natural opposite of "if."
 
@@ -147,55 +131,6 @@ The `else` keyword introduces an alternative execution path in Python's control 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `sino`
-- **Form:** Adversative conjunction
-- **Why it works:** "Sino" means "but rather/otherwise" in Spanish. It's the natural alternative marker: "si no X, sino Y" (if not X, but rather Y). Standard in Spanish programming. Note: distinct from "pero" (but - contrast) and "o" (or - option).
-
-**Arabic:**
-
-- **Translation:** `والا` (wa illā) or `غيرذلك` (ghayr dhālik)
-- **Form:** Adversative particle
-- **Why it works:** "والا" (wa illā) means "otherwise/if not." Common in conditional expressions. Alternative: "غير ذلك" (ghayr dhālik = other than that). Both convey alternative case clearly.
-
-**Chinese:**
-
-- **Translation:** `否则` (fǒuzé)
-- **Form:** Adversative conjunction
-- **Why it works:** Standard Chinese for "otherwise/if not." Two characters: 否 (not/negative) + 则 (then/in that case). Widely used in programming and logical expressions. Clear alternative meaning.
-
-**Hindi:**
-
-- **Translation:** `नहींतो` (nahīṁ to) or `वरना` (varnā)
-- **Form:** Adversative conjunction/particle
-- **Why it works:** "नहीं तो" literally "if not then" - clear alternative. "वरना" means "otherwise." Both formal and natural in Hindi. Can be written together or as two words depending on convention.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using generic "but" instead of "otherwise"**
-
-- **Wrong:** `pero` (Spanish - "but")
-- **Why wrong:** "But" expresses contrast between facts ("I'm tired but happy"). "Else" expresses conditional alternative ("if not X, do Y"). Different logical relationships.
-- **Right:** `sino` (otherwise/but rather)
-
-**Mistake 2: Using "or" (logical OR)**
-
-- **Wrong:** `o` (Spanish - "or")
-- **Why wrong:** "Or" offers simultaneous options ("tea or coffee"). "Else" provides conditional fallback ("if condition fails, then do this"). Confuses alternatives with options.
-- **Right:** `sino`
-
-**Mistake 3: Using only "not" without alternative sense**
-
-- **Wrong:** `no` (Spanish - "not")
-- **Why wrong:** "Not" is pure negation. "Else" requires both negation of condition AND introduction of alternative action. Need "otherwise" sense, not just "not."
-- **Right:** `sino` (incorporates both negation and alternative)
-
----
 
 ## Ambiguity Resolution
 
@@ -240,11 +175,11 @@ Use the CONDITIONAL ALTERNATIVE form (otherwise/if not), not the adjective "othe
 
 **Consistency rule:**
 
-`elif` is typically formed by combining your translations of `else` and `if`. Ensure they work together naturally. For example, Spanish: `elif` → `sino si` (else if) or contracted.
+`elif` is typically formed by combining your translations of `else` and `if`. Ensure they work together naturally, either as a joined compound or a contracted form.
 
 **Example:**
 
-If `else` → `sino` and `if` → `si`, then `elif` should be `sino_si` or similar compound ✅
+Whatever words are chosen for `else` and `if`, `elif` should be their compound (joined or contracted), not an unrelated third word ✅
 
 ### Functional relationships
 
@@ -376,25 +311,24 @@ The only consideration: distinguishing "else" (conditional alternative) from "or
 
 ```yaml
 term: else
-language: es
-translation: sino
-form: adversative_conjunction
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "sino" is the standard adversative conjunction meaning "but rather/otherwise" - perfect for conditional alternatives. It forms natural compound with `si` (if) for `elif` → `sino si`. Universally used in Spanish programming and logical expressions.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `pero` (but - contrast) - Wrong type of opposition (factual contrast vs. conditional alternative)
-2. `o` (or - disjunction) - Offers options, doesn't express conditional fallback
-3. `de_otro_modo` (otherwise - phrase) - Too verbose; `sino` is standard
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Conditional alternatives ("otherwise") are universal in human languages and programming.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

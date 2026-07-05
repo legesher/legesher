@@ -107,13 +107,6 @@ outer()
 
 **Pattern rule:** Scope modifiers should use adjective forms describing where the variable exists: `global` (module-level), `nonlocal` (enclosing function), `local` (current function). They describe scope properties of variables.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `global` | global | عام | 全局 | वैश्विक |
-| `local` | local | محلي | 局部 | स्थानीय |
-| `nonlocal` | **no_local** | **غير محلي** | **非局部** | **गैर-स्थानीय** |
 
 ---
 
@@ -157,16 +150,7 @@ By declaring `nonlocal x`, you tell Python to search enclosing function scopes f
 - **Action vs State:** STATE descriptor - describes where the variable lives
 - **Temporal aspect:** Static - the variable's scope relationship doesn't change
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Negative adjective | "no local", "non local" - meaning not-local |
-| Germanic (de, nl, sv) | Negative adjective | "nichtlokal", "niet-lokaal" - meaning not-local |
-| Slavic (ru, pl, uk) | Negative adjective | "нелокальный", "nielokalny" - meaning not-local |
-| Arabic | Negative adjective | "غير محلي" (ghayr maḥallī) - meaning not local |
-| Chinese | Negative adjective | "非局部" (fēi júbù) - meaning non-local |
-| Hindi | Negative adjective | "गैर-स्थानीय" (gair-sthānīya) - meaning non-local |
+### Recommended Form
 
 **Primary recommendation:** Use negative adjective form meaning "non-local" or "not local." The word should convey "in an enclosing scope, not the current local scope, and not global."
 
@@ -178,55 +162,6 @@ By declaring `nonlocal x`, you tell Python to search enclosing function scopes f
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `no_local` or `nolocal`
-- **Form:** Negative adjective (compound)
-- **Why it works:** Direct translation: "no" (not) + "local" (local) = "not local." Clear and logical. Mirrors the English structure. Distinguishes from both `local` and `global`. Spanish often uses "no" prefix for negation.
-
-**Arabic:**
-
-- **Translation:** `غير محلي` (ghayr maḥallī)
-- **Form:** Negative adjective phrase
-- **Why it works:** غير (ghayr = not/non) + محلي (maḥallī = local) = "not local." Standard Arabic construction for negative adjectives. Clear scope distinction. Used in Arabic technical writing.
-
-**Chinese:**
-
-- **Translation:** `非局部` (fēi júbù)
-- **Form:** Negative adjective compound
-- **Why it works:** 非 (fēi = non/not) + 局部 (júbù = local) = "non-local." Standard Chinese construction for negation. Parallels the structure of the English term. Clear scope semantics.
-
-**Hindi:**
-
-- **Translation:** `गैर-स्थानीय` (gair-sthānīya)
-- **Form:** Negative adjective compound
-- **Why it works:** गैर (gair = non/un) + स्थानीय (sthānīya = local) = "non-local." Standard Hindi construction. Clear scope distinction. Used in Hindi technical contexts for "non-local" concepts.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "outer" or "external"**
-
-- **Wrong:** `externo` (Spanish - "external")
-- **Why wrong:** "External" suggests outside the program or module (like external files/libraries), not enclosing function scope. "Nonlocal" specifically means "in an enclosing function scope," not just "outside" vaguely. "No local" is more precise.
-- **Right:** `no_local` (not in current local scope, but in enclosing)
-
-**Mistake 2: Using "parent" or "parental"**
-
-- **Wrong:** `padre` (Spanish - "parent")
-- **Why wrong:** While enclosing functions are conceptually "parent" functions, "parent" is too metaphorical for a scope keyword. Python uses "enclosing scope," not "parent scope" in documentation. "Nonlocal" is more technical and precise.
-- **Right:** `no_local` (technical scope term)
-
-**Mistake 3: Using positive term instead of negative**
-
-- **Wrong:** `envolvente` (Spanish - "enclosing")
-- **Why wrong:** The English keyword is "nonlocal" (negative construction), not "enclosing" (positive construction). Translations should mirror the linguistic structure: negative adjective modifying "local." This helps learners map between English and native language.
-- **Right:** `no_local` (mirrors the negative structure)
-
----
 
 ## Ambiguity Resolution
 
@@ -269,17 +204,6 @@ Since this is an unambiguous technical term, translations should maintain the ne
 
 Scope modifiers (`global`, `nonlocal`) should use consistent linguistic forms: adjectives describing scope location. The three-level scope system (local, nonlocal/enclosing, global) should have parallel structures.
 
-**Example:**
-
-Spanish scope hierarchy:
-
-- `local` (local - current function) - adjective
-- `no_local` (nonlocal - enclosing function) - negative adjective
-- `global` (global - module) - adjective
-
-All three are adjectives describing scope. ✅ Consistent
-
-NOT: `local` (adjective) + `envolver` (verb - to enclose) + `global` (adjective) ❌ Inconsistent
 
 ### Functional relationships
 
@@ -453,26 +377,24 @@ def level1():
 
 ```yaml
 term: nonlocal
-language: es
-translation: no_local
-form: negative_adjective_compound
-confidence: medium
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "no_local" directly mirrors the English structure: "no" (not) + "local" (local). This maintains the negative construction and clearly distinguishes the scope from both "local" and "global." The underscore connects the compound for keyword clarity.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `nolocal` (single word) - Could work but less clear that "no" is negating "local"
-2. `envolvente` (enclosing) - Doesn't capture the negative structure; wrong linguistic form
-3. `externo` (external) - Too vague, suggests outside the module rather than enclosing function
-4. `no-local` (hyphen) - Alternative punctuation, but underscore more common in Python keywords
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-Confidence is MEDIUM because "nonlocal" is a newer technical term (Python 3.0+) and Spanish CS education may not have a universally established translation yet. "No_local" is logical and clear, but native speaker review is recommended to confirm it sounds natural to Spanish Python programmers. Alternative structures (hyphen vs underscore) may also need community input.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

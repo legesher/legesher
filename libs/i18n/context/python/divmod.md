@@ -82,13 +82,6 @@ except ZeroDivisionError:
 
 **Pattern rule:** Mathematical functions should use terms that describe the operation performed. Compound operations may combine abbreviated terms. "divmod" abbreviates "division-modulo" - performing both operations together.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `pow` | potencia | قوة | 幂 | घात |
-| `abs` | absoluto | مطلق | 绝对值 | निरपेक्ष |
-| `divmod` | **divmod** | **قسمة_باقي** | **除余** | **भागशेष** |
 
 ---
 
@@ -132,16 +125,7 @@ Common use cases include time conversions (seconds to minutes/seconds), money ca
 - **Action vs State:** ACTION - performs two mathematical operations
 - **Temporal aspect:** Instantaneous - computes and returns immediately
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Keep compound or translate | "divmod" understood, or "divresto" type compound |
-| Germanic (de, nl, sv) | Keep or compound | "divmod" clear, or "DivRest" (div-remainder) |
-| Slavic (ru, pl, uk) | Compound translation | "делмод" or "частостаток" (quotient-remainder) |
-| Arabic | Compound phrase | "قسمة_باقي" (division-remainder) |
-| Chinese | Character compound | "除余" (divide-remainder) |
-| Hindi | Compound term | "भागशेष" (division-remainder) |
+### Recommended Form
 
 **Primary recommendation:** Either keep "divmod" (widely recognized abbreviation in programming) or create compound term combining "division/divide" + "modulo/remainder." This is a compound operation, so compound name is appropriate.
 
@@ -153,55 +137,6 @@ Common use cases include time conversions (seconds to minutes/seconds), money ca
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `divmod` or `divresto`
-- **Form:** Compound abbreviation
-- **Why it works:** "divmod" is internationally recognized programming term. Alternative "divresto" (división + resto) follows Spanish while maintaining brevity. Both clearly indicate dual operation.
-
-**Arabic:**
-
-- **Translation:** `قسمة_باقي` (qisma_bāqī) or `قسمود` (qismūd)
-- **Form:** Compound phrase or abbreviated compound
-- **Why it works:** "قسمة_باقي" = division_remainder (clear description). "قسمود" is phonetic adaptation. First option more descriptive, second more compact.
-
-**Chinese:**
-
-- **Translation:** `除余` (chúyú) or `除模` (chúmó)
-- **Form:** Two-character compound
-- **Why it works:** 除余 = divide-remainder (clear meaning). 除模 = divide-modulo (more technical). Both follow Chinese technical terminology conventions. Concise and clear.
-
-**Hindi:**
-
-- **Translation:** `भागशेष` (bhāgśeṣ) or `डिवमॉड` (ḍivmaṭ)
-- **Form:** Compound Sanskrit term or transliteration
-- **Why it works:** "भागशेष" = division-remainder (Sanskrit compound). "डिवमॉड" is transliteration (common in Indian programming). First more linguistic, second more internationally aligned.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Translating only "division" without modulo component**
-
-- **Wrong:** `dividir` (Spanish - "to divide")
-- **Why wrong:** Misses half the operation. `divmod()` returns both quotient AND remainder. Must indicate both components in name.
-- **Right:** `divmod` or `divresto` (includes both operations)
-
-**Mistake 2: Using long descriptive phrase**
-
-- **Wrong:** `dividir_y_obtener_resto` (Spanish - "divide and get remainder")
-- **Why wrong:** Too verbose. Programming functions should be concise. Original "divmod" is 6 letters - translation should be similarly brief if possible.
-- **Right:** `divmod` or `divresto` (concise compound)
-
-**Mistake 3: Separating into two words without connection**
-
-- **Wrong:** `división resto` (Spanish - "division remainder" as separate words)
-- **Why wrong:** Function names shouldn't have spaces unless language requires it. Should be single token for parser. Use underscore or merge.
-- **Right:** `div_resto` or `divresto` (single token)
-
----
 
 ## Ambiguity Resolution
 
@@ -239,13 +174,6 @@ All approaches should make clear this is a dual operation returning both quotien
 
 Mathematical functions (`divmod`, `pow`, `abs`, `min`, `max`) should use consistent naming patterns. If you keep some English terms (like "pow"), keep "divmod". If you translate mathematical terms, translate consistently.
 
-**Example:**
-
-Spanish options:
-
-- Keep all: `pow`, `abs`, `divmod` ✅ (internationally consistent)
-- Translate all: `potencia`, `absoluto`, `divresto` ✅ (linguistically consistent)
-- Mix: `pow`, `absoluto`, `divmod` ⚠️ (less consistent but acceptable)
 
 ### Functional relationships
 
@@ -372,25 +300,24 @@ Minor consideration: Balance between keeping internationally recognized "divmod"
 
 ```yaml
 term: divmod
-language: es
-translation: divmod
-form: compound_technical_term
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Keeping "divmod" in Spanish maintains international consistency - this term is widely recognized in programming globally. The compound abbreviation is self-explanatory to programmers (div + mod). Alternative "divresto" could work but "divmod" has advantage of international recognition.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `divresto` (división + resto) - Valid Spanish compound but less internationally recognizable
-2. `div_mod` (with underscore) - More explicit but breaks from Python's naming convention
-3. `división_módulo` (full words) - Too long for a function name
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "divmod" is internationally recognized, and the concept (combined division-modulo) translates clearly to any language.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

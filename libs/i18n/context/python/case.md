@@ -111,14 +111,6 @@ ignore_event()
 
 **Pattern rule:** Branch keywords that introduce alternatives should use noun or conditional forms in target language—they represent "situations," "instances," or "alternatives" to check.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `if` | si | إذا | 如果 | यदि |
-| `elif` | sino_si | أو_إذا | 否则如果 | अन्यथायदि |
-| `match` | **coincidir** | **مطابقة** | **匹配** | **मिलान** |
-| `case` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -162,16 +154,7 @@ The power of `case` lies in pattern expressiveness. Unlike `if-elif` chains that
 - **Action vs State:** STATE/INSTANCE - describes a particular scenario
 - **Temporal aspect:** Static - each case is a possibility to check
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "caso", "cas" - instance/situation |
-| Germanic (de, nl, sv) | Noun | "Fall", "geval" - case/instance |
-| Slavic (ru, pl, uk) | Noun | "случай" - case/instance |
-| Arabic | Noun | "حالة" - state/case/situation |
-| Chinese | Noun | "情况", "案例" - case/situation |
-| Hindi | Noun | "मामला", "स्थिति" - case/situation |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "case," "instance," "situation," or "alternative" in target language. Should pair naturally with `match` (verb): "match against these cases."
 
@@ -183,55 +166,6 @@ The power of `case` lies in pattern expressiveness. Unlike `if-elif` chains that
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `caso`
-- **Form:** Noun (masculine)
-- **Why it works:** "Caso" means "case/instance/situation" in Spanish. Natural pairing with `coincidir` (match): "match against cases." Standard in Spanish legal/logical terminology. Used in Spanish programming (switch-case constructs).
-
-**Arabic:**
-
-- **Translation:** `حالة` (ḥāla)
-- **Form:** Noun (feminine)
-- **Why it works:** "حالة" means "state/case/situation/condition" in Arabic. Standard technical term. Natural pairing with `مطابقة` (match). Common in Arabic programming education for case branches.
-
-**Chinese:**
-
-- **Translation:** `情况` (qíngkuàng) or `案例` (ànlì)
-- **Form:** Noun
-- **Why it works:** "情况" means "situation/case/circumstance." "案例" means "case/example/instance." Both appropriate. "情况" more common in conditional contexts. Natural pairing with `匹配` (match).
-
-**Hindi:**
-
-- **Translation:** `मामला` (māmlā) or `स्थिति` (sthiti)
-- **Form:** Noun
-- **Why it works:** "मामला" means "case/matter/instance." "स्थिति" means "state/situation/condition." Both work. "मामला" closer to legal/logical "case" meaning. Pairs naturally with `मिलान` (match).
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb form**
-
-- **Wrong:** `casar` (Spanish verb - "to marry" or "to match")
-- **Why wrong:** `case` is a noun describing an instance/situation, not a verb. Python syntax is `match` (verb) followed by `case` (noun) branches. Verb form breaks grammatical relationship.
-- **Right:** `caso` (noun - case/instance)
-
-**Mistake 2: Confusing with "box" or "container"**
-
-- **Wrong:** `caja` (Spanish - "box/case as container")
-- **Why wrong:** English "case" is polysemous—legal case, instance, OR box/container. Programming uses "case" as "instance/situation," not physical container. Must translate correct meaning.
-- **Right:** `caso` (instance/situation meaning)
-
-**Mistake 3: Using same word as different keyword**
-
-- **Wrong:** Using translation identical to `if`, `elif`, or `except`
-- **Why wrong:** `case` is distinct from other conditionals. It's specifically for pattern branches within `match`. Must have unique, clear translation to avoid confusion.
-- **Right:** `caso` (distinct from `si`=if, `sino_si`=elif)
-
----
 
 ## Ambiguity Resolution
 
@@ -268,10 +202,6 @@ A particular instance, situation, or alternative to check. "In the case that thi
 
 `match` and `case` are syntactically inseparable—you cannot have `case` without `match`. The pairing should feel natural: `match` (verb: perform matching) against `case` (noun: instances/patterns). Think grammatically: "match [value] against these cases."
 
-**Example:**
-
-Spanish: `coincidir valor:` (match value:) followed by `caso patrón1:` (case pattern1:) ✅
-Natural pairing: verb + noun structure
 
 ### Functional relationships
 
@@ -407,25 +337,24 @@ pass  # Ignore other events
 
 ```yaml
 term: case
-language: es
-translation: caso
-form: noun (masculine)
-confidence: medium-high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "caso" means "case/instance/situation," accurately capturing the pattern branch concept. Noun form pairs naturally with verb `coincidir` (match): "match against these cases." Standard term in Spanish legal, logical, and programming contexts.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `caja` (box/container) - Wrong meaning, physical container not instance
-2. `instancia` (instance) - Possible, but "caso" more idiomatic for conditionals
-3. `opción` (option) - Too weak, "case" is more specific than general option
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-Confidence is MEDIUM-HIGH because pattern matching is a newer Python feature (3.10+). While "caso" accurately captures the concept and is used in existing switch/case contexts, Python's pattern matching `case` is more powerful than traditional switch/case. Native speaker review recommended to ensure the term feels natural in this new context.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

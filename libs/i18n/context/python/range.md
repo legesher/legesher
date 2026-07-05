@@ -71,13 +71,6 @@ print(numbers)  # Output: [0, 1, 2]
 
 **Pattern rule:** Sequence/collection constructors should use noun forms representing the type of object being created. These are type names, not verbs.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `list` | lista | قائمة | 列表 | सूची |
-| `tuple` | tupla | مجموعة | 元组 | टपल |
-| `range` | **rango** | **نطاق** | **范围** | **श्रेणी** |
 
 ---
 
@@ -121,16 +114,7 @@ Range objects support all common sequence operations like indexing, slicing, len
 - **Action vs State:** STATE - describes what kind of object it is, not an action
 - **Temporal aspect:** Instantaneous - creates the range object immediately
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "rango", "plage" - interval/span |
-| Germanic (de, nl, sv) | Noun | "Bereich", "bereik" - range/domain |
-| Slavic (ru, pl, uk) | Noun | "диапазон", "zakres" - range/span |
-| Arabic | Noun | "نطاق" - range/scope |
-| Chinese | Noun compound | "范围" - range/scope |
-| Hindi | Noun | "श्रेणी" - series/range |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "range," "interval," "span," or "series" depending on the target language's mathematical terminology. This represents a mathematical concept (set of consecutive numbers).
 
@@ -142,55 +126,6 @@ Range objects support all common sequence operations like indexing, slicing, len
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `rango`
-- **Form:** Noun (masculine)
-- **Why it works:** Standard Spanish mathematical term for range/interval. Used in mathematics education and programming. Clear and concise. Natural in "crear un rango" (create a range).
-
-**Arabic:**
-
-- **Translation:** `نطاق` (niṭāq)
-- **Form:** Noun (masculine)
-- **Why it works:** Modern Standard Arabic word for range/scope/domain. Used in technical contexts. Short and clear. Alternative: "مدى" (madá) but نطاق is more technical.
-
-**Chinese:**
-
-- **Translation:** `范围` (fànwéi)
-- **Form:** Noun compound
-- **Why it works:** Two characters: 范 (scope/limit) + 围 (surround/range). Standard Chinese term for range in mathematics and computing. Widely recognized and used in Chinese Python documentation.
-
-**Hindi:**
-
-- **Translation:** `श्रेणी` (śreṇī)
-- **Form:** Noun
-- **Why it works:** Sanskrit-derived word meaning series/sequence/range. Used in Hindi mathematics education. Clear technical term. Aligns with formal Hindi computer science vocabulary.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb form**
-
-- **Wrong:** `extender` (Spanish - "to extend/span")
-- **Why wrong:** Range is a type/noun, not an action. It names the object being created, not the action of creating it.
-- **Right:** `rango` (the range object itself)
-
-**Mistake 2: Using overly colloquial terms**
-
-- **Wrong:** `serie de números` (Spanish - "series of numbers")
-- **Why wrong:** Too verbose and descriptive. Python terms should be concise. While accurate, it's a phrase rather than a standard technical term.
-- **Right:** `rango` (concise technical term)
-
-**Mistake 3: Confusing with English "rank" or "arrange"**
-
-- **Wrong:** `clasificación` (Spanish - "ranking/classification")
-- **Why wrong:** This translates the "rank" meaning of range, not the "numerical interval" meaning. Wrong concept entirely.
-- **Right:** `rango` (numerical span, not ranking)
-
----
 
 ## Ambiguity Resolution
 
@@ -235,10 +170,6 @@ English "range" can mean:
 
 All sequence type constructors (`range`, `list`, `tuple`, `set`) should be nouns. They create objects of specific types. If you translate one as a noun, translate all as nouns (not mixing with verbs).
 
-**Example:**
-
-Spanish: `rango`, `lista`, `tupla`, `conjunto` - all nouns ✅
-NOT: `rango` (noun) + `crear_lista` (verb phrase) ❌
 
 ### Functional relationships
 
@@ -357,25 +288,24 @@ squares = [x**2 for x in range(10)]
 
 ```yaml
 term: range
-language: es
-translation: rango
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "rango" is the standard mathematical term for an interval or range of values. It's used consistently in mathematics education and programming contexts throughout Spanish-speaking regions. The term is concise, unambiguous in technical contexts, and aligns with how computer science is taught in Spanish.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `intervalo` (interval) - Valid but implies continuous values; range is discrete integers
-2. `serie` (series) - Too general; doesn't specifically mean a range of numbers
-3. `secuencia` (sequence) - Correct meaning but "rango" is more standard for Python's range
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Range" as a mathematical interval is a universal concept with clear translations in all major languages used in mathematics education.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

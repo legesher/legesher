@@ -68,13 +68,6 @@ print(data)  # Output: Item Apple costs $2.50
 
 **Pattern rule:** String manipulation methods should use verb forms that clearly indicate the transformation being performed. "Format" means to arrange or structure data into a specific form.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `replace` | reemplazar | استبدال | 替换 | बदलना |
-| `join` | unir | ضم | 连接 | जोड़ना |
-| `format` | **formatear** | **تنسيق** | **格式化** | **प्रारूपित** |
 
 ---
 
@@ -118,16 +111,7 @@ The method returns a new formatted string without modifying the original templat
 - **Action vs State:** ACTION - transforms data into formatted output
 - **Temporal aspect:** One-time action that produces a result
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "formatear", "formater" - to format/arrange |
-| Germanic (de, nl, sv) | Infinitive verb | "formatieren" - to format |
-| Slavic (ru, pl, uk) | Infinitive verb | "форматировать" - to format |
-| Arabic | Verbal noun (masdar) | "تنسيق" - formatting/arrangement |
-| Chinese | Verb compound | "格式化" - to format |
-| Hindi | Verb root | "प्रारूपित करना" - to format |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to format" or "to arrange." This is an action that transforms data into a structured presentation. The term should convey shaping or arranging information.
 
@@ -139,55 +123,6 @@ The method returns a new formatted string without modifying the original templat
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `formatear`
-- **Form:** Infinitive verb
-- **Why it works:** Standard Spanish verb for formatting in computing contexts. Derived from "formato" (format). Widely used in Spanish software and documentation. Natural in "formatear una cadena" (format a string).
-
-**Arabic:**
-
-- **Translation:** `تنسيق` (tansīq)
-- **Form:** Verbal noun (masdar)
-- **Why it works:** Means "formatting/coordination/arrangement" in Modern Standard Arabic. Standard term in Arabic computing for formatting operations. Clear technical meaning without ambiguity.
-
-**Chinese:**
-
-- **Translation:** `格式化` (géshìhuà)
-- **Form:** Verb compound
-- **Why it works:** Three characters: 格式 (format/pattern) + 化 (ify/make into). Standard Chinese computing term for formatting. Universally recognized in Chinese programming contexts.
-
-**Hindi:**
-
-- **Translation:** `प्रारूपित` (prārūpit) or `प्रारूपित करना` (prārūpit karnā)
-- **Form:** Verb root/infinitive
-- **Why it works:** From Sanskrit "प्रारूप" (format/pattern). "प्रारूपित" is formatted form, with "करना" making it infinitive. Standard in Hindi technical contexts.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "print" or "display" instead of "format"**
-
-- **Wrong:** `imprimir` (Spanish - "to print")
-- **Why wrong:** Formatting and printing are different operations. Format creates the string structure; print outputs it. Confusing these loses semantic precision.
-- **Right:** `formatear` (to format)
-
-**Mistake 2: Using generic "convert" or "change"**
-
-- **Wrong:** `convertir` (Spanish - "to convert")
-- **Why wrong:** Too general. "Format" specifically means arranging data according to a structure or pattern, not just any conversion. More specific term is better.
-- **Right:** `formatear` (specifically to format)
-
-**Mistake 3: Using noun instead of verb**
-
-- **Wrong:** `formato` (Spanish - "format" as noun)
-- **Why wrong:** Method names should be verbs (actions). "formato" is the noun (the result), not the action of formatting. Grammatically inconsistent with other methods.
-- **Right:** `formatear` (verb form)
-
----
 
 ## Ambiguity Resolution
 
@@ -358,25 +293,24 @@ Minor consideration: Distinguish between string formatting and disk formatting i
 
 ```yaml
 term: format
-language: es
-translation: formatear
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "formatear" is the standard verb for formatting operations in computing. It clearly captures the action of arranging data into a structured string representation. Consistent with other Spanish string methods and widely used in Spanish programming documentation.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `formato` (noun) - Wrong part of speech; methods should be verbs
-2. `formar` (to form) - Too general; "formatear" is specific technical term
-3. `dar_formato` (give format) - Too verbose; simple verb preferred
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Formatting is a well-established computing concept with clear translations in technical contexts.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

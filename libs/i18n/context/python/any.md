@@ -79,13 +79,6 @@ result = any(check(n) for n in [1, 2, 3, 4])
 
 **Pattern rule:** Logical query functions should use adjective/determiner forms that suggest testing or checking conditions. "Any" asks "does at least one exist?"
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `all` | todos | الكل | 全部 | सभी |
-| `filter` | filtrar | تصفية | 过滤 | फ़िल्टर |
-| `any` | **alguno** | **أي** | **任一** | **कोई** |
 
 ---
 
@@ -129,16 +122,7 @@ For empty iterables, `any()` returns `False` (vacuous truth - there's no element
 - **Action vs State:** QUERY - asks about existence
 - **Temporal aspect:** Instantaneous - checks current state
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Pronoun/adjective | "alguno", "quelque" - some/any |
-| Germanic (de, nl, sv) | Pronoun | "irgendein", "enig" - any/some |
-| Slavic (ru, pl, uk) | Pronoun | "любой", "jakikolwiek" - any |
-| Arabic | Pronoun/determiner | "أي" - any/whichever |
-| Chinese | Determiner | "任一", "任何" - any |
-| Hindi | Pronoun | "कोई" - any/someone |
+### Recommended Form
 
 **Primary recommendation:** Use pronoun/determiner meaning "any" or "some" (existential sense - at least one). Captures the "does any exist?" question.
 
@@ -150,55 +134,6 @@ For empty iterables, `any()` returns `False` (vacuous truth - there's no element
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `alguno` or `algún`
-- **Form:** Indefinite pronoun/adjective
-- **Why it works:** "Alguno" means "some/any" in existential sense - "is there any?" Natural in Spanish questions. Standard in Spanish programming contexts. Could abbreviate to `algún` (apocopated form before masculine nouns).
-
-**Arabic:**
-
-- **Translation:** `أي` (ayy)
-- **Form:** Interrogative/indefinite pronoun
-- **Why it works:** Standard Arabic word for "any/which/whichever." Short, clear, widely understood. Used in logical/mathematical contexts for existential questions.
-
-**Chinese:**
-
-- **Translation:** `任一` (rènyī) or `任何` (rènhé)
-- **Form:** Determiner
-- **Why it works:** `任一` = "any one" (emphatic singular). `任何` = "any/whatever" (more general). Both capture existential quantification. `任一` slightly more precise for "at least one."
-
-**Hindi:**
-
-- **Translation:** `कोई` (koī)
-- **Form:** Indefinite pronoun
-- **Why it works:** Standard Hindi word for "any/someone/something." Natural in questions like "क्या कोई है?" (Is there any?). Used in Hindi logical/mathematical contexts.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "todos" (all) instead of "alguno" (any)**
-
-- **Wrong:** `todos` (Spanish - "all")
-- **Why wrong:** Confuses `any()` with `all()`. `any()` checks if AT LEAST ONE is truthy (existential ∃). `all()` checks if ALL are truthy (universal ∀). Opposite logical meanings.
-- **Right:** `alguno` (some/any - at least one)
-
-**Mistake 2: Using verb "buscar" (to search)**
-
-- **Wrong:** `buscar` (Spanish - "to search/find")
-- **Why wrong:** `any` is not an action verb - it's a determiner/pronoun asking an existence question. Function names should reflect what they test, not implementation details.
-- **Right:** `alguno` (question of existence)
-
-**Mistake 3: Using person-specific "anyone" translation**
-
-- **Wrong:** `cualquiera` (Spanish - "anyone", person-specific)
-- **Why wrong:** While `cualquiera` can mean "any," it often implies people. `any()` works with any values (numbers, strings, objects). Use more general form.
-- **Right:** `alguno` (general "any", works with all types)
-
----
 
 ## Ambiguity Resolution
 
@@ -239,10 +174,6 @@ English "any" can mean:
 
 Logical quantifiers (`any`, `all`) should use determiner/pronoun forms that pose questions. They're not action verbs - they ask about existence or universality.
 
-**Example:**
-
-Spanish: `alguno` (some), `todos` (all) - both determiners/pronouns ✅
-NOT: `alguno` (determiner) + `verificar_todos` (verb phrase) ❌
 
 ### Functional relationships
 
@@ -362,25 +293,24 @@ Minor consideration: Distinguish existential "any" (at least one) from negative 
 
 ```yaml
 term: any
-language: es
-translation: alguno
-form: indefinite_pronoun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "alguno" is the standard indefinite pronoun for "any/some" in existential contexts. It naturally captures the "does any exist?" question. Commonly used in Spanish logic and mathematics for existential quantification.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `cualquiera` (any/whichever) - More choice-oriented; `alguno` better for existence
-2. `algún` (apocopated form) - Valid abbreviation, but full form more recognizable
-3. `existe` (exists - verb) - Wrong part of speech; should be determiner not verb
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Existential quantification is a universal logical concept with clear translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

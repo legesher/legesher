@@ -77,13 +77,6 @@ print(s.start, s.stop, s.step)  # Output: 1 10 2
 
 **Pattern rule:** Sequence manipulation types should use terms indicating their action or result. "Slice" describes both cutting and the resulting piece.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `range` | rango | نطاق | 范围 | परिसर |
-| `list` | lista | قائمة | 列表 | सूची |
-| `slice` | **porción** | **شريحة** | **切片** | **खंड** |
 
 ---
 
@@ -127,16 +120,7 @@ Explicit slice objects make code more readable when you have meaningful slice pa
 - **Action vs State:** Can be ACTION (slicing) or RESULT (the slice)
 - **Temporal aspect:** Creates object representing range
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "porción", "tranche" - the piece/portion |
-| Germanic (de, nl, sv) | Noun | "Scheibe", "schijf" - slice/piece |
-| Slavic (ru, pl, uk) | Noun | "срез", "plasterek" - cut/slice |
-| Arabic | Noun | "شريحة" (sharīḥa) - slice/section |
-| Chinese | Verb-noun | "切片" - cut-piece/slice |
-| Hindi | Noun | "खंड" - section/piece |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "slice" or "portion." While slicing is an action, the `slice()` function creates an object (the slice itself), so noun is more appropriate.
 
@@ -147,55 +131,6 @@ Explicit slice objects make code more readable when you have meaningful slice pa
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `porción` or `rebanada`
-- **Form:** Noun
-- **Why it works:** "Porción" means portion/piece, clear for programming context. "Rebanada" means slice (like bread slice), more literal. Both work; "porción" more general.
-
-**Arabic:**
-
-- **Translation:** `شريحة` (sharīḥa)
-- **Form:** Noun
-- **Why it works:** Standard Arabic word for slice/section. Used in computing contexts. Natural noun form indicating a piece or segment.
-
-**Chinese:**
-
-- **Translation:** `切片` (qiēpiàn)
-- **Form:** Verb-noun compound
-- **Why it works:** 切 (cut) + 片 (piece/slice). Standard Chinese computing term for slicing. Used in numpy, pandas documentation. Clear action-result meaning.
-
-**Hindi:**
-
-- **Translation:** `खंड` (khaṇḍ) or `स्लाइस`
-- **Form:** Noun or transliteration
-- **Why it works:** "खंड" means section/fragment, formal Sanskrit-derived term. Can also transliterate "स्लाइस" (slice) as technical loanword.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "cut" verb without indicating result**
-
-- **Wrong:** `cortar` (Spanish - "to cut" verb)
-- **Why wrong:** Python builtins are typically nouns (types/objects) or infinitive verbs. "Cortar" is conjugated verb or infinitive but doesn't indicate the result object.
-- **Right:** `porción` (the slice/portion - noun)
-
-**Mistake 2: Using "index" instead of "slice"**
-
-- **Wrong:** `índice` (Spanish - "index")
-- **Why wrong:** An index is a single position (0, 1, 2), a slice is a range (1:4). Different concepts.
-- **Right:** `porción` or `rebanada` (indicates range/portion)
-
-**Mistake 3: Using "part" too generically**
-
-- **Wrong:** `parte` (Spanish - "part")
-- **Why wrong:** Too generic. "Part" doesn't convey the specific slicing/range extraction concept. "Slice" is more specific.
-- **Right:** `porción` or `rebanada` (specifically a sliced portion)
-
----
 
 ## Ambiguity Resolution
 
@@ -237,10 +172,6 @@ In programming, "slice" specifically means extracting a contiguous range from a 
 
 Sequence manipulation tools (`slice`, `range`, `enumerate`) should use compatible terminology indicating sequence operations. If `range` uses a noun form, `slice` should too.
 
-**Example:**
-
-Spanish: `porción` (slice), `rango` (range) - both nouns, related concepts ✅
-Chinese: `切片` (slice), `范围` (range) - consistent noun/compound forms ✅
 
 ### Functional relationships
 
@@ -379,25 +310,24 @@ Key consideration: Translation should suggest extracting a range/portion from a 
 
 ```yaml
 term: slice
-language: es
-translation: porción
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "porción" means portion/section, clearly indicating a piece of a sequence. It's more general than "rebanada" (bread slice) and works well in programming contexts. Natural noun form matching Python's type constructor pattern.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `rebanada` (slice of bread) - More literal but less general
-2. `segmento` (segment) - Valid but "porción" more natural
-3. `slice` (keep English) - Works but loses semantic meaning
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. The concept of extracting portions from sequences is straightforward. "Slice" as range extraction has clear equivalents in most languages (portion, section, piece).
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

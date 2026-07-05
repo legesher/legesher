@@ -88,13 +88,6 @@ except AttributeError as e:
 
 **Pattern rule:** Attribute manipulation functions are compound terms: verb + "attr" (attribute). "getattr" = get + attribute. These form a family of related operations on object attributes. Must maintain consistency across this group.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `setattr` | establecer_atributo | تعيين_صفة | 设置属性 | गुण_निर्धारित |
-| `hasattr` | tiene_atributo | له_صفة | 有属性 | गुण_है |
-| `getattr` | **obtener_atributo** | **جلب_صفة** | **获取属性** | **गुण_प्राप्त** |
 
 ---
 
@@ -138,16 +131,7 @@ Common use cases include configuration systems (access config.setting_name dynam
 - **Action vs State:** ACTION - retrieves/accesses attribute
 - **Temporal aspect:** Instantaneous - gets value at call time
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb + noun compound | "obtener_atributo" - get attribute |
-| Germanic (de, nl, sv) | Verb + noun compound | "holeAttribut" - get/fetch attribute |
-| Slavic (ru, pl, uk) | Verb + noun compound | "получить_атрибут" - get attribute |
-| Arabic | Verb + noun phrase | "جلب_صفة" - fetch attribute |
-| Chinese | Verb + noun compound | "获取属性" - get/obtain attribute |
-| Hindi | Verb + noun compound | "गुण_प्राप्त" - obtain attribute |
+### Recommended Form
 
 **Primary recommendation:** Use compound following pattern: verb meaning "get/obtain/retrieve" + noun meaning "attribute/property." Maintain consistency with `setattr` and `hasattr` - all should use same "attr/attribute" term.
 
@@ -159,55 +143,6 @@ Common use cases include configuration systems (access config.setting_name dynam
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `obtener_atributo` or `obt_atr`
-- **Form:** Verb + noun compound
-- **Why it works:** "Obtener" (to obtain/get) + "atributo" (attribute). Clear action-object structure. Could abbreviate like English if desired. Matches pattern with `establecer_atributo` (setattr), `tiene_atributo` (hasattr).
-
-**Arabic:**
-
-- **Translation:** `جلب_صفة` (jalab_ṣifa) or `الحصول_على_صفة` (al-ḥuṣūl 'alā ṣifa)
-- **Form:** Verb + noun compound
-- **Why it works:** "جلب" (fetch/get) + "صفة" (attribute). Concise action + object. Alternative "الحصول على" (obtain) more verbose. First option more compact, matching getattr brevity.
-
-**Chinese:**
-
-- **Translation:** `获取属性` (huòqǔ shǔxìng) or `取属性` (qǔ shǔxìng)
-- **Form:** Verb + noun compound
-- **Why it works:** "获取" (obtain/get) + "属性" (attribute). Standard Chinese programming terminology. Shorter "取属性" also works. Matches with `设置属性` (setattr), `有属性` (hasattr).
-
-**Hindi:**
-
-- **Translation:** `गुण_प्राप्त` (guṇ prāpt) or `गुण_प्राप्त_करना` (guṇ prāpt karnā)
-- **Form:** Noun + verb compound
-- **Why it works:** "गुण" (attribute/property) + "प्राप्त" (obtained/received). Could add "करना" for full verb form. Matches pattern with setattr/hasattr using "गुण" for attribute.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using only "get" without attribute noun**
-
-- **Wrong:** `obtener` (Spanish - "to get/obtain")
-- **Why wrong:** Too generic. Get what? Must specify getting attribute. Compound term necessary for clarity and consistency with setattr/hasattr family.
-- **Right:** `obtener_atributo` (get attribute - complete compound)
-
-**Mistake 2: Using different word for "attribute" than setattr/hasattr**
-
-- **Wrong:** `obtener_propiedad` (Spanish - "get property")
-- **Why wrong:** Inconsistent. If setattr uses "atributo", getattr must too. These three functions form a family - must use same terminology for the "attr" component.
-- **Right:** `obtener_atributo` (matches setattr/hasattr)
-
-**Mistake 3: Using "read" instead of "get"**
-
-- **Wrong:** `leer_atributo` (Spanish - "read attribute")
-- **Why wrong:** "Read" implies file/text reading. "Get" is standard programming term for accessors. Doesn't match Python's get/set pattern.
-- **Right:** `obtener_atributo` (get - standard accessor term)
-
----
 
 ## Ambiguity Resolution
 
@@ -239,21 +174,6 @@ Create compound matching Python's pattern: verb (get/obtain/retrieve) + noun (at
 
 The attr-family (`getattr`, `setattr`, `hasattr`, `delattr`) MUST use the same word for "attribute" across all four. Only the verb changes. This linguistic parallelism is essential for learners to recognize the pattern.
 
-**Example:**
-
-✅ **Consistent (Spanish):**
-
-- `getattr` → `obtener_atributo`
-- `setattr` → `establecer_atributo`
-- `hasattr` → `tiene_atributo`
-- `delattr` → `eliminar_atributo`
-All use "atributo" ✅
-
-❌ **Inconsistent:**
-
-- `getattr` → `obtener_propiedad` (uses "propiedad")
-- `setattr` → `establecer_atributo` (uses "atributo")
-Different terms ❌ WRONG!
 
 ### Functional relationships
 
@@ -400,25 +320,24 @@ Critical requirement: MUST use the same "attribute" translation as setattr and h
 
 ```yaml
 term: getattr
-language: es
-translation: obtener_atributo
-form: compound_verb_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "obtener_atributo" clearly compounds "obtener" (to get/obtain) with "atributo" (attribute), matching the English pattern. Uses same "atributo" as setattr/hasattr for family consistency. Natural Spanish programming terminology.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `obt_atr` (abbreviated) - Could work but full form clearer
-2. `conseguir_atributo` (get/obtain) - "obtener" more standard for getters
-3. `obtener_propiedad` (get property) - Must use "atributo" for consistency with setattr
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. getattr is a clear compound term with straightforward translation, provided it matches setattr/hasattr.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

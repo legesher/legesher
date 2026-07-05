@@ -77,13 +77,6 @@ print(num)  # Prints: 3, 2, 1
 
 **Pattern rule:** Control flow exceptions should use compound noun form combining the action ("Stop") with the concept ("Iteration"), following Python's class naming conventions.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `Exception` | Excepción | استثناء | 异常 | अपवाद |
-| `KeyboardInterrupt` | InterrupciónTeclado | مقاطعة_لوحة_المفاتيح | 键盘中断 | कुंजीपटल_बाधा |
-| `StopIteration` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -127,16 +120,7 @@ Generators use `StopIteration` implicitly—when a generator function returns (r
 - **Action vs State:** Action/Command - represents the act of stopping iteration
 - **Temporal aspect:** Point-in-time event - marks the moment iteration ends
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound Noun | Verb-derived noun + "iteration" noun |
-| Germanic (de, nl, sv) | Compound Noun | Natural compounding: "StopIteration" pattern |
-| Slavic (ru, pl, uk) | Compound Noun | Action noun + "iteration" concept |
-| Arabic | Compound Noun/Phrase | Verbal noun + "iteration" noun |
-| Chinese | Compound Noun | Action + iteration (verb-object pattern) |
-| Hindi | Compound Noun | Sanskrit compound or verb + noun |
+### Recommended Form
 
 **Primary recommendation:** Compound noun combining imperative/action concept ("stop") with iteration concept, maintaining the command-like nature of signaling iteration termination.
 
@@ -147,55 +131,6 @@ Generators use `StopIteration` implicitly—when a generator function returns (r
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `DetenerIteración` or `PararIteración`
-- **Form:** Compound noun (infinitive verb + noun)
-- **Why it works:** "Detener/Parar" (to stop) + "Iteración" (iteration), maintains action + concept structure, follows Python's compound class naming pattern
-
-**Arabic:**
-
-- **Translation:** `إيقاف_التكرار` (eeqaaf al-takraar)
-- **Form:** Verbal noun + noun compound
-- **Why it works:** "إيقاف" (stopping/halt) + "التكرار" (the iteration), clear technical meaning combining action with iteration concept
-
-**Chinese:**
-
-- **Translation:** `停止迭代` (tíngzhǐ diédài)
-- **Form:** Verb + noun compound
-- **Why it works:** "停止" (stop/halt) + "迭代" (iteration), natural Chinese verb-object structure, established CS terminology
-
-**Hindi:**
-
-- **Translation:** `पुनरावृत्ति_रोकें` (punaravritti rokein) or `रोकपुनरावृत्ति`
-- **Form:** Compound noun
-- **Why it works:** "रोक" (stop) + "पुनरावृत्ति" (iteration/repetition), Sanskrit-derived compound maintains both action and concept
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using only "stop" without "iteration"**
-
-- **Wrong:** `Detener` (Spanish - just "stop")
-- **Why wrong:** Loses critical context of WHAT is being stopped; too vague for class name
-- **Right:** `DetenerIteración`
-
-**Mistake 2: Over-explaining instead of compounding**
-
-- **Wrong:** `ExcepciónParaCuandoLaIteraciónTermina` (Spanish - "exception for when iteration ends")
-- **Why wrong:** Too verbose, should be concise compound following Python's naming conventions
-- **Right:** `DetenerIteración`
-
-**Mistake 3: Using passive form**
-
-- **Wrong:** `IteraciónDetenida` (Spanish - "iteration stopped" - passive)
-- **Why wrong:** Should maintain active/imperative quality of the signal to stop
-- **Right:** `DetenerIteración` (active form)
-
----
 
 ## Ambiguity Resolution
 
@@ -246,14 +181,6 @@ Important: `StopIteration` is NOT an error exception—it's a normal control flo
 
 The word chosen for "stop" should align with command/imperative vocabulary. The "iteration" component must match how iteration is translated throughout the language pack.
 
-**Example:**
-
-If iteration-related terms are translated:
-
-- `StopIteration` → `停止迭代` (stop + iteration)
-- `StopAsyncIteration` → `停止异步迭代` (stop + async + iteration)
-- `next()` → `下一个` (next)
-- These should form a coherent semantic family
 
 ### Functional relationships
 
@@ -355,24 +282,24 @@ The difficulty is MEDIUM because while individual components translate straightf
 
 ```yaml
 term: StopIteration
-language: {es|ar|zh|hi|your_language}
-translation: {your_translation}
-form: {compound_noun}
-confidence: {medium|medium-high|high}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Why you chose this translation. Address: How did you translate "stop" (command/imperative concept)? How did you translate "iteration" (established CS term)? How did you combine them into a natural compound? Does it clearly signal control flow rather than error?}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Uncertainty about compound word order? Multiple valid translations for "stop"? Concerns about length or naturalness?}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

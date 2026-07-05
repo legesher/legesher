@@ -84,13 +84,6 @@ print(chr(20013))    # '中' (Chinese character for "middle")
 
 **Pattern rule:** Conversion functions should use abbreviated or noun forms naming the target type or operation. "Chr" abbreviates "character."
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `ord` | ordinal | ترتيبي | 序数 | क्रमिक |
-| `str` | cadena | سلسلة | 字符串 | स्ट्रिंग |
-| `chr` | **carácter** | **حرف** | **字符** | **वर्ण** |
 
 ---
 
@@ -134,16 +127,7 @@ Python 3 uses Unicode strings natively, so `chr()` works with the full Unicode r
 - **Action vs State:** CONVERSION - transforms number to character
 - **Temporal aspect:** Instantaneous conversion
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "carácter", "caractère" - character |
-| Germanic (de, nl, sv) | Noun | "Zeichen", "karakter" - character |
-| Slavic (ru, pl, uk) | Noun | "символ", "znak" - character/symbol |
-| Arabic | Noun | "حرف" - letter/character |
-| Chinese | Noun | "字符" - character |
-| Hindi | Noun | "वर्ण", "अक्षर" - character/letter |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "character." Could abbreviate if target language has common abbreviation for character.
 
@@ -155,55 +139,6 @@ Python 3 uses Unicode strings natively, so `chr()` works with the full Unicode r
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `carácter` or `car`
-- **Form:** Noun
-- **Why it works:** "Carácter" means character in computing context. Could abbreviate to "car" following Python's "chr" abbreviation pattern. Natural in "convertir a carácter" (convert to character). Standard in Spanish CS terminology.
-
-**Arabic:**
-
-- **Translation:** `حرف` (ḥarf)
-- **Form:** Noun
-- **Why it works:** Standard Arabic word for letter/character. Used in computing and typography. Short, clear. While it can mean "letter," context makes computing sense clear. Standard in Arabic CS education.
-
-**Chinese:**
-
-- **Translation:** `字符` (zìfú)
-- **Form:** Noun compound
-- **Why it works:** Two characters: 字 (character/word) + 符 (mark/symbol). Standard Chinese computing term for character. Universally recognized in Chinese programming contexts.
-
-**Hindi:**
-
-- **Translation:** `वर्ण` (varṇ) or `अक्षर` (akṣar)
-- **Form:** Noun
-- **Why it works:** `वर्ण` means letter/character (Sanskrit term). `अक्षर` also means letter/character. Both used in Hindi computing. `वर्ण` more technical/formal, commonly used in CS education.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "letra" (letter) when "carácter" is more accurate**
-
-- **Wrong:** `letra` (Spanish - "letter")
-- **Why wrong:** "Letra" specifically means alphabetic letter. `chr()` converts to any character including digits ('0'-'9'), symbols ('@', '$'), punctuation, emoji, etc. "Carácter" is broader and correct.
-- **Right:** `carácter` (character - includes all types)
-
-**Mistake 2: Using verb "caracterizar" (to characterize)**
-
-- **Wrong:** `caracterizar` (Spanish - "to characterize/describe")
-- **Why wrong:** "Caracterizar" means to describe or give characteristics to something. Different concept from computing "character." Need noun for the data type.
-- **Right:** `carácter` (character - the data type)
-
-**Mistake 3: Using "símbolo" (symbol) when "carácter" is standard**
-
-- **Wrong:** `símbolo` (Spanish - "symbol")
-- **Why wrong:** While characters can be symbols, "carácter" is the technical term in computing for any encoded unit. "Símbolo" is too narrow (suggests only punctuation/special chars). "Carácter" is standard CS term.
-- **Right:** `carácter` (character - standard computing term)
-
----
 
 ## Ambiguity Resolution
 
@@ -248,10 +183,6 @@ In computing: the smallest unit of text, represented by a Unicode code point.
 
 `chr` and `ord` are inverse operations and should have linguistically related translations. If `ord` means "ordinal/order," `chr` should clearly relate to "character."
 
-**Example:**
-
-Spanish: `carácter` (character), `ordinal` (ordinal) - clear inverse relationship ✅
-NOT: `carácter` + `número_código` (breaks the inverse pattern) ❌
 
 ### Functional relationships
 
@@ -405,25 +336,24 @@ Only consideration: Ensure you use computing sense of "character" (encoded symbo
 
 ```yaml
 term: chr
-language: es
-translation: carácter
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "carácter" is the standard computing term for character (encoded symbol). Could abbreviate to "car" following Python's "chr" pattern. Universally used in Spanish CS education and programming contexts.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `car` (abbreviation) - Valid but full word more recognizable initially
-2. `letra` (letter) - Too narrow; excludes digits, symbols, emoji
-3. `símbolo` (symbol) - Less standard than "carácter" in computing
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Character is a universal computing concept with clear, standard translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

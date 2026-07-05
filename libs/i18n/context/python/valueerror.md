@@ -77,13 +77,6 @@ print("sqrt() requires number, not string")
 
 **Pattern rule:** Error exceptions should use compound noun form combining the problematic element ("Value") with "Error", following Python's exception naming conventions.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `Exception` | Excepción | استثناء | 异常 | अपवाद |
-| `TypeError` | ErrorDeTipo | خطأ_النوع | 类型错误 | प्रकार_त्रुटि |
-| `ValueError` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -127,16 +120,7 @@ Many built-in functions raise `ValueError` for invalid inputs: `int()` for uncon
 - **Action vs State:** State/Problem - describes what IS wrong (a value problem)
 - **Temporal aspect:** Point-in-time - marks when invalid value is detected
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound Noun | "Value" + "Error" in appropriate word order |
-| Germanic (de, nl, sv) | Compound Noun | Natural compounding: "WertFehler" pattern |
-| Slavic (ru, pl, uk) | Compound Noun | "Value" + "error" with appropriate case |
-| Arabic | Compound Noun/Phrase | "Error/mistake of value" pattern |
-| Chinese | Compound Noun | "Value" + "error" (noun-noun pattern) |
-| Hindi | Compound Noun | Sanskrit compound for value + error |
+### Recommended Form
 
 **Primary recommendation:** Compound noun combining "value" concept with "error" concept, following Python's exception naming pattern.
 
@@ -147,55 +131,6 @@ Many built-in functions raise `ValueError` for invalid inputs: `int()` for uncon
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ErrorDeValor` or `ErrorValor`
-- **Form:** Compound noun
-- **Why it works:** "Error" + "de Valor" (of value) or direct compound, matches pattern with `ErrorDeTipo`, clear technical meaning
-
-**Arabic:**
-
-- **Translation:** `خطأ_القيمة` (khata' al-qiyma)
-- **Form:** Noun + noun (construct state)
-- **Why it works:** "خطأ" (error/mistake) + "القيمة" (the value), standard Arabic technical term pattern, parallels `TypeError` structure
-
-**Chinese:**
-
-- **Translation:** `值错误` (zhí cuòwù)
-- **Form:** Noun + noun compound
-- **Why it works:** "值" (value) + "错误" (error), natural Chinese technical term, established CS terminology, consistent with `TypeError` (类型错误)
-
-**Hindi:**
-
-- **Translation:** `मान_त्रुटि` (maan trutee) or `मूल्य_त्रुटि`
-- **Form:** Compound noun
-- **Why it works:** "मान/मूल्य" (value) + "त्रुटि" (error), Sanskrit-derived compound, follows technical vocabulary patterns
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using only "value" or only "error"**
-
-- **Wrong:** `Valor` (Spanish - just "value")
-- **Why wrong:** Incomplete, doesn't indicate this is an error exception
-- **Right:** `ErrorDeValor`
-
-**Mistake 2: Over-explaining the concept**
-
-- **Wrong:** `ErrorPorValorIncorrecto` (Spanish - "error due to incorrect value")
-- **Why wrong:** Too verbose, should be concise compound like Python's naming style
-- **Right:** `ErrorDeValor`
-
-**Mistake 3: Confusing with TypeError translation**
-
-- **Wrong:** Using same word for both `ValueError` and `TypeError`
-- **Why wrong:** These are distinct exception types requiring distinct translations
-- **Right:** Different compounds - `ErrorDeValor` vs `ErrorDeTipo`
-
----
 
 ## Ambiguity Resolution
 
@@ -240,19 +175,12 @@ English "error" means:
 - [ ] `IndexError` - Should follow same pattern (Index + Error)
 - [ ] `AttributeError` - Should follow same pattern (Attribute + Error)
 - [ ] `value` - The concept being validated (if translating variable-related terms)
+- [ ] `UnicodeError` - Subclass; its family of four Unicode briefs anchors on this file's error suffix convention
 
 **Consistency rule:**
 
 All `*Error` exceptions should follow identical compound structure. If `TypeError` is "Type + Error", then `ValueError` must be "Value + Error" in the same pattern.
 
-**Example:**
-
-If error exceptions follow this pattern:
-
-- `ValueError` → `值错误` (value + error)
-- `TypeError` → `类型错误` (type + error)
-- `KeyError` → `键错误` (key + error)
-- All must use same "错误" (error) component with different prefixes
 
 ### Functional relationships
 
@@ -355,24 +283,24 @@ The difficulty is MEDIUM because while the components are straightforward, creat
 
 ```yaml
 term: ValueError
-language: {es|ar|zh|hi|your_language}
-translation: {your_translation}
-form: {compound_noun}
-confidence: {medium|medium-high|high}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Why you chose this translation. Address: How did you translate "value" (programming data concept)? How did you translate "error"? How did you combine them following the `*Error` exception pattern? Is it consistent with `TypeError`?}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Uncertainty about which word for "value" is most appropriate? Multiple valid compound structures? Need verification of consistency with other `*Error` translations?}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

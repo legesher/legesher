@@ -86,12 +86,6 @@ read_global()   # Prints: Goodbye
 
 **Pattern rule:** Scope modifiers should use adjective forms describing where the variable exists: global (worldwide), nonlocal (parent scope), local (current scope). They describe the scope property of variables.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `nonlocal` | no_local | غير محلي | 非局部 | गैर-स्थानीय |
-| `global` | **global** | **عام** | **全局** | **वैश्विक** |
 
 ---
 
@@ -135,16 +129,7 @@ You can read global variables without declaring them global—Python searches ou
 - **Action vs State:** STATE descriptor - describes where the variable lives
 - **Temporal aspect:** Static/permanent - the variable's scope doesn't change over time
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adjective | "global", "mondial" - meaning worldwide/universal |
-| Germanic (de, nl, sv) | Adjective | "global", "globaal" - meaning global/universal |
-| Slavic (ru, pl, uk) | Adjective | "глобальный", "globalny" - meaning global |
-| Arabic | Adjective | "عام" (ʿām) or "عالمي" (ʿālamī) - meaning general/global/universal |
-| Chinese | Adjective | "全局" (quánjú) - meaning global/overall |
-| Hindi | Adjective | "वैश्विक" (vaishvik) or "सार्वभौमिक" (sārvabhaumik) - meaning global/universal |
+### Recommended Form
 
 **Primary recommendation:** Use adjective form meaning "global," "worldwide," or "universal." The word should convey "accessible everywhere within the module" rather than "local to one function."
 
@@ -156,55 +141,6 @@ You can read global variables without declaring them global—Python searches ou
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `global`
-- **Form:** Adjective (loanword)
-- **Why it works:** "Global" is used in Spanish programming as a loanword. Widely understood and standard in Spanish CS education. Alternative "mundial" exists but "global" is more common in technical contexts. Recognized internationally.
-
-**Arabic:**
-
-- **Translation:** `عام` (ʿām) or `عالمي` (ʿālamī)
-- **Form:** Adjective
-- **Why it works:** `عام` means "general/public/global." Shorter and more common. `عالمي` means "global/worldwide" (from عالم = world). Both acceptable; `عام` is more concise.
-
-**Chinese:**
-
-- **Translation:** `全局` (quánjú)
-- **Form:** Adjective compound
-- **Why it works:** 全 (complete/whole) + 局 (scope/situation) = "global scope/overall situation." Standard Chinese programming term for global scope. Used universally in Chinese CS education.
-
-**Hindi:**
-
-- **Translation:** `वैश्विक` (vaishvik)
-- **Form:** Adjective
-- **Why it works:** Sanskrit-derived adjective meaning "global, worldwide, universal." Formal and professional. Used in Hindi technical writing. Alternative: सार्वभौमिक (more philosophical) or ग्लोबल (transliteration, less preferred).
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "public" instead of "global"**
-
-- **Wrong:** `público` (Spanish - "public")
-- **Why wrong:** "Public" refers to visibility/access control (public vs. private), not scope (global vs. local). These are different concepts. Global variables exist at module level; public variables are accessible from outside a class. Confusing these concepts misleads learners.
-- **Right:** `global` (scope modifier, not access modifier)
-
-**Mistake 2: Using "universal" with too-broad meaning**
-
-- **Wrong:** `universal` (Spanish - might imply across all programs/modules)
-- **Why wrong:** While semantically close, "global" in Python means module-level scope, not truly universal across all modules. "Universal" might suggest broader reach than Python's globals have. "Global" is more precise.
-- **Right:** `global` (module-level scope)
-
-**Mistake 3: Using verb or noun form**
-
-- **Wrong:** `globalizar` (Spanish - "to globalize" - verb)
-- **Why wrong:** `global` is an adjective describing the variable's scope, not a verb performing an action. The keyword declares scope property, not an action to perform.
-- **Right:** `global` (adjective)
-
----
 
 ## Ambiguity Resolution
 
@@ -252,12 +188,6 @@ Important nuance: Python's "global" is actually "module-global," not "program-gl
 
 Scope-related keywords and concepts should use consistent forms. If `global` is an adjective, `nonlocal` should also be an adjective (or adjective phrase). Don't mix adjectives with verbs for scope modifiers.
 
-**Example:**
-
-Spanish:
-
-- `global` (adjective) + `no_local` (adjective phrase) ✅ Consistent
-- NOT: `global` (adjective) + `localizar` (verb - to localize) ❌ Inconsistent
 
 ### Functional relationships
 
@@ -399,25 +329,24 @@ def add_player_score(score):
 
 ```yaml
 term: global
-language: es
-translation: global
-form: adjective
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish programming uses "global" as a loanword from English. It's universally understood in Spanish CS education and technical documentation. While native alternatives like "mundial" exist, "global" is the standard technical term.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `mundial` (worldwide) - Native Spanish, but less common in technical contexts
-2. `general` (general) - Could work but less specific than "global"
-3. `universal` (universal) - Too broad, implies more than module-level scope
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for Spanish. "Global" is the standard loanword. For languages that resist loanwords (like French with "mondial" or Arabic with "عام"), verify which form is preferred in CS education for that language. Some languages strongly prefer native terms over English loanwords.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

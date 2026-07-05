@@ -63,13 +63,6 @@ for i in range(5):
 
 **Pattern rule:** Iteration keywords may use preposition or verb forms depending on target language's natural loop phrasing. The word should suggest "going through" or "traversing" a collection.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `in` | en | في | 在 | में |
-| `while` | mientras | بينما | 当 | जबकि |
-| `for` | **para** | **لكل** | **对于** | **प्रत्येक_के_लिए** |
 
 ---
 
@@ -111,16 +104,7 @@ Python's `for` loop is fundamentally different from C/Java-style `for` loops. Th
 - **Action vs State:** Hybrid - initiates repetitive action but frame is more prepositional ("for each")
 - **Temporal aspect:** Repeated/iterative - the action happens multiple times, once per element
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Preposition "for/para/pour" or "each" | Natural iteration phrase pattern |
-| Germanic (de, nl, sv) | Preposition "für" or "for each" construct | Mirrors English prepositional structure |
-| Slavic (ru, pl, uk) | Preposition + genitive or "each" | Natural iteration expression |
-| Arabic | "لكل" (for each) or "في" (in) | Expresses distribution/iteration clearly |
-| Chinese | "对于每个" (for each) or simplified | Standard CS iteration term |
-| Hindi | "प्रत्येक के लिए" (for each) | Sanskrit-derived iteration phrase |
+### Recommended Form
 
 **Primary recommendation:** Use the target language's natural way to express "for each item" or "in respect to each element." This may be a preposition, a compound phrase, or even a verb form depending on how the language naturally expresses iteration.
 
@@ -132,55 +116,6 @@ Python's `for` loop is fundamentally different from C/Java-style `for` loops. Th
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `para`
-- **Form:** Preposition
-- **Why it works:** Standard Spanish preposition "for." In "para cada elemento" (for each element), it's natural and widely understood. Concise (1 word) while maintaining clarity. Used in Spanish programming tutorials.
-
-**Arabic:**
-
-- **Translation:** `لكل` (likulli)
-- **Form:** Compound preposition meaning "for each/for every"
-- **Why it works:** Explicitly captures the distributive iteration concept. Unambiguous - clearly means "for every element." Commonly used in Arabic CS education for loop structures.
-
-**Chinese:**
-
-- **Translation:** `对于` (duìyú)
-- **Form:** Compound preposition
-- **Why it works:** Standard Chinese for "with regard to" or "for." Established in Chinese programming education. Can be shortened to just `为` (wèi) for brevity, but `对于` more explicitly conveys the iteration context.
-
-**Hindi:**
-
-- **Translation:** `प्रत्येक_के_लिए` (pratyēka kē li'ē)
-- **Form:** Compound phrase "for each"
-- **Why it works:** Sanskrit-derived `प्रत्येक` (pratyeka = each) + `के लिए` (ke liye = for) clearly expresses iteration. Formal register appropriate for programming. Alternative shorter form: `हर` (har = every).
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using temporal "during" instead of distributive "for"**
-
-- **Wrong:** `durante` (Spanish - "during")
-- **Why wrong:** "During" implies simultaneous occurrence, not sequential iteration. "For each" implies going through elements one by one.
-- **Right:** `para`
-
-**Mistake 2: Using only "each" without "for"**
-
-- **Wrong:** `كل` (Arabic - "each/every" alone)
-- **Why wrong:** Loses the prepositional frame. "Each item" is incomplete; needs "for each item" to express the iteration relationship.
-- **Right:** `لكل` (for each)
-
-**Mistake 3: Using infinitive verb form**
-
-- **Wrong:** `iterar` (Spanish - "to iterate")
-- **Why wrong:** `for` is not a verb command. It's a structural keyword introducing iteration scope, not an action to perform.
-- **Right:** `para` (preposition, not verb)
-
----
 
 ## Ambiguity Resolution
 
@@ -208,7 +143,7 @@ English "for" has many meanings:
 
 In many languages, the word used for "duration" differs from the word for "in respect to each." Use the distributive/prepositional form, not the temporal duration form.
 
-Example: Spanish has "por" (duration: "por dos horas") and "para" (purpose/distribution). For Python's `for`, use "para."
+Example: some languages split English "for" across two prepositions (one for duration, one for purpose/distribution). For Python's `for`, use the purpose/distribution one.
 
 ---
 
@@ -226,11 +161,6 @@ Example: Spanish has "por" (duration: "por dos horas") and "para" (purpose/distr
 
 The `for` and `in` keywords work as a pair in Python syntax: `for item in collection`. Your translations must form a grammatically natural phrase in the target language.
 
-**Example:**
-
-Spanish: `para elemento en lista` (for element in list) - grammatically correct ✅
-French: `pour element dans liste` (for element in list) - grammatically correct ✅
-NOT: Using prepositions that don't pair naturally in the target language ❌
 
 ### Functional relationships
 
@@ -356,25 +286,24 @@ The main question to ask: "Does `for X in Y` translate to a natural phrase in th
 
 ```yaml
 term: for
-language: es
-translation: para
-form: preposition
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "para" is the standard preposition for expressing purpose and distribution, making it ideal for iteration contexts. The phrase "para cada elemento en lista" (for each element in list) is natural and grammatically correct in Spanish. This aligns with Spanish programming tutorials and educational materials.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `por` - Wrong type of "for" (duration/cause, not distribution)
-2. `cada` (each) - Incomplete without prepositional frame
-3. `para_cada` - Too verbose; single word preferred when possible
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term in Romance languages. Slight complexity in ensuring natural pairing with `in`, but this is well-documented in existing translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

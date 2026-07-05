@@ -64,13 +64,6 @@ if data:
 
 **Pattern rule:** All conditional test keywords should use conjunction or present tense form in target language, NOT imperative verb form. They describe state/condition, not commands.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `while` | mientras | بينما | 当 | जबकि |
-| `elif` | sino_si | والا_إذا | 否则如果 | नहींतो_यदि |
-| `if` | **si** | **إذا** | **如果** | **यदि** |
 
 ---
 
@@ -112,16 +105,7 @@ An `if` statement can stand alone or be combined with `elif` (else-if) and `else
 - **Action vs State:** STATE - tests and describes a condition, does not perform an action
 - **Temporal aspect:** Immediate present - evaluates condition at the moment of execution
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Conditional conjunction | "si", "se" - natural conditional particle |
-| Germanic (de, nl, sv) | Conditional conjunction | "wenn", "als" - standard conditional word |
-| Slavic (ru, pl, uk) | Conditional conjunction | "если", "jeśli" - native conditional particle |
-| Arabic | Conditional particle (حرف شرط) | "إذا" - standard conditional particle in MSA |
-| Chinese | Conditional word | "如果" - standard two-character conditional |
-| Hindi | Conditional conjunction | "यदि" or "अगर" - Sanskrit-derived conditional |
+### Recommended Form
 
 **Primary recommendation:** Use the target language's natural conditional word/particle - the equivalent of "if" in everyday speech. This is NOT a verb and should NOT use verb forms (infinitive or imperative).
 
@@ -133,55 +117,6 @@ An `if` statement can stand alone or be combined with `elif` (else-if) and `else
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `si`
-- **Form:** Conjunction
-- **Why it works:** Standard Spanish conditional particle. Same word used in everyday speech ("si llueve, me quedo en casa"). Extremely natural and universally understood.
-
-**Arabic:**
-
-- **Translation:** `إذا` (idhā)
-- **Form:** Conditional particle (حرف شرط)
-- **Why it works:** Classical and Modern Standard Arabic conditional particle. Used in formal writing and Quranic Arabic. Clear, unambiguous conditional meaning.
-
-**Chinese:**
-
-- **Translation:** `如果` (rúguǒ)
-- **Form:** Conditional compound word
-- **Why it works:** Standard two-character conditional used in formal Chinese. Universally understood across all Chinese-speaking regions. Alternative `假如` (jiǎrú) also valid but `如果` more common in technical contexts.
-
-**Hindi:**
-
-- **Translation:** `यदि` (yadi)
-- **Form:** Conditional conjunction
-- **Why it works:** Sanskrit-derived formal conditional. Aligns with technical/educational register. Alternative `अगर` (agar) more colloquial but both acceptable.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb form instead of conjunction**
-
-- **Wrong:** `verificar` (Spanish - "to verify/check")
-- **Why wrong:** "If" is not an action verb. It doesn't mean "check whether" - it's a conditional particle. This changes the meaning fundamentally.
-- **Right:** `si`
-
-**Mistake 2: Using question particle**
-
-- **Wrong:** `¿` or question form (any language)
-- **Why wrong:** "If" makes a conditional statement, not a question. Conditional and interrogative are different grammatical categories.
-- **Right:** Use conditional particle, not interrogative
-
-**Mistake 3: Overly formal or archaic term**
-
-- **Wrong:** `假若` (jiǎruò) in Chinese - archaic/literary form
-- **Why wrong:** While technically correct, this is rarely used in modern speech or technical writing. Programmers wouldn't recognize it as readily.
-- **Right:** `如果` (standard modern conditional)
-
----
 
 ## Ambiguity Resolution
 
@@ -210,7 +145,7 @@ Many languages distinguish between:
 - Conditional "if" (if X then Y)
 - Interrogative "if/whether" (I wonder if X)
 
-Use the CONDITIONAL form. For example, Spanish distinguishes `si` (conditional) from `si` (whether/interrogative context) - they're homonyms but grammatically different.
+Use the CONDITIONAL form. In some languages the two are homonyms but grammatically different - make sure the conditional reading is the one your choice conveys.
 
 ---
 
@@ -230,10 +165,10 @@ All conditional/test keywords (`if`, `elif`, `while`) should use the same gramma
 
 **Example:**
 
-If you translate `if` as conjunction ("si"), then:
+If you translate `if` as a conjunction, then:
 
-- `elif` should also be conjunction-based ("si no" or "sino si")
-- `while` should use conjunction form ("mientras")
+- `elif` should also be conjunction-based (an "else"+"if" compound)
+- `while` should use conjunction form
 - NOT: `if` conjunction + `while` verb form (inconsistent ❌)
 
 ### Functional relationships
@@ -349,7 +284,7 @@ If you're uncertain about the translation, it likely means you're overthinking i
 ### 6. Technical Compatibility
 
 - [ ] Uses correct character set for language?
-- [ ] Will render properly in IDEs (especially RTL for Arabic/Hebrew)?
+- [ ] Will render properly in IDEs (especially RTL scripts)?
 - [ ] No special characters that break syntax highlighting?
 
 ---
@@ -360,24 +295,24 @@ If you're uncertain about the translation, it likely means you're overthinking i
 
 ```yaml
 term: if
-language: es
-translation: si
-form: conjunction
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "si" is the standard conditional conjunction used in all contexts to express hypothetical conditions. It directly maps to the programming concept of conditional testing. This is the universally recognized term in Spanish CS education and technical documentation.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `si_entonces` (if_then) - Too verbose; Python doesn't require explicit "then"
-2. `cuando` (when) - Wrong meaning; expresses temporal "when" not conditional "if"
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term due to clear one-to-one mapping across all target languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

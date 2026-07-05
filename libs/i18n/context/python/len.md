@@ -68,13 +68,6 @@ print(len(nested))  # Output: 3 (three sublists, not total elements)
 
 **Pattern rule:** Query/measurement functions should use noun or verb forms that suggest obtaining information, not modifying data. "Length" is a property you measure/query.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `min` | mínimo | أدنى | 最小 | न्यूनतम |
-| `max` | máximo | أقصى | 最大 | अधिकतम |
-| `len` | **longitud** | **طول** | **长度** | **लंबाई** |
 
 ---
 
@@ -118,16 +111,7 @@ Internally, `len()` doesn't iterate to count - most built-in types cache their l
 - **Action vs State:** STATE/PROPERTY - describes an attribute of the object
 - **Temporal aspect:** Instantaneous - measures current state
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "longitud", "longueur" - length as property |
-| Germanic (de, nl, sv) | Noun | "Länge", "lengte" - length/size |
-| Slavic (ru, pl, uk) | Noun | "длина", "długość" - length |
-| Arabic | Noun | "طول" - length/longness |
-| Chinese | Noun compound | "长度" - length/extent |
-| Hindi | Noun | "लंबाई" - length |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "length" or "size." This is a measurement property, not an action. Abbreviate if your language commonly abbreviates technical terms, otherwise use full word.
 
@@ -139,55 +123,6 @@ Internally, `len()` doesn't iterate to count - most built-in types cache their l
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `longitud` or `lon`
-- **Form:** Noun
-- **Why it works:** "Longitud" means length/extent in Spanish. Could abbreviate to "lon" following Python's abbreviation pattern. Natural in "obtener la longitud" (get the length). Standard in Spanish math/CS.
-
-**Arabic:**
-
-- **Translation:** `طول` (ṭūl)
-- **Form:** Noun
-- **Why it works:** Standard Arabic word for length/height. Concise (one word). Clear meaning in measurement contexts. Used in Arabic mathematics and technical writing.
-
-**Chinese:**
-
-- **Translation:** `长度` (chángdù)
-- **Form:** Noun compound
-- **Why it works:** Two characters: 长 (long/length) + 度 (degree/measure). Standard Chinese term for length in physics, mathematics, and programming. Universally recognized.
-
-**Hindi:**
-
-- **Translation:** `लंबाई` (lambaī)
-- **Form:** Noun
-- **Why it works:** Standard Hindi word for length. Derived from "लंबा" (long). Natural in measurement contexts. Used in Hindi mathematics education.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb "to measure" or "to count"**
-
-- **Wrong:** `medir` (Spanish - "to measure")
-- **Why wrong:** Function names should be nouns (properties/objects) or infinitive verbs. `len` refers to the length property itself, not the action of measuring.
-- **Right:** `longitud` (the length property)
-
-**Mistake 2: Using "size" when "length" is more specific**
-
-- **Wrong:** `tamaño` (Spanish - "size")
-- **Why wrong:** "Size" is more general (could mean area, volume). "Length" specifically means linear extent or count of items. More precise term is better.
-- **Right:** `longitud` (specifically length)
-
-**Mistake 3: Using only abbreviation without context**
-
-- **Wrong:** `l` (Spanish - single letter)
-- **Why wrong:** Too ambiguous. While Python uses "len" (recognizable English abbreviation), single letter in target language may not be clear. Use meaningful abbreviation or full word.
-- **Right:** `lon` or `longitud` (clear abbreviation or full word)
-
----
 
 ## Ambiguity Resolution
 
@@ -229,10 +164,6 @@ In most languages, the same word covers both physical length and count-of-items 
 
 Query/measurement functions (`len`, `min`, `max`, `sum`) should use similar grammatical forms - either all nouns or all infinitive verbs. They're all read-only operations that return information.
 
-**Example:**
-
-Spanish: `longitud`, `mínimo`, `máximo`, `suma` - all nouns ✅
-NOT: `longitud` (noun) + `obtener_mínimo` (verb phrase) ❌
 
 ### Functional relationships
 
@@ -355,25 +286,24 @@ Minor consideration: whether to abbreviate like English "len" or use full word "
 
 ```yaml
 term: len
-language: es
-translation: longitud
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "longitud" is the standard noun for length in mathematics, physics, and programming. It clearly captures the measurement concept. Could be abbreviated to "lon" following Python's pattern, but full word is more immediately recognizable.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `tamaño` (size) - Too general; "longitud" more specific for count/length
-2. `lon` (abbreviation) - Valid but less clear than full word
-3. `largo` (long - adjective) - Wrong part of speech
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Length/count is a universal measurement concept with clear translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

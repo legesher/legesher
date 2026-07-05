@@ -74,13 +74,6 @@ mapped = map(lambda x: x * 2, big_range)  # No computation yet
 
 **Pattern rule:** Functional programming operations should use verb forms that describe the transformation pattern. "Map" means applying a transformation across all elements, creating a one-to-one mapping.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `filter` | filtrar | تصفية | 过滤 | फ़िल्टर |
-| `reduce` | reducir | اختزال | 归约 | न्यूनीकरण |
-| `map` | **mapear** | **تعيين** | **映射** | **मैप** |
 
 ---
 
@@ -124,16 +117,7 @@ The return value is a map iterator object (lazy evaluation), not a list. Computa
 - **Action vs State:** ACTION - performs transformation across sequence
 - **Temporal aspect:** Continuous/iterative - applies to each element
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "mapear" - to map/establish correspondence |
-| Germanic (de, nl, sv) | Infinitive verb | "abbilden" - to map/transform |
-| Slavic (ru, pl, uk) | Infinitive verb | "отображать" - to map |
-| Arabic | Verbal noun (masdar) | "تعيين" - mapping/assignment |
-| Chinese | Verb compound | "映射" - mapping/projection |
-| Hindi | Transliterated/verb | "मैप करना" - to map |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to map" or "to apply transformation." This is an action that creates correspondence between input and output. In languages without established programming term for "map," consider transliteration (keeping "map") as it's a standard functional programming term.
 
@@ -145,55 +129,6 @@ The return value is a map iterator object (lazy evaluation), not a list. Computa
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `mapear`
-- **Form:** Infinitive verb
-- **Why it works:** Standard Spanish verb for mapping operations. Borrowed from English "map" with Spanish infinitive ending. Widely used in Spanish programming and mathematics. Natural in "mapear una función" (map a function).
-
-**Arabic:**
-
-- **Translation:** `تعيين` (ta'yīn) or `خريطة` (kharīṭa)
-- **Form:** Verbal noun
-- **Why it works:** "تعيين" means assignment/mapping in mathematics and computing. Standard term in Arabic functional programming. "خريطة" literally means map but "تعيين" more technical for function mapping.
-
-**Chinese:**
-
-- **Translation:** `映射` (yìngshè)
-- **Form:** Verb compound
-- **Why it works:** Two characters: 映 (reflect/project) + 射 (shoot/emit). Standard Chinese mathematical term for mapping/function mapping. Used in Chinese CS education for map operations.
-
-**Hindi:**
-
-- **Translation:** `मैप` (maip) or `मैप करना` (maip karnā)
-- **Form:** Transliterated/verb
-- **Why it works:** "मैप" is transliteration of "map" (widely recognized in Indian tech). Adding "करना" makes it verb form. Alternative: "आच्छादन" (covering/mapping) but transliteration more common in programming.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "apply" or "apply function" instead of "map"**
-
-- **Wrong:** `aplicar` (Spanish - "to apply")
-- **Why wrong:** Too general. "Apply" doesn't capture the one-to-one correspondence concept. "Map" is specific functional programming term establishing mathematical mapping between sets.
-- **Right:** `mapear` (to map - specific term)
-
-**Mistake 2: Using "transform" without mapping concept**
-
-- **Wrong:** `transformar` (Spanish - "to transform")
-- **Why wrong:** "Transform" is generic change. "Map" specifically means applying function to each element, creating correspondence. Technical precision matters.
-- **Right:** `mapear` (to map - functional programming term)
-
-**Mistake 3: Using noun instead of verb**
-
-- **Wrong:** `mapeo` (Spanish noun - "mapping")
-- **Why wrong:** Function names should be verbs (actions). "mapeo" is the noun (the result/concept), not the action of mapping.
-- **Right:** `mapear` (verb form)
-
----
 
 ## Ambiguity Resolution
 
@@ -365,25 +300,24 @@ Minor consideration: Some languages may prefer transliteration of "map" (keeping
 
 ```yaml
 term: map
-language: es
-translation: mapear
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "mapear" is the standard verb for mapping operations in functional programming and mathematics. It's derived from English "map" with Spanish infinitive ending, widely recognized in Spanish programming communities. Consistent with other functional operations like "filtrar" (filter) and "reducir" (reduce).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `aplicar` (to apply) - Too general; doesn't capture mapping correspondence concept
-2. `transformar` (to transform) - Generic change; "mapear" more specific for FP
-3. `map` (keep English) - Could work but "mapear" is established Spanish term
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Map is a well-established functional programming concept with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

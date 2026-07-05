@@ -77,13 +77,6 @@ print(abs(-0.001))  # Output: 0.001
 
 **Pattern rule:** Mathematical transformation functions should use noun or abbreviated forms naming the mathematical operation. "Absolute" describes the absolute value function.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `round` | redondear | تقريب | 四舍五入 | पूर्णांकित |
-| `pow` | potencia | قوة | 幂 | घात |
-| `abs` | **absoluto** | **مطلق** | **绝对值** | **निरपेक्ष** |
 
 ---
 
@@ -127,16 +120,7 @@ For complex numbers, the implementation uses the Pythagorean theorem. `abs(3+4j)
 - **Action vs State:** TRANSFORMATION - converts to absolute value
 - **Temporal aspect:** Instantaneous transformation
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adjective/noun | "absoluto", "absolu" - absolute |
-| Germanic (de, nl, sv) | Adjective | "absolut", "absoluut" - absolute |
-| Slavic (ru, pl, uk) | Adjective | "абсолютный", "absolutny" |
-| Arabic | Adjective | "مطلق" - absolute/unrestricted |
-| Chinese | Compound noun | "绝对值" - absolute value |
-| Hindi | Adjective | "निरपेक्ष", "परम" - absolute |
+### Recommended Form
 
 **Primary recommendation:** Use adjective form meaning "absolute" or compound "absolute value." This is the mathematical term universally recognized.
 
@@ -148,55 +132,6 @@ For complex numbers, the implementation uses the Pythagorean theorem. `abs(3+4j)
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `absoluto` or `abs`
-- **Form:** Adjective/noun
-- **Why it works:** "Absoluto" is standard mathematical term for absolute value. Could abbreviate as "abs" following Python's pattern. Natural in "valor absoluto" (absolute value). Universally taught in Spanish mathematics.
-
-**Arabic:**
-
-- **Translation:** `مطلق` (muṭlaq) or `القيمة_المطلقة` (al-qīma al-muṭlaqa)
-- **Form:** Adjective or compound
-- **Why it works:** `مطلق` means "absolute/unrestricted." Short, clear. Full form `القيمة المطلقة` means "absolute value" but may be too long. `مطلق` preferred for brevity.
-
-**Chinese:**
-
-- **Translation:** `绝对值` (juéduìzhí) or `绝对` (juéduì)
-- **Form:** Compound noun
-- **Why it works:** `绝对值` = "absolute value" (3 characters: absolute + value). Standard term in Chinese mathematics. Could abbreviate to `绝对` (absolute) for brevity. Both clear and recognized.
-
-**Hindi:**
-
-- **Translation:** `निरपेक्ष` (nirapekṣ) or `परम` (param)
-- **Form:** Adjective
-- **Why it works:** `निरपेक्ष` means "absolute/independent" (Sanskrit-derived). `परम` means "absolute/supreme." `निरपेक्ष` more technical, used in Hindi mathematics. Standard term for absolute value.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "positivo" (positive)**
-
-- **Wrong:** `positivo` (Spanish - "positive")
-- **Why wrong:** Absolute value is non-negative (includes zero), not necessarily positive. More importantly, "absolute value" is the technical term, not "positive value."
-- **Right:** `absoluto` (absolute - mathematical term)
-
-**Mistake 2: Using verb "quitar_signo" (remove sign)**
-
-- **Wrong:** `quitar_signo` (Spanish - "remove sign" - verb phrase)
-- **Why wrong:** Function names should be nouns or adjectives naming the mathematical operation, not verb phrases describing implementation. "Absolute" is the standard term.
-- **Right:** `absoluto` (absolute - the mathematical property)
-
-**Mistake 3: Using only "valor" (value)**
-
-- **Wrong:** `valor` (Spanish - "value")
-- **Why wrong:** Too generic. "Valor" just means value. Need "absolute value" - the specific mathematical concept. Would be like calling `max` just "value."
-- **Right:** `absoluto` (absolute - the specific type of value)
-
----
 
 ## Ambiguity Resolution
 
@@ -239,10 +174,6 @@ In mathematics, written as |x| (vertical bars). The distance from zero on the nu
 
 Mathematical functions should use standard mathematical terminology from target language's math education. `abs`, `round`, `pow`, etc. should all use noun or adjective forms naming the operation.
 
-**Example:**
-
-Spanish: `absoluto`, `redondear`, `potencia` - all mathematical terms ✅
-NOT: `absoluto` (math term) + `hacer_redondo` (colloquial phrase) ❌
 
 ### Functional relationships
 
@@ -380,25 +311,24 @@ Only consideration: Choose between abbreviated "absolute" or full "absolute valu
 
 ```yaml
 term: abs
-language: es
-translation: absoluto
-form: adjective_as_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "absoluto" is the standard mathematical term for absolute value. Short form matches Python's abbreviation pattern. Universally taught in Spanish mathematics as "valor absoluto."
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `abs` (keep English) - Could work but translation preferred
-2. `valor_absoluto` (full form) - Too long; abbreviation better
-3. `magnitud` (magnitude) - Less precise than "absoluto"
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Absolute value is a universal mathematical concept with clear, standard translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -95,14 +95,6 @@ def validate(value):
 
 **Pattern rule:** Exception throwing keywords should use verb forms expressing elevation or signaling. "Raise" means to lift up or bring to attention - bringing error to surface.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `try` | intentar | حاول | 尝试 | प्रयास |
-| `except` | excepto | إلا | 除了 | सिवाय |
-| `assert` | afirmar | أكد | 断言 | दावा |
-| `raise` | **elevar** | **ارفع** | **引发** | **उठाओ** |
 
 ---
 
@@ -152,16 +144,7 @@ Raising enables: input validation (reject invalid data), precondition enforcemen
 - **Action vs State:** ACTION - command to throw error
 - **Temporal aspect:** Instantaneous - immediate exception throwing
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb (imperative/infinitive) | "elevar", "lever", "elevar" - to raise/elevate |
-| Germanic (de, nl, sv) | Verb (infinitive) | "erheben", "verhogen" - to raise |
-| Slavic (ru, pl, uk) | Verb (imperative) | "поднять", "podnieść" - to raise |
-| Arabic | Verb (imperative) | "ارفع" - irfaʿ (raise/lift) |
-| Chinese | Verb compound | "引发" - yǐnfā (trigger/cause) or "抛出" - pāochū (throw out) |
-| Hindi | Verb (imperative) | "उठाओ" - uṭhāo (raise/lift) |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to raise" or "to lift up" (imperative or infinitive). Should convey elevating or bringing to attention. Express signaling error or bringing problem to surface.
 
@@ -173,55 +156,6 @@ Raising enables: input validation (reject invalid data), precondition enforcemen
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `elevar` or `lanzar`
-- **Form:** Verb (infinitive)
-- **Why it works:** "Elevar" means "to raise/elevate." Matches English metaphor. "Lanzar" means "to throw/launch" - also valid, emphasizes throwing. Either acceptable. "Elevar" closer to English "raise"; "lanzar" closer to Java's "throw."
-
-**Arabic:**
-
-- **Translation:** `ارفع` (irfaʿ)
-- **Form:** Verb (imperative)
-- **Why it works:** "Irfaʿ" means "raise/lift" (imperative). Natural command to raise exception. Standard Arabic verb. Used in Arabic programming. Matches elevation metaphor.
-
-**Chinese:**
-
-- **Translation:** `引发` (yǐnfā) or `抛出` (pāochū)
-- **Form:** Verb compound
-- **Why it works:** `引发` means "trigger/cause" - natural for causing exception. `抛出` means "throw out" - matches throw terminology. Either acceptable. `引发` emphasizes causation; `抛出` emphasizes throwing.
-
-**Hindi:**
-
-- **Translation:** `उठाओ` (uṭhāo)
-- **Form:** Verb (imperative)
-- **Why it works:** "Uṭhāo" means "raise/lift" (imperative). Direct translation. Natural command form. Matches raise metaphor. Used in Hindi programming.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "throw" (Java/C++ terminology)**
-
-- **Wrong:** `tirar` (Spanish - "to throw" in colloquial sense)
-- **Why wrong:** Python uses "raise" not "throw." Different languages, different keywords. While semantically similar, maintain Python's terminology. Some Spanish programmers might use "lanzar" (throw) but "elevar" (raise) matches Python better.
-- **Right:** `elevar` (raise - Python's term)
-
-**Mistake 2: Using noun "exception"**
-
-- **Wrong:** `excepción` (Spanish - "exception" - noun)
-- **Why wrong:** Need verb (command), not noun. "Raise" is verb. Can't replace with noun. Wrong part of speech.
-- **Right:** `elevar` (verb - to raise)
-
-**Mistake 3: Using "create" (too general)**
-
-- **Wrong:** `crear` (Spanish - "to create")
-- **Why wrong:** "Create" is too general. Raising does create exception, but also throws it. "Raise" is specific programming term for throwing exceptions. Use "raise" not generic "create."
-- **Right:** `elevar` (specific - to raise/throw)
-
----
 
 ## Ambiguity Resolution
 
@@ -267,9 +201,6 @@ Use the verb for raising/elevating, especially in context of raising issues or c
 
 `raise` should be recognizable as exception-throwing keyword. Works with exception class names. Forms natural phrases like "raise ValueError" in target language.
 
-**Example:**
-
-Spanish: `elevar ValueError` or `lanzar ValueError` - natural phrases ✅
 
 ### Functional relationships
 
@@ -439,25 +370,24 @@ if __debug__:
 
 ```yaml
 term: raise
-language: es
-translation: elevar
-form: verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "elevar" means "to raise/elevate," matching Python's raise metaphor. Natural verb form for command. Works with exception types: "elevar ValueError." Alternative "lanzar" (throw) also valid but "elevar" closer to English "raise."
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `lanzar` (throw) - Valid; emphasizes throwing like Java/C++
-2. `tirar` (throw - colloquial) - Too informal; "elevar" more professional
-3. `crear` (create) - Too general; need specific "raise" action
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Raise/lift verbs are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

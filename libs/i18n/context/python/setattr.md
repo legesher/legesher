@@ -88,13 +88,6 @@ print(getattr(counter, "class"))  # MyCounter
 
 **Pattern rule:** Attribute manipulation functions are compound terms: verb + "attr" (attribute). "setattr" = set + attribute. These form a family of related operations on object attributes. Must maintain consistency across this group.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `getattr` | obtener_atributo | جلب_صفة | 获取属性 | गुण_प्राप्त |
-| `hasattr` | tiene_atributo | له_صفة | 有属性 | गुण_है |
-| `setattr` | **establecer_atributo** | **تعيين_صفة** | **设置属性** | **गुण_निर्धारित** |
 
 ---
 
@@ -138,16 +131,7 @@ Common use cases include configuration systems (set config values from files), d
 - **Action vs State:** ACTION - assigns/modifies attribute
 - **Temporal aspect:** Instantaneous - sets value at call time
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb + noun compound | "establecer_atributo" - set attribute |
-| Germanic (de, nl, sv) | Verb + noun compound | "setzeAttribut" - set attribute |
-| Slavic (ru, pl, uk) | Verb + noun compound | "установить_атрибут" - set attribute |
-| Arabic | Verb + noun phrase | "تعيين_صفة" - set/assign attribute |
-| Chinese | Verb + noun compound | "设置属性" - set attribute |
-| Hindi | Verb + noun compound | "गुण_निर्धारित" - set attribute |
+### Recommended Form
 
 **Primary recommendation:** Use compound following pattern: verb meaning "set/assign/establish" + noun meaning "attribute/property." Maintain consistency with `getattr` and `hasattr` - all should use same "attr/attribute" term.
 
@@ -159,55 +143,6 @@ Common use cases include configuration systems (set config values from files), d
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `establecer_atributo` or `est_atr`
-- **Form:** Verb + noun compound
-- **Why it works:** "Establecer" (to set/establish) + "atributo" (attribute). Clear action-object structure. Could abbreviate if desired. Matches pattern with `obtener_atributo` (getattr), `tiene_atributo` (hasattr).
-
-**Arabic:**
-
-- **Translation:** `تعيين_صفة` (ta'yīn_ṣifa) or `ضبط_صفة` (ḍabṭ_ṣifa)
-- **Form:** Verb + noun compound
-- **Why it works:** "تعيين" (set/assign) + "صفة" (attribute). "ضبط" (set/adjust) also works. Both concise action + object. Matches with `جلب_صفة` (getattr), `له_صفة` (hasattr).
-
-**Chinese:**
-
-- **Translation:** `设置属性` (shèzhì shǔxìng)
-- **Form:** Verb + noun compound
-- **Why it works:** "设置" (set/configure) + "属性" (attribute). Standard Chinese programming terminology. Matches with `获取属性` (getattr), `有属性` (hasattr).
-
-**Hindi:**
-
-- **Translation:** `गुण_निर्धारित` (guṇ nirdhārit) or `गुण_सेट_करना` (guṇ set karnā)
-- **Form:** Noun + verb compound
-- **Why it works:** "गुण" (attribute) + "निर्धारित" (set/determined). Could add "करना" for full verb form. Matches pattern with getattr/hasattr using "गुण" for attribute.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using only "set" without attribute noun**
-
-- **Wrong:** `establecer` (Spanish - "to set/establish")
-- **Why wrong:** Too generic. Set what? Must specify setting attribute. Compound term necessary for clarity and consistency with getattr/hasattr family.
-- **Right:** `establecer_atributo` (set attribute - complete compound)
-
-**Mistake 2: Using different word for "attribute" than getattr/hasattr**
-
-- **Wrong:** `establecer_propiedad` (Spanish - "set property")
-- **Why wrong:** Inconsistent. If getattr uses "atributo", setattr must too. These three functions form a family - must use same terminology for the "attr" component.
-- **Right:** `establecer_atributo` (matches getattr/hasattr)
-
-**Mistake 3: Using "write" or "assign" instead of "set"**
-
-- **Wrong:** `escribir_atributo` (Spanish - "write attribute")
-- **Why wrong:** "Write" implies file/output operations. "Set" is standard programming term for assignment/mutation. Doesn't match Python's get/set pattern.
-- **Right:** `establecer_atributo` (set - standard mutator term)
-
----
 
 ## Ambiguity Resolution
 
@@ -239,21 +174,6 @@ Create compound matching Python's pattern: verb (set/assign/establish) + noun (a
 
 The attr-family (`getattr`, `setattr`, `hasattr`, `delattr`) MUST use the same word for "attribute" across all four. Only the verb changes. This linguistic parallelism is essential for learners to recognize the pattern.
 
-**Example:**
-
-✅ **Consistent (Spanish):**
-
-- `getattr` → `obtener_atributo`
-- `setattr` → `establecer_atributo`
-- `hasattr` → `tiene_atributo`
-- `delattr` → `eliminar_atributo`
-All use "atributo" ✅
-
-❌ **Inconsistent:**
-
-- `getattr` → `obtener_atributo` (uses "atributo")
-- `setattr` → `establecer_propiedad` (uses "propiedad")
-Different terms ❌ WRONG!
 
 ### Functional relationships
 
@@ -408,25 +328,24 @@ Critical requirement: MUST use the same "attribute" translation as getattr and h
 
 ```yaml
 term: setattr
-language: es
-translation: establecer_atributo
-form: compound_verb_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "establecer_atributo" clearly compounds "establecer" (to set/establish) with "atributo" (attribute), matching the English pattern. Uses same "atributo" as getattr/hasattr for family consistency. Natural Spanish programming terminology for assignment operations.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `est_atr` (abbreviated) - Could work but full form clearer
-2. `asignar_atributo` (assign attribute) - "establecer" more standard for setters
-3. `establecer_propiedad` (set property) - Must use "atributo" for consistency with getattr
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. setattr is a clear compound term with straightforward translation, provided it matches getattr/hasattr.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

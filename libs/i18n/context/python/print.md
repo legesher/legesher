@@ -62,13 +62,6 @@ print("Error", "Warning", sep=" | ", end="!\n")
 
 **Pattern rule:** I/O functions should use verb forms in target language, typically infinitive form. They perform actions that interact with the outside world (screen, files, network).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `input` | entrada | إدخال | 输入 | इनपुट |
-| `open` | abrir | فتح | 打开 | खोलना |
-| `print` | **imprimir** | **طباعة** | **打印** | **प्रिंट** |
 
 ---
 
@@ -112,16 +105,7 @@ Internally, `print()` doesn't actually "print" in the literal sense. It calls th
 - **Action vs State:** Pure ACTION - performs output operation
 - **Temporal aspect:** Instantaneous/one-time action - happens immediately when called
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "imprimir", "imprimer" - standard verb form for functions |
-| Germanic (de, nl, sv) | Infinitive verb | "drucken", "afdrukken" - natural verb form |
-| Slavic (ru, pl, uk) | Infinitive verb | "печатать", "drukować" - verb infinitive standard |
-| Arabic | Masdar (verbal noun) or present | "طباعة" (printing) - masdar form common for functions |
-| Chinese | Verb compound | "打印" - standard two-character verb |
-| Hindi | Infinitive or transliteration | "छापना" (to print) or "प्रिंट" (loan) - both acceptable |
+### Recommended Form
 
 **Primary recommendation:** Use infinitive verb form in your target language. The function name should read as "to print" - the action of outputting. This maintains consistency with other action-based function names.
 
@@ -133,55 +117,6 @@ Internally, `print()` doesn't actually "print" in the literal sense. It calls th
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `imprimir`
-- **Form:** Infinitive verb
-- **Why it works:** Standard Spanish verb meaning "to print." Used in computing contexts for both screen output and physical printing. Universally understood, natural pronunciation, proper length.
-
-**Arabic:**
-
-- **Translation:** `طباعة` (ṭibāʿah)
-- **Form:** Masdar (verbal noun)
-- **Why it works:** Standard Arabic term for printing/typing. Used in CS education and technical documentation. Clear, unambiguous meaning. Alternative `طبع` (verb form) also acceptable but masdar preferred for function names in Arabic.
-
-**Chinese:**
-
-- **Translation:** `打印` (dǎyìn)
-- **Form:** Verb compound
-- **Why it works:** Established CS term meaning "to print." Two characters: 打 (strike/hit) + 印 (print/stamp). Used universally in Chinese programming contexts. Natural and immediately recognizable.
-
-**Hindi:**
-
-- **Translation:** `प्रिंट` (print - transliteration) or `छापना` (chhāpnā - to print)
-- **Form:** Transliteration or native infinitive
-- **Why it works:** Two acceptable approaches. `प्रिंट` is widely recognized loanword in Indian CS education. `छापना` is pure Hindi verb but less common in technical contexts. Either works; transliteration may be more recognizable to Indian programmers.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using noun form instead of verb**
-
-- **Wrong:** `impresión` (Spanish - "impression/printout" - noun)
-- **Why wrong:** Function names should be verbs (actions), not nouns (things). `imprimir` is the verb "to print"; `impresión` is the noun "a printout."
-- **Right:** `imprimir` (verb)
-
-**Mistake 2: Using "show" or "display" instead of "print"**
-
-- **Wrong:** `mostrar` (Spanish - "to show/display")
-- **Why wrong:** While technically similar, "print" has specific meaning in computing. Changing to "show" loses the connection to the established term. Consistency with global CS terminology matters.
-- **Right:** `imprimir` (maintains "print" concept)
-
-**Mistake 3: Using "write" instead of "print"**
-
-- **Wrong:** `escribir` (Spanish - "to write")
-- **Why wrong:** In Python, `write()` is a different method (for file objects). Using "write" for `print` creates ambiguity. "Print" specifically means "output to console/stdout."
-- **Right:** `imprimir` (distinct from "write")
-
----
 
 ## Ambiguity Resolution
 
@@ -208,8 +143,6 @@ English "print" can mean:
 
 However: In many languages, the same word covers both concepts (screen output and paper output). This is acceptable - the context (programming) makes it clear. Don't invent a new term just to distinguish "screen print" from "paper print" if your language uses one word for both.
 
-**Example:** Spanish "imprimir" means both "print to paper" and "output to screen" - this is fine and natural.
-
 ---
 
 ## Cross-References (Consistency Requirements)
@@ -226,10 +159,6 @@ However: In many languages, the same word covers both concepts (screen output an
 
 All function names should use the same grammatical form in your language. If you use infinitive for `print`, use infinitive for `input`, `open`, `len`, etc. Consistency across all builtins is critical.
 
-**Example:**
-
-Spanish: `imprimir`, `abrir`, `entrada` - all verb forms ✅
-NOT: `imprimir` (verb) + `tamaño` (noun for len) - inconsistent ❌
 
 ### Functional relationships
 
@@ -301,7 +230,7 @@ print(f"Name: {name}, Age: {age}")
 
 **If your confidence doesn't match this assessment, FLAG FOR HUMAN REVIEW.**
 
-The only minor complexity: some languages might debate between native term vs. English loanword (e.g., Hindi `छापना` vs. `प्रिंट`). In such cases, choose whichever is more common in that language's CS education materials.
+The only minor complexity: some languages might debate between native term vs. English loanword. In such cases, choose whichever is more common in that language's CS education materials.
 
 ---
 
@@ -355,25 +284,24 @@ The only minor complexity: some languages might debate between native term vs. E
 
 ```yaml
 term: print
-language: es
-translation: imprimir
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "imprimir" is the standard verb for printing/outputting in computing contexts. It's used universally in Spanish CS education and technical documentation. The infinitive form maintains consistency with Python's function naming conventions.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `mostrar` (to show) - Too general; loses specific "print" meaning
-2. `salida` (output - noun) - Wrong part of speech; should be verb
-3. `escribir` (to write) - Conflicts with file `write()` method
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for Romance and Germanic languages. Slight complexity for languages debating between native term vs. English loanword (e.g., Hindi), but both options are well-documented.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

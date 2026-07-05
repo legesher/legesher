@@ -109,13 +109,6 @@ else:
 
 **Pattern rule:** Conditional keywords should express testing/checking. "Elif" is compound of "else" + "if" - alternative condition. Creates chain of mutually exclusive branches.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `if` | si | إذا | 如果 | अगर |
-| `else` | sino | وإلا | 否则 | नहीं_तो |
-| `elif` | **si_no_si** | **وإلا_إذا** | **否则_如果** | **वरना_अगर** |
 
 ---
 
@@ -161,16 +154,7 @@ Key advantage: `elif` keeps conditionals flat instead of nested. Without `elif`,
 - **Action vs State:** CONDITIONAL - tests alternative condition
 - **Temporal aspect:** Conditional - depends on previous failure
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound (else + if) | "si_no_si", "sinon_si" - else if |
-| Germanic (de, nl, sv) | Compound | "sonst_wenn", "anders_als" - else if |
-| Slavic (ru, pl, uk) | Compound | "иначе_если", "inaczej_jeśli" - else if |
-| Arabic | Compound phrase | "وإلا إذا" - wa illā idhā (and else if) |
-| Chinese | Compound | "否则如果" - fǒuzé rúguǒ (else if) |
-| Hindi | Compound | "वरना अगर" - varnā agar (else if) |
+### Recommended Form
 
 **Primary recommendation:** Use compound form combining "else" and "if" translations. This should express "otherwise, if (alternative condition)." May use underscore, compound word, or space depending on language conventions.
 
@@ -182,55 +166,6 @@ Key advantage: `elif` keeps conditionals flat instead of nested. Without `elif`,
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `si_no_si` or `sino_si`
-- **Form:** Compound keyword
-- **Why it works:** Combines "sino" (else/otherwise) + "si" (if). Natural Spanish for "else if." Reads as "if not, [then] if." Clear compound of existing keywords. Alternative: `o_si` (or if) but less precise.
-
-**Arabic:**
-
-- **Translation:** `وإلا_إذا` (wa illā idhā)
-- **Form:** Compound phrase
-- **Why it works:** Combines `وإلا` (and else) + `إذا` (if). Natural Arabic for "else if." May use underscore or space. Reads as "and otherwise if."
-
-**Chinese:**
-
-- **Translation:** `否则如果` (fǒuzé rúguǒ) or `要不如果` (yàobù rúguǒ)
-- **Form:** Compound phrase
-- **Why it works:** `否则如果` combines "否则" (else/otherwise) + "如果" (if). Natural Chinese for "else if." Four characters. `要不如果` is colloquial alternative. Either acceptable.
-
-**Hindi:**
-
-- **Translation:** `वरना_अगर` (varnā agar) or `नहीं_तो_अगर` (nahīṁ to agar)
-- **Form:** Compound
-- **Why it works:** Combines "वरना" (else/otherwise) + "अगर" (if). Natural Hindi for "else if." Can use underscore for single keyword. Alternative uses "नहीं तो" (if not then) + "अगर" (if).
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using only "if" without "else" component**
-
-- **Wrong:** `si` (Spanish - just "if")
-- **Why wrong:** `elif` is specifically "else if" - combines both concepts. Using just "if" loses the "else" (otherwise) component. Need compound to distinguish from plain `if`.
-- **Right:** `si_no_si` or `sino_si` (else + if)
-
-**Mistake 2: Creating completely new word**
-
-- **Wrong:** `altersi` (Spanish - invented compound)
-- **Why wrong:** Should be recognizable as combination of else + if. Users need to understand it's "otherwise, if." Inventing new word obscures this. Use compounds of existing translations.
-- **Right:** `si_no_si` (recognizable compound)
-
-**Mistake 3: Using "or if" instead of "else if"**
-
-- **Wrong:** `o_si` (Spanish - "or if")
-- **Why wrong:** While "or if" is close, "else if" is more precise. "Else" specifically means "if previous was false." "Or" doesn't capture the sequential dependency. Use "else" component.
-- **Right:** `si_no_si` (else if, not or if)
-
----
 
 ## Ambiguity Resolution
 
@@ -260,9 +195,6 @@ Note: Some languages use "elsif" (Perl, Ruby) or "elseif" (PHP) - slightly diffe
 
 `elif` should be recognizable compound of `else` + `if` translations. If translating `else` as "sino" and `if` as "si", then `elif` should be something like "si_no_si" or "sino_si". Keep the relationship clear.
 
-**Example:**
-
-Spanish: `si` (if), `sino` (else), `si_no_si` or `sino_si` (elif) - clear relationship ✅
 
 ### Functional relationships
 
@@ -444,25 +376,24 @@ elif other_outer:
 
 ```yaml
 term: elif
-language: es
-translation: sino_si
-form: compound_keyword
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "sino_si" combines "sino" (else/otherwise) + "si" (if). Natural Spanish equivalent of "else if." Works in if-elif-else chains. Clear compound maintaining relationship to component keywords.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `si_no_si` - Also valid; "si no" (if not) + "si" (if)
-2. `o_si` (or if) - Less precise; "else" more accurate than "or"
-3. `elseif` (borrowed English) - Could work but translation preferred
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Compound keywords are straightforward when components are clear.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

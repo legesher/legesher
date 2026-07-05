@@ -111,13 +111,6 @@ asyncio.run(main())
 
 **Pattern rule:** Async equivalents use 'a' prefix. `anext` is to `next` as `aiter` is to `iter`. Must maintain this parallel naming structure.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `next` | siguiente | التالي | 下一个 | अगला |
-| `aiter` | aiter | مكرر_لاتزامني | 异步迭代器 | अतुल्य_पुनरावर्तक |
-| `anext` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -159,16 +152,7 @@ This is fundamental for manual control of async iteration. While `async for` loo
 - **Action vs State:** ACTION - retrieves next value
 - **Temporal aspect:** Instantaneous async action (awaited)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Async marker + "next" term | Mirror relationship to next() with async indicator |
-| Germanic (de, nl, sv) | Async prefix + "next" | Clear async/sync relationship |
-| Slavic (ru, pl, uk) | Async marker + next base | Pattern consistency |
-| Arabic | Async marker + next term | Could use prefix or compound |
-| Chinese | "异步" (async) + next term | Compound showing async nature |
-| Hindi | "अतुल्य" (async) + next | Prefix or compound structure |
+### Recommended Form
 
 **Primary recommendation:** Add an async marker (prefix, compound, or adjective) to however `next` is translated. The relationship between `next` and `anext` must be immediately clear, parallel to `iter`/`aiter`.
 
@@ -180,55 +164,6 @@ This is fundamental for manual control of async iteration. While `async for` loo
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `anext` (borrowed) or `siguiente_asinc`
-- **Form:** Function name with async marker
-- **Why it works:** Maintains relationship to "siguiente" (next) while clearly indicating async nature, concise
-
-**Arabic:**
-
-- **Translation:** `التالي_لاتزامني` (al-tālī lātazāmunī - async next)
-- **Form:** Compound with async prefix
-- **Why it works:** Builds on `next` translation with async marker, clear and consistent
-
-**Chinese:**
-
-- **Translation:** `异步下一个` (yìbù xià yīgè - async next)
-- **Form:** Compound with async prefix
-- **Why it works:** Standard pattern combining "异步" (async) + "下一个" (next), used in async programming
-
-**Hindi:**
-
-- **Translation:** `अतुल्य_अगला` (atulya aglā)
-- **Form:** Compound with async + next
-- **Why it works:** Combines async marker with next term, maintains relationship to `next`
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: No async indicator**
-
-- **Wrong:** Same translation as `next`
-- **Why wrong:** Must distinguish sync `next` from async `anext`
-- **Right:** Add async prefix/marker to `next` translation
-
-**Mistake 2: Based on wrong term**
-
-- **Wrong:** `iter_asinc` (based on "iter") while should be based on "next"
-- **Why wrong:** `anext` is async version of `next`, not `iter`
-- **Right:** `siguiente_asinc` (based on next)
-
-**Mistake 3: Missing the retrieval concept**
-
-- **Wrong:** `esperar_siguiente` (Spanish - "wait next")
-- **Why wrong:** Adds unnecessary "wait" - the await is separate from the function name
-- **Right:** `siguiente_asinc` (async next, without "wait")
-
----
 
 ## Ambiguity Resolution
 
@@ -367,24 +302,24 @@ pass
 
 ```yaml
 term: anext
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {function_name_with_async_marker}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Explain how your translation relates to `next` translation and parallels the `aiter`/`iter` pattern. Should make the sync/async relationship clear while being concise.}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Concerns about async terminology, need for consistency verification with `aiter` translation}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -68,13 +68,6 @@ while True:
 
 **Pattern rule:** Loop control keywords should use conjunction or verb forms suggesting ongoing/repeated action. "While" expresses duration - "during the time that" - making it a temporal conjunction.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `if` | si | إذا | 如果 | यदि |
-| `for` | para | لكل | 对于 | प्रत्येक_के_लिए |
-| `while` | **mientras** | **بينما** | **当** | **जबकि** |
 
 ---
 
@@ -118,16 +111,7 @@ The syntax `while condition:` evaluates the expression after `while` and convert
 - **Action vs State:** STATE - expresses ongoing condition during a duration
 - **Temporal aspect:** Continuous/durative - "during the time that" or "as long as"
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Temporal conjunction | "mientras", "pendant que" - natural duration word |
-| Germanic (de, nl, sv) | Temporal conjunction | "während", "terwijl" - while/during |
-| Slavic (ru, pl, uk) | Temporal conjunction | "пока", "podczas" - while/during |
-| Arabic | Temporal particle | "بينما" - during/while |
-| Chinese | Temporal particle | "当" or "当...时" - when/while |
-| Hindi | Temporal conjunction | "जबकि" - while/whereas |
+### Recommended Form
 
 **Primary recommendation:** Use the target language's natural word for "while" or "during the time that." This should be a temporal conjunction expressing duration with a condition, not a simple conditional like "if."
 
@@ -139,55 +123,6 @@ The syntax `while condition:` evaluates the expression after `while` and convert
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `mientras`
-- **Form:** Temporal conjunction
-- **Why it works:** Standard Spanish for "while." Perfectly captures the duration + condition meaning. "Mientras X sea verdad, hacer Y" is natural Spanish. Universally understood in educational and technical contexts.
-
-**Arabic:**
-
-- **Translation:** `بينما` (baynamā)
-- **Form:** Temporal particle
-- **Why it works:** Standard Modern Arabic for "while/whereas." Expresses simultaneity and duration. Used in formal and technical writing. Clear conditional-temporal meaning.
-
-**Chinese:**
-
-- **Translation:** `当` (dāng) or `当...时` (dāng...shí)
-- **Form:** Temporal particle
-- **Why it works:** `当` means "when/while" - standard for temporal conditions. Can be used alone or in full form `当...时` (when...time). Established in Chinese programming education.
-
-**Hindi:**
-
-- **Translation:** `जबकि` (jabaki)
-- **Form:** Temporal conjunction
-- **Why it works:** Sanskrit-derived conjunction meaning "while/whereas." Formal register appropriate for programming. Expresses duration with condition clearly. Alternative: `जब_तक` (jab tak = as long as).
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using the same word as "if"**
-
-- **Wrong:** `si` (Spanish for "if")
-- **Why wrong:** While "if" tests condition once, "while" implies repeated testing over duration. Spanish distinguishes: `si` (if) vs. `mientras` (while). Don't conflate them.
-- **Right:** `mientras`
-
-**Mistake 2: Using "until" instead of "while"**
-
-- **Wrong:** `hasta` (Spanish - "until")
-- **Why wrong:** "Until" expresses opposite logic: loop until condition becomes true (negative condition). "While" continues while condition is true (positive condition). Different meanings.
-- **Right:** `mientras`
-
-**Mistake 3: Using only "when" without duration aspect**
-
-- **Wrong:** `cuando` (Spanish - "when")
-- **Why wrong:** "When" can express one-time event ("when X happens"). "While" emphasizes duration ("during the time that X is true"). Need temporal duration aspect.
-- **Right:** `mientras` (explicitly durative)
-
----
 
 ## Ambiguity Resolution
 
@@ -216,7 +151,7 @@ Some languages distinguish:
 - Temporal simultaneous "while" (two things happening at once)
 - Conditional durative "while" (repeat as long as condition holds)
 
-Use the CONDITIONAL DURATIVE form. In many languages, these are the same word (like Spanish "mientras"), which is fine.
+Use the CONDITIONAL DURATIVE form. In many languages, these are the same word, which is fine.
 
 ---
 
@@ -234,10 +169,6 @@ Use the CONDITIONAL DURATIVE form. In many languages, these are the same word (l
 
 All loop keywords (`for`, `while`) and conditional keywords (`if`, `elif`, `else`) should use grammatically compatible forms. They're all control flow structures, so they should feel cohesive.
 
-**Example:**
-
-Spanish: `mientras`, `para`, `si` - all conjunctions/particles ✅
-NOT: `mientras` (conjunction) + `iterar` (verb for "for") ❌
 
 ### Functional relationships
 
@@ -363,25 +294,24 @@ The only consideration: ensuring your translation captures the DURATIVE aspect (
 
 ```yaml
 term: while
-language: es
-translation: mientras
-form: temporal_conjunction
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "mientras" is the standard temporal conjunction for "while" - expressing duration with condition. It clearly distinguishes from `si` (if - single test) and captures the repeated nature of the loop. Universally used in Spanish programming education.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `durante` (during) - Too focused on duration, loses conditional aspect
-2. `cuando` (when) - Too focused on timing, less clearly durative
-3. `hasta` (until) - Opposite logic (negative condition)
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Temporal-conditional "while" loops are universal, and all languages have natural expressions for this concept.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

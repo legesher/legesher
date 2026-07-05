@@ -91,13 +91,6 @@ ending with "Error" in English. Translations should convey both the
 error type and the specific problem domain (key, index, attribute,
 etc.).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `TypeError` | ErrorDeTipo | خطأنوع | 类型错误 | प्रकारत्रुटि |
-| `ValueError` | ErrorDeValor | خطأقيمة | 值错误 | मानत्रुटि |
-| `KeyError` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -173,16 +166,7 @@ exception handling or by using safer methods like `.get()` or
 - **Temporal aspect:** Instantaneous - occurs at moment of failed
   lookup
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound noun or noun phrase | "ErrorDeClave" - clear structure |
-| Germanic (de, nl, sv) | Compound noun | "Schlüsselfehler" - natural compounds |
-| Slavic (ru, pl, uk) | Compound noun | "КлючОшибка" - describes error type |
-| Arabic | Noun phrase or compound | "خطأمفتاح" - key error |
-| Chinese | Compound noun | "键错误" - key + error |
-| Hindi | Compound noun | "कुंजीत्रुटि" - key + error |
+### Recommended Form
 
 **Primary recommendation:** Use compound noun combining the concept
 of "key" with "error." Maintain capitalization that matches Python's
@@ -198,68 +182,6 @@ convention (PascalCase for exception classes in English).
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ErrorDeClave` or `ErrorDeKey`
-- **Form:** Compound noun
-- **Why it works:** "Clave" or "Key" for dictionary keys + "Error"
-  is clear. "De" preposition connects them naturally. Follows
-  Spanish CS conventions for exception names.
-
-**Arabic:**
-
-- **Translation:** `خطأمفتاح` (khata' miftaah)
-- **Form:** Compound noun
-- **Why it works:** "خطأ" (error) + "مفتاح" (key) creates clear
-  compound. Standard Arabic technical terminology. Concise and
-  unambiguous.
-
-**Chinese:**
-
-- **Translation:** `键错误` (jiàn cuòwù)
-- **Form:** Compound noun
-- **Why it works:** "键" (key) + "错误" (error) is natural Chinese
-  structure. Used in Chinese programming documentation. Clear and
-  concise.
-
-**Hindi:**
-
-- **Translation:** `कुंजीत्रुटि` (kunjee truti)
-- **Form:** Compound noun
-- **Why it works:** "कुंजी" (key) + "त्रुटि" (error) follows
-  Sanskrit compound rules. Technical but accessible. Used in Hindi
-  CS education.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using generic "error" without "key"**
-
-- **Wrong:** `Error` (Spanish)
-- **Why wrong:** Too generic - doesn't specify this is about
-  dictionary keys. Loses critical information about the error type.
-- **Right:** `ErrorDeClave` (specifies key error)
-
-**Mistake 2: Over-explaining in the name**
-
-- **Wrong:** `ErrorLaClaveNoExiste` (Spanish - "the key doesn't
-  exist")
-- **Why wrong:** Exception names should be concise identifiers, not
-  full sentences. Too long for practical use in code.
-- **Right:** `ErrorDeClave` (concise but clear)
-
-**Mistake 3: Using verb forms**
-
-- **Wrong:** `ClaveFaltante` (Spanish - "missing key" as adjective)
-- **Why wrong:** Exception names in Python are nouns representing
-  error types, not descriptions of state. Should follow same
-  pattern as other exceptions.
-- **Right:** `ErrorDeClave` (noun form)
-
----
 
 ## Ambiguity Resolution
 
@@ -307,20 +229,10 @@ importance.**
 **Consistency rule:**
 
 All exception classes ending in "Error" should use the same structure
-in translations. If `KeyError` translates as "ErrorDeClave" (Spanish),
-then `IndexError` should be "ErrorDeÍndice" - maintaining consistent
+in translations. `KeyError` and `IndexError` must share the same
+"error" word and the same compound pattern - maintaining consistent
 pattern.
 
-**Example:**
-
-Spanish exception pattern:
-
-- `KeyError` → `ErrorDeClave` ✅
-- `IndexError` → `ErrorDeÍndice` ✅
-- `AttributeError` → `ErrorDeAtributo` ✅
-
-NOT: `KeyError` → `ErrorDeClave` but `IndexError` →
-`ÍndiceIncorrecto` ❌ (inconsistent pattern)
 
 ### Functional relationships
 
@@ -392,7 +304,7 @@ data.pop("c")  # Raises KeyError (unless default provided)
 **Rationale:** While the concept is well-established in computer
 science, translating "key" requires understanding the
 dictionary/mapping context. Different languages may use different
-words for dictionary keys (clave, clé, Schlüssel, مفتاح, 键, कुंजी).
+words for dictionary keys.
 The compound structure also needs to feel natural in the target
 language while maintaining technical clarity.
 
@@ -451,34 +363,24 @@ REVIEW.**
 
 ```yaml
 term: KeyError
-language: es
-translation: ErrorDeClave
-form: compound_noun
-confidence: medium-high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "ErrorDeClave" combines "Error" (error) with "Clave" (key
-in computing context), connected by "De" preposition. Follows
-Spanish programming convention for exception names. Maintains
-consistency with other exception translations like `ErrorDeValor`
-(ValueError).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `ErrorDeKey` - Using English "Key" - valid in some Spanish CS
-   contexts
-2. `ExcepciónDeClave` - Using "Excepción" instead of "Error" - too
-   verbose
-3. `ClaveError` - Direct compound - less natural in Spanish
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-Confidence is MEDIUM-HIGH because while "clave" is standard for
-dictionary keys in Spanish programming, some regions use English
-"key" in technical contexts. Regional variation exists in CS
-terminology.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

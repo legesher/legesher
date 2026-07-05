@@ -80,13 +80,6 @@ if not 0:  # 0 is falsy
 
 **Pattern rule:** Boolean literals should use noun or adjective forms representing falsehood/incorrectness. Should be natural opposite of `True` translation.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `True` | Verdadero | صحيح | 真 | सत्य |
-| `None` | Ninguno | لاشيء | 无 | कोई_नहीं |
-| `False` | **Falso** | **خطأ** | **假** | **असत्य** |
 
 ---
 
@@ -130,16 +123,7 @@ Python's truthiness system means many values evaluate to `False` in boolean cont
 - **Action vs State:** STATE - represents a truth value
 - **Temporal aspect:** Timeless - falsehood is absolute
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adjective (masculine) | "Falso", "Faux" - false |
-| Germanic (de, nl, sv) | Adjective | "Falsch", "vals" - false |
-| Slavic (ru, pl, uk) | Adjective/noun | "Ложь", "fałsz" - false/falsehood |
-| Arabic | Adjective/noun | "خطأ" - error/wrong/false |
-| Chinese | Adjective | "假" - false/fake |
-| Hindi | Adjective/noun | "असत्य" - untruth/false |
+### Recommended Form
 
 **Primary recommendation:** Use adjective form meaning "false" or "untrue." Must be natural opposite/antonym of `True` translation. Follow Python's capitalization.
 
@@ -151,55 +135,6 @@ Python's truthiness system means many values evaluate to `False` in boolean cont
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `Falso`
-- **Form:** Adjective (masculine), capitalized
-- **Why it works:** Direct opposite of "Verdadero" (True). Standard Spanish for false/incorrect. Capitalized like Python. Used in Spanish CS education for boolean false value.
-
-**Arabic:**
-
-- **Translation:** `خطأ` (khaṭa')
-- **Form:** Noun/adjective
-- **Why it works:** Means "error/mistake/wrong/false." Natural opposite of `صحيح` (true). Standard in Arabic for false value in logic. Common in CS contexts.
-
-**Chinese:**
-
-- **Translation:** `假` (jiǎ)
-- **Form:** Adjective
-- **Why it works:** Single character meaning "false/fake/untrue." Natural opposite of `真` (true). Standard Chinese for boolean false. Concise and clear.
-
-**Hindi:**
-
-- **Translation:** `असत्य` (asatya)
-- **Form:** Adjective/noun
-- **Why it works:** Sanskrit-derived word: अ- (negation prefix) + सत्य (truth) = "untruth/false." Perfect opposite of `सत्य` (True). Formal register appropriate for programming.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "no" particle instead of "false"**
-
-- **Wrong:** `No` (Spanish - "no")
-- **Why wrong:** "No" is conversational negation. "False" is logical falsehood. Different concepts. Programming uses logical false, not conversational no.
-- **Right:** `Falso` (logical false)
-
-**Mistake 2: Using "wrong" when "false" is clearer**
-
-- **Wrong:** `Incorrecto` (Spanish - "incorrect")
-- **Why wrong:** While related, "incorrect" suggests error or mistake. "False" is more neutral - simply the opposite of true. "False" is standard logical term.
-- **Right:** `Falso` (logical false, opposite of true)
-
-**Mistake 3: Using numeric "0" or "zero"**
-
-- **Wrong:** `Cero` (Spanish - "zero")
-- **Why wrong:** While `False == 0`, conceptually they're different. `False` is logical falsehood; 0 is a number. Keep logical and numeric concepts distinct.
-- **Right:** `Falso` (logical concept)
-
----
 
 ## Ambiguity Resolution
 
@@ -241,10 +176,6 @@ Use the word for logical/factual falsehood, not fakery or disloyalty.
 
 `False` and `True` MUST be opposites in target language. They should use the same grammatical form (both adjectives, both nouns, etc.) and same capitalization pattern.
 
-**Example:**
-
-Spanish: `Verdadero` (True), `Falso` (False) - both capitalized adjectives, clear opposites ✅
-NOT: `Verdadero` + `No` - inconsistent forms ❌
 
 ### Functional relationships
 
@@ -362,25 +293,24 @@ can_proceed = has_permission and not is_blocked  # False if blocked
 
 ```yaml
 term: False
-language: es
-translation: Falso
-form: adjective
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "Falso" is the natural opposite of "Verdadero" (True), representing logical falsehood. Capitalized to match Python's convention. Standard adjective for false/incorrect. Used universally in Spanish CS education.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `Incorrecto` (incorrect) - Less neutral; "Falso" is standard logical term
-2. `No` (no) - Too conversational; need logical term
-3. `falso` (lowercase) - Should capitalize to match Python
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Logical falsehood is universal with clear translations. Key is ensuring it's the natural opposite of `True` translation.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -73,13 +73,6 @@ print(matrix[0][1])  # Output: 2
 
 **Pattern rule:** Collection type constructors should use noun forms naming the container. For `list`, use the word for "list" or "array" depending on language conventions.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `tuple` | tupla | صف | 元组 | टपल |
-| `dict` | diccionario | قاموس | 字典 | शब्दकोश |
-| `list` | **lista** | **قائمة** | **列表** | **सूची** |
 
 ---
 
@@ -123,16 +116,7 @@ As mutable objects, lists can be modified in-place. This means `mylist.append(4)
 - **Action vs State:** STATE/CONTAINER - describes what holds data
 - **Temporal aspect:** Timeless - a type is a permanent category
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "lista", "liste" - list/roster |
-| Germanic (de, nl, sv) | Noun | "Liste", "lijst" - list |
-| Slavic (ru, pl, uk) | Noun | "список", "lista" - list |
-| Arabic | Noun | "قائمة" - list/roster |
-| Chinese | Noun compound | "列表" - column/table list |
-| Hindi | Noun | "सूची" - list/index |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "list" or "array" (depending on CS conventions in your language). This should be the same word used for shopping lists, to-do lists, etc. - an ordered series of items.
 
@@ -144,55 +128,6 @@ As mutable objects, lists can be modified in-place. This means `mylist.append(4)
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `lista`
-- **Form:** Noun (feminine)
-- **Why it works:** Standard Spanish word for list (shopping list, to-do list). Natural in programming contexts. "Lista de elementos" (list of elements) sounds natural. Used universally in Spanish CS education.
-
-**Arabic:**
-
-- **Translation:** `قائمة` (qā'imah)
-- **Form:** Noun (feminine)
-- **Why it works:** Standard Arabic for list/roster. Used in everyday contexts (shopping list) and technical contexts (data list). Clear, unambiguous. Standard in Arabic CS education.
-
-**Chinese:**
-
-- **Translation:** `列表` (lièbiǎo)
-- **Form:** Noun compound
-- **Why it works:** Two characters: 列 (column/series) + 表 (table/list). Standard Chinese CS term for list data structure. Distinguishes from array (数组). Universally recognized.
-
-**Hindi:**
-
-- **Translation:** `सूची` (sūcī)
-- **Form:** Noun
-- **Why it works:** Sanskrit-derived word for list/index/catalog. Formal register appropriate for programming. Used in Hindi mathematics and CS education. Clear, unambiguous meaning.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "array" when "list" is more appropriate**
-
-- **Wrong:** `arreglo` (Spanish - "array" in some contexts)
-- **Why wrong:** In many languages' CS contexts, "array" implies fixed-size or low-level structure, while "list" is higher-level, dynamic. Python's `list` is dynamic, not fixed-size. Check conventions - some languages use "array" for lists, others distinguish.
-- **Right:** `lista` (dynamic ordered collection)
-
-**Mistake 2: Using verb form "to list"**
-
-- **Wrong:** `listar` (Spanish - "to list" - verb)
-- **Why wrong:** Type names are nouns (containers), not verbs (actions). `list` names the data structure, not the action of listing things.
-- **Right:** `lista` (noun)
-
-**Mistake 3: Using overly specific "sequence" or "vector"**
-
-- **Wrong:** `secuencia` (Spanish - "sequence")
-- **Why wrong:** While technically correct (lists are sequences), "list" is the more common, specific term. "Sequence" is more abstract. Use the common word unless "list" doesn't exist.
-- **Right:** `lista` (specific, common term)
-
----
 
 ## Ambiguity Resolution
 
@@ -235,9 +170,6 @@ In most languages, context makes this clear - the data structure meaning dominat
 
 All collection type constructors (`list`, `tuple`, `dict`, `set`) should use noun forms. They name containers/data structures, not actions.
 
-**Example:**
-
-Spanish: `lista`, `tupla`, `diccionario`, `conjunto` - all nouns ✅
 
 ### Functional relationships
 
@@ -363,25 +295,24 @@ Minor consideration: some languages distinguish "list" (dynamic) from "array" (f
 
 ```yaml
 term: list
-language: es
-translation: lista
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "lista" is the universal word for list - used for shopping lists, to-do lists, and data lists. Natural in programming contexts and CS education. Clear, simple, widely recognized.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `arreglo` (array) - Some contexts use this, but "lista" more specific for Python's dynamic lists
-2. `secuencia` (sequence) - Too abstract; "lista" more concrete and common
-3. `listado` (listing) - Verbal noun; pure noun preferred
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Lists (ordered series) are universal concepts with clear translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

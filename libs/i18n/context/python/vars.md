@@ -175,13 +175,6 @@ print('version' in vars(sys))  # True
 
 **Pattern rule:** Introspection functions that examine object state. `vars` and `dir` are related - `vars()` returns attribute dictionary, `dir()` returns attribute names list. Translations should convey inspection/variables concept.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `dir` | directorio | دليل | 目录 | निर्देशिका |
-| `locals` | locales | محلي | 本地 | स्थानीय |
-| `vars` | **variables** | **متغيرات** | **变量** | **चर** |
 
 ---
 
@@ -225,16 +218,7 @@ Common use cases: debugging (inspect all attributes at once), serialization (con
 - **Action vs State:** STATE - represents collection of variables
 - **Temporal aspect:** Snapshot of current variables
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun (plural) | "variables" - variables/attributes |
-| Germanic (de, nl, sv) | Noun (plural) | "Variablen" - variables |
-| Slavic (ru, pl, uk) | Noun (plural) | "переменные" - variables |
-| Arabic | Noun (plural) | "متغيرات" - variables |
-| Chinese | Noun | "变量" - variables |
-| Hindi | Noun (plural) | "चर" - variables |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "variables" or "attributes" (plural if language has plurals). Should be abbreviation or short form if natural in target language. Conveys collection of variables.
 
@@ -246,55 +230,6 @@ Common use cases: debugging (inspect all attributes at once), serialization (con
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `variables` or `vars`
-- **Form:** Noun (plural)
-- **Why it works:** "Variables" is standard programming term. Could abbreviate to "vars" matching English style, or keep full "variables." Both clear. Plural form indicates collection.
-
-**Arabic:**
-
-- **Translation:** `متغيرات` (mutaghayyirāt)
-- **Form:** Noun (plural)
-- **Why it works:** "متغيرات" is plural of "متغير" (variable). Standard Arabic for variables in programming. Clear technical term. Plural form appropriate.
-
-**Chinese:**
-
-- **Translation:** `变量` (biànliàng)
-- **Form:** Noun
-- **Why it works:** "变量" means "variable(s)" - Chinese doesn't distinguish plural morphologically. Standard CS term. Concise two-character compound. Widely understood.
-
-**Hindi:**
-
-- **Translation:** `चर` (char) or `वेरिएबल` (veriebal)
-- **Form:** Noun
-- **Why it works:** "चर" is Sanskrit-derived term for variables. Concise, one syllable. "वेरिएबल" is transliteration also acceptable. Both used in Indian CS education.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using singular form**
-
-- **Wrong:** `variable` (Spanish singular)
-- **Why wrong:** Function returns collection of variables, not single variable. Plural form more accurate. "vars" is abbreviation of "variables" (plural), not "variable."
-- **Right:** `variables` (plural)
-
-**Mistake 2: Using verb form**
-
-- **Wrong:** `variar` (Spanish - "to vary")
-- **Why wrong:** "vars" is noun (variables), not verb (to vary). Function doesn't perform action of varying - it accesses variable collection. Part of speech matters.
-- **Right:** `variables` (noun)
-
-**Mistake 3: Being too verbose when abbreviation natural**
-
-- **Wrong:** `diccionario_de_variables` (Spanish - "dictionary of variables")
-- **Why wrong:** Over-explains. English "vars" is concise abbreviation. While "variables" is clear, don't add extra words. Keep concise like English.
-- **Right:** `variables` or `vars` (concise)
-
----
 
 ## Ambiguity Resolution
 
@@ -410,25 +345,24 @@ Key consideration: Check if target language commonly abbreviates "variables" in 
 
 ```yaml
 term: vars
-language: es
-translation: variables
-form: noun_plural
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "variables" is the full form of the English abbreviation "vars." Standard programming term widely understood in Spanish CS education. Plural form correctly indicates collection of variables/attributes. Clear and unambiguous.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `vars` (keep English abbreviation) - Could work but "variables" more explicit
-2. `atributos` (attributes) - Accurate but "variables" more standard for this function
-3. `diccionario` (dictionary) - Too generic, doesn't specify variables
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence HIGH. Standard programming terminology with clear meaning.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

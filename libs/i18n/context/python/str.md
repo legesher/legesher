@@ -68,13 +68,6 @@ print(str(p))  # Output: "Person object"
 
 **Pattern rule:** Type constructors should use noun forms in target language. They name a category/class of values. For `str`, use the noun for "string/text/character sequence."
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `int` | entero | عدد_صحيح | 整数 | पूर्णांक |
-| `list` | lista | قائمة | 列表 | सूची |
-| `str` | **cadena** | **سلسلة** | **字符串** | **स्ट्रिंग** |
 
 ---
 
@@ -118,16 +111,7 @@ Strings support extensive operations: indexing (`s[0]`), slicing (`s[1:5]`), con
 - **Action vs State:** STATE/CATEGORY - describes what something IS (a text sequence)
 - **Temporal aspect:** Timeless - a type is a permanent classification
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun (feminine: chain/string) | "cadena", "chaîne" - metaphor of linked characters |
-| Germanic (de, nl, sv) | Noun (compound) | "Zeichenkette" (character chain) - descriptive compound |
-| Slavic (ru, pl, uk) | Noun | "строка" (line/string) - standard CS term |
-| Arabic | Noun (feminine) | "سلسلة" (chain/sequence) - sequence metaphor |
-| Chinese | Noun compound | "字符串" (character string) - technical term |
-| Hindi | Transliteration or native noun | "स्ट्रिंग" (string) or "वर्ण-सूची" (character list) |
+### Recommended Form
 
 **Primary recommendation:** Use your target language's established CS education term for "string" (text data type). This is usually "string," "character chain/sequence," or "text." Avoid overly literal translations that aren't used in education.
 
@@ -139,55 +123,6 @@ Strings support extensive operations: indexing (`s[0]`), slicing (`s[1:5]`), con
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `cadena`
-- **Form:** Noun (feminine)
-- **Why it works:** Standard Spanish CS term. "Cadena de caracteres" (character string) is often shortened to "cadena" in programming contexts. Widely recognized in Spanish educational materials. Natural and concise.
-
-**Arabic:**
-
-- **Translation:** `سلسلة` (silsilah)
-- **Form:** Noun (feminine)
-- **Why it works:** Means "chain/sequence" - perfectly captures the concept of linked characters. Standard Arabic CS term. Clear technical meaning distinguishing it from general "text" (نص).
-
-**Chinese:**
-
-- **Translation:** `字符串` (zìfúchuàn)
-- **Form:** Noun compound
-- **Why it works:** Established technical term. Three characters: 字符 (character) + 串 (string/series). Universally used in Chinese programming education. Precise and unambiguous.
-
-**Hindi:**
-
-- **Translation:** `स्ट्रिंग` (string - transliteration)
-- **Form:** Transliterated English loanword
-- **Why it works:** Widely adopted in Indian CS education. While native alternatives exist (`वर्ण-माला`, `पाठ`), the English loanword "string" is more recognizable to Hindi programmers. Acceptable in technical register.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "text" without technical qualification**
-
-- **Wrong:** `texto` (Spanish - just "text")
-- **Why wrong:** Too general - doesn't convey the technical concept of a string data type. "Text" could mean any written content. "Cadena" is the specific programming term.
-- **Right:** `cadena` (string/chain - technical term)
-
-**Mistake 2: Overly literal "character chain" when standard term exists**
-
-- **Wrong:** `cadena_de_caracteres` (Spanish - full phrase)
-- **Why wrong:** Too verbose. While technically accurate, the abbreviated `cadena` is standard in Spanish programming. Use the concise industry-standard term.
-- **Right:** `cadena` (established abbreviation)
-
-**Mistake 3: Using "line" when it means "string"**
-
-- **Wrong:** `línea` (Spanish - "line")
-- **Why wrong:** A "line" (línea) typically means a line of text (with newline), not a string data type. Russian uses "строка" (line/string) but this doesn't transfer to Spanish where "línea" has different connotations.
-- **Right:** `cadena` (string, not line)
-
----
 
 ## Ambiguity Resolution
 
@@ -213,8 +148,8 @@ English "string" can mean:
 
 Many languages distinguish between:
 
-- Physical string/rope (cuerda, حبل)
-- Text string data type (cadena, سلسلة)
+- Physical string/rope
+- Text string data type
 
 Use the COMPUTING/PROGRAMMING term, not the physical object term.
 
@@ -235,10 +170,6 @@ Use the COMPUTING/PROGRAMMING term, not the physical object term.
 
 All type constructors (`str`, `int`, `float`, `bool`, `list`, `dict`, `set`, `tuple`) must use the same grammatical category - all nouns. Don't mix noun types with verb types or adjectives.
 
-**Example:**
-
-Spanish: `cadena`, `entero`, `flotante`, `lista` - all nouns ✅
-NOT: `cadena` (noun) + `convertir_entero` (verb phrase) ❌
 
 ### Functional relationships
 
@@ -349,25 +280,24 @@ Minor consideration: Some languages debate between native term vs. English loanw
 
 ```yaml
 term: str
-language: es
-translation: cadena
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "cadena" is the standard CS term for string data type, derived from "cadena de caracteres" (character chain). It's universally used in Spanish programming education and technical documentation. Natural, concise, and clearly distinguishes the programming concept from general "text."
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `texto` (text) - Too general; not the specific technical term
-2. `cuerda` (physical string/rope) - Wrong meaning; not used in CS
-3. `cadena_de_caracteres` (full phrase) - Too verbose; `cadena` is standard abbreviation
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. String is a universal programming concept with established translations in all languages. Minor variation: some languages prefer English loanword "string" over native term - both are acceptable if used consistently in that language's CS education.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

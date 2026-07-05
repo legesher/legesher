@@ -68,13 +68,6 @@ age = int(input("Enter age: "))
 
 **Pattern rule:** I/O functions should use verb forms (infinitive) or noun forms depending on language. They perform actions that interact with external sources (users, files, network).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `print` | imprimir | طباعة | 打印 | प्रिंट |
-| `open` | abrir | فتح | 打开 | खोलना |
-| `input` | **entrada** | **إدخال** | **输入** | **इनपुट** |
 
 ---
 
@@ -118,16 +111,7 @@ For non-string data, you must convert explicitly: `int(input("Number: "))` conve
 - **Action vs State:** Can be either - "input" can mean the data (noun) or the act of entering data (verb)
 - **Temporal aspect:** Instantaneous action or state of data
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "entrada", "entrée" - the input/entry |
-| Germanic (de, nl, sv) | Noun | "Eingabe", "invoer" - input/entry |
-| Slavic (ru, pl, uk) | Noun | "ввод", "wejście" - input/entry |
-| Arabic | Masdar (verbal noun) | "إدخال" - inputting/input |
-| Chinese | Noun/verb compound | "输入" - input/enter |
-| Hindi | Noun or transliteration | "इनपुट" (input) or "निवेश" (input/entry) |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "input" or "entry." In most languages, "input" can be both noun and verb; the noun form (the data entering) is typically more natural for a function name.
 
@@ -139,55 +123,6 @@ For non-string data, you must convert explicitly: `int(input("Number: "))` conve
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `entrada`
-- **Form:** Noun (feminine)
-- **Why it works:** Standard Spanish for "input/entry." Natural in "datos de entrada" (input data). Pairs well with `print`/`imprimir` (output). Used in Spanish CS education for I/O operations.
-
-**Arabic:**
-
-- **Translation:** `إدخال` (idkhāl)
-- **Form:** Masdar (verbal noun)
-- **Why it works:** Root د-خ-ل (d-kh-l) means "to enter." Masdar "إدخال" means "inputting/entering" - standard Arabic computing term. Clearly represents data entry concept.
-
-**Chinese:**
-
-- **Translation:** `输入` (shūrù)
-- **Form:** Verb/noun compound
-- **Why it works:** Two characters: 输 (transport/transmit) + 入 (enter). Standard Chinese term for input in computing. Works as both verb "to input" and noun "the input."
-
-**Hindi:**
-
-- **Translation:** `इनपुट` (inpuṭ - transliteration) or `निवेश` (nivēśa)
-- **Form:** Transliterated loanword or native noun
-- **Why it works:** "इनपुट" widely adopted in Indian CS contexts. Alternative: "निवेश" (investment/input) is formal Hindi term. Transliteration may be more recognizable.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "read" when "input" is more specific**
-
-- **Wrong:** `leer` (Spanish - "to read")
-- **Why wrong:** "Read" applies to files, strings, any data. "Input" specifically means data from user/external source. Different concepts - `read()` is a different Python method.
-- **Right:** `entrada` (input specifically)
-
-**Mistake 2: Using "ask" or "question"**
-
-- **Wrong:** `preguntar` (Spanish - "to ask")
-- **Why wrong:** "Ask" is the prompt action. `input()` receives the answer, not asks the question. The prompt parameter does the asking; the function gets the response.
-- **Right:** `entrada` (receiving input, not asking)
-
-**Mistake 3: Using "keyboard" or "type"**
-
-- **Wrong:** `teclado` (Spanish - "keyboard")
-- **Why wrong:** Too specific to one input method. Input can come from stdin redirected from files, pipes, etc., not just keyboard. "Input" is method-agnostic.
-- **Right:** `entrada` (general input concept)
-
----
 
 ## Ambiguity Resolution
 
@@ -229,10 +164,6 @@ In technical contexts, "input" vs. "output" are standard terms. Use the computin
 
 I/O functions (`input`, `print`, `open`, `read`) should use compatible grammatical forms. They're all interactions with external sources. If using verbs, use infinitive consistently.
 
-**Example:**
-
-Spanish: `entrada` (noun), `imprimir` (verb), `abrir` (verb) - mixed but natural ✅
-Alternatively: all infinitive verbs if language prefers verb forms for functions
 
 ### Functional relationships
 
@@ -355,25 +286,24 @@ Only consideration: whether to use native term or English loanword "input" (comm
 
 ```yaml
 term: input
-language: es
-translation: entrada
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "entrada" is the standard noun for input in computing - data entering a system. Forms natural pair with "salida" (output) and contrasts with `imprimir` (print/output function). Universally recognized in Spanish CS education.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `ingresar` (to enter - verb) - Verb form; noun preferred for consistency
-2. `leer` (to read) - Different concept; reading vs. inputting
-3. `input` (English loanword) - Possible but native term preferred
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Input/output are universal I/O concepts with standard translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

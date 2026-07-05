@@ -91,13 +91,6 @@ print(my_plugin())  # Works! Function added to globals
 
 **Pattern rule:** Introspection functions that access scope/namespace should use plural nouns representing the collection of items being accessed.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `locals` | locales | محلية | 局部变量 | लोकल्स |
-| `vars` | variables | متغيرات | 变量 | वेरिएबल्स |
-| `globals` | **globales** | **عمومية** | **全局变量** | **ग्लोबल्स** |
 
 ---
 
@@ -141,16 +134,7 @@ Unlike `locals()`, the dictionary returned by `globals()` is "live" - modifying 
 - **Action vs State:** STATE/COLLECTION - represents the set of global variables
 - **Temporal aspect:** Current state (live/mutable)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Plural adjective as noun | "globales", "globaux" - global ones |
-| Germanic (de, nl, sv) | Plural adjective as noun | "globale", "globalen" - global ones |
-| Slavic (ru, pl, uk) | Plural adjective as noun | "глобальные", "globalne" - global ones |
-| Arabic | Plural adjective | "عمومية" (public/global ones) |
-| Chinese | Compound noun | "全局变量" - global variables |
-| Hindi | Loanword plural | "ग्लोबल्स" - globals |
+### Recommended Form
 
 **Primary recommendation:** Use plural form of "global" as a noun (the global variables). Should parallel translation of `locals` for consistency.
 
@@ -162,55 +146,6 @@ Unlike `locals()`, the dictionary returned by `globals()` is "live" - modifying 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `globales`
-- **Form:** Plural adjective as noun
-- **Why it works:** "Globales" means "global ones" (variables understood from context). Parallel to "locales" for `locals`. Natural and clear.
-
-**Arabic:**
-
-- **Translation:** `عمومية` ('umūmīya) or `كلّية` (kullīya)
-- **Form:** Plural adjective
-- **Why it works:** "عمومية" means "public/general ones" (commonly used for globals). Parallels translation of `locals`. Standard technical term.
-
-**Chinese:**
-
-- **Translation:** `全局变量` (quán jú biàn liàng)
-- **Form:** Compound noun
-- **Why it works:** 全局 (global/whole scope) + 变量 (variables). Clear and explicit. Standard term in Chinese programming, parallels `locals` translation.
-
-**Hindi:**
-
-- **Translation:** `वैश्विक` (vaishvik) or `ग्लोबल्स` (globals)
-- **Form:** Adjective plural or loanword
-- **Why it works:** "वैश्विक" means global/worldwide. "ग्लोबल्स" is common transliteration. Either works, should match `locals` style.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using singular form**
-
-- **Wrong:** `global` (Spanish - singular)
-- **Why wrong:** English uses plural "globals" to indicate collection. Should maintain plural in translation.
-- **Right:** `globales` (plural)
-
-**Mistake 2: Inconsistent with locals**
-
-- **Wrong:** Using "globales" when `locals` translated as "variables_locales"
-- **Why wrong:** `locals` and `globals` are parallel functions; translations must mirror each other's structure.
-- **Right:** Match the pattern used for `locals`
-
-**Mistake 3: Using "globe" or "world"**
-
-- **Wrong:** `mundo` (Spanish - "world")
-- **Why wrong:** "Global" in programming means module-wide scope, not geographical world.
-- **Right:** `globales` (global variables)
-
----
 
 ## Ambiguity Resolution
 
@@ -250,13 +185,6 @@ English "globals" can mean:
 
 `globals` and `locals` are complementary functions. Their translations MUST use parallel structure: if `locals` is plural adjective, `globals` should be too. Same grammatical form. This is CRITICAL.
 
-**Example:**
-
-✅ **Consistent:**
-Spanish: `globales`/`locales` (both plural adjectives)
-
-❌ **Inconsistent:**
-Spanish: `variable_global`/`locales` (different structures)
 
 ### Functional relationships
 
@@ -407,25 +335,24 @@ print("At module level:", globals() == locals())  # True
 
 ```yaml
 term: globals
-language: es
-translation: globales
-form: plural adjective as noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "globales" (plural of "global") naturally represents global variables. Parallels "locales" for `locals()`, maintaining the local/global distinction. Clear and standard in Spanish programming contexts.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `variables_globales` - More explicit but longer; "globales" sufficient
-2. `global` - Singular form; should be plural
-3. `mundial` - Means "worldwide"; wrong context (geographical not scope)
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - "Global" is standard programming term. Main consideration is ensuring parallel structure with `locals` translation, which is critical.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

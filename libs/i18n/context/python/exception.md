@@ -72,14 +72,6 @@ except Exception as e:
 
 **Pattern rule:** Exception class names should be nouns or noun phrases describing the error condition. They follow Python's class naming convention (PascalCase in English, but translated as nouns).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `class` | clase | صنف | 类 | वर्ग |
-| `ValueError` | ErrorDeValor | خطأ_القيمة | 值错误 | मान_त्रुटि |
-| `TypeError` | ErrorDeTipo | خطأ_النوع | 类型错误 | प्रकार_त्रुटि |
-| `Exception` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -125,16 +117,7 @@ Creating custom exceptions is simple: inherit from `Exception` (or a more specif
 - **Action vs State:** STATE/EVENT - describes a category of exceptional conditions
 - **Temporal aspect:** Event-oriented - represents something that happens/occurs
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun (feminine in most) | "Exception" = "Excepción" (cognate) |
-| Germanic (de, nl, sv) | Noun | "Exception" = "Ausnahme" (German for exception) |
-| Slavic (ru, pl, uk) | Noun | Technical computing term |
-| Arabic | Noun (مصدر) | "استثناء" (istithna' - exception) |
-| Chinese | Noun | "异常" (yìcháng - abnormal/exception) |
-| Hindi | Noun (Sanskrit-derived) | "अपवाद" (apawaad - exception) |
+### Recommended Form
 
 **Primary recommendation:** Use the established technical term for "exception" in computing/programming contexts. Most languages have adopted a standard term through CS education.
 
@@ -145,55 +128,6 @@ Creating custom exceptions is simple: inherit from `Exception` (or a more specif
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `Excepción`
-- **Form:** Noun (feminine)
-- **Why it works:** Direct cognate, universally understood in Spanish programming contexts, matches CS education terminology
-
-**Arabic:**
-
-- **Translation:** `استثناء` (istithna')
-- **Form:** Noun (مصدر - verbal noun)
-- **Why it works:** Standard Arabic computing term for exception, widely used in technical documentation
-
-**Chinese:**
-
-- **Translation:** `异常` (yìcháng)
-- **Form:** Noun (compound: 异 = different/abnormal + 常 = normal/regular)
-- **Why it works:** Established Chinese CS term, literally "abnormal condition," universally recognized
-
-**Hindi:**
-
-- **Translation:** `अपवाद` (apawaad)
-- **Form:** Noun (Sanskrit-derived)
-- **Why it works:** Standard Hindi term for exception, used in CS education throughout India
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "Error" Instead**
-
-- **Wrong:** `Error` (keeping English) or `ErrorGeneral`
-- **Why wrong:** While related, "exception" and "error" are distinct concepts in Python (`Exception` vs `Error` suffixed classes)
-- **Right:** `Excepción` (specific translation)
-
-**Mistake 2: Using Descriptive Phrase**
-
-- **Wrong:** `CondiciónExcepcional` (Spanish - exceptional condition)
-- **Why wrong:** Too verbose, doesn't match Python's concise naming convention
-- **Right:** `Excepción`
-
-**Mistake 3: Using "Problem" or Generic Term**
-
-- **Wrong:** `Problema` (Spanish - problem)
-- **Why wrong:** Too generic, loses the specific programming meaning of "exception"
-- **Right:** `Excepción` (technical term)
-
----
 
 ## Ambiguity Resolution
 
@@ -230,6 +164,8 @@ English "exception" can mean:
 - [ ] `raise` keyword - Should linguistically pair with exception (verb that "throws" the noun)
 - [ ] `except` keyword - Should relate to the concept of catching/handling exceptions
 - [ ] `class` keyword - Exceptions are classes, so noun patterns should align
+- [ ] `ExceptionGroup` - 3.11 group carrier; must be the Exception translation plus the same group word used by `BaseExceptionGroup`
+- [ ] `Warning` - Subclasses Exception; its translation must NOT reuse the error word
 
 **Consistency rule:**
 
@@ -347,24 +283,24 @@ The difficulty is MEDIUM because while the base term is usually straightforward 
 
 ```yaml
 term: Exception
-language: {es|ar|zh|hi|your_language}
-translation: {your_translation}
-form: {noun}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Why you chose this translation. Address: Does your language have an established programming term for "exception"? Is there a cognate from Latin? How does this integrate with existing exception class names? Does it work grammatically with raise/except keywords?}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Are you uncertain about the standard CS term? Is there ambiguity with "error" terminology? Does the translation need to serve as a base for compound exception names?}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -94,13 +94,6 @@ print(hash(p))  # Hash based on tuple (1, 2)
 
 **Pattern rule:** Computational/introspection functions should use noun forms naming what they compute or return. "Hash" is both the operation and the result.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `id` | identificador | معرّف | 标识符 | पहचानकर्ता |
-| `len` | longitud | طول | 长度 | लंबाई |
-| `hash` | **dispersión** | **تجزئة** | **哈希** | **हैश** |
 
 ---
 
@@ -144,16 +137,7 @@ Hash contract: if `a == b`, then `hash(a) == hash(b)` must be true. The reverse 
 - **Action vs State:** COMPUTATION - generates fingerprint
 - **Temporal aspect:** Computed value
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun/technical term | "dispersión", "hachage" - hash |
-| Germanic (de, nl, sv) | Noun/loanword | "Hash", "Hashwert" |
-| Slavic (ru, pl, uk) | Noun/loanword | "хеш", "hasz" |
-| Arabic | Verbal noun or loanword | "تجزئة" (fragmentation) or "هاش" |
-| Chinese | Transliteration | "哈希", "散列" |
-| Hindi | Transliteration or compound | "हैश", "सारांश" |
+### Recommended Form
 
 **Primary recommendation:** Use transliteration "hash" or native technical term meaning "dispersion/fragmentation/chopping." Hash is a specialized CS term that many languages transliterate.
 
@@ -165,55 +149,6 @@ Hash contract: if `a == b`, then `hash(a) == hash(b)` must be true. The reverse 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `dispersión` or `hash`
-- **Form:** Noun or transliteration
-- **Why it works:** "Dispersión" means dispersion/scattering - captures hash function concept. Alternatively, transliterate "hash" (pronounced "hash" or "jash"). Both used in Spanish CS contexts. "Dispersión" more descriptive, "hash" more universal.
-
-**Arabic:**
-
-- **Translation:** `تجزئة` (tajzi'a) or `هاش` (hāsh)
-- **Form:** Verbal noun or transliteration
-- **Why it works:** `تجزئة` means "fragmentation/partitioning" - captures hash concept. `هاش` is direct transliteration. Technical CS contexts use both. `تجزئة` more Arabic, `هاش` more internationally recognizable.
-
-**Chinese:**
-
-- **Translation:** `哈希` (hāxī) or `散列` (sànliè)
-- **Form:** Transliteration or native term
-- **Why it works:** `哈希` is phonetic transliteration of "hash" - widely recognized in Chinese CS. `散列` means "scatter/disperse" - descriptive native term. Both standard in Chinese programming contexts. `哈希` more common.
-
-**Hindi:**
-
-- **Translation:** `हैश` (haish) or `सारांश` (sārāṃsh)
-- **Form:** Transliteration or native term
-- **Why it works:** `हैश` is direct transliteration - used in Indian CS education. `सारांश` means "summary/digest" - captures fingerprint concept. Transliteration more standard in technical contexts.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "almohadilla" (#symbol) instead of hash function**
-
-- **Wrong:** `almohadilla` (Spanish - "hash symbol" #, hashtag)
-- **Why wrong:** "Almohadilla" refers to the # symbol (number sign/hashtag), not the hash function in computing. Different concepts. Need computational hash term.
-- **Right:** `dispersión` or `hash` (hash function, computational concept)
-
-**Mistake 2: Using generic "código" (code)**
-
-- **Wrong:** `código` (Spanish - "code")
-- **Why wrong:** "Código" is too generic - could mean source code, error code, etc. Hash is a specific cryptographic/computational fingerprint. Need precise term.
-- **Right:** `dispersión` or `hash` (specific hash function/value)
-
-**Mistake 3: Using "mezcla" (mixture) informally**
-
-- **Wrong:** `mezcla` (Spanish - "mixture/blend")
-- **Why wrong:** While hash functions do "mix" data, "mezcla" is too informal/colloquial. Need technical term. Not standard in CS education.
-- **Right:** `dispersión` (technical term) or `hash` (transliteration)
-
----
 
 ## Ambiguity Resolution
 
@@ -258,14 +193,6 @@ Used in dictionaries, sets, cryptography, data integrity checking.
 
 Hash-related terminology should use the same root translation. If you translate `hash` as "dispersión," then `__hash__` should be `__dispersión__` and hash-related discussions use "dispersión."
 
-**Example:**
-
-Spanish: If using `dispersión` for `hash`, then:
-
-- "función de dispersión" (hash function)
-- "valor de dispersión" (hash value)
-- "tabla de dispersión" (hash table)
-Consistency across all hash-related terms ✅
 
 ### Functional relationships
 
@@ -438,25 +365,24 @@ Only consideration: Distinguish computational hash from other meanings (# symbol
 
 ```yaml
 term: hash
-language: es
-translation: dispersión
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "dispersión" (dispersion/scattering) is a technical term used for hash functions in Spanish CS contexts. It captures the concept of distributing/scattering data into fingerprints. Alternative: direct transliteration "hash" is also widely used and recognized.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `hash` (transliteration) - Widely recognized, international term
-2. `picadillo` (hash as chopped mixture) - Too colloquial/food-related
-3. `almohadilla` (# symbol) - Wrong concept (hashtag, not hash function)
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Hash is a universal CS concept with established translations or transliterations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

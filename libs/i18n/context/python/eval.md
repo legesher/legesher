@@ -93,13 +93,6 @@ print(safe_data)  # Output: {'key': [1, 2, 3]}
 
 **Pattern rule:** Dynamic code execution functions should clearly indicate they execute or evaluate code. These are advanced and potentially dangerous functions.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `exec` | ejecutar | تنفيذ | 执行 | निष्पादन |
-| `compile` | compilar | تجميع | 编译 | संकलन |
-| `eval` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -141,16 +134,7 @@ The function has access to the current scope by default, meaning it can read and
 - **Action vs State:** ACTION - performs evaluation
 - **Temporal aspect:** Instantaneous action (evaluates and returns)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | evaluar, évaluer (to evaluate) |
-| Germanic (de, nl, sv) | Infinitive verb | evaluieren, evalueren |
-| Slavic (ru, pl, uk) | Infinitive verb | вычислить, оценить |
-| Arabic | Verbal noun (masdar) | تقييم (taqyīm - evaluation) |
-| Chinese | Verb | 求值 (qiúzhí - evaluate value) |
-| Hindi | Infinitive verb | मूल्यांकन (mūlyāṅkan - evaluate) |
+### Recommended Form
 
 **Primary recommendation:** Use a verb meaning "to evaluate," "to assess value," or "to compute value." Should convey the act of determining the value of an expression.
 
@@ -162,55 +146,6 @@ The function has access to the current scope by default, meaning it can read and
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `eval` (borrowed) or `evaluar`
-- **Form:** Infinitive verb
-- **Why it works:** "Evaluar" means "to evaluate" in Spanish; "eval" is also widely recognized in programming. Either works depending on language pack philosophy.
-
-**Arabic:**
-
-- **Translation:** `تقييم` (taqyīm - evaluation/assess)
-- **Form:** Verbal noun (masdar)
-- **Why it works:** Technical term for evaluation, appropriate for computing value of expression
-
-**Chinese:**
-
-- **Translation:** `求值` (qiúzhí - evaluate/compute value)
-- **Form:** Verb compound
-- **Why it works:** Standard CS term, literally "seek value" - captures the concept of determining expression value
-
-**Hindi:**
-
-- **Translation:** `मूल्यांकन` (mūlyāṅkan - evaluate) or `गणना` (gaṇanā - compute)
-- **Form:** Verbal noun/infinitive
-- **Why it works:** Formal term for evaluation, appropriate for computing expression values
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "execute" instead of "evaluate"**
-
-- **Wrong:** `ejecutar` (Spanish - execute)
-- **Why wrong:** "Execute" is for `exec()` (statements); "eval" is for expressions (finding values)
-- **Right:** `evaluar` (evaluate - finding value)
-
-**Mistake 2: Too vague or generic**
-
-- **Wrong:** `hacer` (Spanish - "to do/make")
-- **Why wrong:** Too generic, doesn't capture the specific concept of evaluating to find value
-- **Right:** `evaluar` (evaluate specifically)
-
-**Mistake 3: Using noun instead of verb**
-
-- **Wrong:** `evaluación` (Spanish - "evaluation" noun)
-- **Why wrong:** Function names should be verbs (infinitive), not nouns
-- **Right:** `evaluar` (infinitive verb)
-
----
 
 ## Ambiguity Resolution
 
@@ -344,24 +279,24 @@ exec("x = 5")
 
 ```yaml
 term: eval
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {infinitive_verb}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Explain that you chose a verb meaning "evaluate" or "compute value," emphasizing expression evaluation (not statement execution). Mention distinction from `exec` if relevant.}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Need to verify distinction from `exec`, check CS terminology for "evaluate expression"}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

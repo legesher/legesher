@@ -80,13 +80,6 @@ with open('file.txt') as f:
 
 **Pattern rule:** Iterator protocol functions should use terms related to repetition, traversal, or cycling. "Iterate" means to repeat or go through sequentially.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `next` | siguiente | التالي | 下一个 | अगला |
-| `range` | rango | نطاق | 范围 | परिसर |
-| `iter` | **iterar** | **تكرار** | **迭代** | **पुनरावृत्ति** |
 
 ---
 
@@ -130,16 +123,7 @@ The two-argument form `iter(callable, sentinel)` creates an iterator that repeat
 - **Action vs State:** ACTION - creates iterator, initiates iteration
 - **Temporal aspect:** Initiates process of repeated traversal
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "iterar", "itérer" - to iterate |
-| Germanic (de, nl, sv) | Infinitive or noun | "iterieren", "Iterator" |
-| Slavic (ru, pl, uk) | Infinitive verb | "итерировать" - to iterate |
-| Arabic | Verbal noun (masdar) | "تكرار" - iteration/repeating |
-| Chinese | Verb | "迭代" - iterate/repeat |
-| Hindi | Verbal noun | "पुनरावृत्ति" - iteration/repetition |
+### Recommended Form
 
 **Primary recommendation:** Use infinitive verb form meaning "to iterate" or "to repeat." This is an action that initiates iteration.
 
@@ -150,55 +134,6 @@ The two-argument form `iter(callable, sentinel)` creates an iterator that repeat
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `iterar`
-- **Form:** Infinitive verb
-- **Why it works:** Direct Spanish cognate of "iterate." Used in computing and mathematics. Clear, professional, universally understood in Spanish technical contexts.
-
-**Arabic:**
-
-- **Translation:** `تكرار` (takrār)
-- **Form:** Verbal noun (masdar)
-- **Why it works:** Standard Arabic for repetition/iteration. Form II verbal noun from root ك-ر-ر (k-r-r) meaning "to repeat." Used in computing contexts.
-
-**Chinese:**
-
-- **Translation:** `迭代` (dièdài)
-- **Form:** Verb compound
-- **Why it works:** Two characters: 迭 (repeatedly) + 代 (replace/generation). Standard Chinese computing term for iteration. Used in algorithms, loops, iterator discussions.
-
-**Hindi:**
-
-- **Translation:** `पुनरावृत्ति` (punarāvṛtti)
-- **Form:** Verbal noun
-- **Why it works:** Sanskrit compound: "पुनः" (again) + "आवृत्ति" (return/repetition). Formal term for iteration. Standard in Indian CS education.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "loop" instead of "iterate"**
-
-- **Wrong:** `bucle` (Spanish - "loop")
-- **Why wrong:** Loops use iterators, but iteration is more fundamental. `iter()` creates iterator objects; loops are one use of iterators. Different concepts.
-- **Right:** `iterar` (to iterate - more fundamental)
-
-**Mistake 2: Using generic "repeat"**
-
-- **Wrong:** `repetir` (Spanish - "to repeat")
-- **Why wrong:** Too general. "Repeat" doesn't convey the sequential traversal aspect. "Iterate" specifically means traversing through items one by one.
-- **Right:** `iterar` (technical iteration concept)
-
-**Mistake 3: Using "traverse" or "walk through"**
-
-- **Wrong:** `recorrer` (Spanish - "to traverse/go through")
-- **Why wrong:** While related, "iterate" is a specific technical term in computing. Most languages have computing-specific iteration terminology.
-- **Right:** `iterar` (technical term, not general traversal)
-
----
 
 ## Ambiguity Resolution
 
@@ -230,10 +165,6 @@ The term is unambiguous in programming contexts. It specifically refers to the i
 
 Iterator protocol functions (`iter`, `next`, `enumerate`, `zip`) should use compatible terminology. They're all part of Python's iteration framework.
 
-**Example:**
-
-Spanish: `iterar` (iter), `siguiente` (next) - compatible iteration vocabulary ✅
-Chinese: `迭代` (iter), `下一个` (next) - consistent sequential processing concepts ✅
 
 ### Functional relationships
 
@@ -389,25 +320,24 @@ Key consideration: Need technical computing term for iteration protocol, not gen
 
 ```yaml
 term: iter
-language: es
-translation: iterar
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "iterar" is the direct cognate of "iterate," universally used in Spanish computing and mathematics. It clearly conveys the technical concept of traversing sequences element-by-element. Standard in Spanish CS education and programming communities.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `repetir` (to repeat) - Too general, doesn't convey sequential traversal
-2. `recorrer` (to traverse) - Valid but "iterar" more technical/precise
-3. `iter` (keep English abbreviation) - Works but "iterar" is clearer
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Iterate" is a well-established technical term with clear cognates in Romance languages and standard translations in other language families.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

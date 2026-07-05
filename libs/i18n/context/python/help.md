@@ -84,13 +84,6 @@ help('for')  # Shows for loop documentation
 
 **Pattern rule:** Utility/introspection functions can be either nouns (describing what they provide) or verbs (describing what action they perform). "Help" works as both.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `dir` | directorio | دليل | 目录 | निर्देशिका |
-| `print` | imprimir | طباعة | 打印 | प्रिंट |
-| `help` | **ayuda** | **مساعدة** | **帮助** | **सहायता** |
 
 ---
 
@@ -134,16 +127,7 @@ Help displays information from multiple sources: built-in docstrings, automatica
 - **Action vs State:** ACTION - provides assistance/documentation
 - **Temporal aspect:** Instantaneous - retrieves and displays help immediately
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "ayuda", "aide" - assistance/help |
-| Germanic (de, nl, sv) | Noun | "Hilfe", "hulp" - help/assistance |
-| Slavic (ru, pl, uk) | Noun | "помощь", "pomoc" - help |
-| Arabic | Noun (masdar) | "مساعدة" - help/assistance |
-| Chinese | Noun/Verb | "帮助" - help (works as both) |
-| Hindi | Noun | "सहायता" - help/assistance |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "help" or "assistance." While "help" can be verb or noun in English, most languages prefer noun form for function names (represents what the function provides).
 
@@ -155,55 +139,6 @@ Help displays information from multiple sources: built-in docstrings, automatica
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ayuda`
-- **Form:** Noun (feminine)
-- **Why it works:** Standard Spanish word for help/assistance. Used universally in Spanish software interfaces for help systems. Clear, concise, immediately understood. Natural in "obtener ayuda" (get help).
-
-**Arabic:**
-
-- **Translation:** `مساعدة` (musāʿada)
-- **Form:** Masdar/verbal noun (feminine)
-- **Why it works:** Standard Arabic word for help/assistance. Used in all Arabic software interfaces for help menus and documentation access. Clear and universally recognized.
-
-**Chinese:**
-
-- **Translation:** `帮助` (bāngzhù)
-- **Form:** Verb-complement compound (works as noun/verb)
-- **Why it works:** Two characters: 帮 (help/assist) + 助 (aid/assist). Standard Chinese term for help systems in software. Used universally in Chinese computing interfaces.
-
-**Hindi:**
-
-- **Translation:** `सहायता` (sahāytā)
-- **Form:** Noun (feminine)
-- **Why it works:** Sanskrit-derived Hindi word meaning help/assistance. Formal technical term used in Hindi software interfaces. Clear and professional. Aligns with formal Hindi computing vocabulary.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "manual" or "documentation"**
-
-- **Wrong:** `manual` (Spanish)
-- **Why wrong:** "Manual" is too specific (implies a comprehensive manual/book). "Help" is broader—immediate assistance. Software uses "ayuda" for help systems, not "manual."
-- **Right:** `ayuda` (help/assistance)
-
-**Mistake 2: Using imperative verb form**
-
-- **Wrong:** `ayudar` (Spanish infinitive - "to help")
-- **Why wrong:** While grammatically an infinitive, function names should typically be nouns naming what they provide, not infinitive verbs. "Ayuda" (help noun) is standard in Spanish computing.
-- **Right:** `ayuda` (help as noun)
-
-**Mistake 3: Using "support"**
-
-- **Wrong:** `soporte` (Spanish - "support")
-- **Why wrong:** "Support" implies technical support/customer service. "Help" specifically means documentation/assistance system. "Ayuda" is the standard term in Spanish software.
-- **Right:** `ayuda` (help/assistance)
-
----
 
 ## Ambiguity Resolution
 
@@ -246,10 +181,6 @@ Note: Meanings 1 and 2 are closely related (one is verb, one is noun of same con
 
 Utility functions can mix nouns and verbs depending on what they do. `help` is typically noun (what it provides), while `print` might be verb (what it does). Follow natural usage in target language's software interfaces.
 
-**Example:**
-
-Spanish: `ayuda` (noun), `imprimir` (verb), `entrada` (noun), `tipo` (noun) ✅
-This mix is fine—follow what each represents
 
 ### Functional relationships
 
@@ -391,25 +322,24 @@ print(len.__doc__)  # Same info help() displays
 
 ```yaml
 term: help
-language: es
-translation: ayuda
-form: noun (feminine)
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "ayuda" is the universal standard term for help systems across all Spanish software interfaces—from operating systems to applications to websites. It clearly conveys access to documentation and assistance. Every Spanish-speaking computer user recognizes "ayuda" as the help/documentation menu.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `ayudar` (infinitive verb "to help") - Grammatically possible but "ayuda" (noun) is standard in software
-2. `soporte` (support) - Implies technical support team, not documentation system
-3. `manual` (manual) - Too specific; implies comprehensive manual rather than context-sensitive help
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Ayuda" is universally used across all Spanish software interfaces and is immediately recognized by all Spanish-speaking users as the help system.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

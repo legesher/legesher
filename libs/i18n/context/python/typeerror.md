@@ -77,13 +77,6 @@ print("sqrt() needs non-negative number")
 
 **Pattern rule:** Error exceptions should use compound noun form combining the problematic element ("Type") with "Error", following Python's exception naming conventions.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `Exception` | Excepción | استثناء | 异常 | अपवाद |
-| `ValueError` | ErrorDeValor | خطأ_القيمة | 值错误 | मान_त्रुटि |
-| `TypeError` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -127,16 +120,7 @@ Python raises `TypeError` automatically for built-in operations and functions wh
 - **Action vs State:** State/Problem - describes what IS wrong (a type mismatch)
 - **Temporal aspect:** Point-in-time - marks when type incompatibility is detected
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound Noun | "Type" + "Error" in appropriate word order |
-| Germanic (de, nl, sv) | Compound Noun | Natural compounding: "TypFehler" pattern |
-| Slavic (ru, pl, uk) | Compound Noun | "Type" + "error" with appropriate case |
-| Arabic | Compound Noun/Phrase | "Error/mistake of type" pattern |
-| Chinese | Compound Noun | "Type" + "error" (noun-noun pattern) |
-| Hindi | Compound Noun | Sanskrit compound for type + error |
+### Recommended Form
 
 **Primary recommendation:** Compound noun combining "type" concept with "error" concept, following Python's exception naming pattern and maintaining consistency with `ValueError`.
 
@@ -147,55 +131,6 @@ Python raises `TypeError` automatically for built-in operations and functions wh
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ErrorDeTipo` or `ErrorTipo`
-- **Form:** Compound noun
-- **Why it works:** "Error" + "de Tipo" (of type) or direct compound, matches pattern with `ErrorDeValor`, clear technical meaning, widely used in Spanish programming
-
-**Arabic:**
-
-- **Translation:** `خطأ_النوع` (khata' al-naw')
-- **Form:** Noun + noun (construct state)
-- **Why it works:** "خطأ" (error/mistake) + "النوع" (the type), standard Arabic technical term pattern, consistent with `ValueError` structure
-
-**Chinese:**
-
-- **Translation:** `类型错误` (lèixíng cuòwù)
-- **Form:** Noun + noun compound
-- **Why it works:** "类型" (type) + "错误" (error), natural Chinese technical term, established CS terminology, consistent with `ValueError` (值错误)
-
-**Hindi:**
-
-- **Translation:** `प्रकार_त्रुटि` (prakaar trutee)
-- **Form:** Compound noun
-- **Why it works:** "प्रकार" (type/kind) + "त्रुटि" (error), Sanskrit-derived compound, follows technical vocabulary patterns, consistent with other error types
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using only "type" or only "error"**
-
-- **Wrong:** `Tipo` (Spanish - just "type")
-- **Why wrong:** Incomplete, doesn't indicate this is an error exception
-- **Right:** `ErrorDeTipo`
-
-**Mistake 2: Confusing "type" with "typing" or "typographical"**
-
-- **Wrong:** `ErrorDeMecanografía` (Spanish - "typing error" as in keyboard typing)
-- **Why wrong:** Wrong meaning of "type"—should be data type, not keyboard typing
-- **Right:** `ErrorDeTipo` (data type)
-
-**Mistake 3: Over-specifying the error**
-
-- **Wrong:** `ErrorPorTipoIncorrecto` (Spanish - "error due to incorrect type")
-- **Why wrong:** Too verbose, should be concise compound like Python's naming style
-- **Right:** `ErrorDeTipo`
-
----
 
 ## Ambiguity Resolution
 
@@ -246,14 +181,6 @@ English "error" means:
 
 All `*Error` exceptions should follow identical compound structure. If `ValueError` is "Value + Error", then `TypeError` must be "Type + Error" in the same pattern with same connectors and word order.
 
-**Example:**
-
-If error exceptions follow this pattern:
-
-- `TypeError` → `类型错误` (type + error)
-- `ValueError` → `值错误` (value + error)
-- `AttributeError` → `属性错误` (attribute + error)
-- All must use same "错误" (error) component with different prefixes
 
 ### Functional relationships
 
@@ -360,24 +287,24 @@ The difficulty is MEDIUM because while the components are well-known in programm
 
 ```yaml
 term: TypeError
-language: {es|ar|zh|hi|your_language}
-translation: {your_translation}
-form: {compound_noun}
-confidence: {medium|medium-high|high}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Why you chose this translation. Address: How did you translate "type" (data type concept, not typing)? How did you translate "error"? How did you combine them following the `*Error` exception pattern? Is it consistent with `ValueError` and other error types?}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Uncertainty about which word for "type" is most appropriate? Concerns about distinguishing from typing/typesetting? Need verification of consistency with other `*Error` translations?}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

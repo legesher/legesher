@@ -69,13 +69,6 @@ print(repr(p))  # Output: Point(3, 4)
 
 **Pattern rule:** Representation/conversion functions should use noun or verb forms indicating transformation or description. "Representation" describes what you get.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `str` | cadena | سلسلة | 字符串 | स्ट्रिंग |
-| `format` | formato | تنسيق | 格式化 | प्रारूप |
-| `repr` | **representación** | **تمثيل** | **表示** | **प्रतिनिधित्व** |
 
 ---
 
@@ -119,16 +112,7 @@ Every object has a `__repr__()` method. If not explicitly defined, objects inher
 - **Action vs State:** Can be ACTION (create representation) or STATE (the representation)
 - **Temporal aspect:** Instantaneous - creates representation at moment of call
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "representación" - the representation itself |
-| Germanic (de, nl, sv) | Noun | "Darstellung", "representatie" - representation |
-| Slavic (ru, pl, uk) | Noun | "представление" - representation |
-| Arabic | Verbal noun (masdar) | "تمثيل" - representation/representing |
-| Chinese | Noun/verb | "表示" - representation/express |
-| Hindi | Noun | "प्रतिनिधित्व" - representation |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "representation" or "depiction." While `repr` performs an action, the focus is on the representation it produces.
 
@@ -139,55 +123,6 @@ Every object has a `__repr__()` method. If not explicitly defined, objects inher
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `representación` or `repr`
-- **Form:** Noun
-- **Why it works:** "Representación" means representation/depiction in Spanish. Clear and standard term. Could abbreviate to "repr" keeping English abbreviation (common for technical functions).
-
-**Arabic:**
-
-- **Translation:** `تمثيل` (tamthīl)
-- **Form:** Verbal noun (masdar)
-- **Why it works:** Standard Arabic term for representation/depiction. Form II verbal noun from root م-ث-ل (m-th-l) meaning "to represent/resemble." Used in technical contexts.
-
-**Chinese:**
-
-- **Translation:** `表示` (biǎoshì)
-- **Form:** Verb/noun compound
-- **Why it works:** Two characters: 表 (exterior/express) + 示 (show). Means "to express/represent" or "representation." Standard Chinese computing term. Concise and clear.
-
-**Hindi:**
-
-- **Translation:** `प्रतिनिधित्व` (pratinidhitva) or `प्रदर्शन` (pradarshan)
-- **Form:** Noun
-- **Why it works:** "प्रतिनिधित्व" means representation. From Sanskrit. Formal and precise. Alternative "प्रदर्शन" means display/presentation, also valid but slightly different nuance.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "string" or "text" only**
-
-- **Wrong:** `cadena` (Spanish - "string/chain")
-- **Why wrong:** Too generic. Doesn't capture that this is a special programmer-oriented representation, not just any string conversion.
-- **Right:** `representación` (captures the representation concept)
-
-**Mistake 2: Using "print" or "display"**
-
-- **Wrong:** `imprimir` (Spanish - "to print")
-- **Why wrong:** `repr()` doesn't print anything - it returns a string. Focus is on creating representation, not outputting it.
-- **Right:** `representación` (the representation itself)
-
-**Mistake 3: Confusing with str**
-
-- **Wrong:** Using exact same translation as `str()`
-- **Why wrong:** `repr()` and `str()` are different - repr for programmers (debugging), str for users (display). Should have distinct translations that hint at this difference.
-- **Right:** `representación` (repr), `cadena` or `texto` (str) - maintain distinction
-
----
 
 ## Ambiguity Resolution
 
@@ -229,10 +164,6 @@ In computing, "representation" usually means how data is encoded/shown, not poli
 
 String conversion functions (`repr`, `str`, `ascii`, `format`) should use forms that indicate transformation or description. They all produce string output but for different purposes.
 
-**Example:**
-
-Spanish: `representación`, `cadena`, `ascii`, `formato` - all nouns, clearly related ✅
-NOT: `representar` (verb) + `cadena` (noun) + `formatear` (verb) ❌ (inconsistent)
 
 ### Functional relationships
 
@@ -362,25 +293,24 @@ Key consideration: Translation should suggest programmer-oriented representation
 
 ```yaml
 term: repr
-language: es
-translation: representación
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "representación" captures the concept of representing an object in string form. It's distinct from "cadena" (str) and clearly indicates this is a representation/depiction. Standard term in Spanish technical writing.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `repr` (keep abbreviation) - Valid, commonly done for technical functions
-2. `representar` (verb infinitive) - Valid but noun form better captures output
-3. `cadena` (string) - Too generic, doesn't distinguish from str()
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Representation" is a standard computing term with clear translations. The distinction from general "string" is important to maintain.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

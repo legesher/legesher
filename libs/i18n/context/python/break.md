@@ -94,13 +94,6 @@ print("After loop")  # Always executes
 
 **Pattern rule:** Loop control keywords should use verb forms expressing interruption or termination. "Break" means to stop or interrupt the loop.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `continue` | continuar | استمر | 继续 | जारी |
-| `return` | retornar | ارجع | 返回 | वापसी |
-| `break` | **romper** | **كسر** | **打破** | **तोड़ो** |
 
 ---
 
@@ -146,16 +139,7 @@ Important: `break` only affects the innermost loop. In nested loops, outer loops
 - **Action vs State:** ACTION - command to terminate loop
 - **Temporal aspect:** Instantaneous - immediate effect
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb (imperative/infinitive) | "romper", "casser", "quebrar" - to break |
-| Germanic (de, nl, sv) | Verb (infinitive) | "brechen", "breken" - to break |
-| Slavic (ru, pl, uk) | Verb (imperative) | "прервать", "przerwać" - to break/interrupt |
-| Arabic | Verb (imperative) | "كسر" - kasr (break) or "اخرج" - ukhruj (exit) |
-| Chinese | Verb compound | "打破" - dǎpò (break/smash) or "中断" - zhōngduàn (interrupt) |
-| Hindi | Verb (imperative) | "तोड़ो" - toṛo (break) |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to break" or "to interrupt" (imperative or infinitive depending on language conventions for commands). This should convey stopping or exiting forcefully.
 
@@ -167,55 +151,6 @@ Important: `break` only affects the innermost loop. In nested loops, outer loops
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `romper`
-- **Form:** Verb (infinitive)
-- **Why it works:** "Romper" means "to break" in Spanish. Matches metaphor of breaking out of loop. Standard in Spanish programming. Can also consider "interrumpir" (interrupt) but "romper" more direct.
-
-**Arabic:**
-
-- **Translation:** `كسر` (kasr) or `اخرج` (ukhruj)
-- **Form:** Verb (imperative)
-- **Why it works:** `كسر` means "break/shatter." `اخرج` means "exit/get out." Either captures the concept. `كسر` maintains break metaphor; `اخرج` more explicit about exiting.
-
-**Chinese:**
-
-- **Translation:** `中断` (zhōngduàn) or `打破` (dǎpò)
-- **Form:** Verb compound
-- **Why it works:** `中断` means "interrupt/discontinue" - clear for loop termination. `打破` means "break/smash" - maintains break metaphor. Either acceptable; `中断` more technical/precise.
-
-**Hindi:**
-
-- **Translation:** `तोड़ो` (toṛo)
-- **Form:** Verb (imperative)
-- **Why it works:** "Toṛo" means "break" (imperative). Direct translation of break metaphor. Natural command form in Hindi. Used in Hindi programming contexts.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using noun "breakage" instead of verb**
-
-- **Wrong:** `ruptura` (Spanish - "breakage/rupture" - noun)
-- **Why wrong:** Keywords are commands (verbs), not nouns. Need action word, not thing. "Break" is verb (imperative).
-- **Right:** `romper` (verb - to break)
-
-**Mistake 2: Using general "stop" when "break" more specific**
-
-- **Wrong:** `parar` (Spanish - "to stop")
-- **Why wrong:** While conceptually similar, "break" is programming term with specific meaning (exit loop). "Stop" more general. Maintain "break" metaphor for consistency across languages.
-- **Right:** `romper` (maintains break metaphor)
-
-**Mistake 3: Confusing with "return" (function exit)**
-
-- **Wrong:** `salir` (Spanish - "to exit/leave" - might confuse with return)
-- **Why wrong:** "Break" exits loop; "return" exits function. Different concepts. Using same word for both causes confusion. Need distinct terms.
-- **Right:** `romper` (loop exit, distinct from function exit)
-
----
 
 ## Ambiguity Resolution
 
@@ -260,9 +195,6 @@ Use the word for breaking out of or interrupting a pattern, not physical breakin
 
 Loop control keywords (`break`, `continue`) should use action verbs. They should be distinct from each other and from `return` (function exit). All three are commands but affect different scopes.
 
-**Example:**
-
-Spanish: `romper` (break loop), `continuar` (continue loop), `retornar` (return from function) - all distinct ✅
 
 ### Functional relationships
 
@@ -410,25 +342,24 @@ for item in items:
 
 ```yaml
 term: break
-language: es
-translation: romper
-form: verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "romper" means "to break," capturing the metaphor of breaking out of a loop. Standard verb form used as command. Distinct from "continuar" (continue) and "retornar" (return).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `interrumpir` (interrupt) - Valid but "romper" more direct
-2. `salir` (exit) - Might confuse with return; "romper" more specific
-3. `parar` (stop) - Too general; "romper" maintains break metaphor
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Break/interrupt verbs are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -82,13 +82,6 @@ print(callable(obj))  # False - instance not callable (no __call__)
 
 **Pattern rule:** Predicate functions (return boolean) should use adjective or question forms. "Callable" is an adjective describing whether something can be called. Past participles and -able/-ible forms work well for predicates.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `isinstance` | es_instancia | نموذج_من | 属于类 | उदाहरण_है |
-| `hasattr` | tiene_atributo | له_صفة | 有属性 | गुण_है |
-| `callable` | **invocable** | **قابل_للاستدعاء** | **可调用** | **आह्वान_योग्य** |
 
 ---
 
@@ -132,16 +125,7 @@ This is useful for callbacks, validation, and duck typing. Before calling an obj
 - **Action vs State:** STATE/CAPABILITY - describes whether object can be called
 - **Temporal aspect:** Permanent property - doesn't change during runtime
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | -able adjective | "invocable", "appelable" - capable of being called |
-| Germanic (de, nl, sv) | -bar adjective | "aufrufbar" - callable/invokable |
-| Slavic (ru, pl, uk) | Adjective/participle | "вызываемый" - callable |
-| Arabic | Adjective phrase | "قابل للاستدعاء" - callable/invokable |
-| Chinese | Adjective compound | "可调用" - can-call (capability) |
-| Hindi | -योग्य adjective | "आह्वान योग्य" - worthy of calling |
+### Recommended Form
 
 **Primary recommendation:** Use adjective form with -able/-ible suffix or equivalent meaning "capable of being called/invoked." This describes a capability, not an action. Adjective form appropriate for predicate that tests capability.
 
@@ -153,55 +137,6 @@ This is useful for callbacks, validation, and duck typing. Before calling an obj
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `invocable` or `llamable`
-- **Form:** -able adjective
-- **Why it works:** "Invocable" from "invocar" (to invoke) + -able suffix. "Llamable" from "llamar" (to call) + -able. Both follow Spanish adjective pattern for capability. "Invocable" more technical, "llamable" more direct.
-
-**Arabic:**
-
-- **Translation:** `قابل_للاستدعاء` (qābil lil-istidʿāʾ) or `استدعائي` (istidʿāʾī)
-- **Form:** Adjective phrase
-- **Why it works:** "قابل للاستدعاء" = capable of being called (full phrase). "استدعائي" = callable (adjective form). First more explicit, second more concise. Both standard Arabic patterns for capability.
-
-**Chinese:**
-
-- **Translation:** `可调用` (kě tiáoyòng)
-- **Form:** Adjective compound
-- **Why it works:** Three characters: 可 (can/able) + 调用 (call/invoke). Standard Chinese pattern for capability adjectives. Clear meaning: "able to be called." Common in Chinese programming terminology.
-
-**Hindi:**
-
-- **Translation:** `आह्वान_योग्य` (āhvān yogya) or `कॉल_करने_योग्य` (kāl karne yogya)
-- **Form:** -योग्य adjective
-- **Why it works:** "आह्वान योग्य" = worthy of calling (Sanskrit-derived). "योग्य" suffix expresses capability. Alternative uses transliterated "कॉल" (call). First more linguistic, second more internationally recognizable.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb "to call" instead of adjective "callable"**
-
-- **Wrong:** `llamar` (Spanish - "to call")
-- **Why wrong:** Verb describes action of calling. `callable()` doesn't call anything - it tests whether object CAN be called. Need adjective describing capability.
-- **Right:** `invocable` or `llamable` (capable of being called)
-
-**Mistake 2: Using noun "call" or "function"**
-
-- **Wrong:** `llamada` (Spanish - "call" as noun)
-- **Why wrong:** Noun is wrong part of speech. Predicate functions should be adjectives (describing state/property). "Call" is the action, "callable" is the capability.
-- **Right:** `invocable` (adjective describing capability)
-
-**Mistake 3: Using "is_function" instead of "callable"**
-
-- **Wrong:** `es_función` (Spanish - "is function")
-- **Why wrong:** Too narrow. Callable includes functions, classes, methods, AND objects with `__call__`. "Is function" excludes these other callables.
-- **Right:** `invocable` (covers all callable types)
-
----
 
 ## Ambiguity Resolution
 
@@ -377,25 +312,24 @@ Minor consideration: Ensure translation uses adjective form appropriate for pred
 
 ```yaml
 term: callable
-language: es
-translation: invocable
-form: adjective
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "invocable" uses the standard -able suffix pattern for capability adjectives, meaning "capable of being invoked/called." It clearly captures the concept of objects that can be executed like functions. Consistent with Spanish technical terminology and natural for native speakers.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `llamable` (callable) - Also valid, from "llamar" (to call), but "invocable" more technical
-2. `ejecutable` (executable) - Too broad; "invocable" more specific to calling
-3. `llamar` (to call) - Wrong form; need adjective not verb
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Callable is a straightforward concept with clear adjective formation in most languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

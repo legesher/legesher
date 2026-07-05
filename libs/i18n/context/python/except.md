@@ -98,14 +98,6 @@ except Exception:   # More general last
 
 **Pattern rule:** Exception catching keywords should express exclusion or interception. "Except" means "excluding/catching this case." Handles specific error conditions.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `try` | intentar | حاول | 尝试 | प्रयास |
-| `raise` | elevar | ارفع | 引发 | उठाओ |
-| `as` | como | كـ | 作为 | के_रूप_में |
-| `except` | **excepto** | **إلا** | **除了** | **सिवाय** |
 
 ---
 
@@ -151,16 +143,7 @@ Exception matching: Python checks if raised exception is instance of (or subclas
 - **Action vs State:** CONDITIONAL HANDLING - catches specific cases
 - **Temporal aspect:** Reactive - responds to exceptions
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Preposition | "excepto", "sauf", "exceto" - except/excluding |
-| Germanic (de, nl, sv) | Preposition | "außer", "behalve" - except |
-| Slavic (ru, pl, uk) | Preposition | "кроме", "oprócz" - except |
-| Arabic | Preposition (exceptive) | "إلا" - illā (except) |
-| Chinese | Preposition phrase | "除了" - chúle (except/besides) |
-| Hindi | Postposition | "सिवाय" - sivāy (except) or "के अलावा" - ke alāvā |
+### Recommended Form
 
 **Primary recommendation:** Use the target language's word for "except" or "excluding" - expressing exception from a general rule. Should convey "in this exceptional case, do this."
 
@@ -172,55 +155,6 @@ Exception matching: Python checks if raised exception is instance of (or subclas
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `excepto`
-- **Form:** Preposition
-- **Why it works:** "Excepto" means "except/excluding" in Spanish. Natural for expressing exception handling. Standard preposition. Parallels English except. Used in Spanish programming.
-
-**Arabic:**
-
-- **Translation:** `إلا` (illā)
-- **Form:** Exceptive particle
-- **Why it works:** "Illā" is standard Arabic exceptive particle meaning "except." Universal in Arabic grammar. Natural for expressing exceptions. "illā ValueError" reads as "except ValueError." Standard in Arabic programming.
-
-**Chinese:**
-
-- **Translation:** `除了` (chúle)
-- **Form:** Preposition phrase
-- **Why it works:** "Chúle" means "except/besides." Two characters. Standard Chinese preposition for exclusion. Natural for exception handling. "除了 ValueError" clear meaning.
-
-**Hindi:**
-
-- **Translation:** `सिवाय` (sivāy) or `के_अलावा` (ke alāvā)
-- **Form:** Postposition
-- **Why it works:** "Sivāy" means "except/excluding." Standard Hindi exceptive. Shorter. "Ke alāvā" also means "except/besides" but longer. Either acceptable. "ValueError सिवाय" follows Hindi grammar (postposition after object).
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "catch" (borrowed from Java/C++)**
-
-- **Wrong:** `capturar` (Spanish - "to catch")
-- **Why wrong:** Java/C++ use "catch," Python uses "except." Different languages, different keywords. Maintain Python's terminology. "Catch" is verb; "except" is preposition.
-- **Right:** `excepto` (except - Python's term)
-
-**Mistake 2: Using "when error" phrase**
-
-- **Wrong:** `cuando_error` (Spanish - "when error")
-- **Why wrong:** Too verbose. Should be single keyword like English "except." Python's error handling uses concise keywords. "When error" is phrase, not keyword.
-- **Right:** `excepto` (single keyword)
-
-**Mistake 3: Using "if" (wrong concept)**
-
-- **Wrong:** `si` (Spanish - "if")
-- **Why wrong:** "If" is for regular conditionals. "Except" is specifically for exception handling (errors). Different control structures. Need exception-specific keyword.
-- **Right:** `excepto` (exception-specific)
-
----
 
 ## Ambiguity Resolution
 
@@ -259,15 +193,12 @@ Use the word for "except/excluding" - expressing exception from normal flow, spe
 - [ ] `as` - Binds exception to variable
 - [ ] `finally` - Cleanup after try-except
 - [ ] `else` - Success path (no exception)
+- [ ] `except*` - 3.11 exception-groups form; rendered as this translation plus untranslated `*`, byte-identical base
 
 **Consistency rule:**
 
 `try`-`except` form the core error handling pair. Must work together grammatically. `except ExceptionType as var:` should read naturally in target language.
 
-**Example:**
-
-Spanish: `intentar` (try) and `excepto` (except) pair naturally ✅
-"intentar...excepto ValueError" clear parallel
 
 ### Functional relationships
 
@@ -447,25 +378,24 @@ except Exception:  # Catches errors, not system exits
 
 ```yaml
 term: except
-language: es
-translation: excepto
-form: preposition
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "excepto" means "except/excluding," naturally expressing exception handling. Standard preposition. Works in try-except error handling structures with "intentar" (try). Parallels Python's English terminology.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `capturar` (catch - verb) - Java/C++ term, not Python's; wrong part of speech
-2. `cuando_error` (when error) - Too verbose; need single keyword
-3. `salvo` (except/save) - Valid alternative but "excepto" more standard
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Except/excluding words are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

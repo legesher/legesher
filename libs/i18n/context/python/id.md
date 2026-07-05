@@ -78,13 +78,6 @@ print(id(s1) == id(s2))  # Often True (string interning)
 
 **Pattern rule:** Introspection functions should use nouns that represent properties or identifiers you're querying about objects.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `type` | tipo | نوع | 类型 | प्रकार |
-| `hash` | hash | تجزئة | 哈希 | हैश |
-| `id` | **identificador** or **identidad** | **معرف** or **هوية** | **标识** | **पहचान** |
 
 ---
 
@@ -128,16 +121,7 @@ The identity never changes once an object is created. When an object is destroye
 - **Action vs State:** STATE/PROPERTY - an intrinsic attribute of objects
 - **Temporal aspect:** Permanent (for object's lifetime)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun or abbreviation | "identidad", "identificador", "id" |
-| Germanic (de, nl, sv) | Noun | "Identität", "Kennung" |
-| Slavic (ru, pl, uk) | Noun | "идентификатор", "identyfikator" |
-| Arabic | Noun | "معرّف" (identifier) or "هوية" (identity) |
-| Chinese | Noun compound | "标识" (identifier) |
-| Hindi | Noun | "पहचान" (identity) |
+### Recommended Form
 
 **Primary recommendation:** Use noun meaning "identifier" or "identity." This is a property that uniquely identifies objects. Many languages might keep the abbreviation "id" as it's universal in computing.
 
@@ -148,55 +132,6 @@ The identity never changes once an object is created. When an object is destroye
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `id` or `identificador`
-- **Form:** Abbreviation or noun
-- **Why it works:** "ID" is universally understood in Spanish computing. Full form "identificador" clearly means identifier. Both work, abbreviation preferred for brevity.
-
-**Arabic:**
-
-- **Translation:** `معرّف` (mu'arrif)
-- **Form:** Noun (active participle)
-- **Why it works:** Standard Arabic term for identifier in computing. Clear meaning, concise, technically accurate.
-
-**Chinese:**
-
-- **Translation:** `标识` (biāo zhì)
-- **Form:** Noun compound
-- **Why it works:** 标 (mark/sign) + 识 (recognize/know). Standard Chinese term for identifier. Used in computing and database contexts.
-
-**Hindi:**
-
-- **Translation:** `पहचान` (pahchān)
-- **Form:** Noun
-- **Why it works:** Common Hindi word for identity/identification. Natural, clear, non-technical speakers would understand. Used in computing contexts.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb form**
-
-- **Wrong:** `identificar` (Spanish - "to identify" verb)
-- **Why wrong:** `id` is the identifier noun, not the action of identifying. Function returns a value (identifier), not performing action.
-- **Right:** `id` or `identificador` (the identifier itself)
-
-**Mistake 2: Using "address" or "number"**
-
-- **Wrong:** `dirección` (Spanish - "address")
-- **Why wrong:** Too implementation-specific. While CPython uses memory addresses, `id` abstractly means unique identifier, not necessarily memory address.
-- **Right:** `identificador` (general identifier concept)
-
-**Mistake 3: Using "name"**
-
-- **Wrong:** `nombre` (Spanish - "name")
-- **Why wrong:** Names are human-readable labels; `id` is a system-generated number for uniqueness. Semantically different.
-- **Right:** `identificador` (system identifier)
-
----
 
 ## Ambiguity Resolution
 
@@ -236,10 +171,6 @@ English "id" can mean:
 
 Introspection functions that query object properties (`id`, `type`, `hash`) should use noun forms representing the property being queried. They're all "what is this object's X?" functions.
 
-**Example:**
-
-Spanish: `id` → `identificador`, `type` → `tipo`, `hash` → `hash` (all nouns) ✅
-NOT: `id` → `identificar` (verb) + `type` → `tipo` (noun) ❌
 
 ### Functional relationships
 
@@ -360,25 +291,24 @@ cache[id(obj)] = obj  # Use ID as key to track objects
 
 ```yaml
 term: id
-language: es
-translation: id
-form: abbreviation (noun)
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-"ID" is universally recognized in Spanish computing contexts as abbreviation for "identificador." Keeping "id" maintains international consistency and brevity. Full form "identificador" also valid but longer; abbreviation preferred following Python's conciseness principle.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `identificador` - Full Spanish word, clear but longer
-2. `identidad` - More abstract "identity"; "identificador" more concrete
-3. `clave` - Means "key"; doesn't capture uniqueness aspect
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - "ID" is standard computing abbreviation worldwide. Minor consideration: whether to use abbreviation or full word. Abbreviation recommended for consistency with international usage.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

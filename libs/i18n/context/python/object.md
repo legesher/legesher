@@ -88,13 +88,6 @@ def func(value=MISSING):
 
 **Pattern rule:** Class/type-related terms should use noun forms representing the concept or entity being created/referenced.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `class` | clase | صف | 类 | वर्ग |
-| `type` | tipo | نوع | 类型 | प्रकार |
-| `object` | **objeto** | **كائن** | **对象** | **ऑब्जेक्ट** |
 
 ---
 
@@ -138,16 +131,7 @@ You can instantiate `object()` directly, but these instances are minimal - they 
 - **Action vs State:** STATE/ENTITY - represents a thing
 - **Temporal aspect:** Permanent (conceptual entity)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "objeto", "objet" - object/thing |
-| Germanic (de, nl, sv) | Noun | "Objekt", "object" - object |
-| Slavic (ru, pl, uk) | Noun | "объект", "obiekt" - object |
-| Arabic | Noun | "كائن" (entity/being) or "شيء" (thing) |
-| Chinese | Noun | "对象" - object/target |
-| Hindi | Loanword/noun | "ऑब्जेक्ट" or "वस्तु" (thing) |
+### Recommended Form
 
 **Primary recommendation:** Use noun meaning "object" or "thing." This is a fundamental OOP concept with established translations in most languages' technical vocabulary.
 
@@ -159,55 +143,6 @@ You can instantiate `object()` directly, but these instances are minimal - they 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `objeto`
-- **Form:** Noun
-- **Why it works:** Standard Spanish word for object/thing. Universally used in Spanish OOP terminology. Natural and clear.
-
-**Arabic:**
-
-- **Translation:** `كائن` (kā'in)
-- **Form:** Noun
-- **Why it works:** Means entity/being/object. Standard Arabic term used in OOP contexts. Technical and clear.
-
-**Chinese:**
-
-- **Translation:** `对象` (duì xiàng)
-- **Form:** Noun compound
-- **Why it works:** Standard Chinese term for object in OOP. 对 (toward) + 象 (image/target). Universally recognized in Chinese programming education.
-
-**Hindi:**
-
-- **Translation:** `ऑब्जेक्ट` (ŏbjekṭ) or `वस्तु` (vastu)
-- **Form:** Loanword or native noun
-- **Why it works:** "ऑब्जेक्ट" is widely used transliteration in Indian CS education. "वस्तु" (thing) is pure Hindi but less common in technical contexts.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "objective" (adjective)**
-
-- **Wrong:** `objetivo` (Spanish - "objective" meaning goal/unbiased)
-- **Why wrong:** "Objective" is different word - means goal or unbiased. Need noun "object" not adjective "objective."
-- **Right:** `objeto` (the thing/object)
-
-**Mistake 2: Using "subject"**
-
-- **Wrong:** `sujeto` (Spanish - "subject")
-- **Why wrong:** In grammar and philosophy, "subject" is opposite of "object." In programming, we need "object" specifically.
-- **Right:** `objeto` (object not subject)
-
-**Mistake 3: Using overly technical term**
-
-- **Wrong:** Using rare academic philosophical term
-- **Why wrong:** Should use standard OOP terminology from computing, not philosophy.
-- **Right:** Standard term from CS education
-
----
 
 ## Ambiguity Resolution
 
@@ -247,10 +182,6 @@ English "object" can mean:
 
 OOP terminology (`object`, `class`, `type`, `instance`) should use noun forms representing entities in the OOP model. All should feel like parts of the same conceptual framework.
 
-**Example:**
-
-Spanish: `objeto`, `clase`, `tipo`, `instancia` - all nouns ✅
-NOT: `objetar` (verb), `clase` (noun), `típico` (adjective) ❌
 
 ### Functional relationships
 
@@ -388,25 +319,24 @@ print(dir(obj))  # Show all inherited methods
 
 ```yaml
 term: object
-language: es
-translation: objeto
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "objeto" is the standard noun for object in OOP contexts. Universally used in Spanish programming education and technical documentation. Clear distinction from "objetivo" (goal/objective).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `objetivo` - Means goal/objective; wrong concept
-2. `cosa` - Means thing; too informal and general
-3. `entidad` - Means entity; less standard than "objeto" for OOP
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - "Object" is fundamental OOP term with clear translations. Main consideration is avoiding confusion with "objective" (goal), which is different word in most languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

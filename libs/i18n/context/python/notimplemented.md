@@ -72,14 +72,6 @@ print(x is NotImplemented)  # Output: True
 
 **Pattern rule:** All singleton constants should use noun or past participle form in target language. They represent fixed sentinel values, not actions.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `None` | Ninguno | لا شيء | 空 | कुछ नहीं |
-| `Ellipsis` | Elipsis | علامة_الحذف | 省略号 | लोप_चिह्न |
-| `True` | Verdadero | صحيح | 真 | सत्य |
-| `NotImplemented` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -125,16 +117,7 @@ The key distinction: `NotImplemented` is a return value (for operator methods), 
 - **Action vs State:** STATE - describes that something "is not implemented"
 - **Temporal aspect:** Permanent state - the operation is fundamentally not supported
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Negation + past participle | "Not implemented" = "No implementado" |
-| Germanic (de, nl, sv) | Negation + past participle | "Not implemented" = "Nicht implementiert" |
-| Slavic (ru, pl, uk) | Negation + past participle | "Not implemented" = "Не реализовано" |
-| Arabic | Negation + past participle or noun | Technical computing term |
-| Chinese | Negation + noun/verb phrase | "未实现" (not realized/implemented) |
-| Hindi | Negation + past participle | Sanskrit-derived technical term |
+### Recommended Form
 
 **Primary recommendation:** Use negated past participle form to match the English "NotImplemented" structure. This conveys "the state of not being implemented" rather than an action.
 
@@ -145,55 +128,6 @@ The key distinction: `NotImplemented` is a return value (for operator methods), 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `NoImplementado`
-- **Form:** Negation + past participle (masculine)
-- **Why it works:** Direct translation of structure, matches pattern of `NotImplemented` as state description
-
-**Arabic:**
-
-- **Translation:** `غير_منفذ` (ghayr munaffadh - not implemented/executed)
-- **Form:** Negation + passive participle
-- **Why it works:** Technical computing term structure, clear state description
-
-**Chinese:**
-
-- **Translation:** `未实现` (wèi shíxiàn)
-- **Form:** Negation + verb (not yet realized)
-- **Why it works:** Standard Chinese computing terminology for "not implemented"
-
-**Hindi:**
-
-- **Translation:** `लागू_नहीं` (laagoo nahīn - not implemented/applied)
-- **Form:** Past participle + negation
-- **Why it works:** Technical term commonly used in Hindi CS education
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "Error" or "Exception"**
-
-- **Wrong:** `NoImplementadoError` (Spanish - NotImplementedError)
-- **Why wrong:** Confuses `NotImplemented` (singleton value) with `NotImplementedError` (exception class)
-- **Right:** `NoImplementado`
-
-**Mistake 2: Using Verb/Infinitive Form**
-
-- **Wrong:** `NoImplementar` (Spanish - "to not implement")
-- **Why wrong:** This is a state description, not an action/command
-- **Right:** `NoImplementado` (past participle - "not implemented")
-
-**Mistake 3: Adding "Operator" or "Method"**
-
-- **Wrong:** `OperaciónNoImplementada` (Spanish - operation not implemented)
-- **Why wrong:** Too verbose, adds unnecessary context
-- **Right:** `NoImplementado` (concise, matches Python's convention)
-
----
 
 ## Ambiguity Resolution
 
@@ -234,13 +168,6 @@ YES
 
 All singleton constants should use first-letter capitalization (following Python's convention) and noun/adjective form. However, `NotImplemented` is compound (negation + participle) while others are simple nouns/adjectives.
 
-**Example:**
-
-If you translate `None` as capitalized noun:
-
-- `None` → `Ninguno` (Spanish - capitalized)
-- `NotImplemented` → `NoImplementado` (Spanish - capitalized compound)
-- NOT: `None` → `Ninguno` + `NotImplemented` → `no_implementado` ← Inconsistent capitalization ❌
 
 ### Functional relationships
 
@@ -335,24 +262,24 @@ The difficulty is MEDIUM because:
 
 ```yaml
 term: NotImplemented
-language: {es|ar|zh|hi|your_language}
-translation: {your_translation}
-form: {negation_plus_past_participle|compound_adjective}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Why you chose this translation. Address: How does your language express "not implemented" as a state? Did you use past participle + negation? Does it clearly differ from the exception class `NotImplementedError`? How does this align with technical terminology in your language?}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Are you uncertain about past participle form? Is there ambiguity between state and command? Does compound negation work naturally in your language?}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

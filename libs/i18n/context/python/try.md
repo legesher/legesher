@@ -99,14 +99,6 @@ except:
 
 **Pattern rule:** Exception handling keywords should express attempting or testing. "Try" means "attempt this, be prepared for failure." Creates protected execution context.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `except` | excepto | إلا | 除了 | सिवाय |
-| `finally` | finalmente | أخيرا | 最后 | अंततः |
-| `raise` | elevar | ارفع | 引发 | उठाओ |
-| `try` | **intentar** | **حاول** | **尝试** | **प्रयास** |
 
 ---
 
@@ -157,16 +149,7 @@ Exception handling structure:
 - **Action vs State:** ACTION - command to attempt execution
 - **Temporal aspect:** Initiation - begins protected execution
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb (imperative/infinitive) | "intentar", "essayer", "tentar" - to try/attempt |
-| Germanic (de, nl, sv) | Verb (infinitive) | "versuchen", "proberen" - to try/attempt |
-| Slavic (ru, pl, uk) | Verb (imperative) | "попробовать", "spróbować" - to try/attempt |
-| Arabic | Verb (imperative) | "حاول" - ḥāwil (try/attempt) |
-| Chinese | Verb | "尝试" - chángshì (try/attempt) |
-| Hindi | Verb/noun | "प्रयास" - prayās (try/attempt) or "कोशिश" - koshish (try) |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to try" or "to attempt" (imperative or infinitive). Should convey making an effort that might fail. Express testing or attempting with possibility of error.
 
@@ -178,55 +161,6 @@ Exception handling structure:
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `intentar`
-- **Form:** Verb (infinitive)
-- **Why it works:** "Intentar" means "to try/attempt" in Spanish. Natural for expressing attempting risky code. Standard verb form. Clear meaning of making effort that might fail.
-
-**Arabic:**
-
-- **Translation:** `حاول` (ḥāwil)
-- **Form:** Verb (imperative)
-- **Why it works:** "Ḥāwil" means "try/attempt" (imperative command). Natural command to attempt execution. Standard Arabic verb. Used in Arabic programming contexts.
-
-**Chinese:**
-
-- **Translation:** `尝试` (chángshì)
-- **Form:** Verb
-- **Why it works:** "Chángshì" means "try/attempt." Two characters. Standard Chinese term for attempting. Clear meaning. Universal in Chinese programming.
-
-**Hindi:**
-
-- **Translation:** `प्रयास` (prayās) or `कोशिश` (koshish)
-- **Form:** Noun/verb
-- **Why it works:** "Prayās" means "attempt/try" (more formal). "Koshish" means "try/effort" (more colloquial). Either acceptable. Both convey attempting with possibility of failure. Used in Hindi programming.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "test" instead of "try"**
-
-- **Wrong:** `probar` (Spanish - "to test/prove")
-- **Why wrong:** "Test" emphasizes checking/verifying. "Try" emphasizes attempting with possible failure. Different nuance. "Try" is standard programming term. Use "try" not "test."
-- **Right:** `intentar` (to try/attempt)
-
-**Mistake 2: Using noun "attempt"**
-
-- **Wrong:** `intento` (Spanish - "attempt" - noun)
-- **Why wrong:** Need verb form for keyword, not noun. "Try" is verb (command). Can't replace with noun. Wrong part of speech.
-- **Right:** `intentar` (verb - to try)
-
-**Mistake 3: Using "check" (too passive)**
-
-- **Wrong:** `verificar` (Spanish - "to verify/check")
-- **Why wrong:** "Check" is passive examination. "Try" is active attempt with risk. "Try" implies execution that might fail, not just checking. Different concepts.
-- **Right:** `intentar` (active attempt)
-
----
 
 ## Ambiguity Resolution
 
@@ -266,14 +200,12 @@ Use the verb for trying/attempting, emphasizing possibility of failure.
 - [ ] `finally` - Optional; cleanup after try
 - [ ] `else` - Optional; success path after try
 - [ ] `raise` - Throws exceptions that try catches
+- [ ] `except*` - 3.11 exception-groups form; participates in the same try-family consistency group
 
 **Consistency rule:**
 
 `try`-`except`-`else`-`finally` form a cohesive error handling structure. Translations should work together naturally. All should be recognizable as error handling keywords.
 
-**Example:**
-
-Spanish: `intentar` (try), `excepto` (except), `sino` (else), `finalmente` (finally) - cohesive set ✅
 
 ### Functional relationships
 
@@ -454,25 +386,24 @@ except Exception:
 
 ```yaml
 term: try
-language: es
-translation: intentar
-form: verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "intentar" means "to try/attempt," expressing attempting execution with possible failure. Natural verb form for command. Works in try-except-finally error handling structures. Standard Spanish programming terminology.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `probar` (to test) - Emphasizes testing over attempting; "try" more accurate
-2. `intento` (attempt - noun) - Wrong part of speech; need verb
-3. `tratar` (to try) - Also valid; "intentar" more formal and clear
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Try/attempt verbs are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

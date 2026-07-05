@@ -78,13 +78,6 @@ point = (1, 2)
 
 **Pattern rule:** Collection type constructors should use noun forms representing the data structure. These are type names that describe what kind of container they create.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `list` | lista | قائمة | 列表 | सूची |
-| `set` | conjunto | مجموعة | 集合 | सेट |
-| `tuple` | **tupla** | **صف** | **元组** | **टपल** |
 
 ---
 
@@ -128,16 +121,7 @@ Tuples support all sequence operations except those that modify the sequence: in
 - **Action vs State:** STATE - describes what kind of object it is
 - **Temporal aspect:** Instantaneous - creates the tuple object immediately
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun (technical term) | "tupla" - mathematical term |
-| Germanic (de, nl, sv) | Noun | "Tupel" - borrowed from mathematics |
-| Slavic (ru, pl, uk) | Noun | "кортеж" - established CS term |
-| Arabic | Noun | "صف" (row/tuple) or transliterate |
-| Chinese | Noun compound | "元组" - element-group |
-| Hindi | Transliterated noun | "टपल" - borrowed term |
+### Recommended Form
 
 **Primary recommendation:** This is a specialized mathematical/CS term. Many languages either:
 
@@ -153,55 +137,6 @@ Tuples support all sequence operations except those that modify the sequence: in
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `tupla`
-- **Form:** Noun (feminine)
-- **Why it works:** Established Spanish mathematical term. Used in Spanish computer science education and Python documentation. Clear, concise, recognized by Spanish-speaking programmers.
-
-**Arabic:**
-
-- **Translation:** `صف` (ṣaff - row/rank/tuple)
-- **Form:** Noun (masculine)
-- **Why it works:** Arabic word for ordered row or rank. Used in mathematics and can represent ordered sequences. Concise alternative to longer descriptive phrases. Alternative: `مجموعة مرتبة` (ordered group) but too long.
-
-**Chinese:**
-
-- **Translation:** `元组` (yuánzǔ)
-- **Form:** Noun compound
-- **Why it works:** Two characters: 元 (element/primary) + 组 (group). Standard Chinese CS term for tuple. Used consistently in Chinese Python documentation and education. Clear and concise.
-
-**Hindi:**
-
-- **Translation:** `टपल` (ṭapal)
-- **Form:** Transliterated noun
-- **Why it works:** Direct transliteration of "tuple." Used in Hindi CS education as a borrowed technical term. No native Hindi equivalent exists for this specific CS concept, so borrowing is appropriate.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "pair" or "double"**
-
-- **Wrong:** `pareja` (Spanish - "pair")
-- **Why wrong:** Tuples can have any number of elements (1, 2, 3, or more), not just two. "Pair" incorrectly suggests always having exactly two items.
-- **Right:** `tupla` (n-tuple, any number of items)
-
-**Mistake 2: Overly descriptive phrase**
-
-- **Wrong:** `lista inmutable` (Spanish - "immutable list")
-- **Why wrong:** Too verbose for a type name. While technically descriptive, Python uses concise type names. "Tuple" is a specific type, not just "immutable list."
-- **Right:** `tupla` (concise technical term)
-
-**Mistake 3: Generic "group" without specificity**
-
-- **Wrong:** `grupo` (Spanish - "group")
-- **Why wrong:** Too generic—doesn't convey ordered or immutable nature. Sets and lists are also "groups" but behave differently. Need specific technical term.
-- **Right:** `tupla` (specific ordered immutable sequence)
-
----
 
 ## Ambiguity Resolution
 
@@ -232,10 +167,6 @@ NO (in modern usage)
 
 All collection/sequence types (`list`, `tuple`, `set`, `dict`, `frozenset`) must be nouns representing data structures. If you translate one as a noun, translate all as nouns.
 
-**Example:**
-
-Spanish: `lista`, `tupla`, `conjunto`, `diccionario` - all nouns ✅
-NOT: `lista` (noun) + `crear_tupla` (verb phrase) ❌
 
 ### Functional relationships
 
@@ -361,25 +292,24 @@ Minor consideration: Some languages may need to decide between loan word/transli
 
 ```yaml
 term: tuple
-language: es
-translation: tupla
-form: noun (feminine)
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "tupla" is the established mathematical and computer science term for tuples. It's used consistently in Spanish Python documentation, CS education, and programming discussions. The term is a cognate that Spanish speakers in technical fields immediately recognize.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `tuple` (English loan) - Some Spanish programmers use English term, but "tupla" is standard
-2. `pareja` (pair) - Wrong: implies exactly 2 items, tuples can have any number
-3. `secuencia inmutable` (immutable sequence) - Too verbose for a type name
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Tupla" is the standard term across Spanish-speaking technical communities and educational materials.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

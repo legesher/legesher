@@ -130,13 +130,6 @@ model.save()
 
 **Pattern rule:** Inheritance-related terms should convey hierarchical relationships. "super" implies "above" or "parent" in hierarchy. Translations should capture upward relationship in class hierarchy.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `class` | clase | صنف | 类 | वर्ग |
-| `isinstance` | es_instancia | هو_نموذج | 是实例 | उदाहरण_है |
-| `super` | **super** | **فوق** | **父类** | **अधि** |
 
 ---
 
@@ -180,16 +173,7 @@ Common use cases: calling parent `__init__` to initialize inherited attributes, 
 - **Action vs State:** REFERENCE - points to parent class
 - **Temporal aspect:** Instantaneous - resolves parent at call time
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun or adjective | "super" or "superior" - above/parent |
-| Germanic (de, nl, sv) | Noun or adjective | "über" or "super" - above/parent |
-| Slavic (ru, pl, uk) | Adjective/noun | "над" (over) or "родитель" (parent) |
-| Arabic | Preposition/noun | "فوق" (above) or "أصل" (origin/parent) |
-| Chinese | Noun | "父类" (parent class) or "超" (super) |
-| Hindi | Adjective/noun | "अधि" (super/above) or "जनक" (parent) |
+### Recommended Form
 
 **Primary recommendation:** Use term meaning "above," "parent," or "superior" - captures hierarchical relationship. Can keep English "super" if widely adopted in target language's CS education.
 
@@ -201,55 +185,6 @@ Common use cases: calling parent `__init__` to initialize inherited attributes, 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `super` or `superior`
-- **Form:** Adjective/noun
-- **Why it works:** "Super" is understood in Spanish CS education. "Superior" also works, meaning "upper/higher." Both convey hierarchical position. Short and clear.
-
-**Arabic:**
-
-- **Translation:** `فوق` (fawqa) or `أصل` (aṣl)
-- **Form:** Preposition/noun
-- **Why it works:** "فوق" means "above/over" - spatial metaphor for hierarchy. "أصل" means "origin/source" - parent class concept. Both natural in Arabic OOP terminology.
-
-**Chinese:**
-
-- **Translation:** `父类` (fùlèi) or `超` (chāo)
-- **Form:** Noun
-- **Why it works:** "父类" literally "parent class" - explicit hierarchy. "超" is Chinese for "super" - used in tech contexts. Both widely understood.
-
-**Hindi:**
-
-- **Translation:** `अधि` (adhi) or `जनक` (janak)
-- **Form:** Adjective/noun
-- **Why it works:** "अधि" is Sanskrit prefix meaning "above/super." "जनक" means "parent/progenitor." Both convey hierarchical relationship naturally.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "call parent" or action verb**
-
-- **Wrong:** `llamar_padre` (Spanish - "call parent")
-- **Why wrong:** "super" is not the action of calling - it's a reference to the parent. The calling is separate. Should be noun/adjective, not verb phrase.
-- **Right:** `super` or `superior` (noun/adjective)
-
-**Mistake 2: Using "better" without hierarchy implication**
-
-- **Wrong:** `mejor` (Spanish - "better")
-- **Why wrong:** Implies superiority in quality, not hierarchical position. Parent classes aren't "better," they're "above" in the inheritance tree.
-- **Right:** `superior` (hierarchical above)
-
-**Mistake 3: Too verbose or explanatory**
-
-- **Wrong:** `clase_padre_arriba` (Spanish - "parent class above")
-- **Why wrong:** Too long for function that's used frequently. Should be concise. Over-explains the concept.
-- **Right:** `super` or `superior` (concise)
-
----
 
 ## Ambiguity Resolution
 
@@ -289,19 +224,6 @@ English "super" can mean:
 
 Object-oriented terms should use consistent metaphors. If "class" uses formal OOP terminology, "super" should too. If using hierarchical terms ("parent," "above"), be consistent across inheritance-related functions.
 
-**Example:**
-
-✅ **Consistent (Chinese):**
-
-- `class` → `类` (class)
-- `super` → `父类` (parent class)
-- Consistent family/hierarchy metaphor ✅
-
-❌ **Inconsistent:**
-
-- `class` → `类` (class)
-- `super` → `更好` (better - quality not hierarchy)
-- Mixed metaphors ❌
 
 ### Functional relationships
 
@@ -438,25 +360,24 @@ Key considerations: Check if "super" is used in target language CS education. If
 
 ```yaml
 term: super
-language: es
-translation: super
-form: adjective_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "super" is widely understood in CS education and conveys the hierarchical "above" concept naturally. Alternative "superior" also works but "super" is shorter and more commonly used in programming contexts. Maintains international consistency while being natural in Spanish.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `superior` (superior/upper) - Also valid, more formal, but "super" more common in code
-2. `padre` (parent) - Too specific (literally "father"), "super" more abstract
-3. `sobre` (over) - Preposition not noun, less clear as function name
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence HIGH for Spanish. For languages without Latin roots, may need native hierarchical terms. Check CS education materials in target language.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

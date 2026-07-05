@@ -72,13 +72,6 @@ print(binary)  # Output: '101010'
 
 **Pattern rule:** Base conversion builtins should use short noun forms representing the target number system.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `int` | entero | عدد صحيح | 整数 | पूर्णांक |
-| `hex` | hex | سداسي عشري | 十六进制 | हेक्स |
-| `bin` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -120,16 +113,7 @@ Binary representations are essential for understanding bitwise operations, worki
 - **Action vs State:** State/property - describes the binary form of a number
 - **Temporal aspect:** Instantaneous conversion - generates representation at call time
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Abbreviation or noun | "bin" or "binario" - binary number system |
-| Germanic (de, nl, sv) | Abbreviation or noun | "bin" or "binär" - binary concept |
-| Slavic (ru, pl, uk) | Abbreviation or noun | "bin" or "двоичный" - binary system |
-| Arabic | Noun/adjective | "ثنائي" - binary/dual system |
-| Chinese | Noun phrase | "二进制" - binary (base-2) system |
-| Hindi | Noun/adjective | "द्विआधारी" or "बाइनरी" - binary system |
+### Recommended Form
 
 **Primary recommendation:** Use abbreviation "bin" if universally understood, or short noun meaning "binary"
 
@@ -141,55 +125,6 @@ Binary representations are essential for understanding bitwise operations, worki
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `bin` or `binario`
-- **Form:** abbreviation or adjective/noun
-- **Why it works:** "bin" is universally understood in Spanish tech; "binario" clearly means binary. Abbreviation preferred for consistency with "hex" and "oct".
-
-**Arabic:**
-
-- **Translation:** `ثنائي`
-- **Form:** adjective/noun (thunā'ī - binary)
-- **Why it works:** Standard Arabic term for binary system, clear and concise, matches technical vocabulary
-
-**Chinese:**
-
-- **Translation:** `二进制`
-- **Form:** noun phrase
-- **Why it works:** 二进制 (èrjìnzhì) literally means "base-2 system", standard term for binary in Chinese computing
-
-**Hindi:**
-
-- **Translation:** `बाइनरी` or `द्विआधारी`
-- **Form:** noun (transliteration or Sanskrit-derived)
-- **Why it works:** बाइनरी (bāinarī) is widely understood transliteration; द्विआधारी (dviyādhārī) is formal Sanskrit term for binary
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb form**
-
-- **Wrong:** `convertir_binario` (Spanish - "convert to binary")
-- **Why wrong:** Function name should be noun/abbreviation, not action phrase; too wordy
-- **Right:** `bin` or `binario`
-
-**Mistake 2: Using "two" alone**
-
-- **Wrong:** `dos` (Spanish - "two")
-- **Why wrong:** Doesn't indicate this is about number system/base-2 representation
-- **Right:** `binario` (binary system)
-
-**Mistake 3: Too technical/verbose**
-
-- **Wrong:** `representación_binaria` (Spanish - "binary representation")
-- **Why wrong:** Too long for builtin function name; loses the conciseness of "bin"
-- **Right:** `bin` or `binario`
-
----
 
 ## Ambiguity Resolution
 
@@ -335,24 +270,24 @@ print(bin(a & b))  # 0b1000 (bitwise AND)
 
 ```yaml
 term: bin
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {abbreviation|noun}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Why you chose this translation. Address: concept accuracy (binary base-2 system), linguistic form (abbreviation/noun), consistency with hex/oct pattern, whether "bin" is universally understood or needs translation}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{What concerns you have, what needs human verification}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

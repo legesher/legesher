@@ -86,13 +86,6 @@ for i, item in enumerate([]):
 
 **Pattern rule:** Iteration utility functions should use verb forms (infinitive or present tense) describing what they do to sequences. They process iterables and return iterators.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `zip` | comprimir/empaquetar | ضغط | 压缩 | ज़िप |
-| `map` | mapear | خريطة | 映射 | मैप |
-| `enumerate` | **enumerar** | **تعداد** | **枚举** | **गिनती** |
 
 ---
 
@@ -136,16 +129,7 @@ Common use cases include: numbering output for users (`"1. First item"`), tracki
 - **Action vs State:** ACTION - actively pairs items with numbers
 - **Temporal aspect:** Progressive/Iterative - processes items one by one
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive | "enumerar", "énumérer" - to enumerate |
-| Germanic (de, nl, sv) | Infinitive | "aufzählen", "opsommen" - to count/list |
-| Slavic (ru, pl, uk) | Infinitive | "перечислить" - to enumerate |
-| Arabic | Verbal noun (masdar) | "تعداد" - counting/enumeration |
-| Chinese | Verb compound | "枚举" - enumerate/list items |
-| Hindi | Infinitive/Verbal noun | "गिनती करना" - to count/enumerate |
+### Recommended Form
 
 **Primary recommendation:** Use infinitive verb form meaning "to enumerate," "to count," or "to list." This is an action function that does something to an iterable (adds counting).
 
@@ -157,55 +141,6 @@ Common use cases include: numbering output for users (`"1. First item"`), tracki
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `enumerar`
-- **Form:** Infinitive verb
-- **Why it works:** Standard Spanish verb meaning "to enumerate/count/list items one by one." Used in computing contexts for enumeration. Clear action verb that conveys adding numbers to items.
-
-**Arabic:**
-
-- **Translation:** `تعداد` (taʿdād)
-- **Form:** Verbal noun (masdar)
-- **Why it works:** Masdar from عدّ (to count). Means counting, enumeration, or tallying. Used in Arabic computing for enumeration operations. Conveys the counting aspect clearly.
-
-**Chinese:**
-
-- **Translation:** `枚举` (méijǔ)
-- **Form:** Verb compound
-- **Why it works:** Two characters: 枚 (count/enumerate one by one) + 举 (lift/list/enumerate). Standard Chinese computing term for enumeration. Used in programming contexts for listing items systematically.
-
-**Hindi:**
-
-- **Translation:** `गिनती` (ginatī) or `गणना` (gaṇanā)
-- **Form:** Verbal noun
-- **Why it works:** "गिनती" means counting/enumeration. "गणना" is more formal Sanskrit term meaning calculation/counting. Both convey the systematic counting concept. Choose based on formality preference.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "number" as noun**
-
-- **Wrong:** `número` (Spanish - "number")
-- **Why wrong:** This is a noun meaning a number, not the action of numbering/counting. "Enumerar" (to enumerate/count) is the verb describing the action.
-- **Right:** `enumerar` (to enumerate/count)
-
-**Mistake 2: Using past participle**
-
-- **Wrong:** `enumerado` (Spanish - "enumerated")
-- **Why wrong:** Past participle suggests a completed state. Function performs ongoing action (enumerating), not describing a result. Use infinitive verb form.
-- **Right:** `enumerar` (infinitive: to enumerate)
-
-**Mistake 3: Using generic "count" without systematic connotation**
-
-- **Wrong:** `contar` (Spanish - "to count")
-- **Why wrong:** "Contar" is generic counting. "Enumerar" specifically means to list/count items systematically, one by one—more precise for this operation.
-- **Right:** `enumerar` (to enumerate systematically)
-
----
 
 ## Ambiguity Resolution
 
@@ -238,10 +173,6 @@ NO (in modern usage)
 
 Iteration utility functions (`enumerate`, `zip`, `map`, `filter`) should use verb forms (infinitive) describing the transformation/enhancement they apply to iterables.
 
-**Example:**
-
-Spanish: `enumerar`, `empaquetar`, `mapear`, `filtrar` - all infinitive verbs ✅
-NOT: `enumerar` (verb) + `empaquetado` (participle) ❌
 
 ### Functional relationships
 
@@ -392,25 +323,24 @@ for i, item in enumerate(items):
 
 ```yaml
 term: enumerate
-language: es
-translation: enumerar
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "enumerar" is the standard verb meaning "to enumerate, to list, or to count items one by one." It's used in Spanish computing contexts for enumeration operations and clearly conveys the systematic counting/listing action that the function performs. The infinitive form aligns with other Python iteration utilities.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `contar` (to count) - Too generic; doesn't convey the systematic listing aspect
-2. `numerar` (to number) - Valid but "enumerar" is more precise and standard in computing
-3. `listar` (to list) - Focuses on listing without emphasizing the counting/numbering
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Enumerar" is a clear, standard term across Spanish computing contexts and precisely captures the function's purpose.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

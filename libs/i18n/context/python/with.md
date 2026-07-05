@@ -98,13 +98,6 @@ with Timer():
 
 **Pattern rule:** Context management keywords should express accompaniment or association. "With" means "in the company of" or "using" - indicating resource is active during the block.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `as` | como | كـ | 作为 | के_रूप_में |
-| `try` | intentar | حاول | 尝试 | प्रयास |
-| `with` | **con** | **مع** | **与** | **के_साथ** |
 
 ---
 
@@ -150,16 +143,7 @@ The `as` clause binds what `__enter__` returns to a variable. For files, `with o
 - **Action vs State:** RELATION - indicates resource is active during block
 - **Temporal aspect:** Duration - resource managed for block's lifetime
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Preposition | "con", "avec", "com" - with |
-| Germanic (de, nl, sv) | Preposition | "mit", "met" - with |
-| Slavic (ru, pl, uk) | Preposition (instrumental) | "с", "z" - with |
-| Arabic | Preposition | "مع" - maʿa (with) |
-| Chinese | Preposition | "与" - yǔ (with) or "用" - yòng (using) |
-| Hindi | Postposition | "के साथ" - ke sāth (with) |
+### Recommended Form
 
 **Primary recommendation:** Use the target language's preposition meaning "with" - indicating accompaniment, association, or instrumentality. Should express "using this resource" or "in the company of."
 
@@ -171,55 +155,6 @@ The `as` clause binds what `__enter__` returns to a variable. For files, `with o
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `con`
-- **Form:** Preposition
-- **Why it works:** "Con" means "with" in Spanish. Natural for expressing association with resource. "con open('file') como f" reads as "with open file as f." Standard preposition.
-
-**Arabic:**
-
-- **Translation:** `مع` (maʿa)
-- **Form:** Preposition
-- **Why it works:** "Maʿa" means "with/together with" in Arabic. Universal Arabic preposition for accompaniment. Natural for expressing resource management. "مع open('file') كـ f" natural.
-
-**Chinese:**
-
-- **Translation:** `用` (yòng) or `与` (yǔ)
-- **Form:** Preposition
-- **Why it works:** `用` means "use/using" - clear for resource management. `与` means "with/and" - also valid. Either acceptable. `用` slightly more action-oriented, `与` more association-oriented. Both work.
-
-**Hindi:**
-
-- **Translation:** `के_साथ` (ke sāth) or shortened `साथ` (sāth)
-- **Form:** Postposition
-- **Why it works:** "Ke sāth" means "with/together with." Standard Hindi postposition. May be shortened to just "साथ" for code brevity. "open('file') के_साथ" follows Hindi grammar (postposition after object).
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "using" (borrowing from C#)**
-
-- **Wrong:** `usando` (Spanish - "using")
-- **Why wrong:** While semantically close, Python uses "with" not "using." Different languages, different keywords. Maintain Python's terminology. "Using" is C#, "with" is Python.
-- **Right:** `con` (with - Python's term)
-
-**Mistake 2: Using "within" (location not association)**
-
-- **Wrong:** `dentro` (Spanish - "within/inside")
-- **Why wrong:** "Within" is about location inside something. "With" is about association or using something. Different concepts. "With file" not "within file."
-- **Right:** `con` (with - association)
-
-**Mistake 3: Using noun "accompaniment"**
-
-- **Wrong:** `acompañamiento` (Spanish - "accompaniment")
-- **Why wrong:** Need preposition, not noun. "With" is preposition in `with resource:`. Can't replace with noun. Wrong part of speech.
-- **Right:** `con` (preposition)
-
----
 
 ## Ambiguity Resolution
 
@@ -264,9 +199,6 @@ Use the preposition for "with" indicating association, accompaniment, or instrum
 
 `with resource as var:` should read as grammatical phrase in target language. Order may need adjustment for target language, but meaning should be clear.
 
-**Example:**
-
-Spanish: `con open('file') como f:` - grammatically coherent ✅
 
 ### Functional relationships
 
@@ -433,25 +365,24 @@ with suppress(FileNotFoundError):
 
 ```yaml
 term: with
-language: es
-translation: con
-form: preposition
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "con" means "with" (association/accompaniment). Natural for expressing resource management. Works grammatically with "como" (as) in context manager syntax. Standard Spanish preposition.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `usando` (using) - Valid but "with" is Python's term, not "using"
-2. `junto_con` (together with) - Too verbose; simple "con" sufficient
-3. `mediante` (by means of) - Too formal; "con" more natural
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "With" prepositions are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

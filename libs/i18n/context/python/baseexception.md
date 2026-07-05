@@ -70,13 +70,6 @@ print("This will catch KeyboardInterrupt")
 
 **Pattern rule:** All exception base classes should use noun form in target language, representing the category or type of exception.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `Exception` | Excepción | استثناء | 异常 | अपवाद |
-| `object` | Objeto | كائن | 对象 | वस्तु |
-| `BaseException` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -120,16 +113,7 @@ In practice, you'll rarely reference `BaseException` directly. Most exception ha
 - **Action vs State:** State/Category - describes what something IS (a type of exception)
 - **Temporal aspect:** Permanent - defines a category that exists throughout program execution
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound Noun | "Base" + "Exception" as two-word compound or single merged term |
-| Germanic (de, nl, sv) | Compound Noun | Natural compounding: "BasisAusnahme" pattern |
-| Slavic (ru, pl, uk) | Compound Noun | "Base" + "Exception" with appropriate case |
-| Arabic | Compound Noun | Adjective + Noun pattern: "basic exception" |
-| Chinese | Compound Noun | Two-character compound preferred |
-| Hindi | Compound Noun | Sanskrit-derived compound |
+### Recommended Form
 
 **Primary recommendation:** Compound noun form combining "base/foundation" concept with "exception" concept, maintaining the hierarchical nature of the term.
 
@@ -140,55 +124,6 @@ In practice, you'll rarely reference `BaseException` directly. Most exception ha
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ExcepciónBase` or `BaseExcepción`
-- **Form:** Compound noun (Excepción + Base)
-- **Why it works:** Combines "exception" with "base/foundation," maintains capitalization for class naming, natural compound structure in Spanish
-
-**Arabic:**
-
-- **Translation:** `استثناء_أساسي` (istithna'a asaasiy)
-- **Form:** Noun + Adjective compound
-- **Why it works:** "Basic/foundational exception" follows Arabic word order (noun before adjective), clear technical meaning
-
-**Chinese:**
-
-- **Translation:** `基础异常` (jīchǔ yìcháng)
-- **Form:** Two-character compound + two-character compound
-- **Why it works:** "基础" (foundation/base) + "异常" (exception), natural Chinese technical term structure
-
-**Hindi:**
-
-- **Translation:** `मूलअपवाद` (mool-apvaad)
-- **Form:** Compound noun
-- **Why it works:** "मूल" (root/base) + "अपवाद" (exception), Sanskrit-derived compound follows technical vocabulary patterns
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Literal word-by-word translation without compound**
-
-- **Wrong:** `Base Excepción` (Spanish with space and mixed case)
-- **Why wrong:** Breaks class naming convention, should be single compound term for Python class name
-- **Right:** `ExcepciónBase` or `BaseExcepción`
-
-**Mistake 2: Using action verb instead of noun**
-
-- **Wrong:** `ExceptuarBase` (Spanish verb form)
-- **Why wrong:** This is a class name (noun), not an action; verb form inappropriate for type names
-- **Right:** `ExcepciónBase`
-
-**Mistake 3: Omitting the "base" concept**
-
-- **Wrong:** `异常` alone (Chinese - just "exception")
-- **Why wrong:** Loses the critical "base/foundation" distinction from regular `Exception` class
-- **Right:** `基础异常` (includes "base/foundation" concept)
-
----
 
 ## Ambiguity Resolution
 
@@ -227,18 +162,15 @@ The "Exception" part means a deviation from normal program flow due to an error 
 - [ ] `Exception` - Must use same word for "exception," just without "base" prefix
 - [ ] `object` - May inform how to translate "base" concept in class hierarchies
 - [ ] `class` - Should align with class naming conventions
+- [ ] `KeyboardInterrupt` - Direct subclass; a control-flow signal that subclasses BaseException precisely to escape `except Exception`
+- [ ] `SystemExit` - Direct subclass; same control-flow-signal rationale as KeyboardInterrupt
+- [ ] `GeneratorExit` - Direct subclass; same control-flow-signal rationale as KeyboardInterrupt
+- [ ] `BaseExceptionGroup` - 3.11 group carrier; its name must be the BaseException translation plus the group word
 
 **Consistency rule:**
 
 The word you choose for "exception" in `BaseException` must match exactly with how you translate `Exception` and other exception types. The "base" component should clearly indicate foundational/parent relationship.
 
-**Example:**
-
-If you translate `Exception` as "异常" (yìcháng), then:
-
-- `BaseException` should be "基础异常" (base + exception)
-- `ValueError` should be "值异常" (value + exception)
-- NOT: Different words for "exception" across different exception types (inconsistent ❌)
 
 ### Functional relationships
 
@@ -331,24 +263,24 @@ raise
 
 ```yaml
 term: BaseException
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: compound_noun
-confidence: {medium|medium-high}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Why you chose this translation. Address: concept accuracy (root exception class), linguistic form (compound noun structure), consistency with `Exception` translation, alignment with technical class naming in target language}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Uncertainty about compound structure, multiple valid options for "base" translation, need native speaker verification of class naming conventions}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

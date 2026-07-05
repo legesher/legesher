@@ -87,13 +87,6 @@ print(times_two(5))  # 10
 
 **Pattern rule:** Function-related keywords vary in form. `def` is a verb (to define), while `lambda` is a mathematical term (Greek letter representing anonymous functions). Lambda is a special case: it's a loanword from mathematics/lambda calculus.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `def` | definir | تعريف | 定义 | परिभाषित |
-| `return` | retornar | إرجاع | 返回 | वापसी |
-| `lambda` | **lambda** | **لامدا** | **lambda** | **लैम्ब्डा** |
 
 ---
 
@@ -137,16 +130,7 @@ However, lambda has limitations: no statements (no `if` statements with colons, 
 - **Action vs State:** CONSTRUCTOR - creates function objects
 - **Temporal aspect:** Instantaneous - function object created immediately
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Keep "lambda" | Universal mathematical term, recognized internationally |
-| Germanic (de, nl, sv) | Keep "lambda" | International technical term |
-| Slavic (ru, pl, uk) | Transliterate "lambda" | Лямбда - phonetic spelling in Cyrillic |
-| Arabic | Transliterate "lambda" | لامدا (lāmdā) - phonetic spelling in Arabic script |
-| Chinese | Keep "lambda" or transliterate | lambda or 兰姆达 (lánmǔdá) - both used |
-| Hindi | Transliterate "lambda" | लैम्ब्डा (laimḍā) - phonetic spelling in Devanagari |
+### Recommended Form
 
 **Primary recommendation:** Keep "lambda" as-is (loanword) or transliterate phonetically in target script. Do NOT translate the meaning. Lambda is an international mathematical/technical term like "π" (pi) or "Δ" (delta). Translation would disconnect it from its mathematical roots and create confusion for multilingual programmers.
 
@@ -158,55 +142,6 @@ However, lambda has limitations: no statements (no `if` statements with colons, 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `lambda`
-- **Form:** Loanword (keep as-is)
-- **Why it works:** "Lambda" is recognized internationally in mathematics and CS. Spanish programmers use "lambda" in code and education. No translation needed—it's a proper noun (Greek letter name).
-
-**Arabic:**
-
-- **Translation:** `لامدا` (lāmdā)
-- **Form:** Phonetic transliteration
-- **Why it works:** Since Arabic script can't display Latin letters in code naturally, transliterate to لامدا. Maintains pronunciation while fitting Arabic script. Standard approach for technical Greek/Latin terms.
-
-**Chinese:**
-
-- **Translation:** `lambda` (preferred) or `兰姆达` (lánmǔdá)
-- **Form:** Loanword or phonetic transliteration
-- **Why it works:** Chinese programming typically keeps "lambda" as-is. Transliteration 兰姆达 exists but is rare in code. Most Chinese Python programmers use "lambda" directly.
-
-**Hindi:**
-
-- **Translation:** `लैम्ब्डा` (laimḍā)
-- **Form:** Phonetic transliteration
-- **Why it works:** Devanagari transliteration maintains international recognition. Hindi programmers would recognize this as the lambda concept. Alternative: keep "lambda" as-is if mixing scripts is acceptable.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Translating to "anonymous"**
-
-- **Wrong:** `anónima` (Spanish - "anonymous")
-- **Why wrong:** While lambda creates anonymous functions, "lambda" is a proper term from mathematics, not just "anonymous." Translating loses the connection to lambda calculus and functional programming theory. "Lambda" is the internationally recognized term.
-- **Right:** `lambda` (mathematical loanword)
-
-**Mistake 2: Translating to "function" or "func"**
-
-- **Wrong:** `función` (Spanish - "function")
-- **Why wrong:** Too generic. "Lambda" specifically means anonymous function using expression syntax. "Function" could mean any function. The Greek letter lambda has specific meaning in computer science.
-- **Right:** `lambda` (specific technical term)
-
-**Mistake 3: Creating new unrelated term**
-
-- **Wrong:** `expr` (abbreviation for "expression")
-- **Why wrong:** Completely breaks from international standards. Programmers learning multiple languages would be confused. "Lambda" is nearly universal (Python, JavaScript, Ruby, Java, C++, etc.). Inventing new terms hurts interoperability.
-- **Right:** `lambda` (international standard)
-
----
 
 ## Ambiguity Resolution
 
@@ -331,7 +266,7 @@ squares = list(map(lambda x: x**2, range(10)))
 
 - International mathematical term (like π or Δ)
 - Most languages use "lambda" as-is
-- Some scripts require transliteration (Arabic, Hindi, Russian)
+- Some scripts require transliteration
 - Risk: translators might translate meaning ("anonymous") instead of keeping term
 - Minor decision: loanword vs. phonetic transliteration
 
@@ -393,25 +328,24 @@ squares = list(map(lambda x: x**2, range(10)))
 
 ```yaml
 term: lambda
-language: es
-translation: lambda
-form: loanword
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish programming uses "lambda" as an international loanword from mathematics. It's universally recognized in CS education globally. Translating to "anónima" would break the connection to lambda calculus and confuse multilingual programmers.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `anónima` (anonymous) - Wrong; translates meaning instead of keeping mathematical term
-2. `función anónima` (anonymous function) - Too long, descriptive rather than term
-3. Keep `lambda` - Correct; maintains international recognition ✅
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for Spanish (keep "lambda"). For non-Latin scripts (Arabic, Hindi, Russian, Chinese), confidence is MEDIUM—verify whether CS education keeps "lambda" as-is or uses phonetic transliteration. Check textbooks and online tutorials in target language for standard practice.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

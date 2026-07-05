@@ -93,14 +93,6 @@ assert 1 == 1  # Always passes - debugging/testing only
 
 **Pattern rule:** Debugging keywords should express verification or confirmation. "Assert" means to state confidently - declaring something must be true.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `raise` | elevar | ارفع | 引发 | उठाओ |
-| `if` | si | إذا | 如果 | अगर |
-| `True` | Verdadero | صحيح | True | सत्य |
-| `assert` | **afirmar** | **أكد** | **断言** | **दावा** |
 
 ---
 
@@ -153,16 +145,7 @@ Use assertions for: developer errors (internal logic bugs), preconditions (requi
 - **Action vs State:** ACTION - command to verify condition
 - **Temporal aspect:** Instantaneous - immediate check
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb (imperative/infinitive) | "afirmar", "affirmer", "afirmar" - to assert/affirm |
-| Germanic (de, nl, sv) | Verb (infinitive) | "behaupten", "beweren" - to assert/claim |
-| Slavic (ru, pl, uk) | Verb (imperative) | "утверждать", "twierdzić" - to assert/claim |
-| Arabic | Verb (imperative) | "أكد" - akkid (affirm/confirm) |
-| Chinese | Verb/noun | "断言" - duànyán (assert/assertion) |
-| Hindi | Verb/noun | "दावा" - dāvā (claim/assert) or "पुष्टि" - puṣṭi (confirm) |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to assert," "to affirm," or "to claim" (imperative or infinitive). Should convey declaring something as true or verifying a condition.
 
@@ -174,55 +157,6 @@ Use assertions for: developer errors (internal logic bugs), preconditions (requi
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `afirmar`
-- **Form:** Verb (infinitive)
-- **Why it works:** "Afirmar" means "to affirm/assert" in Spanish. Natural for declaring condition must be true. Standard verb form. Used in Spanish programming.
-
-**Arabic:**
-
-- **Translation:** `أكد` (akkid)
-- **Form:** Verb (imperative)
-- **Why it works:** "Akkid" means "affirm/confirm/assert" (imperative). Natural command to verify condition. Standard Arabic verb. Used in Arabic programming contexts.
-
-**Chinese:**
-
-- **Translation:** `断言` (duànyán)
-- **Form:** Verb/noun compound
-- **Why it works:** "Duànyán" means "assert/assertion." Two characters. Standard Chinese programming term. Functions as verb (to assert) or noun (assertion). Universal in Chinese programming.
-
-**Hindi:**
-
-- **Translation:** `दावा` (dāvā) or `पुष्टि_करो` (puṣṭi karo)
-- **Form:** Noun/verb
-- **Why it works:** "Dāvā" means "claim/assert." Short, clear. "Puṣṭi karo" means "confirm/verify" (more verbose). Either acceptable. "Dāvā" more concise.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "check" (too passive)**
-
-- **Wrong:** `verificar` (Spanish - "to check/verify")
-- **Why wrong:** "Check" is passive examination. "Assert" is active declaration of truth. Different emphasis. "Assert" stronger - declares must be true, not just checking.
-- **Right:** `afirmar` (to assert/affirm)
-
-**Mistake 2: Using noun "assertion"**
-
-- **Wrong:** `afirmación` (Spanish - "assertion/affirmation" - noun)
-- **Why wrong:** Need verb (command), not noun. "Assert" is verb. Can't replace with noun. Wrong part of speech.
-- **Right:** `afirmar` (verb - to assert)
-
-**Mistake 3: Using "assume" (wrong direction)**
-
-- **Wrong:** `asumir` (Spanish - "to assume")
-- **Why wrong:** "Assume" means to take for granted without proof. "Assert" means to declare and verify. "Assert" actively checks; "assume" passively accepts. Opposite concepts.
-- **Right:** `afirmar` (to assert/verify)
-
----
 
 ## Ambiguity Resolution
 
@@ -266,9 +200,6 @@ Use the verb for asserting/affirming - declaring truth and verifying it.
 
 `assert` should be recognizable as debugging/verification keyword. Works with boolean conditions. Forms natural phrases like "assert x > 0" in target language.
 
-**Example:**
-
-Spanish: `afirmar x > 0` - natural phrase ✅
 
 ### Functional relationships
 
@@ -428,25 +359,24 @@ assert validate_internal_state(), "Debug check"
 
 ```yaml
 term: assert
-language: es
-translation: afirmar
-form: verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "afirmar" means "to affirm/assert," naturally expressing declaring condition as true. Standard verb form for command. Works in assertion statements: "afirmar x > 0." Used in Spanish programming.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `verificar` (verify/check) - Too passive; "assert" more active declaration
-2. `afirmación` (assertion - noun) - Wrong part of speech; need verb
-3. `asumir` (assume) - Wrong concept; assumes without checking, assert checks
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Assert/affirm verbs are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

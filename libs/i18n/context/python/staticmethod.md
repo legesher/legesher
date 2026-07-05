@@ -107,13 +107,6 @@ print(obj.instance_func(5))  # Output: 100 (accesses instance)
 
 **Pattern rule:** Method decorators should indicate the type of method they create, using compound terms or clear technical vocabulary.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `class` | clase | صنف | 类 | वर्ग |
-| `classmethod` | método_clase | دالة_صنف | 类方法 | वर्ग_विधि |
-| `staticmethod` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -155,16 +148,7 @@ Staticmethods are less common than instance methods or classmethods because if a
 - **Action vs State:** DESCRIPTOR - describes what kind of method this is
 - **Temporal aspect:** N/A (it's a type descriptor)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound: static + method | Método estático, méthode statique |
-| Germanic (de, nl, sv) | Compound noun | Statische Methode (natural compounds) |
-| Slavic (ru, pl, uk) | Compound with static + method | Technical compound |
-| Arabic | Compound: static + method | Descriptive compound |
-| Chinese | Compound noun | 静态方法 (static method) |
-| Hindi | Compound | स्थिर विधि (static method) |
+### Recommended Form
 
 **Primary recommendation:** Create a compound combining translations of "static" (fixed/unchanging) and "method". Should parallel the structure of `classmethod` translation.
 
@@ -176,55 +160,6 @@ Staticmethods are less common than instance methods or classmethods because if a
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `método_estático`
-- **Form:** Compound noun
-- **Why it works:** Clear compound of "método" (method) + "estático" (static), parallels `método_clase`, standard term
-
-**Arabic:**
-
-- **Translation:** `دالة_ثابتة` (dāllat thābita - static function/method)
-- **Form:** Compound noun
-- **Why it works:** Technical compound, "ثابتة" means static/fixed, clear in CS context
-
-**Chinese:**
-
-- **Translation:** `静态方法` (jìngtài fāngfǎ - static method)
-- **Form:** Compound noun
-- **Why it works:** Standard CS term for staticmethod, widely used in Chinese OOP documentation
-
-**Hindi:**
-
-- **Translation:** `स्थिर_विधि` (sthir vidhi - static method)
-- **Form:** Compound noun
-- **Why it works:** Clear Sanskrit-derived compound, "स्थिर" means static/fixed, professional
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Inconsistent with classmethod**
-
-- **Wrong:** `métodoestático` (no underscore) while `método_clase` (has underscore)
-- **Why wrong:** Should use same compound pattern as `classmethod`
-- **Right:** `método_estático` (consistent with `método_clase`)
-
-**Mistake 2: Using "constant" instead of "static"**
-
-- **Wrong:** `método_constante` (Spanish - "constant method")
-- **Why wrong:** "Static" and "constant" are different concepts; static methods aren't necessarily constant
-- **Right:** `método_estático` (static, not constant)
-
-**Mistake 3: Too verbose**
-
-- **Wrong:** `método_sin_estado` (Spanish - "stateless method")
-- **Why wrong:** While accurate, too long and non-standard terminology
-- **Right:** `método_estático` (standard term)
-
----
 
 ## Ambiguity Resolution
 
@@ -357,24 +292,24 @@ return x + y
 
 ```yaml
 term: staticmethod
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {compound_noun}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Explain that you created a compound from "static" + "method" translations, maintaining perfect parallel structure to `classmethod`. Emphasize consistency.}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Need to verify parallel structure with `classmethod`, check OOP terminology}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

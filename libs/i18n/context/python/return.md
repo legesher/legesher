@@ -71,13 +71,6 @@ def display_message():
 
 **Pattern rule:** Function/loop exit keywords should use verb forms (infinitive). They perform actions that alter control flow by terminating or suspending execution.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `break` | romper | كسر | 中断 | तोड़ना |
-| `yield` | ceder | ينتج | 产生 | उत्पन्न |
-| `return` | **retornar** | **إرجاع** | **返回** | **वापसी** |
 
 ---
 
@@ -121,16 +114,7 @@ Functions can have multiple `return` statements in different branches (if-else, 
 - **Action vs State:** Pure ACTION - performs termination and value sending
 - **Temporal aspect:** Instantaneous/completive - happens immediately and ends function
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "retornar", "retourner" - to return/give back |
-| Germanic (de, nl, sv) | Infinitive verb | "zurückgeben", "terugkeren" - to give back/return |
-| Slavic (ru, pl, uk) | Infinitive verb | "вернуть", "zwrócić" - to return/give back |
-| Arabic | Masdar (verbal noun) | "إرجاع" (returning/return) or verb form "يرجع" |
-| Chinese | Verb compound | "返回" - return/go back |
-| Hindi | Verbal noun or infinitive | "वापसी" (return - noun) or "लौटाना" (to return) |
+### Recommended Form
 
 **Primary recommendation:** Use infinitive verb form meaning "to return" or "to give back." Focus on the "giving back a value" meaning, not just "going back to a place."
 
@@ -142,55 +126,6 @@ Functions can have multiple `return` statements in different branches (if-else, 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `retornar`
-- **Form:** Infinitive verb
-- **Why it works:** Standard verb meaning "to return/give back." Used in Spanish programming for function returns. Distinct from `volver` (come back to place). `Retornar un valor` is natural technical Spanish. Also used in mathematics and formal contexts.
-
-**Arabic:**
-
-- **Translation:** `إرجاع` (irjāʿ)
-- **Form:** Masdar (verbal noun)
-- **Why it works:** Means "returning/giving back." Standard in Arabic CS terminology. Root ر-ج-ع (r-j-ʿ) means return/go back. Masdar form commonly used for function names in Arabic programming contexts.
-
-**Chinese:**
-
-- **Translation:** `返回` (fǎnhuí)
-- **Form:** Verb compound
-- **Why it works:** Two characters: 返 (return/go back) + 回 (return/back). Standard Chinese programming term for function return. Used universally in Chinese CS education. Clear "give back value" meaning.
-
-**Hindi:**
-
-- **Translation:** `वापसी` (vāpsī) or `लौटाना` (lauṭānā)
-- **Form:** Verbal noun or infinitive verb
-- **Why it works:** `वापसी` means "return/coming back" (noun form common in Hindi). `लौटाना` is infinitive "to return." Both acceptable; verbal noun may be more natural for function names in Hindi technical writing.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "come back" (movement) vs. "give back" (value)**
-
-- **Wrong:** `volver` (Spanish - "to come back/return to place")
-- **Why wrong:** "Volver" emphasizes physical return to location ("volver a casa" = return home). Programming `return` emphasizes giving back a value. "Retornar" better captures value transfer.
-- **Right:** `retornar` (give back/return value)
-
-**Mistake 2: Using noun form instead of verb**
-
-- **Wrong:** `retorno` (Spanish - "the return" - noun)
-- **Why wrong:** Keywords are actions (verbs), not things (nouns). Function name should be "to return" (action), not "the return" (result).
-- **Right:** `retornar` (verb infinitive)
-
-**Mistake 3: Using "send" or "output"**
-
-- **Wrong:** `enviar` (Spanish - "to send")
-- **Why wrong:** "Send" implies one-way transfer. "Return" implies completing a transaction - going back AND giving back. "Return" has specific meaning in function context that "send" lacks.
-- **Right:** `retornar` (captures both return-to-caller and give-value)
-
----
 
 ## Ambiguity Resolution
 
@@ -216,8 +151,8 @@ English "return" can mean:
 
 Many languages distinguish:
 
-- Return to place (physical movement): volver, regreso
-- Return a value (function context): retornar, devolver
+- Return to place (physical movement)
+- Return a value (give something back)
 
 Use the FUNCTION VALUE RETURN meaning. In some languages, the same word covers both (which is acceptable), but if your language distinguishes, use the "give back value" word, not the "go back to place" word.
 
@@ -237,10 +172,6 @@ Use the FUNCTION VALUE RETURN meaning. In some languages, the same word covers b
 
 All action keywords (`return`, `break`, `continue`, `yield`, `raise`) should use verb forms (infinitive). They perform control flow actions. Don't mix verb and noun forms across these keywords.
 
-**Example:**
-
-Spanish: `retornar`, `romper`, `continuar`, `ceder`, `lanzar` - all infinitive verbs ✅
-NOT: `retornar` (verb) + `pausa` (noun for break) ❌
 
 ### Functional relationships
 
@@ -309,7 +240,7 @@ def get_coordinates():
 
 **If your confidence doesn't match this assessment, FLAG FOR HUMAN REVIEW.**
 
-Minor consideration: Some languages might debate between "return/give back" (retornar/devolver in Spanish). Check which is more common in that language's CS education.
+Minor consideration: Some languages might debate between a "return" verb and a "give back" verb. Check which is more common in that language's CS education.
 
 ---
 
@@ -363,25 +294,24 @@ Minor consideration: Some languages might debate between "return/give back" (ret
 
 ```yaml
 term: return
-language: es
-translation: retornar
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "retornar" is the standard verb for returning values in programming contexts. It emphasizes "giving back" a value rather than physical return to a location, which distinguishes it from "volver." Widely used in Spanish CS education and technical documentation.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `devolver` (to return/give back) - Also acceptable, means "give back," common in some regions
-2. `volver` (to return to place) - Wrong emphasis (physical location vs. value transfer)
-3. `regresar` (to go back) - Similar to volver; emphasizes movement, not value transfer
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Function return is universal in programming. Minor variation: some Spanish-speaking regions prefer "devolver" over "retornar," but both are widely understood and acceptable. Check local CS education materials for preference.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

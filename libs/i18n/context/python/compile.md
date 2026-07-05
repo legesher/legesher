@@ -167,13 +167,6 @@ exec(compiled)  # Output: Hello, World
 
 **Pattern rule:** Meta-programming functions that work with code as data. "compile" is verb indicating transformation process (source → executable). Translations should convey compilation/transformation concept.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `eval` | evaluar | تقييم | 求值 | मूल्यांकन |
-| `exec` | ejecutar | تنفيذ | 执行 | निष्पादित |
-| `compile` | **compilar** | **ترجمة** | **编译** | **संकलित** |
 
 ---
 
@@ -217,16 +210,7 @@ Common use cases: template systems (compile template once, execute many times), 
 - **Action vs State:** ACTION - performs compilation transformation
 - **Temporal aspect:** One-time action producing result
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "compilar" - to compile |
-| Germanic (de, nl, sv) | Infinitive verb | "kompilieren" - to compile |
-| Slavic (ru, pl, uk) | Infinitive verb | "компилировать" - to compile |
-| Arabic | Verbal noun (masdar) | "ترجمة" - compilation/translation |
-| Chinese | Verb | "编译" - compile |
-| Hindi | Verb root | "संकलित करना" - to compile |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to compile" or "to transform/translate" code. Standard CS term across languages. Should convey transformation from source to executable.
 
@@ -238,55 +222,6 @@ Common use cases: template systems (compile template once, execute many times), 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `compilar`
-- **Form:** Infinitive verb
-- **Why it works:** "Compilar" is standard CS term for compilation in Spanish. Infinitive matches Python's keyword pattern. Widely used in Spanish programming education.
-
-**Arabic:**
-
-- **Translation:** `ترجمة` (tarjama) or `تصريف` (taṣrīf)
-- **Form:** Verbal noun (masdar)
-- **Why it works:** "ترجمة" means "translation/compilation" - standard Arabic for code compilation. "تصريف" also used. Both convey transformation process.
-
-**Chinese:**
-
-- **Translation:** `编译` (biānyì)
-- **Form:** Verb
-- **Why it works:** "编译" is standard Chinese for "compile" in CS contexts. Literally "edit-translate." Universally understood in Chinese programming.
-
-**Hindi:**
-
-- **Translation:** `संकलित` (sankalit) or `कंपाइल` (kampail)
-- **Form:** Verb
-- **Why it works:** "संकलित" is Sanskrit-derived term for compile/collect. "कंपाइल" is transliteration also accepted. Both used in Hindi CS education.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "collect" without CS context**
-
-- **Wrong:** `coleccionar` (Spanish - "to collect" things)
-- **Why wrong:** While Latin root means "collect," CS meaning is specific: transform source to executable. Standard term is "compilar."
-- **Right:** `compilar` (standard CS term)
-
-**Mistake 2: Using "build" or "construct"**
-
-- **Wrong:** `construir` (Spanish - "to build/construct")
-- **Why wrong:** "Build" is different process (linking compiled components). "Compile" is specific transformation. Use standard CS term.
-- **Right:** `compilar` (compile, not build)
-
-**Mistake 3: Using noun instead of verb**
-
-- **Wrong:** `compilación` (Spanish - "compilation" - noun)
-- **Why wrong:** Function performs action (verb), not thing (noun). Python builtins use verb forms for actions.
-- **Right:** `compilar` (verb form)
-
----
 
 ## Ambiguity Resolution
 
@@ -328,14 +263,6 @@ Use standard CS term for compilation in target language.
 
 Meta-programming functions that work with code (`compile`, `exec`, `eval`) should use compatible verb forms. If using infinitives, use infinitives consistently. All should feel like code manipulation actions.
 
-**Example:**
-
-✅ **Consistent (Spanish):**
-
-- `compile` → `compilar` (infinitive)
-- `exec` → `ejecutar` (infinitive)
-- `eval` → `evaluar` (infinitive)
-All infinitive verbs ✅
 
 ---
 
@@ -412,25 +339,24 @@ Key consideration: Use standard CS term for compilation, not general dictionary 
 
 ```yaml
 term: compile
-language: es
-translation: compilar
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "compilar" is the standard CS term for code compilation. Infinitive verb form matches Python's keyword pattern. Universally understood in Spanish programming education for transforming source code to executable form.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `compilación` (noun form) - Wrong part of speech, should be verb
-2. `construir` (to build) - Different concept, "compile" more specific
-3. `traducir` (to translate) - Too general, "compilar" is standard CS term
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence HIGH. "Compilar" is universal CS term with clear meaning across Spanish-speaking regions.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

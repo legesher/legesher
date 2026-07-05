@@ -111,14 +111,6 @@ print("Server error")
 
 **Pattern rule:** Control flow keywords that introduce structural blocks should use verb forms (infinitive or imperative) in target language—they command the program to perform branching logic.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `if` | si | إذا | 如果 | यदि |
-| `else` | sino | وإلا | 否则 | अन्यथा |
-| `match` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
-| `case` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -162,16 +154,7 @@ Patterns can be literals (`case 42:`), wildcards (`case _:`), variable captures 
 - **Action vs State:** ACTION - actively compares value against patterns
 - **Temporal aspect:** One-time decision point (evaluates once, branches once)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "coincidir", "correspondre" - to match/correspond |
-| Germanic (de, nl, sv) | Infinitive verb | "passen", "matchen" - to match |
-| Slavic (ru, pl, uk) | Infinitive verb | "сопоставить" - to match/compare |
-| Arabic | Verbal noun (masdar) | "مطابقة" - matching/correspondence |
-| Chinese | Verb (dictionary form) | "匹配" - to match/pair |
-| Hindi | Infinitive verb | "मिलान करना" - to match |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to match," "to correspond," or "to compare" in target language. Should convey finding which pattern fits. If language has established programming term for "pattern matching," use that root.
 
@@ -183,55 +166,6 @@ Patterns can be literals (`case 42:`), wildcards (`case _:`), variable captures 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `coincidir`
-- **Form:** Infinitive verb
-- **Why it works:** "Coincidir" means "to coincide/match/correspond" in Spanish. Natural for expressing pattern matching. Used in Spanish CS education for matching operations. Verb form consistent with other control flow keywords like `definir` (def).
-
-**Arabic:**
-
-- **Translation:** `مطابقة` (muṭābaqa)
-- **Form:** Verbal noun (masdar)
-- **Why it works:** "مطابقة" means matching/correspondence in Arabic. Standard in technical contexts. Masdar form consistent with other keywords like `تعريف` (definition). Common in Arabic programming education.
-
-**Chinese:**
-
-- **Translation:** `匹配` (pǐpèi)
-- **Form:** Verb (dictionary form)
-- **Why it works:** "匹配" is the standard Chinese term for "match/pair/correspond." Used in software engineering for pattern matching, regex matching, etc. Natural and established in Chinese technical vocabulary.
-
-**Hindi:**
-
-- **Translation:** `मिलान` (milān) or `मिलान करना` (milān karnā)
-- **Form:** Noun or infinitive verb
-- **Why it works:** "मिलान" means matching/comparison in Hindi. "करना" adds infinitive verb form. Standard in Hindi CS terminology. Natural for pattern matching concept.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "switch" when "match" is clearer**
-
-- **Wrong:** `cambiar` (Spanish - "to switch/change")
-- **Why wrong:** Python's `match` isn't just switching between options—it's pattern matching with destructuring. "Switch" implies changing state; "match" implies finding correspondence. Concept is different from C's switch.
-- **Right:** `coincidir` (to match/correspond)
-
-**Mistake 2: Using noun instead of verb**
-
-- **Wrong:** `coincidencia` (Spanish noun - "coincidence/match")
-- **Why wrong:** Keywords are imperative commands. "Match" tells Python to perform matching action. Noun form doesn't convey the action. Inconsistent with other verb-form keywords.
-- **Right:** `coincidir` (verb infinitive)
-
-**Mistake 3: Too literal translation missing context**
-
-- **Wrong:** `fósforo` (Spanish - "match" as in matchstick)
-- **Why wrong:** English "match" is polysemous—matchstick vs correspondence. Programming uses "match" as "find correspondence," not the fire-starting tool. Must translate correct meaning.
-- **Right:** `coincidir` (correspond/match meaning)
-
----
 
 ## Ambiguity Resolution
 
@@ -268,10 +202,6 @@ Test a value against multiple patterns to find which pattern corresponds/fits. S
 
 `match` and `case` always work together—they're syntactically paired. If `match` is verb form, ensure `case` uses compatible form (noun for "case/instance/situation"). Think of it as "`match` (verb) against these `case`s (nouns)."
 
-**Example:**
-
-Spanish: `coincidir` (match - verb) with `caso` (case - noun) ✅
-Both natural, compatible: "match against cases"
 
 ### Functional relationships
 
@@ -398,25 +328,24 @@ process_3d(x, y, z)
 
 ```yaml
 term: match
-language: es
-translation: coincidir
-form: infinitive verb
-confidence: medium-high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "coincidir" means "to match/coincide/correspond," capturing the pattern matching concept accurately. Verb form maintains consistency with other Python keywords. Widely used in Spanish CS education for matching operations.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `igualar` (to equal/match) - Too focused on equality, misses pattern aspect
-2. `emparejar` (to pair) - Too specific to pairing, not general pattern fitting
-3. `cambiar` (to switch) - Wrong concept, implies C-style switch
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-Confidence is MEDIUM-HIGH because pattern matching is a newer Python feature (3.10+). While "coincidir" accurately captures the concept, some Spanish-speaking regions might not have established conventions yet. Native speaker review recommended to confirm naturalness.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

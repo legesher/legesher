@@ -79,13 +79,6 @@ print(round(-3.2))  # Output: -3
 
 **Pattern rule:** Mathematical transformation functions use verb or noun forms naming the operation. "Round" describes the rounding transformation.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `abs` | absoluto | مطلق | 绝对值 | निरपेक्ष |
-| `int` | entero | عدد_صحيح | 整数 | पूर्णांक |
-| `round` | **redondear** | **تقريب** | **四舍五入** | **पूर्णांकित** |
 
 ---
 
@@ -129,16 +122,7 @@ The return type depends on parameters: `round(x)` (no second arg) returns int. `
 - **Action vs State:** ACTION - performs rounding
 - **Temporal aspect:** Instantaneous transformation
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "redondear", "arrondir" - to round |
-| Germanic (de, nl, sv) | Infinitive verb | "runden", "afronden" - to round |
-| Slavic (ru, pl, uk) | Infinitive verb | "округлить", "zaokrąglić" - to round |
-| Arabic | Verbal noun (masdar) | "تقريب" - rounding/approximation |
-| Chinese | Verb phrase | "四舍五入", "取整" - round off |
-| Hindi | Verbal noun/infinitive | "पूर्णांकित करना", "गोल करना" - to round |
+### Recommended Form
 
 **Primary recommendation:** Use infinitive verb form meaning "to round" or "to approximate." This is an action that transforms a number.
 
@@ -150,55 +134,6 @@ The return type depends on parameters: `round(x)` (no second arg) returns int. `
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `redondear`
-- **Form:** Infinitive verb
-- **Why it works:** Standard Spanish mathematical term for rounding. From "redondo" (round/circular). Natural in "redondear un número" (round a number). Universally used in Spanish mathematics and calculators.
-
-**Arabic:**
-
-- **Translation:** `تقريب` (taqrīb)
-- **Form:** Verbal noun (masdar)
-- **Why it works:** Standard Arabic word for rounding/approximation. From root ق-ر-ب (to be near/approach). Used in Arabic mathematics for rounding operations. Clear mathematical meaning.
-
-**Chinese:**
-
-- **Translation:** `四舍五入` (sìshěwǔrù) or `取整` (qǔzhěng)
-- **Form:** Idiomatic phrase or verb
-- **Why it works:** `四舍五入` = "four discard five enter" - describes "round down if <5, up if ≥5" rule. Traditional Chinese rounding term. `取整` = "take integer" - shorter, more modern. Both widely recognized.
-
-**Hindi:**
-
-- **Translation:** `पूर्णांकित करना` (pūrṇāṅkit karnā) or `गोल करना` (gol karnā)
-- **Form:** Verbal phrase
-- **Why it works:** `पूर्णांकित करना` = "to make whole/integer" (technical term). `गोल करना` = "to round/make round" (more colloquial). `पूर्णांकित` more formal/mathematical. Both valid.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using adjective "redondo" instead of verb "redondear"**
-
-- **Wrong:** `redondo` (Spanish - "round" - adjective)
-- **Why wrong:** "Redondo" describes something circular/round (adjective). Need verb form for the action of rounding. "Redondear" is the infinitive verb.
-- **Right:** `redondear` (to round - verb)
-
-**Mistake 2: Using "aproximar" when "redondear" is more specific**
-
-- **Wrong:** `aproximar` (Spanish - "to approximate")
-- **Why wrong:** "Aproximar" is too general - means any approximation. "Redondear" specifically means rounding (approximating to specified decimal places). More precise term is better.
-- **Right:** `redondear` (to round - specific type of approximation)
-
-**Mistake 3: Using "circular" or geometric rounding**
-
-- **Wrong:** `hacer_circular` (Spanish - "make circular")
-- **Why wrong:** Confuses geometric concept (making something round/circular) with mathematical rounding. Different meanings. Use mathematical term.
-- **Right:** `redondear` (mathematical rounding)
-
----
 
 ## Ambiguity Resolution
 
@@ -241,10 +176,6 @@ English "round" can mean:
 
 Mathematical transformation functions should use verb forms (infinitive) for action-oriented operations. `round`, like other transformations, performs an action on the number.
 
-**Example:**
-
-Spanish: `redondear`, `convertir_a_entero`, `calcular_absoluto` - verb forms ✅
-(Note: `int`, `abs` may be nouns, but `round` as verb is standard)
 
 ### Functional relationships
 
@@ -389,25 +320,24 @@ Only consideration: Distinguish mathematical rounding from geometric "round" (ci
 
 ```yaml
 term: round
-language: es
-translation: redondear
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "redondear" is the universal mathematical term for rounding numbers. It's an infinitive verb form matching Python's action-oriented builtin functions. Standard term used on calculators, in mathematics education, and programming contexts.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `aproximar` (approximate) - Too general; "redondear" more specific
-2. `redondo` (round - adjective) - Wrong part of speech
-3. `hacer_redondo` (make round) - Verbose; infinitive verb better
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Rounding is a universal mathematical concept with clear, standard translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

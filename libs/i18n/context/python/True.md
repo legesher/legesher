@@ -72,13 +72,6 @@ print(int(True))    # Output: 1
 
 **Pattern rule:** Boolean literals should use noun or adjective forms representing truth/correctness. Many languages capitalize boolean literals (True/False) or use lowercase (true/false). Follow target language conventions.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `False` | Falso | خطأ | 假 | असत्य |
-| `None` | Ninguno | لاشيء | 无 | कोई_नहीं |
-| `True` | **Verdadero** | **صحيح** | **真** | **सत्य** |
 
 ---
 
@@ -122,16 +115,7 @@ Python has truthiness: many values evaluate to `True` in boolean contexts. Non-z
 - **Action vs State:** STATE - represents a truth value, not an action
 - **Temporal aspect:** Timeless - truth is absolute, not time-dependent
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adjective (masculine) | "Verdadero", "Vrai" - true/truthful |
-| Germanic (de, nl, sv) | Adjective | "Wahr", "waar" - true |
-| Slavic (ru, pl, uk) | Adjective/noun | "Истина", "prawda" - truth/true |
-| Arabic | Adjective | "صحيح" - correct/true |
-| Chinese | Adjective | "真" - true/real |
-| Hindi | Adjective/noun | "सत्य" - truth/true |
+### Recommended Form
 
 **Primary recommendation:** Use adjective form meaning "true" or "truthful." Follow Python's capitalization (first letter capital) unless target language has different conventions for boolean constants.
 
@@ -143,55 +127,6 @@ Python has truthiness: many values evaluate to `True` in boolean contexts. Non-z
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `Verdadero`
-- **Form:** Adjective (masculine), capitalized
-- **Why it works:** Standard Spanish for "true/truthful." Capitalized like Python. Pairs naturally with `Falso` (False). Used in Spanish CS education for boolean true value.
-
-**Arabic:**
-
-- **Translation:** `صحيح` (ṣaḥīḥ)
-- **Form:** Adjective
-- **Why it works:** Means "correct/true/valid." Standard in Arabic for truth value. Pairs with `خطأ` (false/error). Natural in logical contexts.
-
-**Chinese:**
-
-- **Translation:** `真` (zhēn)
-- **Form:** Adjective
-- **Why it works:** Single character meaning "true/real/genuine." Standard Chinese for boolean true. Concise. Pairs with `假` (false). Used in Chinese programming.
-
-**Hindi:**
-
-- **Translation:** `सत्य` (satya)
-- **Form:** Noun/adjective
-- **Why it works:** Sanskrit-derived word for truth/true. Philosophical and formal. Used in Hindi for logical truth. Pairs with `असत्य` (false). Appropriate register for programming.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using lowercase when Python uses uppercase**
-
-- **Wrong:** `verdadero` (Spanish - lowercase)
-- **Why wrong:** Python capitalizes boolean literals: `True`, `False`. Translation should match this capitalization to maintain visual consistency.
-- **Right:** `Verdadero` (capitalized)
-
-**Mistake 2: Using "yes" or affirmative particle**
-
-- **Wrong:** `sí` (Spanish - "yes")
-- **Why wrong:** "Yes" is conversational affirmation. "True" is logical/philosophical truth. Different concepts. Programming uses logical truth, not conversational yes/no.
-- **Right:** `Verdadero` (logical truth)
-
-**Mistake 3: Using numeric "1" or "one"**
-
-- **Wrong:** `uno` (Spanish - "one")
-- **Why wrong:** While `True == 1` in Python, conceptually they're different. `True` is logical truth; 1 is a number. Don't conflate them in naming.
-- **Right:** `Verdadero` (logical concept)
-
----
 
 ## Ambiguity Resolution
 
@@ -233,10 +168,6 @@ Most languages distinguish these meanings. Use the word for logical/factual trut
 
 `True` and `False` are opposites and should use antonym words in target language. Both should have same capitalization pattern. If `True` is adjective, `False` should be too.
 
-**Example:**
-
-Spanish: `Verdadero` (True), `Falso` (False) - both capitalized adjectives ✅
-NOT: `Verdadero` (adj) + `No` (particle for False) - inconsistent ❌
 
 ### Functional relationships
 
@@ -354,25 +285,24 @@ Only consideration: capitalization conventions may vary. Follow Python's capital
 
 ```yaml
 term: True
-language: es
-translation: Verdadero
-form: adjective
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "Verdadero" is the standard adjective for true/truthful, representing logical truth. Capitalized to match Python's convention. Natural opposite of "Falso" (False). Used universally in Spanish CS education.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `Cierto` (true/certain) - Valid but "Verdadero" more common in CS
-2. `Sí` (yes) - Wrong concept; conversational vs. logical
-3. `verdadero` (lowercase) - Should capitalize to match Python
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Logical truth/falsehood are universal concepts with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

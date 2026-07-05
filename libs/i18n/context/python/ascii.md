@@ -32,8 +32,8 @@ print(ascii(text))  # Output: 'Caf\xe9'
 emoji = "Hello 👋"
 print(ascii(emoji))  # Output: 'Hello \U0001f44b'
 
-chinese = "你好"
-print(ascii(chinese))  # Output: '\u4f60\u597d'
+greeting = "你好"
+print(ascii(greeting))  # Output: '\u4f60\u597d'
 ```
 
 **What this does:** All non-ASCII characters are escaped. Emojis use `\U` (32-bit), most Unicode uses `\u` (16-bit), Latin-1 extended uses `\x` (8-bit). The resulting string is pure ASCII.
@@ -67,13 +67,6 @@ print(ascii(text))  # Output: 'Caf\xe9' (escaped)
 
 **Pattern rule:** Representation functions should use noun forms describing the type of representation. "ASCII" refers to the character encoding standard.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `repr` | representación | تمثيل | 表示 | प्रतिनिधित्व |
-| `str` | cadena | سلسلة | 字符串 | स्ट्रिंग |
-| `ascii` | **ascii** | **أسكي** | **ASCII码** | **ASCII** |
 
 ---
 
@@ -117,16 +110,7 @@ The function is useful for debugging when you need pure ASCII output, writing to
 - **Action vs State:** STATE/PROPERTY - describes encoding type
 - **Temporal aspect:** Instantaneous - converts at moment of call
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Keep "ascii" | International technical term |
-| Germanic (de, nl, sv) | Keep "ASCII" | Universal acronym |
-| Slavic (ru, pl, uk) | Transliterate "аски" | Or keep ASCII |
-| Arabic | Transliterate "أسكي" | Or keep ASCII |
-| Chinese | "ASCII码" or keep | 码 adds "code" clarity |
-| Hindi | Keep "ASCII" | Established loanword |
+### Recommended Form
 
 **Primary recommendation:** Keep "ascii" as-is (lowercase). It's an internationally recognized technical acronym. No translation needed.
 
@@ -137,55 +121,6 @@ The function is useful for debugging when you need pure ASCII output, writing to
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ascii`
-- **Form:** Proper noun (unchanged)
-- **Why it works:** ASCII is universally recognized in computing worldwide. No translation needed. Spanish developers use "ASCII" in conversation and documentation.
-
-**Arabic:**
-
-- **Translation:** `أسكي` (aski) or `ascii`
-- **Form:** Transliteration or unchanged
-- **Why it works:** Can transliterate to Arabic script for consistency with RTL text, but keeping "ascii" is also acceptable as it's a universal technical term.
-
-**Chinese:**
-
-- **Translation:** `ascii` or `ASCII码` (ASCII mǎ)
-- **Form:** Unchanged or with 码 (code)
-- **Why it works:** Keep English term, optionally add 码 for clarity. "ASCII码" (ASCII code) is common in Chinese technical writing. However, for function name brevity, plain `ascii` works.
-
-**Hindi:**
-
-- **Translation:** `ascii`
-- **Form:** Proper noun (unchanged)
-- **Why it works:** ASCII is standard loanword in Hindi computing. No translation needed. Used as-is in Indian CS education.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Translating the full acronym meaning**
-
-- **Wrong:** `código_estándar_americano` (Spanish - "American Standard Code")
-- **Why wrong:** Way too long and loses the universally recognized "ASCII" term. Technical acronyms should generally stay as acronyms.
-- **Right:** `ascii` (keep the acronym)
-
-**Mistake 2: Using generic "character" or "encoding"**
-
-- **Wrong:** `carácter` (Spanish - "character")
-- **Why wrong:** Too generic. ASCII is a specific encoding standard, not just "character." Loses important specificity.
-- **Right:** `ascii` (specific standard)
-
-**Mistake 3: Using native character encoding names**
-
-- **Wrong:** Using local encoding name like "EBCDIC" or country-specific standard
-- **Why wrong:** ASCII is a specific international standard. Substituting other encodings changes the meaning.
-- **Right:** `ascii` (the specific standard)
-
----
 
 ## Ambiguity Resolution
 
@@ -217,10 +152,6 @@ The term is unambiguous in computing contexts. It specifically refers to the ASC
 
 Character/string representation functions (`ascii`, `repr`, `str`) should use compatible forms. ASCII is special because it's a proper noun (standard name), while others are common nouns/verbs.
 
-**Example:**
-
-Spanish: `ascii`, `representación`, `cadena` - ASCII unchanged, others translated ✅
-NOT: `código_ascii`, `representación`, `cadena` ❌ (overcomplicating ASCII)
 
 ### Functional relationships
 
@@ -353,25 +284,24 @@ Key consideration: ASCII is a technical acronym, not a common word. Acronyms are
 
 ```yaml
 term: ascii
-language: es
-translation: ascii
-form: proper_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-ASCII is an internationally recognized technical acronym that should remain unchanged in most languages. Spanish developers universally use "ASCII" in technical contexts. Keeping it lowercase as "ascii" matches Python convention for function names.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `ASCII` (uppercase) - Standard acronym form, but Python uses lowercase for functions
-2. `código_ascii` (ASCII code) - Too verbose for function name
-3. `asci` (transliteration) - Unnecessary; acronym is universally recognized
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. ASCII is a universal technical term that doesn't require translation. The only consideration is case (lowercase for Python functions) and whether to keep English or transliterate for non-Latin scripts.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

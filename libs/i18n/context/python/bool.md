@@ -73,13 +73,6 @@ result = not True        # False
 
 **Pattern rule:** Type constructors should use noun forms naming the category. For `bool`, use the noun form of "boolean" (logical true/false type).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `int` | entero | عدد_صحيح | 整数 | पूर्णांक |
-| `str` | cadena | سلسلة | 字符串 | स्ट्रिंग |
-| `bool` | **booleano** | **منطقي** | **布尔** | **बूलियन** |
 
 ---
 
@@ -123,16 +116,7 @@ Technically, `bool` is a subclass of `int` where `True` has value 1 and `False` 
 - **Action vs State:** STATE/CATEGORY - describes what something is
 - **Temporal aspect:** Timeless - a type is a permanent classification
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adjective-as-noun | "booleano" - boolean/relating to Boole |
-| Germanic (de, nl, sv) | Adjective-as-noun | "boolesch" - boolean |
-| Slavic (ru, pl, uk) | Adjective or noun | "булев" (Boole's), "логический" (logical) |
-| Arabic | Adjective | "منطقي" (logical) or transliteration |
-| Chinese | Transliteration | "布尔" (bù'ěr) - Boole's name |
-| Hindi | Transliteration | "बूलियन" (būliyan) - boolean |
+### Recommended Form
 
 **Primary recommendation:** Use adjective form meaning "boolean" or "logical." Many languages transliterate "Boolean" from the English (Boole's name). Alternatively, use word for "logical" if that's established in CS education.
 
@@ -144,55 +128,6 @@ Technically, `bool` is a subclass of `int` where `True` has value 1 and `False` 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `booleano`
-- **Form:** Adjective-as-noun (masculine)
-- **Why it works:** Standard Spanish form of "Boolean" (Boole's name + Spanish "-eano" suffix). Used in Spanish CS education for logical true/false type. Natural in "valor booleano" (boolean value).
-
-**Arabic:**
-
-- **Translation:** `منطقي` (manṭiqī) or `بولياني` (būliyānī)
-- **Form:** Adjective or transliteration
-- **Why it works:** "منطقي" means "logical" - clear and natural. Alternative: "بولياني" (transliteration of Boolean). "منطقي" may be more accessible; both are used in Arabic CS contexts.
-
-**Chinese:**
-
-- **Translation:** `布尔` (bù'ěr) or `布尔型` (bù'ěrxíng)
-- **Form:** Transliteration of "Boole"
-- **Why it works:** Standard Chinese transliteration of Boolean/Boole's name. Sometimes extended to "布尔型" (Boolean type). Universally recognized in Chinese programming.
-
-**Hindi:**
-
-- **Translation:** `बूलियन` (būliyan)
-- **Form:** Transliteration
-- **Why it works:** Direct transliteration of "Boolean" widely adopted in Indian CS education. Alternative: "तार्किक" (tārkik - logical) but transliteration more recognizable.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "true/false" instead of "boolean"**
-
-- **Wrong:** `verdadero_falso` (Spanish - "true_false")
-- **Why wrong:** "True" and "False" are the VALUES of type `bool`. The type itself is "boolean" - the category containing those two values. Like confusing 5 (value) with `int` (type).
-- **Right:** `booleano` (the type name)
-
-**Mistake 2: Using "binary" instead of "boolean"**
-
-- **Wrong:** `binario` (Spanish - "binary")
-- **Why wrong:** "Binary" refers to base-2 number system (0 and 1 as digits). "Boolean" is logical true/false. Related but distinct concepts. Bool values can be represented in binary, but they're not the same thing.
-- **Right:** `booleano` (logical type, not numeric base)
-
-**Mistake 3: Using "logical" when "boolean" is established**
-
-- **Wrong:** Using only `lógico` when `booleano` is standard
-- **Why wrong:** While "logical" captures the concept, "Boolean" is the technical term honoring George Boole. If your language's CS education uses "Boolean" (transliterated), use that. "Logical" is acceptable if standard, but check conventions.
-- **Right:** `booleano` if that's the CS education standard
-
----
 
 ## Ambiguity Resolution
 
@@ -226,9 +161,6 @@ NO
 
 All type constructors (`bool`, `int`, `float`, `str`, `list`, `dict`) should use noun forms. They name categories, not actions. `bool` specifically should relate to the concept of logical true/false.
 
-**Example:**
-
-Spanish: `booleano`, `entero`, `flotante`, `cadena` - all nouns/adjectives-as-nouns ✅
 
 ### Functional relationships
 
@@ -349,25 +281,24 @@ Only consideration: whether to transliterate "Boolean" or use native word for "l
 
 ```yaml
 term: bool
-language: es
-translation: booleano
-form: adjective_as_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "booleano" is the standard form honoring George Boole's name, following Spanish adjective formation (-eano suffix). Used universally in Spanish CS education for logical true/false type. Natural in technical contexts alongside `entero`, `flotante`, `cadena`.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `lógico` (logical) - Less specific; "booleano" is the precise CS term
-2. `bool` (keep English) - Transliteration preferred when possible
-3. `binario` (binary) - Wrong concept; confuses logical with numeric base-2
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Boolean logic is universal, and "Boolean" (Boole's name) is recognized globally in CS education.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

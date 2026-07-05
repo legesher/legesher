@@ -95,13 +95,6 @@ print(x)  # Raises NameError in Python 3 (x is local to comprehension)
 
 **Pattern rule:** Exception classes should use noun forms, typically ending with "Error" in English. Translations should convey both the error type and the specific problem domain (name, attribute, key, etc.).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `AttributeError` | ErrorDeAtributo | خطأسمة | 属性错误 | विशेषतात्रुटि |
-| `KeyError` | ErrorDeClave | خطأمفتاح | 键错误 | कुंजीत्रुटि |
-| `NameError` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -145,16 +138,7 @@ Understanding `NameError` is crucial for debugging Python code. The error messag
 - **Action vs State:** STATE - describes an error condition, not an action
 - **Temporal aspect:** Instantaneous - occurs at moment of name lookup failure
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound noun or noun phrase | "ErrorDeNombre" - clear structure |
-| Germanic (de, nl, sv) | Compound noun | "Namensfehler" - natural compounds |
-| Slavic (ru, pl, uk) | Compound noun | "ИмяОшибка" - describes error type |
-| Arabic | Noun phrase or compound | "خطأاسم" - name error |
-| Chinese | Compound noun | "名称错误" - name + error |
-| Hindi | Compound noun | "नामत्रुटि" - name + error |
+### Recommended Form
 
 **Primary recommendation:** Use compound noun combining the concept of "name" (identifier) with "error." Maintain capitalization that matches Python's convention (PascalCase for exception classes in English).
 
@@ -166,55 +150,6 @@ Understanding `NameError` is crucial for debugging Python code. The error messag
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ErrorDeNombre`
-- **Form:** Compound noun
-- **Why it works:** "Nombre" (name/identifier) + "Error" is clear. "De" preposition connects them naturally. Follows Spanish CS conventions. Maintains consistency with `ErrorDeClave` pattern.
-
-**Arabic:**
-
-- **Translation:** `خطأاسم` (khata' ism)
-- **Form:** Compound noun
-- **Why it works:** "خطأ" (error) + "اسم" (name) creates clear compound. Standard Arabic technical terminology. Concise and follows pattern of other exception translations.
-
-**Chinese:**
-
-- **Translation:** `名称错误` (míngchēng cuòwù)
-- **Form:** Compound noun
-- **Why it works:** "名称" (name/identifier) + "错误" (error) is natural Chinese structure. Standard in Chinese programming documentation. Clear and concise.
-
-**Hindi:**
-
-- **Translation:** `नामत्रुटि` (naam truti)
-- **Form:** Compound noun
-- **Why it works:** "नाम" (name) + "त्रुटि" (error) follows Sanskrit compound rules. Technical but accessible. Consistent with Hindi CS terminology.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "variable" instead of "name"**
-
-- **Wrong:** `ErrorDeVariable` (Spanish)
-- **Why wrong:** `NameError` applies to any undefined identifier (variables, functions, classes), not just variables. "Name" is the broader technical term.
-- **Right:** `ErrorDeNombre` (covers all identifier types)
-
-**Mistake 2: Overly descriptive**
-
-- **Wrong:** `ErrorNombreNoDefinido` (Spanish - "name not defined")
-- **Why wrong:** Exception names should be concise identifiers, not full sentences. Too long for practical use in code.
-- **Right:** `ErrorDeNombre` (concise but clear)
-
-**Mistake 3: Missing consistency with other exceptions**
-
-- **Wrong:** `NombreNoEncontrado` (Spanish - "name not found")
-- **Why wrong:** Doesn't follow the "ErrorDe..." pattern used for other exceptions. Inconsistent structure makes the exception hierarchy harder to understand.
-- **Right:** `ErrorDeNombre` (consistent pattern)
-
----
 
 ## Ambiguity Resolution
 
@@ -256,16 +191,8 @@ English "name" can mean:
 
 **Consistency rule:**
 
-All exception classes ending in "Error" should use the same structure in translations. If `NameError` translates as "ErrorDeNombre" (Spanish), then `AttributeError` should be "ErrorDeAtributo" and `KeyError` should be "ErrorDeClave" - maintaining consistent pattern.
+All exception classes ending in "Error" should use the same structure in translations. `NameError`, `AttributeError`, and `KeyError` must share the same "error" word and the same compound pattern - maintaining consistent pattern.
 
-**Example:**
-
-Spanish exception pattern:
-
-- `NameError` → `ErrorDeNombre` ✅
-- `AttributeError` → `ErrorDeAtributo` ✅
-- `KeyError` → `ErrorDeClave` ✅
-NOT: `NameError` → `ErrorDeNombre` but `AttributeError` → `AtributoNoEncontrado` ❌ (inconsistent pattern)
 
 ### Functional relationships
 
@@ -344,7 +271,7 @@ print(y)  # Raises NameError
 
 **For this term:** MEDIUM
 
-**Rationale:** While the concept is well-established in programming, translating "name" requires understanding the identifier/variable context. Different languages may use different words for code identifiers (nombre, اسم, 名称, नाम). The compound structure needs to feel natural while maintaining technical clarity and consistency with other exception translations.
+**Rationale:** While the concept is well-established in programming, translating "name" requires understanding the identifier/variable context. Different languages may use different words for code identifiers. The compound structure needs to feel natural while maintaining technical clarity and consistency with other exception translations.
 
 **If your confidence doesn't match this assessment, FLAG FOR HUMAN REVIEW.**
 
@@ -399,25 +326,24 @@ print(y)  # Raises NameError
 
 ```yaml
 term: NameError
-language: es
-translation: ErrorDeNombre
-form: compound_noun
-confidence: medium-high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "ErrorDeNombre" combines "Error" (error) with "Nombre" (name/identifier in programming context), connected by "De" preposition. Follows Spanish programming convention for exception names. Maintains consistency with other exception translations like `ErrorDeClave` (KeyError) and `ErrorDeAtributo` (AttributeError).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `ErrorDeVariable` - Using "Variable" - too narrow, doesn't include functions/classes
-2. `ExcepciónDeNombre` - Using "Excepción" instead of "Error" - too verbose
-3. `NombreError` - Direct compound - less natural in Spanish
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-Confidence is MEDIUM-HIGH because "nombre" is standard for identifiers in Spanish programming, though the term covers variables, functions, and classes. The broad usage of "nombre" matches Python's broad usage of "name" for any identifier.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

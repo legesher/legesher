@@ -85,13 +85,6 @@ mv.release()
 
 **Pattern rule:** Memory and buffer-related types should use technical vocabulary conveying direct data access or low-level operations.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `bytes` | bytes | بايتات | 字节 | बाइट |
-| `bytearray` | bytearray | مصفوفة_بايت | 字节数组 | बाइट_सारणी |
-| `memoryview` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -133,16 +126,7 @@ The buffer protocol is Python's way of exposing raw memory buffers. Objects like
 - **Action vs State:** Creates an object representing a view (action that results in state)
 - **Temporal aspect:** Instantaneous creation, but the view persists
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound noun "view of memory" or technical term | Technical compound matching CS terminology |
-| Germanic (de, nl, sv) | Compound noun (natural in Germanic) | "Speicheransicht" (memory-view) type compounds |
-| Slavic (ru, pl, uk) | Compound noun or technical borrowing | May borrow or create compound from "memory" + "view" |
-| Arabic | Technical compound or descriptive phrase | Compound of "memory/storage" + "view/perspective" |
-| Chinese | Compound technical term | Two-character compounds common for technical terms |
-| Hindi | Compound or borrowed term | Sanskrit-derived compound or technical borrowing |
+### Recommended Form
 
 **Primary recommendation:** Use a compound term combining concepts of "memory" and "view/perspective" if the target language has established CS terminology for these concepts. Otherwise, consider technical borrowing if "memoryview" is used in education.
 
@@ -154,55 +138,6 @@ The buffer protocol is Python's way of exposing raw memory buffers. Objects like
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `vista_memoria` or `vistaMemoria`
-- **Form:** Compound noun
-- **Why it works:** Clear compound of "vista" (view) + "memoria" (memory), conveys the concept of viewing memory directly, follows Spanish CS naming conventions
-
-**Arabic:**
-
-- **Translation:** `عرض_ذاكرة` (ʿarḍ dhākira)
-- **Form:** Compound noun
-- **Why it works:** Combines "عرض" (view/display) + "ذاكرة" (memory), technical and clear, follows Arabic technical compound patterns
-
-**Chinese:**
-
-- **Translation:** `内存视图` (nèicún shìtú)
-- **Form:** Compound noun
-- **Why it works:** Standard CS term combining "内存" (memory) + "视图" (view), widely used in Chinese technical documentation
-
-**Hindi:**
-
-- **Translation:** `स्मृति_दृश्य` (smriti drishya) or borrowed `मेमोरीव्यू`
-- **Form:** Compound noun or technical borrowing
-- **Why it works:** Sanskrit compound "स्मृति" (memory) + "दृश्य" (view) is formal and clear; borrowing acceptable if standard in education
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Losing the "view" concept**
-
-- **Wrong:** `memoria` (Spanish - just "memory")
-- **Why wrong:** Misses the crucial "view" aspect - this isn't memory itself, it's a view/window into memory
-- **Right:** `vista_memoria` (memory view)
-
-**Mistake 2: Using action verb instead of noun**
-
-- **Wrong:** `ver_memoria` (Spanish - "to see memory")
-- **Why wrong:** This is a verb phrase, not a type name. Types should be nouns.
-- **Right:** `vista_memoria` (noun - memory view)
-
-**Mistake 3: Over-simplifying the technical concept**
-
-- **Wrong:** `datos` (Spanish - "data")
-- **Why wrong:** Too generic, loses the specific meaning of a zero-copy view into buffer memory
-- **Right:** `vista_memoria` (preserves technical precision)
-
----
 
 ## Ambiguity Resolution
 
@@ -232,13 +167,6 @@ The term is unambiguous in Python context - it always refers to the buffer proto
 
 Binary data and memory-related terms should form a cohesive vocabulary family. If "bytes" uses a direct term or borrowing, "memoryview" should maintain similar technical register and clarity.
 
-**Example:**
-
-If you translate `bytes` as borrowed term in Spanish:
-
-- `bytes` → `bytes` (borrowed)
-- `bytearray` → `bytearray` or `arreglo_bytes`
-- `memoryview` → `memoryview` or `vista_memoria` (consistent technical register)
 
 ### Functional relationships
 
@@ -332,24 +260,24 @@ result = bytes(mv)  # bytes from memoryview
 
 ```yaml
 term: memoryview
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {compound_noun|technical_borrowing}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Why you chose this translation. Address: does it convey zero-copy view concept, is it consistent with bytes/bytearray terminology, is it used in technical documentation in target language, does it maintain appropriate technical precision}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{What concerns you have, what needs human verification - particularly check if target language CS education has established term for buffer protocol or memory views}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -128,13 +128,6 @@ asyncio.run(main())
 
 **Pattern rule:** Async equivalents of sync functions typically use 'a' prefix (aiter, anext, await). Should maintain consistency with this naming pattern.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `iter` | iter | مكرر | 迭代器 | पुनरावर्तक |
-| `next` | siguiente | التالي | 下一个 | अगला |
-| `aiter` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -176,16 +169,7 @@ This is essential for async programming when dealing with async generators, asyn
 - **Action vs State:** ACTION - creates/returns async iterator
 - **Temporal aspect:** Instantaneous action (returns iterator immediately)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Prefix "async_" + iterator term | Mirror relationship to iter() with async marker |
-| Germanic (de, nl, sv) | Prefix "async_" + iterator | Clear async/sync relationship |
-| Slavic (ru, pl, uk) | Prefix for async + iterator base | Maintain pattern consistency |
-| Arabic | Async marker + iterator term | Could use prefix or compound |
-| Chinese | "异步" (async) + iterator term | Compound showing async nature |
-| Hindi | "अतुल्य" (async) + iterator | Prefix or compound structure |
+### Recommended Form
 
 **Primary recommendation:** Add an async marker (prefix, compound, or adjective) to however `iter` is translated. The relationship between `iter` and `aiter` must be immediately clear.
 
@@ -197,55 +181,6 @@ This is essential for async programming when dealing with async generators, asyn
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `aiter` (borrowed) or `iter_asinc`
-- **Form:** Technical abbreviation with async marker
-- **Why it works:** Maintains relationship to "iter" while clearly indicating async nature, concise for frequent use
-
-**Arabic:**
-
-- **Translation:** `مكرر_لاتزامني` (mukarrar lātazāmunī - async iterator)
-- **Form:** Compound with async prefix
-- **Why it works:** Builds on `iter` translation with async marker, clear technical term
-
-**Chinese:**
-
-- **Translation:** `异步迭代器` (yìbù diédàiqì - async iterator)
-- **Form:** Compound noun
-- **Why it works:** Standard CS term combining "异步" (async) + "迭代器" (iterator), used in Chinese async programming docs
-
-**Hindi:**
-
-- **Translation:** `अतुल्य_पुनरावर्तक` (atulya punarāvartak)
-- **Form:** Compound with async + iterator
-- **Why it works:** Combines async marker with iterator term, maintains relationship to `iter`
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: No async indicator**
-
-- **Wrong:** Same translation as `iter`
-- **Why wrong:** Must distinguish sync `iter` from async `aiter`
-- **Right:** Add async prefix/marker to `iter` translation
-
-**Mistake 2: Completely different term**
-
-- **Wrong:** `próximo_asíncrono` (Spanish - "async next") - confusing with `anext`
-- **Why wrong:** Should be based on `iter`, not `next`
-- **Right:** `iter_asinc` or `aiter` (related to iter)
-
-**Mistake 3: Too verbose**
-
-- **Wrong:** `obtener_iterador_asíncrono` (Spanish - "get async iterator")
-- **Why wrong:** Too long for frequently used function
-- **Right:** `iter_asinc` or `aiter` (concise)
-
----
 
 ## Ambiguity Resolution
 
@@ -376,24 +311,24 @@ pass
 
 ```yaml
 term: aiter
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {function_name_with_async_marker}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Explain how your translation relates to `iter` translation and how it indicates async nature. Should make the sync/async relationship immediately clear while being concise for frequent use.}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Concerns about async terminology in target language, need for verification with async programming community}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

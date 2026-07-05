@@ -4,7 +4,7 @@ Comprehensive validation and auto-fix script for Python context documents.
 
 Validates:
 1. Code block indentation (Python syntax must be correct)
-2. Template structure (11 required sections)
+2. Template structure (10 required sections)
 3. index.json synchronization with actual files
 4. Cross-reference consistency
 
@@ -44,7 +44,6 @@ class ContextDocValidator:
         "Etymology",
         "Concept Explanation",
         "Linguistic Form Recommendation",
-        "Translation Examples",
         "Ambiguity Resolution",
         "Cross-References",
         "Confidence Calibration",

@@ -56,13 +56,6 @@
 
 **Pattern rule:** All {pattern} terms should use {verb form|noun form|adjective form} in target language.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `{related_1}` | {es} | {ar} | {zh} | {hi} |
-| `{related_2}` | {es} | {ar} | {zh} | {hi} |
-| `{this term}` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -105,16 +98,7 @@
 - **Action vs State:** {Does it DO something or DESCRIBE something?}
 - **Temporal aspect:** {Does it have a time component? Ongoing, one-time, permanent?}
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | {Infinitive|Noun|Adjective} | {Why this form} |
-| Germanic (de, nl, sv) | {Infinitive|Noun|Adjective} | {Why this form} |
-| Slavic (ru, pl, uk) | {Infinitive|Noun|Adjective} | {Why this form} |
-| Arabic | {Masdar|Noun|Adjective} | {Why this form} |
-| Chinese | {Dictionary form|Noun|Adjective} | {Why this form} |
-| Hindi | {Infinitive|Noun|Adjective} | {Why this form} |
+### Recommended Form
 
 **Primary recommendation:** {What form to use and WHY}
 
@@ -125,55 +109,6 @@
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `{good_translation}`
-- **Form:** {infinitive/noun/etc.}
-- **Why it works:** {Captures concept, natural, consistent with pattern}
-
-**Arabic:**
-
-- **Translation:** `{good_translation}`
-- **Form:** {masdar/noun/etc.}
-- **Why it works:** {Explanation}
-
-**Chinese:**
-
-- **Translation:** `{good_translation}`
-- **Form:** {dictionary form/etc.}
-- **Why it works:** {Explanation}
-
-**Hindi:**
-
-- **Translation:** `{good_translation}`
-- **Form:** {infinitive/etc.}
-- **Why it works:** {Explanation}
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: {Type of mistake}**
-
-- **Wrong:** `{bad_translation}` (Spanish example)
-- **Why wrong:** {Explanation - wrong meaning, wrong form, inconsistent, etc.}
-- **Right:** `{correct_translation}`
-
-**Mistake 2: {Type of mistake}**
-
-- **Wrong:** `{bad_translation}` (Another language example)
-- **Why wrong:** {Explanation}
-- **Right:** `{correct_translation}`
-
-**Mistake 3: {Type of mistake}**
-
-- **Wrong:** `{bad_translation}`
-- **Why wrong:** {Explanation}
-- **Right:** `{correct_translation}`
-
----
 
 ## Ambiguity Resolution
 

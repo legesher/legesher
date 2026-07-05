@@ -79,13 +79,6 @@ print(largest)  # Output: (2, 'b') - compares first element, then second if tied
 
 **Pattern rule:** Comparison/selection functions should use adjective forms describing the superlative property. "Maximum" = largest/highest.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `min` | mínimo | أدنى | 最小 | न्यूनतम |
-| `sum` | suma | مجموع | 总和 | योग |
-| `max` | **máximo** | **أقصى** | **最大** | **अधिकतम** |
 
 ---
 
@@ -129,16 +122,7 @@ The optional `key` parameter accepts a function that transforms each element bef
 - **Action vs State:** STATE/PROPERTY - describes the largest
 - **Temporal aspect:** Result of comparison
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Superlative adjective/noun | "máximo", "maximum" - largest |
-| Germanic (de, nl, sv) | Superlative noun | "Maximum", "maximum" - largest |
-| Slavic (ru, pl, uk) | Superlative adjective | "максимум", "maksimum" - largest |
-| Arabic | Superlative adjective | "أقصى" - highest/largest |
-| Chinese | Superlative compound | "最大" - most large |
-| Hindi | Superlative adjective | "अधिकतम", "महत्तम" - largest |
+### Recommended Form
 
 **Primary recommendation:** Use superlative form meaning "largest" or "maximum." This is a mathematical superlative - the greatest value in a set.
 
@@ -150,55 +134,6 @@ The optional `key` parameter accepts a function that transforms each element bef
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `máximo`
-- **Form:** Superlative adjective/noun (masculine)
-- **Why it works:** Standard Spanish mathematical term for maximum/largest. Natural in "el máximo valor" (the maximum value). Universally used in Spanish mathematics and statistics. Pairs with "mínimo."
-
-**Arabic:**
-
-- **Translation:** `أقصى` (aqṣā)
-- **Form:** Elative/superlative adjective
-- **Why it works:** Standard Arabic word for highest/largest/maximum. Used in Arabic mathematics and statistics. Clear superlative meaning. Pairs naturally with `أدنى` (minimum).
-
-**Chinese:**
-
-- **Translation:** `最大` (zuìdà)
-- **Form:** Superlative compound
-- **Why it works:** Two characters: 最 (most/superlative marker) + 大 (big/large). Standard Chinese mathematical term for maximum. Clear, concise, universally recognized. Pairs with 最小 (minimum).
-
-**Hindi:**
-
-- **Translation:** `अधिकतम` (adhikatam) or `महत्तम` (mahattam)
-- **Form:** Superlative adjective
-- **Why it works:** `अधिकतम` from Sanskrit "अधिक" (more) + "तम" (superlative suffix). Standard in Hindi mathematics. `महत्तम` (greatest) also valid. `अधिकतम` more common in technical contexts.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using comparative "mayor" instead of superlative "máximo"**
-
-- **Wrong:** `mayor` (Spanish - "greater/larger" - comparative)
-- **Why wrong:** "Mayor" compares two things (A is larger than B). "Máximo" is superlative (the largest of all). `max()` finds the absolute largest, not just larger.
-- **Right:** `máximo` (largest/maximum - superlative)
-
-**Mistake 2: Using verb "maximizar" (maximize)**
-
-- **Wrong:** `maximizar` (Spanish - "to maximize" - verb)
-- **Why wrong:** "Maximizar" means to make larger/increase. `max()` doesn't modify anything - it selects/returns the already-largest value. Different concept.
-- **Right:** `máximo` (the maximum - noun/adjective)
-
-**Mistake 3: Using "grande" (big) without superlative**
-
-- **Wrong:** `grande` (Spanish - "big/large" - positive adjective)
-- **Why wrong:** "Grande" means large, but not largest. Need superlative "el más grande" or better, mathematical term "máximo."
-- **Right:** `máximo` (maximum/largest - superlative)
-
----
 
 ## Ambiguity Resolution
 
@@ -239,10 +174,6 @@ English "maximum" can mean:
 
 `min` and `max` MUST be translated as grammatical opposites using the same superlative pattern. They're complementary functions.
 
-**Example:**
-
-Spanish: `mínimo` (minimum), `máximo` (maximum) - both superlatives ✅
-NOT: `máximo` (superlative) + `más_pequeño` (comparative phrase) ❌
 
 ### Functional relationships
 
@@ -377,25 +308,24 @@ Only consideration: Ensure you use superlative (largest) not comparative (larger
 
 ```yaml
 term: max
-language: es
-translation: máximo
-form: superlative_adjective_as_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "máximo" is the standard mathematical term for maximum/largest value. It's a superlative adjective used as a noun in technical contexts. Pairs naturally with "mínimo" and is universally taught in Spanish mathematics.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `mayor` (larger) - Comparative, not superlative; wrong degree
-2. `grande` (large) - Positive adjective, not superlative
-3. `maximizar` (maximize - verb) - Wrong concept; that means to increase
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Maximum is a universal mathematical concept with clear, standard translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

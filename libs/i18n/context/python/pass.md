@@ -88,13 +88,6 @@ for item in items:
 
 **Pattern rule:** Null operation keywords should express the concept of "doing nothing" or "passing over." "Pass" means to skip or move past without action.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `break` | romper | كسر | 打破 | तोड़ो |
-| `continue` | continuar | استمر | 继续 | जारी |
-| `pass` | **pasar** | **مرر** | **通过** | **पास** |
 
 ---
 
@@ -140,16 +133,7 @@ Unlike comments (which Python ignores during parsing), `pass` is an actual state
 - **Action vs State:** INACTION - command to do nothing
 - **Temporal aspect:** Instantaneous - immediate non-action
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb (imperative/infinitive) | "pasar", "passer" - to pass/skip |
-| Germanic (de, nl, sv) | Verb (infinitive) | "übergehen", "passeren" - to pass over |
-| Slavic (ru, pl, uk) | Verb (imperative) | "пропустить", "pominąć" - to skip/pass |
-| Arabic | Verb (imperative) | "مرر" - marrir (pass) |
-| Chinese | Verb | "通过" - tōngguò (pass through) |
-| Hindi | Loanword/verb | "पास" - pās (pass - borrowed) |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to pass" or "to skip" (imperative or infinitive). This should convey moving past without action or doing nothing.
 
@@ -161,55 +145,6 @@ Unlike comments (which Python ignores during parsing), `pass` is an actual state
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `pasar`
-- **Form:** Verb (infinitive)
-- **Why it works:** "Pasar" means "to pass" in Spanish. Natural for concept of passing over without action. Standard in Spanish programming. Can also consider "omitir" (omit) but "pasar" more direct.
-
-**Arabic:**
-
-- **Translation:** `مرر` (marrir)
-- **Form:** Verb (imperative)
-- **Why it works:** "Marrir" means "pass" (imperative). Direct command to pass over. Natural in Arabic for skipping without action. Used in Arabic programming contexts.
-
-**Chinese:**
-
-- **Translation:** `通过` (tōngguò) or `跳过` (tiàoguò)
-- **Form:** Verb compound
-- **Why it works:** `通过` means "pass through" - natural for placeholder. `跳过` means "skip over" - also valid. Either acceptable; `通过` slightly more common in programming contexts.
-
-**Hindi:**
-
-- **Translation:** `पास` (pās)
-- **Form:** Loanword/verb
-- **Why it works:** "Pās" is borrowed from English "pass" and widely understood in Hindi. Integrated into Hindi programming vocabulary. Alternative: `छोड़ो` (choṛo - skip) but loanword more recognizable.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "nothing" noun instead of verb**
-
-- **Wrong:** `nada` (Spanish - "nothing")
-- **Why wrong:** Keywords are verbs (commands), not nouns. Need action word even though action is "do nothing." "Pass" is verb; "nothing" is noun/pronoun.
-- **Right:** `pasar` (verb - to pass)
-
-**Mistake 2: Using "empty" adjective**
-
-- **Wrong:** `vacío` (Spanish - "empty")
-- **Why wrong:** "Empty" is adjective describing state, not verb commanding action. Need imperative verb form for keyword.
-- **Right:** `pasar` (verb)
-
-**Mistake 3: Confusing with "continue" concept**
-
-- **Wrong:** `continuar` (Spanish - "continue")
-- **Why wrong:** "Continue" is for loop control (skip to next iteration). "Pass" is null operation (do nothing at all). Different concepts need different words.
-- **Right:** `pasar` (distinct from continue)
-
----
 
 ## Ambiguity Resolution
 
@@ -254,9 +189,6 @@ Use the word for passing/skipping without action, or explicitly doing nothing.
 
 `pass` should be distinct from control flow keywords that actually affect execution (`break`, `continue`, `return`). While they're all verbs, `pass` is unique in doing nothing.
 
-**Example:**
-
-Spanish: `pasar` (pass - do nothing), `romper` (break), `continuar` (continue), `retornar` (return) - all distinct verbs ✅
 
 ### Functional relationships
 
@@ -406,25 +338,24 @@ def example():
 
 ```yaml
 term: pass
-language: es
-translation: pasar
-form: verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "pasar" means "to pass/skip," naturally expressing the concept of passing over without action. Standard verb form used as command. Distinct from control flow keywords. Used in Spanish programming for placeholder statements.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `nada` (nothing) - Wrong part of speech; need verb not noun
-2. `vacío` (empty) - Adjective, not verb
-3. `omitir` (omit) - Valid but "pasar" more direct and standard
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Pass/skip verbs are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

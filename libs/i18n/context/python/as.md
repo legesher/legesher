@@ -90,13 +90,6 @@ with open("in.txt") as fin, open("out.txt") as fout:
 
 **Pattern rule:** Aliasing keywords should express equivalence, substitution, or alternative naming. "As" means "in the role of" or "under the name of."
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `import` | importar | استيراد | 导入 | आयात |
-| `from` | desde | من | 从 | से |
-| `as` | **como** | **كـ** | **作为** | **के_रूप_में** |
 
 ---
 
@@ -146,16 +139,7 @@ Binding exceptions allows: error inspection (`except ValueError as e: print(e)`)
 - **Action vs State:** RELATION - indicates aliasing or binding relationship
 - **Temporal aspect:** N/A - conceptual relation
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Conjunction/preposition | "como", "comme", "como" - as/like |
-| Germanic (de, nl, sv) | Conjunction | "als", "als" - as/like |
-| Slavic (ru, pl, uk) | Preposition/particle | "как", "jako" - as/like |
-| Arabic | Preposition/prefix | "كـ" - ka (as/like) |
-| Chinese | Preposition phrase | "作为" - zuòwéi (to serve as) |
-| Hindi | Postposition phrase | "के रूप में" - ke rūp mẽ (in the form of) |
+### Recommended Form
 
 **Primary recommendation:** Use the target language's word for "as" or "in the role of" - expressing equivalence, similarity, or alternative naming. Should indicate "under the name of" or "known as."
 
@@ -167,55 +151,6 @@ Binding exceptions allows: error inspection (`except ValueError as e: print(e)`)
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `como`
-- **Form:** Conjunction/preposition
-- **Why it works:** "Como" means "as/like" in Spanish. Natural for expressing aliases: "import numpy como np" reads as "import numpy known as np." Standard in Spanish programming.
-
-**Arabic:**
-
-- **Translation:** `كـ` (ka)
-- **Form:** Preposition prefix
-- **Why it works:** "Ka" means "as/like" in Arabic. Prefix that attaches to following word. "import numpy كـ np" natural. Standard Arabic preposition for comparison/role.
-
-**Chinese:**
-
-- **Translation:** `作为` (zuòwéi)
-- **Form:** Preposition phrase
-- **Why it works:** "Zuòwéi" means "to act as/serve as." Two characters. Natural for expressing role/alias. "import numpy 作为 np" clear meaning. Standard in Chinese programming.
-
-**Hindi:**
-
-- **Translation:** `के_रूप_में` (ke rūp mẽ) or shortened `के_रूप` (ke rūp)
-- **Form:** Postposition phrase
-- **Why it works:** "Ke rūp mẽ" means "in the form of." Natural for aliasing. May be shortened for code brevity. "import numpy के_रूप_में np" (or shortened form) follows Hindi grammar.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "equals" symbol or word**
-
-- **Wrong:** `igual` (Spanish - "equal") or `=`
-- **Why wrong:** "Equal" indicates value equality (`==`). "As" indicates aliasing/naming. Different concepts. Aliasing isn't equality - it's alternative naming.
-- **Right:** `como` (as/in the role of)
-
-**Mistake 2: Using "called" verb**
-
-- **Wrong:** `llamado` (Spanish - "called")
-- **Why wrong:** "Called" is past participle/adjective. Need preposition/conjunction for syntax. "Import X llamado Y" doesn't follow English-like syntax of "import X as Y."
-- **Right:** `como` (preposition/conjunction)
-
-**Mistake 3: Using noun "alias"**
-
-- **Wrong:** `alias` (Spanish - "alias" noun)
-- **Why wrong:** Need conjunction/preposition, not noun. Can't say "import numpy alias np" - wrong grammar. "As" is function word, not content word.
-- **Right:** `como` (conjunction)
-
----
 
 ## Ambiguity Resolution
 
@@ -260,9 +195,6 @@ Use the word meaning "in the capacity of," "known as," or "under the name of."
 
 `as` must work grammatically in both contexts: imports (`import X as Y`, `from X import Y as Z`) and exception handling (`except E as e`). Translation should read naturally in both cases.
 
-**Example:**
-
-Spanish: `import numpy como np`, `except ValueError como e` - both grammatical ✅
 
 ### Functional relationships
 
@@ -427,25 +359,24 @@ with my_context() as res:
 
 ```yaml
 term: as
-language: es
-translation: como
-form: preposition_conjunction
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "como" means "as/like" (in the role of, known as). Natural for expressing aliases and bindings. Works in both import contexts ("import numpy como np") and exception handling ("except ValueError como e"). Standard in Spanish programming.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `igual` (equal) - Wrong concept; equality not aliasing
-2. `llamado` (called) - Wrong part of speech; need preposition
-3. `alias` (alias - noun) - Wrong part of speech; need conjunction
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "As" equivalents are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

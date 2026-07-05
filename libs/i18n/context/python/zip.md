@@ -88,13 +88,6 @@ print(result)  # [(1,), (2,), (3,)] - single-item tuples
 
 **Pattern rule:** Iteration utility functions use verb forms describing the transformation they apply. "Zip" metaphorically describes combining sequences like a zipper.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `enumerate` | enumerar | تعداد | 枚举 | गिनती |
-| `map` | mapear | خريطة | 映射 | मैप |
-| `zip` | **empaquetar** | **دمج** | **压缩/打包** | **जोड़ना** |
 
 ---
 
@@ -138,16 +131,7 @@ The return value is a zip iterator object (memory-efficient), not a list. Conver
 - **Action vs State:** ACTION - actively combines/pairs elements
 - **Temporal aspect:** Instantaneous - pairs elements as iterated
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "empaquetar", "fermer" - to package/combine |
-| Germanic (de, nl, sv) | Infinitive verb | "reißverschließen", "ritsen" - to zip |
-| Slavic (ru, pl, uk) | Infinitive verb | "соединить", "połączyć" - to combine |
-| Arabic | Verbal noun | "دمج" - merging/combining |
-| Chinese | Verb compound | "打包" (package) or "合并" (merge) |
-| Hindi | Infinitive | "जोड़ना" - to join/combine |
+### Recommended Form
 
 **Primary recommendation:** The challenge with "zip" is that it's a metaphor from physical zippers. Options:
 
@@ -165,55 +149,6 @@ Choose based on what's most natural and clear in target language.
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `empaquetar` or `comprimir` or `enlazar`
-- **Form:** Infinitive verb
-- **Why it works:** "Empaquetar" means to package/bundle together. "Enlazar" means to link/bind together. Both convey combining separate things. Note: "Comprimir" usually means file compression, so "empaquetar" or "enlazar" may be clearer. Alternative: keep "zip" as technical term.
-
-**Arabic:**
-
-- **Translation:** `دمج` (damj) or `ربط` (rabṭ)
-- **Form:** Verbal noun/infinitive
-- **Why it works:** "دمج" means to merge/combine/integrate. "ربط" means to link/connect/bind. Both convey the concept of bringing separate things together. Clear technical meaning.
-
-**Chinese:**
-
-- **Translation:** `打包` (dǎbāo) or `合并` (hébìng) or `拉链` (lāliàn)
-- **Form:** Verb compound
-- **Why it works:** "打包" means to package/bundle. "合并" means to merge/combine. "拉链" literally means zipper (could work as metaphor). "打包" or "合并" more clearly convey the combining action.
-
-**Hindi:**
-
-- **Translation:** `जोड़ना` (joṛnā) or `संयोजन` (sanyojan)
-- **Form:** Infinitive verb
-- **Why it works:** "जोड़ना" means to join/connect/combine. "संयोजन" is more formal (combination/conjunction). Both convey bringing separate sequences together systematically.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Confusing with file compression**
-
-- **Wrong:** `comprimir` (Spanish - "to compress files")
-- **Why wrong:** In computing, "comprimir" typically means file compression (ZIP files, reducing size). While related to the English word "zip," it creates confusion. Better to use "empaquetar" (package), "enlazar" (link), or keep "zip."
-- **Right:** `empaquetar` or `enlazar` (package/link together)
-
-**Mistake 2: Using noun instead of verb**
-
-- **Wrong:** `cremallera` (Spanish - "zipper" noun)
-- **Why wrong:** This is the noun for a physical zipper. Function names should be verbs (actions). Need verb form like "cerrar con cremallera" (way too long) or different approach.
-- **Right:** `empaquetar` (verb: to package/bundle)
-
-**Mistake 3: Using generic "unite" without systematic connotation**
-
-- **Wrong:** `unir` (Spanish - "to unite/join")
-- **Why wrong:** Too generic and vague. Doesn't convey the specific parallel element-by-element pairing that `zip` does. "Empaquetar" or "enlazar" better suggest the systematic pairing.
-- **Right:** `empaquetar` or `enlazar` (systematic packaging/linking)
-
----
 
 ## Ambiguity Resolution
 
@@ -264,10 +199,6 @@ English "zip" can mean:
 
 Iteration utility functions (`zip`, `enumerate`, `map`, `filter`) should use verb forms (infinitive) describing the transformation they apply.
 
-**Example:**
-
-Spanish: `empaquetar`, `enumerar`, `mapear`, `filtrar` - all infinitive verbs ✅
-NOT: `empaquetar` (verb) + `empaquetado` (participle) ❌
 
 ### Functional relationships
 
@@ -426,26 +357,24 @@ Note: This is rated LOW but might lean toward MEDIUM in some languages if the zi
 
 ```yaml
 term: zip
-language: es
-translation: empaquetar
-form: infinitive_verb
-confidence: medium-high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "empaquetar" means "to package" or "to bundle together," which conceptually captures what `zip()` does—bundling corresponding elements from multiple sequences. While "zip" is sometimes kept as an English technical term in Spanish programming, "empaquetar" provides a clear native verb. Alternative: "enlazar" (to link/bind) also works well.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `zip` (keep English) - Valid technical term, many Spanish programmers use it as-is
-2. `comprimir` (compress) - Confusing with file compression; avoid
-3. `enlazar` (to link/bind) - Good alternative, conveys pairing concept
-4. `combinar` (to combine) - Too generic, doesn't convey the systematic pairing
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-Confidence is MEDIUM-HIGH (not HIGH) because "zip" is often kept as an English loanword in many languages' programming contexts. Translation provides clarity for learners but may differ from established usage. Recommend community review to determine if transliteration or translation is preferred in target language's Python community.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -106,13 +106,6 @@ del temp.celsius  # Calls deleter
 
 **Pattern rule:** Descriptors and decorators that modify class behavior should use noun forms indicating what they create or modify.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `class` | clase | صنف | 类 | वर्ग |
-| `def` | definir | تعريف | 定义 | परिभाषित |
-| `property` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -154,16 +147,7 @@ Properties are fundamental to Python's "consenting adults" philosophy - attribut
 - **Action vs State:** STATE/CHARACTERISTIC - describes what an object has
 - **Temporal aspect:** Persistent state (exists as part of object)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun (characteristic/attribute) | Property as object characteristic |
-| Germanic (de, nl, sv) | Noun (attribute/characteristic) | Eigenschaft, property terms |
-| Slavic (ru, pl, uk) | Noun (characteristic/attribute) | Property/ownership concept |
-| Arabic | Noun (characteristic/attribute) | خاصية (characteristic) |
-| Chinese | Noun | 属性 (attribute/property) |
-| Hindi | Noun | गुण (quality/property) or विशेषता |
+### Recommended Form
 
 **Primary recommendation:** Use a noun meaning "characteristic," "attribute," or "property" in the sense of "a feature that belongs to something." Should convey ownership/belonging.
 
@@ -175,55 +159,6 @@ Properties are fundamental to Python's "consenting adults" philosophy - attribut
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `propiedad`
-- **Form:** Noun
-- **Why it works:** Standard Spanish term for property/characteristic, widely used in OOP contexts, clear and concise
-
-**Arabic:**
-
-- **Translation:** `خاصية` (khāṣṣiyya - property/characteristic)
-- **Form:** Noun
-- **Why it works:** Technical term used in Arabic programming for object attributes/properties, clear meaning
-
-**Chinese:**
-
-- **Translation:** `属性` (shǔxìng - attribute/property)
-- **Form:** Noun
-- **Why it works:** Standard CS term for object properties, widely used in Chinese OOP documentation
-
-**Hindi:**
-
-- **Translation:** `गुण` (guṇa - property/quality) or `संपत्ति` (sampatti)
-- **Form:** Noun
-- **Why it works:** Sanskrit-derived term meaning quality/characteristic, appropriate for object attributes
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb form**
-
-- **Wrong:** `propiedear` (Spanish verb - doesn't exist)
-- **Why wrong:** Property is a noun (thing), not an action
-- **Right:** `propiedad` (noun)
-
-**Mistake 2: Wrong type of property**
-
-- **Wrong:** `inmueble` (Spanish - real estate property)
-- **Why wrong:** This is about land/buildings, not programming attributes
-- **Right:** `propiedad` (in programming context)
-
-**Mistake 3: Too generic**
-
-- **Wrong:** `cosa` (Spanish - "thing")
-- **Why wrong:** Too vague, doesn't convey the specific concept of object characteristic
-- **Right:** `propiedad` (specific to attributes)
-
----
 
 ## Ambiguity Resolution
 
@@ -365,24 +300,24 @@ del self._value
 
 ```yaml
 term: property
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {noun}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Explain that you chose a term meaning "object characteristic/attribute" in OOP context, not real estate. Mention if this term is used in OOP education in target language.}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Need to verify OOP terminology, check educational materials}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

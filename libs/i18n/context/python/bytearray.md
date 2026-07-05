@@ -75,13 +75,6 @@ print(data)  # Output: bytearray(b'Hello\x00\x00\x00\x00\x00')
 
 **Pattern rule:** Mutable type constructors should use noun forms. Compound terms should clearly show relationship to base type (byte + array).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `bytes` | bytes | بايتات | 字节串 | बाइट्स |
-| `list` | lista | قائمة | 列表 | सूची |
-| `bytearray` | **matriz_bytes** | **مصفوفة_بايت** | **字节数组** | **बाइट_सरणी** |
 
 ---
 
@@ -125,16 +118,7 @@ Common use cases include network buffers, file I/O buffers, and any scenario whe
 - **Action vs State:** STATE/THING - describes what the object is
 - **Temporal aspect:** Static type definition
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound noun | "matriz_bytes", "tableau_octets" |
-| Germanic (de, nl, sv) | Compound noun | "Byte-Array", "bytearray" |
-| Slavic (ru, pl, uk) | Compound | "байтовый_массив" (byte array) |
-| Arabic | Compound | "مصفوفة بايتات" (array bytes) |
-| Chinese | Compound | "字节数组" (byte array) |
-| Hindi | Compound | "बाइट सरणी" (byte array) |
+### Recommended Form
 
 **Primary recommendation:** Use compound form combining "byte" + "array" concept. Keep relationship to `bytes` clear while indicating mutability/array nature.
 
@@ -145,55 +129,6 @@ Common use cases include network buffers, file I/O buffers, and any scenario whe
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `matriz_bytes` or `arreglo_bytes`
-- **Form:** Compound noun
-- **Why it works:** "Matriz" (matrix/array) + "bytes" clearly indicates mutable byte sequence. Could also use "arreglo" (array). Maintains connection to `bytes` while showing array nature.
-
-**Arabic:**
-
-- **Translation:** `مصفوفة_بايت` (mṣfūfat bāyt) or `صف_بايتات` (ṣaf bāytāt)
-- **Form:** Compound noun
-- **Why it works:** "مصفوفة" (array/matrix) + "بايت" (byte). Standard Arabic computing terminology. Shows mutable collection structure.
-
-**Chinese:**
-
-- **Translation:** `字节数组` (zìjié shùzǔ)
-- **Form:** Compound noun
-- **Why it works:** 字节 (byte) + 数组 (array). Standard Chinese term for byte array. Clear structure indicating multiple bytes in array form.
-
-**Hindi:**
-
-- **Translation:** `बाइट_सरणी` (bāiṭ saraṇī) or `बाइट_अरे`
-- **Form:** Compound noun
-- **Why it works:** "बाइट" (byte) + "सरणी" (array). Could also transliterate "array" as "अरे." Shows mutable sequence of bytes.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using only "array" without "byte"**
-
-- **Wrong:** `matriz` (Spanish - "array" alone)
-- **Why wrong:** Too generic. Could be array of anything. Need to specify it's bytes.
-- **Right:** `matriz_bytes` (byte array - specific)
-
-**Mistake 2: Using same translation as bytes**
-
-- **Wrong:** `bytes` (same as immutable bytes type)
-- **Why wrong:** `bytes` and `bytearray` are different types - one immutable, one mutable. Need distinct translations to show this difference.
-- **Right:** `bytes` vs `matriz_bytes` (distinct types)
-
-**Mistake 3: Using "list" terminology**
-
-- **Wrong:** `lista_bytes` (Spanish - "byte list")
-- **Why wrong:** While similar to lists, bytearrays are specifically for bytes (0-255) and have different characteristics. "Array" better captures the fixed-type nature.
-- **Right:** `matriz_bytes` or `arreglo_bytes` (byte array)
-
----
 
 ## Ambiguity Resolution
 
@@ -225,11 +160,6 @@ The term is unambiguous. It's a compound of "byte" + "array," clearly indicating
 
 Binary data types (`bytes`, `bytearray`, `memoryview`) should use related terminology. The "byte" part should be consistent, with differentiator showing mutability or view nature.
 
-**Example:**
-
-Spanish: `bytes`, `matriz_bytes` - consistent "bytes" root ✅
-Chinese: `字节串`, `字节数组` - consistent "字节" (byte) root ✅
-NOT: `bytes`, `array_binario` ❌ (inconsistent roots)
 
 ### Functional relationships
 
@@ -363,25 +293,24 @@ Key consideration: Relationship to `bytes` must be clear. The mutable/array aspe
 
 ```yaml
 term: bytearray
-language: es
-translation: matriz_bytes
-form: compound_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "matriz_bytes" combines "matriz" (matrix/array) with "bytes," clearly indicating a mutable byte collection. The underscore follows Python convention for compound names. Maintains clear relationship to `bytes` while showing the array/mutable nature.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `arreglo_bytes` (byte array) - Also valid, "arreglo" is common for arrays
-2. `bytearray` (keep English) - Works but loses clarity about byte relationship
-3. `bytes_mutable` (mutable bytes) - Focuses on mutability but "array" better indicates structure
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Compound "byte + array" terms are straightforward in most languages. The structure clearly shows relationship to `bytes` with added mutability.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

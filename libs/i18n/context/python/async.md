@@ -121,13 +121,6 @@ asyncio.run(iterate())  # Prints 1, 2, 3 with pauses
 
 **Pattern rule:** Declaration modifiers should use adjective forms describing the nature/type of what's being declared. `async` describes the asynchronous nature of functions, context managers, or iterators.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `await` | esperar | انتظار | 等待 | प्रतीक्षा |
-| `sync` (concept) | síncrono | متزامن | 同步 | समकालिक |
-| `async` | **asíncrono** | **غير متزامن** | **异步** | **अतुल्यकालिक** |
 
 ---
 
@@ -171,16 +164,7 @@ This enables concurrency without threads: thousands of I/O operations (network r
 - **Action vs State:** STATE descriptor - describes asynchronous property
 - **Temporal aspect:** Static - the async nature doesn't change
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adjective | "asíncrono", "asynchrone" - asynchronous |
-| Germanic (de, nl, sv) | Adjective | "asynchron", "asynchroon" - asynchronous |
-| Slavic (ru, pl, uk) | Adjective | "асинхронный", "asynchroniczny" - asynchronous |
-| Arabic | Adjective phrase | "غير متزامن" (ghayr mutazāmin) - not synchronous |
-| Chinese | Adjective | "异步" (yìbù) - asynchronous |
-| Hindi | Adjective | "अतुल्यकालिक" (atulyakālik) - asynchronous |
+### Recommended Form
 
 **Primary recommendation:** Use adjective form meaning "asynchronous" or "not synchronous." The word should describe code that doesn't execute synchronously, allowing concurrent non-blocking operations. Often abbreviated like English "async" from "asynchronous."
 
@@ -192,55 +176,6 @@ This enables concurrency without threads: thousands of I/O operations (network r
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `asíncrono` or abbreviated `asínc`
-- **Form:** Adjective
-- **Why it works:** "Asíncrono" is standard Spanish for "asynchronous." Technical term recognized in Spanish CS education. Could abbreviate to "asínc" to mirror English "async," though full form may be clearer.
-
-**Arabic:**
-
-- **Translation:** `غير متزامن` (ghayr mutazāmin)
-- **Form:** Negative adjective phrase
-- **Why it works:** غير (not) + متزامن (synchronous) = "not synchronous, asynchronous." Clear technical term. Standard Arabic construction for negating adjectives. Used in Arabic computing contexts.
-
-**Chinese:**
-
-- **Translation:** `异步` (yìbù)
-- **Form:** Adjective compound
-- **Why it works:** 异 (different/other) + 步 (step/pace) = "different pace, asynchronous." Standard Chinese computing term. Contrasts with 同步 (synchronous = same pace). Concise and clear.
-
-**Hindi:**
-
-- **Translation:** `अतुल्यकालिक` (atulyakālik) or `असमकालिक` (asamakālik)
-- **Form:** Adjective
-- **Why it works:** अ (not) + तुल्यकालिक (synchronous) = "asynchronous." Sanskrit-derived technical term. Professional and precise. Alternative: असमकालिक (not simultaneous).
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "parallel" instead of "asynchronous"**
-
-- **Wrong:** `paralelo` (Spanish - "parallel")
-- **Why wrong:** Parallelism (multiple operations executing simultaneously on multiple cores) is different from asynchronicity (concurrent operations on one thread). Python's `async` provides concurrency, not parallelism. "Asíncrono" is correct.
-- **Right:** `asíncrono` (asynchronous, not parallel)
-
-**Mistake 2: Using "concurrent" without "asynchronous"**
-
-- **Wrong:** `concurrente` (Spanish - "concurrent")
-- **Why wrong:** While async enables concurrency, "asynchronous" is the specific technical term. Many concurrency models exist (threads, processes, async). "Asynchronous" specifically describes cooperative, non-blocking concurrency. More precise than generic "concurrent."
-- **Right:** `asíncrono` (specific to async/await model)
-
-**Mistake 3: Using verb form**
-
-- **Wrong:** `asincronizar` (Spanish - "to make asynchronous" - verb)
-- **Why wrong:** `async` is a modifier/adjective describing the nature of a function, not a verb performing an action. "async def" means "asynchronous function definition," not "make this function async."
-- **Right:** `asíncrono` (adjective)
-
----
 
 ## Ambiguity Resolution
 
@@ -281,20 +216,12 @@ But in Python, "async" specifically means: **code that uses the async/await patt
 - [ ] `def` - Modified by async (async def); both relate to function declaration
 - [ ] `with`/`for` - Also modified by async (async with, async for)
 - [ ] Conceptual opposite: "synchronous" - Should be linguistically related
+- [ ] `StopAsyncIteration` - Ends `async for`; must reuse this keyword's async marker
 
 **Consistency rule:**
 
 Async keywords (`async`, `await`) are paired and should work together linguistically. `async` is adjective describing the context, `await` is verb acting within that context. Both should maintain the async/await pattern recognizable across languages.
 
-**Example:**
-
-Spanish:
-
-- `asíncrono` (async - adjective: asynchronous)
-- `esperar` (await - verb: to await)
-- Together: "asíncrono def" creates async function, within which you can "esperar" ✅
-
-Adjective + verb pair. Works cohesively.
 
 ### Functional relationships
 
@@ -464,26 +391,24 @@ class AsyncResource:
 
 ```yaml
 term: async
-language: es
-translation: asíncrono
-form: adjective
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "asíncrono" is the standard adjective for "asynchronous." It's widely used in Spanish CS education and technical documentation. Could be abbreviated to "asínc" to mirror English "async," though the full form may be clearer for learners.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `asínc` (abbreviated) - Mirrors English "async" abbreviation, but less clear
-2. `no_síncrono` (not synchronous) - Technically accurate but verbose
-3. `concurrente` (concurrent) - Related but less specific than "asynchronous"
-4. `asíncrono` (asynchronous) - Standard technical term, clear and professional ✅
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for Spanish. "Asíncrono" is the established translation for "asynchronous" in computing. The question of whether to abbreviate to "asínc" (like "async") may benefit from community input—some may prefer brevity, others clarity. For other languages, verify whether async/await terminology is established in CS education, as async programming is still relatively new (2015+) and terminology may still be evolving.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

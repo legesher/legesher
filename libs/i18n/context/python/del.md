@@ -78,13 +78,6 @@ del person.name
 
 **Pattern rule:** Namespace manipulation keywords should use verb forms (infinitive). They perform actions that modify what names exist in the current scope: creating, deleting, importing.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `def` | definir | تعريف | 定义 | परिभाषित |
-| `import` | importar | استيراد | 导入 | आयात |
-| `del` | **eliminar** | **حذف** | **删除** | **हटाना** |
 
 ---
 
@@ -128,16 +121,7 @@ The syntax varies by target: `del variable`, `del list[index]`, `del dict[key]`,
 - **Action vs State:** Pure ACTION - performs removal/deletion
 - **Temporal aspect:** Instantaneous/perfective - happens immediately and completes
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "eliminar", "supprimer" - to delete/remove |
-| Germanic (de, nl, sv) | Infinitive verb | "löschen", "verwijderen" - to delete/remove |
-| Slavic (ru, pl, uk) | Infinitive verb | "удалить", "usunąć" - to delete/remove |
-| Arabic | Masdar (verbal noun) | "حذف" (ḥadhf) - deletion/removing |
-| Chinese | Verb | "删除" (shānchú) - to delete/remove |
-| Hindi | Infinitive verb | "हटाना" (haṭānā) - to remove/delete |
+### Recommended Form
 
 **Primary recommendation:** Use infinitive verb meaning "to delete" or "to remove." Focus on removal/elimination action. The term should be general enough to apply to variables, list items, dict keys, and attributes.
 
@@ -149,55 +133,6 @@ The syntax varies by target: `del variable`, `del list[index]`, `del dict[key]`,
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `eliminar`
-- **Form:** Infinitive verb
-- **Why it works:** Standard Spanish verb meaning "to eliminate, to remove, to delete." Used in Spanish programming contexts for deletion operations. Broad enough to cover variables, list items, dict keys, and attributes. Natural and professional.
-
-**Arabic:**
-
-- **Translation:** `حذف` (ḥadhf)
-- **Form:** Masdar (verbal noun)
-- **Why it works:** Standard Arabic term for deletion/removal. Root ح-ذ-ف (ḥ-dh-f) means delete/remove. Commonly used in Arabic computing contexts. Masdar form suitable for keyword representing deletion action.
-
-**Chinese:**
-
-- **Translation:** `删除` (shānchú)
-- **Form:** Verb compound
-- **Why it works:** Standard Chinese computing term. 删 (delete) + 除 (remove) = comprehensive deletion concept. Universally used in Chinese programming documentation and education for delete operations.
-
-**Hindi:**
-
-- **Translation:** `हटाना` (haṭānā)
-- **Form:** Infinitive verb
-- **Why it works:** Common Hindi verb meaning "to remove." Natural and clear. Used in Hindi computing contexts. Less formal than Sanskrit alternatives, making it accessible while remaining professional.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "destroy" instead of "delete/remove"**
-
-- **Wrong:** `destruir` (Spanish - "to destroy")
-- **Why wrong:** "Destroy" implies violent obliteration of the object itself. Python's `del` removes references/names, not necessarily objects. "Destruir" is too strong and technically inaccurate. "Eliminar" or "borrar" better capture reference removal.
-- **Right:** `eliminar` (to eliminate/remove/delete)
-
-**Mistake 2: Using noun form**
-
-- **Wrong:** `eliminación` (Spanish - "the deletion" - noun)
-- **Why wrong:** Keywords are actions (verbs), not things (nouns). "Del" performs deletion action, so translation should be verb "to delete," not noun "deletion."
-- **Right:** `eliminar` (verb infinitive)
-
-**Mistake 3: Using "erase" with data wiping connotation**
-
-- **Wrong:** `borrar` (Spanish - "to erase") - borderline acceptable
-- **Why wrong:** "Borrar" often implies wiping/erasing data (like erasing a whiteboard). While acceptable in some contexts, "eliminar" is more precise for namespace operations. "Borrar" isn't wrong but "eliminar" is more technical and accurate.
-- **Right:** `eliminar` (more precise for reference removal)
-
----
 
 ## Ambiguity Resolution
 
@@ -239,10 +174,6 @@ Key semantic nuance: Python's `del` operates at the namespace/reference level, n
 
 Namespace and control flow keywords (`def`, `del`, `import`, `return`, `break`) should all use verb forms (infinitive). They perform actions that affect program state. Don't mix verb and noun forms across these keywords.
 
-**Example:**
-
-Spanish: `definir` (def), `eliminar` (del), `importar` (import) - all infinitive verbs ✅
-NOT: `definir` (verb) + `eliminación` (noun) ❌
 
 ### Functional relationships
 
@@ -372,25 +303,24 @@ del x, y, z  # Delete multiple names
 
 ```yaml
 term: del
-language: es
-translation: eliminar
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "eliminar" is the standard verb for deletion/removal operations in programming. It's broad enough to cover removing variables, list items, dictionary keys, and attributes. Widely used in Spanish technical documentation and CS education.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `borrar` (to erase) - Also acceptable, common in Spain, but slightly less technical
-2. `suprimir` (to suppress/delete) - More formal, less common in programming contexts
-3. `destruir` (to destroy) - Too strong, implies object destruction rather than reference removal
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for Spanish. "Eliminar" is standard in Spanish CS education. Regional variation exists (Spain may prefer "borrar"), but "eliminar" is universally understood. For other languages, verify that chosen verb emphasizes removal/deletion without excessive violence connotation.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

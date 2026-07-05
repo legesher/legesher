@@ -103,13 +103,6 @@ list(delegate())  # [0, 1, 2, 10, 20]
 
 **Pattern rule:** Function control keywords that affect execution flow should use verb forms (infinitive). `yield` performs an action: pause function, return value, and enable resumption. It's a control flow verb.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `return` | retornar | إرجاع | 返回 | वापसी |
-| `break` | romper | كسر | 中断 | तोड़ना |
-| `yield` | **ceder** | **ينتج** | **产出** | **उपज देना** |
 
 ---
 
@@ -153,16 +146,7 @@ Generators are powerful for memory efficiency (large/infinite sequences), lazy e
 - **Action vs State:** ACTION - produces/gives value and pauses
 - **Temporal aspect:** Iterative/repeated - happens multiple times, not once
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "ceder", "produire" - to yield/produce/give |
-| Germanic (de, nl, sv) | Infinitive verb | "ergeben", "opleveren" - to yield/produce |
-| Slavic (ru, pl, uk) | Infinitive verb | "выдавать", "wydawać" - to yield/give out |
-| Arabic | Masdar (verbal noun) | "ينتج" (yuntij) - producing/yielding |
-| Chinese | Verb | "产出" (chǎnchū) or "让出" (ràngchū) - to produce/yield |
-| Hindi | Infinitive verb | "उपज देना" (upaj denā) - to yield/produce |
+### Recommended Form
 
 **Primary recommendation:** Use infinitive verb meaning "to yield," "to produce," or "to give." Focus on the production/giving aspect, suggesting iterative delivery of values, not one-time return. The term should convey gradual output over time.
 
@@ -174,55 +158,6 @@ Generators are powerful for memory efficiency (large/infinite sequences), lazy e
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ceder`
-- **Form:** Infinitive verb
-- **Why it works:** "Ceder" means "to yield, to give way, to produce." Captures both yield-as-produce (output values) and yield-as-surrender-control (pause). Used in Spanish CS contexts for generator yield. Natural and professional.
-
-**Arabic:**
-
-- **Translation:** `ينتج` (yuntij) or `إنتاج` (intāj)
-- **Form:** Verb or masdar (verbal noun)
-- **Why it works:** Root ن-ت-ج (n-t-j) means produce/yield. `ينتج` is present tense verb "produces/yields." `إنتاج` is masdar "production/yielding." Both capture generator production concept. Masdar form may be preferred for keyword consistency.
-
-**Chinese:**
-
-- **Translation:** `产出` (chǎnchū) or `生成` (shēngchéng)
-- **Form:** Verb compound
-- **Why it works:** `产出` = 产 (produce) + 出 (out) = "yield/produce output." `生成` = 生 (generate) + 成 (become) = "generate." Both emphasize gradual production. Used in Chinese programming for yield/generator concepts.
-
-**Hindi:**
-
-- **Translation:** `उपज देना` (upaj denā) or `उत्पन्न` (utpanna)
-- **Form:** Infinitive verb phrase or adjective-turned-verb
-- **Why it works:** `उपज देना` = "to give yield/produce." `उत्पन्न` = "produced/generated." Both convey production concept. First is more verb-like, second more concise.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "surrender" or "give up"**
-
-- **Wrong:** `rendirse` (Spanish - "to surrender/give up")
-- **Why wrong:** "Rendirse" implies defeat or giving up, missing the production/value-output meaning. `yield` in programming primarily means "produce a value," secondarily "pause/yield control." "Ceder" better captures both aspects without negative connotation.
-- **Right:** `ceder` (yield/produce/give)
-
-**Mistake 2: Using "pause" or "wait"**
-
-- **Wrong:** `pausar` (Spanish - "to pause")
-- **Why wrong:** While `yield` does pause execution, that's mechanism, not purpose. The keyword's name emphasizes what it does (produces values) not how (by pausing). "Pause" doesn't convey the value-production aspect critical to generators.
-- **Right:** `ceder` (focuses on yielding values)
-
-**Mistake 3: Using "harvest" or agricultural term**
-
-- **Wrong:** `cosechar` (Spanish - "to harvest")
-- **Why wrong:** While "yield" has agricultural roots (crop yields), "cosechar" is too specific and informal for technical keyword. "Ceder" or "producir" are more technical and professional.
-- **Right:** `ceder` (technical term, not agricultural)
-
----
 
 ## Ambiguity Resolution
 
@@ -267,22 +202,12 @@ The agricultural metaphor is apt: fields yield crops over time (harvest season),
 - [ ] `return` - Both produce function output; yield pauses, return exits; should use similar verb forms
 - [ ] `await` - Similar pause/resume for async (yield for sync generators, await for async)
 - [ ] `def` - Defines functions; yield makes them generators; related function concepts
+- [ ] `GeneratorExit` - Raised inside generators on `close()`; shares generator vocabulary, no error word
 
 **Consistency rule:**
 
 Function output keywords (`return`, `yield`) should both use verb forms (infinitive). They perform actions that produce values from functions. `yield` and `await` both do pause/resume, so similar linguistic structure helps (both verbs).
 
-**Example:**
-
-Spanish:
-
-- `retornar` (return - verb: to return)
-- `ceder` (yield - verb: to yield)
-- `esperar` (await - verb: to wait/await)
-
-All verbs, all infinitive form. ✅ Consistent
-
-NOT: `retornar` (verb) + `ceder` (verb) + `espera` (noun - wait/hope) ❌ Inconsistent
 
 ### Functional relationships
 
@@ -446,26 +371,24 @@ def echo():
 
 ```yaml
 term: yield
-language: es
-translation: ceder
-form: infinitive_verb
-confidence: medium-high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "ceder" means "to yield, to give, to produce," capturing both value production and control surrender. It's used in Spanish programming contexts for generators. The term balances technical precision with natural Spanish phrasing.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `producir` (to produce) - Emphasizes production but misses pause/yield-control aspect
-2. `generar` (to generate) - Clear for generators but less specific than yield
-3. `rendir` (to yield/render) - Can mean "yield results" but has performance connotations
-4. `ceder` (to yield/give way) - Best balance of production and control concepts ✅
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-Confidence is MEDIUM-HIGH (not HIGH) because generators are advanced, and Spanish CS education may have variation in terminology. "Ceder" is strong candidate but native speaker review recommended. Alternatives like "producir" or "generar" might be equally acceptable depending on regional CS teaching practices. Community input valuable for final decision.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

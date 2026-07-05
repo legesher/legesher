@@ -83,13 +83,6 @@ buggy_function(5)
 
 **Pattern rule:** Debugging and introspection tools should use clear action verbs indicating what they do (break execution, print output, raise errors).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `break` | romper | كسر | 中断 | तोड़ना |
-| `print` | imprimir | طباعة | 打印 | छापना |
-| `breakpoint` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -131,16 +124,7 @@ Breakpoints are essential for debugging complex issues that can't be easily diag
 - **Action vs State:** ACTION - triggers pause/break in execution
 - **Temporal aspect:** Instantaneous action (breaks immediately)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound: break + point | May translate compound or borrow technical term |
-| Germanic (de, nl, sv) | Compound noun | Natural in Germanic (Haltepunkt, breakpoint) |
-| Slavic (ru, pl, uk) | Compound or borrowed | Tech term may be borrowed |
-| Arabic | Compound technical term | Break/stop + point/location |
-| Chinese | Compound noun | Established debugging term exists |
-| Hindi | Compound or borrowed | May use Sanskrit compound or borrow |
+### Recommended Form
 
 **Primary recommendation:** Check if "breakpoint" is an established technical term in the target language's debugging/CS education. If so, borrow or adapt it. Otherwise, create a clear compound meaning "break/pause point."
 
@@ -152,55 +136,6 @@ Breakpoints are essential for debugging complex issues that can't be easily diag
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `breakpoint` (borrowed) or `punto_interrupción`
-- **Form:** Compound noun
-- **Why it works:** "Breakpoint" is widely understood in Spanish CS; alternatively "punto de interrupción" (interruption point) captures the concept clearly
-
-**Arabic:**
-
-- **Translation:** `نقطة_توقف` (nuqṭat tawaqquf - stop point)
-- **Form:** Compound noun
-- **Why it works:** Technical compound combining "نقطة" (point) + "توقف" (stop/pause), clear debugging terminology
-
-**Chinese:**
-
-- **Translation:** `断点` (duàndiǎn - break point)
-- **Form:** Compound noun
-- **Why it works:** Standard debugging term in Chinese, widely used in IDEs and debugging tools
-
-**Hindi:**
-
-- **Translation:** `विराम_बिंदु` (virām bindu - pause point) or borrowed `ब्रेकपॉइंट`
-- **Form:** Compound noun or technical borrowing
-- **Why it works:** Sanskrit compound clear and formal; borrowing acceptable if standard in CS education
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using just "break" from break keyword**
-
-- **Wrong:** `romper` (Spanish - the break keyword translation)
-- **Why wrong:** "Breakpoint" is a compound noun, not the same as the `break` keyword
-- **Right:** `punto_interrupción` or `breakpoint`
-
-**Mistake 2: Action verb instead of noun**
-
-- **Wrong:** `interrumpir` (Spanish - "to interrupt")
-- **Why wrong:** This is a verb; breakpoint is a noun (a point/location)
-- **Right:** `punto_interrupción` (noun - interruption point)
-
-**Mistake 3: Too verbose**
-
-- **Wrong:** `punto_donde_se_detiene_ejecución` (Spanish - "point where execution stops")
-- **Why wrong:** Way too long for a frequently used debugging function
-- **Right:** `punto_interrupción` or `breakpoint` (concise)
-
----
 
 ## Ambiguity Resolution
 
@@ -232,13 +167,13 @@ While `breakpoint` contains "break," it's not the same as the `break` keyword. H
 
 **Example:**
 
-**Spanish - possible approaches:**
+**Possible approaches:**
 
-- Borrow: `breakpoint` (tech term)
-- Translate: `punto_interrupción` (interruption point)
-- Hybrid: `break_punto` (if "break" kept in other contexts)
+- Borrow: keep `breakpoint` as a technical loanword
+- Translate: a native "interruption point / stop point" compound
+- Hybrid: loanword root + native "point" word (if "break" is kept in other contexts)
 
-Choose based on CS education norms.
+Choose based on the language community's CS education norms.
 
 ### Functional relationships
 
@@ -330,24 +265,24 @@ return step2
 
 ```yaml
 term: breakpoint
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {compound_noun|technical_borrowing}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Explain whether you borrowed the term or translated it, and why. Mention if you checked CS education materials, IDE localization, or debugger documentation in the target language.}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Need to verify with debugger localization, CS education materials, or debugging community in target language}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

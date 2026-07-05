@@ -89,13 +89,6 @@ print(type(type))    # <class 'type'>
 
 **Pattern rule:** Introspection functions should use noun forms or verb forms that suggest querying/examining rather than modifying. These functions inspect objects without changing them.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `isinstance` | es_instancia | هو_نموذج | 属于实例 | उदाहरण_है |
-| `id` | identificador | معرّف | 标识 | पहचान |
-| `type` | **tipo** | **نوع** | **类型** | **प्रकार** |
 
 ---
 
@@ -139,16 +132,7 @@ While useful for debugging and introspection, for type checking it's usually bet
 - **Action vs State:** STATE - describes what category something belongs to
 - **Temporal aspect:** Instantaneous - queries current state
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "tipo", "type" - classification/kind |
-| Germanic (de, nl, sv) | Noun | "Typ", "type" - kind/category |
-| Slavic (ru, pl, uk) | Noun | "тип", "typ" - type/kind |
-| Arabic | Noun | "نوع" - type/kind/species |
-| Chinese | Noun compound | "类型" - category/type |
-| Hindi | Noun | "प्रकार" - type/kind |
+### Recommended Form
 
 **Primary recommendation:** Use the standard word for "type," "kind," or "category" in the target language. This is a universal computing concept with established translations in all languages.
 
@@ -160,55 +144,6 @@ While useful for debugging and introspection, for type checking it's usually bet
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `tipo`
-- **Form:** Noun (masculine)
-- **Why it works:** Standard Spanish word for "type," "kind," or "category." Used universally in Spanish computer science for data types. Clear, concise, and immediately understood by Spanish programmers.
-
-**Arabic:**
-
-- **Translation:** `نوع` (nawʿ)
-- **Form:** Noun (masculine)
-- **Why it works:** Arabic word for type, kind, or species. Standard term in Arabic computing for data types. Used in Arabic CS education and technical documentation. Concise and clear.
-
-**Chinese:**
-
-- **Translation:** `类型` (lèixíng)
-- **Form:** Noun compound
-- **Why it works:** Two characters: 类 (category/class) + 型 (model/type). Standard Chinese computing term for "type." Used consistently in Chinese Python documentation and CS education.
-
-**Hindi:**
-
-- **Translation:** `प्रकार` (prakār)
-- **Form:** Noun
-- **Why it works:** Sanskrit-derived Hindi word meaning type, kind, or category. Standard term in Hindi CS education for data types. Clear technical term that aligns with formal Hindi computing vocabulary.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Confusing with "to type" (keyboard)**
-
-- **Wrong:** `escribir` (Spanish - "to write/type on keyboard")
-- **Why wrong:** This is the verb meaning to type on a keyboard, not the noun meaning category/classification. Wrong meaning entirely.
-- **Right:** `tipo` (noun: type/kind/category)
-
-**Mistake 2: Using overly specific biological term**
-
-- **Wrong:** `especie` (Spanish - "species")
-- **Why wrong:** While "type" and "species" are related concepts, "especie" is too biological. "Tipo" is the correct general computing term for data types.
-- **Right:** `tipo` (general type/category)
-
-**Mistake 3: Using "class" when "type" is more precise**
-
-- **Wrong:** `clase` (Spanish - "class")
-- **Why wrong:** While Python types are classes, `type()` is the function name and "tipo" is the standard term. "Clase" should be reserved for translating `class` keyword.
-- **Right:** `tipo` (type, not class specifically)
-
----
 
 ## Ambiguity Resolution
 
@@ -251,10 +186,6 @@ English "type" can mean:
 
 Type-related functions and type names should all use noun forms. They describe categories and classifications, not actions.
 
-**Example:**
-
-Spanish: `tipo`, `clase`, `entero`, `cadena` - all nouns ✅
-NOT: `tipo` (noun) + `verificar_tipo` (verb phrase in function name) ❌
 
 ### Functional relationships
 
@@ -396,25 +327,24 @@ print(instance.x)  # 10
 
 ```yaml
 term: type
-language: es
-translation: tipo
-form: noun (masculine)
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "tipo" is the universal standard term for "type" in computing contexts, used consistently to describe data types across all Spanish programming documentation and CS education. It clearly conveys the concept of category or classification. The term is immediately recognizable and used naturally in phrases like "tipo de datos" (data type).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `clase` (class) - Related but "clase" should be reserved for `class` keyword
-2. `categoría` (category) - Too generic; "tipo" is the established computing term
-3. `type` (English loan) - Not standard in Spanish; native term exists and is preferred
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Tipo" is the universal standard term for "type" in Spanish computing, recognized across all Spanish-speaking technical communities and educational systems.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

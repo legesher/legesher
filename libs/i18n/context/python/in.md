@@ -90,13 +90,6 @@ for item in [1, 2, 3]:
 
 **Pattern rule:** Membership operators should use preposition or verb forms that express containment or presence. "In" expresses being within or inside something.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `for` | para | لكل | 对于 | के_लिए |
-| `not` | no | ليس | 非 | नहीं |
-| `in` | **en** | **في** | **在** | **में** |
 
 ---
 
@@ -142,16 +135,7 @@ For different types, `in` behavior varies: for lists/tuples, checks if value equ
 - **Action vs State:** RELATION - expresses containment/membership
 - **Temporal aspect:** Instantaneous check (membership) or ongoing (iteration)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Preposition | "en", "dans", "em" - in/inside |
-| Germanic (de, nl, sv) | Preposition | "in", "in" - in |
-| Slavic (ru, pl, uk) | Preposition | "в", "w" - in/within |
-| Arabic | Preposition | "في" - fī (in/within) |
-| Chinese | Preposition | "在" - zài (at/in) or "于" - yú (in) |
-| Hindi | Postposition | "में" - mẽ (in/within) |
+### Recommended Form
 
 **Primary recommendation:** Use the target language's basic locative preposition meaning "in" or "inside" - the word used to express physical or conceptual containment.
 
@@ -163,55 +147,6 @@ For different types, `in` behavior varies: for lists/tuples, checks if value equ
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `en`
-- **Form:** Preposition
-- **Why it works:** Universal Spanish preposition for location/containment. "Está en la lista" (it's in the list). Natural for both membership test and iteration. Standard in Spanish programming.
-
-**Arabic:**
-
-- **Translation:** `في` (fī)
-- **Form:** Preposition
-- **Why it works:** Standard Arabic preposition for containment/location. "في القائمة" (in the list). Natural for expressing membership. Used in Arabic CS education.
-
-**Chinese:**
-
-- **Translation:** `在` (zài) or `于` (yú)
-- **Form:** Preposition
-- **Why it works:** `在` means "at/in" (location). `于` means "in/at" (more formal/literary). Either acceptable. `在` more common in everyday speech, appropriate for programming.
-
-**Hindi:**
-
-- **Translation:** `में` (mẽ)
-- **Form:** Postposition
-- **Why it works:** Standard Hindi postposition for location/containment. "सूची में है" (is in list). Natural for expressing membership. Note: Hindi uses postpositions (after noun) rather than prepositions (before noun).
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "inside" when "in" is simpler**
-
-- **Wrong:** `dentro` (Spanish - "inside")
-- **Why wrong:** While correct, "dentro" is more emphatic than needed. "En" is simpler, more common. Code should use the shortest, most common word. "In" vs "inside" - prefer "in."
-- **Right:** `en` (simple, common preposition)
-
-**Mistake 2: Using verb "contains"**
-
-- **Wrong:** `contiene` (Spanish - "contains" - verb)
-- **Why wrong:** Makes code read awkwardly: "if element contiene lista" doesn't follow natural word order. "Contains" is verb; "in" is preposition. Preposition reads more naturally.
-- **Right:** `en` (preposition for containment)
-
-**Mistake 3: Using "within" for formality**
-
-- **Wrong:** `dentro_de` (Spanish - "within")
-- **Why wrong:** Too formal and verbose. Python's `in` is simple two-letter word. Compound phrase is longer. Use simplest common preposition.
-- **Right:** `en` (simple, common)
-
----
 
 ## Ambiguity Resolution
 
@@ -255,9 +190,6 @@ Use the locative/containment preposition in your language - the word for "in/ins
 
 `in` and `not in` should work together naturally. If `in` is a preposition, `not in` should be negation + preposition. The phrase should read naturally in the target language.
 
-**Example:**
-
-Spanish: `en` (in), `no en` or `not in` combined naturally ✅
 
 ### Functional relationships
 
@@ -395,25 +327,24 @@ if char in "aeiou" and char in word:
 
 ```yaml
 term: in
-language: es
-translation: en
-form: preposition
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "en" is the universal preposition for location and containment. Natural for asking "está en la lista?" (is it in the list?). Works for both membership tests and `for` loop iteration. Standard in Spanish programming.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `dentro` (inside) - More emphatic than needed; "en" simpler
-2. `contiene` (contains - verb) - Wrong word order; need preposition
-3. `dentro_de` (within) - Too verbose; "en" is standard
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Containment/location prepositions are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

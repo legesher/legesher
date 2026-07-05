@@ -62,13 +62,6 @@ except FileNotFoundError:
 
 **Pattern rule:** All file I/O action builtins should use verb forms (infinitive) in target language to indicate operations.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `read` | leer | قراءة | 读取 | पढ़ना |
-| `write` | escribir | كتابة | 写入 | लिखना |
-| `open` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -110,76 +103,18 @@ Modern Python encourages using `open()` with context managers (the `with` statem
 - **Action vs State:** Action - actively creates connection to file system
 - **Temporal aspect:** One-time action that creates ongoing state (file remains open until closed)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "abrir" (Spanish) - natural verb form for file opening action |
-| Germanic (de, nl, sv) | Infinitive verb | "öffnen" (German) - standard verb for opening action |
-| Slavic (ru, pl, uk) | Infinitive verb | "открыть" (Russian) - verb captures action |
-| Arabic | Masdar (verbal noun) | "فتح" - verbal noun for opening action |
-| Chinese | Verb (dictionary form) | "打开" - standard verb for opening |
-| Hindi | Infinitive verb | "खोलना" - infinitive captures opening action |
+### Recommended Form
 
 **Primary recommendation:** Use infinitive verb form that means "to open" in target language
 
 **Forms to AVOID:**
 
-- ❌ Participle/gerund forms ("opening", "abriendo") - Too wordy, implies ongoing process
-- ❌ Noun forms ("opener", "apertura") - This is an action, not a thing
+- ❌ Participle/gerund forms ("opening") - Too wordy, implies ongoing process
+- ❌ Noun forms ("opener") - This is an action, not a thing
 - ❌ Past tense ("opened") - Function initiates action, not describing completed action
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `abrir`
-- **Form:** infinitive verb
-- **Why it works:** Standard Spanish verb for "to open", natural and clear, matches pattern with other action builtins like "cerrar" (close)
-
-**Arabic:**
-
-- **Translation:** `فتح`
-- **Form:** masdar (verbal noun)
-- **Why it works:** Standard Arabic term for opening, used in technical contexts, concise and clear
-
-**Chinese:**
-
-- **Translation:** `打开`
-- **Form:** verb compound
-- **Why it works:** Common Chinese verb for "to open", used for files and applications, natural in technical context
-
-**Hindi:**
-
-- **Translation:** `खोलना`
-- **Form:** infinitive verb
-- **Why it works:** Standard Hindi infinitive for "to open", clear and natural for file operations
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using noun instead of verb**
-
-- **Wrong:** `apertura` (Spanish - means "opening" as noun)
-- **Why wrong:** This is a thing/event, not an action; builtins that perform actions should use verb forms
-- **Right:** `abrir` (infinitive verb)
-
-**Mistake 2: Using status/state word**
-
-- **Wrong:** `abierto` (Spanish - means "open" as adjective/state)
-- **Why wrong:** Describes state, not action; would confuse whether checking if file is open vs opening it
-- **Right:** `abrir` (action verb)
-
-**Mistake 3: Using compound phrase**
-
-- **Wrong:** `abrir archivo` (Spanish - "open file")
-- **Why wrong:** Too long, includes object; builtin name should be action only, object comes as parameter
-- **Right:** `abrir` (just the action)
-
----
 
 ## Ambiguity Resolution
 
@@ -212,23 +147,15 @@ English "open" can mean:
 
 **If translating `open`, check these translations:**
 
-- [ ] `close` - Opposite action, should use antonym verb form ("cerrar" vs "abrir" in Spanish)
+- [ ] `close` - Opposite action, should use antonym verb form
 - [ ] `read` - Related file operation, should use same verb form pattern
 - [ ] `write` - Related file operation, should use same verb form pattern
 - [ ] `with` - Context manager keyword often used with open, ensure compatibility
 
 **Consistency rule:**
 
-All file I/O operations should use infinitive verb forms in the target language. If `open` is translated as an infinitive verb like "abrir" (Spanish), then related functions like `read`, `write`, and `close` must also use infinitive forms ("leer", "escribir", "cerrar").
+All file I/O operations should use infinitive verb forms in the target language. If `open` is translated as an infinitive verb, then related functions like `read`, `write`, and `close` must also use infinitive forms.
 
-**Example:**
-
-If you translate `open` as infinitive ("abrir" in Spanish), then:
-
-- `close` should also be infinitive ("cerrar")
-- `read` should also be infinitive ("leer")
-- `write` should also be infinitive ("escribir")
-- NOT: `open` infinitive + `close` noun (inconsistent ❌)
 
 ### Functional relationships
 
@@ -317,24 +244,24 @@ with open("file.txt", "r") as f:
 
 ```yaml
 term: open
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {infinitive|masdar|verb}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Why you chose this translation. Address: concept accuracy (action of making file accessible), linguistic form (infinitive verb), consistency with file I/O operations pattern, alignment with standard technical vocabulary in target language}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{What concerns you have, what needs human verification}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

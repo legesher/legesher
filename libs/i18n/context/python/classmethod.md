@@ -106,13 +106,6 @@ print(Cat.get_species())  # Output: Cat: Felis catus
 
 **Pattern rule:** Method decorators should indicate the type of method they create, using compound terms or clear technical vocabulary.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `class` | clase | صنف | 类 | वर्ग |
-| `def` | definir | تعريف | 定义 | परिभाषित |
-| `classmethod` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -154,16 +147,7 @@ Classmethods work correctly with inheritance because `cls` refers to the actual 
 - **Action vs State:** DESCRIPTOR - describes what kind of method this is
 - **Temporal aspect:** N/A (it's a type descriptor)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound: class + method | Método de clase, méthode de classe |
-| Germanic (de, nl, sv) | Compound noun | Klassenmethode (natural compounds) |
-| Slavic (ru, pl, uk) | Compound with class + method | Technical compound |
-| Arabic | Compound: class + method | Descriptive compound |
-| Chinese | Compound noun | 类方法 (class method) |
-| Hindi | Compound | वर्ग विधि (class method) |
+### Recommended Form
 
 **Primary recommendation:** Create a compound combining translations of "class" and "method". The relationship should be clear - this is a method that belongs to/operates on the class level.
 
@@ -175,55 +159,6 @@ Classmethods work correctly with inheritance because `cls` refers to the actual 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `método_clase` or `métodoclase`
-- **Form:** Compound noun
-- **Why it works:** Clear compound of "método" (method) + "clase" (class), immediately understood as class-level method
-
-**Arabic:**
-
-- **Translation:** `دالة_صنف` (dāllat ṣinf - class function/method)
-- **Form:** Compound noun
-- **Why it works:** Technical compound combining class + method concepts, clear in CS context
-
-**Chinese:**
-
-- **Translation:** `类方法` (lèi fāngfǎ - class method)
-- **Form:** Compound noun
-- **Why it works:** Standard CS term for classmethod, widely used in Chinese Python documentation
-
-**Hindi:**
-
-- **Translation:** `वर्ग_विधि` (varga vidhi - class method)
-- **Form:** Compound noun
-- **Why it works:** Clear Sanskrit-derived compound, professional and precise
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using just "method"**
-
-- **Wrong:** `método` (Spanish - just "method")
-- **Why wrong:** Doesn't distinguish from regular instance methods
-- **Right:** `método_clase` (class method)
-
-**Mistake 2: Wrong word order or relationship**
-
-- **Wrong:** `clase_de_método` (Spanish - "type of method")
-- **Why wrong:** Sounds like a category/type rather than a class-level method
-- **Right:** `método_clase` (method of/for class)
-
-**Mistake 3: Too verbose**
-
-- **Wrong:** `método_que_pertenece_a_clase` (Spanish - "method that belongs to class")
-- **Why wrong:** Way too long for a frequently used decorator
-- **Right:** `método_clase` (concise)
-
----
 
 ## Ambiguity Resolution
 
@@ -353,24 +288,24 @@ pass
 
 ```yaml
 term: classmethod
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {compound_noun}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Explain that you created a compound from "class" + "method" translations. Mention if this pattern is used in OOP education in target language.}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Need to verify compound structure, check consistency with `staticmethod`}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -61,14 +61,6 @@ print(type(x))  # Output: <class 'ellipsis'>
 
 **Pattern rule:** All constant singletons should use noun form or value name in target language. They represent fixed objects, not actions.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `None` | Ninguno | لا شيء | 空 | कुछ नहीं |
-| `True` | Verdadero | صحيح | 真 | सत्य |
-| `False` | Falso | خطأ | 假 | असत्य |
-| `Ellipsis` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -114,16 +106,7 @@ NumPy extends this usage to array slicing, where `...` represents "all remaining
 - **Action vs State:** STATE - it is a fixed value, not an action
 - **Temporal aspect:** Permanent constant - exists throughout program execution
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun (feminine to match "elipsis") | Matches grammatical gender of linguistic term |
-| Germanic (de, nl, sv) | Noun | Represents constant object |
-| Slavic (ru, pl, uk) | Noun | Constants are nouns |
-| Arabic | Noun (مصدر or concrete noun) | Technical term for punctuation mark |
-| Chinese | Noun phrase | Technical term |
-| Hindi | Noun (Sanskrit-derived) | Technical/mathematical constant |
+### Recommended Form
 
 **Primary recommendation:** Use the linguistic/typographical term for "ellipsis" in the target language if it exists and is recognizable. This connects to the mathematical and typographical tradition.
 
@@ -134,55 +117,6 @@ NumPy extends this usage to array slicing, where `...` represents "all remaining
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `Elipsis`
-- **Form:** Noun (feminine)
-- **Why it works:** Direct cognate with established technical meaning in Spanish mathematics and typography
-
-**Arabic:**
-
-- **Translation:** `علامة_الحذف` (ʿalāmat al-ḥadhf - mark of omission)
-- **Form:** Noun phrase
-- **Why it works:** Technical term used in Arabic typography and grammar for ellipsis punctuation
-
-**Chinese:**
-
-- **Translation:** `省略号` (shěnglüèhào)
-- **Form:** Noun
-- **Why it works:** Standard Chinese term for ellipsis punctuation mark, widely recognized
-
-**Hindi:**
-
-- **Translation:** `लोप_चिह्न` (lop chinha - omission mark)
-- **Form:** Noun phrase
-- **Why it works:** Technical grammatical term for ellipsis in Hindi
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Literal "Three Dots"**
-
-- **Wrong:** `tres_puntos` (Spanish - three dots)
-- **Why wrong:** Too literal, loses connection to technical/mathematical concept of ellipsis
-- **Right:** `Elipsis`
-
-**Mistake 2: Generic "Omission"**
-
-- **Wrong:** `omisión` alone (Spanish - omission)
-- **Why wrong:** Too generic, doesn't convey the specific typographical/programming concept
-- **Right:** `Elipsis` (technical term)
-
-**Mistake 3: Using "Incomplete" or "Unfinished"**
-
-- **Wrong:** `incompleto` (Spanish - incomplete)
-- **Why wrong:** Describes a state rather than naming the constant object
-- **Right:** `Elipsis` (the object's name)
-
----
 
 ## Ambiguity Resolution
 
@@ -222,13 +156,6 @@ English "ellipsis" can mean:
 
 All singleton constants (`None`, `True`, `False`, `Ellipsis`, `NotImplemented`) should use noun form and consistent capitalization pattern (first letter capitalized in most languages following Python's convention).
 
-**Example:**
-
-If you translate `None` as noun with first capital:
-
-- `None` → `Ninguno` (Spanish - capitalized noun)
-- `Ellipsis` → `Elipsis` (Spanish - capitalized noun)
-- NOT: `None` → `Ninguno` (capitalized) + `Ellipsis` → `elipsis` (lowercase) ← Inconsistent ❌
 
 ### Functional relationships
 
@@ -316,24 +243,24 @@ The difficulty is MEDIUM because the concept exists cross-linguistically (typogr
 
 ```yaml
 term: Ellipsis
-language: {es|ar|zh|hi|your_language}
-translation: {your_translation}
-form: {noun|noun_phrase}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Why you chose this translation. Consider: Does your language have an established term for ellipsis punctuation? Is a cognate available (elipsis/ellipse)? Did you choose descriptive translation like "omission mark"? How does this align with mathematical/typographical terminology in your language?}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Are you uncertain about the technical term? Is there ambiguity between cognate and descriptive translation? Does your language lack a standard term for this punctuation mark?}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

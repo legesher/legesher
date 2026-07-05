@@ -95,13 +95,6 @@ print(_)  # Works, but confusing - avoid this
 
 **Pattern rule:** Wildcard/placeholder terms should convey "match anything" or "ignore this" in target language. They represent absence of interest in a value.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `match` | **coincidir** | **مطابقة** | **匹配** | **मिलान** |
-| `case` | **caso** | **حالة** | **情况** | **मामला** |
-| `_` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -145,16 +138,7 @@ Beyond pattern matching, `_` has conventional uses: developers use it to indicat
 - **Action vs State:** PLACEHOLDER - neither action nor state, represents unknown/ignored entity
 - **Temporal aspect:** Immediate/static - exists at matching moment only
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun or symbol | "comodín", "underscore", or keep `_` symbol |
-| Germanic (de, nl, sv) | Noun or symbol | "Platzhalter", "wildcard", or keep `_` |
-| Slavic (ru, pl, uk) | Noun or symbol | "заполнитель", keep `_` symbol |
-| Arabic | Symbol or word | Keep `_` or "حرف_سفلي" (unlikely to translate) |
-| Chinese | Symbol | Keep `_` symbol (most common) or "下划线" |
-| Hindi | Symbol | Keep `_` symbol (most practical) |
+### Recommended Form
 
 **Primary recommendation:** **Keep the underscore symbol `_` untranslated** across all languages. It's a universal typographic character, language-independent, and changing it would break keyboard muscle memory and reduce code portability.
 
@@ -166,55 +150,6 @@ Beyond pattern matching, `_` has conventional uses: developers use it to indicat
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `_` (keep underscore symbol)
-- **Form:** Symbol (untranslated)
-- **Why it works:** Universal character, familiar to all programmers. Spanish documentation would call it "guion bajo" or "comodín", but in code, the symbol stays as `_`.
-
-**Arabic:**
-
-- **Translation:** `_` (keep underscore symbol)
-- **Form:** Symbol (untranslated)
-- **Why it works:** Even in RTL scripts, ASCII symbols remain universal in code. Arab developers know `_` regardless of language. Translating would cause confusion and input difficulties.
-
-**Chinese:**
-
-- **Translation:** `_` (keep underscore symbol)
-- **Form:** Symbol (untranslated)
-- **Why it works:** Chinese programming universally uses ASCII symbols for operators and special identifiers. The symbol is language-neutral and universally understood.
-
-**Hindi:**
-
-- **Translation:** `_` (keep underscore symbol)
-- **Form:** Symbol (untranslated)
-- **Why it works:** Devanagari script doesn't have an equivalent. Using the ASCII underscore maintains consistency with global programming practices.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Translating to a word**
-
-- **Wrong:** `cualquiera` (Spanish - "whatever/any")
-- **Why wrong:** Makes patterns verbose. `case (x, cualquiera, z):` is much longer than `case (x, _, z):`. Wildcard should be minimal. Loses visual recognition.
-- **Right:** `_` (keep symbol)
-
-**Mistake 2: Using different placeholder symbol**
-
-- **Wrong:** `-` (dash/hyphen) or `.` (period)
-- **Why wrong:** These symbols have other meanings in Python (`-` is subtraction operator, `.` is attribute access). Creating conflicts and ambiguity. Underscore is unique and established.
-- **Right:** `_` (keep standard symbol)
-
-**Mistake 3: Using multi-character replacement**
-
-- **Wrong:** `__` (double underscore) or `ign` (abbreviation)
-- **Why wrong:** Double underscore has special meaning in Python (name mangling). Multi-character defeats the purpose of a minimal, quick-to-type placeholder. Breaks brevity.
-- **Right:** `_` (single character)
-
----
 
 ## Ambiguity Resolution
 
@@ -255,16 +190,6 @@ In identifiers: valid but discouraged variable name
 
 The underscore `_` should remain unchanged as a symbol across all languages. However, documentation and comments explaining it should align with how `match`/`case` are translated and how the concept of "wildcard" or "placeholder" is expressed in the target language's technical vocabulary.
 
-**Example:**
-
-```python
-# If match/case are translated to Spanish:
-coincidir punto:
-caso (0, 0):
-print("Origen")
-caso (0, _):  # _ symbol stays, comment explains "comodín"
-print("En eje Y")
-```
 
 ### Functional relationships
 
@@ -378,25 +303,24 @@ x, _, z = get_coordinates()  # Only need x and z
 
 ```yaml
 term: _
-language: es
-translation: _
-form: symbol (unchanged)
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-The underscore `_` should remain unchanged across all languages as it's a universal programming symbol, not a linguistic term. It serves as a wildcard pattern in `match`/`case` and conventionally indicates throwaway values. Translating it would break its purpose as a minimal, single-character placeholder.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `comodín` (Spanish word for "wildcard") - Too long, breaks pattern brevity
-2. `-` (dash symbol) - Conflicts with subtraction operator
-3. `cualquiera` (any/whatever) - Way too verbose for a placeholder
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-Confidence is HIGH for keeping the symbol unchanged. The concept explanation in target language requires MEDIUM effort to convey wildcard/throwaway semantics clearly.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

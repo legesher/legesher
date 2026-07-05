@@ -79,13 +79,6 @@ cat.meow()  # Output: The feline says meow
 
 **Pattern rule:** Definition keywords can use verb forms (action of defining) or noun forms (the thing being defined). For `class`, noun form is often more natural since "class" is both the action and the result.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `def` | definir | تعريف | 定义 | परिभाषित |
-| `object` | objeto | كائن | 对象 | वस्तु |
-| `class` | **clase** | **صنف** | **类** | **वर्ग** |
 
 ---
 
@@ -129,16 +122,7 @@ Classes support inheritance: a class can inherit from parent classes, reusing th
 - **Action vs State:** Primarily STATE (describes a category), though also ACTION (defines/creates)
 - **Temporal aspect:** Timeless/definitional - a class is a permanent category
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "clase", "classe" - category/group |
-| Germanic (de, nl, sv) | Noun | "Klasse", "klasse" - category (often capitalized in German) |
-| Slavic (ru, pl, uk) | Noun | "класс", "klasa" - category/class |
-| Arabic | Noun | "صنف" or "فئة" - category/type |
-| Chinese | Noun | "类" - category/type |
-| Hindi | Noun | "वर्ग" - class/category |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "class" or "category." This should be the same word used in social contexts (social class) or academic contexts (classroom, classification). The noun form is preferred because "class" names what's being created.
 
@@ -150,55 +134,6 @@ Classes support inheritance: a class can inherit from parent classes, reusing th
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `clase`
-- **Form:** Noun (feminine)
-- **Why it works:** Standard Spanish noun for "class" - used in social classification, education, and programming. "Clase de objetos" (class of objects) is natural. Universally recognized in Spanish OOP contexts.
-
-**Arabic:**
-
-- **Translation:** `صنف` (ṣinf) or `فئة` (fi'ah)
-- **Form:** Noun
-- **Why it works:** "صنف" means category/type/class - standard in Arabic programming. "فئة" also means class/category. Both acceptable; `صنف` more common in CS. Clearly distinguishes from `كائن` (object - instance).
-
-**Chinese:**
-
-- **Translation:** `类` (lèi)
-- **Form:** Noun
-- **Why it works:** Standard Chinese for "category/class/type." Single character, concise. Established in Chinese OOP terminology. Related to `分类` (classification) but `类` alone is standard for programming classes.
-
-**Hindi:**
-
-- **Translation:** `वर्ग` (varga)
-- **Form:** Noun
-- **Why it works:** Sanskrit-derived noun meaning "class/category/group." Used in mathematics (sets), social contexts (social class), and programming. Formal register appropriate for technical contexts.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb "classify" instead of noun "class"**
-
-- **Wrong:** `clasificar` (Spanish - "to classify" - verb)
-- **Why wrong:** The keyword creates a class (noun), not performs classification (verb). Though `class` involves categorization, the keyword names the category itself.
-- **Right:** `clase` (noun)
-
-**Mistake 2: Using "object" instead of "class"**
-
-- **Wrong:** `objeto` (Spanish - "object")
-- **Why wrong:** Objects are instances OF classes. Classes are templates; objects are specific instances. These are distinct concepts in OOP.
-- **Right:** `clase` (the template/category)
-
-**Mistake 3: Using "type" when class is more specific**
-
-- **Wrong:** `tipo` (Spanish - "type")
-- **Why wrong:** While classes create types, "type" is a separate Python concept (metaclass). "Class" is more specific for OOP contexts. Some languages might accept both, but distinguish if possible.
-- **Right:** `clase` (specifically OOP class concept)
-
----
 
 ## Ambiguity Resolution
 
@@ -236,14 +171,13 @@ Most languages use the same word for social class and OOP class, which is accept
 - [ ] `def` - Both define structures; should use compatible forms
 - [ ] `object` - Classes create objects; relationship should be clear
 - [ ] `type` - Related but distinct concept; avoid confusion
+- [ ] `cls` - Abbreviation of this keyword's translation; must stay visibly derived from it
+- [ ] `self` - Instance counterpart; must stay distinguishable from both `class` and `cls`
 
 **Consistency rule:**
 
 `class` and `def` are both definition keywords with similar structure: `keyword name: body`. They should feel cohesive. If `def` uses verb form, consider whether `class` should too (or whether noun form is more natural).
 
-**Example:**
-
-Spanish: `definir` (def - verb), `clase` (class - noun) - acceptable because "class" works better as noun ✅
 
 ### Functional relationships
 
@@ -368,25 +302,24 @@ class Config:
 
 ```yaml
 term: class
-language: es
-translation: clase
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "clase" is the standard noun for class in OOP, mathematics, and social contexts. It clearly represents a category/template for creating objects. Universally recognized in Spanish programming education and OOP literature.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `clasificar` (to classify - verb) - Wrong part of speech; verb vs. noun
-2. `tipo` (type) - Related but distinct concept in Python
-3. `categoría` (category) - Too general; "clase" is established OOP term
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. OOP classes are universal, and "class" (category/group) is a common word in all languages with clear, established translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

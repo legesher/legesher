@@ -113,13 +113,6 @@ async def safe_fetch():
 
 **Pattern rule:** Async control flow keywords should use verb forms. `await` performs an action: pause the coroutine until the awaited operation completes. It's a verb commanding the runtime to wait asynchronously.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `async` | asíncrono | غير متزامن | 异步 | अतुल्यकालिक |
-| `yield` | ceder | ينتج | 产出 | उपज देना |
-| `await` | **esperar** | **انتظار** | **等待** | **प्रतीक्षा** |
 
 ---
 
@@ -163,16 +156,7 @@ Crucially, `await` doesn't block the thread. Traditional blocking operations (li
 - **Action vs State:** ACTION - actively waiting (not passive)
 - **Temporal aspect:** Durative - waiting spans time until completion
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "esperar", "attendre" - to wait/await |
-| Germanic (de, nl, sv) | Infinitive verb | "warten", "wachten" - to wait/await |
-| Slavic (ru, pl, uk) | Infinitive verb | "ждать", "czekać" - to wait/await |
-| Arabic | Masdar (verbal noun) | "انتظار" (intiẓār) - waiting/awaiting |
-| Chinese | Verb | "等待" (děngdài) - to wait/await |
-| Hindi | Infinitive verb | "प्रतीक्षा करना" (pratīkṣā karnā) - to wait/await |
+### Recommended Form
 
 **Primary recommendation:** Use infinitive verb meaning "to await" or "to wait." Emphasize active waiting for a specific result, not passive idleness. The term should convey purposeful waiting for an asynchronous operation to complete.
 
@@ -184,55 +168,6 @@ Crucially, `await` doesn't block the thread. Traditional blocking operations (li
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `esperar`
-- **Form:** Infinitive verb
-- **Why it works:** "Esperar" means "to wait, to expect, to await." Standard verb for waiting. Used in Spanish async programming contexts. Natural and clear. Conveys active waiting for result.
-
-**Arabic:**
-
-- **Translation:** `انتظار` (intiẓār)
-- **Form:** Masdar (verbal noun)
-- **Why it works:** Root ن-ظ-ر (n-ẓ-r) means wait/expect. `انتظار` is verbal noun "waiting/awaiting." Standard Arabic for waiting. Fits async context well. Professional and clear.
-
-**Chinese:**
-
-- **Translation:** `等待` (děngdài)
-- **Form:** Verb compound
-- **Why it works:** 等 (wait) + 待 (await) = "to wait, to await." Standard Chinese for waiting. Used in Chinese async programming. Clear temporal semantics. Natural compound.
-
-**Hindi:**
-
-- **Translation:** `प्रतीक्षा करना` (pratīkṣā karnā)
-- **Form:** Infinitive verb phrase
-- **Why it works:** प्रतीक्षा (expectation/waiting) + करना (to do) = "to wait/await." Formal and professional. Used in Hindi technical writing. Sanskrit-derived, appropriate for technical context.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "pause" or "stop"**
-
-- **Wrong:** `pausar` (Spanish - "to pause")
-- **Why wrong:** While `await` does pause execution, "pause" doesn't convey waiting for a result. "Await" is specifically about waiting for something to complete. "Esperar" captures both pause and expectation.
-- **Right:** `esperar` (wait/await with expectation)
-
-**Mistake 2: Using "sleep" or "rest"**
-
-- **Wrong:** `dormir` (Spanish - "to sleep")
-- **Why wrong:** "Sleep" suggests inactivity or idleness. `await` is active waiting for a specific event. `asyncio.sleep()` is a function you can await, but `await` itself means "wait for," not "sleep."
-- **Right:** `esperar` (active waiting)
-
-**Mistake 3: Using "block"**
-
-- **Wrong:** `bloquear` (Spanish - "to block")
-- **Why wrong:** "Block" is the opposite of what `await` does. Blocking operations freeze the thread. `await` is non-blocking—it pauses the coroutine but allows the event loop to run other tasks. Critical distinction.
-- **Right:** `esperar` (non-blocking wait)
-
----
 
 ## Ambiguity Resolution
 
@@ -282,20 +217,12 @@ Python chose "await" over "wait" to emphasize purposeful waiting for async resul
 - [ ] `async` - Declares async functions; `await` works inside async functions; paired keywords
 - [ ] `yield` - Pauses sync generators; `await` pauses async coroutines; similar pause/resume
 - [ ] `return` - Returns value and exits; `await` waits for value; both handle function results
+- [ ] `StopAsyncIteration` - Async-iteration protocol sibling; ends the `async for` loops that await-based code drives
 
 **Consistency rule:**
 
 Async keywords (`async`, `await`) should work together linguistically. If `async` is an adjective, `await` is the verb that acts within async contexts. `await` and `yield` both do pause/resume, so similar verb forms help. All action keywords should be verbs.
 
-**Example:**
-
-Spanish:
-
-- `asíncrono` (async - adjective: asynchronous)
-- `esperar` (await - verb: to await)
-- `ceder` (yield - verb: to yield)
-
-Adjective + verbs. ✅ Works together
 
 **Pairing:** "async defines context, await acts within it."
 
@@ -467,26 +394,24 @@ async def delayed_action():
 
 ```yaml
 term: await
-language: es
-translation: esperar
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "esperar" means "to wait, to expect, to await," perfectly capturing the async waiting concept. It's the standard verb for waiting in Spanish and is used in async programming contexts. Natural, professional, and clearly conveys active waiting for a result.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `aguardar` (to await) - More formal synonym of esperar, but less common in everyday use
-2. `pausar` (to pause) - Describes mechanism but misses waiting-for-result aspect
-3. `dormir` (to sleep) - Wrong concept (implies inactivity, not awaiting result)
-4. `esperar` (to wait/await) - Best captures active waiting for async result ✅
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for Spanish. "Esperar" is the natural verb for waiting/awaiting. For languages new to async programming, verify that CS education has established async/await terminology. Some languages may still be developing standard translations as async programming becomes more common. Native speaker review valuable for emerging async terminology.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

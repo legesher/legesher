@@ -79,13 +79,6 @@ print(smallest)  # Output: (1, 'c') - compares first element, then second
 
 **Pattern rule:** Comparison/selection functions should use adjective forms describing the superlative property. "Minimum" = smallest/lowest.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `max` | máximo | أقصى | 最大 | अधिकतम |
-| `sum` | suma | مجموع | 总和 | योग |
-| `min` | **mínimo** | **أدنى** | **最小** | **न्यूनतम** |
 
 ---
 
@@ -129,16 +122,7 @@ The optional `key` parameter accepts a function that transforms each element bef
 - **Action vs State:** STATE/PROPERTY - describes the smallest
 - **Temporal aspect:** Result of comparison
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Superlative adjective/noun | "mínimo", "minimum" - smallest |
-| Germanic (de, nl, sv) | Superlative noun | "Minimum", "minimum" - smallest |
-| Slavic (ru, pl, uk) | Superlative adjective | "минимум", "minimum" - smallest |
-| Arabic | Superlative adjective | "أدنى" - lowest/smallest |
-| Chinese | Superlative compound | "最小" - most small |
-| Hindi | Superlative adjective | "न्यूनतम", "लघुतम" - smallest |
+### Recommended Form
 
 **Primary recommendation:** Use superlative form meaning "smallest" or "minimum." This is a mathematical superlative - the least value in a set.
 
@@ -150,55 +134,6 @@ The optional `key` parameter accepts a function that transforms each element bef
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `mínimo`
-- **Form:** Superlative adjective/noun (masculine)
-- **Why it works:** Standard Spanish mathematical term for minimum/smallest. Natural in "el mínimo valor" (the minimum value). Universally used in Spanish mathematics and statistics.
-
-**Arabic:**
-
-- **Translation:** `أدنى` (adnā)
-- **Form:** Elative/superlative adjective
-- **Why it works:** Standard Arabic word for lowest/smallest/minimum. Used in Arabic mathematics and statistics. Clear superlative meaning. Pairs naturally with `أقصى` (maximum).
-
-**Chinese:**
-
-- **Translation:** `最小` (zuìxiǎo)
-- **Form:** Superlative compound
-- **Why it works:** Two characters: 最 (most/superlative marker) + 小 (small). Standard Chinese mathematical term for minimum. Clear, concise, universally recognized. Pairs with 最大 (maximum).
-
-**Hindi:**
-
-- **Translation:** `न्यूनतम` (nyūnatam) or `लघुतम` (laghutam)
-- **Form:** Superlative adjective
-- **Why it works:** `न्यूनतम` from Sanskrit "न्यून" (less) + "तम" (superlative suffix). Standard in Hindi mathematics. `लघुतम` (smallest) also valid. `न्यूनतम` more common in technical contexts.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using comparative "menor" instead of superlative "mínimo"**
-
-- **Wrong:** `menor` (Spanish - "smaller/less" - comparative)
-- **Why wrong:** "Menor" compares two things (A is smaller than B). "Mínimo" is superlative (the smallest of all). `min()` finds the absolute smallest, not just smaller.
-- **Right:** `mínimo` (smallest/minimum - superlative)
-
-**Mistake 2: Using verb "minimizar" (minimize)**
-
-- **Wrong:** `minimizar` (Spanish - "to minimize" - verb)
-- **Why wrong:** "Minimizar" means to make smaller/reduce. `min()` doesn't modify anything - it selects/returns the already-smallest value. Different concept.
-- **Right:** `mínimo` (the minimum - noun/adjective)
-
-**Mistake 3: Using "pequeño" (small) without superlative**
-
-- **Wrong:** `pequeño` (Spanish - "small" - positive adjective)
-- **Why wrong:** "Pequeño" means small, but not smallest. Need superlative "el más pequeño" or better, mathematical term "mínimo."
-- **Right:** `mínimo` (minimum/smallest - superlative)
-
----
 
 ## Ambiguity Resolution
 
@@ -239,10 +174,6 @@ English "minimum" can mean:
 
 `min` and `max` MUST be translated as grammatical opposites using the same superlative pattern. They're complementary functions.
 
-**Example:**
-
-Spanish: `mínimo` (minimum), `máximo` (maximum) - both superlatives ✅
-NOT: `mínimo` (superlative) + `más_grande` (comparative phrase) ❌
 
 ### Functional relationships
 
@@ -373,25 +304,24 @@ Only consideration: Ensure you use superlative (smallest) not comparative (small
 
 ```yaml
 term: min
-language: es
-translation: mínimo
-form: superlative_adjective_as_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "mínimo" is the standard mathematical term for minimum/smallest value. It's a superlative adjective used as a noun in technical contexts. Pairs naturally with "máximo" and is universally taught in Spanish mathematics.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `menor` (smaller) - Comparative, not superlative; wrong degree
-2. `pequeño` (small) - Positive adjective, not superlative
-3. `minimizar` (minimize - verb) - Wrong concept; that means to reduce
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Minimum is a universal mathematical concept with clear, standard translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

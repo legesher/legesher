@@ -83,13 +83,6 @@ result = all([True, True, False, expensive_function()])
 
 **Pattern rule:** Aggregation functions operate on sequences to produce a single result. `all` and `any` are logical quantifiers (universal and existential). They should use forms suggesting totality or completeness.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `any` | cualquiera/alguno | أي | 任意 | कोई |
-| `sum` | suma | مجموع | 总和 | योग |
-| `all` | **todos** | **كل** | **全部** | **सभी** |
 
 ---
 
@@ -133,16 +126,7 @@ An important edge case: `all([])` returns `True`. This is the mathematical conve
 - **Action vs State:** STATE - describes a property of the collection
 - **Temporal aspect:** Instantaneous - checks current state
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Plural adjective/pronoun | "todos", "tous" - all/every |
-| Germanic (de, nl, sv) | Plural adjective/pronoun | "alle", "all" - all |
-| Slavic (ru, pl, uk) | Plural adjective | "все", "wszystko" - all |
-| Arabic | Universal quantifier | "كل" - all/every |
-| Chinese | Universal quantifier | "全部" or "都" - all/entirely |
-| Hindi | Plural adjective | "सभी" - all/everyone |
+### Recommended Form
 
 **Primary recommendation:** Use the standard word meaning "all," "every," or "everything" in the target language. This should be the plural/universal form suggesting totality or completeness of a collection.
 
@@ -154,55 +138,6 @@ An important edge case: `all([])` returns `True`. This is the mathematical conve
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `todos`
-- **Form:** Plural adjective/pronoun (masculine)
-- **Why it works:** Standard Spanish word meaning "all" or "everyone." Used as pronoun meaning "all items" or adjective meaning "all the items." Clear, concise, and matches the English concept perfectly. Natural in "todos son verdaderos" (all are true).
-
-**Arabic:**
-
-- **Translation:** `كل` (kull)
-- **Form:** Universal quantifier (masculine)
-- **Why it works:** Standard Arabic word for "all," "every," or "each." Used as universal quantifier in logic and mathematics in Arabic. Concise, clear, and widely recognized. Conveys totality/completeness concept.
-
-**Chinese:**
-
-- **Translation:** `全部` (quánbù) or `都` (dōu)
-- **Form:** Adverb/Quantifier
-- **Why it works:** "全部" means "all/entire/whole." "都" means "all/both/entirely" and is more concise. Both convey the universal quantification concept. "都" is shorter and might be preferred for a function name.
-
-**Hindi:**
-
-- **Translation:** `सभी` (sabhī)
-- **Form:** Plural adjective/pronoun
-- **Why it works:** Standard Hindi word meaning "all" or "everyone." Clear universal quantifier. Natural in "सभी सत्य हैं" (all are true). Commonly used in Hindi for universal statements.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using singular form**
-
-- **Wrong:** `todo` (Spanish - "all" but singular form)
-- **Why wrong:** "Todo" is singular (everything as one unit). "Todos" is plural (all items individually). Since we're checking multiple items, plural "todos" is correct.
-- **Right:** `todos` (plural: all items)
-
-**Mistake 2: Using "everything" when "all" is clearer**
-
-- **Wrong:** `todo_lo_existente` (Spanish - "everything existing")
-- **Why wrong:** Too verbose and philosophical. "Todos" is concise and clear. Function names should be brief.
-- **Right:** `todos` (all, concise)
-
-**Mistake 3: Using "complete" instead of "all"**
-
-- **Wrong:** `completo` (Spanish - "complete")
-- **Why wrong:** "Complete" suggests entirety or wholeness, not logical quantification over items. "Todos" specifically means "all items" which matches the function's purpose.
-- **Right:** `todos` (all items)
-
----
 
 ## Ambiguity Resolution
 
@@ -245,10 +180,6 @@ Note: Meanings 1 and 2 are very similar. Key distinction: `all()` checks items i
 
 `all` and `any` are a complementary pair. They should use related forms in the target language—often antonyms or words from the same semantic field (quantifiers).
 
-**Example:**
-
-Spanish: `todos` (all) and `cualquiera`/`alguno` (any) - related quantifiers ✅
-NOT: `todos` (quantifier) + unrelated word for `any` ❌
 
 ### Functional relationships
 
@@ -416,25 +347,24 @@ has_access = all(permissions.get(p, False) for p in required_perms)  # True
 
 ```yaml
 term: all
-language: es
-translation: todos
-form: plural_adjective_pronoun (masculine)
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "todos" is the standard plural form meaning "all" or "everyone," perfectly matching Python's `all()` function which checks if all items meet a condition. It's a common word immediately understood by all Spanish speakers. The masculine plural form "todos" is used as the generic/default when gender is unspecified.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `todo` (singular) - Wrong number; refers to everything as single unit, not all items individually
-2. `cada` (each) - Emphasizes individual items but doesn't convey the collective "all" concept as clearly
-3. `completo` (complete) - Wrong concept; means whole/entire, not universal quantifier
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "All" is a fundamental concept with clear, standard translations in all languages. No ambiguity or complexity.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

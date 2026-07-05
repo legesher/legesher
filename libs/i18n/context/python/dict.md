@@ -78,13 +78,6 @@ value = data.get("missing", "default")  # Returns "default"
 
 **Pattern rule:** Collection type constructors should use noun forms naming the container type. For `dict`, use the word for "dictionary" or "map" depending on language conventions.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `list` | lista | قائمة | 列表 | सूची |
-| `set` | conjunto | مجموعة | 集合 | सेट |
-| `dict` | **diccionario** | **قاموس** | **字典** | **शब्दकोश** |
 
 ---
 
@@ -128,16 +121,7 @@ Common operations include: access by key (`d[key]`), safe access (`.get(key, def
 - **Action vs State:** STATE/CONTAINER - describes what holds data
 - **Temporal aspect:** Timeless - a type is a permanent category
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "diccionario", "dictionnaire" - dictionary |
-| Germanic (de, nl, sv) | Noun | "Wörterbuch", "woordenboek" - dictionary/word-book |
-| Slavic (ru, pl, uk) | Noun | "словарь", "słownik" - dictionary |
-| Arabic | Noun | "قاموس" - dictionary/lexicon |
-| Chinese | Noun compound | "字典" - character dictionary |
-| Hindi | Noun | "शब्दकोश" - word-treasure/dictionary |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "dictionary" (the book of words and definitions). This maintains Python's metaphor. Alternative: use "map" or "mapping" if that's CS convention in your language, though "dictionary" is preferred.
 
@@ -149,55 +133,6 @@ Common operations include: access by key (`d[key]`), safe access (`.get(key, def
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `diccionario`
-- **Form:** Noun (masculine)
-- **Why it works:** Standard Spanish word for dictionary (book of words). Perfect metaphor: maps palabras (words/keys) to definiciones (definitions/values). Widely used in Spanish CS education for this data structure.
-
-**Arabic:**
-
-- **Translation:** `قاموس` (qāmūs)
-- **Form:** Noun (masculine)
-- **Why it works:** Standard Arabic for dictionary/lexicon. Used for word dictionaries and data dictionaries. Clear mapping metaphor. Established in Arabic CS education.
-
-**Chinese:**
-
-- **Translation:** `字典` (zìdiǎn)
-- **Form:** Noun compound
-- **Why it works:** Two characters: 字 (character/word) + 典 (book/canon). Standard Chinese for dictionary (book). Same metaphor as English: maps characters to meanings. Universally used in Chinese programming.
-
-**Hindi:**
-
-- **Translation:** `शब्दकोश` (śabdakōśa)
-- **Form:** Noun compound
-- **Why it works:** Sanskrit compound: शब्द (word) + कोश (treasure/collection). Standard Hindi for dictionary. Formal register. Used in Hindi CS education for mapping data structures.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "map" verb instead of noun**
-
-- **Wrong:** `mapear` (Spanish - "to map" - verb)
-- **Why wrong:** Type names are nouns (containers), not verbs (actions). While "map" (noun) is acceptable in some languages, verb form is not. Need "mapping" or "dictionary."
-- **Right:** `diccionario` (noun) or `mapa` (noun, if that's CS convention)
-
-**Mistake 2: Using implementation term "hash table"**
-
-- **Wrong:** `tabla_hash` (Spanish - "hash table")
-- **Why wrong:** "Hash table" is implementation detail. Python's `dict` is conceptually a dictionary (key-value mapping). "Hash" is how it's implemented, not what it represents. User-facing name should be conceptual.
-- **Right:** `diccionario` (conceptual/metaphorical name)
-
-**Mistake 3: Using "word" or "definition" instead of "dictionary"**
-
-- **Wrong:** `palabra` (Spanish - "word")
-- **Why wrong:** "Word" and "definition" are the contents of a dictionary, not the dictionary itself. Like confusing book contents with the book. Need the container name.
-- **Right:** `diccionario` (the container mapping words to definitions)
-
----
 
 ## Ambiguity Resolution
 
@@ -230,9 +165,6 @@ Both meanings are related - the programming term borrows the metaphor from the b
 
 All collection type constructors (`dict`, `list`, `tuple`, `set`) should use noun forms. They name data structures, not actions.
 
-**Example:**
-
-Spanish: `diccionario`, `lista`, `tupla`, `conjunto` - all nouns ✅
 
 ### Functional relationships
 
@@ -362,25 +294,24 @@ Minor consideration: some languages' CS education might use "map" instead of "di
 
 ```yaml
 term: dict
-language: es
-translation: diccionario
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "diccionario" preserves Python's dictionary metaphor - mapping keys (words) to values (definitions). Standard Spanish word for dictionary (book), naturally extending to data structure. Universally recognized in Spanish CS education.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `mapa` (map - noun) - Valid in some contexts, but "diccionario" maintains Python's metaphor
-2. `asociativo` (associative) - Too abstract; "diccionario" more concrete
-3. `dic` (abbreviation) - Too terse; full word preferred for clarity
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Dictionaries (books mapping words to definitions) are universal, and the programming metaphor is intuitive worldwide.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

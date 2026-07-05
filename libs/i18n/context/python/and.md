@@ -80,13 +80,6 @@ print(5 and 0)       # Output: 0 (second falsy, returns it)
 
 **Pattern rule:** Logical operators should use conjunction forms in target language - words that connect conditions. "And" combines requirements that must all be satisfied.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `or` | o | أو | 或 | या |
-| `not` | no | ليس | 非 | नहीं |
-| `and` | **y** | **و** | **与** | **और** |
 
 ---
 
@@ -130,16 +123,7 @@ Short-circuit evaluation means if the left operand is falsy, Python returns it i
 - **Action vs State:** RELATION - connects/combines conditions
 - **Temporal aspect:** Simultaneous - both conditions must hold
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Conjunction | "y", "et", "e" - coordinating conjunction |
-| Germanic (de, nl, sv) | Conjunction | "und", "en" - and |
-| Slavic (ru, pl, uk) | Conjunction | "и", "i" - and |
-| Arabic | Conjunction particle | "و" - wa (and) |
-| Chinese | Conjunction | "与" or "和" - and/with |
-| Hindi | Conjunction | "और" - aur (and) |
+### Recommended Form
 
 **Primary recommendation:** Use the target language's basic conjunction for "and" - the word used to join items in a list. This should be the most common word for combining/adding things.
 
@@ -151,55 +135,6 @@ Short-circuit evaluation means if the left operand is falsy, Python returns it i
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `y` (or `e` before i/hi sounds)
-- **Form:** Conjunction
-- **Why it works:** Standard Spanish conjunction. "A y B" is natural. Note: Spanish uses "e" before words starting with i/hi for phonetic reasons ("padre e hijo"), but in code, simple "y" is standard.
-
-**Arabic:**
-
-- **Translation:** `و` (wa)
-- **Form:** Conjunction particle
-- **Why it works:** Most basic Arabic conjunction. Single character. Natural for connecting conditions. Standard in Arabic programming.
-
-**Chinese:**
-
-- **Translation:** `与` (yǔ) or `和` (hé)
-- **Form:** Conjunction
-- **Why it works:** Both mean "and." `与` more formal/written; `和` more colloquial. Either acceptable. `与` may be preferred for programming's formal register.
-
-**Hindi:**
-
-- **Translation:** `और` (aur)
-- **Form:** Conjunction
-- **Why it works:** Standard Hindi conjunction for "and." Natural for connecting conditions. Universal in Hindi speech and writing.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "also" or "additionally"**
-
-- **Wrong:** `también` (Spanish - "also")
-- **Why wrong:** "Also" is additive adverb, not conjunction. Need coordinating conjunction that joins conditions. "And" is conjunction; "also" isn't.
-- **Right:** `y` (conjunction)
-
-**Mistake 2: Using bitwise operator symbol**
-
-- **Wrong:** `&&` (symbol from C/Java)
-- **Why wrong:** Python deliberately uses English words, not symbols. If target language has natural word for "and," use it rather than importing foreign symbols.
-- **Right:** `y` (natural Spanish word)
-
-**Mistake 3: Using "with" for combination**
-
-- **Wrong:** `con` (Spanish - "with")
-- **Why wrong:** "With" indicates accompaniment, not logical conjunction. "A with B" doesn't mean "both A and B must be true." Use coordinating conjunction.
-- **Right:** `y` (coordinating conjunction)
-
----
 
 ## Ambiguity Resolution
 
@@ -233,9 +168,6 @@ But in programming logic, "and" means: **logical conjunction - both conditions m
 
 Logical operators (`and`, `or`, `not`) should all use compatible grammatical forms - typically conjunctions or particles. They form a set of logical connectives.
 
-**Example:**
-
-Spanish: `y` (and), `o` (or), `no` (not) - all basic conjunctions/particles ✅
 
 ### Functional relationships
 
@@ -351,25 +283,24 @@ value = config and config.get('key') and process()
 
 ```yaml
 term: and
-language: es
-translation: y
-form: conjunction
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "y" is the universal coordinating conjunction for "and." Natural for connecting conditions in logical expressions. Standard in Spanish programming and matches Python's philosophy of readable English-like syntax.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `&&` (C-style symbol) - Python uses words, not symbols
-2. `e` (phonetic variant) - Used before i/hi in speech, but "y" standard in code
-3. `también` (also) - Adverb, not conjunction
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "And" is the most basic conjunction in every language with clear, universal translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

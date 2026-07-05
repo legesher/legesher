@@ -110,13 +110,6 @@ print(f"Error: {e}")  # issubclass() arg 1 must be a class
 
 **Pattern rule:** Introspection functions using "is" + noun pattern should indicate what they check. Must be parallel to `isinstance`.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `is` | es | هو | 是 | है |
-| `isinstance` | es_instancia | هو_نموذج | 是实例 | है_उदाहरण |
-| `issubclass` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -158,16 +151,7 @@ The function accepts a tuple of classes for the second argument, returning True 
 - **Action vs State:** QUERY - asks a question and returns boolean
 - **Temporal aspect:** Instantaneous check
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb "is" + "subclass" | es_subclase, est_sous-classe |
-| Germanic (de, nl, sv) | Verb + noun or compound | ist_Unterklasse, isSubclass |
-| Slavic (ru, pl, uk) | Verb "is" + "subclass" | является_подклассом |
-| Arabic | Verb "is" + "subclass" | هو_صنف_فرعي (huwa ṣinf far'ī) |
-| Chinese | Verb + noun | 是子类 (shì zǐlèi) |
-| Hindi | Verb + noun | है_उपवर्ग (hai upavarga) |
+### Recommended Form
 
 **Primary recommendation:** Create compound from "is" (verb) + "subclass" (noun), maintaining exact parallel structure to `isinstance`. Should use same "is" verb and similar compound pattern.
 
@@ -179,55 +163,6 @@ The function accepts a tuple of classes for the second argument, returning True 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `es_subclase`
-- **Form:** Compound verb+noun
-- **Why it works:** Parallel to `es_instancia`, uses same verb "es" (is) + "subclase" (subclass), consistent pattern
-
-**Arabic:**
-
-- **Translation:** `هو_صنف_فرعي` (huwa ṣinf far'ī - is subclass)
-- **Form:** Compound verb+noun
-- **Why it works:** Parallel to `isinstance`, same verb "هو" (is) + "صنف فرعي" (subclass)
-
-**Chinese:**
-
-- **Translation:** `是子类` (shì zǐlèi - is subclass)
-- **Form:** Compound verb+noun
-- **Why it works:** Parallel to `是实例`, uses "是" (is) + "子类" (subclass), consistent
-
-**Hindi:**
-
-- **Translation:** `है_उपवर्ग` (hai upavarga - is subclass)
-- **Form:** Compound verb+noun
-- **Why it works:** Parallel to `isinstance`, "है" (is) + "उपवर्ग" (subclass), consistent
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Not parallel to isinstance**
-
-- **Wrong:** `verifica_subclase` (Spanish - "verify subclass") while `isinstance` = `es_instancia`
-- **Why wrong:** Must use same verb pattern as `isinstance`
-- **Right:** `es_subclase` (parallel to `es_instancia`)
-
-**Mistake 2: Wrong word order**
-
-- **Wrong:** `subclase_es` (Spanish - "subclass is")
-- **Why wrong:** Reverses the natural verb-noun order
-- **Right:** `es_subclase` (is subclass)
-
-**Mistake 3: Using "child class" instead of "subclass"**
-
-- **Wrong:** `es_clase_hija` (Spanish - "is child class")
-- **Why wrong:** While "child class" is synonymous, "subclass" is the standard technical term
-- **Right:** `es_subclase` (is subclass - standard term)
-
----
 
 ## Ambiguity Resolution
 
@@ -258,23 +193,22 @@ The compound term is Python-specific with one clear meaning. Your translation sh
 
 CRITICAL: `isinstance` and `issubclass` MUST use identical verb translation (the `is` part) and parallel structure:
 
-- If `isinstance` = `es_instancia`, then `issubclass` = `es_subclase`
-- If `isinstance` = `هو_نموذج`, then `issubclass` = `هو_صنف_فرعي`
+- Whatever form `isinstance` takes, `issubclass` must mirror it exactly, swapping only the noun
 - Same verb, same structure, different noun
 
 **Example:**
 
 ✅ **Consistent (Perfect parallel):**
 
-- `is` → `es`
-- `isinstance` → `es_instancia`
-- `issubclass` → `es_subclase`
+- `is` → the pack's copula
+- `isinstance` → that copula + "instance" noun
+- `issubclass` → that copula + "subclass" noun
 - Perfect parallel structure ✅
 
 ❌ **Inconsistent:**
 
-- `isinstance` → `es_instancia` (uses "es")
-- `issubclass` → `verifica_subclase` (uses "verifica")
+- `isinstance` → copula + "instance" noun
+- `issubclass` → a "verify"-verb compound
 - Different verbs ❌
 
 ### Functional relationships
@@ -366,24 +300,24 @@ return cls()
 
 ```yaml
 term: issubclass
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {compound_verb_noun}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Explain that you used the EXACT same verb as `isinstance` with "subclass" noun, maintaining perfect parallel structure. Emphasize this is non-negotiable for consistency.}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `Different verb` - ❌ Rejected because MUST match `isinstance` verb
-2. `{your actual alternative}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{If you're unsure about `isinstance` translation, you cannot translate this. Check `isinstance` first, then create perfect parallel.}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

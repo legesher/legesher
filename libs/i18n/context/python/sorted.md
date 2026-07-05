@@ -84,13 +84,6 @@ by_grade = sorted(students, key=lambda s: s["grade"])
 
 **Pattern rule:** These transformation functions take iterables and return new sequences/iterators. They're named with past participles (sorted, reversed, filtered) suggesting the result of an action.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `reversed` | invertido | معكوس | 反转 | उलटा |
-| `filter` | filtrar | تصفية | 过滤 | फ़िल्टर |
-| `sorted` | **ordenado** | **مرتب** | **排序** | **क्रमबद्ध** |
 
 ---
 
@@ -134,16 +127,7 @@ The function accepts optional parameters: `reverse=True` for descending order, a
 - **Action vs State:** STATE - describes the resulting order, not the action
 - **Temporal aspect:** Perfect/Completed - indicates sorting has been done
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Past participle | "ordenado", "trié" - sorted/ordered |
-| Germanic (de, nl, sv) | Past participle | "sortiert", "gesorteerd" - sorted |
-| Slavic (ru, pl, uk) | Past participle | "отсортированный" - sorted |
-| Arabic | Passive participle | "مرتب" - arranged/ordered |
-| Chinese | Verb compound | "排序" - sort/arrange (works as past action) |
-| Hindi | Past participle | "क्रमबद्ध" - arranged/ordered |
+### Recommended Form
 
 **Primary recommendation:** Use past participle or adjective form meaning "sorted," "ordered," or "arranged." This emphasizes the result (a sorted collection) rather than the action of sorting.
 
@@ -155,55 +139,6 @@ The function accepts optional parameters: `reverse=True` for descending order, a
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ordenado`
-- **Form:** Past participle/adjective (masculine)
-- **Why it works:** Past participle of "ordenar" (to sort/order). Conveys "having been ordered/arranged." Standard term in Spanish computing. Clear that it describes the state of the result, not the action.
-
-**Arabic:**
-
-- **Translation:** `مرتب` (murattab)
-- **Form:** Passive participle (masculine)
-- **Why it works:** Passive participle of رتب (to arrange/order). Means "arranged" or "ordered." Used in Arabic computing contexts for sorting. Conveys the result state clearly.
-
-**Chinese:**
-
-- **Translation:** `排序` (páixù)
-- **Form:** Verb compound
-- **Why it works:** Two characters: 排 (arrange/line up) + 序 (sequence/order). Standard Chinese computing term for sorting. Works as both verb and result description in Chinese. Universally recognized.
-
-**Hindi:**
-
-- **Translation:** `क्रमबद्ध` (kramabaddha)
-- **Form:** Compound adjective (Sanskrit-derived)
-- **Why it works:** From क्रम (order/sequence) + बद्ध (bound/arranged). Means "arranged in sequence." Formal Sanskrit-based term used in Hindi CS education. Clearly conveys ordered state.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using infinitive verb**
-
-- **Wrong:** `ordenar` (Spanish - "to sort/order")
-- **Why wrong:** Infinitive describes the action "to sort," but function returns the result "sorted." Past participle "ordenado" (sorted/ordered) better describes what the function returns.
-- **Right:** `ordenado` (sorted, past participle)
-
-**Mistake 2: Using noun form**
-
-- **Wrong:** `orden` (Spanish - "order")
-- **Why wrong:** Noun is ambiguous—could mean "command" or "orderliness." Past participle "ordenado" specifically means "having been ordered/sorted." More precise.
-- **Right:** `ordenado` (sorted, participle)
-
-**Mistake 3: Using imperative form**
-
-- **Wrong:** `ordena` (Spanish - "sort!" imperative)
-- **Why wrong:** Imperative is a command. Function returns a result (sorted collection), not commanding to sort. Past participle indicates the returned state.
-- **Right:** `ordenado` (sorted, describes result)
-
----
 
 ## Ambiguity Resolution
 
@@ -246,10 +181,6 @@ English "sorted" can mean:
 
 Transformation functions that return results (`sorted`, `reversed`, `filter`) should use past participle or adjective forms indicating the result state. They describe what you get back, not the action.
 
-**Example:**
-
-Spanish: `ordenado`, `invertido`, `filtrado` - all past participles ✅
-NOT: `ordenado` (participle) + `invertir` (infinitive) ❌
 
 ### Functional relationships
 
@@ -386,25 +317,24 @@ by_grade_name = sorted(students, key=lambda s: (-s[1], s[0]))
 
 ```yaml
 term: sorted
-language: es
-translation: ordenado
-form: past_participle (masculine)
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "ordenado" is the past participle of "ordenar" (to order/sort), meaning "ordered" or "sorted." It clearly conveys that the function returns something in an ordered state. This aligns with Spanish computing terminology and matches the pattern of English using "sorted" (past participle) rather than "sort" (verb).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `ordenar` (infinitive "to sort") - Wrong form; function returns result, not action
-2. `clasificado` (classified/sorted) - Valid but "ordenado" is more standard for numeric/alphabetic ordering
-3. `orden` (order - noun) - Too ambiguous; past participle is clearer
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Past participle forms for "sorted/ordered" exist clearly in all major languages and align with how sorting is discussed in computing contexts.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

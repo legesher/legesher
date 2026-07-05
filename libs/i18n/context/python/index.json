@@ -1,33 +1,9 @@
 {
   "version": "1.0",
   "language": "python",
-  "total_documents": 121,
-  "last_updated": "2025-11-11",
+  "total_documents": 182,
+  "last_updated": "2026-07-05",
   "documents": [
-    {
-      "term": "False",
-      "filename": "False.md",
-      "category": "keyword",
-      "type": "constant (boolean literal)",
-      "difficulty": "EASY",
-      "summary": "`False` is a boolean literal in Python representing the logical value \"false.\" It's one of two possible `bool` values (the other being `True`) and is fundamental to conditional logic, comparisons, and..."
-    },
-    {
-      "term": "None",
-      "filename": "None.md",
-      "category": "keyword",
-      "type": "constant (null literal)",
-      "difficulty": "EASY",
-      "summary": "`None` is Python's null value representing the absence of a value or \"nothing.\" It's the only value of type `NoneType`, used to indicate missing data, uninitialized variables, or functions that don't ..."
-    },
-    {
-      "term": "True",
-      "filename": "True.md",
-      "category": "keyword",
-      "type": "constant (boolean literal)",
-      "difficulty": "EASY",
-      "summary": "`True` is a boolean literal in Python representing the logical value \"true.\" It's one of two possible `bool` values (the other being `False`) and is fundamental to conditional logic, comparisons, and ..."
-    },
     {
       "term": "__import__",
       "filename": "__import__.md",
@@ -85,6 +61,14 @@
       "summary": "The `any` function in Python returns `True` if at least one element in an iterable is truthy, otherwise `False`. It stops checking as soon as it finds a truthy value (short-circuit evaluation). Return..."
     },
     {
+      "term": "ArithmeticError",
+      "filename": "arithmeticerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "EASY",
+      "summary": "`ArithmeticError` is the built-in base class for exceptions raised when a numeric calculation fails. Python almost never raises it directly; instead it raises one of its subclasses — `ZeroDivisionError`, `OverflowError`, or `FloatingPointError` — and `ArithmeticError` exists so code can catch the whole family of arithmetic failures with one handler."
+    },
+    {
       "term": "as",
       "filename": "as.md",
       "category": "keyword",
@@ -107,6 +91,14 @@
       "type": "debugging (assertion statement)",
       "difficulty": "EASY",
       "summary": "The `assert` keyword tests a condition and raises `AssertionError` if the condition is false. Used for debugging and development - checking assumptions and invariants. Assertions can be disabled globa..."
+    },
+    {
+      "term": "AssertionError",
+      "filename": "assertionerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`AssertionError` is a built-in exception raised when an `assert` statement fails - that is, when the asserted condition evaluates to false. It signals that an assumption the programmer declared to be true turned out not to hold, which usually indicates a bug in the program rather than a user or environment problem."
     },
     {
       "term": "async",
@@ -141,12 +133,28 @@
       "summary": "`BaseException` is the root base class of all exceptions in Python's exception hierarchy. Every exception that can be raised or caught in Python inherits from `BaseException`, making it the fundamenta..."
     },
     {
+      "term": "BaseExceptionGroup",
+      "filename": "baseexceptiongroup.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "HARD",
+      "summary": "`BaseExceptionGroup` (Python 3.11, PEP 654) is an exception that wraps multiple unrelated exceptions raised together - for example, several concurrent tasks failing at once. It subclasses `BaseException`, may contain any `BaseException` instances (including `KeyboardInterrupt`), and is handled selectively with the `except*` syntax or split apart with `.split()` and `.subgroup()`."
+    },
+    {
       "term": "bin",
       "filename": "bin.md",
       "category": "builtin",
       "type": "noun",
       "difficulty": "LOW",
       "summary": "The `bin()` function converts an integer to a binary string prefixed with \"0b\". It returns the binary (base-2) representation of the number."
+    },
+    {
+      "term": "BlockingIOError",
+      "filename": "blockingioerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "HARD",
+      "summary": "`BlockingIOError` is a built-in exception raised when an operation on an object set to non-blocking mode would have to block — for example, reading from a non-blocking socket that has no data yet. It is a subclass of `OSError`, introduced by PEP 3151 in Python 3.3, corresponds to the OS error codes `EAGAIN`, `EALREADY`, `EWOULDBLOCK`, and `EINPROGRESS`, and (when raised from the buffered I/O classes in the `io` module) carries a `characters_written` attribute."
     },
     {
       "term": "bool",
@@ -173,6 +181,22 @@
       "summary": "`breakpoint()` drops into the debugger at the point where it's called, providing an interactive debugging session to inspect variables, step through code, and diagnose issues."
     },
     {
+      "term": "BrokenPipeError",
+      "filename": "brokenpipeerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "HARD",
+      "summary": "`BrokenPipeError` is a built-in exception raised when writing to a pipe whose reading end has been closed, or to a socket that has been shut down for writing — the data has nowhere to go because the other end is gone. It is a subclass of `ConnectionError` (and thus `OSError`), introduced by PEP 3151 in Python 3.3, and corresponds to the OS error codes `EPIPE` and `ESHUTDOWN`."
+    },
+    {
+      "term": "BufferError",
+      "filename": "buffererror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`BufferError` is a built-in exception raised when an operation on a buffer - a raw block of memory exposed through Python's buffer protocol - cannot be performed. The classic trigger is trying to resize a `bytearray` while a `memoryview` still holds (exports) its underlying memory."
+    },
+    {
       "term": "bytearray",
       "filename": "bytearray.md",
       "category": "builtin_type",
@@ -189,6 +213,14 @@
       "summary": "The `bytes` type represents immutable sequences of bytes (integers 0-255). It's used for binary data like file contents, network packets, and encoded text. Unlike strings which are text, bytes are raw..."
     },
     {
+      "term": "BytesWarning",
+      "filename": "byteswarning.md",
+      "category": "exception",
+      "type": "exception class (warning category)",
+      "difficulty": "MEDIUM",
+      "summary": "`BytesWarning` is the warning category for suspicious mixing of `bytes` (or `bytearray`) with `str` - most classically comparing them with `==`, which is always `False` in Python 3 and usually a porting bug. It subclasses `Warning`, but unlike its siblings it is never emitted at all unless Python runs with the `-b` flag (`-bb` promotes it to an error)."
+    },
+    {
       "term": "callable",
       "filename": "callable.md",
       "category": "builtin_function",
@@ -203,6 +235,14 @@
       "type": "control flow (pattern branch)",
       "difficulty": "MEDIUM",
       "summary": "The `case` keyword defines pattern branches within a `match` statement in Python 3.10+. Each `case` specifies a pattern to match against; when the pattern matches, its associated code block executes. ..."
+    },
+    {
+      "term": "ChildProcessError",
+      "filename": "childprocesserror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`ChildProcessError` is a built-in exception raised when an operation on a child process fails — most commonly waiting for a child that does not exist or has already been reaped. It is a subclass of `OSError`, introduced by PEP 3151 in Python 3.3, and corresponds to the OS error code `ECHILD` (\"No child processes\")."
     },
     {
       "term": "chr",
@@ -229,6 +269,14 @@
       "summary": "`@classmethod` decorator creates a method that receives the class as its first argument instead of an instance, enabling class-level operations and alternative constructors."
     },
     {
+      "term": "cls",
+      "filename": "cls.md",
+      "category": "reserved_word",
+      "type": "noun (abbreviation of \"class\")",
+      "difficulty": "HARD",
+      "summary": "`cls` is NOT a Python keyword. It is the CONVENTIONAL name for the first parameter of classmethods (methods decorated with `@classmethod`), referring to the CLASS object itself rather than an instance. The abbreviation exists because `class` is a reserved keyword and literally cannot be used as a parameter name; PEP 8 codifies `cls` as its stand-in. Legesher translates it because it appears in every `@classmethod` a learner reads - and its translation must be visibly RELATED to the language's `class` translation, yet distinguishable from both it and the `self` translation."
+    },
+    {
       "term": "compile",
       "filename": "compile.md",
       "category": "builtin_function",
@@ -243,6 +291,38 @@
       "type": "noun/adjective",
       "difficulty": "LOW",
       "summary": "The `complex` type in Python represents complex numbers with real and imaginary parts. Complex numbers are essential in mathematics, engineering, and scientific computing, representing numbers as `a +..."
+    },
+    {
+      "term": "ConnectionAbortedError",
+      "filename": "connectionabortederror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`ConnectionAbortedError` is a built-in exception raised when a connection attempt is aborted by the peer — the connection was torn down before it completed or before the operation finished. It is a subclass of `ConnectionError` (and thus `OSError`), introduced by PEP 3151 in Python 3.3, and corresponds to the OS error code `ECONNABORTED` (\"software caused connection abort\")."
+    },
+    {
+      "term": "ConnectionError",
+      "filename": "connectionerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`ConnectionError` is the built-in base class for connection-related failures: it is a subclass of `OSError` and the parent of `BrokenPipeError`, `ConnectionAbortedError`, `ConnectionRefusedError`, and `ConnectionResetError`. It was introduced by PEP 3151 in Python 3.3, which reorganized OS and I/O errors into specific exception classes so code can catch \"the connection failed\" as one family."
+    },
+    {
+      "term": "ConnectionRefusedError",
+      "filename": "connectionrefusederror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`ConnectionRefusedError` is a built-in exception raised when a connection attempt is refused by the peer — typically because nothing is listening on the target port, so the remote host actively rejects the request. It is a subclass of `ConnectionError` (and thus `OSError`), introduced by PEP 3151 in Python 3.3, and corresponds to the OS error code `ECONNREFUSED`."
+    },
+    {
+      "term": "ConnectionResetError",
+      "filename": "connectionreseterror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "HARD",
+      "summary": "`ConnectionResetError` is a built-in exception raised when an established connection is reset by the peer — the other side abruptly tears down the conversation, typically via a TCP RST packet, instead of closing it gracefully. It is a subclass of `ConnectionError` (and thus `OSError`), introduced by PEP 3151 in Python 3.3, and corresponds to the OS error code `ECONNRESET` (\"Connection reset by peer\")."
     },
     {
       "term": "continue",
@@ -275,6 +355,14 @@
       "type": "compound_verb",
       "difficulty": "MEDIUM",
       "summary": "The `delattr()` function deletes a named attribute from an object. Signature: `delattr(object, name)` where name is a string. Equivalent to `del object.attribute` but allows dynamic attribute names. P..."
+    },
+    {
+      "term": "DeprecationWarning",
+      "filename": "deprecationwarning.md",
+      "category": "exception",
+      "type": "exception class (warning category)",
+      "difficulty": "HARD",
+      "summary": "`DeprecationWarning` is the warning category for features that are deprecated: they still work today, but they are officially discouraged and scheduled for removal, so *developers* should migrate away from them. It subclasses `Warning`, is emitted via `warnings.warn()`, and since Python 3.7 (PEP 565) is shown by default only when triggered by code running in `__main__`; deprecations triggered inside imported libraries are hidden by default."
     },
     {
       "term": "dict",
@@ -325,12 +413,36 @@
       "summary": "The `else` keyword in Python introduces an alternative code block that executes when a preceding `if` condition is false, when a loop (`for`/`while`) completes normally, or when a `try` block doesn't ..."
     },
     {
+      "term": "EncodingWarning",
+      "filename": "encodingwarning.md",
+      "category": "exception",
+      "type": "exception class (warning category)",
+      "difficulty": "MEDIUM",
+      "summary": "`EncodingWarning` (Python 3.10+, PEP 597) is the warning category emitted when a text file is opened without an explicit `encoding=` argument, silently falling back to the platform's locale encoding - a portability hazard, since the same script then reads files differently on different machines. It subclasses `Warning` and is opt-in: it is only emitted when enabled via `-X warn_default_encoding` or the `PYTHONWARNDEFAULTENCODING` environment variable."
+    },
+    {
       "term": "enumerate",
       "filename": "enumerate.md",
       "category": "builtin_function",
       "type": "verb (iteration utility)",
       "difficulty": "LOW",
       "summary": "The `enumerate` function in Python adds a counter to an iterable, returning an enumerate object that yields pairs of (index, item). It's used to get both the position and value when looping, avoiding ..."
+    },
+    {
+      "term": "EnvironmentError",
+      "filename": "environmenterror.md",
+      "category": "exception",
+      "type": "exception class (legacy alias of `OSError`)",
+      "difficulty": "EASY",
+      "summary": "`EnvironmentError` is a **legacy alias of `OSError`** — since Python 3.3 (PEP 3151) the two names are bound to the exact same class (`EnvironmentError is OSError` is `True`). In Python 2 it was the shared base class of `IOError` and `OSError`; that hierarchy no longer exists. It is kept only for backward compatibility; new code should write `OSError`. This entry inherits its meaning, and its translation, entirely from `OSError`."
+    },
+    {
+      "term": "EOFError",
+      "filename": "eoferror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`EOFError` is a built-in exception raised when `input()` hits end-of-file (EOF) without reading any data - the input stream ended before a line could be read. It signals \"there is no more input,\" typically because the user pressed Ctrl-D (Unix) or Ctrl-Z+Enter (Windows), or because piped/redirected input ran out."
     },
     {
       "term": "eval",
@@ -349,6 +461,14 @@
       "summary": "The `except` keyword catches and handles exceptions raised in a `try` block. Specifies which exception types to catch and what code to execute when they occur. Allows programs to recover from errors g..."
     },
     {
+      "term": "except*",
+      "filename": "except_star.md",
+      "category": "keyword",
+      "type": "exception_handling (exception group filtering)",
+      "difficulty": "HARD",
+      "summary": "The `except*` syntax (Python 3.11+, PEP 654) handles exceptions raised inside an `ExceptionGroup`. It is NOT a new keyword - it is the existing `except` keyword combined with the `*` symbol. Where a plain `except` picks one handler (first match wins), `except*` clauses each extract the exceptions they match from the group, so MULTIPLE `except*` clauses can all run for a single raised group."
+    },
+    {
       "term": "exception",
       "filename": "exception.md",
       "category": "builtin exception class",
@@ -357,12 +477,44 @@
       "summary": "`Exception` is the base class for all built-in exceptions in Python (except system-exiting exceptions). It's the parent class you inherit from when creating custom exceptions, and it's what you typica..."
     },
     {
+      "term": "ExceptionGroup",
+      "filename": "exceptiongroup.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "HARD",
+      "summary": "`ExceptionGroup` (Python 3.11, PEP 654) is an exception that wraps multiple ordinary exceptions raised together, such as several concurrent tasks failing at once. It is the `Exception`-subclass variant of `BaseExceptionGroup`: it may only contain `Exception` instances, is catchable by `except Exception`, and is what `BaseExceptionGroup(...)` automatically returns when all contained exceptions are regular `Exception` subclasses."
+    },
+    {
       "term": "exec",
       "filename": "exec.md",
       "category": "builtin",
       "type": "function",
       "difficulty": "HIGH",
       "summary": "`exec()` executes Python statements from a string or code object, unlike `eval()` which only handles expressions, powerful but dangerous with untrusted input."
+    },
+    {
+      "term": "False",
+      "filename": "False.md",
+      "category": "keyword",
+      "type": "constant (boolean literal)",
+      "difficulty": "EASY",
+      "summary": "`False` is a boolean literal in Python representing the logical value \"false.\" It's one of two possible `bool` values (the other being `True`) and is fundamental to conditional logic, comparisons, and..."
+    },
+    {
+      "term": "FileExistsError",
+      "filename": "fileexistserror.md",
+      "category": "exception",
+      "type": "exception class (noun compound)",
+      "difficulty": "MEDIUM",
+      "summary": "`FileExistsError` is the built-in exception raised when an operation tries to *create* a file or directory at a path where one already exists — `os.mkdir` on an existing directory, `open(..., \"x\")` on an existing file. It is the `OSError` subclass corresponding to `errno` `EEXIST` (\"File exists\"), and the mirror image of `FileNotFoundError`: there, the path was unexpectedly absent; here, it is unexpectedly present."
+    },
+    {
+      "term": "FileNotFoundError",
+      "filename": "filenotfounderror.md",
+      "category": "exception",
+      "type": "exception class (noun compound)",
+      "difficulty": "MEDIUM",
+      "summary": "`FileNotFoundError` is the built-in exception raised when a file or directory is requested at a path where nothing exists — opening a missing file, deleting a nonexistent path, or entering a directory that isn't there. It is the `OSError` subclass corresponding to `errno` `ENOENT` (\"No such file or directory\") and is one of the most frequently encountered exceptions in everyday Python."
     },
     {
       "term": "filter",
@@ -387,6 +539,14 @@
       "type": "noun (numeric type)",
       "difficulty": "LOW",
       "summary": "The `float` type in Python represents floating-point numbers (decimals). It stores approximate real numbers using IEEE 754 double-precision format, supporting decimal fractions and scientific notation..."
+    },
+    {
+      "term": "FloatingPointError",
+      "filename": "floatingpointerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`FloatingPointError` is a built-in exception reserved for floating-point operation failures — but modern CPython almost never raises it. Ordinary float operations return `inf` or `nan` (or raise `ZeroDivisionError`/`OverflowError`) instead. The class survives largely for historical reasons (the long-removed `fpectl` module) and because third-party numeric libraries such as NumPy raise it when configured to treat floating-point faults as errors."
     },
     {
       "term": "for",
@@ -419,6 +579,22 @@
       "type": "noun (compound)",
       "difficulty": "MEDIUM",
       "summary": "The `frozenset` type represents an immutable set - a collection of unique elements that cannot be modified after creation. Like `set` but frozen/unchangeable, making it hashable and usable as dictiona..."
+    },
+    {
+      "term": "FutureWarning",
+      "filename": "futurewarning.md",
+      "category": "exception",
+      "type": "exception class (warning category)",
+      "difficulty": "HARD",
+      "summary": "`FutureWarning` is the warning category for deprecations and upcoming behavior changes whose message is intended for END USERS of applications written in Python - people who run Python programs but may not read library source code. It subclasses `Warning`, is emitted via `warnings.warn()`, and unlike `DeprecationWarning` it is shown by default no matter where the triggering code lives, precisely so that it reaches those users."
+    },
+    {
+      "term": "GeneratorExit",
+      "filename": "generatorexit.md",
+      "category": "builtin_type",
+      "type": "exception class (control flow signal)",
+      "difficulty": "MEDIUM",
+      "summary": "`GeneratorExit` is a control-flow signal, not an error: it is raised INSIDE a generator at its paused `yield` point when the generator's `close()` method is called (or the generator is garbage-collected), telling it to finish up and exit. It subclasses `BaseException` - deliberately not `Exception` - and a generator should run its cleanup and stop, never catch it and continue yielding."
     },
     {
       "term": "getattr",
@@ -501,12 +677,36 @@
       "summary": "The `import` keyword loads external modules, packages, or specific objects into the current namespace, making their functionality available for use. It's Python's mechanism for code reuse and accessin..."
     },
     {
+      "term": "ImportError",
+      "filename": "importerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`ImportError` is a built-in exception raised when an `import` statement fails to load a module, or when `from module import name` cannot find the requested name inside a module that does exist. It carries `.name` (the module that was being imported) and `.path` (the file, if any, that triggered the failure), and it is the parent class of `ModuleNotFoundError`."
+    },
+    {
+      "term": "ImportWarning",
+      "filename": "importwarning.md",
+      "category": "exception",
+      "type": "exception class (warning category)",
+      "difficulty": "MEDIUM",
+      "summary": "`ImportWarning` is the warning category for probable mistakes in module imports - situations where an import technically succeeds (or proceeds) but the import machinery noticed something suspicious, such as a package with malformed metadata. It subclasses `Warning`, is emitted via `warnings.warn()`, and is ignored (hidden) by default; developers enable it with filters, the `-W` flag, or Python's development mode."
+    },
+    {
       "term": "in",
       "filename": "in.md",
       "category": "keyword",
       "type": "operator (membership test)",
       "difficulty": "EASY",
       "summary": "The `in` keyword is a membership test operator in Python that checks whether a value exists within a container (list, string, dict, set, etc.). It returns `True` if the value is found, `False` otherwi..."
+    },
+    {
+      "term": "IndentationError",
+      "filename": "indentationerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "HARD",
+      "summary": "`IndentationError` is a subclass of `SyntaxError` raised when the parser rejects code because its indentation - the leading whitespace at the start of each line - is incorrect. Indentation is structural in Python: it is how blocks are delimited, a design unique to Python among mainstream languages, which makes translating this term pedagogically load-bearing."
     },
     {
       "term": "indexerror",
@@ -533,12 +733,36 @@
       "summary": "The `int` type in Python represents integer numbers (whole numbers without decimal points). It supports unlimited precision (arbitrary size) and serves both as a type name and a constructor function t..."
     },
     {
+      "term": "InterruptedError",
+      "filename": "interruptederror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`InterruptedError` is a built-in exception raised when a system call is interrupted by an incoming signal before it can complete. It is a subclass of `OSError`, introduced by PEP 3151 in Python 3.3, and corresponds to the OS error code `EINTR`. Since Python 3.5 (PEP 475), the interpreter automatically retries interrupted system calls when the signal handler returns normally, so this exception rarely surfaces in modern code."
+    },
+    {
+      "term": "IOError",
+      "filename": "ioerror.md",
+      "category": "exception",
+      "type": "exception class (legacy alias of `OSError`)",
+      "difficulty": "EASY",
+      "summary": "`IOError` is a **legacy alias of `OSError`** — since Python 3.3 (PEP 3151) the two names are bound to the exact same class (`IOError is OSError` is `True`). It is kept only for backward compatibility with pre-3.3 code; new code should write `OSError`. There is no separate \"I/O error\" class to translate: this entry inherits its meaning, and its translation, entirely from `OSError`."
+    },
+    {
       "term": "is",
       "filename": "is.md",
       "category": "keyword",
       "type": "operator (identity test)",
       "difficulty": "EASY",
       "summary": "The `is` keyword is an identity test operator in Python that checks whether two variables refer to the same object in memory (same identity), not whether they have equal values. It returns `True` if b..."
+    },
+    {
+      "term": "IsADirectoryError",
+      "filename": "isadirectoryerror.md",
+      "category": "exception",
+      "type": "exception class (noun compound with embedded predicate)",
+      "difficulty": "HARD",
+      "summary": "`IsADirectoryError` is the built-in exception raised when a file operation is applied to a path that turns out to be a directory — most commonly `open()` on a directory path. It is the `OSError` subclass corresponding to `errno` `EISDIR` (\"Is a directory\"): the operation expected a regular file, and the operating system objects that the path *is a directory* instead. Its exact opposite is `NotADirectoryError` (`ENOTDIR`)."
     },
     {
       "term": "isinstance",
@@ -563,6 +787,14 @@
       "type": "verb/noun",
       "difficulty": "MEDIUM",
       "summary": "The `iter` function creates an iterator object from an iterable (list, tuple, string, etc.) or calls a function repeatedly until a sentinel value is reached. It's the starting point for iteration - co..."
+    },
+    {
+      "term": "KeyboardInterrupt",
+      "filename": "keyboardinterrupt.md",
+      "category": "builtin_type",
+      "type": "exception class (control-flow signal)",
+      "difficulty": "MEDIUM",
+      "summary": "`KeyboardInterrupt` is the exception raised when the user interrupts a running program from the keyboard, normally by pressing Ctrl-C (which delivers the SIGINT signal). It is a user action, not a program failure: it inherits directly from `BaseException` (not `Exception`), which is the canonical reason to write `except Exception:` instead of a bare `except:` - so users can always stop your program."
     },
     {
       "term": "keyerror",
@@ -605,6 +837,14 @@
       "summary": "The `locals()` function returns a dictionary of the current local symbol table (local variables). It provides access to all variables defined in the current scope, useful for introspection and debuggi..."
     },
     {
+      "term": "LookupError",
+      "filename": "lookuperror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`LookupError` is the base class for exceptions raised when a lookup - retrieving a value by key or index from a mapping or sequence - fails because the key or index is invalid. Its two everyday subclasses are `KeyError` (dictionary keys) and `IndexError` (sequence positions); catching `LookupError` catches both."
+    },
+    {
       "term": "map",
       "filename": "map.md",
       "category": "builtin_function",
@@ -629,6 +869,14 @@
       "summary": "The `max` function in Python returns the largest item from an iterable or the largest of two or more arguments. Works with numbers, strings, or any objects that support comparison operators. Can accep..."
     },
     {
+      "term": "MemoryError",
+      "filename": "memoryerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`MemoryError` is a built-in exception raised when an operation runs out of memory - an allocation request that the system cannot satisfy. It is recoverable in principle: the interpreter state survives, so a program can catch it, free or avoid the oversized allocation, and continue (typically by deleting objects or switching to a smaller/streaming approach)."
+    },
+    {
       "term": "memoryview",
       "filename": "memoryview.md",
       "category": "builtin",
@@ -643,6 +891,14 @@
       "type": "noun (comparison/aggregation)",
       "difficulty": "EASY",
       "summary": "The `min` function in Python returns the smallest item from an iterable or the smallest of two or more arguments. Works with numbers, strings, or any objects that support comparison operators. Can acc..."
+    },
+    {
+      "term": "ModuleNotFoundError",
+      "filename": "modulenotfounderror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`ModuleNotFoundError` is the exception raised when Python cannot locate the module an `import` statement asks for - the module genuinely is not there (not installed, misspelled, or not on the search path). Introduced in Python 3.6 as a subclass of `ImportError`, it produces the message beginners see more than any other: `No module named 'x'`."
     },
     {
       "term": "nameerror",
@@ -661,6 +917,14 @@
       "summary": "The `next` function retrieves the next item from an iterator. It calls the iterator's `__next__()` method and returns the next value in the sequence. When the iterator is exhausted, it raises `StopIte..."
     },
     {
+      "term": "None",
+      "filename": "None.md",
+      "category": "keyword",
+      "type": "constant (null literal)",
+      "difficulty": "EASY",
+      "summary": "`None` is Python's null value representing the absence of a value or \"nothing.\" It's the only value of type `NoneType`, used to indicate missing data, uninitialized variables, or functions that don't ..."
+    },
+    {
       "term": "nonlocal",
       "filename": "nonlocal.md",
       "category": "keyword",
@@ -677,12 +941,28 @@
       "summary": "The `not` keyword is a unary logical operator in Python that negates boolean values. It returns `True` if the operand is falsy, and `False` if the operand is truthy. It's the primary way to express lo..."
     },
     {
+      "term": "NotADirectoryError",
+      "filename": "notadirectoryerror.md",
+      "category": "exception",
+      "type": "exception class (noun compound with negated predicate)",
+      "difficulty": "MEDIUM",
+      "summary": "`NotADirectoryError` is the built-in exception raised when a directory operation is applied to a path that is *not* a directory — listing a file's \"contents,\" changing into a file, or using a file as an intermediate path component. It is the `OSError` subclass corresponding to `errno` `ENOTDIR` (\"Not a directory\"), and the exact opposite of `IsADirectoryError` (`EISDIR`): that one fires when a directory appears where a file was expected; this one, when something else appears where a directory was expected."
+    },
+    {
       "term": "notimplemented",
       "filename": "notimplemented.md",
       "category": "builtin constant",
       "type": "constant / singleton",
       "difficulty": "MEDIUM",
       "summary": "`NotImplemented` is a special singleton constant returned by binary operator methods (like `__add__`, `__eq__`) to indicate that the operation is not supported for the given operand types. It triggers..."
+    },
+    {
+      "term": "NotImplementedError",
+      "filename": "notimplementederror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`NotImplementedError` is a built-in exception raised to mark a method or function that exists but has deliberately not been implemented - typically an abstract method that subclasses must override, or a stub awaiting future work. It is critically distinct from `NotImplemented`, which is a special VALUE returned (never raised) by binary dunder methods like `__eq__` and `__add__`."
     },
     {
       "term": "object",
@@ -725,12 +1005,44 @@
       "summary": "The `ord` function in Python converts a single character (string of length 1) to its Unicode code point (integer). It's the inverse of `chr()`. Takes a single-character string and returns an integer r..."
     },
     {
+      "term": "OSError",
+      "filename": "oserror.md",
+      "category": "exception",
+      "type": "exception class (noun compound)",
+      "difficulty": "MEDIUM",
+      "summary": "`OSError` is the built-in exception raised when a system function returns a system-related error — failed file operations, missing paths, permission denials, socket failures, and other conditions the operating system reports through error codes. Since Python 3.3 (PEP 3151) it is the single base class for the entire OS/IO exception family, carrying `errno`, `strerror`, and `filename` attributes that describe exactly what the operating system rejected."
+    },
+    {
+      "term": "OverflowError",
+      "filename": "overflowerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`OverflowError` is a built-in exception raised when the result of an arithmetic operation is too large to be represented — for example `math.exp(1000)`, which exceeds what a float can hold. Crucially, Python integers never overflow (they have arbitrary precision), so this exception is almost always about floats and about converting values that are too large into a fixed-size representation."
+    },
+    {
       "term": "pass",
       "filename": "pass.md",
       "category": "keyword",
       "type": "control_flow (null operation)",
       "difficulty": "EASY",
       "summary": "The `pass` keyword is a null operation statement that does nothing when executed. It serves as a syntactic placeholder where a statement is required by Python's grammar but no action is needed. Used i..."
+    },
+    {
+      "term": "PendingDeprecationWarning",
+      "filename": "pendingdeprecationwarning.md",
+      "category": "exception",
+      "type": "exception class (warning category)",
+      "difficulty": "HARD",
+      "summary": "`PendingDeprecationWarning` is the warning category for features that are NOT deprecated yet but are expected to be deprecated in the future. It is one stage earlier than `DeprecationWarning` in a feature's phase-out timeline. It subclasses `Warning`, is emitted via `warnings.warn()`, and is ignored (hidden) by default - maintainers use it as an early, quiet signal that only developers who opt in will see."
+    },
+    {
+      "term": "PermissionError",
+      "filename": "permissionerror.md",
+      "category": "exception",
+      "type": "exception class (noun compound)",
+      "difficulty": "EASY",
+      "summary": "`PermissionError` is the built-in exception raised when an operation is attempted without adequate access rights — reading a protected file, writing into a system directory, or performing a privileged operation as an unprivileged user. It is the `OSError` subclass corresponding to `errno` `EACCES` (\"Permission denied\") and `EPERM` (\"Operation not permitted\"), the operating system's two ways of saying \"you are not allowed to do that.\""
     },
     {
       "term": "pow",
@@ -747,6 +1059,14 @@
       "type": "verb",
       "difficulty": "EASY",
       "summary": "The `print` function in Python outputs text, numbers, or other object representations to the console (standard output). It's the primary way to display information to users and debug programs, automat..."
+    },
+    {
+      "term": "ProcessLookupError",
+      "filename": "processlookuperror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`ProcessLookupError` is a built-in exception raised when a given process doesn't exist — an operation targeted a process ID (PID) that names no living process. It is a subclass of `OSError`, introduced by PEP 3151 in Python 3.3, and corresponds to the OS error code `ESRCH` (\"No such process\")."
     },
     {
       "term": "property",
@@ -773,12 +1093,36 @@
       "summary": "The `range` function in Python generates a sequence of numbers, commonly used for looping a specific number of times. It returns an immutable sequence object that produces numbers on demand rather tha..."
     },
     {
+      "term": "RecursionError",
+      "filename": "recursionerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM-HARD",
+      "summary": "`RecursionError` is a built-in exception raised when the maximum recursion depth is exceeded - typically when a function keeps calling itself without reaching a base case, exhausting Python's call-stack limit. Introduced in Python 3.5, it subclasses `RuntimeError`, so older code catching `RuntimeError` for this condition still works."
+    },
+    {
+      "term": "ReferenceError",
+      "filename": "referenceerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`ReferenceError` is a built-in exception raised when a weak reference proxy (created with `weakref.proxy`) is used after the object it refers to has been garbage-collected. It is one of Python's rarest built-in exceptions, appearing almost exclusively in code that uses the `weakref` module for caches, observers, and other non-owning references."
+    },
+    {
       "term": "repr",
       "filename": "repr.md",
       "category": "builtin_function",
       "type": "noun/verb",
       "difficulty": "MEDIUM",
       "summary": "The `repr` function returns a string representation of an object that is ideally unambiguous and evaluable - meaning it should recreate the object when passed to `eval()`. Short for \"representation,\" ..."
+    },
+    {
+      "term": "ResourceWarning",
+      "filename": "resourcewarning.md",
+      "category": "exception",
+      "type": "exception class (warning category)",
+      "difficulty": "MEDIUM",
+      "summary": "`ResourceWarning` is the warning category for resource-usage problems - above all, operating-system resources like files and sockets that were opened but never explicitly closed and are being cleaned up by the garbage collector instead. It subclasses `Warning`, is ignored (hidden) by default, and is typically enabled during development via Python's development mode (`-X dev`) or a warning filter."
     },
     {
       "term": "return",
@@ -811,6 +1155,22 @@
       "type": "exception class",
       "difficulty": "MEDIUM",
       "summary": "`RuntimeError` is a built-in exception raised when an error is detected that doesn't fall into any other specific exception category. It serves as a generic runtime error for situations that don't fit..."
+    },
+    {
+      "term": "RuntimeWarning",
+      "filename": "runtimewarning.md",
+      "category": "exception",
+      "type": "exception class (warning category)",
+      "difficulty": "MEDIUM",
+      "summary": "`RuntimeWarning` is the warning category for dubious runtime behavior - code that executes and produces a result, but in a way that suggests the programmer's mental model is wrong (a coroutine created but never awaited, a numeric operation quietly overflowing in a library). It subclasses `Warning`, is emitted via `warnings.warn()`, and is shown by default."
+    },
+    {
+      "term": "self",
+      "filename": "self.md",
+      "category": "reserved_word",
+      "type": "pronoun (reflexive)",
+      "difficulty": "HARD",
+      "summary": "`self` is NOT a Python keyword. It is the CONVENTIONAL name for the first parameter of instance methods, referring to the instance the method was called on - \"the object itself.\" The parser accepts any name; the convention is enforced by community practice (PEP 8), linters, and every tutorial ever written. Legesher translates it anyway because it appears in virtually every class body a learner reads: linguistically it is a reflexive pronoun, and most languages have strong native reflexive forms that beat any coined noun."
     },
     {
       "term": "set",
@@ -853,6 +1213,14 @@
       "summary": "`@staticmethod` decorator creates a method that doesn't receive an implicit first argument (neither `self` nor `cls`), functioning like a regular function but organized within a class namespace."
     },
     {
+      "term": "StopAsyncIteration",
+      "filename": "stopasynciteration.md",
+      "category": "builtin_type",
+      "type": "exception class (control flow signal)",
+      "difficulty": "MEDIUM",
+      "summary": "`StopAsyncIteration` (Python 3.5, PEP 492) is a control-flow signal, not an error: it is raised by an asynchronous iterator's `__anext__()` method to tell an `async for` loop that there are no more items. It is the async twin of `StopIteration` - same meaning, same non-error nature, delivered through the asynchronous iteration protocol."
+    },
+    {
       "term": "stopiteration",
       "filename": "stopiteration.md",
       "category": "builtin_type",
@@ -883,6 +1251,54 @@
       "type": "noun",
       "difficulty": "MEDIUM",
       "summary": "The `super()` function in Python returns a proxy object that delegates method calls to a parent or sibling class. Used primarily in inheritance to call parent class methods without hardcoding parent n..."
+    },
+    {
+      "term": "SyntaxError",
+      "filename": "syntaxerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`SyntaxError` is raised when Python's parser rejects code because it does not follow the grammar of the language - the code cannot even begin to run. The exception carries `filename`, `lineno`, `offset`, and `text` locating the problem, and since Python 3.10 its messages have become far more precise (naming unclosed brackets, suggesting missing colons or commas)."
+    },
+    {
+      "term": "SyntaxWarning",
+      "filename": "syntaxwarning.md",
+      "category": "exception",
+      "type": "exception class (warning category)",
+      "difficulty": "MEDIUM",
+      "summary": "`SyntaxWarning` is the warning category for dubious syntax - source code that parses and runs, but is written in a way that usually indicates a mistake, such as testing `is` against a literal. It subclasses `Warning`, is shown by default, and is emitted at compile time (when the code is parsed), unlike its sibling `RuntimeWarning`. Its hard-failure counterpart is `SyntaxError`, where the code cannot be parsed at all."
+    },
+    {
+      "term": "SystemExit",
+      "filename": "systemexit.md",
+      "category": "builtin_type",
+      "type": "exception class (control-flow signal)",
+      "difficulty": "MEDIUM",
+      "summary": "`SystemExit` is the exception raised by `sys.exit()` to request a clean interpreter shutdown. It is a control-flow signal, not a failure: it inherits directly from `BaseException` (not `Exception`) so that ordinary `except Exception` handlers do not accidentally swallow it, and it carries the requested exit status in its `.code` attribute."
+    },
+    {
+      "term": "TabError",
+      "filename": "taberror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "HARD",
+      "summary": "`TabError` is a subclass of `IndentationError` raised when a file's indentation mixes tab characters and spaces inconsistently - in a way whose meaning would depend on how wide a tab is displayed. Python 3 refuses to guess and rejects the code at parse time with `inconsistent use of tabs and spaces in indentation`."
+    },
+    {
+      "term": "TimeoutError",
+      "filename": "timeouterror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`TimeoutError` is a built-in exception raised when a system function or operation times out — the allotted waiting time expires before the operation completes. It is a subclass of `OSError`, introduced by PEP 3151 in Python 3.3, and corresponds to the OS error code `ETIMEDOUT`. It has since unified Python's timeout exceptions: `socket.timeout` became an alias of it in Python 3.10, and `asyncio.TimeoutError` followed in Python 3.11, so from 3.11 onward those names all refer to this one class."
+    },
+    {
+      "term": "True",
+      "filename": "True.md",
+      "category": "keyword",
+      "type": "constant (boolean literal)",
+      "difficulty": "EASY",
+      "summary": "`True` is a boolean literal in Python representing the logical value \"true.\" It's one of two possible `bool` values (the other being `False`) and is fundamental to conditional logic, comparisons, and ..."
     },
     {
       "term": "try",
@@ -917,12 +1333,68 @@
       "summary": "`TypeError` is raised when an operation or function is applied to an object of inappropriate type. It signals that the data type itself is wrong for the operation, not just the specific value—you're t..."
     },
     {
+      "term": "UnboundLocalError",
+      "filename": "unboundlocalerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "HARD",
+      "summary": "`UnboundLocalError` is a subclass of `NameError` raised when a function references a local variable before any value has been bound to it. It typically strikes when a name is assigned *somewhere* in a function - which makes it local throughout the whole function - but is read before that assignment runs. Since Python 3.11 the message spells the situation out: `cannot access local variable 'x' where it is not associated with a value`."
+    },
+    {
       "term": "underscore",
       "filename": "underscore.md",
       "category": "keyword",
       "type": "variable (wildcard pattern)",
       "difficulty": "MEDIUM",
       "summary": "The `_` (underscore) is a special identifier in Python used as a wildcard or throwaway variable. In pattern matching (Python 3.10+), it matches anything without binding to a value. It's also conventio..."
+    },
+    {
+      "term": "UnicodeDecodeError",
+      "filename": "unicodedecodeerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`UnicodeDecodeError` is a built-in exception raised when **decoding fails: converting bytes into text (bytes → str)** — for example, reading a UTF-8 file as ASCII. It is the Unicode error users hit most often, and it carries `encoding`, `object`, `start`, `end`, and `reason` attributes pinpointing exactly which bytes could not be decoded."
+    },
+    {
+      "term": "UnicodeEncodeError",
+      "filename": "unicodeencodeerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`UnicodeEncodeError` is a built-in exception raised when **encoding fails: converting text into bytes (str → bytes)** — for example, encoding \"café\" to ASCII, which has no byte for \"é\". It is the mirror of `UnicodeDecodeError` (the bytes → text direction) and carries `encoding`, `object`, `start`, `end`, and `reason` attributes pinpointing exactly which characters could not be encoded."
+    },
+    {
+      "term": "UnicodeError",
+      "filename": "unicodeerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "MEDIUM",
+      "summary": "`UnicodeError` is the built-in base class for exceptions raised when Unicode encoding, decoding, or translating fails. It subclasses `ValueError`, and in practice you almost always see one of its three specific subclasses — `UnicodeDecodeError` (bytes → text failed), `UnicodeEncodeError` (text → bytes failed), or `UnicodeTranslateError` (character mapping failed) — which carry `encoding`, `object`, `start`, `end`, and `reason` attributes describing exactly what went wrong."
+    },
+    {
+      "term": "UnicodeTranslateError",
+      "filename": "unicodetranslateerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "HARD",
+      "summary": "`UnicodeTranslateError` is a built-in exception raised when an error occurs during character translation — the `str.translate()` style of mapping characters to other characters within text (str → str), not natural-language translation and not encoding/decoding. It is the rarest member of the Unicode error family: the standard library almost never raises it, and its constructor takes `(object, start, end, reason)` with no encoding argument, since no codec is involved."
+    },
+    {
+      "term": "UnicodeWarning",
+      "filename": "unicodewarning.md",
+      "category": "exception",
+      "type": "exception class (warning category)",
+      "difficulty": "MEDIUM",
+      "summary": "`UnicodeWarning` is the base warning category for Unicode-related concerns - suspicious comparisons, normalization surprises, or lossy text handling that works but may not do what the author intended. It subclasses `Warning`, is emitted via `warnings.warn()`, and is shown by default. In Python 3 the interpreter itself emits it only rarely; it mainly serves libraries and tools that handle text."
+    },
+    {
+      "term": "UserWarning",
+      "filename": "userwarning.md",
+      "category": "exception",
+      "type": "exception class (warning category)",
+      "difficulty": "MEDIUM",
+      "summary": "`UserWarning` is the default warning category: it is what `warnings.warn()` emits when no category is given. It subclasses `Warning` and marks generic warnings generated by user code (as opposed to specialized categories like `DeprecationWarning`). Like all warnings, it is advisory: it is shown by default and execution continues."
     },
     {
       "term": "valueerror",
@@ -939,6 +1411,14 @@
       "type": "noun (abbreviation)",
       "difficulty": "MEDIUM",
       "summary": "The `vars()` function returns the `__dict__` attribute of an object, module, class, or instance - a dictionary containing its attributes. With no arguments, returns `locals()` dictionary. Used for int..."
+    },
+    {
+      "term": "Warning",
+      "filename": "warning.md",
+      "category": "exception",
+      "type": "exception class (warning category, base class)",
+      "difficulty": "MEDIUM",
+      "summary": "`Warning` is the base class for all warning categories in Python. It subclasses `Exception`, but unlike ordinary exceptions, warnings are advisory: they are typically emitted with `warnings.warn()` rather than raised, execution continues after they are shown, and they can be filtered, silenced, or promoted to errors via the `warnings` module and the `-W` command-line flag."
     },
     {
       "term": "while",
@@ -963,6 +1443,14 @@
       "type": "verb",
       "difficulty": "HARD",
       "summary": "The `yield` keyword in Python creates generator functions that produce values lazily one at a time, pausing execution after each value and resuming when the next value is requested. Unlike `return` wh..."
+    },
+    {
+      "term": "ZeroDivisionError",
+      "filename": "zerodivisionerror.md",
+      "category": "builtin_type",
+      "type": "exception class",
+      "difficulty": "EASY",
+      "summary": "`ZeroDivisionError` is a built-in exception raised when the second argument of a division or modulo operation is zero. It applies to `/`, `//`, `%`, `divmod()`, and raising zero to a negative power — and, unlike some languages that return infinity for floats, Python raises this exception for both integer and floating-point division by zero."
     },
     {
       "term": "zip",

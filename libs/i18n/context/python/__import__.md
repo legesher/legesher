@@ -87,13 +87,6 @@ print(data)  # Output: {"key": "value"}
 
 **Pattern rule:** Import-related terms should convey the concept of loading/bringing in external code. `__import__` is the underlying mechanism, rarely used directly.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `import` | importar | استيراد | 导入 | आयात |
-| `from` | desde | من | 从 | से |
-| `__import__` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -135,16 +128,7 @@ Most Python programmers never use `__import__` directly. It's primarily for Pyth
 - **Action vs State:** ACTION - performs the import operation
 - **Temporal aspect:** Instantaneous action (loads module when called)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb (same as `import`) | Should align with how `import` is translated |
-| Germanic (de, nl, sv) | Infinitive verb | Import action, consistent with `import` keyword |
-| Slavic (ru, pl, uk) | Infinitive verb | Import action, matches `import` |
-| Arabic | Verbal noun (masdar) like `import` | Consistent with import terminology |
-| Chinese | Verb form matching `import` | Should be consistent with import statement |
-| Hindi | Infinitive matching `import` | Action of importing |
+### Recommended Form
 
 **Primary recommendation:** Translate exactly the same as the `import` keyword but preserve the `__` (dunder) prefix to mark it as a low-level special function. The core concept is identical - both mean "to import" - but the double underscore signals "internal/advanced."
 
@@ -156,55 +140,6 @@ Most Python programmers never use `__import__` directly. It's primarily for Pyth
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `__importar__`
-- **Form:** Infinitive verb with dunder prefix
-- **Why it works:** Matches translation of `import` keyword ("importar") while preserving the `__` markers that indicate it's a special low-level function
-
-**Arabic:**
-
-- **Translation:** `__استيراد__` (**istīrād**)
-- **Form:** Verbal noun (masdar) with dunder
-- **Why it works:** Uses same term as `import` keyword with double underscores, maintaining consistency and special function marking
-
-**Chinese:**
-
-- **Translation:** `__导入__` (**dǎorù**)
-- **Form:** Verb with dunder markers
-- **Why it works:** Same term as `import` (导入) with preserved underscores, clear it's the low-level version of import
-
-**Hindi:**
-
-- **Translation:** `__आयात__` (**āyāt**)
-- **Form:** Infinitive with dunder
-- **Why it works:** Matches `import` translation with special markers, consistent terminology
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using different verb than `import`**
-
-- **Wrong:** `__cargar__` (Spanish - "load") while `import` = "importar"
-- **Why wrong:** Creates inconsistency - both refer to the same concept (importing), must use same verb
-- **Right:** `__importar__` (matches `import`)
-
-**Mistake 2: Dropping the double underscores**
-
-- **Wrong:** `importar` (same as regular import)
-- **Why wrong:** Loses the dunder convention that signals this is a special low-level function
-- **Right:** `__importar__` (preserves special marking)
-
-**Mistake 3: Adding explanatory text**
-
-- **Wrong:** `__importar_bajo_nivel__` (Spanish - "**import_low_level**")
-- **Why wrong:** Function names should be concise; explanatory text belongs in documentation, not the identifier
-- **Right:** `__importar__` (concise, relies on `__` to signal special nature)
-
----
 
 ## Ambiguity Resolution
 
@@ -238,20 +173,20 @@ The `__import__` function has only one meaning in Python - it's the low-level fu
 
 **Consistency rule:**
 
-`__import__` must be linguistically identical to `import` except for the double underscores. If `import` is translated as "importar" in Spanish, then `__import__` must be `__importar__`, not a different verb.
+`__import__` must be linguistically identical to `import` except for the double underscores. Whatever verb the pack chooses for `import`, `__import__` must be that exact verb wrapped in `__...__`, not a different verb.
 
 **Example:**
 
 ✅ **Consistent:**
 
-- `import` → `importar`
-- `__import__` → `__importar__`
+- `import` → the pack's import verb
+- `__import__` → the same verb wrapped in `__...__`
 - Same verb root ✅
 
 ❌ **Inconsistent:**
 
-- `import` → `importar`
-- `__import__` → `__cargar__` (different verb!)
+- `import` → one verb
+- `__import__` → a different verb (e.g., a "load" verb) wrapped in `__...__`
 - Inconsistent ❌
 
 ### Functional relationships
@@ -343,25 +278,24 @@ from os.path import join  # Calls __import__('os.path', fromlist=['join'])
 
 ```yaml
 term: __import__
-language: {es|ar|zh|hi}
-translation: __{your_import_translation}__
-form: {infinitive_verb|masdar|verb}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Explain that you used the EXACT same translation as `import` with double underscores added. This maintains consistency since both refer to the same operation, with `__import__` being the low-level implementation. The dunder markers indicate it's a special internal function.}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `Different verb` - ❌ Rejected because MUST match `import` translation
-2. `Without underscores` - ❌ Rejected because loses dunder convention
-3. `{your actual alternative}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{If you're unsure how `import` is translated in your target language, you need to research that first. `__import__` cannot be translated independently - it MUST match `import`.}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -178,13 +178,6 @@ print(methods)  # Output: ['apple', 'middle', 'zebra'] - sorted!
 
 **Pattern rule:** Introspection functions that examine object state. `dir` and `vars` are complimentary - `dir()` returns names, `vars()` returns name-value dictionary. Translations should convey listing/directory concept.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `vars` | variables | متغيرات | 变量 | चर |
-| `help` | ayuda | مساعدة | 帮助 | सहायता |
-| `dir` | **directorio** | **دليل** | **目录** | **निर्देशिका** |
 
 ---
 
@@ -228,16 +221,7 @@ Common use cases: exploration (what methods does this object have?), debugging (
 - **Action vs State:** REFERENCE - refers to listing/contents
 - **Temporal aspect:** Snapshot of current attributes
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "directorio" - directory/listing |
-| Germanic (de, nl, sv) | Noun | "Verzeichnis" - directory |
-| Slavic (ru, pl, uk) | Noun | "директория" - directory |
-| Arabic | Noun | "دليل" - directory/guide/listing |
-| Chinese | Noun | "目录" - directory/catalog |
-| Hindi | Noun | "निर्देशिका" - directory |
+### Recommended Form
 
 **Primary recommendation:** Use noun meaning "directory," "listing," or "catalog" - conveys listing of contents. Can abbreviate if natural in target language, but full word often clearer. Should suggest "list of names" concept.
 
@@ -249,55 +233,6 @@ Common use cases: exploration (what methods does this object have?), debugging (
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `directorio` or `dir`
-- **Form:** Noun
-- **Why it works:** "Directorio" means directory/listing - clear analogy to file system directories. Can abbreviate to "dir" matching English. Both understood in Spanish programming contexts.
-
-**Arabic:**
-
-- **Translation:** `دليل` (dalīl)
-- **Form:** Noun
-- **Why it works:** "دليل" means directory/guide/listing. Standard Arabic for directory in computing contexts. Clear reference to listing contents.
-
-**Chinese:**
-
-- **Translation:** `目录` (mùlù)
-- **Form:** Noun
-- **Why it works:** "目录" means directory/catalog/table of contents. Standard Chinese for file directories. Natural for listing object contents.
-
-**Hindi:**
-
-- **Translation:** `निर्देशिका` (nirdeshika)
-- **Form:** Noun
-- **Why it works:** "निर्देशिका" means directory/catalog. Technical term used for file directories in Hindi computing. Clear listing concept.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using generic "list"**
-
-- **Wrong:** `lista` (Spanish - just "list")
-- **Why wrong:** Too generic. Many things are lists. "Directory" specifically means listing of contents/names. More precise term better.
-- **Right:** `directorio` (directory - more specific)
-
-**Mistake 2: Using verb form**
-
-- **Wrong:** `dirigir` (Spanish - "to direct/manage")
-- **Why wrong:** "dir" is noun (directory), not verb (to direct). Part of speech matters. Should be noun meaning listing.
-- **Right:** `directorio` (noun)
-
-**Mistake 3: Using unrelated abbreviation**
-
-- **Wrong:** `desc` (Spanish abbreviation of "descripción" - description)
-- **Why wrong:** Not related to directory/listing concept. "dir" specifically about listing names. Should maintain directory metaphor.
-- **Right:** `dir` or `directorio` (maintains directory concept)
-
----
 
 ## Ambiguity Resolution
 
@@ -421,25 +356,24 @@ Key consideration: Check if target language commonly uses abbreviations in code.
 
 ```yaml
 term: dir
-language: es
-translation: directorio
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "directorio" is the full word for "directory" - standard computing term for file directories and listings. While "dir" abbreviation could work, "directorio" is more explicit and widely understood. Conveys the listing/catalog concept clearly.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `dir` (keep English abbreviation) - Could work but "directorio" more explicit
-2. `lista` (list) - Too generic, "directorio" more specific
-3. `indice` (index) - Could work but "directorio" more standard for this purpose
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence HIGH. "Directory" is standard computing metaphor with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

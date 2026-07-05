@@ -105,13 +105,6 @@ exec(code_obj)  # Output: Compiled
 
 **Pattern rule:** Dynamic code execution functions should clearly indicate they execute code. Must distinguish `exec` (statements) from `eval` (expressions).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `eval` | evaluar | تقييم | 求值 | मूल्यांकन |
-| `compile` | compilar | تجميع | 编译 | संकलन |
-| `exec` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -153,16 +146,7 @@ The function always returns None - it's about side effects (creating variables, 
 - **Action vs State:** ACTION - performs execution
 - **Temporal aspect:** Instantaneous action (executes code)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | ejecutar, exécuter (to execute) |
-| Germanic (de, nl, sv) | Infinitive verb | ausführen, uitvoeren |
-| Slavic (ru, pl, uk) | Infinitive verb | выполнить, wykonać |
-| Arabic | Verbal noun (masdar) | تنفيذ (tanfīdh - execution) |
-| Chinese | Verb | 执行 (zhíxíng - execute) |
-| Hindi | Infinitive verb | निष्पादन (niṣpādan - execute) |
+### Recommended Form
 
 **Primary recommendation:** Use a verb meaning "to execute," "to run," or "to perform." Should clearly convey running/executing code, and should be distinguishable from `eval`.
 
@@ -174,55 +158,6 @@ The function always returns None - it's about side effects (creating variables, 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ejecutar` or `exec` (borrowed)
-- **Form:** Infinitive verb
-- **Why it works:** "Ejecutar" means "to execute/run" in Spanish, clearly different from "evaluar" (eval), distinguishing statements from expressions
-
-**Arabic:**
-
-- **Translation:** `تنفيذ` (tanfīdh - execute/implement)
-- **Form:** Verbal noun (masdar)
-- **Why it works:** Technical term for execution, clearly distinct from "تقييم" (evaluate), appropriate for running code
-
-**Chinese:**
-
-- **Translation:** `执行` (zhíxíng - execute)
-- **Form:** Verb
-- **Why it works:** Standard CS term for execution, clearly distinct from "求值" (evaluate), widely used
-
-**Hindi:**
-
-- **Translation:** `निष्पादन` (niṣpādan - execute) or `चलाना` (chalānā - run)
-- **Form:** Verbal noun/infinitive
-- **Why it works:** Formal term for execution, distinct from evaluation, professional
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Same as eval**
-
-- **Wrong:** Using same translation as `eval`
-- **Why wrong:** Must distinguish exec (statements) from eval (expressions)
-- **Right:** Different verbs - execute vs evaluate
-
-**Mistake 2: Too vague**
-
-- **Wrong:** `hacer` (Spanish - "to do")
-- **Why wrong:** Too generic, doesn't convey specific concept of code execution
-- **Right:** `ejecutar` (execute specifically)
-
-**Mistake 3: Noun instead of verb**
-
-- **Wrong:** `ejecución` (Spanish - "execution" noun)
-- **Why wrong:** Function names should be verbs (infinitive), not nouns
-- **Right:** `ejecutar` (infinitive verb)
-
----
 
 ## Ambiguity Resolution
 
@@ -363,24 +298,24 @@ exec(code_obj)
 
 ```yaml
 term: exec
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {infinitive_verb}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Explain that you chose a verb meaning "execute" or "run code," emphasizing statement execution (not expression evaluation). MUST mention distinction from `eval`.}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Need to verify distinction from `eval`, check CS terminology for "execute statements"}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

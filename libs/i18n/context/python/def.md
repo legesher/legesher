@@ -68,13 +68,6 @@ print(power(5, 3))   # 125 (overrides default)
 
 **Pattern rule:** Definition keywords should use verb forms (infinitive) suggesting creation or declaration. They perform the action of bringing something into existence.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `class` | clase | صنف | 类 | वर्ग |
-| `lambda` | lambda | لامدا | λ | लैम्डा |
-| `def` | **definir** | **تعريف** | **定义** | **परिभाषित** |
 
 ---
 
@@ -118,16 +111,7 @@ Parameters can have default values, type hints, and special forms (`*args` for v
 - **Action vs State:** Pure ACTION - performs creation/definition
 - **Temporal aspect:** Instantaneous/resultative - creates something that then exists
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "definir", "définir" - to define |
-| Germanic (de, nl, sv) | Infinitive verb | "definieren", "definiëren" - to define |
-| Slavic (ru, pl, uk) | Infinitive verb | "определить", "zdefiniować" - to define |
-| Arabic | Masdar (verbal noun) | "تعريف" (definition/defining) - standard for declarations |
-| Chinese | Verb compound | "定义" - define/determine meaning |
-| Hindi | Verbal adjective/infinitive | "परिभाषित" (defined) or "परिभाषित करना" (to define) |
+### Recommended Form
 
 **Primary recommendation:** Use infinitive verb form meaning "to define" or "to declare." This should be the same word used in mathematics or dictionaries for defining terms.
 
@@ -139,55 +123,6 @@ Parameters can have default values, type hints, and special forms (`*args` for v
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `definir`
-- **Form:** Infinitive verb
-- **Why it works:** Standard Spanish verb "to define." Used in mathematics, dictionaries, and programming for establishing definitions. Natural in constructions like "definir una función" (define a function). Universally recognized in Spanish CS education.
-
-**Arabic:**
-
-- **Translation:** `تعريف` (taʿrīf)
-- **Form:** Masdar (verbal noun)
-- **Why it works:** Root ع-ر-ف (ʿ-r-f) means "to know/recognize." Masdar "تعريف" means "definition/defining." Standard Arabic term for declarations and definitions in programming. Used in CS textbooks across Arabic-speaking regions.
-
-**Chinese:**
-
-- **Translation:** `定义` (dìngyì)
-- **Form:** Verb compound
-- **Why it works:** Two characters: 定 (determine/fix) + 义 (meaning/righteousness). Standard Chinese term for "define" used in mathematics, logic, and programming. Universally recognized in Chinese CS education.
-
-**Hindi:**
-
-- **Translation:** `परिभाषित` (paribhāṣita) or `परिभाषित_करना` (paribhāṣita karnā)
-- **Form:** Verbal adjective or infinitive compound
-- **Why it works:** Sanskrit-derived term for "defined" or "to define." Formal register appropriate for programming. `परिभाषित करना` is full infinitive form; `परिभाषित` alone may be acceptable as shortened form.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using noun "definition" instead of verb "define"**
-
-- **Wrong:** `definición` (Spanish - "definition" - noun)
-- **Why wrong:** Keywords are actions (verbs), not concepts (nouns). We're performing the action of defining, not referring to the concept of definition.
-- **Right:** `definir` (verb infinitive)
-
-**Mistake 2: Using "function" instead of "define"**
-
-- **Wrong:** `función` (Spanish - "function")
-- **Why wrong:** "Function" is what we're creating (the object), not the action. Like saying "create" vs. "thing being created." The keyword performs definition, doesn't name the result.
-- **Right:** `definir` (the action of creating a function)
-
-**Mistake 3: Using "declare" when "define" is more specific**
-
-- **Wrong:** `declarar` (Spanish - "to declare")
-- **Why wrong:** "Declare" can mean announcing existence without providing content ("declare variable"). "Define" means providing the complete specification (name, parameters, body). "Def" does the latter.
-- **Right:** `definir` (provides complete function specification)
-
----
 
 ## Ambiguity Resolution
 
@@ -218,14 +153,13 @@ All meanings share the core concept of "establishing what something is," but in 
 - [ ] `class` - Similar definition structure; should use compatible verb form
 - [ ] `lambda` - Alternative function definition; relationship should be clear
 - [ ] `return` - Functions defined with `def` use `return`; both should be verbs
+- [ ] `self` - Conventional first parameter in every method definition; its word form must not collide with def's verb
+- [ ] `cls` - Conventional first parameter for class methods; same non-collision requirement
 
 **Consistency rule:**
 
 All definition keywords (`def`, `class`) and function-related keywords (`return`, `yield`) should use verb forms. They're all actions in the function lifecycle.
 
-**Example:**
-
-Spanish: `definir` (def), `clase` (class), `retornar` (return) - verbs for actions, nouns for objects ✅
 
 ### Functional relationships
 
@@ -351,25 +285,24 @@ The main question is whether to use the full word "define" or abbreviate. Follow
 
 ```yaml
 term: def
-language: es
-translation: definir
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "definir" is the standard verb for defining functions, used universally in mathematics, logic, and programming. It clearly expresses the action of creating a function with complete specification (name, parameters, body). Recognized across all Spanish-speaking CS education systems.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `def` (keep English abbreviation) - Possible if English loanwords common, but translation preferred
-2. `función` (function - noun) - Wrong part of speech; names the object, not the action
-3. `declarar` (declare) - Less specific; "define" includes providing the body, not just announcing
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Function definition is universal in programming, and "define" is a standard mathematical/logical term with clear translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

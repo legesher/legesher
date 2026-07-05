@@ -9,6 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **i18n**: Translation context briefs now cover every database term (183
+  briefs — 61 new, spanning the exception families plus `except*`, `self`,
+  `cls`) and describe only the English term: per-language translation samples
+  and language-family prescription tables are removed from the canonical
+  briefs, with live pack context injected at prompt-assembly time instead.
+  See `libs/i18n/CHANGELOG.md` for full details (#2).
+
 ## [0.13.0] - 2026-06-11
 
 ### Added

@@ -110,13 +110,6 @@ except RuntimeError:
 
 **Pattern rule:** Exception classes should use noun forms, typically ending with "Error" in English. Translations should convey both the error type and the temporal aspect (runtime vs compile-time).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `ValueError` | ErrorDeValor | خطأقيمة | 值错误 | मानत्रुटि |
-| `TypeError` | ErrorDeTipo | خطأنوع | 类型错误 | प्रकारत्रुटि |
-| `RuntimeError` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -160,16 +153,7 @@ Understanding when to use `RuntimeError` versus more specific exceptions is an i
 - **Action vs State:** STATE - describes an error condition, not an action
 - **Temporal aspect:** Occurs during execution time (runtime) not compile time
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound noun or noun phrase | "ErrorDeEjecución" - clear structure |
-| Germanic (de, nl, sv) | Compound noun | "Laufzeitfehler" - natural compounds |
-| Slavic (ru, pl, uk) | Compound noun | "ОшибкаВремениВыполнения" - execution time error |
-| Arabic | Noun phrase or compound | "خطأوقتالتشغيل" - runtime error |
-| Chinese | Compound noun | "运行时错误" - runtime + error |
-| Hindi | Compound noun | "क्रियान्वयनत्रुटि" - execution/runtime + error |
+### Recommended Form
 
 **Primary recommendation:** Use compound noun combining the concept of "runtime" or "execution time" with "error." Maintain capitalization that matches Python's convention (PascalCase for exception classes in English).
 
@@ -181,55 +165,6 @@ Understanding when to use `RuntimeError` versus more specific exceptions is an i
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ErrorDeEjecución` or `ErrorDeRuntime`
-- **Form:** Compound noun
-- **Why it works:** "Ejecución" (execution/runtime) + "Error" is clear. "De" preposition connects them naturally. Follows Spanish CS conventions. Some regions use English "Runtime."
-
-**Arabic:**
-
-- **Translation:** `خطأوقتالتشغيل` (khata' waqt al-tashgheel)
-- **Form:** Compound noun phrase
-- **Why it works:** "خطأ" (error) + "وقت التشغيل" (runtime/execution time) creates clear meaning. Standard Arabic technical terminology for runtime errors.
-
-**Chinese:**
-
-- **Translation:** `运行时错误` (yùnxíngshí cuòwù)
-- **Form:** Compound noun
-- **Why it works:** "运行时" (runtime/execution time) + "错误" (error) is standard Chinese programming terminology. Commonly used in Chinese technical documentation.
-
-**Hindi:**
-
-- **Translation:** `क्रियान्वयनत्रुटि` (kriyaanvayan truti)
-- **Form:** Compound noun
-- **Why it works:** "क्रियान्वयन" (execution/implementation) + "त्रुटि" (error) follows Sanskrit compound rules. Technical but accessible terminology.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using generic "error" without temporal context**
-
-- **Wrong:** `Error` (Spanish)
-- **Why wrong:** Loses the critical "runtime" distinction. Doesn't indicate when the error occurs (runtime vs compile time vs import time).
-- **Right:** `ErrorDeEjecución` (specifies runtime)
-
-**Mistake 2: Overly literal translation creating awkward phrases**
-
-- **Wrong:** `ErrorDeTiempoDeEjecución` (Spanish - "error of time of execution")
-- **Why wrong:** Too verbose and awkward. Exception names should be concise. "Ejecución" alone captures the runtime concept.
-- **Right:** `ErrorDeEjecución` (concise)
-
-**Mistake 3: Missing consistency with other exceptions**
-
-- **Wrong:** `ErrorEnEjecución` (Spanish - "error in execution")
-- **Why wrong:** Inconsistent with the "ErrorDe..." pattern used for other exceptions. Preposition choice should be consistent.
-- **Right:** `ErrorDeEjecución` (consistent pattern with ErrorDeValor, ErrorDeTipo, etc.)
-
----
 
 ## Ambiguity Resolution
 
@@ -275,19 +210,12 @@ English "runtime" can mean:
 - [ ] `NotImplementedError` - Subclass of RuntimeError
 - [ ] `ValueError` - Sibling exception (should follow same pattern)
 - [ ] `TypeError` - Sibling exception (same pattern)
+- [ ] `RuntimeWarning` - Same qualifier plus the warning word, never the error word
 
 **Consistency rule:**
 
-All exception classes ending in "Error" should use the same structure in translations. If `RuntimeError` translates as "ErrorDeEjecución" (Spanish), then `ValueError` should be "ErrorDeValor" and `TypeError` should be "ErrorDeTipo" - maintaining consistent pattern.
+All exception classes ending in "Error" should use the same structure in translations. `RuntimeError`, `ValueError`, and `TypeError` must share the same "error" word and the same compound pattern - maintaining consistent pattern.
 
-**Example:**
-
-Spanish exception pattern:
-
-- `RuntimeError` → `ErrorDeEjecución` ✅
-- `ValueError` → `ErrorDeValor` ✅
-- `TypeError` → `ErrorDeTipo` ✅
-NOT: `RuntimeError` → `ErrorDeEjecución` but `ValueError` → `ValorInválido` ❌ (inconsistent pattern)
 
 ### Functional relationships
 
@@ -365,7 +293,7 @@ raise CustomRuntimeError("Custom runtime problem")
 
 **For this term:** MEDIUM
 
-**Rationale:** The concept of "runtime" (execution time) is well-established in computer science, but different languages handle this compound term differently. Some use native terms for execution time (ejecución, 运行时), while others adopt "runtime" as a technical loanword. The translation needs to clearly indicate when the error occurs (during execution) while maintaining consistency with other exception translations.
+**Rationale:** The concept of "runtime" (execution time) is well-established in computer science, but different languages handle this compound term differently. Some use native terms for execution time, while others adopt "runtime" as a technical loanword. The translation needs to clearly indicate when the error occurs (during execution) while maintaining consistency with other exception translations.
 
 **If your confidence doesn't match this assessment, FLAG FOR HUMAN REVIEW.**
 
@@ -420,25 +348,24 @@ raise CustomRuntimeError("Custom runtime problem")
 
 ```yaml
 term: RuntimeError
-language: es
-translation: ErrorDeEjecución
-form: compound_noun
-confidence: medium-high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "ErrorDeEjecución" combines "Error" (error) with "Ejecución" (execution/runtime), connected by "De" preposition. "Ejecución" clearly indicates execution time (runtime) in Spanish programming contexts. Maintains consistency with other exception translations like `ErrorDeValor` (ValueError) and `ErrorDeTipo` (TypeError).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `ErrorDeRuntime` - Using English "Runtime" - valid in some Spanish CS contexts where "runtime" is used as loanword
-2. `ErrorEnTiempoDeEjecución` - "Error in execution time" - too verbose
-3. `ExcepciónDeEjecución` - Using "Excepción" instead of "Error" - too verbose
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-Confidence is MEDIUM-HIGH because while "ejecución" is standard for execution/runtime in Spanish programming, some technical contexts use English "runtime" as a loanword. Regional variation exists. Some Spanish-speaking developers are familiar with "runtime" as an untranslated technical term.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

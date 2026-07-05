@@ -77,13 +77,6 @@ result = calculate()
 
 **Pattern rule:** Exception handling keywords should use conjunction/state forms. They describe conditions and control flow based on success or failure. Together they form: try-except-else-finally.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `try` | intentar | محاولة | 尝试 | प्रयास |
-| `except` | excepto | استثناء | 除外 | अपवाद |
-| `finally` | **finalmente** | **أخيرا** | **最终** | **अंत में** |
 
 ---
 
@@ -127,16 +120,7 @@ The execution order is: try block → except block (if exception) → else block
 - **Action vs State:** STATE indicator - marks the final phase of exception handling
 - **Temporal aspect:** Terminal/conclusive - happens after all other blocks, regardless of outcomes
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adverb form | "finalmente", "finalement" - meaning "finally/at last" |
-| Germanic (de, nl, sv) | Adverb form | "schließlich", "eindelijk" - meaning "finally/ultimately" |
-| Slavic (ru, pl, uk) | Adverb form | "наконец", "wreszcie" - meaning "finally/at last" |
-| Arabic | Adverb/particle | "أخيرا" (akhīran) - meaning "finally/lastly" |
-| Chinese | Adverb compound | "最终" (zuìzhōng) - meaning "finally/ultimately" |
-| Hindi | Adverb phrase | "अंत में" (ant mein) - meaning "in the end/finally" |
+### Recommended Form
 
 **Primary recommendation:** Use adverb form meaning "finally" or "at last." Emphasize temporal finality and guaranteed conclusion. The word should convey "this happens last, no matter what happened before."
 
@@ -148,55 +132,6 @@ The execution order is: try block → except block (if exception) → else block
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `finalmente`
-- **Form:** Adverb
-- **Why it works:** Standard Spanish adverb meaning "finally, at last." Natural in exception handling context: "try-except-finalmente." Conveys both temporal finality and certainty. Used in Spanish programming texts.
-
-**Arabic:**
-
-- **Translation:** `أخيرا` (akhīran)
-- **Form:** Adverb
-- **Why it works:** Common Arabic adverb meaning "finally, lastly." Clear temporal ordering. Standard in Arabic technical writing. The ـا ending marks adverbial form.
-
-**Chinese:**
-
-- **Translation:** `最终` (zuìzhōng)
-- **Form:** Adverb compound
-- **Why it works:** 最 (most/ultimate) + 终 (end/final). Means "finally, ultimately, in the end." Standard in Chinese programming. Conveys guaranteed final execution.
-
-**Hindi:**
-
-- **Translation:** `अंत में` (ant mein)
-- **Form:** Adverbial phrase
-- **Why it works:** अंत (end) + में (in) = "in the end, finally." Natural Hindi construction for temporal finality. Used in Hindi technical education.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using noun "end" instead of adverb "finally"**
-
-- **Wrong:** `fin` (Spanish - "the end" - noun)
-- **Why wrong:** "Fin" is a noun (the end), not an adverb (finally). Keywords need the adverbial form to indicate "this happens finally." "Finalmente" is correct adverb.
-- **Right:** `finalmente` (adverb - finally/at last)
-
-**Mistake 2: Using "always" or "certainly"**
-
-- **Wrong:** `siempre` (Spanish - "always")
-- **Why wrong:** "Always" emphasizes frequency/certainty but lacks temporal ordering. "Finally" emphasizes "happens last after try/except" AND "happens certainly." Need both concepts.
-- **Right:** `finalmente` (emphasizes temporal conclusion)
-
-**Mistake 3: Using "cleanup" or functional description**
-
-- **Wrong:** `limpieza` (Spanish - "cleanup")
-- **Why wrong:** Too implementation-focused. "Finally" is linguistic (temporal adverb), not functional description. We're translating the keyword's semantic meaning, not describing its common use case.
-- **Right:** `finalmente` (temporal/conclusive adverb)
-
----
 
 ## Ambiguity Resolution
 
@@ -242,29 +177,6 @@ The key semantic components are:
 
 Exception handling keywords (`try`, `except`, `else`, `finally`) form a semantic unit. They should use consistent linguistic forms: conjunctions, state markers, or conditional/temporal adverbs. Don't mix wildly different parts of speech.
 
-**Example:**
-
-Python exception handling structure:
-
-```python
-try:
-    # attempt something
-except ErrorType:
-    # handle error
-else:
-    # no error occurred
-finally:
-    # always runs at end
-```
-
-Spanish should maintain parallel structure:
-
-- `intentar` (to try - infinitive verb)
-- `excepto` (except - conjunction/preposition)
-- `sino` or `else` (else - conjunction)
-- `finalmente` (finally - adverb)
-
-These work together; translations should feel cohesive as a unit.
 
 ### Functional relationships
 
@@ -399,25 +311,24 @@ finally:
 
 ```yaml
 term: finally
-language: es
-translation: finalmente
-form: adverb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "finalmente" is the standard adverb meaning "finally, at last." It perfectly captures the temporal finality and guaranteed execution of the finally block in exception handling. Widely used in Spanish programming education and technical documentation for try-except-finalmente structures.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `al final` (at the end) - Also acceptable adverbial phrase, but two words; "finalmente" is more concise
-2. `siempre` (always) - Wrong emphasis (certainty but not temporal ordering)
-3. `fin` (end) - Wrong part of speech (noun instead of adverb)
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for Spanish. "Finalmente" is unambiguous in exception handling context. For other languages, verify that chosen term conveys both "happens last" AND "happens regardless" concepts.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

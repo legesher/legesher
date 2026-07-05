@@ -73,13 +73,6 @@ print(a & b)  # Intersection: frozenset({2, 3})
 
 **Pattern rule:** Immutable collection types should use compound forms combining immutability indicator + base type. "Frozen" indicates unchangeable state.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `set` | conjunto | مجموعة | 集合 | समुच्चय |
-| `tuple` | tupla | صف | 元组 | टपल |
-| `frozenset` | **conjunto_inmutable** | **مجموعة_ثابتة** | **不可变集合** | **अपरिवर्तनीय_समुच्चय** |
 
 ---
 
@@ -123,16 +116,7 @@ The main use cases are: (1) as dictionary keys when you need a set-like key, (2)
 - **Action vs State:** STATE/THING - describes what the object is
 - **Temporal aspect:** Static type, permanent immutability
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adjective + noun | "conjunto_inmutable", "ensemble_gelé" |
-| Germanic (de, nl, sv) | Compound noun | "unveränderbare Menge", "bevroren verzameling" |
-| Slavic (ru, pl, uk) | Adjective + noun | "неизменяемое множество" (immutable set) |
-| Arabic | Adjective + noun | "مجموعة ثابتة" (fixed/constant set) |
-| Chinese | Modifier + noun | "不可变集合" or "冻结集合" (immutable/frozen set) |
-| Hindi | Adjective + noun | "अपरिवर्तनीय समुच्चय" (immutable set) |
+### Recommended Form
 
 **Primary recommendation:** Use compound combining "frozen/immutable" concept + "set" term. The immutability aspect should be clear.
 
@@ -143,55 +127,6 @@ The main use cases are: (1) as dictionary keys when you need a set-like key, (2)
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `conjunto_inmutable` or `conjunto_congelado`
-- **Form:** Adjective + noun compound
-- **Why it works:** "Conjunto" (set) + "inmutable" (immutable) clearly indicates unchangeable set. Alternative "congelado" (frozen) is more literal but "inmutable" clearer in technical context.
-
-**Arabic:**
-
-- **Translation:** `مجموعة_ثابتة` (majmū'a thābita) or `مجموعة_مجمدة`
-- **Form:** Noun + adjective compound
-- **Why it works:** "مجموعة" (set/collection) + "ثابتة" (fixed/constant) indicates immutability. Alternative "مجمدة" (frozen) is more literal. Arabic word order: noun then adjective.
-
-**Chinese:**
-
-- **Translation:** `不可变集合` (bùkěbiàn jíhé) or `冻结集合` (dòngjié jíhé)
-- **Form:** Modifier + noun compound
-- **Why it works:** 不可变 (cannot change) + 集合 (set) is standard for immutable types. Alternative 冻结 (frozen) + 集合 is more literal translation.
-
-**Hindi:**
-
-- **Translation:** `अपरिवर्तनीय_समुच्चय` (aparivartan īya samucchaya)
-- **Form:** Adjective + noun compound
-- **Why it works:** "अपरिवर्तनीय" (immutable) + "समुच्चय" (set). Sanskrit-derived formal terminology. Clear indication of immutability.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using only "set" without indicating immutability**
-
-- **Wrong:** `conjunto` (Spanish - just "set")
-- **Why wrong:** Doesn't distinguish from mutable `set` type. The frozen/immutable nature is the key differentiator.
-- **Right:** `conjunto_inmutable` (immutable set - shows difference)
-
-**Mistake 2: Using "cold" instead of "frozen"**
-
-- **Wrong:** `conjunto_frío` (Spanish - "cold set")
-- **Why wrong:** "Cold" and "frozen" are different concepts. "Frozen" means fixed/unchangeable, "cold" just means low temperature. Wrong metaphor.
-- **Right:** `conjunto_congelado` or `conjunto_inmutable` (frozen/immutable)
-
-**Mistake 3: Using "constant" without "set"**
-
-- **Wrong:** `constante` (Spanish - "constant")
-- **Why wrong:** Too generic. Doesn't specify this is a set type. Need compound showing both aspects.
-- **Right:** `conjunto_inmutable` (immutable set - both aspects clear)
-
----
 
 ## Ambiguity Resolution
 
@@ -233,10 +168,6 @@ Most languages distinguish between physical freezing and metaphorical "frozen" (
 
 Immutable types (`frozenset`, `tuple`, `bytes`) should use consistent terminology for expressing immutability. If using "immutable" for frozenset, consider alignment with how other immutable types are described.
 
-**Example:**
-
-Spanish: `conjunto_inmutable`, `tupla` (inherently immutable), `bytes` (inherently immutable) ✅
-Chinese: `不可变集合`, `元组`, `字节串` - immutable types use consistent patterns ✅
 
 ### Functional relationships
 
@@ -371,25 +302,24 @@ Key consideration: Metaphorical "frozen" (unchangeable) vs literal "frozen" (ice
 
 ```yaml
 term: frozenset
-language: es
-translation: conjunto_inmutable
-form: compound_adjective_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "conjunto_inmutable" combines "conjunto" (set) with "inmutable" (immutable), clearly indicating an unchangeable set. The term "inmutable" is more precise than literal "congelado" (frozen) in technical contexts. Maintains clear relationship to `set` while emphasizing immutability.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `conjunto_congelado` (frozen set) - More literal but "inmutable" clearer technically
-2. `frozenset` (keep English) - Works but loses semantic clarity
-3. `conjunto_fijo` (fixed set) - Valid but "inmutable" more standard in CS
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. The concept of immutable collections is well-established in programming. Compound "immutable + set" structure translates straightforwardly across languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

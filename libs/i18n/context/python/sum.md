@@ -74,13 +74,6 @@ print(squares_sum)  # Output: 30 (0+1+4+9+16)
 
 **Pattern rule:** Aggregation functions should use noun forms naming the result. "Sum" is the total/result of addition.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `min` | mínimo | أدنى | 最小 | न्यूनतम |
-| `max` | máximo | أقصى | 最大 | अधिकतम |
-| `sum` | **suma** | **مجموع** | **总和** | **योग** |
 
 ---
 
@@ -124,16 +117,7 @@ Python specifically prohibits using `sum()` for string concatenation (`sum(['a',
 - **Action vs State:** RESULT - names the output
 - **Temporal aspect:** Completed action (the total after adding)
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "suma", "somme" - sum/total |
-| Germanic (de, nl, sv) | Noun | "Summe", "som" - sum |
-| Slavic (ru, pl, uk) | Noun | "сумма", "suma" - sum |
-| Arabic | Noun | "مجموع" - sum/total |
-| Chinese | Noun compound | "总和", "求和" - total sum |
-| Hindi | Noun | "योग", "जोड़" - sum/addition |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "sum" or "total." This names the mathematical result, not the action of adding.
 
@@ -145,55 +129,6 @@ Python specifically prohibits using `sum()` for string concatenation (`sum(['a',
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `suma`
-- **Form:** Noun (feminine)
-- **Why it works:** Standard Spanish mathematical term for sum/total. Natural in "la suma de los números" (the sum of the numbers). Universally taught in Spanish mathematics education.
-
-**Arabic:**
-
-- **Translation:** `مجموع` (majmūʿ)
-- **Form:** Noun (active participle form)
-- **Why it works:** Standard Arabic word for sum/total/aggregate. Used in Arabic mathematics and statistics. Clear, concise, widely recognized.
-
-**Chinese:**
-
-- **Translation:** `总和` (zǒnghé) or `求和` (qiúhé)
-- **Form:** Noun compound
-- **Why it works:** `总和` = "total sum" (noun). `求和` = "seek sum" (verb+noun, more action-oriented). `总和` better captures result concept. Both used in Chinese mathematics.
-
-**Hindi:**
-
-- **Translation:** `योग` (yog) or `जोड़` (joṛ)
-- **Form:** Noun
-- **Why it works:** `योग` is Sanskrit-derived formal term for sum (used in mathematics). `जोड़` is colloquial "addition/sum." `योग` more technical/formal, aligns with CS education register.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb "sumar" instead of noun "suma"**
-
-- **Wrong:** `sumar` (Spanish - "to sum/add" - verb infinitive)
-- **Why wrong:** Function names should be nouns (the result) or infinitives. For aggregation functions like `sum`, `max`, `min`, Python uses nouns naming the result. Verb form breaks pattern consistency.
-- **Right:** `suma` (the sum/total - noun)
-
-**Mistake 2: Using "total" when "sum" is more specific**
-
-- **Wrong:** `total` (Spanish/English - generic total)
-- **Why wrong:** While related, "sum" specifically means result of addition. "Total" is more general (could be multiplication, counting). Mathematical precision matters.
-- **Right:** `suma` (specifically addition result)
-
-**Mistake 3: Using "addition" instead of "sum"**
-
-- **Wrong:** `adición` (Spanish - "addition" - the operation)
-- **Why wrong:** "Addition" is the operation/process (verb noun). "Sum" is the result/answer. `sum([1,2,3])` returns the sum (6), not the addition operation.
-- **Right:** `suma` (the result of addition)
-
----
 
 ## Ambiguity Resolution
 
@@ -234,10 +169,6 @@ English "sum" can mean:
 
 Aggregation functions (`sum`, `min`, `max`) should all use noun forms naming their result. They reduce a collection to a single value.
 
-**Example:**
-
-Spanish: `suma`, `mínimo`, `máximo` - all nouns ✅
-NOT: `suma` (noun) + `obtener_máximo` (verb phrase) ❌
 
 ### Functional relationships
 
@@ -364,25 +295,24 @@ Minor consideration: Ensure you use noun form (the result) rather than verb form
 
 ```yaml
 term: sum
-language: es
-translation: suma
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "suma" is the universal mathematical term for sum/total. It clearly captures the result-of-addition concept. Standard in Spanish mathematics education from elementary through university.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `total` - Too general; "suma" specifically means addition result
-2. `sumar` (verb) - Wrong part of speech; should be noun (result) not verb (action)
-3. `adición` - Means "addition" (operation); "suma" means the result
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Sum is a universal mathematical concept with clear, standard translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

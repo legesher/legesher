@@ -97,13 +97,6 @@ print(person.name)  # Still "Bob" - typo created separate attribute
 
 **Pattern rule:** Exception classes should use noun forms, typically ending with "Error" in English. Translations should convey both the error type and the specific problem domain (attribute, key, index, etc.).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `KeyError` | ErrorDeClave | خطأمفتاح | 键错误 | कुंजीत्रुटि |
-| `IndexError` | ErrorDeÍndice | خطأفهرس | 索引错误 | सूचकांकत्रुटि |
-| `AttributeError` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -147,16 +140,7 @@ Understanding `AttributeError` is crucial for debugging object-oriented Python c
 - **Action vs State:** STATE - describes an error condition, not an action
 - **Temporal aspect:** Instantaneous - occurs at moment of failed attribute access
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound noun or noun phrase | "ErrorDeAtributo" - clear structure |
-| Germanic (de, nl, sv) | Compound noun | "Attributfehler" - natural compounds |
-| Slavic (ru, pl, uk) | Compound noun | "АтрибутОшибка" - describes error type |
-| Arabic | Noun phrase or compound | "خطأسمة" - attribute error |
-| Chinese | Compound noun | "属性错误" - attribute + error |
-| Hindi | Compound noun | "विशेषतात्रुटि" - attribute + error |
+### Recommended Form
 
 **Primary recommendation:** Use compound noun combining the concept of "attribute" with "error." Maintain capitalization that matches Python's convention (PascalCase for exception classes in English).
 
@@ -168,55 +152,6 @@ Understanding `AttributeError` is crucial for debugging object-oriented Python c
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ErrorDeAtributo`
-- **Form:** Compound noun
-- **Why it works:** "Atributo" (attribute) + "Error" is clear. "De" preposition connects them naturally. Follows Spanish CS conventions. Maintains consistency with `ErrorDeClave` pattern.
-
-**Arabic:**
-
-- **Translation:** `خطأسمة` (khata' simah)
-- **Form:** Compound noun
-- **Why it works:** "خطأ" (error) + "سمة" (attribute) creates clear compound. Standard Arabic technical terminology. Concise and follows pattern of other exception translations.
-
-**Chinese:**
-
-- **Translation:** `属性错误` (shǔxìng cuòwù)
-- **Form:** Compound noun
-- **Why it works:** "属性" (attribute/property) + "错误" (error) is natural Chinese structure. Standard in Chinese programming documentation. Clear and concise.
-
-**Hindi:**
-
-- **Translation:** `विशेषतात्रुटि` (visheshta truti)
-- **Form:** Compound noun
-- **Why it works:** "विशेषता" (attribute/property) + "त्रुटि" (error) follows Sanskrit compound rules. Technical but accessible. Consistent with Hindi CS terminology.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "property" instead of "attribute"**
-
-- **Wrong:** `ErrorDePropiedad` (Spanish - using "property")
-- **Why wrong:** While related, "attribute" is the broader technical term encompassing both properties and methods. "Property" is more specific in Python (refers to descriptors).
-- **Right:** `ErrorDeAtributo` (uses broader technical term)
-
-**Mistake 2: Overly verbose descriptions**
-
-- **Wrong:** `ErrorAtributoNoExiste` (Spanish - "attribute doesn't exist")
-- **Why wrong:** Exception names should be concise identifiers, not full sentences. Too descriptive for practical use in code.
-- **Right:** `ErrorDeAtributo` (concise but clear)
-
-**Mistake 3: Missing consistency with other exceptions**
-
-- **Wrong:** `AtributoFaltante` (Spanish - "missing attribute")
-- **Why wrong:** Doesn't follow the "ErrorDe..." pattern used for other exceptions. Inconsistent structure makes the exception hierarchy harder to understand.
-- **Right:** `ErrorDeAtributo` (consistent pattern)
-
----
 
 ## Ambiguity Resolution
 
@@ -258,16 +193,8 @@ English "attribute" can mean:
 
 **Consistency rule:**
 
-All exception classes ending in "Error" should use the same structure in translations. If `AttributeError` translates as "ErrorDeAtributo" (Spanish), then `KeyError` should be "ErrorDeClave" and `NameError` should be "ErrorDeNombre" - maintaining consistent pattern.
+All exception classes ending in "Error" should use the same structure in translations. Whatever compound pattern `AttributeError` uses, `KeyError` and `NameError` must follow it with the same error word and the same compound order - maintaining consistent pattern.
 
-**Example:**
-
-Spanish exception pattern:
-
-- `AttributeError` → `ErrorDeAtributo` ✅
-- `KeyError` → `ErrorDeClave` ✅
-- `NameError` → `ErrorDeNombre` ✅
-NOT: `AttributeError` → `ErrorDeAtributo` but `KeyError` → `ClaveNoEncontrada` ❌ (inconsistent pattern)
 
 ### Functional relationships
 
@@ -346,7 +273,7 @@ result.method()  # Raises AttributeError: 'NoneType' object has no attribute 'me
 
 **For this term:** MEDIUM
 
-**Rationale:** While the concept is well-established in object-oriented programming, translating "attribute" requires understanding the object property/method context. Different languages may use different words for object attributes (atributo, سمة, 属性, विशेषता). The compound structure needs to feel natural while maintaining technical clarity and consistency with other exception translations.
+**Rationale:** While the concept is well-established in object-oriented programming, translating "attribute" requires understanding the object property/method context. Different languages may use different words for object attributes. The compound structure needs to feel natural while maintaining technical clarity and consistency with other exception translations.
 
 **If your confidence doesn't match this assessment, FLAG FOR HUMAN REVIEW.**
 
@@ -401,25 +328,24 @@ result.method()  # Raises AttributeError: 'NoneType' object has no attribute 'me
 
 ```yaml
 term: AttributeError
-language: es
-translation: ErrorDeAtributo
-form: compound_noun
-confidence: medium-high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "ErrorDeAtributo" combines "Error" (error) with "Atributo" (attribute in OOP context), connected by "De" preposition. Follows Spanish programming convention for exception names. Maintains consistency with other exception translations like `ErrorDeClave` (KeyError) and `ErrorDeÍndice` (IndexError).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `ErrorDePropiedad` - Using "Propiedad" (property) - too narrow, doesn't include methods
-2. `ExcepciónDeAtributo` - Using "Excepción" instead of "Error" - too verbose
-3. `AtributoError` - Direct compound - less natural in Spanish
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-Confidence is MEDIUM-HIGH because "atributo" is standard for object properties/methods in Spanish programming, though some contexts might distinguish between "propiedad" (property) and "método" (method). The broader "atributo" covers both, matching Python's usage.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

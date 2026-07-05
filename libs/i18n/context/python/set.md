@@ -76,13 +76,6 @@ empty = set()  # Correct way
 
 **Pattern rule:** Collection type constructors should use noun forms representing the data structure. These name the type of container being created.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `list` | lista | قائمة | 列表 | सूची |
-| `dict` | diccionario | قاموس | 字典 | शब्दकोश |
-| `set` | **conjunto** | **مجموعة** | **集合** | **सेट** |
 
 ---
 
@@ -126,16 +119,7 @@ Common uses include removing duplicates from sequences, fast membership testing,
 - **Action vs State:** STATE - describes what kind of collection it is
 - **Temporal aspect:** Instantaneous - creates the set immediately
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "conjunto", "ensemble" - set/collection |
-| Germanic (de, nl, sv) | Noun | "Menge", "verzameling" - set |
-| Slavic (ru, pl, uk) | Noun | "множество", "zbiór" - set |
-| Arabic | Noun | "مجموعة" - set/collection |
-| Chinese | Noun compound | "集合" - collection/set |
-| Hindi | Transliterated or native | "सेट" (loan) or "समुच्चय" (set) |
+### Recommended Form
 
 **Primary recommendation:** Use the standard mathematical term for "set" in the target language. This is a universal mathematical concept taught in all education systems. Most languages have an established term from mathematics.
 
@@ -147,55 +131,6 @@ Common uses include removing duplicates from sequences, fast membership testing,
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `conjunto`
-- **Form:** Noun (masculine)
-- **Why it works:** Standard Spanish mathematical term for set. Used universally in mathematics education throughout Spanish-speaking world. Precise technical term that captures the mathematical concept.
-
-**Arabic:**
-
-- **Translation:** `مجموعة` (majmūʿa)
-- **Form:** Noun (feminine)
-- **Why it works:** Standard Arabic mathematical term for set. Used in mathematics education across Arabic-speaking regions. Clear and universally recognized in technical contexts.
-
-**Chinese:**
-
-- **Translation:** `集合` (jíhé)
-- **Form:** Noun compound
-- **Why it works:** Two characters: 集 (gather/collect) + 合 (combine/unite). Standard Chinese mathematical term for set. Used consistently in Chinese mathematics and CS education.
-
-**Hindi:**
-
-- **Translation:** `समुच्चय` (samuccaya) or `सेट` (seṭ)
-- **Form:** Noun (Sanskrit-derived) or Transliterated noun
-- **Why it works:** "समुच्चय" is the formal Sanskrit-derived mathematical term used in Hindi mathematics education. "सेट" is a transliterated loan word also commonly used. Both are acceptable depending on formality preference.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using generic "collection" or "group"**
-
-- **Wrong:** `colección` (Spanish - "collection")
-- **Why wrong:** Too generic. While sets are collections, "conjunto" is the specific mathematical term for a set (unique, unordered elements). More precise term exists.
-- **Right:** `conjunto` (mathematical set)
-
-**Mistake 2: Using terms implying order**
-
-- **Wrong:** `serie` (Spanish - "series")
-- **Why wrong:** "Series" implies sequence or order. Sets are explicitly unordered. Using a term suggesting order misrepresents the concept.
-- **Right:** `conjunto` (unordered set)
-
-**Mistake 3: Using terms that don't convey uniqueness**
-
-- **Wrong:** `grupo` (Spanish - "group")
-- **Why wrong:** "Group" doesn't emphasize that all elements must be unique. While colloquially similar, "conjunto" is the precise mathematical term that implies uniqueness.
-- **Right:** `conjunto` (set with unique elements)
-
----
 
 ## Ambiguity Resolution
 
@@ -240,10 +175,6 @@ English "set" can mean:
 
 All collection types (`list`, `tuple`, `set`, `dict`, `frozenset`) must be nouns representing data structures. They name container types, not actions.
 
-**Example:**
-
-Spanish: `lista`, `tupla`, `conjunto`, `diccionario` - all nouns ✅
-NOT: `conjunto` (noun) + `crear_lista` (verb phrase) ❌
 
 ### Functional relationships
 
@@ -371,25 +302,24 @@ squares = {x**2 for x in range(10)}  # {0, 1, 4, 9, 16, 25, 36, 49, 64, 81}
 
 ```yaml
 term: set
-language: es
-translation: conjunto
-form: noun (masculine)
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "conjunto" is the universal mathematical term for set, taught in all Spanish-language mathematics courses worldwide. It precisely captures the concept of a collection of unique, unordered elements with mathematical operations. The term is immediately recognizable to anyone with mathematics education in Spanish.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `colección` (collection) - Too generic; doesn't specify mathematical set properties
-2. `grupo` (group) - Colloquial but not the precise mathematical term; "group" has a different meaning in abstract algebra
-3. `set` (English loan) - Not standard; Spanish has perfectly good native term
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Conjunto" is the standard mathematical term universally used across all Spanish-speaking educational systems and technical literature.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

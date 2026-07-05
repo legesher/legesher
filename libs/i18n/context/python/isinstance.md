@@ -93,13 +93,6 @@ print("This won't print")
 
 **Pattern rule:** Introspection functions using "is" + noun pattern should indicate what they check. The "is" suggests a boolean return.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `is` | es | هو | 是 | है |
-| `type` | tipo | نوع | 类型 | प्रकार |
-| `isinstance` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -141,16 +134,7 @@ The function accepts either a single class or a tuple of classes. When given a t
 - **Action vs State:** QUERY - asks a question and returns boolean
 - **Temporal aspect:** Instantaneous check
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb "is" + noun "instance" | es_instancia, est_instance |
-| Germanic (de, nl, sv) | Verb + noun or compound | ist_Instanz, isInstance |
-| Slavic (ru, pl, uk) | Verb "is" + noun "instance" | является_экземпляром |
-| Arabic | Verb "is" + noun "instance" | هو_نموذج (huwa namūdhaj) |
-| Chinese | Verb + noun | 是实例 (shì shílì) |
-| Hindi | Verb + noun | है_उदाहरण (hai udāharaṇ) |
+### Recommended Form
 
 **Primary recommendation:** Create compound from "is" (verb) + "instance" (noun), maintaining the verb-noun structure. Should read naturally as "is [an] instance [of]".
 
@@ -162,55 +146,6 @@ The function accepts either a single class or a tuple of classes. When given a t
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `es_instancia` or `esinstancia`
-- **Form:** Compound verb+noun
-- **Why it works:** Clear compound of "es" (is) + "instancia" (instance), immediately understood, parallel to English structure
-
-**Arabic:**
-
-- **Translation:** `هو_نموذج` (huwa namūdhaj - is instance/example)
-- **Form:** Compound verb+noun
-- **Why it works:** "هو" (is) + "نموذج" (instance/model), clear and follows compound pattern
-
-**Chinese:**
-
-- **Translation:** `是实例` (shì shílì - is instance)
-- **Form:** Compound verb+noun
-- **Why it works:** Standard CS term, "是" (is) + "实例" (instance), widely used
-
-**Hindi:**
-
-- **Translation:** `है_उदाहरण` (hai udāharaṇ - is instance)
-- **Form:** Compound verb+noun
-- **Why it works:** Clear compound, "है" (is) + "उदाहरण" (instance/example), follows pattern
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Wrong word order**
-
-- **Wrong:** `instancia_es` (Spanish - "instance is")
-- **Why wrong:** Reverses the natural verb-noun order of the English term
-- **Right:** `es_instancia` (is instance)
-
-**Mistake 2: Using different verb than `is`**
-
-- **Wrong:** `verifica_instancia` (Spanish - "verify instance")
-- **Why wrong:** Should use same verb as `is` keyword for consistency
-- **Right:** `es_instancia` (uses "es" from `is`)
-
-**Mistake 3: Too verbose**
-
-- **Wrong:** `comprobar_si_es_instancia` (Spanish - "check if is instance")
-- **Why wrong:** Adds unnecessary words; function name should be concise
-- **Right:** `es_instancia` (concise compound)
-
----
 
 ## Ambiguity Resolution
 
@@ -241,22 +176,22 @@ The compound term is Python-specific with one clear meaning. Your translation sh
 
 The "is*" functions (`isinstance`, `issubclass`) MUST use the same verb translation as the `is` keyword:
 
-- If `is` = "es" (Spanish), then `isinstance` = "es_instancia" (not "está_instancia")
-- If `is` = "هو" (Arabic), then `isinstance` = "هو_نموذج" (same verb)
+- Whatever copula/verb the pack chose for `is`, `isinstance` must reuse it verbatim - if the language distinguishes several "to be" verbs, do not switch to a different one
+- Do not substitute a "check/verify" verb - the name asserts identity of kind, not the act of checking
 
 **Example:**
 
 ✅ **Consistent:**
 
-- `is` → `es`
-- `isinstance` → `es_instancia`
-- `issubclass` → `es_subclase`
-- All use "es" ✅
+- `is` → the pack's copula
+- `isinstance` → that copula + "instance" noun
+- `issubclass` → that copula + "subclass" noun
+- All use the same verb ✅
 
 ❌ **Inconsistent:**
 
-- `is` → `es`
-- `isinstance` → `verifica_instancia` (different verb!)
+- `is` → the pack's copula
+- `isinstance` → a "verify"-verb compound (different verb!)
 - Inconsistent ❌
 
 ### Functional relationships
@@ -346,24 +281,24 @@ if isinstance(obj, BaseClass):
 
 ```yaml
 term: isinstance
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {compound_verb_noun}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Explain that you compounded the `is` verb translation with "instance" noun, maintaining natural word order. Emphasize consistency with `is` keyword and parallel structure to `issubclass`.}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{Need to verify `is` translation, check consistency with `issubclass` pattern}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

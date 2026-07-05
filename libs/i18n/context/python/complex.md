@@ -88,13 +88,6 @@ except ZeroDivisionError:
 
 **Pattern rule:** Type constructors should use noun forms naming the type of data. "Complex" refers to complex numbers - a fundamental mathematical concept. Can be adjective ("complex number") or noun ("a complex").
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `int` | entero | عدد_صحيح | 整数 | पूर्णांक |
-| `float` | flotante | عائم | 浮点 | दशमलव |
-| `complex` | **complejo** | **مركب** | **复数** | **सम्मिश्र** |
 
 ---
 
@@ -138,16 +131,7 @@ The type is essential for scientific computing, signal processing, electrical en
 - **Action vs State:** STATE - describes type of mathematical object
 - **Temporal aspect:** Permanent - type classification
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adjective/noun | "complejo" (complex) - mathematical term |
-| Germanic (de, nl, sv) | Adjective/noun | "komplex" (complex) - cognate |
-| Slavic (ru, pl, uk) | Adjective | "комплексный" (complex) |
-| Arabic | Adjective | "مركب" (composite/complex) |
-| Chinese | Noun compound | "复数" (complex number) |
-| Hindi | Adjective | "सम्मिश्र" (composite/complex) |
+### Recommended Form
 
 **Primary recommendation:** Use adjective or noun form meaning "complex" in mathematical sense (composed of parts), not "complicated." This is a standard mathematical term that exists in most languages' technical vocabulary.
 
@@ -159,55 +143,6 @@ The type is essential for scientific computing, signal processing, electrical en
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `complejo`
-- **Form:** Adjective/noun
-- **Why it works:** "Complejo" is the standard Spanish mathematical term for complex numbers. Direct cognate from Latin. Used in "número complejo" (complex number). Universally recognized in Spanish mathematics and engineering.
-
-**Arabic:**
-
-- **Translation:** `مركب` (murakkab) or `عقدي` ('aqdī)
-- **Form:** Adjective
-- **Why it works:** "مركب" means composite/complex in mathematics. "عقدي" from "عقد" (node/complex) also used. "مركب" more common in Arabic mathematics for complex numbers.
-
-**Chinese:**
-
-- **Translation:** `复数` (fùshù)
-- **Form:** Noun compound
-- **Why it works:** Two characters: 复 (complex/compound) + 数 (number). Standard Chinese mathematical term. Contrasts with 实数 (real number). Universal in Chinese mathematics and engineering.
-
-**Hindi:**
-
-- **Translation:** `सम्मिश्र` (sammiśra) or `जटिल` (jaṭil)
-- **Form:** Adjective
-- **Why it works:** "सम्मिश्र" from Sanskrit means composite/complex, standard in Hindi mathematics. "जटिल" means complex but can imply complicated. "सम्मिश्र" preferred for mathematical context.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "complicated" instead of "complex"**
-
-- **Wrong:** `complicado` (Spanish - "complicated")
-- **Why wrong:** Different meaning. "Complex" (mathematical) means composed of real and imaginary parts. "Complicated" means difficult. Wrong semantic field.
-- **Right:** `complejo` (complex in mathematical sense)
-
-**Mistake 2: Using "imaginary" alone**
-
-- **Wrong:** `imaginario` (Spanish - "imaginary")
-- **Why wrong:** Complex numbers have BOTH real and imaginary parts. "Imaginary" alone refers only to numbers like `3j` with zero real part. Incomplete.
-- **Right:** `complejo` (includes both components)
-
-**Mistake 3: Using generic "number" without complex qualifier**
-
-- **Wrong:** `número` (Spanish - "number")
-- **Why wrong:** Too general. Doesn't specify which type of number. Must indicate this is complex number type specifically.
-- **Right:** `complejo` (specific type)
-
----
 
 ## Ambiguity Resolution
 
@@ -391,25 +326,24 @@ Minor consideration: Ensure translation captures mathematical meaning (real + im
 
 ```yaml
 term: complex
-language: es
-translation: complejo
-form: adjective_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "complejo" is the universal mathematical term for complex numbers, directly cognate with English. It clearly captures the concept of numbers composed of real and imaginary parts. Standard in Spanish mathematics education and professional contexts.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `complicado` (complicated) - Wrong meaning; refers to difficulty not mathematical composition
-2. `número_complejo` (complex number) - Too verbose; type name should be concise
-3. `imaginario` (imaginary) - Incomplete; misses the real component
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Complex numbers are a universal mathematical concept with well-established translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

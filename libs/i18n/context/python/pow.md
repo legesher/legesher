@@ -82,13 +82,6 @@ print(pow(2, -1))   # Output: 0.5 (float for negative exponent)
 
 **Pattern rule:** Mathematical operation functions should use noun forms naming the operation or result. "Power" is the mathematical term for exponentiation.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `abs` | absoluto | مطلق | 绝对值 | निरपेक्ष |
-| `round` | redondear | تقريب | 四舍五入 | पूर्णांकित |
-| `pow` | **potencia** | **قوة** | **幂** | **घात** |
 
 ---
 
@@ -132,16 +125,7 @@ Type handling: If both x and y are integers and y is non-negative, returns int. 
 - **Action vs State:** RESULT - the power/exponentiation result
 - **Temporal aspect:** Computed result
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun | "potencia", "puissance" - power |
-| Germanic (de, nl, sv) | Noun | "Potenz", "macht" - power |
-| Slavic (ru, pl, uk) | Noun | "степень", "potęga" - power |
-| Arabic | Noun | "قوة", "أس" - power/exponent |
-| Chinese | Noun | "幂", "乘方" - power |
-| Hindi | Noun | "घात", "शक्ति" - power/exponent |
+### Recommended Form
 
 **Primary recommendation:** Use noun form meaning "power" or "exponent." This names the mathematical operation of exponentiation.
 
@@ -153,55 +137,6 @@ Type handling: If both x and y are integers and y is non-negative, returns int. 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `potencia` or `pot`
-- **Form:** Noun
-- **Why it works:** "Potencia" is standard Spanish mathematical term for power/exponentiation. Natural in "elevar a la potencia" (raise to the power). Could abbreviate as "pot" following Python's pattern. Universally taught in Spanish mathematics.
-
-**Arabic:**
-
-- **Translation:** `قوة` (quwwa) or `أس` (uss)
-- **Form:** Noun
-- **Why it works:** `قوة` means "power/strength" (general). `أس` specifically means "exponent/power" (mathematical). `أس` more technical and precise for mathematics. Both recognized in Arabic math education.
-
-**Chinese:**
-
-- **Translation:** `幂` (mì) or `乘方` (chéngfāng)
-- **Form:** Noun
-- **Why it works:** `幂` is concise single-character word for "power" (mathematical). `乘方` = "multiplication method" (2 characters, more descriptive). `幂` preferred for brevity, standard in Chinese mathematics.
-
-**Hindi:**
-
-- **Translation:** `घात` (ghāt) or `शक्ति` (shakti)
-- **Form:** Noun
-- **Why it works:** `घात` is Sanskrit-derived mathematical term for exponent/power. `शक्ति` means "power/strength" (more general). `घात` more technical, standard in Hindi mathematics education.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb "elevar" (to raise)**
-
-- **Wrong:** `elevar` (Spanish - "to raise/elevate" - verb)
-- **Why wrong:** "Elevar" is the action of raising to a power. `pow` should name the operation/result (power), not the action. Use noun form.
-- **Right:** `potencia` (power - noun)
-
-**Mistake 2: Using only "exponente" (exponent)**
-
-- **Wrong:** `exponente` (Spanish - "exponent")
-- **Why wrong:** "Exponente" is the exponent (the y in x^y), not the operation itself. The operation is "potenciación" (exponentiation) or result is "potencia" (power).
-- **Right:** `potencia` (power - the operation and result)
-
-**Mistake 3: Using "multiplicación" (multiplication)**
-
-- **Wrong:** `multiplicación` (Spanish - "multiplication")
-- **Why wrong:** Power is repeated multiplication, but it's a distinct operation. 2³ is not "multiplication" - it's "power" or "exponentiation." Different mathematical concepts.
-- **Right:** `potencia` (power - distinct from multiplication)
-
----
 
 ## Ambiguity Resolution
 
@@ -246,10 +181,6 @@ Mathematically written as x^y, xʸ, or x**y.
 
 Mathematical operation functions should use noun forms naming the operation or result. `pow`, `abs`, etc. should all use compatible naming patterns.
 
-**Example:**
-
-Spanish: `potencia`, `absoluto`, `raíz_cuadrada` - all mathematical noun terms ✅
-NOT: `potencia` (noun) + `hacer_absoluto` (verb phrase) ❌
 
 ### Functional relationships
 
@@ -395,25 +326,24 @@ Only consideration: Distinguish mathematical "power" from other meanings (electr
 
 ```yaml
 term: pow
-language: es
-translation: potencia
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "potencia" is the universal mathematical term for power/exponentiation. It clearly captures the x^y operation concept. Standard in Spanish mathematics education and scientific contexts.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `elevar` (to raise - verb) - Wrong part of speech; should be noun
-2. `exponente` (exponent) - That's the y in x^y, not the operation
-3. `pot` (abbreviation) - Valid but full word more recognizable
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Exponentiation is a universal mathematical concept with clear, standard translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -77,13 +77,6 @@ math.isnan(not_a_number)       # True
 
 **Pattern rule:** Numeric type constructors should use noun forms representing the kind of number they store. These are type names, not verbs.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `int` | entero | عدد صحيح | 整数 | पूर्णांक |
-| `bool` | booleano | منطقي | 布尔 | बूलियन |
-| `float` | **flotante** | **عائم** | **浮点** | **फ्लोट** |
 
 ---
 
@@ -127,21 +120,12 @@ Common uses include measurements (temperature, distance), financial calculations
 - **Action vs State:** STATE - describes what kind of number it is
 - **Temporal aspect:** N/A - this is a type classification
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun/Adjective | "flotante" (floating) - from computing |
-| Germanic (de, nl, sv) | Noun | "Gleitkomma" (floating comma) |
-| Slavic (ru, pl, uk) | Adjective as noun | "плавающая" (floating) |
-| Arabic | Adjective as noun | "عائم" (floating) |
-| Chinese | Noun compound | "浮点" (floating point) |
-| Hindi | Transliterated | "फ्लोट" (borrowed term) |
+### Recommended Form
 
 **Primary recommendation:** Most languages either:
 
-1. Use adjective "floating" as a noun (flotante, floating)
-2. Use compound "floating-point" (Gleitkommazahl, 浮点)
+1. Use adjective "floating" as a noun
+2. Use compound "floating-point"
 3. Transliterate "float" as a technical term
 
 **Forms to AVOID:**
@@ -152,55 +136,6 @@ Common uses include measurements (temperature, distance), financial calculations
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `flotante`
-- **Form:** Adjective used as noun (masculine)
-- **Why it works:** Standard Spanish computing term. Short for "número flotante" (floating-point number). Used consistently in Spanish CS education and programming documentation. Clear technical term.
-
-**Arabic:**
-
-- **Translation:** `عائم` (ʿāʾim)
-- **Form:** Active participle/adjective (masculine)
-- **Why it works:** Arabic word for "floating." Used in Arabic technical literature for floating-point numbers. Concise and clear. Conveys the concept of a number whose decimal point position varies.
-
-**Chinese:**
-
-- **Translation:** `浮点` (fúdiǎn) or `浮点数` (fúdiǎnshù)
-- **Form:** Noun compound
-- **Why it works:** 浮 (float/drift) + 点 (point). Standard Chinese term for floating-point. Used universally in Chinese computing. Can add 数 (number) for clarity: "floating-point number."
-
-**Hindi:**
-
-- **Translation:** `फ्लोट` (floṭ)
-- **Form:** Transliterated noun
-- **Why it works:** Direct transliteration of "float." Used as a borrowed technical term in Hindi CS education. No established native Hindi equivalent exists, so borrowing is appropriate for this specialized computing concept.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "decimal"**
-
-- **Wrong:** `decimal` (Spanish)
-- **Why wrong:** While floats display with decimals, "decimal" refers to base-10 representation, not floating-point format. Python has a separate `decimal` type for exact decimal arithmetic. "Flotante" is the specific computing term.
-- **Right:** `flotante` (floating-point)
-
-**Mistake 2: Using verb form**
-
-- **Wrong:** `flotar` (Spanish - "to float")
-- **Why wrong:** This is a verb meaning "to float/drift." Python type names are nouns/adjectives, not verbs. "Flotante" (floating) is the adjective form used as a noun.
-- **Right:** `flotante` (floating, adjective/noun)
-
-**Mistake 3: Using "real"**
-
-- **Wrong:** `real` (Spanish - "real")
-- **Why wrong:** Mathematically, "real numbers" include both rationals and irrationals, while floats are a specific computational approximation. Some languages use "real" for floats, but "flotante" is more precise.
-- **Right:** `flotante` (specifically floating-point)
-
----
 
 ## Ambiguity Resolution
 
@@ -243,10 +178,6 @@ English "float" can mean:
 
 All basic type constructors (`int`, `float`, `complex`, `bool`, `str`) must be nouns or adjectives used as nouns. They name types, not actions.
 
-**Example:**
-
-Spanish: `entero`, `flotante`, `complejo`, `booleano`, `cadena` - all nouns ✅
-NOT: `flotante` (noun) + `crear_entero` (verb phrase) ❌
 
 ### Functional relationships
 
@@ -377,25 +308,24 @@ y.is_integer()    # True
 
 ```yaml
 term: float
-language: es
-translation: flotante
-form: adjective/noun (masculine)
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "flotante" is the standard computing term for floating-point numbers, used consistently across Spanish programming documentation and CS education. It's an adjective ("floating") used as a noun, clearly conveying the concept of a number whose decimal point position varies. The term is immediately recognizable to Spanish-speaking programmers.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `float` (English loan) - Some Spanish programmers use English, but "flotante" is standard
-2. `decimal` (decimal) - Too generic; doesn't specify floating-point format
-3. `real` (real) - Mathematical term but "flotante" is more precise for computing
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Flotante" is the established term in Spanish computing and consistently used across educational materials and technical documentation.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

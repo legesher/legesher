@@ -83,13 +83,6 @@ result = not "text"  # False (not the string "text")
 
 **Pattern rule:** Logical negation operators should use negation forms in target language - words that express "no," "not," or denial. "Not" reverses the truth value of a condition.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `and` | y | و | 与 | और |
-| `or` | o | أو | 或 | या |
-| `not` | **no** | **ليس** | **非** | **नहीं** |
 
 ---
 
@@ -133,16 +126,7 @@ Unlike `and` and `or`, which return one of their operands, `not` always returns 
 - **Action vs State:** NEGATION - reverses truth value
 - **Temporal aspect:** Instantaneous - negation happens immediately
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Negation particle | "no", "non", "não" - not/no |
-| Germanic (de, nl, sv) | Negation particle | "nicht", "niet", "inte" - not |
-| Slavic (ru, pl, uk) | Negation particle | "не", "nie" - not/no |
-| Arabic | Negation particle | "ليس" - laysa (is not) |
-| Chinese | Negation character | "非" - fēi (not/non-) or "不" - bù (not) |
-| Hindi | Negation particle | "नहीं" - nahīṁ (not/no) |
+### Recommended Form
 
 **Primary recommendation:** Use the target language's primary negation word - the word used to express "no" or "not" in sentences. This should be the most common word for negation.
 
@@ -154,55 +138,6 @@ Unlike `and` and `or`, which return one of their operands, `not` always returns 
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `no`
-- **Form:** Negation particle
-- **Why it works:** Universal Spanish negation. "No es verdad" (it's not true). Natural for negating conditions. Standard in Spanish programming.
-
-**Arabic:**
-
-- **Translation:** `ليس` (laysa)
-- **Form:** Negation particle (copular negation)
-- **Why it works:** Standard Arabic negation for states/conditions. More formal than `لا` (simple no). Appropriate for logical negation in programming. Used in Arabic CS education.
-
-**Chinese:**
-
-- **Translation:** `非` (fēi) or `不` (bù)
-- **Form:** Negation character
-- **Why it works:** `非` means "non-/not-" (formal). `不` means "not" (common). Either acceptable; `非` may be preferred for programming's formal register. Both are single character.
-
-**Hindi:**
-
-- **Translation:** `नहीं` (nahīṁ)
-- **Form:** Negation particle
-- **Why it works:** Universal Hindi negation for verbs/adjectives. "यह सत्य नहीं है" (this is not true). Natural for negating conditions. Standard in Hindi programming.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verbose phrase instead of simple negation**
-
-- **Wrong:** `no_es` (Spanish - "is not" as compound)
-- **Why wrong:** Too verbose. Python's `not` is simple, single word. Should use simplest negation word. "No" alone is sufficient; don't need "is not."
-- **Right:** `no` (simple negation)
-
-**Mistake 2: Using question negation form**
-
-- **Wrong:** `¿no?` (Spanish - question negation)
-- **Why wrong:** Question form is for asking; need statement negation. Logical `not` is declarative, not interrogative. Use statement negation, not question tag.
-- **Right:** `no` (statement negation)
-
-**Mistake 3: Using bitwise NOT symbol**
-
-- **Wrong:** `!` (symbol from C/Java)
-- **Why wrong:** Python deliberately uses English words, not symbols. If target language has natural word for "not," use it rather than importing foreign symbols.
-- **Right:** `no` (natural Spanish word)
-
----
 
 ## Ambiguity Resolution
 
@@ -237,9 +172,6 @@ But in programming logic, `not` has one clear meaning: **logical negation - reve
 
 Logical operators (`and`, `or`, `not`) should all use compatible grammatical forms - typically conjunctions or particles. They form a set of logical connectives. `not` is typically a particle/adverb rather than conjunction.
 
-**Example:**
-
-Spanish: `y` (and), `o` (or), `no` (not) - all basic conjunctions/particles ✅
 
 ### Functional relationships
 
@@ -370,25 +302,24 @@ if not all(checks):
 
 ```yaml
 term: not
-language: es
-translation: no
-form: negation_particle
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "no" is the universal negation particle. Natural for negating conditions in logical expressions. Standard in Spanish programming and matches Python's philosophy of readable English-like syntax.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `!` (C-style symbol) - Python uses words, not symbols
-2. `negar` (verb "to negate") - Should be particle, not verb
-3. `sin` (without) - Wrong concept; need negation not absence
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Not" is the most basic negation in every language with clear, universal translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

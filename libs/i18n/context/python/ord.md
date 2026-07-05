@@ -87,13 +87,6 @@ assert char == back   # True
 
 **Pattern rule:** Conversion functions should use abbreviated or noun forms naming the source or operation. "Ord" abbreviates "ordinal" (position in sequence).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `chr` | carácter | حرف | 字符 | वर्ण |
-| `int` | entero | عدد_صحيح | 整数 | पूर्णांक |
-| `ord` | **ordinal** | **ترتيبي** | **序数** | **क्रमिक** |
 
 ---
 
@@ -137,16 +130,7 @@ This is essential for text processing, character comparisons, sorting, and under
 - **Action vs State:** CONVERSION - transforms character to number
 - **Temporal aspect:** Instantaneous conversion
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adjective/noun | "ordinal" - relating to order |
-| Germanic (de, nl, sv) | Adjective/noun | "ordinal", "Ordnungszahl" |
-| Slavic (ru, pl, uk) | Adjective | "порядковый", "liczba porządkowa" |
-| Arabic | Adjective | "ترتيبي" - ordinal/sequential |
-| Chinese | Compound noun | "序数", "顺序" - ordinal number |
-| Hindi | Adjective | "क्रमिक", "क्रमांक" - ordinal |
+### Recommended Form
 
 **Primary recommendation:** Use adjective/noun form meaning "ordinal" (relating to position/order in sequence). This captures the concept of getting the character's position number.
 
@@ -158,55 +142,6 @@ This is essential for text processing, character comparisons, sorting, and under
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ordinal` or `ord`
-- **Form:** Adjective/noun
-- **Why it works:** "Ordinal" means relating to order/position in sequence. Natural in "valor ordinal" (ordinal value) or "número ordinal" (ordinal number). Standard mathematical/CS term in Spanish.
-
-**Arabic:**
-
-- **Translation:** `ترتيبي` (tartībī)
-- **Form:** Adjective (nisba form)
-- **Why it works:** From root ت-ر-ت-ب (order/arrangement). Means "ordinal/sequential/positional." Used in Arabic mathematics for ordinal numbers. Clear technical meaning.
-
-**Chinese:**
-
-- **Translation:** `序数` (xùshù) or `序号` (xùhào)
-- **Form:** Compound noun
-- **Why it works:** `序数` = "ordinal number" (sequence + number). `序号` = "sequence number/serial number." Both capture position-in-sequence concept. `序数` more mathematical/formal.
-
-**Hindi:**
-
-- **Translation:** `क्रमिक` (kramik) or `क्रमांक` (kramāṅk)
-- **Form:** Adjective/noun
-- **Why it works:** `क्रमिक` means "sequential/ordinal" (from Sanskrit "krama" = sequence). `क्रमांक` means "serial number." Both capture ordinal concept. Standard in Hindi mathematics.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "orden" (order as command) instead of "ordinal"**
-
-- **Wrong:** `orden` (Spanish - "order" as command/arrangement)
-- **Why wrong:** "Orden" can mean command, sequence, or tidiness. "Ordinal" specifically means the position number in a sequence. More precise term needed. Computing uses "ordinal."
-- **Right:** `ordinal` (ordinal number/value - technical term)
-
-**Mistake 2: Using "número" (number) alone**
-
-- **Wrong:** `número` (Spanish - "number")
-- **Why wrong:** Too generic. `ord()` doesn't return just any number - it returns the ordinal value (position in Unicode). "Número ordinal" or just "ordinal" is more precise.
-- **Right:** `ordinal` (specifically the ordinal/position number)
-
-**Mistake 3: Using "código" (code) without "ordinal" context**
-
-- **Wrong:** `código` (Spanish - "code")
-- **Why wrong:** "Código" just means code. Could be error code, source code, etc. Need "código de punto" (code point) or better, "ordinal" which is the standard term for character position values.
-- **Right:** `ordinal` (ordinal value - standard CS term)
-
----
 
 ## Ambiguity Resolution
 
@@ -249,10 +184,6 @@ In mathematics: "ordinal number" contrasts with "cardinal number" (counting vs. 
 
 `ord` and `chr` are inverse operations and should have linguistically related translations. They form a pair for character encoding conversions.
 
-**Example:**
-
-Spanish: `ordinal` (ordinal value), `carácter` (character) - clear inverse ✅
-Both are computing terms that work together logically.
 
 ### Functional relationships
 
@@ -427,25 +358,24 @@ Only consideration: Ensure you use mathematical/CS sense of "ordinal" (position 
 
 ```yaml
 term: ord
-language: es
-translation: ordinal
-form: adjective_as_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "ordinal" is the standard mathematical/CS term for ordinal number (position in sequence). Clearly captures the concept of getting a character's position value in Unicode. Natural pairing with "carácter" (chr function).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `orden` (order) - Ambiguous; could mean command or tidiness
-2. `número` (number) - Too generic; "ordinal" more specific
-3. `código` (code) - Less standard than "ordinal" for this concept
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Ordinal is a universal mathematical concept with clear, standard translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -74,13 +74,6 @@ print(hex(255).upper())  # Output: '0XFF'
 
 **Pattern rule:** Base conversion builtins should use short noun forms representing the target number system.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `int` | entero | عدد صحيح | 整数 | पूर्णांक |
-| `bin` | bin | ثنائي | 二进制 | बाइनरी |
-| `hex` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -122,16 +115,7 @@ Hexadecimal is ubiquitous in computing: RGB colors (#FF5733), memory addresses (
 - **Action vs State:** State/property - describes the hexadecimal form of a number
 - **Temporal aspect:** Instantaneous conversion - generates representation at call time
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Abbreviation or noun | "hex" or "hexadecimal" - hex number system |
-| Germanic (de, nl, sv) | Abbreviation or noun | "hex" or "hexadezimal" - hexadecimal concept |
-| Slavic (ru, pl, uk) | Abbreviation or noun | "hex" or "шестнадцатеричный" - base-16 system |
-| Arabic | Noun/adjective | "سداسي عشري" - hexadecimal (six-ten) system |
-| Chinese | Noun phrase | "十六进制" - hexadecimal (base-16) system |
-| Hindi | Noun/adjective | "हेक्साडेसिमल" or "षोडश" - hexadecimal/sixteen-based |
+### Recommended Form
 
 **Primary recommendation:** Use abbreviation "hex" if universally understood, or short noun meaning "hexadecimal"
 
@@ -143,55 +127,6 @@ Hexadecimal is ubiquitous in computing: RGB colors (#FF5733), memory addresses (
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `hex` or `hexadecimal`
-- **Form:** abbreviation or noun
-- **Why it works:** "hex" is universally understood in Spanish tech; "hexadecimal" clearly means base-16. Abbreviation preferred for consistency with "bin" and "oct".
-
-**Arabic:**
-
-- **Translation:** `سداسي_عشري` or `hex`
-- **Form:** adjective/noun (sudāsī 'asharī - six-ten/hexadecimal)
-- **Why it works:** سداسي عشري is standard Arabic for hexadecimal; "hex" also recognized in tech contexts
-
-**Chinese:**
-
-- **Translation:** `十六进制`
-- **Form:** noun phrase
-- **Why it works:** 十六进制 (shíliùjìnzhì) literally means "base-16 system", standard term for hexadecimal in Chinese computing
-
-**Hindi:**
-
-- **Translation:** `हेक्स` or `षोडश`
-- **Form:** noun (transliteration or Sanskrit)
-- **Why it works:** हेक्स (heks) is widely understood transliteration; षोडश (ṣoḍaśa) means sixteen in Sanskrit, formal term
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using verb form**
-
-- **Wrong:** `convertir_hexadecimal` (Spanish - "convert to hexadecimal")
-- **Why wrong:** Function name should be noun/abbreviation, not action phrase; too wordy
-- **Right:** `hex` or `hexadecimal`
-
-**Mistake 2: Using "sixteen" alone**
-
-- **Wrong:** `dieciséis` (Spanish - "sixteen")
-- **Why wrong:** Doesn't indicate this is about number system/base-16 representation
-- **Right:** `hexadecimal` (hexadecimal system)
-
-**Mistake 3: Mixing with "six" terminology**
-
-- **Wrong:** `seis` (Spanish - "six")
-- **Why wrong:** While "hexa" means six, hexadecimal is sixteen (6+10), not just six
-- **Right:** `hexadecimal` (base-16 system)
-
----
 
 ## Ambiguity Resolution
 
@@ -343,24 +278,24 @@ print(f"Object at {hex(id(obj))}")
 
 ```yaml
 term: hex
-language: {es|ar|zh|hi}
-translation: {your_translation}
-form: {abbreviation|noun}
-confidence: {high|medium|low}
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-{Why you chose this translation. Address: concept accuracy (hexadecimal base-16 system), linguistic form (abbreviation/noun), consistency with bin/oct pattern, whether "hex" is universally understood or needs translation}
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `{alternative_1}` - {Why you didn't choose this}
-2. `{alternative_2}` - {Why you didn't choose this}
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-{What concerns you have, what needs human verification}
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

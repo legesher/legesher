@@ -70,13 +70,6 @@ print(text == binary.decode())  # Output: True (after decoding)
 
 **Pattern rule:** Type constructors should use noun forms describing what they create. "Bytes" is plural noun referring to binary data units.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `str` | cadena | سلسلة | 字符串 | स्ट्रिंग |
-| `bytearray` | matriz_bytes | مصفوفة_بايتات | 字节数组 | बाइट_सरणी |
-| `bytes` | **bytes** | **بايتات** | **字节串** | **बाइट्स** |
 
 ---
 
@@ -120,16 +113,7 @@ In Python 3, the string/bytes distinction is strict. You cannot mix them without
 - **Action vs State:** STATE/THING - describes what the object is
 - **Temporal aspect:** Static type definition
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Keep "bytes" or translate | "bytes", "octetos" - technical term |
-| Germanic (de, nl, sv) | Plural noun | "Bytes" - universal term |
-| Slavic (ru, pl, uk) | Transliterate | "байты" (bayty) - or keep |
-| Arabic | Transliterate/translate | "بايتات" (bytes plural) |
-| Chinese | Compound noun | "字节" (byte) + qualifier |
-| Hindi | Transliterate | "बाइट्स" or keep "bytes" |
+### Recommended Form
 
 **Primary recommendation:** Keep "bytes" unchanged or transliterate. It's an international computing term. If translating, use plural form of "byte" in target language.
 
@@ -140,55 +124,6 @@ In Python 3, the string/bytes distinction is strict. You cannot mix them without
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `bytes` or `octetos`
-- **Form:** Plural noun
-- **Why it works:** "Bytes" is universally understood in Spanish computing. Alternative "octetos" (octets) is technically correct but less common. Keeping "bytes" is simpler and more recognizable.
-
-**Arabic:**
-
-- **Translation:** `بايتات` (bāytāt) or `bytes`
-- **Form:** Plural noun (transliterated)
-- **Why it works:** Transliterates "bytes" to Arabic with Arabic plural form. Standard in Arabic computing. Alternatively can keep English "bytes."
-
-**Chinese:**
-
-- **Translation:** `字节串` (zìjié chuàn) or `字节` (zìjié)
-- **Form:** Compound noun
-- **Why it works:** 字节 means "byte" (literally "character section"). Adding 串 (string/sequence) clarifies it's multiple bytes. Can use just 字节 (understood as plural from context).
-
-**Hindi:**
-
-- **Translation:** `बाइट्स` (bāiṭs) or `bytes`
-- **Form:** Transliterated plural
-- **Why it works:** Phonetic transliteration of "bytes" to Devanagari. Common approach for technical loanwords in Hindi. Keeping English "bytes" also acceptable.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using singular form**
-
-- **Wrong:** `byte` (English - singular)
-- **Why wrong:** Type name is plural - represents sequence of bytes, not single byte. Python uses `bytes` not `byte`.
-- **Right:** `bytes` (plural)
-
-**Mistake 2: Confusing with string**
-
-- **Wrong:** `cadena_binaria` (Spanish - "binary string")
-- **Why wrong:** Mixes string concept with binary data. In Python 3, bytes and strings are distinct types. Calling it a "string" creates confusion.
-- **Right:** `bytes` or `octetos` (bytes as distinct type)
-
-**Mistake 3: Being too generic**
-
-- **Wrong:** `binario` (Spanish - "binary")
-- **Why wrong:** Too general. "Binary" could mean many things (binary number, binary file). "Bytes" is specific.
-- **Right:** `bytes` (specific type)
-
----
 
 ## Ambiguity Resolution
 
@@ -220,11 +155,6 @@ The term is unambiguous in programming contexts. It specifically refers to binar
 
 Binary data types (`bytes`, `bytearray`) should use related translations showing they're both byte-based. Clear distinction from text (`str`) is critical in Python 3.
 
-**Example:**
-
-Spanish: `bytes`, `matriz_bytes` (byte array) - related terminology ✅
-OR: `bytes`, `bytearray` - keep both English ✅
-NOT: `octetos`, `array_binario` ❌ (inconsistent roots)
 
 ### Functional relationships
 
@@ -356,25 +286,24 @@ Key consideration: In Python 3, bytes/string distinction is critical. Translatio
 
 ```yaml
 term: bytes
-language: es
-translation: bytes
-form: plural_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-"Bytes" is an internationally recognized computing term that works across languages. Spanish developers universally understand "bytes." Keeping it unchanged maintains clarity and international consistency. Alternative "octetos" exists but "bytes" is more common.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `octetos` (octets) - Valid technical term but less common than "bytes"
-2. `bytes` (keep English) - Most recognizable, universally understood
-3. `datos_binarios` (binary data) - Too verbose and loses "bytes" specificity
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Bytes" is a universal technical term. The main decision is whether to keep English or use translated equivalent, with keeping English being simpler and more widely recognized.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

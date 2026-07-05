@@ -93,13 +93,6 @@ print(list1 == list3) # True (equal values)
 
 **Pattern rule:** Identity operators should use copula or verb forms that express "being" or "sameness." "Is" expresses identity - being the exact same thing.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `==` | == | == | == | == |
-| `!=` | != | != | != | != |
-| `is` | **es** | **هو** | **是** | **है** |
 
 ---
 
@@ -145,16 +138,7 @@ Identity matters for: checking singletons (None, True, False), understanding mut
 - **Action vs State:** STATE - expresses being/identity
 - **Temporal aspect:** Present tense - immediate identity check
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Copula verb (3rd person) | "es", "est", "é" - is |
-| Germanic (de, nl, sv) | Copula verb | "ist", "is" - is |
-| Slavic (ru, pl, uk) | Copula verb (present) | Often omitted in present; use "есть", "jest" if needed |
-| Arabic | Copula pronoun/verb | "هو" - huwa (he/it is) |
-| Chinese | Copula verb | "是" - shì (is/to be) |
-| Hindi | Copula verb | "है" - hai (is) |
+### Recommended Form
 
 **Primary recommendation:** Use the target language's copula verb for "is" - the verb expressing identity or equivalence (3rd person singular present tense of "to be").
 
@@ -166,55 +150,6 @@ Identity matters for: checking singletons (None, True, False), understanding mut
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `es`
-- **Form:** Copula verb (3rd person singular, present)
-- **Why it works:** "Es" is "is" in Spanish. "x es y" means "x is y." Natural for identity check. Standard copula verb. Reads like natural Spanish.
-
-**Arabic:**
-
-- **Translation:** `هو` (huwa)
-- **Form:** Copula pronoun (3rd person masculine)
-- **Why it works:** Arabic often omits copula in present tense, but `هو` (he/it is) makes identity explicit. Can also use `هي` (hiya - she/it is) or simply `ـ` (omitted). `هو` clear for programming.
-
-**Chinese:**
-
-- **Translation:** `是` (shì)
-- **Form:** Copula verb
-- **Why it works:** `是` is the standard Chinese copula "to be." "x 是 y" means "x is y." Universal Chinese verb for identity/equivalence. Natural for identity test.
-
-**Hindi:**
-
-- **Translation:** `है` (hai)
-- **Form:** Copula verb (present, 3rd person)
-- **Why it works:** "Hai" is "is" in Hindi. "x hai y" expresses identity. Standard present tense copula. Natural for identity check in Hindi.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "equals" or "igual" (equality not identity)**
-
-- **Wrong:** `igual` (Spanish - "equal")
-- **Why wrong:** "Equal" is value comparison (`==`), "is" is identity check. Different concepts. Need word for "being the same object," not "having equal value."
-- **Right:** `es` (copula for identity)
-
-**Mistake 2: Using "same" adjective instead of "is" verb**
-
-- **Wrong:** `mismo` (Spanish - "same")
-- **Why wrong:** "Same" is adjective; need verb for operator. "Is" is verb expressing identity. Word order would be wrong with adjective.
-- **Right:** `es` (verb)
-
-**Mistake 3: Using "identical" (too verbose)**
-
-- **Wrong:** `idéntico` (Spanish - "identical")
-- **Why wrong:** While conceptually correct, too long for frequent operator. Python's `is` is two letters. Use simple copula verb.
-- **Right:** `es` (simple, short)
-
----
 
 ## Ambiguity Resolution
 
@@ -259,9 +194,6 @@ Use the copula verb for identity/equivalence, not existence or general state.
 
 `is` and `is not` should work together naturally. If `is` is a verb, `is not` should be verb + negation. The phrase should read naturally in the target language.
 
-**Example:**
-
-Spanish: `es` (is), `no es` or `is not` combined naturally ✅
 
 **Important distinction:**
 `is` (identity) and `==` (equality) MUST be different. Don't translate both the same way.
@@ -356,7 +288,7 @@ def process(data=None):
 
 **If your confidence doesn't match this assessment, FLAG FOR HUMAN REVIEW.**
 
-Minor consideration: Some languages (like Russian) may omit copula in present tense. Translator should decide whether to use explicit copula or contextually appropriate form.
+Minor consideration: Some languages omit the copula in present tense. The translator should decide whether to use explicit copula or contextually appropriate form.
 
 ---
 
@@ -409,25 +341,24 @@ Minor consideration: Some languages (like Russian) may omit copula in present te
 
 ```yaml
 term: is
-language: es
-translation: es
-form: copula_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "es" is the third-person singular present tense of "ser/estar" (to be), expressing identity. Natural for asking "x es y?" (is x y?). Works for identity checks. Standard Spanish copula.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `igual` (equal) - Wrong concept; that's `==` not identity
-2. `mismo` (same - adjective) - Wrong part of speech; need verb
-3. `idéntico` (identical) - Too verbose; "es" is standard and short
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Copula verbs expressing "is/to be" are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

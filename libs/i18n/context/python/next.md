@@ -80,13 +80,6 @@ for item in items:
 
 **Pattern rule:** Iterator control functions should use terms indicating progression or retrieval. "Next" indicates moving forward in a sequence.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `iter` | iterar | تكرار | 迭代 | पुनरावृत्ति |
-| `range` | rango | نطاق | 范围 | परिसर |
-| `next` | **siguiente** | **التالي** | **下一个** | **अगला** |
 
 ---
 
@@ -130,16 +123,7 @@ The optional second argument provides a default value to return when the iterato
 - **Action vs State:** Can be ACTION (retrieve next) or DESCRIPTION (the next one)
 - **Temporal aspect:** Indicates progression to subsequent item
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Adjective | "siguiente", "suivant" - the next one |
-| Germanic (de, nl, sv) | Adjective | "nächste" - next |
-| Slavic (ru, pl, uk) | Adjective | "следующий", "następny" - next/following |
-| Arabic | Adjective | "التالي" (al-tālī) - the next/following |
-| Chinese | Adjective/verb | "下一个" - next one |
-| Hindi | Adjective | "अगला" - next/following |
+### Recommended Form
 
 **Primary recommendation:** Use adjective form meaning "next" or "following." While `next()` performs an action, the focus is on which item (the next one), not the action of getting.
 
@@ -150,55 +134,6 @@ The optional second argument provides a default value to return when the iterato
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `siguiente`
-- **Form:** Adjective
-- **Why it works:** "Siguiente" means next/following in Spanish. Natural, clear, universally understood. Captures the "next in sequence" concept perfectly.
-
-**Arabic:**
-
-- **Translation:** `التالي` (al-tālī)
-- **Form:** Adjective with definite article
-- **Why it works:** Standard Arabic for "the next/following." Used in sequential contexts. Clear and natural.
-
-**Chinese:**
-
-- **Translation:** `下一个` (xià yīgè)
-- **Form:** Adjective phrase
-- **Why it works:** Literally "down one" or "next one." Standard Chinese for next item in sequence. Clear temporal progression meaning.
-
-**Hindi:**
-
-- **Translation:** `अगला` (aglā)
-- **Form:** Adjective
-- **Why it works:** Common Hindi word for next/following. Natural in sequential contexts. Clear progression meaning.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "continue" concept**
-
-- **Wrong:** `continuar` (Spanish - "to continue")
-- **Why wrong:** "Continue" means keep going, not get next item. In programming, "continue" is a different keyword (skip to next loop iteration).
-- **Right:** `siguiente` (next - indicates which item)
-
-**Mistake 2: Using "advance" or "forward"**
-
-- **Wrong:** `avanzar` (Spanish - "to advance")
-- **Why wrong:** Too focused on the action of moving forward. "Next" focuses on the item you're getting, not the movement.
-- **Right:** `siguiente` (the next item)
-
-**Mistake 3: Using "after" instead of "next"**
-
-- **Wrong:** `después` (Spanish - "after" or "later")
-- **Why wrong:** "After" is too general and doesn't strongly indicate immediate sequence. "Next" is specifically the immediately following item.
-- **Right:** `siguiente` (next - immediately following)
-
----
 
 ## Ambiguity Resolution
 
@@ -240,10 +175,6 @@ Most languages distinguish between spatial "next to" and temporal/sequential "ne
 
 Iterator-related functions (`next`, `iter`, `enumerate`) should use compatible terminology. They're all part of Python's iteration protocol.
 
-**Example:**
-
-Spanish: `siguiente` (next), `iterar` (iter) - compatible sequential/iteration concepts ✅
-Chinese: `下一个` (next), `迭代` (iter) - consistent iteration vocabulary ✅
 
 ### Functional relationships
 
@@ -390,25 +321,24 @@ Key consideration: Translation should indicate immediate sequential progression,
 
 ```yaml
 term: next
-language: es
-translation: siguiente
-form: adjective
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "siguiente" means next/following and is the standard term for sequential progression. It naturally fits in iteration contexts and is universally understood. Matches Python's focus on which item (the next one) rather than the action.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `próximo` (next/proximate) - Also valid but "siguiente" more common
-2. `avanzar` (advance) - Too action-focused, not about which item
-3. `next` (keep English) - Works but loses semantic clarity
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. "Next" in sequential contexts is straightforward across languages. The concept of immediate sequential progression has clear equivalents everywhere.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

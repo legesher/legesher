@@ -9,6 +9,30 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **Context briefs cover every term and describe only the term.** 61 new
+  Tier-1 translation briefs complete coverage of the terms database (183
+  files): the 58 previously missing exceptions (connection/os_io, file/OS,
+  warning, arithmetic/encoding, runtime/memory/base, system/syntax/import
+  families) plus `except*`, `self`, and `cls` — every runnable claim in
+  their code examples executed against a live interpreter. 13 older briefs
+  gained cross-references to the new siblings, and `index.json` was
+  regenerated (182 entries).
+- **Per-language translation content removed from all briefs.** The
+  "Translation Examples (Good & Bad)" sections, es/ar/zh/hi
+  existing-translation tables, and "Recommended Form by Language Family"
+  prescription tables are gone (the latter retitled "Recommended Form",
+  keeping the semantic form guidance and forms-to-avoid reasoning); the
+  "Translation Output Format" block is a language-neutral placeholder.
+  Rationale: unreviewed samples read as authoritative anchors and family
+  prescriptions pre-commit what a linguist should derive — concrete examples
+  now belong to prompt assembly, injected from live pack data. English
+  etymology, English-meaning ambiguity analysis, and Unicode-demo code
+  (`ascii`/`chr`/`ord`/`str`) are kept. The tier-1 template and the
+  validator's required-section list (now 10 sections) match the new shape
+  (#2).
+
 ## [0.13.0] - 2026-06-11
 
 ### Added

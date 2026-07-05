@@ -67,13 +67,6 @@ decimal2 = int(hex_str, 16)  # Result: 255 (hex to decimal)
 
 **Pattern rule:** Type constructors should use noun forms in target language. They name a category/class of values, not actions. Think "integer" (noun) not "make integer" (verb).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `float` | flotante | عدد_عشري | 浮点数 | दशमलव |
-| `str` | cadena | سلسلة | 字符串 | स्ट्रिंग |
-| `int` | **entero** | **عدد_صحيح** | **整数** | **पूर्णांक** |
 
 ---
 
@@ -117,16 +110,7 @@ Integers support all standard arithmetic operations: `+`, `-`, `*`, `/`, `//` (f
 - **Action vs State:** STATE/CATEGORY - describes what something IS, not an action
 - **Temporal aspect:** Timeless - a type is a permanent classification
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun or adjective-as-noun | "entero" (whole/integer) - mathematical term |
-| Germanic (de, nl, sv) | Noun | "ganz" or "ganzzahl" (whole number) |
-| Slavic (ru, pl, uk) | Noun | "целое" (whole number) |
-| Arabic | Noun phrase | "عدد صحيح" (whole number) or abbreviated |
-| Chinese | Noun compound | "整数" (whole number) - standard math term |
-| Hindi | Noun | "पूर्णांक" (complete number) - Sanskrit math term |
+### Recommended Form
 
 **Primary recommendation:** Use the mathematical term for "integer" or "whole number" in your target language. This should be the same term taught in mathematics education. Avoid abbreviating unless the abbreviation is universally recognized in that language's CS education.
 
@@ -138,55 +122,6 @@ Integers support all standard arithmetic operations: `+`, `-`, `*`, `/`, `//` (f
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `entero`
-- **Form:** Noun (masculine)
-- **Why it works:** Standard Spanish mathematical term for integer. "Número entero" is taught in schools. Natural, widely recognized, appropriate length. Used consistently in Spanish programming materials.
-
-**Arabic:**
-
-- **Translation:** `عدد_صحيح` (ʿadad ṣaḥīḥ) or `صحيح` (ṣaḥīḥ)
-- **Form:** Noun phrase (number + adjective) or shortened form
-- **Why it works:** "عدد صحيح" literally means "whole/correct number" - the standard Arabic mathematical term. Could be abbreviated to just `صحيح` for brevity while maintaining clarity.
-
-**Chinese:**
-
-- **Translation:** `整数` (zhěngshù)
-- **Form:** Noun compound
-- **Why it works:** Standard Chinese mathematical term. Two characters: 整 (whole/complete) + 数 (number). Universally used in Chinese education and programming. Concise and clear.
-
-**Hindi:**
-
-- **Translation:** `पूर्णांक` (pūrṇāṅka)
-- **Form:** Noun (Sanskrit compound)
-- **Why it works:** Sanskrit-derived mathematical term: पूर्ण (complete) + अंक (digit/number). Standard in Hindi mathematics education. Formal register appropriate for programming. Alternative: `इंट` (int - transliteration) less preferred but understood.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using only "number" without "whole/integer" qualifier**
-
-- **Wrong:** `número` (Spanish - just "number")
-- **Why wrong:** Too general - doesn't distinguish integers from floats or other numeric types. Python has multiple number types; must be specific.
-- **Right:** `entero` (integer/whole number)
-
-**Mistake 2: Using verb "to convert" or "to make integer"**
-
-- **Wrong:** `enterar` (Spanish - invented verb)
-- **Why wrong:** Type names are nouns, not verbs. While `int()` can be used as a function, the fundamental concept is a noun - a category of numbers.
-- **Right:** `entero` (noun)
-
-**Mistake 3: Abbreviation without context**
-
-- **Wrong:** `ent` (Spanish abbreviation)
-- **Why wrong:** Unclear abbreviation not standard in Spanish CS education. While English uses "int" (universally recognized abbreviation), this doesn't translate well. Use full word unless abbreviation is standard.
-- **Right:** `entero` (full word, or `int` if adopted as loanword)
-
----
 
 ## Ambiguity Resolution
 
@@ -202,17 +137,11 @@ English "integer" is unambiguous in mathematics/CS - it means whole number. The 
 
 Some languages have multiple words for "whole":
 
-1. **Whole (complete/entire)** - totalidad, completo
-2. **Whole (unbroken/intact)** - intacto
+1. **Whole (complete/entire)**
+2. **Whole (unbroken/intact)**
 3. **Whole (integer - mathematical)** ✅ **This is the meaning**
 
-**Example (Spanish):**
-
-- "entero" - whole/integer (mathematical term) ✅
-- "completo" - whole/complete (full, not partial)
-- "todo" - whole/all (entire)
-
-Use the mathematical term, not general words for "whole" or "complete."
+Use the mathematical term, not general words for "whole," "complete," or "all/entire."
 
 ---
 
@@ -231,10 +160,6 @@ Use the mathematical term, not general words for "whole" or "complete."
 
 All type constructors (`int`, `float`, `str`, `bool`, `list`, `dict`, `set`, `tuple`) must use the same grammatical category - all nouns. Don't mix noun types with verb types.
 
-**Example:**
-
-Spanish: `entero`, `flotante`, `cadena`, `booleano` - all nouns ✅
-NOT: `entero` (noun) + `convertir_cadena` (verb phrase) ❌
 
 ### Functional relationships
 
@@ -342,25 +267,24 @@ The only minor consideration: whether to abbreviate (like English "int") or use 
 
 ```yaml
 term: int
-language: es
-translation: entero
-form: noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "entero" is the standard mathematical term for integer, taught universally in Spanish education. It clearly distinguishes integers from floats and maintains consistency with mathematical terminology. Natural, concise, and widely recognized across Spanish-speaking programming communities.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `int` (English loanword) - Not necessary; Spanish has clear equivalent
-2. `número_entero` (full phrase) - Too verbose; `entero` sufficient in context
-3. `integral` - Adjective form; noun preferred for type names
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Integer is a universal mathematical concept with well-established translations in all languages.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

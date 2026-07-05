@@ -73,13 +73,6 @@ first_ten = list(itertools.islice(filtered, 10))
 
 **Pattern rule:** Functional programming operations should use verb forms describing their operation pattern. "Filter" means selecting elements that pass a test, removing those that don't.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `map` | mapear | تعيين | 映射 | मैप |
-| `reduce` | reducir | اختزال | 归约 | न्यूनीकरण |
-| `filter` | **filtrar** | **تصفية** | **过滤** | **फ़िल्टर** |
 
 ---
 
@@ -123,16 +116,7 @@ The return value is a filter iterator object (lazy evaluation). Computation happ
 - **Action vs State:** ACTION - performs selection based on condition
 - **Temporal aspect:** Continuous/iterative - tests each element
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Infinitive verb | "filtrar", "filtrer" - to filter/select |
-| Germanic (de, nl, sv) | Infinitive verb | "filtern" - to filter |
-| Slavic (ru, pl, uk) | Infinitive verb | "фильтровать" - to filter |
-| Arabic | Verbal noun (masdar) | "تصفية" - filtering/purification |
-| Chinese | Verb compound | "过滤" - to filter/strain |
-| Hindi | Transliterated/verb | "फ़िल्टर करना" - to filter |
+### Recommended Form
 
 **Primary recommendation:** Use verb form meaning "to filter" or "to select by condition." This is an action that separates wanted from unwanted elements. "Filter" is widely recognized as a technical term, so transliteration might be appropriate in some languages.
 
@@ -144,55 +128,6 @@ The return value is a filter iterator object (lazy evaluation). Computation happ
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `filtrar`
-- **Form:** Infinitive verb
-- **Why it works:** Standard Spanish verb for filtering operations. Natural cognate from Latin "filtrum". Widely used in Spanish programming and technical contexts. Natural in "filtrar elementos" (filter elements).
-
-**Arabic:**
-
-- **Translation:** `تصفية` (taṣfiya)
-- **Form:** Verbal noun (masdar)
-- **Why it works:** Means "filtering/purification/refining" in Arabic. Standard term for filtering in computing. Captures both selection and removal aspects. Used in Arabic technical documentation.
-
-**Chinese:**
-
-- **Translation:** `过滤` (guòlǜ)
-- **Form:** Verb compound
-- **Why it works:** Two characters: 过 (pass through) + 滤 (filter/strain). Standard Chinese term for filtering in all contexts. Used in Chinese programming and engineering. Clear physical filtering metaphor.
-
-**Hindi:**
-
-- **Translation:** `फ़िल्टर` (filṭar) or `फ़िल्टर करना` (filṭar karnā)
-- **Form:** Transliterated/verb
-- **Why it works:** Transliteration of "filter" widely used in Indian tech and everyday language (air filter, water filter). Adding "करना" makes full verb form. Alternative: "छानना" (strain) but transliteration more standard in programming.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "select" without filtering concept**
-
-- **Wrong:** `seleccionar` (Spanish - "to select")
-- **Why wrong:** Too general. "Select" doesn't convey the conditional testing aspect. "Filter" specifically means selecting based on passing a test/condition.
-- **Right:** `filtrar` (to filter - conditional selection)
-
-**Mistake 2: Using "remove" instead of "filter"**
-
-- **Wrong:** `remover` (Spanish - "to remove")
-- **Why wrong:** Focuses on what's excluded rather than what's included. Filter emphasizes keeping matching elements, not removing non-matching ones. Conceptual opposite.
-- **Right:** `filtrar` (to filter - keep matching elements)
-
-**Mistake 3: Using noun instead of verb**
-
-- **Wrong:** `filtro` (Spanish noun - "filter")
-- **Why wrong:** Function names should be verbs (actions). "filtro" is the device/concept (noun), "filtrar" is the action of filtering.
-- **Right:** `filtrar` (verb form)
-
----
 
 ## Ambiguity Resolution
 
@@ -367,25 +302,24 @@ Minor consideration: Ensure translation conveys conditional selection (keeping m
 
 ```yaml
 term: filter
-language: es
-translation: filtrar
-form: infinitive_verb
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "filtrar" is the standard verb for filtering operations in computing and engineering. It's a natural cognate from Latin that clearly captures conditional selection. Consistent with other functional operations like "mapear" (map) and "reducir" (reduce), maintaining grammatical parallelism.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `seleccionar` (to select) - Too general; doesn't convey conditional/predicate aspect
-2. `cribar` (to sift/screen) - Valid but "filtrar" more standard in computing
-3. `filtro` (noun) - Wrong part of speech; should be verb
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Filtering is a universal concept with clear, established translations in technical contexts.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

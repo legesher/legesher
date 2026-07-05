@@ -155,14 +155,6 @@ delattr(MyClass, "class_attr")  # Works - deletes from class
 
 **Pattern rule:** Attribute manipulation functions are compound: verb + "attr" (attribute). Family pattern: get/set/has/del + attr. These four form complete CRUD operations on object attributes. Must maintain family consistency across translations.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `getattr` | obtener_atributo | جلب_صفة | 获取属性 | गुण_प्राप्त |
-| `setattr` | establecer_atributo | تعيين_صفة | 设置属性 | गुण_निर्धारित |
-| `hasattr` | tiene_atributo | له_صفة | 有属性 | गुण_है |
-| `delattr` | **eliminar_atributo** | **حذف_صفة** | **删除属性** | **गुण_हटाना** |
 
 ---
 
@@ -206,16 +198,7 @@ Common use cases include dynamic cleanup (remove temporary attributes), attribut
 - **Action vs State:** ACTION - removes/deletes attribute
 - **Temporal aspect:** One-time action with permanent effect
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Verb + noun compound | "eliminar_atributo" - delete attribute |
-| Germanic (de, nl, sv) | Verb + noun compound | "löschAttribut" - delete attribute |
-| Slavic (ru, pl, uk) | Verb + noun compound | "удалить_атрибут" - delete attribute |
-| Arabic | Verb + noun phrase | "حذف_صفة" - delete attribute |
-| Chinese | Verb + noun compound | "删除属性" - delete attribute |
-| Hindi | Verb + noun compound | "गुण_हटाना" - remove attribute |
+### Recommended Form
 
 **Primary recommendation:** Compound following attr-family pattern: verb meaning "delete/remove" + same noun for "attribute" used in getattr/setattr/hasattr. CRITICAL: Must use exact same "attribute" word as other attr-family functions.
 
@@ -227,55 +210,6 @@ Common use cases include dynamic cleanup (remove temporary attributes), attribut
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `eliminar_atributo` or `del_atributo`
-- **Form:** Verb + noun compound
-- **Why it works:** "eliminar" (delete/remove) + "atributo" (attribute - same as getattr/setattr/hasattr). "del" also works as abbreviation matching English. Clear deletion action.
-
-**Arabic:**
-
-- **Translation:** `حذف_صفة` (ḥadhf ṣifa)
-- **Form:** Verb + noun compound
-- **Why it works:** "حذف" (delete/remove) + "صفة" (attribute - same as getattr/setattr/hasattr). Standard Arabic for deletion. Maintains family consistency.
-
-**Chinese:**
-
-- **Translation:** `删除属性` (shānchú shǔxìng)
-- **Form:** Verb + noun compound
-- **Why it works:** "删除" (delete) + "属性" (attribute - same as getattr/setattr/hasattr). Standard Chinese for deletion operations. Natural compound structure.
-
-**Hindi:**
-
-- **Translation:** `गुण_हटाना` (guṇ haṭānā)
-- **Form:** Noun + verb compound
-- **Why it works:** "गुण" (attribute - same as getattr/setattr/hasattr) + "हटाना" (to remove/delete). Hindi verb-noun order. Matches pattern with other attr functions.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using different "attribute" word than getattr/setattr/hasattr**
-
-- **Wrong:** `eliminar_propiedad` (Spanish - uses "propiedad" but others use "atributo")
-- **Why wrong:** Breaks attr-family consistency. All four functions (get/set/has/del + attr) MUST use identical "attribute" term. Pattern recognition essential.
-- **Right:** `eliminar_atributo` (matches family's "atributo")
-
-**Mistake 2: Using "destroy" or overly violent term**
-
-- **Wrong:** `destruir_atributo` (Spanish - "destroy attribute")
-- **Why wrong:** Too dramatic. Standard CS terminology uses "delete" or "remove" for attribute deletion. "Destroy" implies more violent action than simple removal.
-- **Right:** `eliminar_atributo` (remove/delete - standard term)
-
-**Mistake 3: Missing verb or using only "del"**
-
-- **Wrong:** `del` (just abbreviation without attribute noun)
-- **Why wrong:** Ambiguous - del what? Must specify deleting attribute. Family pattern requires verb + attr structure for clarity and consistency.
-- **Right:** `eliminar_atributo` or `del_atributo` (complete compound)
-
----
 
 ## Ambiguity Resolution
 
@@ -307,21 +241,6 @@ Use standard programming term for "delete/remove" + exact same "attribute" word 
 
 The attr-family (`getattr`, `setattr`, `hasattr`, `delattr`) MUST use identical word for "attribute" across all four. Only the verb changes (get/set/has/del). This linguistic parallelism is CRITICAL for pattern recognition and learning.
 
-**Example:**
-
-✅ **Consistent (Spanish):**
-
-- `getattr` → `obtener_atributo`
-- `setattr` → `establecer_atributo`
-- `hasattr` → `tiene_atributo`
-- `delattr` → `eliminar_atributo`
-All use "atributo" ✅
-
-❌ **Inconsistent:**
-
-- `getattr` → `obtener_atributo` (uses "atributo")
-- `delattr` → `eliminar_propiedad` (uses "propiedad")
-Different terms ❌ WRONG!
 
 ### Functional relationships
 
@@ -500,25 +419,24 @@ CRITICAL: Check getattr/setattr/hasattr translations first. Copy their "attribut
 
 ```yaml
 term: delattr
-language: es
-translation: eliminar_atributo
-form: compound_verb_noun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "eliminar_atributo" compounds "eliminar" (to delete/remove) with "atributo" (attribute), maintaining exact consistency with getattr/setattr/hasattr family. "Eliminar" is standard CS term for deletion operations. Completes the attr-family CRUD pattern naturally.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `del_atributo` (abbreviation) - Valid but "eliminar" more explicit
-2. `borrar_atributo` (erase attribute) - "Eliminar" more technical/formal
-3. `eliminar_propiedad` - WRONG: Must use "atributo" for family consistency
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence HIGH. Clear compound with established pattern. Key requirement: verify getattr/setattr/hasattr use "atributo," then use same word.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

@@ -87,13 +87,6 @@ print(empty[0])  # Raises IndexError: list index out of range
 
 **Pattern rule:** Exception classes should use noun forms, typically ending with "Error" in English. Translations should convey both the error type and the specific problem domain (index, key, attribute, etc.).
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `KeyError` | ErrorDeClave | خطأمفتاح | 键错误 | कुंजीत्रुटि |
-| `ValueError` | ErrorDeValor | خطأقيمة | 值错误 | मानत्रुटि |
-| `IndexError` | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** | **YOUR TRANSLATION** |
 
 ---
 
@@ -137,16 +130,7 @@ Understanding `IndexError` is fundamental because sequences are core to Python p
 - **Action vs State:** STATE - describes an error condition, not an action
 - **Temporal aspect:** Instantaneous - occurs at moment of failed access
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Compound noun or noun phrase | "ErrorDeÍndice" - clear structure |
-| Germanic (de, nl, sv) | Compound noun | "Indexfehler" - natural compounds |
-| Slavic (ru, pl, uk) | Compound noun | "ИндексОшибка" - describes error type |
-| Arabic | Noun phrase or compound | "خطأفهرس" - index error |
-| Chinese | Compound noun | "索引错误" - index + error |
-| Hindi | Compound noun | "सूचकांकत्रुटि" - index + error |
+### Recommended Form
 
 **Primary recommendation:** Use compound noun combining the concept of "index" with "error." Maintain capitalization that matches Python's convention (PascalCase for exception classes in English).
 
@@ -158,55 +142,6 @@ Understanding `IndexError` is fundamental because sequences are core to Python p
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `ErrorDeÍndice`
-- **Form:** Compound noun
-- **Why it works:** "Índice" (index) + "Error" is clear. "De" preposition connects them naturally. Follows Spanish CS conventions. Maintains consistency with `ErrorDeClave` pattern.
-
-**Arabic:**
-
-- **Translation:** `خطأفهرس` (khata' fahras)
-- **Form:** Compound noun
-- **Why it works:** "خطأ" (error) + "فهرس" (index) creates clear compound. Standard Arabic technical terminology. Concise and follows pattern of other exception translations.
-
-**Chinese:**
-
-- **Translation:** `索引错误` (suǒyǐn cuòwù)
-- **Form:** Compound noun
-- **Why it works:** "索引" (index) + "错误" (error) is natural Chinese structure. Standard in Chinese programming documentation. Clear and concise.
-
-**Hindi:**
-
-- **Translation:** `सूचकांकत्रुटि` (soochkaank truti)
-- **Form:** Compound noun
-- **Why it works:** "सूचकांक" (index) + "त्रुटि" (error) follows Sanskrit compound rules. Technical but accessible. Consistent with Hindi CS terminology.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Overly verbose descriptions**
-
-- **Wrong:** `ErrorElÍndiceEstáFueraDeRango` (Spanish - "the index is out of range")
-- **Why wrong:** Exception names should be concise identifiers, not full sentences. Too long for practical use in code.
-- **Right:** `ErrorDeÍndice` (concise but clear)
-
-**Mistake 2: Using "position" instead of "index"**
-
-- **Wrong:** `ErrorDePosición` (Spanish)
-- **Why wrong:** While "position" is related, "index" is the specific technical term for numeric position in sequences. Should use exact technical terminology.
-- **Right:** `ErrorDeÍndice` (uses technical term)
-
-**Mistake 3: Missing consistency with other exceptions**
-
-- **Wrong:** `ÍndiceInválido` (Spanish - "invalid index")
-- **Why wrong:** Doesn't follow the "ErrorDe..." pattern used for other exceptions. Inconsistent structure makes the exception hierarchy harder to understand.
-- **Right:** `ErrorDeÍndice` (consistent pattern)
-
----
 
 ## Ambiguity Resolution
 
@@ -247,16 +182,8 @@ English "index" can mean:
 
 **Consistency rule:**
 
-All exception classes ending in "Error" should use the same structure in translations. If `IndexError` translates as "ErrorDeÍndice" (Spanish), then `KeyError` should be "ErrorDeClave" and `AttributeError` should be "ErrorDeAtributo" - maintaining consistent pattern.
+All exception classes ending in "Error" should use the same structure in translations. Whatever compound pattern `IndexError` uses, `KeyError` and `AttributeError` should follow it with the same error word and the same compound order - maintaining consistent pattern.
 
-**Example:**
-
-Spanish exception pattern:
-
-- `IndexError` → `ErrorDeÍndice` ✅
-- `KeyError` → `ErrorDeClave` ✅
-- `AttributeError` → `ErrorDeAtributo` ✅
-NOT: `IndexError` → `ErrorDeÍndice` but `KeyError` → `ClaveNoEncontrada` ❌ (inconsistent pattern)
 
 ### Functional relationships
 
@@ -332,7 +259,7 @@ print(empty[0])  # Raises IndexError
 
 **For this term:** MEDIUM
 
-**Rationale:** While the concept is well-established in computer science, translating "index" requires understanding the sequence/position context. Different languages may use different words for numeric positions (índice, فهرس, 索引, सूचकांक). The compound structure needs to feel natural while maintaining technical clarity and consistency with other exception translations.
+**Rationale:** While the concept is well-established in computer science, translating "index" requires understanding the sequence/position context. Different languages may use different words for numeric positions. The compound structure needs to feel natural while maintaining technical clarity and consistency with other exception translations.
 
 **If your confidence doesn't match this assessment, FLAG FOR HUMAN REVIEW.**
 
@@ -387,25 +314,24 @@ print(empty[0])  # Raises IndexError
 
 ```yaml
 term: IndexError
-language: es
-translation: ErrorDeÍndice
-form: compound_noun
-confidence: medium-high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "ErrorDeÍndice" combines "Error" (error) with "Índice" (index in computing context), connected by "De" preposition. Follows Spanish programming convention for exception names. Maintains consistency with other exception translations like `ErrorDeClave` (KeyError).
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `ErrorDeIndex` - Using English "Index" - less clear for Spanish speakers
-2. `ExcepciónDeÍndice` - Using "Excepción" instead of "Error" - too verbose
-3. `ÍndiceError` - Direct compound - less natural in Spanish
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-Confidence is MEDIUM-HIGH because "índice" is standard for numeric positions in Spanish programming, though some technical contexts might use "posición" (position). Regional variation exists in CS terminology.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

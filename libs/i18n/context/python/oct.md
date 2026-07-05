@@ -77,13 +77,6 @@ print(number)
 
 **Pattern rule:** Base conversion functions should use short, technical names (often abbreviations) representing the target number system.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `bin` | binario | ثنائي | 二进制 | बाइनरी |
-| `hex` | hexadecimal | ست عشري | 十六进制 | हेक्साडेसिमल |
-| `oct` | **octal** | **ثماني** | **八进制** | **ऑक्टल** |
 
 ---
 
@@ -127,16 +120,7 @@ Each octal digit represents 3 bits, making conversion from binary straightforwar
 - **Action vs State:** Can be seen as ACTION (convert) or TARGET (octal form)
 - **Temporal aspect:** Instantaneous conversion
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Noun/adjective | "octal", "octal" |
-| Germanic (de, nl, sv) | Noun/adjective | "oktal", "octaal" |
-| Slavic (ru, pl, uk) | Noun/adjective | "восьмеричный", "ósemkowy" |
-| Arabic | Adjective | "ثماني" (eight-based) |
-| Chinese | Compound adjective | "八进制" - base-8 system |
-| Hindi | Loanword | "ऑक्टल" |
+### Recommended Form
 
 **Primary recommendation:** Use noun or adjective form meaning "octal." Can abbreviate to "oct" if target language uses abbreviations, or keep full word. Must align with `bin` and `hex` translation strategy.
 
@@ -148,55 +132,6 @@ Each octal digit represents 3 bits, making conversion from binary straightforwar
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `octal` or `oct`
-- **Form:** Adjective/noun
-- **Why it works:** "Octal" is standard Spanish term for base-8 system. Universally understood in computing. Could abbreviate to "oct" for consistency with English.
-
-**Arabic:**
-
-- **Translation:** `ثماني` (thumānī)
-- **Form:** Adjective
-- **Why it works:** Standard Arabic term for octal/eight-based. Clear meaning (derived from ثمانية - eight). Technically accurate.
-
-**Chinese:**
-
-- **Translation:** `八进制` (bā jìn zhì)
-- **Form:** Compound noun
-- **Why it works:** 八 (eight) + 进制 (base system). Standard Chinese term for octal. Universally recognized in computing.
-
-**Hindi:**
-
-- **Translation:** `ऑक्टल` (ŏkṭal)
-- **Form:** Loanword
-- **Why it works:** Widely used transliteration. Clear and recognized in Hindi computing contexts.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using just "eight"**
-
-- **Wrong:** `ocho` (Spanish - "eight")
-- **Why wrong:** Too generic. "Octal" is technical term for base-8 number system, not just the number eight.
-- **Right:** `octal` (technical term)
-
-**Mistake 2: Inconsistent with bin/hex**
-
-- **Wrong:** Using full word "octal" when `bin` and `hex` are abbreviated
-- **Why wrong:** All three must follow same pattern. If `bin` is abbreviated, `oct` and `hex` should be too.
-- **Right:** Match abbreviation strategy of `bin`/`hex`
-
-**Mistake 3: Using outdated term**
-
-- **Wrong:** Using archaic or regional term unfamiliar to modern programmers
-- **Why wrong:** Should use standard computing terminology.
-- **Right:** Standard term from CS education
-
----
 
 ## Ambiguity Resolution
 
@@ -226,14 +161,6 @@ N/A - "oct" and "octal" are unambiguous in computing contexts. Always refers to 
 
 Base conversion functions (`bin`, `hex`, `oct`) MUST use parallel grammatical structure. This is critical. All abbreviated or all full words.
 
-**Example:**
-
-✅ **Consistent:**
-Spanish: `binario`, `hexadecimal`, `octal` (all full adjectives)
-OR: `bin`, `hex`, `oct` (all abbreviations)
-
-❌ **Inconsistent:**
-Spanish: `binario`, `hex`, `octavo` ← Wrong! (mixed styles, wrong word)
 
 ### Functional relationships
 
@@ -359,25 +286,24 @@ print(f"File permission: {clean}")
 
 ```yaml
 term: oct
-language: es
-translation: octal
-form: noun/adjective
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "octal" is the standard term for base-8 number system. Universally recognized in computing and system administration. Matches pattern if using "binario" and "hexadecimal" full forms.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `oct` - Keep English abbreviation; but should match `bin`/`hex` strategy
-2. `base8` - Descriptive but not standard terminology
-3. `ocho` - Means "eight"; wrong concept
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Octal is standard computing term. Main decision is abbreviation vs full word, which MUST match `bin` and `hex` strategy in same language pack.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

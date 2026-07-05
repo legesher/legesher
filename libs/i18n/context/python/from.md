@@ -86,13 +86,6 @@ from math import sqrt  # Uses cached module, just imports sqrt
 
 **Pattern rule:** Module system keywords should express source/origin (from) or destination/identity (as). "From" indicates the source location of imported code.
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `import` | importar | استيراد | 导入 | आयात |
-| `as` | como | كـ | 作为 | के_रूप_में |
-| `from` | **desde** | **من** | **从** | **से** |
 
 ---
 
@@ -138,16 +131,7 @@ Selective importing is useful for: convenience (shorter names - `sqrt()` vs `mat
 - **Action vs State:** RELATION - indicates source location
 - **Temporal aspect:** N/A - spatial/conceptual relation
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Preposition | "desde", "de", "de" - from |
-| Germanic (de, nl, sv) | Preposition | "von", "van", "från" - from |
-| Slavic (ru, pl, uk) | Preposition | "из", "z", "з" - from |
-| Arabic | Preposition | "من" - min (from) |
-| Chinese | Preposition | "从" - cóng (from) |
-| Hindi | Postposition | "से" - se (from) |
+### Recommended Form
 
 **Primary recommendation:** Use the target language's preposition meaning "from" - indicating source, origin, or starting point. This should be the most common word for expressing origin.
 
@@ -159,55 +143,6 @@ Selective importing is useful for: convenience (shorter names - `sqrt()` vs `mat
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `desde`
-- **Form:** Preposition
-- **Why it works:** "Desde" means "from" in Spanish (indicating origin/source). Natural for expressing source module. Works grammatically: "desde math importar sqrt". Standard in Spanish programming.
-
-**Arabic:**
-
-- **Translation:** `من` (min)
-- **Form:** Preposition
-- **Why it works:** "Min" means "from" in Arabic (indicating source). Universal Arabic preposition for origin. Natural for expressing module source. "من math استيراد sqrt" reads naturally.
-
-**Chinese:**
-
-- **Translation:** `从` (cóng)
-- **Form:** Preposition
-- **Why it works:** "Cóng" means "from" in Chinese (indicating source/origin). Single character. Standard Chinese preposition. "从 math 导入 sqrt" natural word order.
-
-**Hindi:**
-
-- **Translation:** `से` (se)
-- **Form:** Postposition
-- **Why it works:** "Se" means "from" in Hindi (indicating source). Standard Hindi postposition. Note: Hindi uses postpositions (after noun) not prepositions (before). "math से आयात sqrt" follows Hindi grammar.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using compound "out of" instead of simple "from"**
-
-- **Wrong:** `fuera_de` (Spanish - "out of")
-- **Why wrong:** Too verbose. Python's `from` is short, simple preposition. "Fuera de" is compound phrase. Use simple one-word preposition.
-- **Right:** `desde` (or `de` - simple from)
-
-**Mistake 2: Using "origin" (noun) instead of "from" (preposition)**
-
-- **Wrong:** `origen` (Spanish - "origin")
-- **Why wrong:** Need preposition, not noun. "From" is preposition in phrase `from X import Y`. Can't replace preposition with noun.
-- **Right:** `desde` (preposition)
-
-**Mistake 3: Using "within" (wrong direction)**
-
-- **Wrong:** `dentro` (Spanish - "within/inside")
-- **Why wrong:** "Within" indicates location inside something. "From" indicates movement/source from something. Opposite directions. Need source preposition.
-- **Right:** `desde` (indicating source)
-
----
 
 ## Ambiguity Resolution
 
@@ -245,15 +180,13 @@ Use the preposition for source/origin - the word answering "where does this come
 - [ ] `as` - Often used together: `from X import Y as Z`
 - [ ] Prepositions like `in` - Should use consistent grammatical forms
 - [ ] Relative import dots (`.`, `..`)
+- [ ] `ImportError` - Exception raised on failed imports; must reuse the import root
+- [ ] `ModuleNotFoundError` - Subclass of ImportError; same import-root consistency
 
 **Consistency rule:**
 
 `from module import name` should read as grammatical phrase in target language. Word order may need adjustment for target language grammar, but meaning should be clear.
 
-**Example:**
-
-Spanish: `desde math importar sqrt` - grammatically coherent phrase ✅
-Alternative word order if more natural: `importar sqrt desde math`
 
 ### Functional relationships
 
@@ -414,25 +347,24 @@ from myapp.utils import helpers
 
 ```yaml
 term: from
-language: es
-translation: desde
-form: preposition
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "desde" means "from" (indicating source/origin). Natural preposition for expressing module source. Works grammatically with "importar" (import) and "como" (as). Standard in Spanish programming.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `de` (from - shorter) - Also valid; "desde" more explicit about origin
-2. `fuera_de` (out of) - Too verbose; need simple preposition
-3. `origen` (origin - noun) - Wrong part of speech; need preposition
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH. Source/origin prepositions are universal with clear translations.
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 

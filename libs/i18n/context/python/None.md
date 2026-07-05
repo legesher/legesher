@@ -81,13 +81,6 @@ if not None:
 
 **Pattern rule:** Null literals should express absence, nothingness, or lack of value. Many languages use "null," "nil," "none," or "nothing." Choose term that feels natural for "absence."
 
-**Existing translations (for consistency):**
-
-| Term | Spanish | Arabic | Chinese | Hindi |
-|------|---------|--------|---------|-------|
-| `True` | Verdadero | صحيح | 真 | सत्य |
-| `False` | Falso | خطأ | 假 | असत्य |
-| `None` | **Ninguno** | **لاشيء** | **无** | **कोई_नहीं** |
 
 ---
 
@@ -131,16 +124,7 @@ Functions that don't explicitly return a value return `None` by default. This ma
 - **Action vs State:** STATE - represents absence/nothingness
 - **Temporal aspect:** Timeless - absence is constant
 
-### Recommended Form by Language Family
-
-| Language Family | Recommended Form | Rationale |
-|-----------------|------------------|-----------|
-| Romance (es, fr, pt, it) | Pronoun/adjective | "Ninguno", "Aucun" - none/not any |
-| Germanic (de, nl, sv) | Pronoun | "Nichts", "niets" - nothing/none |
-| Slavic (ru, pl, uk) | Pronoun | "Ничто", "nic" - nothing |
-| Arabic | Noun phrase | "لا شيء" - no thing/nothing |
-| Chinese | Adverb/negation | "无" - without/none |
-| Hindi | Pronoun phrase | "कोई नहीं" - no one/none |
+### Recommended Form
 
 **Primary recommendation:** Use word meaning "none," "nothing," or "no one" - expressing absence. Should feel distinct from `True`/`False` (which are opposites of each other, while `None` is orthogonal).
 
@@ -152,55 +136,6 @@ Functions that don't explicitly return a value return `None` by default. This ma
 
 ---
 
-## Translation Examples (Good & Bad)
-
-### ✅ Good Translations
-
-**Spanish:**
-
-- **Translation:** `Ninguno`
-- **Form:** Pronoun, capitalized
-- **Why it works:** Standard Spanish for "none/not any." Distinct from `Verdadero`/`Falso`. Natural in "no hay ninguno" (there is none). Used in Spanish CS for null value.
-
-**Arabic:**
-
-- **Translation:** `لاشيء` (lā shay') or `لا_شيء`
-- **Form:** Negative particle + noun (nothing)
-- **Why it works:** Literally "no thing" - perfect for absence. Standard Arabic expression for nothingness. May use underscore if needed: `لا_شيء`.
-
-**Chinese:**
-
-- **Translation:** `无` (wú)
-- **Form:** Adverb/negation
-- **Why it works:** Single character meaning "without/none/lacking." Classical Chinese for absence/nothingness. Concise. Standard in Chinese programming for null.
-
-**Hindi:**
-
-- **Translation:** `कोई_नहीं` (koī nahīṁ)
-- **Form:** Pronoun + negation
-- **Why it works:** Literally "no one" or "none." Natural Hindi expression for absence. May need underscore for compound: `कोई_नहीं`. Formal and clear.
-
-### ❌ Common Translation Mistakes
-
-**Mistake 1: Using "empty" instead of "none"**
-
-- **Wrong:** `Vacío` (Spanish - "empty")
-- **Why wrong:** "Empty" describes containers with nothing inside. `None` represents absence itself - not a container. Different concepts.
-- **Right:** `Ninguno` (none/not any)
-
-**Mistake 2: Using "zero" when "none" is correct**
-
-- **Wrong:** `Cero` (Spanish - "zero")
-- **Why wrong:** Zero is a number (numeric value). `None` is absence of value (not even zero). `None != 0` in Python. Keep concepts distinct.
-- **Right:** `Ninguno` (absence, not zero)
-
-**Mistake 3: Using "null" when natural word exists**
-
-- **Wrong:** `Nulo` (Spanish - "null")
-- **Why wrong:** While "nulo" works and is used in some contexts, "ninguno" is more natural Spanish. If your language has a natural word for "none," prefer it over Latinized "null."
-- **Right:** `Ninguno` (natural Spanish word)
-
----
 
 ## Ambiguity Resolution
 
@@ -242,9 +177,6 @@ The programming sense is philosophical "nothingness" rather than quantitative "n
 
 `None` should be distinct from `True`/`False` (which are boolean opposites), while still feeling like a constant. Same capitalization pattern as boolean literals.
 
-**Example:**
-
-Spanish: `Verdadero`, `Falso`, `Ninguno` - all capitalized, but `Ninguno` distinct from true/false dichotomy ✅
 
 ### Functional relationships
 
@@ -371,25 +303,24 @@ Minor consideration: whether to use native word ("ninguno") or Latinized "null."
 
 ```yaml
 term: None
-language: es
-translation: Ninguno
-form: pronoun
-confidence: high
+language: <target-language-code>
+translation: <recommended-term>
+form: <word-form>
+confidence: <high|medium|low>
 ```
 
 **Rationale (2-3 sentences):**
 
-Spanish "Ninguno" is the standard pronoun for "none/not any," representing absence of value. Capitalized to match Python's constant pattern. Distinct from boolean `Verdadero`/`Falso`. Natural and widely used.
+Explain why the recommended term carries this concept's semantic components in the target language — grounded in this brief's Concept Explanation and Ambiguity Resolution, never in another language's choice.
 
 **Alternatives considered:**
 
-1. `Nulo` (null) - Valid but "Ninguno" more natural Spanish
-2. `Nada` (nothing) - Too colloquial; "Ninguno" more formal
-3. `ninguno` (lowercase) - Should capitalize to match Python
+List the candidate terms weighed in the target language and why each was rejected or kept.
 
 **If confidence is not HIGH, explain:**
 
-N/A - Confidence is HIGH for this term. Null/absence is universal with clear translations. Main choice is between native word and Latinized "null."
+State what makes this term uncertain (no established native term, competing regional conventions, semantic gap) so review can prioritize it.
+
 
 ---
 
