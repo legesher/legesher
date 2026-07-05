@@ -113,7 +113,6 @@ builtins:
   anext: следующийасинх
 exceptions:
   baseexception: базовоеисключение
-  basegeneratorexit: выходбазогенератора
   exception: исключение
   generatorexit: выходизгенератора
   systemexit: выходизсистемы

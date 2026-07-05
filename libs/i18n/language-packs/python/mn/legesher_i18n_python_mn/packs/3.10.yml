@@ -117,7 +117,6 @@ exceptions:
   assertionerror: батлалтыналдаа
   attributeerror: шинжийналдаа
   baseexception: үндсэнонцгойбайдал
-  basegeneratorexit: үндсэнүүсгэгчгарах
   blockingioerror: хаалтынООалдаа
   brokenpipeerror: эвдэрсэнхоолойалдаа
   buffererror: буферийналдаа

@@ -145,7 +145,7 @@ Python's built-in functions and types in French.
 | `vars` | `variables` |
 | `zip` | `zipper` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `Erreurdattribut` |
 | `baseexception` | `exception_de_base` |
 | `baseexceptiongroup` | `groupeDeBaseException` |
-| `basegeneratorexit` | `basegénérateurdesortie` |
 | `blockingioerror` | `erreurdESbloquante` |
 | `brokenpipeerror` | `erreurdepipecassée` |
 | `buffererror` | `erreurdetampon` |

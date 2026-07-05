@@ -145,7 +145,7 @@ Python's built-in functions and types in Portuguese.
 | `vars` | `variaveis` |
 | `zip` | `zipar` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `errodeatributo` |
 | `baseexception` | `BaseException` |
 | `baseexceptiongroup` | `grupodeexceçãobase` |
-| `basegeneratorexit` | `basegeradordesaída` |
 | `blockingioerror` | `errodeESbloqueante` |
 | `brokenpipeerror` | `errodepipequebrada` |
 | `buffererror` | `errodebuffer` |

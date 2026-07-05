@@ -145,7 +145,7 @@ Python's built-in functions and types in Korean.
 | `vars` | `변수` |
 | `zip` | `자바` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `속성오류` |
 | `baseexception` | `기본예외` |
 | `baseexceptiongroup` | `기본예외그룹` |
-| `basegeneratorexit` | `기본생성자종료` |
 | `blockingioerror` | `블로킹io오류` |
 | `brokenpipeerror` | `브로큰파이프오류` |
 | `buffererror` | `버퍼오류` |

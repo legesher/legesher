@@ -145,7 +145,7 @@ Python's built-in functions and types in Malayalam.
 | `vars` | `ചരങ്ങൾ` |
 | `zip` | `കൂട്ടിച്ചേർക്കുക` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `ഗുണവിശേഷപിശക്` |
 | `baseexception` | `അടിസ്ഥാനവിശേഷം` |
 | `baseexceptiongroup` | `അടിസ്ഥാനവിശേഷഗണം` |
-| `basegeneratorexit` | `അടിസ്ഥാനജനറേറ്റർപുറത്ത്` |
 | `blockingioerror` | `തടയൽഐഒപിശക്` |
 | `brokenpipeerror` | `തകർന്നപൈപ്പ്പിശക്` |
 | `buffererror` | `ബഫർപിശക്` |

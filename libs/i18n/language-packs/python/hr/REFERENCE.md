@@ -145,7 +145,7 @@ Python's built-in functions and types in Croatian.
 | `vars` | `varijable` |
 | `zip` | `spoji` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `greškaatributa` |
 | `baseexception` | `osnovniizuzetak` |
 | `baseexceptiongroup` | `skupinaosnovnihizuzetaka` |
-| `basegeneratorexit` | `izlazosnovnoggeneratora` |
 | `blockingioerror` | `greškablokirajućegio` |
 | `brokenpipeerror` | `greškaprekinutecijevi` |
 | `buffererror` | `greškameduspremnika` |

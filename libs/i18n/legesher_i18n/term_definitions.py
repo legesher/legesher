@@ -162,7 +162,6 @@ BUILTIN_TYPES = [
 EXCEPTIONS = [
     # Base exception classes
     "baseexception",
-    "basegeneratorexit",  # 3.12+ internal
     "exception",
     "generatorexit",
     # System-related exceptions

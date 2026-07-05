@@ -113,7 +113,6 @@ builtins:
   anext: अगला_असमकालिक
 exceptions:
   baseexception: बेसएक्सपेक्शन
-  basegeneratorexit: बेसजेनरेटरएक्सिट
   exception: विशेषाधिकार
   generatorexit: जेनरेटरएक्सिट
   systemexit: सिस्टमएक्जिट

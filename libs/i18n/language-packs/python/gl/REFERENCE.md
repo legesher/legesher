@@ -145,7 +145,7 @@ Python's built-in functions and types in Galician.
 | `vars` | `variables` |
 | `zip` | `comprimir` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `erroatributo` |
 | `baseexception` | `excepcionbase` |
 | `baseexceptiongroup` | `grupoexcepcionbase` |
-| `basegeneratorexit` | `saidaxeradorbase` |
 | `blockingioerror` | `erroentradabloqueo` |
 | `brokenpipeerror` | `errotuboroto` |
 | `buffererror` | `errobuffer` |

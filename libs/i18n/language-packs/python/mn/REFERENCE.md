@@ -145,7 +145,7 @@ Python's built-in functions and types in Mongolian.
 | `vars` | `хувьсагчид` |
 | `zip` | `хослуулах` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `шинжийналдаа` |
 | `baseexception` | `үндсэнонцгойбайдал` |
 | `baseexceptiongroup` | `үндсэнонцгойбайдлынбүлэг` |
-| `basegeneratorexit` | `үндсэнүүсгэгчгарах` |
 | `blockingioerror` | `хаалтынООалдаа` |
 | `brokenpipeerror` | `эвдэрсэнхоолойалдаа` |
 | `buffererror` | `буферийналдаа` |

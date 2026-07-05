@@ -113,7 +113,6 @@ builtins:
   anext: næsteElement
 exceptions:
   baseexception: baseriseksemplet
-  basegeneratorexit: basegenerator_exit
   exception: undtagelse
   generatorexit: generatorforløsning
   systemexit: systemafslut

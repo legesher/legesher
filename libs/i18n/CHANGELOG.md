@@ -33,6 +33,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   validator's required-section list (now 10 sections) match the new shape
   (#2).
 
+### Fixed
+
+- **Fabricated `basegeneratorexit` term removed everywhere.** The name is not
+  a real Python exception — it originated in `term_definitions.py`
+  (mislabeled "3.12+ internal") and propagated into the database and every
+  shipped pack; it was flagged as a shipped-pack corruption during the
+  Unicode audit. Removed from `translations.db` (1 term + 82 candidate
+  translations + 27 selected translations, cascade-verified; 181 terms
+  remain), the `term_definitions.py` source line, and 51 pack YAML + 50
+  REFERENCE.md files. The collision audit passes on the resulting tree (#3).
+
 ## [0.13.0] - 2026-06-11
 
 ### Added

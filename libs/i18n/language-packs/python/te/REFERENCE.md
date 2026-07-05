@@ -145,7 +145,7 @@ Python's built-in functions and types in Telugu.
 | `vars` | `చరాలు` |
 | `zip` | `జత` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `గుణలక్షణదోషం` |
 | `baseexception` | `మూలమినహాయింపు` |
 | `baseexceptiongroup` | `మూలమినహాయింపుసమూహం` |
-| `basegeneratorexit` | `మూలజనకనిష్క్రమణ` |
 | `blockingioerror` | `అవరోధకఐఓదోషం` |
 | `brokenpipeerror` | `విరిగినపైపుదోషం` |
 | `buffererror` | `బఫర్దోషం` |

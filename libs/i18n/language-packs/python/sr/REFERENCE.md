@@ -145,7 +145,7 @@ Python's built-in functions and types in Serbian.
 | `vars` | `променљиве` |
 | `zip` | `спајање` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `ГрешкаАтрибута` |
 | `baseexception` | `ОсновниИзузетак` |
 | `baseexceptiongroup` | `ГрупаОсновнихИзузетака` |
-| `basegeneratorexit` | `ОсновниИзлазГенератора` |
 | `blockingioerror` | `ГрешкаБлокирањаУИ` |
 | `brokenpipeerror` | `ГрешкаПрекинутеЦеви` |
 | `buffererror` | `ГрешкаБафера` |

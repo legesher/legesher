@@ -145,7 +145,7 @@ Python's built-in functions and types in Czech.
 | `vars` | `proměnné` |
 | `zip` | `spoj` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `chybaatributu` |
 | `baseexception` | `základnívýjimka` |
 | `baseexceptiongroup` | `základnískupinavýjimek` |
-| `basegeneratorexit` | `základníukončenígenerátoru` |
 | `blockingioerror` | `chybablokujícíhovýstupu` |
 | `brokenpipeerror` | `chybapřerušenéhokanálu` |
 | `buffererror` | `chybavyrovnávacípaměti` |

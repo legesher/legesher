@@ -117,7 +117,6 @@ exceptions:
   assertionerror: تصدیقغلطی
   attributeerror: خاصیتغلطی
   baseexception: بنیادیاستثنا
-  basegeneratorexit: بنیادیجنریٹرخروج
   blockingioerror: مسدودداخلہخارجہغلطی
   brokenpipeerror: ٹوٹاپائپغلطی
   buffererror: بفرغلطی

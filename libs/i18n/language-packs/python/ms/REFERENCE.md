@@ -145,7 +145,7 @@ Python's built-in functions and types in Malay.
 | `vars` | `memperlihatkan` |
 | `zip` | `zipping` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `kesalahanatribut` |
 | `baseexception` | `kesalahan_asas` |
 | `baseexceptiongroup` | `kelompokpengecualiandasar` |
-| `basegeneratorexit` | `basegeneratorkeluaran` |
 | `blockingioerror` | `kesalahanmasukankeluaranyangmemblokir` |
 | `brokenpipeerror` | `kesalahanselangyangpecah` |
 | `buffererror` | `kesalahanbuffer` |

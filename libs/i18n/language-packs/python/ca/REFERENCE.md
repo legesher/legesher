@@ -145,7 +145,7 @@ Python's built-in functions and types in Catalan.
 | `vars` | `variables` |
 | `zip` | `combinar` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `erroratribut` |
 | `baseexception` | `excepciobase` |
 | `baseexceptiongroup` | `grupexcepciobase` |
-| `basegeneratorexit` | `sortitageneradorbase` |
 | `blockingioerror` | `errorbloqueiges` |
 | `brokenpipeerror` | `errorcanoneria` |
 | `buffererror` | `errormemoriaintermedia` |

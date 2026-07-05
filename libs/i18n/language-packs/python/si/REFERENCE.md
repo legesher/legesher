@@ -145,7 +145,7 @@ Python's built-in functions and types in Sinhala.
 | `vars` | `විචල්‍යයන්` |
 | `zip` | `යුගළ` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `ගුණදෝෂය` |
 | `baseexception` | `මූලඅපවාදය` |
 | `baseexceptiongroup` | `මූලඅපවාදසමූහය` |
-| `basegeneratorexit` | `මූලජනකපිටවීම` |
 | `blockingioerror` | `අවහිරපිවිසුම්දෝෂය` |
 | `brokenpipeerror` | `කැඩුණුනළදෝෂය` |
 | `buffererror` | `අන්තරාදෝෂය` |

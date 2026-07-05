@@ -148,7 +148,7 @@ Python's built-in functions and types in Arabic.
 | `vars` | `الحصولعلىالمتغيرات` |
 | `zip` | `التجميع` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -159,7 +159,6 @@ Exception classes for error handling.
 | `attributeerror` | `خطأفيالسمة` |
 | `baseexception` | `الاستثناءالأساسي` |
 | `baseexceptiongroup` | `مجموعةالاستثناءاتالأساسية` |
-| `basegeneratorexit` | `إنشاءقاعدةالخروج` |
 | `blockingioerror` | `خطأالإدخالالإخراجالمُعطّل` |
 | `brokenpipeerror` | `خطأانسدادالأنبوبالمكسور` |
 | `buffererror` | `خطأالذاكرةالموقتة` |

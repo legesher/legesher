@@ -145,7 +145,7 @@ Python's built-in functions and types in Russian.
 | `vars` | `переменные` |
 | `zip` | `сжатие` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `Ошибкаатрибута` |
 | `baseexception` | `базовоеисключение` |
 | `baseexceptiongroup` | `базовоеисключениегруппы` |
-| `basegeneratorexit` | `выходбазогенератора` |
 | `blockingioerror` | `блокировкавводавывода` |
 | `brokenpipeerror` | `бракнопайперор` |
 | `buffererror` | `ошибкабуфера` |

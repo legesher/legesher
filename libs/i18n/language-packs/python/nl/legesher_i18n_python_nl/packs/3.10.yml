@@ -113,7 +113,6 @@ builtins:
   anext: anexten
 exceptions:
   baseexception: baseuitzondering
-  basegeneratorexit: basegeneratoruitgang
   exception: uitzondering
   generatorexit: generatoruitgang
   systemexit: systeemafsluiting

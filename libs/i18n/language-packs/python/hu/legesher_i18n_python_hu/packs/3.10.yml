@@ -113,7 +113,6 @@ builtins:
   anext: következő_tétel
 exceptions:
   baseexception: BaseException
-  basegeneratorexit: basegenerator_exit
   exception: výjimka
   generatorexit: generátor_kimenet
   systemexit: rendszerkilépés

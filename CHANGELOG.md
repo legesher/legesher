@@ -18,6 +18,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   briefs, with live pack context injected at prompt-assembly time instead.
   See `libs/i18n/CHANGELOG.md` for full details (#2).
 
+### Fixed
+
+- **i18n**: The fabricated `basegeneratorexit` "exception" (never a real
+  Python name) is removed from the translations database, the term
+  definitions, and all 51 language packs. See `libs/i18n/CHANGELOG.md` (#3).
+
 ## [0.13.0] - 2026-06-11
 
 ### Added

@@ -145,7 +145,7 @@ Python's built-in functions and types in Danish.
 | `vars` | `variabler` |
 | `zip` | `samlet` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `attributfejl` |
 | `baseexception` | `baseriseksemplet` |
 | `baseexceptiongroup` | `basecovidsgroup` |
-| `basegeneratorexit` | `basegenerator_exit` |
 | `blockingioerror` | `blokeringioerror` |
 | `brokenpipeerror` | `brokkenpypefejl` |
 | `buffererror` | `bufferfejl` |

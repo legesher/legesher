@@ -145,7 +145,7 @@ Python's built-in functions and types in Italian.
 | `vars` | `variabili` |
 | `zip` | `zippare` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `AttributeError` |
 | `baseexception` | `BaseException` |
 | `baseexceptiongroup` | `gruppoDiEccezioniBase` |
-| `basegeneratorexit` | `basegeneratorediexit` |
 | `blockingioerror` | `errorediinputoutputbloccante` |
 | `brokenpipeerror` | `erroredibrokenpipe` |
 | `buffererror` | `erroredibuffer` |

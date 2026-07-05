@@ -117,7 +117,6 @@ exceptions:
   assertionerror: tasdiqlash_xatosi
   attributeerror: xususiyat_xatosi
   baseexception: asosiy_istisno
-  basegeneratorexit: asosiy_generator_chiqish
   blockingioerror: blokirovka_kiritish_chiqarish_xatosi
   brokenpipeerror: buzilgan_quvur_xatosi
   buffererror: bufer_xatosi

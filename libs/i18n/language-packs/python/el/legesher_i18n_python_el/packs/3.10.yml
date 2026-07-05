@@ -113,7 +113,6 @@ builtins:
   anext: επόμενο
 exceptions:
   baseexception: βασική_εξαίρεση
-  basegeneratorexit: βασική_έξοδος_γεννήτριας
   exception: εξαίρεση
   generatorexit: εξόδου_γεννήτριας
   systemexit: διακοπή_συστήματος

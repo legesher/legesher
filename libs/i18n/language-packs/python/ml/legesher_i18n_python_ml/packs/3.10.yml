@@ -117,7 +117,6 @@ exceptions:
   assertionerror: ഉറപ്പിക്കൽപിശക്
   attributeerror: ഗുണവിശേഷപിശക്
   baseexception: അടിസ്ഥാനവിശേഷം
-  basegeneratorexit: അടിസ്ഥാനജനറേറ്റർപുറത്ത്
   blockingioerror: തടയൽഐഒപിശക്
   brokenpipeerror: തകർന്നപൈപ്പ്പിശക്
   buffererror: ബഫർപിശക്

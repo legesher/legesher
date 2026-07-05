@@ -113,7 +113,6 @@ builtins:
   anext: 非同期イテレーターから次の項目を取得する
 exceptions:
   baseexception: ベーシック例外
-  basegeneratorexit: ベースジェネレータエクジット
   exception: 例外
   generatorexit: ジェネレータを終了する
   systemexit: システム終了

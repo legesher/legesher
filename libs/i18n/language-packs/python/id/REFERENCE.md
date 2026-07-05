@@ -145,7 +145,7 @@ Python's built-in functions and types in Indonesian.
 | `vars` | `var` |
 | `zip` | `gabungan` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `ErrorAtribut` |
 | `baseexception` | `BaseException` |
 | `baseexceptiongroup` | `kelompokpengecualiandasar` |
-| `basegeneratorexit` | `basegeneratorkeluar` |
 | `blockingioerror` | `kesalahanioyangmemblokir` |
 | `brokenpipeerror` | `kesalahanpiparusak` |
 | `buffererror` | `kesalahanbuffer` |

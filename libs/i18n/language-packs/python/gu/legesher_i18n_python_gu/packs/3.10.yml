@@ -117,7 +117,6 @@ exceptions:
   assertionerror: ખાતરીભૂલ
   attributeerror: લક્ષણભૂલ
   baseexception: મૂળઅપવાદ
-  basegeneratorexit: મૂળજનરેટરબહાર
   blockingioerror: અવરોધિતઆઈઓભૂલ
   brokenpipeerror: તૂટેલીપાઈપભૂલ
   buffererror: બફરભૂલ

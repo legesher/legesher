@@ -113,7 +113,6 @@ builtins:
   anext: próximoasync
 exceptions:
   baseexception: BaseException
-  basegeneratorexit: basegeradordesaída
   exception: exceção
   generatorexit: geradordesaída
   systemexit: saídadosistema

@@ -145,7 +145,7 @@ Python's built-in functions and types in Macedonian.
 | `vars` | `променливи` |
 | `zip` | `спои` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `грешканаатрибут` |
 | `baseexception` | `основенисклучок` |
 | `baseexceptiongroup` | `основенисклучокгрупа` |
-| `basegeneratorexit` | `излезнаосновенгенератор` |
 | `blockingioerror` | `грешканаблокирачковнес` |
 | `brokenpipeerror` | `грешканасчуканцевка` |
 | `buffererror` | `грешканабафер` |

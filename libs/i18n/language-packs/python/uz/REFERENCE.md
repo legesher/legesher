@@ -145,7 +145,7 @@ Python's built-in functions and types in Uzbek.
 | `vars` | `ozgaruvchilar` |
 | `zip` | `juftlash` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `xususiyat_xatosi` |
 | `baseexception` | `asosiy_istisno` |
 | `baseexceptiongroup` | `asosiy_istisno_guruhi` |
-| `basegeneratorexit` | `asosiy_generator_chiqish` |
 | `blockingioerror` | `blokirovka_kiritish_chiqarish_xatosi` |
 | `brokenpipeerror` | `buzilgan_quvur_xatosi` |
 | `buffererror` | `bufer_xatosi` |

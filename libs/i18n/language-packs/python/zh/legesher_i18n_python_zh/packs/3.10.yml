@@ -117,7 +117,6 @@ exceptions:
   assertionerror: 断言错误
   attributeerror: 属性错误
   baseexception: 基本异常
-  basegeneratorexit: 基底生成器退出
   blockingioerror: 阻塞的IO错误
   brokenpipeerror: 破管错误
   buffererror: 缓冲区错误

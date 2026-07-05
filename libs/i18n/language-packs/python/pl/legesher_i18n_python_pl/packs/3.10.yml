@@ -113,7 +113,6 @@ builtins:
   anext: następnyasync
 exceptions:
   baseexception: BazaWyjątku
-  basegeneratorexit: wyjściepodstawowegogeneratora
   exception: wyjątekklasa
   generatorexit: wyjściegeneratora
   systemexit: wyjściezsystemu

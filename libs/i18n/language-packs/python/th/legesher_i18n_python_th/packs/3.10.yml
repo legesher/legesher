@@ -113,7 +113,6 @@ builtins:
   anext: ฟังกำลัง
 exceptions:
   baseexception: การเปลี่ยนที่พื้นฐาน
-  basegeneratorexit: เครื่องมือพัฒนาเพื่อออกแบบ
   exception: การถือเป็นการติดต่อกับการเกิดอาการที่ไม่คาดฝัน
   generatorexit: เครื่องสร้างออกซิเจน
   systemexit: เลิกใช้งาน

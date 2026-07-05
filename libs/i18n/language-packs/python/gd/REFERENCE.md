@@ -145,7 +145,7 @@ Python's built-in functions and types in Scottish Gaelic.
 | `vars` | `caochladairean` |
 | `zip` | `dlùthaich` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `mearachd_buaidhe` |
 | `baseexception` | `bun_eisgeachd` |
 | `baseexceptiongroup` | `bun_buidheann_eisgeachd` |
-| `basegeneratorexit` | `bun_gineadair_fàgail` |
 | `blockingioerror` | `mearachd_bacaidh_io` |
 | `brokenpipeerror` | `mearachd_pìoba_briste` |
 | `buffererror` | `mearachd_bufair` |

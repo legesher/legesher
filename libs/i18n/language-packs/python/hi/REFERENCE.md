@@ -145,7 +145,7 @@ Python's built-in functions and types in Hindi.
 | `vars` | `जिसका` |
 | `zip` | `ज़िप` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `अत्रिभाष्यत्रुटि` |
 | `baseexception` | `बेसएक्सपेक्शन` |
 | `baseexceptiongroup` | `बेसएक्सेप्शनग्रुप` |
-| `basegeneratorexit` | `बेसजेनरेटरएक्सिट` |
 | `blockingioerror` | `ब्लॉकिंगआईओएरोर` |
 | `brokenpipeerror` | `ब्रोकनपाइपएरर` |
 | `buffererror` | `बफ़रएरर` |

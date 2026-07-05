@@ -145,7 +145,7 @@ Python's built-in functions and types in German.
 | `vars` | `variablen` |
 | `zip` | `zippen` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `Attributfehler` |
 | `baseexception` | `BaseException` |
 | `baseexceptiongroup` | `BaseExceptionGroup` |
-| `basegeneratorexit` | `basegeneratorbeenden` |
 | `blockingioerror` | `BlockingIOFehler` |
 | `brokenpipeerror` | `BrokenPipeError` |
 | `buffererror` | `Bufferfehler` |

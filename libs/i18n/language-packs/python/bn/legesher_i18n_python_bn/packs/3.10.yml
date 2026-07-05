@@ -117,7 +117,6 @@ exceptions:
   assertionerror: নিশ্চিতকরণত্রুটি
   attributeerror: বৈশিষ্ট্যত্রুটি
   baseexception: ভিত্তিব্যতিক্রম
-  basegeneratorexit: ভিত্তিজেনারেটরপ্রস্থান
   blockingioerror: ব্লকিংআইওত্রুটি
   brokenpipeerror: ভাঙাপাইপত্রুটি
   buffererror: বাফারত্রুটি

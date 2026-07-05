@@ -145,7 +145,7 @@ Python's built-in functions and types in Finnish.
 | `vars` | `variaable` |
 | `zip` | `sijoita` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `attribuutivirhe` |
 | `baseexception` | `perusvirhe` |
 | `baseexceptiongroup` | `baseexceptiongroupin` |
-| `basegeneratorexit` | `perusGeneraattoriLopeta` |
 | `blockingioerror` | `blockingioerrori` |
 | `brokenpipeerror` | `pisteenlomakärsitys` |
 | `buffererror` | `buffererrori` |

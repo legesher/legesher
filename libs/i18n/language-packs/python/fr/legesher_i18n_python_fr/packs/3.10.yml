@@ -116,7 +116,6 @@ exceptions:
   assertionerror: erreurdassertion
   attributeerror: Erreurdattribut
   baseexception: exception_de_base
-  basegeneratorexit: basegénérateurdesortie
   blockingioerror: erreurdESbloquante
   brokenpipeerror: erreurdepipecassée
   buffererror: erreurdetampon

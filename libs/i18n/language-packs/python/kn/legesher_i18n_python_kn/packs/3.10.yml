@@ -117,7 +117,6 @@ exceptions:
   assertionerror: ಖಚಿತಪಡಿಸುವಿಕೆದೋಷ
   attributeerror: ಗುಣಲಕ್ಷಣದೋಷ
   baseexception: ಮೂಲಅಪವಾದ
-  basegeneratorexit: ಮೂಲಉತ್ಪಾದಕನಿರ್ಗಮನ
   blockingioerror: ನಿರ್ಬಂಧಕಐಓದೋಷ
   brokenpipeerror: ಮುರಿದಕೊಳವೆದೋಷ
   buffererror: ಬಫರ್ದೋಷ

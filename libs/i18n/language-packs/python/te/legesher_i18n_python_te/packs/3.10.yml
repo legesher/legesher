@@ -114,7 +114,6 @@ builtins:
   type: రకం
 exceptions:
   baseexception: మూలమినహాయింపు
-  basegeneratorexit: మూలజనకనిష్క్రమణ
   exception: మినహాయింపుతరగతి
   generatorexit: జనకనిష్క్రమణ
   systemexit: వ్యవస్థనిష్క్రమణ

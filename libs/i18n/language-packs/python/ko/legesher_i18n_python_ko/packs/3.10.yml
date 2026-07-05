@@ -113,7 +113,6 @@ builtins:
   anext: 다음항목을검색합니다
 exceptions:
   baseexception: 기본예외
-  basegeneratorexit: 기본생성자종료
   exception: 예외
   generatorexit: 제네레이터종료
   systemexit: 시스템종료

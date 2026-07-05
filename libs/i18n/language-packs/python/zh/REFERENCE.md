@@ -145,7 +145,7 @@ Python's built-in functions and types in Chinese.
 | `vars` | `变量字典` |
 | `zip` | `压缩` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `属性错误` |
 | `baseexception` | `基本异常` |
 | `baseexceptiongroup` | `基异常组` |
-| `basegeneratorexit` | `基底生成器退出` |
 | `blockingioerror` | `阻塞的IO错误` |
 | `brokenpipeerror` | `破管错误` |
 | `buffererror` | `缓冲区错误` |

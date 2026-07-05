@@ -145,7 +145,7 @@ Python's built-in functions and types in Burmese.
 | `vars` | `ကိန်းရှင်များ` |
 | `zip` | `တွဲစပ်` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `ဂုဏ်သတ္တိအမှား` |
 | `baseexception` | `အခြေခံခြွင်းချက်` |
 | `baseexceptiongroup` | `အခြေခံခြွင်းချက်အုပ်စု` |
-| `basegeneratorexit` | `အခြေခံထုတ်လုပ်ထွက်` |
 | `blockingioerror` | `ပိတ်ဆို့ထည့်သွင်းထုတ်ယူအမှား` |
 | `brokenpipeerror` | `ကျိုးပိုက်အမှား` |
 | `buffererror` | `ကြားခံအမှား` |

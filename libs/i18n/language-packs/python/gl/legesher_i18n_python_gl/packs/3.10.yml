@@ -117,7 +117,6 @@ exceptions:
   assertionerror: erroasegurar
   attributeerror: erroatributo
   baseexception: excepcionbase
-  basegeneratorexit: saidaxeradorbase
   blockingioerror: erroentradabloqueo
   brokenpipeerror: errotuboroto
   buffererror: errobuffer

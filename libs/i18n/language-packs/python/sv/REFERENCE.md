@@ -145,7 +145,7 @@ Python's built-in functions and types in Swedish.
 | `vars` | `variabler` |
 | `zip` | `zippa` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `attributfeil` |
 | `baseexception` | `basen_exception` |
 | `baseexceptiongroup` | `basertulevärdighetshav` |
-| `basegeneratorexit` | `basegeneratorutgående` |
 | `blockingioerror` | `blockerandeIoFel` |
 | `brokenpipeerror` | `brottnöje` |
 | `buffererror` | `bufferfel` |

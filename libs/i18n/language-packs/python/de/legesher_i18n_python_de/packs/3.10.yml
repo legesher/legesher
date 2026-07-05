@@ -113,7 +113,6 @@ builtins:
   anext: nächsterWert
 exceptions:
   baseexception: BaseException
-  basegeneratorexit: basegeneratorbeenden
   exception: Ausnahme
   generatorexit: generator_exit
   systemexit: systematischerAusstieg

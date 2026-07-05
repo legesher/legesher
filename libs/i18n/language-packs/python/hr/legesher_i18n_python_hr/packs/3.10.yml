@@ -117,7 +117,6 @@ exceptions:
   assertionerror: greškatvrdnje
   attributeerror: greškaatributa
   baseexception: osnovniizuzetak
-  basegeneratorexit: izlazosnovnoggeneratora
   blockingioerror: greškablokirajućegio
   brokenpipeerror: greškaprekinutecijevi
   buffererror: greškameduspremnika

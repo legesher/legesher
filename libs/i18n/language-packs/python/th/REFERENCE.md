@@ -145,7 +145,7 @@ Python's built-in functions and types in Thai.
 | `vars` | `แทรกซับ` |
 | `zip` | `ซิป` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `ความผิดพลาดในการเก็บอัตรา` |
 | `baseexception` | `การเปลี่ยนที่พื้นฐาน` |
 | `baseexceptiongroup` | `กลุ่มข้อความที่เป็นพื้นฐาน` |
-| `basegeneratorexit` | `เครื่องมือพัฒนาเพื่อออกแบบ` |
 | `blockingioerror` | `การแจ้งเหตุผลการบังคับให้อยู่ในสิ่งที่หยุดการดำเนินการ` |
 | `brokenpipeerror` | `เครื่องมือที่ผิดหลัก` |
 | `buffererror` | `เกรดข้อความบันทึก` |

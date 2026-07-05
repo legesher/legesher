@@ -113,7 +113,6 @@ builtins:
   anext: anextiä
 exceptions:
   baseexception: perusvirhe
-  basegeneratorexit: perusGeneraattoriLopeta
   exception: ohje
   generatorexit: generaattoriLopeta
   systemexit: jäätäyttymistä

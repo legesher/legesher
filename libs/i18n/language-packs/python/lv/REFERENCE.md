@@ -145,7 +145,7 @@ Python's built-in functions and types in Latvian.
 | `vars` | `mainīgie` |
 | `zip` | `savienot` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `AtribūtaKļūda` |
 | `baseexception` | `PamatIzņēmums` |
 | `baseexceptiongroup` | `PamatIzņēmumuGrupa` |
-| `basegeneratorexit` | `PamatĢeneratoraIzeja` |
 | `blockingioerror` | `BloķējošāIeIzKļūda` |
 | `brokenpipeerror` | `PārrautaCaurulesKļūda` |
 | `buffererror` | `BuferaKļūda` |

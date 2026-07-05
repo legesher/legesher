@@ -117,7 +117,6 @@ exceptions:
   assertionerror: የማረጋገጫስህተት
   attributeerror: የባህሪስህተት
   baseexception: መሠረታዊልዩ
-  basegeneratorexit: መሠረታዊአመንጪመውጫ
   blockingioerror: የማገድግብዓትስህተት
   brokenpipeerror: የተሰበረቧንቧስህተት
   buffererror: የማጠራቀሚያስህተት

@@ -114,7 +114,6 @@ builtins:
   anext: salajengna_asinkron
 exceptions:
   baseexception: PangecualianDasar
-  basegeneratorexit: KaluarGeneratorDasar
   exception: Pangecualian
   generatorexit: KaluarGenerator
   systemexit: KaluarSistem

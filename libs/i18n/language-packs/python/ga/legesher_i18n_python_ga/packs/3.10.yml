@@ -117,7 +117,6 @@ exceptions:
   assertionerror: EarráidDearbhaithe
   attributeerror: EarráidTréithe
   baseexception: BunEisceacht
-  basegeneratorexit: BunGhineadóirScoir
   blockingioerror: EarráidIABhlocála
   brokenpipeerror: EarráidPíobaBriste
   buffererror: EarráidMhaoláin

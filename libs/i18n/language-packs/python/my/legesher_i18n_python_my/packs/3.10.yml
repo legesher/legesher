@@ -117,7 +117,6 @@ exceptions:
   assertionerror: အတည်ပြုအမှား
   attributeerror: ဂုဏ်သတ္တိအမှား
   baseexception: အခြေခံခြွင်းချက်
-  basegeneratorexit: အခြေခံထုတ်လုပ်ထွက်
   blockingioerror: ပိတ်ဆို့ထည့်သွင်းထုတ်ယူအမှား
   brokenpipeerror: ကျိုးပိုက်အမှား
   buffererror: ကြားခံအမှား

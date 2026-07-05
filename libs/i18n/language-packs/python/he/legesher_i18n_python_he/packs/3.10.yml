@@ -113,7 +113,6 @@ builtins:
   anext: הבאאקסט
 exceptions:
   baseexception: בסיסיוצאדופן
-  basegeneratorexit: יצירתבסיס
   exception: חריגה
   generatorexit: יצירתיציאה
   systemexit: יציאתמערכת

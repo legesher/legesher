@@ -145,7 +145,7 @@ Python's built-in functions and types in Hungarian.
 | `vars` | `variablák` |
 | `zip` | `csatol` |
 
-## Exceptions (69 terms)
+## Exceptions (68 terms)
 
 Exception classes for error handling.
 
@@ -156,7 +156,6 @@ Exception classes for error handling.
 | `attributeerror` | `attributetori` |
 | `baseexception` | `BaseException` |
 | `baseexceptiongroup` | `baseexceptioncsoport` |
-| `basegeneratorexit` | `basegenerator_exit` |
 | `blockingioerror` | `blokkoló_io_hiba` |
 | `brokenpipeerror` | `bükört_üzem_leállítás` |
 | `buffererror` | `hibaBuffernak` |

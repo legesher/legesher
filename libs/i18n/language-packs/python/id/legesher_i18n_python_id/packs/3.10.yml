@@ -113,7 +113,6 @@ builtins:
   anext: nextAn
 exceptions:
   baseexception: BaseException
-  basegeneratorexit: basegeneratorkeluar
   exception: kecurangan
   generatorexit: generasikeluar
   systemexit: keluaransistem
