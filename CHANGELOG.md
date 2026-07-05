@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **i18n**: Script-family style-guide overlays (CJK, Brahmic, Arabic-script,
+  Cyrillic, Ethiopic, and Southeast-Asian spaceless scripts) encoding naming
+  rules for caseless scripts, per-language symbol vocabulary (what `_`, `:`,
+  parentheses are called), and Noto font rendering hints for the editor.
+  See `libs/i18n/CHANGELOG.md` (#4).
+
 ## [0.13.1] - 2026-07-05
 
 ### Changed

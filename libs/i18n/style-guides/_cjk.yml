@@ -1,0 +1,68 @@
+# _cjk.yml — Script-family overlay: Chinese, Japanese, Korean
+# Members: zh, ja, ko. Extends python.yml + _ltr.yml; per-language guides
+# (zh.yml, ja.yml, ko.yml) extend this file and fill the per-language slots.
+
+language: _cjk
+extends:
+- python.yml
+- _ltr.yml
+version: 0.1.0
+status: experimental
+
+naming:
+  case_substitute:
+    strategy: morphology
+    detail: >
+      No letter case exists. Part of speech carries what PEP 8 case carries
+      in English: callables are verb phrases, classes/exceptions are noun
+      compounds. This is the same word-form discipline the translation
+      briefs enforce — it is load-bearing style, not preference.
+
+  word_boundaries:
+    strategy: concatenate
+    detail: >
+      Characters are morphemic and self-delimiting; no separator is needed
+      (计算总和). Underscores are OPTIONAL for clarity in long names and in
+      Korean, where Hangul syllable blocks delimit syllables, not words.
+
+  constants:
+    strategy: marker_affix   # per-language guide may override
+    detail: >
+      No uppercase exists. Default: a constant-marker prefix word plus
+      underscore (zh 常量_, ja 定数_, ko 상수_). Per-language guides ratify
+      or override with a native-reviewer decision.
+
+  identifier_length:
+    max_chars: 8
+    detail: >
+      CJK reads dense — 2 to 4 characters is the sweet spot for keywords,
+      8 for compound identifiers. Longer usually means a definition is
+      masquerading as a name.
+
+abbreviation:
+  granularity: character
+  detail: >
+    Compress by dropping characters while every remaining character keeps
+    meaning (计算总和 -> 计总). Never truncate mid-word phonetically.
+
+numerals:
+  literals: ascii_required     # Python only accepts ASCII digits in literals
+  identifiers: ascii_recommended
+  detail: >
+    Fullwidth digits (１２３) are NFKC-unstable in identifiers — forbidden
+    by the NFKC fixed-point rule.
+
+symbol_vocabulary:
+  # What symbols are CALLED in the target language (teaching/docs/errors
+  # vocabulary — the symbols themselves never change in code).
+  # Per-language guides MUST fill these:
+  underscore:           # zh 下划线, ja アンダースコア, ko 밑줄
+  colon:
+  parentheses:
+  indent:
+
+rendering:
+  # Font for correct glyph rendering in the editor/extension. Per-language:
+  # zh -> Noto Sans SC (or TC per locale, later), ja -> Noto Sans JP,
+  # ko -> Noto Sans KR. Han unification makes a family-wide default wrong.
+  noto_font:

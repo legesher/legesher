@@ -301,6 +301,23 @@ class TestGetSupportedLanguages:
                 f"'{excluded}' should not be in supported languages"
             )
 
+    def test_excludes_script_family_overlays(self, loader: StyleGuideLoader) -> None:
+        # Script-family overlays are underscore-prefixed building blocks, not
+        # loadable language codes — load() rejects them (non-ISO), so they must
+        # not appear in the supported-language list.
+        result = loader.get_supported_languages()
+        for overlay in (
+            "_cjk",
+            "_brahmic",
+            "_arabic",
+            "_cyrillic",
+            "_ethiopic",
+            "_sea-spaceless",
+        ):
+            assert overlay not in result, (
+                f"'{overlay}' overlay should not be in supported languages"
+            )
+
     def test_is_sorted(self, loader: StyleGuideLoader) -> None:
         result = loader.get_supported_languages()
         assert result == sorted(result)

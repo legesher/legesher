@@ -6,6 +6,7 @@ language: ur
 extends:
 - python.yml
 - _rtl.yml
+- _arabic.yml
 version: 0.1.0
 status: experimental
 
@@ -210,3 +211,17 @@ formatting:
     rule: >
       Source code is stored left-aligned with standard 4-space indentation.
       RTL display is handled by the editor, not by the source file.
+
+# ---------------------------------------------------------------------------
+# Symbol vocabulary — what symbols are CALLED in Urdu (teaching/docs/
+# error-message vocabulary; the symbols themselves never change in code).
+# MEDIUM confidence — native-reviewer ratification pending.
+# ---------------------------------------------------------------------------
+symbol_vocabulary:
+  underscore: انڈر اسکور
+  colon: رابطہ
+  parentheses: قوسین
+  indent: حاشیہ
+
+rendering:
+  noto_font: Noto Nastaliq Urdu   # Nastaliq, not Naskh — needs taller line-height

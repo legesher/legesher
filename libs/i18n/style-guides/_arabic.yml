@@ -1,0 +1,75 @@
+# _arabic.yml — Script-family overlay: Arabic-script languages
+# Members: ar, fa, ur. (Hebrew is RTL but NOT Arabic script — it extends
+# _rtl.yml directly, not this file.) Extends python.yml + _rtl.yml.
+
+language: _arabic
+extends:
+- python.yml
+- _rtl.yml
+version: 0.1.0
+status: experimental
+
+naming:
+  case_substitute:
+    strategy: morphology
+    detail: >
+      No letter case exists. Callables use the language's action form
+      (masdar for Arabic, per-language brief conventions for fa/ur);
+      classes/exceptions are noun compounds. Word form replaces PEP 8 case.
+
+  word_boundaries:
+    strategy: underscore
+    detail: >
+      Underscore between logical words (قيمة_افتراضية). Tatweel (U+0640) as
+      a native-looking separator was CONSIDERED AND REJECTED: NFKC-stable
+      but untypable on many keyboards and visually fragile between
+      non-joining letters.
+
+  constants:
+    strategy: marker_affix   # per-language guide may override
+    detail: >
+      No uppercase exists. Default: constant-marker prefix + underscore
+      (ar ثابت_, fa ثابت_, ur مستقل_ — reviewer decisions pending).
+
+  identifier_length:
+    max_chars: 12
+    detail: >
+      Tighter than the general RTL guidance for keywords (max 10 per
+      _rtl.yml); 12 for compound identifiers.
+
+abbreviation:
+  granularity: word
+  detail: >
+    Root-and-pattern morphology cannot truncate: dropping letters destroys
+    the root. Abbreviate by dropping whole words from the compound. Prose
+    abbreviation marks are identifier-illegal punctuation — abbreviate
+    without them.
+
+script:
+  diacritics:
+    rule: >
+      Omit harakat/short vowels in identifiers (standard technical
+      orthography); identifiers with and without diacritics are DIFFERENT
+      tokens to Python, so packs must pick one form — bare — and the
+      validation gate should reject vocalized forms.
+
+numerals:
+  literals: ascii_required
+  identifiers: ascii_recommended
+  detail: >
+    Arabic-Indic digits (٠١٢, fa ۰۱۲) are identifier-legal but two digit
+    systems in one file is a UTS #39 confusable hazard; ASCII throughout,
+    and it keeps bidi runs simpler.
+
+symbol_vocabulary:
+  # Per-language guides MUST fill these:
+  underscore:           # ar شرطة سفلية, fa زیرخط, ur قوسین زیریں — reviewer decisions
+  colon:
+  parentheses:
+  indent:
+
+rendering:
+  # Family default; Urdu overrides to Nastaliq (the script style Urdu
+  # readers expect): ur -> Noto Nastaliq Urdu. Note Nastaliq's tall vertical
+  # ligatures need increased editor line-height — flag for extension work.
+  noto_font: Noto Sans Arabic

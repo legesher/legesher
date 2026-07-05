@@ -125,8 +125,10 @@ class StyleGuideLoader:
         """List language codes that have a dedicated style guide file.
 
         Returns only language-specific guides (e.g. ``ar.yml``), excluding
-        the base ``python.yml`` and direction files (``_ltr.yml``,
-        ``_rtl.yml``).
+        the base ``python.yml`` and any overlay files. Overlays are the
+        underscore-prefixed building blocks — direction layers (``_ltr.yml``,
+        ``_rtl.yml``) and script-family overlays (``_cjk.yml``,
+        ``_arabic.yml``, …) — which are not loadable language codes.
 
         Returns:
             Sorted list of language codes.
@@ -138,11 +140,13 @@ class StyleGuideLoader:
             )
             return []
 
-        excluded = {"python", "_ltr", "_rtl"}
+        # ``python.yml`` is the base; every ``_*.yml`` file is an overlay
+        # (direction layer or script-family overlay) and is not a loadable
+        # language code, so both are excluded from the supported list.
         codes = [
             f.stem
             for f in self.style_guides_dir.glob("*.yml")
-            if f.is_file() and f.stem not in excluded
+            if f.is_file() and f.stem != "python" and not f.stem.startswith("_")
         ]
 
         logger.info("Found %d language-specific style guides", len(codes))

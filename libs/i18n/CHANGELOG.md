@@ -9,6 +9,31 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Six script-family style overlays** (`_cjk`, `_brahmic`, `_arabic`,
+  `_cyrillic`, `_ethiopic`, `_sea-spaceless`) extending the
+  `python.yml` + `_ltr`/`_rtl` architecture, so per-language guides shrink
+  to a handful of native-reviewer decisions. They encode: morphology as the
+  case substitute for caseless scripts (callables are verb phrases, classes
+  noun compounds), underscore as the universal separator (required for
+  spaceless scripts), an explicit per-language constants strategy (no
+  uppercase exists), abbreviation granularity per script (letters /
+  characters / whole words), identifier length budgets, ASCII-digit policy,
+  and the NFKC fixed-point rule (#4).
+- **`symbol_vocabulary` sections** — what symbols are *called* in the target
+  language (the underscore is universal in code; its name is not) — filled
+  for es/zh/ur with slots for the remaining languages (#4).
+- **`rendering.noto_font` hints** per script family so the extension renders
+  packs with the right glyphs (Urdu = Noto Nastaliq Urdu, noted as needing
+  taller line-height); `zh.yml`/`ur.yml` now extend their family overlays
+  (#4).
+
+  *Note:* the `extends` chain is declarative for now — `StyleGuideLoader` and
+  `PromptBuilder` still merge base + direction + language directly, so the
+  family overlays document intent but are not yet resolved at load time.
+  Runtime resolution of the overlay chain is planned as a follow-up (#4).
+
 ## [0.13.1] - 2026-07-05
 
 ### Changed

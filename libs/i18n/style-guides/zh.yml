@@ -6,6 +6,7 @@ language: zh
 extends:
 - python.yml
 - _ltr.yml
+- _cjk.yml
 version: 0.1.0
 status: experimental
 
@@ -170,3 +171,16 @@ formatting:
       no fullwidth comma (，), no fullwidth period (。),
       no fullwidth parentheses (（）), no fullwidth colon (：).
       Chinese punctuation is acceptable ONLY inside string literals and comments.
+
+# ---------------------------------------------------------------------------
+# Symbol vocabulary — what symbols are CALLED in Chinese (teaching/docs/
+# error-message vocabulary; the symbols themselves never change in code)
+# ---------------------------------------------------------------------------
+symbol_vocabulary:
+  underscore: 下划线
+  colon: 冒号
+  parentheses: 圆括号
+  indent: 缩进
+
+rendering:
+  noto_font: Noto Sans SC

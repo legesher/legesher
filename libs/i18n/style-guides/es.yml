@@ -181,3 +181,16 @@ formatting:
       Do NOT use inverted punctuation marks in code (no inverted exclamation
       or inverted question mark). Spanish punctuation is acceptable ONLY
       inside string literals and comments.
+
+# ---------------------------------------------------------------------------
+# Symbol vocabulary — what symbols are CALLED in Spanish (teaching/docs/
+# error-message vocabulary; the symbols themselves never change in code)
+# ---------------------------------------------------------------------------
+symbol_vocabulary:
+  underscore: guion bajo
+  colon: dos puntos
+  parentheses: paréntesis
+  indent: sangría
+
+rendering:
+  noto_font: Noto Sans   # Latin default
