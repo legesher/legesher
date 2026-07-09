@@ -9,6 +9,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Selected translations for 5 under-covered core terms across all 51 Python
+  language packs** — `__import__`, `type`, `encodingwarning`, `exceptiongroup`,
+  and `baseexceptiongroup`, each previously present in only 0–5 languages in
+  `selected_translations` despite mostly already shipping in the packs. This
+  reconciles the DB to the shipped packs and adds the missing `__import__`
+  builtin (generated as `__<word>__`, dunder-wrapped; experimental, pending
+  native review) plus the missing `type` builtins in 22 packs. Driven by an
+  idempotent, collision-guarded backfill script (`scripts/translate/backfill_core606.py`)
+  that makes surgical, additive YAML edits — no full pack regeneration. [CORE-606]
+
+### Fixed
+
+- **Two pre-existing pack translation bugs surfaced by the collision guard:**
+  `fi` shipped `exception` and `exceptiongroup` both as `ohje` (a round-trip
+  collision) — `exceptiongroup` is now `poikkeusryhmä`; `de`
+  `baseexceptiongroup` was the untranslated identity `BaseExceptionGroup`, now
+  `Basisausnahmegruppe`. [CORE-606]
+
 ## [0.20.0] - 2026-07-09
 
 ## [0.19.0] - 2026-07-09
