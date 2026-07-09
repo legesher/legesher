@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-07-09
+
 ### Added
 
 - **i18n**: Style-guide schema + template + validator + README — the canonical,
@@ -182,9 +184,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.14.0  | Yes      |
-| legesher-i18n            | 0.14.0  | Yes      |
-| legesher (CLI)           | 0.14.0  | —        |
+| legesher-core            | 0.15.0  | Yes      |
+| legesher-i18n            | 0.15.0  | Yes      |
+| legesher (CLI)           | 0.15.0  | —        |
 | legesher-language-server | 0.1.3   | Yes      |
 | legesher-vscode          | 0.1.5   | —        |
 
