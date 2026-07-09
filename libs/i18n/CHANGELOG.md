@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-07-09
+
 ### Added
 
 - **Per-language style guides for all 51 languages, on the rules/profile schema.**

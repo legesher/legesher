@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-07-09
+
 ### Added
 
 - **i18n**: Per-language Python style guides for all 51 languages on the
@@ -194,9 +196,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.15.0  | Yes      |
-| legesher-i18n            | 0.15.0  | Yes      |
-| legesher (CLI)           | 0.15.0  | —        |
+| legesher-core            | 0.16.0  | Yes      |
+| legesher-i18n            | 0.16.0  | Yes      |
+| legesher (CLI)           | 0.16.0  | —        |
 | legesher-language-server | 0.1.3   | Yes      |
 | legesher-vscode          | 0.1.5   | —        |
 
