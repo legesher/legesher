@@ -6,7 +6,6 @@ target: python
 version: '3.11'
 exceptions:
   baseexceptiongroup: baseexceptiongroup
-  encodingwarning: encodingwarning
   exceptiongroup: exceptiongroup
 extends: 3.10.yml
 keywords:

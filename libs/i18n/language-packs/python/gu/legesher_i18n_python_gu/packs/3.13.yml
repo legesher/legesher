@@ -6,7 +6,8 @@ target: python
 version: '3.13'
 extends: 3.12.yml
 keywords: {}
-exceptions: {}
+exceptions:
+  pythonfinalizationerror: પાયથનસમાપ્તિભૂલ
 metadata:
   python_version_min: '3.13'
   python_version_max: '3.13'

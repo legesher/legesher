@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: errorderechazodeconexión
   connectionreseterror: resetearconexión
   deprecationwarning: advertenciadedepreciación
+  encodingwarning: advertenciadecodificación
   environmenterror: errordeentorno
   eoferror: errordeentradasalida
   exception: excepción
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: detener_iteración
   syntaxerror: errordesintaxis
   syntaxwarning: advertenciadesintaxis
+  systemerror: errordesistema
   systemexit: salirdelsistema
   taberror: errordetabulación
   timeouterror: errordetiempodeespera

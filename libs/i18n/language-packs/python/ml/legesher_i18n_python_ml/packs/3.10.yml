@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: ബന്ധം_നിരാകരണപിശക്
   connectionreseterror: ബന്ധം_പുനഃസ്ഥാപനപിശക്
   deprecationwarning: ഒഴിവാക്കൽമുന്നറിയിപ്പ്
+  encodingwarning: എൻകോഡിംഗ്മുന്നറിയിപ്പ്
   environmenterror: പരിസ്ഥിതിപിശക്
   eoferror: ഫയൽഅവസാനപിശക്
   exception: വിശേഷം
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: ആവർത്തനനിർത്തൽ
   syntaxerror: വാക്യഘടനപിശക്
   syntaxwarning: വാക്യഘടനമുന്നറിയിപ്പ്
+  systemerror: സിസ്റ്റംപിശക്
   systemexit: സിസ്റ്റംപുറത്ത്
   taberror: ടാബ്പിശക്
   timeouterror: സമയപരിധിപിശക്

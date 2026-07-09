@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: ГрешкаОдбијенеВезе
   connectionreseterror: ГрешкаРесетовањаВезе
   deprecationwarning: УпозорењеЗастарелости
+  encodingwarning: УпозорењеКодирања
   environmenterror: ГрешкаОкружења
   eoferror: ГрешкаКрајаДатотеке
   exception: Изузетак
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: ЗаустављањеИтерације
   syntaxerror: ГрешкаСинтаксе
   syntaxwarning: УпозорењеСинтаксе
+  systemerror: грешкасистема
   systemexit: ИзлазСистема
   taberror: ГрешкаТабулатора
   timeouterror: ГрешкаВременскогОграничења

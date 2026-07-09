@@ -113,8 +113,10 @@ builtins:
   anext: nextAn
 exceptions:
   baseexception: BaseException
+  encodingwarning: avvertimentodicodifica
   exception: eccezione
   generatorexit: generatore_errore
+  systemerror: erroresistema
   systemexit: uscitaSistema
   keyboardinterrupt: interruzionedatastiera
   arithmeticerror: errorearitmetico

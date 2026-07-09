@@ -9,7 +9,6 @@ keywords:
   except*: سوائے*
 exceptions:
   baseexceptiongroup: بنیادیاستثناگروہ
-  encodingwarning: ضابطہبندیانتباہ
   exceptiongroup: استثناگروہ
 metadata:
   python_version_min: '3.11'

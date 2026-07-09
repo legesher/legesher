@@ -145,7 +145,7 @@ Python's built-in functions and types in Amharic.
 | `vars` | `ተለዋዋጮች` |
 | `zip` | `አጣምር` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `በመጠባበቅማቋረጥማስጠንቀቂያ` |
 | `permissionerror` | `የፈቃድስህተት` |
 | `processlookuperror` | `የሂደትፍለጋስህተት` |
+| `pythonfinalizationerror` | `ፓይተንማጠናቀቂያስህተት` |
 | `recursionerror` | `የድግግሞሽስህተት` |
 | `referenceerror` | `የማጣቀሻስህተት` |
 | `resourcewarning` | `የሀብትማስጠንቀቂያ` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `ድግግሞሽአቁም` |
 | `syntaxerror` | `የአገባብስህተት` |
 | `syntaxwarning` | `የአገባብማስጠንቀቂያ` |
+| `systemerror` | `ስርዓትስህተት` |
 | `systemexit` | `ስርዓትውጣ` |
 | `taberror` | `የታብስህተት` |
 | `timeouterror` | `የጊዜማብቂያስህተት` |

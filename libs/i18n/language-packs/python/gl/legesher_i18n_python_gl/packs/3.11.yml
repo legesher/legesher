@@ -9,7 +9,6 @@ keywords:
   except*: agasde*
 exceptions:
   baseexceptiongroup: grupoexcepcionbase
-  encodingwarning: avisocodificacion
   exceptiongroup: grupoexcepcion
 metadata:
   python_version_min: '3.11'

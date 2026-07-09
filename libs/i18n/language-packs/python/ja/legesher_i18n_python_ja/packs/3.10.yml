@@ -113,8 +113,10 @@ builtins:
   anext: 非同期イテレーターから次の項目を取得する
 exceptions:
   baseexception: ベーシック例外
+  encodingwarning: エンコーディング警告
   exception: 例外
   generatorexit: ジェネレータを終了する
+  systemerror: システムエラー
   systemexit: システム終了
   keyboardinterrupt: キーボード中断
   arithmeticerror: 算数エラー

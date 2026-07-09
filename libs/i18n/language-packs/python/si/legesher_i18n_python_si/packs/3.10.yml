@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: සම්බන්ධතාවප්‍රතික්ෂේපදෝෂය
   connectionreseterror: සම්බන්ධතාවනැවතසැකසීමේදෝෂය
   deprecationwarning: අවලංගුඅවවාදය
+  encodingwarning: කේතනඅවවාදය
   environmenterror: පරිසරදෝෂය
   eoferror: ගොනුඅවසානදෝෂය
   exception: අපවාදය
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: පුනරාවර්තනනැවතුම
   syntaxerror: වාක්‍යරීතිදෝෂය
   syntaxwarning: වාක්‍යරීතිඅවවාදය
+  systemerror: පද්ධතිදෝෂය
   systemexit: පද්ධතිපිටවීම
   taberror: ටැබ්දෝෂය
   timeouterror: කාලඉකුත්දෝෂය

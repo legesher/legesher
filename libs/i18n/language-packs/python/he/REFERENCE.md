@@ -148,7 +148,7 @@ Python's built-in functions and types in Hebrew.
 | `vars` | `משתנים` |
 | `zip` | `למזג` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -199,6 +199,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `אזהרת_הפסקה_שימוש` |
 | `permissionerror` | `שגיאתהרשאה` |
 | `processlookuperror` | `שגיאת_מציאת_תהליך` |
+| `pythonfinalizationerror` | `שגיאתסיוםפייתון` |
 | `recursionerror` | `שגיאהשלחזרה` |
 | `referenceerror` | `שגיאתהפניה` |
 | `resourcewarning` | `אזהרתמשאב` |
@@ -208,6 +209,7 @@ Exception classes for error handling.
 | `stopiteration` | `עצירת_איטרציה` |
 | `syntaxerror` | `שגיאתתחביר` |
 | `syntaxwarning` | `אזהרתסינטקס` |
+| `systemerror` | `שגיאתמערכת` |
 | `systemexit` | `יציאתמערכת` |
 | `taberror` | `טאברור` |
 | `timeouterror` | `שגיאהבזמןהמתנה` |

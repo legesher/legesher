@@ -9,7 +9,6 @@ keywords:
   except*: ಹೊರತುಪಡಿಸಿ*
 exceptions:
   baseexceptiongroup: ಮೂಲಅಪವಾದಗುಂಪು
-  encodingwarning: ಎನ್ಕೋಡಿಂಗ್ಎಚ್ಚರಿಕೆ
   exceptiongroup: ಅಪವಾದಗುಂಪು
 metadata:
   python_version_min: '3.11'

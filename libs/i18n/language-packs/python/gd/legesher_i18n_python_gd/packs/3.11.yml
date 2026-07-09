@@ -9,7 +9,6 @@ keywords:
   except*: achgidheadh*
 exceptions:
   baseexceptiongroup: bun_buidheann_eisgeachd
-  encodingwarning: rabhadh_còdachaidh
   exceptiongroup: buidheann_eisgeachd
 metadata:
   python_version_min: '3.11'

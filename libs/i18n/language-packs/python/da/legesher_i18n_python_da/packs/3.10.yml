@@ -113,8 +113,10 @@ builtins:
   anext: næsteElement
 exceptions:
   baseexception: baseriseksemplet
+  encodingwarning: encodingadvarsel
   exception: undtagelse
   generatorexit: generatorforløsning
+  systemerror: systemfejl
   systemexit: systemafslut
   keyboardinterrupt: tastaturinterrupter
   arithmeticerror: aritmetiskfejl

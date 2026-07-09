@@ -145,7 +145,7 @@ Python's built-in functions and types in Galician.
 | `vars` | `variables` |
 | `zip` | `comprimir` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `avisodepreciacionpendente` |
 | `permissionerror` | `erropermiso` |
 | `processlookuperror` | `errobuscaproceso` |
+| `pythonfinalizationerror` | `errofinalizacionpython` |
 | `recursionerror` | `errorecursion` |
 | `referenceerror` | `erroreferencia` |
 | `resourcewarning` | `avisorecurso` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `deteriteracion` |
 | `syntaxerror` | `errosintaxe` |
 | `syntaxwarning` | `avisosintaxe` |
+| `systemerror` | `errosistema` |
 | `systemexit` | `saidasistema` |
 | `taberror` | `errotabulacion` |
 | `timeouterror` | `errotempoesgotado` |

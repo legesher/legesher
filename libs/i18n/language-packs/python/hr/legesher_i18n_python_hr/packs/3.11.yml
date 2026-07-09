@@ -9,7 +9,6 @@ keywords:
   except*: izuzetak*
 exceptions:
   baseexceptiongroup: skupinaosnovnihizuzetaka
-  encodingwarning: upozorenjeokodiranju
   exceptiongroup: skupinaizuzetaka
 metadata:
   python_version_min: '3.11'

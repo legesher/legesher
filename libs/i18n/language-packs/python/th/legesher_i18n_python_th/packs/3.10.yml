@@ -113,8 +113,10 @@ builtins:
   anext: ฟังกำลัง
 exceptions:
   baseexception: การเปลี่ยนที่พื้นฐาน
+  encodingwarning: คำเตือนการอัปโลด
   exception: การถือเป็นการติดต่อกับการเกิดอาการที่ไม่คาดฝัน
   generatorexit: เครื่องสร้างออกซิเจน
+  systemerror: ข้อผิดพลาดระบบ
   systemexit: เลิกใช้งาน
   keyboardinterrupt: เครื่องแทรกข้อคิด
   arithmeticerror: ข้อผิดพลาดเกี่ยวกับเครื่องสำหรับการทำคำและการประมाถนา

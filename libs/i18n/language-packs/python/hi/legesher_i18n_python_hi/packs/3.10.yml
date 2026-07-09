@@ -113,8 +113,10 @@ builtins:
   anext: अगला_असमकालिक
 exceptions:
   baseexception: बेसएक्सपेक्शन
+  encodingwarning: एन्कोडिंगचेतावनी
   exception: विशेषाधिकार
   generatorexit: जेनरेटरएक्सिट
+  systemerror: सिस्टमत्रुटि
   systemexit: सिस्टमएक्जिट
   keyboardinterrupt: कीबोर्डइंटर럽्ट
   arithmeticerror: अरिथमेटिकत्रुटि

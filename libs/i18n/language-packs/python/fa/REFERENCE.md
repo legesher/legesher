@@ -148,7 +148,7 @@ Python's built-in functions and types in Persian.
 | `vars` | `متغیرها` |
 | `zip` | `فشرده` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -199,6 +199,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `هشدارمنسوخشدنآتی` |
 | `permissionerror` | `خطایدسترسی` |
 | `processlookuperror` | `خطایجستجویفرایند` |
+| `pythonfinalizationerror` | `خطاینهاییسازیپایتون` |
 | `recursionerror` | `خطایبازگشتی` |
 | `referenceerror` | `خطایمرجع` |
 | `resourcewarning` | `هشدارمنابع` |
@@ -208,6 +209,7 @@ Exception classes for error handling.
 | `stopiteration` | `توقفتکرار` |
 | `syntaxerror` | `خطاینحو` |
 | `syntaxwarning` | `هشدارنحو` |
+| `systemerror` | `خطایسیستم` |
 | `systemexit` | `خروجسیستم` |
 | `taberror` | `خطایتب` |
 | `timeouterror` | `خطایزمانسپری` |

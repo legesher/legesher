@@ -113,8 +113,10 @@ builtins:
   anext: следующийасинх
 exceptions:
   baseexception: базовоеисключение
+  encodingwarning: предупреждениекодирования
   exception: исключение
   generatorexit: выходизгенератора
+  systemerror: системнаяошибка
   systemexit: выходизсистемы
   keyboardinterrupt: прерываниепоклавиатуре
   arithmeticerror: арифметическаяошибка

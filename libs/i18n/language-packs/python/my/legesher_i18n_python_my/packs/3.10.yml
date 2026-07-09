@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: ချိတ်ဆက်ငြင်းပယ်အမှား
   connectionreseterror: ချိတ်ဆက်ပြန်လည်သတ်မှတ်အမှား
   deprecationwarning: ရှေးဟောင်းသတိပေး
+  encodingwarning: ကုဒ်ပြောင်းသတိပေး
   environmenterror: ပတ်ဝန်းကျင်အမှား
   eoferror: ဖိုင်အဆုံးအမှား
   exception: ခြွင်းချက်ဖြစ်ရပ်
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: ထပ်ခါရပ်
   syntaxerror: ဝါကျဖွဲ့အမှား
   syntaxwarning: ဝါကျဖွဲ့သတိပေး
+  systemerror: စနစ်အမှား
   systemexit: စနစ်ထွက်
   taberror: တက်ဘ်အမှား
   timeouterror: အချိန်လွန်အမှား

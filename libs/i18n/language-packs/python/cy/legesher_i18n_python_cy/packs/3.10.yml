@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: gwallcysylltiadwedigwrthod
   connectionreseterror: gwallcysylltiadwediailosod
   deprecationwarning: rhybyddanghymeradwy
+  encodingwarning: rhybuddamgodio
   environmenterror: gwallamgylchedd
   eoferror: gwalldiweddfeil
   exception: eithriad
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: aturio
   syntaxerror: gwallcystrawen
   syntaxwarning: rhybuddcystrawen
+  systemerror: gwallsystem
   systemexit: allanfasystem
   taberror: gwalltab
   timeouterror: gwallamserallan

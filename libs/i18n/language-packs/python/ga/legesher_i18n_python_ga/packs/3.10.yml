@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: EarráidNascDiúltaithe
   connectionreseterror: EarráidAthshocrúNaisc
   deprecationwarning: RabhadhDímheasta
+  encodingwarning: RabhadhIonchódaithe
   environmenterror: EarráidTimpeallachta
   eoferror: EarráidDCL
   exception: Eisceacht
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: StadAthriochta
   syntaxerror: EarráidChomhréire
   syntaxwarning: RabhadhComhréire
+  systemerror: earráidcórais
   systemexit: ScorChórais
   taberror: EarráidTáib
   timeouterror: EarráidAmAmuigh

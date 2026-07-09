@@ -145,7 +145,7 @@ Python's built-in functions and types in Irish.
 | `vars` | `athróga` |
 | `zip` | `sipeáil` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `RabhadhDímheasArFeitheamh` |
 | `permissionerror` | `EarráidCheada` |
 | `processlookuperror` | `EarráidCuardachPróisis` |
+| `pythonfinalizationerror` | `earráidchríochnúpython` |
 | `recursionerror` | `EarráidAthchúrsála` |
 | `referenceerror` | `EarráidTagartha` |
 | `resourcewarning` | `RabhadhAcmhainne` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `StadAthriochta` |
 | `syntaxerror` | `EarráidChomhréire` |
 | `syntaxwarning` | `RabhadhComhréire` |
+| `systemerror` | `earráidcórais` |
 | `systemexit` | `ScorChórais` |
 | `taberror` | `EarráidTáib` |
 | `timeouterror` | `EarráidAmAmuigh` |

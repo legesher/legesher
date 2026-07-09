@@ -145,7 +145,7 @@ Python's built-in functions and types in Spanish.
 | `vars` | `variables` |
 | `zip` | `acopiar` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `advertenciadeadvertenciadedepreciaciónpendiente` |
 | `permissionerror` | `errordepermiso` |
 | `processlookuperror` | `errordebúsquedadeproceso` |
+| `pythonfinalizationerror` | `errorfinalizaciónpython` |
 | `recursionerror` | `errorderecursión` |
 | `referenceerror` | `errordereferencia` |
 | `resourcewarning` | `advertenciaderecursos` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `detener_iteración` |
 | `syntaxerror` | `errordesintaxis` |
 | `syntaxwarning` | `advertenciadesintaxis` |
+| `systemerror` | `errordesistema` |
 | `systemexit` | `salirdelsistema` |
 | `taberror` | `errordetabulación` |
 | `timeouterror` | `errordetiempodeespera` |

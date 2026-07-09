@@ -145,7 +145,7 @@ Python's built-in functions and types in Polish.
 | `vars` | `zmienne` |
 | `zip` | `zipped` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `ostrożenieprzedprzestarzałymostrzeżeniem` |
 | `permissionerror` | `błąduprawnień` |
 | `processlookuperror` | `błądprocesuwyszukiwania` |
+| `pythonfinalizationerror` | `błądfinalizacjipythona` |
 | `recursionerror` | `błądrekurencji` |
 | `referenceerror` | `błądodwołania` |
 | `resourcewarning` | `ostrzeżenieozasobie` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `KoniecIteracji` |
 | `syntaxerror` | `błądskładniowy` |
 | `syntaxwarning` | `uwaganaskładnię` |
+| `systemerror` | `błądsystemu` |
 | `systemexit` | `wyjściezsystemu` |
 | `taberror` | `błądtabulatora` |
 | `timeouterror` | `błądczasuwygaśnięcia` |

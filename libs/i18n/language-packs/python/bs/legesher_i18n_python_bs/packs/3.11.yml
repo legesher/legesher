@@ -9,7 +9,6 @@ keywords:
   except*: osim*
 exceptions:
   baseexceptiongroup: grupaosnovnihizuzetaka
-  encodingwarning: upozorenjekodiranja
   exceptiongroup: grupaizuzetaka
 metadata:
   python_version_min: '3.11'

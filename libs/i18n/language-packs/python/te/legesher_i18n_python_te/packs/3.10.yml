@@ -114,8 +114,10 @@ builtins:
   type: రకం
 exceptions:
   baseexception: మూలమినహాయింపు
+  encodingwarning: సంకేతనహెచ్చరిక
   exception: మినహాయింపుతరగతి
   generatorexit: జనకనిష్క్రమణ
+  systemerror: వ్యవస్థదోషం
   systemexit: వ్యవస్థనిష్క్రమణ
   keyboardinterrupt: కీబోర్డుఅంతరాయం
   arithmeticerror: అంకగణితదోషం

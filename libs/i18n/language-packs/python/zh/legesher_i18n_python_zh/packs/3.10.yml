@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: 连接拒绝错误
   connectionreseterror: 连接重置错误
   deprecationwarning: 弃用警告
+  encodingwarning: 编码警告
   environmenterror: 环境错误
   eoferror: 文件结束错误
   exception: 异常
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: 停止迭代
   syntaxerror: 语法错误
   syntaxwarning: 语法警告
+  systemerror: 系统错误
   systemexit: 系统退出
   taberror: 制表符错误
   timeouterror: 超时错误

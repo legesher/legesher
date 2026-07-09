@@ -7,7 +7,6 @@ keywords:
 exceptions:
   exceptiongroup: กลุ่มข้อความที่ไม่เป็นประโยชน์
   baseexceptiongroup: กลุ่มข้อความที่เป็นพื้นฐาน
-  encodingwarning: คำเตือนการอัปโลด
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'

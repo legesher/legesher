@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: erroconexionrexeitada
   connectionreseterror: erroconexionreiniciada
   deprecationwarning: avisodepreciacion
+  encodingwarning: avisocodificacion
   environmenterror: erroambiente
   eoferror: errofindearquivo
   exception: excepcion
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: deteriteracion
   syntaxerror: errosintaxe
   syntaxwarning: avisosintaxe
+  systemerror: errosistema
   systemexit: saidasistema
   taberror: errotabulacion
   timeouterror: errotempoesgotado

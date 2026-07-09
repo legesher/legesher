@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: خطایردشدناتصال
   connectionreseterror: خطایبازنشانیاتصال
   deprecationwarning: هشدارمنسوخشدن
+  encodingwarning: هشداررمزگذاری
   environmenterror: خطایمحیط
   eoferror: خطایپایانپرونده
   exception: استثنا
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: توقفتکرار
   syntaxerror: خطاینحو
   syntaxwarning: هشدارنحو
+  systemerror: خطایسیستم
   systemexit: خروجسیستم
   taberror: خطایتب
   timeouterror: خطایزمانسپری

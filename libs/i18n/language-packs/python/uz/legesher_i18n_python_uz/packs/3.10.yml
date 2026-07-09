@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: ulanish_rad_etilgan_xato
   connectionreseterror: ulanish_qayta_tiklangan_xato
   deprecationwarning: eskirganlik_ogohlantirish
+  encodingwarning: kodlash_ogohlantirish
   environmenterror: muhit_xatosi
   eoferror: fayl_oxiri_xatosi
   exception: istisno_holat
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: iteratsiya_toxtatish
   syntaxerror: sintaksis_xatosi
   syntaxwarning: sintaksis_ogohlantirish
+  systemerror: tizim_xatosi
   systemexit: tizim_chiqish
   taberror: tabulyatsiya_xatosi
   timeouterror: vaqt_tugashi_xatosi

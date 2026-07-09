@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: mearachd_ceangal_dhiùltadh
   connectionreseterror: mearachd_ceangal_ath_shuidhichte
   deprecationwarning: rabhadh_dì_mholaidh
+  encodingwarning: rabhadh_còdachaidh
   environmenterror: mearachd_àrainneachd
   eoferror: mearachd_crìoch_fhaidhle
   exception: eisgeachd
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: stad_athrachadh
   syntaxerror: mearachd_co_chàraidh
   syntaxwarning: rabhadh_co_chàraidh
+  systemerror: mearachd_siostam
   systemexit: siostam_fàgail
   taberror: mearachd_taba
   timeouterror: mearachd_ùine_seachad

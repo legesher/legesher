@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: одбиенаврска
   connectionreseterror: ресетиранаврска
   deprecationwarning: предупредувањезазастареност
+  encodingwarning: предупредувањезакодирање
   environmenterror: грешканаоколина
   eoferror: грешканакрајнадатотека
   exception: исклучок
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: заприитерација
   syntaxerror: синтаксичкагрешка
   syntaxwarning: синтаксичкопредупредување
+  systemerror: системскагрешка
   systemexit: излезодсистем
   taberror: грешканатабулатор
   timeouterror: грешканаистекувањевреме

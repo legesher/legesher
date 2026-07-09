@@ -145,7 +145,7 @@ Python's built-in functions and types in French.
 | `vars` | `variables` |
 | `zip` | `zipper` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `avertissementdedépréciationenattente` |
 | `permissionerror` | `erreurdautorisation` |
 | `processlookuperror` | `erreurderecherchedeprocessus` |
+| `pythonfinalizationerror` | `erreurfinalisationpython` |
 | `recursionerror` | `erreurderécursivité` |
 | `referenceerror` | `erreurderéférence` |
 | `resourcewarning` | `avertissementderessources` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `arrêtdelitération` |
 | `syntaxerror` | `erreurdesyntaxe` |
 | `syntaxwarning` | `avertissementdesyntaxe` |
+| `systemerror` | `erreursystème` |
 | `systemexit` | `arrêtdusystème` |
 | `taberror` | `erreurdetabulation` |
 | `timeouterror` | `erreurdedélai` |

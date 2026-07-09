@@ -214,6 +214,8 @@ EXCEPTIONS = [
     "runtimeerror",
     "notimplementederror",
     "recursionerror",
+    # System exceptions
+    "systemerror",
     # Reference exceptions
     "referenceerror",
     # Assertion exceptions
@@ -244,16 +246,24 @@ EXCEPTIONS = [
     "byteswarning",
     "encodingwarning",
     "resourcewarning",
-    # Exception groups (Python 3.11+)
-    "exceptiongroup",
-    "baseexceptiongroup",
 ]
 
-# Exceptions added in specific Python versions
+# Exceptions added in specific Python versions.
+#
+# These version deltas are mirrored in
+# ``language-packs/python/version-index.yml`` (``added_exceptions``), which is
+# the source consumed by ``VersionIndex.get_all_exceptions`` and the pack
+# exporter. They are kept here too so ``classify_term`` /
+# ``get_exceptions_for_version`` stay version-aware without importing
+# ``version_index`` (that would be a circular import). ``encodingwarning`` is
+# NOT here: it is a 3.10 term (PEP 597) and lives in the ``EXCEPTIONS`` base.
+# ``test_baseline_against_stdlib`` pins both copies to the real stdlib.
 EXCEPTIONS_3_11 = [
     "exceptiongroup",
     "baseexceptiongroup",
-    "encodingwarning",
+]
+EXCEPTIONS_3_13 = [
+    "pythonfinalizationerror",
 ]
 
 # Special Constants
@@ -362,8 +372,13 @@ def get_exceptions_for_version(version: str = "3.10") -> list[str]:
     """
     exceptions = EXCEPTIONS.copy()
 
-    # 3.11+ has exceptiongroup, baseexceptiongroup, encodingwarning
-    # These are already in our base list for simplicity
+    # Add version-specific exceptions (mirrored in version-index.yml).
+    if version >= "3.11":
+        exceptions.extend(EXCEPTIONS_3_11)
+
+    if version >= "3.13":
+        exceptions.extend(EXCEPTIONS_3_13)
+
     return exceptions
 
 
@@ -411,8 +426,9 @@ def classify_term(term: str, python_version: str = "3.10") -> TermCategory:
     if term_lower in [t.lower() for t in BUILTIN_TYPES]:
         return "builtin_type"
 
-    # Check exceptions
-    if term_lower in EXCEPTIONS:
+    # Check exceptions (version-aware: includes exception groups @3.11,
+    # ``pythonfinalizationerror`` @3.13)
+    if term_lower in get_exceptions_for_version(python_version):
         return "exception"
 
     # Check special constants
@@ -446,7 +462,7 @@ def get_all_terms_by_category(
         "keyword": get_keywords_for_version(python_version),
         "builtin_func": BUILTIN_FUNCTIONS.copy(),
         "builtin_type": BUILTIN_TYPES.copy(),
-        "exception": EXCEPTIONS.copy(),
+        "exception": get_exceptions_for_version(python_version),
         "special_constant": SPECIAL_CONSTANTS.copy(),
         "reserved_word": RESERVED_WORDS.copy(),
         "helper": HELPER_TERMS.copy(),
@@ -509,6 +525,7 @@ __all__ = [
     "BUILTIN_TYPES",
     "EXCEPTIONS",
     "EXCEPTIONS_3_11",
+    "EXCEPTIONS_3_13",
     "SPECIAL_CONSTANTS",
     "RESERVED_WORDS",
     "HELPER_TERMS",

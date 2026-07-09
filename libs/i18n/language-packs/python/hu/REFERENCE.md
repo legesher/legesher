@@ -145,7 +145,7 @@ Python's built-in functions and types in Hungarian.
 | `vars` | `variablák` |
 | `zip` | `csatol` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `várjon_a_letávolítási_értesítőjét` |
 | `permissionerror` | `hozzáférési_hivatás` |
 | `processlookuperror` | `folyamatKeresesHiba` |
+| `pythonfinalizationerror` | `pythonvéglegesítésihiba` |
 | `recursionerror` | `rekurzív_hiba` |
 | `referenceerror` | `referenciahibás` |
 | `resourcewarning` | `erőforrásfigyelmén` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `bejegyzesErtelmesitett` |
 | `syntaxerror` | `szintakszis_hiányos` |
 | `syntaxwarning` | `syntax_warning` |
+| `systemerror` | `rendszerhiba` |
 | `systemexit` | `rendszerkilépés` |
 | `taberror` | `tabHiba` |
 | `timeouterror` | `timeout_hibás` |

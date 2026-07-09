@@ -113,8 +113,10 @@ builtins:
   anext: következő_tétel
 exceptions:
   baseexception: BaseException
+  encodingwarning: encoding警告
   exception: výjimka
   generatorexit: generátor_kimenet
+  systemerror: rendszerhiba
   systemexit: rendszerkilépés
   keyboardinterrupt: kiborraabbagyűjlés
   arithmeticerror: aritmetikai_hiba

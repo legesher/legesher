@@ -8,6 +8,8 @@ extends: 3.12.yml
 
 keywords: {}  # No new keywords in Python 3.13
 
+exceptions:
+  pythonfinalizationerror: pythonfinalizationerror
 metadata:
   python_version_min: '3.13'
   python_version_max: '3.14'

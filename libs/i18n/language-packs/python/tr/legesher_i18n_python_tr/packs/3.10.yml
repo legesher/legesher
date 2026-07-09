@@ -113,8 +113,10 @@ builtins:
   anext: sonrakiasenkron
 exceptions:
   baseexception: temelistisna
+  encodingwarning: encoding_uyarısı
   exception: özeldurum
   generatorexit: generatör_çıkışı
+  systemerror: sistemhatası
   systemexit: sistemçıkışı
   keyboardinterrupt: klavye_kesintisi
   arithmeticerror: aritmetikhata

@@ -145,7 +145,7 @@ Python's built-in functions and types in Turkish.
 | `vars` | `değişkenler` |
 | `zip` | `birleştir` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `bekleyenkullanımdışıbırakmauyarısı` |
 | `permissionerror` | `izinhatası` |
 | `processlookuperror` | `yönetimHata` |
+| `pythonfinalizationerror` | `pythonsonlandırmahatası` |
 | `recursionerror` | `yinelemehatası` |
 | `referenceerror` | `referanshatası` |
 | `resourcewarning` | `kaynakuyarı` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `durdurma_iterasyonu` |
 | `syntaxerror` | `sintakshatası` |
 | `syntaxwarning` | `sintaksuyarı` |
+| `systemerror` | `sistemhatası` |
 | `systemexit` | `sistemçıkışı` |
 | `taberror` | `tabhata` |
 | `timeouterror` | `zamanaşımıhatası` |

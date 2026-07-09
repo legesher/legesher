@@ -145,7 +145,7 @@ Python's built-in functions and types in Danish.
 | `vars` | `variabler` |
 | `zip` | `samlet` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `eksponeringsvarningforafgang` |
 | `permissionerror` | `adgangsvilkårfejlgørelse` |
 | `processlookuperror` | `processlookupfejl` |
+| `pythonfinalizationerror` | `pythonafslutningsfejl` |
 | `recursionerror` | `rekursionsfejl` |
 | `referenceerror` | `referensfejl` |
 | `resourcewarning` | `ressourceadvars` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `stopiteration` |
 | `syntaxerror` | `syntaxfejl` |
 | `syntaxwarning` | `syntaxvarningen` |
+| `systemerror` | `systemfejl` |
 | `systemexit` | `systemafslut` |
 | `taberror` | `tabfejl` |
 | `timeouterror` | `tidslimetre_fejl` |

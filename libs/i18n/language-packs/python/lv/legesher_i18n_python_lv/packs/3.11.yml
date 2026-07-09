@@ -9,7 +9,6 @@ keywords:
   except*: izņemot*
 exceptions:
   baseexceptiongroup: PamatIzņēmumuGrupa
-  encodingwarning: KodējumaBrīdinājums
   exceptiongroup: IzņēmumuGrupa
 metadata:
   python_version_min: '3.11'

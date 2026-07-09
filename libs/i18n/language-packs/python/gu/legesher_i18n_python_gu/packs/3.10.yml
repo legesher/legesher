@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: જોડાણનકારભૂલ
   connectionreseterror: જોડાણરીસેટભૂલ
   deprecationwarning: અવમૂલ્યનસચેતવણી
+  encodingwarning: એન્કોડિંગસચેતવણી
   environmenterror: પર્યાવરણભૂલ
   eoferror: ફાઈલઅંતભૂલ
   exception: અપવાદ
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: પુનરાવર્તનઅટકાવો
   syntaxerror: વાક્યરચનાભૂલ
   syntaxwarning: વાક્યરચનાસચેતવણી
+  systemerror: સિસ્ટમભૂલ
   systemexit: સિસ્ટમબહાર
   taberror: ટેબભૂલ
   timeouterror: સમયસમાપ્તિભૂલ

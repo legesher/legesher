@@ -10,7 +10,6 @@ keywords:
 exceptions:
   exceptiongroup: kivételcsoport
   baseexceptiongroup: baseexceptioncsoport
-  encodingwarning: encoding警告
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'

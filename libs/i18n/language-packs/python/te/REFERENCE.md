@@ -145,7 +145,7 @@ Python's built-in functions and types in Telugu.
 | `vars` | `చరాలు` |
 | `zip` | `జత` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `వాయిదాతొలగింపుహెచ్చరిక` |
 | `permissionerror` | `అనుమతిదోషం` |
 | `processlookuperror` | `ప్రక్రియశోధనదోషం` |
+| `pythonfinalizationerror` | `పైథాన్ముగింపుదోషం` |
 | `recursionerror` | `పునరావృత్తిదోషం` |
 | `referenceerror` | `సూచనదోషం` |
 | `resourcewarning` | `వనరులహెచ్చరిక` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `పునరావృత్తిఆపు` |
 | `syntaxerror` | `వాక్యరచనదోషం` |
 | `syntaxwarning` | `వాక్యరచనహెచ్చరిక` |
+| `systemerror` | `వ్యవస్థదోషం` |
 | `systemexit` | `వ్యవస్థనిష్క్రమణ` |
 | `taberror` | `ట్యాబ్దోషం` |
 | `timeouterror` | `కాలపరిమితిదోషం` |

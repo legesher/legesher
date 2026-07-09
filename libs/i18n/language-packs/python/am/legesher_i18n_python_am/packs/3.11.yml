@@ -9,7 +9,6 @@ keywords:
   except*: ከቀረ*
 exceptions:
   baseexceptiongroup: መሠረታዊልዩሁኔታቡድን
-  encodingwarning: የኢንኮድማስጠንቀቂያ
   exceptiongroup: ልዩሁኔታቡድን
 metadata:
   python_version_min: '3.11'

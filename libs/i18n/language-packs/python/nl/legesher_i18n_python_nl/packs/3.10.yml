@@ -113,8 +113,10 @@ builtins:
   anext: anexten
 exceptions:
   baseexception: baseuitzondering
+  encodingwarning: encodingwaarschuwing
   exception: uitzondering
   generatorexit: generatoruitgang
+  systemerror: systeemfout
   systemexit: systeemafsluiting
   keyboardinterrupt: toetsenbordonderbreking
   arithmeticerror: aritmetischefout

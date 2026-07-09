@@ -148,7 +148,7 @@ Python's built-in functions and types in Urdu.
 | `vars` | `متغیرات_لاؤ` |
 | `zip` | `جوڑا` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -199,6 +199,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `زیرالتواءمتروکانتباہ` |
 | `permissionerror` | `اجازتغلطی` |
 | `processlookuperror` | `عملتلاشغلطی` |
+| `pythonfinalizationerror` | `پائتھناختتامغلطی` |
 | `recursionerror` | `تکرارغلطی` |
 | `referenceerror` | `حوالہغلطی` |
 | `resourcewarning` | `وسائلانتباہ` |
@@ -208,6 +209,7 @@ Exception classes for error handling.
 | `stopiteration` | `تکراررُک` |
 | `syntaxerror` | `نحوغلطی` |
 | `syntaxwarning` | `نحوانتباہ` |
+| `systemerror` | `نظامغلطی` |
 | `systemexit` | `نظامخروج` |
 | `taberror` | `ٹیبغلطی` |
 | `timeouterror` | `وقتختمغلطی` |

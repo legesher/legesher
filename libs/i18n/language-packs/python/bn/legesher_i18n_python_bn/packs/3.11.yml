@@ -9,7 +9,6 @@ keywords:
   except*: ব্যতীত*
 exceptions:
   baseexceptiongroup: ভিত্তিব্যতিক্রমগোষ্ঠী
-  encodingwarning: এনকোডিংসতর্কতা
   exceptiongroup: ব্যতিক্রমগোষ্ঠী
 metadata:
   python_version_min: '3.11'

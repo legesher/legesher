@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: chybaodmítnutéhospojení
   connectionreseterror: chybaresetuspojení
   deprecationwarning: varováníozastarání
+  encodingwarning: varováníkódování
   environmenterror: chybaprostředí
   eoferror: chybakoncesouboru
   exception: výjimka
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: zastaviteraci
   syntaxerror: chybasyntaxe
   syntaxwarning: varováníosyntaxi
+  systemerror: interníchyba
   systemexit: ukončenísystému
   taberror: chybatabulátoru
   timeouterror: chybačasovéholimitu

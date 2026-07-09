@@ -6,7 +6,6 @@ keywords:
   except*: 多重捕获*
 exceptions:
   baseexceptiongroup: 基异常组
-  encodingwarning: 编码警告
   exceptiongroup: 异常组
 metadata:
   python_version_min: '3.11'

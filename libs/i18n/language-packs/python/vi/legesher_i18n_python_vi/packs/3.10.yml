@@ -113,8 +113,10 @@ builtins:
   anext: tiếp_theo
 exceptions:
   baseexception: lỗi_cơ_bản
+  encodingwarning: cảnhbáomãhóa
   exception: lỗi
   generatorexit: generatorkhải
+  systemerror: lỗihệthống
   systemexit: hậukỳhệthống
   keyboardinterrupt: sựngắtkếtnốibànphím
   arithmeticerror: lỗitínharít

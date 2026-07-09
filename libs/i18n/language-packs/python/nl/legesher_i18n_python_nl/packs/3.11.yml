@@ -7,7 +7,6 @@ keywords:
 exceptions:
   exceptiongroup: uitzonderinggroep
   baseexceptiongroup: baseexceptiongroep
-  encodingwarning: encodingwaarschuwing
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'

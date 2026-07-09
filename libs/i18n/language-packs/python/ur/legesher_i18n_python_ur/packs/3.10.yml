@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: رابطہمستردغلطی
   connectionreseterror: رابطہدوبارہغلطی
   deprecationwarning: متروکانتباہ
+  encodingwarning: ضابطہبندیانتباہ
   environmenterror: ماحولغلطی
   eoferror: فائلختمغلطی
   exception: استثنا
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: تکراررُک
   syntaxerror: نحوغلطی
   syntaxwarning: نحوانتباہ
+  systemerror: نظامغلطی
   systemexit: نظامخروج
   taberror: ٹیبغلطی
   timeouterror: وقتختمغلطی

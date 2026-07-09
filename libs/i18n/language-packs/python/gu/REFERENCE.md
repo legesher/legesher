@@ -145,7 +145,7 @@ Python's built-in functions and types in Gujarati.
 | `vars` | `ચલો` |
 | `zip` | `જોડી` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `બાકીઅવમૂલ્યનસચેતવણી` |
 | `permissionerror` | `પરવાનગીભૂલ` |
 | `processlookuperror` | `પ્રક્રિયાશોધભૂલ` |
+| `pythonfinalizationerror` | `પાયથનસમાપ્તિભૂલ` |
 | `recursionerror` | `પુનરાવર્તનભૂલ` |
 | `referenceerror` | `સંદર્ભભૂલ` |
 | `resourcewarning` | `સંસાધનસચેતવણી` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `પુનરાવર્તનઅટકાવો` |
 | `syntaxerror` | `વાક્યરચનાભૂલ` |
 | `syntaxwarning` | `વાક્યરચનાસચેતવણી` |
+| `systemerror` | `સિસ્ટમભૂલ` |
 | `systemexit` | `સિસ્ટમબહાર` |
 | `taberror` | `ટેબભૂલ` |
 | `timeouterror` | `સમયસમાપ્તિભૂલ` |

@@ -145,7 +145,7 @@ Python's built-in functions and types in Norwegian.
 | `vars` | `variabler` |
 | `zip` | `zippe` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `avventrikk` |
 | `permissionerror` | `ilaksessjonfeil` |
 | `processlookuperror` | `processlookupfeil` |
+| `pythonfinalizationerror` | `pythonavslutningsfeil` |
 | `recursionerror` | `rekursionsfeil` |
 | `referenceerror` | `referansefeil` |
 | `resourcewarning` | `resursadvars` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `stoppiterasjon` |
 | `syntaxerror` | `syntaxfeil` |
 | `syntaxwarning` | `syntaxwarnings` |
+| `systemerror` | `systemfeil` |
 | `systemexit` | `systemavslutning` |
 | `taberror` | `tabfeil` |
 | `timeouterror` | `tidslim` |

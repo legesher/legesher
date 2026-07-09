@@ -145,7 +145,7 @@ Python's built-in functions and types in Sundanese.
 | `vars` | `variabel` |
 | `zip` | `gabungkeun` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `PeringatanBakalTeuDipake` |
 | `permissionerror` | `KasalahanIjin` |
 | `processlookuperror` | `KasalahanPilarianProses` |
+| `pythonfinalizationerror` | `kasalahanfinalisasipython` |
 | `recursionerror` | `KasalahanRekursi` |
 | `referenceerror` | `KasalahanReferensi` |
 | `resourcewarning` | `PeringatanSumberdaya` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `EureunIterasi` |
 | `syntaxerror` | `KasalahanSintaksis` |
 | `syntaxwarning` | `PeringatanSintaksis` |
+| `systemerror` | `kasalahansistem` |
 | `systemexit` | `KaluarSistem` |
 | `taberror` | `KasalahanTab` |
 | `timeouterror` | `KasalahanWaktuBeak` |

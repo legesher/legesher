@@ -9,7 +9,6 @@ keywords:
   except*: හැර*
 exceptions:
   baseexceptiongroup: මූලඅපවාදසමූහය
-  encodingwarning: කේතනඅවවාදය
   exceptiongroup: අපවාදසමූහය
 metadata:
   python_version_min: '3.11'

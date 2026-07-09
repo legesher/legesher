@@ -145,7 +145,7 @@ Python's built-in functions and types in German.
 | `vars` | `variablen` |
 | `zip` | `zippen` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `ausstehendeDeprecationWarnung` |
 | `permissionerror` | `Berechtigungsfehler` |
 | `processlookuperror` | `Prozessfehler` |
+| `pythonfinalizationerror` | `pythonfinalisierungsfehler` |
 | `recursionerror` | `Rekursionfehler` |
 | `referenceerror` | `Referenzfehler` |
 | `resourcewarning` | `Ressourcenwarnung` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `StopIteration` |
 | `syntaxerror` | `Syntaxfehler` |
 | `syntaxwarning` | `Syntaxwarnung` |
+| `systemerror` | `systemfehler` |
 | `systemexit` | `systematischerAusstieg` |
 | `taberror` | `Taberror` |
 | `timeouterror` | `Zeitüberschreitung` |

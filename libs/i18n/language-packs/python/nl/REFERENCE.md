@@ -145,7 +145,7 @@ Python's built-in functions and types in Dutch.
 | `vars` | `variabelen` |
 | `zip` | `zippen` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `pendingdeprecationwaarschuwing` |
 | `permissionerror` | `permission_error` |
 | `processlookuperror` | `processlookupfout` |
+| `pythonfinalizationerror` | `pythonafrondingsfout` |
 | `recursionerror` | `recursiefout` |
 | `referenceerror` | `referentiefout` |
 | `resourcewarning` | `resourcewaarschuwing` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `stopiteratie` |
 | `syntaxerror` | `syntaxisfout` |
 | `syntaxwarning` | `syntaxwaarschuwing` |
+| `systemerror` | `systeemfout` |
 | `systemexit` | `systeemafsluiting` |
 | `taberror` | `tabfout` |
 | `timeouterror` | `timeoutfout` |

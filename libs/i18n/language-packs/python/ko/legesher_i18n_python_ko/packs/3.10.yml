@@ -113,8 +113,10 @@ builtins:
   anext: 다음항목을검색합니다
 exceptions:
   baseexception: 기본예외
+  encodingwarning: 인코딩경고
   exception: 예외
   generatorexit: 제네레이터종료
+  systemerror: 시스템오류
   systemexit: 시스템종료
   keyboardinterrupt: 키보드중단
   arithmeticerror: 산술오류

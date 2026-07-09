@@ -9,7 +9,6 @@ keywords:
   except*: સિવાય*
 exceptions:
   baseexceptiongroup: મૂળઅપવાદસમૂહ
-  encodingwarning: એન્કોડિંગસચેતવણી
   exceptiongroup: અપવાદસમૂહ
 metadata:
   python_version_min: '3.11'

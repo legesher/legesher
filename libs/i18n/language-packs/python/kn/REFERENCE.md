@@ -145,7 +145,7 @@ Python's built-in functions and types in Kannada.
 | `vars` | `ಚರಗಳು` |
 | `zip` | `ಜೋಡಿಸು` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `ಬಾಕಿಅಸಮರ್ಥನೆಎಚ್ಚರಿಕೆ` |
 | `permissionerror` | `ಅನುಮತಿದೋಷ` |
 | `processlookuperror` | `ಪ್ರಕ್ರಿಯೆಹುಡುಕಾಟದೋಷ` |
+| `pythonfinalizationerror` | `ಪೈಥಾನ್ಅಂತಿಮಗೊಳಿಸುವಿಕೆದೋಷ` |
 | `recursionerror` | `ಪುನರಾವರ್ತನೆದೋಷ` |
 | `referenceerror` | `ಉಲ್ಲೇಖದೋಷ` |
 | `resourcewarning` | `ಸಂಪನ್ಮೂಲಎಚ್ಚರಿಕೆ` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `ಪುನರಾವರ್ತನೆನಿಲ್ಲಿಸು` |
 | `syntaxerror` | `ವಾಕ್ಯರಚನೆದೋಷ` |
 | `syntaxwarning` | `ವಾಕ್ಯರಚನೆಎಚ್ಚರಿಕೆ` |
+| `systemerror` | `ವ್ಯವಸ್ಥೆದೋಷ` |
 | `systemexit` | `ವ್ಯವಸ್ಥೆನಿರ್ಗಮನ` |
 | `taberror` | `ಟ್ಯಾಬ್ದೋಷ` |
 | `timeouterror` | `ಸಮಯಮೀರಿದದೋಷ` |

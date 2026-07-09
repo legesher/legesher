@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: خطأرفضالاتصال
   connectionreseterror: إعادةتعيينخطأالاتصال
   deprecationwarning: تحذيرالإهمال
+  encodingwarning: تحذيرالترميز
   environmenterror: خطأالبيئة
   eoferror: خطأ
   exception: الاستثناء
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: الإيقاف_التكراري
   syntaxerror: خطأفيبناءالجملة
   syntaxwarning: تحذيربناء
+  systemerror: خطأالنظام
   systemexit: إنهاءالنظام
   taberror: خطأالتبويب
   timeouterror: خطأالوقت

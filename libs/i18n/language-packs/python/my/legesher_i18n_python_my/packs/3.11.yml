@@ -9,7 +9,6 @@ keywords:
   except*: ခြွင်းချက်*
 exceptions:
   baseexceptiongroup: အခြေခံခြွင်းချက်အုပ်စု
-  encodingwarning: ကုဒ်ပြောင်းသတိပေး
   exceptiongroup: ခြွင်းချက်အုပ်စု
 metadata:
   python_version_min: '3.11'

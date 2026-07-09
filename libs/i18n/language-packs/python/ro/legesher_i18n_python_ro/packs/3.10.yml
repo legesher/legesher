@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: eroare_conexiune_refuzată
   connectionreseterror: eroare_conexiune_resetată
   deprecationwarning: avertisment_depreciere
+  encodingwarning: avertisment_codificare
   environmenterror: eroare_mediu
   eoferror: eroare_sfârșit_fișier
   exception: excepție
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: oprire_iterare
   syntaxerror: eroare_sintaxă
   syntaxwarning: avertisment_sintaxă
+  systemerror: eroare_sistem
   systemexit: ieșire_sistem
   taberror: eroare_tabulare
   timeouterror: eroare_timp_expirat

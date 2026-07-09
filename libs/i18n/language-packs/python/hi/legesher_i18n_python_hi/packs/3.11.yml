@@ -10,7 +10,6 @@ keywords:
 exceptions:
   exceptiongroup: विशेषाधिकारसमूह
   baseexceptiongroup: बेसएक्सेप्शनग्रुप
-  encodingwarning: एन्कोडिंगचेतावनी
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'

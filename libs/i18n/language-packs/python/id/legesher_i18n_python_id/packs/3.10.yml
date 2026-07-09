@@ -113,8 +113,10 @@ builtins:
   anext: nextAn
 exceptions:
   baseexception: BaseException
+  encodingwarning: peringatanpengkodean
   exception: kecurangan
   generatorexit: generasikeluar
+  systemerror: kesalahansistem
   systemexit: keluaransistem
   keyboardinterrupt: interupsikeyboard
   arithmeticerror: kesalahanaritmatika

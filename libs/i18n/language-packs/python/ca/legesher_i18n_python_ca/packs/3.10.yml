@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: errorconnexiorefusada
   connectionreseterror: errorconnexioreiniciada
   deprecationwarning: avisobsolescencia
+  encodingwarning: aviscodificacio
   environmenterror: errorentorn
   eoferror: errorfinal
   exception: excepcio
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: aturariteracio
   syntaxerror: errorsintaxi
   syntaxwarning: avissintaxi
+  systemerror: errorsistema
   systemexit: sortidasistema
   taberror: errortabulacio
   timeouterror: errortempsesgotat

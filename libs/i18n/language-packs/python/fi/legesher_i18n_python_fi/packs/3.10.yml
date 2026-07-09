@@ -113,8 +113,10 @@ builtins:
   anext: anextiä
 exceptions:
   baseexception: perusvirhe
+  encodingwarning: enkodivarnin
   exception: ohje
   generatorexit: generaattoriLopeta
+  systemerror: järjestelmävirhe
   systemexit: jäätäyttymistä
   keyboardinterrupt: näkyvä_avautumin
   arithmeticerror: aritmetinenvirhe

@@ -126,6 +126,7 @@ exceptions:
   connectionrefusederror: erreurderefusdeconnexion
   connectionreseterror: resetterlaconnexion
   deprecationwarning: avertissementdedépréciation
+  encodingwarning: avertissementdencodage
   environmenterror: erreurdenvironnement
   eoferror: erreurdéof
   exception: lexception
@@ -163,6 +164,7 @@ exceptions:
   stopiteration: arrêtdelitération
   syntaxerror: erreurdesyntaxe
   syntaxwarning: avertissementdesyntaxe
+  systemerror: erreursystème
   systemexit: arrêtdusystème
   taberror: erreurdetabulation
   timeouterror: erreurdedélai

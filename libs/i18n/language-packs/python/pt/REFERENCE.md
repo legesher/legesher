@@ -145,7 +145,7 @@ Python's built-in functions and types in Portuguese.
 | `vars` | `variaveis` |
 | `zip` | `zipar` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `avisodedepreciaçãopendente` |
 | `permissionerror` | `errodepermissão` |
 | `processlookuperror` | `errodeprocuração` |
+| `pythonfinalizationerror` | `errofinalizaçãopython` |
 | `recursionerror` | `erroderecursão` |
 | `referenceerror` | `errodereferência` |
 | `resourcewarning` | `avisoderecurso` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `excecaoDeIteracaoParada` |
 | `syntaxerror` | `errodesintaxe` |
 | `syntaxwarning` | `avisodesintaxe` |
+| `systemerror` | `errosistema` |
 | `systemexit` | `saídadosistema` |
 | `taberror` | `errodetabulação` |
 | `timeouterror` | `errodetempolimite` |

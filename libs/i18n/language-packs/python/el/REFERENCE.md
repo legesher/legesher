@@ -145,7 +145,7 @@ Python's built-in functions and types in Greek.
 | `vars` | `variabiles` |
 | `zip` | `συνδεις` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `ειδοποίηση_για_ακυρότητα` |
 | `permissionerror` | `σφάλμα_άδειας` |
 | `processlookuperror` | `σφάλμααναζήτησηςδιεργασίας` |
+| `pythonfinalizationerror` | `σφάλμαοριστικοποίησηςπάιθον` |
 | `recursionerror` | `αναδρομήσφάλματος` |
 | `referenceerror` | `σφάλμααναφοράς` |
 | `resourcewarning` | `προειδοποίηση_πόρων` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `διακοπή_επαναληψης` |
 | `syntaxerror` | `σύνταξη_σφάλματος` |
 | `syntaxwarning` | `σύνταξηπροειδοποίηση` |
+| `systemerror` | `σφάλμασυστήματος` |
 | `systemexit` | `διακοπή_συστήματος` |
 | `taberror` | `ταμπλάρο` |
 | `timeouterror` | `σφάλμαχρονικούορίου` |

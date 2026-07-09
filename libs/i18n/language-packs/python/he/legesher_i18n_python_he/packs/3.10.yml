@@ -113,8 +113,10 @@ builtins:
   anext: הבאאקסט
 exceptions:
   baseexception: בסיסיוצאדופן
+  encodingwarning: אזהרת_קידוד
   exception: חריגה
   generatorexit: יצירתיציאה
+  systemerror: שגיאתמערכת
   systemexit: יציאתמערכת
   keyboardinterrupt: הפרעת_מקלדת
   arithmeticerror: שגיאתחשבון

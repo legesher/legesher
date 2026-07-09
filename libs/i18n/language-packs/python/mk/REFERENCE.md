@@ -145,7 +145,7 @@ Python's built-in functions and types in Macedonian.
 | `vars` | `променливи` |
 | `zip` | `спои` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `предупредувањезачекачказастареност` |
 | `permissionerror` | `грешканадозвола` |
 | `processlookuperror` | `грешканапребарувањепроцес` |
+| `pythonfinalizationerror` | `грешканафинализацијанапајтон` |
 | `recursionerror` | `грешканарекурзија` |
 | `referenceerror` | `грешканареференца` |
 | `resourcewarning` | `предупредувањезаресурс` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `заприитерација` |
 | `syntaxerror` | `синтаксичкагрешка` |
 | `syntaxwarning` | `синтаксичкопредупредување` |
+| `systemerror` | `системскагрешка` |
 | `systemexit` | `излезодсистем` |
 | `taberror` | `грешканатабулатор` |
 | `timeouterror` | `грешканаистекувањевреме` |

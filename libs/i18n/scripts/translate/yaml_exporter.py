@@ -18,6 +18,8 @@ from legesher_i18n.language_registry import get_language_name
 
 try:
     from .term_classifier import (
+        EXCEPTIONS_3_11,
+        EXCEPTIONS_3_13,
         classify_term,
         get_yaml_section_for_term_type,
         is_valid_term_type,
@@ -25,6 +27,8 @@ try:
 except ImportError:
     # If relative import fails, try absolute import
     from term_classifier import (  # type: ignore[no-redef]
+        EXCEPTIONS_3_11,
+        EXCEPTIONS_3_13,
         classify_term,
         get_yaml_section_for_term_type,
         is_valid_term_type,
@@ -288,15 +292,14 @@ class YAMLExporter:
             for k, v in classified["keywords"].items()
             if k not in ["except*", "type"]  # Exclude 3.11+ and 3.12+
         }
+        # Exceptions added after 3.10 belong in their version pack, not the
+        # base. Sourced from term_definitions (mirrored in version-index.yml),
+        # so encodingwarning (a 3.10 term, PEP 597) correctly stays in the base.
+        version_added_exceptions = set(EXCEPTIONS_3_11) | set(EXCEPTIONS_3_13)
         base_exceptions = {
             k: v
             for k, v in classified["exceptions"].items()
-            if k
-            not in [
-                "exceptiongroup",
-                "baseexceptiongroup",
-                "encodingwarning",
-            ]  # Exclude 3.11+
+            if k not in version_added_exceptions
         }
 
         # 3.10-specific builtins (aiter, anext added in 3.10)
@@ -327,7 +330,7 @@ class YAMLExporter:
             keywords_311["except*"] = classified["keywords"]["except*"]
 
         exceptions_311 = {}
-        for ex in ["exceptiongroup", "baseexceptiongroup", "encodingwarning"]:
+        for ex in EXCEPTIONS_3_11:
             if ex in classified["exceptions"]:
                 exceptions_311[ex] = classified["exceptions"][ex]
 
@@ -368,7 +371,13 @@ class YAMLExporter:
             f"# Extends 3.11 pack and adds 'type' keyword for type parameters\n\n",
         )
 
-        # 3.13 - Extends 3.12 (no new keywords/builtins/exceptions)
+        # 3.13 - Extends 3.12, adds PythonFinalizationError (interpreter-
+        # finalization safety; new in 3.13)
+        exceptions_313 = {}
+        for ex in EXCEPTIONS_3_13:
+            if ex in classified["exceptions"]:
+                exceptions_313[ex] = classified["exceptions"][ex]
+
         self._write_yaml_pack(
             packs_dir / "3.13.yml",
             language_code,
@@ -376,9 +385,9 @@ class YAMLExporter:
             "3.12.yml",
             {},  # No new keywords
             {},  # No new builtins
-            {},  # No new exceptions
+            exceptions_313,
             f"# {lang_name} Language Pack for Python 3.13+\n"
-            f"# Extends 3.12 pack (no new keywords in 3.13)\n\n",
+            f"# Extends 3.12 pack and adds PythonFinalizationError\n\n",
         )
 
         # 3.14 - Extends 3.13 (no new keywords/builtins/exceptions yet)

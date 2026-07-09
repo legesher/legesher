@@ -113,8 +113,10 @@ builtins:
   anext: neste
 exceptions:
   baseexception: basenesteFeil
+  encodingwarning: kodingerremake
   exception: uitlandetilfordring
   generatorexit: genererutgang
+  systemerror: systemfeil
   systemexit: systemavslutning
   keyboardinterrupt: tastaturinterrupser
   arithmeticerror: aritmetiskfeil

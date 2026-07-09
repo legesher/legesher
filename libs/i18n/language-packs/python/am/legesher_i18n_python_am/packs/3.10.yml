@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: ግንኙነትተከልክሏል
   connectionreseterror: ግንኙነትተቀይሯል
   deprecationwarning: የማቋረጥማስጠንቀቂያ
+  encodingwarning: የኢንኮድማስጠንቀቂያ
   environmenterror: የአካባቢስህተት
   eoferror: የፋይልመጨረሻስህተት
   exception: ልዩሁኔታ
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: ድግግሞሽአቁም
   syntaxerror: የአገባብስህተት
   syntaxwarning: የአገባብማስጠንቀቂያ
+  systemerror: ስርዓትስህተት
   systemexit: ስርዓትውጣ
   taberror: የታብስህተት
   timeouterror: የጊዜማብቂያስህተት

@@ -9,7 +9,6 @@ keywords:
   except*: heblaw*
 exceptions:
   baseexceptiongroup: grwpeithriadgwaelod
-  encodingwarning: rhybuddamgodio
   exceptiongroup: grwpeithriad
 metadata:
   python_version_min: '3.11'

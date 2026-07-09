@@ -145,7 +145,7 @@ Python's built-in functions and types in Bosnian.
 | `vars` | `varijable` |
 | `zip` | `spoji` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `upozorenjepredstojececezastarjelosti` |
 | `permissionerror` | `greskadozvole` |
 | `processlookuperror` | `greskapretrageprocesa` |
+| `pythonfinalizationerror` | `greskafinalizacijepythona` |
 | `recursionerror` | `greskarekurzije` |
 | `referenceerror` | `greskareferense` |
 | `resourcewarning` | `upozorenjeresursa` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `zaustavljanjeponavljanja` |
 | `syntaxerror` | `greskasintakse` |
 | `syntaxwarning` | `upozorenjesintakse` |
+| `systemerror` | `sistemskagreska` |
 | `systemexit` | `izlazizsistema` |
 | `taberror` | `greskatabulatora` |
 | `timeouterror` | `greskaistekavremena` |

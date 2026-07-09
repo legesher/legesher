@@ -9,7 +9,6 @@ keywords:
   except*: بجز*
 exceptions:
   baseexceptiongroup: گروهاستثنایپایه
-  encodingwarning: هشداررمزگذاری
   exceptiongroup: گروهاستثنا
 metadata:
   python_version_min: '3.11'

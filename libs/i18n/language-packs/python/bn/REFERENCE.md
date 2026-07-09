@@ -145,7 +145,7 @@ Python's built-in functions and types in Bengali.
 | `vars` | `চলকসমূহ` |
 | `zip` | `জিপ` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `বিলম্বিতঅবচয়সতর্কতা` |
 | `permissionerror` | `অনুমতিত্রুটি` |
 | `processlookuperror` | `প্রক্রিয়াঅনুসন্ধানত্রুটি` |
+| `pythonfinalizationerror` | `পাইথনসমাপ্তিত্রুটি` |
 | `recursionerror` | `পুনরাবৃত্তিত্রুটি` |
 | `referenceerror` | `রেফারেন্সত্রুটি` |
 | `resourcewarning` | `সম্পদসতর্কতা` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `পুনরাবৃত্তিবন্ধ` |
 | `syntaxerror` | `বাক্যগঠনত্রুটি` |
 | `syntaxwarning` | `বাক্যগঠনসতর্কতা` |
+| `systemerror` | `সিস্টেমত্রুটি` |
 | `systemexit` | `সিস্টেমপ্রস্থান` |
 | `taberror` | `ট্যাবত্রুটি` |
 | `timeouterror` | `সময়সীমাত্রুটি` |

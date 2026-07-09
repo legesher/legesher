@@ -113,8 +113,10 @@ builtins:
   anext: następnyasync
 exceptions:
   baseexception: BazaWyjątku
+  encodingwarning: ostrzeżeniedotyczącekodowania
   exception: wyjątekklasa
   generatorexit: wyjściegeneratora
+  systemerror: błądsystemu
   systemexit: wyjściezsystemu
   keyboardinterrupt: przerwanieklawiatury
   arithmeticerror: błądarytmetyczny

@@ -6,7 +6,6 @@ keywords:
   except*: exceptează*
 exceptions:
   baseexceptiongroup: grup_excepții_bază
-  encodingwarning: avertisment_codificare
   exceptiongroup: grup_excepții
 metadata:
   python_version_min: '3.11'

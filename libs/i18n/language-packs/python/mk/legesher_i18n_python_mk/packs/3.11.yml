@@ -9,7 +9,6 @@ keywords:
   except*: освен_ѕвезда
 exceptions:
   baseexceptiongroup: основенисклучокгрупа
-  encodingwarning: предупредувањезакодирање
   exceptiongroup: исклучокгрупа
 metadata:
   python_version_min: '3.11'

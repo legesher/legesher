@@ -145,7 +145,7 @@ Python's built-in functions and types in Japanese.
 | `vars` | `変数` |
 | `zip` | `ジップ` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `未使用の警告` |
 | `permissionerror` | `アクセス拒否` |
 | `processlookuperror` | `プロセスルックアップエラー` |
+| `pythonfinalizationerror` | `パイソン終了処理エラー` |
 | `recursionerror` | `再帰エラー` |
 | `referenceerror` | `参照エラー` |
 | `resourcewarning` | `リソース警告` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `停止反復` |
 | `syntaxerror` | `構文エラー` |
 | `syntaxwarning` | `構文警告` |
+| `systemerror` | `システムエラー` |
 | `systemexit` | `システム終了` |
 | `taberror` | `タブエラー` |
 | `timeouterror` | `タイムアウトエラー` |

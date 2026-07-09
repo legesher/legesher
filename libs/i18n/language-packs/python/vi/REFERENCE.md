@@ -145,7 +145,7 @@ Python's built-in functions and types in Vietnamese.
 | `vars` | `varia` |
 | `zip` | `gộp` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `cảnhbáosắpbịlỗi` |
 | `permissionerror` | `lỗiquyền` |
 | `processlookuperror` | `lỗitìmkiếmquytrình` |
+| `pythonfinalizationerror` | `lỗihoàntấtpython` |
 | `recursionerror` | `lỗiđệquy` |
 | `referenceerror` | `lỗithamchiếu` |
 | `resourcewarning` | `cảnhbáotàinguyên` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `Dừnglặplại` |
 | `syntaxerror` | `lỗicúpháp` |
 | `syntaxwarning` | `lờicảnhbáocúpháp` |
+| `systemerror` | `lỗihệthống` |
 | `systemexit` | `hậukỳhệthống` |
 | `taberror` | `lỗitab` |
 | `timeouterror` | `lỗithờigian` |

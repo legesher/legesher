@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: greskaodbijeneveze
   connectionreseterror: greskaresetovaneveze
   deprecationwarning: upozorenjezastarjelosti
+  encodingwarning: upozorenjekodiranja
   environmenterror: greskaokruzenja
   eoferror: greskakrajadatoteke
   exception: izuzetak
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: zaustavljanjeponavljanja
   syntaxerror: greskasintakse
   syntaxwarning: upozorenjesintakse
+  systemerror: sistemskagreska
   systemexit: izlazizsistema
   taberror: greskatabulatora
   timeouterror: greskaistekavremena

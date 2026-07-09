@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: সংযোগপ্রত্যাখ্যানত্রুটি
   connectionreseterror: সংযোগপুনঃস্থাপনত্রুটি
   deprecationwarning: অবচয়সতর্কতা
+  encodingwarning: এনকোডিংসতর্কতা
   environmenterror: পরিবেশত্রুটি
   eoferror: ফাইলশেষত্রুটি
   exception: ব্যতিক্রম
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: পুনরাবৃত্তিবন্ধ
   syntaxerror: বাক্যগঠনত্রুটি
   syntaxwarning: বাক্যগঠনসতর্কতা
+  systemerror: সিস্টেমত্রুটি
   systemexit: সিস্টেমপ্রস্থান
   taberror: ট্যাবত্রুটি
   timeouterror: সময়সীমাত্রুটি

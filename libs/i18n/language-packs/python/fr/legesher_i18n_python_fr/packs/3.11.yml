@@ -6,7 +6,6 @@ keywords:
   except*: excepter*
 exceptions:
   baseexceptiongroup: groupeDeBaseException
-  encodingwarning: avertissementdencodage
   exceptiongroup: groupedexceptions
 metadata:
   python_version_min: '3.11'

@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: SavienojumaAtteikumaKļūda
   connectionreseterror: SavienojumaAtiestatīšanasKļūda
   deprecationwarning: NovecošanasBrīdinājums
+  encodingwarning: KodējumaBrīdinājums
   environmenterror: VidesKļūda
   eoferror: FailaBeiguKļūda
   exception: Izņēmums
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: ApturētIterāciju
   syntaxerror: SintaksesKļūda
   syntaxwarning: SintaksesBrīdinājums
+  systemerror: sistēmaskļūda
   systemexit: SistēmasIzeja
   taberror: TabulācijasKļūda
   timeouterror: TaimautaKļūda

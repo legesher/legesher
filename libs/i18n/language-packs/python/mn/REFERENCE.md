@@ -145,7 +145,7 @@ Python's built-in functions and types in Mongolian.
 | `vars` | `хувьсагчид` |
 | `zip` | `хослуулах` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `хүлээгдэжхуучралтанхааруулга` |
 | `permissionerror` | `зөвшөөрлийналдаа` |
 | `processlookuperror` | `процессхайлталдаа` |
+| `pythonfinalizationerror` | `пайтондуусгахалдаа` |
 | `recursionerror` | `рекурсийналдаа` |
 | `referenceerror` | `лавлагааныалдаа` |
 | `resourcewarning` | `нөөцийнанхааруулга` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `давталтзогсоох` |
 | `syntaxerror` | `бичлэгийналдаа` |
 | `syntaxwarning` | `бичлэгийнанхааруулга` |
+| `systemerror` | `системалдаа` |
 | `systemexit` | `системгарах` |
 | `taberror` | `табынадаа` |
 | `timeouterror` | `хугацааныалдаа` |

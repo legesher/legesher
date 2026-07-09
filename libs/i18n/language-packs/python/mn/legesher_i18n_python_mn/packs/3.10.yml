@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: холболтааставигдсаналдаа
   connectionreseterror: холболтшинэчлэгдсэналдаа
   deprecationwarning: хуучирсананхааруулга
+  encodingwarning: кодчилолынанхааруулга
   environmenterror: орчныалдаа
   eoferror: файлтөгсгөлалдаа
   exception: онцгойбайдал
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: давталтзогсоох
   syntaxerror: бичлэгийналдаа
   syntaxwarning: бичлэгийнанхааруулга
+  systemerror: системалдаа
   systemexit: системгарах
   taberror: табынадаа
   timeouterror: хугацааныалдаа

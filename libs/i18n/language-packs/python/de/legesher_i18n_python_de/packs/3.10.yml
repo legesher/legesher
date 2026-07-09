@@ -113,8 +113,10 @@ builtins:
   anext: nächsterWert
 exceptions:
   baseexception: BaseException
+  encodingwarning: Codierungswarnung
   exception: Ausnahme
   generatorexit: generator_exit
+  systemerror: systemfehler
   systemexit: systematischerAusstieg
   keyboardinterrupt: KeyboardInterrupt
   arithmeticerror: arithmetischerFehler

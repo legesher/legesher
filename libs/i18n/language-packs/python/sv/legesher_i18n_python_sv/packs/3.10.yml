@@ -113,8 +113,10 @@ builtins:
   anext: nastaAnvarende
 exceptions:
   baseexception: basen_exception
+  encodingwarning: kodningvarning
   exception: undantag
   generatorexit: generatörsutgång
+  systemerror: systemfel
   systemexit: systemutgång
   keyboardinterrupt: tasttröttning
   arithmeticerror: aritmetiskfel

@@ -145,7 +145,7 @@ Python's built-in functions and types in Welsh.
 | `vars` | `newidynnau` |
 | `zip` | `sipio` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `rhybuddanghymeradwyddyfodol` |
 | `permissionerror` | `gwallcaniatad` |
 | `processlookuperror` | `gwallchwilioprosesau` |
+| `pythonfinalizationerror` | `gwallgorffenpython` |
 | `recursionerror` | `gwallailadrodd` |
 | `referenceerror` | `gwallcyfeiriad` |
 | `resourcewarning` | `rhybuddadnodd` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `aturio` |
 | `syntaxerror` | `gwallcystrawen` |
 | `syntaxwarning` | `rhybuddcystrawen` |
+| `systemerror` | `gwallsystem` |
 | `systemexit` | `allanfasystem` |
 | `taberror` | `gwalltab` |
 | `timeouterror` | `gwallamserallan` |

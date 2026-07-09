@@ -113,8 +113,10 @@ builtins:
   anext: επόμενο
 exceptions:
   baseexception: βασική_εξαίρεση
+  encodingwarning: προειδοποίησηκωδικοποίησης
   exception: εξαίρεση
   generatorexit: εξόδου_γεννήτριας
+  systemerror: σφάλμασυστήματος
   systemexit: διακοπή_συστήματος
   keyboardinterrupt: διακοπή_με_κλειδαριά
   arithmeticerror: αριθμητικόσφάλμα

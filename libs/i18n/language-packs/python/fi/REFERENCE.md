@@ -145,7 +145,7 @@ Python's built-in functions and types in Finnish.
 | `vars` | `variaable` |
 | `zip` | `sijoita` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `odatettavavaarallinenvarmaus` |
 | `permissionerror` | `oikeudenviesti` |
 | `processlookuperror` | `processlookupvirhe` |
+| `pythonfinalizationerror` | `pythonviimeistelyvirhe` |
 | `recursionerror` | `rekursioonvirhe` |
 | `referenceerror` | `viitevirhe` |
 | `resourcewarning` | `resurssivarnauha` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `stoppiteracija` |
 | `syntaxerror` | `syntaxerrori` |
 | `syntaxwarning` | `syntaksivaroitus` |
+| `systemerror` | `järjestelmävirhe` |
 | `systemexit` | `jäätäyttymistä` |
 | `taberror` | `taberrori` |
 | `timeouterror` | `aikausvirhe` |

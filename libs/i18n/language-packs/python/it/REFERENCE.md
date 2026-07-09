@@ -145,7 +145,7 @@ Python's built-in functions and types in Italian.
 | `vars` | `variabili` |
 | `zip` | `zippare` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `avvisodideprecazioneinsospeso` |
 | `permissionerror` | `errorediautorizzazione` |
 | `processlookuperror` | `erroridilookupdelprocesso` |
+| `pythonfinalizationerror` | `errorefinalizzazionepython` |
 | `recursionerror` | `errorediricorsione` |
 | `referenceerror` | `errorediriferimento` |
 | `resourcewarning` | `avvertimentodirisorsa` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `iterazioneInterrotta` |
 | `syntaxerror` | `erroredisintassi` |
 | `syntaxwarning` | `avvertimentodisintassi` |
+| `systemerror` | `erroresistema` |
 | `systemexit` | `uscitaSistema` |
 | `taberror` | `erroreDiTabulazione` |
 | `timeouterror` | `erroreditimeout` |

@@ -114,8 +114,10 @@ builtins:
   anext: salajengna_asinkron
 exceptions:
   baseexception: PangecualianDasar
+  encodingwarning: PeringatanPangkodean
   exception: Pangecualian
   generatorexit: KaluarGenerator
+  systemerror: kasalahansistem
   systemexit: KaluarSistem
   keyboardinterrupt: GangguanKibor
   arithmeticerror: KasalahanAritmatika

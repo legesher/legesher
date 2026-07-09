@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: connectionrefusederror
   connectionreseterror: connectionreseterror
   deprecationwarning: deprecationwarning
+  encodingwarning: encodingwarning
   environmenterror: environmenterror
   eoferror: eoferror
   exception: exception
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: stopiteration
   syntaxerror: syntaxerror
   syntaxwarning: syntaxwarning
+  systemerror: systemerror
   systemexit: systemexit
   taberror: taberror
   timeouterror: timeouterror

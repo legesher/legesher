@@ -145,7 +145,7 @@ Python's built-in functions and types in Romanian.
 | `vars` | `variabile` |
 | `zip` | `arhivează` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `avertisment_depreciere_viitoare` |
 | `permissionerror` | `eroare_permisiune` |
 | `processlookuperror` | `eroare_căutare_proces` |
+| `pythonfinalizationerror` | `eroare_finalizare_python` |
 | `recursionerror` | `eroare_recursie` |
 | `referenceerror` | `eroare_referință` |
 | `resourcewarning` | `avertisment_resursă` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `oprire_iterare` |
 | `syntaxerror` | `eroare_sintaxă` |
 | `syntaxwarning` | `avertisment_sintaxă` |
+| `systemerror` | `eroare_sistem` |
 | `systemexit` | `ieșire_sistem` |
 | `taberror` | `eroare_tabulare` |
 | `timeouterror` | `eroare_timp_expirat` |

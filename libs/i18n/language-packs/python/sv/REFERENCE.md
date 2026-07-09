@@ -145,7 +145,7 @@ Python's built-in functions and types in Swedish.
 | `vars` | `variabler` |
 | `zip` | `zippa` |
 
-## Exceptions (68 terms)
+## Exceptions (70 terms)
 
 Exception classes for error handling.
 
@@ -196,6 +196,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `väntandeavskrivningsvarning` |
 | `permissionerror` | `behörighetshavelse` |
 | `processlookuperror` | `processlookupfeil` |
+| `pythonfinalizationerror` | `pythonslutförandefel` |
 | `recursionerror` | `rekursionsfel` |
 | `referenceerror` | `referensfel` |
 | `resourcewarning` | `resursavvisning` |
@@ -205,6 +206,7 @@ Exception classes for error handling.
 | `stopiteration` | `stoppiteration` |
 | `syntaxerror` | `syntaxfel` |
 | `syntaxwarning` | `syntaxvarning` |
+| `systemerror` | `systemfel` |
 | `systemexit` | `systemutgång` |
 | `taberror` | `tabbortfellet` |
 | `timeouterror` | `tidsgränssöttning` |

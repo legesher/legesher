@@ -127,6 +127,7 @@ exceptions:
   connectionrefusederror: ಸಂಪರ್ಕನಿರಾಕರಣೆದೋಷ
   connectionreseterror: ಸಂಪರ್ಕಮರುಹೊಂದಿಸುವಿಕೆದೋಷ
   deprecationwarning: ಅಸಮರ್ಥನೆಎಚ್ಚರಿಕೆ
+  encodingwarning: ಎನ್ಕೋಡಿಂಗ್ಎಚ್ಚರಿಕೆ
   environmenterror: ಪರಿಸರದೋಷ
   eoferror: ಕಡತಅಂತ್ಯದೋಷ
   exception: ಅಪವಾದ
@@ -164,6 +165,7 @@ exceptions:
   stopiteration: ಪುನರಾವರ್ತನೆನಿಲ್ಲಿಸು
   syntaxerror: ವಾಕ್ಯರಚನೆದೋಷ
   syntaxwarning: ವಾಕ್ಯರಚನೆಎಚ್ಚರಿಕೆ
+  systemerror: ವ್ಯವಸ್ಥೆದೋಷ
   systemexit: ವ್ಯವಸ್ಥೆನಿರ್ಗಮನ
   taberror: ಟ್ಯಾಬ್ದೋಷ
   timeouterror: ಸಮಯಮೀರಿದದೋಷ

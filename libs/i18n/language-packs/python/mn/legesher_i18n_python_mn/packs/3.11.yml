@@ -9,7 +9,6 @@ keywords:
   except*: бусад*
 exceptions:
   baseexceptiongroup: үндсэнонцгойбайдлынбүлэг
-  encodingwarning: кодчилолынанхааруулга
   exceptiongroup: онцгойбайдлынбүлэг
 metadata:
   python_version_min: '3.11'
