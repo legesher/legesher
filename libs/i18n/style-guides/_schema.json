@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.legesher.io/schemas/style-guide.json",
+  "title": "Legesher style guide",
+  "description": "Rules + a language/script profile proposing best-practice Python for one target language. Applies to per-language {code}.yml guides, not to the python.yml base or the _*.yml overlays. See README.md for the field reference.",
+  "type": "object",
+  "required": ["language", "extends", "version", "status", "supports", "naming", "script", "formatting", "rendering"],
+  "additionalProperties": true,
+  "properties": {
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}$",
+      "description": "ISO 639-1 code; must exist in languages.json"
+    },
+    "extends": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+\\.yml$"},
+      "description": "Ordered ancestor chain, base-first (e.g. [python.yml, _ltr.yml, _cjk.yml])"
+    },
+    "version": {"type": "string"},
+    "status": {"type": "string", "enum": ["experimental", "reviewed", "stable"]},
+    "supports": {
+      "type": "object",
+      "description": "Which Python naming conventions the script can express, plus script-profile facts. Booleans only.",
+      "additionalProperties": false,
+      "required": [
+        "case_distinction", "snake_case", "upper_snake_case", "pascal_case",
+        "camel_case", "native_digits", "combining_marks", "requires_word_separator",
+        "diacritics_in_identifiers", "cursive_joining"
+      ],
+      "properties": {
+        "case_distinction": {"type": "boolean", "description": "Script distinguishes upper/lower case"},
+        "snake_case": {"type": "boolean", "description": "Words joinable with underscore"},
+        "upper_snake_case": {"type": "boolean", "description": "Constants as ALL_CAPS (requires case)"},
+        "pascal_case": {"type": "boolean", "description": "CapWords class names (requires case)"},
+        "camel_case": {"type": "boolean", "description": "camelCase names (requires case)"},
+        "native_digits": {"type": "boolean", "description": "Language has its own numeral forms (profile)"},
+        "combining_marks": {"type": "boolean", "description": "Characters compose from base + combining marks"},
+        "requires_word_separator": {"type": "boolean", "description": "Underscores mandatory (spaceless scripts)"},
+        "diacritics_in_identifiers": {"type": "boolean", "description": "Diacritics / tone marks are part of identifier spelling (e.g. Yoruba, Vietnamese) vs omitted (Arabic harakat, Hebrew niqqud)"},
+        "cursive_joining": {"type": "boolean", "description": "Letters connect contextually (Arabic-script)"}
+      }
+    },
+    "naming": {
+      "type": "object",
+      "required": ["case_substitute"],
+      "additionalProperties": true,
+      "properties": {
+        "case_substitute": {
+          "type": "string",
+          "enum": ["morphology", "not_needed"],
+          "description": "How case is replaced when unsupported. morphology = part of speech signals role; not_needed = PEP 8 casing applies."
+        }
+      }
+    },
+    "script": {
+      "type": "object",
+      "required": ["name", "direction", "constraints"],
+      "additionalProperties": true,
+      "properties": {
+        "name": {"type": "string", "description": "Writing-system identity, e.g. 'Latin' or 'Telugu (Brahmic)'"},
+        "direction": {"type": "string", "enum": ["ltr", "rtl"]},
+        "constraints": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Script-specific rules (NFKC, forbidden joiners, digit profile, diacritics, etc.)"
+        }
+      }
+    },
+    "formatting": {
+      "type": "object",
+      "required": ["comment_prefix", "programming_punctuation"],
+      "additionalProperties": true,
+      "properties": {
+        "comment_prefix": {"type": "string"},
+        "programming_punctuation": {"type": "string", "enum": ["ascii_only"]}
+      }
+    },
+    "rendering": {
+      "type": "object",
+      "required": ["noto_font"],
+      "additionalProperties": true,
+      "properties": {
+        "noto_font": {"type": "string", "description": "Noto font for editor glyph rendering (VS Code extension)"}
+      }
+    }
+  }
+}

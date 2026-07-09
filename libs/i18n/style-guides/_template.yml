@@ -1,0 +1,58 @@
+# _template.yml — copy to {code}.yml to add a language. Fill the language-level
+# fields; everything shared is inherited from the overlay chain. See README.md
+# for the field reference and the how-to.
+#
+# A style guide is a set of English rules + a language/script profile proposing
+# best-practice Python for one target language. Key/value pairs are written in
+# English UNLESS a value must be in the target script (e.g. a native-digit
+# sample). Vocabulary — word choices, symbol names — lives in the language
+# packs, not here.
+
+language: xx                       # ISO 639-1 code; must exist in languages.json
+extends:                           # ordered ancestor chain, base-first
+- python.yml
+- _ltr.yml                         # or _rtl.yml
+# - _cjk.yml                       # + a script-family overlay if one applies
+version: 0.1.0
+status: experimental               # experimental | reviewed | stable
+
+# Which Python naming conventions this language's script can express, plus a few
+# script-profile facts. Black and white — booleans only.
+supports:
+  case_distinction: false          # script distinguishes upper/lower case
+  snake_case: true                 # words joinable with underscore (universal)
+  upper_snake_case: false          # constants as ALL_CAPS (requires case)
+  pascal_case: false               # CapWords class names (requires case)
+  camel_case: false                # camelCase names (requires case)
+  native_digits: false             # language has its own numeral forms (profile)
+  combining_marks: false           # characters compose from base + combining marks
+  requires_word_separator: false   # underscores mandatory (spaceless scripts)
+  diacritics_in_identifiers: false # diacritics / tone marks are part of identifier spelling
+  cursive_joining: false           # letters connect contextually (Arabic-script)
+
+# How identifiers are formed.
+naming:
+  case_substitute: morphology      # morphology | not_needed
+  # morphology (caseless scripts): part of speech does case's job — callables are
+  #   verb phrases, classes/exceptions are noun compounds. A single-word name
+  #   stays bare; a multi-word idea joins with underscores. Constants are NOT
+  #   prefix-marked — there is simply no ALL_CAPS form.
+  # not_needed (bicameral scripts): standard PEP 8 casing applies unchanged.
+
+# Script identity + the constraints its characters impose.
+script:
+  name: <writing system, e.g. "Latin" or "Telugu (Brahmic)">
+  direction: ltr                   # ltr | rtl
+  constraints:
+  - <script-specific rule, e.g. "Zero-width joiner (U+200D) is forbidden in identifiers.">
+  - "Digits: <profile — e.g. 'written with ASCII 0-9', or 'natively written with Devanagari १२३; Legesher decides ASCII vs native (native-digit support is planned, ASCII-only today)'>."
+
+# Formatting rules.
+formatting:
+  comment_prefix: '#'
+  programming_punctuation: ascii_only   # native punctuation only inside strings/comments
+  docstrings: PEP 257 structure, prose in the target language
+
+# Editor rendering (consumed by the VS Code extension, not the translation prompt).
+rendering:
+  noto_font: Noto Sans <script>

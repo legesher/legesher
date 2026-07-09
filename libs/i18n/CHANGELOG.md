@@ -9,6 +9,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Style-guide schema, template, validator, and README.** The canonical,
+  documented format for per-language Python style guides: `_schema.json` (the
+  `supports` capability flags plus the `naming` / `script` / `formatting` /
+  `rendering` structure and enums), a copy-to-add-a-language `_template.yml`, a
+  `validate_style_guides.py` that checks structure and consistency with
+  `languages.json` (the case flags match `has_case_distinction`, the direction
+  matches `rtl`, the extends chain resolves), and a `README.md` field reference.
+  Establishes a style guide as a set of English rules plus a language/script
+  profile — the foundation the per-language guides are regenerated onto.
+
 ## [0.14.0] - 2026-07-05
 
 ### Added

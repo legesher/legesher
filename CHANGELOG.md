@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **i18n**: Style-guide schema + template + validator + README — the canonical,
+  documented format for per-language Python style guides (capability flags, a
+  script profile, and a validator that checks consistency with `languages.json`).
+
 ## [0.14.0] - 2026-07-05
 
 ### Added
