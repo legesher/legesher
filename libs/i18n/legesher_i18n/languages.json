@@ -1,6 +1,6 @@
 {
   "$schema": "./languages.schema.json",
-  "_comment": "This is the single source of truth for language metadata. Do not edit generated files directly.",
+  "_comment": "AUTO-GENERATED from translations.db (languages table, in_registry = 1). Do not edit directly; edit the DB and run libs/i18n/legesher_i18n/scripts/generate_languages.py.",
   "canonical_language": "en",
   "languages": {
     "am": {

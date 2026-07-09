@@ -1,8 +1,11 @@
 """Language metadata registry for Legesher i18n.
 
-Central API for looking up language metadata by code. The canonical source
-of truth is ``languages.json`` in this directory; this module loads it once
-at import time and exposes two module-level constants plus accessor helpers.
+Central API for looking up language metadata by code. The single source of
+truth is the ``languages`` table in ``translations.db``; ``languages.json`` in
+this directory is *generated* from it (see ``scripts/generate_languages.py``).
+This module loads that generated JSON once at import time — it never touches the
+database on the import path — and exposes two module-level constants plus
+accessor helpers.
 
 Module-level constants:
     LANGUAGE_METADATA: Mapping of language code to metadata dict. Keys are
@@ -14,7 +17,8 @@ Module-level constants:
         storage (typically ``"en"``). Translations are stored in git as
         this language and translated on the fly for other locales.
 
-To add or modify languages, edit ``languages.json`` and run:
+To add or modify languages, edit the ``languages`` table in ``translations.db``
+(set ``in_registry = 1`` to publish a language), then regenerate this JSON:
 
     uv run python libs/i18n/legesher_i18n/scripts/generate_languages.py
 """
@@ -23,7 +27,7 @@ import json
 from pathlib import Path
 from typing import Literal, TypedDict
 
-# Path to the canonical language data
+# Path to the generated language data (regenerated from translations.db)
 _LANGUAGES_JSON = Path(__file__).parent / "languages.json"
 
 
@@ -61,7 +65,7 @@ def _load_languages() -> tuple[dict[str, LanguageMetadata], str]:
     return languages, data["canonical_language"]
 
 
-# Load language data from JSON (single source of truth)
+# Load language data from the generated JSON (regenerated from translations.db)
 LANGUAGE_METADATA, CANONICAL_LANGUAGE = _load_languages()
 
 

@@ -1,13 +1,24 @@
 #!/usr/bin/env python3
-"""Generate TypeScript language definitions from languages.json.
+"""Generate the language-registry artifacts from translations.db.
 
-This script reads the canonical languages.json and generates:
-1. TypeScript module for VS Code extension (libs/vs-code/src/generated/languages.ts)
+CORE-611: ``translations.db`` (the ``languages`` table, rows where
+``in_registry = 1``) is the single source of truth for the published language
+registry. This script regenerates the two derived, git-tracked artifacts from
+it — nothing else reads the database at runtime:
+
+1. ``languages.json``                          — Python read-path
+   (``language_registry.py``, ``prompt_builder.py``, ``style_guides.py``, ...)
+2. ``libs/vs-code/src/generated/languages.ts``  — VS Code extension read-path
+
+To add or change a published language, edit the DB (``languages`` table) — set
+its fields and ``in_registry = 1`` — then run this script. Never hand-edit
+``languages.json`` or ``languages.ts``; a drift test fails if they diverge from
+the DB.
 
 Usage:
-    python -m legesher_i18n.scripts.generate_languages
-    # or from repo root:
     uv run python libs/i18n/legesher_i18n/scripts/generate_languages.py
+    # or:
+    python -m legesher_i18n.scripts.generate_languages
 """
 
 import json
@@ -15,17 +26,86 @@ import sys
 from pathlib import Path
 
 # Resolve paths relative to this script
-SCRIPT_DIR = Path(__file__).parent
+SCRIPT_DIR = Path(__file__).resolve().parent
 I18N_DIR = SCRIPT_DIR.parent
 REPO_ROOT = I18N_DIR.parent.parent.parent
 LANGUAGES_JSON = I18N_DIR / "languages.json"
 VSCODE_GENERATED_DIR = REPO_ROOT / "libs" / "vs-code" / "src" / "generated"
 
+# Make ``legesher_i18n`` importable when this file is run as a plain script path
+# (e.g. ``python .../scripts/generate_languages.py``) rather than ``-m``.
+sys.path.insert(0, str(I18N_DIR.parent))
 
-def load_languages() -> dict:
-    """Load languages.json source file."""
-    with open(LANGUAGES_JSON, encoding="utf-8") as f:
-        return json.load(f)
+from legesher_i18n.db import TranslationDatabase  # noqa: E402
+
+# The canonical language: the language Legesher's Python keywords are authored
+# in. translations.db has no canonical flag, so it is fixed here (this matches
+# the value that has always shipped in languages.json).
+CANONICAL_LANGUAGE = "en"
+
+# Kept in sync with languages.schema.json (a sibling of languages.json).
+JSON_SCHEMA_REF = "./languages.schema.json"
+JSON_COMMENT = (
+    "AUTO-GENERATED from translations.db (languages table, in_registry = 1). "
+    "Do not edit directly; edit the DB and run "
+    "libs/i18n/legesher_i18n/scripts/generate_languages.py."
+)
+
+
+def load_registry_from_db(db_path: str | Path | None = None) -> dict:
+    """Load the published language registry from translations.db.
+
+    Returns the same shape the rest of the toolchain expects from
+    ``languages.json``: ``{"canonical_language": str, "languages": {code: meta}}``,
+    with languages sorted by code and only the published (``in_registry = 1``)
+    set included. DB columns are mapped onto the json field names
+    (``native_name`` -> ``native``, ``direction`` -> ``rtl`` boolean).
+
+    Args:
+        db_path: Optional path to the SQLite database. Defaults to the canonical
+            translations.db; overridable mainly for testing.
+    """
+    db = TranslationDatabase(db_path)
+    try:
+        rows = db.get_languages(in_registry=True)
+    finally:
+        db.close()
+
+    languages: dict[str, dict] = {}
+    for row in sorted(rows, key=lambda r: r["code"]):
+        code = row["code"]
+        # iso639_2 / bcp47 are nullable columns. For a *published* language they
+        # are required by languages.schema.json, so fail fast rather than emit an
+        # empty string that would silently ship a broken registry (this is the
+        # exact gap CORE-611 backfilled — guard against it regressing).
+        if not row["iso639_2"] or not row["bcp47"]:
+            raise ValueError(
+                f"Published language {code!r} is missing iso639_2/bcp47 in "
+                f"translations.db (iso639_2={row['iso639_2']!r}, "
+                f"bcp47={row['bcp47']!r}). The DB must be the complete source of "
+                f"truth for published languages — backfill it before regenerating."
+            )
+        languages[code] = {
+            "name": row["name"],
+            "native": row["native_name"],
+            "iso639_2": row["iso639_2"],
+            "bcp47": row["bcp47"],
+            "rtl": row["direction"] == "rtl",
+            "has_case_distinction": bool(row["has_case_distinction"]),
+            "status": row["status"],
+        }
+    return {"canonical_language": CANONICAL_LANGUAGE, "languages": languages}
+
+
+def generate_json(data: dict) -> str:
+    """Render schema-valid ``languages.json`` content from registry data."""
+    document = {
+        "$schema": JSON_SCHEMA_REF,
+        "_comment": JSON_COMMENT,
+        "canonical_language": data["canonical_language"],
+        "languages": data["languages"],
+    }
+    return json.dumps(document, indent=2, ensure_ascii=False) + "\n"
 
 
 def generate_typescript(data: dict) -> str:
@@ -38,7 +118,7 @@ def generate_typescript(data: dict) -> str:
         "/**",
         " * AUTO-GENERATED FILE - DO NOT EDIT DIRECTLY",
         " *",
-        " * This file is generated from libs/i18n/legesher_i18n/languages.json",
+        " * This file is generated from translations.db (languages table, in_registry = 1)",
         " * Run: uv run python libs/i18n/legesher_i18n/scripts/generate_languages.py",
         " */",
         "",
@@ -53,7 +133,7 @@ def generate_typescript(data: dict) -> str:
         "    status: LanguageStatus;",
         "}",
         "",
-        "export type LanguageCode = ",
+        "export type LanguageCode =",
     ]
 
     # Add union type of all language codes
@@ -153,26 +233,17 @@ def generate_typescript(data: dict) -> str:
 
 
 def main() -> int:
-    """Generate TypeScript from languages.json."""
-    print(f"Loading {LANGUAGES_JSON}...")
+    """Regenerate languages.json and the VS Code languages.ts from the DB."""
+    print("Loading published language registry from translations.db...")
+    data = load_registry_from_db()
+    print(f"Found {len(data['languages'])} published languages (in_registry = 1)")
 
-    if not LANGUAGES_JSON.exists():
-        print(f"ERROR: {LANGUAGES_JSON} not found")
-        return 1
+    LANGUAGES_JSON.write_text(generate_json(data), encoding="utf-8")
+    print(f"Generated {LANGUAGES_JSON}")
 
-    data = load_languages()
-    languages = data["languages"]
-    print(f"Found {len(languages)} languages")
-
-    # Generate TypeScript
-    ts_content = generate_typescript(data)
-
-    # Ensure output directory exists
     VSCODE_GENERATED_DIR.mkdir(parents=True, exist_ok=True)
-
     ts_output = VSCODE_GENERATED_DIR / "languages.ts"
-    with open(ts_output, "w", encoding="utf-8") as f:
-        f.write(ts_content)
+    ts_output.write_text(generate_typescript(data), encoding="utf-8")
     print(f"Generated {ts_output}")
 
     print("Done!")

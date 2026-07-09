@@ -116,6 +116,23 @@ class TranslationDatabase:
         for statement in get_schema():
             conn.execute(statement)
 
+        # CORE-611: lightweight, idempotent column migrations for the languages
+        # table. This project has no migration framework; ``ALTER TABLE ... ADD
+        # COLUMN`` is safe to run on every open when guarded by a column-existence
+        # check. Databases created before CORE-611 lack ``has_case_distinction``
+        # / ``in_registry``; fresh databases already have them from
+        # LANGUAGES_TABLE, so both branches are no-ops there.
+        lang_columns = {row[1] for row in conn.execute("PRAGMA table_info(languages)")}
+        if "has_case_distinction" not in lang_columns:
+            conn.execute(
+                "ALTER TABLE languages ADD COLUMN "
+                "has_case_distinction BOOLEAN DEFAULT 1"
+            )
+        if "in_registry" not in lang_columns:
+            conn.execute(
+                "ALTER TABLE languages ADD COLUMN in_registry BOOLEAN DEFAULT 0"
+            )
+
         conn.commit()
         conn.close()
 
@@ -271,11 +288,19 @@ class TranslationDatabase:
             return dict(row)
         return None
 
-    def get_languages(self, has_yaml_pack: bool | None = None) -> list[dict]:
-        """Get all languages with optional filter.
+    def get_languages(
+        self,
+        has_yaml_pack: bool | None = None,
+        in_registry: bool | None = None,
+    ) -> list[dict]:
+        """Get all languages with optional filters.
 
         Args:
             has_yaml_pack: If set, filter by whether language has a YAML pack
+            in_registry: If set, filter by whether the language is published to
+                the generated language registry (languages.json / VS Code
+                languages.ts). CORE-611: the registry is generated from the
+                languages where ``in_registry = 1``.
 
         Returns:
             List of language dictionaries
@@ -289,6 +314,10 @@ class TranslationDatabase:
         if has_yaml_pack is not None:
             query += " AND has_yaml_pack = ?"
             params.append(1 if has_yaml_pack else 0)
+
+        if in_registry is not None:
+            query += " AND in_registry = ?"
+            params.append(1 if in_registry else 0)
 
         query += " ORDER BY code"
         cursor = conn.execute(query, params)

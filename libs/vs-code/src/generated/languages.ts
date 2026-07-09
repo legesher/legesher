@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED FILE - DO NOT EDIT DIRECTLY
  *
- * This file is generated from libs/i18n/legesher_i18n/languages.json
+ * This file is generated from translations.db (languages table, in_registry = 1)
  * Run: uv run python libs/i18n/legesher_i18n/scripts/generate_languages.py
  */
 

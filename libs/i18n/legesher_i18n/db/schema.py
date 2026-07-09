@@ -29,6 +29,14 @@ CREATE TABLE IF NOT EXISTS terms (
 """
 
 # Languages table - language registry
+#
+# CORE-611: translations.db is the single source of truth for the published
+# language registry.
+#   - ``in_registry`` marks which languages are published to the generated
+#     artifacts (languages.json + the VS Code languages.ts). The registry is
+#     generated from the rows where ``in_registry = 1``.
+#   - ``has_case_distinction`` is per-language script metadata consumed by the
+#     prompt builder; it previously lived only in languages.json.
 LANGUAGES_TABLE = """
 CREATE TABLE IF NOT EXISTS languages (
     code TEXT PRIMARY KEY,
@@ -40,8 +48,10 @@ CREATE TABLE IF NOT EXISTS languages (
     direction TEXT DEFAULT 'ltr',
     script TEXT,
     numeral_system TEXT,
+    has_case_distinction BOOLEAN DEFAULT 1,
     status TEXT DEFAULT 'experimental',
     has_yaml_pack BOOLEAN DEFAULT 0,
+    in_registry BOOLEAN DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
