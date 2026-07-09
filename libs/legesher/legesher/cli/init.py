@@ -12,7 +12,6 @@ Example:
 """
 
 import re
-import subprocess
 import sys
 from pathlib import Path
 from collections.abc import Sequence
@@ -447,55 +446,33 @@ def _yaml_list(items: Sequence[str], indent: int = 0) -> str:
 
 
 def _setup_git_integration() -> None:
-    """Set up git filters and attributes for canonical English storage."""
-    # Create .gitattributes
-    gitattributes_path = Path(".gitattributes")
-    gitattributes_content = """# Legesher: Store Python files as English in git
-*.py filter=legesher diff=legesher
+    """Set up git filters and attributes for canonical English storage.
 
-# Legesher metadata is stored as-is
-.legesher/** -filter -diff
-"""
+    Delegates to the shared helpers behind ``legesher git setup`` so both
+    entry points configure identical filters: the ``legesher-filter``
+    console script, ``filter.legesher.required=false``, and the same
+    .gitattributes entry (CORE-1344).
+    """
+    from legesher.cli.git import _configure_git_filters, _create_gitattributes
+    from legesher.config import LegesherConfig
 
-    if gitattributes_path.exists():
-        existing = gitattributes_path.read_text(encoding="utf-8")
-        if "filter=legesher" not in existing:
-            with open(gitattributes_path, "a", encoding="utf-8") as f:
-                f.write("\n" + gitattributes_content)
-            click.echo("✓ Updated .gitattributes")
-        else:
-            click.echo("○ .gitattributes already configured")
-    else:
-        gitattributes_path.write_text(gitattributes_content, encoding="utf-8")
-        click.echo("✓ Created .gitattributes")
-
-    # Configure git filters
     try:
-        subprocess.run(
-            ["git", "config", "filter.legesher.clean", "legesher git clean %f"],
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        subprocess.run(
-            ["git", "config", "filter.legesher.smudge", "legesher git smudge %f"],
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        click.echo("✓ Configured git filters")
-    except subprocess.CalledProcessError as e:
+        repo_root = LegesherConfig._find_repo_root()
+    except ValueError as e:
         click.echo(
-            click.style(
-                f"  ⚠ Could not configure git filters: {e}",
-                fg="yellow",
-            )
+            click.style(f"  ⚠ Could not set up git integration: {e}", fg="yellow")
         )
-        click.echo("    You can manually configure them later with:")
-        click.echo('    git config filter.legesher.clean "legesher git clean %f"')
-        click.echo('    git config filter.legesher.smudge "legesher git smudge %f"')
+        click.echo("    Run 'legesher git setup' from within a git repository.")
+        return
+
+    if not _configure_git_filters():
+        click.echo(click.style("  ⚠ Could not configure git filters", fg="yellow"))
+        click.echo("    You can configure them later with: legesher git setup")
+        return
+    click.echo("✓ Configured git filters")
+
+    _create_gitattributes(repo_root)
+    click.echo("✓ Updated .gitattributes")
 
 
 __all__ = ["init"]

@@ -9,6 +9,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **legesher**: `legesher init --git` configured git filters as the nonexistent
+  `legesher git clean/smudge` subcommands, so repos onboarded through `init`
+  looked configured but silently never translated. It now delegates to the same
+  helpers as `legesher git setup`, wiring the real `legesher-filter` console
+  script (`--clean`/`--smudge`) plus `filter.legesher.required=false` — both
+  entry points configure identically and can no longer drift. The README's
+  matching phantom `legesher git clean/smudge` reference is corrected to
+  `legesher-filter`. (CORE-1344, #1)
+
 ## [0.17.0] - 2026-07-09
 
 ### Changed

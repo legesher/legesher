@@ -211,7 +211,7 @@ See [legesher-language-server](libs/language-server/README.md) for LSP documenta
 - **`legesher translate`:** Translate files or directories (keywords only, or `--full` for LLM-powered full translation)
 - **`legesher run`:** Run translated Python files directly
 - **`legesher git setup`:** Initialize git integration
-- **`legesher git clean/smudge`:** Git filter commands
+- **`legesher-filter`:** Git filter script (`--clean`/`--smudge`), invoked automatically by git — not run directly
 - **`legesher metadata`:** View translation history
 - **`legesher-i18n validate`:** Validate language packs
 - **`legesher-i18n show`:** Display pack versions

@@ -6,6 +6,7 @@ Tests verify that:
 - Interactive mode still works when TTY is available
 """
 
+import subprocess
 from pathlib import Path
 from unittest.mock import patch
 
@@ -142,3 +143,45 @@ class TestInitNonInteractive:
             )
             assert result.exit_code == 1
             assert "already initialized" in result.output
+
+
+class TestSetupGitIntegration:
+    """Regression tests for CORE-1344.
+
+    `legesher init --git` previously wired nonexistent `legesher git
+    clean/smudge` subcommands; it must configure the same filters as
+    `legesher git setup` (the `legesher-filter` console script).
+    """
+
+    def test_configures_legesher_filter_commands(self, tmp_path, monkeypatch):
+        """Init's git step must match `legesher git setup` wiring exactly."""
+        subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+        monkeypatch.chdir(tmp_path)
+
+        from legesher.cli.init import _setup_git_integration
+
+        _setup_git_integration()
+
+        def git_config(key: str) -> str:
+            result = subprocess.run(
+                ["git", "config", "--local", key],
+                cwd=tmp_path,
+                capture_output=True,
+                text=True,
+            )
+            return result.stdout.strip()
+
+        assert git_config("filter.legesher.clean") == "legesher-filter --clean"
+        assert git_config("filter.legesher.smudge") == "legesher-filter --smudge"
+        assert git_config("filter.legesher.required") == "false"
+        assert "*.py filter=legesher" in (tmp_path / ".gitattributes").read_text()
+
+    def test_outside_git_repo_warns_without_raising(self, tmp_path, monkeypatch):
+        """Outside a git repo the step degrades gracefully."""
+        monkeypatch.chdir(tmp_path)
+
+        from legesher.cli.init import _setup_git_integration
+
+        _setup_git_integration()
+
+        assert not (tmp_path / ".gitattributes").exists()
