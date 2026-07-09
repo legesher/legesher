@@ -66,12 +66,13 @@ These are Python's reserved words translated to Hindi.
 | `with` | `साथमें` |
 | `yield` | `देना` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Hindi.
 
 | English | Hindi |
 | ------- | ------ |
+| `__import__` | `__आयात__` |
 | `abs` | `अभि` |
 | `aiter` | `अभिसंगतआयटेर` |
 | `all` | `सभी` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Hindi.
 | `sum` | `जोड़ना` |
 | `super` | `सुपर` |
 | `tuple` | `टपल` |
-| `type` | `type` |
+| `type` | `प्रकार` |
 | `vars` | `जिसका` |
 | `zip` | `ज़िप` |
 

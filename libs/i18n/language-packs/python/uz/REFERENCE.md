@@ -66,12 +66,13 @@ These are Python's reserved words translated to Uzbek.
 | `with` | `bilan` |
 | `yield` | `berish` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Uzbek.
 
 | English | Uzbek |
 | ------- | ------ |
+| `__import__` | `__kiritish__` |
 | `abs` | `mutlaq` |
 | `aiter` | `asinxron_iterator` |
 | `all` | `hammasi` |

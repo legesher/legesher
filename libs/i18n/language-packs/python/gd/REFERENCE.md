@@ -66,12 +66,13 @@ These are Python's reserved words translated to Scottish Gaelic.
 | `with` | `le` |
 | `yield` | `thoir` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Scottish Gaelic.
 
 | English | Scottish Gaelic |
 | ------- | ------ |
+| `__import__` | `__ionphortaich__` |
 | `abs` | `dearbhluach` |
 | `aiter` | `neo_shioncathraiche` |
 | `all` | `uile` |

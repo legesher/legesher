@@ -66,12 +66,13 @@ These are Python's reserved words translated to Dutch.
 | `with` | `met` |
 | `yield` | `opbrengen` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Dutch.
 
 | English | Dutch |
 | ------- | ------ |
+| `__import__` | `__importeer__` |
 | `abs` | `absoluut` |
 | `aiter` | `asynch_iterator` |
 | `all` | `alles` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Dutch.
 | `sum` | `som` |
 | `super` | `superHogerNiveau` |
 | `tuple` | `tupel` |
-| `type` | `type` |
+| `type` | `soort` |
 | `vars` | `variabelen` |
 | `zip` | `zippen` |
 

@@ -66,12 +66,13 @@ These are Python's reserved words translated to Malayalam.
 | `with` | `ഉപയോഗിച്ച്` |
 | `yield` | `വിളവ്` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Malayalam.
 
 | English | Malayalam |
 | ------- | ------ |
+| `__import__` | `__ഇറക്കുമതി__` |
 | `abs` | `സമ്പൂർണ്ണമൂല്യം` |
 | `aiter` | `അസമന്വിതആവർത്തകം` |
 | `all` | `എല്ലാം` |

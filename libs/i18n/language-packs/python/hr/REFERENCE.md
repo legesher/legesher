@@ -66,12 +66,13 @@ These are Python's reserved words translated to Croatian.
 | `with` | `sa` |
 | `yield` | `predaj` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Croatian.
 
 | English | Croatian |
 | ------- | ------ |
+| `__import__` | `__uvoz__` |
 | `abs` | `apsolutno` |
 | `aiter` | `asinkiter` |
 | `all` | `sve` |

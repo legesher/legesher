@@ -66,12 +66,13 @@ These are Python's reserved words translated to Gujarati.
 | `with` | `સાથે` |
 | `yield` | `ઉત્પન્ન` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Gujarati.
 
 | English | Gujarati |
 | ------- | ------ |
+| `__import__` | `__આયાત__` |
 | `abs` | `નિરપેક્ષ` |
 | `aiter` | `અસમપુનરાવર્તક` |
 | `all` | `બધા` |

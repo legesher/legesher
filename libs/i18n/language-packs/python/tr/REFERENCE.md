@@ -66,12 +66,13 @@ These are Python's reserved words translated to Turkish.
 | `with` | `ile` |
 | `yield` | `ver` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Turkish.
 
 | English | Turkish |
 | ------- | ------ |
+| `__import__` | `__içeaktar__` |
 | `abs` | `mutlakDeğer` |
 | `aiter` | `asenkron_itaratci` |
 | `all` | `herşey` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Turkish.
 | `sum` | `toplam` |
 | `super` | `üst` |
 | `tuple` | `kökleme` |
-| `type` | `type` |
+| `type` | `tür` |
 | `vars` | `değişkenler` |
 | `zip` | `birleştir` |
 

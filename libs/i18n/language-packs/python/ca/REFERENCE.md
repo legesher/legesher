@@ -66,12 +66,13 @@ These are Python's reserved words translated to Catalan.
 | `with` | `amb` |
 | `yield` | `cedir` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Catalan.
 
 | English | Catalan |
 | ------- | ------ |
+| `__import__` | `__importar__` |
 | `abs` | `absolut` |
 | `aiter` | `aiterador` |
 | `all` | `tots` |

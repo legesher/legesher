@@ -69,12 +69,13 @@ These are Python's reserved words translated to Arabic.
 | `with` | `مع` |
 | `yield` | `تَرْجِع` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Arabic.
 
 | English | Arabic |
 | ------- | ------ |
+| `__import__` | `__استيراد__` |
 | `abs` | `القيمةالمطلقة` |
 | `aiter` | `مُتَأَنِّي` |
 | `all` | `كل` |

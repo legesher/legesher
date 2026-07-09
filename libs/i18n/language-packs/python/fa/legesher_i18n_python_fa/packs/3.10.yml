@@ -40,6 +40,7 @@ keywords:
   with: با
   yield: تولید
 builtins:
+  __import__: __واردکردن__
   abs: قدرمطلق
   aiter: تکرارگرناهمگام
   all: همه

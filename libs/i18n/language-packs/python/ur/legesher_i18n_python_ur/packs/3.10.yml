@@ -40,6 +40,7 @@ keywords:
   with: ساتھ
   yield: حاصل
 builtins:
+  __import__: __درآمد__
   abs: مطلق
   aiter: غیرہمزمانتکرارکنندہ
   all: تمام

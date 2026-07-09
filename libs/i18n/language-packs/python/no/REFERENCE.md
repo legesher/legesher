@@ -66,12 +66,13 @@ These are Python's reserved words translated to Norwegian.
 | `with` | `med` |
 | `yield` | `yeld` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Norwegian.
 
 | English | Norwegian |
 | ------- | ------ |
+| `__import__` | `__importer__` |
 | `abs` | `absoluttvurdere` |
 | `aiter` | `iterer` |
 | `all` | `alle` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Norwegian.
 | `sum` | `summe` |
 | `super` | `supp` |
 | `tuple` | `tuplet` |
-| `type` | `type` |
+| `type` | `objekt_type` |
 | `vars` | `variabler` |
 | `zip` | `zippe` |
 

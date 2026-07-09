@@ -66,12 +66,13 @@ These are Python's reserved words translated to Portuguese.
 | `with` | `com` |
 | `yield` | `renderizar` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Portuguese.
 
 | English | Portuguese |
 | ------- | ------ |
+| `__import__` | `__importar__` |
 | `abs` | `valorabsoluto` |
 | `aiter` | `iter_async` |
 | `all` | `todos` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Portuguese.
 | `sum` | `soma` |
 | `super` | `superClasse` |
 | `tuple` | `tupla` |
-| `type` | `type` |
+| `type` | `tipo` |
 | `vars` | `variaveis` |
 | `zip` | `zipar` |
 

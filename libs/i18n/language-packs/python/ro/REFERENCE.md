@@ -66,12 +66,13 @@ These are Python's reserved words translated to Romanian.
 | `with` | `cu` |
 | `yield` | `produce` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Romanian.
 
 | English | Romanian |
 | ------- | ------ |
+| `__import__` | `__importă__` |
 | `abs` | `valoare_absolută` |
 | `aiter` | `iterator_asincron` |
 | `all` | `toate` |

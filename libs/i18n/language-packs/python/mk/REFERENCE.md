@@ -66,12 +66,13 @@ These are Python's reserved words translated to Macedonian.
 | `with` | `со` |
 | `yield` | `произведи` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Macedonian.
 
 | English | Macedonian |
 | ------- | ------ |
+| `__import__` | `__увоз__` |
 | `abs` | `апсолутна` |
 | `aiter` | `аитер` |
 | `all` | `сите` |

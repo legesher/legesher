@@ -66,12 +66,13 @@ These are Python's reserved words translated to German.
 | `with` | `mit` |
 | `yield` | `abgeben` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in German.
 
 | English | German |
 | ------- | ------ |
+| `__import__` | `__importieren__` |
 | `abs` | `absoluter_Wert` |
 | `aiter` | `asynchrone_itor` |
 | `all` | `alle` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in German.
 | `sum` | `summe` |
 | `super` | `superKlasse` |
 | `tuple` | `Tupel` |
-| `type` | `type` |
+| `type` | `Typ` |
 | `vars` | `variablen` |
 | `zip` | `zippen` |
 
@@ -155,7 +156,7 @@ Exception classes for error handling.
 | `assertionerror` | `Assertionfehler` |
 | `attributeerror` | `Attributfehler` |
 | `baseexception` | `BaseException` |
-| `baseexceptiongroup` | `BaseExceptionGroup` |
+| `baseexceptiongroup` | `Basisausnahmegruppe` |
 | `blockingioerror` | `BlockingIOFehler` |
 | `brokenpipeerror` | `BrokenPipeError` |
 | `buffererror` | `Bufferfehler` |

@@ -66,12 +66,13 @@ These are Python's reserved words translated to Malay.
 | `with` | `dengan` |
 | `yield` | `menghasilkan` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Malay.
 
 | English | Malay |
 | ------- | ------ |
+| `__import__` | `__impor__` |
 | `abs` | `darjat` |
 | `aiter` | `pengulangan_asinkron` |
 | `all` | `semua` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Malay.
 | `sum` | `hitung` |
 | `super` | `superObjek` |
 | `tuple` | `tupel` |
-| `type` | `type` |
+| `type` | `jenis` |
 | `vars` | `memperlihatkan` |
 | `zip` | `zipping` |
 

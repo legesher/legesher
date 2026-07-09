@@ -40,6 +40,7 @@ keywords:
   match: соответствие
   case: случай
 builtins:
+  __import__: __импорт__
   abs: абсолютноезначение
   all: все
   any: каждый
@@ -87,6 +88,7 @@ builtins:
   slice: срез
   sorted: отсортированный
   sum: сумма
+  type: тип
   vars: переменные
   zip: сжатие
   bool: булев

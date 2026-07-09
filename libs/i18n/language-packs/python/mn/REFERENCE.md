@@ -66,12 +66,13 @@ These are Python's reserved words translated to Mongolian.
 | `with` | `хамт` |
 | `yield` | `үүсгэх` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Mongolian.
 
 | English | Mongolian |
 | ------- | ------ |
+| `__import__` | `__импортлох__` |
 | `abs` | `абсолют` |
 | `aiter` | `асинхрондавтагч` |
 | `all` | `бүгд` |

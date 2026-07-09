@@ -40,6 +40,7 @@ keywords:
   with: cu
   yield: produce
 builtins:
+  __import__: __importă__
   abs: valoare_absolută
   aiter: iterator_asincron
   all: toate

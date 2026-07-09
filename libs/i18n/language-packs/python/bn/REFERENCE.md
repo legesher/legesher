@@ -66,12 +66,13 @@ These are Python's reserved words translated to Bengali.
 | `with` | `সহ` |
 | `yield` | `প্রদান` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Bengali.
 
 | English | Bengali |
 | ------- | ------ |
+| `__import__` | `__আমদানি__` |
 | `abs` | `পরমমান` |
 | `aiter` | `অসমকালীন_ইটারেটর` |
 | `all` | `সকল` |

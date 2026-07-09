@@ -66,12 +66,13 @@ These are Python's reserved words translated to Korean.
 | `with` | `with문` |
 | `yield` | `값을생성하다` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Korean.
 
 | English | Korean |
 | ------- | ------ |
+| `__import__` | `__가져오기__` |
 | `abs` | `절댓값` |
 | `aiter` | `아이트리` |
 | `all` | `모두` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Korean.
 | `sum` | `합계` |
 | `super` | `슈퍼` |
 | `tuple` | `튜플` |
-| `type` | `type` |
+| `type` | `타입` |
 | `vars` | `변수` |
 | `zip` | `자바` |
 

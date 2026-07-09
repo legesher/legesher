@@ -66,12 +66,13 @@ These are Python's reserved words translated to Hungarian.
 | `with` | `kontextussal` |
 | `yield` | `rendni` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Hungarian.
 
 | English | Hungarian |
 | ------- | ------ |
+| `__import__` | `__importál__` |
 | `abs` | `absz` |
 | `aiter` | `asynchronos_iterator` |
 | `all` | `az_összes_elemet` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Hungarian.
 | `sum` | `összeg` |
 | `super` | `szülő_osztály` |
 | `tuple` | `sorozat_tartomany` |
-| `type` | `type` |
+| `type` | `típus` |
 | `vars` | `variablák` |
 | `zip` | `csatol` |
 

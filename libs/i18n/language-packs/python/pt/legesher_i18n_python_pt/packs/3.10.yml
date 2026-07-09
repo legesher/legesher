@@ -40,6 +40,7 @@ keywords:
   match: combinar
   case: caso
 builtins:
+  __import__: __importar__
   abs: valorabsoluto
   all: todos
   any: qualquer
@@ -87,6 +88,7 @@ builtins:
   slice: fatiar
   sorted: ordenado
   sum: soma
+  type: tipo
   vars: variaveis
   zip: zipar
   bool: booleano

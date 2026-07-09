@@ -69,12 +69,13 @@ These are Python's reserved words translated to Hebrew.
 | `with` | `עם` |
 | `yield` | `הוצא` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Hebrew.
 
 | English | Hebrew |
 | ------- | ------ |
+| `__import__` | `__ייבוא__` |
 | `abs` | `הערךהמוחלט` |
 | `aiter` | `מעגלאיטרטורסינכרוני` |
 | `all` | `הכל` |
@@ -144,7 +145,7 @@ Python's built-in functions and types in Hebrew.
 | `sum` | `סכום` |
 | `super` | `סופר` |
 | `tuple` | `טופל` |
-| `type` | `type` |
+| `type` | `סוג` |
 | `vars` | `משתנים` |
 | `zip` | `למזג` |
 

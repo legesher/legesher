@@ -66,12 +66,13 @@ These are Python's reserved words translated to Irish.
 | `with` | `le` |
 | `yield` | `géill` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Irish.
 
 | English | Irish |
 | ------- | ------ |
+| `__import__` | `__iompórtáil__` |
 | `abs` | `dearbhluach` |
 | `aiter` | `neamhshathaire` |
 | `all` | `gach` |

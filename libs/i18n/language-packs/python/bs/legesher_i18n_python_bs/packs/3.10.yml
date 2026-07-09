@@ -40,6 +40,7 @@ keywords:
   with: sa
   yield: proizvedi
 builtins:
+  __import__: __uvoz__
   abs: apsolutno
   aiter: asinhroniiterator
   all: sve

@@ -40,6 +40,7 @@ keywords:
   match: cocokkan
   case: kasus
 builtins:
+  __import__: __impor__
   abs: nilaimutlak
   all: semua
   any: manusia
@@ -87,6 +88,7 @@ builtins:
   slice: pemotongan
   sorted: tertata
   sum: menambahkan
+  type: tipe
   vars: var
   zip: gabungan
   bool: boolean

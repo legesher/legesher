@@ -40,6 +40,7 @@ keywords:
   with: le
   yield: thoir
 builtins:
+  __import__: __ionphortaich__
   abs: dearbhluach
   aiter: neo_shioncathraiche
   all: uile

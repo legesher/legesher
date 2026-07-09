@@ -40,6 +40,7 @@ keywords:
   match: täydentäyttää
   case: tapa
 builtins:
+  __import__: __tuo__
   abs: absoluuti
   all: kaikki
   any: mikätahansa
@@ -87,6 +88,7 @@ builtins:
   slice: kirjaus
   sorted: sorteerittu
   sum: summa
+  type: tyyppi
   vars: variaable
   zip: sijoita
   bool: tietotyyppiBooleaani

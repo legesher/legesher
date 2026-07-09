@@ -40,6 +40,7 @@ keywords:
   with: le
   yield: géill
 builtins:
+  __import__: __iompórtáil__
   abs: dearbhluach
   aiter: neamhshathaire
   all: gach

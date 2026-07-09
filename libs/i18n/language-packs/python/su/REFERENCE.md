@@ -66,12 +66,13 @@ These are Python's reserved words translated to Sundanese.
 | `with` | `kalawan` |
 | `yield` | `hasilkeun` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Sundanese.
 
 | English | Sundanese |
 | ------- | ------ |
+| `__import__` | `__impor__` |
 | `abs` | `mutlak` |
 | `aiter` | `iterasi_asinkron` |
 | `all` | `kabeh` |

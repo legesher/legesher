@@ -40,6 +40,7 @@ keywords:
   match: मैच
   case: केस
 builtins:
+  __import__: __आयात__
   abs: अभि
   all: सभी
   any: कोईभी
@@ -87,6 +88,7 @@ builtins:
   slice: स्लाइस
   sorted: सॉर्टेड
   sum: जोड़ना
+  type: प्रकार
   vars: जिसका
   zip: ज़िप
   bool: बूलियन

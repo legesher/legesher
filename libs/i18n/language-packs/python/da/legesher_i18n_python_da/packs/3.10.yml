@@ -40,6 +40,7 @@ keywords:
   match: sammenligning
   case: sæt
 builtins:
+  __import__: __importer__
   abs: absolutværdien
   all: alle
   any: enigen
@@ -87,6 +88,7 @@ builtins:
   slice: skær
   sorted: sorteret
   sum: summe
+  type: objekt_type
   vars: variabler
   zip: samlet
   bool: boolesk

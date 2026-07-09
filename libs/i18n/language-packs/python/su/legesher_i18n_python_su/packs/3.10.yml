@@ -40,6 +40,7 @@ keywords:
   match: cocogkeun
   case: kasus
 builtins:
+  __import__: __impor__
   abs: mutlak
   all: kabeh
   any: naon_wae

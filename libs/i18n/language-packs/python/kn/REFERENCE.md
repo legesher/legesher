@@ -66,12 +66,13 @@ These are Python's reserved words translated to Kannada.
 | `with` | `ಜೊತೆಗೆ` |
 | `yield` | `ಒದಗಿಸು` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Kannada.
 
 | English | Kannada |
 | ------- | ------ |
+| `__import__` | `__ಆಮದು__` |
 | `abs` | `ನಿರಪೇಕ್ಷ` |
 | `aiter` | `ಅಸಮಕಾಲೀನಪುನರಾವರ್ತಕ` |
 | `all` | `ಎಲ್ಲಾ` |

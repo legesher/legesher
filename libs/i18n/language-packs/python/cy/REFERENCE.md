@@ -66,12 +66,13 @@ These are Python's reserved words translated to Welsh.
 | `with` | `gyda` |
 | `yield` | `ildio` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Welsh.
 
 | English | Welsh |
 | ------- | ------ |
+| `__import__` | `__mewnforio__` |
 | `abs` | `absoliwt` |
 | `aiter` | `aiteru` |
 | `all` | `pob` |

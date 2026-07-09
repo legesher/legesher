@@ -66,12 +66,13 @@ These are Python's reserved words translated to Chinese.
 | `with` | `跟` |
 | `yield` | `产生` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Chinese.
 
 | English | Chinese |
 | ------- | ------ |
+| `__import__` | `__导入__` |
 | `abs` | `绝对值` |
 | `aiter` | `异步迭代器` |
 | `all` | `全` |

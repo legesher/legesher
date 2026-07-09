@@ -40,6 +40,7 @@ keywords:
   match: egyeztetés
   case: eset
 builtins:
+  __import__: __importál__
   abs: absz
   all: az_összes_elemet
   any: bővebben
@@ -87,6 +88,7 @@ builtins:
   slice: osztatás
   sorted: szerelésre
   sum: összeg
+  type: típus
   vars: variablák
   zip: csatol
   bool: logikai_értékek

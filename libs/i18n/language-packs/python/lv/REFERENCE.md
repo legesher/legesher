@@ -66,12 +66,13 @@ These are Python's reserved words translated to Latvian.
 | `with` | `ar` |
 | `yield` | `iegūt` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Latvian.
 
 | English | Latvian |
 | ------- | ------ |
+| `__import__` | `__importēt__` |
 | `abs` | `absolūtā` |
 | `aiter` | `asinhIterators` |
 | `all` | `visi` |

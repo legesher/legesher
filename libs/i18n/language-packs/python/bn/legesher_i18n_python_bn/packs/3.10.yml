@@ -40,6 +40,7 @@ keywords:
   with: সহ
   yield: প্রদান
 builtins:
+  __import__: __আমদানি__
   abs: পরমমান
   aiter: অসমকালীন_ইটারেটর
   all: সকল

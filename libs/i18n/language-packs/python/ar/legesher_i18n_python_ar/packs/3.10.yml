@@ -40,6 +40,7 @@ keywords:
   with: مع
   yield: تَرْجِع
 builtins:
+  __import__: __استيراد__
   abs: القيمةالمطلقة
   aiter: مُتَأَنِّي
   all: كل

@@ -66,12 +66,13 @@ These are Python's reserved words translated to Italian.
 | `with` | `con` |
 | `yield` | `dare` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Italian.
 
 | English | Italian |
 | ------- | ------ |
+| `__import__` | `__importare__` |
 | `abs` | `valoreassoluto` |
 | `aiter` | `aiteratore` |
 | `all` | `tutto` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Italian.
 | `sum` | `somma` |
 | `super` | `classe_padre` |
 | `tuple` | `tupla` |
-| `type` | `type` |
+| `type` | `tipo` |
 | `vars` | `variabili` |
 | `zip` | `zippare` |
 

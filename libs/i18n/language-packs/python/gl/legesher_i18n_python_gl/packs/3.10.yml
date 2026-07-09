@@ -40,6 +40,7 @@ keywords:
   with: con
   yield: ceder
 builtins:
+  __import__: __importar__
   abs: absoluto
   aiter: aiterador
   all: todos

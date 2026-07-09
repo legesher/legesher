@@ -66,12 +66,13 @@ These are Python's reserved words translated to Spanish.
 | `with` | `con` |
 | `yield` | `dar` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Spanish.
 
 | English | Spanish |
 | ------- | ------ |
+| `__import__` | `__importar__` |
 | `abs` | `valorabsoluto` |
 | `aiter` | `iterador_asincrónico` |
 | `all` | `todo` |

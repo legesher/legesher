@@ -66,12 +66,13 @@ These are Python's reserved words translated to Swedish.
 | `with` | `med` |
 | `yield` | `gebe` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Swedish.
 
 | English | Swedish |
 | ------- | ------ |
+| `__import__` | `__importera__` |
 | `abs` | `absolut_värde` |
 | `aiter` | `asynk_Iterator` |
 | `all` | `alla` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Swedish.
 | `sum` | `summa` |
 | `super` | `superObjekt` |
 | `tuple` | `ordnad_olika` |
-| `type` | `type` |
+| `type` | `typ` |
 | `vars` | `variabler` |
 | `zip` | `zippa` |
 

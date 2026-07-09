@@ -40,6 +40,7 @@ keywords:
   with: gyda
   yield: ildio
 builtins:
+  __import__: __mewnforio__
   abs: absoliwt
   aiter: aiteru
   all: pob

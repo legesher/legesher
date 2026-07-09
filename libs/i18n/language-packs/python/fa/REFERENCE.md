@@ -69,12 +69,13 @@ These are Python's reserved words translated to Persian.
 | `with` | `با` |
 | `yield` | `تولید` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Persian.
 
 | English | Persian |
 | ------- | ------ |
+| `__import__` | `__واردکردن__` |
 | `abs` | `قدرمطلق` |
 | `aiter` | `تکرارگرناهمگام` |
 | `all` | `همه` |

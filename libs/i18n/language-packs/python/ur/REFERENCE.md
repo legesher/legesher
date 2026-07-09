@@ -69,12 +69,13 @@ These are Python's reserved words translated to Urdu.
 | `with` | `ساتھ` |
 | `yield` | `حاصل` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Urdu.
 
 | English | Urdu |
 | ------- | ------ |
+| `__import__` | `__درآمد__` |
 | `abs` | `مطلق` |
 | `aiter` | `غیرہمزمانتکرارکنندہ` |
 | `all` | `تمام` |

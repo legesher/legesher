@@ -66,12 +66,13 @@ These are Python's reserved words translated to Vietnamese.
 | `with` | `với` |
 | `yield` | `hiệusuất` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Vietnamese.
 
 | English | Vietnamese |
 | ------- | ------ |
+| `__import__` | `__nhập__` |
 | `abs` | `sốtuyệtđối` |
 | `aiter` | `ktraiter` |
 | `all` | `tấtcả` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Vietnamese.
 | `sum` | `tổng` |
 | `super` | `siêu` |
 | `tuple` | `thưmục` |
-| `type` | `type` |
+| `type` | `loại` |
 | `vars` | `varia` |
 | `zip` | `gộp` |
 

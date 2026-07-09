@@ -66,12 +66,13 @@ These are Python's reserved words translated to Greek.
 | `with` | `με` |
 | `yield` | `αποτέλεσμα` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Greek.
 
 | English | Greek |
 | ------- | ------ |
+| `__import__` | `__εισαγωγή__` |
 | `abs` | `απόλυτητιμή` |
 | `aiter` | `αιτητής` |
 | `all` | `όλους` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Greek.
 | `sum` | `άρθροισμα` |
 | `super` | `υπερ` |
 | `tuple` | `πλειάδα` |
-| `type` | `type` |
+| `type` | `τύπος` |
 | `vars` | `variabiles` |
 | `zip` | `συνδεις` |
 

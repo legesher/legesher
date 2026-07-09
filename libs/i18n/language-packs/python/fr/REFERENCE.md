@@ -66,12 +66,13 @@ These are Python's reserved words translated to French.
 | `with` | `avec` |
 | `yield` | `dégager` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in French.
 
 | English | French |
 | ------- | ------ |
+| `__import__` | `__importer__` |
 | `abs` | `labsolu` |
 | `aiter` | `iterer` |
 | `all` | `tout` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in French.
 | `sum` | `somme` |
 | `super` | `classe_parente` |
 | `tuple` | `sequence_ordonnee_inmutabble` |
-| `type` | `type` |
+| `type` | `retourne_type` |
 | `vars` | `variables` |
 | `zip` | `zipper` |
 

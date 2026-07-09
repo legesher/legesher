@@ -66,12 +66,13 @@ These are Python's reserved words translated to Indonesian.
 | `with` | `dengan` |
 | `yield` | `menghasilkan` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Indonesian.
 
 | English | Indonesian |
 | ------- | ------ |
+| `__import__` | `__impor__` |
 | `abs` | `nilaimutlak` |
 | `aiter` | `pengulangan_asinkron` |
 | `all` | `semua` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Indonesian.
 | `sum` | `menambahkan` |
 | `super` | `superclasses` |
 | `tuple` | `tupel` |
-| `type` | `type` |
+| `type` | `tipe` |
 | `vars` | `var` |
 | `zip` | `gabungan` |
 

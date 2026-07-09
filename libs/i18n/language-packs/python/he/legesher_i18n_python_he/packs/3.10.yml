@@ -40,6 +40,7 @@ keywords:
   match: התאמה
   case: מקרה
 builtins:
+  __import__: __ייבוא__
   abs: הערךהמוחלט
   all: הכל
   any: כל_ערך
@@ -87,6 +88,7 @@ builtins:
   slice: חיתוך
   sorted: ממוין
   sum: סכום
+  type: סוג
   vars: משתנים
   zip: למזג
   bool: בוליאני

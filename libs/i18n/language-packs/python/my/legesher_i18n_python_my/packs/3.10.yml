@@ -40,6 +40,7 @@ keywords:
   with: နှင့်အတူ
   yield: ထုတ်ပေး
 builtins:
+  __import__: __တင်သွင်း__
   abs: ကိန်းပြည့်တန်ဖိုး
   aiter: အချိန်မတူထပ်ခါ
   all: အားလုံး

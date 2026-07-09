@@ -66,12 +66,13 @@ These are Python's reserved words translated to Japanese.
 | `with` | `with文` |
 | `yield` | `生成する` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Japanese.
 
 | English | Japanese |
 | ------- | ------ |
+| `__import__` | `__インポート__` |
 | `abs` | `絶対値` |
 | `aiter` | `非同期イテレーター` |
 | `all` | `すべて` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Japanese.
 | `sum` | `合計` |
 | `super` | `スーパー` |
 | `tuple` | `タプル` |
-| `type` | `type` |
+| `type` | `型` |
 | `vars` | `変数` |
 | `zip` | `ジップ` |
 

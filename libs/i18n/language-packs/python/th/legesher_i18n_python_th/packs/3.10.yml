@@ -40,6 +40,7 @@ keywords:
   match: เทคนิคการตรวจสอบแบบฉลาด
   case: การตอน
 builtins:
+  __import__: __นำเข้า__
   abs: ฟังก์ชันabs
   all: ทุกอย่าง
   any: ใช่
@@ -87,6 +88,7 @@ builtins:
   slice: ซิก
   sorted: ที่จัดการ
   sum: เก็บรวม
+  type: ชนิด
   vars: แทรกซับ
   zip: ซิป
   bool: บูล

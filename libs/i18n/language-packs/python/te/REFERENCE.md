@@ -66,12 +66,13 @@ These are Python's reserved words translated to Telugu.
 | `with` | `తో` |
 | `yield` | `అందించు` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Telugu.
 
 | English | Telugu |
 | ------- | ------ |
+| `__import__` | `__దిగుమతి__` |
 | `abs` | `సంపూర్ణమానం` |
 | `aiter` | `అసమకాలికపునరావృత్తి` |
 | `all` | `అన్నీ` |

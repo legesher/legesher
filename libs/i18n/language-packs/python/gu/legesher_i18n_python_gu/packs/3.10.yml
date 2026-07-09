@@ -40,6 +40,7 @@ keywords:
   with: સાથે
   yield: ઉત્પન્ન
 builtins:
+  __import__: __આયાત__
   abs: નિરપેક્ષ
   aiter: અસમપુનરાવર્તક
   all: બધા

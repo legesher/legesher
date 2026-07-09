@@ -66,12 +66,13 @@ These are Python's reserved words translated to Thai.
 | `with` | `ใช้กับ` |
 | `yield` | `ซอยเดินผ่าน` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Thai.
 
 | English | Thai |
 | ------- | ------ |
+| `__import__` | `__นำเข้า__` |
 | `abs` | `ฟังก์ชันabs` |
 | `aiter` | `aiterator` |
 | `all` | `ทุกอย่าง` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Thai.
 | `sum` | `เก็บรวม` |
 | `super` | `เซฟ่า` |
 | `tuple` | `ตัวเลือด` |
-| `type` | `type` |
+| `type` | `ชนิด` |
 | `vars` | `แทรกซับ` |
 | `zip` | `ซิป` |
 

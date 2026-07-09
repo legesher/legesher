@@ -40,6 +40,7 @@ keywords:
   match: 매치
   case: 케이스
 builtins:
+  __import__: __가져오기__
   abs: 절댓값
   all: 모두
   any: 어떤
@@ -87,6 +88,7 @@ builtins:
   slice: 슬라이스
   sorted: 정렬된
   sum: 합계
+  type: 타입
   vars: 변수
   zip: 자바
   bool: 부울

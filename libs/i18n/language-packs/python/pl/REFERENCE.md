@@ -66,12 +66,13 @@ These are Python's reserved words translated to Polish.
 | `with` | `przy` |
 | `yield` | `wprowadzać` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Polish.
 
 | English | Polish |
 | ------- | ------ |
+| `__import__` | `__importuj__` |
 | `abs` | `wartosc_bez_znaku` |
 | `aiter` | `asynchroniczny_iterator` |
 | `all` | `wszystkie` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Polish.
 | `sum` | `suma` |
 | `super` | `superKlasy` |
 | `tuple` | `krotka` |
-| `type` | `type` |
+| `type` | `typ` |
 | `vars` | `zmienne` |
 | `zip` | `zipped` |
 

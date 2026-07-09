@@ -66,12 +66,13 @@ These are Python's reserved words translated to Finnish.
 | `with` | `jäsen` |
 | `yield` | `yields` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Finnish.
 
 | English | Finnish |
 | ------- | ------ |
+| `__import__` | `__tuo__` |
 | `abs` | `absoluuti` |
 | `aiter` | `aiteri` |
 | `all` | `kaikki` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Finnish.
 | `sum` | `summa` |
 | `super` | `yläluokka` |
 | `tuple` | `tupla` |
-| `type` | `type` |
+| `type` | `tyyppi` |
 | `vars` | `variaable` |
 | `zip` | `sijoita` |
 
@@ -170,7 +171,7 @@ Exception classes for error handling.
 | `environmenterror` | `ympäröivävirhe` |
 | `eoferror` | `väärinvalintaa` |
 | `exception` | `ohje` |
-| `exceptiongroup` | `ohje` |
+| `exceptiongroup` | `poikkeusryhmä` |
 | `fileexistserror` | `tietolaman_väärin_määritelystä` |
 | `filenotfounderror` | `tietystäpuuttumatonvirhe` |
 | `floatingpointerror` | `floatpointerrori` |

@@ -40,6 +40,7 @@ keywords:
   with: хамт
   yield: үүсгэх
 builtins:
+  __import__: __импортлох__
   abs: абсолют
   aiter: асинхрондавтагч
   all: бүгд

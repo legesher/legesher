@@ -40,6 +40,7 @@ keywords:
   match: eşleş
   case: vaka
 builtins:
+  __import__: __içeaktar__
   abs: mutlakDeğer
   all: herşey
   any: herhangibir
@@ -87,6 +88,7 @@ builtins:
   slice: kesme
   sorted: sıralı
   sum: toplam
+  type: tür
   vars: değişkenler
   zip: birleştir
   bool: mantıksal

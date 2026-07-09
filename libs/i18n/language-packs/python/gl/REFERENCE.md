@@ -66,12 +66,13 @@ These are Python's reserved words translated to Galician.
 | `with` | `con` |
 | `yield` | `ceder` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Galician.
 
 | English | Galician |
 | ------- | ------ |
+| `__import__` | `__importar__` |
 | `abs` | `absoluto` |
 | `aiter` | `aiterador` |
 | `all` | `todos` |

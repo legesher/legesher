@@ -40,6 +40,7 @@ keywords:
   with: s
   yield: vydej
 builtins:
+  __import__: __importovat__
   abs: absolutní
   aiter: aitérátor
   all: vše

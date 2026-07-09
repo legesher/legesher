@@ -40,6 +40,7 @@ keywords:
   with: 跟
   yield: 产生
 builtins:
+  __import__: __导入__
   abs: 绝对值
   aiter: 异步迭代器
   all: 全

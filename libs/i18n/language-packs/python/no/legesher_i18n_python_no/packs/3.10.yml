@@ -40,6 +40,7 @@ keywords:
   match: matching
   case: sak
 builtins:
+  __import__: __importer__
   abs: absoluttvurdere
   all: alle
   any: enhver
@@ -87,6 +88,7 @@ builtins:
   slice: slices
   sorted: sorteret
   sum: summe
+  type: objekt_type
   vars: variabler
   zip: zippe
   bool: boolean

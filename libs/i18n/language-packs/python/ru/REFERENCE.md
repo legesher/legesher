@@ -66,12 +66,13 @@ These are Python's reserved words translated to Russian.
 | `with` | `с` |
 | `yield` | `приводить` |
 
-## Built-in Functions (71 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Russian.
 
 | English | Russian |
 | ------- | ------ |
+| `__import__` | `__импорт__` |
 | `abs` | `абсолютноезначение` |
 | `aiter` | `айтер` |
 | `all` | `все` |
@@ -141,7 +142,7 @@ Python's built-in functions and types in Russian.
 | `sum` | `сумма` |
 | `super` | `супер` |
 | `tuple` | `кортеж` |
-| `type` | `type` |
+| `type` | `тип` |
 | `vars` | `переменные` |
 | `zip` | `сжатие` |
 

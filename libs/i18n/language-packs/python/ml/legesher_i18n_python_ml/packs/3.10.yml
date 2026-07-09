@@ -40,6 +40,7 @@ keywords:
   with: ഉപയോഗിച്ച്
   yield: വിളവ്
 builtins:
+  __import__: __ഇറക്കുമതി__
   abs: സമ്പൂർണ്ണമൂല്യം
   aiter: അസമന്വിതആവർത്തകം
   all: എല്ലാം

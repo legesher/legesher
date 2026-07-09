@@ -40,6 +40,7 @@ keywords:
   match: ταυτοποίηση_μοτίβου
   case: περίπτωση
 builtins:
+  __import__: __εισαγωγή__
   abs: απόλυτητιμή
   all: όλους
   any: οποιοσδήποτε
@@ -87,6 +88,7 @@ builtins:
   slice: τοτμήμα
   sorted: ταξινομημένος
   sum: άρθροισμα
+  type: τύπος
   vars: variabiles
   zip: συνδεις
   bool: μπουλ

@@ -40,6 +40,7 @@ keywords:
   with: avec
   yield: dégager
 builtins:
+  __import__: __importer__
   abs: labsolu
   aiter: iterer
   all: tout
@@ -109,6 +110,7 @@ builtins:
   sum: somme
   super: classe_parente
   tuple: sequence_ordonnee_inmutabble
+  type: retourne_type
   vars: variables
   zip: zipper
 exceptions:

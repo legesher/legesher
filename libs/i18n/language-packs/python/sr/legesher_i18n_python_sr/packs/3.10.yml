@@ -40,6 +40,7 @@ keywords:
   with: са
   yield: произведи
 builtins:
+  __import__: __увоз__
   abs: апсолутно
   aiter: аитератор
   all: све

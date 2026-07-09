@@ -66,12 +66,13 @@ These are Python's reserved words translated to Amharic.
 | `with` | `በ` |
 | `yield` | `አስገኝ` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Amharic.
 
 | English | Amharic |
 | ------- | ------ |
+| `__import__` | `__አስገባ__` |
 | `abs` | `ፍጹም` |
 | `aiter` | `ያልተመሳሰለድጋሚ` |
 | `all` | `ሁሉም` |

@@ -40,6 +40,7 @@ keywords:
   match: overeenkomst
   case: geval
 builtins:
+  __import__: __importeer__
   abs: absoluut
   all: alles
   any: enige
@@ -87,6 +88,7 @@ builtins:
   slice: slicen
   sorted: gesorteerd
   sum: som
+  type: soort
   vars: variabelen
   zip: zippen
   bool: waarheid

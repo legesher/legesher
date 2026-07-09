@@ -66,12 +66,13 @@ These are Python's reserved words translated to Czech.
 | `with` | `s` |
 | `yield` | `vydej` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Czech.
 
 | English | Czech |
 | ------- | ------ |
+| `__import__` | `__importovat__` |
 | `abs` | `absolutní` |
 | `aiter` | `aitérátor` |
 | `all` | `vše` |

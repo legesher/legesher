@@ -5,7 +5,7 @@ extends: 3.10.yml
 keywords:
   except*: exceptiivi
 exceptions:
-  exceptiongroup: ohje
+  exceptiongroup: poikkeusryhmä
   baseexceptiongroup: baseexceptiongroupin
 metadata:
   python_version_min: '3.11'

@@ -66,12 +66,13 @@ These are Python's reserved words translated to Burmese.
 | `with` | `နှင့်အတူ` |
 | `yield` | `ထုတ်ပေး` |
 
-## Built-in Functions (72 terms)
+## Built-in Functions (73 terms)
 
 Python's built-in functions and types in Burmese.
 
 | English | Burmese |
 | ------- | ------ |
+| `__import__` | `__တင်သွင်း__` |
 | `abs` | `ကိန်းပြည့်တန်ဖိုး` |
 | `aiter` | `အချိန်မတူထပ်ခါ` |
 | `all` | `အားလုံး` |

@@ -40,6 +40,7 @@ keywords:
   match: సరిపోల్చు
   case: సందర్భం
 builtins:
+  __import__: __దిగుమతి__
   abs: సంపూర్ణమానం
   all: అన్నీ
   any: ఏదైనా
