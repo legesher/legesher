@@ -9,6 +9,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **`PromptBuilder` consumes the rules/profile style guide.**
+  `_build_style_guide_section` now renders the fields the field reference marks
+  as prompt-consumed: `naming.case_substitute` (plus the conventions the script
+  can express, read from the `supports` flags), `script.name` /
+  `script.direction` / `script.constraints`, and the `formatting` rules. It no
+  longer reads the removed `translation` block — word choices, symbol names, and
+  boolean constants come from the language packs, not the style guide. This
+  activates the guides that were inert: CORE-1392/1393/1394 built the schema,
+  the guides, and the loader; this is the consumer that puts them into the
+  prompt.
+
 ## [0.17.1] - 2026-07-09
 
 ## [0.17.0] - 2026-07-09

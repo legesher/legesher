@@ -186,16 +186,7 @@ class TestSystemPromptContainsStyleGuide:
         )
         assert "Naming Conventions" in system
 
-    @pytest.mark.xfail(
-        reason="CORE-1398 moved vocabulary (translation conventions) out of the "
-        "style guides and into the language packs, so the guide no longer carries "
-        "a `translation` block for PromptBuilder to render. Re-sourcing that "
-        "guidance from the packs — or dropping the section — is decided in "
-        "CORE-1395 (PromptBuilder consumption of the rules/profile schema), which "
-        "will resolve this xfail.",
-        strict=False,
-    )
-    def test_contains_translation_conventions(
+    def test_contains_script_section(
         self,
         builder: PromptBuilder,
         sample_identifiers: list[dict[str, Any]],
@@ -205,7 +196,76 @@ class TestSystemPromptContainsStyleGuide:
             target_lang="es",
             existing_glossary={},
         )
-        assert "Translation Conventions" in system
+        assert "### Script" in system
+        assert "Writing system: Latin" in system
+
+    def test_contains_script_constraints(
+        self,
+        builder: PromptBuilder,
+        sample_identifiers: list[dict[str, Any]],
+    ) -> None:
+        # A leaf guide's script.constraints reach the prompt verbatim (here es's
+        # digits line — Spanish has no native digits, so it prescribes ASCII 0-9).
+        system, _ = builder.build_identifier_prompt(
+            identifiers=sample_identifiers,
+            target_lang="es",
+            existing_glossary={},
+        )
+        assert "ASCII 0-9" in system
+
+    def test_capabilities_reflect_supports_flags(
+        self,
+        builder: PromptBuilder,
+        sample_identifiers: list[dict[str, Any]],
+    ) -> None:
+        # A cased script (es) can express all four conventions — assert the whole
+        # rendered line so a dropped convention or reordering is caught.
+        cased, _ = builder.build_identifier_prompt(
+            identifiers=sample_identifiers, target_lang="es", existing_glossary={}
+        )
+        assert (
+            "Conventions this script can express: "
+            "snake_case, UPPER_SNAKE_CASE, CapWords, camelCase." in cased
+        )
+        # ... a caseless one only snake_case.
+        caseless, _ = builder.build_identifier_prompt(
+            identifiers=sample_identifiers, target_lang="zh", existing_glossary={}
+        )
+        assert "Conventions this script can express: snake_case." in caseless
+
+    def test_caseless_target_emits_morphology_note(
+        self,
+        builder: PromptBuilder,
+        sample_identifiers: list[dict[str, Any]],
+    ) -> None:
+        system, _ = builder.build_identifier_prompt(
+            identifiers=sample_identifiers, target_lang="zh", existing_glossary={}
+        )
+        assert "This script has no letter case" in system
+
+    def test_no_translation_conventions_section(
+        self,
+        builder: PromptBuilder,
+        sample_identifiers: list[dict[str, Any]],
+    ) -> None:
+        # Vocabulary moved to the packs (CORE-1398); the prompt no longer renders
+        # a translation-conventions block from the style guide (CORE-1395).
+        system, _ = builder.build_identifier_prompt(
+            identifiers=sample_identifiers, target_lang="es", existing_glossary={}
+        )
+        assert "Translation Conventions" not in system
+
+    def test_structural_only_guide_reports_unavailable(
+        self,
+        builder: PromptBuilder,
+    ) -> None:
+        # A code with no dedicated guide ("xx") resolves to base + direction
+        # structural nodes only (no naming/script/formatting), so the section
+        # reports unavailable rather than emitting an empty Style Guide block.
+        section = builder._build_style_guide_section("xx")
+        assert (
+            section == "## Style Guide\n\nNo style guide available for this language."
+        )
 
 
 # ------------------------------------------------------------------

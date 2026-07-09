@@ -9,6 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **i18n**: `PromptBuilder` renders the resolved style guide's rules/profile
+  into the translation system prompt — the naming case-substitute strategy and
+  the conventions the script can express, the script identity + constraints, and
+  the formatting rules. It no longer emits a vocabulary / translation-conventions
+  block (word choices live in the language packs), activating the previously
+  inert guides.
+
 ## [0.17.1] - 2026-07-09
 
 ### Fixed

@@ -434,32 +434,41 @@ class PromptBuilder:
         )
 
     def _build_style_guide_section(self, target_lang: str) -> str:
-        """Format the loaded style guide into readable prompt text."""
+        """Render the resolved style guide into readable prompt text.
+
+        Emits the rules/profile fields the field reference (CORE-1392) marks as
+        prompt-consumed: the naming case-substitute strategy plus the
+        conventions the script can express, the script identity and its
+        constraints, and the formatting rules. Vocabulary is deliberately
+        absent — word choices and symbol names come from the language pack, not
+        the style guide.
+        """
         guide = self._loader.load(target_lang)
         if not guide:
             return "## Style Guide\n\nNo style guide available for this language."
 
         parts: list[str] = ["## Style Guide"]
 
-        # Naming conventions
-        naming = guide.get("naming", {})
-        if naming:
-            parts.append(self._format_naming_rules(naming))
+        # Naming conventions — case-substitute strategy + expressible conventions.
+        naming = guide.get("naming")
+        if isinstance(naming, dict) and naming:
+            parts.append(self._format_naming_rules(naming, guide.get("supports", {})))
 
-        # Script requirements
-        script = guide.get("script", {})
-        if script:
+        # Script identity + the constraints its characters impose.
+        script = guide.get("script")
+        if isinstance(script, dict) and script:
             parts.append(self._format_script_rules(script))
 
-        # Translation conventions
-        translation = guide.get("translation", {})
-        if translation:
-            parts.append(self._format_translation_rules(translation))
-
-        # Formatting rules
-        formatting = guide.get("formatting", {})
-        if formatting:
+        # Formatting rules.
+        formatting = guide.get("formatting")
+        if isinstance(formatting, dict) and formatting:
             parts.append(self._format_formatting_rules(formatting))
+
+        # A language with no dedicated guide resolves to structural-only nodes
+        # (base + direction) that carry none of the renderable sections. Treat
+        # that as "no guide" rather than emitting an empty Style Guide block.
+        if len(parts) == 1:
+            return "## Style Guide\n\nNo style guide available for this language."
 
         return "\n\n".join(parts)
 
@@ -526,135 +535,93 @@ class PromptBuilder:
     # Style guide formatting helpers
     # ------------------------------------------------------------------
 
-    def _format_naming_rules(self, naming: dict[str, Any]) -> str:
-        """Format the naming conventions section."""
+    def _format_naming_rules(
+        self, naming: dict[str, Any], supports: dict[str, Any]
+    ) -> str:
+        """Format the naming-convention rules from the rules/profile schema.
+
+        Renders the case-substitute strategy (how a caseless script stands in
+        for PEP 8 casing) and, from the ``supports`` flags, the case-based
+        conventions the script can actually express.
+        """
         lines = ["### Naming Conventions"]
-        for key, value in naming.items():
-            if isinstance(value, dict):
-                usage = value.get("usage", "")
-                rule = value.get("rule", "")
-                unicode_note = value.get("unicode", "")
-                detail = value.get("detail", "")
 
-                header = key.replace("_", " ").title()
-                lines.append(f"\n**{header}**")
-                if usage:
-                    lines.append(f"- Usage: {usage}")
-                if rule:
-                    lines.append(f"- Rule: {rule}")
-                if unicode_note:
-                    lines.append(f"- Unicode: {unicode_note}")
-                if detail:
-                    lines.append(f"- {detail.strip()}")
+        substitute = naming.get("case_substitute")
+        if substitute == "morphology":
+            lines.append(
+                "- This script has no letter case. Where PEP 8 leans on case to "
+                "signal role (CapWords classes, UPPER_SNAKE constants), rely on "
+                "word choice and context instead; join a multi-word name with "
+                "underscores."
+            )
+        elif substitute == "not_needed":
+            lines.append(
+                "- This script has letter case; apply PEP 8 casing directly "
+                "(snake_case, CapWords, UPPER_SNAKE_CASE)."
+            )
 
-                examples = value.get("examples", [])
-                if examples:
-                    for ex in examples:
-                        lines.append(f"  - e.g. {ex}")
-            elif isinstance(value, str):
-                lines.append(f"- {key}: {value}")
+        detail = naming.get("detail")
+        if isinstance(detail, str) and detail.strip():
+            lines.append(f"- {detail.strip()}")
+
+        if isinstance(supports, dict):
+            available = [
+                label
+                for flag, label in (
+                    ("snake_case", "snake_case"),
+                    ("upper_snake_case", "UPPER_SNAKE_CASE"),
+                    ("pascal_case", "CapWords"),
+                    ("camel_case", "camelCase"),
+                )
+                if supports.get(flag)
+            ]
+            if available:
+                lines.append(
+                    "- Conventions this script can express: "
+                    + ", ".join(available)
+                    + "."
+                )
 
         return "\n".join(lines)
 
     def _format_script_rules(self, script: dict[str, Any]) -> str:
-        """Format the script/character requirements section."""
-        lines = ["### Script Requirements"]
+        """Format the script identity and the constraints its characters impose."""
+        lines = ["### Script"]
 
-        native = script.get("native_required")
-        if native is not None:
-            lines.append(f"- Native script required: {native}")
+        name = script.get("name")
+        if isinstance(name, str) and name.strip():
+            dir_word = {"rtl": "right-to-left", "ltr": "left-to-right"}.get(
+                script.get("direction"), ""
+            )
+            suffix = f" ({dir_word})" if dir_word else ""
+            lines.append(f"- Writing system: {name.strip()}{suffix}")
 
-        detail = script.get("detail", "")
-        if detail:
-            lines.append(f"- {detail.strip()}")
-
-        latin = script.get("latin_mixing", {})
-        if isinstance(latin, dict) and latin.get("rule"):
-            lines.append(f"- Latin mixing: {latin['rule'].strip()}")
-
-        accent = script.get("accent_handling", {})
-        if isinstance(accent, dict) and accent.get("rule"):
-            lines.append(f"- Accents: {accent['rule'].strip()}")
-
-        bidi = script.get("bidirectional", {})
-        if isinstance(bidi, dict):
-            handling = bidi.get("handling", "")
-            bidi_detail = bidi.get("detail", "")
-            if handling:
-                lines.append(f"- Bidirectional handling: {handling}")
-            if bidi_detail:
-                lines.append(f"  {bidi_detail.strip()}")
-
-        return "\n".join(lines)
-
-    def _format_translation_rules(self, translation: dict[str, Any]) -> str:
-        """Format the translation conventions section."""
-        lines = ["### Translation Conventions"]
-
-        register = translation.get("register", "")
-        if register:
-            lines.append(f"- Register: {register}")
-
-        detail = translation.get("detail", "")
-        if detail:
-            lines.append(f"- {detail.strip()}")
-
-        for section_key in (
-            "verb_form",
-            "noun_form",
-            "boolean_constants",
-            "type_constructors",
-            "transliteration",
-            "compound_consistency",
-        ):
-            section = translation.get(section_key, {})
-            if not isinstance(section, dict):
-                continue
-
-            header = section_key.replace("_", " ").title()
-            lines.append(f"\n**{header}**")
-
-            for k, v in section.items():
-                if k == "examples":
-                    for ex in v:
-                        lines.append(f"  - e.g. {ex}")
-                elif k == "pattern_families":
-                    for pf in v:
-                        lines.append(f"  - {pf}")
-                elif isinstance(v, str):
-                    lines.append(f"- {k}: {v.strip()}")
+        constraints = script.get("constraints")
+        if isinstance(constraints, list):
+            for constraint in constraints:
+                if isinstance(constraint, str) and constraint.strip():
+                    lines.append(f"- {constraint.strip()}")
 
         return "\n".join(lines)
 
     def _format_formatting_rules(self, formatting: dict[str, Any]) -> str:
-        """Format the formatting conventions section."""
-        lines = ["### Formatting Rules"]
+        """Format the formatting rules from the rules/profile schema."""
+        lines = ["### Formatting"]
 
-        prefix = formatting.get("comment_prefix", "")
-        if prefix:
-            lines.append(f"- Comment prefix: ``{prefix}``")
+        prefix = formatting.get("comment_prefix")
+        if isinstance(prefix, str) and prefix:
+            lines.append(f"- Comments start with `{prefix}`.")
 
-        docstring = formatting.get("docstring_style", {})
-        if isinstance(docstring, dict) and docstring.get("rule"):
-            lines.append(f"- Docstrings: {docstring['rule'].strip()}")
-            doc_detail = docstring.get("detail", "")
-            if doc_detail:
-                lines.append(f"  {doc_detail.strip()}")
+        if formatting.get("programming_punctuation") == "ascii_only":
+            lines.append(
+                "- Use ASCII punctuation for all code syntax — operators, "
+                "brackets, quotes, and separators stay ASCII even when the "
+                "identifiers around them are not."
+            )
 
-        punctuation = formatting.get("punctuation", {})
-        if isinstance(punctuation, dict) and punctuation.get("rule"):
-            lines.append(f"- Punctuation: {punctuation['rule'].strip()}")
-
-        line_length = formatting.get("line_length", {})
-        if isinstance(line_length, dict) and line_length.get("rule"):
-            lines.append(f"- Line length: {line_length['rule'].strip()}")
-            note = line_length.get("note", "")
-            if note:
-                lines.append(f"  Note: {note.strip()}")
-
-        alignment = formatting.get("alignment", {})
-        if isinstance(alignment, dict) and alignment.get("rule"):
-            lines.append(f"- Alignment: {alignment['rule'].strip()}")
+        docstrings = formatting.get("docstrings")
+        if isinstance(docstrings, str) and docstrings.strip():
+            lines.append(f"- Docstrings: {docstrings.strip()}")
 
         return "\n".join(lines)
 
