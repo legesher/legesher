@@ -9,6 +9,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **`StyleGuideLoader` now resolves the full `extends` chain; the pack gate
+  gained an ASCII-digit check.** The loader follows each guide's declared
+  `extends` list transitively (base → direction → script-family → language) with
+  de-duplication and cycle detection, so the script-family overlays are
+  consulted for their member languages — this supersedes the 0.14.0 note that
+  the chain was "declarative for now." Parsed files are cached (each was read
+  2–3× per load) and unsafe `extends` targets (path separators / `..`) are
+  rejected. `SchemaValidator.validate_pack_strict` gained `check_ascii_digits`
+  (identifiers must use ASCII digits 0-9) and stays safety-only: stylistic
+  preferences such as identifier length are guidance for the translation prompt
+  (CORE-1395), not pack warnings.
+
 ## [0.16.0] - 2026-07-09
 
 ### Added

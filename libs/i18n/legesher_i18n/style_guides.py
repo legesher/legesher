@@ -1,15 +1,20 @@
-"""Style guide loader for translation pipeline.
+"""Style guide loader for the translation pipeline.
 
-This module loads and merges hierarchical YAML style guide files
-that define language-specific translation conventions. Style guides
-follow a three-level hierarchy:
+Loads and deep-merges the hierarchical YAML style guides that describe, per
+language, the Python conventions its script can express — the rules/profile
+schema: ``supports`` capability flags, ``naming`` rules, ``script``
+constraints, and a rendering font. A language guide declares an ``extends``
+chain that is resolved in full before merging:
 
-  1. ``python.yml`` — base rules for all Python translations
-  2. ``_ltr.yml`` or ``_rtl.yml`` — direction-specific rules
-  3. ``{lang}.yml`` — language-specific overrides (optional)
+  1. ``python.yml`` — the base every guide extends
+  2. ``_ltr.yml`` / ``_rtl.yml`` — the writing-direction layer
+  3. ``_cjk.yml`` / ``_arabic.yml`` / … — the script-family overlay (optional)
+  4. ``{lang}.yml`` — the language guide itself
 
-Each level deep-merges on top of the previous, with later files
-winning on key conflicts.
+Each level deep-merges on top of the previous, with later files winning on key
+conflicts. The overlays are content-free structural nodes, so a merged guide's
+rules come from the leaf language file; the chain still determines which files
+are consulted and in what order.
 """
 
 from __future__ import annotations
@@ -23,6 +28,10 @@ from typing import Any
 import yaml
 
 _LANG_CODE_RE = re.compile(r"^[a-z]{2,3}$")
+# A style-guide filename an ``extends`` entry may name: a bare ``{code}.yml`` /
+# ``python.yml`` / ``_overlay.yml``, no path separators or ``..``. Entries that
+# fail this are dropped, so a guide can never steer the loader outside its dir.
+_SAFE_OVERLAY_NAME = re.compile(r"^_?[a-z0-9][a-z0-9_-]*\.ya?ml$")
 
 logger = logging.getLogger(__name__)
 
@@ -31,16 +40,16 @@ _LANGUAGES_JSON = Path(__file__).parent / "languages.json"
 
 
 class StyleGuideLoader:
-    """Load and merge hierarchical YAML style guide files.
+    """Load and deep-merge the hierarchical YAML style guides.
 
-    Style guides provide translation conventions organised in a three-level
-    hierarchy: base (Python), then direction (LTR or RTL), then
-    language-specific overrides. Each level deep-merges on top of the
-    previous, with later files winning on key conflicts.
+    A language guide is assembled from its declared ``extends`` chain — base
+    (``python.yml``) → direction (``_ltr``/``_rtl``) → optional script-family
+    overlay (``_cjk``, ``_arabic``, …) → the language file. Each level
+    deep-merges on top of the previous, later files winning on key conflicts.
 
     Example:
         >>> loader = StyleGuideLoader()
-        >>> guide = loader.load("ar")  # merges python.yml + _rtl.yml + ar.yml
+        >>> guide = loader.load("ar")  # python.yml + _rtl.yml + _arabic.yml + ar.yml
         >>> guide["formatting"]["comment_prefix"]
         '#'
     """
@@ -59,6 +68,10 @@ class StyleGuideLoader:
 
         self._rtl_languages: set[str] | None = None
         self._cache: dict[str, dict[str, Any]] = {}
+        # Parsed-file cache: a single file is read for its ``extends`` during
+        # chain resolution and again for its body during the merge, so parse
+        # each path at most once per loader instance.
+        self._file_cache: dict[str, dict[str, Any] | None] = {}
         logger.info("StyleGuideLoader initialised: %s", self.style_guides_dir)
 
     # ------------------------------------------------------------------
@@ -92,31 +105,13 @@ class StyleGuideLoader:
         merged: dict[str, Any] = {}
 
         for path in hierarchy:
-            if not path.exists():
-                logger.warning("Style guide file not found, skipping: %s", path)
+            data = self._load_yaml(path)
+            if data is None:
                 continue
-
-            try:
-                with open(path, encoding="utf-8") as fh:
-                    data = yaml.safe_load(fh)
-
-                if not isinstance(data, dict):
-                    logger.warning(
-                        "Style guide file did not parse as a dict, skipping: %s",
-                        path,
-                    )
-                    continue
-
-                merged = self._deep_merge(merged, data)
-                logger.debug(
-                    "Loaded style guide: %s (%d top-level keys)",
-                    path.name,
-                    len(data),
-                )
-            except yaml.YAMLError as exc:
-                logger.error("Error parsing style guide %s: %s", path, exc)
-            except OSError as exc:
-                logger.error("Error reading style guide %s: %s", path, exc)
+            merged = self._deep_merge(merged, data)
+            logger.debug(
+                "Merged style guide: %s (%d top-level keys)", path.name, len(data)
+            )
 
         self._cache[language_code] = merged
         return merged
@@ -159,19 +154,27 @@ class StyleGuideLoader:
     def _resolve_hierarchy(self, language_code: str) -> list[Path]:
         """Determine the ordered list of style guide files to load.
 
-        The hierarchy is always:
-          1. ``python.yml`` (base — required)
-          2. ``_rtl.yml`` or ``_ltr.yml`` (direction layer)
-          3. ``{language_code}.yml`` (language-specific — optional)
+        When a ``{language_code}.yml`` guide exists, its declared ``extends``
+        chain is resolved in full — base → direction → script-family → language
+        — by following each file's ``extends`` list transitively. This is what
+        pulls a script-family overlay (``_cjk.yml``, ``_arabic.yml``, …) into
+        the merge for its member languages. The chain is de-duplicated (a file
+        shared by several ancestors is merged once, at its earliest position)
+        and cycle-detected.
+
+        When no language guide exists, the loader falls back to the fixed
+        ``python.yml`` → ``_rtl.yml``/``_ltr.yml`` hierarchy so callers still
+        get base + direction conventions.
 
         Args:
             language_code: ISO 639-1 language code.
 
         Returns:
-            Ordered list of file paths to load and merge.
+            Ordered list of file paths to load and merge, base-first.
 
         Raises:
             FileNotFoundError: If ``python.yml`` does not exist.
+            ValueError: If the ``extends`` graph contains a cycle.
         """
         base = self.style_guides_dir / "python.yml"
         if not base.exists():
@@ -179,26 +182,109 @@ class StyleGuideLoader:
                 f"Base style guide not found: {base}. The python.yml file is required."
             )
 
-        hierarchy: list[Path] = [base]
-
-        # Direction layer
-        if self._is_rtl(language_code):
-            hierarchy.append(self.style_guides_dir / "_rtl.yml")
-        else:
-            hierarchy.append(self.style_guides_dir / "_ltr.yml")
-
-        # Language-specific layer
         lang_file = self.style_guides_dir / f"{language_code}.yml"
         if lang_file.exists():
-            hierarchy.append(lang_file)
-        else:
-            logger.debug(
-                "No language-specific style guide for '%s' — "
-                "using base + direction only",
-                language_code,
-            )
+            if self._read_extends(lang_file):
+                return self._resolve_extends_chain(lang_file)
+            # Guide exists but declares no ``extends`` (or is malformed): fall
+            # back to the fixed base → direction → language hierarchy so it
+            # still inherits the base and direction layers.
+            direction = "_rtl.yml" if self._is_rtl(language_code) else "_ltr.yml"
+            return [base, self.style_guides_dir / direction, lang_file]
 
-        return hierarchy
+        # No language-specific guide — base + direction only.
+        logger.debug(
+            "No language-specific style guide for '%s' — using base + direction only",
+            language_code,
+        )
+        direction = "_rtl.yml" if self._is_rtl(language_code) else "_ltr.yml"
+        return [base, self.style_guides_dir / direction]
+
+    def _resolve_extends_chain(self, lang_file: Path) -> list[Path]:
+        """Resolve a guide's full ``extends`` chain into an ordered file list.
+
+        Performs a post-order traversal of the ``extends`` graph so ancestors
+        are merged before the files that extend them, appending *lang_file*
+        last. Each file appears once (first-seen position wins). A file that
+        appears in its own ancestry raises ``ValueError``.
+        """
+        ordered: list[Path] = []
+        seen: set[str] = set()
+
+        def visit(path: Path, stack: tuple[str, ...]) -> None:
+            if path.name in stack:
+                cycle = " -> ".join((*stack, path.name))
+                raise ValueError(f"Cyclic style-guide extends chain: {cycle}")
+            if path.name in seen:
+                return
+            for parent in self._read_extends(path):
+                visit(self.style_guides_dir / parent, (*stack, path.name))
+            seen.add(path.name)
+            ordered.append(path)
+
+        visit(lang_file, ())
+        return ordered
+
+    def _load_yaml(self, path: Path) -> dict[str, Any] | None:
+        """Parse a style-guide file once per loader, caching the result.
+
+        The resolver reads a file's ``extends`` and the merge step reads its
+        body, so without caching each file is parsed several times per
+        :meth:`load`. Returns the parsed mapping, or ``None`` when the file is
+        missing, unreadable, or does not parse to a dict.
+        """
+        key = str(path)
+        if key in self._file_cache:
+            return self._file_cache[key]
+
+        result: dict[str, Any] | None = None
+        if not path.exists():
+            logger.warning("Style guide file not found, skipping: %s", path)
+        else:
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    data = yaml.safe_load(fh)
+                if isinstance(data, dict):
+                    result = data
+                else:
+                    logger.warning(
+                        "Style guide file did not parse as a dict, skipping: %s",
+                        path,
+                    )
+            except yaml.YAMLError as exc:
+                logger.error("Error parsing style guide %s: %s", path, exc)
+            except OSError as exc:
+                logger.error("Error reading style guide %s: %s", path, exc)
+
+        self._file_cache[key] = result
+        return result
+
+    def _read_extends(self, path: Path) -> list[str]:
+        """Return the validated ``extends`` list declared in a style guide file.
+
+        Missing files, parse errors, and a missing/invalid ``extends`` key all
+        yield an empty list — resolution treats them as roots rather than
+        failing, and the merge step logs any file it then cannot read. Each
+        entry must be a bare style-guide filename (:data:`_SAFE_OVERLAY_NAME`);
+        an entry with a path separator or ``..`` is dropped with a warning, so a
+        guide can never make the loader read outside its directory.
+        """
+        data = self._load_yaml(path)
+        if not (isinstance(data, dict) and isinstance(data.get("extends"), list)):
+            return []
+        parents: list[str] = []
+        for entry in data["extends"]:
+            name = str(entry)
+            if _SAFE_OVERLAY_NAME.match(name):
+                parents.append(name)
+            else:
+                logger.warning(
+                    "Ignoring unsafe extends entry %r in %s "
+                    "(must be a bare style-guide filename)",
+                    name,
+                    path,
+                )
+        return parents
 
     def _deep_merge(
         self, base: dict[str, Any], override: dict[str, Any]

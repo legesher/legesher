@@ -9,6 +9,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **i18n**: `StyleGuideLoader` resolves the full script-family `extends` chain
+  (base → direction → family → language) with cycle detection, so overlays are
+  merged into member languages; parsed files are cached and unsafe `extends`
+  targets (path separators / `..`) are rejected. The pack validation gate gained
+  an ASCII-digit check and stays safety-only — identifier length and other
+  stylistic preferences are guidance for the translation prompt (CORE-1395),
+  not pack warnings.
+
 ## [0.16.0] - 2026-07-09
 
 ### Added

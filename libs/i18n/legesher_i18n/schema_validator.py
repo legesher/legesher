@@ -1047,7 +1047,7 @@ class SchemaValidator:
         """
         findings: list[Finding] = []
         for section, key, value in SchemaValidator._iter_translation_items(pack_schema):
-            core = value[:-1] if value.endswith("*") else value
+            core = SchemaValidator._strip_soft_keyword_marker(value)
             nfc = unicodedata.normalize("NFC", core)
             nfkc = unicodedata.normalize("NFKC", core)
             if core != nfc or core != nfkc:
@@ -1108,7 +1108,7 @@ class SchemaValidator:
             # Format chars (ZWJ/ZWNJ/bidi/BOM) are policed separately; strip the
             # language's explicitly-allowed ones so they don't muddy the script
             # set, and drop a trailing soft-keyword ``*``.
-            core = value[:-1] if value.endswith("*") else value
+            core = SchemaValidator._strip_soft_keyword_marker(value)
             cleaned = "".join(
                 ch for ch in core if ch not in policy.allowed_format_chars
             )
@@ -1218,7 +1218,7 @@ class SchemaValidator:
             if value == key:
                 continue
 
-            core = value[:-1] if value.endswith("*") else value
+            core = SchemaValidator._strip_soft_keyword_marker(value)
             folded = unicodedata.normalize("NFKC", core)
 
             for candidate in {core, folded}:
@@ -1419,13 +1419,64 @@ class SchemaValidator:
         return findings
 
     @staticmethod
+    def _strip_soft_keyword_marker(value: str) -> str:
+        """Drop the trailing ``*`` that marks a soft-keyword translation.
+
+        Soft keywords (``match``, ``case``, ``type``, ``_``) carry a trailing
+        ``*`` in pack values to flag that they are contextual keywords. The
+        marker is not part of the identifier, so it must be removed before a
+        value is normalized, script-checked, collision-checked, or measured.
+        """
+        return value[:-1] if value.endswith("*") else value
+
+    @staticmethod
+    def check_ascii_digits(pack_schema: "LanguagePackSchema") -> list["Finding"]:
+        """Flag identifiers that contain non-ASCII decimal digits.
+
+        Style guides require ASCII digits 0-9 in identifiers: native digit
+        systems (Arabic-Indic ٠-٩, Devanagari १-९, Thai ๑-๙, …) are
+        identifier-legal but mixing digit systems in one file is a UTS #39
+        confusable hazard and complicates bidi runs. Emitted as a warning (the
+        ASCII-digit policy is advisory). The trailing ``*`` of a soft-keyword
+        translation is stripped before scanning, matching the other checks.
+        """
+        findings: list[Finding] = []
+        for section, key, value in SchemaValidator._iter_translation_items(pack_schema):
+            core = SchemaValidator._strip_soft_keyword_marker(value)
+            bad = sorted(
+                {
+                    c
+                    for c in core
+                    if unicodedata.category(c) == "Nd" and not ("0" <= c <= "9")
+                }
+            )
+            if bad:
+                cps = ", ".join(f"U+{ord(c):04X}" for c in bad)
+                findings.append(
+                    Finding(
+                        severity="warning",
+                        code="non-ascii-digit",
+                        location=f"{section}.{key}",
+                        message=(
+                            f"Value '{core}' uses non-ASCII digit(s) ({cps}); "
+                            "identifiers must use ASCII digits 0-9."
+                        ),
+                    )
+                )
+        return findings
+
+    @staticmethod
     def validate_pack_strict(
         pack_schema: "LanguagePackSchema",
         language: str | None = None,
     ) -> list["Finding"]:
         """Run every safety check and return all Findings (empty == clean).
 
-        Aggregates, in order:
+        The gate is safety/correctness-only: every check flags something that
+        breaks code or is a Unicode/confusable hazard. Stylistic preferences
+        (e.g. identifier length) are guidance for the translation prompt
+        (PromptBuilder, CORE-1395), not pack warnings, so this takes no style
+        guide. Aggregates, in order:
 
         1. :meth:`check_normalization`
         2. :meth:`check_script_consistency`
@@ -1436,6 +1487,7 @@ class SchemaValidator:
            (via :meth:`_strict_duplicate_findings`, type==type allow-listed)
         7. the previously-dead :meth:`check_identifier_validity`
            (via :meth:`_strict_identifier_findings`)
+        8. :meth:`check_ascii_digits` — the ASCII-digit policy
 
         Args:
             pack_schema: Validated, inheritance-merged pack.
@@ -1455,4 +1507,5 @@ class SchemaValidator:
         findings += SchemaValidator.check_min_interpreter_identifier(pack_schema, lang)
         findings += SchemaValidator._strict_duplicate_findings(pack_schema)
         findings += SchemaValidator._strict_identifier_findings(pack_schema)
+        findings += SchemaValidator.check_ascii_digits(pack_schema)
         return findings
