@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-07-09
+
 ### Changed
 
 - **i18n**: `StyleGuideLoader` resolves the full script-family `extends` chain
@@ -206,9 +208,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.16.0  | Yes      |
-| legesher-i18n            | 0.16.0  | Yes      |
-| legesher (CLI)           | 0.16.0  | —        |
+| legesher-core            | 0.17.0  | Yes      |
+| legesher-i18n            | 0.17.0  | Yes      |
+| legesher (CLI)           | 0.17.0  | —        |
 | legesher-language-server | 0.1.3   | Yes      |
 | legesher-vscode          | 0.1.5   | —        |
 

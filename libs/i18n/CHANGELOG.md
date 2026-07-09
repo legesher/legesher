@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-07-09
+
 ### Changed
 
 - **`StyleGuideLoader` now resolves the full `extends` chain; the pack gate
