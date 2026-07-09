@@ -1,0 +1,51 @@
+# ru.yml — Russian Python style guide
+# Russian (Русский) — Cyrillic, left-to-right.
+# A profile of best-practice Python for Russian: which conventions the script
+# can express and the constraints its characters impose. Rules only — vocabulary
+# (word choices, symbol names) lives in the language packs.
+
+language: "ru"
+extends:
+- python.yml
+- _ltr.yml
+- _cyrillic.yml
+version: 0.1.0
+status: experimental
+
+# Which Python naming conventions this script can express, plus profile facts.
+supports:
+  case_distinction: true
+  snake_case: true
+  upper_snake_case: true
+  pascal_case: true
+  camel_case: true
+  native_digits: false
+  combining_marks: false
+  requires_word_separator: false
+  diacritics_in_identifiers: false
+  cursive_joining: false
+
+# How identifiers are formed.
+naming:
+  case_substitute: not_needed
+  detail: >
+    Russian has letter case; snake_case / CapWords / UPPER_SNAKE apply as in
+    PEP 8. A single-word name stays bare; a multi-word idea joins with underscores.
+
+# Script identity + the constraints its characters impose.
+script:
+  name: "Cyrillic"
+  direction: ltr
+  constraints:
+  - "Cyrillic has upper/lowercase; PEP 8 casing applies unchanged. Do NOT mix Latin and Cyrillic in one identifier — а/a, е/e, о/o, р/p, с/c, х/x are homoglyphs the Unicode gate flags."
+  - "Digits: written with ASCII 0-9."
+
+# Formatting rules.
+formatting:
+  comment_prefix: "#"
+  programming_punctuation: ascii_only
+  docstrings: PEP 257 structure, prose in Russian
+
+# Editor rendering (VS Code extension, not the translation prompt).
+rendering:
+  noto_font: "Noto Sans"   # covers Cyrillic

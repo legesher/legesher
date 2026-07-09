@@ -186,6 +186,15 @@ class TestSystemPromptContainsStyleGuide:
         )
         assert "Naming Conventions" in system
 
+    @pytest.mark.xfail(
+        reason="CORE-1398 moved vocabulary (translation conventions) out of the "
+        "style guides and into the language packs, so the guide no longer carries "
+        "a `translation` block for PromptBuilder to render. Re-sourcing that "
+        "guidance from the packs — or dropping the section — is decided in "
+        "CORE-1395 (PromptBuilder consumption of the rules/profile schema), which "
+        "will resolve this xfail.",
+        strict=False,
+    )
     def test_contains_translation_conventions(
         self,
         builder: PromptBuilder,

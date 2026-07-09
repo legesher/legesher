@@ -61,7 +61,7 @@ repos:
   rev: v2.14.0
   hooks:
   - id: pretty-format-yaml
-    args: [--autofix, --indent=2]
+    args: [--autofix, --indent=2, --preserve-quotes]   # keep meaningful quotes (e.g. language: "no" — a YAML 1.1 boolean in PyYAML)
     exclude: ^(\.github/workflows/.*\.yml|\.github/dependabot\.yml|libs/language-server/tests/fixtures/language_packs/invalid/.*\.yml|libs/i18n/language-packs/.*/packs/.*\.yml|.*pnpm-lock\.yaml)$      # Don't auto-format GitHub Actions, Dependabot config, invalid test fixtures, language pack files, or pnpm lockfiles (auto-generated)
 
   # Custom language pack YAML validation
@@ -73,6 +73,16 @@ repos:
     language: system
     name: Validate Language Pack YAML
     pass_filenames: true
+
+  # Style-guide schema + languages.json consistency validation. Runs on both
+  # style-guide edits AND languages.json edits (a change to the case/rtl source
+  # of truth must re-check every guide's derived flags).
+  - entry: uv run python -m legesher_i18n.scripts.validate_style_guides
+    files: ^libs/i18n/(style-guides/.*\.yml|legesher_i18n/languages\.json)$
+    id: validate-style-guides
+    language: system
+    name: Validate Style Guides
+    pass_filenames: false
 
   # Changelog enforcement: require CHANGELOG updates when version bumps
   - entry: uv run python scripts/check_changelog_on_version_bump.py

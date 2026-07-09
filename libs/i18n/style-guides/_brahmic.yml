@@ -1,7 +1,6 @@
-# _brahmic.yml — Script-family overlay: Brahmic-derived scripts
-# Members today: bn, gu, hi, kn, ml, si, te (Devanagari, Bengali, Gujarati,
-# Kannada, Malayalam, Sinhala, Telugu). Future 103-set members (ta, mr, ne,
-# pa, ...) join here. Extends python.yml + _ltr.yml.
+# _brahmic.yml — Script-family node: Brahmic-derived abugidas.
+# Members: bn, gu, hi, kn, ml, si, te. Caseless; combining vowel signs (matras)
+# and virama; native digits. Structural node only. No content keys.
 
 language: _brahmic
 extends:
@@ -9,66 +8,3 @@ extends:
 - _ltr.yml
 version: 0.1.0
 status: experimental
-
-naming:
-  case_substitute:
-    strategy: morphology
-    detail: >
-      No letter case exists. Callables are verb phrases (infinitive/verbal
-      noun per the language's brief conventions), classes/exceptions are
-      noun compounds — the briefs' word-form discipline replaces PEP 8 case.
-
-  word_boundaries:
-    strategy: underscore
-    detail: >
-      Underscore between logical words (मान_त्रुटि). Direct concatenation is
-      legal but long conjunct sequences hurt readability; prefer the
-      separator beyond two words.
-
-  constants:
-    strategy: marker_affix   # per-language guide may override
-    detail: >
-      No uppercase exists. Default: constant-marker prefix + underscore
-      (hi स्थिर_). Native reviewers ratify per language.
-
-  identifier_length:
-    max_chars: 15
-    detail: >
-      Compounds run long in these scripts; cap at ~15 characters and prefer
-      two-word compounds over three (python.yml max_words applies).
-
-abbreviation:
-  granularity: word
-  detail: >
-    Abbreviate by dropping whole words from a compound, never by truncating
-    within a word — conjuncts and inherent vowels make letter-truncation
-    unreadable. Established Sanskrit-derived prefixes (स्व-, अ-) are
-    legitimate compression.
-
-script:
-  combining_marks:
-    rule: >
-      Matras and viramas are XID_Continue and legal, but every identifier
-      must be an NFKC fixed point (validation-gate enforced). Zero-width
-      joiners are forbidden even where visually customary.
-
-numerals:
-  literals: ascii_required
-  identifiers: ascii_recommended
-  detail: >
-    Native digits (१२३, ২৩৪) are identifier-legal but mixing digit systems
-    in one file is a confusable hazard; ASCII throughout.
-
-symbol_vocabulary:
-  # Per-language guides MUST fill these (hi: अंडरस्कोर or रेखांक — reviewer decision):
-  underscore:
-  colon:
-  parentheses:
-  indent:
-
-rendering:
-  # Per-language — each member uses a different script:
-  # hi -> Noto Sans Devanagari, bn -> Noto Sans Bengali, gu -> Noto Sans Gujarati,
-  # kn -> Noto Sans Kannada, ml -> Noto Sans Malayalam, si -> Noto Sans Sinhala,
-  # te -> Noto Sans Telugu.
-  noto_font:

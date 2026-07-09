@@ -66,6 +66,14 @@ def _validate_guide(
     if problems:
         return problems  # structure too broken to check the rest
 
+    # 1a0. language must equal the filename code. Catches the YAML 1.1 boolean
+    #      trap (`language: no` → PyYAML reads False) and any code/filename drift.
+    if guide.get("language") != code:
+        problems.append(
+            f"language is {guide.get('language')!r}, expected {code!r} "
+            "(quote codes like 'no' so PyYAML keeps them strings)"
+        )
+
     # 1a. supports: exactly the schema's flag set, all booleans.
     want = set(schema["properties"]["supports"]["required"])
     got = set(guide["supports"])

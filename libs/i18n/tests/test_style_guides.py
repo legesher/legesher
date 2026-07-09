@@ -75,21 +75,21 @@ class TestLoadBasePython:
     """Loading python.yml should return a dict with the expected top-level keys."""
 
     def test_returns_dict_with_expected_keys(self, loader: StyleGuideLoader) -> None:
-        # The "en" language has no dedicated file and is LTR,
-        # so the result is python.yml + _ltr.yml (no language-specific layer).
+        # "en" has a self-contained rules/profile guide (en.yml).
         guide = loader.load("en")
 
         assert isinstance(guide, dict)
-        for key in ("naming", "script", "translation", "formatting"):
+        for key in ("supports", "naming", "script", "formatting", "rendering"):
             assert key in guide, f"Expected top-level key '{key}' in guide"
 
-    def test_naming_section_has_snake_case(self, loader: StyleGuideLoader) -> None:
+    def test_naming_has_case_substitute(self, loader: StyleGuideLoader) -> None:
         guide = loader.load("en")
-        assert "snake_case" in guide["naming"]
+        assert guide["naming"]["case_substitute"] in ("morphology", "not_needed")
 
-    def test_script_section_has_native_required(self, loader: StyleGuideLoader) -> None:
+    def test_script_has_name_and_direction(self, loader: StyleGuideLoader) -> None:
         guide = loader.load("en")
-        assert guide["script"]["native_required"] is True
+        assert guide["script"]["name"]
+        assert guide["script"]["direction"] in ("ltr", "rtl")
 
 
 # ------------------------------------------------------------------
@@ -102,8 +102,7 @@ class TestLoadLTRLanguage:
 
     def test_has_ltr_direction(self, loader: StyleGuideLoader) -> None:
         guide = loader.load("es")
-        # _ltr.yml adds naming.text_direction
-        assert guide["naming"].get("text_direction") == "left-to-right"
+        assert guide["script"]["direction"] == "ltr"
 
     def test_has_base_formatting(self, loader: StyleGuideLoader) -> None:
         guide = loader.load("es")
@@ -111,8 +110,9 @@ class TestLoadLTRLanguage:
 
     def test_has_language_specific_content(self, loader: StyleGuideLoader) -> None:
         guide = loader.load("es")
-        # es.yml overrides translation.register
-        assert guide["translation"]["register"] == "technical-formal"
+        # es is bicameral Latin: PEP 8 casing applies, case conventions supported.
+        assert guide["naming"]["case_substitute"] == "not_needed"
+        assert guide["supports"]["case_distinction"] is True
 
 
 # ------------------------------------------------------------------
@@ -125,19 +125,21 @@ class TestLoadRTLLanguage:
 
     def test_has_rtl_direction(self, loader: StyleGuideLoader) -> None:
         guide = loader.load("ur")
-        assert guide["naming"].get("text_direction") == "right-to-left"
+        assert guide["script"]["direction"] == "rtl"
 
-    def test_has_rtl_bidirectional_handling(self, loader: StyleGuideLoader) -> None:
+    def test_urdu_is_caseless(self, loader: StyleGuideLoader) -> None:
         guide = loader.load("ur")
-        assert guide["script"]["bidirectional"]["handling"] == "unicode-bidi-algorithm"
+        assert guide["supports"]["case_distinction"] is False
+        assert guide["naming"]["case_substitute"] == "morphology"
 
     def test_has_urdu_specific_content(self, loader: StyleGuideLoader) -> None:
         guide = loader.load("ur")
-        assert guide["translation"]["register"] == "modern-standard-urdu"
+        # Arabic-script languages are cursive-joining.
+        assert guide["supports"]["cursive_joining"] is True
 
-    def test_has_urdu_script_variant(self, loader: StyleGuideLoader) -> None:
+    def test_has_urdu_script_name(self, loader: StyleGuideLoader) -> None:
         guide = loader.load("ur")
-        assert "Nastaliq" in guide["script"]["variant"]
+        assert "Nastaliq" in guide["script"]["name"]
 
 
 # ------------------------------------------------------------------
@@ -148,23 +150,18 @@ class TestLoadRTLLanguage:
 class TestHierarchyMerging:
     """Language-specific values should override base values."""
 
-    def test_es_register_overrides_python_register(
-        self, loader: StyleGuideLoader
-    ) -> None:
-        base_guide = loader.load("en")  # python.yml + _ltr.yml only
-        es_guide = loader.load("es")
+    def test_no_old_schema_leak(self, loader: StyleGuideLoader) -> None:
+        # The minimal base/overlays must not leak old-schema content into the
+        # merged guide (CORE-1398): the language guide is self-contained.
+        for code in ("es", "ur", "zh"):
+            guide = loader.load(code)
+            assert "translation" not in guide, f"{code}: translation leaked"
+            assert "symbol_vocabulary" not in guide, f"{code}: symbol_vocabulary leaked"
 
-        # python.yml has "technical-standard", es.yml overrides to "technical-formal"
-        assert (
-            base_guide["translation"]["register"] != es_guide["translation"]["register"]
-        )
-        assert es_guide["translation"]["register"] == "technical-formal"
-
-    def test_ur_register_overrides_python_register(
-        self, loader: StyleGuideLoader
-    ) -> None:
-        ur_guide = loader.load("ur")
-        assert ur_guide["translation"]["register"] == "modern-standard-urdu"
+    def test_supports_flags_present(self, loader: StyleGuideLoader) -> None:
+        guide = loader.load("es")
+        assert isinstance(guide["supports"], dict)
+        assert guide["supports"]["snake_case"] is True
 
     def test_language_field_reflects_language_specific_file(
         self,
@@ -257,24 +254,22 @@ class TestCacheBehavior:
 
 
 class TestMissingLanguageFallback:
-    """A language without a specific guide (e.g. 'fi') returns base + direction only."""
+    """A code without a dedicated guide (e.g. 'xx') falls back to base + direction.
+
+    Every real language now ships a guide, so this uses a synthetic code to
+    exercise the fallback path.
+    """
 
     def test_returns_base_plus_ltr(self, loader: StyleGuideLoader) -> None:
-        # Finnish has no fi.yml but is LTR
-        guide = loader.load("fi")
+        # 'xx' has no xx.yml; the loader falls back to python.yml + _ltr.yml.
+        chain = [p.name for p in loader._resolve_hierarchy("xx")]
+        assert chain == ["python.yml", "_ltr.yml"]
 
-        assert isinstance(guide, dict)
-        assert "naming" in guide
-        assert "script" in guide
-
-    def test_ltr_direction_applied(self, loader: StyleGuideLoader) -> None:
-        guide = loader.load("fi")
-        assert guide["naming"].get("text_direction") == "left-to-right"
-
-    def test_no_language_specific_override(self, loader: StyleGuideLoader) -> None:
-        guide = loader.load("fi")
-        # Should still have the base register, not a language-specific one
-        assert guide["translation"]["register"] != "technical-formal"
+    def test_fallback_has_no_language_content(self, loader: StyleGuideLoader) -> None:
+        # The minimal base/direction nodes carry no per-language content.
+        guide = loader.load("xx")
+        for key in ("supports", "translation", "symbol_vocabulary"):
+            assert key not in guide
 
 
 # ------------------------------------------------------------------

@@ -1,196 +1,50 @@
-# es.yml — Spanish style guide for Legesher translations
-# Extends base Python conventions and LTR text direction.
-# Targets standard Spanish as used in CS education across Latin America and Spain.
+# es.yml — Spanish Python style guide
+# Spanish (Español) — Latin, left-to-right.
+# A profile of best-practice Python for Spanish: which conventions the script
+# can express and the constraints its characters impose. Rules only — vocabulary
+# (word choices, symbol names) lives in the language packs.
 
-language: es
+language: "es"
 extends:
 - python.yml
 - _ltr.yml
 version: 0.1.0
 status: experimental
 
-# ---------------------------------------------------------------------------
-# Precedent
-# ---------------------------------------------------------------------------
-# Programming languages with Spanish keywords already exist — notably
-# Latino and Lexico. Legesher follows standard CS vocabulary used in
-# Spanish-language university courses and technical documentation.
+# Which Python naming conventions this script can express, plus profile facts.
+supports:
+  case_distinction: true
+  snake_case: true
+  upper_snake_case: true
+  pascal_case: true
+  camel_case: true
+  native_digits: false
+  combining_marks: false
+  requires_word_separator: false
+  diacritics_in_identifiers: true
+  cursive_joining: false
 
-# ---------------------------------------------------------------------------
-# Naming conventions
-# ---------------------------------------------------------------------------
+# How identifiers are formed.
 naming:
-  snake_case:
-    usage: variables, functions, methods, parameters
-    rule: Lowercase Spanish words joined by underscores
-    examples:
-    - calcular_suma (calculate_sum)
-    - obtener_valor (get_value)
-    - es_valido (is_valid)
+  case_substitute: not_needed
+  detail: >
+    Spanish has letter case; snake_case / CapWords / UPPER_SNAKE apply as in
+    PEP 8. A single-word name stays bare; a multi-word idea joins with underscores.
 
-  pascal_case:
-    usage: class names, exception names
-    rule: Each word capitalized, accents preserved
-    examples:
-    - ErrorDeValor (ValueError)
-    - ErrorDeTipo (TypeError)
-    - ArchivoNoEncontrado (FileNotFoundError)
-
-  upper_snake_case:
-    usage: constants
-    rule: All uppercase with underscores, accents preserved
-    examples:
-    - VALOR_MAXIMO (MAX_VALUE)
-    - VERDADERO (True)
-
-  compound_words:
-    strategy: concatenate or underscore
-    detail: >
-      Multi-word translations may concatenate (esInstancia) or use
-      underscores (es_instancia). Choose ONE strategy per pack and
-      apply it consistently to all compound terms.
-    max_words: 3
-    examples:
-    - isinstance -> es_instancia or esInstancia
-    - hasattr -> tiene_atributo or tieneAtributo
-    - getattr -> obtener_atributo or obtenerAtributo
-
-  word_boundaries:
-    strategy: underscores for snake_case, capitalization for PascalCase
-
-# ---------------------------------------------------------------------------
-# Script rules
-# ---------------------------------------------------------------------------
+# Script identity + the constraints its characters impose.
 script:
-  native_required: true
-  variant: Latin script with Spanish characters
-  detail: >
-    Spanish uses Latin script extended with accented vowels and ene.
-    All native characters are valid Python identifiers.
+  name: "Latin"
+  direction: ltr
+  constraints:
+  - "Spanish uses Latin script with case; PEP 8 casing applies. Preserve á é í ó ú ü ñ — all are valid identifier characters."
+  - "Digits: written with ASCII 0-9."
 
-  latin_mixing:
-    rule: >
-      Acceptable for universal technical terms. Since Spanish uses Latin
-      script natively, there is no script-switching concern. However,
-      prefer Spanish translations over English borrowings.
-
-  accent_handling:
-    rule: >
-      PRESERVE all Spanish accents and special characters.
-      These are valid Python identifiers and MUST be kept:
-      á, é, í, ó, ú (acute accents), ü (dieresis), ñ (eñe).
-    examples:
-    - definición (with accent on ó) — keywords often use infinitive form definir
-    - número (with accent on ú) — when used as identifier
-    - año (year, with ñ) vs ano (anus, without ñ) — ñ changes meaning entirely
-
-# ---------------------------------------------------------------------------
-# Translation conventions
-# ---------------------------------------------------------------------------
-translation:
-  register: technical-formal
-  detail: >
-    Use standard CS vocabulary as taught in Spanish-language university
-    courses. The register is formal but natural — the kind of language
-    a professor would use in a lecture, not a legal document.
-  good_examples:
-  - definir — natural, used in all CS education
-  - retornar — standard technical term for 'return'
-  - imprimir — universally understood for 'print'
-  - importar — standard for 'import'
-  bad_examples:
-  - conceptuar — too stuffy/pretentious for 'define'
-  - armar — too informal/colloquial for 'build/create'
-  - jalar — regional slang, not universally understood
-  - coger — has vulgar connotations in some regions, avoid
-
-  verb_form:
-    rule: INFINITIVE form for all action keywords (-ar, -er, -ir endings)
-    detail: >
-      Spanish infinitives are the citation form and universally understood.
-      They are neutral (no person, number, or tense) and match how
-      functions are conceptualized: an action to perform.
-    examples:
-    - def -> definir
-    - return -> retornar
-    - print -> imprimir
-    - import -> importar
-    - raise -> lanzar
-    - yield -> ceder
-    - break -> romper
-    - continue -> continuar
-    - pass -> pasar
-    - delete -> eliminar
-
-  noun_form:
-    rule: SINGULAR form for all type names and class references
-    examples:
-    - list -> lista (not listas)
-    - dict -> diccionario (not diccionarios)
-    - str -> cadena (not cadenas)
-    - int -> entero (not enteros)
-    - float -> flotante (not flotantes)
-    - bool -> booleano (not booleanos)
-    - class -> clase (not clases)
-
-  boolean_constants:
-    form: Masculine singular adjective
-    examples:
-    - True -> Verdadero
-    - False -> Falso
-    - None -> Nulo or Ninguno
-
-  transliteration:
-    policy: Not applicable — Spanish uses Latin script
-    detail: >
-      Since Spanish shares the Latin alphabet with English, transliteration
-      is not a concern. Focus on finding the correct Spanish CS term.
-
-  compound_consistency:
-    rule: >
-      All compound terms must use the same pattern within a pack.
-      If usando es_instancia (underscore), then use tiene_atributo,
-      obtener_atributo, establecer_atributo, eliminar_atributo consistently.
-    pattern_families:
-    - 'obtener/establecer/eliminar + atributo: parallel verb+noun'
-    - 'es + tipo: es_instancia, es_subclase'
-    - 'tiene + propiedad: tiene_atributo'
-
-# ---------------------------------------------------------------------------
-# Formatting conventions
-# ---------------------------------------------------------------------------
+# Formatting rules.
 formatting:
-  comment_prefix: '#'
+  comment_prefix: "#"
+  programming_punctuation: ascii_only
+  docstrings: PEP 257 structure, prose in Spanish
 
-  docstring_style:
-    rule: Triple-quoted strings with Spanish text, PEP 257 structure
-    example: |
-      """Calcular la suma de dos numeros.
-
-      Argumentos:
-          a: El primer numero
-          b: El segundo numero
-
-      Retorna:
-          La suma de los dos numeros
-      """
-
-  punctuation:
-    rule: >
-      Use ASCII punctuation for all programming constructs.
-      Do NOT use inverted punctuation marks in code (no inverted exclamation
-      or inverted question mark). Spanish punctuation is acceptable ONLY
-      inside string literals and comments.
-
-# ---------------------------------------------------------------------------
-# Symbol vocabulary — what symbols are CALLED in Spanish (teaching/docs/
-# error-message vocabulary; the symbols themselves never change in code)
-# ---------------------------------------------------------------------------
-symbol_vocabulary:
-  underscore: guion bajo
-  colon: dos puntos
-  parentheses: paréntesis
-  indent: sangría
-
+# Editor rendering (VS Code extension, not the translation prompt).
 rendering:
-  noto_font: Noto Sans   # Latin default
+  noto_font: "Noto Sans"   # Latin default

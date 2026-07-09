@@ -9,6 +9,30 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Per-language style guides for all 51 languages, on the rules/profile schema.**
+  Every language in `languages.json` now has a guide built on the schema shipped
+  in 0.15.0: the `supports` capability flags (case conventions plus script
+  profile — `native_digits`, `combining_marks`, `requires_word_separator`,
+  `diacritics_in_identifiers`, `cursive_joining`), `naming` rules,
+  `script.constraints` (including a per-language native-digit profile), and a
+  rendering font. Rules only — the word choices, symbol names, and boolean
+  vocabulary live in the language packs, not here. The capability flags are
+  derived from / consistent with `languages.json`, and every guide passes
+  `validate_style_guides.py`. es/zh/ur were migrated onto the same schema.
+  These are structured first drafts; native review is on the rules (iterative,
+  non-blocking), not per-term.
+- **Base and family overlays aligned to the rules/profile schema.** The
+  `python.yml` base and the eight family overlays (`_ltr`, `_rtl`, `_cjk`,
+  `_arabic`, `_brahmic`, `_cyrillic`, `_ethiopic`, `_sea-spaceless`) were reduced
+  to minimal structural nodes — `language`, `extends`, `version`, `status`, and
+  documentation only. They previously carried old-schema content (`translation`,
+  `symbol_vocabulary`, `register`, `text_direction`, …) that leaked into every
+  merged language guide through the `extends` chain; with the overlays now
+  content-free, a merged guide contains exactly the leaf language's rules. The
+  loader-facing tests were migrated to assert the rules/profile shape.
+
 ## [0.15.0] - 2026-07-09
 
 ### Added

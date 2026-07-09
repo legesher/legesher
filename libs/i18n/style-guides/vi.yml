@@ -1,0 +1,51 @@
+# vi.yml — Vietnamese Python style guide
+# Vietnamese (Tiếng Việt) — Latin, left-to-right.
+# A profile of best-practice Python for Vietnamese: which conventions the script
+# can express and the constraints its characters impose. Rules only — vocabulary
+# (word choices, symbol names) lives in the language packs.
+
+language: "vi"
+extends:
+- python.yml
+- _ltr.yml
+version: 0.1.0
+status: experimental
+
+# Which Python naming conventions this script can express, plus profile facts.
+supports:
+  case_distinction: true
+  snake_case: true
+  upper_snake_case: true
+  pascal_case: true
+  camel_case: true
+  native_digits: false
+  combining_marks: true
+  requires_word_separator: false
+  diacritics_in_identifiers: true
+  cursive_joining: false
+
+# How identifiers are formed.
+naming:
+  case_substitute: not_needed
+  detail: >
+    Vietnamese has letter case; snake_case / CapWords / UPPER_SNAKE apply as in
+    PEP 8. A single-word name stays bare; a multi-word idea joins with underscores.
+
+# Script identity + the constraints its characters impose.
+script:
+  name: "Latin"
+  direction: ltr
+  constraints:
+  - "Vietnamese uses Latin script with case; PEP 8 casing applies unchanged. Native diacritics are valid Python identifier characters — preserve them."
+  - "Vietnamese stacks tone marks on vowels; precomposed and combining forms both occur. Identifiers must be NFC/NFKC fixed points — normalise on generation so the stored form matches the runtime token."
+  - "Digits: written with ASCII 0-9."
+
+# Formatting rules.
+formatting:
+  comment_prefix: "#"
+  programming_punctuation: ascii_only
+  docstrings: PEP 257 structure, prose in Vietnamese
+
+# Editor rendering (VS Code extension, not the translation prompt).
+rendering:
+  noto_font: "Noto Sans"   # Latin default

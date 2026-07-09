@@ -1,7 +1,7 @@
-# _cyrillic.yml — Script-family overlay: Cyrillic-script languages
-# Members: mk, mn, ru, sr (sr is digraphic — Serbian packs choose Cyrillic
-# or Latin per pack; this overlay applies to the Cyrillic choice).
-# Extends python.yml + _ltr.yml.
+# _cyrillic.yml — Script-family node: Cyrillic-script languages.
+# Members: mk, mn, ru, sr (sr is digraphic — this node covers the Cyrillic
+# orthography). Bicameral; standard PEP 8 casing applies. Structural node only.
+# No content keys.
 
 language: _cyrillic
 extends:
@@ -9,39 +9,3 @@ extends:
 - _ltr.yml
 version: 0.1.0
 status: experimental
-
-naming:
-  case_substitute:
-    strategy: not_needed
-    detail: >
-      Cyrillic is bicameral — PEP 8 casing applies unchanged: snake_case
-      functions (вычислить_сумму), CapWords classes (ОшибкаЗначения),
-      UPPER_SNAKE constants (МАКС_РАЗМЕР).
-
-  word_boundaries:
-    strategy: underscore
-
-  constants:
-    strategy: upper_snake
-
-script:
-  latin_mixing:
-    rule: >
-      AVOID mixing Latin and Cyrillic within one identifier — а/a, е/e, о/o
-      are the canonical confusable pairs (UTS #39); the Unicode gate flags
-      mixed-script identifiers. Universal abbreviations (API, HTTP) stay
-      all-Latin as separate words, never fused into a Cyrillic identifier.
-
-numerals:
-  literals: ascii_required
-  identifiers: ascii_recommended
-
-symbol_vocabulary:
-  # Per-language guides MUST fill these:
-  underscore:           # ru нижнее подчёркивание — reviewer decision
-  colon:
-  parentheses:
-  indent:
-
-rendering:
-  noto_font: Noto Sans   # covers Cyrillic incl. Mongolian Cyrillic

@@ -1,9 +1,7 @@
-# _sea-spaceless.yml — Script-family overlay: Southeast-Asian spaceless scripts
-# Members today: my (Myanmar), th (Thai); Lao (lo) and Khmer (km) join with
-# the 103-language set. These scripts write prose WITHOUT spaces between
-# words, so readers have no space habit to lean on — which makes explicit
-# identifier separators MORE valuable here, not less.
-# Extends python.yml + _ltr.yml.
+# _sea-spaceless.yml — Script-family node: Southeast-Asian spaceless scripts.
+# Members: my, th (lo/km join with the 103-language set). Caseless; written
+# without spaces, so an underscore separator is required; combining marks (Thai
+# U+0E33 is the NFKC trap). Structural node only. No content keys.
 
 language: _sea-spaceless
 extends:
@@ -11,57 +9,3 @@ extends:
 - _ltr.yml
 version: 0.1.0
 status: experimental
-
-naming:
-  case_substitute:
-    strategy: morphology
-    detail: >
-      No letter case exists. Callables are verb phrases, classes/exceptions
-      noun compounds — word form replaces PEP 8 case.
-
-  word_boundaries:
-    strategy: underscore_required
-    detail: >
-      Underscore between logical words is REQUIRED, not optional: prose in
-      these scripts is unsegmented, so an unsegmented identifier gives the
-      reader no parsing anchor at all. (The sentence-length Thai
-      "translations" observed in shipped pack data are the failure mode this
-      rule exists to prevent.)
-
-  constants:
-    strategy: marker_affix   # reviewer decision pending
-    detail: No uppercase exists; default constant-marker prefix + underscore.
-
-  identifier_length:
-    max_chars: 15
-    detail: Hard cap; a name approaching it is usually a definition, not a term.
-
-abbreviation:
-  granularity: word
-
-script:
-  normalization:
-    rule: >
-      NFKC fixed-point is NON-NEGOTIABLE here specifically: Thai U+0E33
-      (SARA AM) decomposes under NFKC, so any identifier containing it as
-      written differs from the token the runtime compares. NFKC-unstable
-      selections have shipped before; the validation gate must reject
-      NFKC-unstable identifiers, and unstable selections need regeneration
-      at the generation layer.
-
-numerals:
-  literals: ascii_required
-  identifiers: ascii_recommended
-  detail: Thai (๑๒๓) and Myanmar (၁၂၃) digits are identifier-legal but confusable-hazardous; ASCII throughout.
-
-symbol_vocabulary:
-  # Per-language guides MUST fill these:
-  underscore:
-  colon:
-  parentheses:
-  indent:
-
-rendering:
-  # th -> Noto Sans Thai, my -> Noto Sans Myanmar (lo/km later:
-  # Noto Sans Lao, Noto Sans Khmer).
-  noto_font:

@@ -1,6 +1,7 @@
-# _ethiopic.yml — Script-family overlay: Ethiopic (Geʽez) script
-# Members: am (Amharic); Tigrinya (ti) joins with the 103-language set.
-# Extends python.yml + _ltr.yml.
+# _ethiopic.yml — Script-family node: Ethiopic (Geʽez) syllabary.
+# Members: am (Tigrinya joins with the 103-language set). Caseless syllabary;
+# Geʽez numerals exist but are non-decimal / archaic. Structural node only.
+# No content keys.
 
 language: _ethiopic
 extends:
@@ -8,48 +9,3 @@ extends:
 - _ltr.yml
 version: 0.1.0
 status: experimental
-
-naming:
-  case_substitute:
-    strategy: morphology
-    detail: >
-      No letter case exists in the Geʽez syllabary. Callables are verb
-      phrases, classes/exceptions noun compounds — the briefs' word-form
-      discipline replaces PEP 8 case. Amharic currently has the highest
-      selected-translation coverage (181/181); its conventions here become
-      the family reference.
-
-  word_boundaries:
-    strategy: underscore
-    detail: >
-      Underscore between logical words. The Ethiopic wordspace (፡ U+1361)
-      is punctuation and identifier-ILLEGAL — never substitute it for the
-      underscore.
-
-  constants:
-    strategy: marker_affix   # reviewer decision pending
-    detail: No uppercase exists; default constant-marker prefix + underscore.
-
-  identifier_length:
-    max_chars: 12
-
-abbreviation:
-  granularity: word
-  detail: >
-    Syllabic characters carry consonant+vowel; truncating within a word
-    changes its reading. Abbreviate by dropping whole words.
-
-numerals:
-  literals: ascii_required
-  identifiers: ascii_recommended
-  detail: Ethiopic numerals (፩፪) are not Nd-category and are identifier-illegal anyway.
-
-symbol_vocabulary:
-  # am guide MUST fill these:
-  underscore:
-  colon:
-  parentheses:
-  indent:
-
-rendering:
-  noto_font: Noto Sans Ethiopic

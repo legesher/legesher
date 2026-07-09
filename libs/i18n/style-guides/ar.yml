@@ -1,0 +1,55 @@
+# ar.yml — Arabic Python style guide
+# Arabic (العربية) — Arabic, right-to-left.
+# A profile of best-practice Python for Arabic: which conventions the script
+# can express and the constraints its characters impose. Rules only — vocabulary
+# (word choices, symbol names) lives in the language packs.
+
+language: "ar"
+extends:
+- python.yml
+- _rtl.yml
+- _arabic.yml
+version: 0.1.0
+status: experimental
+
+# Which Python naming conventions this script can express, plus profile facts.
+supports:
+  case_distinction: false
+  snake_case: true
+  upper_snake_case: false
+  pascal_case: false
+  camel_case: false
+  native_digits: true
+  combining_marks: true
+  requires_word_separator: false
+  diacritics_in_identifiers: false
+  cursive_joining: true
+
+# How identifiers are formed.
+naming:
+  case_substitute: morphology
+  detail: >
+    No letter case exists; part of speech carries what PEP 8 case carries
+    — callables are verb phrases, classes and exceptions are noun compounds.
+    A single-word name stays bare; a multi-word idea joins with underscores.
+    Constants are not marked with a prefix word (there is no ALL_CAPS form).
+
+# Script identity + the constraints its characters impose.
+script:
+  name: "Arabic"
+  direction: rtl
+  constraints:
+  - "Root-and-pattern morphology (Arabic-specific): abbreviate by dropping whole words, never by truncating a root; write bare consonantal skeletons. Use the standard Arabic block (U+0600–06FF); avoid presentation forms (U+FB50–FDFF, U+FE70–FEFF)."
+  - "Combining marks are legal in identifiers, but every identifier must be an NFKC fixed point. Separately — NFKC does NOT catch these — the zero-width joiner (U+200D), zero-width non-joiner (U+200C), and tatweel (U+0640) are forbidden by codepoint: Python accepts them inside identifiers, producing rendered-identical confusables."
+  - "Omit vowel diacritics (harakat / tashkil) in identifiers — write the bare consonantal skeleton."
+  - "Digits: Arabic natively uses ٠١٢٣; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+
+# Formatting rules.
+formatting:
+  comment_prefix: "#"
+  programming_punctuation: ascii_only
+  docstrings: PEP 257 structure, prose in Arabic
+
+# Editor rendering (VS Code extension, not the translation prompt).
+rendering:
+  noto_font: "Noto Sans Arabic"

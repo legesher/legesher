@@ -9,6 +9,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **i18n**: Per-language Python style guides for all 51 languages on the
+  rules/profile schema — capability flags, script constraints, and a
+  native-digit profile per language; rules only (vocabulary lives in the packs),
+  validated against the schema and `languages.json`.
+- **i18n**: Base and family style-guide overlays reduced to minimal structural
+  nodes on the rules/profile schema, so legacy vocabulary no longer leaks into a
+  merged guide through the `extends` chain.
+
 ## [0.15.0] - 2026-07-09
 
 ### Added
