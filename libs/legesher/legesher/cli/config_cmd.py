@@ -1,12 +1,15 @@
 """Configuration management commands for Legesher.
 
 This module provides CLI commands for viewing and modifying Legesher
-project configuration stored in .legesher/config.yml.
+configuration. Values live in the project config (.legesher/config.yml)
+or the user-level config (~/.legesher/config.yml); project values take
+precedence when both define a key.
 
 Commands:
     legesher config list: Display all configuration values
     legesher config get <key>: Get a specific configuration value
     legesher config set <key> <value>: Set a configuration value
+    legesher config set --global <key> <value>: Set a user-level value
 """
 
 import sys
@@ -39,12 +42,70 @@ def _find_config_path() -> Path:
     )
 
 
+def _user_config_path() -> Path:
+    """Return the user-level config path (~/.legesher/config.yml)."""
+    return Path.home() / ".legesher" / "config.yml"
+
+
+def _load_yaml_mapping(config_path: Path) -> dict:
+    """Load a config file, requiring the YAML root to be a mapping.
+
+    An empty file loads as an empty dict.
+
+    Raises:
+        click.ClickException: If the YAML root is not a mapping.
+    """
+    with open(config_path, encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    if data is None:
+        return {}
+    if not isinstance(data, dict):
+        raise click.ClickException(
+            f"Config file {config_path} is not a YAML mapping "
+            f"(found {type(data).__name__}). Fix or remove the file."
+        )
+    return data
+
+
 def _load_config() -> tuple[dict, Path]:
     """Load config file and return data + path."""
     config_path = _find_config_path()
-    with open(config_path, encoding="utf-8") as f:
-        data = yaml.safe_load(f) or {}
-    return data, config_path
+    return _load_yaml_mapping(config_path), config_path
+
+
+def _load_merged_config() -> tuple[dict, list[Path]]:
+    """Load user-level and project config merged (project takes precedence).
+
+    Merging is a top-level update, matching LegesherConfig.load(): a
+    project-level section replaces the user-level section of the same
+    name entirely, so these commands report what the runtime actually
+    uses.
+
+    Returns:
+        Tuple of (merged data, list of contributing config paths)
+
+    Raises:
+        click.ClickException: If neither config file exists
+    """
+    data: dict = {}
+    paths: list[Path] = []
+
+    user_path = _user_config_path()
+    if user_path.exists():
+        data = _load_yaml_mapping(user_path)
+        paths.append(user_path)
+
+    try:
+        project_data, project_path = _load_config()
+    except click.ClickException:
+        if not paths:
+            raise
+    else:
+        data = dict(data)
+        data.update(project_data)
+        paths.append(project_path)
+
+    return data, paths
 
 
 _MISSING = object()
@@ -139,23 +200,26 @@ def _format_value(data, prefix: str = "") -> list[str]:
 def config():
     """View and modify Legesher project configuration.
 
-    Configuration is stored in .legesher/config.yml and can be
-    viewed or modified using these subcommands.
+    Configuration is stored in the project's .legesher/config.yml or
+    the user-level ~/.legesher/config.yml and can be viewed or
+    modified using these subcommands.
 
     \b
     Examples:
         $ legesher config list
         $ legesher config get git.enabled
         $ legesher config set translation.default_target ar
+        $ legesher config set --global language es
     """
     pass
 
 
 @config.command(name="list")
 def config_list():
-    """Display all configuration values."""
-    data, config_path = _load_config()
-    click.echo(click.style(f"Configuration ({config_path}):\n", bold=True))
+    """Display all configuration values (user-level merged with project)."""
+    data, paths = _load_merged_config()
+    sources = ", ".join(str(path) for path in paths)
+    click.echo(click.style(f"Configuration ({sources}):\n", bold=True))
     for line in _format_value(data):
         click.echo(f"  {line}")
 
@@ -166,8 +230,10 @@ def config_get(key: str):
     """Get a specific configuration value.
 
     KEY is a dotted path like 'git.enabled' or 'translation.default_target'.
+    Values are read from the user-level config merged with the project
+    config (project takes precedence).
     """
-    data, _path = _load_config()
+    data, _paths = _load_merged_config()
     value = _get_nested(data, key)
     if value is _MISSING:
         click.echo(click.style(f"Key '{key}' not found.", fg="yellow"))
@@ -189,17 +255,31 @@ def config_get(key: str):
 @config.command(name="set")
 @click.argument("key")
 @click.argument("value")
-def config_set(key: str, value: str):
+@click.option(
+    "--global",
+    "use_global",
+    is_flag=True,
+    help="Set in user-level config (~/.legesher/config.yml)",
+)
+def config_set(key: str, value: str, use_global: bool):
     """Set a configuration value.
 
     KEY is a dotted path like 'git.enabled' or 'translation.default_target'.
     VALUE is the new value (booleans: true/false, numbers auto-detected).
+    With --global, the value is written to the user-level config
+    (~/.legesher/config.yml) instead of the project config.
     """
-    data, config_path = _load_config()
+    _validate_key(key)
+    if use_global:
+        config_path = _user_config_path()
+        data = _load_yaml_mapping(config_path) if config_path.exists() else {}
+        config_path.parent.mkdir(exist_ok=True)
+    else:
+        data, config_path = _load_config()
     _set_nested(data, key, value)
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
-    click.echo(f"Set {key} = {_coerce_value(value)}")
+    click.echo(f"Set {key} = {_coerce_value(value)} in {config_path}")
 
 
 __all__ = ["config"]

@@ -11,6 +11,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **legesher**: `--global` flag for `legesher config set`, writing values to
+  the user-level config (`~/.legesher/config.yml`) instead of the project
+  config; `config get`/`list` now read the user-level config merged with the
+  project config (top-level merge matching runtime precedence: a project
+  section replaces the user section of the same name), `config set` reports
+  which config file it wrote, and a config file whose YAML root is not a
+  mapping produces a clear CLI error instead of a crash. [CORE-574]
 - **i18n**: selected translations for 5 under-covered core terms (`__import__`,
   `type`, `encodingwarning`, `exceptiongroup`, `baseexceptiongroup`) across all
   51 Python language packs — reconciling `selected_translations` to the shipped

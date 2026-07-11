@@ -9,6 +9,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **`--global` flag for `legesher config set`** (CORE-574): writes values to
+  the user-level config (`~/.legesher/config.yml`) instead of the project
+  config. `config get`/`list` now read the user-level config merged with the
+  project config (top-level merge matching `LegesherConfig.load()`: a project
+  section replaces the user section of the same name), and `config set`
+  reports which config file it wrote. A config file whose YAML root is not a
+  mapping now produces a clear CLI error instead of a crash, and is never
+  overwritten.
+
 ## [0.20.0] - 2026-07-09
 
 ## [0.19.0] - 2026-07-09
