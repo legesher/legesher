@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-07-11
+
 ### Added
 
 - **`--global` flag for `legesher config set`** (CORE-574): writes values to

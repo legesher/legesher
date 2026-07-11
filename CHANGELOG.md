@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-07-11
+
 ### Added
 
 - **legesher**: `--global` flag for `legesher config set`, writing values to
@@ -259,9 +261,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.20.0  | Yes      |
-| legesher-i18n            | 0.20.0  | Yes      |
-| legesher (CLI)           | 0.20.0  | —        |
+| legesher-core            | 0.21.0  | Yes      |
+| legesher-i18n            | 0.21.0  | Yes      |
+| legesher (CLI)           | 0.21.0  | —        |
 | legesher-language-server | 0.1.3   | Yes      |
 | legesher-vscode          | 0.1.5   | —        |
 
