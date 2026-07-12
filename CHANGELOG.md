@@ -9,6 +9,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **i18n**: four small `pkg:i18n` quick wins from the 2026-07-12 Phase C
+  review. `TranslationDatabase.close()` now closes connections opened from
+  every thread (tracked under a lock), and the class supports
+  `with TranslationDatabase() as db:` [CORE-610]; `get_stats()` count queries
+  are written out per table, eliminating the f-string-table-name SQL pattern
+  [CORE-609]; the default `db_path` now detects the install location — a
+  source checkout / editable install keeps the in-repo db, while installed
+  environments (site-packages/dist-packages) get `~/.legesher/translations.db`
+  seeded once from the bundled copy (CLI defaults resolve at command time,
+  `--db-path` override unchanged) [CORE-601]; and
+  `api/providers/anthropic.py` is mypy-clean — 10 `union-attr` /
+  `call-overload` / `no-any-return` errors fixed via proper `None` narrowing,
+  no `type: ignore` [CORE-816].
+
 ## [0.21.2] - 2026-07-12
 
 ### Fixed

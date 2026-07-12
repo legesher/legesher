@@ -5,6 +5,7 @@ with the consolidated schema: terms, languages, translations, selected_translati
 """
 
 import logging
+import shutil
 import sqlite3
 import threading
 from pathlib import Path
@@ -12,6 +13,55 @@ from pathlib import Path
 from .schema import get_schema
 
 logger = logging.getLogger(__name__)
+
+
+def _running_from_source_checkout(module_path: Path | None = None) -> bool:
+    """Detect whether this module runs from a source checkout (CORE-601).
+
+    Installed environments place the package under a ``site-packages`` or
+    ``dist-packages`` directory; a source checkout (including editable
+    installs, which point back into the checkout) does not. The check uses
+    ``Path.parts`` — exact path-component matches — so directory names that
+    merely contain the substring (e.g. ``my-site-packages-fork``) don't
+    false-match. As reinforcement, a source checkout must also have a
+    ``pyproject.toml`` somewhere above this module (the project marker at
+    ``libs/i18n/pyproject.toml``).
+
+    Args:
+        module_path: Override of this module's resolved path (for tests).
+    """
+    if module_path is None:
+        module_path = Path(__file__).resolve()
+    parts = module_path.parts
+    if "site-packages" in parts or "dist-packages" in parts:
+        return False
+    return any((parent / "pyproject.toml").is_file() for parent in module_path.parents)
+
+
+def default_db_path() -> Path:
+    """Resolve the default database path (CORE-601).
+
+    Source checkouts and editable installs keep using the in-repo database
+    next to this module (``legesher_i18n/db/translations.db``) — that file is
+    the control-plane source of truth. Installed environments (the module
+    lives under ``site-packages``/``dist-packages``) must never mutate the
+    bundled copy, so the default falls back to a per-user data directory
+    (``~/.legesher/translations.db``), seeded once from the bundled database
+    when the package ships one.
+
+    ``platformdirs`` was considered and skipped to avoid a new runtime
+    dependency; ``~/.legesher`` is stable across platforms.
+    """
+    packaged = Path(__file__).parent / "translations.db"
+    if _running_from_source_checkout():
+        return packaged
+
+    user_db = Path.home() / ".legesher" / "translations.db"
+    if not user_db.exists() and packaged.exists():
+        user_db.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(packaged, user_db)
+        logger.info(f"Seeded user translation database at {user_db} from {packaged}")
+    return user_db
 
 
 class TranslationDatabase:
@@ -30,7 +80,15 @@ class TranslationDatabase:
     - Automatic schema initialization
     - Foreign key support with cascading deletes
 
-    Default storage location: libs/i18n/legesher_i18n/db/translations.db
+    Default storage location: libs/i18n/legesher_i18n/db/translations.db in
+    source checkouts / editable installs; ~/.legesher/translations.db in
+    installed environments (site-packages/dist-packages). See
+    ``default_db_path`` (CORE-601).
+
+    Supports use as a context manager (CORE-610)::
+
+        with TranslationDatabase() as db:
+            db.get_stats()
     """
 
     def __init__(self, db_path: str | Path | None = None):
@@ -38,19 +96,28 @@ class TranslationDatabase:
         Initialize Translation Database.
 
         Args:
-            db_path: Path to SQLite database file. Defaults to
-                     libs/i18n/legesher_i18n/db/translations.db
+            db_path: Path to SQLite database file. Defaults to the in-repo
+                     database in source checkouts / editable installs, or a
+                     per-user data directory in installed environments (see
+                     ``default_db_path``).
         """
         if db_path is None:
-            db_path = str(Path(__file__).parent / "translations.db")
+            db_path = str(default_db_path())
         self.db_path = str(db_path)
 
         # Ensure directory exists
         db_dir = Path(self.db_path).parent
         db_dir.mkdir(parents=True, exist_ok=True)
 
-        # Connection pooling: maintain persistent connection per thread
+        # Connection pooling: maintain persistent connection per thread.
+        # CORE-610: every connection is also tracked in _connections so
+        # close() can release connections opened by other threads.
         self._local = threading.local()
+        self._connections: list[sqlite3.Connection] = []
+        self._connections_lock = threading.Lock()
+        # CORE-610: once close() sets this (under the lock), _get_connection()
+        # refuses to open new connections, so none can slip past close().
+        self._closed = False
 
         # Initialize database schema
         self._init_db()
@@ -59,23 +126,51 @@ class TranslationDatabase:
         """Clean up connections on deletion."""
         self.close()
 
+    def __enter__(self) -> "TranslationDatabase":
+        """Enter context manager scope (CORE-610)."""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        """Close all connections when leaving a ``with`` block (CORE-610)."""
+        self.close()
+
     def close(self):
         """
-        Close all thread-local database connections.
+        Close all database connections opened by this instance.
 
-        Important on Windows to prevent file locking issues.
-        Should be called when the database is no longer needed.
+        CORE-610: closes connections from every thread that used this
+        database, not just the calling thread. Important on Windows to
+        prevent file locking issues. Should be called when the database is
+        no longer needed; afterwards ``_get_connection`` raises
+        ``RuntimeError``. Idempotent — calling close() again is a no-op.
         """
+        if not hasattr(self, "_connections"):
+            # __init__ failed before connection tracking was set up
+            # (close() is also invoked from __del__).
+            return
+
+        with self._connections_lock:
+            # Mark closed before swapping the list so a concurrent
+            # _get_connection() cannot register a connection that would
+            # escape the sweep below.
+            self._closed = True
+            connections = self._connections
+            self._connections = []
+
+        for conn in connections:
+            try:
+                conn.close()
+            except Exception as e:
+                logger.warning(f"Error closing SQLite connection: {e}")
+
+        if connections:
+            logger.debug(f"Closed {len(connections)} SQLite connection(s)")
+
+        # Drop the calling thread's cached connection reference. Other
+        # threads' thread-local references are unreachable from here; their
+        # underlying connections are already closed above.
         if hasattr(self, "_local") and hasattr(self._local, "conn"):
-            if self._local.conn is not None:
-                try:
-                    self._local.conn.close()
-                    self._local.conn = None
-                    logger.debug(
-                        f"Closed SQLite connection for thread {threading.current_thread().name}"
-                    )
-                except Exception as e:
-                    logger.warning(f"Error closing SQLite connection: {e}")
+            self._local.conn = None
 
     def _get_connection(self) -> sqlite3.Connection:
         """
@@ -86,19 +181,32 @@ class TranslationDatabase:
 
         Returns:
             SQLite connection for the current thread
+
+        Raises:
+            RuntimeError: If close() has already been called on this instance.
         """
-        if not hasattr(self._local, "conn") or self._local.conn is None:
-            self._local.conn = sqlite3.connect(
-                self.db_path, check_same_thread=False, timeout=10.0
-            )
+        conn: sqlite3.Connection | None = getattr(self._local, "conn", None)
+        if conn is None:
+            with self._connections_lock:
+                if self._closed:
+                    raise RuntimeError("TranslationDatabase is closed")
+            conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=10.0)
             # Enable WAL mode for better concurrent access
-            self._local.conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA journal_mode=WAL")
             # Enable foreign key support
-            self._local.conn.execute("PRAGMA foreign_keys=ON")
+            conn.execute("PRAGMA foreign_keys=ON")
+            with self._connections_lock:
+                if self._closed:
+                    # close() won the race while this connection was being
+                    # set up; close it here so it can never leak.
+                    conn.close()
+                    raise RuntimeError("TranslationDatabase is closed")
+                self._connections.append(conn)
+            self._local.conn = conn
             logger.debug(
                 f"Created new SQLite connection for thread {threading.current_thread().name}"
             )
-        return self._local.conn
+        return conn
 
     def _init_db(self):
         """
@@ -789,11 +897,19 @@ class TranslationDatabase:
         """
         conn = self._get_connection()
 
+        # CORE-609: each count query is written out explicitly so no table
+        # name is ever interpolated into SQL, even from a hardcoded tuple.
         stats: dict = {}
-        for table in ("terms", "languages", "translations", "selected_translations"):
-            stats[f"{table}_count"] = conn.execute(
-                f"SELECT COUNT(*) FROM {table}"
-            ).fetchone()[0]
+        stats["terms_count"] = conn.execute("SELECT COUNT(*) FROM terms").fetchone()[0]
+        stats["languages_count"] = conn.execute(
+            "SELECT COUNT(*) FROM languages"
+        ).fetchone()[0]
+        stats["translations_count"] = conn.execute(
+            "SELECT COUNT(*) FROM translations"
+        ).fetchone()[0]
+        stats["selected_translations_count"] = conn.execute(
+            "SELECT COUNT(*) FROM selected_translations"
+        ).fetchone()[0]
 
         stats["languages_with_packs"] = conn.execute(
             "SELECT COUNT(*) FROM languages WHERE has_yaml_pack = 1"

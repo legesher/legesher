@@ -1,6 +1,6 @@
 """Database module for translation storage and management."""
 
-from .database import TranslationDatabase
+from .database import TranslationDatabase, default_db_path
 from .schema import (
     INDEXES,
     LANGUAGES_TABLE,
@@ -12,6 +12,7 @@ from .schema import (
 
 __all__ = [
     "TranslationDatabase",
+    "default_db_path",
     "TERMS_TABLE",
     "LANGUAGES_TABLE",
     "TRANSLATIONS_TABLE",

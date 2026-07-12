@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import re
+from typing import Any
 
 try:
     from anthropic import AsyncAnthropic
@@ -190,6 +191,10 @@ class AnthropicProvider(TranslationProvider):
         """
         if not self.client:
             raise AuthenticationError("Anthropic client not initialized (no API key)")
+        # Bind to a local so the narrowing survives into the api_call closure
+        # (CORE-816: mypy cannot narrow attribute access across function
+        # boundaries).
+        client = self.client
 
         if not self.supports(source_lang, target_lang):
             raise UnsupportedLanguageError(
@@ -197,31 +202,29 @@ class AnthropicProvider(TranslationProvider):
             )
 
         # Build translation prompt, using PromptBuilder if available
-        use_prompt_builder = self._prompt_builder and context
-        if use_prompt_builder:
+        prompt_builder = self._prompt_builder
+        if prompt_builder is not None and context:
             glossary = context.get("glossary", {})
             kind = context.get("kind")
 
             if kind:  # text element (comment/docstring/string)
-                system_prompt, user_prompt = self._prompt_builder.build_text_prompt(
+                system_prompt, user_prompt = prompt_builder.build_text_prompt(
                     texts=[{"text": text, "kind": kind, "context": context}],
                     target_lang=target_lang,
                     identifier_glossary=glossary,
                 )
             else:  # identifier
-                system_prompt, user_prompt = (
-                    self._prompt_builder.build_identifier_prompt(
-                        identifiers=[
-                            {
-                                "text": text,
-                                "role": context.get("role", "unknown"),
-                                "context": context,
-                            }
-                        ],
-                        target_lang=target_lang,
-                        existing_glossary=glossary,
-                        forbidden_values=context.get("forbidden_values"),
-                    )
+                system_prompt, user_prompt = prompt_builder.build_identifier_prompt(
+                    identifiers=[
+                        {
+                            "text": text,
+                            "role": context.get("role", "unknown"),
+                            "context": context,
+                        }
+                    ],
+                    target_lang=target_lang,
+                    existing_glossary=glossary,
+                    forbidden_values=context.get("forbidden_values"),
                 )
         else:
             system_prompt = None
@@ -229,14 +232,14 @@ class AnthropicProvider(TranslationProvider):
 
         # Call Claude API with retry logic
         async def api_call():
-            kwargs = {
+            kwargs: dict[str, Any] = {
                 "model": self.model,
                 "max_tokens": self.max_tokens,
                 "messages": [{"role": "user", "content": user_prompt}],
             }
             if system_prompt:
                 kwargs["system"] = system_prompt
-            return await self.client.messages.create(**kwargs)
+            return await client.messages.create(**kwargs)
 
         try:
             response = await self._call_api_with_retry(api_call)
@@ -333,6 +336,9 @@ class AnthropicProvider(TranslationProvider):
         """
         if not self.client:
             raise AuthenticationError("Anthropic client not initialized (no API key)")
+        # Local binding so the narrowing survives into the api_call closure
+        # (CORE-816).
+        client = self.client
 
         # Check cache first
         cache_key = self._generate_cache_key(term, translations, language)
@@ -346,7 +352,7 @@ class AnthropicProvider(TranslationProvider):
 
         # Call API with retry logic
         async def api_call():
-            return await self.client.messages.create(
+            return await client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 messages=[{"role": "user", "content": prompt}],
@@ -656,6 +662,13 @@ Respond ONLY with the JSON object, no additional text."""
                 raise ValueError(f"No JSON found in response: {content}")
 
         try:
-            return json.loads(json_str)
+            data = json.loads(json_str)
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON in response: {json_str}") from e
+
+        if not isinstance(data, dict):
+            raise ValueError(
+                f"Expected a JSON object in response, got {type(data).__name__}: "
+                f"{json_str}"
+            )
+        return data

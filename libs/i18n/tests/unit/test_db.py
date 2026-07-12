@@ -7,11 +7,17 @@ linguistic_standards) tracked in CORE-595.
 
 import sqlite3
 import tempfile
+import threading
 from pathlib import Path
 
 import pytest
 
-from legesher_i18n.db.database import TranslationDatabase
+import legesher_i18n.db.database as database_module
+from legesher_i18n.db.database import (
+    TranslationDatabase,
+    _running_from_source_checkout,
+    default_db_path,
+)
 
 
 @pytest.mark.unit
@@ -71,6 +77,105 @@ class TestTranslationDatabase:
             assert Path(db.db_path).name == "translations.db"
         finally:
             db.close()
+
+    def test_context_manager_closes_connections(self):
+        """CORE-610: leaving a ``with`` block closes the database connections."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db_path = str(Path(tmpdir) / "test_translations.db")
+            with TranslationDatabase(db_path=db_path) as db:
+                conn = db._get_connection()
+                conn.execute("SELECT 1")
+
+            with pytest.raises(sqlite3.ProgrammingError):
+                conn.execute("SELECT 1")
+
+    def test_close_closes_other_threads_connections(self):
+        """CORE-610: close() releases connections opened by other threads."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db_path = str(Path(tmpdir) / "test_translations.db")
+            db = TranslationDatabase(db_path=db_path)
+
+            worker_connections: list[sqlite3.Connection] = []
+
+            def open_connection():
+                worker_connections.append(db._get_connection())
+
+            thread = threading.Thread(target=open_connection)
+            thread.start()
+            thread.join()
+
+            main_conn = db._get_connection()
+            assert len(worker_connections) == 1
+            assert worker_connections[0] is not main_conn
+
+            db.close()
+
+            for conn in (*worker_connections, main_conn):
+                with pytest.raises(sqlite3.ProgrammingError):
+                    conn.execute("SELECT 1")
+
+    def test_close_is_idempotent(self):
+        """CORE-610: calling close() twice is safe."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db_path = str(Path(tmpdir) / "test_translations.db")
+            db = TranslationDatabase(db_path=db_path)
+            db._get_connection()
+            db.close()
+            db.close()  # must not raise
+
+    def test_get_connection_after_close_raises(self):
+        """CORE-610: a closed database refuses to open new connections."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db_path = str(Path(tmpdir) / "test_translations.db")
+            db = TranslationDatabase(db_path=db_path)
+            db._get_connection()
+            db.close()
+
+            with pytest.raises(RuntimeError, match="closed"):
+                db._get_connection()
+
+    def test_concurrent_close_and_connect_does_not_leak(self):
+        """CORE-610: close() racing _get_connection() never leaks a connection.
+
+        Every connection a worker obtains must end up closed: either it was
+        registered before close() swapped the tracking list (so close()
+        sweeps it), or _get_connection() saw the closed flag, closed the
+        fresh connection itself, and raised. Bounded iteration count — this
+        is a race-shape check, not a stress test.
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db_path = str(Path(tmpdir) / "test_translations.db")
+            for _ in range(10):
+                db = TranslationDatabase(db_path=db_path)
+                obtained: list[sqlite3.Connection] = []
+                barrier = threading.Barrier(3)
+
+                def open_connection():
+                    barrier.wait()
+                    try:
+                        obtained.append(db._get_connection())
+                    except RuntimeError:
+                        pass  # lost the race to close() — expected
+
+                def close_db():
+                    barrier.wait()
+                    db.close()
+
+                threads = [
+                    threading.Thread(target=open_connection),
+                    threading.Thread(target=open_connection),
+                    threading.Thread(target=close_db),
+                ]
+                for t in threads:
+                    t.start()
+                for t in threads:
+                    t.join()
+
+                # No connection may remain registered or usable.
+                assert db._connections == []
+                for conn in obtained:
+                    with pytest.raises(sqlite3.ProgrammingError):
+                        conn.execute("SELECT 1")
 
     # ===========================
     # Term CRUD Tests
@@ -1067,3 +1172,103 @@ class TestTermCategoryValidation:
                 assert cat in msg
         finally:
             path.unlink()
+
+
+@pytest.mark.unit
+class TestDefaultDbPath:
+    """CORE-601: default db_path resolution must never target site-packages."""
+
+    def test_source_checkout_uses_packaged_path(self, monkeypatch):
+        """Source checkouts / editable installs keep the in-repo database."""
+        monkeypatch.setattr(
+            database_module, "_running_from_source_checkout", lambda: True
+        )
+        packaged_dir = Path(database_module.__file__).parent
+        assert default_db_path() == packaged_dir / "translations.db"
+
+    def test_installed_environment_falls_back_to_user_dir(self, monkeypatch, tmp_path):
+        """Installed environments resolve to ~/.legesher/translations.db."""
+        fake_home = tmp_path / "home"
+        fake_home.mkdir()
+        monkeypatch.setattr(
+            database_module, "_running_from_source_checkout", lambda: False
+        )
+        monkeypatch.setattr(Path, "home", lambda: fake_home)
+
+        result = default_db_path()
+
+        assert result == fake_home / ".legesher" / "translations.db"
+        # Seeded once from the bundled database shipped with the package
+        packaged = Path(database_module.__file__).parent / "translations.db"
+        if packaged.exists():
+            assert result.exists()
+            assert result.stat().st_size == packaged.stat().st_size
+
+    def test_installed_environment_does_not_reseed_existing_user_db(
+        self, monkeypatch, tmp_path
+    ):
+        """An existing user database is never overwritten by the seed copy."""
+        fake_home = tmp_path / "home"
+        user_db = fake_home / ".legesher" / "translations.db"
+        user_db.parent.mkdir(parents=True)
+        user_db.write_bytes(b"sentinel")
+        monkeypatch.setattr(
+            database_module, "_running_from_source_checkout", lambda: False
+        )
+        monkeypatch.setattr(Path, "home", lambda: fake_home)
+
+        result = default_db_path()
+
+        assert result == user_db
+        assert user_db.read_bytes() == b"sentinel"
+
+
+@pytest.mark.unit
+class TestRunningFromSourceCheckout:
+    """CORE-601: install-location detection uses exact path components."""
+
+    def test_real_module_location_is_source_checkout(self):
+        """The test suite itself runs from the repo checkout."""
+        assert _running_from_source_checkout() is True
+
+    def test_site_packages_is_not_source_checkout(self, tmp_path):
+        module_path = (
+            tmp_path
+            / "venv"
+            / "lib"
+            / "python3.12"
+            / "site-packages"
+            / "legesher_i18n"
+            / "db"
+            / "database.py"
+        )
+        assert _running_from_source_checkout(module_path) is False
+
+    def test_dist_packages_is_not_source_checkout(self, tmp_path):
+        module_path = (
+            tmp_path
+            / "usr"
+            / "lib"
+            / "python3"
+            / "dist-packages"
+            / "legesher_i18n"
+            / "db"
+            / "database.py"
+        )
+        assert _running_from_source_checkout(module_path) is False
+
+    def test_substring_match_does_not_false_positive(self, tmp_path):
+        """A directory merely containing 'site-packages' in its name is fine."""
+        checkout = tmp_path / "my-site-packages-fork"
+        module_dir = checkout / "libs" / "i18n" / "legesher_i18n" / "db"
+        module_dir.mkdir(parents=True)
+        (checkout / "libs" / "i18n" / "pyproject.toml").write_text("[project]\n")
+        module_path = module_dir / "database.py"
+        assert _running_from_source_checkout(module_path) is True
+
+    def test_no_repo_marker_is_not_source_checkout(self, tmp_path):
+        """Without a pyproject.toml above the module, treat it as installed."""
+        module_dir = tmp_path / "somewhere" / "legesher_i18n" / "db"
+        module_dir.mkdir(parents=True)
+        module_path = module_dir / "database.py"
+        assert _running_from_source_checkout(module_path) is False

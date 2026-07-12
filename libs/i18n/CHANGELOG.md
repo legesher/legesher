@@ -9,6 +9,30 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **Four small database/provider quick wins (2026-07-12 Phase C review):**
+  `TranslationDatabase.close()` previously closed only the calling thread's
+  connection, leaking any opened from other threads — every connection is now
+  tracked under a `threading.Lock` and closed together, and the class
+  supports the context-manager protocol (`with TranslationDatabase() as db:`)
+  [CORE-610]; `get_stats()` builds its four count queries as explicit
+  literals instead of f-string table-name interpolation (defensive — the
+  names were hardcoded) [CORE-609]; the default `db_path` resolves via
+  `default_db_path()`, which detects the install location — a source
+  checkout / editable install (no `site-packages`/`dist-packages` path
+  component, `pyproject.toml` marker above the module) keeps the in-repo
+  `legesher_i18n/db/translations.db` (unchanged behavior), while installed
+  environments get `~/.legesher/translations.db`, seeded once from the
+  bundled copy, so the bundled database is never mutated in place (CLI
+  `db init`/`db stats`/`db vacuum` resolve the same default at command time
+  instead of import time; `--db-path` overrides unchanged) [CORE-601]; and
+  `api/providers/anthropic.py` passes mypy with 0 errors (was 10:
+  `union-attr` on `context`/`_prompt_builder`/`client`, a `call-overload` on
+  the kwargs dict, and a `no-any-return` in `_parse_json_response`) via local
+  bindings that survive closure boundaries and an `isinstance` guard on the
+  parsed JSON — no `type: ignore` suppressions [CORE-816].
+
 ## [0.21.2] - 2026-07-12
 
 ### Fixed

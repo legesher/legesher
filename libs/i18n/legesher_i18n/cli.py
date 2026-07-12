@@ -25,10 +25,17 @@ from rich.table import Table
 from .exceptions import PackValidationError
 from .pack_loader import LanguagePackLoader, LanguagePack
 from .schema_validator import SchemaValidator
-from .db import TranslationDatabase
+from .db import TranslationDatabase, default_db_path
 
-# Default database path — resolved once so Click's exists=True check works
-_DEFAULT_DB_PATH = Path(__file__).parent / "db" / "translations.db"
+# CORE-601: the default database path is resolved via default_db_path()
+# INSIDE each command (bundled db in source checkouts;
+# ~/.legesher/translations.db in installed environments). Resolving at import
+# time would copy the database as a side effect of e.g. `--help`, so the
+# --db-path options default to None and defer to the resolver at run time.
+_DB_PATH_DEFAULT_HELP = (
+    "bundled db in source checkouts; "
+    "~/.legesher/translations.db in installed environments"
+)
 
 # Global console instance - can be replaced with quiet version
 console = Console()
@@ -512,7 +519,8 @@ def db():
 @click.option(
     "--db-path",
     default=None,
-    help="Path to database file (default: package db)",
+    show_default=_DB_PATH_DEFAULT_HELP,
+    help="Path to database file",
     type=click.Path(path_type=Path),
 )
 @click.option("--quiet", "-q", is_flag=True, help="Suppress output (for CI/scripts)")
@@ -533,7 +541,7 @@ def init(db_path: Path | None, quiet: bool):
         if db_path:
             resolved_path = Path(db_path).resolve()
         else:
-            resolved_path = (Path(__file__).parent / "db" / "translations.db").resolve()
+            resolved_path = default_db_path().resolve()
 
         already_exists = resolved_path.exists()
 
@@ -560,12 +568,13 @@ def init(db_path: Path | None, quiet: bool):
 @db.command()
 @click.option(
     "--db-path",
-    default=_DEFAULT_DB_PATH,
-    help="Path to database file (default: package db)",
+    default=None,
+    show_default=_DB_PATH_DEFAULT_HELP,
+    help="Path to database file",
     type=click.Path(exists=True, path_type=Path),
 )
 @click.option("--quiet", "-q", is_flag=True, help="Suppress output (for CI/scripts)")
-def stats(db_path: Path, quiet: bool):
+def stats(db_path: Path | None, quiet: bool):
     """Show database statistics.
 
     Displays counts of terms, translations, selected translations, and languages.
@@ -578,6 +587,12 @@ def stats(db_path: Path, quiet: bool):
     """
     out = get_console(quiet)
     try:
+        if db_path is None:
+            # Resolving here may seed ~/.legesher from the bundled db on
+            # first run — acceptable at command time, never at import time.
+            db_path = default_db_path()
+            if not db_path.exists():
+                raise FileNotFoundError(db_path)
         database = TranslationDatabase(db_path=str(db_path))
         db_stats = database.get_stats()
 
@@ -673,12 +688,13 @@ def stats(db_path: Path, quiet: bool):
 @db.command()
 @click.option(
     "--db-path",
-    default=_DEFAULT_DB_PATH,
-    help="Path to database file (default: package db)",
+    default=None,
+    show_default=_DB_PATH_DEFAULT_HELP,
+    help="Path to database file",
     type=click.Path(exists=True, path_type=Path),
 )
 @click.option("--quiet", "-q", is_flag=True, help="Suppress output (for CI/scripts)")
-def vacuum(db_path: Path, quiet: bool):
+def vacuum(db_path: Path | None, quiet: bool):
     """Optimize database size.
 
     Runs SQLite VACUUM command to reclaim unused space and optimize the database file.
@@ -691,6 +707,12 @@ def vacuum(db_path: Path, quiet: bool):
     """
     out = get_console(quiet)
     try:
+        if db_path is None:
+            # Resolving here may seed ~/.legesher from the bundled db on
+            # first run — acceptable at command time, never at import time.
+            db_path = default_db_path()
+            if not db_path.exists():
+                raise FileNotFoundError(db_path)
         database = TranslationDatabase(db_path=str(db_path))
         resolved_path = Path(database.db_path)
         out.print(f"[cyan]Optimizing database:[/cyan] {resolved_path}")
@@ -732,7 +754,8 @@ def vacuum(db_path: Path, quiet: bool):
 @click.option(
     "--db-path",
     default=None,
-    help="Path to database file (default: package db)",
+    show_default=_DB_PATH_DEFAULT_HELP,
+    help="Path to database file",
     type=click.Path(path_type=Path),
 )
 @click.option(
@@ -907,6 +930,7 @@ def _export_csv(data: dict, output: Path | TextIO) -> None:
         data: Export data dictionary
         output: Path to file or file-like object (e.g., sys.stdout)
     """
+    f: TextIO
     if isinstance(output, Path):
         f = open(output, "w", newline="", encoding="utf-8")
         should_close = True
