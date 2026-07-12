@@ -81,7 +81,7 @@ builtins:
   pow: potenzieren
   print: drucken
   range: Bereich
-  repr: représentation
+  repr: repräsentation
   reversed: umgekehrt
   round: runden
   setattr: setAttribut
@@ -106,7 +106,7 @@ builtins:
   property: Eigenschaft
   set: Satz
   staticmethod: statischeMethode
-  str: diestrTypKonvertierung
+  str: Zeichenkette
   super: superKlasse
   tuple: Tupel
   ellipsis: dasAuslasszeichen

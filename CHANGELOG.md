@@ -9,6 +9,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **i18n**: three garbled pack translations — `de` `str` was
+  `diestrTypKonvertierung` (a mashed-together "die str Typ Konvertierung",
+  also the longest token across all 51 packs), now `Zeichenkette`; `de` and
+  `da` `repr` both carried the French `représentation` (copy-paste leak), now
+  `repräsentation` (de) / `repræsentation` (da). Applied surgically to the
+  `3.10.yml` packs, `REFERENCE.md`, and `translations.db`
+  (candidates + selected, tagged pending native review). [CORE-1303]
+
 ## [0.21.1] - 2026-07-12
 
 ### Fixed

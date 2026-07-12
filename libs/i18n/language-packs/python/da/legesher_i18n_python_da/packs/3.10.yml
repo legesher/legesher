@@ -81,7 +81,7 @@ builtins:
   pow: helt
   print: skrivUd
   range: område
-  repr: représentation
+  repr: repræsentation
   reversed: omvending
   round: runde
   setattr: angivEgenskab

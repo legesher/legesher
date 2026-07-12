@@ -130,7 +130,7 @@ Python's built-in functions and types in Danish.
 | `print` | `skrivUd` |
 | `property` | `egenskab` |
 | `range` | `område` |
-| `repr` | `représentation` |
+| `repr` | `repræsentation` |
 | `reversed` | `omvending` |
 | `round` | `runde` |
 | `set` | `sætning` |

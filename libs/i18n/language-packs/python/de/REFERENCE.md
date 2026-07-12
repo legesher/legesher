@@ -130,7 +130,7 @@ Python's built-in functions and types in German.
 | `print` | `drucken` |
 | `property` | `Eigenschaft` |
 | `range` | `Bereich` |
-| `repr` | `représentation` |
+| `repr` | `repräsentation` |
 | `reversed` | `umgekehrt` |
 | `round` | `runden` |
 | `set` | `Satz` |
@@ -138,7 +138,7 @@ Python's built-in functions and types in German.
 | `slice` | `Schnitt` |
 | `sorted` | `geordnet` |
 | `staticmethod` | `statischeMethode` |
-| `str` | `diestrTypKonvertierung` |
+| `str` | `Zeichenkette` |
 | `sum` | `summe` |
 | `super` | `superKlasse` |
 | `tuple` | `Tupel` |

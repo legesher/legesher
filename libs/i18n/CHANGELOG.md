@@ -9,6 +9,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **Three garbled pack translations caught while building the showcase cards:**
+  `de` `str` shipped as `diestrTypKonvertierung` — a literal mash of "die str
+  Typ Konvertierung" and, at 22 chars, the longest token across all 51 packs —
+  now `Zeichenkette` (the ticket-specified standard German CS term, pending
+  native review); `de` and `da` `repr` both shipped the *French*
+  `représentation` (copy-paste leak), now `repräsentation` (de) /
+  `repræsentation` (da). Fixed surgically in each pack's `3.10.yml` and
+  `REFERENCE.md`; `translations.db` gets the corrections as new candidate rows
+  plus flipped `selected_translations` (tagged `core-1303`, pending native
+  review), mirroring the CORE-1317 pattern — no pack regeneration. [CORE-1303]
+
 ## [0.21.1] - 2026-07-12
 
 ## [0.21.0] - 2026-07-11
