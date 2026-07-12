@@ -858,7 +858,9 @@ class TestEdgeCases:
             # but if it returns 40 chars, it should still be stored
             assert len(latest["commit_sha"]) > 0
 
-    def test_concurrent_tracking(self, translation_tracker, file_with_metadata):
+    def test_concurrent_tracking(
+        self, translation_tracker, metadata_manager, file_with_metadata
+    ):
         """Test concurrent tracking operations."""
         import threading
 
@@ -866,14 +868,14 @@ class TestEdgeCases:
 
         def track_operations():
             try:
-                for i in range(10):
+                for i in range(20):
                     translation_tracker.track_clean(file_with_metadata, "es", "en")
             except Exception as e:
                 errors.append(e)
 
         # Run concurrent operations
         threads = []
-        for _ in range(3):
+        for _ in range(5):
             thread = threading.Thread(target=track_operations)
             threads.append(thread)
             thread.start()
@@ -882,8 +884,53 @@ class TestEdgeCases:
             thread.join()
 
         # Should not have any errors
-        assert len(errors) == 0
+        assert errors == []
 
         # Should have some history entries
         history = translation_tracker.get_translation_history(file_with_metadata)
         assert len(history) > 0
+
+        # Concurrent atomic writes should never leave temp files behind
+        leftover = list(metadata_manager.metadata_dir.rglob(".*.tmp"))
+        assert leftover == []
+
+    def test_concurrent_history_appends_are_not_lost(
+        self, metadata_manager, file_with_metadata
+    ):
+        """Concurrent add_history_entry calls must not lose entries."""
+        import threading
+
+        errors = []
+        num_threads = 5
+        entries_per_thread = 10
+
+        def append_entries(thread_id: int):
+            try:
+                for i in range(entries_per_thread):
+                    entry: HistoryEntry = {
+                        "action": "clean",
+                        "from_language": "es",
+                        "to_language": "en",
+                        # Unique timestamp per entry so every append is distinct
+                        "timestamp": f"2026-07-12T00:{thread_id:02d}:{i:02d}Z",
+                        "commit_sha": f"sha{thread_id}_{i}",
+                    }
+                    metadata_manager.add_history_entry(file_with_metadata, entry)
+            except Exception as e:
+                errors.append(e)
+
+        threads = [
+            threading.Thread(target=append_entries, args=(tid,))
+            for tid in range(num_threads)
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+        assert errors == []
+
+        # Every append must land: the read-modify-write is serialized per path
+        metadata = metadata_manager.get_metadata(file_with_metadata)
+        assert metadata is not None
+        assert len(metadata["history"]) == num_threads * entries_per_thread

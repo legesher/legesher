@@ -9,6 +9,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **core**: metadata writes raced under concurrency — every writer staged
+  through the same shared temp file (`.<name>.tmp`) before the atomic rename,
+  so parallel writers could rename each other's half-written file or crash
+  with `FileNotFoundError`, and the unserialized read-modify-write in
+  `record_translation`/`add_history_entry`/`update_metadata` silently dropped
+  concurrent history entries. Temp names are now unique per process and
+  thread (removed on any write failure), and a per-path `threading.Lock`
+  serializes each metadata file's read-modify-write cycle, so concurrent
+  appends all land. Root cause of the `test_concurrent_tracking` CI
+  flake. [CORE-1319]
+
 ## [0.21.0] - 2026-07-11
 
 ### Added

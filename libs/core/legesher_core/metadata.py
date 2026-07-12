@@ -42,6 +42,8 @@ Example:
 """
 
 import logging
+import os
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -52,6 +54,28 @@ from .types import FileMetadata, HistoryEntry, TranslationRecord
 
 # Configure module logger
 logger = logging.getLogger(__name__)
+
+# Per-path locks serializing read-modify-write cycles on metadata files, so
+# concurrent writers (even across MetadataManager instances) don't lose
+# history/translation entries. Keyed by metadata file path; guarded by
+# _path_locks_guard for thread-safe lazy creation.
+_path_locks_guard = threading.Lock()
+_path_locks: dict[str, threading.Lock] = {}
+
+
+def _get_path_lock(path: Path) -> threading.Lock:
+    """Return the process-wide lock for a metadata file path.
+
+    The key is the resolved path so equivalent spellings of the same file
+    (relative vs absolute, ".." segments, symlinks) share one lock.
+    """
+    key = str(path.resolve())
+    with _path_locks_guard:
+        lock = _path_locks.get(key)
+        if lock is None:
+            lock = threading.Lock()
+            _path_locks[key] = lock
+        return lock
 
 
 class MetadataManager:
@@ -190,7 +214,8 @@ class MetadataManager:
         # Create parent directories if needed
         metadata_path.parent.mkdir(parents=True, exist_ok=True)
 
-        self._write_yaml(metadata_path, metadata)
+        with _get_path_lock(metadata_path):
+            self._write_yaml(metadata_path, metadata)
         logger.info(
             f"Created metadata for {relative_path}: "
             f"original_language={original_language}, "
@@ -215,27 +240,28 @@ class MetadataManager:
             ...     {"python_version": "3.12"}
             ... )
         """
-        metadata = self.get_metadata(file_path)
-        if metadata is None:
-            logger.warning(
-                f"Cannot update metadata for {file_path}: metadata not found"
-            )
-            return
-
-        # Apply updates
-        for key, value in updates.items():
-            if key in metadata:
-                metadata[key] = value  # type: ignore
-            else:
-                logger.warning(
-                    f"Ignoring unknown metadata field '{key}' for {file_path}"
-                )
-
-        # Update timestamp
-        metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
-
         metadata_path = self._get_metadata_path(file_path)
-        self._write_yaml(metadata_path, metadata)
+        with _get_path_lock(metadata_path):
+            metadata = self.get_metadata(file_path)
+            if metadata is None:
+                logger.warning(
+                    f"Cannot update metadata for {file_path}: metadata not found"
+                )
+                return
+
+            # Apply updates
+            for key, value in updates.items():
+                if key in metadata:
+                    metadata[key] = value  # type: ignore
+                else:
+                    logger.warning(
+                        f"Ignoring unknown metadata field '{key}' for {file_path}"
+                    )
+
+            # Update timestamp
+            metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+            self._write_yaml(metadata_path, metadata)
         logger.debug(f"Updated metadata for {file_path}: {updates.keys()}")
 
     def record_translation(self, file_path: Path, record: TranslationRecord) -> None:
@@ -259,19 +285,20 @@ class MetadataManager:
             ... }
             >>> manager.record_translation(Path("src/main.py"), record)
         """
-        metadata = self.get_metadata(file_path)
-        if metadata is None:
-            logger.warning(
-                f"Cannot record translation for {file_path}: metadata not found. "
-                "Create metadata first with create_metadata()."
-            )
-            return
-
-        metadata["translations"].append(record)
-        metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
-
         metadata_path = self._get_metadata_path(file_path)
-        self._write_yaml(metadata_path, metadata)
+        with _get_path_lock(metadata_path):
+            metadata = self.get_metadata(file_path)
+            if metadata is None:
+                logger.warning(
+                    f"Cannot record translation for {file_path}: metadata not found. "
+                    "Create metadata first with create_metadata()."
+                )
+                return
+
+            metadata["translations"].append(record)
+            metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+            self._write_yaml(metadata_path, metadata)
         logger.info(
             f"Recorded translation for {file_path}: "
             f"language={record['language']}, method={record['method']}"
@@ -297,19 +324,20 @@ class MetadataManager:
             ... }
             >>> manager.add_history_entry(Path("src/main.py"), entry)
         """
-        metadata = self.get_metadata(file_path)
-        if metadata is None:
-            logger.warning(
-                f"Cannot add history entry for {file_path}: metadata not found. "
-                "Create metadata first with create_metadata()."
-            )
-            return
-
-        metadata["history"].append(entry)
-        metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
-
         metadata_path = self._get_metadata_path(file_path)
-        self._write_yaml(metadata_path, metadata)
+        with _get_path_lock(metadata_path):
+            metadata = self.get_metadata(file_path)
+            if metadata is None:
+                logger.warning(
+                    f"Cannot add history entry for {file_path}: metadata not found. "
+                    "Create metadata first with create_metadata()."
+                )
+                return
+
+            metadata["history"].append(entry)
+            metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+            self._write_yaml(metadata_path, metadata)
         logger.debug(
             f"Added history entry for {file_path}: "
             f"action={entry['action']}, {entry['from_language']}->{entry['to_language']}"
@@ -477,8 +505,12 @@ class MetadataManager:
             ...     {"file": "src/main.py", ...}
             ... )
         """
-        # Write to temporary file first
-        temp_path = path.parent / f".{path.name}.tmp"
+        # Write to a temporary file first. The temp name is unique per
+        # process AND thread so concurrent writers never share (and never
+        # rename away) each other's temp file.
+        temp_path = (
+            path.parent / f".{path.name}.{os.getpid()}.{threading.get_ident()}.tmp"
+        )
 
         try:
             with open(temp_path, "w", encoding="utf-8") as f:
@@ -494,13 +526,12 @@ class MetadataManager:
             temp_path.replace(path)
             logger.debug(f"Wrote YAML file atomically: {path}")
 
-        except OSError as e:
-            # Clean up temp file if it exists
-            if temp_path.exists():
-                try:
-                    temp_path.unlink()
-                except OSError:
-                    pass  # Best effort cleanup
+        except Exception as e:
+            # Clean up temp file if it exists (best effort, no orphans)
+            try:
+                temp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
             logger.error(f"Failed to write YAML file {path}: {e}", exc_info=True)
             raise

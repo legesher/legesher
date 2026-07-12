@@ -9,6 +9,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **`MetadataManager` metadata writes are now concurrency-safe**. Previously
+  `_write_yaml` staged every write through the same shared temp file
+  (`.<name>.tmp`), so concurrent writers raced on the atomic rename —
+  `FileNotFoundError` when another thread renamed the temp file away first,
+  or a peer's partially-written file promoted as the metadata — and the
+  unserialized read-modify-write in `record_translation`,
+  `add_history_entry`, and `update_metadata` lost concurrent history
+  entries. Temp files are now uniquely named per process and thread and
+  removed on any write failure, and a module-level per-path
+  `threading.Lock` serializes each metadata file's read-modify-write
+  cycle. Root cause of the flaky
+  `test_translation_tracker.py::TestEdgeCases::test_concurrent_tracking`;
+  that test now also asserts no orphaned temp files, and a new
+  `test_concurrent_history_appends_are_not_lost` pins the no-lost-appends
+  guarantee. [CORE-1319]
+
 ## [0.21.0] - 2026-07-11
 
 ## [0.20.0] - 2026-07-09
