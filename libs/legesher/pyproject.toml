@@ -17,7 +17,7 @@ dependencies = [
     "legesher-i18n",
 ]
 name = "legesher"
-version = "0.21.2"
+version = "0.21.3"
 description = "main build for Legesher Monorepo"
 readme = "README.md"
 keywords = ["translation", "programming", "multilingual", "i18n", "cli", "developer-tools"]
