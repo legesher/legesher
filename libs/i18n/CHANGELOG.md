@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.21.2] - 2026-07-12
+
 ### Fixed
 
 - **Three garbled pack translations caught while building the showcase cards:**
