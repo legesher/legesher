@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.21.3] - 2026-07-12
+
 ### Fixed
 
 - **Four small database/provider quick wins (2026-07-12 Phase C review):**
