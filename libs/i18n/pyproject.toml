@@ -81,6 +81,7 @@ dev = [
     "redis>=5.0.0",  # For testing
     "pytest-mock>=3.12.0",  # For mocking
     "responses>=0.24.0",  # For HTTP mocking
+    "pyarrow>=23.0.1",
 ]
 
 [tool.pytest.ini_options]

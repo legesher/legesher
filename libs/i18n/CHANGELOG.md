@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **HF corpus exporter — five-config Parquet + dataset card + reconciliation
+  (CORE-1505).** `scripts/export_corpus.py` exports the v2 corpus to the
+  `legesher/translations` dataset as five Parquet configs (concepts, terms,
+  options, endorsements, contributors). The export is read-only over the v2
+  DB and strips everything private by construction: `contributor_identities`,
+  `build_meta`, the LLM `rationale` column, and all integer surrogate ids —
+  contributors appear only as opaque `c_…` tokens plus review rung. Pinned
+  Arrow schemas, a `reconciliation.json` ledger cross-checking exported row
+  counts against the source DB, and a refusal gate that aborts if any
+  config's SQL so much as mentions a private table fail the build loudly.
+  Repo creation is private-first per CORE-1502: `push_to_hub` creates the
+  repo itself with `private=True` and never flips visibility.
 - **Concept-centric translations schema v2 with an endorsement corpus
   (CORE-1501).** Additive: `translations.db` is read-only throughout; nothing
   migrates in place. The unit of translation becomes a *concept*, options are
