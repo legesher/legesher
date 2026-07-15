@@ -35,6 +35,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
     endorsements; words a review rejected stay as evidence under a neutral
     `source_detail` and endorse nothing.
 
+### Changed
+
+- **BCP 47 backfill applied to `languages.bcp47` (CORE-1512, promote slice 1).**
+  The reviewed proposal TSV is now written into the database: 3 corrections
+  (`sr` → `sr-Cyrl`, `uz` → `uz-Latn`, `mn` → `mn-Cyrl`) and 5 NULL-fills
+  (`ne`, `sw`, `uk`, `xh` bare tags; `tl` → `fil` per the 2026-07-15 decision).
+  All 56 rows now carry a registry-canonical tag; zero NULLs. Applied via the
+  new `scripts/apply_bcp47_backfill.py` (dry-run by default, TSV-validated,
+  single-transaction, refuses `needs_review=yes` rows), verified by full
+  `.dump` diff — exactly 8 `languages.bcp47` cells changed, nothing else.
+  `languages.json` / VS Code `languages.ts` regenerated (`mn`/`sr`/`uz`
+  metadata only), and the three packs' `REFERENCE.md` language tables updated
+  to match (`no`/`zh` already carried their overrides). New `TestBackfillApplied`
+  guards pin DB == TSV **and** every pack REFERENCE.md's "BCP 47 Tag" row ==
+  the DB column in CI. The
+  language *key* (`code`) is unchanged — the key flip is a separate CORE-1512
+  decision scoped against the v2 cutover.
+
 ## [0.22.0] - 2026-07-15
 
 ### Added

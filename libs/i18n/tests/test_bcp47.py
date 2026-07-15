@@ -659,3 +659,63 @@ class TestUnresolvedScript:
     def test_the_editorial_script_languages_resolve(self) -> None:
         for code, tag in [("zh", "zh-Hans"), ("sr", "sr-Cyrl"), ("mn", "mn-Cyrl")]:
             assert resolve_proposal(code)[0] == tag
+
+
+class TestBackfillApplied:
+    """CORE-1512 slice 1: the DB column carries the reviewed proposal.
+
+    The TSV was the *proposal*; `apply_bcp47_backfill.py` wrote it into
+    `languages.bcp47` on 2026-07-15. From that moment the DB and the TSV must
+    agree exactly — a divergence means either an unreviewed hand-edit to the DB
+    or a regenerated proposal that was never applied, and both should fail CI.
+    """
+
+    @staticmethod
+    def _db_column() -> dict[str, str | None]:
+        import sqlite3
+
+        db_path = I18N_ROOT / "legesher_i18n" / "db" / "translations.db"
+        assert db_path.exists(), f"{db_path} missing"
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        try:
+            return dict(conn.execute("SELECT code, bcp47 FROM languages"))
+        finally:
+            conn.close()
+
+    def test_db_matches_the_committed_proposal_exactly(self) -> None:
+        proposed = {row["code"]: row["proposed_tag"] for row in _backfill_rows()}
+        assert self._db_column() == proposed
+
+    def test_no_nulls_remain(self) -> None:
+        nulls = [code for code, tag in self._db_column().items() if not tag]
+        assert nulls == []
+
+    def test_every_db_tag_is_canonical(self) -> None:
+        for code, tag in self._db_column().items():
+            assert tag is not None and is_canonical(tag), (code, tag)
+
+    def test_pack_reference_docs_state_the_db_tag(self) -> None:
+        """Every pack REFERENCE.md 'BCP 47 Tag' row matches the DB column.
+
+        REFERENCE.md is hand-maintained (packs do not regenerate — CORE-1400),
+        so nothing mechanical kept its language table honest: mn/sr/uz shipped
+        stale bare tags for a day after the 2026-07-15 backfill. This pins the
+        docs to the database.
+        """
+        import re as _re
+
+        db = self._db_column()
+        checked = 0
+        for ref in sorted(PACK_ROOT.glob("*/REFERENCE.md")):
+            code = ref.parent.name
+            match = _re.search(
+                r"\|\s*\*\*BCP 47 Tag\*\*\s*\|\s*`([^`]+)`\s*\|", ref.read_text()
+            )
+            assert match, f"{ref} has no BCP 47 Tag row"
+            assert match.group(1) == db[code], (
+                f"{ref}: says {match.group(1)!r}, DB says {db[code]!r}"
+            )
+            checked += 1
+        # 50, not 51: en is the canonical source language and ships no
+        # REFERENCE.md (there is nothing to translate back to).
+        assert checked == 50

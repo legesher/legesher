@@ -16,7 +16,7 @@
 | **Script** | Cyrillic |
 | **ISO 639-1** | `sr` |
 | **ISO 639-2** | `srp` |
-| **BCP 47 Tag** | `sr` |
+| **BCP 47 Tag** | `sr-Cyrl` |
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 

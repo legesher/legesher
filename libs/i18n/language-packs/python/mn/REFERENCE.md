@@ -16,7 +16,7 @@
 | **Script** | Cyrillic |
 | **ISO 639-1** | `mn` |
 | **ISO 639-2** | `mon` |
-| **BCP 47 Tag** | `mn` |
+| **BCP 47 Tag** | `mn-Cyrl` |
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 

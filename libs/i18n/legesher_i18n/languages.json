@@ -286,7 +286,7 @@
       "name": "Mongolian",
       "native": "Монгол",
       "iso639_2": "mon",
-      "bcp47": "mn",
+      "bcp47": "mn-Cyrl",
       "rtl": false,
       "has_case_distinction": true,
       "status": "experimental"
@@ -376,7 +376,7 @@
       "name": "Serbian",
       "native": "Српски",
       "iso639_2": "srp",
-      "bcp47": "sr",
+      "bcp47": "sr-Cyrl",
       "rtl": false,
       "has_case_distinction": true,
       "status": "experimental"
@@ -439,7 +439,7 @@
       "name": "Uzbek",
       "native": "O'zbek",
       "iso639_2": "uzb",
-      "bcp47": "uz",
+      "bcp47": "uz-Latn",
       "rtl": false,
       "has_case_distinction": true,
       "status": "experimental"

@@ -16,7 +16,7 @@
 | **Script** | Latin |
 | **ISO 639-1** | `uz` |
 | **ISO 639-2** | `uzb` |
-| **BCP 47 Tag** | `uz` |
+| **BCP 47 Tag** | `uz-Latn` |
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
