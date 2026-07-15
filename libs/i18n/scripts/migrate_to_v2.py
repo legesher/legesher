@@ -69,6 +69,12 @@ from legesher_i18n.db.schema_v2 import (  # noqa: E402
     option_uid,
     salt_fingerprint,
 )
+from legesher_i18n.script_policy import (  # noqa: E402
+    ALWAYS_ALLOWED_SCRIPTS,
+    has_policy,
+    policy_for,
+    scripts_of,
+)
 
 #: v1 language codes with no `bcp47` value in the database, and the tag they
 #: resolve to. CORE-1500 owns the authoritative, IANA-verified backfill; this map
@@ -243,8 +249,10 @@ IMPORT_RUNG = "contributor"
 
 #: The validator that actually runs (see :func:`validate_surface`). It is a real
 #: version string, NOT the reserved 'migration-seed' -- the canon trigger rejects
-#: that value precisely so a stamped row can never pass for a checked one.
-VALIDATOR_VERSION = "py-identifier-v1"
+#: that value precisely so a stamped row can never pass for a checked one. Bumped
+#: to v2 for the CORE-1514 fixes: term-aware identifiers, the SARA-AM NFKC delta
+#: class, and real locale-aware script-consistency.
+VALIDATOR_VERSION = "py-identifier-v2"
 
 #: Printed after every run, and enforced by ``--publish`` where it can be.
 #:
@@ -306,26 +314,135 @@ class Validation:
 
     identifier_valid: bool
     nfkc_stable: bool
+    #: WHY the value is NFKC-unstable, or None when it is stable. A fact, kept
+    #: separate from the canon policy that acts on it (see validate_surface).
+    nfkc_delta_class: str | None
     script_consistent: bool
     collides_en_keyword: bool
 
 
-def _script_of(char: str) -> str | None:
-    """The Unicode script family of a letter, by character-name prefix.
+#: The Thai SARA AM character and its NFKC decomposition (NIKHAHIT + SARA AA).
+#: U+0E33 is the ONLY source of NFKC instability across the 25 refused Thai
+#: selections, and CPython NFKC-normalizes identifiers (PEP 3131), so both
+#: spellings are one identifier at runtime -- no spoofing surface.
+_SARA_AM = "ำ"
+_SARA_AM_NFKC = unicodedata.normalize("NFKC", _SARA_AM)  # "ํา"
 
-    A pragmatic stand-in for a full ``Script`` property lookup (which the stdlib
-    does not expose): ``LATIN SMALL LETTER A`` -> ``LATIN``. Non-letters return
-    ``None`` and are not considered.
+#: Base scripts for the DB languages that do NOT ship a pack yet, so the v2
+#: validator can classify their options. ``script_policy.SCRIPT_POLICIES`` is
+#: keyed to shipped packs only (``tests/test_script_policy_coverage.py`` forbids
+#: orphan entries), so these live here until they ship. Same set as
+#: :data:`BCP47_FALLBACK`.
+NON_PACK_SCRIPTS: dict[str, frozenset[str]] = {
+    "ne": frozenset({"Devanagari"}),  # Nepali
+    "sw": frozenset({"Latin"}),  # Swahili
+    "tl": frozenset({"Latin"}),  # Tagalog
+    "uk": frozenset({"Cyrillic"}),  # Ukrainian
+    "xh": frozenset({"Latin"}),  # Xhosa
+}
+
+
+def allowed_scripts_for(code: str) -> frozenset[str] | None:
+    """Resolve the Unicode scripts a locale's identifiers may legitimately use.
+
+    Reads the shared, default-deny ``script_policy`` table -- the single source
+    of truth the pack auditor also uses, so the v2 validator and the pack audit
+    finally agree on what "foreign script" means -- falling back to
+    :data:`NON_PACK_SCRIPTS` for the handful of DB-only languages. Returns
+    ``None`` for an un-policied code, which the script check treats as a
+    violation, never a silent pass.
+
+    Args:
+        code: The v1 two-letter language code (``th``, ``ja``, ``no``).
+
+    Returns:
+        The allowed scripts, or ``None`` if the code has no policy.
     """
-    if not char.isalpha():
-        return None
-    try:
-        return unicodedata.name(char).split()[0]
-    except ValueError:
-        return None
+    if has_policy(code):
+        return policy_for(code).scripts
+    return NON_PACK_SCRIPTS.get(code)
 
 
-def validate_surface(surface: str) -> Validation:
+def _is_identifier_char(char: str) -> bool:
+    """Whether ``char`` may appear inside a Python identifier (letters/digits/_)."""
+    return char == "_" or char.isalnum()
+
+
+def _structural_affixes(term_name: str) -> tuple[str, str]:
+    """The leading/trailing NON-identifier characters the source term carries.
+
+    A faithful translation of ``except*`` (PEP 654) must keep the trailing
+    ``*``; the identifier check validates the *stem* and requires the surface to
+    mirror these affixes. Today ``except*`` is the only term that exercises this,
+    but the logic generalizes to any structural affix (a future ``*args``). A
+    term that is already a valid identifier -- every dunder included -- has none.
+    """
+    start = 0
+    while start < len(term_name) and not _is_identifier_char(term_name[start]):
+        start += 1
+    end = len(term_name)
+    while end > start and not _is_identifier_char(term_name[end - 1]):
+        end -= 1
+    return term_name[:start], term_name[end:]
+
+
+def _identifier_valid(surface: str, term_name: str) -> bool:
+    """Term-aware Python-identifier check.
+
+    A plain ``str.isidentifier()`` refuses ``except*`` in every locale forever
+    (the literal ``*``) and would blanket-accept a stray ``*`` on any other term.
+    Instead, carry the structural affixes of the SOURCE term: the surface must
+    mirror them exactly, and the stem between them must be a valid identifier.
+    """
+    prefix, suffix = _structural_affixes(term_name)
+    if not surface.startswith(prefix) or not surface.endswith(suffix):
+        return False
+    if len(surface) < len(prefix) + len(suffix):
+        return False
+    stem = (
+        surface[len(prefix) : len(surface) - len(suffix)]
+        if suffix
+        else surface[len(prefix) :]
+    )
+    return stem.isidentifier()
+
+
+def _nfkc_delta_class(surface: str) -> str | None:
+    """Classify WHY ``surface`` is NFKC-unstable -- a fact, not a policy.
+
+    ``None`` when already NFKC-stable. ``'sara-am-only'`` when the ONLY unstable
+    character is U+0E33 (Thai SARA AM) and decomposing it reproduces the NFKC
+    form exactly -- legitimate Thai orthography CPython itself normalizes
+    (PEP 3131), so there is no spoofing surface. ``'other'`` for any other
+    instability, which stays a hard block.
+    """
+    nfkc = unicodedata.normalize("NFKC", surface)
+    if nfkc == surface:
+        return None
+    unstable = {c for c in surface if unicodedata.normalize("NFKC", c) != c}
+    if unstable == {_SARA_AM} and surface.replace(_SARA_AM, _SARA_AM_NFKC) == nfkc:
+        return "sara-am-only"
+    return "other"
+
+
+def _script_consistent(surface: str, allowed_scripts: frozenset[str] | None) -> bool:
+    """Real, per-character, locale-aware script-consistency.
+
+    Every letter's script must fall within the locale's allowlist (``Common``
+    and ``Inherited`` are always allowed). This is the honest version of the old
+    ``len(scripts) <= 1`` heuristic, which was wrong in both directions: it
+    passed an NFKC-stable Cyrillic-in-Thai confusable, and it flagged legitimate
+    Japanese (Han + Kana). An un-policied locale is default-deny.
+    """
+    if allowed_scripts is None:
+        return False
+    present = scripts_of(surface) - ALWAYS_ALLOWED_SCRIPTS
+    return present <= allowed_scripts
+
+
+def validate_surface(
+    surface: str, term_name: str, allowed_scripts: frozenset[str] | None
+) -> Validation:
     """Run the mechanical checks the canon trigger gates on.
 
     This is the honest version of what the migration used to *stamp*. The
@@ -334,20 +451,28 @@ def validate_surface(surface: str) -> Validation:
     running anything, which made the CORE-1400 gate circular: "pack_export
     reproduces all 5,136 selections" was true *because the gate was bypassed*.
     Two real defects were hiding under the stamp (Amharic ``ከቀረ*``, and 25
-    NFKC-unstable Thai renderings).
+    NFKC-unstable Thai renderings) -- and the Q7 triage (CORE-1514) then found
+    the honest v1 check was itself over- AND under-inclusive: it refused all 25
+    of those Thai SARA-AM selections and every locale's ``except*``, while
+    passing 12 of 15 mixed-script confusables. This v2 check fixes all three.
 
     Args:
         surface: The NFC-normalized rendering.
+        term_name: The English source term (e.g. ``except*``), so the identifier
+            check can carry the term's structural affixes.
+        allowed_scripts: The Unicode scripts legitimate for this locale (see
+            :func:`allowed_scripts_for`), or ``None`` for an un-policied locale.
 
     Returns:
-        The verdict. ``identifier_valid`` is Python's own rule, which is what a
-        Legesher pack ultimately has to satisfy.
+        The verdict. ``identifier_valid`` is Python's own rule made term-aware;
+        ``nfkc_delta_class`` records why an unstable value is unstable; and
+        ``script_consistent`` is checked against the locale's real allowlist.
     """
-    scripts = {s for s in (_script_of(c) for c in surface) if s is not None}
     return Validation(
-        identifier_valid=surface.isidentifier(),
+        identifier_valid=_identifier_valid(surface, term_name),
         nfkc_stable=unicodedata.normalize("NFKC", surface) == surface,
-        script_consistent=len(scripts) <= 1,
+        nfkc_delta_class=_nfkc_delta_class(surface),
+        script_consistent=_script_consistent(surface, allowed_scripts),
         collides_en_keyword=keyword.iskeyword(surface),
     )
 
@@ -601,6 +726,11 @@ def migrate(
     # a separate pass; it is NOT NULL in the schema, so a placeholder marks the
     # debt explicitly rather than hiding it.
     concept_of_term: dict[int, tuple[int, str]] = {}
+    #: v2 concept id -> the English source term (e.g. 'except*'). The identifier
+    #: validator is term-aware, so it needs the token, not just the slug (which
+    #: has lost the structural '*': 'except*' -> slug 'except*' but dunders map
+    #: '_' -> '-'). Kept as the real term name.
+    term_name_of_concept: dict[int, str] = {}
     for row in src.execute("SELECT * FROM terms ORDER BY id"):
         slug = row["name"].strip().lower().replace("_", "-")
         cur = dst.execute(
@@ -614,6 +744,7 @@ def migrate(
         )
         concept_id = int(cur.lastrowid or 0)
         concept_of_term[row["id"]] = (concept_id, slug)
+        term_name_of_concept[concept_id] = row["name"]
         dst.execute(
             "INSERT INTO terms (concept_id, programming_language, name, category, subcategory, "
             "version_added) VALUES (?, 'python', ?, ?, ?, ?)",
@@ -635,6 +766,10 @@ def migrate(
     # -- 3. Corpus: options + provenance -------------------------------------
     v1_translation_rows = 0
     options_seen: dict[str, str] = {}
+    #: option uid -> (concept id, v1 language code), so the validation pass can
+    #: recover the term name (for term-aware id checks) and the locale's script
+    #: policy without re-joining. One option is always one (concept, locale).
+    option_meta: dict[str, tuple[int, str]] = {}
     contributors: dict[str, str] = {}  # SOURCE KEY (github username) -> c_<hex>
     unresolved: dict[str, int] = defaultdict(int)  # v1 label -> rows it holds
     endorsements: dict[tuple[str, str], str] = {}
@@ -651,6 +786,7 @@ def migrate(
         if not surface:
             continue
         uid = option_uid(slug, locale, surface)
+        option_meta.setdefault(uid, (concept_id, row["language_code"]))
 
         if uid not in options_seen:
             dst.execute(
@@ -788,18 +924,27 @@ def migrate(
     # one; what runs here is validate_surface(), and whatever it finds, it reports.
     invalid_identifier = 0
     nfkc_unstable = 0
+    sara_am_only = 0
+    script_inconsistent = 0
     for uid, surface in options_seen.items():
-        verdict = validate_surface(surface)
+        concept_id, code = option_meta[uid]
+        verdict = validate_surface(
+            surface, term_name_of_concept[concept_id], allowed_scripts_for(code)
+        )
         invalid_identifier += not verdict.identifier_valid
         nfkc_unstable += not verdict.nfkc_stable
+        sara_am_only += verdict.nfkc_delta_class == "sara-am-only"
+        script_inconsistent += not verdict.script_consistent
         dst.execute(
             "INSERT INTO option_validations (option_uid, validator_version, identifier_valid, "
-            "nfkc_stable, script_consistent, collides_en_keyword) VALUES (?, ?, ?, ?, ?, ?)",
+            "nfkc_stable, nfkc_delta_class, script_consistent, collides_en_keyword) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
                 uid,
                 VALIDATOR_VERSION,
                 int(verdict.identifier_valid),
                 int(verdict.nfkc_stable),
+                verdict.nfkc_delta_class,
                 int(verdict.script_consistent),
                 int(verdict.collides_en_keyword),
             ),
@@ -807,6 +952,8 @@ def migrate(
     ledger.record("options validated", len(options_seen))
     ledger.record("  invalid identifier", invalid_identifier)
     ledger.record("  NFKC-unstable", nfkc_unstable)
+    ledger.record("    of which SARA-AM only", sara_am_only)
+    ledger.record("  script-inconsistent", script_inconsistent)
 
     # -- 6. Canon ------------------------------------------------------------
     # The gate is now real, so it bites: a v1 selection whose rendering fails
@@ -819,7 +966,8 @@ def migrate(
     for row in src.execute("SELECT * FROM selected_translations ORDER BY id"):
         selected_rows += 1
         concept_id, slug = concept_of_term[row["term_id"]]
-        locale = locale_of[row["language_code"]]
+        code = row["language_code"]
+        locale = locale_of[code]
         surface = normalize_surface_form(row["translation"])
         uid = option_uid(slug, locale, surface)
         if uid not in options_seen:
@@ -830,13 +978,20 @@ def migrate(
                 f"selected value not present as an option: {slug}/{locale}/{surface}"
             )
 
-        verdict = validate_surface(surface)
-        if not (verdict.identifier_valid and verdict.nfkc_stable):
-            reason = (
-                "not a valid identifier"
-                if not verdict.identifier_valid
-                else "NFKC-unstable"
-            )
+        # The exact same rule the SQL trigger enforces (trg_canon_requires_valid_
+        # identifier): identifier-valid AND script-consistent AND (NFKC-stable OR
+        # SARA-AM only). Reported reason is the FIRST failing check, in that order.
+        verdict = validate_surface(
+            surface, term_name_of_concept[concept_id], allowed_scripts_for(code)
+        )
+        nfkc_ok = verdict.nfkc_stable or verdict.nfkc_delta_class == "sara-am-only"
+        if not (verdict.identifier_valid and verdict.script_consistent and nfkc_ok):
+            if not verdict.identifier_valid:
+                reason = "not a valid identifier"
+            elif not verdict.script_consistent:
+                reason = "mixed / foreign script"
+            else:
+                reason = "NFKC-unstable"
             rejected.append((locale, slug, surface, reason))
             continue
 

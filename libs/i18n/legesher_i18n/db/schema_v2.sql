@@ -515,6 +515,15 @@ CREATE TABLE option_validations (
     validator_version   TEXT NOT NULL,
     identifier_valid    INTEGER NOT NULL CHECK (identifier_valid IN (0, 1)),
     nfkc_stable         INTEGER NOT NULL CHECK (nfkc_stable IN (0, 1)),
+    -- WHY the value is NFKC-unstable, recorded as a FACT (CORE-1514). NULL when
+    -- stable. 'sara-am-only' = the delta is exclusively U+0E33 (Thai SARA AM),
+    -- which CPython itself NFKC-normalizes in identifiers (PEP 3131), so both
+    -- spellings are one identifier at runtime and there is no spoofing surface.
+    -- 'other' is any other instability and stays a hard block. The fact stays a
+    -- fact: the ALLOWANCE for 'sara-am-only' is explicit policy in
+    -- trg_canon_requires_valid_identifier, not a weakening of nfkc_stable.
+    nfkc_delta_class    TEXT CHECK (nfkc_delta_class IS NULL
+                                    OR nfkc_delta_class IN ('sara-am-only', 'other')),
     script_consistent   INTEGER NOT NULL CHECK (script_consistent IN (0, 1)),
     collides_en_keyword INTEGER NOT NULL DEFAULT 0 CHECK (collides_en_keyword IN (0, 1)),
     min_interpreter_ok  INTEGER NOT NULL DEFAULT 1 CHECK (min_interpreter_ok IN (0, 1)),
@@ -715,20 +724,34 @@ BEGIN
     SELECT RAISE(ABORT, 'canon: option pl_scope does not cover this selection');
 END;
 
--- The selection rule (CORE-1400): never ship an option that fails mechanical
--- validation. Unvalidated is also a reject — silence is not a pass. And a
--- 'migration-seed' row is unvalidated: it is a stamp, not a verdict.
+-- The selection rule (CORE-1400), corrected in both directions by the Q7 triage
+-- (CORE-1514): never ship an option that fails mechanical validation, but do not
+-- refuse a legitimate one either. Unvalidated is a reject — silence is not a
+-- pass — and a 'migration-seed' row is unvalidated: a stamp, not a verdict.
+-- Three real checks gate the SELECTION:
+--   * identifier_valid  — term-aware (except* keeps its mirrored '*'), so a
+--                         faithful rendering is no longer refused for structure.
+--   * script_consistent — real per-character, locale-aware script classification,
+--                         so a Cyrillic-in-Thai confusable (NFKC-stable, a valid
+--                         identifier) no longer ships.
+--   * NFKC              — stable, OR unstable for exactly one reason: SARA-AM.
+--                         U+0E33 is legitimate Thai orthography that CPython
+--                         normalizes in identifiers (PEP 3131); accepting the
+--                         'sara-am-only' class is explicit policy, and it rides on
+--                         identifier_valid + script_consistent, so the accepted
+--                         NFKC form is itself an identifier-valid single script.
 CREATE TRIGGER trg_canon_requires_valid_identifier
 BEFORE INSERT ON canon_selections
 WHEN NOT EXISTS (
     SELECT 1 FROM option_validations v
     WHERE v.option_uid = NEW.option_uid
       AND v.identifier_valid = 1
-      AND v.nfkc_stable = 1
+      AND v.script_consistent = 1
+      AND (v.nfkc_stable = 1 OR v.nfkc_delta_class = 'sara-am-only')
       AND v.validator_version <> 'migration-seed'
 )
 BEGIN
-    SELECT RAISE(ABORT, 'canon: option is unvalidated or fails identifier/NFKC validation');
+    SELECT RAISE(ABORT, 'canon: option is unvalidated or fails identifier/NFKC/script validation');
 END;
 
 -- The denormalized surface_form must match the option it claims to ratify.

@@ -42,10 +42,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
     private `build_meta` table so the push script can verify which salt minted
     it.
   - `scripts/migrate_to_v2.py` — v1 → v2 migration (16,710 translations →
-    11,335 options + 16,710 provenance rows; 5,110 canon selections with 26
-    refused by the CORE-1400 validation gate). Pipeline labels mint no
-    endorsements; words a review rejected stay as evidence under a neutral
-    `source_detail` and endorse nothing.
+    11,335 options + 16,710 provenance rows; 5,087 canon selections with 49
+    refused by the CORE-1400 validation gate — see the CORE-1514 gate fix
+    below). Pipeline labels mint no endorsements; words a review rejected stay
+    as evidence under a neutral `source_detail` and endorse nothing.
 
 ### Changed
 
@@ -64,6 +64,32 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the DB column in CI. The
   language *key* (`code`) is unchanged — the key flip is a separate CORE-1512
   decision scoped against the v2 cutover.
+
+### Fixed
+
+- **v2 canon-validation gate corrected in both directions (CORE-1514, from the
+  Q7 triage on CORE-1501).** The honest `validate_surface` check was
+  simultaneously over- and under-inclusive: it refused 25 legitimate Thai
+  SARA-AM selections and every locale's `except*`, while passing 12 of 15
+  mixed-script confusables. Three fixes, in `schema_v2.sql` + `migrate_to_v2.py`:
+  - **`nfkc_delta_class` on `option_validations`** records *why* a value is
+    NFKC-unstable as a fact (`sara-am-only` = the delta is exclusively U+0E33,
+    which CPython itself normalizes per PEP 3131; `other` = anything else). The
+    canon trigger accepts `sara-am-only` as explicit policy — gated by
+    `identifier_valid` + `script_consistent` — while `other` stays a hard block.
+  - **Term-aware identifier validation** carries the source term's structural
+    affixes: `except*` validates the stem `ከቀረ` and requires the mirrored `*`.
+    No blanket `*` allowance elsewhere; dunders are already valid identifiers.
+  - **Real, locale-aware script-consistency** reuses the shared `script_policy`
+    table (default-deny) instead of the old `len(scripts) <= 1` heuristic, so a
+    Cyrillic-in-Thai confusable (`บайтс`) is refused while a legitimate Japanese
+    Han+Kana value is not. The canon trigger now gates on `script_consistent`.
+  - Net effect on the migration: the 25 Thai SARA-AM selections and `am
+    except*` **lift into canon**; 46 previously-shipped cross-script values
+    (real corruptions like `pl bool` = `布尔` and `nb except` = `u犁ksluttelse`,
+    untranslated English, and loanwords) are **newly blocked** and become the
+    CORE-1318 generation-layer / native-review workload. Canon refusals move
+    26 → 49; the validator version bumps to `py-identifier-v2`.
 
 ## [0.22.0] - 2026-07-15
 
