@@ -9,6 +9,32 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Concept-centric translations schema v2 with an endorsement corpus
+  (CORE-1501).** Additive: `translations.db` is read-only throughout; nothing
+  migrates in place. The unit of translation becomes a *concept*, options are
+  content-addressed (`option_uid` = truncated SHA-256 of the rendering, never
+  an AUTOINCREMENT id), endorsements are one-row-per-attestation with counts
+  derived, and the canon may only ratify a corpus option.
+  - `legesher_i18n/db/schema_v2.sql` / `schema_v2.py` — DDL, loader,
+    frozen-identifier helpers. `connect()` turns on `PRAGMA foreign_keys`
+    **and** `PRAGMA recursive_triggers` (both are per-connection and OFF by
+    default; the latter is what stops `INSERT OR REPLACE` from slipping past
+    the append-only triggers).
+  - `contributor_id` = `c_` + HMAC-SHA256(key=salt, msg=GitHub username),
+    truncated to 16 hex — an opaque, publishable token; the username persists
+    only in the never-exported `contributor_identities` table. The salt is
+    immutable forever and escrowed; `--publish` refuses unpublishable salts
+    **before** building, and each built DB records `sha256(salt)[:16]` in the
+    private `build_meta` table so the push script can verify which salt minted
+    it.
+  - `scripts/migrate_to_v2.py` — v1 → v2 migration (16,710 translations →
+    11,335 options + 16,710 provenance rows; 5,110 canon selections with 26
+    refused by the CORE-1400 validation gate). Pipeline labels mint no
+    endorsements; words a review rejected stay as evidence under a neutral
+    `source_detail` and endorse nothing.
+
 ## [0.22.0] - 2026-07-15
 
 ### Added
