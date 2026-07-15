@@ -9,6 +9,42 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **BCP 47 locale validator + audited backfill proposal (CORE-1500).** Prepares
+  the language key to move from a 2-letter ISO 639-1 `code` to a BCP 47 locale
+  tag. Additive only: `translations.db` is untouched, the primary key is not
+  flipped, and no pack directory moves.
+  - `legesher_i18n/bcp47.py` — parse / validate / canonicalize, in three
+    strictness layers (well-formed, valid, canonical), plus `fallback_chain()`
+    implementing RFC 4647 "Lookup" (`ar-EG` → `ar`).
+  - `legesher_i18n/data/iana-language-subtag-registry.tsv` — a vendored IANA
+    snapshot (File-Date `2026-06-14`, 9,296 records) so validation is offline
+    and deterministic. Pinned in tests by record count **and** a SHA-256 of the
+    data rows, so a truncated or silently-edited snapshot fails CI.
+  - `legesher_i18n/db/migrations/bcp47_backfill.tsv` — the 56-row proposal.
+    6 tags change, each script case decided from shipped pack content:
+    `zh` → `zh-Hans`, `sr` → `sr-Cyrl`, `uz` → `uz-Latn`, `mn` → `mn-Cyrl`, and
+    `no` → `nb`, `tl` → `fil` (all six confirmed by Madison 2026-07-15, along
+    with `su` keeping the bare tag). The other 50 are unchanged; 48
+    carry a registry `Suppress-Script`, so the bare tag is provably canonical.
+  - A pack's locale is what its YAML `language:` field declares, **not** what
+    its directory is called — so `no/` and `zh/` keep their directories, Python
+    module names, and published dist names. The TSV records
+    `current_pack_dir` and `default_slug_if_new` separately for exactly this
+    reason.
+  - `legesher_i18n/scripts/propose_bcp47_backfill.py` now **raises** rather than
+    stamping a bare tag with an unverified "no script contrast" rationale when a
+    language has no `Suppress-Script` and no editorial decision — the failure
+    mode that would otherwise mis-tag `az`, `ku`, `sd`, `ha`, `ky`, `tg`, `ff`
+    during the 103-language expansion.
+  - `canonicalize()` validates and canonicalizes **variant** subtags like every
+    other subtag (review fix): an unregistered variant (`en-foobar`) raises
+    `ValueError` instead of passing through, and a deprecated variant with a
+    registered replacement is substituted (`ja-Latn-hepburn-heploc` →
+    `ja-Latn-hepburn-alalc97`), restoring the `is_canonical(canonicalize(x))`
+    invariant.
+
 ## [0.21.3] - 2026-07-12
 
 ### Fixed
