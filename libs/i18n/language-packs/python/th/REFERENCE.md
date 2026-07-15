@@ -43,7 +43,7 @@ These are Python's reserved words translated to Thai.
 | `except*` | `เครื่องมือที่ใช้ในการเอาเป็น` |
 | `False` | `ผลักดัน` |
 | `finally` | `ทำเสมอ` |
-| `for` | `เทคนิคfor` |
+| `for` | `วนรอบ` |
 | `from` | `ฝัน` |
 | `global` | `เครื่องมือภาษาไทยทั้งหมด` |
 | `if` | `ถ้า` |
@@ -73,8 +73,8 @@ Python's built-in functions and types in Thai.
 | English | Thai |
 | ------- | ------ |
 | `__import__` | `__นำเข้า__` |
-| `abs` | `ฟังก์ชันabs` |
-| `aiter` | `aiterator` |
+| `abs` | `ค่าสัมบูรณ์` |
+| `aiter` | `ตัววนอะซิงค์` |
 | `all` | `ทุกอย่าง` |
 | `anext` | `ฟังกำลัง` |
 | `any` | `ใช่` |
@@ -82,8 +82,8 @@ Python's built-in functions and types in Thai.
 | `bin` | `บิน` |
 | `bool` | `บูล` |
 | `breakpoint` | `เป้าหมายปัญหา` |
-| `bytearray` | `ไบต์เรയ์` |
-| `bytes` | `บайтส` |
+| `bytearray` | `อาร์เรย์ไบต์` |
+| `bytes` | `ชุดไบต์` |
 | `callable` | `การทำให้เป็นตัวอย่างที่สามารถถูกเรียกได้` |
 | `chr` | `เซริลล์` |
 | `classmethod` | `เคล็ดลับของคลาส` |
@@ -95,7 +95,7 @@ Python's built-in functions and types in Thai.
 | `divmod` | `ดิวมอด` |
 | `ellipsis` | `อิลิสเซียม` |
 | `enumerate` | `นับรายการ` |
-| `eval` | `พิมัญเครื่องคำeval` |
+| `eval` | `ประเมินผล` |
 | `exec` | `ซับเทริก` |
 | `filter` | `ฟิลเตอร์` |
 | `float` | `ฟลอต` |
@@ -110,12 +110,12 @@ Python's built-in functions and types in Thai.
 | `id` | `เครื่องมือแบนเริ่ม` |
 | `input` | `ขอบคุณ` |
 | `int` | `เซลล์ฝัน` |
-| `isinstance` | `isinstanceคือการตรวจสอบว่าอันตรายเป็นเจ้าของแต่ละประเภท` |
-| `issubclass` | `issubclassคือการตรวจสอบว่าที่เป็นชุดของกล่าวและผู้ที่มีคลาสของกล่าวนั้นเป็นชุดของกล่าวหรือไม่` |
-| `iter` | `เครื่องมือiter` |
+| `isinstance` | `เป็นอินสแตนซ์` |
+| `issubclass` | `เป็นคลาสย่อย` |
+| `iter` | `ตัววน` |
 | `len` | `ลัง` |
 | `list` | `รายการ` |
-| `locals` | `เครื่องมือlocals` |
+| `locals` | `ตัวแปรเฉพาะที่` |
 | `map` | `แมป` |
 | `max` | `เทคนิคใช้สำหรับการเลือกของขั้นตอนที่มากที่สุด` |
 | `memoryview` | `เจตนาการทางการเรียกของแบคเตอร์` |
@@ -130,7 +130,7 @@ Python's built-in functions and types in Thai.
 | `print` | `เจตนา` |
 | `property` | `คุณสำหรับ` |
 | `range` | `เลขที่มาตราฐาน` |
-| `repr` | `เครื่องมือแปลงรูปแบบของPython` |
+| `repr` | `การแทนค่า` |
 | `reversed` | `ซับเปลี่ยน` |
 | `round` | `ขอเคลื่อน` |
 | `set` | `เซต` |
@@ -152,7 +152,7 @@ Exception classes for error handling.
 
 | English | Thai |
 | ------- | ------ |
-| `arithmeticerror` | `ข้อผิดพลาดเกี่ยวกับเครื่องสำหรับการทำคำและการประมाถนา` |
+| `arithmeticerror` | `ข้อผิดพลาดเลขคณิต` |
 | `assertionerror` | `ข้อสมพันธ์ที่ไม่ถูก` |
 | `attributeerror` | `ความผิดพลาดในการเก็บอัตรา` |
 | `baseexception` | `การเปลี่ยนที่พื้นฐาน` |
@@ -188,7 +188,7 @@ Exception classes for error handling.
 | `keyerror` | `เกิดความผิดหมายในการป้อนคีย์` |
 | `lookuperror` | `คำเลือกข้างใน` |
 | `memoryerror` | `เกิดข้อผิดพลาดในการใช้หัวข้อมือแบบไม่มีพื้นฐาน` |
-| `modulenotfounderror` | `เกิดอีเมล่าในการต้องการของมॉडูล` |
+| `modulenotfounderror` | `ข้อผิดพลาดไม่พบโมดูล` |
 | `nameerror` | `ความเสียงานชื่อ` |
 | `notadirectoryerror` | `ข้อผิดพลาดไม่เป็นสำเร็จ` |
 | `notimplementederror` | `ข้อผิดพลาดในการไม่เป็นที่ทำการตัดสินใจ` |
@@ -205,7 +205,7 @@ Exception classes for error handling.
 | `runtimewarning` | `คำเตือนในเวลาการรับทราบ` |
 | `stopasynciteration` | `หยุดการเปลี่ยนแปลงอย่างไรง่ายๆ` |
 | `stopiteration` | `เหงื่อนการหยุดการทำงาน` |
-| `syntaxerror` | `ข้อผิดพลาดสัยงานสำหรับPython` |
+| `syntaxerror` | `ข้อผิดพลาดไวยากรณ์` |
 | `syntaxwarning` | `เตือนรักษาความสมดุล` |
 | `systemerror` | `ข้อผิดพลาดระบบ` |
 | `systemexit` | `เลิกใช้งาน` |
@@ -214,7 +214,7 @@ Exception classes for error handling.
 | `typeerror` | `เกิดข้อผิดพลาดชนิดประเภท` |
 | `unboundlocalerror` | `เกิดข้อผิดพลาดในการตั้งแต่ละที่ไม่มีความสัมพันธ์` |
 | `unicodedecodeerror` | `ออกซิเจนไม่คอยหรือไม่สามารถแปลงได้` |
-| `unicodeencodeerror` | `เกิดอีกสิ่งที่เรียกว่าUnicodeEncodeErrorถ้าคุณไม่สามารถแปลงข้อคิดของตัวอ่างUnicodeให้เป็นข้อคิดของตัวอ่างASCII` |
+| `unicodeencodeerror` | `ข้อผิดพลาดเข้ารหัสยูนิโค้ด` |
 | `unicodeerror` | `อุนิคเซียร์` |
 | `unicodetranslateerror` | `อินเมชั่นตรัสแบ็คที่` |
 | `unicodewarning` | `ฟังก์ชั่นสำหรับความเห็นชัดของอัครโลยี` |
@@ -253,9 +253,9 @@ Here's an example showing Thai Python code with Legesher:
         เครื่องสำคัญ n * แฟกทอเรียล(n - 1)
 
 เครื่องมือ หลัก():
-    ตัวเลข = [เซลล์ฝัน(x) เทคนิคfor x อยู่ใน เลขที่มาตราฐาน(6)]
+    ตัวเลข = [เซลล์ฝัน(x) วนรอบ x อยู่ใน เลขที่มาตราฐาน(6)]
 
-    เทคนิคfor จำนวน อยู่ใน ตัวเลข:
+    วนรอบ จำนวน อยู่ใน ตัวเลข:
         ผลลัพธ์ = แฟกทอเรียล(จำนวน)
         เจตนา(f"{จำนวน}! = {ผลลัพธ์}")
 

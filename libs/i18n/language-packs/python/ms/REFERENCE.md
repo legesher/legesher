@@ -40,7 +40,7 @@ These are Python's reserved words translated to Malay.
 | `elif` | `lainjika` |
 | `else` | `lainnya` |
 | `except` | `kecuali` |
-| `except*` | `kecuali` |
+| `except*` | `kecuali*` |
 | `False` | `Salah` |
 | `finally` | `akhirnya` |
 | `for` | `untuk` |
@@ -102,7 +102,7 @@ Python's built-in functions and types in Malay.
 | `format` | `formatkan` |
 | `frozenset` | `setyangdibekukan` |
 | `getattr` | `mengambilatribut` |
-| `globals` | `global` |
+| `globals` | `pembolehubahsejagat` |
 | `hasattr` | `memilikiatribut` |
 | `hash` | `hashcode` |
 | `help` | `bantu` |
@@ -180,7 +180,7 @@ Exception classes for error handling.
 | `importerror` | `kesalahanimpor` |
 | `importwarning` | `perhatianimpor` |
 | `indentationerror` | `kesalahanpenginderaan` |
-| `indexerror` | `IndexError` |
+| `indexerror` | `kesalahanindeks` |
 | `interruptederror` | `kesalahangangguan` |
 | `ioerror` | `kesalahanmasukankeluaran` |
 | `isadirectoryerror` | `kesalahandirektori` |
@@ -189,7 +189,7 @@ Exception classes for error handling.
 | `lookuperror` | `kesalahanpencarian` |
 | `memoryerror` | `kesalahanmemori` |
 | `modulenotfounderror` | `kesilapanPengimportanModul` |
-| `nameerror` | `NameError` |
+| `nameerror` | `kesalahannama` |
 | `notadirectoryerror` | `kesalahan_bukan_direktori` |
 | `notimplementederror` | `kesalahanimplementasiyangtidakwajar` |
 | `oserror` | `kesalahansistemoperasi` |

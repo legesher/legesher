@@ -37,10 +37,10 @@ These are Python's reserved words translated to Japanese.
 | `continue` | `継続する` |
 | `def` | `定義する` |
 | `del` | `削除` |
-| `elif` | `elseif` |
+| `elif` | `それ以外もし` |
 | `else` | `それ以外の場合` |
 | `except` | `除く` |
-| `except*` | `exceptの使用` |
+| `except*` | `除く*` |
 | `False` | `偽` |
 | `finally` | `ついに` |
 | `for` | `ループ` |
@@ -62,8 +62,8 @@ These are Python's reserved words translated to Japanese.
 | `True` | `真` |
 | `try` | `試す` |
 | `type` | `型` |
-| `while` | `while_ループ` |
-| `with` | `with文` |
+| `while` | `条件ループ` |
+| `with` | `文脈` |
 | `yield` | `生成する` |
 
 ## Built-in Functions (73 terms)
@@ -78,7 +78,7 @@ Python's built-in functions and types in Japanese.
 | `all` | `すべて` |
 | `anext` | `非同期イテレーターから次の項目を取得する` |
 | `any` | `任意` |
-| `ascii` | `ASCII` |
+| `ascii` | `アスキー` |
 | `bin` | `バイナリ` |
 | `bool` | `ブール値` |
 | `breakpoint` | `ブレークポイント` |
@@ -157,7 +157,7 @@ Exception classes for error handling.
 | `attributeerror` | `属性エラー` |
 | `baseexception` | `ベーシック例外` |
 | `baseexceptiongroup` | `基底例外グループ` |
-| `blockingioerror` | `ブロックIOエラー` |
+| `blockingioerror` | `ブロッキング入出力エラー` |
 | `brokenpipeerror` | `ブロークンピープラーエラー` |
 | `buffererror` | `バッファエラー` |
 | `byteswarning` | `バイト警告` |
@@ -182,7 +182,7 @@ Exception classes for error handling.
 | `indentationerror` | `インデントエラー` |
 | `indexerror` | `インデックスエラー` |
 | `interruptederror` | `中断エラー` |
-| `ioerror` | `IOエラー` |
+| `ioerror` | `入出力エラー` |
 | `isadirectoryerror` | `イサディレクトリエラー` |
 | `keyboardinterrupt` | `キーボード中断` |
 | `keyerror` | `キーエラー` |
@@ -192,7 +192,7 @@ Exception classes for error handling.
 | `nameerror` | `未定義名エラー` |
 | `notadirectoryerror` | `ノットディレクトリエラー` |
 | `notimplementederror` | `未実装エラー` |
-| `oserror` | `osエラー` |
+| `oserror` | `オペレーティングシステムエラー` |
 | `overflowerror` | `オーバーフローエラー` |
 | `pendingdeprecationwarning` | `未使用の警告` |
 | `permissionerror` | `アクセス拒否` |
@@ -247,7 +247,7 @@ Here's an example showing Japanese Python code with Legesher:
     """nの階乗を計算する。"""
     もし n < 0:
         エラーをスローする 値の誤り("負の数は許可されていません")
-    elseif n == 0 または n == 1:
+    それ以外もし n == 0 または n == 1:
         戻り値 1
     それ以外の場合:
         戻り値 n * 階乗(n - 1)
@@ -261,7 +261,7 @@ Here's an example showing Japanese Python code with Legesher:
 
     # whileループのデモ
     カウント = 0
-    while_ループ カウント < 3:
+    条件ループ カウント < 3:
         印刷(f"カウント: {カウント}")
         カウント += 1
 

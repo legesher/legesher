@@ -3,7 +3,7 @@ target: python
 version: '3.11'
 extends: 3.10.yml
 keywords:
-  except*: למעט
+  except*: למעט*
 exceptions:
   exceptiongroup: קבוצתחריגים
   baseexceptiongroup: בסיס_אקסייפטיונגרופ

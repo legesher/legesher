@@ -854,6 +854,12 @@ SELECT
       WHERE f.option_uid = o.uid AND f.resolved_at IS NULL)  AS open_flags,
     COALESCE(v.identifier_valid, 0)  AS identifier_valid,
     COALESCE(v.nfkc_stable, 0)       AS nfkc_stable,
+    -- The other two predicates the canon gate (trg_canon_requires_valid_
+    -- identifier) actually tests, so this view mirrors canon-eligibility rather
+    -- than a stale subset: an identifier-valid, NFKC-stable option can still be
+    -- refused for a foreign script (CORE-1514).
+    COALESCE(v.script_consistent, 0) AS script_consistent,
+    v.nfkc_delta_class,
     RANK() OVER (
         PARTITION BY o.concept_id, o.locale, o.pl_scope
         ORDER BY ec.weighted_endorsement DESC, ec.endorsements DESC, o.surface_form ASC

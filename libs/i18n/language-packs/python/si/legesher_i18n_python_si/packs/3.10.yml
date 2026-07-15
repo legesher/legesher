@@ -185,7 +185,7 @@ reserved_words:
   self: තමා
   cls: පන්තියමයම
 metadata:
-  python_version_min: '3.10'
+  python_version_min: '3.13'
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'

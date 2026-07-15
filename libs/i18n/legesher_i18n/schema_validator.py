@@ -29,6 +29,7 @@ from .script_policy import (
     ALWAYS_ALLOWED_SCRIPTS,
     FORBIDDEN_FORMAT_CHARS,
     has_policy,
+    nfkc_delta_class,
     policy_for,
     scripts_of,
 )
@@ -55,6 +56,17 @@ _TRANSLATION_SECTIONS = (
 # same value on purpose, so the strict duplicate check allow-lists exactly this
 # (section, key) pair-up: ``keywords.type`` == ``builtins.type``.
 _ALLOWED_DUPLICATE_KEYS = frozenset({"type"})
+
+# A pack value is a TERM, not a definition. Machine translation sometimes emits a
+# sentence-length gloss in place of a short native word (the CORE-1318 "th max"
+# = 45-char definition, "hi isinstance" = 90-char sentence). Such values are
+# valid identifiers, so they pass the safety checks, but they are a quality
+# defect. The threshold is code points: the shipped legitimate compounds top out
+# around the high 30s (German/Finnish/Thai error compounds), while the
+# descriptions run 45-110. 40 catches the sentences while sparing real compounds.
+# Emitted as a WARNING (advisory), so it surfaces for native review without
+# blocking the safety gate.
+MAX_TERM_LENGTH = 40
 
 
 @dataclass(frozen=True)
@@ -1050,20 +1062,28 @@ class SchemaValidator:
             core = SchemaValidator._strip_soft_keyword_marker(value)
             nfc = unicodedata.normalize("NFC", core)
             nfkc = unicodedata.normalize("NFKC", core)
-            if core != nfc or core != nfkc:
-                findings.append(
-                    Finding(
-                        severity="error",
-                        code="nfkc-instability",
-                        location=f"{section}.{key}",
-                        message=(
-                            f"Value '{value}' is not stable under Unicode "
-                            f"normalization (NFC='{nfc}', NFKC='{nfkc}'). "
-                            "Python NFKC-folds identifiers at parse time, so "
-                            "the source value will not round-trip."
-                        ),
-                    )
+            if core == nfc == nfkc:
+                continue
+            # CORE-1514 policy, shared with the v2 canon gate: legitimate Thai
+            # orthography whose ONLY NFKC delta is SARA AM (U+0E33) is not a
+            # defect -- CPython folds it in identifiers (PEP 3131), so both
+            # spellings are one identifier. It must still be NFC-stable (SARA AM
+            # is; a value that is *also* NFC-unstable is a different problem).
+            if core == nfc and nfkc_delta_class(core, nfkc=nfkc) == "sara-am-only":
+                continue
+            findings.append(
+                Finding(
+                    severity="error",
+                    code="nfkc-instability",
+                    location=f"{section}.{key}",
+                    message=(
+                        f"Value '{value}' is not stable under Unicode "
+                        f"normalization (NFC='{nfc}', NFKC='{nfkc}'). "
+                        "Python NFKC-folds identifiers at parse time, so "
+                        "the source value will not round-trip."
+                    ),
                 )
+            )
         return findings
 
     @staticmethod
@@ -1466,17 +1486,49 @@ class SchemaValidator:
         return findings
 
     @staticmethod
+    def check_term_length(pack_schema: "LanguagePackSchema") -> list["Finding"]:
+        """Flag sentence-length values — a description used where a term belongs.
+
+        Length is measured in CODE POINTS on the soft-keyword-stripped core, so a
+        short multi-byte native word (e.g. a 10-character Thai term whose UTF-8
+        length exceeds the threshold) is not penalised. Emitted as a WARNING: a
+        long identifier is valid Python, so this is a quality signal for native
+        review, not a safety failure. See :data:`MAX_TERM_LENGTH`.
+        """
+        findings: list[Finding] = []
+        for section, key, value in SchemaValidator._iter_translation_items(pack_schema):
+            core = SchemaValidator._strip_soft_keyword_marker(value)
+            if len(core) >= MAX_TERM_LENGTH:
+                findings.append(
+                    Finding(
+                        severity="warning",
+                        code="descriptions-as-terms",
+                        location=f"{section}.{key}",
+                        message=(
+                            f"Value '{value}' is {len(core)} code points — a "
+                            f"sentence, not a term (limit {MAX_TERM_LENGTH}). A "
+                            "translation should be a short native word; this "
+                            "looks like a definition and needs retranslation."
+                        ),
+                    )
+                )
+        return findings
+
+    @staticmethod
     def validate_pack_strict(
         pack_schema: "LanguagePackSchema",
         language: str | None = None,
     ) -> list["Finding"]:
         """Run every safety check and return all Findings (empty == clean).
 
-        The gate is safety/correctness-only: every check flags something that
-        breaks code or is a Unicode/confusable hazard. Stylistic preferences
-        (e.g. identifier length) are guidance for the translation prompt
-        (PromptBuilder, CORE-1395), not pack warnings, so this takes no style
-        guide. Aggregates, in order:
+        The gate is safety/correctness-first: every ``error`` flags something
+        that breaks code or is a Unicode/confusable hazard. A small set of
+        advisory ``warning`` checks (non-ASCII digits, description-length) ride
+        along so the audit can surface them for native review — ``audit_packs``
+        fails CI on errors only, never on these warnings. Stylistic preferences
+        beyond them (naming, phrasing) stay guidance for the translation prompt
+        (PromptBuilder, CORE-1395), so this takes no style guide. Aggregates,
+        in order:
 
         1. :meth:`check_normalization`
         2. :meth:`check_script_consistency`
@@ -1487,7 +1539,8 @@ class SchemaValidator:
            (via :meth:`_strict_duplicate_findings`, type==type allow-listed)
         7. the previously-dead :meth:`check_identifier_validity`
            (via :meth:`_strict_identifier_findings`)
-        8. :meth:`check_ascii_digits` — the ASCII-digit policy
+        8. :meth:`check_ascii_digits` — the ASCII-digit policy (warning)
+        9. :meth:`check_term_length` — description-as-term length (warning)
 
         Args:
             pack_schema: Validated, inheritance-merged pack.
@@ -1495,8 +1548,9 @@ class SchemaValidator:
                 ``pack_schema.language``.
 
         Returns:
-            A flat ``list[Finding]``. An empty list means the pack passed every
-            safety check.
+            A flat ``list[Finding]`` mixing errors and advisory warnings. No
+            ``severity == "error"`` finding means the pack passes the blocking
+            gate; an entirely empty list means it is clean of warnings too.
         """
         lang = language or pack_schema.language
         findings: list[Finding] = []
@@ -1508,4 +1562,5 @@ class SchemaValidator:
         findings += SchemaValidator._strict_duplicate_findings(pack_schema)
         findings += SchemaValidator._strict_identifier_findings(pack_schema)
         findings += SchemaValidator.check_ascii_digits(pack_schema)
+        findings += SchemaValidator.check_term_length(pack_schema)
         return findings

@@ -46,7 +46,7 @@ These are Python's reserved words translated to Arabic.
 | `except*` | `استثناء*` |
 | `False` | `كاذب` |
 | `finally` | `أخيراً` |
-| `for` | `لـ` |
+| `for` | `لكل` |
 | `from` | `من` |
 | `global` | `العالمي` |
 | `if` | `إذا` |
@@ -256,9 +256,9 @@ Here's an example showing Arabic Python code with Legesher:
         إرجاع n * المضروب(n - 1)
 
 تعريف الرئيسية():
-    الأرقام = [العددالصحيح(x) لـ x في النطاق(6)]
+    الأرقام = [العددالصحيح(x) لكل x في النطاق(6)]
 
-    لـ رقم في الأرقام:
+    لكل رقم في الأرقام:
         النتيجة = المضروب(رقم)
         طَبْع(f"{رقم}! = {النتيجة}")
 

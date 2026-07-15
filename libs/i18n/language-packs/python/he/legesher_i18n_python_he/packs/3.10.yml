@@ -66,7 +66,7 @@ builtins:
   hex: הקס
   id: הזהותהייחודית
   input: קלט
-  isinstance: isinstance_hebrew
+  isinstance: היש_מופע
   issubclass: היש_תת_מחלקה
   iter: אִיטֵר
   len: אורך
@@ -92,7 +92,7 @@ builtins:
   vars: משתנים
   zip: למזג
   bool: בוליאני
-  bytearray: ARRY_OF_BYTE
+  bytearray: מערך_בתים
   bytes: בתים
   classmethod: שיטתמחלקה
   complex: מורכב

@@ -78,7 +78,7 @@ Python's built-in functions and types in Chinese.
 | `all` | `全` |
 | `anext` | `下一项` |
 | `any` | `任意` |
-| `ascii` | `ASCII` |
+| `ascii` | `阿斯克码` |
 | `bin` | `二进制` |
 | `bool` | `布尔` |
 | `breakpoint` | `断点` |
@@ -157,7 +157,7 @@ Exception classes for error handling.
 | `attributeerror` | `属性错误` |
 | `baseexception` | `基本异常` |
 | `baseexceptiongroup` | `基异常组` |
-| `blockingioerror` | `阻塞的IO错误` |
+| `blockingioerror` | `阻塞输入输出错误` |
 | `brokenpipeerror` | `破管错误` |
 | `buffererror` | `缓冲区错误` |
 | `byteswarning` | `字节警告` |
@@ -182,7 +182,7 @@ Exception classes for error handling.
 | `indentationerror` | `缩进错误` |
 | `indexerror` | `越界访问错误` |
 | `interruptederror` | `中断错误` |
-| `ioerror` | `IO错误` |
+| `ioerror` | `输入输出错误` |
 | `isadirectoryerror` | `是目录错误` |
 | `keyboardinterrupt` | `键盘中断` |
 | `keyerror` | `键错误` |
@@ -197,7 +197,7 @@ Exception classes for error handling.
 | `pendingdeprecationwarning` | `待删除警告` |
 | `permissionerror` | `权限错误` |
 | `processlookuperror` | `进程查找错误` |
-| `pythonfinalizationerror` | `python终结错误` |
+| `pythonfinalizationerror` | `解释器终结错误` |
 | `recursionerror` | `递归错误` |
 | `referenceerror` | `引用错误` |
 | `resourcewarning` | `资源警告` |

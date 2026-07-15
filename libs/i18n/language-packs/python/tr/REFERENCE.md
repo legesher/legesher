@@ -40,7 +40,7 @@ These are Python's reserved words translated to Turkish.
 | `elif` | `eğer_de` |
 | `else` | `yoksa` |
 | `except` | `yada` |
-| `except*` | `except` |
+| `except*` | `yada*` |
 | `False` | `yanlış` |
 | `finally` | `sonunda` |
 | `for` | `için` |

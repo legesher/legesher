@@ -128,7 +128,7 @@ exceptions:
   lookuperror: lookupfout
   indexerror: indexfout
   keyerror: sleutelfout
-  attributeerror: AttributeError
+  attributeerror: attribuutfout
   nameerror: Naamfout
   unboundlocalerror: ongebondenlokalefout
   oserror: osfout

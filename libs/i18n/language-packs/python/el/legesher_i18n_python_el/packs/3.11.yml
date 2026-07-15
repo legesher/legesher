@@ -3,7 +3,7 @@ target: python
 version: '3.11'
 extends: 3.10.yml
 keywords:
-  except*: εκτός
+  except*: εκτός*
 exceptions:
   exceptiongroup: οηομάδαεξαιρέσεων
   baseexceptiongroup: βασική_εξαίρεση_ομάδα

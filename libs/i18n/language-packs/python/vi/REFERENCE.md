@@ -40,7 +40,7 @@ These are Python's reserved words translated to Vietnamese.
 | `elif` | `nếu_khác` |
 | `else` | `khác` |
 | `except` | `trừ` |
-| `except*` | `trừ` |
+| `except*` | `trừ*` |
 | `False` | `Sai` |
 | `finally` | `Cuốicùng` |
 | `for` | `cho` |
@@ -127,7 +127,7 @@ Python's built-in functions and types in Vietnamese.
 | `open` | `mở` |
 | `ord` | `chuyểnđổikýtựthànhmãđiểmUnicode` |
 | `pow` | `làmchomộtsốnânglênlũythừa` |
-| `print` | `in` |
+| `print` | `inra` |
 | `property` | `thuộctính` |
 | `range` | `phạmvi` |
 | `repr` | `biểudiễn` |
@@ -257,21 +257,21 @@ bằng chinh():
 
     cho so trong cacso:
         ketqua = giaithua(so)
-        in(f"{so}! = {ketqua}")
+        inra(f"{so}! = {ketqua}")
 
     # Minh họa vòng lặp while
     dem = 0
     trongkhi dem < 3:
-        in(f"Đếm: {dem}")
+        inra(f"Đếm: {dem}")
         dem += 1
 
     # Minh họa try/except
     thử:
         giaithua(-1)
     trừ LỗiGiátrị như loi:
-        in(f"Lỗi: {loi}")
+        inra(f"Lỗi: {loi}")
     Cuốicùng:
-        in("Hoàn thành!")
+        inra("Hoàn thành!")
 
 nếu __name__ == "__main__":
     chinh()

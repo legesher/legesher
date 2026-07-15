@@ -7,10 +7,11 @@ pack with full inheritance resolution, and runs
 are grouped by language and by finding-code, printed as a readable report, and
 the process exits non-zero when any finding is present.
 
-This is the engine behind the ``validate-packs`` CI job. While the shipped
-packs still contain known data defects (foreign-script bleed-through, NFKC
-instability, etc.), the CI job runs this in **non-blocking** (``continue-on-
-error``) mode — the report is informational until the data-correction PRs land.
+This is the engine behind the ``validate-packs`` CI job. The data-correction
+PRs (CORE-1318) cleared every **error**, so the job now runs this **blocking**:
+the process exits non-zero on any error (safety / correctness), while advisory
+**warnings** (descriptions-as-terms, non-ASCII digits) are surfaced for native
+review without failing CI.
 
 Usage::
 
@@ -70,7 +71,15 @@ def _audit_pack_file(
     version = pack_file.stem  # e.g. "3.13" or "default"
 
     try:
-        pack = loader.load(lang, "python", None if version == "default" else version)
+        # enforce_min_interpreter=False: the auditor inspects the raw pack
+        # (it has its own check_min_interpreter_identifier); it must see the
+        # 3.13-only Sinhala values rather than have the loader refuse them.
+        pack = loader.load(
+            lang,
+            "python",
+            None if version == "default" else version,
+            enforce_min_interpreter=False,
+        )
     except Exception as exc:  # noqa: BLE001 — report, don't abort the run
         return (
             lang,
@@ -109,17 +118,30 @@ def _audit_pack_file(
     return lang, version, findings
 
 
-def _print_report(results: list[tuple[str, str, list[Finding]]], quiet: bool) -> int:
-    """Print the grouped report and return the total finding count."""
+def _print_report(
+    results: list[tuple[str, str, list[Finding]]], quiet: bool
+) -> tuple[int, int]:
+    """Print the grouped report and return ``(errors, warnings)``.
+
+    Errors are BLOCKING (safety / correctness: foreign script, NFKC instability,
+    keyword collisions, illegal format chars, min-interpreter traps, duplicate
+    targets, invalid identifiers). Warnings are ADVISORY quality signals
+    (descriptions-as-terms, non-ASCII digits) that surface for native review but
+    do not fail the gate.
+    """
     by_lang: dict[str, list[tuple[str, Finding]]] = defaultdict(list)
     code_counter: Counter[str] = Counter()
-    total = 0
+    errors = 0
+    warnings = 0
 
     for lang, version, findings in results:
         for finding in findings:
             by_lang[lang].append((version, finding))
             code_counter[finding.code] += 1
-            total += 1
+            if finding.severity == "error":
+                errors += 1
+            else:
+                warnings += 1
 
     if not quiet:
         for lang in sorted(by_lang):
@@ -136,13 +158,14 @@ def _print_report(results: list[tuple[str, str, list[Finding]]], quiet: bool) ->
     print("\n--- Audit summary ---")
     print(f"Packs audited: {len(results)}")
     print(f"Languages with findings: {len(by_lang)}")
-    print(f"Total findings: {total}")
+    print(f"Blocking errors: {errors}")
+    print(f"Advisory warnings: {warnings}")
     if code_counter:
         print("By code:")
         for code, count in code_counter.most_common():
             print(f"  {code}: {count}")
 
-    return total
+    return errors, warnings
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -172,11 +195,13 @@ def main(argv: list[str] | None = None) -> int:
 
     loader = LanguagePackLoader()
     results = [_audit_pack_file(loader, pf) for pf in pack_files]
-    total = _print_report(results, args.quiet)
+    errors, _warnings = _print_report(results, args.quiet)
 
-    # Non-zero exit on findings so CI can gate on it (the workflow currently
-    # runs this with continue-on-error until the data-correction PRs land).
-    return 1 if total else 0
+    # BLOCKING gate (CORE-1318): fail only on ERRORS. Advisory warnings
+    # (descriptions-as-terms, non-ASCII digits) are surfaced for native review
+    # but do not fail CI. The data-correction PRs cleared every error, so the
+    # validate-packs workflow now runs this without continue-on-error.
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":

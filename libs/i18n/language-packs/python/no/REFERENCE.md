@@ -39,8 +39,8 @@ These are Python's reserved words translated to Norwegian.
 | `del` | `slette` |
 | `elif` | `elsif` |
 | `else` | `annett` |
-| `except` | `u犁ksluttelse` |
-| `except*` | `except` |
+| `except` | `unntatt` |
+| `except*` | `unntatt*` |
 | `False` | `falsk` |
 | `finally` | `forrestil` |
 | `for` | `for_loops` |
@@ -268,7 +268,7 @@ definisjon hoved():
     # Demonstrer try/except
     prøve:
         fakultet(-1)
-    u犁ksluttelse Værdfeil som feil:
+    unntatt Værdfeil som feil:
         skrive(f"Feil: {feil}")
     forrestil:
         skrive("Ferdig!")

@@ -72,6 +72,7 @@ from legesher_i18n.db.schema_v2 import (  # noqa: E402
 from legesher_i18n.script_policy import (  # noqa: E402
     ALWAYS_ALLOWED_SCRIPTS,
     has_policy,
+    nfkc_delta_class,
     policy_for,
     scripts_of,
 )
@@ -321,13 +322,6 @@ class Validation:
     collides_en_keyword: bool
 
 
-#: The Thai SARA AM character and its NFKC decomposition (NIKHAHIT + SARA AA).
-#: U+0E33 is the ONLY source of NFKC instability across the 25 refused Thai
-#: selections, and CPython NFKC-normalizes identifiers (PEP 3131), so both
-#: spellings are one identifier at runtime -- no spoofing surface.
-_SARA_AM = "ำ"
-_SARA_AM_NFKC = unicodedata.normalize("NFKC", _SARA_AM)  # "ํา"
-
 #: Base scripts for the DB languages that do NOT ship a pack yet, so the v2
 #: validator can classify their options. ``script_policy.SCRIPT_POLICIES`` is
 #: keyed to shipped packs only (``tests/test_script_policy_coverage.py`` forbids
@@ -407,24 +401,6 @@ def _identifier_valid(surface: str, term_name: str) -> bool:
     return stem.isidentifier()
 
 
-def _nfkc_delta_class(surface: str) -> str | None:
-    """Classify WHY ``surface`` is NFKC-unstable -- a fact, not a policy.
-
-    ``None`` when already NFKC-stable. ``'sara-am-only'`` when the ONLY unstable
-    character is U+0E33 (Thai SARA AM) and decomposing it reproduces the NFKC
-    form exactly -- legitimate Thai orthography CPython itself normalizes
-    (PEP 3131), so there is no spoofing surface. ``'other'`` for any other
-    instability, which stays a hard block.
-    """
-    nfkc = unicodedata.normalize("NFKC", surface)
-    if nfkc == surface:
-        return None
-    unstable = {c for c in surface if unicodedata.normalize("NFKC", c) != c}
-    if unstable == {_SARA_AM} and surface.replace(_SARA_AM, _SARA_AM_NFKC) == nfkc:
-        return "sara-am-only"
-    return "other"
-
-
 def _script_consistent(surface: str, allowed_scripts: frozenset[str] | None) -> bool:
     """Real, per-character, locale-aware script-consistency.
 
@@ -468,10 +444,11 @@ def validate_surface(
         ``nfkc_delta_class`` records why an unstable value is unstable; and
         ``script_consistent`` is checked against the locale's real allowlist.
     """
+    nfkc = unicodedata.normalize("NFKC", surface)
     return Validation(
         identifier_valid=_identifier_valid(surface, term_name),
-        nfkc_stable=unicodedata.normalize("NFKC", surface) == surface,
-        nfkc_delta_class=_nfkc_delta_class(surface),
+        nfkc_stable=nfkc == surface,
+        nfkc_delta_class=nfkc_delta_class(surface, nfkc=nfkc),
         script_consistent=_script_consistent(surface, allowed_scripts),
         collides_en_keyword=keyword.iskeyword(surface),
     )
@@ -926,11 +903,16 @@ def migrate(
     nfkc_unstable = 0
     sara_am_only = 0
     script_inconsistent = 0
+    #: uid -> verdict, so the canon pass (step 6) reuses the verdict computed
+    #: here instead of re-running validate_surface on every selected option. One
+    #: verdict per option; every selected uid is an option (checked in step 6).
+    verdicts: dict[str, Validation] = {}
     for uid, surface in options_seen.items():
         concept_id, code = option_meta[uid]
         verdict = validate_surface(
             surface, term_name_of_concept[concept_id], allowed_scripts_for(code)
         )
+        verdicts[uid] = verdict
         invalid_identifier += not verdict.identifier_valid
         nfkc_unstable += not verdict.nfkc_stable
         sara_am_only += verdict.nfkc_delta_class == "sara-am-only"
@@ -981,9 +963,9 @@ def migrate(
         # The exact same rule the SQL trigger enforces (trg_canon_requires_valid_
         # identifier): identifier-valid AND script-consistent AND (NFKC-stable OR
         # SARA-AM only). Reported reason is the FIRST failing check, in that order.
-        verdict = validate_surface(
-            surface, term_name_of_concept[concept_id], allowed_scripts_for(code)
-        )
+        # Reuse the verdict computed in step 5 (same option, same inputs) rather
+        # than re-running the validator.
+        verdict = verdicts[uid]
         nfkc_ok = verdict.nfkc_stable or verdict.nfkc_delta_class == "sara-am-only"
         if not (verdict.identifier_valid and verdict.script_consistent and nfkc_ok):
             if not verdict.identifier_valid:

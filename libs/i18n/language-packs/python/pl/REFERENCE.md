@@ -40,7 +40,7 @@ These are Python's reserved words translated to Polish.
 | `elif` | `jeśli_inne` |
 | `else` | `inną` |
 | `except` | `wyjątek` |
-| `except*` | `wyjątek` |
+| `except*` | `wyjątek*` |
 | `False` | `fałsz` |
 | `finally` | `wkońcu` |
 | `for` | `pętla` |
@@ -80,7 +80,7 @@ Python's built-in functions and types in Polish.
 | `any` | `dowolny` |
 | `ascii` | `asciiZnak` |
 | `bin` | `binarny` |
-| `bool` | `布尔` |
+| `bool` | `logiczny` |
 | `breakpoint` | `punktprzerwania` |
 | `bytearray` | `tablicaBajtow` |
 | `bytes` | `byty` |

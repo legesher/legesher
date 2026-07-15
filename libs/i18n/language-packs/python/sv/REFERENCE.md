@@ -40,7 +40,7 @@ These are Python's reserved words translated to Swedish.
 | `elif` | `annansom` |
 | `else` | `annär` |
 | `except` | `förutom` |
-| `except*` | `undantag` |
+| `except*` | `förutom*` |
 | `False` | `falsk` |
 | `finally` | `slutliggare` |
 | `for` | `för` |
@@ -178,7 +178,7 @@ Exception classes for error handling.
 | `futurewarning` | `tidigareVarning` |
 | `generatorexit` | `generatörsutgång` |
 | `importerror` | `importfeil` |
-| `importwarning` | `importav警警` |
+| `importwarning` | `importvarning` |
 | `indentationerror` | `indentationfel` |
 | `indexerror` | `indexfeil` |
 | `interruptederror` | `interrupterror` |

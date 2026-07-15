@@ -43,7 +43,7 @@ These are Python's reserved words translated to Hebrew.
 | `elif` | `אם_אלו` |
 | `else` | `אחרת` |
 | `except` | `למעט` |
-| `except*` | `למעט` |
+| `except*` | `למעט*` |
 | `False` | `כוזב` |
 | `finally` | `לבסוף` |
 | `for` | `לכל` |
@@ -85,7 +85,7 @@ Python's built-in functions and types in Hebrew.
 | `bin` | `בינארי` |
 | `bool` | `בוליאני` |
 | `breakpoint` | `השהייה` |
-| `bytearray` | `ARRY_OF_BYTE` |
+| `bytearray` | `מערך_בתים` |
 | `bytes` | `בתים` |
 | `callable` | `קריאה` |
 | `chr` | `תו` |
@@ -113,7 +113,7 @@ Python's built-in functions and types in Hebrew.
 | `id` | `הזהותהייחודית` |
 | `input` | `קלט` |
 | `int` | `שלם` |
-| `isinstance` | `isinstance_hebrew` |
+| `isinstance` | `היש_מופע` |
 | `issubclass` | `היש_תת_מחלקה` |
 | `iter` | `אִיטֵר` |
 | `len` | `אורך` |

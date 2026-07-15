@@ -382,3 +382,43 @@ def scripts_of(value: str) -> set[str]:
         Set of script names (e.g. ``{"Latin", "Common"}``).
     """
     return {_script_of_char(ch) for ch in value}
+
+
+# ---------------------------------------------------------------------------
+# NFKC delta classification — shared with the v2 canon gate (CORE-1514).
+# ---------------------------------------------------------------------------
+
+#: Thai SARA AM and its NFKC decomposition (NIKHAHIT + SARA AA). U+0E33 is the
+#: single source of NFKC instability across the shipped Thai pack values.
+SARA_AM = "ำ"
+_SARA_AM_NFKC = unicodedata.normalize("NFKC", SARA_AM)  # "ํา"
+
+
+def nfkc_delta_class(value: str, nfkc: str | None = None) -> str | None:
+    """Classify WHY *value* is NFKC-unstable, or return None when it is stable.
+
+    ``"sara-am-only"`` — the ONLY unstable character is U+0E33 (Thai SARA AM),
+    and decomposing it reproduces the NFKC form exactly. CPython itself NFKC-
+    folds identifiers (PEP 3131), so both spellings are one identifier at
+    runtime and there is no spoofing surface; legitimate Thai orthography.
+    ``"other"`` — any other instability, which stays a hard defect.
+
+    This mirrors the policy the v2 canon gate applies in
+    ``scripts/migrate_to_v2.py`` (CORE-1514), so the pack auditor and the corpus
+    validator agree on what "dirty" means.
+
+    Args:
+        value: The string to classify.
+        nfkc: The NFKC normalization of *value*, if the caller already computed
+            it (``check_normalization`` and ``validate_surface`` both do). Passed
+            in to avoid a redundant ``unicodedata.normalize`` pass; computed here
+            when ``None``.
+    """
+    if nfkc is None:
+        nfkc = unicodedata.normalize("NFKC", value)
+    if nfkc == value:
+        return None
+    unstable = {c for c in value if unicodedata.normalize("NFKC", c) != c}
+    if unstable == {SARA_AM} and value.replace(SARA_AM, _SARA_AM_NFKC) == nfkc:
+        return "sara-am-only"
+    return "other"

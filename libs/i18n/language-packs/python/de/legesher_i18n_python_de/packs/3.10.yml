@@ -59,7 +59,7 @@ builtins:
   filter: filtern
   format: formatieren
   getattr: attributabrufen
-  globals: global
+  globals: dieglobalenVariablen
   hasattr: hatattribut
   hash: Hash
   help: Hilfe
@@ -114,13 +114,13 @@ builtins:
   aiter: asynchrone_itor
   anext: nächsterWert
 exceptions:
-  baseexception: BaseException
+  baseexception: Basisausnahme
   encodingwarning: Codierungswarnung
   exception: Ausnahme
   generatorexit: generator_exit
   systemerror: systemfehler
   systemexit: systematischerAusstieg
-  keyboardinterrupt: KeyboardInterrupt
+  keyboardinterrupt: Tastaturunterbrechung
   arithmeticerror: arithmetischerFehler
   floatingpointerror: FloatPunktFehler
   overflowerror: Überlauffehler
@@ -129,13 +129,13 @@ exceptions:
   indexerror: Indexfehler
   keyerror: Schlüsselfehler
   attributeerror: Attributfehler
-  nameerror: NameError
+  nameerror: Namensfehler
   unboundlocalerror: ungebundener_lokaler_fehler
   oserror: osfehler
   blockingioerror: BlockingIOFehler
-  childprocesserror: ChildProcessError
+  childprocesserror: Kindprozessfehler
   connectionerror: Verbindungsfehler
-  brokenpipeerror: BrokenPipeError
+  brokenpipeerror: Pipeunterbrechungsfehler
   connectionabortederror: Verbindungsabbruchfehler
   connectionrefusederror: Verbindungsverweigerungsfehler
   connectionreseterror: Verbindungsresetfehler
@@ -149,10 +149,10 @@ exceptions:
   timeouterror: Zeitüberschreitung
   importerror: Importfehler
   modulenotfounderror: Modulnichtgefunden
-  stopiteration: StopIteration
+  stopiteration: Iterationsstopp
   stopasynciteration: stop_async_iteration
   typeerror: Typfehler
-  valueerror: ValueError
+  valueerror: Wertfehler
   unicodeerror: UnicodeFehler
   unicodedecodeerror: UnicodeFehlerbeimDekodieren
   unicodeencodeerror: UnicodeKodierungsfehler

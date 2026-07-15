@@ -102,7 +102,7 @@ Python's built-in functions and types in German.
 | `format` | `formatieren` |
 | `frozenset` | `gefrorener_Satz` |
 | `getattr` | `attributabrufen` |
-| `globals` | `global` |
+| `globals` | `dieglobalenVariablen` |
 | `hasattr` | `hatattribut` |
 | `hash` | `Hash` |
 | `help` | `Hilfe` |
@@ -155,13 +155,13 @@ Exception classes for error handling.
 | `arithmeticerror` | `arithmetischerFehler` |
 | `assertionerror` | `Assertionfehler` |
 | `attributeerror` | `Attributfehler` |
-| `baseexception` | `BaseException` |
+| `baseexception` | `Basisausnahme` |
 | `baseexceptiongroup` | `Basisausnahmegruppe` |
 | `blockingioerror` | `BlockingIOFehler` |
-| `brokenpipeerror` | `BrokenPipeError` |
+| `brokenpipeerror` | `Pipeunterbrechungsfehler` |
 | `buffererror` | `Bufferfehler` |
 | `byteswarning` | `ByteWarnung` |
-| `childprocesserror` | `ChildProcessError` |
+| `childprocesserror` | `Kindprozessfehler` |
 | `connectionabortederror` | `Verbindungsabbruchfehler` |
 | `connectionerror` | `Verbindungsfehler` |
 | `connectionrefusederror` | `Verbindungsverweigerungsfehler` |
@@ -184,12 +184,12 @@ Exception classes for error handling.
 | `interruptederror` | `Interruptorfehler` |
 | `ioerror` | `IOFehler` |
 | `isadirectoryerror` | `Isadirectoryerror` |
-| `keyboardinterrupt` | `KeyboardInterrupt` |
+| `keyboardinterrupt` | `Tastaturunterbrechung` |
 | `keyerror` | `Schlüsselfehler` |
 | `lookuperror` | `Suchfehler` |
 | `memoryerror` | `Speicherfehler` |
 | `modulenotfounderror` | `Modulnichtgefunden` |
-| `nameerror` | `NameError` |
+| `nameerror` | `Namensfehler` |
 | `notadirectoryerror` | `NichtDateiVerzeichnisFehler` |
 | `notimplementederror` | `Notimplementierungsfehler` |
 | `oserror` | `osfehler` |
@@ -204,7 +204,7 @@ Exception classes for error handling.
 | `runtimeerror` | `Laufzeitfehler` |
 | `runtimewarning` | `Laufzeitwarnung` |
 | `stopasynciteration` | `stop_async_iteration` |
-| `stopiteration` | `StopIteration` |
+| `stopiteration` | `Iterationsstopp` |
 | `syntaxerror` | `Syntaxfehler` |
 | `syntaxwarning` | `Syntaxwarnung` |
 | `systemerror` | `systemfehler` |
@@ -219,7 +219,7 @@ Exception classes for error handling.
 | `unicodetranslateerror` | `UnicodeÜbersetzungsfehler` |
 | `unicodewarning` | `UnicodeWarnung` |
 | `userwarning` | `Benutzerwarnung` |
-| `valueerror` | `ValueError` |
+| `valueerror` | `Wertfehler` |
 | `warning` | `Warnung` |
 | `zerodivisionerror` | `Nullteilungsfehler` |
 
@@ -246,7 +246,7 @@ von typing importieren Optional
 definit fakultaet(n):
     """Berechne die Fakultät von n."""
     wenn n < 0:
-        erheben ValueError("Negative Zahlen sind nicht erlaubt")
+        erheben Wertfehler("Negative Zahlen sind nicht erlaubt")
     wennsonst n == 0 oder n == 1:
         zurückgeben 1
     sonst:
@@ -268,7 +268,7 @@ definit haupt():
     # Demonstriere Try/Except
     versuchen:
         fakultaet(-1)
-    außer ValueError als fehler:
+    außer Wertfehler als fehler:
         drucken(f"Fehler: {fehler}")
     endlich:
         drucken("Fertig!")

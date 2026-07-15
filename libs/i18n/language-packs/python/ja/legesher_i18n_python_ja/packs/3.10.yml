@@ -12,7 +12,7 @@ keywords:
   continue: 継続する
   def: 定義する
   del: 削除
-  elif: elseif
+  elif: それ以外もし
   else: それ以外の場合
   except: 除く
   finally: ついに
@@ -31,8 +31,8 @@ keywords:
   raise: エラーをスローする
   return: 戻り値
   try: 試す
-  while: while_ループ
-  with: with文
+  while: 条件ループ
+  with: 文脈
   yield: 生成する
   None: なし
   'True': 真
@@ -44,7 +44,7 @@ builtins:
   abs: 絶対値
   all: すべて
   any: 任意
-  ascii: ASCII
+  ascii: アスキー
   bin: バイナリ
   breakpoint: ブレークポイント
   callable: 可呼び
@@ -131,8 +131,8 @@ exceptions:
   attributeerror: 属性エラー
   nameerror: 未定義名エラー
   unboundlocalerror: 未定義の変数によるエラー
-  oserror: osエラー
-  blockingioerror: ブロックIOエラー
+  oserror: オペレーティングシステムエラー
+  blockingioerror: ブロッキング入出力エラー
   childprocesserror: 子プロセスエラー
   connectionerror: 接続エラー
   brokenpipeerror: ブロークンピープラーエラー
@@ -169,7 +169,7 @@ exceptions:
   indentationerror: インデントエラー
   taberror: タブエラー
   environmenterror: 環境エラー
-  ioerror: IOエラー
+  ioerror: 入出力エラー
   warning: 警告
   userwarning: ユーザーワーニング
   deprecationwarning: 警告非推奨

@@ -32,7 +32,7 @@ keywords:
   return: 반환
   try: 시도
   while: 반복문
-  with: with문
+  with: 함께
   yield: 값을생성하다
   None: 없음
   'True': 정말
@@ -50,7 +50,7 @@ builtins:
   callable: 콜가능한
   chr: 한글문자
   compile: 컴파일
-  delattr: 삭제attr
+  delattr: 속성삭제
   dir: 디렉토리
   divmod: 디브모드
   enumerate: 열거
@@ -58,7 +58,7 @@ builtins:
   exec: 실행
   filter: 필터링
   format: 포맷
-  getattr: get_attribute
+  getattr: 속성가져오기
   globals: 글로벌변수
   hasattr: 해당객체에지정된속성이있는지확인합니다
   hash: 해시
@@ -84,7 +84,7 @@ builtins:
   repr: 표현
   reversed: 역순
   round: 반올림
-  setattr: 셋attr
+  setattr: 속성설정
   slice: 슬라이스
   sorted: 정렬된
   sum: 합계
@@ -124,7 +124,7 @@ exceptions:
   arithmeticerror: 산술오류
   floatingpointerror: 부동소수점오류
   overflowerror: 버퍼오버플로오류
-  zerodivisionerror: 零의나눗셈오류
+  zerodivisionerror: 영나눗셈오류
   lookuperror: 검색오류
   indexerror: 인덱스오류
   keyerror: 키오류
@@ -132,7 +132,7 @@ exceptions:
   nameerror: 이름오류
   unboundlocalerror: 무한대지역오류
   oserror: 오류
-  blockingioerror: 블로킹io오류
+  blockingioerror: 차단입출력오류
   childprocesserror: 자식프로세스오류
   connectionerror: 연결오류
   brokenpipeerror: 브로큰파이프오류
@@ -169,7 +169,7 @@ exceptions:
   indentationerror: 인덴트오류
   taberror: 타블오류
   environmenterror: 환경오류
-  ioerror: IO오류
+  ioerror: 입출력오류
   warning: 경고
   userwarning: 사용자경고
   deprecationwarning: 경고구식입니다

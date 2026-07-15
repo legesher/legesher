@@ -95,7 +95,7 @@ Python's built-in functions and types in Hindi.
 | `divmod` | `दिवमोड` |
 | `ellipsis` | `त्रिकोणीय` |
 | `enumerate` | `सूचीबद्धकरना` |
-| `eval` | `evalकरना` |
+| `eval` | `मूल्यांकनकरना` |
 | `exec` | `कार्यान्वयन` |
 | `filter` | `चुनना` |
 | `float` | `फ्लोटिंगपॉइंटसंख्या` |
@@ -184,7 +184,7 @@ Exception classes for error handling.
 | `interruptederror` | `अवरोधकत्रुटि` |
 | `ioerror` | `आईओईररर` |
 | `isadirectoryerror` | `इसाडायरेक्टरीएरर` |
-| `keyboardinterrupt` | `कीबोर्डइंटर럽्ट` |
+| `keyboardinterrupt` | `कुंजीपटलव्यवधान` |
 | `keyerror` | `कीत्रुटि` |
 | `lookuperror` | `खोजत्रुटि` |
 | `memoryerror` | `मेमोरीएरर` |

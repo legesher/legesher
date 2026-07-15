@@ -3,7 +3,7 @@ target: python
 version: '3.11'
 extends: 3.10.yml
 keywords:
-  except*: exceptの使用
+  except*: 除く*
 exceptions:
   exceptiongroup: 例外グループ
   baseexceptiongroup: 基底例外グループ

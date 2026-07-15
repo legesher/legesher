@@ -96,13 +96,28 @@ class TestNormalizationStability:
         schema = _schema("th", builtins={"len": THAI_STABLE})
         assert SchemaValidator.check_normalization(schema) == []
 
-    def test_thai_sara_am_is_flagged(self) -> None:
-        # The real-world defect: SARA AM (U+0E33) decomposes under NFKC to
-        # U+0E4D U+0E32, so a value carrying it never matches what CPython binds.
+    def test_thai_sara_am_only_is_allowed(self) -> None:
+        # CORE-1514 policy: SARA AM (U+0E33) decomposes under NFKC to U+0E4D
+        # U+0E32, but CPython itself NFKC-folds identifiers (PEP 3131), so both
+        # spellings are ONE identifier at runtime -- no spoofing surface. When
+        # the ONLY NFKC delta is SARA AM, legitimate Thai orthography passes; the
+        # pack auditor and the v2 canon gate agree on this.
         sara_am = chr(0x0E04) + chr(0x0E33)
-        assert unicodedata.normalize("NFKC", sara_am) != sara_am
+        assert unicodedata.normalize("NFC", sara_am) == sara_am  # NFC-stable
+        assert unicodedata.normalize("NFKC", sara_am) != sara_am  # NFKC-unstable
         schema = _schema("th", builtins={"len": sara_am})
-        assert SchemaValidator.check_normalization(schema) != []
+        assert SchemaValidator.check_normalization(schema) == []
+
+    def test_sara_am_mixed_with_another_instability_is_still_flagged(self) -> None:
+        # The allowance is SARA-AM-*only*. A value that is also unstable for
+        # another reason (here NFC-unstable Angstrom) is not legitimate Thai and
+        # must still be flagged.
+        mixed = chr(0x0E04) + chr(0x0E33) + ANGSTROM
+        assert unicodedata.normalize("NFC", mixed) != mixed
+        schema = _schema("th", builtins={"len": mixed})
+        findings = SchemaValidator.check_normalization(schema)
+        assert len(findings) == 1
+        assert findings[0].code == "nfkc-instability"
 
     def test_soft_keyword_star_is_stripped_before_check(self) -> None:
         # The trailing '*' of a soft-keyword translation must not be treated as

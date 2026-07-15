@@ -114,7 +114,7 @@ builtins:
   aiter: iter_async
   anext: próximoasync
 exceptions:
-  baseexception: BaseException
+  baseexception: exceçãobase
   encodingwarning: avisodecodificação
   exception: exceção
   generatorexit: geradordesaída
@@ -152,7 +152,7 @@ exceptions:
   stopiteration: excecaoDeIteracaoParada
   stopasynciteration: pararaiteraçãoassíncrona
   typeerror: errodetipo
-  valueerror: ValueError
+  valueerror: errodevalor
   unicodeerror: errodeunicode
   unicodedecodeerror: errodedecodificaçãodeUnicode
   unicodeencodeerror: errordecodificaçãounicode

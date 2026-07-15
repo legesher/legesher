@@ -21,6 +21,7 @@ from .exceptions import (
     PackNotFoundError,
     PackValidationError,
     PathTraversalError,
+    UnsupportedInterpreterError,
 )
 from .schema_validator import LanguagePackMetadata, SchemaValidator
 
@@ -35,6 +36,16 @@ MAX_INHERITANCE_DEPTH = 10
 # primitive. The loader validates ``version`` against this pattern before any
 # filesystem join (closes the gap; the ``extends`` field has its own guard).
 _VERSION_PATTERN = re.compile(r"^(\d+\.\d+|default)$")
+
+
+def _parse_xy(version: str) -> tuple[int, int] | None:
+    """Parse a leading ``X.Y`` from a version string, ignoring any suffix.
+
+    Returns ``(major, minor)`` or ``None`` when there is no ``X.Y`` prefix (e.g.
+    ``"default"``), so callers can skip a comparison they cannot make.
+    """
+    match = re.match(r"^(\d+)\.(\d+)", version)
+    return (int(match.group(1)), int(match.group(2))) if match else None
 
 
 @dataclass(frozen=True)
@@ -282,6 +293,7 @@ class LanguagePackLoader:
         language: str,
         target: str = "python",
         version: str | None = None,
+        enforce_min_interpreter: bool = True,
     ) -> LanguagePack:
         """Load a language pack with full inheritance resolution.
 
@@ -292,6 +304,12 @@ class LanguagePackLoader:
             target: Target programming language (default: 'python')
             version: Python version (e.g., '3.10', '3.13')
                     If None, attempts to load default pack
+            enforce_min_interpreter: When True (the default) and ``version`` is
+                an ``X.Y`` string, refuse a pack whose ``python_version_min``
+                exceeds it — its identifiers would ``SyntaxError`` on that
+                interpreter (e.g. Sinhala ZWJ conjuncts need 3.13+, CORE-1318).
+                Tooling that inspects the raw pack without running translated
+                code (the auditor, exporters) passes ``False``.
 
         Returns:
             Loaded LanguagePack with merged keywords from inheritance
@@ -300,6 +318,8 @@ class LanguagePackLoader:
             PackNotFoundError: If pack file doesn't exist (includes available languages)
             CircularInheritanceError: If circular inheritance detected
             MaxInheritanceDepthError: If inheritance too deep
+            UnsupportedInterpreterError: If the pack's ``python_version_min``
+                exceeds ``version`` and ``enforce_min_interpreter`` is True
             ValueError: If ``version`` is not ``X.Y`` or ``"default"``
                 (path-traversal guard, since version is joined into a filename)
         """
@@ -335,6 +355,15 @@ class LanguagePackLoader:
         # Validate merged pack
         pack_schema = SchemaValidator.validate_pack(pack_data, pack_path)
 
+        # Interpreter-floor guard: a pack whose declared minimum exceeds the
+        # version we are loading FOR contains identifiers that only parse on the
+        # newer interpreter (the Sinhala ZWJ conjuncts, CORE-1318). Refuse loudly
+        # here rather than letting a SyntaxError surface in the user's code.
+        # Skipped when ``version`` is None (no target to compare) or on the
+        # auditor/exporter bypass, which inspect the raw pack without running it.
+        if enforce_min_interpreter and version is not None:
+            self._enforce_min_interpreter(pack_schema, version, language)
+
         # Create immutable LanguagePack
         pack = LanguagePack(
             language=pack_schema.language,
@@ -350,6 +379,30 @@ class LanguagePackLoader:
         )
 
         return pack
+
+    @staticmethod
+    def _enforce_min_interpreter(
+        pack_schema: Any, requested_version: str, language: str
+    ) -> None:
+        """Refuse a pack that requires a newer interpreter than requested.
+
+        No-op when the pack declares no ``python_version_min`` or when either
+        version string lacks a parseable ``X.Y`` prefix (nothing to compare).
+
+        Raises:
+            UnsupportedInterpreterError: If ``python_version_min`` > requested.
+        """
+        metadata = pack_schema.metadata
+        if metadata is None or not metadata.python_version_min:
+            return
+        required = _parse_xy(metadata.python_version_min)
+        requested = _parse_xy(requested_version)
+        if required is None or requested is None:
+            return
+        if requested < required:
+            raise UnsupportedInterpreterError(
+                language, metadata.python_version_min, requested_version
+            )
 
     def _get_pack_path(self, language: str, target: str, version: str | None) -> Path:
         """Build path to language pack file.

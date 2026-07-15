@@ -116,3 +116,31 @@ class UnsupportedVersionError(LanguagePackError):
             f"Python version {version} is not supported. "
             f"Supported versions: {supported}"
         )
+
+
+class UnsupportedInterpreterError(LanguagePackError):
+    """Raised when a pack requires a newer Python than the one it's loaded for.
+
+    A pack whose ``metadata.python_version_min`` exceeds the requested version
+    contains identifiers that are only legal on that newer interpreter — e.g.
+    the Sinhala ZWJ conjuncts, valid identifier characters only from the CPython
+    3.13 Unicode 13.0 XID update (CORE-1318). Loading such a pack for an older
+    interpreter would surface as a ``SyntaxError`` in the user's translated
+    code, so the loader refuses it here with an actionable message instead.
+
+    Tooling that inspects the raw pack without executing translated code (the
+    pack auditor, exporters) passes ``enforce_min_interpreter=False`` to
+    :meth:`LanguagePackLoader.load` to bypass this check.
+    """
+
+    def __init__(self, language: str, required_version: str, requested_version: str):
+        self.language = language
+        self.required_version = required_version
+        self.requested_version = requested_version
+        super().__init__(
+            f"Language pack '{language}' requires Python >= {required_version} "
+            f"(declares python_version_min '{required_version}'); cannot serve "
+            f"the {requested_version} pack — its identifiers are only valid on "
+            f"Python {required_version}+. Load it on Python >= {required_version}, "
+            "or pass enforce_min_interpreter=False to inspect the raw pack."
+        )

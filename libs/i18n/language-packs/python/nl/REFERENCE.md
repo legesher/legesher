@@ -40,7 +40,7 @@ These are Python's reserved words translated to Dutch.
 | `elif` | `alswel` |
 | `else` | `anders` |
 | `except` | `behalve` |
-| `except*` | `behalve` |
+| `except*` | `behalve*` |
 | `False` | `fout` |
 | `finally` | `tenslotte` |
 | `for` | `voor` |
@@ -154,7 +154,7 @@ Exception classes for error handling.
 | ------- | ------ |
 | `arithmeticerror` | `aritmetischefout` |
 | `assertionerror` | `assertiefout` |
-| `attributeerror` | `AttributeError` |
+| `attributeerror` | `attribuutfout` |
 | `baseexception` | `baseuitzondering` |
 | `baseexceptiongroup` | `baseexceptiongroep` |
 | `blockingioerror` | `blokkendIOFout` |

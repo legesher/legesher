@@ -6,7 +6,7 @@ target: python
 version: '3.11'
 extends: 3.10.yml
 keywords:
-  except*: kivéve
+  except*: kivéve*
 exceptions:
   exceptiongroup: kivételcsoport
   baseexceptiongroup: baseexceptioncsoport

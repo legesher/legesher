@@ -59,7 +59,7 @@ builtins:
   filter: memfilter
   format: formatkan
   getattr: mengambilatribut
-  globals: global
+  globals: pembolehubahsejagat
   hasattr: memilikiatribut
   hash: hashcode
   help: bantu
@@ -126,10 +126,10 @@ exceptions:
   overflowerror: kesalahankelebihan
   zerodivisionerror: kesalahanpembagiannol
   lookuperror: kesalahanpencarian
-  indexerror: IndexError
+  indexerror: kesalahanindeks
   keyerror: kesalahan_kunci
   attributeerror: kesalahanatribut
-  nameerror: NameError
+  nameerror: kesalahannama
   unboundlocalerror: kesalahanunboundlocalerror
   oserror: kesalahansistemoperasi
   blockingioerror: kesalahanmasukankeluaranyangmemblokir

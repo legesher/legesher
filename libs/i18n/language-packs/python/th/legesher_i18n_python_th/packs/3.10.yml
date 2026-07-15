@@ -16,7 +16,7 @@ keywords:
   else: อื่นๆ
   except: เลือก
   finally: ทำเสมอ
-  for: เทคนิคfor
+  for: วนรอบ
   from: ฝัน
   global: เครื่องมือภาษาไทยทั้งหมด
   if: ถ้า
@@ -41,7 +41,7 @@ keywords:
   case: การตอน
 builtins:
   __import__: __นำเข้า__
-  abs: ฟังก์ชันabs
+  abs: ค่าสัมบูรณ์
   all: ทุกอย่าง
   any: ใช่
   ascii: อาซิก
@@ -54,7 +54,7 @@ builtins:
   dir: ดิร์
   divmod: ดิวมอด
   enumerate: นับรายการ
-  eval: พิมัญเครื่องคำeval
+  eval: ประเมินผล
   exec: ซับเทริก
   filter: ฟิลเตอร์
   format: ฟอร์มเทริต
@@ -66,11 +66,11 @@ builtins:
   hex: เกี่ยวกับการแต่งรูปแบบหน้าอายุ
   id: เครื่องมือแบนเริ่ม
   input: ขอบคุณ
-  isinstance: isinstanceคือการตรวจสอบว่าอันตรายเป็นเจ้าของแต่ละประเภท
-  issubclass: issubclassคือการตรวจสอบว่าที่เป็นชุดของกล่าวและผู้ที่มีคลาสของกล่าวนั้นเป็นชุดของกล่าวหรือไม่
-  iter: เครื่องมือiter
+  isinstance: เป็นอินสแตนซ์
+  issubclass: เป็นคลาสย่อย
+  iter: ตัววน
   len: ลัง
-  locals: เครื่องมือlocals
+  locals: ตัวแปรเฉพาะที่
   map: แมป
   max: เทคนิคใช้สำหรับการเลือกของขั้นตอนที่มากที่สุด
   min: นิยมที่น้อยที่สุด
@@ -81,7 +81,7 @@ builtins:
   pow: เครื่องหมายนี้จะถูกแปลเป็นภาษาไทย
   print: เจตนา
   range: เลขที่มาตราฐาน
-  repr: เครื่องมือแปลงรูปแบบของPython
+  repr: การแทนค่า
   reversed: ซับเปลี่ยน
   round: ขอเคลื่อน
   setattr: ซับเปรียง
@@ -92,8 +92,8 @@ builtins:
   vars: แทรกซับ
   zip: ซิป
   bool: บูล
-  bytearray: ไบต์เรയ์
-  bytes: บайтส
+  bytearray: อาร์เรย์ไบต์
+  bytes: ชุดไบต์
   classmethod: เคล็ดลับของคลาส
   complex: เซ็มปลิส
   dict: ข้อคิดเห็น
@@ -111,7 +111,7 @@ builtins:
   tuple: ตัวเลือด
   ellipsis: อิลิสเซียม
   notimplemented: ไม่ผ่านการทำงานที่ต้องการ
-  aiter: aiterator
+  aiter: ตัววนอะซิงค์
   anext: ฟังกำลัง
 exceptions:
   baseexception: การเปลี่ยนที่พื้นฐาน
@@ -121,7 +121,7 @@ exceptions:
   systemerror: ข้อผิดพลาดระบบ
   systemexit: เลิกใช้งาน
   keyboardinterrupt: เครื่องแทรกข้อคิด
-  arithmeticerror: ข้อผิดพลาดเกี่ยวกับเครื่องสำหรับการทำคำและการประมाถนา
+  arithmeticerror: ข้อผิดพลาดเลขคณิต
   floatingpointerror: ข้อผิดพลาดของตัวเลือดเวียนทางเคมี
   overflowerror: เกิดอุณหภูมิ
   zerodivisionerror: ผลของการแบ่งปันสูงเกินไป
@@ -148,14 +148,14 @@ exceptions:
   processlookuperror: เกิดข้อผิดพลาดในการค้นหา
   timeouterror: เกิดอุปสรรคเวลา
   importerror: ข้อผิดพลาดในการยิม
-  modulenotfounderror: เกิดอีเมล่าในการต้องการของมॉडูล
+  modulenotfounderror: ข้อผิดพลาดไม่พบโมดูล
   stopiteration: เหงื่อนการหยุดการทำงาน
   stopasynciteration: หยุดการเปลี่ยนแปลงอย่างไรง่ายๆ
   typeerror: เกิดข้อผิดพลาดชนิดประเภท
   valueerror: ข้อผิดพลาดค่า
   unicodeerror: อุนิคเซียร์
   unicodedecodeerror: ออกซิเจนไม่คอยหรือไม่สามารถแปลงได้
-  unicodeencodeerror: เกิดอีกสิ่งที่เรียกว่าUnicodeEncodeErrorถ้าคุณไม่สามารถแปลงข้อคิดของตัวอ่างUnicodeให้เป็นข้อคิดของตัวอ่างASCII
+  unicodeencodeerror: ข้อผิดพลาดเข้ารหัสยูนิโค้ด
   unicodetranslateerror: อินเมชั่นตรัสแบ็คที่
   runtimeerror: เกิดข้อผิดพลาดในเวลาเป็นปัจจุบัน
   notimplementederror: ข้อผิดพลาดในการไม่เป็นที่ทำการตัดสินใจ
@@ -165,7 +165,7 @@ exceptions:
   memoryerror: เกิดข้อผิดพลาดในการใช้หัวข้อมือแบบไม่มีพื้นฐาน
   buffererror: เกรดข้อความบันทึก
   eoferror: เกิดข้อผิดพลาด
-  syntaxerror: ข้อผิดพลาดสัยงานสำหรับPython
+  syntaxerror: ข้อผิดพลาดไวยากรณ์
   indentationerror: เกิดอุปสรรคการตั้งแต่ง
   taberror: เทคนร์ของตับ
   environmenterror: เกิดข้อผิดพลาดในการตั้งค่าเครื่องมือ

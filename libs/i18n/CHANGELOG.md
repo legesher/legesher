@@ -91,6 +91,44 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
     CORE-1318 generation-layer / native-review workload. Canon refusals move
     26 → 49; the validator version bumps to `py-identifier-v2`.
 
+- **Corrected the 609 pack-validation findings at the generation layer and
+  flipped the pack-audit gate to blocking (CORE-1318).** All 609 findings
+  (foreign-script, keyword-collision, NFKC-instability, min-interpreter-xid,
+  duplicate-target, illegal-format-char) — 166 distinct across 23 languages —
+  are cleared; the CORE-1514 canon gate now refuses **0** selections (was 49).
+  - **87 best-effort native-script corrections** across 20 languages, applied
+    surgically to `translations.db` (`selected_translations` + a new
+    `translations` option row each) and the pack YAMLs in lockstep — no
+    regeneration (`translations.db` stays the hand-editable source until
+    CORE-1400). Corruptions (`pl bool` `布尔` → `logiczny`, `ko zerodivisionerror`
+    `零의나눗셈오류` → `영나눗셈오류`), untranslated English (`de ValueError` →
+    `Wertfehler`), and embedded-Latin renderings (`th for` `เทคนิคfor` → `วนรอบ`)
+    become genuine target-script terms. The old values remain as non-selected
+    corpus options (evidence, per the CORE-1400 reframe).
+  - **Systemic fixes:** the `except*` keyword now carries its mirrored `*`
+    (`<except-word>*`) in 14 locales, resolving every `except`/`except*`
+    duplicate-target and collision; the Sinhala packs declare
+    `python_version_min: '3.13'` (its ZWJ conjuncts require the Unicode 13.0 XID
+    update), clearing all 51 min-interpreter-xid findings.
+  - **Interpreter-floor guard now enforced at load (CORE-1517).**
+    `python_version_min` was advisory only, so the version-aware loader still
+    served the ZWJ-bearing Sinhala `3.10`/`3.11`/`3.12` packs to interpreters
+    that `SyntaxError` on them. `LanguagePackLoader.load()` now raises
+    `UnsupportedInterpreterError` when a pack's declared floor exceeds the
+    version being loaded for; the pack auditor and exporters pass
+    `enforce_min_interpreter=False` to inspect raw packs, so the blocking gate
+    is unaffected. Generalizes to any future 3.13-only pack.
+  - **`check_normalization` now accepts the SARA-AM-only NFKC class** (shared
+    `script_policy.nfkc_delta_class`, mirroring the v2 canon gate), so the pack
+    auditor and the corpus validator agree on what "dirty" means.
+  - **New `check_term_length` rule (`descriptions-as-terms`)** flags
+    sentence-length values (≥40 code points) as **warnings** — a machine
+    translation emitting a definition where a term belongs. `audit_packs.py` now
+    separates blocking **errors** from advisory **warnings**; the gate
+    (`validate-packs.yml`) fails CI on errors only, so the 65 remaining
+    long-description warnings surface for native review without blocking.
+  - Regenerated the 22 affected `REFERENCE.md` files.
+
 ## [0.22.0] - 2026-07-15
 
 ### Added

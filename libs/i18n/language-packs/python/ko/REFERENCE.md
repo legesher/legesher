@@ -40,7 +40,7 @@ These are Python's reserved words translated to Korean.
 | `elif` | `다른만` |
 | `else` | `다른경우` |
 | `except` | `제외` |
-| `except*` | `제외` |
+| `except*` | `제외*` |
 | `False` | `거짓` |
 | `finally` | `마지막으로` |
 | `for` | `반복` |
@@ -63,7 +63,7 @@ These are Python's reserved words translated to Korean.
 | `try` | `시도` |
 | `type` | `타입` |
 | `while` | `반복문` |
-| `with` | `with문` |
+| `with` | `함께` |
 | `yield` | `값을생성하다` |
 
 ## Built-in Functions (73 terms)
@@ -89,7 +89,7 @@ Python's built-in functions and types in Korean.
 | `classmethod` | `클래스메서드` |
 | `compile` | `컴파일` |
 | `complex` | `복소수` |
-| `delattr` | `삭제attr` |
+| `delattr` | `속성삭제` |
 | `dict` | `사전` |
 | `dir` | `디렉토리` |
 | `divmod` | `디브모드` |
@@ -101,7 +101,7 @@ Python's built-in functions and types in Korean.
 | `float` | `부동소수점` |
 | `format` | `포맷` |
 | `frozenset` | `불변집합` |
-| `getattr` | `get_attribute` |
+| `getattr` | `속성가져오기` |
 | `globals` | `글로벌변수` |
 | `hasattr` | `해당객체에지정된속성이있는지확인합니다` |
 | `hash` | `해시` |
@@ -134,7 +134,7 @@ Python's built-in functions and types in Korean.
 | `reversed` | `역순` |
 | `round` | `반올림` |
 | `set` | `집합` |
-| `setattr` | `셋attr` |
+| `setattr` | `속성설정` |
 | `slice` | `슬라이스` |
 | `sorted` | `정렬된` |
 | `staticmethod` | `정적메서드` |
@@ -157,7 +157,7 @@ Exception classes for error handling.
 | `attributeerror` | `속성오류` |
 | `baseexception` | `기본예외` |
 | `baseexceptiongroup` | `기본예외그룹` |
-| `blockingioerror` | `블로킹io오류` |
+| `blockingioerror` | `차단입출력오류` |
 | `brokenpipeerror` | `브로큰파이프오류` |
 | `buffererror` | `버퍼오류` |
 | `byteswarning` | `바이트경고` |
@@ -182,7 +182,7 @@ Exception classes for error handling.
 | `indentationerror` | `인덴트오류` |
 | `indexerror` | `인덱스오류` |
 | `interruptederror` | `중단오류` |
-| `ioerror` | `IO오류` |
+| `ioerror` | `입출력오류` |
 | `isadirectoryerror` | `이사오류` |
 | `keyboardinterrupt` | `키보드중단` |
 | `keyerror` | `키오류` |
@@ -221,7 +221,7 @@ Exception classes for error handling.
 | `userwarning` | `사용자경고` |
 | `valueerror` | `값오류` |
 | `warning` | `경고` |
-| `zerodivisionerror` | `零의나눗셈오류` |
+| `zerodivisionerror` | `영나눗셈오류` |
 
 ## Reserved Words (2 terms)
 

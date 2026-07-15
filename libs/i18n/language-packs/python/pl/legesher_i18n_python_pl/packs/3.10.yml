@@ -91,7 +91,7 @@ builtins:
   type: typ
   vars: zmienne
   zip: zipped
-  bool: 布尔
+  bool: logiczny
   bytearray: tablicaBajtow
   bytes: byty
   classmethod: metoda_klasy

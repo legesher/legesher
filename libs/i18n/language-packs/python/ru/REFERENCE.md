@@ -180,7 +180,7 @@ Exception classes for error handling.
 | `importerror` | `импорт_ошибка` |
 | `importwarning` | `предупреждениеобимпорте` |
 | `indentationerror` | `ошибкаотступа` |
-| `indexerror` | `IndexError` |
+| `indexerror` | `ошибкаиндекса` |
 | `interruptederror` | `ошибкапрерывания` |
 | `ioerror` | `ошибкавводавывода` |
 | `isadirectoryerror` | `ошибкаПапки` |
@@ -201,7 +201,7 @@ Exception classes for error handling.
 | `recursionerror` | `рекурсионнаяошибка` |
 | `referenceerror` | `ошибкассылки` |
 | `resourcewarning` | `предупреждениеоресурсах` |
-| `runtimeerror` | `runtime_error` |
+| `runtimeerror` | `ошибкавыполнения` |
 | `runtimewarning` | `ошибкаВремяВыполнения` |
 | `stopasynciteration` | `стоп_асинхронное_итерация` |
 | `stopiteration` | `стопитерация` |
@@ -219,7 +219,7 @@ Exception classes for error handling.
 | `unicodetranslateerror` | `ошибка_перевода_юникод` |
 | `unicodewarning` | `уникодПредупреждение` |
 | `userwarning` | `предупреждение_пользователя` |
-| `valueerror` | `ValueError` |
+| `valueerror` | `ошибказначения` |
 | `warning` | `предупреждение` |
 | `zerodivisionerror` | `ошибканулевогоделения` |
 
@@ -246,7 +246,7 @@ Here's an example showing Russian Python code with Legesher:
 определение факториал(n):
     """Вычислить факториал числа n."""
     если n < 0:
-        выбросить ValueError("Отрицательные числа не допускаются")
+        выбросить Ошибказначения("Отрицательные числа не допускаются")
     если_иначе n == 0 или n == 1:
         возвратить 1
     иначе:
@@ -268,7 +268,7 @@ Here's an example showing Russian Python code with Legesher:
     # Демонстрация try/except
     попытаться:
         факториал(-1)
-    за_исключением ValueError как ошибка:
+    за_исключением Ошибказначения как ошибка:
         печать(f"Ошибка: {ошибка}")
     наконец:
         печать("Готово!")

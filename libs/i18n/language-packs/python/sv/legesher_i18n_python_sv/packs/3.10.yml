@@ -177,7 +177,7 @@ exceptions:
   syntaxwarning: syntaxvarning
   runtimewarning: runtimevarning
   futurewarning: tidigareVarning
-  importwarning: importav警警
+  importwarning: importvarning
   unicodewarning: unicodevarning
   byteswarning: bytesvarnings
   resourcewarning: resursavvisning

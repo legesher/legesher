@@ -54,7 +54,7 @@ builtins:
   dir: दिखाएँ
   divmod: दिवमोड
   enumerate: सूचीबद्धकरना
-  eval: evalकरना
+  eval: मूल्यांकनकरना
   exec: कार्यान्वयन
   filter: चुनना
   format: फ़ॉर्मेट
@@ -120,7 +120,7 @@ exceptions:
   generatorexit: जेनरेटरएक्सिट
   systemerror: सिस्टमत्रुटि
   systemexit: सिस्टमएक्जिट
-  keyboardinterrupt: कीबोर्डइंटर럽्ट
+  keyboardinterrupt: कुंजीपटलव्यवधान
   arithmeticerror: अरिथमेटिकत्रुटि
   floatingpointerror: फ्लोटिंगपॉइंटरएरर
   overflowerror: अवरोधत्रुटि

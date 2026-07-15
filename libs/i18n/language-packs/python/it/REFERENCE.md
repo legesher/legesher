@@ -40,7 +40,7 @@ These are Python's reserved words translated to Italian.
 | `elif` | `sealtrimenti` |
 | `else` | `altrimenti` |
 | `except` | `eccetto` |
-| `except*` | `eccetto` |
+| `except*` | `eccetto*` |
 | `False` | `falso` |
 | `finally` | `finalmente` |
 | `for` | `per` |
@@ -154,8 +154,8 @@ Exception classes for error handling.
 | ------- | ------ |
 | `arithmeticerror` | `errorearitmetico` |
 | `assertionerror` | `errorediasserzione` |
-| `attributeerror` | `AttributeError` |
-| `baseexception` | `BaseException` |
+| `attributeerror` | `errorediattributo` |
+| `baseexception` | `eccezionedibase` |
 | `baseexceptiongroup` | `gruppoDiEccezioniBase` |
 | `blockingioerror` | `errorediinputoutputbloccante` |
 | `brokenpipeerror` | `erroredibrokenpipe` |
@@ -185,7 +185,7 @@ Exception classes for error handling.
 | `ioerror` | `erroreI_O` |
 | `isadirectoryerror` | `errorediisadirectory` |
 | `keyboardinterrupt` | `interruzionedatastiera` |
-| `keyerror` | `KeyError` |
+| `keyerror` | `erroredichiave` |
 | `lookuperror` | `errorediricerca` |
 | `memoryerror` | `erroredimemoria` |
 | `modulenotfounderror` | `erroredimodulonontrovato` |
@@ -219,7 +219,7 @@ Exception classes for error handling.
 | `unicodetranslateerror` | `erroreditraduzionediUnicode` |
 | `unicodewarning` | `avvertimentounicode` |
 | `userwarning` | `avvertimento_utente` |
-| `valueerror` | `ValueError` |
+| `valueerror` | `erroredivalore` |
 | `warning` | `avviso` |
 | `zerodivisionerror` | `erroredidivisioneperzero` |
 
@@ -246,7 +246,7 @@ dal typing importare Optional
 definire fattoriale(n):
     """Calcola il fattoriale di n."""
     se n < 0:
-        sollevare ValueError("I numeri negativi non sono consentiti")
+        sollevare Erroredivalore("I numeri negativi non sono consentiti")
     sealtrimenti n == 0 o n == 1:
         ritorno 1
     altrimenti:
@@ -268,7 +268,7 @@ definire principale():
     # Dimostra try/except
     prova:
         fattoriale(-1)
-    eccetto ValueError come errore:
+    eccetto Erroredivalore come errore:
         stampa(f"Errore: {errore}")
     finalmente:
         stampa("Fatto!")

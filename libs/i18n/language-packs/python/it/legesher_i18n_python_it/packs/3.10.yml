@@ -114,7 +114,7 @@ builtins:
   aiter: aiteratore
   anext: nextAn
 exceptions:
-  baseexception: BaseException
+  baseexception: eccezionedibase
   encodingwarning: avvertimentodicodifica
   exception: eccezione
   generatorexit: generatore_errore
@@ -127,8 +127,8 @@ exceptions:
   zerodivisionerror: erroredidivisioneperzero
   lookuperror: errorediricerca
   indexerror: ErroreIndice
-  keyerror: KeyError
-  attributeerror: AttributeError
+  keyerror: erroredichiave
+  attributeerror: errorediattributo
   nameerror: Erroredinome
   unboundlocalerror: errorediriferimentolocalenonvincolato
   oserror: erroreOs
@@ -152,7 +152,7 @@ exceptions:
   stopiteration: iterazioneInterrotta
   stopasynciteration: stoppazioneasincrona
   typeerror: erroreditipo
-  valueerror: ValueError
+  valueerror: erroredivalore
   unicodeerror: erroreunicode
   unicodedecodeerror: erroredidecodificaUnicode
   unicodeencodeerror: erroreDiCodificaDiUnicode

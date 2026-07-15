@@ -89,7 +89,7 @@ builtins:
   sorted: ταξινομημένος
   sum: άρθροισμα
   type: τύπος
-  vars: variabiles
+  vars: μεταβλητές
   zip: συνδεις
   bool: μπουλ
   bytearray: πίνακας_ψηφιολέξεων
@@ -137,7 +137,7 @@ exceptions:
   connectionerror: σφάλμα_σύνδεσης
   brokenpipeerror: κατάληψηΣφαλμέτηςΕποπτείας
   connectionabortederror: σύνδεσμοςΑκολουθητήςΣφαίρας
-  connectionrefusederror: connection_refused_error
+  connectionrefusederror: σφάλμα_άρνησης_σύνδεσης
   connectionreseterror: σφάλμαΚλεισιμοςΣύνδεσης
   fileexistserror: σφάλμα_υπάρχουσας_αρχειής
   filenotfounderror: σφάλμα_δεν_βρέθηκε_αρχείο
@@ -147,12 +147,12 @@ exceptions:
   permissionerror: σφάλμα_άδειας
   processlookuperror: σφάλμααναζήτησηςδιεργασίας
   timeouterror: σφάλμαχρονικούορίου
-  importerror: importerroros
+  importerror: σφάλμα_εισαγωγής
   modulenotfounderror: σφάλμαΔιατύπωσηςΠυθόν
   stopiteration: διακοπή_επαναληψης
   stopasynciteration: διακοπή_ασύγχρονης_επανάληψης
   typeerror: τύπος_σφάλματος
-  valueerror: ValueError
+  valueerror: σφάλμα_τιμής
   unicodeerror: σφάλμα_γιούνικοντ
   unicodedecodeerror: σφάλμα_αποκωδικοποίησης_γιούνικοντ
   unicodeencodeerror: σφάλμα_κωδικοποίησης_γιούνικοντ

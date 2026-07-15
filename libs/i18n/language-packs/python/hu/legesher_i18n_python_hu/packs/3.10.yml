@@ -114,8 +114,8 @@ builtins:
   aiter: asynchronos_iterator
   anext: következő_tétel
 exceptions:
-  baseexception: BaseException
-  encodingwarning: encoding警告
+  baseexception: alapkivétel
+  encodingwarning: kódolási_figyelmeztetés
   exception: výjimka
   generatorexit: generátor_kimenet
   systemerror: rendszerhiba
@@ -154,7 +154,7 @@ exceptions:
   typeerror: tipushiba
   valueerror: Értétvéltesés
   unicodeerror: unicodehiba
-  unicodedecodeerror: unicoddekódérszabály破环
+  unicodedecodeerror: unicode_dekódolási_hiba
   unicodeencodeerror: üzenetKódolásiHiba
   unicodetranslateerror: unicodetranslatehiba
   runtimeerror: runtimeError

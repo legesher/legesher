@@ -59,7 +59,7 @@ builtins:
   filter: memfilter
   format: formatkan
   getattr: mengaksesatribut
-  globals: global
+  globals: variabelglobal
   hasattr: memilikiatribut
   hash: nilai_hash
   help: bantuan
@@ -114,7 +114,7 @@ builtins:
   aiter: pengulangan_asinkron
   anext: nextAn
 exceptions:
-  baseexception: BaseException
+  baseexception: kesalahandasar
   encodingwarning: peringatanpengkodean
   exception: kecurangan
   generatorexit: generasikeluar

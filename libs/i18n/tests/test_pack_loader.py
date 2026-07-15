@@ -13,6 +13,7 @@ from legesher_i18n.exceptions import (
     PackNotFoundError,
     PackValidationError,
     PathTraversalError,
+    UnsupportedInterpreterError,
 )
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -667,3 +668,38 @@ class TestReservedWordsInheritance:
         result = SchemaValidator.check_identifier_validity(schema)
         assert result["passed"] is True
         assert result["invalid_reserved_words"] == []
+
+
+class TestMinInterpreterEnforcement:
+    """The interpreter-floor guard (CORE-1318).
+
+    A pack whose ``python_version_min`` exceeds the version it is loaded for
+    ships identifiers that only parse on the newer interpreter — the Sinhala ZWJ
+    conjuncts are valid identifier characters only from CPython 3.13 (Unicode
+    13.0 XID). The loader refuses such a load loudly rather than letting a
+    ``SyntaxError`` surface in the user's translated code.
+    """
+
+    def test_sinhala_below_min_interpreter_is_refused(self):
+        # si/3.10.yml declares python_version_min '3.13'; loading it FOR 3.10
+        # must be refused with an actionable message.
+        loader = LanguagePackLoader()
+        with pytest.raises(UnsupportedInterpreterError, match="3.13"):
+            loader.load("si", "python", "3.10")
+
+    def test_sinhala_at_min_interpreter_loads(self):
+        loader = LanguagePackLoader()
+        pack = loader.load("si", "python", "3.13")
+        assert pack.language == "si"
+
+    def test_tooling_bypass_loads_incompatible_pack(self):
+        # The auditor/exporter path inspects the raw pack without executing it.
+        loader = LanguagePackLoader()
+        pack = loader.load("si", "python", "3.10", enforce_min_interpreter=False)
+        assert pack.language == "si"
+
+    def test_compatible_pack_is_unaffected(self):
+        # A pack whose floor is at or below the requested version loads normally.
+        loader = LanguagePackLoader()
+        pack = loader.load("es", "python", "3.10")
+        assert pack.language == "es"

@@ -46,7 +46,7 @@ builtins:
   all: 全
   anext: 下一项
   any: 任意
-  ascii: ASCII
+  ascii: 阿斯克码
   bin: 二进制
   bool: 布尔
   breakpoint: 断点
@@ -118,7 +118,7 @@ exceptions:
   assertionerror: 断言错误
   attributeerror: 属性错误
   baseexception: 基本异常
-  blockingioerror: 阻塞的IO错误
+  blockingioerror: 阻塞输入输出错误
   brokenpipeerror: 破管错误
   buffererror: 缓冲区错误
   byteswarning: 字节警告
@@ -142,7 +142,7 @@ exceptions:
   indentationerror: 缩进错误
   indexerror: 越界访问错误
   interruptederror: 中断错误
-  ioerror: IO错误
+  ioerror: 输入输出错误
   isadirectoryerror: 是目录错误
   keyboardinterrupt: 键盘中断
   keyerror: 键错误

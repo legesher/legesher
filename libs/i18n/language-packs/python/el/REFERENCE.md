@@ -40,7 +40,7 @@ These are Python's reserved words translated to Greek.
 | `elif` | `αλλάν` |
 | `else` | `αλλιώς` |
 | `except` | `εκτός` |
-| `except*` | `εκτός` |
+| `except*` | `εκτός*` |
 | `False` | `ψευδής` |
 | `finally` | `τελικά` |
 | `for` | `για` |
@@ -143,7 +143,7 @@ Python's built-in functions and types in Greek.
 | `super` | `υπερ` |
 | `tuple` | `πλειάδα` |
 | `type` | `τύπος` |
-| `vars` | `variabiles` |
+| `vars` | `μεταβλητές` |
 | `zip` | `συνδεις` |
 
 ## Exceptions (70 terms)
@@ -164,7 +164,7 @@ Exception classes for error handling.
 | `childprocesserror` | `σφάλμα_παιδιού_διαδικασίας` |
 | `connectionabortederror` | `σύνδεσμοςΑκολουθητήςΣφαίρας` |
 | `connectionerror` | `σφάλμα_σύνδεσης` |
-| `connectionrefusederror` | `connection_refused_error` |
+| `connectionrefusederror` | `σφάλμα_άρνησης_σύνδεσης` |
 | `connectionreseterror` | `σφάλμαΚλεισιμοςΣύνδεσης` |
 | `deprecationwarning` | `αποκλεισμόςπροειδοποίησης` |
 | `encodingwarning` | `προειδοποίησηκωδικοποίησης` |
@@ -177,7 +177,7 @@ Exception classes for error handling.
 | `floatingpointerror` | `σφάλμα_πλωτής_εκτύπωσης` |
 | `futurewarning` | `προειδοποίηση_για_το_μελλον` |
 | `generatorexit` | `εξόδου_γεννήτριας` |
-| `importerror` | `importerroros` |
+| `importerror` | `σφάλμα_εισαγωγής` |
 | `importwarning` | `προειδοποίηση_εισαγωγής` |
 | `indentationerror` | `κεντρισμοςΣφαλμα` |
 | `indexerror` | `Σφάλμαευρετηρίου` |
@@ -219,7 +219,7 @@ Exception classes for error handling.
 | `unicodetranslateerror` | `σφάλμα_μετάφρασης_γιούνικοντ` |
 | `unicodewarning` | `προειδοποίηση_γιούνικοντ` |
 | `userwarning` | `προειδοποίηση_χρήστη` |
-| `valueerror` | `ValueError` |
+| `valueerror` | `σφάλμα_τιμής` |
 | `warning` | `προειδοποίηση` |
 | `zerodivisionerror` | `μηδέν_διαίρεση_σφάλμα` |
 
@@ -246,7 +246,7 @@ Here's an example showing Greek Python code with Legesher:
 δε παραγοντικό(n):
     """Υπολογισμός παραγοντικού του n."""
     αν n < 0:
-        ανυψώστε ValueError("Οι αρνητικοί αριθμοί δεν επιτρέπονται")
+        ανυψώστε Σφάλμα_τιμής("Οι αρνητικοί αριθμοί δεν επιτρέπονται")
     αλλάν n == 0 ή n == 1:
         επιστροφή 1
     αλλιώς:
@@ -268,7 +268,7 @@ Here's an example showing Greek Python code with Legesher:
     # Επίδειξη try/except
     προσπάθεια:
         παραγοντικό(-1)
-    εκτός ValueError ως σφάλμα:
+    εκτός Σφάλμα_τιμής ως σφάλμα:
         εκτύπωση(f"Σφάλμα: {σφάλμα}")
     τελικά:
         εκτύπωση("Ολοκληρώθηκε!")

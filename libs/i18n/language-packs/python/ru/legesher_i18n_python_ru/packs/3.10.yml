@@ -126,7 +126,7 @@ exceptions:
   overflowerror: ошибкапереполнения
   zerodivisionerror: ошибканулевогоделения
   lookuperror: ошибкапоиска
-  indexerror: IndexError
+  indexerror: ошибкаиндекса
   keyerror: ошибкаключа
   attributeerror: Ошибкаатрибута
   nameerror: Ошибкаимени
@@ -152,12 +152,12 @@ exceptions:
   stopiteration: стопитерация
   stopasynciteration: стоп_асинхронное_итерация
   typeerror: типошаг
-  valueerror: ValueError
+  valueerror: ошибказначения
   unicodeerror: ошибкауниткодирования
   unicodedecodeerror: ошибкадекодированияунитногокода
   unicodeencodeerror: ошибка_кодирования_юникод
   unicodetranslateerror: ошибка_перевода_юникод
-  runtimeerror: runtime_error
+  runtimeerror: ошибкавыполнения
   notimplementederror: ошибканереализации
   recursionerror: рекурсионнаяошибка
   referenceerror: ошибкассылки

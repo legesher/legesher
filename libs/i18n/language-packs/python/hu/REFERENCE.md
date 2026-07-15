@@ -40,7 +40,7 @@ These are Python's reserved words translated to Hungarian.
 | `elif` | `különbenha` |
 | `else` | `more` |
 | `except` | `kivéve` |
-| `except*` | `kivéve` |
+| `except*` | `kivéve*` |
 | `False` | `hamis` |
 | `finally` | `finalizálás` |
 | `for` | `ezen` |
@@ -155,7 +155,7 @@ Exception classes for error handling.
 | `arithmeticerror` | `aritmetikai_hiba` |
 | `assertionerror` | `az_ellenőrzési_hiba` |
 | `attributeerror` | `attributetori` |
-| `baseexception` | `BaseException` |
+| `baseexception` | `alapkivétel` |
 | `baseexceptiongroup` | `baseexceptioncsoport` |
 | `blockingioerror` | `blokkoló_io_hiba` |
 | `brokenpipeerror` | `bükört_üzem_leállítás` |
@@ -167,7 +167,7 @@ Exception classes for error handling.
 | `connectionrefusederror` | `connection_refused_error` |
 | `connectionreseterror` | `connectionresetting` |
 | `deprecationwarning` | `depreciációveszeltséget` |
-| `encodingwarning` | `encoding警告` |
+| `encodingwarning` | `kódolási_figyelmeztetés` |
 | `environmenterror` | `környezetiHiba` |
 | `eoferror` | `eöferror` |
 | `exception` | `výjimka` |
@@ -213,7 +213,7 @@ Exception classes for error handling.
 | `timeouterror` | `timeout_hibás` |
 | `typeerror` | `tipushiba` |
 | `unboundlocalerror` | `bővített_helyi_hiba` |
-| `unicodedecodeerror` | `unicoddekódérszabály破环` |
+| `unicodedecodeerror` | `unicode_dekódolási_hiba` |
 | `unicodeencodeerror` | `üzenetKódolásiHiba` |
 | `unicodeerror` | `unicodehiba` |
 | `unicodetranslateerror` | `unicodetranslatehiba` |

@@ -40,7 +40,7 @@ These are Python's reserved words translated to Indonesian.
 | `elif` | `jika_lain` |
 | `else` | `lainnya` |
 | `except` | `kecuali` |
-| `except*` | `kecuali` |
+| `except*` | `kecuali*` |
 | `False` | `Salah` |
 | `finally` | `akhirnya` |
 | `for` | `untuk` |
@@ -102,7 +102,7 @@ Python's built-in functions and types in Indonesian.
 | `format` | `formatkan` |
 | `frozenset` | `setyangtidakdapatdiubah` |
 | `getattr` | `mengaksesatribut` |
-| `globals` | `global` |
+| `globals` | `variabelglobal` |
 | `hasattr` | `memilikiatribut` |
 | `hash` | `nilai_hash` |
 | `help` | `bantuan` |
@@ -155,7 +155,7 @@ Exception classes for error handling.
 | `arithmeticerror` | `kesalahanaritmatika` |
 | `assertionerror` | `kesalahanasersi` |
 | `attributeerror` | `ErrorAtribut` |
-| `baseexception` | `BaseException` |
+| `baseexception` | `kesalahandasar` |
 | `baseexceptiongroup` | `kelompokpengecualiandasar` |
 | `blockingioerror` | `kesalahanioyangmemblokir` |
 | `brokenpipeerror` | `kesalahanpiparusak` |

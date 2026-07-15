@@ -3,7 +3,7 @@ target: python
 version: '3.11'
 extends: 3.10.yml
 keywords:
-  except*: except
+  except*: yada*
 exceptions:
   exceptiongroup: özeldurumgrubu
   baseexceptiongroup: temelistisnagrubu

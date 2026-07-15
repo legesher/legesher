@@ -180,7 +180,7 @@ Exception classes for error handling.
 | `importerror` | `importationerreur` |
 | `importwarning` | `avertissementdimportation` |
 | `indentationerror` | `erreurdindentation` |
-| `indexerror` | `IndexError` |
+| `indexerror` | `erreurdindice` |
 | `interruptederror` | `erreurdinterruption` |
 | `ioerror` | `erreurdES` |
 | `isadirectoryerror` | `erreurisadirectory` |

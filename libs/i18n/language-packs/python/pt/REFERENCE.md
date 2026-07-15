@@ -155,7 +155,7 @@ Exception classes for error handling.
 | `arithmeticerror` | `erroaritmético` |
 | `assertionerror` | `errodeafirmação` |
 | `attributeerror` | `errodeatributo` |
-| `baseexception` | `BaseException` |
+| `baseexception` | `exceçãobase` |
 | `baseexceptiongroup` | `grupodeexceçãobase` |
 | `blockingioerror` | `errodeESbloqueante` |
 | `brokenpipeerror` | `errodepipequebrada` |
@@ -219,7 +219,7 @@ Exception classes for error handling.
 | `unicodetranslateerror` | `errodetraduçãodeunicod` |
 | `unicodewarning` | `avisodeunicode` |
 | `userwarning` | `avisodousuário` |
-| `valueerror` | `ValueError` |
+| `valueerror` | `errodevalor` |
 | `warning` | `aviso` |
 | `zerodivisionerror` | `errodedivisãoporzero` |
 
@@ -246,7 +246,7 @@ de typing importar Optional
 definir fatorial(n):
     """Calcular o fatorial de n."""
     se n < 0:
-        elevar ValueError("Números negativos não são permitidos")
+        elevar Errodevalor("Números negativos não são permitidos")
     senãose n == 0 ou n == 1:
         retornar 1
     senão:
@@ -268,7 +268,7 @@ definir principal():
     # Demonstrar try/except
     tentar:
         fatorial(-1)
-    excepto ValueError como erro:
+    excepto Errodevalor como erro:
         imprimir(f"Erro: {erro}")
     finalmente:
         imprimir("Pronto!")
