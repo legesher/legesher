@@ -1,6 +1,7 @@
 """Tests for pack_loader module."""
 
 import textwrap
+import types
 
 import pytest
 import yaml
@@ -671,31 +672,46 @@ class TestReservedWordsInheritance:
 
 
 class TestMinInterpreterEnforcement:
-    """The interpreter-floor guard (CORE-1318).
+    """The interpreter-floor guard (CORE-1318 / CORE-1517).
 
     A pack whose ``python_version_min`` exceeds the version it is loaded for
-    ships identifiers that only parse on the newer interpreter — the Sinhala ZWJ
-    conjuncts are valid identifier characters only from CPython 3.13 (Unicode
-    13.0 XID). The loader refuses such a load loudly rather than letting a
+    ships identifiers that only parse on the newer interpreter (e.g. the Sinhala
+    ZWJ conjuncts, valid identifier characters only from CPython 3.13 / Unicode
+    15.1). The loader refuses such a load loudly rather than letting a
     ``SyntaxError`` surface in the user's translated code.
+
+    The mechanism is exercised directly on ``_enforce_min_interpreter`` with a
+    synthetic schema, so it does not depend on any real pack's floor (Sinhala is
+    now compatible at every tier — see ``TestSinhalaInterpreterTiers``).
     """
 
-    def test_sinhala_below_min_interpreter_is_refused(self):
-        # si/3.10.yml declares python_version_min '3.13'; loading it FOR 3.10
-        # must be refused with an actionable message.
+    @staticmethod
+    def _schema(python_version_min):
+        return types.SimpleNamespace(
+            metadata=types.SimpleNamespace(python_version_min=python_version_min)
+        )
+
+    def test_refuses_a_pack_whose_floor_exceeds_the_request(self):
         loader = LanguagePackLoader()
         with pytest.raises(UnsupportedInterpreterError, match="3.13"):
-            loader.load("si", "python", "3.10")
+            loader._enforce_min_interpreter(self._schema("3.13"), "3.10", "xx")
 
-    def test_sinhala_at_min_interpreter_loads(self):
+    def test_allows_floor_at_or_below_the_request(self):
         loader = LanguagePackLoader()
-        pack = loader.load("si", "python", "3.13")
-        assert pack.language == "si"
+        # Exact match and lower floor both pass (no raise).
+        loader._enforce_min_interpreter(self._schema("3.10"), "3.10", "xx")
+        loader._enforce_min_interpreter(self._schema("3.10"), "3.13", "xx")
 
-    def test_tooling_bypass_loads_incompatible_pack(self):
-        # The auditor/exporter path inspects the raw pack without executing it.
+    def test_no_floor_is_a_noop(self):
         loader = LanguagePackLoader()
-        pack = loader.load("si", "python", "3.10", enforce_min_interpreter=False)
+        loader._enforce_min_interpreter(self._schema(None), "3.10", "xx")
+
+    def test_tooling_bypass_loads_a_high_floor_pack(self):
+        # The auditor/exporter path inspects a raw pack without executing it, so
+        # it bypasses the floor. si/3.13.yml declares a 3.13 floor; loading it
+        # FOR 3.10 with the bypass must succeed.
+        loader = LanguagePackLoader()
+        pack = loader.load("si", "python", "3.13", enforce_min_interpreter=False)
         assert pack.language == "si"
 
     def test_compatible_pack_is_unaffected(self):
@@ -703,3 +719,88 @@ class TestMinInterpreterEnforcement:
         loader = LanguagePackLoader()
         pack = loader.load("es", "python", "3.10")
         assert pack.language == "es"
+
+
+class TestSinhalaInterpreterTiers:
+    """CORE-1521: Sinhala ships a no-ZWJ variant for 3.10-3.12 and restores the
+    ZWJ (U+200D) conjunct spellings for 3.13+.
+
+    The conjunct forms are valid Python identifiers only on CPython 3.13+
+    (Unicode 15.1 XID); the non-conjunct (ZWJ-stripped) forms parse on every
+    interpreter. So the lower-tier packs must carry no ZWJ, the 3.13+ packs must
+    carry the conjuncts, and the two must be the same word (differing only by the
+    joiner) — with `si` loading cleanly at every tier.
+    """
+
+    ZWJ = "‍"
+
+    @staticmethod
+    def _values(pack):
+        merged = {}
+        for section in ("keywords", "builtins", "exceptions", "reserved_words"):
+            merged.update(getattr(pack, section, {}) or {})
+        return merged
+
+    def test_lower_tiers_load_and_carry_no_zwj(self):
+        loader = LanguagePackLoader()
+        for version in ("3.10", "3.11", "3.12"):
+            # enforce_min_interpreter is True by default — must NOT raise now.
+            pack = loader.load("si", "python", version)
+            assert pack.metadata.python_version_min == version
+            offenders = [v for v in self._values(pack).values() if self.ZWJ in v]
+            assert offenders == [], f"si {version} still carries ZWJ: {offenders}"
+
+    def test_313_plus_restores_the_conjuncts(self):
+        loader = LanguagePackLoader()
+        for version in ("3.13", "3.14"):
+            values = self._values(loader.load("si", "python", version))
+            # 'True' -> 'satya' with the ත්‍ය conjunct (virama+ZWJ+ya).
+            assert values["True"] == "සත්‍ය"
+            assert self.ZWJ in values["True"]
+            # All 17 re-tiered values must regain their conjunct in the overlay
+            # (guards against a conjunct dropped from or missing in 3.13.yml).
+            assert sum(self.ZWJ in v for v in values.values()) == 17
+
+    def test_tiers_are_the_same_word_minus_the_joiner(self):
+        loader = LanguagePackLoader()
+        low = self._values(loader.load("si", "python", "3.10"))
+        high = self._values(loader.load("si", "python", "3.13"))
+        drifted = {
+            k: (low[k], high[k]) for k in low if high[k].replace(self.ZWJ, "") != low[k]
+        }
+        assert drifted == {}, f"tier spellings drifted apart: {drifted}"
+
+
+def test_no_xid_313_only_char_below_the_declared_floor():
+    """No pack value may contain a character that only became a valid identifier
+    on CPython 3.13 (ZWJ U+200D / ZWNJ U+200C) while the pack declares a floor
+    below 3.13 — that value would ``SyntaxError`` on the interpreter it targets.
+
+    Generalises the CORE-1521 Sinhala fix to every shipped pack: the deterministic
+    static guarantee that each tier parses on its own interpreter.
+    """
+    xid_313_only = {"‍", "‌"}
+    loader = LanguagePackLoader()
+    offenders = []
+    for code, _name in loader.list_available_languages("python"):
+        for version in ("3.10", "3.11", "3.12", "3.13", "3.14"):
+            try:
+                pack = loader.load(
+                    code, "python", version, enforce_min_interpreter=False
+                )
+            except Exception:
+                continue
+            floor = pack.metadata.python_version_min if pack.metadata else None
+            try:
+                below_313 = floor is None or tuple(
+                    int(p) for p in floor.split(".")[:2]
+                ) < (3, 13)
+            except ValueError:
+                below_313 = True
+            if not below_313:
+                continue
+            for section in ("keywords", "builtins", "exceptions", "reserved_words"):
+                for key, value in (getattr(pack, section, {}) or {}).items():
+                    if any(ch in xid_313_only for ch in value):
+                        offenders.append((code, version, key, value))
+    assert offenders == [], f"XID-3.13-only chars below a <3.13 floor: {offenders}"

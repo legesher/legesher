@@ -1,19 +1,41 @@
 # Sinhala Language Pack for Python 3.13+
-# Extends 3.12 pack (no new keywords in 3.13)
+# Extends the 3.12 pack. Restores the ZWJ (U+200D) conjunct spellings for the 17
+# values that need them: those are valid Python identifiers only on CPython
+# 3.13+ (Unicode 15.1 XID). The 3.10-3.12 packs carry the non-conjunct (no-ZWJ)
+# forms so they parse on those interpreters; this overlay upgrades them to the
+# correct conjunct orthography for 3.13+. See CORE-1521.
 
 language: si
 target: python
 version: '3.13'
 extends: 3.12.yml
-keywords: {}
+keywords:
+  'False': අසත්‍ය
+  'True': සත්‍ය
+builtins:
+  classmethod: පන්තික්‍රමය
+  exec: ක්‍රියාත්මක
+  int: පූර්ණසංඛ්‍යා
+  notimplemented: ක්‍රියාත්මකනැත
+  print: මුද්‍රණය
+  staticmethod: ස්ථිතික්‍රමය
+  vars: විචල්‍යයන්
 exceptions:
   pythonfinalizationerror: පයිතන්අවසන්කිරීමේදෝෂය
+  childprocesserror: ළමාක්‍රියාවලිදෝෂය
+  connectionrefusederror: සම්බන්ධතාවප්‍රතික්ෂේපදෝෂය
+  floatingpointerror: දශමලක්ෂ්‍යදෝෂය
+  notimplementederror: ක්‍රියාත්මකනොකළදෝෂය
+  processlookuperror: ක්‍රියාවලිසෙවුම්දෝෂය
+  syntaxerror: වාක්‍යරීතිදෝෂය
+  syntaxwarning: වාක්‍යරීතිඅවවාදය
+  zerodivisionerror: ශුන්‍යබෙදීමේදෝෂය
 metadata:
   python_version_min: '3.13'
   python_version_max: '3.13'
   compatibility_tested:
   - '3.13'
-  last_updated: '2026-03-10'
+  last_updated: '2026-07-16'
   community_reviewed: false
   author: Legesher Team
   license: MIT

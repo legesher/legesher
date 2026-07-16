@@ -49,6 +49,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **Sinhala now supports Python 3.10–3.12 via a no-ZWJ variant (CORE-1521).**
+  Sinhala conjuncts are written `consonant + virama + ZWJ (U+200D) + consonant`,
+  and ZWJ is a valid identifier character only on CPython 3.13+ (Unicode 15.1);
+  on 3.10–3.12 it is a hard `SyntaxError`. The `si` packs are re-tiered so each
+  interpreter gets a spelling it can parse: the base `3.10.yml` carries the 17
+  affected values in their **non-conjunct (ZWJ-stripped)** form with the floor
+  reverted to 3.10 (3.11/3.12 likewise), and a `3.13.yml` overlay restores the
+  correct **ZWJ conjunct** spellings with the 3.13 floor. `translations.db`
+  keeps the canonical conjunct forms (matched by the 3.13+ tier); the lower-tier
+  no-ZWJ forms are a pack-layer compatibility downgrade. Verified: all `si` 3.10
+  values compile on Python 3.10; every 3.13 conjunct is the same word as its
+  3.10 form minus the joiner. New `TestSinhalaInterpreterTiers` +
+  `test_no_xid_313_only_char_below_the_declared_floor` (a general guard for any
+  pack) pin it. **Native-review-gated:** the non-conjunct spellings await a
+  Sinhala reviewer's sign-off before this ships.
 - **BCP 47 backfill applied to `languages.bcp47` (CORE-1512, promote slice 1).**
   The reviewed proposal TSV is now written into the database: 3 corrections
   (`sr` → `sr-Cyrl`, `uz` → `uz-Latn`, `mn` → `mn-Cyrl`) and 5 NULL-fills

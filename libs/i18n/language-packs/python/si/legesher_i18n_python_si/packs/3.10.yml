@@ -1,10 +1,19 @@
+# Sinhala base pack (Python 3.10+ floor).
+#
+# CORE-1521: 17 values here (True/False + 7 builtins + 8 exceptions) are carried
+# in their NON-CONJUNCT (ZWJ-stripped) form so they parse on CPython 3.10-3.12,
+# where the ZWJ (U+200D) conjunct spelling is a SyntaxError. The canonical
+# CONJUNCT spellings live in 3.13.yml (the 3.13+ overlay) and in translations.db.
+# This base pack therefore deliberately DIVERGES from the DB for those 17 values
+# — an intentional interpreter-compat downgrade, not drift (the cross-layer check
+# CORE-1516 should treat lower-tier packs as a known exception).
 language: si
 target: python
 version: '3.10'
 keywords:
-  'False': අසත්‍ය
+  'False': අසත්ය
   None: කිසිවක්නැත
-  'True': සත්‍ය
+  'True': සත්ය
   and: සහ
   as: ලෙස
   assert: තහවුරු
@@ -54,7 +63,7 @@ builtins:
   bytes: බයිට
   callable: ඇමතිය
   chr: අකුර
-  classmethod: පන්තික්‍රමය
+  classmethod: පන්තික්රමය
   compile: සම්පාදනය
   complex: සංකීර්ණ
   delattr: ගුණමකන්න
@@ -64,7 +73,7 @@ builtins:
   ellipsis: සංක්ෂිප්තය
   enumerate: ගණනකරන්න
   eval: තක්සේරුව
-  exec: ක්‍රියාත්මක
+  exec: ක්රියාත්මක
   filter: පෙරන්න
   float: දශම
   format: ආකෘතිය
@@ -77,7 +86,7 @@ builtins:
   hex: ෂඩ්දශම
   id: හැඳුනුම
   input: ආදානය
-  int: පූර්ණසංඛ්‍යා
+  int: පූර්ණසංඛ්යා
   isinstance: අවස්ථාවද
   issubclass: උපපන්තිද
   iter: පුනරාවර්තකය
@@ -89,13 +98,13 @@ builtins:
   memoryview: මතකදසුන
   min: අවම
   next: ඊළඟ
-  notimplemented: ක්‍රියාත්මකනැත
+  notimplemented: ක්රියාත්මකනැත
   object: වස්තුව
   oct: අෂ්ටමය
   open: විවෘත
   ord: අනුපිළිවෙල
   pow: බලය
-  print: මුද්‍රණය
+  print: මුද්රණය
   property: ගුණාංගය
   range: පරාසය
   repr: නිරූපණය
@@ -105,12 +114,12 @@ builtins:
   setattr: ගුණසකසන්න
   slice: කොටස
   sorted: අනුපිළිවෙළට
-  staticmethod: ස්ථිතික්‍රමය
+  staticmethod: ස්ථිතික්රමය
   str: අකුරුමාලාව
   sum: එකතුව
   super: මූලික
   tuple: ටියුපලය
-  vars: විචල්‍යයන්
+  vars: විචල්යයන්
   zip: යුගළ
   type: වර්ගය
 exceptions:
@@ -122,10 +131,10 @@ exceptions:
   brokenpipeerror: කැඩුණුනළදෝෂය
   buffererror: අන්තරාදෝෂය
   byteswarning: බයිටඅවවාදය
-  childprocesserror: ළමාක්‍රියාවලිදෝෂය
+  childprocesserror: ළමාක්රියාවලිදෝෂය
   connectionabortederror: සම්බන්ධතාවනැවතීමේදෝෂය
   connectionerror: සම්බන්ධතාවදෝෂය
-  connectionrefusederror: සම්බන්ධතාවප්‍රතික්ෂේපදෝෂය
+  connectionrefusederror: සම්බන්ධතාවප්රතික්ෂේපදෝෂය
   connectionreseterror: සම්බන්ධතාවනැවතසැකසීමේදෝෂය
   deprecationwarning: අවලංගුඅවවාදය
   encodingwarning: කේතනඅවවාදය
@@ -134,7 +143,7 @@ exceptions:
   exception: අපවාදය
   fileexistserror: ගොනුපවතීදෝෂය
   filenotfounderror: ගොනුනොමැතිදෝෂය
-  floatingpointerror: දශමලක්ෂ්‍යදෝෂය
+  floatingpointerror: දශමලක්ෂ්යදෝෂය
   futurewarning: අනාගතඅවවාදය
   generatorexit: ජනකපිටවීම
   importerror: ආයාතදෝෂය
@@ -151,12 +160,12 @@ exceptions:
   modulenotfounderror: මොඩියුලනොමැතිදෝෂය
   nameerror: නාමදෝෂය
   notadirectoryerror: නාමාවලියනොවේදෝෂය
-  notimplementederror: ක්‍රියාත්මකනොකළදෝෂය
+  notimplementederror: ක්රියාත්මකනොකළදෝෂය
   oserror: මෙහෙයුම්පද්ධතිදෝෂය
   overflowerror: පිටාර්දෝෂය
   pendingdeprecationwarning: බලාපොරොත්තුඅවලංගුඅවවාදය
   permissionerror: අවසරදෝෂය
-  processlookuperror: ක්‍රියාවලිසෙවුම්දෝෂය
+  processlookuperror: ක්රියාවලිසෙවුම්දෝෂය
   recursionerror: පුනරාවර්තනදෝෂය
   referenceerror: යොමුදෝෂය
   resourcewarning: සම්පතඅවවාදය
@@ -164,8 +173,8 @@ exceptions:
   runtimewarning: ධාවනකාලඅවවාදය
   stopasynciteration: අසමමුහුර්තපුනරාවර්තනනැවතුම
   stopiteration: පුනරාවර්තනනැවතුම
-  syntaxerror: වාක්‍යරීතිදෝෂය
-  syntaxwarning: වාක්‍යරීතිඅවවාදය
+  syntaxerror: වාක්යරීතිදෝෂය
+  syntaxwarning: වාක්යරීතිඅවවාදය
   systemerror: පද්ධතිදෝෂය
   systemexit: පද්ධතිපිටවීම
   taberror: ටැබ්දෝෂය
@@ -180,12 +189,12 @@ exceptions:
   userwarning: පරිශීලකඅවවාදය
   valueerror: අගයදෝෂය
   warning: අවවාදය
-  zerodivisionerror: ශුන්‍යබෙදීමේදෝෂය
+  zerodivisionerror: ශුන්යබෙදීමේදෝෂය
 reserved_words:
   self: තමා
   cls: පන්තියමයම
 metadata:
-  python_version_min: '3.13'
+  python_version_min: '3.10'
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'
