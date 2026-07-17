@@ -95,3 +95,29 @@ class TestExpectedPackEnforcement:
         # Spot-checks against known entries.
         for required in ("en", "es", "ar", "ur", "zh", "ja"):
             assert required in codes, f"{required} missing from registry"
+
+
+class TestTargetGating:
+    """The cross-section pack layer is Python-specific (CORE-1372)."""
+
+    def test_non_python_target_skips_pack_layer(
+        self, audit_module, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A target without a cross-section profile skips the pack layer and
+        passes — acorn-style targets are category-aware, so cross-partition
+        homonyms are legal. The skip is logged, never silent, and must not
+        touch ``_expected_pack_codes`` (there are no JS packs on disk yet).
+        """
+
+        def _boom() -> list[str]:
+            raise AssertionError("pack layer must not run for a non-python target")
+
+        monkeypatch.setattr(audit_module, "_expected_pack_codes", _boom)
+
+        assert audit_module.audit_packs(target="javascript") is True
+
+    def test_default_target_is_python(self, audit_module) -> None:
+        """Calling with no target preserves the Python behaviour (all 51
+        packs audited, zero collisions)."""
+        assert audit_module.audit_packs() is True
+        assert audit_module.audit_packs(target="python") is True

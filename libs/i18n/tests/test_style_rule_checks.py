@@ -15,11 +15,11 @@ premise before feeding the check.
 from __future__ import annotations
 
 import unicodedata
-from pathlib import Path
 from types import SimpleNamespace
 
 from legesher_i18n.schema_validator import LanguagePackSchema, SchemaValidator
 from legesher_i18n.scripts import audit_packs
+from tests import pack_file
 
 DEVANAGARI_ONE = chr(0x0967)  # १  — category Nd, not ASCII
 ARABIC_INDIC_ZERO = chr(0x0660)  # ٠  — category Nd, not ASCII
@@ -94,9 +94,7 @@ class TestAuditGateSeam:
             metadata=None,
         )
         loader = SimpleNamespace(load=lambda *args, **kwargs: pack)
-        pack_file = Path(
-            "libs/i18n/language-packs/python/hi/legesher_i18n_python_hi/packs/3.13.yml"
-        )
-        lang, version, findings = audit_packs._audit_pack_file(loader, pack_file)
+        pack_path = pack_file("hi", "3.13")
+        lang, version, findings = audit_packs._audit_pack_file(loader, pack_path)
         assert (lang, version) == ("hi", "3.13")
         assert any(f.code == "non-ascii-digit" for f in findings)

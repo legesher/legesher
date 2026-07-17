@@ -16,14 +16,12 @@ explicit allowlists below; anything outside them fails the test.
 import builtins
 import keyword
 import sys
-from pathlib import Path
 
 from legesher_i18n.version_index import VersionIndex
 from legesher_i18n.term_definitions import get_exceptions_for_version
+from tests import language_packs_root
 
-REAL_INDEX_PATH = (
-    Path(__file__).parent.parent / "language-packs" / "python" / "version-index.yml"
-)
+REAL_INDEX_PATH = language_packs_root() / "version-index.yml"
 RUNNING_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 
 

@@ -1078,22 +1078,15 @@ class TestCrossSectionCollisions:
         collision, this test fails so the issue is caught at PR time
         rather than at runtime via the AYA-213 failure mode.
         """
-        from pathlib import Path
-
         import yaml
 
         from legesher_i18n.language_registry import get_active_language_codes
 
-        packs_root = Path(__file__).parent.parent / "language-packs" / "python"
+        from tests import pack_file
+
         broken = []
         for lang_code in get_active_language_codes():
-            yml = (
-                packs_root
-                / lang_code
-                / f"legesher_i18n_python_{lang_code}"
-                / "packs"
-                / "3.10.yml"
-            )
+            yml = pack_file(lang_code, "3.10")
             if not yml.exists():
                 continue
             data = yaml.safe_load(yml.read_text(encoding="utf-8"))

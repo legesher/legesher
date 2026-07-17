@@ -48,6 +48,7 @@ from legesher_i18n.scripts.refresh_iana_subtags import (
     check_not_truncated,
     snapshot_record_count,
 )
+from tests import language_packs_root
 
 # The vendored snapshot this test suite was written against. If a refresh moves
 # it, that is fine — but a human should look at the diff (a subtag going
@@ -86,7 +87,7 @@ UNRESOLVED_SCRIPT_LANGUAGES = ["az", "ku", "sd", "ha", "ky", "tg", "ff"]
 
 I18N_ROOT = Path(__file__).resolve().parents[1]
 BACKFILL_TSV = I18N_ROOT / "legesher_i18n" / "db" / "migrations" / "bcp47_backfill.tsv"
-PACK_ROOT = I18N_ROOT / "language-packs" / "python"
+PACK_ROOT = language_packs_root()
 
 
 def _backfill_rows() -> list[dict[str, str]]:

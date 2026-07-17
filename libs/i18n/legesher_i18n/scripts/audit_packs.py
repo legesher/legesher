@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Audit every shipped language pack with the Unicode/script safety layer.
 
-Walks ``libs/i18n/language-packs/python/{lang}/.../packs/*.yml``, loads each
-pack with full inheritance resolution, and runs
-:meth:`SchemaValidator.validate_pack_strict` over the merged result. Findings
-are grouped by language and by finding-code, printed as a readable report, and
-the process exits non-zero when any finding is present.
+Walks ``libs/i18n/language-packs/{target}/{lang}/.../packs/*.yml`` for the
+selected ``--target`` (default ``python``), loads each pack with full
+inheritance resolution, and runs :meth:`SchemaValidator.validate_pack_strict`
+over the merged result. Findings are grouped by language and by finding-code,
+printed as a readable report, and the process exits non-zero when any finding
+is present.
 
 This is the engine behind the ``validate-packs`` CI job. The data-correction
 PRs (CORE-1318) cleared every **error**, so the job now runs this **blocking**:
@@ -13,11 +14,18 @@ the process exits non-zero on any error (safety / correctness), while advisory
 **warnings** (descriptions-as-terms, non-ASCII digits) are surfaced for native
 review without failing CI.
 
+Two of the aggregated checks are Python-specific and are switched off for
+non-Python targets (CORE-1372): the CPython-XID min-interpreter check and the
+cross-partition collision pass. See :data:`_PYTHON_GATE_TARGETS`. The remaining
+per-target grammar (version tokens, identifier rules, partitions) is owned by
+CORE-1503's per-target profiles.
+
 Usage::
 
-    python -m legesher_i18n.scripts.audit_packs            # audit all packs
-    python -m legesher_i18n.scripts.audit_packs --lang si  # one language
-    python -m legesher_i18n.scripts.audit_packs --quiet    # summary only
+    python -m legesher_i18n.scripts.audit_packs                    # all python packs
+    python -m legesher_i18n.scripts.audit_packs --lang si          # one language
+    python -m legesher_i18n.scripts.audit_packs --target javascript
+    python -m legesher_i18n.scripts.audit_packs --quiet            # summary only
 """
 
 from __future__ import annotations
@@ -34,22 +42,39 @@ from legesher_i18n.schema_validator import (
     SchemaValidator,
 )
 
+# Targets whose packs run the Python-specific gates in ``validate_pack_strict``:
+# the CPython-XID min-interpreter check (a CPython-only Unicode-version trap)
+# and the cross-partition collision pass (CPython's ``tokenize`` dispatches
+# flat, so a value shared across partitions round-trips to the wrong token —
+# CORE-710). JavaScript's acorn AST is category-aware, so cross-partition
+# homonyms are legal and neither gate applies. Interim seed for the per-target
+# profiles formalised in CORE-1503.
+_PYTHON_GATE_TARGETS: frozenset[str] = frozenset({"python"})
 
-def _language_packs_root() -> Path:
-    """Return the ``language-packs/python`` directory in the working tree."""
+# Programming-language targets the audit knows how to walk. Kept in step with
+# the on-disk ``language-packs/<target>`` layout.
+_KNOWN_TARGETS: tuple[str, ...] = ("python", "javascript")
+
+_DEFAULT_TARGET = "python"
+
+
+def _language_packs_root(target: str = _DEFAULT_TARGET) -> Path:
+    """Return the ``language-packs/<target>`` directory in the working tree."""
     # This file lives at libs/i18n/legesher_i18n/scripts/audit_packs.py;
-    # the packs live at libs/i18n/language-packs/python.
-    return Path(__file__).resolve().parents[2] / "language-packs" / "python"
+    # the packs live at libs/i18n/language-packs/<target>.
+    return Path(__file__).resolve().parents[2] / "language-packs" / target
 
 
-def _discover_pack_files(root: Path, lang_filter: str | None) -> list[Path]:
+def _discover_pack_files(
+    root: Path, lang_filter: str | None, target: str = _DEFAULT_TARGET
+) -> list[Path]:
     """Return every concrete pack YAML under *root*, optionally filtered.
 
     Skips the top-level ``version-index.yml`` and any non-pack YAML; only files
     living inside a ``packs/`` directory are returned.
     """
     files: list[Path] = []
-    for path in sorted(root.glob("*/legesher_i18n_python_*/packs/*.yml")):
+    for path in sorted(root.glob(f"*/legesher_i18n_{target}_*/packs/*.yml")):
         lang = path.parents[2].name
         if lang_filter and lang != lang_filter:
             continue
@@ -58,17 +83,21 @@ def _discover_pack_files(root: Path, lang_filter: str | None) -> list[Path]:
 
 
 def _audit_pack_file(
-    loader: LanguagePackLoader, pack_file: Path
+    loader: LanguagePackLoader,
+    pack_file: Path,
+    target: str = _DEFAULT_TARGET,
 ) -> tuple[str, str, list[Finding]]:
     """Load + audit one pack file. Returns (lang, version, findings).
 
     Loads through the inheritance-resolving loader so the audit sees the merged
     pack a consumer would actually get. A load failure (malformed YAML, missing
     parent) is surfaced as a single ``load-error`` finding rather than crashing
-    the whole run.
+    the whole run. The Python-only gates run only when *target* is in
+    :data:`_PYTHON_GATE_TARGETS`.
     """
     lang = pack_file.parents[2].name
     version = pack_file.stem  # e.g. "3.13" or "default"
+    python_gates = target in _PYTHON_GATE_TARGETS
 
     try:
         # enforce_min_interpreter=False: the auditor inspects the raw pack
@@ -76,7 +105,7 @@ def _audit_pack_file(
         # 3.13-only Sinhala values rather than have the loader refuse them.
         pack = loader.load(
             lang,
-            "python",
+            target,
             None if version == "default" else version,
             enforce_min_interpreter=False,
         )
@@ -114,7 +143,12 @@ def _audit_pack_file(
         cultural_notes=[],
         metadata=pack.metadata,
     )
-    findings = SchemaValidator.validate_pack_strict(schema, lang)
+    findings = SchemaValidator.validate_pack_strict(
+        schema,
+        lang,
+        run_min_interpreter=python_gates,
+        run_cross_section=python_gates,
+    )
     return lang, version, findings
 
 
@@ -177,24 +211,33 @@ def main(argv: list[str] | None = None) -> int:
         help="Audit only this language code (e.g. 'si'). Default: all packs.",
     )
     parser.add_argument(
+        "--target",
+        default=_DEFAULT_TARGET,
+        choices=_KNOWN_TARGETS,
+        help=(
+            "Programming-language target to audit (default: python). "
+            "Non-Python targets skip the CPython-only gates."
+        ),
+    )
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Print only the summary, not per-finding detail.",
     )
     args = parser.parse_args(argv)
 
-    root = _language_packs_root()
+    root = _language_packs_root(args.target)
     if not root.exists():
         print(f"language-packs root not found: {root}", file=sys.stderr)
         return 2
 
-    pack_files = _discover_pack_files(root, args.lang)
+    pack_files = _discover_pack_files(root, args.lang, args.target)
     if not pack_files:
         print(f"No pack files found under {root}", file=sys.stderr)
         return 2
 
     loader = LanguagePackLoader()
-    results = [_audit_pack_file(loader, pf) for pf in pack_files]
+    results = [_audit_pack_file(loader, pf, args.target) for pf in pack_files]
     errors, _warnings = _print_report(results, args.quiet)
 
     # BLOCKING gate (CORE-1318): fail only on ERRORS. Advisory warnings

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from legesher_i18n.pack_loader import LanguagePackLoader
 from legesher_i18n.db import TranslationDatabase
+from tests import I18N_ROOT, language_packs_root, pack_file
 
 
 class TestDirectoryStructure:
@@ -16,19 +17,19 @@ class TestDirectoryStructure:
 
     def test_language_packs_directory_exists(self):
         """Verify language-packs directory exists."""
-        pack_dir = Path(__file__).parent.parent / "language-packs"
+        pack_dir = I18N_ROOT / "language-packs"
         assert pack_dir.exists(), "language-packs directory should exist"
         assert pack_dir.is_dir(), "language-packs should be a directory"
 
     def test_python_subdirectory_exists(self):
         """Verify python subdirectory exists under language-packs."""
-        python_dir = Path(__file__).parent.parent / "language-packs" / "python"
+        python_dir = language_packs_root()
         assert python_dir.exists(), "python subdirectory should exist"
         assert python_dir.is_dir(), "python should be a directory"
 
     def test_language_package_directories_exist(self):
         """Verify language package directories exist (ar, es, en, fr, zh)."""
-        python_dir = Path(__file__).parent.parent / "language-packs" / "python"
+        python_dir = language_packs_root()
         expected_languages = ["ar", "es", "en", "fr", "zh"]
 
         for lang in expected_languages:
@@ -111,15 +112,7 @@ class TestLanguagePackStructure:
         """Verify Spanish pack properly quotes 'not: no' to avoid YAML boolean parsing."""
         import yaml
 
-        es_pack_path = (
-            Path(__file__).parent.parent
-            / "language-packs"
-            / "python"
-            / "es"
-            / "legesher_i18n_python_es"
-            / "packs"
-            / "3.10.yml"
-        )
+        es_pack_path = pack_file("es", "3.10")
 
         # Load the YAML and verify the 'not' keyword is parsed as string "no", not boolean False
         with open(es_pack_path) as f:

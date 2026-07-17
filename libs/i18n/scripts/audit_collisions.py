@@ -18,12 +18,14 @@ inline in PR review UIs.
 Usage:
 
     uv run python libs/i18n/scripts/audit_collisions.py
+    uv run python libs/i18n/scripts/audit_collisions.py --target javascript
 
 Exits 0 on clean audit, 1 on any collision.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -43,8 +45,24 @@ from legesher_i18n.schema_validator import (  # noqa: E402
 )
 
 _IS_GHA = os.environ.get("GITHUB_ACTIONS") == "true"
-_LANGUAGE_PACKS_DIR = _SCRIPT_DIR.parent / "language-packs" / "python"
 _LANGUAGES_JSON = _SCRIPT_DIR.parent / "legesher_i18n" / "languages.json"
+
+_DEFAULT_TARGET = "python"
+_KNOWN_TARGETS: tuple[str, ...] = ("python", "javascript")
+
+# The pack-layer audit here IS the cross-partition collision check. That guard
+# exists for CPython's flat ``tokenize`` dispatch, where a value shared across
+# partitions round-trips to the wrong token (CORE-710). JavaScript's acorn AST
+# is category-aware, so cross-partition homonyms are legal and this layer does
+# not apply (CORE-1372). A target maps to the base pack file the check reads;
+# targets absent from this map skip the pack layer entirely. Interim seed for
+# CORE-1503's per-target profiles (which own version-token grammar).
+_CROSS_SECTION_BASE_PACK: dict[str, str] = {"python": "3.10.yml"}
+
+
+def _language_packs_dir(target: str = _DEFAULT_TARGET) -> Path:
+    """Return the ``language-packs/<target>`` directory in the working tree."""
+    return _SCRIPT_DIR.parent / "language-packs" / target
 
 
 def _gha_error(message: str, file: str | None = None) -> None:
@@ -94,19 +112,34 @@ def _expected_pack_codes() -> list[str]:
         return []
 
 
-def audit_packs() -> bool:
+def audit_packs(target: str = _DEFAULT_TARGET) -> bool:
     """Return True iff every language code in ``languages.json`` has an
     auditable pack file AND that file has zero cross-section collisions.
 
+    The cross-partition collision check is Python-specific (see
+    :data:`_CROSS_SECTION_BASE_PACK`). For a target without a cross-section
+    profile (e.g. JavaScript, whose acorn AST is category-aware), the pack
+    layer does not apply and this returns True after logging the skip — a
+    logged skip, never a silent one (CORE-1372).
+
     Failure modes (Copilot review on PR #237):
     * Pack directory entirely missing → fail (was: silent skip).
-    * Pack dir present but ``packs/3.10.yml`` missing → fail (was: silent
+    * Pack dir present but the base pack file missing → fail (was: silent
       skip).
     * Schema validation error on the YAML → fail.
     * Cross-section collision present → fail.
     """
-    if not _LANGUAGE_PACKS_DIR.exists():
-        _gha_error(f"Language packs directory not found: {_LANGUAGE_PACKS_DIR}")
+    base_pack = _CROSS_SECTION_BASE_PACK.get(target)
+    if base_pack is None:
+        print(
+            f"Cross-section pack audit is not defined for target {target!r} "
+            f"(acorn-style targets are category-aware); skipping pack layer."
+        )
+        return True
+
+    packs_dir = _language_packs_dir(target)
+    if not packs_dir.exists():
+        _gha_error(f"Language packs directory not found: {packs_dir}")
         return False
 
     expected_codes = _expected_pack_codes()
@@ -117,13 +150,7 @@ def audit_packs() -> bool:
     missing: list[str] = []
     audited = 0
     for code in expected_codes:
-        pack = (
-            _LANGUAGE_PACKS_DIR
-            / code
-            / f"legesher_i18n_python_{code}"
-            / "packs"
-            / "3.10.yml"
-        )
+        pack = packs_dir / code / f"legesher_i18n_{target}_{code}" / "packs" / base_pack
         if not pack.exists():
             missing.append(code)
             _gha_error(
@@ -165,9 +192,21 @@ def audit_packs() -> bool:
     return True
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--target",
+        default=_DEFAULT_TARGET,
+        choices=_KNOWN_TARGETS,
+        help=(
+            "Programming-language target to audit (default: python). Targets "
+            "without a cross-section profile skip the pack layer."
+        ),
+    )
+    args = parser.parse_args(argv)
+
     db_ok = audit_db()
-    packs_ok = audit_packs()
+    packs_ok = audit_packs(args.target)
     return 0 if (db_ok and packs_ok) else 1
 
 

@@ -30,6 +30,16 @@ from pathlib import Path
 import re
 import yaml
 
+# Cross-partition collision detection is Python-specific: CPython's ``tokenize``
+# dispatches tokens flat, so a value shared across partitions round-trips to the
+# wrong token (CORE-710). Acorn-style targets (JavaScript) are category-aware, so
+# cross-partition homonyms are legal and this pass is skipped for them
+# (CORE-1372); intra-section duplicates (reversibility) still apply to every
+# target. Keyed on the pack's own ``target`` field. Interim seed for CORE-1503's
+# per-target profiles (which also own the version-token grammar this script's
+# schema check still enforces Python-style).
+_CROSS_SECTION_TARGETS = frozenset({"python"})
+
 
 class LanguagePackValidator:
     """Validator for language pack YAML files."""
@@ -210,11 +220,18 @@ class LanguagePackValidator:
                     )
 
             # Cross-section collisions: same value in 2+ distinct sections.
+            # Python-only (see ``_CROSS_SECTION_TARGETS``): acorn's AST is
+            # category-aware, so this pass is skipped for non-Python targets.
             # Message is prefixed with "Collision" (capital C) so the
             # existing test_validate_yaml.py assertions
             # ``"Collision" in error_message`` work uniformly across
             # intra-section and cross-section findings.
-            for collision in dup.get("cross_section_collisions", []):
+            cross_section = (
+                dup.get("cross_section_collisions", [])
+                if schema.target in _CROSS_SECTION_TARGETS
+                else []
+            )
+            for collision in cross_section:
                 locations = ", ".join(
                     f"{loc['section']}.{loc['source_key']}"
                     for loc in collision.get("locations", [])

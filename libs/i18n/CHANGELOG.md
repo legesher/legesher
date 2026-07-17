@@ -49,6 +49,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **Pack audit gates are now target-aware (CORE-1372).** `audit_packs.py` and
+  `audit_collisions.py` gain a `--target` flag (default `python`) and no longer
+  hard-code the `language-packs/python` path; the seven path-hard-coded tests
+  route through a shared `tests/` helper. The two checks in `validate_pack_strict`
+  that are Python-specific are switched off for non-Python targets via neutral
+  toggles — the cross-*partition* collision pass (CPython `tokenize` dispatches
+  flat, so a shared value round-trips to the wrong token — CORE-710) and the
+  CPython-XID `check_min_interpreter_identifier`. A JavaScript pack therefore
+  passes through the same gates without them misfiring (acorn's AST is
+  category-aware, so cross-partition homonyms are legal there), while
+  intra-partition reversibility still runs for every target. The pre-commit
+  `validate_language_pack_yaml.py` hook — which runs on every target's packs —
+  gates its cross-section check the same way. The engine never branches on the
+  target; each caller supplies the toggle. Per-target version grammar,
+  identifier rules, and the remaining Python-isms stay with the per-target
+  profile work in CORE-1503.
 - **Sinhala now supports Python 3.10–3.12 via a no-ZWJ variant (CORE-1521).**
   Sinhala conjuncts are written `consonant + virama + ZWJ (U+200D) + consonant`,
   and ZWJ is a valid identifier character only on CPython 3.13+ (Unicode 15.1);

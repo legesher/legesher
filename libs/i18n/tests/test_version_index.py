@@ -8,12 +8,12 @@ from legesher_i18n.exceptions import (
     VersionIndexError,
     UnsupportedVersionError,
 )
+from tests import language_packs_root
 
 
-# Use actual version-index.yml from language-packs/python/
-REAL_INDEX_PATH = (
-    Path(__file__).parent.parent / "language-packs" / "python" / "version-index.yml"
-)
+# Use actual version-index.yml from language-packs/python/ (version-index is a
+# Python-only artifact; the target segment comes from the shared helper).
+REAL_INDEX_PATH = language_packs_root() / "version-index.yml"
 
 
 class TestVersionIndexLoading:

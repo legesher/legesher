@@ -9,8 +9,6 @@ grows from 51 to 103 languages.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from legesher_i18n.script_policy import (
@@ -21,10 +19,11 @@ from legesher_i18n.script_policy import (
     policy_for,
     scripts_of,
 )
+from tests import language_packs_root
 
-# language-packs/python lives at libs/i18n/language-packs/python; this test file
-# is at libs/i18n/tests/test_*.py.
-_PACKS_ROOT = Path(__file__).resolve().parents[1] / "language-packs" / "python"
+# Shipped packs live at libs/i18n/language-packs/<target>; the target segment
+# comes from the shared helper (default python).
+_PACKS_ROOT = language_packs_root()
 
 
 def _shipped_language_codes() -> set[str]:

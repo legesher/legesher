@@ -20,7 +20,9 @@ _REPO_ROOT = Path(__file__).resolve().parents[4]
 _VALIDATOR = _REPO_ROOT / "libs" / "i18n" / "scripts" / "validate_language_pack_yaml.py"
 
 
-def _make_pack_dir(tmp_path: Path) -> Path:
+def _make_pack_dir(
+    tmp_path: Path, target: str = "python", lang: str = "ur"
+) -> Path:
     """Build a layout the validator recognises (must contain
     ``language-packs`` and ``packs`` in the path).
     """
@@ -29,9 +31,9 @@ def _make_pack_dir(tmp_path: Path) -> Path:
         / "libs"
         / "i18n"
         / "language-packs"
-        / "python"
-        / "ur"
-        / "legesher_i18n_python_ur"
+        / target
+        / lang
+        / f"legesher_i18n_{target}_{lang}"
         / "packs"
     )
     pack_dir.mkdir(parents=True, exist_ok=True)
@@ -140,3 +142,46 @@ class TestCrossSectionCollisionGate:
         assert result.returncode != 0
         combined = (result.stdout + result.stderr).lower()
         assert "cross" in combined or "collision" in combined
+
+    def test_javascript_pack_allows_cross_section_homonym(
+        self, tmp_path: Path
+    ) -> None:
+        """A JavaScript pack may reuse one value across partitions — acorn's
+        AST is category-aware, so cross-partition homonyms are legal (CORE-1372).
+        The same shape that fails for a Python pack must pass here.
+
+        (``version`` is kept as ``N.N`` to satisfy the current Python-shaped
+        version regex; generalizing that grammar is CORE-1503. This isolates the
+        cross-section gate.)
+        """
+        pack_yml = (
+            _make_pack_dir(tmp_path, target="javascript", lang="ur") / "3.10.yml"
+        )
+        pack_yml.write_text(
+            textwrap.dedent("""
+                language: ur
+                target: javascript
+                version: "3.10"
+                keywords:
+                  def: "تعریف"
+                builtins:
+                  print: "چھاپ"
+                exceptions:
+                  ValueError: "قدرغلطی"
+                reserved_words:
+                  self: "چھاپ"
+                  cls: "جماعت"
+                """).lstrip(),
+            encoding="utf-8",
+        )
+
+        result = _run_validator(pack_yml)
+        combined = (result.stdout + result.stderr).lower()
+        assert result.returncode == 0, (
+            f"JS pack with a cross-partition homonym should pass. "
+            f"stdout: {result.stdout}\nstderr: {result.stderr}"
+        )
+        assert "cross" not in combined, (
+            f"Cross-section check must not run for a JS target. "
+            f"Output:\n{result.stdout}\n{result.stderr}"
+        )

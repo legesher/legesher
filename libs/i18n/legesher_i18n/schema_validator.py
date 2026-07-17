@@ -1352,6 +1352,8 @@ class SchemaValidator:
     @staticmethod
     def _strict_duplicate_findings(
         pack_schema: "LanguagePackSchema",
+        *,
+        include_cross_section: bool = True,
     ) -> list["Finding"]:
         """Wrap ``check_duplicates`` output as Findings, allow-listing type==type.
 
@@ -1359,6 +1361,17 @@ class SchemaValidator:
         ``duplicate-target`` findings. The intentional ``keywords.type ==
         builtins.type`` overlap is suppressed: it is the one duplicate the
         language packs ship on purpose.
+
+        Intra-section duplicates always run: in-partition reversibility (Rule 2)
+        applies to *every* target, including JavaScript ``members``. The
+        ``include_cross_section`` toggle governs only the cross-partition
+        collision pass, which is Python-specific: CPython's ``tokenize``
+        dispatches tokens flat, so a value shared across partitions round-trips
+        to the wrong token (CORE-710). JavaScript's acorn AST is category-aware,
+        so cross-partition homonyms (e.g. a member and a builtin) are legal;
+        callers auditing a non-Python target pass ``include_cross_section=False``
+        (CORE-1372). The toggle is target-neutral by design — the target→toggle
+        decision lives in the caller, never as an ``if target ==`` branch here.
         """
         dup = SchemaValidator.check_duplicates(pack_schema)
         findings: list[Finding] = []
@@ -1389,7 +1402,9 @@ class SchemaValidator:
                     )
                 )
 
-        for collision in dup.get("cross_section_collisions", []):
+        for collision in (
+            dup.get("cross_section_collisions", []) if include_cross_section else []
+        ):
             keys = {loc["source_key"] for loc in collision.get("locations", [])}
             if keys <= _ALLOWED_DUPLICATE_KEYS:
                 continue
@@ -1518,6 +1533,9 @@ class SchemaValidator:
     def validate_pack_strict(
         pack_schema: "LanguagePackSchema",
         language: str | None = None,
+        *,
+        run_min_interpreter: bool = True,
+        run_cross_section: bool = True,
     ) -> list["Finding"]:
         """Run every safety check and return all Findings (empty == clean).
 
@@ -1542,10 +1560,33 @@ class SchemaValidator:
         8. :meth:`check_ascii_digits` — the ASCII-digit policy (warning)
         9. :meth:`check_term_length` — description-as-term length (warning)
 
+        Two of the aggregated checks are Python-specific and are gated by the
+        ``run_min_interpreter`` / ``run_cross_section`` toggles (CORE-1372):
+
+        * ``check_min_interpreter_identifier`` guards the CPython 3.13 XID trap —
+          meaningless for a non-CPython runtime.
+        * the cross-section collision pass inside ``_strict_duplicate_findings``
+          guards CPython's flat ``tokenize`` dispatch; JavaScript's acorn AST is
+          category-aware, so cross-partition homonyms are legal there (D4).
+
+        Both default to ``True`` (today's Python behaviour). Callers auditing a
+        non-Python target pass ``False``. The toggles are booleans, not a target
+        string: the target→toggle mapping stays in the caller so the engine never
+        forks on ``if target == "python"`` (CORE-1503's "per-target data, not
+        per-target code paths" rule). The remaining Python-isms — the keyword
+        set in :meth:`check_keyword_collisions` and the ``str.isidentifier``
+        grammar in :meth:`check_identifier_validity` — are the per-target
+        identifier/keyword profile owned by CORE-1503, not gated here.
+
         Args:
             pack_schema: Validated, inheritance-merged pack.
             language: Language code to police against. Defaults to
                 ``pack_schema.language``.
+            run_min_interpreter: Run the CPython-XID min-interpreter check.
+                Set ``False`` for non-CPython targets.
+            run_cross_section: Run the cross-partition collision pass. Set
+                ``False`` for targets whose runtime dispatches by AST category
+                (e.g. JavaScript) rather than a flat token stream.
 
         Returns:
             A flat ``list[Finding]`` mixing errors and advisory warnings. No
@@ -1558,8 +1599,13 @@ class SchemaValidator:
         findings += SchemaValidator.check_script_consistency(pack_schema, lang)
         findings += SchemaValidator.check_format_chars(pack_schema, lang)
         findings += SchemaValidator.check_keyword_collisions(pack_schema)
-        findings += SchemaValidator.check_min_interpreter_identifier(pack_schema, lang)
-        findings += SchemaValidator._strict_duplicate_findings(pack_schema)
+        if run_min_interpreter:
+            findings += SchemaValidator.check_min_interpreter_identifier(
+                pack_schema, lang
+            )
+        findings += SchemaValidator._strict_duplicate_findings(
+            pack_schema, include_cross_section=run_cross_section
+        )
         findings += SchemaValidator._strict_identifier_findings(pack_schema)
         findings += SchemaValidator.check_ascii_digits(pack_schema)
         findings += SchemaValidator.check_term_length(pack_schema)
