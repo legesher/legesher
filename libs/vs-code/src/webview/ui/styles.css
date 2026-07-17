@@ -195,7 +195,9 @@ code {
 .pane.rtl code {
     direction: rtl !important;
     text-align: right !important;
-    unicode-bidi: embed;
+    /* isolate, not the legacy `embed`: prevents bidi bleed across the pane
+       boundary. See js-engine-repo docs/bidi-display-prose-policy.md (CORE-1532). */
+    unicode-bidi: isolate;
 }
 
 /* Syntax highlighting overrides to match VS Code theme */
