@@ -1,0 +1,793 @@
+{
+ "implementation": "v8",
+ "version_added": "0.1.0",
+ "provenance": "JEJ learner-facing catalog (CORE-1378/CORE-1379). Generic identities; enumerated from the pinned consumer surface, adversarially verified (leakage/bidi/schema/MSA). Arabic enters at status='machine' pending native review. Stored templates are clean: bidi isolation is applied at render time per the ratified code-vs-display policy.",
+ "templates": [
+  {
+   "key": "jej.construct_not_allowed",
+   "cluster": "not-available-at-level",
+   "template_en": "The '{construct}' construct is not allowed at this language level.",
+   "placeholders": [
+    {
+     "name": "construct",
+     "example": "ClassDeclaration"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "البنية «{construct}» غير مسموح بها في هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Impersonal passive agreement: confirm 'غير مسموح بها' (masculine participle + feminine pronoun referring to البنية) is the preferred MSA form over fully agreeing 'غير مسموحة'.",
+    "Terminology: 'البنية' chosen for 'construct' (AST/grammar structure); reviewer confirm vs alternatives 'التركيب' or 'الصيغة' for young learners.",
+    "Agreement anchor: adjectives agree with the head noun البنية, never with the interpolated value — confirm this reads naturally whether {construct} renders as an English AST name (ClassDeclaration) or a localized label.",
+    "Quote style: straight ASCII quotes around a Latin identifier inside RTL text — confirm acceptable given render-time bidi isolation (stored template is clean by policy)."
+   ]
+  },
+  {
+   "key": "jej.construct_explicitly_forbidden",
+   "cluster": "not-available-at-level",
+   "template_en": "The '{construct}' construct is intentionally excluded from this language level.",
+   "placeholders": [
+    {
+     "name": "construct",
+     "example": "WithStatement"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "البنية «{construct}» مستبعدة عن قصد من هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Intent nuance: 'عن قصد' chosen over 'عمدا' to avoid the legal/punitive connotation of premeditation; confirm it conveys a deliberate design choice (not a bug, not a punishment) warmly enough for young learners.",
+    "Double preposition: 'مستبعدة عن قصد من هذا المستوى من اللغة' repeats من (excluded FROM + level OF the language) — confirm fluency; if clunky, reviewer may prefer restructuring, but keep the shared cluster frame.",
+    "Gender agreement: 'مستبعدة' agrees with feminine البنية — confirm.",
+    "Quote style: straight ASCII quotes around a Latin identifier inside RTL text — confirm acceptable given render-time bidi isolation."
+   ]
+  },
+  {
+   "key": "jej.global_not_available",
+   "cluster": "not-available-at-level",
+   "template_en": "'{global}' is not available at this language level.",
+   "placeholders": [
+    {
+     "name": "global",
+     "example": "Math"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "الاسم «{global}» غير متاح في هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Added head noun: Arabic inserts 'الاسم' (absent from the English) to anchor gender agreement and avoid an adjective directly modifying a foreign token — confirm 'الاسم' is the right classifier for globals like Math/console; alternative: 'المعرف'.",
+    "Agreement anchor: 'غير متاح' (masc) tracks الاسم regardless of interpolation — confirm it still reads correctly if {global} renders as an Arabic pack word of different apparent gender (e.g. رياضيات for Math), where the quoted token is an apposition/name.",
+    "Register: confirm 'غير متاح' carries the intended 'not unlocked yet at this level' (availability) reading rather than a permanent absence, matching the pedagogical gradient vs the not-allowed and intentionally-excluded keys.",
+    "Quote style: straight ASCII quotes around a Latin identifier inside RTL text — confirm acceptable given render-time bidi isolation."
+   ]
+  },
+  {
+   "key": "jej.member_not_available",
+   "cluster": "not-available-at-level",
+   "template_en": "The member '{member}' is not available at this language level.",
+   "placeholders": [
+    {
+     "name": "member",
+     "example": "split"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "العضو «{member}» غير متاح في هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Terminology: 'العضو' is the standard Arabic OOP term for member, but its everyday senses (limb, organization member) may read oddly for children; reviewer weigh alternatives 'الخاصية' (property) / 'الدالة' (method) — note the JEJ member surface spans BOTH properties (length) and methods (split, floor), so any replacement must cover both.",
+    "Agreement anchor: 'غير متاح' (masc) tracks العضو, not the interpolated value — confirm it holds when {member} renders as an Arabic pack word (e.g. طول for length, أرضية for floor).",
+    "Register: confirm the availability reading ('not unlocked at this level') as in jej.global_not_available.",
+    "Quote style: straight ASCII quotes around a Latin identifier inside RTL text — confirm acceptable given render-time bidi isolation."
+   ]
+  },
+  {
+   "key": "jej.declaration_kind_not_allowed",
+   "cluster": "operator-not-allowed",
+   "template_en": "'{kind}' declarations are not allowed — declare with {alternatives} instead.",
+   "placeholders": [
+    {
+     "name": "kind",
+     "example": "var"
+    },
+    {
+     "name": "alternatives",
+     "example": "'let' or 'const' (locale-aware list rendered from pack terms)"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "التصريح باستخدام «{kind}» غير مسموح به — استخدم {alternatives} بدلا من ذلك.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Term choice: التصريح for 'declaration' (Hsoub convention); rejected الإعلان (reads as 'advertisement' to young learners) and التعريف ('definition') — native reviewer to confirm",
+    "{alternatives} is a countable rendered list: confirm the frame 'استخدم {alternatives} بدلا من ذلك' stays natural for 1, 2, or 3+ items; dual/plural agreement must live in the list renderer so the sentence never needs re-keying",
+    "Imperative استخدم is masculine-singular neutral address (standard Arabic UI register) — confirm for the young-learner audience",
+    "Agreement: غير مسموح به is masculine, agreeing with the head noun التصريح, not with the interpolated {kind} value (a code token) — safe by construction, reviewer confirm"
+   ]
+  },
+  {
+   "key": "jej.assignment_operator_not_allowed",
+   "cluster": "operator-not-allowed",
+   "template_en": "The assignment operator '{operator}' is not allowed at this language level.",
+   "placeholders": [
+    {
+     "name": "operator",
+     "example": "op= (defensive default-deny; every real JS compound-assignment operator is currently allowed)"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "عامل الإسناد «{operator}» غير مسموح به في هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Term: عامل الإسناد for 'assignment operator' (Hsoub convention) vs عامل التعيين — confirm",
+    "Cluster-wide operator term: العامل (vs المعامل / المؤثر), reserving معامل for operand — confirm curriculum convention",
+    "Phrase في هذا المستوى من اللغة for 'at this language level' — confirm it reads as the JavaScript learning level, not linguistic register",
+    "Agreement anchors to masculine عامل regardless of the interpolated symbol — safe by construction, reviewer confirm"
+   ]
+  },
+  {
+   "key": "jej.binary_operator_not_allowed",
+   "cluster": "operator-not-allowed",
+   "template_en": "The operator '{operator}' cannot be used between two values at this language level.",
+   "placeholders": [
+    {
+     "name": "operator",
+     "example": "=="
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "لا يمكن استخدام العامل «{operator}» بين قيمتين في هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Indefinite dual بين قيمتين mirrors the EN generic rule 'between two values' — confirm naturalness vs definite بين القيمتين",
+    "Cluster-wide operator term العامل — confirm (see assignment-operator row)",
+    "Phrase في هذا المستوى من اللغة — confirm register (see assignment-operator row)"
+   ]
+  },
+  {
+   "key": "jej.logical_operator_not_allowed",
+   "cluster": "operator-not-allowed",
+   "template_en": "The logical operator '{operator}' is not allowed at this language level.",
+   "placeholders": [
+    {
+     "name": "operator",
+     "example": "op (defensive default-deny; &&, ||, ?? are all allowed)"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "العامل المنطقي «{operator}» غير مسموح به في هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "العامل المنطقي is the standard Arabic term for 'logical operator' — low risk, confirm alongside the cluster-wide العامل decision",
+    "Phrase في هذا المستوى من اللغة — confirm register (see assignment-operator row)"
+   ]
+  },
+  {
+   "key": "jej.unary_operator_not_allowed",
+   "cluster": "operator-not-allowed",
+   "template_en": "The operator '{operator}' cannot be used in front of a value at this language level.",
+   "placeholders": [
+    {
+     "name": "operator",
+     "example": "delete"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "لا يمكن استخدام العامل «{operator}» قبل قيمة في هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "قبل (reading order) deliberately chosen over spatial أمام for 'in front of' so the rule stays true in RTL Arabic source code — confirm the choice",
+    "Indefinite قبل قيمة mirrors EN 'a value' — confirm vs definite قبل القيمة",
+    "Cluster-wide operator term العامل — confirm (see assignment-operator row)"
+   ]
+  },
+  {
+   "key": "jej.update_operator_not_allowed",
+   "cluster": "operator-not-allowed",
+   "template_en": "The update operator '{operator}' is not allowed at this language level.",
+   "placeholders": [
+    {
+     "name": "operator",
+     "example": "op (defensive default-deny; ++ and -- are both allowed)"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "عامل التحديث «{operator}» غير مسموح به في هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "عامل التحديث is a coined generic for ESTree 'update operator' (++/--); conventional Arabic materials name the pair عاملا الزيادة والنقصان — confirm the coinage (التحديث is familiar to young learners from apps) or substitute the conventional pair",
+    "Phrase في هذا المستوى من اللغة — confirm register (see assignment-operator row)"
+   ]
+  },
+  {
+   "key": "jej.block_required",
+   "cluster": "structure-required",
+   "template_en": "The body of '{construct}' must be wrapped in curly braces {{ }}.",
+   "placeholders": [
+    {
+     "name": "construct",
+     "example": "if"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "يجب وضع جسم «{construct}» بين قوسين معقوصين {{ }}.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Bracket terminology: chose 'قوسين معقوصين' for { }; naming varies regionally (معقوف vs معقوص vs حاصرة) — confirm the clearest term for young learners; the literal {{ }} symbols anchor the meaning regardless of term choice.",
+    "Interpolation agreement: {construct} is a quoted code token in apposition to 'جسم', so no gender/case agreement is structurally required — verify it still reads naturally with real pack values (e.g. 'إذا', 'طالما') and with Latin-script fallback tokens.",
+    "RTL rendering check: stored template keeps the escaped literal braces {{ }} and ASCII quotes adjacent to RTL text with no bidi controls (per ratified policy — isolation is applied at render time); reviewer should eyeball the rendered message to confirm the brace pair and quoted token appear in the correct visual order.",
+    "Term 'جسم' (body) is the standard Arabic CS term (جسم الدالة/الحلقة); confirm age-appropriateness for absolute beginners vs a more transparent alternative like 'محتوى'.",
+    "ASCII quotes '…' around {construct} kept for catalog-wide consistency with code-token display; reviewer may prefer Arabic guillemets «…» — decide once for the whole catalog, not per message."
+   ]
+  },
+  {
+   "key": "jej.assignment_target_must_be_variable",
+   "cluster": "structure-required",
+   "template_en": "You can only assign to variables — assigning to a property is not allowed at this language level.",
+   "placeholders": [],
+   "translations": {
+    "ar": {
+     "template": "يمكنك إسناد القيم إلى المتغيرات فقط، أما الإسناد إلى الخصائص فغير مسموح به في هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Term choice: 'إسناد' for assignment (vs 'تعيين' or the more concrete 'تخزين قيمة في') — confirm for the young-learner age group and lock the choice catalog-wide; first clause adds 'القيم' (values) to make the action concrete for beginners.",
+    "'الخصائص' for properties: English singular 'a property' rendered as generic definite plural to parallel 'المتغيرات' (idiomatic Arabic generic reference) — confirm, and confirm 'خاصية' matches the property term used on other Arabic learner-facing surfaces.",
+    "Register: the 'أما … فـ' contrast construction is standard school MSA but slightly formal — confirm it suits young learners; simpler fallback is 'لكن الإسناد إلى الخصائص غير مسموح به'.",
+    "'في هذا المستوى من اللغة' for 'at this language level' — confirm it matches how JEJ language levels are named elsewhere in the Arabic learner UI."
+   ]
+  },
+  {
+   "key": "jej.constructor_restricted",
+   "cluster": "restricted-form",
+   "template_en": "'{keyword}' can only be used with '{allowed}' at this language level.",
+   "placeholders": [
+    {
+     "name": "keyword",
+     "example": "new"
+    },
+    {
+     "name": "allowed",
+     "example": "Date"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "لا يمكن استخدام «{keyword}» إلا مع «{allowed}» في هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "gender-agreement: the masdar construction (لا يمكن استخدام + genitive) deliberately avoids verb/adjective agreement with the interpolated value; confirm it reads naturally with both Arabic pack words (جديد / تاريخ) and raw English tokens (new / Date) in the slots",
+    "plural-handling: {allowed} may later carry a list of allowed constructors; 'إلا مع' is number-neutral so the sentence needs no re-keying, but a native reviewer must set the list join (أو vs و, Arabic comma ،) at the render/join layer",
+    "register: confirm the exceptive لا يمكن ... إلا reads as warm guidance rather than scolding for young learners; a softer فقط variant was rejected because فقط's scope is ambiguous between 'with {allowed}' and 'at this level'",
+    "cross-cluster consistency: 'في هذا المستوى من اللغة' is the fixed rendering of the English tail 'at this language level' — it must match the rendering chosen in every other cluster that carries the same tail",
+    "punctuation: Western straight single quotes kept around code-token placeholders and Western full stop kept (stored template stays clean, isolation at render time) — confirm against pack punctuation conventions"
+   ]
+  },
+  {
+   "key": "jej.source_not_valid_language",
+   "cluster": "admission",
+   "template_en": "This code could not be read as valid {language}.",
+   "placeholders": [
+    {
+     "name": "language",
+     "example": "JavaScript (registry display name, pack-renderable)"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "تعذرت قراءة هذه الشيفرة كشيفرة صالحة بلغة {language}.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "gender-agreement: no Arabic word inflects against {language} by design — صالحة agrees with the fixed feminine شيفرة, and {language} sits after بلغة in a genitive slot; confirm the sentence stays natural when the value renders in Arabic script (جافاسكريبت) and in Latin script (JavaScript).",
+    "register: تعذرت قراءة is standard Arabic UI phrasing but formal; confirm it suits young absolute beginners, or prefer the warmer first-person لم نتمكن من قراءة (apply the same choice cluster-wide).",
+    "term-choice: الشيفرة chosen for 'code' over the loanword الكود (target-script policy); confirm age-group familiarity — cluster-wide decision.",
+    "style: role-marking كـ in كشيفرة is contested by MSA purists; alternatives بوصفها شيفرة صالحة or على أنها شيفرة صالحة if the reviewer objects.",
+    "repetition: شيفرة appears twice (هذه الشيفرة … كشيفرة صالحة); intentional for clarity, reviewer may smooth it."
+   ]
+  },
+  {
+   "key": "jej.source_not_in_dialect",
+   "cluster": "admission",
+   "template_en": "This code uses features that are not part of this language level.",
+   "placeholders": [],
+   "translations": {
+    "ar": {
+     "template": "تستخدم هذه الشيفرة ميزات ليست ضمن هذا المستوى من اللغة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "term-choice: ميزات for 'features'; reviewer may prefer خصائص for young learners — pick one and keep it consistent across all clusters.",
+    "semantics: هذا المستوى من اللغة must read as the teaching level (JEJ dialect subset) of the programming language, not linguistic register — المستوى اللغوي was deliberately avoided; confirm the intended reading survives for the age group.",
+    "plural: ميزات is a fixed, non-interpolated plural taking feminine-singular agreement (ليست) per MSA non-human plural rules; no countable placeholder exists, so later plural-rule work needs no re-keying.",
+    "register: confirm cluster consistency with the sibling message (verb-initial frame, same هذه الشيفرة subject, same term for 'code')."
+   ]
+  },
+  {
+   "key": "jej.parse_unexpected_token",
+   "cluster": "parse-error",
+   "template_en": "Unexpected '{token}' — check the code just before this point.",
+   "placeholders": [
+    {
+     "name": "token",
+     "example": "}"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "الرمز «{token}» غير متوقع — تحقق من الشيفرة قبل هذا الموضع مباشرة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Gender agreement: interpolated token is anchored masculine via the category noun 'الرمز' so 'غير متوقع' stays invariant — confirm this reads naturally for every token shape (ASCII punctuation and Arabic pack words alike)",
+    "Register: native 'الشيفرة' chosen over loanword 'الكود' — confirm for a young-learner audience; swap to 'الكود' if الشيفرة reads too formal",
+    "Category noun 'الرمز' added beyond the bare English 'Unexpected {token}' for grammatical anchoring — confirm the addition is wanted"
+   ]
+  },
+  {
+   "key": "jej.parse_unterminated_string",
+   "cluster": "parse-error",
+   "template_en": "A text string was opened but never closed — add the closing quote '{delimiter}'.",
+   "placeholders": [
+    {
+     "name": "delimiter",
+     "example": "\""
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "تم فتح نص ولم يتم إغلاقه — أضف علامة الاقتباس الختامية «{delimiter}».",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Register: 'تم فتح / لم يتم إغلاقه' software-passive used deliberately because the true passive (فتح / لم يغلق) is ambiguous without diacritics — confirm register for young learners",
+    "Terminology: 'علامة الاقتباس' vs 'علامة التنصيص' for quotation mark; also consider unifying to the siblings' plain 'علامة الإغلاق' since the delimiter glyph is shown anyway",
+    "'نص' (not 'سلسلة نصية') matches the draft pack's String term — confirm it is clear that a string, not arbitrary prose, is meant"
+   ]
+  },
+  {
+   "key": "jej.parse_unterminated_template",
+   "cluster": "parse-error",
+   "template_en": "A template string was opened but never closed — add the closing '{delimiter}'.",
+   "placeholders": [
+    {
+     "name": "delimiter",
+     "example": "`"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "تم فتح نص قالبي ولم يتم إغلاقه — أضف علامة الإغلاق «{delimiter}».",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Terminology: 'نص قالبي' coined with نص as head noun to keep the family with the string message — confirm against curriculum alternatives (قالب نصي، سلسلة قالبية، قالب نصوص)",
+    "Register: same تم-passive as the other unterminated messages — review once for all three"
+   ]
+  },
+  {
+   "key": "jej.parse_unterminated_regexp",
+   "cluster": "parse-error",
+   "template_en": "A regular expression was opened but never closed — add the closing '{delimiter}'.",
+   "placeholders": [
+    {
+     "name": "delimiter",
+     "example": "/"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "تم فتح تعبير نمطي ولم يتم إغلاقه — أضف علامة الإغلاق «{delimiter}».",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Terminology: 'تعبير نمطي' is the prose form of the draft pack's RegExp term (تعبير_نمطي) — confirm the space-separated prose form",
+    "Register: same تم-passive as the other unterminated messages — review once for all three"
+   ]
+  },
+  {
+   "key": "jej.parse_missing_separator",
+   "cluster": "parse-error",
+   "template_en": "A '{separator}' seems to be missing at the end of a statement.",
+   "placeholders": [
+    {
+     "name": "separator",
+     "example": ";"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "يبدو أن علامة «{separator}» مفقودة في نهاية الجملة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Gender agreement: interpolated symbol anchored feminine via 'علامة' so 'مفقودة' stays invariant — confirm for all separator glyphs",
+    "Terminology: 'الجملة' (sentence) chosen for 'statement' as the beginner-friendly bridge (code sentence ends with ';' like prose ends with '.') — alternative is the more technical 'التعليمة'"
+   ]
+  },
+  {
+   "key": "jej.parse_bad_escape_sequence",
+   "cluster": "parse-error",
+   "template_en": "'{sequence}' is not a recognized escape sequence.",
+   "placeholders": [
+    {
+     "name": "sequence",
+     "example": "\\q"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "«{sequence}» ليس تسلسل هروب معروفا.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Terminology: 'تسلسل هروب' (Microsoft-style escape sequence) may be opaque to absolute beginners — confirm or propose a simpler young-learner gloss",
+    "Grammar: ليس with indefinite accusative predicate 'معروفا' (tanwin alif retained, mark dropped per no-diacritics rule) — confirm",
+    "Gender: ليس defaults masculine for the interpolated sequence (no anchor noun) — confirm acceptable for sequences like '\\q'"
+   ]
+  },
+  {
+   "key": "jej.parse_identifier_after_number",
+   "cluster": "parse-error",
+   "template_en": "A name cannot begin right after a number — add a space or an operator between them.",
+   "placeholders": [],
+   "translations": {
+    "ar": {
+     "template": "لا يمكن أن يبدأ اسم بعد رقم مباشرة — أضف مسافة أو عاملا بينهما.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Terminology: 'عاملا' for operator — confirm عامل vs معامل against the curriculum; bare عامل also means 'worker' out of context",
+    "Grammar: accusative 'عاملا' and dual pronoun 'بينهما' (number + name) — confirm both"
+   ]
+  },
+  {
+   "key": "jej.parse_reserved_word",
+   "cluster": "parse-error",
+   "template_en": "'{word}' is a reserved word and cannot be used as a name.",
+   "placeholders": [
+    {
+     "name": "word",
+     "example": "class (back-substitutes to the pack keyword term)"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "«{word}» كلمة محجوزة ولا يمكن استخدامها كاسم.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Interpolation: {word} back-substitutes the Arabic pack keyword (e.g. 'ليكن') so the quoted value is itself Arabic — confirm the sentence reads naturally with real pack words and that the feminine agreement chain (كلمة → استخدامها) holds regardless of the word's own gender",
+    "Register: 'كاسم' (kaf-as) is contemporary technical usage; prescriptive MSA prefers 'استخدامها اسما' — confirm house style"
+   ]
+  },
+  {
+   "key": "jej.invalid_regexp_pattern",
+   "cluster": "parse-error",
+   "template_en": "'{pattern}' is not a valid regular expression pattern.",
+   "placeholders": [
+    {
+     "name": "pattern",
+     "example": "[a-"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "«{pattern}» ليس تعبيرا نمطيا صالحا.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Simplification: English 'regular expression pattern' rendered as just 'تعبيرا نمطيا' because نمطي already carries 'pattern' and 'نمط تعبير نمطي' would be redundant — confirm no meaning loss",
+    "Grammar: ليس with accusative predicate chain 'تعبيرا نمطيا صالحا'; masculine default agreement for the interpolated pattern — confirm"
+   ]
+  },
+  {
+   "key": "jej.name_not_defined",
+   "cluster": "name-resolution-error",
+   "template_en": "'{name}' is not defined — check the spelling, or declare it before using it.",
+   "placeholders": [
+    {
+     "name": "name",
+     "example": "total"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "الاسم «{name}» غير معرف — تحقق من الإملاء، أو عرفه قبل استخدامه.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Gender agreement: the masculine head noun الاسم anchors all agreeing forms (غير معرف، عرفه، استخدامه) so any interpolated identifier stays grammatical — verify it still reads naturally when {name} is a feminine Arabic identifier such as 'القيمة', and that the anchored pattern does not feel bureaucratic.",
+    "'غير معرف' intentionally echoes the draft pack's undefined = غير_معرف and the fix verb عرفه (shared root ع-ر-ف): confirm beginners will not conflate this not-declared error with the undefined VALUE; if the conflation is a concern, propose لم يتم تعريفه for the error instead.",
+    "Confirm الإملاء is the natural school word for 'spelling' across regions for young learners (alternative: التهجئة).",
+    "Quote style: ASCII '…' kept around {name} to match the English family; confirm the pack-wide preference (e.g., «…» guillemets) — no bidi controls are stored, isolation happens at render time per the ratified policy.",
+    "Register: direct imperatives تحقق / عرفه address the learner; confirm this lands warm rather than curt in MSA for young learners."
+   ]
+  },
+  {
+   "key": "jej.name_used_before_initialization",
+   "cluster": "name-resolution-error",
+   "template_en": "'{name}' was used before it was given its value — move the declaration above this line.",
+   "placeholders": [
+    {
+     "name": "name",
+     "example": "count"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "تم استخدام الاسم «{name}» قبل أن يأخذ قيمته — انقل سطر التعريف فوق هذا السطر.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "Gender agreement: الاسم anchors يأخذ قيمته (masculine) regardless of the interpolated identifier — verify naturalness when {name} is a feminine Arabic identifier.",
+    "تم استخدام was chosen over the bare passive استخدم, which without diacritics can misread as the imperative 'use'; confirm the تم construction is acceptable register here, or supply the diacritized passive اسـتُخدم if the pack later allows selective diacritics.",
+    "قبل أن يأخذ قيمته renders 'before it was given its value': confirm naturalness for beginners versus alternatives (قبل أن يحصل على قيمته، or the more technical قبل أن تسند إليه قيمة — likely too formal for this register).",
+    "سطر التعريف = 'the declaration (line)': confirm تعريف over إعلان as the standing beginner term for variable declaration, consistent with عرفه in jej.name_not_defined and with the pack's ليكن / ثابت pedagogy.",
+    "فوق هذا السطر mirrors the visual English 'above this line'; confirm versus the execution-order phrasing إلى ما قبل هذا السطر, whichever native reviewers find clearer for children reading their own code.",
+    "Quote style: same ASCII '…' question as the rest of the cluster."
+   ]
+  },
+  {
+   "key": "jej.member_of_missing_value",
+   "cluster": "value-use-error",
+   "template_en": "Cannot read '{member}' because the value is '{literal}' — there is nothing to read from.",
+   "placeholders": [
+    {
+     "name": "member",
+     "example": "length → طول (back-substitutes to the pack member term)"
+    },
+    {
+     "name": "literal",
+     "example": "null → عدم or undefined → غير_معرف (back-substitutes to the pack keyword/builtin term)"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "لا يمكن قراءة «{member}» لأن القيمة هي «{literal}» — لا يوجد شيء يمكن القراءة منه.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "gender: هي agrees with القيمة (fem head noun) and treats the interpolated '{literal}' (عدم / غير_معرف) as a quoted mention — confirm no agreement shift is needed with either builtin term",
+    "register: impersonal tail لا يوجد شيء يمكن القراءة منه — confirm it reads naturally for young learners; warmer alternative: فلا يوجد ما يمكن قراءته",
+    "punctuation: straight ASCII quotes around placeholders kept to match the cluster/render convention — catalog-wide decision on Arabic guillemets «…» still pending",
+    "structure: em-dash problem—explanation shape mirrored from English — confirm dash is acceptable MSA punctuation for learner UI or should become a comma + فـ"
+   ]
+  },
+  {
+   "key": "jej.not_callable",
+   "cluster": "value-use-error",
+   "template_en": "'{callee}' is not a function — check that it holds a function before calling it.",
+   "placeholders": [
+    {
+     "name": "callee",
+     "example": "score (learner-chosen identifier; may itself be an Arabic word, e.g. نتيجة)"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "الاسم «{callee}» ليس دالة — تأكد من أنه يحمل دالة قبل استدعائه.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "gender: '{callee}' is predicated masculine (ليس / أنه / استدعائه) using the mentioned-identifier default; learner identifiers may be feminine Arabic nouns (e.g. نتيجة) — confirm the masc-default convention or restructure with a head noun (القيمة '{callee}' ليست دالة …)",
+    "terminology: دالة for 'function' is standard MSA math/CS usage; the draft pack has no function term (not in the JEJ surface) — confirm register for young learners",
+    "idiom: يحمل ('holds') for a name holding a value — confirm the metaphor reads naturally; alternative يحتوي على",
+    "register: imperative تأكد addresses the learner directly (matches English 'check') — confirm warm-imperative is the desired voice for this catalog",
+    "Anchor added post-verify: الاسم heads the agreement chain (ليس/أنه/استدعائه) so learner-chosen feminine identifiers do not break agreement."
+   ]
+  },
+  {
+   "key": "jej.constant_reassigned",
+   "cluster": "value-use-error",
+   "template_en": "'{name}' was declared with '{keyword}' and cannot be given a new value.",
+   "placeholders": [
+    {
+     "name": "name",
+     "example": "limit (learner-chosen identifier; may itself be an Arabic word, e.g. حد)"
+    },
+    {
+     "name": "keyword",
+     "example": "const → ثابت (back-substitutes to the pack keyword term)"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "تم تعريف الاسم «{name}» باستخدام «{keyword}»، لذا لا يمكن إعطاؤه قيمة جديدة.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "register: تم تعريف chosen over bare عرف (ambiguous without diacritics: 'knew' vs 'declared') — confirm the تم-construction is acceptable for learner register or prefer an active form addressing the learner (عرفت '{name}' …)",
+    "gender: إعطاؤه masculine pronoun for '{name}' — same masc-default mention decision as jej.not_callable; native reviewer should ratify once, cluster-wide",
+    "connector: لذا makes the consequence explicit where English has 'and' — intentional for beginners; confirm",
+    "keyword slot: renders as باستخدام 'ثابت' after back-substitution — confirm flow with the pack term interpolated; alternative phrasing بالكلمة '{keyword}'",
+    "Anchor added post-verify: الاسم heads the agreement chain (إعطاؤه), matching cluster siblings."
+   ]
+  },
+  {
+   "key": "jej.iteration_limit_exceeded",
+   "cluster": "limit-error",
+   "template_en": "A loop repeated more than {limit} times and was stopped — check its ending condition.",
+   "placeholders": [
+    {
+     "name": "limit",
+     "example": "10000"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "تكررت حلقة أكثر من {limit} مرة فتم إيقافها — تحقق من شرط توقفها.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "PLURAL: counted noun 'مرة' after {limit} is correct for the typical large limits (11–99 and multiples of 100/1000, e.g. 10000) but values 3–10 require 'مرات'; sentence is structured so only the noun slot changes when CLDR plural categories are wired in — no re-key needed.",
+    "GENDER/REGISTER: masculine singular imperative 'تحقق' used as the conventional neutral learner address — confirm this register suits young learners (alternative: softer 'تأكد من').",
+    "NATURALNESS: indefinite subject 'تكررت حلقة' chosen over 'إحدى الحلقات' (presupposes multiple loops) and 'هناك حلقة' (filler) — confirm which reads most natural to a native ear.",
+    "TERM: 'شرط توقفها' for 'ending condition' — confirm against the standard Arabic CS-pedagogy term (شرط التوقف) used in target curricula."
+   ]
+  },
+  {
+   "key": "jej.invalid_count_value",
+   "cluster": "limit-error",
+   "template_en": "'{value}' is not a valid count — use a whole number that is zero or more.",
+   "placeholders": [
+    {
+     "name": "value",
+     "example": "-1"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "القيمة «{value}» غير صالحة كعدد مرات — استخدم عددا صحيحا يساوي صفرا أو أكثر.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "GENDER: agreement is deliberately anchored to the feminine head noun 'القيمة' preceding the placeholder, so 'غير صالحة' never agrees with the interpolated {value} — confirm the pattern holds when {value} renders as Latin/code text.",
+    "REGISTER: 'كعدد مرات' uses modern kaf-as-'in the capacity of'; purist MSA may prefer a rephrase (e.g. 'لا تصلح عددا للمرات') — confirm acceptable for the pack's register.",
+    "PHRASING: 'عددا صحيحا يساوي صفرا أو أكثر' for 'a whole number that is zero or more' — confirm for young learners; alternative 'عددا صحيحا موجبا أو صفرا'. Note 'عدد صحيح' is the school math term for integer.",
+    "RTL/RENDER: ASCII single quotes surround '{value}' in RTL text; stored template is clean per the bidi policy (isolation at render time) — native reviewer should eyeball the rendered output for quote placement around the interpolated value."
+   ]
+  },
+  {
+   "key": "jej.call_stack_exceeded",
+   "cluster": "limit-error",
+   "template_en": "Too many function calls were waiting at once — a function may be calling itself without an end.",
+   "placeholders": [],
+   "translations": {
+    "ar": {
+     "template": "تراكمت استدعاءات كثيرة جدا للدوال في وقت واحد — ربما هناك دالة تستدعي نفسها بلا توقف.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "TERM: 'دالة' for 'function' is the MSA/most-common CS-pedagogy choice, but regional curricula vary (تابع in Syria, اقتران in Jordan) — confirm for the target audience.",
+    "SEMANTICS: 'تراكمت' ('piled up') renders 'were waiting at once' by mechanism rather than literally — confirm the accumulation image is acceptable (it is truer to the call stack and clearer for beginners than a literal 'waiting').",
+    "PHRASING: 'ربما هناك دالة تستدعي نفسها' chosen over tighter 'ربما تستدعي دالة نفسها' to prevent a beginner misparsing 'تستدعي' as 2nd person ('you call') — confirm the existential reads naturally.",
+    "TERM: 'بلا توقف' for 'without an end' — deliberately echoes the توقف word-family from the loop message; confirm, or consider 'دون شرط توقف' to teach the base-case concept explicitly."
+   ]
+  },
+  {
+   "key": "jej.execution_timed_out",
+   "cluster": "execution-outcome",
+   "template_en": "The program ran for more than {seconds} seconds and was stopped.",
+   "placeholders": [
+    {
+     "name": "seconds",
+     "example": "5"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "استمر البرنامج في العمل لأكثر من {seconds} من الثواني، لذلك تم إيقافه.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "PLURAL: {seconds} is countable; the counted noun is kept singular and immediately adjacent ({seconds} ثانية) so CLDR plural categories (ثانية واحدة / ثانيتين / ثوانٍ / ثانية) can be added later without re-keying. Confirm «لأكثر من {seconds} ثانية» is acceptable UI Arabic for 3–10 values, where ثوان is classically required.",
+    "REGISTER: تم إيقافه chosen over internal passive أوقف because the passive is ambiguous without diacritics; confirm the تم-construction matches the desired learner register (some style guides prefer the passive verb form).",
+    "TONE: لذلك ('therefore') is an intentional beginner-friendly explicitation of the neutral English 'and' — it tells the learner the long run is WHY it was stopped; confirm.",
+    "DIGITS: the numeral interpolated into {seconds} sits inside Arabic text; Western vs Eastern Arabic digit choice is a render-time locale decision — confirm the expectation for young Arabic readers."
+   ]
+  },
+  {
+   "key": "jej.execution_cancelled",
+   "cluster": "execution-outcome",
+   "template_en": "The run was cancelled before it finished.",
+   "placeholders": [],
+   "translations": {
+    "ar": {
+     "template": "تم إلغاء تشغيل البرنامج قبل أن ينتهي.",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "EXPLICITATION: English 'The run' is rendered as تشغيل البرنامج ('the program's run') — bare التشغيل reads dangling for a young learner; confirm the added البرنامج.",
+    "REGISTER: تم إلغاء kept parallel to تم إيقافه for cluster consistency; reviewer may prefer أُلغي, which would need a diacritic to disambiguate — hence avoided in the diacritic-free template.",
+    "GRAMMAR (low risk): subject of ينتهي is التشغيل (masculine) — internal agreement only, no interpolated value involved."
+   ]
+  },
+  {
+   "key": "jej.error_occurred",
+   "cluster": "execution-outcome",
+   "template_en": "A '{error_type}' occurred: {message}",
+   "placeholders": [
+    {
+     "name": "error_type",
+     "example": "RangeError (rendered as a display term from the CORE-1379 error-type catalog)"
+    },
+    {
+     "name": "message",
+     "example": "raw engine message pass-through (untranslated by design; fallback only)"
+    }
+   ],
+   "translations": {
+    "ar": {
+     "template": "حدث خطأ من نوع «{error_type}»: {message}",
+     "status": "machine"
+    }
+   },
+   "review_flags": [
+    "GENDER: the frame حدث خطأ من نوع locks verb agreement to the fixed masculine خطأ, so the interpolated {error_type} display term never controls agreement regardless of its gender/number. Verify the frame reads naturally with real CORE-1379 Arabic display terms, and that a term like خطأ المدى does not grate as «خطأ من نوع 'خطأ المدى'» (mild double-خطأ redundancy).",
+    "HOMONYM: خطأ ('error') coexists with the draft pack's false → خطأ (the established صحيح/خطأ convention in Arabic CS education). Native reviewer + CORE-1379 catalog author should jointly confirm this overload is acceptable for young learners; the alternative مشكلة was rejected to keep the universal حدث خطأ idiom and stay consistent with catalog term naming.",
+    "QUOTES: ASCII straight quotes around {error_type} mirror the English template family and help delimit a possibly-Latin term in RTL context; reviewer may prefer Arabic «» guillemets.",
+    "BIDI/PUNCTUATION: {message} is raw untranslated engine text (usually English/LTR) ending an RTL sentence; isolation happens at render time per the ratified policy (stored template is control-free). Confirm the colon + trailing LTR run reads acceptably. No trailing period added, matching English, since the pass-through may carry its own punctuation."
+   ]
+  }
+ ]
+}

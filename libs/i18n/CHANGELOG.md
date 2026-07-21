@@ -11,6 +11,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **JEJ message-template seed + append-once seeder (CORE-1378).** The v2
+  message tables shipped deliberately empty; this is the designed fill path.
+  `legesher_i18n/db/seeds/v8_jej_messages.json` carries the 35-template JEJ
+  learner-facing catalog (generic `jej.<id>` keys, `implementation='v8'`,
+  `version_added='0.1.0'`) with English templates, declared placeholder
+  contracts, and draft Arabic entering at `status='machine'` pending native
+  review. `scripts/seed_message_templates.py` validates before any write
+  (placeholder parity per surface, zero stored bidi controls per the ratified
+  code-vs-display policy, locales must pre-exist — never created as a side
+  effect), refuses to re-seed an existing (implementation, version_added)
+  set (revisions land as a new `version_added`), supports `--dry-run`, and
+  never touches the operational v1 `translations.db`. Tests run the shipped
+  seed against the real `schema_v2.sql` DDL.
+
 - **JavaScript/JEJ term-context corpus — 60 Tier-1 translation briefs
   (CORE-1370).** `context/javascript/` mirrors `context/python/`: one brief
   per term of the JEJ teaching surface (16 keywords / 16 builtins / 28
