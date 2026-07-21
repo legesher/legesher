@@ -11,6 +11,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **JavaScript/JEJ term-context corpus — 60 Tier-1 translation briefs
+  (CORE-1370).** `context/javascript/` mirrors `context/python/`: one brief
+  per term of the JEJ teaching surface (16 keywords / 16 builtins / 28
+  members, matching the upstream courseware source at `0fca239` exactly),
+  plus `index.json` and a corpus README. Each brief records which uniqueness
+  rule governs the term — standalone (one concept ↔ one native term) for
+  keywords and builtins, qualified (in-partition reversibility only) for
+  members — and member briefs carry the full receiver set with an
+  AST-decided definition (non-computed `MemberExpression.property`, not
+  dot-adjacency) so chosen words survive String→Array widening. `toString`
+  and `valueOf` are pre-flagged for native review (radix-conversion vs
+  date-text gap hidden by English); `log` and `of` are deliberately absent,
+  held pending the upstream widening decision. All 60 docs and the index
+  pass `validate_and_fix_context_docs.py` clean.
 - **HF corpus exporter — five-config Parquet + dataset card + reconciliation
   (CORE-1505).** `scripts/export_corpus.py` exports the v2 corpus to the
   `legesher/translations` dataset as five Parquet configs (concepts, terms,

@@ -1,0 +1,549 @@
+{
+  "version": "1.0",
+  "language": "javascript",
+  "target_note": "JEJ subset @ upstream-courseware 0fca239 (16 keywords / 16 builtins / 28 members). log/of held pending CORE-1529.",
+  "total_documents": 60,
+  "last_updated": "2026-07-21",
+  "documents": [
+    {
+      "term": "BigInt",
+      "filename": "BigInt.md",
+      "category": "builtin",
+      "type": "object (global constructor)",
+      "difficulty": "HARD",
+      "binding": "standalone",
+      "summary": "`BigInt` is the global for *arbitrary-precision integers* — whole numbers that can grow beyond the safe range of ordinary JavaScript numbers without losing accuracy. It is used as `BigInt(123)` or wit..."
+    },
+    {
+      "term": "Boolean",
+      "filename": "Boolean.md",
+      "category": "builtin",
+      "type": "object (global constructor / type name)",
+      "difficulty": "EASY",
+      "binding": "standalone",
+      "summary": "`Boolean` is the global object that names JavaScript's true/false type and, called as `Boolean(x)`, converts any value into `true` or `false`. It is named after mathematician George Boole and is capit..."
+    },
+    {
+      "term": "Date",
+      "filename": "Date.md",
+      "category": "builtin",
+      "type": "object (global constructor)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`Date` is the global constructor for date-and-time values. Called as `new Date()`, it captures the current moment (or a moment you specify) as an object you can read and format. In JEJ it names the ca..."
+    },
+    {
+      "term": "Infinity",
+      "filename": "Infinity.md",
+      "category": "builtin",
+      "type": "constant (numeric value)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`Infinity` is the numeric value that lies beyond the largest number JavaScript can represent — \"endlessly large.\" You get it from operations like `1/0` or from arithmetic that overflows the number ran..."
+    },
+    {
+      "term": "Math",
+      "filename": "Math.md",
+      "category": "builtin",
+      "type": "object (global namespace)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`Math` is the global namespace object that holds JavaScript's mathematical functions and constants — `Math.floor(...)`, `Math.max(...)`, `Math.PI`. It is a *facility* accessed by name and dotted into;..."
+    },
+    {
+      "term": "NaN",
+      "filename": "NaN.md",
+      "category": "builtin",
+      "type": "constant (numeric value)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`NaN` stands for \"Not a Number\" — the special numeric value you get when a math operation has no valid numeric result, such as `0/0` or turning the word `\"hello\"` into a number. It is a *number-typed*..."
+    },
+    {
+      "term": "Number",
+      "filename": "Number.md",
+      "category": "builtin",
+      "type": "object (global constructor / type name)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`Number` is the global object that names JavaScript's single numeric type and, called as `Number(x)`, converts a value into a number. JavaScript has no separate integer and floating-point types — `Num..."
+    },
+    {
+      "term": "RegExp",
+      "filename": "RegExp.md",
+      "category": "builtin",
+      "type": "object (global constructor)",
+      "difficulty": "HARD",
+      "binding": "standalone",
+      "summary": "`RegExp` is the global constructor for *regular expressions* — pattern objects that describe and match text (e.g. \"any run of digits\"). It is invoked as `new RegExp(\"...\")`, or via the literal form `/..."
+    },
+    {
+      "term": "String",
+      "filename": "String.md",
+      "category": "builtin",
+      "type": "object (global constructor / type name)",
+      "difficulty": "EASY",
+      "binding": "standalone",
+      "summary": "`String` is the global object that names JavaScript's text type and, called as `String(x)`, converts any value into its text form. It is capitalized because it is a global object (the constructor), di..."
+    },
+    {
+      "term": "abs",
+      "filename": "abs.md",
+      "category": "member",
+      "type": "method (static function)",
+      "difficulty": "EASY",
+      "binding": "qualified",
+      "summary": "`abs` is a static member method on the `Math` object that returns the **absolute value** of a number — its distance from zero, ignoring sign. It is called as `Math.abs(x)`. A negative input comes back..."
+    },
+    {
+      "term": "alert",
+      "filename": "alert.md",
+      "category": "builtin",
+      "type": "function (browser global)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`alert` is a browser global function that pops up a small modal box showing a message to the user and pausing the page until they click \"OK\". In JEJ it is the simplest way a program speaks directly to..."
+    },
+    {
+      "term": "break",
+      "filename": "break.md",
+      "category": "keyword",
+      "type": "control_flow (loop control)",
+      "difficulty": "EASY",
+      "binding": "standalone",
+      "summary": "The `break` keyword immediately exits the innermost enclosing loop (`for` or `while`), terminating it regardless of the loop's condition. Execution continues with the first statement after the loop. I..."
+    },
+    {
+      "term": "ceil",
+      "filename": "ceil.md",
+      "category": "member",
+      "type": "method (static function)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`ceil` is a static member method on the `Math` object that rounds a number **UP** to the nearest integer — toward positive infinity. It is called as `Math.ceil(x)`. `Math.ceil(3.2)` is `4`; and `Math...."
+    },
+    {
+      "term": "charAt",
+      "filename": "charAt.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`charAt` is a member method that returns **the single character at a given index** in a string — position `0` is the first character. It is called as `text.charAt(index)`. If the index is out of range..."
+    },
+    {
+      "term": "charCodeAt",
+      "filename": "charCodeAt.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "HARD",
+      "binding": "qualified",
+      "summary": "`charCodeAt` is a member method that returns **the numeric character code** (the UTF-16 code unit, a number) of the character at a given index in a string. It is called as `text.charCodeAt(index)`. Un..."
+    },
+    {
+      "term": "concat",
+      "filename": "concat.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`concat` is a member method that joins values end-to-end to produce a **new** value. On a string it appends one or more strings to make a longer string; on an array (once arrays are taught) it appends..."
+    },
+    {
+      "term": "confirm",
+      "filename": "confirm.md",
+      "category": "builtin",
+      "type": "function (browser global)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`confirm` is a browser global function that shows the user a modal box with a message and two buttons — OK and Cancel — and returns `true` if they click OK, `false` if they click Cancel. In JEJ it is ..."
+    },
+    {
+      "term": "console",
+      "filename": "console.md",
+      "category": "builtin",
+      "type": "object (global namespace)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`console` is the global object that gives access to the environment's debugging output — the panel where a program prints text for the developer to read. In JEJ it is the receiver of the output call l..."
+    },
+    {
+      "term": "const",
+      "filename": "const.md",
+      "category": "keyword",
+      "type": "declaration",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "The `const` keyword declares a block-scoped binding that cannot be reassigned after it is set. It introduces a name and fixes it to a value for the life of its scope, forming the matched contrast to `..."
+    },
+    {
+      "term": "continue",
+      "filename": "continue.md",
+      "category": "keyword",
+      "type": "control_flow (loop control)",
+      "difficulty": "EASY",
+      "binding": "standalone",
+      "summary": "The `continue` keyword skips the rest of the current loop pass and immediately proceeds to the next one. Unlike `break`, which exits the loop entirely, `continue` stays in the loop and jumps ahead to ..."
+    },
+    {
+      "term": "do",
+      "filename": "do.md",
+      "category": "keyword",
+      "type": "control flow",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "The `do` keyword begins a `do...while` loop: it runs the loop body once *before* the condition is ever tested, then keeps repeating while the condition holds. It guarantees at least one execution, whi..."
+    },
+    {
+      "term": "else",
+      "filename": "else.md",
+      "category": "keyword",
+      "type": "conjunction",
+      "difficulty": "EASY",
+      "binding": "standalone",
+      "summary": "The `else` keyword introduces an alternative code block that executes when the preceding `if` condition is falsy. It represents the \"otherwise\" case in control flow — the branch taken when the `if` te..."
+    },
+    {
+      "term": "endsWith",
+      "filename": "endsWith.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`endsWith` is a member method that answers a yes/no question: does this string end with the given suffix? It is called as `value.endsWith(suffix)` and returns a boolean."
+    },
+    {
+      "term": "false",
+      "filename": "false.md",
+      "category": "keyword",
+      "type": "constant (boolean literal)",
+      "difficulty": "EASY",
+      "binding": "standalone",
+      "summary": "`false` is a boolean literal representing the logical value \"false.\" It is one of the two `boolean` values (the other being `true`) and is fundamental to conditional logic, comparisons, and control fl..."
+    },
+    {
+      "term": "floor",
+      "filename": "floor.md",
+      "category": "member",
+      "type": "method (static function)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`floor` is a static member method on the `Math` object that rounds a number **DOWN** to the nearest integer — toward negative infinity. It is called as `Math.floor(x)`. `Math.floor(3.7)` is `3`; cruci..."
+    },
+    {
+      "term": "for",
+      "filename": "for.md",
+      "category": "keyword",
+      "type": "conjunction/preposition",
+      "difficulty": "EASY",
+      "binding": "standalone",
+      "summary": "The `for` keyword creates a counter-controlled loop that repeats a block of code. JavaScript's canonical form is the C-style `for (init; condition; step)`: an initializer runs once, a condition is tes..."
+    },
+    {
+      "term": "if",
+      "filename": "if.md",
+      "category": "keyword",
+      "type": "conjunction",
+      "difficulty": "EASY",
+      "binding": "standalone",
+      "summary": "The `if` keyword tests a condition and executes a block of code only when that condition is truthy. It is the fundamental building block for conditional logic in JavaScript, letting a program make dec..."
+    },
+    {
+      "term": "in",
+      "filename": "in.md",
+      "category": "keyword",
+      "type": "operator (property-presence test)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "The `in` keyword is a binary operator that tests whether a **property (key) exists in an object**. The expression `\"x\" in obj` is `true` when `obj` has a property named `x`, and `false` otherwise. It ..."
+    },
+    {
+      "term": "includes",
+      "filename": "includes.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`includes` is a member method that answers a yes/no question: does this value contain the thing I am asking about? On a string it tests whether a substring appears; on an array (once arrays are taught..."
+    },
+    {
+      "term": "indexOf",
+      "filename": "indexOf.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`indexOf` is a member method that returns the **first position (index) at which a search value occurs** in its receiver — a character/substring inside a string, and (once arrays arrive) an element ins..."
+    },
+    {
+      "term": "length",
+      "filename": "length.md",
+      "category": "member",
+      "type": "property (noun)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`length` is a member property that reports how many units a value contains — the count of characters in a string, and (once arrays are taught) the count of elements in an array. It is read as `value.l..."
+    },
+    {
+      "term": "let",
+      "filename": "let.md",
+      "category": "keyword",
+      "type": "declaration",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "The `let` keyword declares a block-scoped variable that can be reassigned later. It introduces a name into the current block and binds it to a value, unlike `const`, whose binding cannot be reassigned..."
+    },
+    {
+      "term": "max",
+      "filename": "max.md",
+      "category": "member",
+      "type": "method (static function)",
+      "difficulty": "EASY",
+      "binding": "qualified",
+      "summary": "`max` is a static member method on the `Math` object that returns the **largest** of its arguments. It is called as `Math.max(a, b, ...)` and accepts any number of numeric arguments. `Math.max(3, 8, 5..."
+    },
+    {
+      "term": "min",
+      "filename": "min.md",
+      "category": "member",
+      "type": "method (static function)",
+      "difficulty": "EASY",
+      "binding": "qualified",
+      "summary": "`min` is a static member method on the `Math` object that returns the **smallest** of its arguments. It is called as `Math.min(a, b, ...)` and accepts any number of numeric arguments. `Math.min(3, 8, ..."
+    },
+    {
+      "term": "new",
+      "filename": "new.md",
+      "category": "keyword",
+      "type": "operator (construction)",
+      "difficulty": "HARD",
+      "binding": "standalone",
+      "summary": "The `new` keyword constructs an instance from a constructor: `new Date()` builds a fresh Date object, `new RegExp(...)` builds a regular expression. It is the *action of creating/instantiating* an obj..."
+    },
+    {
+      "term": "null",
+      "filename": "null.md",
+      "category": "keyword",
+      "type": "constant (null literal)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`null` is JavaScript's **intentional-absence** value — a deliberate \"nothing\" that a programmer assigns on purpose to mean \"no object / no value here.\" It is the sole value of its own kind and is writ..."
+    },
+    {
+      "term": "parseFloat",
+      "filename": "parseFloat.md",
+      "category": "builtin",
+      "type": "function",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`parseFloat` is the global function that reads a string and extracts a decimal `Number` from its leading numeric characters — `parseFloat(\"3.14\")` → `3.14`. It is the sibling of `parseInt`, differing ..."
+    },
+    {
+      "term": "parseInt",
+      "filename": "parseInt.md",
+      "category": "builtin",
+      "type": "function",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`parseInt` is the global function that reads a string and extracts a whole-number `Number` from its leading digits — `parseInt(\"42\")` → `42`. Unlike `Number`, it reads as far as the digits go and igno..."
+    },
+    {
+      "term": "pow",
+      "filename": "pow.md",
+      "category": "member",
+      "type": "method (static function)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`pow` is a static member method on the `Math` object that raises a **base** to an **exponent** (exponentiation). It is called as `Math.pow(base, exponent)`. `Math.pow(2, 3)` is `8` (2 × 2 × 2). The na..."
+    },
+    {
+      "term": "prompt",
+      "filename": "prompt.md",
+      "category": "builtin",
+      "type": "function (browser global)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "`prompt` is a browser global function that shows the user a modal box with a message and a text field, and returns the string they type (or `null` if they cancel). In JEJ it is how a program asks the ..."
+    },
+    {
+      "term": "repeat",
+      "filename": "repeat.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`repeat` is a member method that returns a new string made of the original repeated a given number of times. It is called as `value.repeat(n)` and yields a fresh string; the original is unchanged."
+    },
+    {
+      "term": "replace",
+      "filename": "replace.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`replace` is a member method that returns a **new** string in which the **first** match of a target is swapped for a replacement. It is called as `value.replace(target, replacement)`; the original str..."
+    },
+    {
+      "term": "replaceAll",
+      "filename": "replaceAll.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`replaceAll` is a member method that returns a **new** string in which **every** match of a target is swapped for a replacement. It is called as `value.replaceAll(target, replacement)`; the original s..."
+    },
+    {
+      "term": "return",
+      "filename": "return.md",
+      "category": "keyword",
+      "type": "verb",
+      "difficulty": "EASY",
+      "binding": "standalone",
+      "summary": "The `return` keyword exits a function and optionally sends a value back to the caller. It marks the end of function execution and specifies what result (if any) the function produces. A function that ..."
+    },
+    {
+      "term": "round",
+      "filename": "round.md",
+      "category": "member",
+      "type": "method (static function)",
+      "difficulty": "EASY",
+      "binding": "qualified",
+      "summary": "`round` is a static member method on the `Math` object that rounds a number to the **nearest integer**. It is called as `Math.round(x)`. A fractional part of `0.5` or more rounds up, below `0.5` round..."
+    },
+    {
+      "term": "slice",
+      "filename": "slice.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`slice` is a member method that **extracts a sub-range** of its receiver and returns it as a new value — a substring of a string, and (once arrays arrive) a sub-array of an array. It is called as `val..."
+    },
+    {
+      "term": "sqrt",
+      "filename": "sqrt.md",
+      "category": "member",
+      "type": "method (static function)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`sqrt` is a static member method on the `Math` object that returns the **square root** of a number — the non-negative value that, multiplied by itself, gives the input. It is called as `Math.sqrt(x)`...."
+    },
+    {
+      "term": "startsWith",
+      "filename": "startsWith.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`startsWith` is a member method that answers a yes/no question: does this string begin with the given prefix? It is called as `value.startsWith(prefix)` and returns a boolean."
+    },
+    {
+      "term": "substring",
+      "filename": "substring.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`substring` is a member method that returns the **portion of a string between two indices** — the characters from `start` up to (but not including) `end`. It is called as `text.substring(start, end)`...."
+    },
+    {
+      "term": "toFixed",
+      "filename": "toFixed.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`toFixed` is a member method on numbers that formats the number using a fixed number of decimal places and returns the result as a **string**. It is called as `value.toFixed(digits)`; it rounds to tha..."
+    },
+    {
+      "term": "toLowerCase",
+      "filename": "toLowerCase.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`toLowerCase` is a member method that returns a **new string with every letter converted to its lowercase form**. It is called as `text.toLowerCase()`. Characters with no case (digits, punctuation, an..."
+    },
+    {
+      "term": "toPrecision",
+      "filename": "toPrecision.md",
+      "category": "member",
+      "type": "method (function)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`toPrecision` is a member method on numbers that formats a number to a given total count of **significant digits** and returns the result as a **string**. It is called as `value.toPrecision(n)`, where..."
+    },
+    {
+      "term": "toString",
+      "filename": "toString.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "HARD",
+      "binding": "qualified",
+      "summary": "`toString` is a member method that returns a **text representation** of its receiver — the digits of a number as text, the characters of a string, and (once they arrive) a date rendered as date-text, ..."
+    },
+    {
+      "term": "toUpperCase",
+      "filename": "toUpperCase.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`toUpperCase` is a member method that returns a **new string with every letter converted to its uppercase form**. It is called as `text.toUpperCase()`. Characters with no case (digits, punctuation, an..."
+    },
+    {
+      "term": "trim",
+      "filename": "trim.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`trim` is a member method that returns a new string with leading and trailing whitespace removed. It is called as `value.trim()` with no arguments; the original string is unchanged and interior whites..."
+    },
+    {
+      "term": "true",
+      "filename": "true.md",
+      "category": "keyword",
+      "type": "constant (boolean literal)",
+      "difficulty": "EASY",
+      "binding": "standalone",
+      "summary": "`true` is a boolean literal representing the logical value \"true.\" It is one of the two `boolean` values (the other being `false`) and is fundamental to conditional logic, comparisons, and control flo..."
+    },
+    {
+      "term": "typeof",
+      "filename": "typeof.md",
+      "category": "keyword",
+      "type": "operator (unary)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "The `typeof` keyword is a unary operator that returns a *string* naming the type of a value — `\"string\"`, `\"number\"`, `\"boolean\"`, `\"object\"`, `\"undefined\"`, and so on. It inspects a value and reports..."
+    },
+    {
+      "term": "undefined",
+      "filename": "undefined.md",
+      "category": "builtin",
+      "type": "constant (primitive value)",
+      "difficulty": "HARD",
+      "binding": "standalone",
+      "summary": "`undefined` is the value a variable holds before anything is assigned to it, and the value you get for a property or return that was never set. It means \"not yet given a value\" — the default *absence-..."
+    },
+    {
+      "term": "valueOf",
+      "filename": "valueOf.md",
+      "category": "member",
+      "type": "method (verb)",
+      "difficulty": "HARD",
+      "binding": "qualified",
+      "summary": "`valueOf` is a member method that returns the **primitive value** underlying its receiver — the raw number, string, or boolean that a value reduces to when JavaScript needs a primitive (for arithmetic..."
+    },
+    {
+      "term": "while",
+      "filename": "while.md",
+      "category": "keyword",
+      "type": "conjunction",
+      "difficulty": "EASY",
+      "binding": "standalone",
+      "summary": "The `while` keyword creates a loop that repeatedly executes a block as long as a condition stays truthy. It is condition-based iteration: the loop continues until the condition becomes falsy, making i..."
+    }
+  ]
+}
