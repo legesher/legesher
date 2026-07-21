@@ -61,17 +61,25 @@ def _get_token_translator() -> "type[_TokenTranslator]":
 
 
 def _get_tree_sitter_translator() -> "type[_TreeSitterTranslator]":
-    """Lazy import of TreeSitterTranslator."""
-    from .tree_sitter.translator import TreeSitterTranslator
+    """Lazy import of TreeSitterTranslator.
 
-    return TreeSitterTranslator
+    Goes through the ``tree_sitter`` package attribute so a missing optional
+    dependency raises the ImportError naming the ``treesitter`` extra.
+    """
+    from . import tree_sitter as _tree_sitter_pkg
+
+    return _tree_sitter_pkg.TreeSitterTranslator
 
 
 def _get_llm_translator() -> "type[_LLMTranslator]":
-    """Lazy import of LLMTranslator."""
-    from .tree_sitter.llm_translator import LLMTranslator
+    """Lazy import of LLMTranslator.
 
-    return LLMTranslator
+    Goes through the ``tree_sitter`` package attribute so a missing optional
+    dependency raises the ImportError naming the ``treesitter`` extra.
+    """
+    from . import tree_sitter as _tree_sitter_pkg
+
+    return _tree_sitter_pkg.LLMTranslator
 
 
 @dataclass

@@ -13,7 +13,9 @@ dependencies = [
     "pyyaml>=6.0",
     "questionary>=2.0.0",
     "tomli>=2.0.0; python_version < '3.11'",
-    "legesher-core",
+    # The CLI exposes the tree-sitter backend (translate --full, identifier
+    # maps), so it needs the optional extra that ships the C extensions.
+    "legesher-core[treesitter]",
     "legesher-i18n",
 ]
 name = "legesher"

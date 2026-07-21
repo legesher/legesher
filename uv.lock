@@ -1520,7 +1520,7 @@ version = "0.22.0"
 source = { editable = "libs/legesher" }
 dependencies = [
     { name = "click" },
-    { name = "legesher-core" },
+    { name = "legesher-core", extra = ["treesitter"] },
     { name = "legesher-i18n" },
     { name = "pyyaml" },
     { name = "questionary" },
@@ -1541,7 +1541,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = ">=8.0.0" },
-    { name = "legesher-core", editable = "libs/core" },
+    { name = "legesher-core", extras = ["treesitter"], editable = "libs/core" },
     { name = "legesher-i18n", editable = "libs/i18n" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "questionary", specifier = ">=2.0.0" },
@@ -1567,6 +1567,10 @@ dependencies = [
     { name = "click" },
     { name = "legesher-i18n" },
     { name = "pyyaml" },
+]
+
+[package.optional-dependencies]
+treesitter = [
     { name = "tree-sitter" },
     { name = "tree-sitter-python" },
 ]
@@ -1587,9 +1591,10 @@ requires-dist = [
     { name = "click", specifier = ">=8.0.0" },
     { name = "legesher-i18n", editable = "libs/i18n" },
     { name = "pyyaml", specifier = ">=6.0" },
-    { name = "tree-sitter", specifier = ">=0.20.4" },
-    { name = "tree-sitter-python", specifier = ">=0.21.0" },
+    { name = "tree-sitter", marker = "extra == 'treesitter'", specifier = ">=0.20.4" },
+    { name = "tree-sitter-python", marker = "extra == 'treesitter'", specifier = ">=0.21.0" },
 ]
+provides-extras = ["treesitter"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2295,7 +2300,7 @@ version = "0.22.0"
 source = { editable = "." }
 dependencies = [
     { name = "legesher" },
-    { name = "legesher-core" },
+    { name = "legesher-core", extra = ["treesitter"] },
     { name = "legesher-i18n" },
     { name = "legesher-language-server" },
     { name = "legesher-vs-code" },
@@ -2322,7 +2327,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "legesher", editable = "libs/legesher" },
-    { name = "legesher-core", editable = "libs/core" },
+    { name = "legesher-core", extras = ["treesitter"], editable = "libs/core" },
     { name = "legesher-i18n", editable = "libs/i18n" },
     { name = "legesher-language-server", editable = "libs/language-server" },
     { name = "legesher-vs-code", editable = "libs/vs-code" },

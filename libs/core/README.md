@@ -50,6 +50,7 @@ Legesher Core provides **two complete translator implementations**:
 
 - Token-based translation
 - Fast and simple (~140μs for medium files)
+- Pure standard library — no C extensions required
 - Perfect for most use cases
 - Best compatibility with incomplete code
 
@@ -65,6 +66,16 @@ translator = TokenTranslator.from_language_pack("es")
 - Slightly faster (~160μs for medium files)
 - Better error handling for syntax edge cases
 - Supports incremental parsing
+- Requires the optional `treesitter` extra (tree-sitter C extensions):
+
+```bash
+pip install 'legesher-core[treesitter]'
+```
+
+Without the extra, `import legesher_core` and the token path still work;
+accessing `TreeSitterTranslator` or `LLMTranslator` raises an `ImportError`
+that names the extra. This keeps minimal installs and browser Python runtimes
+(where C extensions are unavailable) on the pure-stdlib token path.
 
 ```python
 from legesher_core import create_translator

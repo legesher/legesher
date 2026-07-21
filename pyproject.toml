@@ -8,7 +8,9 @@ authors = [
 ]
 requires-python = ">=3.10,<4.0"
 dependencies = [
-    "legesher-core",
+    # [treesitter] keeps the optional tree-sitter backend installed in the
+    # workspace dev environment (CI runs plain `uv sync`, no --all-extras).
+    "legesher-core[treesitter]",
     "legesher-i18n",
     "legesher",
     "legesher-language-server",

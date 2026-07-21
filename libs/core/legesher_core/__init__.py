@@ -66,6 +66,8 @@ Example:
     >>> tracker.track_clean(Path("src/main.py"), "es", "en")
 """
 
+from typing import TYPE_CHECKING
+
 from .ai_context import (
     AIContextGenerator,
     generate_bilingual_examples,
@@ -94,8 +96,6 @@ from .metadata import MetadataManager
 from .token_mapper import TokenMapper
 from .transformer import TokenTranslator
 from .translation_tracker import TranslationTracker
-from .tree_sitter.llm_translator import LLMTranslator
-from .tree_sitter.translator import TreeSitterTranslator
 from .types import (
     CulturalComment,
     CulturalCommentMetadata,
@@ -103,6 +103,10 @@ from .types import (
     TranslationScope,
     Translator,
 )
+
+if TYPE_CHECKING:
+    from .tree_sitter.llm_translator import LLMTranslator
+    from .tree_sitter.translator import TreeSitterTranslator
 
 __version__ = "0.22.0"
 
@@ -143,3 +147,29 @@ __all__ = [
     "UnsupportedLanguageError",
     "EncodingError",
 ]
+
+#: Re-exports backed by the optional tree-sitter C extensions. Imported
+#: lazily (PEP 562) so that ``import legesher_core`` — and the pure-stdlib
+#: TokenTranslator path — works in environments without the C extensions
+#: (minimal installs, browser Python runtimes). The extensions ship in the
+#: optional ``treesitter`` extra: ``pip install legesher-core[treesitter]``.
+_LAZY_TREE_SITTER_EXPORTS = frozenset({"LLMTranslator", "TreeSitterTranslator"})
+
+
+def __getattr__(name: str) -> object:
+    """Import tree-sitter-backed exports on first attribute access (PEP 562).
+
+    Raises:
+        ImportError: If the optional tree-sitter dependencies are not
+            installed (the message names the ``treesitter`` extra).
+        AttributeError: For attributes this package does not define.
+    """
+    if name in _LAZY_TREE_SITTER_EXPORTS:
+        from . import tree_sitter as _tree_sitter_pkg
+
+        return getattr(_tree_sitter_pkg, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | _LAZY_TREE_SITTER_EXPORTS)
