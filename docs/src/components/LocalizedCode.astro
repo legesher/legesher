@@ -1,0 +1,39 @@
+---
+import '../../.astro/integrations/legesher-snippets/legesher-snippets.css';
+
+interface Props { slug: string }
+const { slug } = Astro.props;
+// Bundled at build time via static glob: import.meta.url is not source-relative
+// once Astro prerenders from dist/.prerender/, so runtime fs reads break there.
+const artifacts = import.meta.glob<{ variants: Record<string, { code: string; spans: [string, string][]; rtl: boolean }> }>(
+  '../../.astro/integrations/legesher-snippets/snippets/*.json',
+  { eager: true, import: 'default' },
+);
+const artifact = artifacts[`../../.astro/integrations/legesher-snippets/snippets/${slug}.json`];
+if (!artifact) throw new Error(`Unknown snippet slug: ${slug}`);
+const { variants } = artifact;
+const escape = (s: string) =>
+  s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+const html = (spans: [string, string][]) =>
+  spans
+    .map(([t, c]) =>
+      c === 'plain' ? escape(t) : `<span class="lg-${c}">${escape(t)}</span>`,
+    )
+    .join('');
+---
+<figure class="lg-code">
+  {Object.entries(variants).map(([code, v]) => (
+    <pre data-lang={code} dir={v.rtl ? 'rtl' : 'ltr'}><code set:html={html(v.spans)} /></pre>
+  ))}
+</figure>
+<style is:global>
+  .lg-code pre { padding: 1rem; overflow-x: auto; border-radius: 0.5rem; }
+  .lg-code pre[dir='rtl'] span { unicode-bidi: isolate; }
+  .lg-keyword { color: var(--sl-color-accent-high); font-weight: 600; }
+  .lg-builtin { color: var(--sl-color-accent); }
+  .lg-exception { color: var(--sl-color-orange); }
+  .lg-reserved { color: var(--sl-color-accent); font-style: italic; }
+  .lg-string { color: var(--sl-color-green); }
+  .lg-comment { color: var(--sl-color-gray-3); font-style: italic; }
+  .lg-number { color: var(--sl-color-orange); }
+</style>

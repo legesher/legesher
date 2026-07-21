@@ -1,6 +1,8 @@
 # build output
 dist/
 .vercel/
+# playwright output
+test-results/
 # generated types
 .astro/
 

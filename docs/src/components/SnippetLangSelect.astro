@@ -1,0 +1,38 @@
+---
+import Default from '@astrojs/starlight/components/SocialIcons.astro';
+// Bundled at build time: import.meta.url is not source-relative once Astro
+// prerenders from dist/.prerender/, so runtime fs reads break there.
+import langs from '../../.astro/integrations/legesher-snippets/snippet-langs.json';
+---
+<label class="lg-picker" title="Code language">
+  <span class="sr-only">Code language</span>
+  <select class="lg-snippet-lang">
+    {langs.map((l) => <option value={l.code}>{l.native}</option>)}
+  </select>
+</label>
+<Default><slot /></Default>
+<style>
+  .lg-picker select { background: transparent; border: 1px solid var(--sl-color-gray-5); border-radius: 0.25rem; color: inherit; }
+</style>
+<script is:inline>
+  // Starlight renders this component twice (header + mobile menu footer), so
+  // wire every unwired picker idempotently and keep the copies in sync.
+  (() => {
+    const KEY = 'legesher-snippet-lang';
+    const pickers = () => document.querySelectorAll('select.lg-snippet-lang');
+    pickers().forEach((sel) => {
+      if (sel.dataset.lgWired) return;
+      sel.dataset.lgWired = '1';
+      const current = document.documentElement.dataset.snippetLang || 'en';
+      if ([...sel.options].some((o) => o.value === current)) sel.value = current;
+      sel.addEventListener('change', () => {
+        localStorage.setItem(KEY, sel.value);
+        if (sel.value === 'en') delete document.documentElement.dataset.snippetLang;
+        else document.documentElement.dataset.snippetLang = sel.value;
+        pickers().forEach((other) => {
+          if (other !== sel) other.value = sel.value;
+        });
+      });
+    });
+  })();
+</script>

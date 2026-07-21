@@ -1,0 +1,26 @@
+name: Docs
+on:
+  pull_request:
+    paths: ['docs/**', 'libs/i18n/language-packs/**']
+  push:
+    branches: [main]
+    paths: ['docs/**', 'libs/i18n/language-packs/**']
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: docs } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm, cache-dependency-path: docs/pnpm-lock.yaml }
+      - run: pip install -r scripts/requirements.txt
+      - run: python -m pytest scripts/tests -v
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e

@@ -1,0 +1,193 @@
+---
+title: Primeros pasos con Legesher
+description: Guía de inicio rápido para programar en tu idioma nativo con Legesher
+sidebar:
+  badge:
+    text: revisión
+    variant: caution
+---
+
+import LocalizedCode from '../../../components/LocalizedCode.astro';
+
+¡Te damos la bienvenida a Legesher! Esta guía te ayudará a empezar a programar en tu idioma nativo.
+
+<LocalizedCode slug="hello-world" />
+
+## Inicio rápido
+
+### 1. Instala la extensión de VS Code
+
+Instálala desde el VS Code Marketplace:
+
+- Busca "Legesher" en el panel de extensiones
+- Haz clic en "Install"
+
+O instálala manualmente:
+
+```bash
+code --install-extension legesher.legesher-vscode
+```
+
+{/* VISUAL: Screenshot of VS Code marketplace showing the Legesher extension */}
+
+### 2. Selecciona tu idioma
+
+Después de la instalación verás un cuadro de diálogo de bienvenida. Haz clic en **"Choose Your Language"** para seleccionar el idioma en el que quieres programar.
+
+O hazlo manualmente:
+
+1. Abre la paleta de comandos (Cmd+Shift+P o Ctrl+Shift+P)
+2. Escribe "Legesher: Select Language"
+3. Elige tu idioma de la lista
+
+{/* VISUAL: [Demo 7] GIF/screenshot of the language selector dropdown in command palette */}
+
+### 3. Empieza a programar
+
+Abre un archivo de Python y empieza a escribir. Legesher hará lo siguiente:
+
+- Sugerir palabras clave en tu idioma
+- Mostrar documentación al pasar el cursor en tu idioma
+- Traducir las funciones integradas y las excepciones de Python
+- Ofrecer IntelliSense en tu idioma nativo
+
+{/* VISUAL: [Demo 10] GIF of autocomplete suggesting translated keywords in action */}
+
+## Idiomas compatibles
+
+Legesher es actualmente compatible con Python 3.10+ con traducciones a **51 idiomas**, entre ellos:
+
+- **Amárico** (አማርኛ) · **Árabe** (العربية) · **Bengalí** (বাংলা) · **Bosnio** (Bosanski)
+- **Catalán** (Català) · **Chino** (中文) · **Croata** (Hrvatski) · **Checo** (Čeština)
+- **Danés** (Dansk) · **Neerlandés** (Nederlands) · **Inglés** (English) · **Finés** (Suomi)
+- **Francés** (Français) · **Gallego** (Galego) · **Alemán** (Deutsch) · **Griego** (Ελληνικά)
+- **Guyaratí** (ગુજરાતી) · **Hebreo** (עברית) · **Hindi** (हिन्दी) · **Húngaro** (Magyar)
+- **Indonesio** (Bahasa Indonesia) · **Irlandés** (Gaeilge) · **Italiano** (Italiano)
+- **Japonés** (日本語) · **Canarés** (ಕನ್ನಡ) · **Coreano** (한국어) · **Letón** (Latviešu)
+- **Macedonio** (Македонски) · **Malayo** (Bahasa Melayu) · **Malayalam** (മലയാളം)
+- **Mongol** (Монгол) · **Noruego** (Norsk) · **Persa** (فارسی) · **Polaco** (Polski)
+- **Portugués** (Português) · **Rumano** (Română) · **Ruso** (Русский)
+- **Gaélico escocés** (Gàidhlig) · **Serbio** (Српски) · **Cingalés** (සිංහල)
+- **Español** · **Sundanés** (Basa Sunda) · **Sueco** (Svenska)
+- **Telugu** (తెలుగు) · **Tailandés** (ไทย) · **Turco** (Türkçe) · **Urdu** (اردو)
+- **Uzbeko** (O'zbek) · **Vietnamita** (Tiếng Việt) · **Galés** (Cymraeg)
+
+Consulta [Idiomas compatibles](/es/reference/supported-languages/) para ver la lista completa con detalles.
+
+## Funcionalidades
+
+### Traducción de palabras clave
+
+Escribe las palabras clave de Python en tu idioma nativo:
+
+```python
+# Spanish example: keywords, control flow, and error handling
+definir saludar(nombre):
+    mensaje = f"¡Hola, {nombre}! Bienvenido a Legesher."
+    imprimir(mensaje)
+    devolver mensaje
+
+definir saludar_con_edad(nombre, edad):
+    si edad < 18:
+        categoria = "joven"
+    si_no edad < 65:
+        categoria = "adulto"
+    sino:
+        categoria = "sabio"
+    imprimir(f"¡Hola, {categoria} {nombre}!")
+    devolver categoria
+
+definir ejemplo_manejo_errores():
+    probar:
+        resultado = 100 / entero(entrada("Número: "))
+        imprimir(f"Resultado: {resultado}")
+    excepto errordedivisiónporcero:
+        imprimir("Error: No se puede dividir por cero.")
+    excepto errordevalor:
+        imprimir("Error: Ingresa un número válido.")
+    finalmente:
+        imprimir("Operación completada.")
+```
+
+{/* VISUAL: [Demo 9] GIF of hover tooltip showing definir → def with documentation */}
+
+### Integración con git
+
+Tu código se guarda en inglés en git, pero tú lo ves en tu idioma:
+
+- **Tu vista:** código en tu idioma nativo
+- **Almacenamiento en git:** inglés (para la colaboración universal)
+- **Traducción automática:** en ambas direcciones, sin fricciones
+
+{/* VISUAL: [Demo 15] Clean/smudge filter flow diagram showing local ↔ git translation */}
+
+### Compatibilidad con IntelliSense
+
+Recibe autocompletado, documentación al pasar el cursor y diagnósticos en tu idioma:
+
+- Escribe `imprimir` y verás sugerencias para `print()`
+- Pasa el cursor sobre las funciones para ver documentación localizada
+- Mensajes de error en tu idioma
+
+{/* VISUAL: [Demo 11] Screenshot of semantic token highlighting with translated keywords */}
+
+## Configuración
+
+### Telemetría
+
+Controla qué datos recopila Legesher:
+
+**Telemetría básica** (activada de forma predeterminada):
+
+```json
+{
+  "legesher.telemetry.enabled": true
+}
+```
+
+**Contribuciones al entrenamiento de ML** (solo con consentimiento explícito):
+
+```json
+{
+  "legesher.telemetry.contributeToMLTraining": false
+}
+```
+
+[Más información sobre privacidad](/es/privacy/)
+
+### Selección de idioma
+
+Cambia tu idioma de programación en cualquier momento:
+
+1. Haz clic en el indicador de idioma de la barra de estado (abajo a la derecha)
+2. O usa la paleta de comandos: "Legesher: Select Language"
+
+## Solución de problemas
+
+### ¿La extensión no se activa?
+
+1. Comprueba que tienes Python instalado
+2. Abre un archivo `.py` para activar la extensión
+3. Revisa el panel de salida: View > Output > selecciona "Legesher Language Server"
+
+### ¿No aparecen las traducciones?
+
+1. Verifica la selección de idioma: revisa la barra de estado
+2. Reinicia el servidor de lenguaje: paleta de comandos > "Legesher: Restart Language Server"
+3. Busca errores en el panel de salida
+
+{/* VISUAL: [Demo 13] Screenshot of status bar showing connection indicator states */}
+
+### ¿Necesitas ayuda?
+
+- [Reporta un problema](https://github.com/legesher/legesher/issues)
+- [Únete a nuestra comunidad](https://legesher.io/go/slack)
+
+## ¿Qué sigue?
+
+- Explora todos los [idiomas compatibles](/es/reference/supported-languages/)
+- [Contribuye](https://github.com/legesher/legesher/blob/main/CONTRIBUTING.md) con traducciones o código en GitHub
+
+---
+
+**¿Todo listo para programar?** ¡Abre un archivo de Python y empieza a escribir en tu idioma!

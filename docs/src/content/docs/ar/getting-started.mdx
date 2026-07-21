@@ -1,0 +1,193 @@
+---
+title: البدء مع Legesher
+description: دليل البدء السريع للبرمجة بلغتك الأم مع Legesher
+sidebar:
+  badge:
+    text: بحاجة لمراجعة
+    variant: caution
+---
+
+import LocalizedCode from '../../../components/LocalizedCode.astro';
+
+مرحبًا بك في Legesher! سيساعدك هذا الدليل على البدء في البرمجة بلغتك الأم.
+
+<LocalizedCode slug="hello-world" />
+
+## البدء السريع
+
+### 1. ثبّت امتداد VS Code
+
+ثبّته من VS Code Marketplace:
+
+- ابحث عن "Legesher" في لوحة الامتدادات
+- انقر على "Install"
+
+أو ثبّته يدويًا:
+
+```bash
+code --install-extension legesher.legesher-vscode
+```
+
+{/* VISUAL: Screenshot of VS Code marketplace showing the Legesher extension */}
+
+### 2. اختر لغتك
+
+بعد التثبيت سيظهر لك مربع حوار ترحيبي. انقر على **"Choose Your Language"** لاختيار اللغة التي تفضل البرمجة بها.
+
+أو يدويًا:
+
+1. افتح لوحة الأوامر (Cmd+Shift+P أو Ctrl+Shift+P)
+2. اكتب "Legesher: Select Language"
+3. اختر لغتك من القائمة
+
+{/* VISUAL: [Demo 7] GIF/screenshot of the language selector dropdown in command palette */}
+
+### 3. ابدأ البرمجة
+
+افتح ملف Python وابدأ الكتابة! سيقوم Legesher بما يلي:
+
+- اقتراح الكلمات المفتاحية بلغتك
+- عرض وثائق التحويم بلغتك
+- ترجمة الدوال المضمنة والاستثناءات في Python
+- دعم IntelliSense بلغتك الأم
+
+{/* VISUAL: [Demo 10] GIF of autocomplete suggesting translated keywords in action */}
+
+## اللغات المدعومة
+
+يدعم Legesher حاليًا Python 3.10 وما بعده مع ترجمات إلى **51 لغة**، من بينها:
+
+- **الأمهرية** (አማርኛ) · **العربية** · **البنغالية** (বাংলা) · **البوسنية** (Bosanski)
+- **الكتالانية** (Català) · **الصينية** (中文) · **الكرواتية** (Hrvatski) · **التشيكية** (Čeština)
+- **الدنماركية** (Dansk) · **الهولندية** (Nederlands) · **الإنجليزية** (English) · **الفنلندية** (Suomi)
+- **الفرنسية** (Français) · **الجاليكية** (Galego) · **الألمانية** (Deutsch) · **اليونانية** (Ελληνικά)
+- **الغوجاراتية** (ગુજરાતી) · **العبرية** (עברית) · **الهندية** (हिन्दी) · **المجرية** (Magyar)
+- **الإندونيسية** (Bahasa Indonesia) · **الأيرلندية** (Gaeilge) · **الإيطالية** (Italiano)
+- **اليابانية** (日本語) · **الكنادية** (ಕನ್ನಡ) · **الكورية** (한국어) · **اللاتفية** (Latviešu)
+- **المقدونية** (Македонски) · **الملايوية** (Bahasa Melayu) · **المالايالامية** (മലയാളം)
+- **المنغولية** (Монгол) · **النرويجية** (Norsk) · **الفارسية** (فارسی) · **البولندية** (Polski)
+- **البرتغالية** (Português) · **الرومانية** (Română) · **الروسية** (Русский)
+- **الغيلية الاسكتلندية** (Gàidhlig) · **الصربية** (Српски) · **السنهالية** (සිංහල)
+- **الإسبانية** (Español) · **السوندية** (Basa Sunda) · **السويدية** (Svenska)
+- **التيلوغوية** (తెలుగు) · **التايلاندية** (ไทย) · **التركية** (Türkçe) · **الأردية** (اردو)
+- **الأوزبكية** (O'zbek) · **الفيتنامية** (Tiếng Việt) · **الويلزية** (Cymraeg)
+
+راجع [اللغات المدعومة](/ar/reference/supported-languages/) للاطلاع على القائمة الكاملة بالتفاصيل.
+
+## الميزات
+
+### ترجمة الكلمات المفتاحية
+
+اكتب الكلمات المفتاحية في Python بلغتك الأم:
+
+```python
+# Spanish example: keywords, control flow, and error handling
+definir saludar(nombre):
+    mensaje = f"¡Hola, {nombre}! Bienvenido a Legesher."
+    imprimir(mensaje)
+    devolver mensaje
+
+definir saludar_con_edad(nombre, edad):
+    si edad < 18:
+        categoria = "joven"
+    si_no edad < 65:
+        categoria = "adulto"
+    sino:
+        categoria = "sabio"
+    imprimir(f"¡Hola, {categoria} {nombre}!")
+    devolver categoria
+
+definir ejemplo_manejo_errores():
+    probar:
+        resultado = 100 / entero(entrada("Número: "))
+        imprimir(f"Resultado: {resultado}")
+    excepto errordedivisiónporcero:
+        imprimir("Error: No se puede dividir por cero.")
+    excepto errordevalor:
+        imprimir("Error: Ingresa un número válido.")
+    finalmente:
+        imprimir("Operación completada.")
+```
+
+{/* VISUAL: [Demo 9] GIF of hover tooltip showing definir → def with documentation */}
+
+### التكامل مع git
+
+يُخزَّن كودك بالإنجليزية في git، لكنك تراه بلغتك:
+
+- **ما تراه أنت:** الكود بلغتك الأم
+- **التخزين في git:** بالإنجليزية (من أجل تعاون عالمي)
+- **ترجمة تلقائية:** في الاتجاهين وبسلاسة
+
+{/* VISUAL: [Demo 15] Clean/smudge filter flow diagram showing local ↔ git translation */}
+
+### دعم IntelliSense
+
+احصل على الإكمال التلقائي ووثائق التحويم والتشخيصات بلغتك:
+
+- اكتب `imprimir` وسترى اقتراحات لـ `print()`
+- حوّم فوق الدوال لرؤية وثائق مترجمة
+- رسائل الخطأ بلغتك
+
+{/* VISUAL: [Demo 11] Screenshot of semantic token highlighting with translated keywords */}
+
+## الإعدادات
+
+### القياس عن بُعد
+
+تحكم في البيانات التي يجمعها Legesher:
+
+**القياس الأساسي عن بُعد** (مفعّل افتراضيًا):
+
+```json
+{
+  "legesher.telemetry.enabled": true
+}
+```
+
+**المساهمة في تدريب نماذج تعلم الآلة** (بموافقة صريحة فقط):
+
+```json
+{
+  "legesher.telemetry.contributeToMLTraining": false
+}
+```
+
+[اعرف المزيد عن الخصوصية](/ar/privacy/)
+
+### اختيار اللغة
+
+غيّر لغة البرمجة في أي وقت:
+
+1. انقر على مؤشر اللغة في شريط الحالة (أسفل يمين النافذة)
+2. أو استخدم لوحة الأوامر: "Legesher: Select Language"
+
+## استكشاف الأخطاء وإصلاحها
+
+### الامتداد لا يتفعّل؟
+
+1. تأكد من أن Python مثبت لديك
+2. افتح ملف `.py` لتشغيل التفعيل
+3. راجع لوحة الإخراج: View > Output > اختر "Legesher Language Server"
+
+### الترجمات لا تظهر؟
+
+1. تحقق من اختيار اللغة: راجع شريط الحالة
+2. أعد تشغيل خادم اللغة: لوحة الأوامر > "Legesher: Restart Language Server"
+3. ابحث عن الأخطاء في لوحة الإخراج
+
+{/* VISUAL: [Demo 13] Screenshot of status bar showing connection indicator states */}
+
+### هل تحتاج إلى مساعدة؟
+
+- [أبلغ عن مشكلة](https://github.com/legesher/legesher/issues)
+- [انضم إلى مجتمعنا](https://legesher.io/go/slack)
+
+## ماذا بعد؟
+
+- استعرض جميع [اللغات المدعومة](/ar/reference/supported-languages/)
+- [ساهم](https://github.com/legesher/legesher/blob/main/CONTRIBUTING.md) بترجمات أو كود على GitHub
+
+---
+
+**هل أنت جاهز للبرمجة؟** افتح ملف Python وابدأ الكتابة بلغتك!
