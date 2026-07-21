@@ -132,15 +132,37 @@ def scan_text(
 
     for offset, ch in enumerate(text):
         if ch == BOM:
-            issues.append(
-                Issue(
-                    kind="bom",
-                    codepoint=_codepoint(ch),
-                    offset=offset,
-                    char_name=_name(ch),
-                    message="Byte-order mark (U+FEFF) present in source",
+            if offset == 0:
+                issues.append(
+                    Issue(
+                        kind="bom",
+                        codepoint=_codepoint(ch),
+                        offset=offset,
+                        char_name=_name(ch),
+                        message="Byte-order mark (U+FEFF) present in source",
+                    )
                 )
-            )
+                continue
+            # An interior U+FEFF is not a legitimate BOM: it is a zero-width
+            # invisible (category Cf) that desyncs offsets and can smuggle a
+            # hidden identifier distinction. Report it as ``invisible`` (not the
+            # informational ``bom`` kind) so the git clean filter — which blocks
+            # bidi/invisible/tatweel but treats bom as advisory — rejects it
+            # instead of letting it reach canonical storage. Respect ``allow``
+            # for parity with the general Cf branch below.
+            if ch not in allow:
+                issues.append(
+                    Issue(
+                        kind="invisible",
+                        codepoint=_codepoint(ch),
+                        offset=offset,
+                        char_name=_name(ch),
+                        message=(
+                            f"Interior byte-order mark ({_codepoint(ch)}) — "
+                            "zero-width invisible (category Cf)"
+                        ),
+                    )
+                )
             continue
 
         if ch in BIDI_CONTROLS:

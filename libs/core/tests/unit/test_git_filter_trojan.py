@@ -28,6 +28,17 @@ class TestCleanRejectsTrojanSource:
         assert exit_code == 1
         assert "​" not in out.getvalue()
 
+    def test_clean_rejects_interior_bom(self, spanish_filter):
+        # A leading BOM is stripped and allowed; an INTERIOR U+FEFF is a
+        # zero-width invisible and must fail the filter, not slip through as an
+        # advisory "bom" issue (CORE-1557).
+        malicious = "ad﻿min = True\n"
+        out = io.StringIO()
+        exit_code = spanish_filter.clean(io.StringIO(malicious), out)
+        assert exit_code == 1
+        assert "﻿" not in out.getvalue()
+        assert out.getvalue() == ""
+
 
 class TestCleanAcceptsLegitimateContent:
     def test_clean_accepts_normal_rtl_string_literal(

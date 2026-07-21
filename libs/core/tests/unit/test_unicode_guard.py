@@ -61,10 +61,20 @@ class TestScanText:
         issues = scan_text(text)
         assert any(i.kind == "tatweel" and i.offset == 2 for i in issues)
 
-    def test_detects_bom_anywhere(self):
-        text = "abc﻿def"
-        issues = scan_text(text)
-        assert any(i.kind == "bom" and i.offset == 3 for i in issues)
+    def test_interior_bom_reported_as_blocking_invisible(self):
+        # An interior U+FEFF is a zero-width invisible, not a legitimate BOM.
+        # It must surface as the blocking ``invisible`` kind (not the advisory
+        # ``bom`` kind) so the git clean filter rejects it (CORE-1557).
+        issues = scan_text("abc﻿def")
+        interior = [i for i in issues if i.offset == 3]
+        assert interior and interior[0].kind == "invisible"
+        assert all(i.kind != "bom" for i in issues)
+
+    def test_interior_bom_respects_allowlist(self):
+        # Parity with the general Cf branch: an allowlisted interior FEFF
+        # (e.g. inside a string/comment token) is not reported.
+        issues = scan_text("abc﻿def", allowed_format_chars={"﻿"})
+        assert all(i.offset != 3 for i in issues)
 
     def test_leading_bom_reported_as_bom(self):
         issues = scan_text("﻿x")
