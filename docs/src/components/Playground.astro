@@ -1,0 +1,253 @@
+---
+// In-browser Python playground (CORE-1551): edit localized Python, click Run to
+// translate → execute it entirely client-side via Pyodide.
+//
+// v1 offers LTR pack languages only; RTL editing is CORE-1552. The offered set is
+// snippet-langs filtered to non-RTL — every such language has both a seed
+// (hello-world variant) and a vendored wheel, verified by build_wheels.sh.
+//
+// These JSON artifacts are the same ones the static snippets use; importing them
+// statically bundles their contents at build time.
+import langsMeta from '../../.astro/integrations/legesher-snippets/snippet-langs.json';
+import helloWorld from '../../.astro/integrations/legesher-snippets/snippets/hello-world.json';
+
+type LangMeta = { code: string; native: string; name: string; rtl: boolean };
+const meta = langsMeta as LangMeta[];
+const variants = (helloWorld as { variants: Record<string, { code: string }> }).variants;
+
+const offered = meta
+  .filter((l) => !l.rtl)
+  .map((l) => ({ code: l.code, native: l.native, name: l.name }));
+const rtlNative = meta.filter((l) => l.rtl).map((l) => l.native);
+const seeds = Object.fromEntries(offered.map((l) => [l.code, variants[l.code]?.code ?? '']));
+
+const data = { offered, seeds, defaultLang: 'es' };
+// Escape "<" so the JSON payload can't break out of the <script> element.
+const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
+---
+
+<section class="pg" aria-label="Python playground">
+  <div class="pg-toolbar">
+    <label class="pg-lang-label">
+      Language
+      <select id="pg-lang" aria-label="Editor language">
+        {offered.map((l) => <option value={l.code}>{l.native} ({l.code})</option>)}
+      </select>
+    </label>
+    <button id="pg-run" type="button" class="pg-run">Run ▶</button>
+    <span id="pg-status" class="pg-status" role="status" aria-live="polite" hidden></span>
+  </div>
+
+  <div id="pg-editor" class="pg-editor"></div>
+
+  <div class="pg-output-wrap">
+    <div class="pg-output-head">Output</div>
+    <pre id="pg-output" class="pg-output" aria-live="polite" tabindex="0"></pre>
+  </div>
+
+  <p class="pg-rtl-note">
+    Right-to-left languages ({rtlNative.join(', ')}) render in the docs but aren’t
+    editable here yet — RTL editing is coming soon.
+  </p>
+
+  <script type="application/json" id="pg-data" set:html={dataJson}></script>
+</section>
+
+<script>
+  import { mountEditor } from '../playground/editor';
+  import { createRunner } from '../playground/runner';
+
+  type Offered = { code: string; native: string; name: string };
+  type PgData = { offered: Offered[]; seeds: Record<string, string>; defaultLang: string };
+
+  const dataEl = document.getElementById('pg-data');
+  const editorParent = document.getElementById('pg-editor');
+  const langSel = document.getElementById('pg-lang') as HTMLSelectElement | null;
+  const runBtn = document.getElementById('pg-run') as HTMLButtonElement | null;
+  const outputEl = document.getElementById('pg-output');
+  const statusEl = document.getElementById('pg-status');
+
+  if (dataEl && editorParent && langSel && runBtn && outputEl && statusEl) {
+    const { offered, seeds, defaultLang } = JSON.parse(dataEl.textContent || '{}') as PgData;
+
+    // Honor the docs-wide code-language preference when it's an offered pack,
+    // else fall back to the default (Spanish). Fresh visitors get the default.
+    let currentLang = defaultLang;
+    try {
+      const pref = localStorage.getItem('legesher-snippet-lang');
+      if (pref && offered.some((l) => l.code === pref)) currentLang = pref;
+    } catch {
+      /* localStorage unavailable — keep default */
+    }
+    langSel.value = currentLang;
+
+    const editor = mountEditor({
+      parent: editorParent,
+      doc: seeds[currentLang] ?? '',
+      onRun: () => run(),
+    });
+
+    const runner = createRunner();
+    let busy = false;
+
+    const setStatus = (text: string) => {
+      statusEl.hidden = !text;
+      statusEl.textContent = text;
+    };
+    const append = (text: string, cls?: string) => {
+      const span = document.createElement('span');
+      if (cls) span.className = cls;
+      span.textContent = text;
+      outputEl.appendChild(span);
+    };
+    const setBusy = (b: boolean) => {
+      busy = b;
+      runBtn.disabled = b;
+      langSel.disabled = b;
+      runBtn.textContent = b ? 'Running…' : 'Run ▶';
+    };
+
+    function run() {
+      if (busy) return;
+      outputEl.textContent = '';
+      setBusy(true);
+      setStatus('Starting…');
+      runner.run(editor.getDoc(), currentLang, {
+        onStatus: (phase, message) => {
+          if (phase === 'booting' || phase === 'installing') {
+            setStatus(`${message} First run only — cached for future visits.`);
+          } else if (phase === 'running') {
+            setStatus('Running…');
+          }
+        },
+        onOutput: (stream, line) => append(line + '\n', stream === 'stderr' ? 'pg-stderr' : undefined),
+        onError: (phase, message) => {
+          const label =
+            phase === 'translate'
+              ? 'Translation error'
+              : phase === 'timeout'
+                ? 'Stopped'
+                : phase === 'boot'
+                  ? 'Runtime failed to start'
+                  : 'Error';
+          if (outputEl.textContent) append('\n');
+          append(`${label}:\n`, 'pg-error');
+          append(message.replace(/\n$/, '') + '\n', 'pg-error');
+          setStatus('');
+          setBusy(false);
+        },
+        onResult: () => {
+          if (!outputEl.textContent) append('(no output)', 'pg-muted');
+          setStatus('');
+          setBusy(false);
+        },
+      });
+    }
+
+    langSel.addEventListener('change', () => {
+      const next = langSel.value;
+      if (next === currentLang) return;
+      currentLang = next;
+      editor.setDoc(seeds[currentLang] ?? '');
+      outputEl.textContent = '';
+      setStatus('');
+    });
+
+    runBtn.addEventListener('click', run);
+  }
+</script>
+
+<style>
+  .pg {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-block: 1.5rem;
+  }
+  .pg-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .pg-lang-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+  }
+  .pg-toolbar select {
+    background: var(--sl-color-bg);
+    color: inherit;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.4rem;
+  }
+  .pg-run {
+    background: var(--sl-color-accent);
+    color: var(--sl-color-black);
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.4rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .pg-run:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+  .pg-status {
+    font-size: 0.8125rem;
+    color: var(--sl-color-gray-3);
+  }
+  .pg-editor {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    max-height: 24rem;
+  }
+  .pg-editor :global(.cm-editor) {
+    max-height: 24rem;
+  }
+  .pg-output-wrap {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  .pg-output-head {
+    background: var(--sl-color-gray-6);
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--sl-color-gray-2);
+  }
+  .pg-output {
+    margin: 0;
+    padding: 0.75rem;
+    min-height: 3rem;
+    max-height: 16rem;
+    overflow: auto;
+    font-family: var(--__sl-font-mono, ui-monospace, monospace);
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .pg-stderr {
+    color: var(--sl-color-orange-high);
+  }
+  .pg-error {
+    color: var(--sl-color-red-high);
+    font-weight: 600;
+  }
+  .pg-muted {
+    color: var(--sl-color-gray-3);
+    font-style: italic;
+  }
+  .pg-rtl-note {
+    font-size: 0.8125rem;
+    color: var(--sl-color-gray-3);
+    margin: 0;
+  }
+</style>

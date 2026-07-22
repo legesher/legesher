@@ -51,6 +51,11 @@ export default defineConfig({
 							translations: { es: 'Inicio rápido', ar: 'البدء السريع' },
 							slug: 'getting-started',
 						},
+						{
+							label: 'Playground',
+							translations: { es: 'Zona de pruebas', ar: 'ساحة التجريب' },
+							slug: 'playground',
+						},
 					],
 				},
 				{

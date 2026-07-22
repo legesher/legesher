@@ -1,3 +1,8 @@
+# Playground Pyodide wheels (public/wheels/*.whl) are intentionally COMMITTED
+# and served as static assets — never ignore them. Regenerate with
+# docs/scripts/build_wheels.sh, then commit the result. See CORE-1551.
+!public/wheels/
+
 # build output
 dist/
 .vercel/
