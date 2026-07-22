@@ -24,13 +24,21 @@ from legesher_i18n.pack_loader import LanguagePackLoader  # noqa: E402
 
 PACK_VERSION_DEFAULT = "3.12"
 
+# FSTRING_START/MIDDLE/END exist only on Python 3.12+ (PEP 701); on older
+# interpreters f-strings tokenize as a single STRING, so those members are
+# simply absent. Build the map with getattr so the module imports on 3.10+
+# (the docs build machine's python3 may lag the workspace's 3.13).
 _TOKEN_CATEGORIES = {
-    tokenize.STRING: "string",
-    tokenize.FSTRING_START: "string",
-    tokenize.FSTRING_MIDDLE: "string",
-    tokenize.FSTRING_END: "string",
-    tokenize.COMMENT: "comment",
-    tokenize.NUMBER: "number",
+    tok_type: category
+    for tok_type, category in (
+        (tokenize.STRING, "string"),
+        (getattr(tokenize, "FSTRING_START", None), "string"),
+        (getattr(tokenize, "FSTRING_MIDDLE", None), "string"),
+        (getattr(tokenize, "FSTRING_END", None), "string"),
+        (tokenize.COMMENT, "comment"),
+        (tokenize.NUMBER, "number"),
+    )
+    if tok_type is not None
 }
 
 
@@ -157,11 +165,13 @@ def emit_artifacts(snippets_dir: Path, out_dir: Path, version: str = PACK_VERSIO
         {"code": c, "native": bundles[c]["native"], "name": bundles[c]["name"], "rtl": bundles[c]["rtl"]}
         for c in ordered
     ]
-    (out_dir / "snippet-langs.json").write_text(json.dumps(langs_meta, ensure_ascii=False, indent=1))
-    (out_dir / "legesher-snippets.css").write_text(_css(ordered))
+    (out_dir / "snippet-langs.json").write_text(
+        json.dumps(langs_meta, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+    (out_dir / "legesher-snippets.css").write_text(_css(ordered), encoding="utf-8")
 
     for src_file in sorted(snippets_dir.glob("*.py")):
-        source = src_file.read_text()
+        source = src_file.read_text(encoding="utf-8")
         try:
             ast.parse(source)
         except SyntaxError as exc:
@@ -177,7 +187,7 @@ def emit_artifacts(snippets_dir: Path, out_dir: Path, version: str = PACK_VERSIO
             }
         payload = {"slug": src_file.stem, "variants": variants}
         (out_dir / "snippets" / f"{src_file.stem}.json").write_text(
-            json.dumps(payload, ensure_ascii=False)
+            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
         )
 
 
