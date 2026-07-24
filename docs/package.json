@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "generate:snippets": "python3 scripts/generate_snippets.py --snippets snippets --out generated",
     "test:e2e": "playwright test"
   },
   "dependencies": {

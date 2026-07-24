@@ -1,0 +1,308 @@
+[
+ {
+  "code": "en",
+  "native": "English",
+  "name": "English",
+  "rtl": false
+ },
+ {
+  "code": "am",
+  "native": "አማርኛ",
+  "name": "Amharic",
+  "rtl": false
+ },
+ {
+  "code": "ar",
+  "native": "العربية",
+  "name": "Arabic",
+  "rtl": true
+ },
+ {
+  "code": "bn",
+  "native": "বাংলা",
+  "name": "Bengali",
+  "rtl": false
+ },
+ {
+  "code": "bs",
+  "native": "Bosanski",
+  "name": "Bosnian",
+  "rtl": false
+ },
+ {
+  "code": "ca",
+  "native": "Català",
+  "name": "Catalan",
+  "rtl": false
+ },
+ {
+  "code": "cs",
+  "native": "Čeština",
+  "name": "Czech",
+  "rtl": false
+ },
+ {
+  "code": "cy",
+  "native": "Cymraeg",
+  "name": "Welsh",
+  "rtl": false
+ },
+ {
+  "code": "da",
+  "native": "Dansk",
+  "name": "Danish",
+  "rtl": false
+ },
+ {
+  "code": "de",
+  "native": "Deutsch",
+  "name": "German",
+  "rtl": false
+ },
+ {
+  "code": "el",
+  "native": "Ελληνικά",
+  "name": "Greek",
+  "rtl": false
+ },
+ {
+  "code": "es",
+  "native": "Español",
+  "name": "Spanish",
+  "rtl": false
+ },
+ {
+  "code": "fa",
+  "native": "فارسی",
+  "name": "Persian",
+  "rtl": true
+ },
+ {
+  "code": "fi",
+  "native": "Suomi",
+  "name": "Finnish",
+  "rtl": false
+ },
+ {
+  "code": "fr",
+  "native": "Français",
+  "name": "French",
+  "rtl": false
+ },
+ {
+  "code": "ga",
+  "native": "Gaeilge",
+  "name": "Irish",
+  "rtl": false
+ },
+ {
+  "code": "gd",
+  "native": "Gàidhlig",
+  "name": "Scottish Gaelic",
+  "rtl": false
+ },
+ {
+  "code": "gl",
+  "native": "Galego",
+  "name": "Galician",
+  "rtl": false
+ },
+ {
+  "code": "gu",
+  "native": "ગુજરાતી",
+  "name": "Gujarati",
+  "rtl": false
+ },
+ {
+  "code": "he",
+  "native": "עברית",
+  "name": "Hebrew",
+  "rtl": true
+ },
+ {
+  "code": "hi",
+  "native": "हिन्दी",
+  "name": "Hindi",
+  "rtl": false
+ },
+ {
+  "code": "hr",
+  "native": "Hrvatski",
+  "name": "Croatian",
+  "rtl": false
+ },
+ {
+  "code": "hu",
+  "native": "Magyar",
+  "name": "Hungarian",
+  "rtl": false
+ },
+ {
+  "code": "id",
+  "native": "Bahasa Indonesia",
+  "name": "Indonesian",
+  "rtl": false
+ },
+ {
+  "code": "it",
+  "native": "Italiano",
+  "name": "Italian",
+  "rtl": false
+ },
+ {
+  "code": "ja",
+  "native": "日本語",
+  "name": "Japanese",
+  "rtl": false
+ },
+ {
+  "code": "kn",
+  "native": "ಕನ್ನಡ",
+  "name": "Kannada",
+  "rtl": false
+ },
+ {
+  "code": "ko",
+  "native": "한국어",
+  "name": "Korean",
+  "rtl": false
+ },
+ {
+  "code": "lv",
+  "native": "Latviešu",
+  "name": "Latvian",
+  "rtl": false
+ },
+ {
+  "code": "mk",
+  "native": "Македонски",
+  "name": "Macedonian",
+  "rtl": false
+ },
+ {
+  "code": "ml",
+  "native": "മലയാളം",
+  "name": "Malayalam",
+  "rtl": false
+ },
+ {
+  "code": "mn",
+  "native": "Монгол",
+  "name": "Mongolian",
+  "rtl": false
+ },
+ {
+  "code": "ms",
+  "native": "Bahasa Melayu",
+  "name": "Malay",
+  "rtl": false
+ },
+ {
+  "code": "my",
+  "native": "မြန်မာ",
+  "name": "Burmese",
+  "rtl": false
+ },
+ {
+  "code": "nl",
+  "native": "Nederlands",
+  "name": "Dutch",
+  "rtl": false
+ },
+ {
+  "code": "no",
+  "native": "Norsk",
+  "name": "Norwegian",
+  "rtl": false
+ },
+ {
+  "code": "pl",
+  "native": "Polski",
+  "name": "Polish",
+  "rtl": false
+ },
+ {
+  "code": "pt",
+  "native": "Português",
+  "name": "Portuguese",
+  "rtl": false
+ },
+ {
+  "code": "ro",
+  "native": "Română",
+  "name": "Romanian",
+  "rtl": false
+ },
+ {
+  "code": "ru",
+  "native": "Русский",
+  "name": "Russian",
+  "rtl": false
+ },
+ {
+  "code": "si",
+  "native": "සිංහල",
+  "name": "Sinhala",
+  "rtl": false
+ },
+ {
+  "code": "sr",
+  "native": "Српски",
+  "name": "Serbian",
+  "rtl": false
+ },
+ {
+  "code": "su",
+  "native": "Basa Sunda",
+  "name": "Sundanese",
+  "rtl": false
+ },
+ {
+  "code": "sv",
+  "native": "Svenska",
+  "name": "Swedish",
+  "rtl": false
+ },
+ {
+  "code": "te",
+  "native": "తెలుగు",
+  "name": "Telugu",
+  "rtl": false
+ },
+ {
+  "code": "th",
+  "native": "ไทย",
+  "name": "Thai",
+  "rtl": false
+ },
+ {
+  "code": "tr",
+  "native": "Türkçe",
+  "name": "Turkish",
+  "rtl": false
+ },
+ {
+  "code": "ur",
+  "native": "اردو",
+  "name": "Urdu",
+  "rtl": true
+ },
+ {
+  "code": "uz",
+  "native": "O'zbek",
+  "name": "Uzbek",
+  "rtl": false
+ },
+ {
+  "code": "vi",
+  "native": "Tiếng Việt",
+  "name": "Vietnamese",
+  "rtl": false
+ },
+ {
+  "code": "zh",
+  "native": "中文",
+  "name": "Chinese",
+  "rtl": false
+ }
+]
