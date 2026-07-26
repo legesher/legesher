@@ -25,9 +25,27 @@ export function legesherSnippets() {
           const snippets = fileURLToPath(new URL('../snippets/', import.meta.url));
           const python = process.env.LEGESHER_PYTHON ?? 'python3';
           logger.info(`regenerating localized snippets → ${committed}`);
-          execFileSync(python, [script, '--snippets', snippets, '--out', committed], {
-            stdio: 'inherit',
-          });
+          try {
+            execFileSync(python, [script, '--snippets', snippets, '--out', committed], {
+              stdio: 'inherit',
+            });
+          } catch (err) {
+            // ENOENT means the interpreter itself is missing. Any other failure means the
+            // generator ran and failed on its own terms — its traceback is already on stderr
+            // via stdio: 'inherit', so point at that rather than blaming the environment.
+            throw new Error(
+              err.code === 'ENOENT'
+                ? `Could not run "${python}" to regenerate localized snippets. Point LEGESHER_PYTHON ` +
+                    'at a Python 3.10+ interpreter with the pack deps installed ' +
+                    '(pip install -r docs/scripts/requirements.txt), or unset ' +
+                    'LEGESHER_GENERATE_SNIPPETS to copy the committed docs/generated/ artifacts instead.'
+                : 'Snippet regeneration failed — see the generator error above. If it is an import ' +
+                    'error, install docs/scripts/requirements.txt into the interpreter named by ' +
+                    'LEGESHER_PYTHON (Python 3.10+); otherwise unset LEGESHER_GENERATE_SNIPPETS to ' +
+                    'copy the committed docs/generated/ artifacts instead.',
+              { cause: err },
+            );
+          }
         }
 
         if (!existsSync(committed)) {
