@@ -9,6 +9,30 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **docs**: localized documentation site — Spanish (`/es/`) and Arabic (`/ar/`)
+  locales with translated prose, RTL layout for `ar`, and a language picker.
+  Code samples are generated from the language packs at build time via
+  span-driven highlighting, so every snippet shows the reader's own keywords
+  instead of a hand-maintained copy. [CORE-1548, CORE-1549, CORE-1553]
+- **docs**: in-browser Python playground — edit and run localized code from the
+  docs, via a Pyodide web worker with a CodeMirror editor island. [CORE-1551]
+
+### Fixed
+
+- **docs**: the docs site could not deploy. Snippet generation ran inside the
+  Astro build, which needs a Python 3.10+ interpreter with the pack deps that
+  Vercel's Node-only build image does not provide, so production stayed frozen
+  on the pre-localization deploy with `/es/` and `/ar/` returning 404. The
+  generated artifacts are now committed under `docs/generated/` and copied in by
+  a pure-Node integration; the Python generator runs only on demand via
+  `pnpm generate:snippets`, and reports an actionable error naming
+  `LEGESHER_PYTHON` and `docs/scripts/requirements.txt` when the interpreter it
+  needs is missing. All generator file I/O is explicitly utf-8, so non-ASCII
+  pack values no longer depend on the build machine's locale.
+  [CORE-1574, CORE-1577]
+
 ## [0.22.0] - 2026-07-15
 
 ## [0.21.3] - 2026-07-12
