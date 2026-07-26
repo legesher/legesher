@@ -9,8 +9,15 @@ authors = [
 license = {text = "Apache-2.0"}
 requires-python = ">=3.10,<4.0"
 dependencies = [
-    "legesher>=0.1.0,<0.2.0",
-    "legesher-core>=0.1.0,<0.2.0",
+    # Sibling packages are version-bumped together by semantic-release
+    # (see root pyproject.toml `version_toml`), which this package does not
+    # participate in. `major_on_zero = true` means a breaking change bumps
+    # 0.x to 1.0, so `<1.0.0` is the compatibility boundary and minor bumps
+    # resolve without touching this file. The `[tool.uv.sources]` workspace
+    # override below is what applies in-repo; these ranges are what ship in
+    # the wheel metadata and govern any out-of-workspace install.
+    "legesher>=0.22.0,<1.0.0",
+    "legesher-core>=0.22.0,<1.0.0",
 ]
 name = "legesher-vs-code"
 version = "0.1.0"
@@ -34,7 +41,6 @@ classifiers = [
 [tool.uv.sources]
 legesher = { workspace = true }
 legesher-core = { workspace = true }
-legesher-i18n = { workspace = true }
 
 [tool.semantic_release]
 version_variable = "legesher-vs-code/__init__.py:__version__"
