@@ -11,6 +11,65 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: concept-centric v2 translations schema. The unit of translation
+  becomes a concept rather than a spelling in one language, so a new
+  programming language maps its words onto existing concepts and inherits every
+  reviewed translation across all 56 locales instead of re-running translation
+  and review from scratch. `db/schema_v2.sql` / `schema_v2.py` add a corpus
+  layer — every term a native speaker offers, one row per endorsement, counts
+  derived — held structurally apart from the canon, which may only ratify an
+  option the corpus already carries. Identity is content-addressed rather than
+  autoincrement: `option_uid` is a truncated SHA-256 over concept, locale, PL
+  scope, and the NFC surface form, so rebuilding the database from files cannot
+  re-key the endorsements a speaker attached to a published dataset.
+  `contributor_id` is `c_` + HMAC-SHA256(salt, GitHub username); the username
+  lives only in the never-exported `contributor_identities` table, and
+  `--publish` refuses a missing, short, or dev salt before it builds anything.
+  `connect()` enables `PRAGMA foreign_keys` and `PRAGMA recursive_triggers`,
+  the latter being what stops `INSERT OR REPLACE` slipping past the
+  append-only triggers. `scripts/migrate_to_v2.py` reads v1 read-only: 16,710
+  translations become 11,335 options plus 16,710 provenance rows, with
+  `translations.db` unchanged (MD5 verified). [CORE-1501]
+- **i18n**: HF corpus exporter. `scripts/export_corpus.py` renders a v2
+  database into the five Parquet configs of the `legesher/translations`
+  dataset — `concepts`, `terms`, `options`, `endorsements`, `contributors` —
+  plus a dataset card and a `reconciliation.json` ledger. It reads the corpus
+  layer only: `canon_selections` and `contributor_identities` are excluded
+  structurally, with a `NEVER_EXPORT` gate asserted against every config's SQL
+  and a post-write audit that reopens each Parquet file and unlinks it if a
+  `source_detail`, `source_key`, `display_name`, or `comment` column shipped.
+  `options` carries its validation findings as columns, turning the audit into
+  per-row review data. Arrow schemas are pinned per config so an all-NULL
+  column cannot export as type `null` and change type on a later revision.
+  Endorsement counts stay derived, never stored, and the ledger cross-checks
+  per-config row counts against the `endorsement_counts` view, exiting nonzero
+  on mismatch. Nothing is pushed here or in CI: `--push` requires both
+  `--governance-signoff CORE-1502` and `LEGESHER_HF_PUSH_APPROVED=1`, and
+  creates the repo with `private=True`, never flipping visibility. [CORE-1505]
+- **i18n**: JavaScript/JEJ term-context corpus — one Tier-1 translation brief
+  per term of the JEJ teaching surface at `context/javascript/`, mirroring the
+  existing `context/python/` corpus: 60 briefs (16 keywords, 16 builtins, 28
+  members, matching the upstream courseware surface at `0fca239`), plus
+  `index.json` and a corpus README. Each brief records the uniqueness rule that
+  governs its term — standalone for the 32 keywords and builtins, qualified for
+  the 28 members — and every member brief carries the term's full receiver set
+  with an AST-decided definition (non-computed `MemberExpression.property`, not
+  dot-adjacency), so a chosen word survives String→Array widening. `toString`
+  and `valueOf` are pre-flagged for native review (English hides the
+  radix-conversion vs date-text gap); `log` and `of` are deliberately absent,
+  held pending the partner decision. [CORE-1370]
+- **i18n**: JEJ message-template seed and append-once seeder — the v2
+  `message_templates` / `message_translations` tables shipped empty, and this
+  is their fill path. `db/seeds/v8_jej_messages.json` carries a 35-template JEJ
+  learner-facing catalog across 10 consistency clusters, with generic
+  `jej.<id>` keys (English is never the key), the DDL's full identity tuple,
+  declared placeholder contracts, and draft Arabic entering at
+  `status='machine'` pending native review. `scripts/seed_message_templates.py`
+  validates before any write — placeholder parity on every surface, zero stored
+  bidi controls (isolation is render-time), locales must pre-exist rather than
+  being created as a side effect — and refuses to re-seed an existing
+  (`implementation`, `version_added`) set, so a reworded template lands as a new
+  `version_added` instead of invalidating shipped translations. [CORE-1378]
 - **docs**: localized documentation site — Spanish (`/es/`) and Arabic (`/ar/`)
   locales with translated prose, RTL layout for `ar`, and a language picker.
   Code samples are generated from the language packs at build time via
@@ -19,8 +78,111 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **docs**: in-browser Python playground — edit and run localized code from the
   docs, via a Pyodide web worker with a CodeMirror editor island. [CORE-1551]
 
+### Changed
+
+- **i18n**: every `languages.bcp47` row now carries a registry-canonical tag.
+  The reviewed backfill is applied — three corrections (`sr` → `sr-Cyrl`,
+  `uz` → `uz-Latn`, `mn` → `mn-Cyrl`, each matching the script the pack
+  actually uses) and five NULL-fills (`ne`, `sw`, `uk`, `xh` bare tags,
+  `tl` → `fil`) — leaving zero NULLs across the 56 rows. It lands before the
+  publish-grade corpus build because the v2 migration derives each option's
+  locale from this column, so a wrong tag would freeze into the published
+  dataset. Applied by `scripts/apply_bcp47_backfill.py`: dry-run unless
+  `--apply`, re-validates every TSV tag against the vendored IANA registry,
+  refuses `needs_review=yes` rows, writes in one transaction, and audits the DB
+  against the TSV afterwards; a full `.dump` diff confirms exactly 8 `bcp47`
+  cells changed and nothing else. `languages.json` and the VS Code
+  `languages.ts` are regenerated, the `mn`/`sr`/`uz` pack `REFERENCE.md`
+  language tables are corrected to match, and new `TestBackfillApplied` guards
+  pin DB against TSV and every pack's "BCP 47 Tag" row against the DB column.
+  The language key (`code`) is unchanged. [CORE-1512]
+- **i18n**: the pack audit gates are target-aware. `audit_packs.py` and
+  `audit_collisions.py` take a `--target` flag (`python`/`javascript`, default
+  `python`) and no longer hard-code `language-packs/python` — packs root,
+  discovery glob, and package-dir name all follow the target. The two
+  Python-only checks are switched off for other targets: the cross-partition
+  collision pass (CPython's `tokenize` dispatches flat, so a value shared across
+  partitions round-trips to the wrong token) and the CPython-XID
+  `check_min_interpreter_identifier`. `validate_pack_strict` takes neutral
+  `run_min_interpreter` / `run_cross_section` toggles and never branches on the
+  target itself — the caller supplies them. Intra-partition reversibility still
+  runs for every target, and the Python audit is unchanged (255 packs, 0 errors;
+  51 packs, 0 collisions). Keyword and identifier profiles stay Python-shaped
+  until CORE-1503. [CORE-1372]
+- **i18n**: the Sinhala packs are re-tiered so `si` runs on Python 3.10–3.12.
+  Sinhala conjuncts are written `consonant + virama + ZWJ (U+200D) +
+  consonant`, and ZWJ is a valid identifier character only on CPython 3.13+
+  (Unicode 15.1) — on 3.10–3.12 it is a hard `SyntaxError` at parse time, which
+  held `si` at a 3.13 floor. The base `3.10.yml` now carries the 17 affected
+  values as a no-ZWJ variant (non-conjunct spelling) with its floor back at
+  3.10, `3.11.yml` / `3.12.yml` likewise, and the `3.13.yml` overlay restores
+  the ZWJ conjunct spellings at the 3.13 floor. `translations.db` keeps the
+  canonical conjunct forms; the lower-tier variant is a pack-layer
+  compatibility downgrade that renders the virama visibly instead of the fused
+  ligature, and stays pending Sinhala native review. A new general guard test
+  rejects any pack value carrying a 3.13-only identifier character below its
+  declared floor. [CORE-1521]
+
 ### Fixed
 
+- **i18n**: the v2 canon gate was wrong in both directions — it refused 25
+  legitimate Thai SARA-AM selections and every locale's `except*`, while
+  passing 12 of 15 mixed-script confusables. Three corrections in
+  `schema_v2.sql` and `migrate_to_v2.py`: `option_validations` now records a
+  `nfkc_delta_class` fact (`sara-am-only` when the only NFKC-unstable character
+  is U+0E33, which CPython itself normalizes per PEP 3131; `other` stays a hard
+  block); identifier validation is term-aware, so `except*` validates its stem
+  and requires the mirrored `*`, with no blanket `*` allowance elsewhere; and
+  script consistency is a real per-character check against the shared
+  `script_policy` allowlist instead of a `len(scripts) <= 1` heuristic, so the
+  pack audit and the canon gate agree on what "foreign script" means.
+  Re-running the migration lifts the 25 SARA-AM selections and `am except*`
+  into canon and newly refuses 46 cross-script values that had already shipped
+  — real corruptions, untranslated English, and loanwords (canon refusals
+  26 → 49, selections 5,110 → 5,087); the validator version bumps
+  `py-identifier-v1` → `py-identifier-v2`. [CORE-1514]
+- **i18n**: all 609 pack-audit findings across 23 languages (166 distinct once
+  collapsed across version packs) are corrected at the generation layer, and the
+  pack-audit gate flips from report-mode to blocking. 87 target-script
+  corrections land surgically in `translations.db` and in the pack YAMLs in
+  lockstep — no regeneration, which stays unsafe until CORE-1400 — replacing
+  corruptions (`pl bool` `布尔` → `logiczny`), untranslated English
+  (`de ValueError` → `Wertfehler`), and embedded-Latin renderings (`th for`
+  `เทคนิคfor` → `วนรอบ`); the old values stay as non-selected corpus options.
+  Two systemic fixes clear the rest: `except*` carries its mirrored `*` in 14
+  locales, resolving every `except`/`except*` duplicate-target and collision,
+  and the Sinhala packs declare `python_version_min: '3.13'`, clearing all 51
+  min-interpreter findings — a floor `LanguagePackLoader.load()` now enforces
+  with `UnsupportedInterpreterError` rather than serving a pack the running
+  interpreter cannot parse. `check_normalization` accepts the same
+  `sara-am-only` NFKC class as the canon gate, a new `check_term_length` rule
+  warns on sentence-length values (≥40 code points), and `audit_packs.py`
+  separates blocking errors from advisory warnings, so `validate-packs.yml`
+  drops `continue-on-error` and fails CI on errors only. The canon gate now
+  refuses 0 selections (was 49); 22 `REFERENCE.md` files regenerated.
+  [CORE-1318, CORE-1517]
+- **core**: `import legesher_core` required the `tree_sitter` /
+  `tree_sitter_python` C extensions. `legesher_core/__init__.py` re-exported
+  `LLMTranslator` and `TreeSitterTranslator` eagerly, so the pure-stdlib
+  `TokenTranslator` path could not import at all in environments without the
+  extensions (minimal installs, browser Python runtimes). Those two exports, and
+  the five parser-backed exports in `legesher_core.tree_sitter`, now resolve
+  lazily through module-level `__getattr__` (PEP 562); `__all__` and `dir()` are
+  unchanged, and the pure components (`IdentifierMap`, `IdentifierValidator`,
+  `TranslationLogger`) stay eager. The tree-sitter dependencies move to an
+  optional `treesitter` extra: accessing a guarded export or calling
+  `create_translator(..., use_tree_sitter=True)` without it raises an
+  `ImportError` naming `pip install legesher-core[treesitter]`, and only
+  ImportErrors whose root cause is `tree_sitter` / `tree_sitter_python` are
+  re-labelled. The monorepo root and the `legesher` CLI depend on
+  `legesher-core[treesitter]`, so CI and dev environments keep the backend under
+  a plain `uv sync`. [CORE-1555]
+- **legesher-vscode**: RTL code panes used the pre-Unicode-6.3
+  `unicode-bidi: embed`. `.pane.rtl pre` / `.pane.rtl code` in the webview
+  stylesheet now use `unicode-bidi: isolate`, which prevents bidi from bleeding
+  across the pane boundary. Container direction only — the per-placeholder
+  message isolation governed by the bidi display-prose policy is unchanged.
+  [CORE-1537]
 - **docs**: the docs site could not deploy. Snippet generation ran inside the
   Astro build, which needs a Python 3.10+ interpreter with the pack deps that
   Vercel's Node-only build image does not provide, so production stayed frozen
@@ -32,6 +194,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   needs is missing. All generator file I/O is explicitly utf-8, so non-ASCII
   pack values no longer depend on the build machine's locale.
   [CORE-1574, CORE-1577]
+
+### Security
+
+- **core**: an interior U+FEFF slipped through the git clean filter into
+  canonical storage. `scan_text` short-circuited every U+FEFF to the advisory
+  `bom` kind, but the filter blocks only `bidi` / `invisible` / `tatweel` — and
+  because a leading BOM is stripped before the scan, any U+FEFF still present at
+  scan time is an interior zero-width invisible (category `Cf`) that desyncs
+  offsets and can smuggle a hidden identifier distinction. The short-circuit is
+  now gated on `offset == 0`: a leading BOM stays advisory, an interior U+FEFF
+  is reported as a blocking `invisible` and honors the per-call allowlist for
+  parity with the general `Cf` branch, so the clean filter rejects the input
+  (exit 1, nothing written). [CORE-1557]
 
 ## [0.22.0] - 2026-07-15
 
