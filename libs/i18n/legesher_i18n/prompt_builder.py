@@ -1,9 +1,12 @@
 """Prompt builder for LLM-powered translation.
 
 Composes provider-agnostic ``(system_prompt, user_prompt)`` tuples for
-translating Python identifiers and text elements into target natural
-languages.  The system prompt is static per language (cacheable), while
-the user prompt changes per call.
+translating source-code identifiers and text elements into target natural
+languages. The programming-language target seasons the prompts through its
+spec profile (``target=`` parameter, CORE-1608); the default ``"python"``
+keeps the historical wording byte-for-byte. The system prompt is static per
+(language, target) pair and suitable for caching, while the user prompt
+changes per call.
 
 Usage
 -----
@@ -27,6 +30,7 @@ from pathlib import Path
 from typing import Any
 
 from legesher_i18n.style_guides import StyleGuideLoader
+from legesher_i18n.target_profiles import TargetProfileLoader
 
 logger = logging.getLogger(__name__)
 
@@ -220,8 +224,6 @@ _CRITICAL_RULES: list[str] = [
         "per call) is unaffected -- this rule applies to each individual "
         "translation value inside that structure."
     ),
-    "All translations MUST be valid Python identifiers -- no spaces, no punctuation.",
-    "snake_case identifiers stay snake_case, PascalCase stays PascalCase.",
     "Maintain consistent verb/noun choices across similar names.",
     "Translate the CONCEPT, not the English word -- do NOT transliterate.",
     (
@@ -237,6 +239,19 @@ _CRITICAL_RULES: list[str] = [
         "Keep them concise."
     ),
 ]
+
+# Target-conditioned rules (CORE-1608): these two carry the target
+# programming language's identifier grammar and casing conventions, so a
+# target profile's ``prompt_rules`` may override them. The defaults reproduce
+# the historical Python wording byte-for-byte; ``_build_critical_rules_section``
+# splices them between the response-format rules and the terminology rules,
+# where they have always appeared.
+_DEFAULT_IDENTIFIER_RULE = (
+    "All translations MUST be valid Python identifiers -- no spaces, no punctuation."
+)
+_DEFAULT_CASING_RULE = (
+    "snake_case identifiers stay snake_case, PascalCase stays PascalCase."
+)
 
 
 # ---------------------------------------------------------------------------
@@ -273,6 +288,8 @@ class PromptBuilder:
         style_guide_loader: StyleGuideLoader,
         *,
         preserve_module_names: bool = False,
+        target: str = "python",
+        target_profile_loader: TargetProfileLoader | None = None,
     ) -> None:
         """Construct a PromptBuilder.
 
@@ -286,9 +303,26 @@ class PromptBuilder:
                 cases where translated code must run against a real
                 Python interpreter and imports have to resolve.
                 CORE-950.
+            target: Programming-language target whose spec profile + guide
+                season the prompts (``spec/targets/{target}/``). A target
+                with no spec directory (today: ``"python"``) keeps the
+                historical Python wording byte-for-byte. CORE-1608.
+            target_profile_loader: Override the default
+                ``TargetProfileLoader`` (tests point it at fixture
+                directories).
         """
         self._loader = style_guide_loader
         self._preserve_module_names = preserve_module_names
+        self._target = target
+        spec = (target_profile_loader or TargetProfileLoader()).load(target)
+        profile = spec.get("profile", {})
+        prompt_rules = profile.get("prompt_rules", {})
+        self._target_display_name = profile.get("display_name", "Python")
+        self._identifier_rule = prompt_rules.get(
+            "identifier_rule", _DEFAULT_IDENTIFIER_RULE
+        )
+        self._casing_rule = prompt_rules.get("casing_rule", _DEFAULT_CASING_RULE)
+        self._target_guide = spec.get("guide", "")
 
     # ------------------------------------------------------------------
     # Public API
@@ -397,14 +431,18 @@ class PromptBuilder:
         Sections:
         1. Language framing (persona + precedent)
         2. Style guide rules
-        3. Critical rules
+        3. Target guide (only when the target ships one — CORE-1608)
+        4. Critical rules
         """
         lang_name = self._resolve_language_name(target_lang)
         sections: list[str] = [
             self._build_framing(target_lang, lang_name),
             self._build_style_guide_section(target_lang),
-            self._build_critical_rules_section(target_lang),
         ]
+        target_section = self._build_target_guide_section()
+        if target_section:
+            sections.append(target_section)
+        sections.append(self._build_critical_rules_section(target_lang))
         return "\n\n".join(sections)
 
     def _build_framing(self, target_lang: str, lang_name: str) -> str:
@@ -420,7 +458,8 @@ class PromptBuilder:
 
         return (
             f"IMAGINE: You are a computer science professor designing "
-            f"Python code in {lang_name} for students who think and learn "
+            f"{self._target_display_name} code in {lang_name} for students "
+            f"who think and learn "
             f"in {lang_name}. These students should be able to read code "
             f"as naturally as reading a {lang_name} textbook. Every "
             f"identifier should feel like it belongs in their language "
@@ -472,6 +511,18 @@ class PromptBuilder:
 
         return "\n\n".join(parts)
 
+    def _build_target_guide_section(self) -> str:
+        """Render the target's GUIDE.md as the Target Guide section.
+
+        Empty when the target ships no guide (today: ``python``), so the
+        system prompt stays byte-identical to the pre-target-aware output.
+        CORE-1608.
+        """
+        guide = self._target_guide.strip()
+        if not guide:
+            return ""
+        return f"## Target Guide ({self._target_display_name})\n\n{guide}"
+
     def _build_critical_rules_section(self, target_lang: str) -> str:
         """Format the critical rules that always apply.
 
@@ -480,8 +531,17 @@ class PromptBuilder:
         opt in. The base set defined in ``_CRITICAL_RULES`` is always
         emitted; conditional rules are appended after it.
         """
+        # Splice order matches the historical list: the two response-format
+        # rules, then the target-conditioned identifier/casing rules
+        # (CORE-1608), then the terminology rules.
+        rules = [
+            *_CRITICAL_RULES[:2],
+            self._identifier_rule,
+            self._casing_rule,
+            *_CRITICAL_RULES[2:],
+        ]
         lines = ["## Critical Rules"]
-        for rule in _CRITICAL_RULES:
+        for rule in rules:
             lines.append(f"- {rule}")
 
         # CORE-950: override the base "PascalCase stays PascalCase" rule
@@ -652,7 +712,11 @@ class PromptBuilder:
 
         # Reserved values the LLM must avoid (CORE-710 / CORE-950).
         if forbidden_values:
-            parts.append(self._format_forbidden_values_section(forbidden_values))
+            parts.append(
+                self._format_forbidden_values_section(
+                    forbidden_values, self._target_display_name
+                )
+            )
             parts.append("")
 
         # Few-shot examples (CORE-950).
@@ -661,7 +725,10 @@ class PromptBuilder:
             parts.append("")
 
         # Identifiers to translate
-        parts.append(f"Translate the following Python identifiers into {lang_name}.")
+        parts.append(
+            f"Translate the following {self._target_display_name} "
+            f"identifiers into {lang_name}."
+        )
         parts.append("")
 
         parts.append("| # | Identifier | Role |")
@@ -835,7 +902,9 @@ class PromptBuilder:
         return "\n".join(lines)
 
     @staticmethod
-    def _format_forbidden_values_section(forbidden_values: list[str]) -> str:
+    def _format_forbidden_values_section(
+        forbidden_values: list[str], display_name: str = "Python"
+    ) -> str:
         """Render the reserved-values block for an identifier prompt.
 
         Deduplicates while preserving first-seen order so the output reads
@@ -864,8 +933,9 @@ class PromptBuilder:
             "### Reserved Translation Values (Do Not Use)",
             "",
             (
-                "These values are already used for Python keywords, builtins, "
-                "exceptions, or reserved conventions like `self`/`cls` in the "
+                f"These values are already used for {display_name} keywords, "
+                "builtins, exceptions, or reserved conventions like "
+                "`self`/`cls` in the "
                 "target language pack. Do NOT propose any of these as the "
                 "translation for an identifier — they would silently break "
                 "round-trip translation."

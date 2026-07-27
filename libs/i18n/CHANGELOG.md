@@ -11,6 +11,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **JavaScript target profile + GUIDE wired into the PromptBuilder
+  (CORE-1608).** The JS-critical slice of the CORE-1503 target-profile
+  system. `spec/targets/javascript/profile.json` carries the machine-readable
+  target facts — version grammar `^es\d{4}$`, the keywords/builtins/members
+  partitions, identifier grammar including Arabic script, contextual
+  keywords — with the prompt-consumed rule strings under `prompt_rules`;
+  `GUIDE.md` carries the prose the rules can't (members are property names,
+  camelCase preservation, `$`/`_` handling, the bare-form Arabic convention)
+  and renders into the system prompt as a "Target Guide" section between the
+  style guide and the critical rules. The new `TargetProfileLoader` mirrors
+  `StyleGuideLoader`'s directory convention and fails loud on an unreadable
+  profile; `PromptBuilder(target=...)` performs pure data substitution, with
+  the python default pinned byte-identical by test and verified old-vs-new
+  at 154/154 prompt pairs across all 51 languages.
 - **JEJ message-template seed + append-once seeder (CORE-1378).** The v2
   message tables shipped deliberately empty; this is the designed fill path.
   `legesher_i18n/db/seeds/v8_jej_messages.json` carries the 35-template JEJ

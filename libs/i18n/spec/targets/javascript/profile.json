@@ -1,0 +1,12 @@
+{
+  "target": "javascript",
+  "display_name": "JavaScript",
+  "version_token_pattern": "^es\\d{4}$",
+  "partitions": ["keywords", "builtins", "members"],
+  "identifier_grammar": "ES2015 IdentifierName: ID_Start plus '$' and '_' to start, ID_Continue plus '$' thereafter. Arabic-script letters are valid identifier characters (CORE-1384).",
+  "contextual_keywords": ["of", "async", "get", "set"],
+  "prompt_rules": {
+    "identifier_rule": "All translations MUST be valid JavaScript identifiers -- no spaces, no punctuation. `_` is the only joining symbol; never use `$` in a translation.",
+    "casing_rule": "camelCase identifiers stay camelCase, PascalCase stays PascalCase."
+  }
+}

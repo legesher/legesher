@@ -11,6 +11,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: generation prompts are target-aware. `spec/targets/javascript/`
+  ships the first per-programming-language profile — `profile.json` (version
+  grammar `^es\d{4}$`, the keywords/builtins/members partitions, identifier
+  grammar including Arabic script, contextual keywords) plus a `GUIDE.md`
+  rendered into prompts as a "Target Guide" section — loaded by the new
+  `TargetProfileLoader` and consumed by `PromptBuilder` through an optional
+  `target=` parameter. Substitution is pure data (display name, identifier
+  rule, casing rule); no `if target ==` branch exists anywhere, and a target
+  without a spec directory keeps the historical wording byte-for-byte —
+  verified empirically at 154/154 prompt pairs across all 51 languages for
+  the default python target. Unblocks Arabic JavaScript pack generation from
+  inheriting Python-flavoured guidance (snake_case instincts, Python's
+  exception taxonomy, no notion of members). [CORE-1608]
 - **i18n**: concept-centric v2 translations schema. The unit of translation
   becomes a concept rather than a spelling in one language, so a new
   programming language maps its words onto existing concepts and inherits every
