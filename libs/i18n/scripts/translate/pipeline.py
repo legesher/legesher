@@ -81,11 +81,17 @@ class PipelineConfig:
         standards_file: Path to linguistic standards file
         output_db: Path to output SQLite database
         skip_existing: If True, skip terms that already have translations
+        target: Programming-language target (CORE-1371). ``"python"`` keeps
+            the historical behavior exactly (term_classifier inventory,
+            python term rows). Any other target sources its inventory from
+            the DB ``terms`` table (seeded, e.g. ``scripts/seed_js_terms.py``)
+            and seasons prompts via the target's spec profile (CORE-1608).
     """
 
     models: list[str] = None  # ['claude', 'aya']
     languages: list[str] = None  # ['es', 'ar', 'fr', ...]
     terms: list[str] | None = None  # If None, use all from manifest
+    target: str = "python"  # Programming-language target (CORE-1371)
     dry_run: bool = False
     max_budget: float = 100.0  # Stop at $100 (safety margin)
     context_dir: Path | None = None
@@ -290,7 +296,9 @@ class TranslationPipeline:
         # Initialize models
         self.models: dict[str, TranslationModel] = {}
         if "claude" in config.models:
-            self.models["claude"] = ClaudeModel(dry_run=config.dry_run)
+            self.models["claude"] = ClaudeModel(
+                dry_run=config.dry_run, target=config.target
+            )
         if "aya" in config.models:
             self.models["aya"] = AyaModel(dry_run=config.dry_run)
         if "aya101-hf" in config.models:
@@ -420,10 +428,14 @@ class TranslationPipeline:
 
             for term in terms:
                 # CORE-1400: the slot a term lives in does not vary by
-                # language or model, so resolve it once per term.
+                # language or model, so resolve it once per term. Python-only:
+                # the resolver rides classify_term and python rows. Non-python
+                # targets carry exactly one seeded row per term (the seeder
+                # enforces it), so the uncategorised read already lands on the
+                # row the write uses (CORE-1371).
                 read_category = (
                     resolve_read_category(self.db, term)
-                    if self.config.skip_existing
+                    if self.config.skip_existing and self.config.target == "python"
                     else None
                 )
 
@@ -438,7 +450,12 @@ class TranslationPipeline:
                             self.stats.finish()
                             return self.stats
 
-                        # Check if translation already exists (skip_existing)
+                        # Check if translation already exists (skip_existing).
+                        # Scoped to the run's target (CORE-1371): without it,
+                        # a javascript run would skip every keyword whose
+                        # spelling Python shares (in/for/if/while/break/
+                        # continue/return) because their PYTHON translations
+                        # exist.
                         if self.config.skip_existing:
                             # CORE-1400: read the same slot _translate_one
                             # writes to. 'type' holds two term rows (the
@@ -450,6 +467,7 @@ class TranslationPipeline:
                             existing = self.db.get_translations_for_term(
                                 term_name=term,
                                 language_code=language,
+                                programming_language=self.config.target,
                                 category=read_category,
                             )
                             # Filter to check if this specific model already contributed
@@ -545,12 +563,24 @@ class TranslationPipeline:
         if not self.config.dry_run:
             try:
                 # Get or create the term in the terms table
-                term_type = classify_term(term, python_version="3.13")
-                term_id = self.db.get_or_create_term(
-                    name=term,
-                    programming_language="python",
-                    category=term_type,
-                )
+                if self.config.target == "python":
+                    term_type = classify_term(term, python_version="3.13")
+                    term_id = self.db.get_or_create_term(
+                        name=term,
+                        programming_language="python",
+                        category=term_type,
+                    )
+                else:
+                    # Non-python targets: the seeded row carries the
+                    # category, so generation never guesses one. Fail loud
+                    # rather than invent a term row (CORE-1371).
+                    existing = self.db.get_term_by_name(term, self.config.target)
+                    if existing is None:
+                        raise ValueError(
+                            f"term '{term}' is not seeded for target "
+                            f"'{self.config.target}' — run the target's seeder first"
+                        )
+                    term_id = existing["id"]
 
                 translation_id = self.db.add_translation(
                     term_id=term_id,
@@ -590,6 +620,24 @@ class TranslationPipeline:
         if self.config.terms is not None:
             # Use provided list
             return self.config.terms
+
+        if self.config.target != "python":
+            # Non-python targets are DB-inventoried (CORE-1371): the seeded
+            # terms table is the target-neutral source of truth, categories
+            # included. term_classifier below is the python-profile legacy
+            # path; migrating python onto the same road rides CORE-1503.
+            rows = self.db.get_terms(programming_language=self.config.target)
+            terms = [row["name"] for row in rows]
+            if not terms:
+                raise ValueError(
+                    f"No terms seeded for target '{self.config.target}' — "
+                    "run scripts/seed_js_terms.py (or the target's seeder) first"
+                )
+            logger.info(
+                f"Loaded {len(terms)} terms from the DB inventory "
+                f"(target={self.config.target})"
+            )
+            return terms
 
         # Get all terms from term_classifier (source of truth)
         # This includes keywords, builtins, exceptions, etc.

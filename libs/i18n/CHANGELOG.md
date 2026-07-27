@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Target-aware pipeline + JavaScript term seeding (CORE-1371 prep).**
+  `scripts/seed_js_terms.py` seeds the 62-term JEJ inventory from
+  `context/javascript/index.json` into the `terms` table with target-neutral
+  categories (`keyword`/`builtin`/`member` — added to `TermCategory` and
+  `TERM_TYPE_YAML_SECTIONS`, where `member` maps to the CORE-1582 `members`
+  section). Split validated (17/16/29) before any write; re-seeding refused;
+  `--dry-run` supported; python rows untouched. `PipelineConfig.target` +
+  `run_pipeline.py --target`: non-python targets source their inventory from
+  the seeded DB and fail loud when unseeded, `ClaudeModel` threads the
+  target into the `PromptBuilder` (Target Guide + JS rules reach generation
+  prompts), and the DB write uses the seeded row's category instead of the
+  python classifier. Python behavior byte-unchanged.
 - **`members` partition in the MLCP pack schema (CORE-1582).** First-class
   extended-optional field for member/property-name translations — labels
   bounded by their receiver, for member-bearing targets such as JavaScript.

@@ -383,7 +383,8 @@ class TranslationDatabase:
             raise ValueError(
                 f"Unknown term category: {category!r}. Must be one of "
                 f"keyword, builtin_func, builtin_type, exception, "
-                f"special_constant, reserved_word, helper, unknown."
+                f"special_constant, reserved_word, helper, unknown, "
+                f"builtin, member."
             )
 
         candidates = self._get_terms_by_name(name, programming_language)

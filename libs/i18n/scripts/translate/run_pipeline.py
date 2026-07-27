@@ -55,6 +55,16 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--target",
+        type=str,
+        default="python",
+        help="Programming-language target (CORE-1371). 'python' keeps the "
+        "historical behavior exactly; other targets (e.g. 'javascript') "
+        "source their term inventory from the seeded DB terms table and "
+        "season prompts via the target's spec profile (CORE-1608).",
+    )
+
+    parser.add_argument(
         "--hf-profile",
         type=str,
         default=None,
@@ -144,6 +154,7 @@ async def main_async(args):
         models=args.models,
         languages=args.languages,
         terms=args.terms,
+        target=args.target,
         dry_run=args.dry_run,
         max_budget=args.max_budget,
         context_dir=args.context_dir,

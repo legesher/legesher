@@ -40,6 +40,7 @@ class ClaudeModel(TranslationModel):
         dry_run: bool = False,
         max_retries: int = 3,
         retry_delay: float = 1.0,
+        target: str = "python",
     ):
         """Initialize Claude model.
 
@@ -50,6 +51,9 @@ class ClaudeModel(TranslationModel):
             dry_run: If True, don't make real API calls (for testing)
             max_retries: Maximum number of retry attempts on failure
             retry_delay: Initial delay in seconds before first retry (exponential backoff)
+            target: Programming-language target whose spec profile seasons
+                the prompts (CORE-1608/CORE-1371); ``"python"`` keeps the
+                historical wording byte-for-byte.
         """
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
         self.model = model
@@ -57,6 +61,7 @@ class ClaudeModel(TranslationModel):
         self.dry_run = dry_run
         self.max_retries = max_retries
         self.retry_delay = retry_delay
+        self.target = target
 
         if not self.dry_run and not self.api_key:
             raise ValueError(
@@ -72,7 +77,7 @@ class ClaudeModel(TranslationModel):
             from legesher_i18n.prompt_builder import PromptBuilder
 
             loader = StyleGuideLoader()
-            self._prompt_builder = PromptBuilder(loader)
+            self._prompt_builder = PromptBuilder(loader, target=self.target)
             logger.info("PromptBuilder loaded — style-guide-aware prompts enabled")
         except Exception as exc:
             logger.debug("PromptBuilder not available, using legacy prompts: %s", exc)

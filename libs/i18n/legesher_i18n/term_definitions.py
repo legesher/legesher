@@ -311,6 +311,11 @@ TermCategory = Literal[
     "reserved_word",
     "helper",
     "unknown",
+    # Target-neutral categories for non-python targets (CORE-1371): the JS
+    # inventory does not carry python's func/type split, and `member` maps to
+    # the first-class members partition (CORE-1582).
+    "builtin",
+    "member",
 ]
 
 # Mapping: term_type -> YAML section name
@@ -324,6 +329,9 @@ TERM_TYPE_YAML_SECTIONS: dict[str, str | None] = {
     "reserved_word": "reserved_words",
     "helper": None,  # Excluded from YAML export
     "unknown": None,  # Excluded from YAML export
+    # Target-neutral categories for non-python targets (CORE-1371):
+    "builtin": "builtins",
+    "member": "members",  # First-class members partition (CORE-1582)
     # Future term types (not yet implemented):
     # "dunder_method": "dunder_methods",  # Magic methods: __init__, __str__, __add__, etc.
     # "numeric_literal": "numeric_literals",  # Number prefixes: 0x (hex), 0b (binary), 0o (octal)

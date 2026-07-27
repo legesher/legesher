@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: the translation pipeline is target-aware and the JavaScript
+  inventory is seedable. `scripts/seed_js_terms.py` materializes the 62-term
+  JEJ surface from the context-corpus index into `translations.db`
+  (`programming_language='javascript'`, target-neutral `keyword`/`builtin`/
+  `member` categories; validates the 17/16/29 split before writing, refuses
+  re-seeding, `--dry-run`). `run_pipeline.py --target javascript` sources
+  its inventory from the seeded DB (python keeps the term_classifier path
+  byte-for-byte), threads the target into the PromptBuilder so the
+  CORE-1608 Target Guide fires, and writes term rows only for pre-seeded
+  terms — the pipeline never invents a term for a non-python target.
+  `TERM_TYPE_YAML_SECTIONS` maps the new categories (`member` → the
+  CORE-1582 `members` partition). [CORE-1371]
 - **i18n**: the pack schema gains a first-class `members` partition (MLCP
   extended field) — member/property-name translations, labels bounded by
   their receiver, for member-bearing targets such as JavaScript. Members
