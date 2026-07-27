@@ -1175,6 +1175,206 @@ class TestTermCategoryValidation:
 
 
 @pytest.mark.unit
+class TestAmbiguousTermResolution:
+    """get_or_create_term resolves same-name terms by category (CORE-1400).
+
+    'type' holds two pack slots — the builtin and the 3.12 soft keyword —
+    and the two may carry different translations in a language. Before this
+    fix, category-aware lookup was gated on ``allow_duplicate_name``, so an
+    explicit ``category=`` was ignored and the lowest-id row (the builtin)
+    came back for every caller. Translations for the soft keyword were then
+    filed against the builtin, silently.
+    """
+
+    @pytest.fixture
+    def db(self):
+        """Create temporary database for testing."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db_path = str(Path(tmpdir) / "test_translations.db")
+            db_instance = TranslationDatabase(db_path=db_path)
+            yield db_instance
+            db_instance.close()
+
+    @pytest.fixture
+    def spanish(self, db):
+        """Register 'es' so translation rows satisfy the language FK."""
+        conn = db._get_connection()
+        conn.execute(
+            "INSERT INTO languages (code, name, native_name) VALUES (?, ?, ?)",
+            ("es", "Spanish", "Español"),
+        )
+        conn.commit()
+
+    @pytest.fixture
+    def dual_type(self, db):
+        """The two 'type' rows, as the real database holds them."""
+        builtin_id = db.get_or_create_term("type", "python", "builtin_type")
+        keyword_id = db.get_or_create_term(
+            "type",
+            "python",
+            "keyword",
+            subcategory="soft_keyword",
+            allow_duplicate_name=True,
+        )
+        assert builtin_id != keyword_id
+        return builtin_id, keyword_id
+
+    def test_explicit_category_resolves_duplicated_name(self, db, dual_type):
+        """The bug: category= must select the row, not be ignored."""
+        builtin_id, keyword_id = dual_type
+
+        assert db.get_or_create_term("type", "python", "keyword") == keyword_id
+        assert db.get_or_create_term("type", "python", "builtin_type") == builtin_id
+
+    def test_explicit_category_agrees_with_get_term_by_name(self, db, dual_type):
+        """get_or_create_term and get_term_by_name must not disagree."""
+        for category in ("keyword", "builtin_type"):
+            by_name = db.get_term_by_name("type", "python", category=category)
+            assert by_name is not None
+            assert db.get_or_create_term("type", "python", category) == by_name["id"]
+
+    def test_resolution_does_not_create_a_third_row(self, db, dual_type):
+        """Resolving by category reuses a row; it never inserts one."""
+        db.get_or_create_term("type", "python", "keyword")
+        db.get_or_create_term("type", "python", "builtin_type")
+
+        assert len(db.get_terms(programming_language="python")) == 2
+
+    def test_ambiguous_name_without_category_raises(self, db, dual_type):
+        """Silently returning the first row is the bug class, not a fallback."""
+        with pytest.raises(ValueError, match="ambiguous"):
+            db.get_or_create_term("type", "python")
+
+    def test_ambiguous_error_names_the_candidate_rows(self, db, dual_type):
+        """The error has to tell the caller which categories exist."""
+        builtin_id, keyword_id = dual_type
+
+        with pytest.raises(ValueError) as exc_info:
+            db.get_or_create_term("type", "python")
+
+        msg = str(exc_info.value)
+        assert "builtin_type" in msg
+        assert "keyword" in msg
+        assert str(builtin_id) in msg
+        assert str(keyword_id) in msg
+
+    def test_ambiguous_name_with_category_matching_no_row_raises(self, db, dual_type):
+        """A category matching no row cannot silently fall back to one.
+
+        The category asked for here is one no pack section maps onto
+        'type'. This test used to ask for 'builtin_func' — the literal
+        call ``import_yaml_to_db`` made for every pack's ``builtins.type``
+        slot — and so asserted that dropping 50 shipped pack values was
+        the intended behavior. The importer now resolves a section
+        against ``YAML_SECTION_CATEGORIES`` in order and lands on the
+        ``builtin_type`` row; see
+        ``tests/translate/test_import_yaml_to_db.py``.
+        """
+        with pytest.raises(ValueError, match="ambiguous"):
+            db.get_or_create_term("type", "python", "exception")
+
+    def test_allow_duplicate_name_still_creates_the_second_slot(self, db):
+        """The flag's own behavior is unchanged."""
+        builtin_id = db.get_or_create_term("type", "python", "builtin_type")
+        keyword_id = db.get_or_create_term(
+            "type", "python", "keyword", allow_duplicate_name=True
+        )
+        assert keyword_id != builtin_id
+        # Re-running is idempotent, not a third row.
+        assert (
+            db.get_or_create_term(
+                "type", "python", "keyword", allow_duplicate_name=True
+            )
+            == keyword_id
+        )
+
+    def test_unambiguous_name_unaffected(self, db):
+        """The common case keeps returning the existing row."""
+        term_id = db.get_or_create_term("def", "python", "keyword")
+
+        assert db.get_or_create_term("def", "python", "keyword") == term_id
+        assert db.get_or_create_term("def", "python") == term_id
+
+    def test_unambiguous_name_with_mismatched_category_reuses_row(self, db):
+        """Callers derive categories from lossy sources (YAML sections).
+
+        A single-row name has no wrong row to return, so a mismatch must
+        not raise and must not insert a duplicate.
+        """
+        term_id = db.get_or_create_term("str", "python", "builtin_type")
+
+        assert db.get_or_create_term("str", "python", "builtin_func") == term_id
+        assert len(db.get_terms(programming_language="python")) == 1
+
+    def test_same_name_other_programming_language_is_not_ambiguous(self, db, dual_type):
+        """Ambiguity is scoped to one programming language."""
+        ts_id = db.get_or_create_term("type", "typescript", "keyword")
+
+        assert db.get_or_create_term("type", "typescript") == ts_id
+
+    def test_translations_resolve_per_category(self, db, spanish, dual_type):
+        """End-to-end: the two slots keep separate translation pools."""
+        builtin_id, keyword_id = dual_type
+        db.add_translation(
+            term_id=builtin_id,
+            language_code="es",
+            translation="tipo",
+            source="test",
+        )
+        db.add_translation(
+            term_id=keyword_id,
+            language_code="es",
+            translation="alias",
+            source="test",
+        )
+
+        keyword_hits = db.get_translations_for_term(
+            term_name="type", language_code="es", category="keyword"
+        )
+        builtin_hits = db.get_translations_for_term(
+            term_name="type", language_code="es", category="builtin_type"
+        )
+        assert [t["translation"] for t in keyword_hits] == ["alias"]
+        assert [t["translation"] for t in builtin_hits] == ["tipo"]
+
+    def test_selected_resolves_per_category(self, db, spanish, dual_type):
+        """get_selected_by_name honors the category passthrough."""
+        builtin_id, keyword_id = dual_type
+        db.set_selected(term_id=builtin_id, language_code="es", translation="tipo")
+        db.set_selected(term_id=keyword_id, language_code="es", translation="alias")
+
+        keyword_selected = db.get_selected_by_name(
+            term_name="type", language_code="es", category="keyword"
+        )
+        builtin_selected = db.get_selected_by_name(
+            term_name="type", language_code="es", category="builtin_type"
+        )
+        assert keyword_selected is not None
+        assert builtin_selected is not None
+        assert keyword_selected["translation"] == "alias"
+        assert builtin_selected["translation"] == "tipo"
+
+    def test_convenience_lookups_without_category_unchanged(self, db, spanish):
+        """Omitting category keeps the documented lowest-id behavior."""
+        term_id = db.get_or_create_term("while", "python", "keyword")
+        db.add_translation(
+            term_id=term_id,
+            language_code="es",
+            translation="mientras",
+            source="test",
+        )
+        db.set_selected(term_id=term_id, language_code="es", translation="mientras")
+
+        translations = db.get_translations_for_term(
+            term_name="while", language_code="es"
+        )
+        selected = db.get_selected_by_name(term_name="while", language_code="es")
+        assert [t["translation"] for t in translations] == ["mientras"]
+        assert selected is not None
+        assert selected["translation"] == "mientras"
+
+
+@pytest.mark.unit
 class TestDefaultDbPath:
     """CORE-601: default db_path resolution must never target site-packages."""
 

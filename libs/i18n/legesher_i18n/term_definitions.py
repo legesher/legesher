@@ -95,6 +95,11 @@ BUILTIN_FUNCTIONS = [
     "dir",
     "divmod",
     "enumerate",
+    # CORE-1400: __import__ is a deliberately-tracked dunder builtin —
+    # every shipped pack carries a builtins.__import__ slot (e.g. ar
+    # '__استيراد__'). The stdlib-baseline guard's dir(builtins) scan
+    # filters dunders, so it allowlists this name explicitly.
+    "__import__",
     "eval",
     "exec",
     "filter",
@@ -153,7 +158,12 @@ BUILTIN_TYPES = [
     "str",
     "super",
     "tuple",
-    # Note: 'type' moves to KEYWORDS_3_12 in Python 3.12+
+    # CORE-1400: 'type' is BOTH the type() builtin (all versions, this
+    # slot) AND the PEP 695 soft keyword (KEYWORDS_3_12). The two are
+    # separate pack slots — 22 languages ship different translations for
+    # them — and separate term rows in translations.db
+    # (UNIQUE(name, programming_language, category)).
+    "type",
 ]
 
 # All Python Built-in Exceptions (Python 3.13)
@@ -320,6 +330,20 @@ TERM_TYPE_YAML_SECTIONS: dict[str, str | None] = {
     # "string_prefix": "string_prefixes",  # String prefixes: f, r, b, fr, etc.
     # "decorator": "decorators",  # Common decorators: @property, @staticmethod, @classmethod
     # "protocol": "protocols",  # Protocol/ABC methods: __iter__, __next__, __enter__, __exit__
+}
+
+# Mapping: YAML section name -> acceptable term categories, in resolution
+# order. The inverse of ``TERM_TYPE_YAML_SECTIONS``, which is many-to-one:
+# ``builtins`` holds three categories, so anything reading a pack back into
+# the database must try each in order instead of assuming the first.
+# CORE-1400: assuming ``builtin_func`` for the whole ``builtins`` section
+# made ``builtins.type`` match neither stored ``type`` row (``builtin_type``
+# and ``keyword``), so the slot raised and was silently dropped.
+YAML_SECTION_CATEGORIES: dict[str, list[str]] = {
+    "keywords": ["keyword"],
+    "builtins": ["builtin_func", "builtin_type", "special_constant"],
+    "exceptions": ["exception"],
+    "reserved_words": ["reserved_word"],
 }
 
 
@@ -532,6 +556,7 @@ __all__ = [
     # Type system
     "TermCategory",
     "TERM_TYPE_YAML_SECTIONS",
+    "YAML_SECTION_CATEGORIES",
     # Functions
     "get_keywords_for_version",
     "get_builtins_for_version",

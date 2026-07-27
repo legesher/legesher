@@ -39,6 +39,49 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   profile; `PromptBuilder(target=...)` performs pure data substitution, with
   the python default pinned byte-identical by test and verified old-vs-new
   at 154/154 prompt pairs across all 51 languages.
+- **Safe pack regeneration: canonical selection rule + exporter rework +
+  verification gate (CORE-1400).** Full pack regeneration from
+  `translations.db` is now safe. A documented selection rule
+  (`legesher_i18n/selection.py`, `docs/translation-selection.md`) decides the
+  canonical value per (term, language): a validity gate (PEP 3131 identifier
+  check with the `except*` soft-keyword allowance) that dirty candidates can
+  never pass, a shipped-pack anchor, then a source-trust order with
+  deterministic tiebreaks. `set_selected` enforces the gate at the write
+  boundary, and `backfill_core1400.py` completed the selection layer for all
+  51 packs (9,384 slots, zero conflicts) — including the dual-slot `type`
+  term (3.10 builtin vs 3.12 soft keyword, now two term rows under
+  `UNIQUE(name, programming_language, category)`) and the `en` identity rows
+  for `self`/`cls`/`except*`. The YAML exporter now reads ONLY
+  `selected_translations`, rewrites sections authoritatively (add / remove /
+  relocate), preserves `reserved_words`, headers, metadata, and key order,
+  applies the CORE-1521 interpreter-floor tiering (Sinhala ZWJ), refuses to
+  emit partial packs, and is YAML-only by default (packaging files are
+  created only when missing — no more `[tool.uv.sources]` overrides or
+  version resets). `scripts/verify_pack_regen.py` is the standing gate: it
+  regenerates all 51 packs into a sentinel-stamped scratch tree and
+  classifies every difference against the shipped packs — including
+  `not_regenerated` (an export that silently produced nothing),
+  `export_failed`, `not_compared`/`unexpected_pack` (coverage asserted
+  against the `languages.json` matrix, both directions), `unknown_section`,
+  and informational `comment_lost`; current result is 0 blocking
+  differences across 255 of 255 expected files. ⚠️ **Behavior changes:**
+  `get_or_create_term` is category-aware and now RAISES `ValueError` on an
+  ambiguous name (e.g. `type`) with no resolving category — pass `category=`
+  or `allow_duplicate_name=True`; `get_term_by_name` /
+  `get_translations_for_term` / `get_selected_by_name` gained a `category`
+  kwarg to address dual-slot names; `export_all_languages` now raises
+  `BulkExportError` at end of run (after completing healthy languages)
+  where it previously logged and returned a partial dict, with
+  data-integrity failures (`IncompleteSelectionError`,
+  `CorruptSelectionError`, `UnparseablePackError`,
+  `InterpreterFloorCollisionError` — a ZWJ-strip that would collapse two
+  different terms now raises instead of emitting an unreversible pack)
+  ranked above environmental ones; and the pipeline's skip-existing check
+  reads the same term slot it writes, ending the perpetual re-translation
+  of `type`. `__import__` joined `BUILTIN_FUNCTIONS` (every shipped pack
+  carries the slot; the stdlib-baseline guard's dunder filter now
+  allowlists it).
+
 - **JEJ message-template seed + append-once seeder (CORE-1378).** The v2
   message tables shipped deliberately empty; this is the designed fill path.
   `legesher_i18n/db/seeds/v8_jej_messages.json` carries the 35-template JEJ

@@ -254,12 +254,20 @@ class TranslationDatabase:
         self,
         name: str,
         programming_language: str = "python",
+        category: str | None = None,
     ) -> dict | None:
         """Get a term by its name and programming language.
+
+        A name may map to more than one term when the same surface token
+        exists in two categories (CORE-1400: ``type`` is both the 3.10
+        builtin and the 3.12 soft keyword). Pass ``category`` to
+        disambiguate; without it, the lowest term id (the longest-standing
+        row) is returned deterministically.
 
         Args:
             name: The term name (e.g., "def", "print", "ValueError")
             programming_language: Programming language (default: "python")
+            category: Optional term category to disambiguate same-name terms
 
         Returns:
             Dictionary with term fields, or None if not found
@@ -267,10 +275,18 @@ class TranslationDatabase:
         conn = self._get_connection()
         conn.row_factory = sqlite3.Row
 
-        cursor = conn.execute(
-            "SELECT * FROM terms WHERE name = ? AND programming_language = ?",
-            (name, programming_language),
-        )
+        if category is not None:
+            cursor = conn.execute(
+                "SELECT * FROM terms WHERE name = ? AND programming_language = ? "
+                "AND category = ?",
+                (name, programming_language, category),
+            )
+        else:
+            cursor = conn.execute(
+                "SELECT * FROM terms WHERE name = ? AND programming_language = ? "
+                "ORDER BY id LIMIT 1",
+                (name, programming_language),
+            )
 
         row = cursor.fetchone()
         conn.row_factory = None
@@ -278,49 +294,128 @@ class TranslationDatabase:
             return dict(row)
         return None
 
-    def get_or_create_term(
+    def _get_terms_by_name(
         self,
         name: str,
         programming_language: str = "python",
-        category: str = "unknown",
-        subcategory: str | None = None,
-    ) -> int:
-        """Get existing term ID or create a new term.
+    ) -> list[dict]:
+        """Get every term row sharing a name+programming_language.
+
+        A name maps to more than one row when the same surface token holds
+        two pack slots (CORE-1400). Returned lowest-id first so callers can
+        report the ambiguity deterministically.
 
         Args:
             name: The term name
             programming_language: Programming language (default: "python")
-            category: Term category (used only if creating). Must be one of
-                the canonical categories defined in
-                ``legesher_i18n.term_definitions.TermCategory`` —
+
+        Returns:
+            List of term dictionaries, ordered by id (possibly empty)
+        """
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+        cursor = conn.execute(
+            "SELECT * FROM terms WHERE name = ? AND programming_language = ? "
+            "ORDER BY id",
+            (name, programming_language),
+        )
+        rows = cursor.fetchall()
+        conn.row_factory = None
+        return [dict(row) for row in rows]
+
+    def get_or_create_term(
+        self,
+        name: str,
+        programming_language: str = "python",
+        category: str | None = None,
+        subcategory: str | None = None,
+        allow_duplicate_name: bool = False,
+    ) -> int:
+        """Get existing term ID or create a new term.
+
+        Lookup is category-aware whenever ``category`` is given, regardless
+        of ``allow_duplicate_name`` (CORE-1400). Gating disambiguation on
+        ``allow_duplicate_name`` made an explicit ``category`` argument a
+        no-op on lookup, so ``get_or_create_term("type", category="keyword")``
+        silently returned the ``builtin_type`` row and filed the soft
+        keyword's translations against the builtin.
+
+        Args:
+            name: The term name
+            programming_language: Programming language (default: "python")
+            category: Term category. Disambiguates the lookup when the name
+                holds more than one row, and is the category stored if a
+                row is created. Must be one of the canonical categories
+                defined in ``legesher_i18n.term_definitions.TermCategory`` —
                 ``keyword``, ``builtin_func``, ``builtin_type``,
                 ``exception``, ``special_constant``, ``reserved_word``,
                 ``helper``, or ``unknown``. CORE-710 added the
-                ``reserved_word`` category for ``self``/``cls``.
+                ``reserved_word`` category for ``self``/``cls``. ``None``
+                (the default) means "caller does not care", and stores
+                ``unknown`` on create.
             subcategory: Term subcategory (used only if creating)
+            allow_duplicate_name: If True, allow creating a second term
+                with the same name in a *different* category (CORE-1400:
+                ``type`` is both the 3.10 builtin and the 3.12 soft
+                keyword). Only an exact (name, programming_language,
+                category) match is reused; anything else is created.
 
         Returns:
             The term ID
 
         Raises:
-            ValueError: If ``category`` is not a recognized value. SQLite
+            ValueError: If ``category`` is not a recognized value (SQLite
                 accepts any string in the column, so this runtime check
                 guards against typos like ``"reserved_words"`` or
-                ``"reservedword"`` silently corrupting the table.
+                ``"reservedword"`` silently corrupting the table), or if
+                ``name`` is ambiguous — more than one row — and no
+                ``category`` selects exactly one of them. Returning an
+                arbitrary row there is the silent-wrong-row bug class
+                CORE-1400 exists to eliminate.
         """
         # CORE-710: validate category against the canonical TermCategory set
         # so a typo doesn't silently insert a ghost row that no consumer
         # can find via the documented categories.
         from ..term_definitions import is_valid_term_type
 
-        if not is_valid_term_type(category):
+        resolved_category = "unknown" if category is None else category
+        if not is_valid_term_type(resolved_category):
             raise ValueError(
                 f"Unknown term category: {category!r}. Must be one of "
                 f"keyword, builtin_func, builtin_type, exception, "
                 f"special_constant, reserved_word, helper, unknown."
             )
 
-        existing = self.get_term_by_name(name, programming_language)
+        candidates = self._get_terms_by_name(name, programming_language)
+
+        if allow_duplicate_name:
+            # CORE-1400: same surface token in two categories (e.g. 'type'
+            # as builtin_type AND keyword). Only reuse an exact
+            # (name, programming_language, category) match; a miss creates
+            # the second slot, which is the point of the flag.
+            existing = self._match_category(candidates, resolved_category)
+        elif len(candidates) > 1:
+            # CORE-1400: an ambiguous name must be resolved explicitly. The
+            # pre-fix fallback ("lowest id wins") returned the wrong row for
+            # every caller that did pass a category.
+            existing = (
+                None if category is None else self._match_category(candidates, category)
+            )
+            if existing is None:
+                raise ValueError(
+                    f"Term name {name!r} is ambiguous in {programming_language}: "
+                    f"{self._describe_candidates(candidates)}. "
+                    f"Requested category: {category!r}. Pass a category that "
+                    f"selects one of them, or allow_duplicate_name=True to add "
+                    f"a new slot (CORE-1400)."
+                )
+        else:
+            # Unambiguous name: reuse the single row even if its category
+            # differs from the requested one. Callers derive the category
+            # from lossy sources (YAML section names), and a name with one
+            # row has no wrong row to return.
+            existing = candidates[0] if candidates else None
+
         if existing:
             return existing["id"]
 
@@ -330,7 +425,7 @@ class TranslationDatabase:
             INSERT INTO terms (name, programming_language, category, subcategory)
             VALUES (?, ?, ?, ?)
             """,
-            (name, programming_language, category, subcategory),
+            (name, programming_language, resolved_category, subcategory),
         )
         conn.commit()
         term_id: int = cursor.lastrowid  # type: ignore[assignment]
@@ -338,6 +433,19 @@ class TranslationDatabase:
             f"Created term '{name}' ({programming_language}) with ID {term_id}"
         )
         return term_id
+
+    @staticmethod
+    def _match_category(candidates: list[dict], category: str) -> dict | None:
+        """Pick the candidate row whose category matches, if any."""
+        for row in candidates:
+            if row["category"] == category:
+                return row
+        return None
+
+    @staticmethod
+    def _describe_candidates(candidates: list[dict]) -> str:
+        """Render candidate rows as ``category (id=N)`` for error messages."""
+        return ", ".join(f"{row['category']} (id={row['id']})" for row in candidates)
 
     def get_terms(
         self,
@@ -597,6 +705,7 @@ class TranslationDatabase:
         term_name: str,
         language_code: str,
         programming_language: str = "python",
+        category: str | None = None,
     ) -> list[dict]:
         """Get all translation suggestions for a term+language combination.
 
@@ -606,11 +715,14 @@ class TranslationDatabase:
             term_name: The term name (e.g., "def", "print")
             language_code: Target language code
             programming_language: Programming language (default: "python")
+            category: Optional term category to disambiguate same-name terms
+                (CORE-1400). Without it a name held by two rows resolves to
+                the lowest term id, per ``get_term_by_name``.
 
         Returns:
             List of translation dictionaries (all suggestions from all sources)
         """
-        term = self.get_term_by_name(term_name, programming_language)
+        term = self.get_term_by_name(term_name, programming_language, category=category)
         if term is None:
             return []
         return self.get_translations(term_id=term["id"], language_code=language_code)
@@ -738,6 +850,7 @@ class TranslationDatabase:
         term_name: str,
         language_code: str,
         programming_language: str = "python",
+        category: str | None = None,
     ) -> dict | None:
         """Get the selected translation for a term by name.
 
@@ -747,11 +860,14 @@ class TranslationDatabase:
             term_name: The term name (e.g., "def", "print")
             language_code: Target language code
             programming_language: Programming language (default: "python")
+            category: Optional term category to disambiguate same-name terms
+                (CORE-1400). Without it a name held by two rows resolves to
+                the lowest term id, per ``get_term_by_name``.
 
         Returns:
             Dictionary with selected translation fields, or None if not found
         """
-        term = self.get_term_by_name(term_name, programming_language)
+        term = self.get_term_by_name(term_name, programming_language, category=category)
         if term is None:
             return None
         return self.get_selected(term["id"], language_code)
@@ -783,11 +899,33 @@ class TranslationDatabase:
             The selected_translation ID
 
         Raises:
-            ValueError: If the translation collides with another term's
-                selected translation in the same language and programming
-                language (unless allow_collision=True)
+            ValueError: If the translation is not a valid publishable
+                identifier (CORE-1400 selection gate — dirty candidates
+                are tolerated in ``translations`` but can never become
+                the selected value), or if it collides with another
+                term's selected translation in the same language and
+                programming language (unless allow_collision=True).
+                Same-name terms (e.g. ``type`` as builtin and as 3.12
+                soft keyword) sharing a translation are NOT a collision.
         """
         conn = self._get_connection()
+
+        # CORE-1400: enforce the publish gate at the write boundary so no
+        # caller can select a value that pack validation would reject.
+        from ..selection import is_valid_pack_value
+
+        term_row = conn.execute(
+            "SELECT name FROM terms WHERE id = ?", (term_id,)
+        ).fetchone()
+        term_name = term_row[0] if term_row else None
+        if not is_valid_pack_value(term_name or "", translation):
+            raise ValueError(
+                f"Translation is not a valid publishable identifier: "
+                f"term_id={term_id} ({term_name!r}) lang={language_code!r} "
+                f"-> {translation!r}. Dirty candidates stay in the "
+                f"'translations' pool; only clean identifiers may be "
+                f"selected (CORE-1400)."
+            )
 
         if not allow_collision:
             existing = conn.execute(
@@ -796,10 +934,11 @@ class TranslationDatabase:
                    JOIN terms t ON t.id = st.term_id
                    WHERE st.language_code = ? AND st.translation = ?
                      AND st.term_id != ?
+                     AND t.name != (SELECT name FROM terms WHERE id = ?)
                      AND t.programming_language = (
                        SELECT programming_language FROM terms WHERE id = ?
                      )""",
-                (language_code, translation, term_id, term_id),
+                (language_code, translation, term_id, term_id, term_id),
             ).fetchone()
             if existing:
                 raise ValueError(
@@ -972,10 +1111,14 @@ class TranslationDatabase:
             query += " AND s.language_code = ?"
             params.append(language_code)
 
+        # CORE-1400: group on term NAME, not term id — the same surface
+        # token stored under two categories (``type`` as 3.10 builtin and
+        # 3.12 soft keyword) sharing one translation is not a round-trip
+        # ambiguity.
         query += """
             GROUP BY s.language_code, s.translation
-            HAVING COUNT(DISTINCT s.term_id) > 1
-            ORDER BY s.language_code, COUNT(DISTINCT s.term_id) DESC
+            HAVING COUNT(DISTINCT t.name) > 1
+            ORDER BY s.language_code, COUNT(DISTINCT t.name) DESC
         """
 
         cursor = conn.execute(query, params)

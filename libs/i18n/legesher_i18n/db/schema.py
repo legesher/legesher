@@ -13,6 +13,12 @@ Future tables (deferred to CORE-595):
 """
 
 # Terms table - canonical list of reserved words
+#
+# CORE-1400: uniqueness includes ``category`` because the same surface
+# token can hold two distinct pack slots (``type`` is both the 3.10
+# builtin and the 3.12 soft keyword, and the two may carry different
+# translations in a language). ``get_term_by_name`` disambiguates via its
+# ``category`` parameter.
 TERMS_TABLE = """
 CREATE TABLE IF NOT EXISTS terms (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +30,7 @@ CREATE TABLE IF NOT EXISTS terms (
     description TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-    UNIQUE(name, programming_language)
+    UNIQUE(name, programming_language, category)
 );
 """
 

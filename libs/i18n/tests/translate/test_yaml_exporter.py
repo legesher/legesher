@@ -1,47 +1,115 @@
-"""Tests for YAML exporter merge functionality."""
+"""Tests for the YAML exporter (CORE-1400 authoritative rewrite).
+
+The exporter's safety contract:
+
+- exports ONLY from ``selected_translations`` (the publish-gated
+  canonical layer), never from the dirty-tolerant candidate pool
+- rewrites pack sections authoritatively (add / remove / relocate)
+- preserves ``reserved_words``, header comments, metadata, and key order
+- refuses to write anything for a language with incomplete selections
+  (the pre-CORE-1400 partial-rewrite bug class)
+- refuses to rewrite an existing pack file it cannot parse back, because
+  the rewrite is authoritative and would reset curated metadata — and
+  parses ALL five version files before writing the first
+- tiers 3.13-only XID characters (CORE-1521) without ever fabricating a
+  collision in the stripped pre-3.13 packs, grouping by term NAME the
+  way the DB-side guard does
+- reports every language a bulk run could not export at the end of the
+  run, so the blast radius is never alphabetical — data-integrity
+  failures ranked above environmental ones, neither one silent
+- never regenerates packaging files over existing ones (uv-workspace
+  safety), and generated pyproject carries no [tool.uv.sources]
+"""
 
 import tempfile
 from pathlib import Path
-import yaml
+
 import pytest
+import yaml
 
 from legesher_i18n.db import TranslationDatabase
-from scripts.translate.yaml_exporter import YAMLExporter
+from legesher_i18n.term_definitions import (
+    BUILTIN_FUNCTIONS,
+    BUILTIN_TYPES,
+    EXCEPTIONS,
+    EXCEPTIONS_3_11,
+    EXCEPTIONS_3_13,
+    KEYWORDS_3_10,
+    KEYWORDS_3_11,
+    KEYWORDS_3_12,
+    KEYWORDS_BASE,
+    RESERVED_WORDS,
+    SPECIAL_CONSTANTS,
+    SPECIAL_VALUES,
+)
+from scripts.translate.yaml_exporter import (
+    BulkExportError,
+    CorruptSelectionError,
+    IncompleteSelectionError,
+    InterpreterFloorCollisionError,
+    UnparseablePackError,
+    YAMLExporter,
+)
+
+# Zero-width joiner: a valid identifier character only on CPython 3.13+
+# (Unicode 15.1 XID) — the Sinhala conjunct trap behind CORE-1521.
+ZWJ = "‍"
+
+_CATEGORY_TERMS = [
+    (
+        KEYWORDS_BASE + SPECIAL_VALUES + KEYWORDS_3_10 + KEYWORDS_3_11 + KEYWORDS_3_12,
+        "keyword",
+    ),
+    (BUILTIN_FUNCTIONS, "builtin_func"),
+    (BUILTIN_TYPES, "builtin_type"),
+    (SPECIAL_CONSTANTS, "special_constant"),
+    (EXCEPTIONS + EXCEPTIONS_3_11 + EXCEPTIONS_3_13, "exception"),
+    (RESERVED_WORDS, "reserved_word"),
+]
 
 
 def _add_language(db, code):
     """Helper to ensure a language exists in the database."""
-    names = {
-        "es": ("Spanish", "Español"),
-        "fr": ("French", "Français"),
-        "de": ("German", "Deutsch"),
-        "ja": ("Japanese", "日本語"),
-        "ko": ("Korean", "한국어"),
-        "tr": ("Turkish", "Türkçe"),
-    }
-    name, native_name = names.get(code, (code.upper(), code.upper()))
     conn = db._get_connection()
     conn.execute(
         "INSERT OR IGNORE INTO languages (code, name, native_name) VALUES (?, ?, ?)",
-        (code, name, native_name),
+        (code, code.upper(), code.upper()),
     )
     conn.commit()
 
 
-def _add_translation(db, language_code, term, term_type, translation, source):
-    """Helper that wraps the new schema API to mirror old add_translation interface.
+def _test_value(name: str) -> str:
+    """Deterministic unique valid identifier for a term name."""
+    if name.endswith("*"):
+        return f"t_{name[:-1]}*"
+    return f"t_{name}"
 
-    Creates the language (if needed), gets or creates the term, and adds the translation.
+
+def _populate_full_language(db, lang: str) -> dict[str, int]:
+    """Create terms + canonical selections covering the full inventory.
+
+    Returns a map of term name -> term id for follow-up tweaks.
     """
-    _add_language(db, language_code)
-    term_id = db.get_or_create_term(
-        name=term, programming_language="python", category=term_type
-    )
-    return db.add_translation(
-        term_id=term_id,
-        language_code=language_code,
-        translation=translation,
-        source=source,
+    _add_language(db, lang)
+    ids: dict[tuple[str, str], int] = {}
+    for names, category in _CATEGORY_TERMS:
+        for name in names:
+            term_id = db.get_or_create_term(
+                name, "python", category, allow_duplicate_name=True
+            )
+            ids[(category, name)] = term_id
+            value = _test_value(name)
+            db.add_translation(
+                term_id=term_id, language_code=lang, translation=value, source="test"
+            )
+            db.set_selected(term_id=term_id, language_code=lang, translation=value)
+    return ids
+
+
+def _reselect(db, ids, lang: str, category: str, name: str, value: str):
+    """Replace the canonical selection for one (category, term) slot."""
+    db.set_selected(
+        term_id=ids[(category, name)], language_code=lang, translation=value
     )
 
 
@@ -67,645 +135,933 @@ def temp_output_dir():
 
 
 @pytest.fixture
-def exporter(temp_db):
-    """Create YAML exporter instance."""
-    return YAMLExporter(db=temp_db)
+def exporter(temp_db, temp_output_dir):
+    """Create YAML exporter instance writing to a temp dir."""
+    return YAMLExporter(db=temp_db, output_dir=temp_output_dir)
 
 
-class TestYAMLExporterMerge:
-    """Test YAML exporter merge functionality."""
+def _pack_file(temp_output_dir: Path, lang: str, version: str) -> Path:
+    return (
+        temp_output_dir
+        / lang
+        / f"legesher_i18n_python_{lang}"
+        / "packs"
+        / f"{version}.yml"
+    )
 
-    def test_merge_preserves_existing_translations(
-        self, exporter, temp_output_dir, temp_db
+
+def _load(path: Path) -> dict:
+    with open(path, encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+class TestSelectionSourcing:
+    """The exporter reads ONLY the canonical selection layer."""
+
+    def test_candidates_alone_do_not_export(self, exporter, temp_db, temp_output_dir):
+        """Un-selected candidate translations must never reach a pack."""
+        _add_language(temp_db, "es")
+        term_id = temp_db.get_or_create_term("def", "python", "keyword")
+        temp_db.add_translation(
+            term_id=term_id,
+            language_code="es",
+            translation="definir",
+            source="aya",
+            confidence="high",
+        )
+        result = exporter.export_language("es", overwrite=True, strict=False)
+        assert result is None
+        assert not (temp_output_dir / "es").exists() or not list(
+            (temp_output_dir / "es").rglob("*.yml")
+        )
+
+    def test_selected_values_are_exported(self, exporter, temp_db, temp_output_dir):
+        _populate_full_language(temp_db, "es")
+        result = exporter.export_language("es", overwrite=True)
+        assert result is not None
+        data = _load(_pack_file(temp_output_dir, "es", "3.10"))
+        assert data["keywords"]["def"] == "t_def"
+        assert data["builtins"]["print"] == "t_print"
+        assert data["exceptions"]["valueerror"] == "t_valueerror"
+
+    def test_dirty_candidate_never_wins_over_selection(
+        self, exporter, temp_db, temp_output_dir
     ):
-        """Test that merge preserves existing translations when adding new ones."""
-        # Create an existing YAML file with some translations
-        yaml_file = temp_output_dir / "test_pack.yml"
-        existing_data = {
-            "language": "es",
-            "target": "python",
-            "version": "3.10",
-            "keywords": {
-                "def": "definir",
-                "return": "retornar",
-                "class": "clase",
-            },
-            "builtins": {
-                "print": "imprimir",
-                "len": "longitud",
-            },
-            "exceptions": {
-                "ValueError": "ErrorDeValor",
-            },
-            "metadata": {
-                "python_version_min": "3.10",
-                "python_version_max": "3.14",
-                "compatibility_tested": ["3.10"],
-                "last_updated": "2024-01-01",
-                "community_reviewed": True,
-                "author": "Original Author",
-                "license": "Apache-2.0",
-            },
-        }
-
-        with open(yaml_file, "w", encoding="utf-8") as f:
-            yaml.dump(existing_data, f, allow_unicode=True, sort_keys=False)
-
-        # Add new translations to database (only 2 new terms)
-        _add_translation(temp_db, "es", "if", "keyword", "si", "aya")
-        _add_translation(temp_db, "es", "abs", "builtin_func", "absoluto", "aya")
-
-        # Write using _write_yaml_pack to trigger merge
-        exporter._write_yaml_pack(
-            filepath=yaml_file,
-            language_code="es",
-            version="3.10",
-            extends=None,
-            keywords={"if": "si"},
-            builtins={"abs": "absoluto"},
-            exceptions={},
-            header="# Test header",
-        )
-
-        # Read the merged file
-        with open(yaml_file, encoding="utf-8") as f:
-            merged_data = yaml.safe_load(f)
-
-        # Verify all original translations are preserved
-        assert merged_data["keywords"]["def"] == "definir"
-        assert merged_data["keywords"]["return"] == "retornar"
-        assert merged_data["keywords"]["class"] == "clase"
-        assert merged_data["builtins"]["print"] == "imprimir"
-        assert merged_data["builtins"]["len"] == "longitud"
-        assert merged_data["exceptions"]["ValueError"] == "ErrorDeValor"
-
-        # Verify new translations were added
-        assert merged_data["keywords"]["if"] == "si"
-        assert merged_data["builtins"]["abs"] == "absoluto"
-
-        # Verify metadata was preserved
-        assert merged_data["metadata"]["author"] == "Original Author"
-        assert merged_data["metadata"]["community_reviewed"] is True
-
-    def test_merge_overrides_existing_translations(self, exporter, temp_output_dir):
-        """Test that new translations override existing ones for same keys."""
-        yaml_file = temp_output_dir / "test_pack.yml"
-
-        # Create existing file with old translation
-        existing_data = {
-            "language": "es",
-            "target": "python",
-            "version": "3.10",
-            "keywords": {
-                "def": "old_translation",  # Old translation
-            },
-            "builtins": {},
-            "exceptions": {},
-            "metadata": {"last_updated": "2024-01-01"},
-        }
-
-        with open(yaml_file, "w", encoding="utf-8") as f:
-            yaml.dump(existing_data, f, allow_unicode=True, sort_keys=False)
-
-        # Write with new translation for same key
-        exporter._write_yaml_pack(
-            filepath=yaml_file,
-            language_code="es",
-            version="3.10",
-            extends=None,
-            keywords={"def": "definir"},  # New translation
-            builtins={},
-            exceptions={},
-            header="# Test",
-        )
-
-        # Verify new translation replaced old one
-        with open(yaml_file, encoding="utf-8") as f:
-            merged_data = yaml.safe_load(f)
-
-        assert merged_data["keywords"]["def"] == "definir"  # New translation
-        assert merged_data["keywords"]["def"] != "old_translation"
-
-    def test_merge_creates_file_if_not_exists(self, exporter, temp_output_dir):
-        """Test that merge creates new file if it doesn't exist."""
-        yaml_file = temp_output_dir / "new_pack.yml"
-
-        # File doesn't exist yet
-        assert not yaml_file.exists()
-
-        # Write to non-existent file
-        exporter._write_yaml_pack(
-            filepath=yaml_file,
+        """The original CORE-1400 defect: a high-confidence dirty candidate
+        must not displace the clean selected value on regen."""
+        ids = _populate_full_language(temp_db, "fr")
+        temp_db.add_translation(
+            term_id=ids[("exception", "arithmeticerror")],
             language_code="fr",
-            version="3.10",
-            extends=None,
-            keywords={"def": "définir"},
-            builtins={"print": "afficher"},
-            exceptions={},
-            header="# New file",
+            translation="erreur arithmétique",
+            source="aya",
+            confidence="high",
         )
+        exporter.export_language("fr", overwrite=True)
+        data = _load(_pack_file(temp_output_dir, "fr", "3.10"))
+        assert data["exceptions"]["arithmeticerror"] == "t_arithmeticerror"
 
-        # Verify file was created
-        assert yaml_file.exists()
 
-        with open(yaml_file, encoding="utf-8") as f:
-            data = yaml.safe_load(f)
+class TestAuthoritativeRewrite:
+    """Sections are rewritten from selections: add, remove, relocate."""
 
-        assert data["keywords"]["def"] == "définir"
-        assert data["builtins"]["print"] == "afficher"
-
-    def test_merge_handles_corrupted_yaml(self, exporter, temp_output_dir):
-        """Test that merge handles corrupted YAML gracefully."""
-        yaml_file = temp_output_dir / "corrupted.yml"
-
-        # Create corrupted YAML file
-        with open(yaml_file, "w", encoding="utf-8") as f:
-            f.write("this is: not: valid: yaml: {{{\n")
-
-        # Write should succeed by treating it as empty
-        exporter._write_yaml_pack(
-            filepath=yaml_file,
-            language_code="de",
-            version="3.10",
-            extends=None,
-            keywords={"def": "definieren"},
-            builtins={},
-            exceptions={},
-            header="# Test",
-        )
-
-        # Verify valid YAML was written
-        with open(yaml_file, encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-
-        assert data["keywords"]["def"] == "definieren"
-
-    def test_merge_preserves_metadata_fields(self, exporter, temp_output_dir):
-        """Test that specific metadata fields are preserved during merge."""
-        yaml_file = temp_output_dir / "metadata_test.yml"
-
-        # Create file with custom metadata
-        existing_data = {
-            "language": "ja",
-            "target": "python",
-            "version": "3.10",
-            "keywords": {"def": "定義"},
-            "builtins": {},
-            "exceptions": {},
-            "metadata": {
-                "python_version_min": "3.8",  # Should be preserved
-                "python_version_max": "3.12",  # Should be preserved
-                "compatibility_tested": ["3.8", "3.9", "3.10"],  # Should be preserved
-                "community_reviewed": True,  # Should be preserved
-                "author": "Community Contributor",  # Should be preserved
-                "license": "Apache-2.0",  # Should be preserved
-                "last_updated": "2023-06-15",  # Should be updated
-            },
-        }
-
-        with open(yaml_file, "w", encoding="utf-8") as f:
-            yaml.dump(existing_data, f, allow_unicode=True, sort_keys=False)
-
-        # Merge with new data
-        exporter._write_yaml_pack(
-            filepath=yaml_file,
-            language_code="ja",
-            version="3.10",
-            extends=None,
-            keywords={"return": "戻る"},
-            builtins={},
-            exceptions={},
-            header="# Test",
-        )
-
-        with open(yaml_file, encoding="utf-8") as f:
-            merged_data = yaml.safe_load(f)
-
-        # Verify preserved fields
-        assert merged_data["metadata"]["python_version_min"] == "3.8"
-        assert merged_data["metadata"]["python_version_max"] == "3.12"
-        assert merged_data["metadata"]["compatibility_tested"] == ["3.8", "3.9", "3.10"]
-        assert merged_data["metadata"]["community_reviewed"] is True
-        assert merged_data["metadata"]["author"] == "Community Contributor"
-        assert merged_data["metadata"]["license"] == "Apache-2.0"
-
-        # Verify updated field
-        assert merged_data["metadata"]["last_updated"] != "2023-06-15"
-
-    def test_merge_empty_sections(self, exporter, temp_output_dir):
-        """Test merge when existing file has empty sections."""
-        yaml_file = temp_output_dir / "empty_sections.yml"
-
-        existing_data = {
-            "language": "ko",
-            "target": "python",
-            "version": "3.10",
-            "keywords": {},  # Empty
-            "builtins": {},  # Empty
-            "exceptions": {},  # Empty
-            "metadata": {},
-        }
-
-        with open(yaml_file, "w", encoding="utf-8") as f:
-            yaml.dump(existing_data, f, allow_unicode=True, sort_keys=False)
-
-        exporter._write_yaml_pack(
-            filepath=yaml_file,
-            language_code="ko",
-            version="3.10",
-            extends=None,
-            keywords={"def": "정의"},
-            builtins={"print": "출력"},
-            exceptions={"ValueError": "값오류"},
-            header="# Test",
-        )
-
-        with open(yaml_file, encoding="utf-8") as f:
-            merged_data = yaml.safe_load(f)
-
-        # Verify sections were populated
-        assert merged_data["keywords"]["def"] == "정의"
-        assert merged_data["builtins"]["print"] == "출력"
-        assert merged_data["exceptions"]["ValueError"] == "값오류"
-
-    def test_integration_export_multiple_versions(
-        self, exporter, temp_output_dir, temp_db
+    def test_removed_selection_removes_term_from_file(
+        self, exporter, temp_db, temp_output_dir
     ):
-        """Test full integration: export multiple versions with inheritance."""
-        # Add translations for a complete language pack
-        translations = [
-            ("es", "def", "keyword", "definir", "aya"),
-            ("es", "return", "keyword", "retornar", "aya"),
-            ("es", "print", "builtin_func", "imprimir", "aya"),
-            ("es", "ValueError", "exception", "ErrorDeValor", "aya"),
-        ]
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
 
-        for lang, term, term_type, translation, source in translations:
-            _add_translation(temp_db, lang, term, term_type, translation, source)
-
-        # Export (this creates all version files)
-        pack_dir = (
-            temp_output_dir / "python" / "es" / "legesher_i18n_python_es" / "packs"
+        # Simulate a stale key that no longer belongs in the pack.
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        data = _load(pack)
+        text = pack.read_text(encoding="utf-8")
+        text = text.replace(
+            "exceptions:\n", "exceptions:\n  fabricatederror: fabricated\n", 1
         )
-        pack_dir.mkdir(parents=True, exist_ok=True)
+        pack.write_text(text, encoding="utf-8")
+        assert "fabricatederror" in _load(pack)["exceptions"]
 
-        # Simulate export by manually writing base version
-        exporter._write_yaml_pack(
-            filepath=pack_dir / "3.10.yml",
+        exporter.export_language("es", overwrite=True)
+        data = _load(pack)
+        assert "fabricatederror" not in data["exceptions"]
+        # Everything legitimate is still there.
+        assert data["keywords"]["def"] == "t_def"
+
+    def test_updated_selection_updates_value(self, exporter, temp_db, temp_output_dir):
+        ids = _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+
+        temp_db.set_selected(
+            term_id=ids[("keyword", "while")],
             language_code="es",
-            version="3.10",
-            extends=None,
-            keywords={"def": "definir", "return": "retornar"},
-            builtins={"print": "imprimir"},
-            exceptions={"ValueError": "ErrorDeValor"},
-            header="# Spanish Python 3.10",
+            translation="mientras",
+        )
+        exporter.export_language("es", overwrite=True)
+        data = _load(_pack_file(temp_output_dir, "es", "3.10"))
+        assert data["keywords"]["while"] == "mientras"
+
+    def test_reserved_words_survive_rewrite(self, exporter, temp_db, temp_output_dir):
+        """The old exporter silently dropped reserved_words on rewrite."""
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        assert _load(pack)["reserved_words"] == {"self": "t_self", "cls": "t_cls"}
+
+        # Rewrite again — still present.
+        exporter.export_language("es", overwrite=True)
+        assert _load(pack)["reserved_words"] == {"self": "t_self", "cls": "t_cls"}
+
+    def test_version_slot_placement(self, exporter, temp_db, temp_output_dir):
+        """Version-specific terms land in their version file only."""
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+
+        d310 = _load(_pack_file(temp_output_dir, "es", "3.10"))
+        d311 = _load(_pack_file(temp_output_dir, "es", "3.11"))
+        d312 = _load(_pack_file(temp_output_dir, "es", "3.12"))
+        d313 = _load(_pack_file(temp_output_dir, "es", "3.13"))
+        d314 = _load(_pack_file(temp_output_dir, "es", "3.14"))
+
+        assert "match" in d310["keywords"] and "case" in d310["keywords"]
+        assert "except*" not in d310["keywords"]
+        assert d311["keywords"] == {"except*": "t_except*"}
+        assert set(d311["exceptions"]) == {"exceptiongroup", "baseexceptiongroup"}
+        assert d312["keywords"] == {"type": "t_type"}
+        assert d313["keywords"] == {}
+        assert set(d313["exceptions"]) == {"pythonfinalizationerror"}
+        assert d314["keywords"] == {} and d314["exceptions"] == {}
+        assert d311["extends"] == "3.10.yml"
+        assert d314["extends"] == "3.13.yml"
+
+    def test_dual_slot_type_exports_both_values(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """'type' as 3.10 builtin and 3.12 soft keyword may differ."""
+        ids = _populate_full_language(temp_db, "ca")
+        temp_db.set_selected(
+            term_id=ids[("keyword", "type")],
+            language_code="ca",
+            translation="tipus_",
+        )
+        temp_db.set_selected(
+            term_id=ids[("builtin_type", "type")],
+            language_code="ca",
+            translation="tipus",
+        )
+        exporter.export_language("ca", overwrite=True)
+        assert _load(_pack_file(temp_output_dir, "ca", "3.10"))["builtins"]["type"] == (
+            "tipus"
+        )
+        assert _load(_pack_file(temp_output_dir, "ca", "3.12"))["keywords"]["type"] == (
+            "tipus_"
         )
 
-        # Now add more translations and re-export (should merge)
-        _add_translation(temp_db, "es", "if", "keyword", "si", "aya")
 
-        exporter._write_yaml_pack(
-            filepath=pack_dir / "3.10.yml",
-            language_code="es",
-            version="3.10",
-            extends=None,
-            keywords={"if": "si"},  # Only new term
-            builtins={},
-            exceptions={},
-            header="# Spanish Python 3.10",
-        )
+class TestNoPartialWrites:
+    """A language with incomplete selections never touches disk."""
 
-        # Verify merge worked
-        with open(pack_dir / "3.10.yml", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-
-        # All translations should be present
-        assert data["keywords"]["def"] == "definir"
-        assert data["keywords"]["return"] == "retornar"
-        assert data["keywords"]["if"] == "si"
-        assert data["builtins"]["print"] == "imprimir"
-        assert data["exceptions"]["ValueError"] == "ErrorDeValor"
-
-
-class TestYAMLExporterRegressions:
-    """Test regressions and bug fixes."""
-
-    def test_turkish_duplicate_bug_fix(self, exporter, temp_output_dir):
-        """Regression test for Turkish duplicate bug that replaced entire file.
-
-        This bug occurred when re-translating 3 duplicate terms - the entire
-        Turkish pack (100+ translations) was replaced with only those 3 terms.
-        """
-        # Create Turkish pack with many translations (simulate existing pack)
-        yaml_file = temp_output_dir / "tr_3.10.yml"
-
-        existing_data = {
-            "language": "tr",
-            "target": "python",
-            "version": "3.10",
-            "keywords": {
-                "def": "tanımla",
-                "return": "dön",
-                "class": "sınıf",
-                "import": "içeaktar",
-                "from": "kaynak",
-                "as": "olarak",
-                "if": "eğer",  # Duplicate issue
-                "else": "değilse",
-                "elif": "değilseeğer",
-                # ... 30+ more keywords
-            },
-            "builtins": {
-                "print": "yazdır",
-                "len": "uzunluk",
-                "str": "yazı",
-                "int": "tamsayı",
-                # ... 70+ more builtins
-            },
-            "exceptions": {
-                "ValueError": "DeğerHatası",
-                "TypeError": "TipHatası",
-                # ... more exceptions
-            },
-            "metadata": {
-                "author": "Legesher Team (Aya AI Model)",
-                "last_updated": "2024-11-20",
-            },
-        }
-
-        with open(yaml_file, "w", encoding="utf-8") as f:
-            yaml.dump(existing_data, f, allow_unicode=True, sort_keys=False)
-
-        # Count existing translations
-        existing_keyword_count = len(existing_data["keywords"])
-        existing_builtin_count = len(existing_data["builtins"])
-
-        # Now simulate re-translating ONLY 3 duplicate terms
-        exporter._write_yaml_pack(
-            filepath=yaml_file,
-            language_code="tr",
-            version="3.10",
-            extends=None,
-            keywords={"not": "değil", "if": "eğer", "ord": "karakter"},  # Only 3 terms
-            builtins={},
-            exceptions={},
-            header="# Turkish Python 3.10",
-        )
-
-        # Read merged file
-        with open(yaml_file, encoding="utf-8") as f:
-            merged_data = yaml.safe_load(f)
-
-        # BUG REGRESSION TEST: All original translations should be preserved
-        assert "def" in merged_data["keywords"], "Original 'def' translation was lost!"
-        assert "return" in merged_data["keywords"], (
-            "Original 'return' translation was lost!"
-        )
-        assert "print" in merged_data["builtins"], (
-            "Original 'print' translation was lost!"
-        )
-
-        # Count should be original + new (if new keys)
-        assert len(merged_data["keywords"]) >= existing_keyword_count, (
-            f"Keywords reduced from {existing_keyword_count} to {len(merged_data['keywords'])}"
-        )
-        assert len(merged_data["builtins"]) >= existing_builtin_count, (
-            f"Builtins reduced from {existing_builtin_count} to {len(merged_data['builtins'])}"
-        )
-
-        # Verify the 3 new/updated translations are present
-        assert merged_data["keywords"]["not"] == "değil"
-        assert merged_data["keywords"]["if"] == "eğer"
-        assert merged_data["keywords"]["ord"] == "karakter"
-
-        # Verify metadata preserved
-        assert merged_data["metadata"]["author"] == "Legesher Team (Aya AI Model)"
-
-
-class TestYAMLExporterTermTypeFromDB:
-    """Test that YAML exporter uses stored term_type from database (CORE-460).
-
-    This test class verifies that:
-    1. Exporter uses the term_type stored in the database as single source of truth
-    2. Fallback to classify_term() works for legacy data with missing/invalid term_type
-    3. Special constants map correctly to builtins section
-    4. Future term types would create new sections (extensible design)
-    """
-
-    def test_uses_term_type_from_database(self, temp_db, temp_output_dir):
-        """Verify exporter uses stored term_type, not re-classification."""
-        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
-
-        # Add translations with explicit term_types (category in new schema)
-        _add_translation(temp_db, "es", "def", "keyword", "definir", "test")
-        _add_translation(temp_db, "es", "print", "builtin_func", "imprimir", "test")
-        _add_translation(
-            temp_db, "es", "ValueError", "exception", "ErrorDeValor", "test"
-        )
-
-        # Build term map and classify
-        translations = temp_db.get_translations_joined(language_code="es")
-        term_map = exporter._build_term_map(translations)
-        classified = exporter._classify_terms(term_map)
-
-        # Verify terms are in correct sections based on stored term_type
-        assert "def" in classified["keywords"], "keyword term should be in keywords"
-        assert "print" in classified["builtins"], "builtin_func should be in builtins"
-        assert "ValueError" in classified["exceptions"], (
-            "exception should be in exceptions"
-        )
-
-    def test_fallback_for_empty_term_type(self, temp_db, temp_output_dir, caplog):
-        """Verify fallback classification when term_type is empty string.
-
-        In the new schema, term_type comes from terms.category via JOIN.
-        We insert a term with empty category to trigger the fallback.
-        """
-        import logging
-
-        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
-
-        # Insert a term with empty category and a translation for it
+    def test_strict_raises_on_incomplete_selections(self, exporter, temp_db):
         _add_language(temp_db, "es")
-        conn = temp_db._get_connection()
-        conn.execute(
-            "INSERT INTO terms (name, programming_language, category) VALUES (?, ?, ?)",
-            ("return", "python", ""),  # Empty string category
+        term_id = temp_db.get_or_create_term("def", "python", "keyword")
+        temp_db.add_translation(
+            term_id=term_id, language_code="es", translation="definir", source="test"
         )
-        conn.commit()
-        term_id = conn.execute(
-            "SELECT id FROM terms WHERE name = ? AND programming_language = ?",
-            ("return", "python"),
-        ).fetchone()[0]
-        conn.execute(
-            "INSERT INTO translations (term_id, language_code, translation, source) VALUES (?, ?, ?, ?)",
-            (term_id, "es", "retornar", "legacy"),
-        )
-        conn.commit()
+        temp_db.set_selected(term_id=term_id, language_code="es", translation="definir")
+        with pytest.raises(IncompleteSelectionError, match="no canonical selection"):
+            exporter.export_language("es", overwrite=True, strict=True)
 
-        # Get translations and classify
-        translations = temp_db.get_translations_joined(language_code="es")
-        term_map = exporter._build_term_map(translations)
+    def test_non_strict_skips_without_writing(self, exporter, temp_db, temp_output_dir):
+        """Regression guard for the Turkish-pack bug class: a partial
+        translation run must never replace/damage an existing pack."""
+        _populate_full_language(temp_db, "tr")
+        exporter.export_language("tr", overwrite=True)
+        pack = _pack_file(temp_output_dir, "tr", "3.10")
+        before = pack.read_text(encoding="utf-8")
 
-        with caplog.at_level(logging.WARNING):
-            classified = exporter._classify_terms(term_map)
-
-        # Verify fallback worked - "return" should be classified as keyword
-        assert "return" in classified["keywords"], (
-            "fallback should classify 'return' as keyword"
-        )
-
-        # Verify warning was logged about invalid term_type
-        assert any("Invalid term_type" in record.message for record in caplog.records)
-
-    def test_fallback_for_invalid_term_type(self, temp_db, temp_output_dir, caplog):
-        """Verify fallback classification when term_type is invalid."""
-        import logging
-
-        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
-
-        # Insert a term with invalid category and a translation for it
-        _add_language(temp_db, "es")
-        conn = temp_db._get_connection()
-        conn.execute(
-            "INSERT INTO terms (name, programming_language, category) VALUES (?, ?, ?)",
-            ("for", "python", "invalid_type_xyz"),
-        )
-        conn.commit()
-        term_id = conn.execute(
-            "SELECT id FROM terms WHERE name = ? AND programming_language = ?",
-            ("for", "python"),
-        ).fetchone()[0]
-        conn.execute(
-            "INSERT INTO translations (term_id, language_code, translation, source) VALUES (?, ?, ?, ?)",
-            (term_id, "es", "para", "bad_source"),
-        )
-        conn.commit()
-
-        translations = temp_db.get_translations_joined(language_code="es")
-        term_map = exporter._build_term_map(translations)
-
-        with caplog.at_level(logging.WARNING):
-            classified = exporter._classify_terms(term_map)
-
-        # Verify fallback worked - "for" should be classified as keyword
-        assert "for" in classified["keywords"], (
-            "fallback should classify 'for' as keyword"
-        )
-
-        # Verify warning was logged about invalid term_type
-        assert any("Invalid term_type" in record.message for record in caplog.records)
-
-    def test_special_constant_maps_to_builtins(self, temp_db, temp_output_dir):
-        """Verify special_constant term_type maps to builtins section."""
-        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
-
-        # Add special constant with explicit term_type
-        _add_translation(
-            temp_db, "es", "ellipsis", "special_constant", "puntos_suspensivos", "test"
-        )
-
-        translations = temp_db.get_translations_joined(language_code="es")
-        term_map = exporter._build_term_map(translations)
-        classified = exporter._classify_terms(term_map)
-
-        # Verify special_constant goes to builtins section
-        assert "ellipsis" in classified["builtins"], (
-            "special_constant should map to builtins section"
-        )
-        assert "ellipsis" not in classified.get("special_constants", {}), (
-            "should not create separate special_constants section"
-        )
-
-    def test_builtin_type_maps_to_builtins(self, temp_db, temp_output_dir):
-        """Verify builtin_type term_type maps to builtins section."""
-        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
-
-        _add_translation(temp_db, "es", "str", "builtin_type", "cadena", "test")
-
-        translations = temp_db.get_translations_joined(language_code="es")
-        term_map = exporter._build_term_map(translations)
-        classified = exporter._classify_terms(term_map)
-
-        assert "str" in classified["builtins"], (
-            "builtin_type should map to builtins section"
-        )
-
-    def test_standard_sections_always_exist(self, temp_db, temp_output_dir):
-        """Verify keywords, builtins, exceptions sections always exist."""
-        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
-
-        # Add only a keyword - no builtins or exceptions
-        _add_translation(temp_db, "es", "if", "keyword", "si", "test")
-
-        translations = temp_db.get_translations_joined(language_code="es")
-        term_map = exporter._build_term_map(translations)
-        classified = exporter._classify_terms(term_map)
-
-        # All standard sections should exist (even if empty)
-        assert "keywords" in classified
-        assert "builtins" in classified
-        assert "exceptions" in classified
-
-    def test_helper_and_unknown_excluded_from_yaml(self, temp_db, temp_output_dir):
-        """Verify helper and unknown term types are excluded from YAML export."""
-        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
-
-        # Add translations with helper and unknown types
-        _add_translation(temp_db, "es", "README", "helper", "LEEME", "test")
-
-        translations = temp_db.get_translations_joined(language_code="es")
-        term_map = exporter._build_term_map(translations)
-        classified = exporter._classify_terms(term_map)
-
-        # Helper terms should not appear in any section
-        assert "README" not in classified["keywords"]
-        assert "README" not in classified["builtins"]
-        assert "README" not in classified["exceptions"]
-
-    def test_pipeline_to_yaml_term_type_consistency(self, temp_db, temp_output_dir):
-        """Integration test: verify term_type consistency from storage to export."""
-        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
-
-        # Simulate what pipeline.py does: store with classified term_type
-        test_terms = [
-            ("def", "keyword", "definir"),
-            ("print", "builtin_func", "imprimir"),
-            ("str", "builtin_type", "cadena"),
-            ("ValueError", "exception", "ErrorDeValor"),
-            ("ellipsis", "special_constant", "puntos_suspensivos"),
-        ]
-
-        for term, term_type, translation in test_terms:
-            _add_translation(
-                temp_db, "es", term, term_type, translation, "pipeline_test"
+        # A second language with only 3 selections must not write at all.
+        _add_language(temp_db, "xx")
+        for name in ("not", "if", "ord"):
+            category = "keyword" if name != "ord" else "builtin_func"
+            term_id = temp_db.get_or_create_term(
+                name, "python", category, allow_duplicate_name=True
+            )
+            temp_db.add_translation(
+                term_id=term_id,
+                language_code="xx",
+                translation=f"x_{name}",
+                source="test",
+            )
+            temp_db.set_selected(
+                term_id=term_id, language_code="xx", translation=f"x_{name}"
             )
 
-        # Export and classify
-        translations = temp_db.get_translations_joined(language_code="es")
-        term_map = exporter._build_term_map(translations)
-        classified = exporter._classify_terms(term_map)
+        result = exporter.export_language("xx", overwrite=True, strict=False)
+        assert result is None
+        assert not (temp_output_dir / "xx").exists()
+        # And the complete pack is untouched.
+        assert pack.read_text(encoding="utf-8") == before
 
-        # Verify correct section placement
-        assert classified["keywords"]["def"] == "definir"
-        assert classified["builtins"]["print"] == "imprimir"
-        assert classified["builtins"]["str"] == "cadena"
-        assert classified["exceptions"]["ValueError"] == "ErrorDeValor"
-        assert classified["builtins"]["ellipsis"] == "puntos_suspensivos"
+    def test_export_all_skips_incomplete_languages(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        _populate_full_language(temp_db, "es")
+        _add_language(temp_db, "uk")
+        term_id = temp_db.get_or_create_term("if", "python", "keyword")
+        temp_db.add_translation(
+            term_id=term_id, language_code="uk", translation="якщо", source="test"
+        )
+        temp_db.set_selected(term_id=term_id, language_code="uk", translation="якщо")
 
-    def test_export_produces_idempotent_result(self, temp_db, temp_output_dir):
-        """Verify re-exporting produces the same classification result."""
-        exporter = YAMLExporter(db=temp_db, output_dir=temp_output_dir)
+        results = exporter.export_all_languages(overwrite=True)
+        assert "es" in results
+        assert "uk" not in results
 
-        _add_translation(temp_db, "es", "class", "keyword", "clase", "test")
-        _add_translation(temp_db, "es", "len", "builtin_func", "longitud", "test")
 
-        translations = temp_db.get_translations_joined(language_code="es")
-        term_map = exporter._build_term_map(translations)
+class TestPresentationPreservation:
+    """Header, metadata, and key order survive an authoritative rewrite."""
 
-        # Classify twice
-        classified_1 = exporter._classify_terms(term_map)
-        classified_2 = exporter._classify_terms(term_map)
+    def test_metadata_preserved_and_last_updated_stable(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
 
-        # Results should be identical
-        assert classified_1 == classified_2, "Classification should be idempotent"
+        # Curate the metadata the way shipped packs are curated.
+        data = _load(pack)
+        text = pack.read_text(encoding="utf-8")
+        text = text.replace(
+            f"last_updated: '{data['metadata']['last_updated']}'",
+            "last_updated: '2024-01-01'",
+        )
+        text = text.replace("community_reviewed: false", "community_reviewed: true")
+        text = text.replace(
+            "author: Legesher Team (Aya AI Model)", "author: Original Author"
+        )
+        pack.write_text(text, encoding="utf-8")
+
+        # No content change -> metadata (incl. last_updated) untouched.
+        exporter.export_language("es", overwrite=True)
+        metadata = _load(pack)["metadata"]
+        assert metadata["last_updated"] == "2024-01-01"
+        assert metadata["community_reviewed"] is True
+        assert metadata["author"] == "Original Author"
+
+    def test_last_updated_refreshes_on_content_change(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        ids = _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        text = pack.read_text(encoding="utf-8")
+        original = _load(pack)["metadata"]["last_updated"]
+        pack.write_text(
+            text.replace(f"last_updated: '{original}'", "last_updated: '2024-01-01'"),
+            encoding="utf-8",
+        )
+
+        temp_db.set_selected(
+            term_id=ids[("keyword", "while")],
+            language_code="es",
+            translation="mientras",
+        )
+        exporter.export_language("es", overwrite=True)
+        assert _load(pack)["metadata"]["last_updated"] != "2024-01-01"
+
+    def test_existing_header_comment_preserved(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        text = pack.read_text(encoding="utf-8")
+        pack.write_text(
+            "# Custom curated header\n# Do not lose me\n\nlanguage:"
+            + text.split("language:", 1)[1],
+            encoding="utf-8",
+        )
+
+        exporter.export_language("es", overwrite=True)
+        new_text = pack.read_text(encoding="utf-8")
+        assert new_text.startswith("# Custom curated header\n# Do not lose me\n")
+
+    def test_existing_key_order_preserved(self, exporter, temp_db, temp_output_dir):
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        before_keys = list(_load(pack)["keywords"].keys())
+
+        exporter.export_language("es", overwrite=True)
+        assert list(_load(pack)["keywords"].keys()) == before_keys
+
+
+class TestPackagingSafety:
+    """Packaging files: YAML-only by default; never overwritten."""
+
+    def test_yaml_only_by_default(self, exporter, temp_db, temp_output_dir):
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        lang_dir = temp_output_dir / "es"
+        assert not (lang_dir / "pyproject.toml").exists()
+        assert not (lang_dir / "README.md").exists()
+        assert not (lang_dir / "CHANGELOG.md").exists()
+        assert not (lang_dir / "legesher_i18n_python_es" / "__init__.py").exists()
+
+    def test_packaging_created_when_requested(self, exporter, temp_db, temp_output_dir):
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True, include_packaging=True)
+        lang_dir = temp_output_dir / "es"
+        assert (lang_dir / "pyproject.toml").exists()
+        assert (lang_dir / "README.md").exists()
+        assert (lang_dir / "CHANGELOG.md").exists()
+        assert (lang_dir / "legesher_i18n_python_es" / "__init__.py").exists()
+
+    def test_generated_pyproject_is_workspace_safe(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """The old template's [tool.uv.sources] editable-path override
+        broke the uv workspace (root declares workspace=true)."""
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True, include_packaging=True)
+        toml_text = (temp_output_dir / "es" / "pyproject.toml").read_text(
+            encoding="utf-8"
+        )
+        assert "[tool.uv.sources]" not in toml_text
+        assert "editable" not in toml_text
+
+    def test_existing_packaging_never_overwritten(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """Regen must not downgrade pack versions (e.g. fr is 0.0.3)."""
+        _populate_full_language(temp_db, "es")
+        lang_dir = temp_output_dir / "es"
+        lang_dir.mkdir(parents=True, exist_ok=True)
+        curated = '[project]\nname = "legesher-i18n-python-es"\nversion = "0.0.3"\n'
+        (lang_dir / "pyproject.toml").write_text(curated, encoding="utf-8")
+
+        exporter.export_language("es", overwrite=True, include_packaging=True)
+        assert (lang_dir / "pyproject.toml").read_text(encoding="utf-8") == curated
+
+
+class TestExportIdempotency:
+    def test_double_export_is_byte_identical(self, exporter, temp_db, temp_output_dir):
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        files = sorted((temp_output_dir / "es").rglob("*.yml"), key=lambda p: p.name)
+        before = {f.name: f.read_text(encoding="utf-8") for f in files}
+
+        exporter.export_language("es", overwrite=True)
+        after = {f.name: f.read_text(encoding="utf-8") for f in files}
+        assert before == after
+
+    def test_overwrite_false_skips_existing(self, exporter, temp_db, temp_output_dir):
+        ids = _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        before = pack.read_text(encoding="utf-8")
+
+        temp_db.set_selected(
+            term_id=ids[("keyword", "while")],
+            language_code="es",
+            translation="mientras",
+        )
+        exporter.export_language("es", overwrite=False)
+        assert pack.read_text(encoding="utf-8") == before
+
+
+class TestUnreadableExistingPack:
+    """A pack that cannot be read back is never rewritten.
+
+    The rewrite is authoritative, so treating an unreadable file as empty
+    silently reset the curated metadata block — license,
+    ``python_version_min`` (the interpreter floor itself),
+    ``python_version_max``, ``community_reviewed`` — to generated
+    defaults, and flipped the new-file empty-section semantics mid-write.
+    """
+
+    @staticmethod
+    def _curate(pack: Path) -> str:
+        """Give a pack the curated metadata a shipped pack carries."""
+        text = pack.read_text(encoding="utf-8")
+        text = text.replace("python_version_min: '3.10'", "python_version_min: '3.13'")
+        text = text.replace("python_version_max: '3.14'", "python_version_max: '3.13'")
+        text = text.replace("license: Apache-2.0", "license: MIT")
+        pack.write_text(text, encoding="utf-8")
+        return text
+
+    def test_corrupt_yaml_raises_and_leaves_the_pack_untouched(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        self._curate(pack)
+
+        # Break the body the way a bad merge or a truncated write would.
+        pack.write_text(
+            pack.read_text(encoding="utf-8").replace(
+                "keywords:\n", "keywords: not: valid: yaml: {{{\n", 1
+            ),
+            encoding="utf-8",
+        )
+        corrupted = pack.read_text(encoding="utf-8")
+        with pytest.raises(UnparseablePackError, match="not valid YAML"):
+            exporter.export_language("es", overwrite=True)
+        assert pack.read_text(encoding="utf-8") == corrupted
+
+    def test_corrupt_yaml_does_not_reset_curated_metadata(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """The reproduced defect: python_version_min/max and license
+        silently reverted to generated defaults on regen."""
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        self._curate(pack)
+        before = _load(pack)["metadata"]
+        assert before["python_version_min"] == "3.13"
+
+        pack.write_text(
+            pack.read_text(encoding="utf-8") + "\nthis is: not: valid: yaml: {{{\n",
+            encoding="utf-8",
+        )
+        with pytest.raises(UnparseablePackError):
+            exporter.export_language("es", overwrite=True)
+
+        # Repair the file; the curated metadata is still the curated one.
+        text = pack.read_text(encoding="utf-8")
+        pack.write_text(
+            text.replace("\nthis is: not: valid: yaml: {{{\n", ""), encoding="utf-8"
+        )
+        exporter.export_language("es", overwrite=True)
+        after = _load(pack)["metadata"]
+        assert after["python_version_min"] == "3.13"
+        assert after["python_version_max"] == "3.13"
+        assert after["license"] == "MIT"
+
+    def test_non_mapping_yaml_raises(self, exporter, temp_db, temp_output_dir):
+        """Valid YAML that isn't a pack mapping is equally unrewritable."""
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        pack.write_text("- clobbered\n- by a list\n", encoding="utf-8")
+
+        with pytest.raises(UnparseablePackError, match="not a mapping"):
+            exporter.export_language("es", overwrite=True)
+
+    def test_undecodable_file_raises(self, exporter, temp_db, temp_output_dir):
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        pack.write_bytes(b"\xff\xfe not utf-8 at all")
+
+        with pytest.raises(UnparseablePackError, match="not valid UTF-8"):
+            exporter.export_language("es", overwrite=True)
+
+    def test_os_error_is_not_a_data_integrity_failure(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """A permission bit / EIO / IsADirectory is an environmental blip.
+
+        Only the file's CONTENT can be a data-integrity failure; ranking
+        an OSError alongside corrupt YAML would let a chmod decide how
+        much of a run survives.
+        """
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        pack.unlink()
+        pack.mkdir()
+
+        # OSError, NOT UnparseablePackError (which is a ValueError).
+        with pytest.raises(OSError):
+            exporter.export_language("es", overwrite=True)
+
+    def test_a_bad_late_file_rewrites_none_of_the_earlier_ones(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """The partial-pack-on-disk state, at file granularity.
+
+        ``3.12.yml`` is parsed before ``3.10.yml`` is written, so a bad
+        file in the middle of the chain leaves the whole pack directory
+        exactly as it was — no rewritten sections, no re-dated metadata.
+        """
+        ids = _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        packs = sorted((temp_output_dir / "es").rglob("*.yml"))
+        assert len(packs) == 5
+
+        broken = _pack_file(temp_output_dir, "es", "3.12")
+        broken.write_text(
+            broken.read_text(encoding="utf-8") + "\nbad: not: valid: yaml: {{{\n",
+            encoding="utf-8",
+        )
+        before = {p.name: p.read_bytes() for p in packs}
+
+        # A real content change: pre-fix, 3.10 and 3.11 were rewritten
+        # with the new value (and re-dated) before 3.12 raised.
+        _reselect(temp_db, ids, "es", "keyword", "while", "mientras")
+        with pytest.raises(UnparseablePackError, match="3.12.yml"):
+            exporter.export_language("es", overwrite=True)
+
+        assert {p.name: p.read_bytes() for p in packs} == before
+
+    def test_missing_file_is_not_a_parse_error(self, exporter, temp_output_dir):
+        """A file that does not exist is a new file, not a corrupt one."""
+        assert exporter._read_existing(temp_output_dir / "nope.yml") == ({}, None)
+
+    def test_empty_file_reads_as_no_existing_data(self, exporter, temp_output_dir):
+        empty = temp_output_dir / "empty.yml"
+        empty.write_text("", encoding="utf-8")
+        assert exporter._read_existing(empty) == ({}, "")
+
+    def test_bulk_export_does_not_swallow_the_error(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """A corrupt pack must not be reduced to a log line in a 51-pack
+        run — export_all reports data-integrity failures."""
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        pack = _pack_file(temp_output_dir, "es", "3.10")
+        pack.write_text("this is: not: valid: yaml: {{{\n", encoding="utf-8")
+
+        with pytest.raises(BulkExportError) as excinfo:
+            exporter.export_all_languages(overwrite=True)
+        assert isinstance(excinfo.value.failures["es"], UnparseablePackError)
+
+
+class TestInterpreterFloorTiering:
+    """CORE-1521: 3.13-only XID characters ship stripped below 3.13.
+
+    ``ZWJ`` is a valid identifier character only from CPython 3.13, so a
+    canonical Sinhala conjunct spelling would not tokenize on 3.10-3.12.
+    The pre-3.13 packs therefore carry the stripped compatibility form
+    and the 3.13 overlay restores the canonical spelling.
+    """
+
+    @staticmethod
+    def _populate_zwj(db, lang: str = "si") -> dict:
+        """Full inventory where three slots carry a ZWJ conjunct."""
+        ids = _populate_full_language(db, lang)
+        _reselect(db, ids, lang, "keyword", "while", f"t_whi{ZWJ}le")
+        _reselect(db, ids, lang, "builtin_func", "print", f"t_pri{ZWJ}nt")
+        _reselect(db, ids, lang, "exception", "valueerror", f"t_valu{ZWJ}eerror")
+        _reselect(db, ids, lang, "keyword", "except*", f"t_exce{ZWJ}pt*")
+        _reselect(db, ids, lang, "reserved_word", "self", f"t_se{ZWJ}lf")
+        return ids
+
+    def test_310_carries_the_stripped_form(self, exporter, temp_db, temp_output_dir):
+        self._populate_zwj(temp_db)
+        exporter.export_language("si", overwrite=True)
+        d310 = _load(_pack_file(temp_output_dir, "si", "3.10"))
+
+        assert d310["keywords"]["while"] == "t_while"
+        assert d310["builtins"]["print"] == "t_print"
+        assert d310["exceptions"]["valueerror"] == "t_valueerror"
+        assert d310["reserved_words"]["self"] == "t_self"
+        assert ZWJ not in _pack_file(temp_output_dir, "si", "3.10").read_text(
+            encoding="utf-8"
+        )
+        # Untouched values are untouched.
+        assert d310["keywords"]["def"] == "t_def"
+
+    def test_313_overlay_restores_the_canonical_form(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        self._populate_zwj(temp_db)
+        exporter.export_language("si", overwrite=True)
+        d313 = _load(_pack_file(temp_output_dir, "si", "3.13"))
+
+        assert d313["keywords"]["while"] == f"t_whi{ZWJ}le"
+        assert d313["builtins"]["print"] == f"t_pri{ZWJ}nt"
+        assert d313["exceptions"]["valueerror"] == f"t_valu{ZWJ}eerror"
+        assert d313["reserved_words"]["self"] == f"t_se{ZWJ}lf"
+        # The 3.13-native term still ships alongside the overlay.
+        assert d313["exceptions"]["pythonfinalizationerror"] == (
+            "t_pythonfinalizationerror"
+        )
+        # Only the tiered terms are overlaid — the overlay is not a copy
+        # of the base pack.
+        assert set(d313["keywords"]) == {"while", "except*"}
+        assert set(d313["builtins"]) == {"print"}
+        assert set(d313["reserved_words"]) == {"self"}
+
+    def test_311_keyword_is_tiered_in_its_own_file(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """A version-specific keyword tiers in the file that carries it."""
+        self._populate_zwj(temp_db)
+        exporter.export_language("si", overwrite=True)
+
+        d311 = _load(_pack_file(temp_output_dir, "si", "3.11"))
+        d313 = _load(_pack_file(temp_output_dir, "si", "3.13"))
+        assert d311["keywords"]["except*"] == "t_except*"
+        assert d313["keywords"]["except*"] == f"t_exce{ZWJ}pt*"
+
+    def test_reserved_words_section_appears_only_when_tiered(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """Without a ZWJ reserved word, 3.13 grows no reserved_words stub."""
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True)
+        assert "reserved_words" not in _load(_pack_file(temp_output_dir, "es", "3.13"))
+
+    def test_tiering_is_idempotent(self, exporter, temp_db, temp_output_dir):
+        """Re-export must not re-strip, re-tier, or churn last_updated."""
+        self._populate_zwj(temp_db)
+        exporter.export_language("si", overwrite=True)
+        files = sorted((temp_output_dir / "si").rglob("*.yml"), key=lambda p: p.name)
+        before = {f.name: f.read_text(encoding="utf-8") for f in files}
+
+        exporter.export_language("si", overwrite=True)
+        after = {f.name: f.read_text(encoding="utf-8") for f in files}
+        assert before == after
+        d310 = _load(_pack_file(temp_output_dir, "si", "3.10"))
+        d313 = _load(_pack_file(temp_output_dir, "si", "3.13"))
+        assert d310["keywords"]["while"] == "t_while"
+        assert d313["keywords"]["while"] == f"t_whi{ZWJ}le"
+
+    def test_build_version_sections_tiers_without_touching_disk(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """The tiering step is resolvable in isolation, before any write."""
+        self._populate_zwj(temp_db)
+        missing: list[str] = []
+        sections = exporter._build_version_sections(
+            "si", exporter._load_selected_slots("si"), missing
+        )
+
+        assert missing == []
+        assert sections["3.10"]["keywords"]["while"] == "t_while"
+        assert sections["3.13"]["keywords"]["while"] == f"t_whi{ZWJ}le"
+        # Section shape per version is load-bearing for empty-stub emission.
+        assert set(sections["3.10"]) == {
+            "keywords",
+            "builtins",
+            "exceptions",
+            "reserved_words",
+        }
+        assert set(sections["3.11"]) == {"keywords", "exceptions"}
+        assert set(sections["3.12"]) == {"keywords", "exceptions"}
+        assert set(sections["3.14"]) == {"keywords", "exceptions"}
+        assert not (temp_output_dir / "si").exists()
+
+    def test_incomplete_language_short_circuits_before_tiering(self, exporter, temp_db):
+        _add_language(temp_db, "xx")
+        term_id = temp_db.get_or_create_term("if", "python", "keyword")
+        temp_db.set_selected(term_id=term_id, language_code="xx", translation="x_if")
+
+        missing: list[str] = []
+        sections = exporter._build_version_sections(
+            "xx", exporter._load_selected_slots("xx"), missing
+        )
+        assert sections == {}
+        assert missing
+
+    def test_strip_collision_within_a_section_raises(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """Two canonically-distinct keywords must not become one token.
+
+        ``db.find_collisions()`` and audit_collisions.py compare canonical
+        values and cannot see this: the values differ until the export
+        strips them.
+        """
+        ids = _populate_full_language(temp_db, "si")
+        _reselect(temp_db, ids, "si", "keyword", "while", f"t_aa{ZWJ}bb")
+        _reselect(temp_db, ids, "si", "keyword", "for", "t_aabb")
+
+        with pytest.raises(InterpreterFloorCollisionError) as excinfo:
+            exporter.export_language("si", overwrite=True)
+        message = str(excinfo.value)
+        assert "keywords.while" in message and "keywords.for" in message
+        assert "t_aabb" in message
+        # Nothing was written — the guard runs before any file is opened.
+        assert not (temp_output_dir / "si").exists()
+
+    def test_strip_collision_across_sections_raises(self, exporter, temp_db):
+        """Cross-section too: sections share one token namespace."""
+        ids = _populate_full_language(temp_db, "si")
+        _reselect(temp_db, ids, "si", "keyword", "while", f"t_cc{ZWJ}dd")
+        _reselect(temp_db, ids, "si", "builtin_func", "print", "t_ccdd")
+
+        with pytest.raises(InterpreterFloorCollisionError, match="builtins.print"):
+            exporter.export_language("si", overwrite=True)
+
+    def test_strip_collision_across_version_files_raises(self, exporter, temp_db):
+        """The pre-3.13 packs chain by ``extends``, so a 3.10 keyword and
+        a 3.12 keyword collide just as fatally.
+
+        The database's own selection guard (``set_selected``) accepts both
+        values: they are canonically distinct. Only the export sees them
+        collapse.
+        """
+        ids = _populate_full_language(temp_db, "si")
+        _reselect(temp_db, ids, "si", "keyword", "while", "t_eeff")
+        _reselect(temp_db, ids, "si", "keyword", "type", f"t_ee{ZWJ}ff")
+
+        with pytest.raises(InterpreterFloorCollisionError, match="keywords.type"):
+            exporter.export_language("si", overwrite=True)
+
+    def test_bulk_export_does_not_swallow_a_strip_collision(self, exporter, temp_db):
+        ids = _populate_full_language(temp_db, "si")
+        _reselect(temp_db, ids, "si", "keyword", "while", f"t_gg{ZWJ}hh")
+        _reselect(temp_db, ids, "si", "keyword", "for", "t_gghh")
+
+        with pytest.raises(BulkExportError) as excinfo:
+            exporter.export_all_languages(overwrite=True)
+        assert isinstance(excinfo.value.failures["si"], InterpreterFloorCollisionError)
+
+    def test_dual_slot_type_may_differ_by_a_conjunct(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """The majority real-world pattern must not be blocked.
+
+        22 of the 51 shipped packs spell the two ``type`` slots (3.10
+        builtin, 3.12 soft keyword) differently. One slot adopting a
+        conjunct spelling strips onto the other's — but it is the SAME
+        term name, which ``db.find_collisions`` deliberately does not
+        treat as a round-trip ambiguity (CORE-1400). Keying the guard on
+        ``section.name`` instead would block all 22.
+        """
+        ids = _populate_full_language(temp_db, "si")
+        _reselect(temp_db, ids, "si", "builtin_type", "type", f"t_ty{ZWJ}pe")
+        _reselect(temp_db, ids, "si", "keyword", "type", "t_type")
+
+        exporter.export_language("si", overwrite=True)
+        assert _load(_pack_file(temp_output_dir, "si", "3.10"))["builtins"]["type"] == (
+            "t_type"
+        )
+        assert _load(_pack_file(temp_output_dir, "si", "3.12"))["keywords"]["type"] == (
+            "t_type"
+        )
+        # The conjunct spelling is still restored by the 3.13 overlay.
+        assert _load(_pack_file(temp_output_dir, "si", "3.13"))["builtins"]["type"] == (
+            f"t_ty{ZWJ}pe"
+        )
+
+    def test_a_different_term_still_collides_with_a_type_slot(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """Grouping by name narrows the guard; it does not disable it.
+
+        ``while`` is a different term from ``type``, so its conjunct
+        spelling stripping onto the shared ``type`` token IS a round-trip
+        ambiguity. ``set_selected`` accepts it — the two values are
+        canonically distinct — so only the export can see the collapse.
+        """
+        ids = _populate_full_language(temp_db, "si")
+        _reselect(temp_db, ids, "si", "keyword", "while", f"t_ty{ZWJ}pe")
+
+        with pytest.raises(InterpreterFloorCollisionError) as excinfo:
+            exporter.export_language("si", overwrite=True)
+        message = str(excinfo.value)
+        assert "builtins.type" in message and "keywords.while" in message
+        assert not (temp_output_dir / "si").exists()
+
+    def test_identical_values_are_not_a_strip_collision(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """The dual-slot ``type`` term legitimately shares one spelling
+        across sections — that is an upstream concern, not a fabricated
+        collision, and must not block the export."""
+        ids = _populate_full_language(temp_db, "si")
+        _reselect(temp_db, ids, "si", "keyword", "type", "tipo")
+        _reselect(temp_db, ids, "si", "builtin_type", "type", "tipo")
+
+        exporter.export_language("si", overwrite=True)
+        assert _load(_pack_file(temp_output_dir, "si", "3.10"))["builtins"]["type"] == (
+            "tipo"
+        )
+        assert _load(_pack_file(temp_output_dir, "si", "3.12"))["keywords"]["type"] == (
+            "tipo"
+        )
+
+
+class TestBulkExportBlastRadius:
+    """A bulk run's outcome never depends on alphabetical position.
+
+    ``export_all_languages`` iterates ``sorted(...)``, so aborting on the
+    first data-integrity failure meant a corrupt ``am`` dropped all 51
+    packs while a corrupt ``zh`` dropped one. Each language is written
+    all-or-nothing, so the healthy ones complete and the run then fails
+    with every failure it found.
+    """
+
+    @staticmethod
+    def _populate(temp_db, langs=("am", "es", "zh")) -> dict[str, dict]:
+        return {lang: _populate_full_language(temp_db, lang) for lang in langs}
+
+    @pytest.mark.parametrize("corrupt", ["am", "zh"])
+    def test_blast_radius_is_not_alphabetical(
+        self, exporter, temp_db, temp_output_dir, corrupt
+    ):
+        ids = self._populate(temp_db)
+        exporter.export_all_languages(overwrite=True)
+
+        _pack_file(temp_output_dir, corrupt, "3.10").write_text(
+            "this is: not: valid: yaml: {{{\n", encoding="utf-8"
+        )
+        healthy = [lang for lang in ids if lang != corrupt]
+        for lang in healthy:
+            _reselect(temp_db, ids[lang], lang, "keyword", "while", "t_while2")
+
+        with pytest.raises(BulkExportError) as excinfo:
+            exporter.export_all_languages(overwrite=True)
+
+        assert set(excinfo.value.failures) == {corrupt}
+        assert isinstance(excinfo.value.failures[corrupt], UnparseablePackError)
+        # Every healthy language exported — first or last in the sort.
+        for lang in healthy:
+            data = _load(_pack_file(temp_output_dir, lang, "3.10"))
+            assert data["keywords"]["while"] == "t_while2"
+
+    def test_every_failure_is_reported_not_just_the_first(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        ids = self._populate(temp_db)
+        exporter.export_all_languages(overwrite=True)
+        for lang in ("am", "zh"):
+            _pack_file(temp_output_dir, lang, "3.10").write_text(
+                "this is: not: valid: yaml: {{{\n", encoding="utf-8"
+            )
+        _reselect(temp_db, ids["es"], "es", "keyword", "while", "t_while2")
+
+        with pytest.raises(BulkExportError) as excinfo:
+            exporter.export_all_languages(overwrite=True)
+
+        assert set(excinfo.value.failures) == {"am", "zh"}
+        assert "am" in str(excinfo.value) and "zh" in str(excinfo.value)
+        assert (
+            _load(_pack_file(temp_output_dir, "es", "3.10"))["keywords"]["while"]
+            == "t_while2"
+        )
+
+    def test_corrupt_selection_layer_is_not_swallowed(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """The most severe failure the module names was the one still
+        being reduced to a log line."""
+        self._populate(temp_db, ("am", "es"))
+        conn = temp_db._get_connection()
+        conn.execute(
+            "UPDATE selected_translations SET translation = ? "
+            "WHERE language_code = 'am'",
+            ("not an identifier",),
+        )
+        conn.commit()
+
+        with pytest.raises(BulkExportError) as excinfo:
+            exporter.export_all_languages(overwrite=True)
+
+        assert isinstance(excinfo.value.failures["am"], CorruptSelectionError)
+        assert "es" not in excinfo.value.failures
+        assert not (temp_output_dir / "am").exists()
+        assert _pack_file(temp_output_dir, "es", "3.10").exists()
+
+    def test_environmental_failure_is_ranked_below_data_integrity(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """An OSError is the milder diagnosis, not a silent one.
+
+        Ranked below the data-integrity failures — but still reported:
+        the pack it skipped is exactly as stale as one a corrupt file
+        skipped, and only the raise tells the caller so. Logged-and-
+        swallowed let the pipeline print "✓ Exported N language packs"
+        over it.
+        """
+        ids = self._populate(temp_db, ("am", "es"))
+        exporter.export_all_languages(overwrite=True)
+        pack = _pack_file(temp_output_dir, "am", "3.10")
+        pack.unlink()
+        pack.mkdir()
+        _reselect(temp_db, ids["es"], "es", "keyword", "while", "t_while2")
+
+        with pytest.raises(BulkExportError) as excinfo:
+            exporter.export_all_languages(overwrite=True)
+
+        assert set(excinfo.value.failures) == {"am"}
+        assert isinstance(excinfo.value.failures["am"], OSError)
+        # Ranked as environmental, NOT as a data-integrity failure.
+        assert set(excinfo.value.environmental) == {"am"}
+        assert excinfo.value.data_integrity == {}
+        # The healthy language still exported — blast radius unchanged.
+        assert (
+            _load(_pack_file(temp_output_dir, "es", "3.10"))["keywords"]["while"]
+            == "t_while2"
+        )
+
+    def test_both_failure_kinds_are_reported_and_ranked(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """One run, both buckets: neither hides the other.
+
+        The severity distinction lives in the buckets and the message
+        order, not in whether the run fails at all.
+        """
+        ids = self._populate(temp_db)
+        exporter.export_all_languages(overwrite=True)
+
+        # 'am' sorts FIRST but is only environmental; 'zh' sorts last and
+        # is the data-integrity failure — so the message order is a rank,
+        # not the alphabet.
+        blocked = _pack_file(temp_output_dir, "am", "3.10")
+        blocked.unlink()
+        blocked.mkdir()
+        _pack_file(temp_output_dir, "zh", "3.10").write_text(
+            "this is: not: valid: yaml: {{{\n", encoding="utf-8"
+        )
+        _reselect(temp_db, ids["es"], "es", "keyword", "while", "t_while2")
+
+        with pytest.raises(BulkExportError) as excinfo:
+            exporter.export_all_languages(overwrite=True)
+
+        err = excinfo.value
+        assert set(err.failures) == {"am", "zh"}
+        assert set(err.data_integrity) == {"zh"}
+        assert set(err.environmental) == {"am"}
+        assert str(err).index("zh:") < str(err).index("am:")
+        assert (
+            _load(_pack_file(temp_output_dir, "es", "3.10"))["keywords"]["while"]
+            == "t_while2"
+        )

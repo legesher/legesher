@@ -75,7 +75,8 @@ EXCEPTIONS_STDLIB_ONLY = {"windowserror"}
 #  - REPL/site helpers injected by site.py that Legesher does not track
 #    (copyright, credits, license, exit, quit)
 #  - True/False/None: tracked as keywords (their real token category)
-#  - type: tracked as the PEP 695 keyword (@3.12)
+# ``type`` is tracked BOTH as a builtin (BUILTIN_TYPES) and as the PEP 695
+# keyword (@3.12) since CORE-1400 — the two are distinct pack slots.
 # NOTE: names Legesher DOES track (e.g. `help`) must NOT be listed here — an
 # allowlist entry for a tracked name would mask a real "term dropped" defect.
 BUILTINS_STDLIB_ONLY = {
@@ -87,8 +88,13 @@ BUILTINS_STDLIB_ONLY = {
     "true",
     "false",
     "none",
-    "type",
 }
+
+# Builtins Legesher tracks that the dir(builtins) scan cannot see:
+# ``__import__`` is a real builtin, but ``_stdlib_builtins`` filters
+# dunder names, so it must be allowlisted on the Legesher side. Every
+# shipped pack carries a ``builtins.__import__`` slot (CORE-1400).
+BUILTINS_LEGESHER_ONLY = {"__import__"}
 
 
 class TestExceptionsAgainstStdlib:
@@ -135,7 +141,7 @@ class TestKeywordsAgainstStdlib:
 class TestBuiltinsAgainstStdlib:
     def test_no_fabricated_builtins(self):
         leg = {b.lower() for b in _index().get_all_builtins(RUNNING_VERSION)}
-        fabricated = leg - _stdlib_builtins()
+        fabricated = leg - _stdlib_builtins() - BUILTINS_LEGESHER_ONLY
         assert not fabricated, (
             f"Legesher lists builtin(s) not in CPython: {sorted(fabricated)}"
         )

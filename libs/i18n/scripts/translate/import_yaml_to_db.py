@@ -27,6 +27,10 @@ import yaml
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from legesher_i18n.db import TranslationDatabase
+from legesher_i18n.term_definitions import (
+    YAML_SECTION_CATEGORIES,
+    get_all_terms_by_category,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,6 +43,91 @@ LANGUAGE_PACKS_DIR = Path(__file__).parent.parent.parent / "language-packs" / "p
 
 # Skip English (it's the reference, not a translation)
 SKIP_LANGUAGES = {"en"}
+
+# Canonical membership per category, lowercased. This is the data that says
+# which of a section's categories a name really belongs to, so a row created
+# from a pack does not have to guess. Version 3.13 covers every shipped pack
+# version; the multi-category ``builtins`` section is version-independent
+# anyway (BUILTIN_FUNCTIONS / BUILTIN_TYPES / SPECIAL_CONSTANTS are fixed
+# lists, and they are disjoint, so at most one category can match).
+_CATEGORY_MEMBERS: dict[str, frozenset[str]] = {
+    category: frozenset(name.lower() for name in names)
+    for category, names in get_all_terms_by_category(python_version="3.13").items()
+}
+
+
+def _create_category(name: str, categories: list[str]) -> tuple[str, bool]:
+    """Pick the category a *new* row for this pack slot should carry.
+
+    CORE-1400: taking ``categories[0]`` filed every unseen ``builtins`` slot
+    as ``builtin_func`` — 21 rows on a bootstrap import (18 ``builtin_type``,
+    2 ``special_constant``, plus ``type``) whose stored category contradicts
+    ``classify_term``. ``classify_term`` cannot be used directly here: it is
+    section-blind and answers ``keyword`` for ``builtins.type``, which is the
+    other slot. The canonical term lists, intersected with the section's own
+    categories, answer for this slot.
+
+    Args:
+        name: The term name as it appears in the pack
+        categories: Acceptable categories for the section, in resolution order
+
+    Returns:
+        ``(category, known)`` — the category to store, and whether the
+        canonical term lists actually place the name there. ``known`` is
+        False when no list knows the name, in which case the section's
+        primary category is the documented fallback.
+    """
+    lowered = name.lower()
+    for category in categories:
+        if lowered in _CATEGORY_MEMBERS.get(category, frozenset()):
+            return category, True
+    return categories[0], False
+
+
+def resolve_term_id(
+    db: TranslationDatabase,
+    name: str,
+    categories: list[str],
+) -> int:
+    """Resolve the term row a pack slot belongs to, creating it if absent.
+
+    A YAML section maps to several term categories (``builtins`` covers
+    ``builtin_func``, ``builtin_type`` and ``special_constant``), so the
+    section name alone does not identify a row. CORE-1400: assuming the
+    first category made ``builtins.type`` request ``builtin_func`` — which
+    matches neither stored ``type`` row — so ``get_or_create_term`` raised
+    on the ambiguity and the slot was dropped.
+
+    Args:
+        db: Translation database instance
+        name: The term name as it appears in the pack
+        categories: Acceptable categories for the section, in resolution
+            order; the section's primary category is the fallback when a
+            term has to be created and no canonical list knows the name
+
+    Returns:
+        The term ID
+    """
+    for category in categories:
+        row = db.get_term_by_name(name, "python", category=category)
+        if row is not None:
+            return row["id"]
+
+    # No row carries any of the section's categories. File the new row under
+    # the category the canonical term lists put the name in — see
+    # ``_create_category``. When they do place it (``known``), any existing
+    # row for the name is a *different* slot, not this one: ``builtins.type``
+    # against a database holding only the ``type`` keyword row is the shipped
+    # example, and reusing that row makes one row absorb both pack slots. So
+    # ask for a second slot. When no list knows the name there is no second
+    # slot to claim, and reusing its single row stays right.
+    category, known = _create_category(name, categories)
+    return db.get_or_create_term(
+        name=name,
+        programming_language="python",
+        category=category,
+        allow_duplicate_name=known,
+    )
 
 
 def import_yaml_file(
@@ -75,13 +164,10 @@ def import_yaml_file(
             if not isinstance(section_data, dict):
                 continue
 
-            # Map YAML section to term category
-            section_to_category = {
-                "keywords": "keyword",
-                "builtins": "builtin_func",
-                "exceptions": "exception",
-            }
-            category = section_to_category.get(section, "unknown")
+            # Map YAML section to its acceptable term categories
+            categories = YAML_SECTION_CATEGORIES.get(section)
+            if not categories:
+                continue
 
             for term, translation in section_data.items():
                 # Skip comments
@@ -100,11 +186,7 @@ def import_yaml_file(
 
                 try:
                     # Get or create the term in the terms table
-                    term_id = db.get_or_create_term(
-                        name=term,
-                        programming_language="python",
-                        category=category,
-                    )
+                    term_id = resolve_term_id(db, term, categories)
 
                     db.add_translation(
                         term_id=term_id,

@@ -172,9 +172,12 @@ result = await coordinator.translate("Hello", "en", "es")
 
 ### Updating Translations
 
-- **Existing terms**: Update in `3.10.yml` (base file)
-- **New Python version terms**: Add only to that version's YAML file
-- Run `legesher-i18n validate` to check
+- **Change the DB first, not the YAML** (CORE-1400): update the canonical value via `set_selected`, then
+  regenerate. Packs are rewritten authoritatively from `selected_translations`, so a YAML-only edit is
+  reverted by the next regen and flagged as a blocking `value_changed` by `scripts/verify_pack_regen.py`.
+- **New Python version terms**: land in that version's YAML file (the exporter places them by
+  `version_added`)
+- Run `legesher-i18n validate` and `scripts/verify_pack_regen.py` to check
 
 ### Language Status
 
@@ -207,7 +210,9 @@ Extensible across programming languages. Python's `def` and a future TypeScript 
 | `version_added`        | TEXT          | Python version when term was introduced                                                                          |
 | `description`          | TEXT          | Optional human-readable description                                                                              |
 
-**Constraint:** `UNIQUE(name, programming_language)`
+**Constraint:** `UNIQUE(name, programming_language, category)` — relaxed from `(name, programming_language)`
+under CORE-1400 so one surface token can hold two slots (`type` is both the 3.10 builtin and the 3.12 soft
+keyword, two term rows).
 
 #### `languages` — Language registry
 
@@ -259,6 +264,11 @@ Tracks which translation is currently chosen for YAML packs. Decouples "what we 
 
 **Constraint:** `UNIQUE(term_id, language_code)` — exactly one active translation per term+language.
 
+**Invariant (CORE-1400):** every selected value passes the publish gate — a valid Python identifier
+(with the `except*` soft-keyword allowance) — enforced by `set_selected` and by the canonical selection
+rule in `legesher_i18n/selection.py`. The candidate pool (`translations`) may be dirty; selections may
+not. See [docs/translation-selection.md](docs/translation-selection.md).
+
 ### Source Values
 
 | Source      | Meaning                                                              |
@@ -279,19 +289,24 @@ db = TranslationDatabase()  # Uses default path, or pass db_path="..."
 
 # Terms
 db.get_or_create_term(name, programming_language, category, subcategory)
-db.get_term_by_name(name, programming_language)
+#   Category-aware since CORE-1400: an explicit category selects among same-name rows.
+#   RAISES ValueError on an ambiguous name (e.g. "type") when no category resolves it;
+#   allow_duplicate_name=True deliberately adds a new (name, category) slot.
+db.get_term_by_name(name, programming_language, category=None)   # no category → lowest-id row
 db.get_terms(programming_language, category)
 
 # Translations (complete catalog)
 db.add_translation(term_id, language_code, translation, source, ...)  # Returns 0 if duplicate
 db.get_translations(term_id, language_code, source)
 db.get_translations_joined(language_code, source)  # JOIN with terms for backward compat
-db.get_translations_for_term(term_name, language_code)
+db.get_translations_for_term(term_name, language_code, category=None)  # category picks the slot for dual-slot names
 
 # Selected translations (active choices)
 db.set_selected(term_id, language_code, translation, selected_by, reason)
+#   Enforces the CORE-1400 publish gate (valid identifier + except* allowance) and the
+#   collision guard at the write boundary — both raise ValueError.
 db.get_selected(term_id, language_code)
-db.get_selected_by_name(term_name, language_code)
+db.get_selected_by_name(term_name, language_code, category=None)
 db.get_all_selected()
 db.remove_selected(term_id, language_code)
 
@@ -336,13 +351,14 @@ ORDER BY tm.name, t.source;
 | `legesher_i18n/db/translations.db`       | The consolidated SQLite database                                |
 | `scripts/translate/pipeline.py`          | Translation pipeline (stores suggestions via `add_translation`) |
 | `scripts/translate/import_yaml_to_db.py` | Bulk YAML-to-DB import utility                                  |
-| `scripts/translate/yaml_exporter.py`     | DB-to-YAML export (uses `get_translations_joined`)              |
+| `scripts/translate/yaml_exporter.py`     | DB-to-YAML export (reads ONLY `get_all_selected` — CORE-1400)   |
 
 ### Collision Prevention (CORE-605)
 
-A **collision** occurs when the same translated text is the selected translation for 2+ different Python terms
-in the same language — this breaks round-trip translation (the reverse translator can't determine which English
-keyword to map back to).
+A **collision** occurs when the same translated text is the selected translation for 2+ different Python term
+**names** in the same language — this breaks round-trip translation (the reverse translator can't determine
+which English keyword to map back to). Same-name terms are exempt (CORE-1400): `type`'s builtin and soft-keyword
+slots sharing one translation round-trips to the same token and is not an ambiguity.
 
 **Detection:**
 
@@ -359,7 +375,7 @@ a translation are NOT collisions (different runtime contexts).
 **Prevention:**
 
 `set_selected()` includes a collision guard (default on). Attempting to select a translation that's already
-active for another term in the same programming language raises `ValueError`:
+active for a different term **name** in the same programming language raises `ValueError`:
 
 ```python
 db.set_selected(term_id=1, language_code="fi", translation="ja")

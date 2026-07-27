@@ -204,6 +204,60 @@ class PipelineStats:
         console.print(f"\nDuration: {duration:.1f}s ({duration / 60:.1f} minutes)")
 
 
+def resolve_read_category(db: TranslationDatabase, term: str) -> str | None:
+    """Pick the category the skip-existing read must query the term with.
+
+    The read has to land on the row ``_translate_one`` writes to, or the
+    skip check consults one row while the write files under another and
+    the term is re-translated (and re-billed) every run — CORE-1400.
+
+    The write calls ``get_or_create_term(category=classify_term(term))``,
+    which resolves in three ways, so the read mirrors all three:
+
+    * a row carries the classified category — both sides pick that row;
+    * the name has exactly one row whose category differs (``classmethod``,
+      ``property``, ``staticmethod`` and ``super`` are stored
+      ``builtin_func`` but classify as ``builtin_type``) — the write reuses
+      that single row, so the read drops the category and does the same;
+    * the name has several rows and none carries the classified category —
+      the write raises, so the read stays strict rather than silently
+      resolving to the lowest id. Empty set on the shipped database; the
+      warning marks it if a future row split creates one.
+
+    Args:
+        db: Translation database instance
+        term: Python term about to be translated
+
+    Returns:
+        The category to pass to the read, or ``None`` to read the term's
+        only row whatever its stored category
+    """
+    category = classify_term(term, python_version="3.13")
+    if db.get_term_by_name(term, "python", category=category) is not None:
+        return category
+
+    # No row carries the classified category. Count the name's rows to tell
+    # the reusable single-row case from the ambiguous one. (A public
+    # ``get_terms(name=...)`` filter would make this a lookup instead of a
+    # scan; ``_get_terms_by_name`` is private, so filter the public list.)
+    rows = [
+        row
+        for row in db.get_terms(programming_language="python")
+        if row["name"] == term
+    ]
+    if len(rows) == 1:
+        return None
+    if len(rows) > 1:
+        logger.warning(
+            f"Term '{term}' has {len(rows)} rows "
+            f"({', '.join(str(row['category']) for row in rows)}) and none is "
+            f"'{category}': the skip-existing read finds nothing and the write "
+            f"will raise. Add the missing row or fix the stored category "
+            f"(CORE-1400)."
+        )
+    return category
+
+
 class TranslationPipeline:
     """Main translation pipeline orchestrator."""
 
@@ -365,6 +419,14 @@ class TranslationPipeline:
             task = progress.add_task("Translating...", total=total_tasks)
 
             for term in terms:
+                # CORE-1400: the slot a term lives in does not vary by
+                # language or model, so resolve it once per term.
+                read_category = (
+                    resolve_read_category(self.db, term)
+                    if self.config.skip_existing
+                    else None
+                )
+
                 for language in self.config.languages:
                     for model_name, model in self.models.items():
                         # Check budget before each translation
@@ -378,9 +440,17 @@ class TranslationPipeline:
 
                         # Check if translation already exists (skip_existing)
                         if self.config.skip_existing:
+                            # CORE-1400: read the same slot _translate_one
+                            # writes to. 'type' holds two term rows (the
+                            # 3.10 builtin_type and the PEP 695 keyword);
+                            # an uncategorised read resolves to the lowest
+                            # id, so the check consulted one row while the
+                            # write filed under the other and could never
+                            # converge — re-billing the term every run.
                             existing = self.db.get_translations_for_term(
                                 term_name=term,
                                 language_code=language,
+                                category=read_category,
                             )
                             # Filter to check if this specific model already contributed
                             model_existing = [
