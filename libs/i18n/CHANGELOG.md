@@ -11,6 +11,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **`of` + `log` context briefs — the corpus follows the CORE-1571 surface
+  widening (60 → 62).** Two new Tier-1 briefs in `context/javascript/`,
+  authored in the linguist-not-translator framing with their `reference.md`
+  citations (§ For-Of Loops; § Logs & Assertions › Logging). `of.md` centers
+  the in/of distinctness constraint — Python spells value-iteration with
+  "in," JavaScript's `in` is key presence, and the two words share the
+  collision-gated keywords partition, so the pair must be chosen jointly.
+  `log.md` centers the record/write sense against the logarithm and
+  print-machine pulls, with qualified-binding guidance (one word may serve
+  `console.log` and `Math.log`; the receiver disambiguates, as in English).
+  `index.json` gains both entries (total 62, target note re-anchored to the
+  Legesher-owned surface @ `c1deb12`), and the corpus README's counts, term
+  lists, and held-terms section move to the post-widening truth — the held
+  list is now the remaining `console.*` family pending CORE-1609 Q1.
 - **JavaScript target profile + GUIDE wired into the PromptBuilder
   (CORE-1608).** The JS-critical slice of the CORE-1503 target-profile
   system. `spec/targets/javascript/profile.json` carries the machine-readable

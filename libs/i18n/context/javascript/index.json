@@ -1,9 +1,9 @@
 {
   "version": "1.0",
   "language": "javascript",
-  "target_note": "JEJ subset @ upstream-courseware 0fca239 (16 keywords / 16 builtins / 28 members). log/of held pending CORE-1529.",
-  "total_documents": 60,
-  "last_updated": "2026-07-21",
+  "target_note": "JEJ subset, Legesher-owned surface (CORE-1581) verified @ upstream-courseware c1deb12 (17 keywords / 16 builtins / 29 members). of/log joined via CORE-1571; remaining console.* held pending CORE-1609 Q1.",
+  "total_documents": 62,
+  "last_updated": "2026-07-27",
   "documents": [
     {
       "term": "BigInt",
@@ -294,6 +294,15 @@
       "summary": "The `let` keyword declares a block-scoped variable that can be reassigned later. It introduces a name into the current block and binds it to a value, unlike `const`, whose binding cannot be reassigned..."
     },
     {
+      "term": "log",
+      "filename": "log.md",
+      "category": "member",
+      "type": "method (verb, output action)",
+      "difficulty": "MEDIUM",
+      "binding": "qualified",
+      "summary": "`log` is the member called as `console.log(value)` — **write a value to the console** so a human can read it. It is the workhorse output call of JEJ: happy-path tracing, inspecting variables, and s ..."
+    },
+    {
       "term": "max",
       "filename": "max.md",
       "category": "member",
@@ -328,6 +337,15 @@
       "difficulty": "MEDIUM",
       "binding": "standalone",
       "summary": "`null` is JavaScript's **intentional-absence** value — a deliberate \"nothing\" that a programmer assigns on purpose to mean \"no object / no value here.\" It is the sole value of its own kind and is writ..."
+    },
+    {
+      "term": "of",
+      "filename": "of.md",
+      "category": "keyword",
+      "type": "operator-like particle (iteration-source marker)",
+      "difficulty": "MEDIUM",
+      "binding": "standalone",
+      "summary": "The `of` keyword appears in exactly one JEJ construct — the `for…of` statement — where it marks the **iterable whose values the loop walks**. `for (const item of items)` reads \"for each item of ite ..."
     },
     {
       "term": "parseFloat",

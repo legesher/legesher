@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: `of` and `log` join the JavaScript/JEJ context corpus — 60 → 62
+  Tier-1 briefs, following the engine-side surface widening to 17 keywords /
+  29 members (js-engine-repo, CORE-1571) now that the key-set is Legesher-owned.
+  Each brief encodes its term's load-bearing constraint: `of` must stay
+  distinct from `in` (Python spells value-iteration with "in," while
+  JavaScript's `in` is key presence, and both live in the collision-gated
+  keywords partition), and `log` is the record/write verb, never the
+  logarithm (`Math.log` shares the spelling; the receiver disambiguates,
+  mirroring English). `index.json` and the corpus README move to the
+  Legesher-owned 17/16/29 accounting with the remaining `console.*` methods
+  documented as held pending the trial module's confirmed usage (CORE-1609).
+  [CORE-1571]
 - **i18n**: generation prompts are target-aware. `spec/targets/javascript/`
   ships the first per-programming-language profile — `profile.json` (version
   grammar `^es\d{4}$`, the keywords/builtins/members partitions, identifier

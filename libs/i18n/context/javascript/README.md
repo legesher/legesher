@@ -6,28 +6,28 @@ human reviewer) toward an accurate, consistent native-language term.
 
 ## Overview
 
-- **Total Documents**: 60
+- **Total Documents**: 62
 - **Template Version**: Tier 1 (Concise Translation Brief) — see `../../docs/context-template-tier1.md`
 - **Target**: the **JEJ** ("Just Enough JavaScript") teaching subset
-- **Source of truth**: `upstream-courseware` @ `0fca239` — `KEYWORDS` (16), `CURATED_MEMBERS` (28), and `allowedGlobals` (17 → 16 in the pack surface, `eval` suppressed). The `LanguagePack` doc comment there states the counts: *"16 keywords, 16 builtins, 28 members."*
+- **Source of truth**: the surface is **Legesher-owned** (CORE-1581), exported by `@legesher/jej` with every post-transcription addition citing its `reference.md` section — last verified against `upstream-courseware` @ `c1deb12` (their enumerated `lib/completing` constants did not survive their greenfield rewrite). Counts: **17 keywords, 16 builtins, 29 members** (`of` and `log` joined via CORE-1571).
 
-## Partitions (60 terms)
+## Partitions (62 terms)
 
 | Partition | Count | Binding | Rules |
 |---|---|---|---|
-| `keywords` | 16 | standalone | Rule 1 (one concept ↔ one term) **and** Rule 2 (reversible) |
+| `keywords` | 17 | standalone | Rule 1 (one concept ↔ one term) **and** Rule 2 (reversible) |
 | `builtins` | 16 | standalone | Rule 1 **and** Rule 2 |
-| `members` | 28 | qualified | **Rule 2 only** — a member is bounded by its receiver; one native word may serve several receivers, and that is correct, not a collision |
+| `members` | 29 | qualified | **Rule 2 only** — a member is bounded by its receiver; one native word may serve several receivers, and that is correct, not a collision |
 
-### Keywords (16)
-`let, const, if, else, for, while, do, break, continue, return, true, false, null, new, typeof, in`
+### Keywords (17)
+`let, const, if, else, for, while, do, break, continue, return, true, false, null, new, typeof, in, of`
 
 ### Builtins (16)
 `console, alert, confirm, prompt, String, Number, Boolean, Math, RegExp, Date, BigInt, parseInt, parseFloat, undefined, NaN, Infinity`
 (`allowedGlobals` minus `eval`, which is suppressed via `SUPPRESSED_GLOBALS`.)
 
-### Members (28)
-`length, toString, valueOf, charAt, charCodeAt, slice, substring, toUpperCase, toLowerCase, indexOf, includes, startsWith, endsWith, repeat, trim, concat, replace, replaceAll, toFixed, toPrecision, abs, floor, ceil, round, max, min, pow, sqrt`
+### Members (29)
+`length, toString, valueOf, charAt, charCodeAt, slice, substring, toUpperCase, toLowerCase, indexOf, includes, startsWith, endsWith, repeat, trim, concat, replace, replaceAll, toFixed, toPrecision, abs, floor, ceil, round, max, min, pow, sqrt, log`
 
 ## Key conventions
 
@@ -37,8 +37,8 @@ human reviewer) toward an accurate, consistent native-language term.
 
 ## Held terms (NOT in this corpus)
 
-- **`log`** — appears as `console.log` but is not in `CURATED_MEMBERS`; the ask to add it is on **CORE-1529**. Until decided, `console.*` renders with `console` translated and the member left canonical.
-- **`of`** — a real JEJ feature (`for…of`) that is not translatable yet; widening tracked on **CORE-1529**. Not shipped unilaterally (the client drift guard asserts set equality).
+- **The remaining `console.*` methods** (`table`, `assert`, `trace`, `count`, `time`/`timeEnd`/`timeLog`, `group`/`groupEnd`/`groupCollapsed`, `error`, `warn`, `info`, `debug`, `dir`, `clear`, `countReset`) — taught by `reference.md` and admitted by the upstream member blocklist, but held until the trial module's actual usage is confirmed (**CORE-1609** Q1). Until then, `console.<held>` renders with `console` translated and the member left canonical.
+- *(Historical: `of` and `log` were held here pending an upstream widening that could never land; they joined the surface via **CORE-1571** once the key-set became Legesher-owned.)*
 
 ## Cross-target notes
 
@@ -49,5 +49,5 @@ granularity decision; these docs use the safe per-concept default (divergences f
 
 ---
 
-**Last Updated:** 2026-07-21
-**Maintained by:** Legesher (CORE-1370)
+**Last Updated:** 2026-07-27
+**Maintained by:** Legesher (CORE-1370; `of`/`log` widening CORE-1571)
