@@ -47,6 +47,7 @@ _TRANSLATION_SECTIONS = (
     "builtins",
     "exceptions",
     "reserved_words",
+    "members",
     "operators",
     "standard_library",
 )
@@ -146,6 +147,11 @@ class LanguagePackSchema(BaseModel):
             deterministically by Legesher (CORE-710).
         operators: Operator translations (MLCP extended field).
         standard_library: Stdlib symbol translations (MLCP extended field).
+        members: Member/property-name translations (e.g. ``.length``,
+            ``.log``) — labels bounded by their receiver, so one native word
+            may serve several receivers. Used by member-bearing targets such
+            as JavaScript; in-partition uniqueness applies, cross-partition
+            homonyms are legal (MLCP extended field, CORE-1582).
         cultural_notes: Per-term cultural context notes.
         metadata: Optional pack metadata block.
     """
@@ -163,6 +169,7 @@ class LanguagePackSchema(BaseModel):
     reserved_words: dict[str, str] = Field(default_factory=dict)
 
     # MLCP v1.0 Extended Optional Fields
+    members: dict[str, str] = Field(default_factory=dict)
     operators: dict[str, str] = Field(default_factory=dict)
     standard_library: dict[str, str] = Field(default_factory=dict)
     cultural_notes: list[CulturalNote] = Field(default_factory=list)
@@ -238,6 +245,7 @@ class LanguagePackSchema(BaseModel):
         "builtins",
         "exceptions",
         "reserved_words",
+        "members",
         "operators",
         "standard_library",
     )
@@ -713,9 +721,15 @@ class SchemaValidator:
         builtin_duplicates = find_duplicate_values(pack_schema.builtins)
         exception_duplicates = find_duplicate_values(pack_schema.exceptions)
         reserved_word_duplicates = find_duplicate_values(pack_schema.reserved_words)
+        member_duplicates = find_duplicate_values(pack_schema.members)
         operator_duplicates = find_duplicate_values(pack_schema.operators)
         stdlib_duplicates = find_duplicate_values(pack_schema.standard_library)
 
+        # NOTE: ``members`` is deliberately ABSENT from the cross-section list
+        # (CORE-1582): members are labels bounded by their receiver, so a
+        # member value matching a keyword/builtin value is a legal homonym on
+        # member-bearing targets, not a reversibility break. In-partition
+        # uniqueness (``member_duplicates`` above) still applies.
         cross_section_collisions = find_cross_section_collisions(
             [
                 ("keyword", pack_schema.keywords),
@@ -732,6 +746,7 @@ class SchemaValidator:
             + len(builtin_duplicates)
             + len(exception_duplicates)
             + len(reserved_word_duplicates)
+            + len(member_duplicates)
             + len(operator_duplicates)
             + len(stdlib_duplicates)
             + len(cross_section_collisions)
@@ -743,6 +758,7 @@ class SchemaValidator:
             "builtin_duplicates": builtin_duplicates,
             "exception_duplicates": exception_duplicates,
             "reserved_word_duplicates": reserved_word_duplicates,
+            "member_duplicates": member_duplicates,
             "operator_duplicates": operator_duplicates,
             "stdlib_duplicates": stdlib_duplicates,
             "cross_section_collisions": cross_section_collisions,
@@ -839,6 +855,7 @@ class SchemaValidator:
         checks["security_path_traversal"] = True  # Validated by field_validator
 
         # MLCP v1.0 Full: Optional Extended Fields
+        checks["has_members"] = bool(pack_schema.members)
         checks["has_operators"] = bool(pack_schema.operators)
         checks["has_stdlib"] = bool(pack_schema.standard_library)
         checks["has_cultural_notes"] = bool(pack_schema.cultural_notes)
@@ -865,6 +882,7 @@ class SchemaValidator:
 
         full_passed = extended_passed and any(
             [
+                checks["has_members"],
                 checks["has_operators"],
                 checks["has_stdlib"],
                 checks["has_cultural_notes"],
@@ -1032,9 +1050,9 @@ class SchemaValidator:
     ) -> list[tuple[str, str, str]]:
         """Yield ``(section, key, value)`` for every translation in the pack.
 
-        Covers all six identifier-bearing sections (keywords, builtins,
-        exceptions, reserved_words, operators, standard_library). Prose and
-        metadata are excluded.
+        Covers all seven identifier-bearing sections (keywords, builtins,
+        exceptions, reserved_words, members, operators, standard_library).
+        Prose and metadata are excluded.
         """
         items: list[tuple[str, str, str]] = []
         for section in _TRANSLATION_SECTIONS:
@@ -1381,6 +1399,7 @@ class SchemaValidator:
             "builtin_duplicates": "builtins",
             "exception_duplicates": "exceptions",
             "reserved_word_duplicates": "reserved_words",
+            "member_duplicates": "members",
             "operator_duplicates": "operators",
             "stdlib_duplicates": "standard_library",
         }

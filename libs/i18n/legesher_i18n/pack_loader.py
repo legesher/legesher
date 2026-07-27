@@ -63,6 +63,9 @@ class LanguagePack:
             ``self`` and ``cls`` (CORE-710). Distinct from ``keywords``
             because they aren't Python reserved words; treated
             deterministically by the translator regardless.
+        members: Merged member/property-name translations — labels bounded
+            by their receiver, for member-bearing targets such as JavaScript
+            (CORE-1582). Empty for Python packs.
         metadata: Optional metadata about the pack
         extends: Optional path to parent pack (for reference)
         inheritance_chain: List of pack paths in inheritance order
@@ -75,6 +78,7 @@ class LanguagePack:
     builtins: dict[str, str] = field(default_factory=dict)
     exceptions: dict[str, str] = field(default_factory=dict)
     reserved_words: dict[str, str] = field(default_factory=dict)
+    members: dict[str, str] = field(default_factory=dict)
     metadata: LanguagePackMetadata | None = None
     extends: str | None = None
     inheritance_chain: list[str] = field(default_factory=list)
@@ -163,7 +167,7 @@ class LanguagePack:
             f"LanguagePack(language={self.language}, target={self.target}, "
             f"version={self.version}, keywords={len(self.keywords)}, "
             f"builtins={len(self.builtins)}, exceptions={len(self.exceptions)}, "
-            f"reserved_words={len(self.reserved_words)})"
+            f"reserved_words={len(self.reserved_words)}, members={len(self.members)})"
         )
 
 
@@ -373,6 +377,7 @@ class LanguagePackLoader:
             builtins=dict(pack_schema.builtins),
             exceptions=dict(pack_schema.exceptions),
             reserved_words=dict(pack_schema.reserved_words),
+            members=dict(pack_schema.members),
             metadata=pack_schema.metadata,
             extends=pack_schema.extends,
             inheritance_chain=inheritance_chain,
@@ -600,6 +605,12 @@ class LanguagePackLoader:
             base_reserved = base.get("reserved_words", {})
             override_reserved = override.get("reserved_words", {})
             merged["reserved_words"] = {**base_reserved, **override_reserved}
+
+        # Merge members (override takes precedence) — CORE-1582
+        if "members" in base or "members" in override:
+            base_members = base.get("members", {})
+            override_members = override.get("members", {})
+            merged["members"] = {**base_members, **override_members}
 
         # Override scalar fields
         for key in ["language", "target", "version", "extends", "metadata"]:

@@ -138,6 +138,9 @@ def _audit_pack_file(
         builtins=dict(pack.builtins),
         exceptions=dict(pack.exceptions),
         reserved_words=dict(pack.reserved_words),
+        # getattr: the audit seam accepts pack-like objects (tests pass duck-
+        # typed stubs), and packs predating the members field audit as empty.
+        members=dict(getattr(pack, "members", {}) or {}),
         operators={},
         standard_library={},
         cultural_notes=[],

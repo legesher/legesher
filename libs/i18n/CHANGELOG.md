@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **`members` partition in the MLCP pack schema (CORE-1582).** First-class
+  extended-optional field for member/property-name translations — labels
+  bounded by their receiver, for member-bearing targets such as JavaScript.
+  `LanguagePackSchema.members` rides the shared mapping validator and every
+  strict safety check via `_TRANSLATION_SECTIONS`; the duplicate audit
+  enforces in-partition uniqueness (`member_duplicates`) while the
+  cross-section collision pass deliberately excludes members — cross-partition
+  homonyms are an intended feature there, the receiver disambiguates.
+  `LanguagePack.members` loads, merges through `extends` inheritance, and
+  reports in `repr`; the audit seam reads members tolerantly
+  (`getattr(..., {})`) so pack-like stubs and pre-field packs audit as empty.
+  Python packs are byte-unchanged.
 - **`of` + `log` context briefs — the corpus follows the CORE-1571 surface
   widening (60 → 62).** Two new Tier-1 briefs in `context/javascript/`,
   authored in the linguist-not-translator framing with their `reference.md`

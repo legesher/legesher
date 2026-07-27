@@ -11,6 +11,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: the pack schema gains a first-class `members` partition (MLCP
+  extended field) — member/property-name translations, labels bounded by
+  their receiver, for member-bearing targets such as JavaScript. Members
+  ride every safety check (they joined `_TRANSLATION_SECTIONS`), enforce
+  in-partition uniqueness in the duplicate audit, and are deliberately
+  EXCLUDED from the cross-section collision pass: a member value matching a
+  keyword value is a legal homonym (the receiver disambiguates), not a
+  reversibility break. The loader carries `members` through construction and
+  `extends` inheritance; Python packs load with an empty mapping, behavior
+  unchanged (full suite 1516 green). Unblocks populating the Arabic
+  JavaScript pack's members in generation. [CORE-1582]
 - **i18n**: `of` and `log` join the JavaScript/JEJ context corpus — 60 → 62
   Tier-1 briefs, following the engine-side surface widening to 17 keywords /
   29 members (js-engine-repo, CORE-1571) now that the key-set is Legesher-owned.
