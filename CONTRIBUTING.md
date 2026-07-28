@@ -1,7 +1,41 @@
 # Contributing to Legesher
 
 Thank you for your interest in contributing to Legesher! This document explains how to contribute to this
-multi-license repository.
+multi-license repository. It pairs with two companion documents:
+
+- [Community Guidelines](COMMUNITY_GUIDELINES.md): how we build on a shared terminology map, and how
+  disagreement works here
+- [AI-Assisted Contributions](AI_CONTRIBUTIONS.md): what is welcome, what we ask you to declare, and
+  where the human line sits
+
+## Ways to Contribute
+
+Legesher exists so people can write and read code in their heart language. Getting there takes more
+than engine code: it takes speakers, teachers, writers, and people willing to report what actually
+happens when they try it. Every path below is a real contribution, and most of them require no
+Python expertise.
+
+| If you are | Start here | Look for |
+| --- | --- | --- |
+| A speaker of one of our 51 pack languages | Offer a better word. Every translation you propose is collected as an option in the shared map; it is never a conflict with what ships today | `contrib:localization` |
+| A linguist, teacher, or careful reader | Native review: help decide what your language ships with. Reviewer onboarding arrives with the review intake | `contrib:localization` |
+| A developer | Engine, toolchain, and editor issues scoped for newcomers | `good first issue`, `contrib:code` |
+| A bilingual writer | Docs localization: translate a guide so readers see the same words in the docs and in their editor | `contrib:docs` |
+| Someone with lived language context | Context Calls: tell us how your language is really written, texted, and code-switched. The observation is the contribution | `contrib:community` |
+| Curious about AI in your language | Prompt an assistant in your language through Legesher and report what happens | `ai:native-prompting` |
+
+### What the labels mean
+
+- `contrib:code`: engine, toolchain, language server, and editor work
+- `contrib:docs`: documentation, including localizing it
+- `contrib:localization`: language packs, translation options, native review
+- `contrib:community`: discussions, Context Calls, showcases, helping other contributors
+- `ai:restricted` / `ai:native-prompting`: AI-assistance policy labels, explained in
+  [AI-Assisted Contributions](AI_CONTRIBUTIONS.md)
+- `good first issue`: scoped and described so a newcomer can finish it
+
+Contributor-facing issues live in this repository's issue tracker and Discussions. Language pack
+work flows through the options model described in [Community Guidelines](COMMUNITY_GUIDELINES.md).
 
 ## New to Open Source?
 
@@ -22,7 +56,8 @@ Open source means the code is publicly visible and accepts contributions from an
 Not sure where to start? Here are beginner-friendly ways to contribute:
 
 1. **Fix Documentation:** Found a typo? Confusing explanation? Documentation PRs are always welcome!
-2. **Translate Language Packs:** Native speaker of a language we don't support yet? Create a language pack!
+2. **Offer a Better Word:** Speak one of our pack languages? Propose translation options; every
+   option you offer joins the shared map.
 3. **Report Bugs:** Found something broken? Open an issue with reproduction steps.
 4. **Answer Questions:** Help other users in GitHub Discussions.
 5. **Good First Issues:** Look for issues tagged
@@ -89,8 +124,8 @@ Contributions to free tier features are welcome.
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/legesher.git
-cd legesher
+git clone https://github.com/YOUR_USERNAME/legesher-next.git
+cd legesher-next
 
 # Install dependencies
 uv sync --all-extras
@@ -179,6 +214,15 @@ cd docs/
 pnpm install
 pnpm dev
 ```
+
+### 4. AI-Assisted Work
+
+AI-assisted contributions are welcome by default; we ask for one declaration line in your pull
+request, and you own the correctness of what you submit. Two labels change the default:
+`ai:restricted` marks issues reserved for learning by hand, and `ai:native-prompting` marks issues
+where prompting an AI in your own language is the point. The full policy, including how
+machine-suggested translations are recorded with their provenance, is in
+[AI-Assisted Contributions](AI_CONTRIBUTIONS.md).
 
 ## Contributor License Agreement
 
@@ -328,7 +372,12 @@ See the [DCO2 documentation](https://github.com/cncf/dco2) for full details on r
 All pull requests are checked by the [CNCF DCO2](https://github.com/cncf/dco2) GitHub App. PRs with unsigned commits
 will not pass the DCO status check. Bot accounts (Dependabot, GitHub Actions, etc.) are automatically exempted.
 
-## Code of Conduct
+## Code of Conduct and Community Guidelines
+
+The full [Code of Conduct](CODE_OF_CONDUCT.md) governs every community space, including its
+language-and-accessibility provisions. The [Community Guidelines](COMMUNITY_GUIDELINES.md) cover
+the working agreements specific to this project: the options model's social contract, content
+standards for language contributions, and the moderation path. The short version:
 
 ### Our Standards
 
@@ -608,6 +657,11 @@ Legesher uses **semantic-release** for automated versioning and releases. Here's
 
 CHANGELOGs are part of your pull request, not created after merge.
 
+A format-and-changelog bot for contributor PRs is planned; when it lands, formatting fixups and
+changelog scaffolding will happen for you, so your attention stays on the contribution rather than
+the bookkeeping. Until then, the steps below are the floor, and reviewers are happy to help you
+through them.
+
 #### Step 1: Update CHANGELOG during implementation
 
 - Add entries to affected package CHANGELOGs (`libs/*/CHANGELOG.md`)
@@ -737,22 +791,28 @@ See [README.md](README.md#versioning-strategy) for complete versioning strategy.
 
 ## Translation Contributions
 
-We especially welcome contributions to language support:
+Language work is the heart of this project, and it follows one principle: **we collect options, we
+don't overwrite winners.** The translations database holds every translation offered for every
+term, with provenance. A language pack is the current best pick exported from those options, and
+all 51 packs are available today with community validation in progress.
 
-1. **Adding a new language**
-   - Create language file in `libs/i18n/`
-   - Add translations for core keywords
-   - Include language metadata
-   - Add tests
+What that means for you:
 
-2. **Improving existing translations**
-   - Fix incorrect translations
-   - Add missing translations
-   - Improve natural language flow
+1. **Offering a better word** is always in season. Propose your term as an option, with a note on
+   whether it is established usage, a coinage, or a loanword your community genuinely uses. You are
+   adding to the map, not fighting the current pick.
+2. **Improving existing translations** happens the same way: propose the better option and say why.
+   When native reviewers endorse it, the pick moves.
+3. **Native review** is how packs climb the ladder from experimental toward official. A dedicated
+   reviewer guide ships with the review intake; until then, the
+   [Community Guidelines](COMMUNITY_GUIDELINES.md) carry the working agreements.
+4. **Requesting a new language** starts with an issue. Packs are generated from the shared
+   database, so the path to a new language runs through collecting its options, not hand-writing
+   pack files.
 
 ## Questions?
 
-- GitHub Discussions: [github.com/legesher/legesher/discussions](https://github.com/legesher/legesher/discussions)
+- GitHub Discussions: [github.com/legesher/legesher-next/discussions](https://github.com/legesher/legesher-next/discussions)
 - Email: <contribute@legesher.com>
 - Documentation: [docs.legesher.io](https://docs.legesher.io)
 

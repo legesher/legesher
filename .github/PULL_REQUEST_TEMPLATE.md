@@ -34,6 +34,11 @@ Closes #
 - [ ] Test improvements
 - [ ] Build/CI changes
 
+## AI Assistance
+
+<!-- One line is enough, e.g. "AI-assisted: drafted with an assistant; I reviewed and tested every
+change." or "No AI assistance." See AI_CONTRIBUTIONS.md for the policy. -->
+
 ## License and Contribution Agreement
 
 ### DCO Sign-off (Required)
