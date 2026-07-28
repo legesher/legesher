@@ -24,7 +24,11 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from scripts.translate.pipeline import TranslationPipeline, PipelineConfig
+from scripts.translate.pipeline import (
+    TranslationPipeline,
+    PipelineConfig,
+    default_languages,
+)
 
 
 def parse_args():
@@ -152,7 +156,11 @@ async def main_async(args):
     # Create config from args
     config = PipelineConfig(
         models=args.models,
-        languages=args.languages,
+        # --languages omitted -> the 24-language CORE-394 default; the config
+        # field no longer accepts None (CORE-1152)
+        languages=(
+            args.languages if args.languages is not None else default_languages()
+        ),
         terms=args.terms,
         target=args.target,
         dry_run=args.dry_run,

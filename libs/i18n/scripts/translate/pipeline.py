@@ -10,7 +10,7 @@ This module coordinates the entire translation process:
 
 import asyncio
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -67,6 +67,36 @@ logger = logging.getLogger(__name__)
 console = Console()
 
 
+def default_languages() -> list[str]:
+    """Default 24 target languages from CORE-394."""
+    return [
+        "es",
+        "ar",
+        "fr",
+        "zh",
+        "hi",
+        "ru",
+        "pt",
+        "de",
+        "ja",
+        "ko",
+        "it",
+        "pl",
+        "tr",
+        "vi",
+        "th",
+        "nl",
+        "sv",
+        "no",
+        "da",
+        "fi",
+        "el",
+        "he",
+        "id",
+        "ms",
+    ]
+
+
 @dataclass
 class PipelineConfig:
     """Configuration for translation pipeline.
@@ -88,8 +118,8 @@ class PipelineConfig:
             and seasons prompts via the target's spec profile (CORE-1608).
     """
 
-    models: list[str] = None  # ['claude', 'aya']
-    languages: list[str] = None  # ['es', 'ar', 'fr', ...]
+    models: list[str] = field(default_factory=lambda: ["claude", "aya"])
+    languages: list[str] = field(default_factory=default_languages)
     terms: list[str] | None = None  # If None, use all from manifest
     target: str = "python"  # Programming-language target (CORE-1371)
     dry_run: bool = False
@@ -101,39 +131,6 @@ class PipelineConfig:
     ollama_model: str = "aya"  # Ollama model name (aya, command-r, qwen2.5, etc.)
     hf_profile: str | None = None  # HuggingFace model profile name
     tiny_aya_variant: str = "earth"  # Tiny Aya variant (earth, fire, water, global)
-
-    def __post_init__(self):
-        """Set defaults."""
-        if self.models is None:
-            self.models = ["claude", "aya"]
-        if self.languages is None:
-            # Default to 24 languages from CORE-394
-            self.languages = [
-                "es",
-                "ar",
-                "fr",
-                "zh",
-                "hi",
-                "ru",
-                "pt",
-                "de",
-                "ja",
-                "ko",
-                "it",
-                "pl",
-                "tr",
-                "vi",
-                "th",
-                "nl",
-                "sv",
-                "no",
-                "da",
-                "fi",
-                "el",
-                "he",
-                "id",
-                "ms",
-            ]
 
 
 @dataclass
@@ -150,16 +147,9 @@ class PipelineStats:
     validation_errors: int = 0
     validation_warnings: int = 0
     total_cost: float = 0.0
-    cost_by_model: dict[str, float] = None
-    start_time: datetime = None
+    cost_by_model: dict[str, float] = field(default_factory=dict)
+    start_time: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     end_time: datetime | None = None
-
-    def __post_init__(self):
-        """Initialize nested dicts."""
-        if self.cost_by_model is None:
-            self.cost_by_model = {}
-        if self.start_time is None:
-            self.start_time = datetime.now(timezone.utc)
 
     def record_success(self, model: str, cost: float):
         """Record a successful translation."""
