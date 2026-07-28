@@ -314,6 +314,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
     long-description warnings surface for native review without blocking.
   - Regenerated the 22 affected `REFERENCE.md` files.
 
+### Security
+
+- **Pack values containing any Default_Ignorable code point are now blocking
+  findings (CORE-1591).** The format-char gate policed bidi controls, tatweel,
+  BOM, and category-`Cf` invisibles, but the non-`Cf` members of Unicode's
+  Default_Ignorable_Code_Point set — U+034F COMBINING GRAPHEME JOINER (Mn),
+  the Hangul fillers U+115F/U+1160/U+3164 (Lo), the variation selectors
+  (U+FE00–U+FE0F, U+E0100–U+E01EF), the Mongolian FVS (U+180B–U+180D,
+  U+180F) — render as nothing, are `.isidentifier()`-True, are NFKC-stable,
+  and pass the script-consistency gate (Mn reads as `Inherited`; the fillers
+  sit inside Hangul blocks). A pack value `valid<U+034F>name` therefore
+  rendered identically to `validname` yet was a different identifier.
+  `check_format_chars` now runs a second net over the full property set (new
+  `default-ignorable-char` error code) via a static Unicode 15.1 range table
+  in `script_policy` — mirroring `unicode_guard._DEFAULT_IGNORABLE_RANGES`
+  from the engine-side half (CORE-1559); consolidation into one shared table
+  is tracked as CORE-1597. Existing `Cf` semantics and the per-language
+  allowlist (Sinhala ZWJ, Persian/Urdu ZWNJ) are unchanged; all 255 shipped
+  packs audit clean with zero new findings.
+
 ## [0.22.0] - 2026-07-15
 
 ### Added

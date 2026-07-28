@@ -29,6 +29,7 @@ from .script_policy import (
     ALWAYS_ALLOWED_SCRIPTS,
     FORBIDDEN_FORMAT_CHARS,
     has_policy,
+    is_default_ignorable,
     nfkc_delta_class,
     policy_for,
     scripts_of,
@@ -1182,6 +1183,18 @@ class SchemaValidator:
         allow-lists it. Today only Sinhala (ZWJ U+200D) and Persian/Urdu (ZWNJ
         U+200C) allow a format char.
 
+        CORE-1591 adds a second, wider net alongside the ``Cf`` one: the full
+        Default_Ignorable_Code_Point set
+        (:func:`legesher_i18n.script_policy.is_default_ignorable`). Its
+        non-``Cf`` members — U+034F COMBINING GRAPHEME JOINER (Mn), the Hangul
+        fillers U+115F/U+1160/U+3164 (Lo), the variation selectors, the
+        Mongolian FVS — render as nothing, are ``.isidentifier()``-True, and
+        pass both the ``Cf`` net and the script-consistency gate (Mn reads as
+        ``Inherited``; the fillers sit inside Hangul blocks). They are reported
+        under their own ``default-ignorable-char`` code; the existing ``Cf``
+        path and its ``illegal-format-char`` code are unchanged, and the
+        per-language allowlist is honored by both nets.
+
         Args:
             pack_schema: Validated, merged pack.
             language: Language code. Defaults to ``pack_schema.language``.
@@ -1212,6 +1225,23 @@ class SchemaValidator:
                                 f"({unicodedata.name(ch, 'UNNAMED')}). "
                                 "Bidi controls, tatweel, BOM, and unlisted "
                                 "zero-width joiners are not permitted."
+                            ),
+                        )
+                    )
+                elif is_default_ignorable(ch):
+                    findings.append(
+                        Finding(
+                            severity="error",
+                            code="default-ignorable-char",
+                            location=f"{section}.{key}",
+                            message=(
+                                f"Value '{value}' contains default-ignorable "
+                                f"character U+{ord(ch):04X} "
+                                f"({unicodedata.name(ch, 'UNNAMED')}). "
+                                "It renders as nothing yet is a valid "
+                                "identifier character, so two visually "
+                                "identical values can be different "
+                                "identifiers."
                             ),
                         )
                     )

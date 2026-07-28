@@ -53,6 +53,7 @@ fallback: an un-policied language must not silently pass the script gate.
 
 from __future__ import annotations
 
+import bisect
 import unicodedata
 from dataclasses import dataclass, field
 
@@ -94,6 +95,85 @@ BIDI_CONTROLS: frozenset[str] = frozenset(
 # included here even though its category is Lm (not Cf): it is a pure cosmetic
 # elongation with no semantic content and must not appear in an identifier.
 FORBIDDEN_FORMAT_CHARS: frozenset[str] = BIDI_CONTROLS | frozenset({BOM, TATWEEL})
+
+
+# ---------------------------------------------------------------------------
+# Default_Ignorable_Code_Point ranges (start, end_inclusive), sorted by start.
+# ---------------------------------------------------------------------------
+#
+# These code points render as nothing yet many of them are valid identifier
+# characters (``.isidentifier()``-True) AND NFKC-stable, so neither the
+# category-``Cf`` net in ``check_format_chars`` nor the normalization check
+# rejects them, and the non-``Cf`` members (U+034F COMBINING GRAPHEME JOINER is
+# Mn -> script "Inherited"; the Hangul fillers are Lo inside Hangul blocks)
+# sail through the script-consistency gate too. A pack value
+# ``valid<U+034F>name`` renders identically to ``validname`` but is a
+# different identifier — the gap CORE-1591 closes at the pack layer.
+#
+# ``unicodedata`` does not expose the Default_Ignorable_Code_Point property, so
+# this is a static table transcribed from the Unicode Character Database
+# DerivedCoreProperties.txt (Unicode 15.1; the property set is unchanged in
+# 16.0). Reserved (Cn) sub-ranges are included so the net stays complete as
+# those code points are assigned in future Unicode versions.
+#
+# NOTE: this table mirrors ``legesher_core.unicode_guard._DEFAULT_IGNORABLE_RANGES``
+# (the engine-side half of the same fix, CORE-1559). legesher-i18n is the
+# dependency leaf of the workspace — legesher-core depends on it, not vice
+# versa — so the table is duplicated here rather than imported. Consolidation
+# into one shared table is tracked as CORE-1597.
+_DEFAULT_IGNORABLE_RANGES: tuple[tuple[int, int], ...] = (
+    (0x00AD, 0x00AD),  # SOFT HYPHEN (Cf)
+    (0x034F, 0x034F),  # COMBINING GRAPHEME JOINER (Mn)
+    (0x061C, 0x061C),  # ARABIC LETTER MARK (Cf)
+    (0x115F, 0x1160),  # HANGUL CHOSEONG/JUNGSEONG FILLER (Lo)
+    (0x17B4, 0x17B5),  # KHMER VOWEL INHERENT AQ..AA (Mn)
+    (0x180B, 0x180D),  # MONGOLIAN FREE VARIATION SELECTOR ONE..THREE (Mn)
+    (0x180E, 0x180E),  # MONGOLIAN VOWEL SEPARATOR (Cf)
+    (0x180F, 0x180F),  # MONGOLIAN FREE VARIATION SELECTOR FOUR (Mn)
+    (0x200B, 0x200F),  # ZERO WIDTH SPACE..RIGHT-TO-LEFT MARK (Cf)
+    (0x202A, 0x202E),  # LEFT-TO-RIGHT EMBEDDING..RIGHT-TO-LEFT OVERRIDE (Cf)
+    (0x2060, 0x2064),  # WORD JOINER..INVISIBLE PLUS (Cf)
+    (0x2065, 0x2065),  # <reserved> (Cn)
+    (0x2066, 0x206F),  # LEFT-TO-RIGHT ISOLATE..NOMINAL DIGIT SHAPES (Cf)
+    (0x3164, 0x3164),  # HANGUL FILLER (Lo)
+    (0xFE00, 0xFE0F),  # VARIATION SELECTOR-1..16 (Mn)
+    (0xFEFF, 0xFEFF),  # ZERO WIDTH NO-BREAK SPACE / BOM (Cf)
+    (0xFFA0, 0xFFA0),  # HALFWIDTH HANGUL FILLER (Lo)
+    (0xFFF0, 0xFFF8),  # <reserved> (Cn)
+    (0x1BCA0, 0x1BCA3),  # SHORTHAND FORMAT LETTER OVERLAP..UP STEP (Cf)
+    (0x1D173, 0x1D17A),  # MUSICAL SYMBOL BEGIN BEAMED..END PHRASE (Cf)
+    (0xE0000, 0xE0000),  # <reserved> (Cn)
+    (0xE0001, 0xE0001),  # LANGUAGE TAG (Cf)
+    (0xE0002, 0xE001F),  # <reserved> (Cn)
+    (0xE0020, 0xE007F),  # TAG SPACE..CANCEL TAG (Cf)
+    (0xE0080, 0xE00FF),  # <reserved> (Cn)
+    (0xE0100, 0xE01EF),  # VARIATION SELECTOR-17..256 (Mn)
+    (0xE01F0, 0xE0FFF),  # <reserved> (Cn)
+)
+
+_DEFAULT_IGNORABLE_STARTS: tuple[int, ...] = tuple(
+    r[0] for r in _DEFAULT_IGNORABLE_RANGES
+)
+
+
+def is_default_ignorable(ch: str) -> bool:
+    """Return True if ``ch`` is a Default_Ignorable_Code_Point.
+
+    These characters render invisibly. Many are valid identifier characters and
+    NFKC-stable, so they can silently distinguish two visually identical
+    translation values. Backed by a static Unicode 15.1 range table because
+    ``unicodedata`` does not expose the property. Per-language allow-listing
+    (Sinhala ZWJ, Persian/Urdu ZWNJ) is applied by the caller
+    (``SchemaValidator.check_format_chars``), not here.
+    """
+    if not ch:
+        return False
+    cp = ord(ch[0])
+    idx = bisect.bisect_right(_DEFAULT_IGNORABLE_STARTS, cp) - 1
+    if 0 <= idx < len(_DEFAULT_IGNORABLE_RANGES):
+        start, end = _DEFAULT_IGNORABLE_RANGES[idx]
+        return start <= cp <= end
+    return False
 
 
 @dataclass(frozen=True)
