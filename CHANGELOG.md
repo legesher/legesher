@@ -11,6 +11,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: Arabic translations for the full 62-term JavaScript (JEJ)
+  surface — 17 keywords, 16 builtins, 29 members — recorded in
+  `translations.db` with per-term rationale and selected through the
+  publish gate. Bare-form convention; 11 keywords pre-seeded from the
+  shipped Python `ar` pack for cross-target consistency; the curation
+  table and its pre-write gates live in `scripts/record_js_ar_terms.py`.
+  Includes one cross-target correction: Python `ar` `while` becomes
+  `طالما` ("as long as", was `حتى` "until"). [CORE-1371]
 - **i18n**: the translation pipeline is target-aware and the JavaScript
   inventory is seedable. `scripts/seed_js_terms.py` materializes the 62-term
   JEJ surface from the context-corpus index into `translations.db`

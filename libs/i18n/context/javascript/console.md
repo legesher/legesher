@@ -150,7 +150,7 @@ English "console" can mean:
 
 All global objects (`console`, `Math`, `Date`, `RegExp`) are names of facilities and should read as nouns of one consistent technical register. Do not translate one as a plain everyday word and another as a formal coinage.
 
-**Note on `log`:** `console.log` is *two* terms — the object `console` and the member `log`. `log` is **not** in the shipping member surface (it is held pending the partner decision on CORE-1529), so `console.*` renders with `console` translated and the member left canonical for now. Do not fold "log/print" meaning into the `console` translation to compensate.
+**Note on `log`:** `console.log` is *two* terms — the object `console` and the member `log`. `log` **ships** in the member surface (it joined via CORE-1571; see `log.md`), so `console.log` renders fully translated. The *remaining* `console.*` members (`warn`, `error`, …) stay held pending CORE-1609 Q1. Do not fold "log/print" meaning into the `console` translation — the member carries it.
 
 ### Functional relationships
 

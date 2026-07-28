@@ -11,6 +11,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Arabic translations for the JavaScript (JEJ) surface (CORE-1371).**
+  All 62 terms (17 keywords / 16 builtins / 29 members) curated in a
+  linguist-framed run over the Tier-1 context briefs, the JS Target Guide,
+  and the `ar` style-guide chain, recorded to `translations.db` with full
+  provenance (`source='claude_agent'`, per-term `model_rationale`) and
+  selected through the CORE-1400 publish gate. Bare-form (unvocalized)
+  convention throughout; 11 keywords pre-seeded from the shipped Python
+  `ar` pack; underscore compounds per the target GUIDE. The recording
+  script (`scripts/record_js_ar_terms.py`) carries the curation table and
+  pre-write gates (Arabic-block charset, no tatweel/ZWJ/ZWNJ, NFC/NFKC
+  fixed points, identifier validity, in-partition uniqueness), so the DB
+  delta is reproducible.
+
 - **Target-aware pipeline + JavaScript term seeding (CORE-1371 prep).**
   `scripts/seed_js_terms.py` seeds the 62-term JEJ inventory from
   `context/javascript/index.json` into the `terms` table with target-neutral
@@ -221,6 +234,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **Python `ar` pack: `while` is now `طالما` ("as long as"), was `حتى`
+  ("until") (CORE-1371).** The shipped value inverted the truth sense of
+  the loop. Corrected at the DB layer and re-exported through the
+  selection-sourced regen; the superseded value stays in the suggestions
+  pool for the decision trail.
+- **`context/javascript/console.md`**: the note on `log` predated
+  CORE-1571 — `log` ships in the member surface; only the remaining
+  `console.*` members stay held (CORE-1609 Q1).
 - **v2 canon-validation gate corrected in both directions (CORE-1514, from the
   Q7 triage on CORE-1501).** The honest `validate_surface` check was
   simultaneously over- and under-inclusive: it refused 25 legitimate Thai

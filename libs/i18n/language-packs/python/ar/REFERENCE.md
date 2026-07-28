@@ -65,7 +65,7 @@ These are Python's reserved words translated to Arabic.
 | `True` | `صحيح` |
 | `try` | `التجربة` |
 | `type` | `النوع` |
-| `while` | `حتى` |
+| `while` | `طالما` |
 | `with` | `مع` |
 | `yield` | `تَرْجِع` |
 
@@ -264,7 +264,7 @@ Here's an example showing Arabic Python code with Legesher:
 
     # توضيح حلقة while
     العداد = 0
-    حتى العداد < 3:
+    طالما العداد < 3:
         طَبْع(f"العداد: {العداد}")
         العداد += 1
 
