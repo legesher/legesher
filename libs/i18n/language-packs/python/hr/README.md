@@ -46,9 +46,9 @@ print(pack.keywords["return"])   # "vrati"
 
 This pack provides translations for:
 
-- **Keywords**: 37 Python keywords
-- **Built-ins**: 72 built-in functions and types
-- **Exceptions**: 66 exception classes
+- **Keywords**: 39 Python keywords
+- **Built-ins**: 73 built-in functions and types
+- **Exceptions**: 70 exception classes
 
 ## Version Inheritance
 

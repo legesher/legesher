@@ -136,10 +136,6 @@ _XID_STRIP_TABLE = {ord(ch): None for ch in _XID_ONLY_FROM_CPYTHON_313}
 # Pack sections, in emitted file order.
 _PACK_SECTIONS = ("keywords", "builtins", "exceptions", "reserved_words")
 
-# Pack files that carry stripped (pre-3.13) values; the 3.13 overlay and
-# 3.14 carry canonical spellings only.
-_PRE_313_VERSIONS = ("3.10", "3.11", "3.12")
-
 
 class IncompleteSelectionError(ValueError):
     """A pack-shipping language is missing canonical selections."""
@@ -613,21 +609,23 @@ class YAMLExporter:
             )
 
         if include_packaging:
-            # Distinct TERMS, not file entries: the 3.13 overlay restores
-            # canonical spellings of terms the pre-3.13 files already carry.
-            def term_count(section: str, versions: tuple[str, ...]) -> int:
+            # Distinct term NAMES unioned across every version file — the same
+            # merge scripts/generate_reference_docs.py performs for REFERENCE.md,
+            # so README.md and REFERENCE.md agree (CORE-1014); the 3.13 overlay
+            # only restores canonical spellings, so names never double-count.
+            def term_count(section: str) -> int:
                 return len(
                     {
                         name
-                        for version in versions
-                        for name in sections[version].get(section, {})
+                        for version_sections in sections.values()
+                        for name in version_sections.get(section, {})
                     }
                 )
 
             counts = {
-                "keywords": term_count("keywords", _PRE_313_VERSIONS),
-                "builtins": term_count("builtins", ("3.10",)),
-                "exceptions": term_count("exceptions", ("3.10", "3.11", "3.13")),
+                "keywords": term_count("keywords"),
+                "builtins": term_count("builtins"),
+                "exceptions": term_count("exceptions"),
             }
             self._generate_packaging_files(language_code, lang_dir, pack_name, counts)
 

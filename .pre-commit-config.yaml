@@ -111,6 +111,15 @@ repos:
     name: Regenerate Reference Documentation
     pass_filenames: false
 
+  # Keep pack README count lines in step with pack contents (CORE-1014) —
+  # same trigger as REFERENCE regeneration; the script is idempotent.
+  - entry: uv run python scripts/update_pack_readme_counts.py
+    files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
+    id: update-pack-readme-counts
+    language: system
+    name: Update Pack README Counts
+    pass_filenames: false
+
   # Commit message validation with Commitizen
 - repo: https://github.com/commitizen-tools/commitizen
   rev: v4.9.1

@@ -23,9 +23,9 @@ uv pip install legesher-i18n legesher-i18n-python-mk
 
 ## Translation Coverage
 
-- **Keywords**: 37 Python keywords
-- **Built-ins**: 72 built-in functions and types
-- **Exceptions**: 66 exception classes
+- **Keywords**: 39 Python keywords
+- **Built-ins**: 73 built-in functions and types
+- **Exceptions**: 70 exception classes
 
 ## Version Inheritance
 

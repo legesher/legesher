@@ -188,6 +188,8 @@ Install with `pre-commit install`. Configuration in `.pre-commit-config.yaml`:
 - **Custom**:
   - `validate-language-pack-yaml`: Validates language pack YAML structure
   - `regenerate-reference-docs`: Auto-regenerates REFERENCE.md when packs change
+    (its sibling `scripts/update_pack_readme_counts.py` refreshes the pack README
+    count lines from the same merged-pack data — run it after pack content changes)
 - **Commits**: Commitizen for conventional commit validation
 
 ### Semantic Release
