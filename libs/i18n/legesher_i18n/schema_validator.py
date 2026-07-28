@@ -202,10 +202,7 @@ class LanguagePackSchema(BaseModel):
     @classmethod
     def validate_target(cls, v: str) -> str:
         """Validate target language (programming language)."""
-        allowed_targets = ["python", "javascript", "java", "rust", "go", "ruby"]
-        if v.lower() not in allowed_targets:
-            # For now, allow any target but warn in future versions
-            pass
+        # Target allowlist is CORE-1503's per-target profile data — no gate here yet.
         return v.lower()
 
     @field_validator("extends")

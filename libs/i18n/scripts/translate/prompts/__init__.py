@@ -1,5 +1,6 @@
-"""Prompt templates and builders for AI translation pipeline."""
+"""Prompt assets for the AI translation pipeline.
 
-from .template import TranslationPromptBuilder, get_language_name, validate_prompt
-
-__all__ = ["TranslationPromptBuilder", "get_language_name", "validate_prompt"]
+This package holds `reserved_words_prompt.md`, a specification document for
+the reserved-words prompt (see libs/i18n/CLAUDE.md) — not a loadable template.
+There is no importable prompt-builder code here.
+"""

@@ -7,11 +7,11 @@ consistent translations across multiple languages.
 
 ## Overview
 
-- **Total Documents**: 121
+- **Total Documents**: 182
 - **Template Version**: Tier 1 (Concise Translation Brief)
 - **Target Audience**: AI translation models, human translators, localization teams
 - **Languages Covered**: Spanish, Arabic, Chinese, Hindi (with guidance for Romance, Germanic, Slavic language families)
-- **Last Updated**: 2025-11-11
+- **Last Updated**: 2026-07-05 (see `index.json` for the live count and per-category breakdown)
 
 ## Document Structure
 
@@ -30,6 +30,8 @@ Each context document follows a standardized 11-section template:
 11. **Translation Validation Checklist** - 6-point verification checklist
 
 ## Coverage by Category
+
+> The per-category counts below reflect the v1.0 release (121 documents). The catalog has since grown to 182 — `index.json` is the live source for current totals and its finer-grained category taxonomy.
 
 ### Keywords (35 documents)
 
