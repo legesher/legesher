@@ -10,7 +10,11 @@ license = {text = "Apache-2.0"}
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "click>=8.0.0",
-    "legesher-i18n",
+    # Sibling range ships in the wheel metadata; in-repo the workspace
+    # override in the root [tool.uv.sources] applies. <1.0.0 because
+    # semantic-release (major_on_zero = true) moves 0.x to 1.0 on a
+    # breaking change.
+    "legesher-i18n>=0.22.0,<1.0.0",
     "pyyaml>=6.0",
 ]
 name = "legesher-core"

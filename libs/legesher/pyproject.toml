@@ -15,8 +15,12 @@ dependencies = [
     "tomli>=2.0.0; python_version < '3.11'",
     # The CLI exposes the tree-sitter backend (translate --full, identifier
     # maps), so it needs the optional extra that ships the C extensions.
-    "legesher-core[treesitter]",
-    "legesher-i18n",
+    # Sibling ranges ship in the wheel metadata; in-repo the workspace
+    # override in the root [tool.uv.sources] applies. <1.0.0 because
+    # semantic-release (major_on_zero = true) moves 0.x to 1.0 on a
+    # breaking change.
+    "legesher-core[treesitter]>=0.22.0,<1.0.0",
+    "legesher-i18n>=0.22.0,<1.0.0",
 ]
 name = "legesher"
 version = "0.22.0"
