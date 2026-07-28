@@ -362,13 +362,17 @@ class GitFilter:
 
     @staticmethod
     def _collect_string_comment_format_chars(source_code: str) -> set[str]:
-        """Collect non-bidi format chars (Cf) inside string/comment tokens.
+        """Collect non-bidi invisible chars inside string/comment tokens.
+
+        Covers both category-``Cf`` format chars and non-``Cf``
+        Default_Ignorable marks (e.g. the U+FE0F emoji variation selector), so
+        legitimate invisibles in literals/comments — ZWJ/ZWNJ in Indic text,
+        emoji presentation selectors — are allowlisted rather than rejected once
+        the guard nets the full Default_Ignorable set (CORE-1559).
 
         Bidi reordering controls are intentionally NOT collected: they are
         dangerous even inside literals for the Trojan Source attack, so
-        ``unicode_guard.scan_text`` always flags them. This only whitelists
-        non-bidi invisibles (e.g. ZWJ/ZWNJ in legitimate Indic/emoji text)
-        when they appear in literals/comments.
+        ``unicode_guard.scan_text`` always flags them.
         """
         import io
         import tokenize
@@ -387,10 +391,12 @@ class GitFilter:
                 )
                 if is_str_or_comment or is_fstring_mid:
                     for ch in tok.string:
-                        if (
-                            ch not in unicode_guard.BIDI_CONTROLS
-                            and unicodedata.category(ch) == "Cf"
-                        ):
+                        if ch in unicode_guard.BIDI_CONTROLS:
+                            continue
+                        is_invisible = unicodedata.category(
+                            ch
+                        ) == "Cf" or unicode_guard.is_default_ignorable(ch)
+                        if is_invisible:
                             allowed.add(ch)
         except (tokenize.TokenError, IndentationError, SyntaxError, ValueError):
             return set()

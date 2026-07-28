@@ -9,6 +9,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Security
+
+- **The Unicode guard now rejects the full Default_Ignorable_Code_Point set,
+  not just category-`Cf` invisibles.** The guard's invisible-character check
+  was `unicodedata.category(ch) == "Cf"`, which caught zero-width format
+  controls (and the BOM) but missed the non-`Cf` default-ignorable marks —
+  U+034F COMBINING GRAPHEME JOINER, the U+115F/U+1160 HANGUL FILLERS, and the
+  U+FE00–U+FE0F VARIATION SELECTORS. These render as nothing yet are valid,
+  NFKC-stable identifier characters, so `total` and `to<U+034F>tal` are visually
+  identical but bind separately in the canonical English output the git clean
+  filter stores — the same "what you see is what runs" bypass the JavaScript
+  guard closed in `assertSourceSafe` [CORE-1556]. `scan_text` and the git clean
+  filter now fail closed on the whole derived property (static Unicode 15.1
+  range table, since `unicodedata` does not expose it). Legitimate invisibles
+  inside string/comment literals (e.g. an emoji variation selector) stay
+  allowlisted; a leading BOM at index 0 and tatweel handling are unchanged.
+  [CORE-1559]
+
 ## [0.22.0] - 2026-07-15
 
 ## [0.21.3] - 2026-07-12

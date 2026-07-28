@@ -11,6 +11,11 @@ Attack classes covered:
       compiler sees.
     * Invisible / format characters (Unicode category ``Cf``) that can hide
       or smuggle content.
+    * Default-ignorable characters that render as nothing but are valid,
+      NFKC-stable identifier characters (U+034F, Hangul fillers, variation
+      selectors, …). These sit outside category ``Cf`` yet let two visually
+      identical identifiers differ in canonical output (parity with the JS
+      guard's ``\\p{Default_Ignorable_Code_Point}`` net).
     * Arabic tatweel (U+0640) padding used to disguise identifiers.
     * Byte-order marks (BOM) that desync byte/character offsets and PEP 263
       encoding detection.
@@ -24,6 +29,7 @@ Note:
 
 from __future__ import annotations
 
+import bisect
 import functools
 import unicodedata
 from dataclasses import dataclass
@@ -59,6 +65,89 @@ BOM: str = chr(0xFEFF)
 TATWEEL: str = chr(0x0640)
 
 
+# Default_Ignorable_Code_Point ranges (start, end_inclusive), sorted by start.
+#
+# These code points render as nothing yet many of them are valid identifier
+# characters (ID_Continue, and the Hangul fillers are even ID_Start) AND
+# NFKC-stable, so neither the category-``Cf`` invisible check nor a
+# normalization pass rejects them. Left unchecked they let two visually
+# identical identifiers differ in the runnable canonical output — the exact
+# "what you see is what runs" bypass this guard exists to surface. The plain
+# ``unicodedata.category(ch) == "Cf"`` test misses the non-``Cf`` members
+# (U+034F COMBINING GRAPHEME JOINER, the U+115F/U+1160 HANGUL FILLERS, the
+# U+FE00–U+FE0F VARIATION SELECTORS, …), which is the gap CORE-1559 closes —
+# the parallel of the JS guard's ``\p{Default_Ignorable_Code_Point}`` net
+# (CORE-1556).
+#
+# ``unicodedata`` does not expose the Default_Ignorable_Code_Point property, so
+# this is a static table transcribed from the Unicode Character Database
+# DerivedCoreProperties.txt (Unicode 15.1; the property set is unchanged in
+# 16.0). This mirrors the range-table style already used by
+# ``script_lookup.py`` and ``libs/i18n``'s ``script_policy.py``. Reserved (Cn)
+# sub-ranges are included so the net stays complete as those code points are
+# assigned in future Unicode versions.
+_DEFAULT_IGNORABLE_RANGES: tuple[tuple[int, int], ...] = (
+    (0x00AD, 0x00AD),  # SOFT HYPHEN (Cf)
+    (0x034F, 0x034F),  # COMBINING GRAPHEME JOINER (Mn)
+    (0x061C, 0x061C),  # ARABIC LETTER MARK (Cf)
+    (0x115F, 0x1160),  # HANGUL CHOSEONG/JUNGSEONG FILLER (Lo)
+    (0x17B4, 0x17B5),  # KHMER VOWEL INHERENT AQ..AA (Mn)
+    (0x180B, 0x180D),  # MONGOLIAN FREE VARIATION SELECTOR ONE..THREE (Mn)
+    (0x180E, 0x180E),  # MONGOLIAN VOWEL SEPARATOR (Cf)
+    (0x180F, 0x180F),  # MONGOLIAN FREE VARIATION SELECTOR FOUR (Mn)
+    (0x200B, 0x200F),  # ZERO WIDTH SPACE..RIGHT-TO-LEFT MARK (Cf)
+    (0x202A, 0x202E),  # LEFT-TO-RIGHT EMBEDDING..RIGHT-TO-LEFT OVERRIDE (Cf)
+    (0x2060, 0x2064),  # WORD JOINER..INVISIBLE PLUS (Cf)
+    (0x2065, 0x2065),  # <reserved> (Cn)
+    (0x2066, 0x206F),  # LEFT-TO-RIGHT ISOLATE..NOMINAL DIGIT SHAPES (Cf)
+    (0x3164, 0x3164),  # HANGUL FILLER (Lo)
+    (0xFE00, 0xFE0F),  # VARIATION SELECTOR-1..16 (Mn)
+    (0xFEFF, 0xFEFF),  # ZERO WIDTH NO-BREAK SPACE / BOM (Cf)
+    (0xFFA0, 0xFFA0),  # HALFWIDTH HANGUL FILLER (Lo)
+    (0xFFF0, 0xFFF8),  # <reserved> (Cn)
+    (0x1BCA0, 0x1BCA3),  # SHORTHAND FORMAT LETTER OVERLAP..UP STEP (Cf)
+    (0x1D173, 0x1D17A),  # MUSICAL SYMBOL BEGIN BEAMED..END PHRASE (Cf)
+    (0xE0000, 0xE0000),  # <reserved> (Cn)
+    (0xE0001, 0xE0001),  # LANGUAGE TAG (Cf)
+    (0xE0002, 0xE001F),  # <reserved> (Cn)
+    (0xE0020, 0xE007F),  # TAG SPACE..CANCEL TAG (Cf)
+    (0xE0080, 0xE00FF),  # <reserved> (Cn)
+    (0xE0100, 0xE01EF),  # VARIATION SELECTOR-17..256 (Mn)
+    (0xE01F0, 0xE0FFF),  # <reserved> (Cn)
+)
+
+_DEFAULT_IGNORABLE_STARTS: tuple[int, ...] = tuple(
+    r[0] for r in _DEFAULT_IGNORABLE_RANGES
+)
+
+
+def is_default_ignorable(ch: str) -> bool:
+    """Return True if ``ch`` is a Default_Ignorable_Code_Point.
+
+    These characters render invisibly. Many are valid identifier characters and
+    NFKC-stable, so they can silently distinguish two visually identical
+    identifiers in canonical output. Backed by a static Unicode 15.1 range table
+    because ``unicodedata`` does not expose the property.
+    """
+    if not ch:
+        return False
+    cp = ord(ch[0])
+    idx = bisect.bisect_right(_DEFAULT_IGNORABLE_STARTS, cp) - 1
+    if 0 <= idx < len(_DEFAULT_IGNORABLE_RANGES):
+        start, end = _DEFAULT_IGNORABLE_RANGES[idx]
+        return start <= cp <= end
+    return False
+
+
+@functools.lru_cache(maxsize=1)
+def _compute_default_ignorable() -> frozenset[str]:
+    return frozenset(
+        chr(cp)
+        for start, end in _DEFAULT_IGNORABLE_RANGES
+        for cp in range(start, end + 1)
+    )
+
+
 @functools.lru_cache(maxsize=1)
 def _compute_invisible_format() -> frozenset[str]:
     chars: set[str] = set()
@@ -70,12 +159,16 @@ def _compute_invisible_format() -> frozenset[str]:
 
 
 def __getattr__(name: str) -> Any:
-    # ``INVISIBLE_FORMAT`` (the full set of category-Cf characters) is computed
-    # lazily on first access so importing this module stays cheap: scan_text
-    # checks ``category`` inline and never materializes the whole set. Exposed
-    # for callers/tests that want to test membership directly.
+    # ``INVISIBLE_FORMAT`` (the full set of category-Cf characters) and
+    # ``DEFAULT_IGNORABLE`` (the full Default_Ignorable_Code_Point set) are
+    # computed lazily on first access so importing this module stays cheap:
+    # scan_text checks membership inline (``category`` / ``is_default_ignorable``)
+    # and never materializes either set. Exposed for callers/tests that want to
+    # test membership directly.
     if name == "INVISIBLE_FORMAT":
         return _compute_invisible_format()
+    if name == "DEFAULT_IGNORABLE":
+        return _compute_default_ignorable()
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -114,7 +207,8 @@ def scan_text(
 
     Detects, with code point and character offset: bidirectional reordering
     controls (Trojan Source class), disallowed invisible/format characters
-    (category ``Cf``), Arabic tatweel padding, and a byte-order mark anywhere.
+    (category ``Cf`` plus the wider Default_Ignorable_Code_Point set), Arabic
+    tatweel padding, and a byte-order mark anywhere.
 
     Args:
         text: The text to scan.
@@ -194,18 +288,33 @@ def scan_text(
             )
             continue
 
-        if unicodedata.category(ch) == "Cf":
+        # Invisible/format characters. Two overlapping nets: the category-``Cf``
+        # controls (word joiner, zero-width space, …) and the full
+        # Default_Ignorable_Code_Point set, which additionally covers non-``Cf``
+        # invisibles — U+034F, the Hangul fillers, the variation selectors — that
+        # ``category == "Cf"`` alone misses (CORE-1559, parity with the JS guard
+        # CORE-1556). Both honor ``allow`` so legitimate invisibles inside
+        # string/comment content are not reported.
+        is_cf = unicodedata.category(ch) == "Cf"
+        is_default_ignorable_ch = is_default_ignorable(ch)
+        if is_cf or is_default_ignorable_ch:
             if ch in allow:
                 continue
+            message = (
+                f"Invisible/format character ({_codepoint(ch)}, category Cf)"
+                if is_cf
+                else (
+                    f"Default-ignorable character ({_codepoint(ch)}) — "
+                    "renders invisibly"
+                )
+            )
             issues.append(
                 Issue(
                     kind="invisible",
                     codepoint=_codepoint(ch),
                     offset=offset,
                     char_name=_name(ch),
-                    message=(
-                        f"Invisible/format character ({_codepoint(ch)}, category Cf)"
-                    ),
+                    message=message,
                 )
             )
 
