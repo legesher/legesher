@@ -20,6 +20,14 @@ Usage:
 
     # Show only languages with untranslated terms
     python find_untranslated.py --only-incomplete
+
+    # Gate mode (pre-commit passes changed pack files as arguments)
+    python find_untranslated.py --warn-only path/to/packs/3.10.yml ...
+
+Exit code is non-zero when findings remain after the intentional-loanword
+allowlist (``untranslated_allowlist.yml`` next to this script) is applied.
+``--warn-only`` (report mode) exits 0 for pack findings; usage errors — an
+unknown ``--language``, a malformed allowlist — still exit non-zero.
 """
 
 import argparse
@@ -28,6 +36,7 @@ import json
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
+from functools import cache
 from pathlib import Path
 
 import yaml
@@ -40,6 +49,45 @@ LANGUAGE_PACKS_DIR = Path(__file__).parent.parent.parent / "language-packs" / "p
 
 # Languages to skip (reference implementations or already complete)
 SKIP_LANGUAGES = {"en"}  # English is the reference, not a translation
+
+# Intentional key == value entries (loanwords / policy keeps, CORE-1318).
+# Entries are "<lang>:<term>" strings; see the file's header comment for the
+# evidence bar. Findings matching the allowlist are not reported.
+ALLOWLIST_PATH = Path(__file__).parent / "untranslated_allowlist.yml"
+
+
+@cache
+def load_allowlist() -> frozenset[tuple[str, str]]:
+    """Load the intentional key == value allowlist as (language, term) pairs."""
+    if not ALLOWLIST_PATH.exists():
+        return frozenset()
+
+    with open(ALLOWLIST_PATH, encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+
+    pairs = set()
+    for raw in data.get("entries") or []:
+        # Accept both spellings: the "lang:term" string and the natural YAML
+        # mapping form "lang: term" (a single-key dict). Anything else is a
+        # mistake — fail loudly rather than silently skipping a gate entry.
+        if isinstance(raw, dict) and len(raw) == 1:
+            language, term = next(iter(raw.items()))
+            language, term = str(language), str(term)
+        elif isinstance(raw, str):
+            language, _, term = raw.partition(":")
+        else:
+            raise SystemExit(
+                f"Malformed allowlist entry {raw!r} in {ALLOWLIST_PATH}: "
+                'expected "lang:term" or "lang: term"'
+            )
+        language, term = language.strip(), term.strip()
+        if not language or not term or ":" in term:
+            raise SystemExit(
+                f"Malformed allowlist entry {raw!r} in {ALLOWLIST_PATH}: "
+                'expected "lang:term" or "lang: term"'
+            )
+        pairs.add((language, term))
+    return frozenset(pairs)
 
 
 @dataclass
@@ -108,6 +156,10 @@ def find_untranslated_in_yaml(
             for term, translation in section_data.items():
                 # Skip comment lines (start with #)
                 if term.startswith("#"):
+                    continue
+
+                # Skip intentional loanwords / policy keeps
+                if (language, term) in load_allowlist():
                     continue
 
                 # Check if translation equals original (untranslated)
@@ -227,6 +279,43 @@ def scan_all_languages(
 
         report = scan_language(lang_dir, language)
         reports[language] = report
+
+    return reports
+
+
+def _language_from_pack_path(path: Path) -> str | None:
+    """Derive the language code from a pack file path, or None if not a
+    python pack file (layout: .../python/<lang>/legesher_i18n_python_<lang>/packs/*.yml)."""
+    for parent in path.resolve().parents:
+        if parent.name.startswith("legesher_i18n_python_"):
+            return parent.name.removeprefix("legesher_i18n_python_")
+    return None
+
+
+def scan_paths(paths: list[Path]) -> dict[str, LanguageReport]:
+    """Scan specific pack files (pre-commit filename mode).
+
+    Files whose path does not identify a python language pack, and files for
+    languages in SKIP_LANGUAGES (the English reference), are ignored.
+    """
+    reports: dict[str, LanguageReport] = {}
+
+    for path in paths:
+        language = _language_from_pack_path(path)
+        if language is None:
+            logger.debug(f"Skipping non-pack path: {path}")
+            continue
+        if language in SKIP_LANGUAGES:
+            continue
+
+        report = reports.setdefault(language, LanguageReport(language=language))
+        report.total_terms += count_terms_in_yaml(path)
+
+        existing_terms = {e.term for e in report.untranslated}
+        for entry in find_untranslated_in_yaml(path, language):
+            if entry.term not in existing_terms:
+                report.untranslated.append(entry)
+                existing_terms.add(entry.term)
 
     return reports
 
@@ -371,14 +460,27 @@ def main():
         action="store_true",
         help="Show verbose output",
     )
+    parser.add_argument(
+        "--warn-only",
+        action="store_true",
+        help="Report pack findings but exit 0 for them (report mode for the "
+        "find-untranslated-terms pre-commit gate; usage errors still exit 1)",
+    )
+    parser.add_argument(
+        "paths",
+        nargs="*",
+        type=Path,
+        help="Pack YAML files to scan (as passed by pre-commit); "
+        "default: scan all language packs",
+    )
 
     args = parser.parse_args()
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    # Scan all languages
-    reports = scan_all_languages()
+    # Scan the given pack files (pre-commit mode) or all languages
+    reports = scan_paths(args.paths) if args.paths else scan_all_languages()
 
     # Export if requested
     if args.output_json:
@@ -393,13 +495,19 @@ def main():
             print_language_detail(reports[args.language])
         else:
             print(f"Language '{args.language}' not found")
-            return
+            return 1
 
     # Show summary
     print_summary(reports, only_incomplete=args.only_incomplete)
 
     # Return exit code based on completeness
     incomplete = sum(1 for r in reports.values() if not r.is_complete)
+    if incomplete and args.warn_only:
+        print(
+            "\n--warn-only: findings reported above are pending native-review "
+            "triage (see libs/i18n/docs/quality-gates.md); exiting 0."
+        )
+        return 0
     return 0 if incomplete == 0 else 1
 
 

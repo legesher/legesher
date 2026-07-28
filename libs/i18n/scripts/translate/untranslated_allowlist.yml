@@ -1,0 +1,28 @@
+# Intentional key == value pack entries — untranslated-terms gate allowlist.
+#
+# Consumed by find_untranslated.py (pre-commit hook: find-untranslated-terms)
+# and, through scan_all_languages(), by translate_untranslated.py — allowlisted
+# terms are also excluded from the translation backfill, so deliberate keeps
+# stop being re-translated. Entries may be written "lang:term" or "lang: term";
+# each asserts the identical value is a deliberate loanword / policy keep
+# (best-effort NATIVE translation policy, CORE-1318), NOT a missed translation.
+#
+# Evidence bar: add entries only with evidence (cross-pack loanword pattern,
+# community/native confirmation in translations.db, or a recorded decision).
+# Questionable cases stay OUT of this file and are tracked as "pending
+# native-review triage" in libs/i18n/docs/quality-gates.md.
+entries:
+# "lambda" is the Greek-letter name, spelled identically in these Latin-script
+# languages. Cross-pack treatment is loanword-only: non-Latin scripts carry
+# transliterations of the same word (ламбда, ラムダ, למבדה, ...), and cy/ga
+# additionally have a community-source row in translations.db agreeing on
+# "lambda".
+- cs:lambda
+- cy:lambda
+- ga:lambda
+- hr:lambda
+- lv:lambda
+# ASCII is an acronym; no pack translates it semantically (others keep or
+# transliterate it: ASCII, ascii_, kode_ascii, аски, アスキー, ...). Czech
+# keeps the lowercase acronym as-is.
+- cs:ascii

@@ -74,6 +74,19 @@ repos:
     name: Validate Language Pack YAML
     pass_filenames: true
 
+  # Untranslated-terms gate (CORE-1021): flags pack entries whose translation
+  # equals the source term (key == value), net of the intentional-loanword
+  # allowlist (libs/i18n/scripts/translate/untranslated_allowlist.yml).
+  # Runs --warn-only (report mode) while da:stopiteration awaits native-review
+  # triage — drop the flag to flip the gate strict once the pending list in
+  # libs/i18n/docs/quality-gates.md clears.
+  - entry: uv run python libs/i18n/scripts/translate/find_untranslated.py --warn-only
+    files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
+    id: find-untranslated-terms
+    language: system
+    name: Find Untranslated Terms
+    pass_filenames: true
+
   # Style-guide schema + languages.json consistency validation. Runs on both
   # style-guide edits AND languages.json edits (a change to the case/rtl source
   # of truth must re-check every guide's derived flags).
