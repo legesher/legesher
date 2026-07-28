@@ -11,6 +11,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Client-shape pack emitter for JavaScript-target locales (CORE-1371).**
+  `scripts/emit_js_client_pack.py` renders the canonical selections into the
+  `@legesher/core` `LanguagePack` TypeScript shape for vendoring into
+  `js-engine-repo` (`packages/packs/src/packs/<locale>.ts`). Registry-driven
+  metadata (bcp47 locale, direction, DB numeral-system vocabulary mapped to
+  the CLDR numbering-system id, `languages.status` as stability); fail-loud
+  completeness — a partial pack is never emitted (CORE-1400 rule 4);
+  deterministic output (alphabetical, timestamp-free, source commit pinned
+  in the DO-NOT-EDIT header) so the same DB state emits byte-identical
+  artifacts.
 - **Arabic translations for the JavaScript (JEJ) surface (CORE-1371).**
   All 62 terms (17 keywords / 16 builtins / 29 members) curated in a
   linguist-framed run over the Tier-1 context briefs, the JS Target Guide,

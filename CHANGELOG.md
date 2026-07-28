@@ -11,6 +11,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: client-shape pack emitter — `scripts/emit_js_client_pack.py`
+  renders a locale's canonical selections into the `@legesher/core`
+  `LanguagePack` TypeScript artifact for vendoring into `js-engine-repo`.
+  Registry-driven metadata, fail-loud completeness (partial packs are never
+  emitted), deterministic byte-identical output with the source commit
+  pinned in the generated header. [CORE-1371]
 - **i18n**: Arabic translations for the full 62-term JavaScript (JEJ)
   surface — 17 keywords, 16 builtins, 29 members — recorded in
   `translations.db` with per-term rationale and selected through the
