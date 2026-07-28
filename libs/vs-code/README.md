@@ -66,7 +66,7 @@ Access via Settings (`Cmd+,`) → search "Legesher":
 | `legesher.enabled`           | `true`         | Enable/disable the extension   |
 | `legesher.serverCommand`     | `legesher-lsp` | Path to language server        |
 | `legesher.trace.server`      | `off`          | Debug logging level            |
-| `legesher.telemetry.enabled` | `true`         | Anonymous usage telemetry      |
+| `legesher.telemetry.enabled` | `false`        | Anonymous usage telemetry      |
 
 ### Language Codes
 
@@ -105,7 +105,7 @@ vi (Vietnamese)  zh (Chinese)
 
 ## Privacy
 
-- **Telemetry**: Anonymous usage data (can be disabled)
+- **Telemetry**: Anonymous usage data (off by default, opt-in)
 - **No code collection**: Your code never leaves your machine
 - Respects VS Code's global telemetry settings
 

@@ -135,9 +135,9 @@ Additional recommendations:
 ### VS Code Extension
 
 - **Permissions**: Extension requests minimal VS Code API permissions, scoped to Python files
-- **Telemetry**: Anonymous usage telemetry is enabled by default via Azure Application
-  Insights. It can be disabled in settings (`legesher.telemetry.enabled`) and respects
-  VS Code's global telemetry setting. No personally identifiable information (PII) is collected.
+- **Telemetry**: Anonymous usage telemetry is disabled by default. It can be enabled in
+  settings (`legesher.telemetry.enabled`), sends data via Azure Application Insights, and
+  respects VS Code's global telemetry setting. No personally identifiable information (PII) is collected.
 - **Local execution**: Code analysis happens locally — the language server runs as a local process with no network calls
 
 ## Security Contacts

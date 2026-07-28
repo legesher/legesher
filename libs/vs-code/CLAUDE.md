@@ -107,7 +107,7 @@ Privacy-focused telemetry respects VS Code global settings:
 
 ```json
 {
-  "legesher.telemetry.enabled": true,
+  "legesher.telemetry.enabled": false,
   "legesher.telemetry.contributeToMLTraining": false
 }
 ```

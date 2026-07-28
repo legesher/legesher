@@ -52,7 +52,7 @@ export class LegesherTelemetry {
 
         // Check if telemetry is enabled in extension settings
         const config = vscode.workspace.getConfiguration('legesher');
-        const telemetryEnabled = config.get<boolean>('telemetry.enabled', true);
+        const telemetryEnabled = config.get<boolean>('telemetry.enabled', false);
 
         if (!telemetryEnabled) {
             Logger.info('Telemetry: Disabled via legesher.telemetry.enabled setting');

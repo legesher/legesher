@@ -79,12 +79,12 @@ describe('Telemetry Module', () => {
             assert.strictEqual(telemetryEnabled, false);
         });
 
-        it('should default telemetry to enabled', () => {
+        it('should default telemetry to disabled (opt-in)', () => {
             const mockConfig: Record<string, boolean> = {};
 
-            const telemetryEnabled = mockConfig['telemetry.enabled'] ?? true;
+            const telemetryEnabled = mockConfig['telemetry.enabled'] ?? false;
 
-            assert.strictEqual(telemetryEnabled, true);
+            assert.strictEqual(telemetryEnabled, false);
         });
 
         it('should track ML training consent separately', () => {

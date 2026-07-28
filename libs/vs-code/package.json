@@ -215,7 +215,7 @@
         },
         "legesher.telemetry.enabled": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "tags": [
             "telemetry",
             "usesOnlineServices"
