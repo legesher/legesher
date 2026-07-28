@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--next-version-placeholder-->
 
+## Unreleased
+
+### Changed
+
+- **Telemetry**: defaults to OFF — opt in via `legesher.telemetry.enabled` (CORE-1586)
+
 ## 0.1.5 (2026-03-01)
 
 ### Changed

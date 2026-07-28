@@ -103,8 +103,8 @@ legesher translate src/ --to zh --full \
 
 ```bash
 $ legesher translate hello.py --to es
-Translating hello.py (en � es)...
- Translation complete: hello.py
+Translating hello.py (en → es)...
+✓ Translation complete: hello.py
   5 keywords translated
   1 builtin function translated
 ```
@@ -138,9 +138,9 @@ legesher git status
 ```bash
 $ legesher git setup --language es
 Setting up git filters for Spanish (es)...
- Git filters configured in .git/config
- Git attributes created in .gitattributes
- Project configuration saved to .legesher/config.yml
+✓ Git filters configured in .git/config
+✓ Git attributes created in .gitattributes
+✓ Project configuration saved to .legesher/config.yml
 
 Your repository is now configured for multilingual development:
   Working language: Spanish (es)
@@ -231,11 +231,11 @@ Maintainer: Legesher Community
 License: MIT
 
 Keyword Coverage:
-   if � si
-   for � para
-   while � mientras
-   def � def
-   class � clase
+  ✓ if → si
+  ✓ for → para
+  ✓ while → mientras
+  ✓ def → def
+  ✓ class → clase
   ... (30 more)
 
 Run with --verbose to see complete translation mappings.
@@ -265,20 +265,20 @@ legesher info --check-updates
 $ legesher info --list
 Available Language Packs:
 
-  es - Spanish (Espa�ol)
+  es - Spanish (Español)
     Python: 3.10, 3.11, 3.12
     Keywords: 35 | Builtins: 71
-    Status:  Installed
+    Status: ✓ Installed
 
-  fr - French (Fran�ais)
+  fr - French (Français)
     Python: 3.10, 3.11, 3.12
     Keywords: 35 | Builtins: 71
-    Status:  Not installed
+    Status: ✗ Not installed
 
-  ar - Arabic ('D91(J))
+  ar - Arabic (العربية)
     Python: 3.10, 3.11, 3.12
     Keywords: 35 | Builtins: 71
-    Status:  Not installed
+    Status: ✗ Not installed
 
 Install a language pack: pip install legesher-i18n-python-<code>
 ```
@@ -352,7 +352,7 @@ legesher config init --language es
 cat > hola.py << 'EOF'
 def saludar(nombre):
     """Saluda a una persona por su nombre."""
-    imprimir(f"�Hola, {nombre}!")
+    imprimir(f"¡Hola, {nombre}!")
 
 si __nombre__ == "__principal__":
     saludar("Mundo")
@@ -435,28 +435,28 @@ pytest tests/test_cli.py
 
 ```text
 libs/legesher/
-   src/legesher/
-      __init__.py
-      cli.py              # Main CLI entry point
-      commands/
-         translate.py    # Translation command
-         git.py          # Git integration command
-         config.py       # Configuration command
-         metadata.py     # Metadata command
-         info.py         # Info command
-      config/
-         manager.py      # Configuration management
-      utils/
-          output.py       # CLI output formatting
-          validation.py   # Input validation
-   tests/
-      test_cli.py
-      test_translate.py
-      test_git.py
-      test_config.py
-      test_metadata.py
-   pyproject.toml
-   README.md
+├── src/legesher/
+│   ├── __init__.py
+│   ├── cli.py              # Main CLI entry point
+│   ├── commands/
+│   │   ├── translate.py    # Translation command
+│   │   ├── git.py          # Git integration command
+│   │   ├── config.py       # Configuration command
+│   │   ├── metadata.py     # Metadata command
+│   │   └── info.py         # Info command
+│   ├── config/
+│   │   └── manager.py      # Configuration management
+│   └── utils/
+│       ├── output.py       # CLI output formatting
+│       └── validation.py   # Input validation
+├── tests/
+│   ├── test_cli.py
+│   ├── test_translate.py
+│   ├── test_git.py
+│   ├── test_config.py
+│   └── test_metadata.py
+├── pyproject.toml
+└── README.md
 ```
 
 ## Contributing
