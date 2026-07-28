@@ -244,6 +244,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **`db collisions` errors on a missing database instead of creating one
+  (CORE-1497).** With no `--db-path` and no database present, the command now
+  exits 1 with "Database not found" and creates no file — previously it
+  silently created an empty database and reported zero collisions. An
+  explicitly passed `--db-path` must now exist, matching `db stats` and
+  `db vacuum`.
 - **Python `ar` pack: `while` is now `طالما` ("as long as"), was `حتى`
   ("until") (CORE-1371).** The shipped value inverted the truth sense of
   the loop. Corrected at the DB layer and re-exported through the

@@ -3,6 +3,7 @@
 import pytest
 from click.testing import CliRunner
 
+import legesher_i18n.cli as cli_module
 from legesher_i18n.cli import cli
 
 
@@ -571,6 +572,40 @@ class TestDbCommand:
 
         # Should fail because database doesn't exist
         assert result.exit_code != 0
+
+    def test_db_collisions_requires_database(self, runner, tmp_path):
+        """Test db collisions requires existing database."""
+        db_path = tmp_path / "nonexistent.db"
+        result = runner.invoke(cli, ["db", "collisions", "--db-path", str(db_path)])
+
+        # Should fail because database doesn't exist
+        assert result.exit_code != 0
+        assert not db_path.exists()
+
+    def test_db_collisions_default_path_missing_db_errors(
+        self, runner, tmp_path, monkeypatch
+    ):
+        """CORE-1497: default-path collisions must error, not create an empty db."""
+        missing = tmp_path / "home" / ".legesher" / "translations.db"
+        monkeypatch.setattr(cli_module, "default_db_path", lambda: missing)
+
+        result = runner.invoke(cli, ["db", "collisions"])
+
+        assert result.exit_code == 1
+        assert "Database not found" in result.output
+        # The bug was silently creating an empty database at the default path
+        assert not missing.exists()
+
+    def test_db_collisions_with_existing_database(self, runner, tmp_path):
+        """Test db collisions runs cleanly against an existing database."""
+        db_path = tmp_path / "test.db"
+        init_result = runner.invoke(cli, ["db", "init", "--db-path", str(db_path)])
+        assert init_result.exit_code == 0
+
+        result = runner.invoke(cli, ["db", "collisions", "--db-path", str(db_path)])
+
+        assert result.exit_code == 0
+        assert "No translation collisions found" in result.output
 
 
 class TestSchemaValidatorSoftKeywords:

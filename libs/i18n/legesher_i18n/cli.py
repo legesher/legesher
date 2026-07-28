@@ -756,7 +756,7 @@ def vacuum(db_path: Path | None, quiet: bool):
     default=None,
     show_default=_DB_PATH_DEFAULT_HELP,
     help="Path to database file",
-    type=click.Path(path_type=Path),
+    type=click.Path(exists=True, path_type=Path),
 )
 @click.option(
     "--language",
@@ -787,7 +787,13 @@ def collisions(
     out = get_console(quiet)
     database = None
     try:
-        database = TranslationDatabase(db_path=str(db_path) if db_path else None)
+        if db_path is None:
+            # Resolving here may seed ~/.legesher from the bundled db on
+            # first run — acceptable at command time, never at import time.
+            db_path = default_db_path()
+            if not db_path.exists():
+                raise FileNotFoundError(db_path)
+        database = TranslationDatabase(db_path=str(db_path))
         results = database.find_collisions(language_code=language)
 
         if json_output:
