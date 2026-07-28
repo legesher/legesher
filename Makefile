@@ -2,7 +2,7 @@
 # ===========================
 # Common commands for development, testing, and code generation.
 
-.PHONY: help install generate generate-languages check-generated test test-all test-i18n test-core test-legesher test-language-server lint format typecheck clean vscode-compile vscode-package
+.PHONY: help install generate generate-languages check-generated test test-all test-i18n test-core test-legesher test-language-server test-mcp lint format typecheck clean vscode-compile vscode-package
 
 # Default target
 help:
@@ -23,6 +23,7 @@ help:
 	@echo "  make test-core            Run core package tests"
 	@echo "  make test-legesher        Run legesher package tests"
 	@echo "  make test-language-server Run language-server tests"
+	@echo "  make test-mcp             Run MCP server tests"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make lint                 Run linters (ruff)"
@@ -64,7 +65,7 @@ generate-languages:
 # ============================================================================
 
 # Run all tests across the monorepo
-test: test-i18n test-core test-legesher test-language-server
+test: test-i18n test-core test-legesher test-language-server test-mcp
 	@echo "All tests complete!"
 
 test-all: test
@@ -86,6 +87,10 @@ test-language-server:
 	@echo "Running language-server tests..."
 	cd libs/language-server && uv run pytest tests/ -v
 
+test-mcp:
+	@echo "Running MCP server tests..."
+	cd libs/mcp && uv run pytest tests/ -v
+
 # Test with coverage
 test-coverage:
 	@echo "Running tests with coverage..."
@@ -106,7 +111,7 @@ format:
 
 typecheck:
 	@echo "Running type checker..."
-	uv run mypy libs/core libs/i18n libs/legesher libs/language-server
+	uv run mypy libs/core libs/i18n libs/legesher libs/language-server libs/mcp
 
 # ============================================================================
 # VS Code Extension

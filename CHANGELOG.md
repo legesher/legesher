@@ -11,6 +11,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **mcp**: new `legesher-mcp` package (`libs/mcp`, Apache-2.0) — the engine's
+  translation capability as a Model Context Protocol stdio server, per the
+  CORE-1165 architecture design. Five coarse tools (`translate_to_native`,
+  `translate_to_source`, `explain_in_language`, `lookup_keyword_mapping`,
+  `map_existing_codebase`), `legesher://` resources for the language catalog
+  and per-language dictionaries, and three prompt templates. Runs entirely
+  against the local engine: no network calls, no account, no telemetry.
+  X→Y translation pivots through English and reports `pivoted`; validation
+  is `compile()`-only; tool errors are machine-coded and content-free.
+  `uvx legesher-mcp` / `uv run legesher-mcp` start it; official `mcp` SDK
+  pinned; 36 tests through the MCP layer. [CORE-1175]
 - **i18n**: client-shape pack emitter — `scripts/emit_js_client_pack.py`
   renders a locale's canonical selections into the `@legesher/core`
   `LanguagePack` TypeScript artifact for vendoring into `js-engine-repo`.

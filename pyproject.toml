@@ -14,6 +14,7 @@ dependencies = [
     "legesher-i18n",
     "legesher",
     "legesher-language-server",
+    "legesher-mcp",
     "legesher-vs-code",
 ]
 readme = "README.md"
@@ -28,6 +29,7 @@ members = [
     "libs/i18n/language-packs/python/*",
     "libs/legesher",
     "libs/language-server",
+    "libs/mcp",
     "libs/vs-code",
 ]
 
@@ -87,6 +89,7 @@ legesher-i18n-python-vi = { workspace = true }
 legesher-i18n-python-zh = { workspace = true }
 legesher = { workspace = true }
 legesher-language-server = { workspace = true }
+legesher-mcp = { workspace = true }
 legesher-vs-code = { workspace = true }
 
 [dependency-groups]

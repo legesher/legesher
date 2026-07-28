@@ -1,0 +1,74 @@
+[project]
+name = "legesher-mcp"
+version = "0.1.0"
+description = "Model Context Protocol (MCP) server for the Legesher translation engine"
+readme = "README.md"
+requires-python = ">=3.10,<4.0"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
+]
+keywords = ["legesher", "mcp", "model-context-protocol", "multilingual", "translation", "i18n"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    "mcp>=1.16.0,<2.0.0",  # Official MCP Python SDK (FastMCP server, stdio transport)
+    "pydantic>=2.5.0",
+    "legesher-core",  # Translation engine (token translator, pack-backed factory)
+    "legesher-i18n",  # Language registry + language pack loader
+]
+
+[tool.uv.sources]
+legesher-core = { workspace = true }
+legesher-i18n = { workspace = true }
+
+[project.scripts]
+legesher-mcp = "legesher_mcp.__main__:main"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+distribution = true
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.8.0",
+    "ruff>=0.1.0",
+]
+
+# Async tests ride anyio's own pytest plugin (anyio ships with the mcp SDK):
+# pytest-asyncio's fixture finalizers run in a separate task, which breaks
+# the SDK session helpers' anyio cancel scopes.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = []
