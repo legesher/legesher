@@ -330,7 +330,35 @@ CREATE TABLE contributor_identities (
     consent_public_credit INTEGER NOT NULL DEFAULT 0 CHECK (consent_public_credit IN (0, 1)),
     consent_version       TEXT,
     consent_at            TEXT,
-    withdrawn_at          TEXT
+    -- Decided 2026-07-21 (CORE-1538; closes the CORE-1501 Q1 thread): how
+    -- public credit reads is the contributor's explicit three-way choice.
+    -- consent_public_credit stays as the derived boolean
+    -- (credit_preference <> 'anonymous'); the importer writes both.
+    credit_preference     TEXT NOT NULL DEFAULT 'anonymous'
+                          CHECK (credit_preference IN ('anonymous', 'handle', 'name')),
+    -- Contact email, captured at every submission (decided 2026-07-21).
+    -- PRIVATE like everything in this table; NEVER in a bundle — bundles are
+    -- public PR artifacts, so the address travels a private channel and lands
+    -- only here. The importer stores it trimmed with the domain lowercased and
+    -- runs the real syntax check; this CHECK is the DB floor (one @, dotted
+    -- domain, no ASCII whitespace — space, tab, CR, LF; LIKE wildcards match
+    -- control characters, so the tab/newline family needs its own guards).
+    -- Deliverability verification is a magic-link flow recorded in
+    -- email_verified_at; an unverified email never blocks.
+    email                 TEXT
+                          CHECK (email IS NULL
+                                 OR (email = TRIM(email)
+                                     AND email NOT LIKE '% %'
+                                     AND email NOT GLOB '*' || char(9)  || '*'
+                                     AND email NOT GLOB '*' || char(10) || '*'
+                                     AND email NOT GLOB '*' || char(13) || '*'
+                                     AND email LIKE '%_@_%.%_'
+                                     AND email NOT LIKE '%@%@%')),
+    email_verified_at     TEXT,
+    withdrawn_at          TEXT,
+    -- A credit choice must have something to credit.
+    CHECK (credit_preference <> 'name'   OR display_name  IS NOT NULL),
+    CHECK (credit_preference <> 'handle' OR github_handle IS NOT NULL)
 );
 
 -- PRIVATE. Never exported (same boundary as contributor_identities).
@@ -1080,3 +1108,662 @@ CREATE TABLE message_translations (
                 CHECK (status IN ('machine', 'experimental', 'reviewed', 'official')),
     UNIQUE (template_id, locale)
 );
+
+-- ===========================================================================
+-- REVIEW INTAKE (CORE-1538) — sessions, rankings, annotations, expansions,
+-- commentary, style ratifications, import-source registry.
+--
+-- The intake layer over the corpus: how structured native review arrives
+-- (review bundles — doc: libs/i18n/docs/proposals/native-review-intake/),
+-- with the same discipline as the corpus itself: append-only community
+-- tables (full UPDATE/DELETE trigger mirrors), content-addressed uids
+-- (formulae in schema_v2.py: session_uid, annotation_uid, expansion_uid,
+-- commentary_uid, style_uid — deterministic so re-importing a bundle is
+-- INSERT-idempotent), pl_scope as the '*' STORED generated column, and
+-- policy expressed in views so thresholds re-cut in one place.
+--
+-- Layers: review_sessions + junctions + session_rankings +
+-- option_annotations + option_expansions + concept_commentary are
+-- CORPUS-ADJACENT (community-writable, append-only, publish-eligible);
+-- commentary_moderation is DERIVED (mutable, regenerable);
+-- import_sources is REFERENCE; message_endorsements is DEFERRED/inert
+-- like the message tables above.
+-- ===========================================================================
+
+-- REFERENCE: every non-human candidate stream, so license posture and
+-- attribution are data, not lore. `redistributable` gates whether terms from
+-- this source may be STORED as options / exported in the Apache-2.0 corpus,
+-- or only DISPLAYED as attributed references in the review kit.
+-- option_provenance.source_detail carries this id for source='model'/'import'.
+CREATE TABLE import_sources (
+    id              TEXT PRIMARY KEY,          -- 'model:aya-expanse-32b', 'initiative:hedy'
+    kind            TEXT NOT NULL CHECK (kind IN ('model', 'initiative', 'dataset')),
+    name            TEXT NOT NULL,
+    url             TEXT,
+    license_spdx    TEXT,                      -- 'Apache-2.0', 'EUPL-1.2'; NULL = none found
+    redistributable INTEGER NOT NULL DEFAULT 0 CHECK (redistributable IN (0, 1)),
+    attribution     TEXT,                      -- credit line required when displayed/exported
+    fetched_ref     TEXT,                      -- commit sha / dataset revision imported from
+    notes           TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    CHECK (id = LOWER(id) AND id NOT LIKE '% %' AND instr(id, char(31)) = 0),
+    -- Redistribution is a verified license posture, never a default.
+    CHECK (redistributable = 0 OR license_spdx IS NOT NULL)
+);
+
+-- One completed sitting of the review app (or an imported issue-form
+-- response): the provenance + verification anchor for everything a reviewer
+-- produced in it. uid = 'ses_' + sha256(canonical bundle)[:24], so re-import
+-- is idempotent. The ONE intake table with a workflow: append-only EXCEPT
+-- status / verification_report / notes.
+CREATE TABLE review_sessions (
+    uid                 TEXT PRIMARY KEY,
+    contributor_id      TEXT NOT NULL REFERENCES contributors(id) ON DELETE RESTRICT,
+    locale              TEXT NOT NULL REFERENCES locales(tag) ON DELETE RESTRICT,
+    track               TEXT NOT NULL
+                        CHECK (track IN ('reserved_words', 'messages', 'style_profile')),
+    programming_language TEXT REFERENCES programming_languages(code) ON DELETE RESTRICT,
+    pl_scope            TEXT NOT NULL
+                        GENERATED ALWAYS AS (COALESCE(programming_language, '*')) STORED,
+    method              TEXT NOT NULL          -- same vocabulary as endorsements.method
+                        CHECK (method IN ('portal', 'survey', 'workshop', 'github',
+                                          'interview', 'import')),
+    kit_version         TEXT NOT NULL,         -- review-kit build the reviewer saw
+    app_version         TEXT,
+    rung_at_session     TEXT NOT NULL REFERENCES review_rungs(rung),  -- snapshot, immutable
+    bundle_digest       TEXT NOT NULL,         -- full sha256 (64 hex); uid is its truncation
+    contact_captured    INTEGER NOT NULL DEFAULT 0 CHECK (contact_captured IN (0, 1)),
+                                               -- email reached the PRIVATE channel; the address
+                                               -- itself lives in contributor_identities only
+    started_at          TEXT,                  -- client-reported; advisory evidence
+    submitted_at        TEXT NOT NULL DEFAULT (datetime('now')),
+    status              TEXT NOT NULL DEFAULT 'submitted'
+                        CHECK (status IN ('submitted', 'verifying', 'accepted',
+                                          'returned', 'rejected')),
+    verification_report TEXT,                  -- JSON, one entry per pipeline stage
+    notes               TEXT,
+    CHECK (uid GLOB 'ses_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'),
+    -- Every character hex, not just the first: GLOB '[0-9a-f]*' anchors only
+    -- position 1, so the negated class over the whole string is the real check.
+    CHECK (bundle_digest NOT GLOB '*[^0-9a-f]*' AND length(bundle_digest) = 64),
+    -- The uid IS the digest's truncation (schema_v2.session_uid); a hand-written
+    -- INSERT must not be able to pair a well-formed uid with an unrelated digest,
+    -- or re-import idempotency and bundle re-verification silently break.
+    CHECK (uid = 'ses_' || substr(bundle_digest, 1, 24)),
+    -- A style-profile session is locale-wide by definition.
+    CHECK (track <> 'style_profile' OR programming_language IS NULL)
+);
+
+CREATE INDEX idx_sessions_locale ON review_sessions(locale, track, status);
+CREATE INDEX idx_sessions_contributor ON review_sessions(contributor_id);
+
+-- Evidence columns are frozen; only the workflow columns may move.
+CREATE TRIGGER trg_sessions_evidence_frozen
+BEFORE UPDATE OF uid, contributor_id, locale, track, programming_language, method,
+                 kit_version, app_version, rung_at_session, bundle_digest,
+                 contact_captured, started_at, submitted_at ON review_sessions
+BEGIN
+    SELECT RAISE(ABORT,
+        'review_sessions: evidence is append-only; only status/verification_report/notes may change');
+END;
+
+-- Terminal states stay terminal: an accepted session has been ingested
+-- (un-accepting would orphan corpus rows); a rejection is a moderation
+-- decision with its own record. A returned session resubmits as a NEW
+-- bundle (new content -> new uid), never mutates back.
+CREATE TRIGGER trg_sessions_terminal_states
+BEFORE UPDATE OF status ON review_sessions
+WHEN OLD.status IN ('accepted', 'rejected') AND NEW.status <> OLD.status
+BEGIN
+    SELECT RAISE(ABORT, 'review_sessions: accepted/rejected are terminal; resubmit as a new bundle');
+END;
+
+CREATE TRIGGER trg_sessions_no_delete
+BEFORE DELETE ON review_sessions
+BEGIN
+    SELECT RAISE(ABORT, 'review_sessions are append-only');
+END;
+
+-- Once a session is terminal, its verification report and notes are part of
+-- the record: rewriting the audit trail after acceptance/rejection is the
+-- same attack as editing evidence. (The transition INTO the terminal state
+-- writes the report in the same UPDATE, which passes — OLD.status is not yet
+-- terminal.)
+CREATE TRIGGER trg_sessions_report_frozen_when_terminal
+BEFORE UPDATE OF verification_report, notes ON review_sessions
+WHEN OLD.status IN ('accepted', 'rejected') AND NEW.status = OLD.status
+BEGIN
+    SELECT RAISE(ABORT,
+        'review_sessions: the verification report is frozen once the session is terminal');
+END;
+
+-- Junctions: which corpus rows a session produced. options/endorsements stay
+-- exactly as above (no new columns on frozen shapes); linkage lives here.
+-- `elicited` preserves the blind-first ordering — the research signal the
+-- structured flow exists to collect. Fully frozen.
+CREATE TABLE session_options (
+    session_uid  TEXT NOT NULL REFERENCES review_sessions(uid) ON DELETE RESTRICT,
+    option_uid   TEXT NOT NULL REFERENCES options(uid) ON DELETE RESTRICT,
+    elicited     TEXT NOT NULL CHECK (elicited IN ('blind',         -- before candidates shown
+                                                   'after_reveal',  -- after seeing candidates
+                                                   'quick')),       -- non-session path (issue form)
+    PRIMARY KEY (session_uid, option_uid)
+) WITHOUT ROWID;
+
+CREATE TRIGGER trg_session_options_frozen
+BEFORE UPDATE ON session_options
+BEGIN SELECT RAISE(ABORT, 'session_options is append-only'); END;
+CREATE TRIGGER trg_session_options_no_delete
+BEFORE DELETE ON session_options
+BEGIN SELECT RAISE(ABORT, 'session_options is append-only'); END;
+
+CREATE TABLE session_endorsements (
+    session_uid     TEXT NOT NULL REFERENCES review_sessions(uid) ON DELETE RESTRICT,
+    endorsement_uid TEXT NOT NULL REFERENCES endorsements(uid) ON DELETE RESTRICT,
+    PRIMARY KEY (session_uid, endorsement_uid)
+) WITHOUT ROWID;
+
+CREATE TRIGGER trg_session_endorsements_frozen
+BEFORE UPDATE ON session_endorsements
+BEGIN SELECT RAISE(ABORT, 'session_endorsements is append-only'); END;
+CREATE TRIGGER trg_session_endorsements_no_delete
+BEFORE DELETE ON session_endorsements
+BEGIN SELECT RAISE(ABORT, 'session_endorsements is append-only'); END;
+
+-- A session may only claim endorsements its OWN contributor made — linking
+-- someone else's endorsement to a session would misattribute evidence.
+CREATE TRIGGER trg_session_endorsements_same_contributor
+BEFORE INSERT ON session_endorsements
+WHEN (SELECT e.contributor_id FROM endorsements e WHERE e.uid = NEW.endorsement_uid)
+  <> (SELECT s.contributor_id FROM review_sessions s WHERE s.uid = NEW.session_uid)
+BEGIN
+    SELECT RAISE(ABORT,
+        'session_endorsements: endorsement belongs to a different contributor than the session');
+END;
+
+-- Session-scoped preference order. Separate from endorsements on purpose:
+--   endorsement = "I would teach this word"   (positive, at-most-one per person)
+--   ranking     = "among those, this order"   (re-elicitable, session-scoped)
+-- Append-only across sessions; aggregation reads each contributor's LATEST
+-- accepted session via latest_rankings. No downvotes anywhere: an unranked,
+-- unendorsed option is simply "passed".
+CREATE TABLE session_rankings (
+    session_uid  TEXT NOT NULL REFERENCES review_sessions(uid) ON DELETE RESTRICT,
+    concept_id   INTEGER NOT NULL REFERENCES concepts(id) ON DELETE RESTRICT,
+    locale       TEXT NOT NULL REFERENCES locales(tag) ON DELETE RESTRICT,
+    programming_language TEXT REFERENCES programming_languages(code) ON DELETE RESTRICT,
+    pl_scope     TEXT NOT NULL
+                 GENERATED ALWAYS AS (COALESCE(programming_language, '*')) STORED,
+    option_uid   TEXT NOT NULL REFERENCES options(uid) ON DELETE RESTRICT,
+    rank         INTEGER NOT NULL CHECK (rank >= 1),   -- 1 = "ship this"
+    revised_after_reveal INTEGER NOT NULL DEFAULT 0
+                 CHECK (revised_after_reveal IN (0, 1)),
+    comment      TEXT,
+    -- A generated column may sit in a UNIQUE constraint but not in a PRIMARY
+    -- KEY (SQLite rule; canon_selections uses the same pattern).
+    UNIQUE (session_uid, concept_id, locale, pl_scope, option_uid)
+);
+
+CREATE UNIQUE INDEX uq_ranking_slot
+    ON session_rankings(session_uid, concept_id, locale, pl_scope, rank);
+CREATE INDEX idx_rankings_option ON session_rankings(option_uid);
+
+-- You may only rank a word you endorsed (live, yours). The importer enforces
+-- this at the bundle level; this trigger is the DB floor. A LATER retraction
+-- legitimately strands the ranking row — it stays as evidence; aggregation
+-- joins live endorsements and ignores it.
+CREATE TRIGGER trg_ranking_requires_endorsement
+BEFORE INSERT ON session_rankings
+WHEN NOT EXISTS (
+    SELECT 1
+    FROM endorsements e
+    JOIN review_sessions s ON s.uid = NEW.session_uid
+    WHERE e.option_uid = NEW.option_uid
+      AND e.contributor_id = s.contributor_id
+      AND e.retracted_at IS NULL
+)
+BEGIN
+    SELECT RAISE(ABORT, 'session_rankings: rank only options this contributor has endorsed');
+END;
+
+-- The ranked option must render the concept/locale the row claims — a
+-- mis-keyed ranking would silently poison aggregation.
+CREATE TRIGGER trg_ranking_option_matches_concept
+BEFORE INSERT ON session_rankings
+WHEN NOT EXISTS (
+    SELECT 1 FROM options o
+    WHERE o.uid = NEW.option_uid
+      AND o.concept_id = NEW.concept_id
+      AND o.locale = NEW.locale
+      AND o.pl_scope IN ('*', NEW.pl_scope)
+)
+BEGIN
+    SELECT RAISE(ABORT, 'session_rankings: option does not render this concept/locale/scope');
+END;
+
+-- And the ranking's locale must be the session's locale — an Urdu ranking
+-- filed under a Spanish session is mis-keyed evidence.
+CREATE TRIGGER trg_ranking_locale_matches_session
+BEFORE INSERT ON session_rankings
+WHEN NEW.locale <> (SELECT s.locale FROM review_sessions s WHERE s.uid = NEW.session_uid)
+BEGIN
+    SELECT RAISE(ABORT, 'session_rankings: locale does not match the session locale');
+END;
+
+CREATE TRIGGER trg_rankings_append_only
+BEFORE UPDATE ON session_rankings
+BEGIN SELECT RAISE(ABORT, 'session_rankings are append-only: a new session supersedes them'); END;
+CREATE TRIGGER trg_rankings_no_delete
+BEFORE DELETE ON session_rankings
+BEGIN SELECT RAISE(ABORT, 'session_rankings are append-only'); END;
+
+-- Neutral, crowd-attestable DESCRIPTORS of an option — distinct from
+-- option_flags (moderation/harm): no resolution workflow, no negative
+-- charge. This is the transliteration checkbox: transliteration popularity
+-- per locale is revealed preference feeding locales.terminology_policy,
+-- while option_flags(reason='transliteration') stays reserved for the
+-- model-policy violation (2026-07-05 rule). Vocabulary is a CHECK, matching
+-- the house style for flags/methods.
+CREATE TABLE option_annotations (
+    uid             TEXT PRIMARY KEY,
+    option_uid      TEXT NOT NULL REFERENCES options(uid) ON DELETE RESTRICT,
+    contributor_id  TEXT NOT NULL REFERENCES contributors(id) ON DELETE RESTRICT,
+    session_uid     TEXT REFERENCES review_sessions(uid) ON DELETE RESTRICT,
+    kind            TEXT NOT NULL
+                    CHECK (kind IN ('transliteration',   -- phonetic copy of the English term
+                                    'cognate_loanword',  -- genuine cognate / established loan
+                                    'established_term',  -- existing classroom/textbook usage
+                                    'coined_neologism',  -- new coinage for this concept
+                                    'register_formal',
+                                    'register_informal',
+                                    'regional')),        -- locale-specific; locale-split signal
+    comment         TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    retracted_at    TEXT,
+    CHECK (uid GLOB 'ann_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]')
+);
+
+CREATE UNIQUE INDEX uq_annotation_once
+    ON option_annotations(option_uid, contributor_id, kind)
+    WHERE retracted_at IS NULL;
+CREATE INDEX idx_annotations_option ON option_annotations(option_uid);
+
+-- A session-linked row must belong to the session's contributor: the uid
+-- formula binds them, but the formula lives in application code and this
+-- floor must hold against a hand-written INSERT. Same rule on expansions,
+-- commentary, and style ratifications below.
+CREATE TRIGGER trg_annotations_contributor_matches_session
+BEFORE INSERT ON option_annotations
+WHEN NEW.session_uid IS NOT NULL
+ AND NEW.contributor_id <> (SELECT s.contributor_id FROM review_sessions s
+                             WHERE s.uid = NEW.session_uid)
+BEGIN
+    SELECT RAISE(ABORT, 'option_annotations: contributor does not match the session contributor');
+END;
+
+CREATE TRIGGER trg_annotations_append_only
+BEFORE UPDATE OF uid, option_uid, contributor_id, session_uid, kind, created_at
+ON option_annotations
+BEGIN SELECT RAISE(ABORT, 'option_annotations are append-only: retract, do not edit'); END;
+CREATE TRIGGER trg_annotations_retraction_is_final
+BEFORE UPDATE OF retracted_at ON option_annotations
+WHEN OLD.retracted_at IS NOT NULL AND NEW.retracted_at IS NULL
+BEGIN SELECT RAISE(ABORT, 'option_annotations: a retraction cannot be reversed'); END;
+CREATE TRIGGER trg_annotations_no_delete
+BEFORE DELETE ON option_annotations
+BEGIN SELECT RAISE(ABORT, 'option_annotations are append-only: retract, do not delete'); END;
+
+-- The phrase layer (elif-class concepts). The reviewed agreement has TWO
+-- layers: (1) the expanded phrase in the target language (prose; spaces
+-- welcome) — this table; (2) the contracted surface form that becomes the
+-- identifier — the option it attaches to. The canon TOML gains an optional
+-- `expansion` per entry, copied from the winning option's most-attested
+-- expansion at selection time.
+CREATE TABLE option_expansions (
+    uid             TEXT PRIMARY KEY,
+    option_uid      TEXT NOT NULL REFERENCES options(uid) ON DELETE RESTRICT,
+    contributor_id  TEXT NOT NULL REFERENCES contributors(id) ON DELETE RESTRICT,
+    session_uid     TEXT REFERENCES review_sessions(uid) ON DELETE RESTRICT,
+    expansion       TEXT NOT NULL,             -- stored NFC, like surface_form
+    formation_note  TEXT,                      -- how the expansion contracts to the token
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    retracted_at    TEXT,
+    CHECK (uid GLOB 'exp_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'),
+    CHECK (expansion <> '' AND instr(expansion, char(31)) = 0)
+);
+
+CREATE INDEX idx_expansions_option ON option_expansions(option_uid);
+
+CREATE TRIGGER trg_expansions_contributor_matches_session
+BEFORE INSERT ON option_expansions
+WHEN NEW.session_uid IS NOT NULL
+ AND NEW.contributor_id <> (SELECT s.contributor_id FROM review_sessions s
+                             WHERE s.uid = NEW.session_uid)
+BEGIN
+    SELECT RAISE(ABORT, 'option_expansions: contributor does not match the session contributor');
+END;
+
+CREATE TRIGGER trg_expansions_append_only
+BEFORE UPDATE OF uid, option_uid, contributor_id, session_uid, expansion,
+                 formation_note, created_at ON option_expansions
+BEGIN SELECT RAISE(ABORT, 'option_expansions are append-only: retract, do not edit'); END;
+CREATE TRIGGER trg_expansions_retraction_is_final
+BEFORE UPDATE OF retracted_at ON option_expansions
+WHEN OLD.retracted_at IS NOT NULL AND NEW.retracted_at IS NULL
+BEGIN SELECT RAISE(ABORT, 'option_expansions: a retraction cannot be reversed'); END;
+CREATE TRIGGER trg_expansions_no_delete
+BEFORE DELETE ON option_expansions
+BEGIN SELECT RAISE(ABORT, 'option_expansions are append-only: retract, do not delete'); END;
+
+-- Free-text community knowledge that belongs to a CONCEPT (or the locale as
+-- a whole), not to one option — the terminology feedstock for
+-- `legesher translate` beyond the packed word. The community row is
+-- append-only and carries NO workflow; publishability is a MODERATION
+-- verdict in commentary_moderation (the option_validations pattern).
+-- Export includes a row only when its moderation row says 'published'.
+CREATE TABLE concept_commentary (
+    uid               TEXT PRIMARY KEY,
+    contributor_id    TEXT NOT NULL REFERENCES contributors(id) ON DELETE RESTRICT,
+    session_uid       TEXT REFERENCES review_sessions(uid) ON DELETE RESTRICT,
+    concept_id        INTEGER REFERENCES concepts(id) ON DELETE RESTRICT,
+                      -- NULL = locale-level commentary. Export keys by slug;
+                      -- the INTEGER id never leaves this database.
+    locale            TEXT NOT NULL REFERENCES locales(tag) ON DELETE RESTRICT,
+    topic             TEXT NOT NULL
+                      CHECK (topic IN ('word_formation', 'expansion', 'register',
+                                       'pedagogy', 'style', 'general')),
+    body              TEXT NOT NULL,
+    created_at        TEXT NOT NULL DEFAULT (datetime('now')),
+    retracted_at      TEXT,
+    CHECK (uid GLOB 'com_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'),
+    CHECK (body <> '')
+);
+
+CREATE INDEX idx_commentary_concept ON concept_commentary(concept_id, locale);
+CREATE INDEX idx_commentary_locale ON concept_commentary(locale, topic);
+
+CREATE TRIGGER trg_commentary_contributor_matches_session
+BEFORE INSERT ON concept_commentary
+WHEN NEW.session_uid IS NOT NULL
+ AND NEW.contributor_id <> (SELECT s.contributor_id FROM review_sessions s
+                             WHERE s.uid = NEW.session_uid)
+BEGIN
+    SELECT RAISE(ABORT, 'concept_commentary: contributor does not match the session contributor');
+END;
+
+CREATE TRIGGER trg_commentary_append_only
+BEFORE UPDATE OF uid, contributor_id, session_uid, concept_id, locale, topic,
+                 body, created_at ON concept_commentary
+BEGIN SELECT RAISE(ABORT, 'concept_commentary is append-only: retract, do not edit'); END;
+CREATE TRIGGER trg_commentary_retraction_is_final
+BEFORE UPDATE OF retracted_at ON concept_commentary
+WHEN OLD.retracted_at IS NOT NULL AND NEW.retracted_at IS NULL
+BEGIN SELECT RAISE(ABORT, 'concept_commentary: a retraction cannot be reversed'); END;
+CREATE TRIGGER trg_commentary_no_delete
+BEFORE DELETE ON concept_commentary
+BEGIN SELECT RAISE(ABORT, 'concept_commentary is append-only: retract, do not delete'); END;
+
+-- DERIVED moderation verdict, 1:1, regenerable — the mutable table.
+CREATE TABLE commentary_moderation (
+    commentary_uid  TEXT PRIMARY KEY REFERENCES concept_commentary(uid) ON DELETE RESTRICT,
+    status          TEXT NOT NULL DEFAULT 'pending'
+                    CHECK (status IN ('pending', 'published', 'withheld')),
+    moderated_by    TEXT,
+    moderated_at    TEXT,
+    note            TEXT
+);
+
+-- Track 3: one reviewer's answer to one named style-profile question for a
+-- locale. The style-guides/<locale>.yml generator aggregates these exactly
+-- as canon aggregates endorsements: evidence rows here, the shipped guide is
+-- a generated artifact, promotion is a query. Style guides remain
+-- SUGGESTIONS — ratification records community preference, not law.
+CREATE TABLE style_ratifications (
+    uid             TEXT PRIMARY KEY,
+    contributor_id  TEXT NOT NULL REFERENCES contributors(id) ON DELETE RESTRICT,
+    session_uid     TEXT REFERENCES review_sessions(uid) ON DELETE RESTRICT,
+    locale          TEXT NOT NULL REFERENCES locales(tag) ON DELETE RESTRICT,
+    field           TEXT NOT NULL
+                    CHECK (field IN ('word_boundaries', 'constants_strategy', 'class_marker',
+                                     'modifier_order', 'abbreviation_granularity',
+                                     'identifier_length_max', 'numerals_policy',
+                                     'docstring_mood', 'terminology_policy', 'zen_preamble')),
+    value           TEXT NOT NULL,
+    rationale       TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    retracted_at    TEXT,
+    CHECK (uid GLOB 'sty_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'),
+    CHECK (value <> '')
+);
+
+-- One LIVE answer per person per (locale, field); retraction frees the slot
+-- for a changed mind, exactly like endorsements.
+CREATE UNIQUE INDEX uq_style_vote
+    ON style_ratifications(locale, field, contributor_id)
+    WHERE retracted_at IS NULL;
+
+CREATE TRIGGER trg_style_contributor_matches_session
+BEFORE INSERT ON style_ratifications
+WHEN NEW.session_uid IS NOT NULL
+ AND NEW.contributor_id <> (SELECT s.contributor_id FROM review_sessions s
+                             WHERE s.uid = NEW.session_uid)
+BEGIN
+    SELECT RAISE(ABORT, 'style_ratifications: contributor does not match the session contributor');
+END;
+
+CREATE TRIGGER trg_style_append_only
+BEFORE UPDATE OF uid, contributor_id, session_uid, locale, field, value,
+                 rationale, created_at ON style_ratifications
+BEGIN SELECT RAISE(ABORT, 'style_ratifications are append-only: retract, do not edit'); END;
+CREATE TRIGGER trg_style_retraction_is_final
+BEFORE UPDATE OF retracted_at ON style_ratifications
+WHEN OLD.retracted_at IS NOT NULL AND NEW.retracted_at IS NULL
+BEGIN SELECT RAISE(ABORT, 'style_ratifications: a retraction cannot be reversed'); END;
+CREATE TRIGGER trg_style_no_delete
+BEFORE DELETE ON style_ratifications
+BEGIN SELECT RAISE(ABORT, 'style_ratifications are append-only: retract, do not delete'); END;
+
+-- DEFERRED (like the message tables above): endorsements for message
+-- translations, activated with the messages track. Before these are ever
+-- PUBLISHED, message_translations must first gain content-addressed keys —
+-- its AUTOINCREMENT id has exactly the rebuild-renumbering hazard options.uid
+-- exists to prevent.
+CREATE TABLE message_endorsements (
+    uid                    TEXT PRIMARY KEY,
+    message_translation_id INTEGER NOT NULL REFERENCES message_translations(id) ON DELETE RESTRICT,
+    contributor_id         TEXT NOT NULL REFERENCES contributors(id) ON DELETE RESTRICT,
+    session_uid            TEXT REFERENCES review_sessions(uid) ON DELETE RESTRICT,
+    method                 TEXT NOT NULL
+                           CHECK (method IN ('portal', 'survey', 'workshop', 'github',
+                                             'interview', 'import')),
+    rung_at_endorsement    TEXT NOT NULL REFERENCES review_rungs(rung),
+    comment                TEXT,
+    created_at             TEXT NOT NULL DEFAULT (datetime('now')),
+    retracted_at           TEXT,
+    CHECK (uid GLOB 'men_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+               || '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]')
+);
+
+CREATE UNIQUE INDEX uq_message_endorsement_once
+    ON message_endorsements(message_translation_id, contributor_id)
+    WHERE retracted_at IS NULL;
+
+CREATE TRIGGER trg_message_endorsements_append_only
+BEFORE UPDATE OF uid, message_translation_id, contributor_id, session_uid,
+                 method, rung_at_endorsement, created_at ON message_endorsements
+BEGIN SELECT RAISE(ABORT, 'message_endorsements are append-only: retract, do not edit'); END;
+CREATE TRIGGER trg_message_endorsements_retraction_is_final
+BEFORE UPDATE OF retracted_at ON message_endorsements
+WHEN OLD.retracted_at IS NOT NULL AND NEW.retracted_at IS NULL
+BEGIN SELECT RAISE(ABORT, 'message_endorsements: a retraction cannot be reversed'); END;
+CREATE TRIGGER trg_message_endorsements_no_delete
+BEFORE DELETE ON message_endorsements
+BEGIN SELECT RAISE(ABORT, 'message_endorsements are append-only: retract, do not delete'); END;
+
+-- -- REVIEW-INTAKE VIEWS --------------------------------------------------------
+
+-- Each contributor's LATEST accepted session per (concept, locale, pl_scope):
+-- the ranking set that counts. Deterministic on ties (submitted_at, then
+-- uid). Enforces its own contract: a ranking whose endorsement was later
+-- retracted is stranded evidence and is excluded here, not left for every
+-- consumer to remember to filter.
+CREATE VIEW latest_rankings AS
+WITH scoped AS (
+    SELECT
+        r.session_uid, r.concept_id, r.locale, r.pl_scope, r.option_uid,
+        r.rank, r.revised_after_reveal, r.comment,
+        s.contributor_id, s.submitted_at,
+        DENSE_RANK() OVER (
+            PARTITION BY s.contributor_id, r.concept_id, r.locale, r.pl_scope
+            ORDER BY s.submitted_at DESC, s.uid DESC
+        ) AS session_recency
+    FROM session_rankings r
+    JOIN review_sessions s ON s.uid = r.session_uid
+    WHERE s.status = 'accepted'
+      AND EXISTS (
+          SELECT 1 FROM endorsements e
+          WHERE e.option_uid = r.option_uid
+            AND e.contributor_id = s.contributor_id
+            AND e.retracted_at IS NULL
+      )
+)
+SELECT session_uid, contributor_id, concept_id, locale, pl_scope,
+       option_uid, rank, revised_after_reveal, comment, submitted_at
+FROM scoped
+WHERE session_recency = 1;
+
+-- Promotion check per option — a THIN layer over option_standings, adding
+-- exactly two things: the native-endorser threshold and canon-eligibility
+-- mirrored from trg_canon_requires_valid_identifier (identifier_valid AND
+-- script_consistent AND (nfkc_stable OR sara-am-only)). Thresholds live
+-- here, in one place (Q5 recommendation: >=2 native, zero open flags).
+CREATE VIEW option_promotion_status AS
+SELECT
+    s.concept_slug,
+    s.locale,
+    s.pl_scope,
+    s.option_uid,
+    s.surface_form,
+    s.endorsements,
+    s.weighted_endorsement,
+    s.native_verified_or_above,
+    s.open_flags,
+    s.standing,
+    (s.identifier_valid = 1
+     AND s.script_consistent = 1
+     AND (s.nfkc_stable = 1 OR s.nfkc_delta_class = 'sara-am-only'))
+                                        AS canon_eligible,
+    (s.withdrawn_at IS NULL
+     AND s.native_verified_or_above >= 2
+     AND s.open_flags = 0
+     AND s.identifier_valid = 1
+     AND s.script_consistent = 1
+     AND (s.nfkc_stable = 1 OR s.nfkc_delta_class = 'sara-am-only'))
+                                        AS reviewed_eligible
+FROM option_standings s;
+
+-- The one-endorsement-away queue: what the app shows a locale's NEXT
+-- reviewer first. Live, canon-eligible options one native endorsement short
+-- of the reviewed bar.
+CREATE VIEW second_endorsement_queue AS
+SELECT concept_slug, locale, pl_scope, option_uid, surface_form,
+       native_verified_or_above, endorsements
+FROM option_promotion_status
+WHERE reviewed_eligible = 0
+  AND canon_eligible = 1
+  AND open_flags = 0
+  AND native_verified_or_above = 1;
+
+-- The experimental -> official gate per (PL x locale) as a query. Threshold
+-- numbers pending ratification; the gate reads THIS view so re-cutting is
+-- one place.
+CREATE VIEW pack_promotion_status AS
+SELECT
+    lp.programming_language,
+    lp.locale,
+    lp.concepts_needed,
+    lp.concepts_selected,
+    lp.concepts_reviewed,
+    lp.concepts_official,
+    (SELECT COUNT(DISTINCT s.contributor_id)
+       FROM review_sessions s
+       JOIN review_rungs rr ON rr.rung = s.rung_at_session
+      WHERE s.locale = lp.locale
+        AND s.track = 'reserved_words'
+        AND s.status = 'accepted'
+        AND rr.counts_as_native = 1)                          AS native_reviewers,
+    (SELECT COUNT(DISTINCT s.contributor_id)
+       FROM review_sessions s
+      WHERE s.locale = lp.locale
+        AND s.track = 'reserved_words'
+        AND s.status = 'accepted')                            AS total_reviewers,
+    (SELECT COUNT(DISTINCT sr.field)
+       FROM style_ratifications sr
+      WHERE sr.locale = lp.locale AND sr.retracted_at IS NULL) AS style_fields_answered,
+    (lp.concepts_selected = lp.concepts_needed)               AS fully_selected,
+    CAST(lp.concepts_reviewed AS REAL) / NULLIF(lp.concepts_needed, 0) AS reviewed_ratio
+FROM locale_progress lp;
+
+-- Terminology export for `legesher translate`: per (concept x locale), the
+-- canon word plus alternates, descriptors, and the most-attested expansion —
+-- the "how else is this concept expressed" layer prompt assembly injects.
+-- Published commentary joins by concept slug in the exporter. Rows whose
+-- ONLY provenance is a non-redistributable import_source are excluded by the
+-- EXPORTER (this view is also the maintainers' internal lens, so it stays
+-- unfiltered).
+CREATE VIEW terminology_export AS
+SELECT
+    c.slug                        AS concept_slug,
+    o.locale,
+    o.pl_scope,
+    o.surface_form,
+    (cs.option_uid = o.uid)       AS is_canon,
+    cs.status                     AS canon_status,
+    ec.endorsements,
+    ec.native_verified_or_above,
+    (SELECT GROUP_CONCAT(a.kind)
+       FROM option_annotations a
+      WHERE a.option_uid = o.uid AND a.retracted_at IS NULL)  AS descriptors,
+    (SELECT x.expansion
+       FROM option_expansions x
+      WHERE x.option_uid = o.uid AND x.retracted_at IS NULL
+      GROUP BY x.expansion
+      ORDER BY COUNT(*) DESC, MIN(x.created_at) ASC
+      LIMIT 1)                                                AS expansion
+FROM options o
+JOIN concepts c             ON c.id = o.concept_id
+LEFT JOIN endorsement_counts ec ON ec.option_uid = o.uid
+LEFT JOIN canon_selections cs
+       ON cs.concept_id = o.concept_id
+      AND cs.locale = o.locale
+      AND cs.pl_scope = o.pl_scope
+WHERE o.withdrawn_at IS NULL;
+
+-- Transliteration revealed-preference per locale — the aggregate the
+-- annotation exists to measure, and the input to a terminology_policy
+-- conversation with that locale's community.
+CREATE VIEW transliteration_preference AS
+SELECT
+    o.locale,
+    COUNT(DISTINCT o.uid)                                     AS live_options,
+    COUNT(DISTINCT a.option_uid)                              AS options_tagged_translit,
+    COUNT(DISTINCT CASE WHEN e.retracted_at IS NULL
+                        THEN e.uid END)                       AS endorsements_on_translit
+FROM options o
+LEFT JOIN option_annotations a
+       ON a.option_uid = o.uid AND a.retracted_at IS NULL AND a.kind = 'transliteration'
+LEFT JOIN endorsements e
+       ON e.option_uid = a.option_uid
+WHERE o.withdrawn_at IS NULL
+GROUP BY o.locale;

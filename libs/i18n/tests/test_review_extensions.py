@@ -1,0 +1,715 @@
+"""Validation suite for the review-intake extensions (CORE-1538).
+
+Covers the intake layer folded into ``schema_v2.sql``: review sessions +
+junctions, session rankings, option annotations, expansions, commentary +
+moderation split, style ratifications, ``import_sources``, the identity
+deltas (``credit_preference`` / ``email``), the intake views, and the
+content-addressed uid helpers in ``schema_v2.py``.
+
+Same doctrine as ``test_schema_v2.py``: every append-only rule is exercised
+on UPDATE *and* DELETE (and ``INSERT OR REPLACE``, which without
+``PRAGMA recursive_triggers`` slips past ``BEFORE DELETE`` triggers), and the
+uid formulae are pinned with literal golden vectors — if a refactor changes a
+digest, a test fails with the exact value that moved.
+"""
+
+from __future__ import annotations
+
+import sqlite3
+from collections.abc import Iterator
+
+import pytest
+
+from legesher_i18n.db.schema_v2 import (
+    annotation_uid,
+    apply_schema_v2,
+    bundle_digest,
+    commentary_uid,
+    expansion_uid,
+    session_uid,
+    style_uid,
+)
+
+# Readable fixed ids (shapes satisfy the CHECKs; values are arbitrary hex).
+C_A = "c_" + "a" * 16
+C_B = "c_" + "b" * 16
+C_C = "c_" + "c" * 16
+OPT1 = "opt_" + "1" * 24  # elif candidate: ورنہ_اگر
+OPT2 = "opt_" + "2" * 24  # elif candidate: وگرنہ
+OPT3 = "opt_" + "3" * 24  # break candidate: توڑو
+SES1 = "ses_" + "1" * 24
+SES2 = "ses_" + "2" * 24
+SES3 = "ses_" + "3" * 24
+
+
+def dig_for(ses: str) -> str:
+    """A bundle_digest consistent with the uid = 'ses_' || digest[:24] CHECK."""
+    return ses[4:] + "e" * 40
+
+
+@pytest.fixture()
+def db() -> Iterator[sqlite3.Connection]:
+    conn = sqlite3.connect(":memory:")
+    apply_schema_v2(conn)
+    yield conn
+    conn.close()
+
+
+@pytest.fixture()
+def seeded(db: sqlite3.Connection) -> sqlite3.Connection:
+    db.executescript(
+        f"""
+        INSERT INTO programming_languages(code, name, status)
+            VALUES ('python','Python','shipping');
+        INSERT INTO locales(tag, language_subtag, name, native_name, direction, in_registry)
+            VALUES ('ur','ur','Urdu','اردو','rtl',1);
+        INSERT INTO concepts(slug, definition_en, category) VALUES
+            ('elif-compound','otherwise-if in a conditional chain','control_flow'),
+            ('break-loop','exit the nearest loop','control_flow');
+        INSERT INTO terms(concept_id, programming_language, name, category)
+            VALUES (1,'python','elif','keyword'), (2,'python','break','keyword');
+        INSERT INTO contributors(id, current_rung) VALUES
+            ('{C_A}','native_verified'), ('{C_B}','native_verified'), ('{C_C}','contributor');
+        INSERT INTO options(uid, concept_id, locale, programming_language, surface_form) VALUES
+            ('{OPT1}', 1, 'ur', NULL, 'ورنہ_اگر'),
+            ('{OPT2}', 1, 'ur', NULL, 'وگرنہ'),
+            ('{OPT3}', 2, 'ur', NULL, 'توڑو');
+        INSERT INTO option_validations(option_uid, validator_version, identifier_valid,
+            nfkc_stable, script_consistent) VALUES
+            ('{OPT1}','audit-v1',1,1,1), ('{OPT2}','audit-v1',1,1,1), ('{OPT3}','audit-v1',1,1,1);
+        INSERT INTO endorsements(uid, option_uid, contributor_id, method, rung_at_endorsement) VALUES
+            ('end_{"1" * 24}','{OPT1}','{C_A}','portal','native_verified'),
+            ('end_{"2" * 24}','{OPT2}','{C_A}','portal','native_verified'),
+            ('end_{"3" * 24}','{OPT1}','{C_B}','portal','native_verified');
+        INSERT INTO review_sessions(uid, contributor_id, locale, track, method, kit_version,
+            rung_at_session, bundle_digest) VALUES
+            ('{SES1}','{C_A}','ur','reserved_words','portal','kit-1','native_verified','{dig_for(SES1)}'),
+            ('{SES2}','{C_A}','ur','reserved_words','portal','kit-1','native_verified','{dig_for(SES2)}');
+        """
+    )
+    return db
+
+
+def one(db: sqlite3.Connection, sql: str) -> tuple:
+    rows = db.execute(sql).fetchall()
+    assert len(rows) == 1, f"expected one row, got {rows!r}"
+    return rows[0]
+
+
+# ---------------------------------------------------------------------------
+# uid helpers — golden vectors (FROZEN once sessions are published)
+# ---------------------------------------------------------------------------
+
+
+def test_review_uid_golden_vectors() -> None:
+    bundle = b'{"bundle":1}'
+    assert bundle_digest(bundle) == (
+        "7710c630a727d03b70a53a2c12394c034b50b5834151f9c7d751e439bed08b4c"
+    )
+    ses = session_uid(bundle)
+    assert ses == "ses_7710c630a727d03b70a53a2c"
+    # session uid and stored digest verify each other by construction
+    assert ses == "ses_" + bundle_digest(bundle)[:24]
+    assert annotation_uid(ses, OPT1, C_A, "transliteration") == (
+        "ann_a403aeb6fd52c7ea34bfc21f"
+    )
+    assert expansion_uid(ses, OPT1, C_A, "ورنہ اگر") == "exp_fbb432c0d35dc9d740ef6d46"
+    assert (
+        commentary_uid(
+            ses,
+            C_A,
+            "elif-compound",
+            "ur",
+            "word_formation",
+            "underscore joins read naturally",
+        )
+        == "com_d5c73f9ea1d80266a22d6de8"
+    )
+    assert style_uid(ses, C_A, "ur", "constants_strategy") == (
+        "sty_a35c0737a364973d7341cf46"
+    )
+
+
+def test_expansion_uid_is_nfc_stable() -> None:
+    ses = session_uid(b"x")
+    # Genuinely different byte sequences for the same text: U+0622 (alef with
+    # madda) vs U+0627 U+0653 (alef + combining madda), which NFC composes.
+    nfc = "آب"
+    nfd = "آب"
+    assert nfc != nfd
+    assert expansion_uid(ses, OPT1, C_A, nfc) == expansion_uid(ses, OPT1, C_A, nfd)
+
+
+def test_review_uids_reject_separator() -> None:
+    ses = session_uid(b"x")
+    with pytest.raises(ValueError):
+        annotation_uid(ses, OPT1, C_A, "trans\x1fliteration")
+    with pytest.raises(ValueError):
+        style_uid(ses, C_A, "ur\x1f", "constants_strategy")
+    # commentary body may contain anything — it is hashed before joining
+    assert commentary_uid(ses, C_A, None, "ur", "general", "a\x1fb").startswith("com_")
+
+
+# ---------------------------------------------------------------------------
+# rankings
+# ---------------------------------------------------------------------------
+
+
+def rank(db: sqlite3.Connection, ses: str, concept: int, opt: str, rk: int) -> None:
+    db.execute(
+        "INSERT INTO session_rankings(session_uid, concept_id, locale,"
+        " programming_language, option_uid, rank) VALUES (?, ?, 'ur', NULL, ?, ?)",
+        (ses, concept, opt, rk),
+    )
+
+
+def test_ranking_requires_live_endorsement(seeded: sqlite3.Connection) -> None:
+    rank(seeded, SES1, 1, OPT1, 1)  # C_A endorsed OPT1 — allowed
+    seeded.execute(
+        "INSERT INTO review_sessions(uid, contributor_id, locale, track, method,"
+        " kit_version, rung_at_session, bundle_digest) VALUES"
+        f" ('{SES3}','{C_C}','ur','reserved_words','portal','kit-1','contributor','{dig_for(SES3)}')"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="rank only options"):
+        rank(seeded, SES3, 1, OPT1, 1)  # C_C never endorsed anything
+
+
+def test_ranking_slot_and_option_uniqueness(seeded: sqlite3.Connection) -> None:
+    rank(seeded, SES1, 1, OPT1, 1)
+    with pytest.raises(sqlite3.IntegrityError):  # rank 1 slot reused
+        rank(seeded, SES1, 1, OPT2, 1)
+    rank(seeded, SES1, 1, OPT2, 2)
+    with pytest.raises(sqlite3.IntegrityError):  # same option ranked twice
+        rank(seeded, SES1, 1, OPT2, 3)
+
+
+def test_ranking_must_match_concept(seeded: sqlite3.Connection) -> None:
+    with pytest.raises(sqlite3.IntegrityError, match="does not render"):
+        rank(seeded, SES1, 2, OPT1, 1)  # OPT1 renders elif, not break
+
+
+def test_rankings_are_append_only(seeded: sqlite3.Connection) -> None:
+    rank(seeded, SES1, 1, OPT1, 1)
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("UPDATE session_rankings SET rank = 2")
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("DELETE FROM session_rankings")
+    # INSERT OR REPLACE is an UPDATE wearing a trench coat: the implicit
+    # DELETE must hit the BEFORE DELETE trigger (recursive_triggers is ON).
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute(
+            "INSERT OR REPLACE INTO session_rankings(session_uid, concept_id,"
+            " locale, programming_language, option_uid, rank)"
+            f" VALUES ('{SES1}', 1, 'ur', NULL, '{OPT1}', 5)"
+        )
+
+
+def test_latest_rankings_supersession(seeded: sqlite3.Connection) -> None:
+    rank(seeded, SES1, 1, OPT1, 1)
+    rank(seeded, SES1, 1, OPT2, 2)
+    rank(seeded, SES2, 1, OPT2, 1)  # later sitting, same contributor
+    seeded.execute(
+        "UPDATE review_sessions SET status='accepted' WHERE uid IN (?, ?)", (SES1, SES2)
+    )
+    rows = seeded.execute(
+        f"SELECT option_uid, rank FROM latest_rankings"
+        f" WHERE contributor_id='{C_A}' AND concept_id=1 ORDER BY rank"
+    ).fetchall()
+    assert rows == [(OPT2, 1)]  # only the latest accepted session counts
+
+
+# ---------------------------------------------------------------------------
+# sessions
+# ---------------------------------------------------------------------------
+
+
+def test_session_workflow_columns_mutable_evidence_frozen(
+    seeded: sqlite3.Connection,
+) -> None:
+    seeded.execute(
+        f"UPDATE review_sessions SET status='accepted', verification_report='{{}}' WHERE uid='{SES1}'"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="terminal"):
+        seeded.execute(
+            f"UPDATE review_sessions SET status='submitted' WHERE uid='{SES1}'"
+        )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute(
+            f"UPDATE review_sessions SET kit_version='kit-2' WHERE uid='{SES2}'"
+        )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("DELETE FROM review_sessions")
+
+
+def test_session_shape_checks(seeded: sqlite3.Connection) -> None:
+    with pytest.raises(sqlite3.IntegrityError):  # uid must be ses_ + 24 hex
+        seeded.execute(
+            "INSERT INTO review_sessions(uid, contributor_id, locale, track, method,"
+            f" kit_version, rung_at_session, bundle_digest) VALUES ('ses_NOTHEX','{C_A}',"
+            f"'ur','reserved_words','portal','k','contributor','{'d' * 64}')"
+        )
+    with pytest.raises(sqlite3.IntegrityError):  # style sessions are locale-wide
+        seeded.execute(
+            "INSERT INTO review_sessions(uid, contributor_id, locale, track,"
+            " programming_language, method, kit_version, rung_at_session, bundle_digest)"
+            f" VALUES ('ses_{'4' * 24}','{C_A}','ur','style_profile','python','portal',"
+            f"'k','contributor','{dig_for('ses_' + '4' * 24)}')"
+        )
+
+
+def test_bundle_digest_shape_and_uid_binding(seeded: sqlite3.Connection) -> None:
+    ses = "ses_" + "7" * 24
+    insert = (
+        "INSERT INTO review_sessions(uid, contributor_id, locale, track, method,"
+        " kit_version, rung_at_session, bundle_digest)"
+        f" VALUES ('{ses}','{C_A}','ur','reserved_words','portal','k','contributor', ?)"
+    )
+    # Every character must be hex, not just the first (GLOB '[0-9a-f]*' only
+    # anchors position 1 — the historical gap this test pins shut).
+    with pytest.raises(sqlite3.IntegrityError):
+        seeded.execute(insert, ("7" + "Z" * 63,))
+    # A well-formed digest that is not the uid's pre-image is a forgery.
+    with pytest.raises(sqlite3.IntegrityError):
+        seeded.execute(insert, ("d" * 64,))
+    seeded.execute(insert, (dig_for(ses),))
+
+
+# ---------------------------------------------------------------------------
+# annotations / expansions / commentary / style
+# ---------------------------------------------------------------------------
+
+
+def test_session_rejected_is_terminal(seeded: sqlite3.Connection) -> None:
+    seeded.execute(f"UPDATE review_sessions SET status='rejected' WHERE uid='{SES1}'")
+    with pytest.raises(sqlite3.IntegrityError, match="terminal"):
+        seeded.execute(
+            f"UPDATE review_sessions SET status='submitted' WHERE uid='{SES1}'"
+        )
+
+
+def test_insert_or_replace_blocked_on_sessions(seeded: sqlite3.Connection) -> None:
+    # TEXT-PK tables must resist the same trench-coat UPDATE as the rankings:
+    # the implicit DELETE hits the no-delete trigger (recursive_triggers ON).
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute(
+            "INSERT OR REPLACE INTO review_sessions(uid, contributor_id, locale,"
+            " track, method, kit_version, rung_at_session, bundle_digest)"
+            f" VALUES ('{SES1}','{C_A}','ur','reserved_words','portal','kit-9',"
+            f"'native_verified','{dig_for(SES1)}')"
+        )
+
+
+def test_session_options_junction(seeded: sqlite3.Connection) -> None:
+    seeded.execute(
+        "INSERT INTO session_options(session_uid, option_uid, elicited)"
+        f" VALUES ('{SES1}','{OPT1}','blind')"
+    )
+    with pytest.raises(sqlite3.IntegrityError):  # elicited vocabulary is closed
+        seeded.execute(
+            "INSERT INTO session_options(session_uid, option_uid, elicited)"
+            f" VALUES ('{SES1}','{OPT2}','guessed')"
+        )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("UPDATE session_options SET elicited='quick'")
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("DELETE FROM session_options")
+
+
+def test_session_endorsements_frozen_and_no_delete(
+    seeded: sqlite3.Connection,
+) -> None:
+    seeded.execute(
+        "INSERT INTO session_endorsements(session_uid, endorsement_uid)"
+        f" VALUES ('{SES1}','end_{'1' * 24}')"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute(f"UPDATE session_endorsements SET session_uid='{SES2}'")
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("DELETE FROM session_endorsements")
+
+
+def test_expansion_triggers_and_checks(seeded: sqlite3.Connection) -> None:
+    e1 = "exp_" + "1" * 24
+    with pytest.raises(
+        sqlite3.IntegrityError, match="does not match the session contributor"
+    ):
+        seeded.execute(  # SES1 belongs to C_A, not C_B
+            "INSERT INTO option_expansions(uid, option_uid, contributor_id,"
+            f" session_uid, expansion) VALUES ('{e1}','{OPT1}','{C_B}','{SES1}','x')"
+        )
+    with pytest.raises(sqlite3.IntegrityError):  # empty expansion
+        seeded.execute(
+            "INSERT INTO option_expansions(uid, option_uid, contributor_id, expansion)"
+            f" VALUES ('{e1}','{OPT1}','{C_A}','')"
+        )
+    seeded.execute(
+        "INSERT INTO option_expansions(uid, option_uid, contributor_id, session_uid,"
+        f" expansion) VALUES ('{e1}','{OPT1}','{C_A}','{SES1}','ورنہ اگر')"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute(f"UPDATE option_expansions SET expansion='y' WHERE uid='{e1}'")
+    seeded.execute(
+        f"UPDATE option_expansions SET retracted_at=datetime('now') WHERE uid='{e1}'"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="cannot be reversed"):
+        seeded.execute(
+            f"UPDATE option_expansions SET retracted_at=NULL WHERE uid='{e1}'"
+        )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("DELETE FROM option_expansions")
+
+
+def test_annotations_and_commentary_no_delete(seeded: sqlite3.Connection) -> None:
+    seeded.execute(
+        "INSERT INTO option_annotations(uid, option_uid, contributor_id, kind)"
+        f" VALUES ('ann_{'5' * 24}','{OPT1}','{C_A}','regional')"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("DELETE FROM option_annotations")
+    com = "com_" + "5" * 24
+    with pytest.raises(
+        sqlite3.IntegrityError, match="does not match the session contributor"
+    ):
+        seeded.execute(  # commentary claiming someone else's session
+            "INSERT INTO concept_commentary(uid, contributor_id, session_uid,"
+            f" concept_id, locale, topic, body) VALUES ('{com}','{C_B}','{SES1}',"
+            "1,'ur','general','x')"
+        )
+    seeded.execute(
+        "INSERT INTO concept_commentary(uid, contributor_id, concept_id, locale,"
+        f" topic, body) VALUES ('{com}','{C_B}',1,'ur','general','x')"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("DELETE FROM concept_commentary")
+
+
+def test_message_endorsements_smoke(seeded: sqlite3.Connection) -> None:
+    # DEFERRED/inert track, but the DDL ships now — pin it before anything
+    # depends on it (one insert, the once-per-contributor index, append-only).
+    seeded.execute(
+        "INSERT INTO message_templates(implementation, key, template_en)"
+        " VALUES ('cpython','ZeroDivisionError.division_by_zero','division by zero')"
+    )
+    seeded.execute(
+        "INSERT INTO message_translations(template_id, locale, template)"
+        " VALUES (1,'ur','صفر سے تقسیم')"
+    )
+    men = "men_" + "1" * 24
+    seeded.execute(
+        "INSERT INTO message_endorsements(uid, message_translation_id,"
+        f" contributor_id, method, rung_at_endorsement) VALUES ('{men}',1,'{C_A}',"
+        "'portal','native_verified')"
+    )
+    with pytest.raises(sqlite3.IntegrityError):  # once per contributor while live
+        seeded.execute(
+            "INSERT INTO message_endorsements(uid, message_translation_id,"
+            f" contributor_id, method, rung_at_endorsement) VALUES"
+            f" ('men_{'2' * 24}',1,'{C_A}','portal','native_verified')"
+        )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute(
+            f"UPDATE message_endorsements SET method='survey' WHERE uid='{men}'"
+        )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("DELETE FROM message_endorsements")
+
+
+def test_email_rejects_control_whitespace(seeded: sqlite3.Connection) -> None:
+    # LIKE '% %' only covers U+0020; the tab/newline family needs the char()
+    # guards this test pins (the comment above the CHECK promised them).
+    for bad in ("a\tb@c.io", "a\nb@c.io", "a\rb@c.io"):
+        with pytest.raises(sqlite3.IntegrityError):
+            seeded.execute(
+                f"INSERT INTO contributor_identities(contributor_id, email)"
+                f" VALUES ('{C_B}', ?)",
+                (bad,),
+            )
+
+
+def test_annotation_one_live_per_kind_and_retraction(
+    seeded: sqlite3.Connection,
+) -> None:
+    a1 = "ann_" + "1" * 24
+    seeded.execute(
+        "INSERT INTO option_annotations(uid, option_uid, contributor_id, session_uid, kind)"
+        f" VALUES ('{a1}','{OPT1}','{C_A}','{SES1}','coined_neologism')"
+    )
+    with pytest.raises(sqlite3.IntegrityError):  # duplicate live vote
+        seeded.execute(
+            "INSERT INTO option_annotations(uid, option_uid, contributor_id, kind)"
+            f" VALUES ('ann_{'2' * 24}','{OPT1}','{C_A}','coined_neologism')"
+        )
+    seeded.execute(
+        f"UPDATE option_annotations SET retracted_at = datetime('now') WHERE uid='{a1}'"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="cannot be reversed"):
+        seeded.execute(
+            f"UPDATE option_annotations SET retracted_at = NULL WHERE uid='{a1}'"
+        )
+    # retraction frees the slot
+    seeded.execute(
+        "INSERT INTO option_annotations(uid, option_uid, contributor_id, kind)"
+        f" VALUES ('ann_{'3' * 24}','{OPT1}','{C_A}','coined_neologism')"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute(
+            f"UPDATE option_annotations SET kind='regional' WHERE uid='{a1}'"
+        )
+
+
+def test_commentary_is_append_only_but_moderation_is_not(
+    seeded: sqlite3.Connection,
+) -> None:
+    com = "com_" + "1" * 24
+    seeded.execute(
+        "INSERT INTO concept_commentary(uid, contributor_id, session_uid, concept_id,"
+        f" locale, topic, body) VALUES ('{com}','{C_A}','{SES1}',1,'ur','word_formation','x')"
+    )
+    seeded.execute(
+        f"INSERT INTO commentary_moderation(commentary_uid, status) VALUES ('{com}','published')"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("UPDATE concept_commentary SET body='y'")
+    seeded.execute(
+        "UPDATE commentary_moderation SET status='withheld'"
+    )  # derived: mutable
+
+
+def test_style_one_live_vote(seeded: sqlite3.Connection) -> None:
+    seeded.execute(
+        "INSERT INTO style_ratifications(uid, contributor_id, session_uid, locale, field, value)"
+        f" VALUES ('sty_{'1' * 24}','{C_A}','{SES1}','ur','constants_strategy','marker_affix')"
+    )
+    with pytest.raises(sqlite3.IntegrityError):
+        seeded.execute(
+            "INSERT INTO style_ratifications(uid, contributor_id, locale, field, value)"
+            f" VALUES ('sty_{'2' * 24}','{C_A}','ur','constants_strategy','positional')"
+        )
+
+
+# ---------------------------------------------------------------------------
+# identity deltas
+# ---------------------------------------------------------------------------
+
+
+def test_identity_email_and_credit_checks(seeded: sqlite3.Connection) -> None:
+    seeded.execute(
+        "INSERT INTO contributor_identities(contributor_id, source_key, display_name,"
+        f" email, credit_preference) VALUES ('{C_A}','gh:a','مدیحہ','a@example.org','name')"
+    )
+    for bad in ("not-an-email", "a@@b.co", "a b@c.io"):
+        with pytest.raises(sqlite3.IntegrityError):
+            seeded.execute(
+                f"INSERT INTO contributor_identities(contributor_id, email) VALUES ('{C_B}', ?)",
+                (bad,),
+            )
+    with pytest.raises(sqlite3.IntegrityError):  # unknown preference
+        seeded.execute(
+            f"INSERT INTO contributor_identities(contributor_id, credit_preference) VALUES ('{C_B}','public')"
+        )
+    with pytest.raises(sqlite3.IntegrityError):  # name credit needs a name
+        seeded.execute(
+            f"INSERT INTO contributor_identities(contributor_id, credit_preference) VALUES ('{C_B}','name')"
+        )
+    with pytest.raises(sqlite3.IntegrityError):  # handle credit needs a handle
+        seeded.execute(
+            f"INSERT INTO contributor_identities(contributor_id, credit_preference) VALUES ('{C_B}','handle')"
+        )
+    seeded.execute(
+        f"INSERT INTO contributor_identities(contributor_id) VALUES ('{C_B}')"
+    )
+    assert one(
+        seeded,
+        f"SELECT credit_preference FROM contributor_identities WHERE contributor_id='{C_B}'",
+    ) == ("anonymous",)
+
+
+# ---------------------------------------------------------------------------
+# import sources
+# ---------------------------------------------------------------------------
+
+
+def test_import_sources_redistribution_needs_license(db: sqlite3.Connection) -> None:
+    with pytest.raises(sqlite3.IntegrityError):
+        db.execute(
+            "INSERT INTO import_sources(id, kind, name, redistributable)"
+            " VALUES ('initiative:hedy','initiative','Hedy',1)"
+        )
+    db.execute(
+        "INSERT INTO import_sources(id, kind, name, license_spdx, redistributable)"
+        " VALUES ('initiative:universalpython','initiative','UniversalPython','Apache-2.0',1)"
+    )
+    db.execute(
+        "INSERT INTO import_sources(id, kind, name)"
+        " VALUES ('initiative:hedy','initiative','Hedy')"  # reference-only default
+    )
+
+
+# ---------------------------------------------------------------------------
+# views
+# ---------------------------------------------------------------------------
+
+
+def test_promotion_mirrors_the_canon_gate(seeded: sqlite3.Connection) -> None:
+    # OPT1: two native endorsers, validations green -> both flags up.
+    assert one(
+        seeded,
+        f"SELECT reviewed_eligible, canon_eligible FROM option_promotion_status WHERE option_uid='{OPT1}'",
+    ) == (1, 1)
+    # OPT2: one endorser -> canon-eligible but not reviewed-eligible.
+    assert one(
+        seeded,
+        f"SELECT reviewed_eligible, canon_eligible FROM option_promotion_status WHERE option_uid='{OPT2}'",
+    ) == (0, 1)
+    # sara-am-only is the ONE tolerated NFKC instability (CORE-1514); 'other' blocks.
+    seeded.execute(
+        f"UPDATE option_validations SET nfkc_stable=0, nfkc_delta_class='sara-am-only' WHERE option_uid='{OPT3}'"
+    )
+    assert one(
+        seeded,
+        f"SELECT canon_eligible FROM option_promotion_status WHERE option_uid='{OPT3}'",
+    ) == (1,)
+    seeded.execute(
+        f"UPDATE option_validations SET nfkc_delta_class='other' WHERE option_uid='{OPT3}'"
+    )
+    assert one(
+        seeded,
+        f"SELECT canon_eligible FROM option_promotion_status WHERE option_uid='{OPT3}'",
+    ) == (0,)
+
+
+def test_second_endorsement_queue(seeded: sqlite3.Connection) -> None:
+    assert seeded.execute(
+        "SELECT option_uid FROM second_endorsement_queue"
+    ).fetchall() == [(OPT2,)]
+
+
+def test_terminology_export_picks_most_attested_expansion(
+    seeded: sqlite3.Connection,
+) -> None:
+    seeded.executescript(
+        f"""
+        INSERT INTO option_expansions(uid, option_uid, contributor_id, session_uid, expansion)
+        VALUES ('exp_{"1" * 24}','{OPT1}','{C_A}','{SES1}','ورنہ اگر'),
+               ('exp_{"2" * 24}','{OPT1}','{C_B}',NULL,'ورنہ اگر'),
+               ('exp_{"3" * 24}','{OPT1}','{C_C}',NULL,'متبادل');
+        """
+    )
+    assert one(
+        seeded, "SELECT expansion FROM terminology_export WHERE surface_form='ورنہ_اگر'"
+    ) == ("ورنہ اگر",)
+
+
+def test_transliteration_preference_counts(seeded: sqlite3.Connection) -> None:
+    seeded.execute(
+        "INSERT INTO option_annotations(uid, option_uid, contributor_id, kind)"
+        f" VALUES ('ann_{'9' * 24}','{OPT2}','{C_B}','transliteration')"
+    )
+    assert one(
+        seeded,
+        "SELECT live_options, options_tagged_translit, endorsements_on_translit FROM transliteration_preference WHERE locale='ur'",
+    ) == (3, 1, 1)
+
+
+def test_ranking_locale_must_match_session(seeded: sqlite3.Connection) -> None:
+    seeded.execute(
+        "INSERT INTO locales(tag, language_subtag, name, native_name, in_registry)"
+        " VALUES ('es','es','Spanish','Español',1)"
+    )
+    seeded.execute(
+        "INSERT INTO review_sessions(uid, contributor_id, locale, track, method,"
+        f" kit_version, rung_at_session, bundle_digest) VALUES"
+        f" ('ses_{'6' * 24}','{C_A}','es','reserved_words','portal','kit-1','native_verified','{dig_for('ses_' + '6' * 24)}')"
+    )
+    with pytest.raises(
+        sqlite3.IntegrityError, match="does not match the session locale"
+    ):
+        rank(seeded, "ses_" + "6" * 24, 1, OPT1, 1)  # ur ranking under an es session
+
+
+def test_session_endorsement_link_must_match_contributor(
+    seeded: sqlite3.Connection,
+) -> None:
+    with pytest.raises(sqlite3.IntegrityError, match="different contributor"):
+        seeded.execute(  # end_3 belongs to C_B; SES1 belongs to C_A
+            f"INSERT INTO session_endorsements(session_uid, endorsement_uid)"
+            f" VALUES ('{SES1}','end_{'3' * 24}')"
+        )
+    seeded.execute(  # C_A's own endorsement links fine
+        f"INSERT INTO session_endorsements(session_uid, endorsement_uid)"
+        f" VALUES ('{SES1}','end_{'1' * 24}')"
+    )
+
+
+def test_session_linked_rows_must_match_contributor(seeded: sqlite3.Connection) -> None:
+    with pytest.raises(
+        sqlite3.IntegrityError, match="does not match the session contributor"
+    ):
+        seeded.execute(  # annotation claims SES1 (C_A's) but is authored by C_B
+            "INSERT INTO option_annotations(uid, option_uid, contributor_id, session_uid, kind)"
+            f" VALUES ('ann_{'7' * 24}','{OPT1}','{C_B}','{SES1}','regional')"
+        )
+    with pytest.raises(
+        sqlite3.IntegrityError, match="does not match the session contributor"
+    ):
+        seeded.execute(
+            "INSERT INTO style_ratifications(uid, contributor_id, session_uid, locale, field, value)"
+            f" VALUES ('sty_{'7' * 24}','{C_B}','{SES1}','ur','word_boundaries','underscore')"
+        )
+    seeded.execute(  # session-less rows carry no such claim
+        "INSERT INTO option_annotations(uid, option_uid, contributor_id, kind)"
+        f" VALUES ('ann_{'8' * 24}','{OPT1}','{C_B}','regional')"
+    )
+
+
+def test_verification_report_frozen_after_terminal(seeded: sqlite3.Connection) -> None:
+    seeded.execute(
+        f"UPDATE review_sessions SET status='returned', verification_report='r1' WHERE uid='{SES1}'"
+    )
+    seeded.execute(
+        f"UPDATE review_sessions SET verification_report='r2' WHERE uid='{SES1}'"
+    )  # not terminal
+    seeded.execute(
+        f"UPDATE review_sessions SET status='accepted', verification_report='final' WHERE uid='{SES2}'"
+    )
+    with pytest.raises(
+        sqlite3.IntegrityError, match="frozen once the session is terminal"
+    ):
+        seeded.execute(
+            f"UPDATE review_sessions SET verification_report='tampered' WHERE uid='{SES2}'"
+        )
+    with pytest.raises(
+        sqlite3.IntegrityError, match="frozen once the session is terminal"
+    ):
+        seeded.execute(
+            f"UPDATE review_sessions SET notes='tampered' WHERE uid='{SES2}'"
+        )
+
+
+def test_latest_rankings_drops_retracted_endorsements(
+    seeded: sqlite3.Connection,
+) -> None:
+    rank(seeded, SES1, 1, OPT1, 1)
+    rank(seeded, SES1, 1, OPT2, 2)
+    seeded.execute(f"UPDATE review_sessions SET status='accepted' WHERE uid='{SES1}'")
+    seeded.execute(
+        f"UPDATE endorsements SET retracted_at = datetime('now') WHERE uid='end_{'1' * 24}'"
+    )
+    rows = seeded.execute(
+        f"SELECT option_uid FROM latest_rankings WHERE contributor_id='{C_A}' AND concept_id=1"
+    ).fetchall()
+    assert rows == [(OPT2,)]  # OPT1's ranking is stranded evidence, not input
+
+
+def test_pack_promotion_counts_native_reviewers(seeded: sqlite3.Connection) -> None:
+    seeded.execute(f"UPDATE review_sessions SET status='accepted' WHERE uid='{SES1}'")
+    seeded.execute(
+        "INSERT INTO review_sessions(uid, contributor_id, locale, track, method,"
+        f" kit_version, rung_at_session, bundle_digest, status) VALUES"
+        f" ('ses_{'5' * 24}','{C_C}','ur','reserved_words','portal','kit-1','contributor','{dig_for('ses_' + '5' * 24)}','accepted')"
+    )
+    assert one(
+        seeded,
+        "SELECT native_reviewers, total_reviewers FROM pack_promotion_status"
+        " WHERE locale='ur' AND programming_language='python'",
+    ) == (1, 2)  # C_A counts as native; C_C does not

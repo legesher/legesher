@@ -44,13 +44,19 @@ __all__ = [
     "SCHEMA_V2_PATH",
     "SEEDED_VALIDATOR_VERSION",
     "UID_HASH_LENGTH",
+    "annotation_uid",
     "apply_schema_v2",
+    "bundle_digest",
+    "commentary_uid",
     "connect",
     "contributor_id",
     "endorsement_uid",
+    "expansion_uid",
     "normalize_surface_form",
     "option_uid",
     "read_schema_sql",
+    "session_uid",
+    "style_uid",
 ]
 
 SCHEMA_V2_PATH = Path(__file__).with_name("schema_v2.sql")
@@ -383,3 +389,145 @@ def endorsement_uid(
         ValueError: if any input contains U+001F.
     """
     return _digest("end", option_uid_, contributor_id_, method, created_at)
+
+
+# ---------------------------------------------------------------------------
+# Review-intake uids (CORE-1538). Deterministic on purpose: re-importing the
+# same bundle re-mints the same uids, so ingest is INSERT-idempotent and never
+# duplicates. Same freeze rules as option_uid: once sessions are published,
+# these formulae are pinned by the golden vectors in
+# ``tests/test_review_extensions.py``.
+# ---------------------------------------------------------------------------
+
+
+def bundle_digest(canonical_bundle: bytes) -> str:
+    """Full SHA-256 of a canonical review bundle, as stored on the session row.
+
+    The bundle must already be in its canonical serialization (RFC 8785-style
+    canonical JSON, UTF-8 bytes) — canonicalization is the submitter's/
+    importer's job; this function hashes bytes, full stop.
+
+    Args:
+        canonical_bundle: The canonical bundle bytes.
+
+    Returns:
+        64 lowercase hex characters (``review_sessions.bundle_digest``).
+    """
+    return hashlib.sha256(canonical_bundle).hexdigest()
+
+
+def session_uid(canonical_bundle: bytes) -> str:
+    """Content-addressed id of one review session.
+
+    The truncation of :func:`bundle_digest`, prefixed — so the session uid and
+    the stored digest verify each other, and re-importing the same bundle is
+    idempotent by construction (same bytes in, same primary key out).
+
+    Args:
+        canonical_bundle: The canonical bundle bytes.
+
+    Returns:
+        ``ses_`` followed by 24 hex characters.
+    """
+    return f"ses_{bundle_digest(canonical_bundle)[:UID_HASH_LENGTH]}"
+
+
+def annotation_uid(
+    session_uid_: str, option_uid_: str, contributor_id_: str, kind: str
+) -> str:
+    """Content-addressed id of one option annotation (descriptor vote).
+
+    Keyed WITHOUT a timestamp: within one session, one person annotating one
+    option with one kind is one fact — re-import must not duplicate it. A
+    retract-then-re-annotate lands in a NEW session, whose uid differs.
+
+    Returns:
+        ``ann_`` followed by 24 hex characters.
+
+    Raises:
+        ValueError: if any input contains U+001F.
+    """
+    return _digest("ann", session_uid_, option_uid_, contributor_id_, kind)
+
+
+def expansion_uid(
+    session_uid_: str, option_uid_: str, contributor_id_: str, expansion: str
+) -> str:
+    """Content-addressed id of one phrase-expansion attestation.
+
+    ``expansion`` is normalized exactly like a surface form (NFC + strip) so an
+    NFC and an NFD spelling of the same phrase are one attestation.
+
+    Returns:
+        ``exp_`` followed by 24 hex characters.
+
+    Raises:
+        ValueError: if any input contains U+001F.
+    """
+    return _digest(
+        "exp",
+        session_uid_,
+        option_uid_,
+        contributor_id_,
+        normalize_surface_form(expansion),
+    )
+
+
+def commentary_uid(
+    session_uid_: str,
+    contributor_id_: str,
+    concept_slug: str | None,
+    locale: str,
+    topic: str,
+    body: str,
+) -> str:
+    """Content-addressed id of one commentary entry.
+
+    The body is hashed first (NFC-normalized) and its hex digest joins the
+    tuple: bodies are long free text, and a digest keeps the joined tuple
+    short while a hex string can never smuggle the U+001F separator.
+
+    Args:
+        session_uid_: The session the commentary arrived in.
+        contributor_id_: Opaque contributor handle.
+        concept_slug: The concept's public slug, or ``None`` for locale-level
+            commentary (hashed as the empty string).
+        locale: BCP 47 tag in canonical case.
+        topic: The commentary topic (``word_formation``, ``expansion``, …).
+        body: The commentary text.
+
+    Returns:
+        ``com_`` followed by 24 hex characters.
+
+    Raises:
+        ValueError: if any input contains U+001F.
+    """
+    body_hash = hashlib.sha256(
+        unicodedata.normalize("NFC", body).encode("utf-8")
+    ).hexdigest()
+    return _digest(
+        "com",
+        session_uid_,
+        contributor_id_,
+        concept_slug or "",
+        locale,
+        topic,
+        body_hash,
+    )
+
+
+def style_uid(session_uid_: str, contributor_id_: str, locale: str, field: str) -> str:
+    """Content-addressed id of one style-profile answer.
+
+    Keyed WITHOUT the value: one person answers one field once per session;
+    the value is the payload, not the identity (an edited answer arrives in a
+    new session, and the one-live-vote index handles supersession via
+    retraction).
+
+    Returns:
+        ``sty_`` followed by 24 hex characters.
+
+    Raises:
+        ValueError: if any input contains U+001F.
+    """
+    return _digest("sty", session_uid_, contributor_id_, locale, field)
