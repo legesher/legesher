@@ -228,7 +228,7 @@ Python Version: 3.12 (with inheritance from 3.11, 3.10)
 Total Keywords: 35
 Total Builtins: 71
 Maintainer: Legesher Community
-License: MIT
+License: Apache-2.0
 
 Keyword Coverage:
   ✓ if → si

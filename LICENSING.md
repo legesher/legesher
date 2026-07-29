@@ -14,31 +14,32 @@ distribute them freely, subject to the terms of the license.
 
 | Package                    | Path                                                                 | License    |
 | -------------------------- | -------------------------------------------------------------------- | ---------- |
+| `legesher`                 | [libs/legesher/](libs/legesher/)                                     | Apache-2.0 |
 | `legesher-core`            | [libs/core/](libs/core/)                                             | Apache-2.0 |
 | `legesher-i18n`            | [libs/i18n/](libs/i18n/)                                             | Apache-2.0 |
 | `legesher-language-server` | [libs/language-server/](libs/language-server/)                       | Apache-2.0 |
-| `legesher-vscode`          | [libs/vs-code/](libs/vs-code/)                                       | Apache-2.0 |
+| `legesher-mcp`             | [libs/mcp/](libs/mcp/)                                               | Apache-2.0 |
+| `legesher-vs-code`         | [libs/vs-code/](libs/vs-code/)                                       | Apache-2.0 |
 | Python language packs (51) | [libs/i18n/language-packs/python/](libs/i18n/language-packs/python/) | Apache-2.0 |
 
 The 51 Python language packs inherit their license from [libs/i18n/LICENSE](libs/i18n/LICENSE).
 
-## Dual Licensed — Apache 2.0 OR Commercial
+Everything published from this repository is Apache-2.0. You may use, modify, and redistribute
+it — including commercially — subject to the license terms.
 
-The main `legesher` CLI package is available under either the Apache License 2.0 (free tier)
-or a commercial license from Legesher (premium tier). You may choose whichever option fits
-your use case.
+## Paid Capabilities Live in the Hosted Service
 
-| Package    | Path                             | License                               |
-| ---------- | -------------------------------- | ------------------------------------- |
-| `legesher` | [libs/legesher/](libs/legesher/) | `Apache-2.0 OR LicenseRef-Commercial` |
+Legesher is open-core. The open half is this repository: the engine, the language data, the CLI,
+and the editor integrations, all Apache-2.0 and locally executable with no account and no network
+call. That matters beyond price — Legesher rewrites your source and installs a git filter, so you
+should be able to read exactly what it does to your code before you run it.
 
-See [libs/legesher/LICENSE](libs/legesher/LICENSE) for the full dual-license text.
+The commercial half is the hosted service (cloud translation API, and the collaboration and
+analytics capabilities built on it). It is a separate, closed-source codebase, and access is
+gated by account, API key, and subscription — not by the license on anything in this repository.
+Its customer terms live with that service.
 
-**Free tier** (Apache 2.0): Local translation, CLI tools, editor integrations, language packs.
-
-**Premium tier** (Commercial): Cloud sync, team collaboration, advanced analytics, priority
-support, SLA guarantees. Contact [sales@legesher.com](mailto:sales@legesher.com) or visit
-[legesher.io/pricing](https://legesher.io/pricing).
+Pricing and availability: [legesher.io/pricing](https://legesher.io/pricing).
 
 ## Third-Party Dependencies
 

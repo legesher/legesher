@@ -14,7 +14,7 @@
 [![Core: Apache 2.0](https://img.shields.io/badge/core-Apache%202.0-green.svg)](libs/core/LICENSE)
 [![i18n: Apache 2.0](https://img.shields.io/badge/i18n-Apache%202.0-green.svg)](libs/i18n/LICENSE)
 [![VS Code: Apache 2.0](https://img.shields.io/badge/vscode-Apache%202.0-green.svg)](libs/vs-code/LICENSE)
-[![Legesher: Dual](https://img.shields.io/badge/legesher-Apache%202.0%20%7C%20Commercial-orange.svg)](libs/legesher/LICENSE)
+[![Legesher: Apache 2.0](https://img.shields.io/badge/legesher-Apache%202.0-green.svg)](libs/legesher/LICENSE)
 
 ## About Legesher
 
@@ -62,24 +62,28 @@ population who don't speak English as their first language. Developers must lear
 
 ## Licensing
 
-This repository uses a **multi-license structure** to support both an open protocol and commercial features:
-
-### 📖 Open Source (Apache License 2.0)
-
-- **[legesher-core](libs/core/)** - Core translation engine
-- **[legesher-i18n](libs/i18n/)** - Language data and dictionaries
-- **[legesher-vs-code](libs/vs-code/)** - VS Code extension
-
-These packages are freely available under the Apache License 2.0. Community contributions welcome!
-
-### 🎯 Dual Licensed (Apache 2.0 + Commercial)
+**Everything in this repository is Apache License 2.0** — the CLI, the translation engine, the
+language data, the language server, the MCP server, and the editor integrations:
 
 - **[legesher](libs/legesher/)** - Main CLI and library
-  - **Free Tier**: Apache 2.0 License for local translation
-  - **Premium Tier**: Commercial license for cloud sync, team features, and advanced tooling
+- **[legesher-core](libs/core/)** - Core translation engine
+- **[legesher-i18n](libs/i18n/)** - Language data and dictionaries
+- **[legesher-language-server](libs/language-server/)** - LSP implementation
+- **[legesher-mcp](libs/mcp/)** - MCP server
+- **[legesher-vs-code](libs/vs-code/)** - VS Code extension
 
-See [LICENSING.md](LICENSING.md) for the complete per-package license breakdown,
-or the [LICENSE](LICENSE) file for the Apache 2.0 terms.
+Use them, modify them, redistribute them — including commercially. Community contributions welcome!
+
+Legesher rewrites your source code and installs a git filter, so being able to read exactly what
+it does before you run it is the point, not a courtesy.
+
+Legesher is open-core: the paid capabilities are the **hosted service** (cloud translation API and
+what is built on it), a separate closed-source codebase where access is gated by account and API
+key rather than by a license here. Nothing in this repository requires an account or a network
+call to work.
+
+See [LICENSING.md](LICENSING.md) for the per-package breakdown, or the [LICENSE](LICENSE) file for
+the Apache 2.0 terms.
 
 ## Quick Start in 5 Minutes
 

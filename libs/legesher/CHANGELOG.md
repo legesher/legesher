@@ -9,6 +9,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **The CLI is now licensed under the Apache License 2.0, with no dual-license
+  option.** It previously declared `Apache-2.0 OR LicenseRef-Commercial` and
+  reserved cloud sync, collaboration, team management, and analytics for a paid
+  tier — capabilities this package does not contain and never has. Those live in
+  the hosted service, where access is gated by account and API key rather than by
+  a source license. This is a loosening: every right the Apache half granted is
+  unchanged, and nothing was published under the dual license. (CORE-1680)
+
 ## [0.22.0] - 2026-07-15
 
 ## [0.21.3] - 2026-07-12

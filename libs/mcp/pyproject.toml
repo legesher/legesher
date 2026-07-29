@@ -22,8 +22,11 @@ classifiers = [
 dependencies = [
     "mcp>=1.16.0,<2.0.0",  # Official MCP Python SDK (FastMCP server, stdio transport)
     "pydantic>=2.5.0",
-    "legesher-core",  # Translation engine (token translator, pack-backed factory)
-    "legesher-i18n",  # Language registry + language pack loader
+    # Sibling ranges ship in the wheel metadata; in-repo the workspace override
+    # in [tool.uv.sources] applies. <1.0.0 because semantic-release
+    # (major_on_zero = true) moves 0.x to 1.0 on a breaking change.
+    "legesher-core>=0.22.0,<1.0.0",  # Translation engine (token translator, pack-backed factory)
+    "legesher-i18n>=0.22.0,<1.0.0",  # Language registry + language pack loader
 ]
 
 [tool.uv.sources]

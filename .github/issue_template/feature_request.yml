@@ -28,9 +28,8 @@ body:
   attributes:
     label: License Awareness
     description: |
-      Please note which packages accept community contributions:
-      - ✅ Open Source (Apache 2.0): core, i18n, vs-code (contributions welcome!)
-      - ⚠️ Dual License: legesher (free tier contributions welcome)
+      Every package in this repository is Apache 2.0, and contributions to all of
+      them are welcome. Paid capabilities live in the separate hosted service.
     options:
     - label: I understand the licensing structure and contribution policy
       required: true

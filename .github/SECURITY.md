@@ -120,10 +120,11 @@ Additional recommendations:
 
 ## Known Security Considerations
 
-### Multi-License Structure
+### License Structure
 
-- **Open source packages** (core, i18n, language-server, vs-code) are Apache-2.0-licensed and publicly auditable
-- **Dual-licensed package** (legesher CLI) is Apache 2.0 for free tier, commercial license for premium features
+- **Every package in this repository** (legesher CLI, core, i18n, language-server, mcp, vs-code) is
+  Apache-2.0-licensed and publicly auditable — you can read exactly what runs against your source
+- **The hosted service** is a separate closed-source codebase; report issues there to the same address
 - **All packages** are subject to the same security review standards
 
 ### Data Handling

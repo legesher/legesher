@@ -1,31 +1,38 @@
 name: License Question
-description: Ask a question about licensing or commercial use
+description: Ask a question about licensing, redistribution, or the hosted service
 title: '[License]: '
 labels: [question, licensing]
 body:
 - type: markdown
   attributes:
     value: |
-      Have a question about Legesher's licensing model? We're here to help!
+      Have a question about Legesher's licensing? We're here to help.
 
       ## Quick Reference
-      - **Open Source (Apache 2.0)**: core, i18n, vs-code - free for any use
-      - **Dual License**: legesher - free tier (Apache 2.0) or premium (Commercial)
+      **Everything in this repository is Apache License 2.0** — the `legesher` CLI, core, i18n,
+      language-server, mcp, and vs-code. You may use, modify, and redistribute it, including
+      commercially, subject to the license terms. There is no paid tier for anything here, and
+      no contributor licence agreement to sign.
 
-      See [LICENSE](../../LICENSE) for full details.
+      Legesher is open-core: the paid capabilities are the separate, closed-source **hosted
+      service**, where access is gated by account and API key rather than by a license on this
+      code. Nothing in this repository needs an account or a network call to work.
+
+      "Legesher" and its logos are trademarks — see [LICENSING.md](../../LICENSING.md).
+
+      See [LICENSE](../../LICENSE) for the full Apache 2.0 terms.
 
 - type: dropdown
   id: question-type
   attributes:
     label: What type of licensing question do you have?
     options:
-    - Can I use this for commercial projects?
-    - What features are included in the free tier?
-    - How do I purchase a commercial license?
-    - What's the difference between Apache 2.0 and dual-license?
-    - Can I redistribute/resell this software?
-    - Enterprise licensing inquiry
-    - OEM/embedded licensing inquiry
+    - Can I use this in a commercial product?
+    - Can I redistribute, repackage, or resell this software?
+    - Can I use the "Legesher" name or logo?
+    - What is covered by the hosted service vs. this repository?
+    - Attribution / NOTICE requirements
+    - Language pack and translation-data licensing
     - Other
   validations:
     required: true
@@ -36,10 +43,14 @@ body:
     label: Which package(s) is your question about?
     multiple: true
     options:
-    - legesher-core (Apache 2.0)
-    - legesher-i18n (Apache 2.0)
-    - legesher-vs-code (Apache 2.0)
-    - legesher (Dual License)
+    - legesher (CLI)
+    - legesher-core
+    - legesher-i18n
+    - legesher-language-server
+    - legesher-mcp
+    - legesher-vs-code
+    - Python language packs
+    - The hosted service
     - Not sure / General question
   validations:
     required: true
@@ -55,8 +66,7 @@ body:
     - Internal business tool
     - Educational/research
     - Government/non-profit
-    - Resale/redistribution
-    - OEM/embedded use
+    - Redistribution / packaging
     - Other
   validations:
     required: true
@@ -78,33 +88,23 @@ body:
   attributes:
     label: Additional Context
     description: Any additional information that might help us answer your question
-    placeholder: |
-      - Company size/type (if applicable)
-      - Expected scale of use
-      - Geographic location
-      - Timeline
 
 - type: checkboxes
   id: documentation-reviewed
   attributes:
     label: Have you reviewed the licensing documentation?
     options:
+    - label: I have read [LICENSING.md](../../LICENSING.md)
     - label: I have read the [LICENSE](../../LICENSE) file
-    - label: I have read the [CONTRIBUTING.md](../../CONTRIBUTING.md) file
 
 - type: markdown
   attributes:
     value: |
       ---
 
-      ## Response Time
-      - General questions: We aim to respond within 2-3 business days
-      - Enterprise inquiries: Priority response within 1 business day
-
-      ## Contact Information
-      For urgent commercial licensing inquiries, you can also reach us at:
-      - Email: sales@legesher.com (commercial licenses)
-      - Email: legal@legesher.com (legal questions)
+      ## Contact
+      - [legal@legesher.com](mailto:legal@legesher.com) — licensing and trademark questions
+      - [sales@legesher.com](mailto:sales@legesher.com) — the hosted service, plans, and enterprise use
 
 - type: checkboxes
   id: terms

@@ -6,9 +6,9 @@ contact_links:
 - name: Documentation
   url: https://docs.legesher.io
   about: Browse our documentation for help and guides
-- name: Commercial Licensing
+- name: Hosted Service & Plans
   url: mailto:sales@legesher.com
-  about: Email us for commercial licensing inquiries
+  about: Email us about the hosted translation service, plans, or enterprise use
 - name: Security Issue
   url: mailto:security@legesher.com
   about: Report security vulnerabilities privately

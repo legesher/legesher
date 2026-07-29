@@ -81,24 +81,20 @@ Stuck? Don't hesitate to ask! We're here to help:
 
 ## Repository License Structure
 
-This repository contains packages with different licenses. Please review the licensing structure before contributing:
-
-### Open Source Packages (Apache License 2.0)
-
-We welcome community contributions to these packages:
-
-- **`libs/core/`** - Core translation engine and shared utilities
-- **`libs/i18n/`** - Internationalization and language data
-- **`libs/vs-code/`** - VS Code editor integration
-
-These packages are freely available under the Apache License 2.0. Your contributions will be licensed under the same terms.
-
-### Dual-Licensed Package (Apache 2.0 + Commercial)
+**Every package in this repository is Apache License 2.0**, and contributions to all of them are
+welcome — there is no package where contributions are restricted, and no contributor licence
+agreement to sign. Your contributions are licensed under the same terms as the code you are
+contributing to:
 
 - **`libs/legesher/`** - Main package with CLI and primary API
+- **`libs/core/`** - Core translation engine and shared utilities
+- **`libs/i18n/`** - Internationalization and language data
+- **`libs/language-server/`** - LSP implementation
+- **`libs/mcp/`** - MCP server
+- **`libs/vs-code/`** - VS Code editor integration
 
-The free tier features use the Apache License 2.0. Premium features require a commercial license.
-Contributions to free tier features are welcome.
+Legesher's paid capabilities live in a separate, closed-source hosted service; nothing in this
+repository is gated behind them. See [LICENSING.md](LICENSING.md) for the full breakdown.
 
 ## How to Contribute
 
@@ -234,14 +230,8 @@ By contributing to Apache-2.0-licensed packages (`core`, `i18n`, `vs-code`), you
 2. You have the right to license your contribution under these terms
 3. You understand your contributions become part of the public open source project
 
-### For Dual-Licensed Package (`legesher`)
-
-By contributing to the `legesher` package, you agree that:
-
-1. Your contributions to free tier features will be licensed under Apache 2.0
-2. Your contributions may also be used in the commercial/premium tier
-3. Legesher retains the right to use your contributions in both the free and commercial versions
-4. You will be credited as a contributor
+The same applies to every package here, including the `legesher` CLI — there is no package whose
+contributions get relicensed under different terms, and you will be credited as a contributor.
 
 ### Copyright Assignment
 
