@@ -9,8 +9,8 @@ The publish surface is the CORPUS layer and nothing else:
     concepts, terms, options (+ cached validations, + aggregated provenance
     sources), endorsements, contributors
 
-Two tables are NEVER exported, and the script is built to fail loudly rather
-than trust the reader (CORE-1502):
+Everything outside that surface is NEVER exported, and the script is built to
+fail loudly rather than trust the reader (CORE-1502):
 
 * ``contributor_identities`` -- the only way back from an opaque ``c_<hex>`` id
   to a person. :data:`NEVER_EXPORT` is asserted against every config's SQL
@@ -18,6 +18,10 @@ than trust the reader (CORE-1502):
 * ``canon_selections`` -- the maintainer decision. The canon lives in the
   monorepo as PR-reviewable text; the community corpus must never imply that
   publishing it is on the table.
+* the whole CORE-1538 review-intake layer, ``option_flags``, and ``build_meta``
+  -- session evidence, contact/verification signals, moderation reports, and
+  salt provenance. Excluded by declaration in :data:`NEVER_EXPORT`, never by
+  omission.
 
 Columns are audited too: after writing, every Parquet file is re-opened and the
 export aborts if any column in :data:`FORBIDDEN_COLUMNS` survived. Belt (SQL
@@ -34,10 +38,21 @@ Usage:
                                            [--target-repo legesher/translations] \\
                                            [--push --governance-signoff CORE-1502]
 
-``--push`` is double-gated: it requires ``--governance-signoff CORE-1502`` AND
-``LEGESHER_HF_PUSH_APPROVED=1`` in the environment, and it refuses BEFORE
-anything is written or any network library is imported. The first push freezes
-every published key forever, so it is a governance act, not a script flag.
+``--push`` runs FOUR gates before the export writes anything, in order:
+
+1. approval -- ``--governance-signoff CORE-1502`` AND
+   ``LEGESHER_HF_PUSH_APPROVED=1``; refused before any network library import;
+2. target -- a non-default ``--target-repo`` must be repeated in
+   ``LEGESHER_HF_TARGET_OVERRIDE`` (a typo must not mint keys against the
+   wrong repo);
+3. provenance -- the database must be a ``--publish`` build whose
+   ``build_meta`` salt fingerprint matches ``$LEGESHER_CONTRIBUTOR_SALT``
+   (which therefore must be set in the pushing shell);
+4. Hub auth -- ``whoami`` preflight, so bad credentials fail before the
+   export runs, not mid-upload (this gate is the first to touch the network).
+
+The first push freezes every published key forever, so it is a governance
+act, not a script flag.
 """
 
 from __future__ import annotations
@@ -57,7 +72,35 @@ from typing import Any
 #: is the maintainer decision, which lives in the monorepo as reviewable text
 #: and is not community data. :func:`_assert_configs_avoid_private_tables` scans
 #: every config's SQL against this set before a single row is read.
-NEVER_EXPORT: frozenset[str] = frozenset({"contributor_identities", "canon_selections"})
+#:
+#: The review-intake layer (CORE-1538) is excluded BY DECLARATION, not by
+#: omission: ``review_sessions`` carries contact/verification signals, the
+#: session evidence tables are raw per-reviewer data awaiting aggregation, and
+#: expansions/commentary are contributor free text whose publishability is a
+#: moderation decision. If any of it is ever published, that is a deliberate
+#: CONFIG_SQL + governance change, not a default.
+NEVER_EXPORT: frozenset[str] = frozenset(
+    {
+        "contributor_identities",
+        "canon_selections",
+        "review_sessions",
+        "session_options",
+        "session_endorsements",
+        "session_rankings",
+        "option_annotations",
+        "option_expansions",
+        "concept_commentary",
+        "commentary_moderation",
+        "style_ratifications",
+        "message_endorsements",
+        # Moderation / harm reports (contributor_id + free-text note); the
+        # dataset card promises these stay private pending CORE-1502 policy.
+        "option_flags",
+        # Salt fingerprint + publish provenance -- same boundary as
+        # contributor_identities per its own schema comment.
+        "build_meta",
+    }
+)
 
 #: Column names that must not survive into any written Parquet file.
 #:
@@ -66,8 +109,22 @@ NEVER_EXPORT: frozenset[str] = frozenset({"contributor_identities", "canon_selec
 #: * ``source_key`` / ``display_name`` -- contributor_identities columns; their
 #:   presence anywhere means the private table leaked.
 #: * ``comment`` -- endorsement free text; may carry PII (CORE-1502 decision).
+#: * ``email`` / ``verification_report`` -- contributor_identities contact and
+#:   review_sessions pipeline internals (CORE-1538); private-channel only.
+#: * ``github_handle`` / ``contact`` -- the remaining contributor_identities
+#:   re-identification columns; any of them anywhere means the private table
+#:   leaked.
 FORBIDDEN_COLUMNS: frozenset[str] = frozenset(
-    {"source_detail", "source_key", "display_name", "comment"}
+    {
+        "source_detail",
+        "source_key",
+        "display_name",
+        "comment",
+        "email",
+        "verification_report",
+        "github_handle",
+        "contact",
+    }
 )
 
 #: The governance ticket whose sign-off gates the first (and every) HF push.
@@ -500,11 +557,12 @@ def _require_clean_data_dir(data_dir: Path) -> None:
     Non-Parquet bystanders (a ``.gitkeep``, an editor swap file) are
     tolerated -- only ``*.parquet`` can ride into the dataset as data.
 
-    ``--push`` uploads the DIRECTORY, so a stale Parquet file from an older
-    run -- a renamed config, an abandoned experiment -- would ride along into
-    the published dataset unnoticed. Unknown files refuse the export (a human
-    decides what they were); the known config files are deleted up front, so
-    every byte present after a successful run was written by that run.
+    ``--push`` uploads by allowlist, and ``data/*.parquet`` is ON it -- so a
+    stale Parquet file from an older run (a renamed config, an abandoned
+    experiment) would still ride along into the published dataset unnoticed.
+    Unknown files refuse the export (a human decides what they were); the
+    known config files are deleted up front, so every byte present after a
+    successful run was written by that run.
 
     Args:
         data_dir: The ``<out>/data`` directory (already created).
@@ -612,15 +670,128 @@ def require_push_approval(governance_signoff: str | None) -> None:
         )
 
 
-def push_to_hub(out_dir: Path, target_repo: str) -> None:
-    """Upload the exported corpus directory to the Hugging Face Hub.
+def require_publish_grade_db(db_path: Path) -> None:
+    """Refuse to push an artifact that was not minted as a publish build.
 
-    huggingface_hub is imported lazily so that every non-push code path works
-    without the library installed and provably never touches the network stack.
+    ``migrate_to_v2.py`` records ``publish_build`` and ``salt_fingerprint`` in
+    the private ``build_meta`` table; until now verifying them before a push
+    was a manual checklist item, which means a dev-salt database would push
+    without complaint. This turns the checklist item into code:
+
+    * the database must carry ``publish_build = 1`` (built under ``--publish``,
+      so the salt-quality and identity-resolution gates already ran);
+    * the recorded fingerprint must not be the public dev salt's;
+    * ``$LEGESHER_CONTRIBUTOR_SALT`` must be set for the push and its
+      fingerprint must MATCH the recorded one -- proving the artifact was
+      minted with the escrowed salt the operator is holding, not some other
+      salt that would fork every contributor id on the next build.
 
     Args:
-        out_dir: The export directory (``data/*.parquet`` + ``README.md``).
-        target_repo: Dataset repo id, e.g. ``legesher/translations``.
+        db_path: The database being exported.
+
+    Raises:
+        SystemExit: unless the artifact is publish-grade and salt-verified.
+    """
+    # Deferred on purpose: export_corpus.py carries no sys.path shim and no
+    # other legesher_i18n import, so every non-push code path keeps working
+    # with only stdlib + pyarrow. Hoisting this to module level would break
+    # standalone non-push runs in environments without the package installed.
+    from legesher_i18n.db.schema_v2 import DEFAULT_CONTRIBUTOR_SALT, salt_fingerprint
+
+    if not db_path.is_file():
+        raise SystemExit(
+            f"PUSH REFUSED: no database at {db_path}. Build a publish-grade one "
+            "with scripts/migrate_to_v2.py --publish first."
+        )
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        try:
+            meta = dict(conn.execute("SELECT key, value FROM build_meta"))
+        # DatabaseError is the parent that also covers "file is not a
+        # database" -- the wrong-artifact case this gate exists for must get
+        # the refusal message, not a raw sqlite3 traceback.
+        except sqlite3.DatabaseError:
+            raise SystemExit(
+                f"PUSH REFUSED: {db_path} has no readable build_meta table -- "
+                "it is not a database built by scripts/migrate_to_v2.py, so "
+                "its salt provenance is unknowable."
+            ) from None
+    finally:
+        conn.close()
+
+    if meta.get("publish_build") != "1":
+        raise SystemExit(
+            "PUSH REFUSED: this database was NOT built with --publish "
+            f"(build_meta.publish_build = {meta.get('publish_build')!r}), so the "
+            "salt-quality and identity-resolution gates never ran on it. Rebuild "
+            "with scripts/migrate_to_v2.py --publish."
+        )
+    recorded = meta.get("salt_fingerprint")
+    if not recorded or recorded == salt_fingerprint(DEFAULT_CONTRIBUTOR_SALT):
+        raise SystemExit(
+            "PUSH REFUSED: the artifact's contributor ids were minted with the "
+            "PUBLIC dev salt (or no salt was recorded). Publishing it would make "
+            "every contributor id reversible. Rebuild with --publish and the "
+            "escrowed salt."
+        )
+    env_salt = os.environ.get("LEGESHER_CONTRIBUTOR_SALT")
+    if not env_salt:
+        raise SystemExit(
+            "PUSH REFUSED: $LEGESHER_CONTRIBUTOR_SALT is not set. The push "
+            "verifies the artifact against the escrowed salt's fingerprint; "
+            "without the salt in hand there is no proof this database was "
+            "minted with it."
+        )
+    if salt_fingerprint(env_salt) != recorded:
+        raise SystemExit(
+            "PUSH REFUSED: $LEGESHER_CONTRIBUTOR_SALT does not match the salt "
+            f"this database was minted with (recorded fingerprint {recorded}, "
+            f"supplied {salt_fingerprint(env_salt)}). Pushing it would publish "
+            "contributor ids that can never be re-minted for returning "
+            "contributors. Find the escrowed salt, or rebuild from v1 with the "
+            "salt you hold."
+        )
+
+
+#: Env var that must REPEAT a non-default ``--target-repo`` for a push. The
+#: first push freezes every published key against its repo, so the destination
+#: gets the same two-key discipline as the push itself: a typo'd repo id must
+#: not be able to mint keys against the wrong namespace.
+TARGET_OVERRIDE_ENV_VAR = "LEGESHER_HF_TARGET_OVERRIDE"
+
+
+def require_intended_target(target_repo: str) -> None:
+    """Refuse to push anywhere but the canonical repo without a second key.
+
+    Args:
+        target_repo: Value of ``--target-repo``.
+
+    Raises:
+        SystemExit: if the target is non-default and not repeated in
+            :data:`TARGET_OVERRIDE_ENV_VAR`.
+    """
+    if target_repo == DEFAULT_TARGET_REPO:
+        return
+    if os.environ.get(TARGET_OVERRIDE_ENV_VAR) != target_repo:
+        raise SystemExit(
+            f"PUSH REFUSED: --target-repo {target_repo!r} is not the canonical "
+            f"{DEFAULT_TARGET_REPO!r}. The first push freezes every published "
+            "key against its repo, so a non-default destination must be "
+            f"repeated verbatim in {TARGET_OVERRIDE_ENV_VAR} -- a typo must "
+            "not be able to publish to the wrong namespace."
+        )
+
+
+def _require_hf_api() -> Any:
+    """Import huggingface_hub lazily and return the ``HfApi`` class.
+
+    One home for the lazy import + its refusal message: every non-push code
+    path works without the library installed and provably never touches the
+    network stack; the two push-path callers share this guard so the install
+    instructions cannot drift apart.
+
+    Raises:
+        SystemExit: if huggingface_hub is not installed.
     """
     try:
         from huggingface_hub import HfApi
@@ -630,8 +801,50 @@ def push_to_hub(out_dir: Path, target_repo: str) -> None:
             "needs it: `uv add --package legesher-i18n --dev huggingface_hub` "
             "(every non-push code path works without it)."
         ) from None
+    return HfApi
 
-    api = HfApi()
+
+def preflight_hub_auth() -> None:
+    """Fail a push on missing Hub auth BEFORE the export runs.
+
+    ``push_to_hub`` runs after the export; without a preflight an
+    unauthenticated run does all the export work and then dies mid-upload,
+    leaving a fully-built artifact behind as if it were push-ready.
+
+    Raises:
+        SystemExit: if huggingface_hub is missing or the token is absent/bad.
+    """
+    hf_api = _require_hf_api()
+    try:
+        who = hf_api().whoami()
+    except Exception as error:  # hub raises several exception types here
+        raise SystemExit(
+            f"PUSH REFUSED: not authenticated to the Hugging Face Hub ({error}). "
+            "Run `huggingface-cli login` or set HF_TOKEN, then re-run."
+        ) from None
+    print(f"Hub auth ok: {who.get('name', '?')}")
+
+
+#: The only files a push may upload -- exactly what the exporter writes. A
+#: stray bystander in the output directory (scratch notes, a copied
+#: translations_v2.db carrying contributor_identities, an editor swap file)
+#: must never ride into the dataset repo, where it would survive the later
+#: public flip.
+PUSH_ALLOW_PATTERNS: tuple[str, ...] = (
+    "README.md",
+    "reconciliation.json",
+    "data/*.parquet",
+)
+
+
+def push_to_hub(out_dir: Path, target_repo: str) -> None:
+    """Upload the exported corpus files to the Hugging Face Hub.
+
+    Args:
+        out_dir: The export directory (``data/*.parquet`` + ``README.md``).
+        target_repo: Dataset repo id, e.g. ``legesher/translations``.
+    """
+    api = _require_hf_api()()
     # Private-first (CORE-1502 decision, 2026-07-14): the repo is created
     # PRIVATE and this tool never changes visibility. Going public is a
     # separate, deliberate maintainer action on the Hub -- not a flag here,
@@ -646,6 +859,7 @@ def push_to_hub(out_dir: Path, target_repo: str) -> None:
         folder_path=str(out_dir),
         repo_id=target_repo,
         repo_type="dataset",
+        allow_patterns=list(PUSH_ALLOW_PATTERNS),
         commit_message=f"corpus export (CORE-1505, signed off via {GOVERNANCE_TICKET})",
     )
     print(f"Pushed {out_dir} -> {target_repo}")
@@ -816,10 +1030,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    # The push gate runs FIRST: a refused push must leave no artifact behind
-    # and must never have imported a network library.
+    # The push gates run FIRST: a refused push must leave no artifact behind.
+    # Approval (no network library imported) -> intended target -> publish-
+    # grade DB + salt fingerprint -> Hub auth. Only then is the export worth
+    # building.
     if args.push:
         require_push_approval(args.governance_signoff)
+        require_intended_target(args.target_repo)
+        require_publish_grade_db(args.db)
+        preflight_hub_auth()
 
     export_corpus(args.db, args.out)
 

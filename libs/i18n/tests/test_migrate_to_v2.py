@@ -31,6 +31,7 @@ from scripts.migrate_to_v2 import (
     NON_HUMAN_CREATED_BY,
     SUPERSEDED_BY_REVIEW,
     SUPERSEDED_SOURCE_DETAIL,
+    definition_from_brief,
     migrate,
     require_publishable_salt,
     resolve_identity,
@@ -74,7 +75,8 @@ def v1_db(tmp_path: Path) -> Iterator[Path]:
             status TEXT, in_registry INTEGER, script TEXT
         );
         CREATE TABLE terms (
-            id INTEGER PRIMARY KEY, name TEXT, category TEXT, subcategory TEXT,
+            id INTEGER PRIMARY KEY, name TEXT, programming_language TEXT NOT NULL,
+            category TEXT, subcategory TEXT,
             description TEXT, version_added TEXT
         );
         CREATE TABLE translations (
@@ -92,11 +94,14 @@ def v1_db(tmp_path: Path) -> Iterator[Path]:
             (code, name, native_name, bcp47, direction, has_case_distinction,
              status, in_registry)
         VALUES ('ur', 'Urdu', 'اردو', 'ur', 'rtl', 0, 'experimental', 1);
-        INSERT INTO terms (id, name, category) VALUES
-            (1, 'True', 'special_constant'),
-            (2, 'False', 'special_constant'),
-            (3, 'break', 'keyword'),
-            (4, 'None', 'special_constant');
+        INSERT INTO terms (id, name, programming_language, category) VALUES
+            (1, 'True', 'python', 'special_constant'),
+            (2, 'False', 'python', 'special_constant'),
+            (3, 'break', 'python', 'keyword'),
+            (4, 'None', 'python', 'special_constant'),
+            (5, 'break', 'javascript', 'keyword'),
+            (6, 'type', 'python', 'builtin_type'),
+            (7, 'type', 'python', 'keyword');
         """
     )
     term_ids = {"True": 1, "False": 2, "break": 3, "None": 4}
@@ -428,4 +433,254 @@ def test_build_meta_records_the_salt_fingerprint(v1_db: Path, tmp_path: Path) ->
     assert meta["salt_fingerprint"] == salt_fingerprint(SALT)
     assert meta["salt_fingerprint"] != salt_fingerprint("some-other-salt")
     assert meta["publish_build"] == "0"
+    conn.close()
+
+
+# ---------------------------------------------------------------------------
+# definition_en seeding from the context briefs (CORE-1312)
+# ---------------------------------------------------------------------------
+
+
+def test_definition_from_brief_extracts_the_quick_summary(tmp_path: Path) -> None:
+    brief = tmp_path / "elif.md"
+    brief.write_text(
+        "# Python Keyword: `elif` - Translation Brief (Tier 1)\n\n"
+        "**Category:** keyword\n\n---\n\n"
+        "## Quick Summary\n\n"
+        "The `elif` keyword provides additional conditional branches.\n"
+        "It tests an alternative condition.\n\n"
+        "---\n\n## Code Examples\n",
+        encoding="utf-8",
+    )
+    assert definition_from_brief("elif", tmp_path) == (
+        "The `elif` keyword provides additional conditional branches."
+        " It tests an alternative condition."
+    )
+
+
+def test_definition_from_brief_missing_file_or_section(tmp_path: Path) -> None:
+    assert definition_from_brief("nonexistent", tmp_path) is None
+    no_section = tmp_path / "break.md"
+    no_section.write_text("# break\n\nProse without the heading.\n", encoding="utf-8")
+    assert definition_from_brief("break", tmp_path) is None
+
+
+def test_definition_from_brief_reads_the_real_briefs() -> None:
+    """The shipped briefs actually seed: elif must resolve to real prose,
+    not remain a TODO placeholder in the published corpus."""
+    text = definition_from_brief("elif")
+    assert text is not None
+    assert "elif" in text
+    assert not text.startswith("TODO")
+
+
+# ---------------------------------------------------------------------------
+# Multi-target v1: concepts merge on slug; terms and canon stay per-PL
+# ---------------------------------------------------------------------------
+
+
+def test_shared_terms_merge_into_one_concept(v1_db: Path, tmp_path: Path) -> None:
+    """python `break` + javascript `break` = ONE concept, two terms rows."""
+    conn = _run(v1_db, tmp_path)
+    assert (
+        conn.execute("SELECT COUNT(*) FROM concepts WHERE slug='break'").fetchone()[0]
+        == 1
+    )
+    rows = conn.execute(
+        "SELECT programming_language FROM terms t JOIN concepts c "
+        "ON c.id=t.concept_id WHERE c.slug='break' ORDER BY 1"
+    ).fetchall()
+    assert [r["programming_language"] for r in rows] == ["javascript", "python"]
+    # both PLs exist in the reference table, with python as the shipping target
+    pls = dict(
+        conn.execute("SELECT code, status FROM programming_languages").fetchall()
+    )
+    assert pls == {"python": "shipping", "javascript": "in_progress"}
+    conn.close()
+
+
+def test_canon_selections_are_pl_scoped(v1_db: Path, tmp_path: Path) -> None:
+    """A v1 selection belongs to its term's target — divergent per-PL picks
+    (real case: abs -> different Arabic renderings per target) must coexist."""
+    src = sqlite3.connect(v1_db)
+    # A selection must exist as a candidate first (the migration hard-errors
+    # on a selected value absent from the corpus).
+    src.executemany(
+        "INSERT INTO translations (term_id, language_code, translation, source, "
+        "created_by, created_at) VALUES (?, 'ur', ?, 'aya', 'ai-aya', "
+        "'2026-03-19T00:00:00')",
+        [(3, "توڑو"), (5, "روکو")],
+    )
+    src.executemany(
+        "INSERT INTO selected_translations (term_id, language_code, translation, "
+        "selected_by, selected_at, selection_reason) VALUES (?, 'ur', ?, "
+        "'quality_review', '2026-03-20T00:00:00', 'test')",
+        [(3, "توڑو"), (5, "روکو")],  # python break vs javascript break: divergent
+    )
+    src.commit()
+    src.close()
+    conn = _run(v1_db, tmp_path)
+    rows = conn.execute(
+        "SELECT pl_scope, surface_form FROM canon_selections cs "
+        "JOIN concepts c ON c.id=cs.concept_id WHERE c.slug='break' ORDER BY 1"
+    ).fetchall()
+    assert [(r["pl_scope"], r["surface_form"]) for r in rows] == [
+        ("javascript", "روکو"),
+        ("python", "توڑو"),
+    ]
+    conn.close()
+
+
+def test_one_token_two_constructs_splits_into_secondary_concept(
+    v1_db: Path, tmp_path: Path
+) -> None:
+    """python `type` (builtin + 3.12 soft keyword) = two concepts sharing a
+    spelling: category-suffixed slug, second terms row export_role='secondary'
+    (the branch the real publish build executes)."""
+    conn = _run(v1_db, tmp_path)
+    slugs = {
+        r["slug"]
+        for r in conn.execute("SELECT slug FROM concepts WHERE slug LIKE 'type%'")
+    }
+    assert slugs == {"type", "type-keyword"}
+    rows = conn.execute(
+        "SELECT c.slug, t.category, t.export_role FROM terms t "
+        "JOIN concepts c ON c.id = t.concept_id WHERE t.name='type' ORDER BY t.id"
+    ).fetchall()
+    assert [(r["slug"], r["category"], r["export_role"]) for r in rows] == [
+        ("type", "builtin_type", "primary"),
+        ("type-keyword", "keyword", "secondary"),
+    ]
+    conn.close()
+
+
+def test_same_token_selections_land_on_their_distinct_concepts(
+    v1_db: Path, tmp_path: Path
+) -> None:
+    """51 real locales picked different words for type-the-builtin vs
+    type-the-keyword — both selections must survive, one per concept."""
+    src = sqlite3.connect(v1_db)
+    src.executemany(
+        "INSERT INTO translations (term_id, language_code, translation, source, "
+        "created_by, created_at) VALUES (?, 'ur', ?, 'aya', 'ai-aya', "
+        "'2026-03-19T00:00:00')",
+        [(6, "قسم_بلٹ_ان"), (7, "قسم_کلیدی")],
+    )
+    src.executemany(
+        "INSERT INTO selected_translations (term_id, language_code, translation, "
+        "selected_by, selected_at, selection_reason) VALUES (?, 'ur', ?, "
+        "'quality_review', '2026-03-20T00:00:00', 'test')",
+        [(6, "قسم_بلٹ_ان"), (7, "قسم_کلیدی")],
+    )
+    src.commit()
+    src.close()
+    conn = _run(v1_db, tmp_path)
+    rows = conn.execute(
+        "SELECT c.slug, cs.surface_form FROM canon_selections cs "
+        "JOIN concepts c ON c.id = cs.concept_id WHERE c.slug LIKE 'type%' "
+        "ORDER BY c.slug"
+    ).fetchall()
+    assert [(r["slug"], r["surface_form"]) for r in rows] == [
+        ("type", "قسم_بلٹ_ان"),
+        ("type-keyword", "قسم_کلیدی"),
+    ]
+    conn.close()
+
+
+def test_definition_precedence_and_ledger_counts(v1_db: Path, tmp_path: Path) -> None:
+    """Three precedence branches through migrate() itself: the v1 description
+    wins over the brief; the brief seeds when the description is NULL; the
+    explicit TODO marker survives when both are missing. The ledger counts pin
+    the split."""
+    src = sqlite3.connect(v1_db)
+    src.executescript(
+        """
+        INSERT INTO terms (id, name, programming_language, category, description)
+            VALUES (8, 'zzz_nobrief', 'python', 'keyword', NULL);
+        INSERT INTO terms (id, name, programming_language, category, description)
+            VALUES (9, 'elif', 'python', 'keyword', 'the v1 description wins');
+        """
+    )
+    src.commit()
+    src.close()
+    target = tmp_path / "v2.db"
+    ledger = migrate(v1_db, target, salt=SALT)
+    conn = sqlite3.connect(target)
+    conn.row_factory = sqlite3.Row
+
+    def definition(slug: str) -> str:
+        return conn.execute(
+            "SELECT definition_en FROM concepts WHERE slug=?", (slug,)
+        ).fetchone()["definition_en"]
+
+    assert definition("elif") == "the v1 description wins"
+    assert definition("zzz-nobrief") == "TODO: seed from context/python/zzz_nobrief.md"
+    assert not definition("break").startswith("TODO")  # seeded from the brief
+    # Fixture concepts: True/False/break/None/type/type-keyword all seed from
+    # real briefs, elif from its description -> 7 seeded; zzz_nobrief -> 1 TODO.
+    assert ledger.counts["definitions_seeded"] == 7
+    assert ledger.counts["definitions_todo"] == 1
+    conn.close()
+
+
+def test_concept_briefs_rows_only_for_existing_files(
+    v1_db: Path, tmp_path: Path
+) -> None:
+    """No dangling Tier-1 brief claims: rows exist only for briefs on disk,
+    with the filesystem-safe stem in the recorded path."""
+    src = sqlite3.connect(v1_db)
+    src.execute(
+        "INSERT INTO terms (id, name, programming_language, category)"
+        " VALUES (8, 'zzz_nobrief', 'python', 'keyword')"
+    )
+    src.commit()
+    src.close()
+    conn = _run(v1_db, tmp_path)
+    paths = [
+        r["path"] for r in conn.execute("SELECT path FROM concept_briefs ORDER BY path")
+    ]
+    i18n_root = Path(__file__).resolve().parents[1]
+    for path in paths:
+        on_disk = i18n_root / path.removeprefix("libs/i18n/")
+        assert on_disk.is_file(), f"dangling brief claim: {path}"
+    assert not any("zzz_nobrief" in p for p in paths)
+    conn.close()
+
+
+def test_definition_from_brief_star_stem_and_empty_section(tmp_path: Path) -> None:
+    """The `*` -> `_star` stem mapping, the unsafe-name guard, and the
+    empty-Quick-Summary branch (must yield None, never a later section)."""
+    real = definition_from_brief("except*")  # against the shipped briefs
+    assert real is not None and not real.startswith("TODO")
+
+    star = tmp_path / "x_star.md"
+    star.write_text("## Quick Summary\n\nMapped fine.\n", encoding="utf-8")
+    assert definition_from_brief("x*", tmp_path) == "Mapped fine."
+
+    empty = tmp_path / "empty.md"
+    empty.write_text(
+        "## Quick Summary\n\n---\n\n## Code Examples\n\n```python\nx = 1\n```\n",
+        encoding="utf-8",
+    )
+    assert definition_from_brief("empty", tmp_path) is None
+
+    (tmp_path / "evil.md").write_text("## Quick Summary\n\nnope\n", encoding="utf-8")
+    assert definition_from_brief("../evil", tmp_path / "sub") is None
+
+
+def test_unknown_pl_seeds_with_planned_status(v1_db: Path, tmp_path: Path) -> None:
+    """A third PL landing in v1 terms gets the fallback: title-cased name,
+    status 'planned'."""
+    src = sqlite3.connect(v1_db)
+    src.execute(
+        "INSERT INTO terms (id, name, programming_language, category)"
+        " VALUES (30, 'match', 'rust', 'keyword')"
+    )
+    src.commit()
+    src.close()
+    conn = _run(v1_db, tmp_path)
+    row = conn.execute(
+        "SELECT name, status FROM programming_languages WHERE code='rust'"
+    ).fetchone()
+    assert (row["name"], row["status"]) == ("Rust", "planned")
     conn.close()

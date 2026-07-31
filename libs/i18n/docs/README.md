@@ -4,6 +4,18 @@ This directory contains the foundation documents for creating high-quality Pytho
 
 ## Contents
 
+### [corpus-publish-runbook.md](./corpus-publish-runbook.md)
+
+The operator sequence for publishing the translations corpus to the private
+Hugging Face dataset (`legesher/translations`): salt escrow, the publish-grade
+v2 build, the dry export, and the multi-gated push.
+
+**Use this for:** Running or auditing the corpus publish (CORE-1312)
+
+### [database-schema.md](./database-schema.md)
+
+Reference for the translations database schema (v1 operational layout).
+
 ### [linguistic-standards.md](./linguistic-standards.md)
 
 Establishes consistent linguistic conventions for translating Python terms:
@@ -15,9 +27,9 @@ Establishes consistent linguistic conventions for translating Python terms:
 
 **Use this for:** Understanding what form translations should take
 
-### [deep-context-template.md](./deep-context-template.md)
+### [context-template-tier1.md](./context-template-tier1.md) / [context-template-tier2.md](./context-template-tier2.md)
 
-Template for creating comprehensive context documents for each Python term:
+Templates for creating comprehensive context documents for each Python term:
 
 - Etymology & history
 - Multi-level explanations (5yo → expert)

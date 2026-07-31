@@ -11,6 +11,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Publish-build hardening for the HF corpus (CORE-1312).** The v1→v2
+  migration is target-aware: concepts dedupe by slug across programming
+  languages (python `break` + javascript `break` = one concept, per-PL
+  `terms` rows), canon selections carry their term's PL scope, python
+  `type`'s builtin/soft-keyword duality splits into two concepts with the
+  second `terms` row as `export_role='secondary'`, and
+  `concepts.definition_en` seeds from the context briefs' Quick Summary
+  instead of publishing `TODO:` placeholders (ledger reports
+  `definitions_seeded` / `definitions_todo`). The corpus push gained four
+  in-code gates (governance approval, intended-target confirmation,
+  `build_meta` publish/salt-fingerprint provenance, Hub-auth preflight), an
+  upload allowlist so only exporter-written files reach the Hub, and
+  `NEVER_EXPORT` now declares the whole review-intake layer plus
+  `option_flags`/`build_meta` by name. Operator flow documented in
+  `docs/corpus-publish-runbook.md`.
 - **Client-shape pack emitter for JavaScript-target locales (CORE-1371).**
   `scripts/emit_js_client_pack.py` renders the canonical selections into the
   `@legesher/core` `LanguagePack` TypeScript shape for vendoring into

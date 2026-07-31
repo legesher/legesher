@@ -19,22 +19,34 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import sys
+import types
 from pathlib import Path
 
 import pytest
 
 from legesher_i18n.db.schema_v2 import (
+    SCHEMA_V2_PATH,
+    DEFAULT_CONTRIBUTOR_SALT,
     apply_schema_v2,
     contributor_id,
     endorsement_uid,
     option_uid,
+    salt_fingerprint,
 )
 from scripts.export_corpus import (
+    CONFIG_BASE_TABLE,
     CONFIG_SCHEMA,
     CONFIG_SQL,
+    DEFAULT_TARGET_REPO,
     FORBIDDEN_COLUMNS,
+    NEVER_EXPORT,
+    PUSH_ALLOW_PATTERNS,
+    TARGET_OVERRIDE_ENV_VAR,
     export_corpus,
     main,
+    require_intended_target,
+    require_publish_grade_db,
 )
 
 pa = pytest.importorskip("pyarrow")
@@ -47,6 +59,7 @@ SALT = "test-salt"
 PRIVATE_STRINGS = (
     "alice-gh",  # contributor_identities.source_key / github_handle
     "Alice Realname",  # contributor_identities.display_name
+    "alice@example.com",  # contributor_identities.email (CORE-1538 contact)
     "zh_reviewer_review",  # option_provenance.source_detail (a real first name)
     "great word, Alice!",  # endorsements.comment (free text, may carry PII)
 )
@@ -106,8 +119,8 @@ def v2_db(tmp_path: Path) -> Path:
     # PRIVATE: the way back from the opaque id to a person. Never exported.
     conn.execute(
         "INSERT INTO contributor_identities (contributor_id, source_key, "
-        "display_name, github_handle) VALUES (?, 'alice-gh', 'Alice Realname', "
-        "'alice-gh')",
+        "display_name, github_handle, email) VALUES (?, 'alice-gh', "
+        "'Alice Realname', 'alice-gh', 'alice@example.com')",
         (CONTRIBUTOR_ALICE,),
     )
     conn.executemany(
@@ -572,3 +585,271 @@ def test_a_missing_database_is_a_clear_refusal(tmp_path: Path) -> None:
     with pytest.raises(SystemExit, match="no database at"):
         export_corpus(tmp_path / "does-not-exist.db", out)
     assert not out.exists()
+
+
+# ---------------------------------------------------------------------------
+# Publish-grade gate: build_meta provenance + salt fingerprint (CORE-1312)
+# ---------------------------------------------------------------------------
+
+
+def _meta_db(tmp_path: Path, name: str, rows: list[tuple[str, str]]) -> Path:
+    """A schema-only v2 database with the given build_meta rows."""
+    path = tmp_path / name
+    conn = sqlite3.connect(path)
+    apply_schema_v2(conn)
+    conn.executemany("INSERT INTO build_meta (key, value) VALUES (?, ?)", rows)
+    conn.commit()
+    conn.close()
+    return path
+
+
+def test_push_refuses_non_publish_grade_databases(tmp_path: Path) -> None:
+    """A dev build, a dev-salt artifact, or an unknown file never pushes."""
+    dev_build = _meta_db(
+        tmp_path,
+        "dev.db",
+        [
+            ("salt_fingerprint", salt_fingerprint(DEFAULT_CONTRIBUTOR_SALT)),
+            ("publish_build", "0"),
+        ],
+    )
+    with pytest.raises(SystemExit, match="NOT built with --publish"):
+        require_publish_grade_db(dev_build)
+
+    # publish_build=1 with the dev salt's fingerprint should be impossible
+    # (migrate refuses the dev salt under --publish), but belt-and-braces:
+    dev_salt = _meta_db(
+        tmp_path,
+        "dev-salt.db",
+        [
+            ("salt_fingerprint", salt_fingerprint(DEFAULT_CONTRIBUTOR_SALT)),
+            ("publish_build", "1"),
+        ],
+    )
+    with pytest.raises(SystemExit, match="PUBLIC dev salt"):
+        require_publish_grade_db(dev_salt)
+
+    stranger = tmp_path / "stranger.db"
+    conn = sqlite3.connect(stranger)
+    conn.execute("CREATE TABLE t (x)")
+    conn.commit()
+    conn.close()
+    with pytest.raises(SystemExit, match="no readable build_meta"):
+        require_publish_grade_db(stranger)
+    # And the same refusal (not a raw sqlite3 traceback) for a file that
+    # exists but is not a SQLite database at all.
+    not_a_db = tmp_path / "corrupt.db"
+    not_a_db.write_bytes(b"definitely not sqlite")
+    with pytest.raises(SystemExit, match="no readable build_meta"):
+        require_publish_grade_db(not_a_db)
+
+
+def test_push_verifies_the_escrowed_salt_fingerprint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The operator must HOLD the salt the artifact was minted with."""
+    escrowed = "correct-horse-battery-staple-0123456789"
+    artifact = _meta_db(
+        tmp_path,
+        "publish.db",
+        [
+            ("salt_fingerprint", salt_fingerprint(escrowed)),
+            ("publish_build", "1"),
+        ],
+    )
+    monkeypatch.delenv("LEGESHER_CONTRIBUTOR_SALT", raising=False)
+    with pytest.raises(SystemExit, match="is not set"):
+        require_publish_grade_db(artifact)
+    monkeypatch.setenv(
+        "LEGESHER_CONTRIBUTOR_SALT", "some-other-salt-entirely-000000000"
+    )
+    with pytest.raises(SystemExit, match="does not match"):
+        require_publish_grade_db(artifact)
+    monkeypatch.setenv("LEGESHER_CONTRIBUTOR_SALT", escrowed)
+    require_publish_grade_db(artifact)  # verified: no exit
+
+
+def test_push_gate_checks_provenance_before_exporting(
+    v2_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Approval keys alone are not enough: a non-publish DB stops the run
+    before a single byte of export output exists."""
+    monkeypatch.setenv("LEGESHER_HF_PUSH_APPROVED", "1")
+    out = tmp_path / "corpus"
+    with pytest.raises(SystemExit, match="NOT built with --publish"):
+        main(
+            [
+                "--db",
+                str(v2_db),
+                "--out",
+                str(out),
+                "--push",
+                "--governance-signoff",
+                "CORE-1502",
+            ]
+        )
+    assert not out.exists()
+
+
+def test_push_refuses_a_missing_database_with_the_gate_message(
+    tmp_path: Path,
+) -> None:
+    """Under --push the provenance gate's message is the one an operator with
+    a wrong --db path actually sees."""
+    with pytest.raises(SystemExit, match="no database at"):
+        require_publish_grade_db(tmp_path / "does-not-exist.db")
+
+
+# ---------------------------------------------------------------------------
+# Intended-target gate (a typo must not mint frozen keys elsewhere)
+# ---------------------------------------------------------------------------
+
+
+def test_target_repo_gate(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(TARGET_OVERRIDE_ENV_VAR, raising=False)
+    require_intended_target(DEFAULT_TARGET_REPO)  # canonical: no second key
+    with pytest.raises(SystemExit, match="not the canonical"):
+        require_intended_target("legesher/translation")  # the classic typo
+    monkeypatch.setenv(TARGET_OVERRIDE_ENV_VAR, "legesher/translations-staging")
+    with pytest.raises(SystemExit, match="not the canonical"):
+        require_intended_target("legesher/translation")  # override must MATCH
+    require_intended_target("legesher/translations-staging")  # repeated: ok
+
+
+# ---------------------------------------------------------------------------
+# Hub auth preflight + the full gated push, with a stubbed huggingface_hub
+# ---------------------------------------------------------------------------
+
+
+def _stub_hub(
+    monkeypatch: pytest.MonkeyPatch, *, whoami_error: Exception | None = None
+) -> dict[str, dict]:
+    """Install a stub huggingface_hub module; returns a call recorder."""
+    calls: dict[str, dict] = {}
+
+    class _Api:
+        def whoami(self):
+            if whoami_error is not None:
+                raise whoami_error
+            return {"name": "tester"}
+
+        def create_repo(self, **kwargs):
+            calls["create_repo"] = kwargs
+
+        def upload_folder(self, **kwargs):
+            calls["upload_folder"] = kwargs
+
+    stub = types.ModuleType("huggingface_hub")
+    stub.HfApi = _Api  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "huggingface_hub", stub)
+    return calls
+
+
+def _arm_push_env(monkeypatch: pytest.MonkeyPatch, v2_db: Path, salt: str) -> None:
+    """Turn every non-network push key: approval, salt, publish-grade meta."""
+    monkeypatch.setenv("LEGESHER_HF_PUSH_APPROVED", "1")
+    monkeypatch.setenv("LEGESHER_CONTRIBUTOR_SALT", salt)
+    conn = sqlite3.connect(v2_db)
+    conn.executemany(
+        "INSERT INTO build_meta (key, value) VALUES (?, ?)",
+        [
+            ("salt_fingerprint", salt_fingerprint(salt)),
+            ("publish_build", "1"),
+        ],
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_failed_hub_auth_refuses_before_the_export_runs(
+    v2_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The runbook promise: bad credentials fail BEFORE the export, so no
+    push-ready artifact is left behind."""
+    _arm_push_env(monkeypatch, v2_db, "escrowed-salt-0123456789-0123456789")
+    _stub_hub(monkeypatch, whoami_error=RuntimeError("401 unauthorized"))
+    out = tmp_path / "corpus"
+    with pytest.raises(SystemExit, match="not authenticated"):
+        main(
+            [
+                "--db",
+                str(v2_db),
+                "--out",
+                str(out),
+                "--push",
+                "--governance-signoff",
+                "CORE-1502",
+            ]
+        )
+    assert not out.exists()
+
+
+def test_fully_gated_push_uploads_only_exporter_artifacts(
+    v2_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The whole happy path: all four gates pass, the export runs, and the
+    upload is allowlisted to exactly the exporter-written files."""
+    _arm_push_env(monkeypatch, v2_db, "escrowed-salt-0123456789-0123456789")
+    calls = _stub_hub(monkeypatch)
+    out = tmp_path / "corpus"
+    assert (
+        main(
+            [
+                "--db",
+                str(v2_db),
+                "--out",
+                str(out),
+                "--push",
+                "--governance-signoff",
+                "CORE-1502",
+            ]
+        )
+        == 0
+    )
+    assert (out / "reconciliation.json").is_file()
+    assert calls["create_repo"]["private"] is True
+    assert calls["create_repo"]["repo_id"] == DEFAULT_TARGET_REPO
+    assert calls["upload_folder"]["allow_patterns"] == list(PUSH_ALLOW_PATTERNS)
+
+
+# ---------------------------------------------------------------------------
+# Schema completeness: every table is classified, never merely omitted
+# ---------------------------------------------------------------------------
+
+#: Reference tables that are neither exported nor private: public-by-nature
+#: vocabulary and structural metadata. A NEW table added to the schema must be
+#: placed in exactly one bucket -- this test is what forces the decision.
+NEUTRAL_TABLES: frozenset[str] = frozenset(
+    {
+        "programming_languages",
+        "locales",
+        "review_rungs",
+        "concept_briefs",
+        "concept_relations",
+        "concept_slug_aliases",
+        "message_templates",
+        "message_translations",
+        "import_sources",
+    }
+)
+
+
+def test_every_schema_table_is_deliberately_classified() -> None:
+    schema_tables = set(
+        re.findall(r"CREATE TABLE (\w+)", SCHEMA_V2_PATH.read_text("utf-8"))
+    )
+    read_tables = set(CONFIG_BASE_TABLE.values()) | {
+        "option_validations",  # joined into the options config
+        "option_provenance",  # aggregated into options.sources
+    }
+    unclassified = schema_tables - read_tables - NEVER_EXPORT - NEUTRAL_TABLES
+    assert not unclassified, (
+        f"schema tables with no export classification: {sorted(unclassified)}. "
+        "Every table must be in the export read-set, NEVER_EXPORT, or "
+        "NEUTRAL_TABLES -- exclusion by omission is exactly what NEVER_EXPORT "
+        "exists to prevent."
+    )
+    # No stale or typo'd declarations, and no table in two buckets.
+    assert NEVER_EXPORT <= schema_tables
+    assert not (NEVER_EXPORT & read_tables)
+    assert not (NEVER_EXPORT & NEUTRAL_TABLES)

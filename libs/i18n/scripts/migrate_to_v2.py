@@ -7,9 +7,14 @@ the v1 file stays the operational source until the cutover gate passes).
 The migration is additive and reversible in six steps:
 
 1. **Reference** -- programming languages, and locales keyed by BCP 47 (CORE-1500).
-2. **Concepts** -- one concept per v1 term, 1:1. The 183 terms have 183 distinct
-   names, so the mapping is unambiguous; concept *merging* across programming
-   languages is a later, deliberate curation act, never automatic.
+2. **Concepts** -- deduped by slug ACROSS programming languages: python ``break``
+   and javascript ``break`` are one concept with a per-PL ``terms`` row each
+   (the concept layer's whole point -- a shared word never re-runs translation
+   + review per target). Within ONE PL, a token naming two constructs (python
+   ``type``: builtin + the 3.12 soft keyword) splits into two concepts via a
+   category-suffixed slug, the second ``terms`` row riding as
+   ``export_role='secondary'``. ``definition_en`` seeds from the v1
+   description, else the term's context brief, else an explicit TODO marker.
 3. **Corpus** -- v1 ``translations`` become ``options`` + ``option_provenance``.
    The option's identity is the rendering, not the source that proposed it, so
    rows that re-attest the same word collapse into one option with several
@@ -558,6 +563,80 @@ def require_publishable_salt(salt: str | None) -> str:
     return salt
 
 
+#: Where the per-term Tier-1 translation briefs live. Each carries a
+#: ``## Quick Summary`` section whose first paragraph is a ready-made
+#: ``definition_en``.
+CONTEXT_BRIEF_DIR = Path(__file__).resolve().parents[1] / "context" / "python"
+
+
+def definition_from_brief(
+    term_name: str, context_dir: Path = CONTEXT_BRIEF_DIR
+) -> str | None:
+    """Extract a ``definition_en`` from the term's context brief, if one exists.
+
+    Reads ``<context_dir>/<term_name>.md`` and returns the first paragraph
+    under its ``## Quick Summary`` heading, joined to a single line. The
+    corpus publishes ``concepts.definition_en`` verbatim (CORE-1505), so
+    without this seed ~243 of the 246 v1 terms would publish a literal
+    ``TODO: seed from context/python/<name>.md`` placeholder.
+
+    Args:
+        term_name: The English term exactly as named in v1 (``elif``,
+            ``except*``, ``__import__``) -- also the brief's file stem.
+        context_dir: The briefs directory (overridable for tests).
+
+    Returns:
+        The summary paragraph, or ``None`` when the brief or its Quick
+        Summary section is missing or empty (the caller keeps the explicit
+        TODO marker -- absent debt must stay visible, not become an empty
+        string or another section's prose).
+    """
+    stem = brief_stem(term_name)
+    if stem is None:
+        return None
+    path = context_dir / f"{stem}.md"
+    if not path.is_file():
+        return None
+    lines = path.read_text(encoding="utf-8").splitlines()
+    try:
+        start = next(
+            index
+            for index, line in enumerate(lines)
+            if line.strip().lower() == "## quick summary"
+        )
+    except StopIteration:
+        return None
+    paragraph: list[str] = []
+    for line in lines[start + 1 :]:
+        stripped = line.strip()
+        if not stripped:
+            if paragraph:
+                break
+            continue
+        # Any heading or rule ends the section -- an EMPTY Quick Summary must
+        # yield None, never fall through and harvest a later section's prose
+        # (which could be literal code-fence markup, published verbatim).
+        if stripped.startswith(("#", "---")):
+            break
+        paragraph.append(stripped)
+    return " ".join(paragraph) or None
+
+
+def brief_stem(term_name: str) -> str | None:
+    """Filesystem-safe brief stem for a v1 term name, or ``None`` if unsafe.
+
+    The briefs use ``_star`` for ``*`` (``except*`` -> ``except_star.md``).
+    The name comes from a database row and is interpolated into a path, so
+    anything that would escape the briefs directory (separators, ``..``) is
+    refused outright -- this pipeline feeds the published artifact, and
+    future ingest paths write into the same database.
+    """
+    stem = term_name.replace("*", "_star")
+    if "/" in stem or "\\" in stem or Path(stem).name != stem:
+        return None
+    return stem
+
+
 def _locale_tag(code: str, bcp47: str | None) -> str:
     """Resolve a v1 two-letter code to its BCP 47 tag."""
     if bcp47:
@@ -658,10 +737,18 @@ def migrate(
     )
 
     # -- 1. Reference --------------------------------------------------------
-    dst.execute(
-        "INSERT INTO programming_languages (code, name, status) VALUES ('python', 'Python', "
-        "'shipping')"
-    )
+    # v1 terms became multi-target with the JavaScript seeding (CORE-1371);
+    # every PL present in the source is seeded, not just python.
+    pl_status = {"python": "shipping", "javascript": "in_progress"}
+    pl_names = {"python": "Python", "javascript": "JavaScript"}
+    for pl_row in src.execute(
+        "SELECT DISTINCT programming_language FROM terms ORDER BY programming_language"
+    ):
+        code = pl_row["programming_language"]
+        dst.execute(
+            "INSERT INTO programming_languages (code, name, status) VALUES (?, ?, ?)",
+            (code, pl_names.get(code, code.title()), pl_status.get(code, "planned")),
+        )
 
     locale_of: dict[str, str] = {}
     language_rows = {
@@ -698,47 +785,99 @@ def migrate(
         )
     ledger.record("locales", len(locale_of))
 
-    # -- 2. Concepts (1:1 with v1 terms) -------------------------------------
-    # definition_en is seeded empty and backfilled from the 183 context briefs by
-    # a separate pass; it is NOT NULL in the schema, so a placeholder marks the
-    # debt explicitly rather than hiding it.
-    concept_of_term: dict[int, tuple[int, str]] = {}
+    # -- 2. Concepts (deduped by slug across PLs) ----------------------------
+    # A concept is cross-PL by design: python `break` and javascript `break`
+    # are ONE concept with two terms rows (that reuse is the whole point of
+    # the concept layer — a shared word never re-runs translation + review
+    # per target). The first term to name a slug declares the concept; later
+    # same-slug terms attach to it.
+    #
+    # definition_en is v1's description when present, else the first Quick
+    # Summary paragraph of the term's context brief; only when both are
+    # missing does the explicit TODO placeholder remain (it is NOT NULL in
+    # the schema, so absent debt stays visible rather than hidden).
+    definitions_seeded = 0
+    definitions_todo = 0
+    term_rows = 0
+    term_tokens_seen: set[tuple[str, str]] = set()
+    concept_by_slug: dict[str, int] = {}
+    #: v1 term id -> (v2 concept id, slug, programming language). One mapping
+    #: for all per-term facts, so the options and canon passes cannot pick up
+    #: one dict and miss another.
+    concept_of_term: dict[int, tuple[int, str, str]] = {}
+    #: concept ids that already carry their Tier-1 brief row.
+    briefed_concepts: set[int] = set()
     #: v2 concept id -> the English source term (e.g. 'except*'). The identifier
     #: validator is term-aware, so it needs the token, not just the slug (which
     #: has lost the structural '*': 'except*' -> slug 'except*' but dunders map
     #: '_' -> '-'). Kept as the real term name.
     term_name_of_concept: dict[int, str] = {}
     for row in src.execute("SELECT * FROM terms ORDER BY id"):
-        slug = row["name"].strip().lower().replace("_", "-")
-        cur = dst.execute(
-            "INSERT INTO concepts (slug, definition_en, category) VALUES (?, ?, ?)",
-            (
-                slug,
-                row["description"]
-                or f"TODO: seed from context/python/{row['name']}.md",
-                row["category"],
-            ),
-        )
-        concept_id = int(cur.lastrowid or 0)
-        concept_of_term[row["id"]] = (concept_id, slug)
-        term_name_of_concept[concept_id] = row["name"]
+        base_slug = row["name"].strip().lower().replace("_", "-")
+        token = (row["programming_language"], row["name"])
+        # One token may name TWO constructs within a PL (python `type`: the
+        # builtin and the 3.12 soft keyword — v1 keeps both under distinct
+        # categories, and 51 locales picked different words for them). Those
+        # are different CONCEPTS sharing a spelling: the second gets a
+        # category-disambiguated slug and rides as export_role='secondary'
+        # (the schema's idx_terms_one_primary allows exactly one primary
+        # reading per (PL, name)).
+        if token in term_tokens_seen:
+            slug = f"{base_slug}-{row['category']}"
+            export_role = "secondary"
+        else:
+            slug = base_slug
+            export_role = "primary"
+        concept_id = concept_by_slug.get(slug)
+        if concept_id is None:
+            definition = row["description"] or definition_from_brief(row["name"])
+            if definition:
+                definitions_seeded += 1
+            else:
+                definitions_todo += 1
+                definition = f"TODO: seed from context/python/{row['name']}.md"
+            cur = dst.execute(
+                "INSERT INTO concepts (slug, definition_en, category) VALUES (?, ?, ?)",
+                (slug, definition, row["category"]),
+            )
+            concept_id = int(cur.lastrowid or 0)
+            concept_by_slug[slug] = concept_id
+            term_name_of_concept[concept_id] = row["name"]
+        # The Tier-1 brief claim: only when the PYTHON term is seen (the briefs
+        # are python briefs), only once per concept, and only for a file that
+        # actually exists — no dangling paths, and order-independent should a
+        # javascript term ever declare the concept first.
+        if (
+            row["programming_language"] == "python"
+            and concept_id not in briefed_concepts
+        ):
+            stem = brief_stem(row["name"])
+            if stem is not None and (CONTEXT_BRIEF_DIR / f"{stem}.md").is_file():
+                dst.execute(
+                    "INSERT INTO concept_briefs (concept_id, tier, path) VALUES (?, 1, ?)",
+                    (concept_id, f"libs/i18n/context/python/{stem}.md"),
+                )
+                briefed_concepts.add(concept_id)
+        concept_of_term[row["id"]] = (concept_id, slug, row["programming_language"])
+        term_tokens_seen.add(token)
         dst.execute(
             "INSERT INTO terms (concept_id, programming_language, name, category, subcategory, "
-            "version_added) VALUES (?, 'python', ?, ?, ?, ?)",
+            "version_added, export_role) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
                 concept_id,
+                row["programming_language"],
                 row["name"],
                 row["category"],
                 row["subcategory"],
                 row["version_added"],
+                export_role,
             ),
         )
-        dst.execute(
-            "INSERT INTO concept_briefs (concept_id, tier, path) VALUES (?, 1, ?)",
-            (concept_id, f"libs/i18n/context/python/{row['name']}.md"),
-        )
-    ledger.record("concepts", len(concept_of_term))
-    ledger.record("terms", len(concept_of_term))
+        term_rows += 1
+    ledger.record("concepts", len(concept_by_slug))
+    ledger.record("terms", term_rows)
+    ledger.record("definitions_seeded", definitions_seeded)
+    ledger.record("definitions_todo", definitions_todo)
 
     # -- 3. Corpus: options + provenance -------------------------------------
     v1_translation_rows = 0
@@ -757,7 +896,7 @@ def migrate(
 
     for row in src.execute("SELECT * FROM translations ORDER BY id"):
         v1_translation_rows += 1
-        concept_id, slug = concept_of_term[row["term_id"]]
+        concept_id, slug, _pl = concept_of_term[row["term_id"]]
         locale = locale_of[row["language_code"]]
         surface = normalize_surface_form(row["translation"])
         if not surface:
@@ -947,7 +1086,7 @@ def migrate(
     rejected: list[tuple[str, str, str, str]] = []
     for row in src.execute("SELECT * FROM selected_translations ORDER BY id"):
         selected_rows += 1
-        concept_id, slug = concept_of_term[row["term_id"]]
+        concept_id, slug, term_pl = concept_of_term[row["term_id"]]
         code = row["language_code"]
         locale = locale_of[code]
         surface = normalize_surface_form(row["translation"])
@@ -977,13 +1116,19 @@ def migrate(
             rejected.append((locale, slug, surface, reason))
             continue
 
+        # PL-scoped: a v1 selection belongs to its term's target. The corpus
+        # shows real per-PL divergence (abs -> قيمة_مطلقة for javascript vs
+        # القيمةالمطلقة for python), so canon rows carry the PL rather than
+        # claiming the concept-wide '*' scope.
         dst.execute(
-            "INSERT INTO canon_selections (concept_id, locale, option_uid, surface_form, status, "
+            "INSERT INTO canon_selections (concept_id, locale, programming_language, "
+            "option_uid, surface_form, status, "
             "decided_by, decided_at, decision_reason, source_file) "
-            "VALUES (?, ?, ?, ?, 'machine', ?, ?, ?, ?)",
+            "VALUES (?, ?, ?, ?, ?, 'machine', ?, ?, ?, ?)",
             (
                 concept_id,
                 locale,
+                term_pl,
                 uid,
                 surface,
                 row["selected_by"],
