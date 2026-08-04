@@ -65,7 +65,7 @@ generate-languages:
 # ============================================================================
 
 # Run all tests across the monorepo
-test: test-i18n test-core test-legesher test-language-server test-mcp
+test: test-i18n test-core test-legesher test-language-server test-mcp test-runtime
 	@echo "All tests complete!"
 
 test-all: test
@@ -90,6 +90,10 @@ test-language-server:
 test-mcp:
 	@echo "Running MCP server tests..."
 	cd libs/mcp && uv run pytest tests/ -v
+
+test-runtime:
+	@echo "Running runtime tests..."
+	cd libs/runtime && uv run pytest tests/ -v
 
 # Test with coverage
 test-coverage:

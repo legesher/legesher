@@ -1,0 +1,67 @@
+[project]
+name = "legesher-runtime"
+version = "0.1.0"
+description = "Localized tracebacks and runtime exception hooks for Legesher"
+readme = "README.md"
+requires-python = ">=3.10,<4.0"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
+]
+keywords = ["legesher", "traceback", "excepthook", "localization", "multilingual", "i18n"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    # Sibling ranges ship in the wheel metadata; in-repo the workspace override
+    # in [tool.uv.sources] applies. <1.0.0 because semantic-release
+    # (major_on_zero = true) moves 0.x to 1.0 on a breaking change.
+    "legesher-i18n>=0.22.0,<1.0.0",  # message catalog + language pack loader
+]
+
+[tool.uv.sources]
+legesher-i18n = { workspace = true }
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+distribution = true
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.8.0",
+    "ruff>=0.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = []

@@ -9,16 +9,20 @@ Example:
     $ legesher run mi_programa.py --args "--verbose"
 """
 
+import logging
 import shlex
 import sys
 from pathlib import Path
 
 import click
+import legesher_runtime
 
 from legesher.config import LegesherConfig
 from legesher.runtime import install_error_handler, install_import_hook
 from legesher.runtime.source_mapper import get_source_mapper
 from legesher_core import TokenTranslator
+
+logger = logging.getLogger(__name__)
 
 
 @click.command()
@@ -43,13 +47,26 @@ def run(script: str, lang: str | None, args: str | None):
         $ legesher run programa.py --lang es
         $ legesher run programa.py --args "--verbose --output results.txt"
     """
-    # Load config
+    # Load config: --lang overrides the project/user config resolution.
     config = LegesherConfig.load()
     language = lang or config.language
 
     # Install runtime hooks
     install_import_hook(language)
     install_error_handler(language)
+    # Localized tracebacks (CORE-1679): installed LAST so the error handler
+    # above is the fallback chain when the renderer degrades. The source
+    # mapper is passed through so frames compiled from TRANSLATED source
+    # (this command compiles translated code under the native filename)
+    # render the native line, remap line numbers, and drop the
+    # translated-offset PEP 657 carets instead of misplacing them.
+    # Best-effort — a failure here must never stop the script from running.
+    try:
+        legesher_runtime.install(
+            language, config.python_version, source_map=get_source_mapper()
+        )
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.debug(f"localized tracebacks unavailable: {exc}")
 
     # Prepare sys.argv for the script
     script_path = Path(script).resolve()

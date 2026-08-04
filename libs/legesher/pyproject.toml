@@ -21,6 +21,7 @@ dependencies = [
     # breaking change.
     "legesher-core[treesitter]>=0.22.0,<1.0.0",
     "legesher-i18n>=0.22.0,<1.0.0",
+    "legesher-runtime>=0.1.0,<1.0.0",
 ]
 name = "legesher"
 version = "0.22.0"
@@ -48,6 +49,7 @@ legesher = "legesher.cli.main:cli"
 [tool.uv.sources]
 legesher-core = { workspace = true }
 legesher-i18n = { workspace = true }
+legesher-runtime = { workspace = true }
 
 [dependency-groups]
 dev = [

@@ -79,6 +79,7 @@ members = [
     "legesher-language-server",
     "legesher-mcp",
     "legesher-monorepo",
+    "legesher-runtime",
     "legesher-vs-code",
 ]
 
@@ -1560,6 +1561,7 @@ dependencies = [
     { name = "click" },
     { name = "legesher-core", extra = ["treesitter"] },
     { name = "legesher-i18n" },
+    { name = "legesher-runtime" },
     { name = "pyyaml" },
     { name = "questionary" },
     { name = "tomli", marker = "python_full_version < '3.11'" },
@@ -1581,6 +1583,7 @@ requires-dist = [
     { name = "click", specifier = ">=8.0.0" },
     { name = "legesher-core", extras = ["treesitter"], editable = "libs/core" },
     { name = "legesher-i18n", editable = "libs/i18n" },
+    { name = "legesher-runtime", editable = "libs/runtime" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "questionary", specifier = ">=2.0.0" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0.0" },
@@ -2377,6 +2380,7 @@ dependencies = [
     { name = "legesher-i18n" },
     { name = "legesher-language-server" },
     { name = "legesher-mcp" },
+    { name = "legesher-runtime" },
     { name = "legesher-vs-code" },
 ]
 
@@ -2405,6 +2409,7 @@ requires-dist = [
     { name = "legesher-i18n", editable = "libs/i18n" },
     { name = "legesher-language-server", editable = "libs/language-server" },
     { name = "legesher-mcp", editable = "libs/mcp" },
+    { name = "legesher-runtime", editable = "libs/runtime" },
     { name = "legesher-vs-code", editable = "libs/vs-code" },
 ]
 
@@ -2424,6 +2429,33 @@ dev = [
     { name = "python-semantic-release", specifier = ">=9.0.0" },
     { name = "ruff", specifier = ">=0.15.12" },
     { name = "vulture", specifier = ">=2.16" },
+]
+
+[[package]]
+name = "legesher-runtime"
+version = "0.1.0"
+source = { editable = "libs/runtime" }
+dependencies = [
+    { name = "legesher-i18n" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "legesher-i18n", editable = "libs/i18n" }]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=1.8.0" },
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-cov", specifier = ">=4.1.0" },
+    { name = "ruff", specifier = ">=0.1.0" },
 ]
 
 [[package]]

@@ -15,6 +15,7 @@ dependencies = [
     "legesher",
     "legesher-language-server",
     "legesher-mcp",
+    "legesher-runtime",
     "legesher-vs-code",
 ]
 readme = "README.md"
@@ -30,6 +31,7 @@ members = [
     "libs/legesher",
     "libs/language-server",
     "libs/mcp",
+    "libs/runtime",
     "libs/vs-code",
 ]
 
@@ -90,6 +92,7 @@ legesher-i18n-python-zh = { workspace = true }
 legesher = { workspace = true }
 legesher-language-server = { workspace = true }
 legesher-mcp = { workspace = true }
+legesher-runtime = { workspace = true }
 legesher-vs-code = { workspace = true }
 
 [dependency-groups]

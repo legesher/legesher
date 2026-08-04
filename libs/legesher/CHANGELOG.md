@@ -9,6 +9,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `legesher run` now renders **localized tracebacks**: uncaught exceptions
+  print with the traceback structure, exception type name, and error message
+  in the script's language (via the new `legesher-runtime` package). The
+  language comes from `.legesher/config.yml` as before, `--lang` overrides.
+  Messages the catalog does not know pass through untranslated, and any
+  rendering problem falls back to the previous traceback behavior. For
+  frames compiled from translated source, the traceback shows the native
+  source line and drops the fine-grained caret markers (their columns were
+  computed against the translated text; correct column re-mapping is a
+  tracked follow-up — no caret beats a wrong caret). [CORE-1679]
+
 ### Changed
 
 - **The CLI is now licensed under the Apache License 2.0, with no dual-license
