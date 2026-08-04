@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **mcp**: agent-session artifacts for localized code — the
+  `AGENTS-template.md` language-policy declaration (copy into a repo as
+  `AGENTS.md`; read by Codex, Cursor, Claude Code, Antigravity, Windsurf)
+  and the `legesher-localized-code` skill (Agent Skills format, portable
+  across Claude surfaces) carrying the stable playbook: canonical ↔ native
+  mental model, tool selection, write → round-trip → validate workflow,
+  and one-concept-one-term naming backed by a project glossary. The policy
+  file and skill are the declaration/playbook half; the server's
+  deterministic tools remain the guarantee.
 - **mcp**: new `legesher-mcp` package (`libs/mcp`, Apache-2.0) — the engine's
   translation capability as a Model Context Protocol stdio server, per the
   CORE-1165 architecture design. Five coarse tools (`translate_to_native`,

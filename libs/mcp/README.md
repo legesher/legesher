@@ -120,6 +120,29 @@ claude mcp add legesher -- uvx legesher-mcp
 }
 ```
 
+## Making agent sessions stay localized
+
+The server is the deterministic half; two shipped artifacts carry the
+policy and playbook half for agent sessions:
+
+- **`templates/AGENTS-template.md`** — the language-policy declaration.
+  Copy it into a repository root as `AGENTS.md`, fill in the declared
+  language, and every `AGENTS.md`-reading agent (Codex, Cursor, Claude
+  Code, Antigravity, Windsurf) picks up the same eight rules: write
+  natively, never hand-translate keywords, one-concept-one-term naming
+  via the project glossary, and the byte-identical round-trip guarantee.
+  The file is the *declaration*; long sessions evict rules files from
+  context, which is exactly why the deterministic tools — not the file —
+  are the *guarantee*.
+- **`skills/legesher-localized-code/`** — the stable-knowledge skill
+  ([Agent Skills](https://agentskills.io) format: portable across Claude
+  Code, Claude apps, and the API). It teaches the mental model
+  (canonical ↔ native, deterministic vs fuzzy layers), which tool to call
+  when, the write → round-trip → validate workflow, and the naming
+  discipline. Claude Code: copy the directory into your project's
+  `.claude/skills/`. Skills carry the *stable* playbook; the MCP server
+  stays the live surface — that split is deliberate.
+
 ## Privacy
 
 - **No telemetry.** The stdio server emits no events, pings, or metrics of

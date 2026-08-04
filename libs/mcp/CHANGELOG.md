@@ -11,6 +11,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Agent-session artifacts for localized code (CORE-1421, CORE-1422):
+  `templates/AGENTS-template.md` — the copy-into-your-repo `AGENTS.md`
+  language-policy declaration (eight rules: write natively, keywords only
+  through the deterministic tools, one-concept-one-term naming backed by a
+  project glossary table, and the byte-identical round-trip guarantee) —
+  and `skills/legesher-localized-code/SKILL.md`, the Agent Skills-format
+  stable-knowledge playbook (mental model, tool selection, the
+  write → round-trip → validate workflow, naming discipline, long-session
+  drift recovery). README section explains the split: the policy file and
+  skill are the declaration/playbook half, the server's deterministic
+  tools are the guarantee.
 - Initial Legesher MCP server package: the engine's translation capability
   as a Model Context Protocol stdio server, per the CORE-1165 architecture
   design (five coarse tools, resources over tool-shaped reads, engine facts
