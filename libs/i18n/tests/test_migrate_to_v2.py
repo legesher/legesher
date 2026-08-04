@@ -684,3 +684,55 @@ def test_unknown_pl_seeds_with_planned_status(v1_db: Path, tmp_path: Path) -> No
     ).fetchone()
     assert (row["name"], row["status"]) == ("Rust", "planned")
     conn.close()
+
+
+# ---------------------------------------------------------------------------
+# CORE-1679 -- the messages partition is NOT migrated, and that gap is loud
+# ---------------------------------------------------------------------------
+
+
+def _activate_and_seed_messages(v1: Path) -> None:
+    """Give the fixture the messages partition with one seeded row."""
+    conn = sqlite3.connect(v1)
+    conn.executescript(
+        """
+        CREATE TABLE message_templates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, implementation TEXT NOT NULL,
+            key TEXT NOT NULL, template_en TEXT NOT NULL, placeholders TEXT,
+            matcher TEXT, concept_id INTEGER, version_added TEXT,
+            version_removed TEXT
+        );
+        INSERT INTO message_templates (implementation, key, template_en)
+        VALUES ('cpython', 'ZeroDivisionError.division_by_zero', 'division by zero');
+        """
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_source_with_message_rows_is_refused_without_acknowledgement(
+    v1_db: Path, tmp_path: Path
+) -> None:
+    """The v2 build would silently start without the CORE-1679 message rows;
+    the migration must refuse rather than let that happen unnoticed."""
+    _activate_and_seed_messages(v1_db)
+    with pytest.raises(SystemExit, match="message_templates"):
+        migrate(v1_db, tmp_path / "v2.db", salt=SALT)
+    assert not (tmp_path / "v2.db").exists()  # refused BEFORE building
+
+
+def test_source_with_message_rows_proceeds_with_acknowledgement(
+    v1_db: Path, tmp_path: Path
+) -> None:
+    _activate_and_seed_messages(v1_db)
+    conn = _run(v1_db, tmp_path, acknowledge_message_rows_not_migrated=True)
+    # The v2 build's partition starts EMPTY (re-seed via seed_message_templates.py).
+    assert conn.execute("SELECT COUNT(*) FROM message_templates").fetchone()[0] == 0
+    conn.close()
+
+
+def test_source_without_message_partition_needs_no_acknowledgement(
+    v1_db: Path, tmp_path: Path
+) -> None:
+    conn = _run(v1_db, tmp_path)  # the pre-CORE-1679 shape keeps working
+    conn.close()

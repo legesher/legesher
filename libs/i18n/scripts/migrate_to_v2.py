@@ -40,9 +40,18 @@ The migration is additive and reversible in six steps:
    ``libs/i18n/canon/<locale>.toml`` (the PR-reviewable source of truth from then
    on).
 
-Every step reconciles row counts and prints the ledger. Nothing is dropped: a
-low-quality v1 translation becomes a low-quality *option*, which the corpus keeps
-by design and the canon refuses to ship (the CORE-1400 reframe).
+Every step reconciles row counts and prints the ledger. Nothing in the six
+steps is dropped: a low-quality v1 translation becomes a low-quality *option*,
+which the corpus keeps by design and the canon refuses to ship (the CORE-1400
+reframe).
+
+EXCEPTION — the messages partition (CORE-1679): message_templates /
+message_translations rows living in the operational v1 database (activated by
+activate_messages_partition.py) are NOT migrated by this script; a v2 build
+starts with the partition empty and must be re-seeded from the catalog seeds
+(seed_message_templates.py). To make that gap impossible to trip over
+silently, the migration REFUSES a source that carries message rows unless
+--acknowledge-message-rows-not-migrated is passed.
 
 Usage:
     LEGESHER_CONTRIBUTOR_SALT=<secret> \\
@@ -669,8 +678,27 @@ def _split_tag(tag: str) -> tuple[str, str | None, str | None]:
     return language, script, region
 
 
+def count_message_rows(src: sqlite3.Connection) -> int:
+    """message_templates rows in the source, 0 when the partition is absent.
+
+    The messages partition (CORE-1679) lives in the operational v1 database
+    but is NOT carried over by this migration -- a v2 build re-seeds it from
+    the catalog seed files. This counter powers the refusal that keeps that
+    gap loud instead of silent.
+    """
+    try:
+        return src.execute("SELECT COUNT(*) FROM message_templates").fetchone()[0]
+    except sqlite3.OperationalError:
+        return 0
+
+
 def migrate(
-    source: Path, target: Path, *, salt: str | None = None, publish: bool = False
+    source: Path,
+    target: Path,
+    *,
+    salt: str | None = None,
+    publish: bool = False,
+    acknowledge_message_rows_not_migrated: bool = False,
 ) -> Ledger:
     """Build a v2 database from a v1 database.
 
@@ -684,6 +712,10 @@ def migrate(
             secret, long, and permanent (:func:`require_publishable_salt`), and no
             contributor identity may still be unresolved. A warning is not enough
             for either -- both are unrecoverable once the corpus is out.
+        acknowledge_message_rows_not_migrated: The messages partition
+            (CORE-1679) is NOT carried over; a source carrying message rows is
+            refused unless this is True (re-seed the v2 build with
+            ``seed_message_templates.py`` afterwards).
 
     Returns:
         The reconciliation ledger.
@@ -700,6 +732,24 @@ def migrate(
 
     src = sqlite3.connect(f"file:{source}?mode=ro", uri=True)
     src.row_factory = sqlite3.Row
+
+    message_rows = count_message_rows(src)
+    if message_rows and not acknowledge_message_rows_not_migrated:
+        src.close()
+        raise SystemExit(
+            f"source database carries {message_rows} message_templates rows "
+            "(the CORE-1679 messages partition), which this migration does "
+            "NOT carry over -- the v2 build would silently start without "
+            "them. Re-run with --acknowledge-message-rows-not-migrated and "
+            "re-seed the v2 build via seed_message_templates.py "
+            "(db/seeds/*.json), or drop the partition from the source first."
+        )
+    if message_rows:
+        print(
+            f"NOTE: {message_rows} message_templates rows in the source are NOT "
+            "migrated (messages partition, CORE-1679). Re-seed the v2 build "
+            "with seed_message_templates.py."
+        )
 
     if publish:
         # Every one-way door is checked BEFORE the target exists. Checking
@@ -1234,6 +1284,15 @@ def main() -> int:
             "once the corpus is out."
         ),
     )
+    parser.add_argument(
+        "--acknowledge-message-rows-not-migrated",
+        action="store_true",
+        help=(
+            "proceed although the source carries CORE-1679 message_templates / "
+            "message_translations rows, which this migration does NOT carry "
+            "over; the v2 build must be re-seeded via seed_message_templates.py"
+        ),
+    )
     args = parser.parse_args()
 
     salt = args.contributor_salt or os.environ.get("LEGESHER_CONTRIBUTOR_SALT")
@@ -1247,7 +1306,13 @@ def main() -> int:
             "         --publish refuses it outright.\n"
         )
 
-    ledger = migrate(args.source, args.target, salt=salt, publish=args.publish)
+    ledger = migrate(
+        args.source,
+        args.target,
+        salt=salt,
+        publish=args.publish,
+        acknowledge_message_rows_not_migrated=args.acknowledge_message_rows_not_migrated,
+    )
     print("Migration ledger:")
     print(ledger.report())
     print()

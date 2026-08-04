@@ -27,6 +27,7 @@ from .language_registry import (
     is_rtl_language,
     is_supported_language,
 )
+from .messages import MessageRule, load_catalog, match_message
 from .pack_loader import LanguagePack, LanguagePackLoader
 from .schema_validator import (
     Finding,
@@ -49,6 +50,10 @@ __all__ = [
     # Prompt building
     "PromptBuilder",
     "StyleGuideLoader",
+    # Localized error-message catalog (CORE-1679)
+    "MessageRule",
+    "load_catalog",
+    "match_message",
     # Language registry
     "CANONICAL_LANGUAGE",
     "LANGUAGE_METADATA",

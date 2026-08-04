@@ -11,6 +11,39 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Localized error-message catalog goes live (CORE-1679).** The messages
+  partition (`message_templates` / `message_translations` /
+  `message_endorsements`) — shipped DEFERRED/inert with schema v2 — is now
+  active in the operational `translations.db`.
+  `scripts/activate_messages_partition.py` applies the partition's DDL read
+  back verbatim from `schema_v2.sql` (idempotent, additive-only), and the
+  database now carries a seeded CPython catalog: 55 templates (SyntaxError,
+  NameError, TypeError, AttributeError, Import/ModuleNotFound, Index/Key,
+  ValueError, ZeroDivision, Indentation/Tab, FileNotFound, Recursion,
+  UnboundLocal, StopIteration, KeyboardInterrupt, AssertionError families
+  plus the traceback structural strings) with anchored, named-group matchers
+  and version-tiered rewordings (`version_added`/`version_removed`; the 3.11
+  UnboundLocalError rewording and 3.12 suggestion messages are separate
+  rows), fully translated into Spanish and Arabic at `status='machine'` (110
+  translations, review-gated per the pack-correction policy). The seeder
+  gained matcher discipline (compile + anchoring + group/placeholder parity +
+  round-trip against the template's own example) and per-template version
+  tiers. New read API `legesher_i18n.messages.load_catalog(locale,
+  python_version)` returns compiled, SQLite-free rules with English fallback
+  and graceful degradation on databases without the partition;
+  `match_message` renders a localized message with slot values preserved.
+  The messages track stays excluded from the HF corpus one-way door;
+  publishing message translations remains gated on content-addressed keys.
+  Message matching is safe by construction: `match_message` takes an
+  exception-type scope (`key_prefix`), unscoped calls exclude catch-all
+  rules (`KeyError.key`), rule order is contractual (`ORDER BY id`, seed
+  order, more-specific suggestion rules first), and `load_catalog` opens
+  the database read-only (a missing path returns an empty catalog instead
+  of creating a stray file). Known v2-cutover gap, made loud:
+  `migrate_to_v2.py` does not carry message rows into a v2 build — it now
+  refuses a source carrying them unless
+  `--acknowledge-message-rows-not-migrated` is passed (the v2 build is then
+  re-seeded via `seed_message_templates.py`).
 - **Publish-build hardening for the HF corpus (CORE-1312).** The v1→v2
   migration is target-aware: concepts dedupe by slug across programming
   languages (python `break` + javascript `break` = one concept, per-PL

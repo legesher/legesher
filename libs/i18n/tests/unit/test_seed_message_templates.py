@@ -46,8 +46,10 @@ class TestSeedValidation:
         assert validate_seed(seed) == []
 
     def test_duplicate_keys_rejected(self, seed):
+        # Identity is (key, version_added) since CORE-1679: the same key may
+        # recur as a version-tiered rewording, but not within one tier.
         seed["templates"].append(dict(seed["templates"][0]))
-        assert any("duplicate key" in p for p in validate_seed(seed))
+        assert any("duplicate (key, version_added)" in p for p in validate_seed(seed))
 
     def test_placeholder_mismatch_rejected(self, seed):
         seed["templates"][0]["translations"]["ar"]["template"] = "بدون عناصر نائبة"
@@ -55,7 +57,9 @@ class TestSeedValidation:
 
     def test_stored_bidi_controls_rejected(self, seed):
         entry = seed["templates"][0]
-        entry["translations"]["ar"]["template"] = "⁨" + entry["translations"]["ar"]["template"] + "⁩"
+        entry["translations"]["ar"]["template"] = (
+            "⁨" + entry["translations"]["ar"]["template"] + "⁩"
+        )
         assert any("bidi" in p for p in validate_seed(seed))
 
 
@@ -84,7 +88,9 @@ class TestSeeding:
     def test_dry_run_writes_nothing(self, v2_db, seed):
         seed_database(v2_db, seed, dry_run=True)
         connection = sqlite3.connect(v2_db)
-        templates = connection.execute("SELECT COUNT(*) FROM message_templates").fetchone()[0]
+        templates = connection.execute(
+            "SELECT COUNT(*) FROM message_templates"
+        ).fetchone()[0]
         translations = connection.execute(
             "SELECT COUNT(*) FROM message_translations"
         ).fetchone()[0]

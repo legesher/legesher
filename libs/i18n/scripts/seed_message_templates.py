@@ -9,25 +9,37 @@ version_added), with per-locale translations entering at the ``machine``
 review rung.
 
 Read-only with respect to everything else: it INSERTs only into the two
-message tables, refuses to touch a database that already carries ANY row for
-the seed's ``(implementation, version_added)`` pair — deliberately stricter
-than per-key: partial prior seeds are ambiguous states — and never opens the
-operational v1 ``translations.db`` (the v2 file is a build artifact until the
-cutover gate passes).
+message tables and refuses to touch a database that already carries ANY row
+for one of the seed's ``(implementation, version_added)`` pairs —
+deliberately stricter than per-key: partial prior seeds are ambiguous states.
 
 Validation before any write:
-- identity keys unique within the seed;
+- identity keys unique within the seed — per ``(key, version_added)``, since a
+  reworded message is a NEW row under the same key (CORE-1679: CPython 3.12
+  rewordings must not invalidate 3.11's translations);
 - placeholder parity: every ``{name}`` used in the English template and each
   translation is declared in ``placeholders`` (after stripping ``{{ }}``
   escapes), and vice versa;
+- matcher discipline (when a template carries a ``matcher``): the regex
+  compiles, is anchored at both ends, its NAMED groups are exactly the
+  declared placeholders, and it round-trips its own English template — the
+  template rendered with the placeholder examples must fullmatch and give
+  every example back from its group;
 - stored templates carry no bidi control characters — isolation of
   interpolated values is a render-time concern (see the ratified
   code-vs-display policy), stored strings stay clean and reviewable;
-- every translation locale exists in ``locales`` (fail with instructions, do
-  not create locales as a side effect).
+- every translation locale exists in ``locales`` — or, on the operational v1
+  database (which predates ``locales``), in ``languages`` (fail with
+  instructions, do not create locales as a side effect).
+
+Since CORE-1679 the messages partition also lives in the operational
+``translations.db`` (activated by ``activate_messages_partition.py``); this
+seeder targets whichever database carries the partition. Per-template
+``version_added`` / ``version_removed`` override the seed-level default, so
+one catalog file can carry version-tiered rewordings.
 
 Usage:
-    python seed_message_templates.py --db path/to/translations_v2.db \
+    python seed_message_templates.py --db path/to/translations.db \
         [--seed path/to/seed.json] [--dry-run]
 """
 
@@ -36,6 +48,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -44,14 +57,27 @@ sys.path.insert(0, str(Path(__file__).parents[1]))
 from legesher_i18n.db.schema_v2 import connect  # noqa: E402
 
 DEFAULT_SEED = (
-    Path(__file__).parent.parent / "legesher_i18n" / "db" / "seeds" / "v8_jej_messages.json"
+    Path(__file__).parent.parent
+    / "legesher_i18n"
+    / "db"
+    / "seeds"
+    / "v8_jej_messages.json"
 )
 
 # Codepoints forbidden in STORED templates (render-time isolation only).
 FORBIDDEN_BIDI = {
-    0x2066, 0x2067, 0x2068, 0x2069,
-    0x202A, 0x202B, 0x202C, 0x202D, 0x202E,
-    0x200E, 0x200F, 0x061C,
+    0x2066,
+    0x2067,
+    0x2068,
+    0x2069,
+    0x202A,
+    0x202B,
+    0x202C,
+    0x202D,
+    0x202E,
+    0x200E,
+    0x200F,
+    0x061C,
 }
 
 PLACEHOLDER = re.compile(r"\{(\w+)\}")
@@ -63,13 +89,65 @@ def used_placeholders(template: str) -> set[str]:
     return set(PLACEHOLDER.findall(stripped))
 
 
+def render_example(template: str, placeholders: list[dict]) -> str:
+    """Substitute each declared placeholder's example into the template.
+
+    Literal replacement, NOT ``str.format``: templates may legitimately carry
+    stray braces (CPython's ``f-string: valid expression required before '}'``)
+    that ``str.format`` would choke on.
+    """
+    rendered = template
+    for p in placeholders:
+        rendered = rendered.replace("{" + p["name"] + "}", p["example"])
+    return rendered
+
+
+def validate_matcher(t: dict) -> list[str]:
+    """Matcher discipline for one template; empty list means valid."""
+    matcher = t.get("matcher")
+    if matcher is None:
+        return []
+    problems: list[str] = []
+    try:
+        rx = re.compile(matcher)
+    except re.error as exc:
+        return [f"{t['key']}: matcher does not compile: {exc}"]
+    if not matcher.startswith("^") or not matcher.endswith("$"):
+        problems.append(f"{t['key']}: matcher must be anchored (^...$): {matcher!r}")
+    declared = {p["name"] for p in t.get("placeholders", [])}
+    if set(rx.groupindex) != declared:
+        problems.append(
+            f"{t['key']}: matcher named groups {sorted(rx.groupindex)} "
+            f"!= declared placeholders {sorted(declared)}"
+        )
+        return problems
+    examples = {p["name"]: p["example"] for p in t.get("placeholders", [])}
+    rendered = render_example(t["template_en"], t.get("placeholders", []))
+    match = rx.fullmatch(rendered)
+    if match is None:
+        problems.append(
+            f"{t['key']}: matcher does not fullmatch its own rendered "
+            f"template_en example: {rendered!r}"
+        )
+    elif match.groupdict() != examples:
+        problems.append(
+            f"{t['key']}: matcher round-trip {match.groupdict()} != examples {examples}"
+        )
+    return problems
+
+
+def template_version_added(t: dict, seed: dict) -> str:
+    """A template's ``version_added``: its own, else the seed-level default."""
+    return t.get("version_added", seed["version_added"])
+
+
 def validate_seed(seed: dict) -> list[str]:
     """Returns a list of human-readable problems; empty means valid."""
     problems: list[str] = []
     templates = seed.get("templates", [])
-    keys = [t["key"] for t in templates]
-    for key in {k for k in keys if keys.count(k) > 1}:
-        problems.append(f"duplicate key in seed: {key}")
+    identities = [(t["key"], template_version_added(t, seed)) for t in templates]
+    for identity in {i for i in identities if identities.count(i) > 1}:
+        problems.append(f"duplicate (key, version_added) in seed: {identity}")
 
     for t in templates:
         declared = {p["name"] for p in t.get("placeholders", [])}
@@ -86,20 +164,56 @@ def validate_seed(seed: dict) -> list[str]:
             bad = [f"U+{ord(ch):04X}" for ch in text if ord(ch) in FORBIDDEN_BIDI]
             if bad:
                 problems.append(f"{t['key']}: {label} stores bidi controls {bad}")
+        problems.extend(validate_matcher(t))
     return problems
 
 
-def seed_database(db_path: Path, seed: dict, *, dry_run: bool = False) -> tuple[int, int]:
+def seed_database(
+    db_path: Path, seed: dict, *, dry_run: bool = False
+) -> tuple[int, int]:
     """Inserts the seed; returns (templates_inserted, translations_inserted)."""
     implementation = seed["implementation"]
-    version_added = seed["version_added"]
     templates = seed["templates"]
 
-    # schema_v2.connect() is the stated contract for every v2 consumer: it
-    # turns on foreign_keys AND recursive_triggers per-connection.
-    connection = connect(db_path)
+    def has_table(conn: sqlite3.Connection, name: str) -> bool:
+        return (
+            conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", (name,)
+            ).fetchone()
+            is not None
+        )
+
+    # A v2 build carries `locales` and gets the stated v2 connection contract
+    # (foreign_keys + recursive_triggers ON). The operational v1 file carries
+    # `languages` instead — its message-partition FK targets do not exist, so
+    # the connection must keep foreign_keys OFF (SQLite resolves FK targets at
+    # DML time) and locale validation happens against `languages` here.
+    probe = sqlite3.connect(db_path)
     try:
-        locales_needed = sorted({loc for t in templates for loc in t.get("translations", {})})
+        is_v2 = has_table(probe, "locales")
+        if not is_v2 and not has_table(probe, "languages"):
+            raise SystemExit(
+                f"{db_path} has neither `locales` (v2) nor `languages` (v1) — "
+                "not a translations database"
+            )
+        if not has_table(probe, "message_templates"):
+            raise SystemExit(
+                f"{db_path} does not carry the messages partition — run "
+                "activate_messages_partition.py first (v1) or rebuild the v2 artifact"
+            )
+    finally:
+        probe.close()
+
+    connection = connect(db_path) if is_v2 else sqlite3.connect(db_path)
+    locale_sql = (
+        "SELECT tag FROM locales WHERE tag IN ({})"
+        if is_v2
+        else "SELECT code FROM languages WHERE code IN ({})"
+    )
+    try:
+        locales_needed = sorted(
+            {loc for t in templates for loc in t.get("translations", {})}
+        )
         known: set[str] = set()
         if locales_needed:
             known = {
@@ -107,7 +221,7 @@ def seed_database(db_path: Path, seed: dict, *, dry_run: bool = False) -> tuple[
                 for row in connection.execute(
                     # Only the placeholder COUNT is interpolated; values are
                     # bound parameters.
-                    f"SELECT tag FROM locales WHERE tag IN ({','.join('?' * len(locales_needed))})",  # nosec B608
+                    locale_sql.format(",".join("?" * len(locales_needed))),  # nosec B608
                     locales_needed,
                 )
             }
@@ -119,30 +233,35 @@ def seed_database(db_path: Path, seed: dict, *, dry_run: bool = False) -> tuple[
                 "never creates locales as a side effect"
             )
 
-        existing = connection.execute(
-            "SELECT key FROM message_templates WHERE implementation = ? AND version_added = ?",
-            (implementation, version_added),
-        ).fetchall()
-        if existing:
-            raise SystemExit(
-                f"refusing to seed: {len(existing)} message_templates rows already exist "
-                f"for ({implementation}, version_added={version_added}) — the seeder is "
-                "append-once; revisions land as a new version_added"
-            )
+        versions_in_seed = sorted({template_version_added(t, seed) for t in templates})
+        for version in versions_in_seed:
+            existing = connection.execute(
+                "SELECT key FROM message_templates WHERE implementation = ? AND version_added = ?",
+                (implementation, version),
+            ).fetchall()
+            if existing:
+                raise SystemExit(
+                    f"refusing to seed: {len(existing)} message_templates rows already exist "
+                    f"for ({implementation}, version_added={version}) — the seeder is "
+                    "append-once; revisions land as a new version_added"
+                )
 
         inserted_templates = 0
         inserted_translations = 0
         for t in templates:
             cursor = connection.execute(
                 "INSERT INTO message_templates "
-                "(implementation, key, template_en, placeholders, version_added) "
-                "VALUES (?, ?, ?, ?, ?)",
+                "(implementation, key, template_en, placeholders, matcher, "
+                " version_added, version_removed) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (
                     implementation,
                     t["key"],
                     t["template_en"],
                     json.dumps(t.get("placeholders", []), ensure_ascii=False),
-                    version_added,
+                    t.get("matcher"),
+                    template_version_added(t, seed),
+                    t.get("version_removed"),
                 ),
             )
             inserted_templates += 1
@@ -166,15 +285,21 @@ def seed_database(db_path: Path, seed: dict, *, dry_run: bool = False) -> tuple[
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--db", type=Path, required=True, help="v2 database file to seed")
-    parser.add_argument("--seed", type=Path, default=DEFAULT_SEED, help="seed JSON file")
+    parser.add_argument(
+        "--db", type=Path, required=True, help="v2 database file to seed"
+    )
+    parser.add_argument(
+        "--seed", type=Path, default=DEFAULT_SEED, help="seed JSON file"
+    )
     parser.add_argument(
         "--dry-run", action="store_true", help="validate and simulate; write nothing"
     )
     args = parser.parse_args()
 
     if not args.db.exists():
-        raise SystemExit(f"database not found: {args.db} (build it with migrate_to_v2.py)")
+        raise SystemExit(
+            f"database not found: {args.db} (build it with migrate_to_v2.py)"
+        )
 
     seed = json.loads(args.seed.read_text(encoding="utf-8"))
     problems = validate_seed(seed)
@@ -185,9 +310,10 @@ def main() -> None:
 
     templates, translations = seed_database(args.db, seed, dry_run=args.dry_run)
     mode = "DRY RUN — rolled back" if args.dry_run else "committed"
+    versions = sorted({template_version_added(t, seed) for t in seed["templates"]})
     print(
         f"{mode}: {templates} message_templates + {translations} message_translations "
-        f"({seed['implementation']}, version_added={seed['version_added']})"
+        f"({seed['implementation']}, version_added={', '.join(versions)})"
     )
 
 

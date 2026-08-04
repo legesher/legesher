@@ -40,6 +40,7 @@ __all__ = [
     "CONCEPT_WIDE",
     "CONTRIBUTOR_TOKEN_LENGTH",
     "DEFAULT_CONTRIBUTOR_SALT",
+    "MESSAGE_PARTITION_TABLES",
     "MIN_PUBLISH_SALT_LENGTH",
     "SCHEMA_V2_PATH",
     "SEEDED_VALIDATOR_VERSION",
@@ -52,6 +53,7 @@ __all__ = [
     "contributor_id",
     "endorsement_uid",
     "expansion_uid",
+    "messages_partition_ddl",
     "normalize_surface_form",
     "option_uid",
     "read_schema_sql",
@@ -174,6 +176,54 @@ def apply_schema_v2(conn: sqlite3.Connection) -> None:
     conn.execute("PRAGMA recursive_triggers = ON")
     conn.executescript(read_schema_sql())
     conn.commit()
+
+
+#: The messages partition (CORE-1679): the three DEFERRED tables schema v2
+#: ships "created, inert". Error message STRINGS are sentences with grammar,
+#: not vocabulary, and they are explicitly EXCLUDED from the HF corpus one-way
+#: door — so activating them in the operational database is reversible.
+MESSAGE_PARTITION_TABLES = (
+    "message_templates",
+    "message_translations",
+    "message_endorsements",
+)
+
+
+def messages_partition_ddl() -> list[str]:
+    """DDL statements for the messages partition, verbatim from ``schema_v2.sql``.
+
+    Rather than re-declaring the three tables (and drifting), this applies the
+    full v2 schema to a throwaway in-memory database and reads back exactly the
+    objects — tables, indexes, triggers — that belong to the message tables from
+    ``sqlite_master``. The .sql file stays the single source of truth; callers
+    (``scripts/activate_messages_partition.py``) get statements they can apply
+    to a database that does not carry the rest of the v2 schema.
+
+    Note on foreign keys: ``message_translations.locale`` references
+    ``locales(tag)`` and ``message_templates.concept_id`` references
+    ``concepts(id)``. SQLite resolves FK targets at DML time, per connection —
+    on the operational v1 database (which has ``languages``, not ``locales``)
+    the partition's writers validate locales against ``languages`` themselves
+    and must not enable ``PRAGMA foreign_keys`` on their connection. The v2
+    build gets real enforcement for free.
+
+    Returns:
+        The CREATE statements in creation order (tables before their indexes
+        and triggers).
+    """
+    conn = sqlite3.connect(":memory:")
+    try:
+        apply_schema_v2(conn)
+        placeholders = ",".join("?" * len(MESSAGE_PARTITION_TABLES))
+        rows = conn.execute(
+            "SELECT sql FROM sqlite_master "  # nosec B608 - placeholder count only
+            f"WHERE tbl_name IN ({placeholders}) AND sql IS NOT NULL "
+            "ORDER BY rowid",
+            MESSAGE_PARTITION_TABLES,
+        ).fetchall()
+    finally:
+        conn.close()
+    return [row[0] for row in rows]
 
 
 def normalize_surface_form(surface_form: str) -> str:
