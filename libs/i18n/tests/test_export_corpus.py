@@ -710,10 +710,10 @@ def test_target_repo_gate(monkeypatch: pytest.MonkeyPatch) -> None:
     require_intended_target(DEFAULT_TARGET_REPO)  # canonical: no second key
     with pytest.raises(SystemExit, match="not the canonical"):
         require_intended_target("legesher/translation")  # the classic typo
-    monkeypatch.setenv(TARGET_OVERRIDE_ENV_VAR, "legesher/language-packs-staging")
+    monkeypatch.setenv(TARGET_OVERRIDE_ENV_VAR, "legesher/language-corpus-staging")
     with pytest.raises(SystemExit, match="not the canonical"):
         require_intended_target("legesher/translation")  # override must MATCH
-    require_intended_target("legesher/language-packs-staging")  # repeated: ok
+    require_intended_target("legesher/language-corpus-staging")  # repeated: ok
 
 
 # ---------------------------------------------------------------------------

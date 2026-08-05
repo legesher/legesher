@@ -7,7 +7,7 @@ This directory contains the foundation documents for creating high-quality Pytho
 ### [corpus-publish-runbook.md](./corpus-publish-runbook.md)
 
 The operator sequence for publishing the translations corpus to the private
-Hugging Face dataset (`legesher/language-packs`): salt escrow, the publish-grade
+Hugging Face dataset (`legesher/language-corpus`): salt escrow, the publish-grade
 v2 build, the dry export, and the multi-gated push.
 
 **Use this for:** Running or auditing the corpus publish (CORE-1312)

@@ -35,7 +35,7 @@ view, so a consumer can always reproduce the headline number from the rows.
 Usage:
     uv run python scripts/export_corpus.py --db build/translations_v2.db \\
                                            --out build/hf-corpus \\
-                                           [--target-repo legesher/language-packs] \\
+                                           [--target-repo legesher/language-corpus] \\
                                            [--push --governance-signoff CORE-1502]
 
 ``--push`` runs FOUR gates before the export writes anything, in order:
@@ -135,7 +135,7 @@ GOVERNANCE_TICKET = "CORE-1502"
 #: deliberate two-key turn.
 PUSH_ENV_VAR = "LEGESHER_HF_PUSH_APPROVED"
 
-DEFAULT_TARGET_REPO = "legesher/language-packs"
+DEFAULT_TARGET_REPO = "legesher/language-corpus"
 
 #: One SELECT per dataset config. Rules the SQL below obeys:
 #:
@@ -842,7 +842,7 @@ def push_to_hub(out_dir: Path, target_repo: str) -> None:
 
     Args:
         out_dir: The export directory (``data/*.parquet`` + ``README.md``).
-        target_repo: Dataset repo id, e.g. ``legesher/language-packs``.
+        target_repo: Dataset repo id, e.g. ``legesher/language-corpus``.
     """
     api = _require_hf_api()()
     # Private-first (CORE-1502 decision, 2026-07-14): the repo is created

@@ -207,7 +207,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   pass `validate_and_fix_context_docs.py` clean.
 - **HF corpus exporter — five-config Parquet + dataset card + reconciliation
   (CORE-1505).** `scripts/export_corpus.py` exports the v2 corpus to the
-  `legesher/language-packs` dataset as five Parquet configs (concepts, terms,
+  `legesher/language-corpus` dataset as five Parquet configs (concepts, terms,
   options, endorsements, contributors). The export is read-only over the v2
   DB and strips everything private by construction: `contributor_identities`,
   `build_meta`, the LLM `rationale` column, and all integer surrogate ids —

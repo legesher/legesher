@@ -1,4 +1,4 @@
-# Corpus publish runbook — `legesher/language-packs` (CORE-1312)
+# Corpus publish runbook — `legesher/language-corpus` (CORE-1312)
 
 > **Maintainer-only.** This is not a contributor workflow — it is the sequence
 > a repository maintainer with publish rights walks once, to create the corpus
@@ -86,7 +86,7 @@ No network library is touched. Review:
 huggingface-cli login        # or export HF_TOKEN=...
 LEGESHER_HF_PUSH_APPROVED=1 uv run python scripts/export_corpus.py \
     --db build/translations_v2.db --out build/hf-corpus \
-    --target-repo legesher/language-packs \
+    --target-repo legesher/language-corpus \
     --push --governance-signoff CORE-1502
 ```
 
@@ -94,7 +94,7 @@ Gate order, all BEFORE the export runs:
 
 1. `--governance-signoff CORE-1502` **and** `LEGESHER_HF_PUSH_APPROVED=1`
    (two keys; a typo cannot publish);
-2. intended target: a `--target-repo` other than `legesher/language-packs`
+2. intended target: a `--target-repo` other than `legesher/language-corpus`
    must be repeated verbatim in `LEGESHER_HF_TARGET_OVERRIDE` — a typo'd
    repo id cannot mint frozen keys against the wrong namespace;
 3. `build_meta` provenance: the DB must be a `--publish` build and its salt
