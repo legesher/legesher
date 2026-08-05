@@ -294,15 +294,26 @@ CONFIG_SCHEMA: dict[str, list[tuple[str, str]]] = {
 #: then this regex is the export-side floor.
 BCP47_WELL_FORMED = re.compile(r"^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$")
 
-#: The dataset card. YAML header first (configs + license placeholder), then
-#: the contract prose: what the corpus is, what is deliberately NOT in it, and
-#: why the counts are derivable. This file IS the public promise, so it states
-#: the privacy posture in full.
+#: The frontmatter line the rendered `language:` list is spliced in after. A
+#: named constant because it is a LOAD-BEARING anchor, not decoration: change
+#: the licence line without changing this and the card loses its language list.
+#: :func:`_splice` refuses rather than letting that ship.
+CARD_LICENSE_ANCHOR = "license: cc-by-4.0\n"
+
+#: The dataset card. YAML header first (configs + licence), then the contract
+#: prose: what the corpus is, what is deliberately NOT in it, why the counts are
+#: derivable, and what each provenance kind obliges a consumer (and us). This
+#: file IS the public promise, so it states the privacy posture in full and
+#: carries the upstream licence notices verbatim -- a summary of a retention
+#: clause does not satisfy it.
 DATASET_CARD = """\
 ---
-# License is a governance decision, not an engineering one: placeholder
-# pending CORE-1502 sign-off.
-license: other
+# CORE-1502, decided 2026-07-15. The MIT- and Apache-2.0-derived subsets do not
+# change the headline licence: both are permissive and allow inclusion in a
+# differently-licensed compilation, provided their notices are retained. That
+# retention is the Licence and attribution section below, and CC BY 4.0 governs
+# the COMPILATION -- it does not relicense the contributed parts.
+license: cc-by-4.0
 configs:
   - config_name: concepts
     data_files:
@@ -338,11 +349,11 @@ configs:
 
 A concept-centric corpus of reserved-word translations for programming
 languages: every candidate rendering ("option") of a programming-language
-concept in a human locale that anyone -- model, community member, maintainer,
-import, or literature -- ever offered, together with every endorsement a
-person attached to it. Options are keyed by content-addressed, stable uids
-(`opt_` + 24 hex), so the corpus survives database rebuilds and re-exports
-byte-identically.
+concept in a human locale that anyone -- Legesher, another open-source project,
+a community reviewer, or a model -- ever offered, together with every
+endorsement a person attached to it. Options are keyed by content-addressed,
+stable uids (`opt_` + 24 hex), so the corpus survives database rebuilds and
+re-exports byte-identically.
 
 Locales ride on `options.locale` as canonical-case BCP 47 tags; there is no
 separate locales config.
@@ -379,8 +390,9 @@ One candidate rendering of one concept in one locale: `option_uid`,
 (`identifier_valid`, `nfkc_stable`, `script_consistent`,
 `collides_en_keyword`, `min_interpreter_ok`, `validator_version`,
 `checked_at`; null when unvalidated); and `sources`, the distinct provenance
-kinds that attested the rendering (`model`, `community`, `maintainer`,
-`import`, `literature`).
+kinds that attested the rendering (`legesher`, `upstream`, `community`,
+`model` -- see [Licence and attribution](#licence-and-attribution) for what
+each one obliges).
 
 ### `endorsements`
 
@@ -415,14 +427,147 @@ source database's `endorsement_counts` view.
   moderation signal about words and the people who flagged them, kept private
   until CORE-1502 settles a publication policy for it.
 
-## Attribution
+## Licence and attribution
 
-The legacy community renderings originate from
-[legesher/legesher-translations](https://github.com/legesher/legesher-translations)
-(MIT, 149 contributors in its `.all-contributorsrc`). MIT permits relicensing
-but requires the copyright and permission notice be retained; this card
-carries that credit, and the affected rows are machine-identifiable in the
-source database's provenance.
+This dataset is released under **CC BY 4.0**. You may share and adapt it,
+including commercially, with attribution.
+
+Part of it comes from other open-source projects that carry their own terms.
+Those terms are reproduced below and travel with the data: CC BY 4.0 governs
+the **compilation**, and does not relicense the contributed parts.
+
+### What `options.sources` tells you
+
+Every row in the `options` config carries a `sources` list saying what kinds of
+source attested that rendering. The vocabulary is cut on one question -- *what
+do we owe for this?* -- so four values, four obligations:
+
+| `sources` value | What it means | What we owe |
+| --- | --- | --- |
+| `legesher` | Produced by the Legesher project: our own packs, curated corrections, values we composed from existing pack material | nothing beyond this licence |
+| `upstream` | Lifted from another open-source project | that project's notice and credit, below |
+| `community` | Offered by an individual through our native-review process | credit on request, withdrawal on request |
+| `model` | Generated by a language model | disclosure of which model, below |
+
+An option can carry more than one value: the same rendering is often proposed
+by a model and then independently attested by a reviewer. Counts per value are
+derivable -- `SELECT` over the `options` config -- and are deliberately not
+frozen into this card, for the same reason endorsement counts are not.
+
+Row-level detail beyond these four values is deliberately not published: the
+finer-grained provenance field carries reviewer labels that identify people,
+and no part of this dataset is a route from an opaque contributor id back to a
+person. That is also why the project names below live in this card rather than
+in a column -- the obligation is machine-visible (`upstream`), the identity of
+the upstream project is human-readable here.
+
+### Upstream projects
+
+**[legesher-translations](https://github.com/legesher/legesher-translations)**
+— MIT. 149 contributors are credited in that repository's
+[`.all-contributorsrc`](https://github.com/legesher/legesher-translations/blob/main/.all-contributorsrc),
+which stays the canonical roster and is deliberately not duplicated here: one
+place to be added to, one place to be removed from, and no stale copy.
+
+This is a Legesher repository (`Copyright (c) 2019 Legesher`), so retaining the
+notice is a commitment we are keeping to those 149 people, not an obligation
+someone else is holding us to. We would owe them the credit either way.
+
+```text
+MIT License
+
+Copyright (c) 2019 Legesher
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+**[UniversalPython](https://github.com/UniversalPython/UniversalPython)** —
+Apache License 2.0, Urdu renderings. Licensed under the Apache License,
+Version 2.0; you may obtain a copy of the License at
+<http://www.apache.org/licenses/LICENSE-2.0>. Unless required by applicable law
+or agreed to in writing, software distributed under the License is distributed
+on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+express or implied.
+
+> **Changes were made.** As Section 4(b) of the Apache License requires us to
+> state: these renderings were **adapted, not reproduced verbatim**. They were
+> normalised to our identifier conventions and re-keyed onto our concept slugs,
+> and some were subsequently superseded by other options in this corpus. Do not
+> read a rendering here as UniversalPython's own current form -- consult the
+> upstream project for that.
+
+**[Latino](https://github.com/lenguaje-latino/latino)** — MIT, Spanish
+renderings. Its `LICENSE.txt` is standard MIT despite GitHub's licence API
+reporting `NOASSERTION` (the API could not classify the file's formatting; the
+text itself is unambiguous).
+
+```text
+The MIT License (MIT)
+
+Copyright (c) 2015 - Latino
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+```
+
+### Community contributors
+
+Renderings marked `community` come from native speakers who reviewed and
+corrected our vocabulary. They are identified in the `contributors` config by
+an opaque, salted id -- never by name, handle, or email -- and that mapping is
+never published. A contributor may ask to be credited by name, or to be
+removed; either request is honoured without losing the endorsement itself, so
+the record of *what* was agreed survives a person's decision about *whether to
+be named*.
+
+### Machine-generated renderings
+
+Renderings marked `model` were produced by a language model:
+
+| Model | Licence |
+| --- | --- |
+| [Aya 101](https://huggingface.co/CohereLabs/aya-101) (Cohere For AI) | Apache-2.0 |
+| Claude (Anthropic) | outputs owned by the API customer |
+
+They are a starting point, not an endorsement. A machine-generated rendering
+carries no native-speaker attestation until one is recorded against it -- which
+is what the `endorsements` config is for, and why packs built from this corpus
+ship labelled experimental.
+
+Values we composed ourselves from existing pack material are `legesher`, not
+`model`: a human assembled them, and calling them `model` would overstate the
+machine's involvement.
 """
 
 
@@ -513,6 +658,49 @@ def _assert_no_forbidden_columns(pq: Any, data_dir: Path) -> None:
             )
 
 
+def _splice(card: str, anchor: str, text: str, *, before: bool) -> str:
+    """Insert ``text`` at ``anchor`` in the card, or REFUSE.
+
+    ``str.replace(..., 1)`` returns the string unchanged when the anchor is
+    missing, so an edit to :data:`DATASET_CARD` that moves an anchor silently
+    drops whatever it was splicing in -- and the export still succeeds, still
+    passes every gate, and ships a card missing its language list. That is a
+    published artifact quietly losing a section, which is worse than a build
+    that stops. So the anchor is required, and required to be unique.
+
+    Args:
+        card: The card template.
+        anchor: Text that must appear EXACTLY ONCE in ``card``.
+        text: What to insert.
+        before: Insert before the anchor rather than after it.
+
+    Returns:
+        The card with ``text`` spliced in.
+
+    Raises:
+        SystemExit: when the anchor is missing or ambiguous.
+    """
+    found = card.count(anchor)
+    if found != 1:
+        raise SystemExit(
+            f"DATASET_CARD anchor {anchor!r} appears {found} times, expected "
+            "exactly 1.\nThe card template and _render_dataset_card have drifted "
+            "-- fix the anchor rather\nthan letting the export ship a card with a "
+            "section silently missing."
+        )
+    return card.replace(anchor, (text + anchor) if before else (anchor + text), 1)
+
+
+def _splice_after(card: str, anchor: str, text: str) -> str:
+    """Insert ``text`` directly after ``anchor``. See :func:`_splice`."""
+    return _splice(card, anchor, text, before=False)
+
+
+def _splice_before(card: str, anchor: str, text: str) -> str:
+    """Insert ``text`` directly before ``anchor``. See :func:`_splice`."""
+    return _splice(card, anchor, text, before=True)
+
+
 def _render_dataset_card(conn: sqlite3.Connection) -> str:
     """The dataset card with the EXACT language list rendered from the DB.
 
@@ -543,12 +731,8 @@ def _render_dataset_card(conn: sqlite3.Connection) -> str:
     lines += [f"| {row['locale']} | {row['n']} |" for row in rows]
     section = "\n".join(lines) + "\n\n"
 
-    card = DATASET_CARD.replace(
-        "license: other\n", "license: other\n" + language_yaml, 1
-    )
-    return card.replace(
-        "## The corpus / canon split", section + "## The corpus / canon split", 1
-    )
+    card = _splice_after(DATASET_CARD, CARD_LICENSE_ANCHOR, language_yaml)
+    return _splice_before(card, "## The corpus / canon split", section)
 
 
 def _require_clean_data_dir(data_dir: Path) -> None:

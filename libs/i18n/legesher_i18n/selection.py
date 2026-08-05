@@ -38,9 +38,38 @@ from .schema_validator import LanguagePackSchema
 # Translation sources ordered from most to least trusted. Sources not in
 # this tuple rank below all listed sources. See
 # docs/translation-selection.md for the rationale per source.
+#
+# *** THIS IS THE v1 `translations.source` VOCABULARY. It is NOT the v2
+# `option_provenance.source` vocabulary, and the two must not be conflated. ***
+#
+# They answer different questions and are cut on different axes:
+#
+#   * THIS one ranks CREDIBILITY -- "whose word do we ship when two candidates
+#     both pass the gate?" It is fine-grained on purpose (`claude_agent` above
+#     `claude` above `aya`), internal, and free to grow as pipelines change.
+#   * The v2 one records OBLIGATION -- "what do we owe for this row?" -- in four
+#     values (`legesher` / `upstream` / `community` / `model`). It is PUBLIC: it
+#     ships as `options.sources` in the Hugging Face corpus, so it is cut coarse
+#     and stable rather than descriptive (CORE-1720).
+#
+# The overlap is where it misleads. `community` HERE is the v1 label on the
+# 2,169 rows lifted wholesale from legesher/legesher-translations -- another
+# repository's work, no individual author. In v2 those are `upstream`, and v2's
+# `community` means something narrower and newer: a named individual's own
+# assertion through the native-review process. Ranking them second here is
+# still right (a human wrote them); reading "community" as "our reviewers said
+# so" is not.
+#
+# Mapping, when you need to cross the boundary:
+#   community_review                                       -> community
+#   community                                              -> upstream
+#   yaml-import, yaml_pack, core-1318-fix, machine-composed -> legesher
+#   claude, claude_agent, aya                              -> model
+# The authoritative version lives in `scripts/migrate_to_v2.SOURCE_MAP`, which
+# refuses to migrate a source it has no bucket for.
 SOURCE_TRUST: tuple[str, ...] = (
     "community_review",  # outcome of a native-reviewer pass
-    "community",  # community-contributed value
+    "community",  # legesher-translations import (v2: `upstream`)
     "core-1318-fix",  # curated corrections from the CORE-1318 audit
     "machine-composed",  # curated machine composition (e.g. CORE-1317)
     "claude_agent",  # linguist-framed agent output

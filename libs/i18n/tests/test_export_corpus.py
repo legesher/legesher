@@ -154,7 +154,7 @@ def v2_db(tmp_path: Path) -> Path:
         [
             (OPT_TRUE_UR, "model", "aya", "aya-101", None),
             (OPT_TRUE_UR, "community", "zh_reviewer_review", None, CONTRIBUTOR_ALICE),
-            (OPT_TRUE_ZH, "import", "yaml_pack", None, None),
+            (OPT_TRUE_ZH, "legesher", "yaml_pack", None, None),
         ],
     )
     endorsement_rows = [
@@ -269,7 +269,7 @@ def test_options_carry_validations_and_aggregated_sources(exported: Path) -> Non
 
     # Two provenance kinds collapse into one sources list; detail stays home.
     assert options["sources"][by_uid[OPT_TRUE_UR]] == ["community", "model"]
-    assert options["sources"][by_uid[OPT_TRUE_ZH]] == ["import"]
+    assert options["sources"][by_uid[OPT_TRUE_ZH]] == ["legesher"]
     assert options["sources"][by_uid[OPT_FALSE_UR]] == []
 
     validated = by_uid[OPT_TRUE_UR]
@@ -401,7 +401,7 @@ def test_dataset_card_names_the_configs_and_the_governance_gate(
     for config in CONFIG_SQL:
         assert f"config_name: {config}" in card
         assert f"data/{config}.parquet" in card
-    assert "license: other" in card
+    assert "license: cc-by-4.0" in card
     assert "Private-first" in card
     assert "language:\n  - ur\n  - zh\n" in card  # exact primary-subtag rollup
     assert "| zh-Hans |" in card  # exact locale list, straight from options.locale

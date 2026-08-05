@@ -438,15 +438,43 @@ CREATE INDEX idx_options_lookup ON options(locale, concept_id);
 
 -- WHO/WHAT proposed this rendering, and why. Append-only, many per option.
 -- A model is a provenance, never a contributor: models propose, people endorse.
+--
+-- `source` IS PUBLIC: it is the only provenance column the corpus exports,
+-- aggregated per option into `options.sources`. `source_detail` is PRIVATE (it
+-- carries v1 reviewer labels containing real first names), so `source` alone
+-- has to be a useful public vocabulary, and it is cut on ONE question:
+--
+--     *** WHAT DO WE OWE FOR THIS ROW? ***
+--
+-- Obligation, not pipeline origin. That is what makes the vocabulary stable:
+-- a future row's bucket is decided by asking what it obliges us to do, not by
+-- which script happened to insert it. The predecessor vocabulary
+-- ('import' / 'community' / 'model' / 'maintainer' / 'literature') was cut on
+-- pipeline origin, and it hid two other projects' work inside a 13,650-row
+-- `import` grab-bag for months -- nothing in the published vocabulary said
+-- "someone else's licence applies here" (CORE-1720).
+--
+-- The two retired values fold in by obligation, not by deletion:
+--   * 'maintainer'  -> 'legesher' — a maintainer coinage is our own work; the
+--                      person is already recorded on the endorsement, and the
+--                      REVIEW RUNG 'maintainer' (review_rungs) is untouched.
+--   * 'literature'  -> 'upstream' — an established rendering taken from CS
+--                      pedagogy or a standards body owes that body a citation,
+--                      which is the `upstream` obligation. Name it in
+--                      `source_detail` / `import_sources`.
 CREATE TABLE option_provenance (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
     option_uid     TEXT NOT NULL REFERENCES options(uid) ON DELETE CASCADE,
     source         TEXT NOT NULL
-                   CHECK (source IN ('model',       -- aya, claude, nllb, ...
-                                     'community',   -- offered by a person
-                                     'maintainer',  -- coined by a maintainer
-                                     'import',      -- lifted from v1 packs/DB
-                                     'literature')),-- established CS pedagogy / standards body
+                   -- value      -- what it means                      -- what we owe
+                   CHECK (source IN
+                     ('legesher',   -- our own packs, curated             nothing beyond
+                                    -- corrections, compositions          the dataset licence
+                      'upstream',   -- lifted from another open-source    retain their notice,
+                                    -- project                           credit them
+                      'community',  -- offered by an individual through   credit on request,
+                                    -- our native-review process          withdrawal on request
+                      'model')),    -- machine-generated                  disclose which model
     source_detail  TEXT,                     -- 'aya', 'claude', 'yaml_pack', 'universal_python'
     model_version  TEXT,
     contributor_id TEXT REFERENCES contributors(id) ON DELETE SET NULL,
@@ -574,7 +602,7 @@ CREATE TABLE option_validations (
 --      NOT NULL, composite-FK'd to the option's concept + locale). Every shipped
 --      word is traceable to an offered option, its provenance, and its
 --      endorsements. A maintainer who wants a word nobody offered must first
---      add it as an option with source='maintainer'.
+--      add it as an option with source='legesher'.
 --   2. You may not ship an invalid identifier. The trigger rejects any option
 --      that fails identifier_valid / nfkc_stable. This is CORE-1400's real
 --      requirement: gate the SELECTION, not the corpus.
@@ -1132,9 +1160,10 @@ CREATE TABLE message_translations (
 
 -- REFERENCE: every non-human candidate stream, so license posture and
 -- attribution are data, not lore. `redistributable` gates whether terms from
--- this source may be STORED as options / exported in the Apache-2.0 corpus,
+-- this source may be STORED as options / exported in the CC BY 4.0 corpus,
 -- or only DISPLAYED as attributed references in the review kit.
--- option_provenance.source_detail carries this id for source='model'/'import'.
+-- option_provenance.source_detail carries this id for
+-- source='model' / source='upstream' (CORE-1720).
 CREATE TABLE import_sources (
     id              TEXT PRIMARY KEY,          -- 'model:aya-expanse-32b', 'initiative:hedy'
     kind            TEXT NOT NULL CHECK (kind IN ('model', 'initiative', 'dataset')),

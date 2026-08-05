@@ -48,7 +48,7 @@ For each `(term, language)` pair, in precedence order:
    | rank | source | why |
    |------|--------|-----|
    | 1 | `community_review` | outcome of a native-reviewer pass |
-   | 2 | `community` | community-contributed value |
+   | 2 | `community` | legesher-translations import — human-written, no named author |
    | 3 | `core-1318-fix` | curated corrections from the CORE-1318 audit |
    | 4 | `machine-composed` | curated machine composition (CORE-1317 style) |
    | 5 | `claude_agent` | linguist-framed agent output |
@@ -68,6 +68,50 @@ For each `(term, language)` pair, in precedence order:
    gate's `not_regenerated` finding blocks on the skip. Silent dropping
    or "best dirty value" fallbacks are forbidden either way: no partial
    pack ever reaches disk.
+
+## Two source vocabularies, and why they differ
+
+The rank-3 table above is the **v1 `translations.source`** vocabulary. The
+published corpus uses a *different*, four-value one — **v2
+`option_provenance.source`**, exported as `options.sources` on Hugging Face.
+They are easy to confuse because two names appear in both, so keep the axes
+straight:
+
+| | v1 `SOURCE_TRUST` | v2 provenance |
+| --- | --- | --- |
+| answers | *whose word do we ship?* (credibility) | *what do we owe for this row?* (obligation) |
+| audience | internal, selection only | **public** — it ships in the dataset |
+| shape | fine-grained, grows with the pipelines | four values, deliberately coarse and stable |
+| values | `community_review` … `aya` (9) | `legesher`, `upstream`, `community`, `model` |
+
+The trap is `community`. In **v1** it labels the 2,169 rows lifted wholesale
+from `legesher/legesher-translations` — another repository's work, with no
+individual author on the row. In **v2** those are `upstream`, and `community`
+means something narrower: a named individual's own assertion through the
+native-review process, carrying credit-on-request and withdrawal-on-request.
+Rank 2 is still the right *credibility* call — a human wrote them — but
+reading v1 `community` as "our reviewers said so" is wrong.
+
+Crossing the boundary:
+
+| v1 source | v2 provenance |
+| --- | --- |
+| `community_review` | `community` |
+| `community` | `upstream` |
+| `yaml-import`, `yaml_pack`, `core-1318-fix`, `machine-composed` | `legesher` |
+| `claude`, `claude_agent`, `aya` | `model` |
+
+`machine-composed` lands in `legesher`, not `model`: a human assembled those
+values from existing pack material, and `model` would overstate the machine's
+involvement.
+
+The authoritative mapping is `scripts/migrate_to_v2.SOURCE_MAP`, which
+**refuses to migrate a source it has no bucket for** rather than defaulting
+one. An obligation cannot be defaulted — every fallback picks a bucket, and
+the only bucket a fallback could pick without asserting something false about
+a stranger's work is the one claiming we authored it. That is precisely how
+`core-1318-fix` (87 rows) once rode a `.get(..., "import")` default into the
+grab-bag without anyone deciding it belonged there (CORE-1720).
 
 ## Enforcement points
 

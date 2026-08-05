@@ -6,7 +6,9 @@ Three properties, each of which is a one-way door once the corpus is published:
   first name; the `_old` twins are the words a review REJECTED and must never be
   endorsed; an ambiguous label is refused, never guessed at
 * **the salt** -- publish mode hard-fails on a salt that cannot safely be frozen
-* **the MIT obligation** -- the legacy rows carry their origin on the row
+* **the upstream obligation** -- rows that are another project's work say so in
+  the one provenance column that actually ships, and an unmapped source stops
+  the migration rather than defaulting into "we wrote this" (CORE-1720)
 
 The migration builds a NEW database and never writes to the v1 source, so these
 run against a synthetic v1 fixture rather than the real ``translations.db``.
@@ -22,6 +24,7 @@ import pytest
 
 from legesher_i18n.db.schema_v2 import (
     DEFAULT_CONTRIBUTOR_SALT,
+    apply_schema_v2,
     contributor_id,
     salt_fingerprint,
 )
@@ -29,8 +32,12 @@ from scripts.migrate_to_v2 import (
     CONTRIBUTOR_IDENTITY_MAP,
     LEGACY_COMMUNITY_SOURCE_DETAIL,
     NON_HUMAN_CREATED_BY,
+    PUBLIC_SOURCES,
+    SOURCE_MAP,
     SUPERSEDED_BY_REVIEW,
     SUPERSEDED_SOURCE_DETAIL,
+    UPSTREAM_PROJECTS,
+    classify_source,
     definition_from_brief,
     migrate,
     require_publishable_salt,
@@ -195,7 +202,7 @@ def test_a_word_the_reviewer_rejected_is_never_endorsed(
     ).fetchall()
     assert len(rejected) == 2
     for row in rejected:
-        assert row["source"] == "import"  # the PACK's word, not the reviewer's
+        assert row["source"] == "legesher"  # the PACK's word, not the reviewer's
         assert row["contributor_id"] is None  # she did not propose it
         # Neutral label, NOT the v1 `<name>_review_old` label: the label embeds
         # a first name and option_provenance is corpus-layer. The audit trail
@@ -250,9 +257,9 @@ def test_an_unknown_label_raises_rather_than_being_guessed_at() -> None:
         resolve_identity("some_new_reviewer_2027")
 
     # And the three classifications stay disjoint -- a label cannot be two things.
-    assert not (set(CONTRIBUTOR_IDENTITY_MAP) & NON_HUMAN_CREATED_BY)
+    assert not (set(CONTRIBUTOR_IDENTITY_MAP) & set(NON_HUMAN_CREATED_BY))
     assert not (set(CONTRIBUTOR_IDENTITY_MAP) & set(SUPERSEDED_BY_REVIEW))
-    assert not (set(SUPERSEDED_BY_REVIEW) & NON_HUMAN_CREATED_BY)
+    assert not (set(SUPERSEDED_BY_REVIEW) & set(NON_HUMAN_CREATED_BY))
     # Every superseded label points at a review that IS a known person.
     for displaced_by in SUPERSEDED_BY_REVIEW.values():
         assert CONTRIBUTOR_IDENTITY_MAP[displaced_by].resolved
@@ -265,7 +272,10 @@ def test_pipeline_labels_still_mint_no_endorsement(v1_db: Path, tmp_path: Path) 
         "SELECT p.source, p.source_detail, p.contributor_id FROM option_provenance p "
         "JOIN options o ON o.uid = p.option_uid WHERE o.surface_form = 'universal'"
     ).fetchone()
-    assert prov["source"] == "import"
+    # ANOTHER PROJECT's work -- Apache-2.0, and the whole point of CORE-1720:
+    # under the old cut this sat in `import` beside our own packs, so nothing
+    # in the PUBLISHED vocabulary said a third-party licence applied.
+    assert prov["source"] == "upstream"
     assert prov["source_detail"] == "universal_python"
     assert prov["contributor_id"] is None
     conn.close()
@@ -342,19 +352,114 @@ def test_publish_mode_succeeds_with_every_identity_resolved(
 
 
 # ---------------------------------------------------------------------------
-# FIX 3 -- the MIT obligation rides on the row
+# The PUBLIC source vocabulary is an obligation cut (CORE-1720)
 # ---------------------------------------------------------------------------
 
 
-def test_legacy_community_rows_carry_their_mit_provenance(
+def test_the_public_source_vocabulary_is_exactly_four_obligations() -> None:
+    """`source` ships in `options.sources`, so its vocabulary is a public promise.
+
+    Four values, four obligations. Anything else reaching the column means a
+    consumer is being told something we did not decide.
+    """
+    assert set(SOURCE_MAP.values()) <= PUBLIC_SOURCES
+    assert set(NON_HUMAN_CREATED_BY.values()) <= PUBLIC_SOURCES
+    # The schema is the floor, not the convention: it must refuse the retired
+    # vocabulary outright rather than trusting the migration to be careful.
+    db = sqlite3.connect(":memory:")
+    apply_schema_v2(db)
+    # FKs off so the CHECK is what fails, not a missing parent option.
+    db.execute("PRAGMA foreign_keys = OFF")
+    for retired in ("import", "maintainer", "literature"):
+        with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
+            db.execute(
+                "INSERT INTO option_provenance (option_uid, source) VALUES (?, ?)",
+                ("opt_" + "0" * 24, retired),
+            )
+    for kept in sorted(PUBLIC_SOURCES):
+        db.execute(
+            "INSERT INTO option_provenance (option_uid, source, source_detail) "
+            "VALUES (?, ?, 'x')",
+            ("opt_" + "0" * 24, kept),
+        )
+    db.close()
+
+
+def test_an_unknown_v1_source_stops_the_migration() -> None:
+    """An obligation cannot be defaulted.
+
+    Every silent fallback picks a bucket, and the only bucket a fallback could
+    pick without asserting something false about a stranger's work is the one
+    claiming we authored it. `core-1318-fix` (87 real rows) rode exactly that
+    default into the `import` grab-bag for months without anyone deciding it
+    belonged there.
+    """
+    with pytest.raises(SystemExit, match="Unknown v1 translation source"):
+        classify_source("some-new-pipeline-2027")
+
+    # The nine real v1 sources are all mapped, so the refusal only ever fires
+    # on something genuinely new.
+    assert classify_source("core-1318-fix") == "legesher"
+    assert classify_source("community") == "upstream"
+
+
+def test_an_unattributable_upstream_row_stops_the_build(
     v1_db: Path, tmp_path: Path
 ) -> None:
-    """The `community` rows came from legesher/legesher-translations (MIT, public).
+    """`upstream` without a project to name is an obligation with no discharge.
 
-    MIT permits relicensing but REQUIRES the copyright and permission notice be
-    retained. Recording the origin ON THE ROW is what makes that obligation
-    machine-visible -- a query, not folklore that survives only as long as the
-    person who remembers it. The dataset card must carry the attribution.
+    The legacy branch recognises the 2,169 legesher-translations rows *by their
+    NULL author*. A future `source='community'` row that carried an author would
+    fall through it, publish `upstream` -- "another project's licence applies
+    here" -- and name no project in the data or the card. Refuse instead.
+    """
+    conn = sqlite3.connect(v1_db)
+    conn.execute(
+        "INSERT INTO translations (term_id, language_code, translation, source, "
+        "created_by, created_at) VALUES (4, 'ur', 'stray', 'community', "
+        "'some_other_project', '2026-03-19T00:00:00')"
+    )
+    conn.commit()
+    conn.close()
+
+    with pytest.raises(SystemExit, match="Cannot attribute an `upstream` row"):
+        migrate(v1_db, tmp_path / "v2.db", salt=SALT)
+
+
+def test_every_upstream_label_has_a_credit_line() -> None:
+    """`upstream` without a project, licence and URL is an unpayable obligation.
+
+    The bucket exists so a human can write the credit; a label that classifies
+    as `upstream` but has no entry here would publish "someone else's licence
+    applies" while withholding whose.
+    """
+    upstream_labels = {
+        label for label, kind in NON_HUMAN_CREATED_BY.items() if kind == "upstream"
+    } | {LEGACY_COMMUNITY_SOURCE_DETAIL}
+    assert upstream_labels == set(UPSTREAM_PROJECTS)
+    for name, url, spdx in UPSTREAM_PROJECTS.values():
+        assert name and url.startswith("https://") and spdx
+
+
+# ---------------------------------------------------------------------------
+# FIX 3 -- the upstream obligation rides on the row
+# ---------------------------------------------------------------------------
+
+
+def test_legacy_community_rows_are_upstream_not_community(
+    v1_db: Path, tmp_path: Path
+) -> None:
+    """The v1 `community` rows came from legesher/legesher-translations (MIT).
+
+    They are `upstream`, NOT `community`, and the distinction is the point of
+    the whole vocabulary: what we owe here is another repository's notice, not
+    an individual's credit-and-withdrawal rights. Someone who asks to be removed
+    from `community` is exercising a right we granted them; a licence notice is
+    not ours to drop on request.
+
+    `source='upstream'` is what makes the obligation visible IN THE PUBLISHED
+    ARTIFACT -- `options.sources` ships, `source_detail` does not -- so the card
+    is where the project names and their notices live (CORE-1720).
     """
     conn = _run(v1_db, tmp_path)
     rows = conn.execute(
@@ -364,7 +469,7 @@ def test_legacy_community_rows_carry_their_mit_provenance(
     ).fetchall()
 
     assert len(rows) == 1  # the one `community` row in the fixture
-    assert rows[0]["source"] == "community"
+    assert rows[0]["source"] == "upstream"
     assert rows[0]["contributor_id"] is None  # no author, hence no endorsement
 
     # It is not a person: it mints no contributor and no endorsement.
@@ -377,7 +482,11 @@ def test_the_migration_reports_the_attribution_row_count(
 ) -> None:
     """The obligation is counted in the ledger, so it cannot be shipped unnoticed."""
     ledger = migrate(v1_db, tmp_path / "v2.db", salt=SALT)
-    assert ledger.counts["MIT-attributed rows"] == 1
+    assert ledger.counts["upstream-attributed rows"] == 2
+    # ...and it is broken out BY PROJECT, because a credit line cannot be
+    # written from an opaque total.
+    assert ledger.counts["  legesher-translations"] == 1
+    assert ledger.counts["  UniversalPython"] == 1
     assert ledger.counts["superseded-by-review rows"] == 2
     assert ledger.counts["endorsements"] == 3
 

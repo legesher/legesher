@@ -243,6 +243,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **BREAKING (corpus consumers): `options.sources` is now cut on obligation
+  (CORE-1720).** The published provenance vocabulary changes from
+  `import` / `community` / `model` / `maintainer` / `literature` to four
+  values — `legesher`, `upstream`, `community`, `model` — each answering
+  *what do we owe for this row?*: nothing beyond the dataset licence,
+  another project's notice and credit, an individual's credit-and-withdrawal
+  rights, or disclosure of which model. The old cut described which pipeline
+  inserted a row, which put our own packs, curated corrections and two other
+  open-source projects' work into one 13,650-row `import` bucket — so nothing
+  in the published vocabulary said a third-party licence applied. Two
+  reclassifications are worth knowing: the legacy `community` rows lifted from
+  `legesher/legesher-translations` are now `upstream` (a licence notice is not
+  ours to drop on request, which is what `community` implies), and
+  machine-*composed* values are `legesher` rather than `model` (a human
+  assembled them from existing pack material). The dataset card now carries the
+  verbatim upstream notices, an explicit "changes were made" statement for the
+  Apache-2.0 source, and the model disclosure; its licence is `cc-by-4.0`. An
+  unmapped source now stops the migration instead of defaulting into "we wrote
+  this". Nothing is republished by this change — it takes effect at the next
+  corpus export.
 - **Pack audit gates are now target-aware (CORE-1372).** `audit_packs.py` and
   `audit_collisions.py` gain a `--target` flag (default `python`) and no longer
   hard-code the `language-packs/python` path; the seven path-hard-coded tests
