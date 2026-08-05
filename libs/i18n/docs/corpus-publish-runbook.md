@@ -83,7 +83,8 @@ No network library is touched. Review:
 ## 3. The private push (double-keyed + provenance-verified)
 
 ```bash
-huggingface-cli login        # or export HF_TOKEN=...
+hf auth whoami               # already authenticated? then skip the login
+hf auth login                # or export HF_TOKEN=...
 LEGESHER_HF_PUSH_APPROVED=1 uv run python scripts/export_corpus.py \
     --db build/translations_v2.db --out build/hf-corpus \
     --target-repo legesher/language-corpus \
@@ -104,7 +105,12 @@ Gate order, all BEFORE the export runs:
    different sessions, re-read the salt into the environment first or the
    gate fails;
 4. Hub auth preflight (`whoami`) — an unauthenticated run fails before the
-   export, not mid-upload.
+   export, not mid-upload. It also confirms org membership: publishing to
+   `legesher/*` needs the account to be in that org, which is the one thing
+   a rehearsal against a personal namespace cannot prove.
+
+Note the CLI is `hf`, not `huggingface-cli` — the latter was renamed and no
+longer works. `hf auth login` replaces `huggingface-cli login`.
 
 The upload itself is allowlisted to exactly what the exporter writes
 (`README.md`, `reconciliation.json`, `data/*.parquet`) — a stray file in the
