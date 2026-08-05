@@ -1,4 +1,14 @@
-# Corpus publish runbook — `legesher/translations` (CORE-1312)
+# Corpus publish runbook — `legesher/language-packs` (CORE-1312)
+
+> **Maintainer-only.** This is not a contributor workflow — it is the sequence
+> a repository maintainer with publish rights walks once, to create the corpus
+> dataset. Nothing here is required to build Legesher, run the test suite, or
+> contribute a translation. If you are looking for how to contribute, start
+> with `CONTRIBUTING.md`.
+>
+> It is published openly on purpose: the gates below are the technical basis
+> for the consent and privacy commitments the dataset card makes, and those
+> claims should be auditable rather than taken on trust.
 
 The operator sequence from the working v1 database to the PRIVATE Hugging
 Face corpus dataset. Every one-way door has a blocking gate in code; this
@@ -20,19 +30,24 @@ the first push it can never change without forking every contributor id.
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Store it in a secret manager AND a backup location. It is never committed,
-never rotated. Every gate below verifies against its fingerprint
-(`schema_v2.salt_fingerprint`, `sha256(salt)[:16]`).
+It is never committed and never rotated. Store it durably in at least two
+independent places before building anything — the escrow procedure itself is
+maintainer-operational and is recorded on CORE-1502, not here.
+
+Every gate below verifies against its **fingerprint**
+(`schema_v2.salt_fingerprint`, `sha256(salt)[:16]`) rather than the salt
+itself, so provenance can be checked without any step handling the secret.
+Note the fingerprint is a key-check value only — it is not the contributor-id
+formula above, and it never leaves the private `build_meta` table.
 
 ## 1. Build the publish-grade v2 database
 
 ```bash
 cd libs/i18n
 # NEVER paste the salt on a command line or in a plain `export` — it lands in
-# shell history and `ps`, and this secret can never be rotated. Read it
-# without echo, or pull it straight from the secret manager:
+# shell history and in `ps`, and this secret can never be rotated. Read it
+# without echo (or pipe it in from your secret manager's CLI):
 read -rs LEGESHER_CONTRIBUTOR_SALT && export LEGESHER_CONTRIBUTOR_SALT
-#   (or: export LEGESHER_CONTRIBUTOR_SALT="$(op read 'op://vault/item/salt')")
 # The --contributor-salt CLI flag must NOT be used for the real salt (argv is
 # visible to every process on the machine).
 uv run python scripts/migrate_to_v2.py \
@@ -71,7 +86,7 @@ No network library is touched. Review:
 huggingface-cli login        # or export HF_TOKEN=...
 LEGESHER_HF_PUSH_APPROVED=1 uv run python scripts/export_corpus.py \
     --db build/translations_v2.db --out build/hf-corpus \
-    --target-repo legesher/translations \
+    --target-repo legesher/language-packs \
     --push --governance-signoff CORE-1502
 ```
 
@@ -79,12 +94,15 @@ Gate order, all BEFORE the export runs:
 
 1. `--governance-signoff CORE-1502` **and** `LEGESHER_HF_PUSH_APPROVED=1`
    (two keys; a typo cannot publish);
-2. intended target: a `--target-repo` other than `legesher/translations`
+2. intended target: a `--target-repo` other than `legesher/language-packs`
    must be repeated verbatim in `LEGESHER_HF_TARGET_OVERRIDE` — a typo'd
    repo id cannot mint frozen keys against the wrong namespace;
 3. `build_meta` provenance: the DB must be a `--publish` build and its salt
    fingerprint must match `$LEGESHER_CONTRIBUTOR_SALT` in the pushing shell
-   — a dev-salt or wrong-salt artifact is refused in code, not by checklist;
+   — a dev-salt or wrong-salt artifact is refused in code, not by checklist.
+   Note this reads the *pushing* shell: if the build and the push happen in
+   different sessions, re-read the salt into the environment first or the
+   gate fails;
 4. Hub auth preflight (`whoami`) — an unauthenticated run fails before the
    export, not mid-upload.
 

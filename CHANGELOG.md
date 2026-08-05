@@ -113,7 +113,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   translations become 11,335 options plus 16,710 provenance rows, with
   `translations.db` unchanged (MD5 verified). [CORE-1501]
 - **i18n**: HF corpus exporter. `scripts/export_corpus.py` renders a v2
-  database into the five Parquet configs of the `legesher/translations`
+  database into the five Parquet configs of the `legesher/language-packs`
   dataset — `concepts`, `terms`, `options`, `endorsements`, `contributors` —
   plus a dataset card and a `reconciliation.json` ledger. It reads the corpus
   layer only: `canon_selections` and `contributor_identities` are excluded
