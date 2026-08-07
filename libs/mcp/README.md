@@ -65,6 +65,10 @@ Inside the monorepo workspace all 51 packs are already installed:
 uv run legesher-mcp
 ```
 
+The server is quiet by default (log level WARNING). For troubleshooting,
+set `LEGESHER_MCP_LOG_LEVEL` (`DEBUG`, `INFO`, `WARNING`, `ERROR`,
+`CRITICAL`); unrecognized values fall back to the quiet default.
+
 ## Client configuration
 
 ### Claude Desktop

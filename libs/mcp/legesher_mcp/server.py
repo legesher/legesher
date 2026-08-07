@@ -20,13 +20,15 @@ telemetry of any kind.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import asdict
-from typing import Annotated
+from typing import Annotated, Literal, cast
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 from pydantic import Field
 
+from . import __version__
 from .engine import (
     CATEGORIES,
     LANG_CODE_PATTERN,
@@ -65,7 +67,25 @@ legesher://languages/{lang}/terms. X→Y translation pivots through English
 (results say so via `pivoted`). Everything runs locally: no network, no
 telemetry."""
 
-mcp = FastMCP("legesher", instructions=_INSTRUCTIONS)
+_LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+
+
+def _log_level_from_env() -> _LogLevel:
+    """Log level from LEGESHER_MCP_LOG_LEVEL; quiet (WARNING) by default.
+
+    An unset or unrecognized value must never stop the server from
+    booting, so anything invalid falls back to the default.
+    """
+    raw = os.environ.get("LEGESHER_MCP_LOG_LEVEL", "").strip().upper()
+    if raw in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
+        return cast(_LogLevel, raw)
+    return "WARNING"
+
+
+mcp = FastMCP("legesher", instructions=_INSTRUCTIONS, log_level=_log_level_from_env())
+# The SDK's FastMCP (1.28) has no version passthrough, and the low-level
+# server otherwise reports the SDK's own package version in initialize.
+mcp._mcp_server.version = __version__
 
 # Reusable parameter annotations -----------------------------------------
 

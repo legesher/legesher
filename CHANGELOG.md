@@ -207,6 +207,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **mcp**: the stdio server now identifies itself truthfully and quietly —
+  the MCP `initialize` handshake reports `legesher-mcp`'s own package version
+  instead of the SDK's [CORE-1737], and the default log level is WARNING so a
+  normal session writes nothing to stderr; set `LEGESHER_MCP_LOG_LEVEL`
+  (DEBUG…CRITICAL) to restore verbose logging for troubleshooting [CORE-1738].
 - **i18n**: the v2 canon gate was wrong in both directions — it refused 25
   legitimate Thai SARA-AM selections and every locale's `except*`, while
   passing 12 of 15 mixed-script confusables. Three corrections in
