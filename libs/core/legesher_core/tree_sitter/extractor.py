@@ -378,7 +378,7 @@ class TranslatableExtractor:
             return
 
         # Detect if this is a docstring (first expr statement in func/class/module body)
-        is_docstring = self._is_docstring(node)
+        is_docstring = self.is_docstring(node)
 
         # Detect quote style and prefix
         quote_style, prefix = self._parse_string_delimiters(text)
@@ -508,7 +508,7 @@ class TranslatableExtractor:
             return
 
         # Determine the identifier's role based on parent node
-        role = self._determine_role(node)
+        role = self.determine_role(node)
 
         # Detect naming convention
         naming_convention = self._detect_naming_convention(text)
@@ -548,8 +548,13 @@ class TranslatableExtractor:
 
     # --- Helper methods ---
 
-    def _is_docstring(self, string_node) -> bool:
-        """Check if a string node is a docstring (first expr in body)."""
+    def is_docstring(self, string_node) -> bool:
+        """Check if a string node is a docstring (first expr in body).
+
+        Public API: the register-map builder
+        (``legesher_core.register_map.builder``) relies on this to split
+        ``docstring`` from ``string`` in the element-class taxonomy.
+        """
         parent = string_node.parent
         if parent is None or parent.type != "expression_statement":
             return False
@@ -582,8 +587,14 @@ class TranslatableExtractor:
             parent = parent.parent
         return False
 
-    def _determine_role(self, node) -> IdentifierRole:
-        """Determine the identifier's role based on its position in the AST."""
+    def determine_role(self, node) -> IdentifierRole:
+        """Determine the identifier's role based on its position in the AST.
+
+        Public API: the register-map builder
+        (``legesher_core.register_map.builder``) uses this for identifiers
+        the extractor itself skips (dunders, reserved words, stdlib
+        imports) so every entry still carries a role.
+        """
         parent = node.parent
         if parent is None:
             return "other"

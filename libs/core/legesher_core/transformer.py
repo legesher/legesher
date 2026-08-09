@@ -9,8 +9,12 @@ import io
 import logging
 import sys
 import tokenize
+import unicodedata
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING:
+    from .register_map.model import RegisterMap
 
 from .cultural_comments import CulturalCommentParser
 from .exceptions import InvalidCodeError
@@ -160,14 +164,17 @@ class TokenTranslator:
             - Incomplete code is handled gracefully (translates valid portion)
             - Syntax errors return original code unchanged
         """
+        # Normalize line endings for consistent processing. Done BEFORE the
+        # empty/whitespace-only early return so every rendering this method
+        # hands back — including pass-throughs — is LF-normalized and can
+        # never disagree with the register map's rendering (CORE-1160).
+        source_code = normalize_newlines(source_code)
+
         # Handle empty input
         if not source_code or not source_code.strip():
             if return_metadata:
                 return source_code, CulturalCommentMetadata()
             return source_code
-
-        # Normalize line endings for consistent processing
-        source_code = normalize_newlines(source_code)
 
         try:
             # Tokenize the source code
@@ -191,8 +198,19 @@ class TokenTranslator:
 
                 # Check if this is a NAME token (keyword, builtin, or identifier)
                 if tok.type == tokenize.NAME:
+                    # Table lookups use the NFC form (compare-NFC contract,
+                    # see unicode_guard): a canonically equivalent rendering
+                    # of a keyword/builtin translates identically, and the
+                    # emitted register map (entry text stored NFC) records
+                    # exactly what this path does. ASCII fast path skips the
+                    # normalization cost on the hot path.
+                    lookup = (
+                        tok.string
+                        if tok.string.isascii()
+                        else unicodedata.normalize("NFC", tok.string)
+                    )
                     # Check for compound keyword: NAME + OP("*") → e.g., "except*"
-                    compound_key = f"{tok.string}*"
+                    compound_key = f"{lookup}*"
                     compound_val = self.mapper.get_keyword(compound_key)
                     if (
                         compound_val
@@ -215,7 +233,7 @@ class TokenTranslator:
                         continue
 
                     # Try to translate as keyword first
-                    translated = self.mapper.get_keyword(tok.string)
+                    translated = self.mapper.get_keyword(lookup)
                     if translated and translated != tok.string:
                         # Create new token only when translation changes the string
                         new_tok = tokenize.TokenInfo(
@@ -226,7 +244,7 @@ class TokenTranslator:
                         continue
 
                     # Try to translate as builtin
-                    translated = self.mapper.get_builtin(tok.string)
+                    translated = self.mapper.get_builtin(lookup)
                     if translated and translated != tok.string:
                         # Create new token only when translation changes the string
                         new_tok = tokenize.TokenInfo(
@@ -241,7 +259,7 @@ class TokenTranslator:
                     # all pre-CORE-710 ones) don't pass reserved_word_map, and
                     # the extra dict.get() costs ~6% on the hot path otherwise.
                     if reserved_word_map := self.mapper.reserved_word_map:
-                        translated = reserved_word_map.get(tok.string)
+                        translated = reserved_word_map.get(lookup)
                         if translated and translated != tok.string:
                             new_tok = tokenize.TokenInfo(
                                 tok.type,
@@ -286,6 +304,126 @@ class TokenTranslator:
             # Catch-all for unexpected errors
             logger.error(f"Translation failed unexpectedly: {e}")
             raise InvalidCodeError(f"Failed to translate code: {e}") from e
+
+    def translate_code_with_map(
+        self,
+        source_code: str,
+        source_lang: str = "en",
+        target_lang: str = "es",
+        register_map: "RegisterMap | None" = None,
+        file: str | None = None,
+    ) -> tuple[str, "RegisterMap"]:
+        """Translate code AND emit the node-keyed register map (CORE-1662 f).
+
+        Opt-in companion to :meth:`translate_code` for CLI/git-filter runs
+        that want to persist classification. The deterministic token path
+        is unchanged; the register map is produced by running the existing
+        tree-sitter classification (``register_map.builder``) alongside it
+        on the same source — reusing the extractor's node identity rather
+        than re-teaching the tokenizer. The emitted map satisfies the same
+        completeness invariant as a directly built one.
+
+        The map describes the SOURCE rendering the translator saw (after
+        CRLF normalization, per CORE-1160): entry text is source-language,
+        NFC-normalized. Deterministic translations are recorded from the
+        same tables ``translate_code`` uses, keyed by each entry's element
+        class: ``keyword``/``builtin`` entries and reserved-word
+        identifiers get ``translations[target_lang]``. The record is
+        refreshed on every call as a function of the entry's CURRENT
+        ``original_text`` — a stale value left behind by a re-anchor (the
+        entry's text changed while its ID survived) is cleared, never
+        kept. (Compound forms such as ``except*`` record the base token's
+        translation; the trailing ``*`` is a separate ``other`` entry.)
+
+        Warning:
+            For names that shadow a keyword or builtin at a binding site
+            (``print = 5``, ``def match(case)``) the two layers of the
+            returned pair disagree by design: the context-free token path
+            still rewrites the name in the translated OUTPUT (CORE-704
+            family — the deterministic translator mistranslates shadowed
+            names), while the map's context-aware classification correctly
+            records the entry as an ``identifier`` with NO deterministic
+            translation. The map's classification is authoritative; the
+            divergence classes are pinned in
+            ``tests/register_map/test_conformance.py``.
+
+        Requires the ``treesitter`` extra (imported lazily, so plain
+        :meth:`translate_code` keeps working on minimal installs; without
+        the extra this method raises the ImportError naming it).
+
+        Args:
+            source_code: Python source code to translate.
+            source_lang: Language of ``source_code`` (recorded on a newly
+                built map).
+            target_lang: Target language for the deterministic translation.
+            register_map: Existing map to reconcile against (node IDs are
+                preserved per the stability contract). When ``None``, a
+                fresh map is built and IDs are minted.
+            file: Optional file path recorded on a newly built map.
+
+        Returns:
+            ``(translated_code, register_map)``. ``translated_code`` is
+            byte-identical to what :meth:`translate_code` returns; the map
+            is reconciled in place when one was passed in.
+        """
+        # Lazy import via the package's PEP 562 re-exports (NOT the builder
+        # module directly) so a missing tree-sitter extra surfaces as the
+        # friendly ImportError naming `legesher-core[treesitter]` instead
+        # of a raw ModuleNotFoundError. The default translate path stays
+        # importable without the extra.
+        from .register_map import build_register_map, update_register_map
+
+        translated = cast(
+            str,
+            self.translate_code(source_code, source_lang, target_lang),
+        )
+        # The map describes what the translator saw: the LF-normalized
+        # rendering (normalize_newlines is also translate_code's first step).
+        normalized = normalize_newlines(source_code)
+        if register_map is None:
+            register_map = build_register_map(
+                normalized, self.mapper, source_lang=source_lang, file=file
+            )
+        else:
+            update_register_map(register_map, normalized, self.mapper)
+
+        # Record what the deterministic path translates, per its tables.
+        # Entry text is stored NFC and translate_code also looks tables up
+        # via NFC (compare-NFC contract), so the two layers agree on every
+        # lookup. The record must be a function of the CURRENT
+        # original_text: on a table miss, a previously recorded value is a
+        # stale leftover from a re-anchor (reconcile keeps translations
+        # while refreshing the text) and is cleared.
+        reserved_word_map = self.mapper.reserved_word_map
+        reserved_values = frozenset(reserved_word_map.values())
+        for entry in register_map.entries.values():
+            translation: str | None = None
+            deterministic_owned = False
+            if entry.element_class == "keyword":
+                translation = self.mapper.get_keyword(entry.original_text)
+                deterministic_owned = True
+            elif entry.element_class == "builtin":
+                translation = self.mapper.get_builtin(entry.original_text)
+                deterministic_owned = True
+            elif entry.element_class == "identifier" and reserved_word_map:
+                translation = reserved_word_map.get(entry.original_text)
+                # Reserved-word records are the ONLY identifier translations
+                # this layer owns — identifier-layer translations (LLM /
+                # IdentifierMap) must survive re-emission. A stale reserved
+                # record is recognizable by its value: IdentifierMap.add
+                # validates against the pack, so an identifier-layer
+                # translation can never equal a reserved-word value.
+                # (Entry-level provenance arrives with the map-correction
+                # workflow; this value check is the interim discriminator.)
+                deterministic_owned = (
+                    translation is not None
+                    or entry.translations.get(target_lang) in reserved_values
+                )
+            if translation:
+                entry.translations[target_lang] = translation
+            elif deterministic_owned:
+                entry.translations.pop(target_lang, None)
+        return translated, register_map
 
     def translate_file(self, file_path: Path, target_lang: str) -> str:
         """Translate a Python file to target language.
