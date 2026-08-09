@@ -11,6 +11,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Showcase example transpile gate (CORE-1403).**
+  `scripts/validate_showcase_examples.py` verifies every preview-repo
+  showcase `hello_world.py` against its shipped Python pack: the example
+  must reverse-translate to canonical English through the engine
+  (`create_translator_from_language_pack` + `reverse()`, the GitFilter
+  construction) and the result must `ast.parse`. Any regressed language
+  exits non-zero. Examples root resolves from `--examples-root`, then
+  `LEGESHER_PREVIEW_ROOT`, then the sibling `../preview-repo`
+  checkout; contributors without the checkout are never blocked (the
+  pre-commit hook `validate-showcase-examples` runs
+  `--skip-if-missing --quiet` on pack-file changes). Coverage gaps —
+  examples without a pack, packs without an example — report as
+  warnings, with `--strict-coverage` promoting missing examples to
+  failures.
+
 - **"Packs are data, not code" contract enforcement (CORE-1453).** New
   `legesher_i18n.data_contract` module and
   `enforce_data_contract` gate (pre-commit hook

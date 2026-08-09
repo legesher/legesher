@@ -21,6 +21,7 @@ listed under the table.
 | Style guides | `libs/i18n/legesher_i18n/scripts/validate_style_guides.py` | Style-guide schema violations; drift between guides' derived flags and `legesher_i18n/languages.json` | pre-commit hook `validate-style-guides` | Blocking |
 | Regen integrity | `libs/i18n/scripts/verify_pack_regen.py` | Regen-vs-shipped diff classes (`value_changed`, `key_added`, `key_removed`, `unknown_section`, `not_regenerated`, ...) — proves DB→YAML regeneration is safe (CORE-1400) | Manual ritual; wired into nothing — run before any pack regeneration | Blocking by convention |
 | Untranslated terms | `libs/i18n/scripts/translate/find_untranslated.py` | Pack entries whose translation equals the source term (key == value), net of the intentional-loanword allowlist | pre-commit hook `find-untranslated-terms` (changed pack files) | **Report-only for now** (`--warn-only`); flips strict when pending triage below clears |
+| Showcase examples | `libs/i18n/scripts/validate_showcase_examples.py` | Pack edits that break the preview-repo `hello_world.py` showcase: each example must reverse-translate to canonical English via its pack (`create_translator_from_language_pack` + `reverse()`) and `ast.parse`; coverage gaps (example↔pack) reported as warnings (`--strict-coverage` promotes missing examples to failures) (CORE-1403) | pre-commit hook `validate-showcase-examples` (changed pack files; skips with a notice when no preview checkout) | **Report-only for now** (`--warn-only`); 11 pre-existing example regressions pending (2026-08-04: ar da fr hi ja no pl si sv th vi) — flips strict when that list clears |
 | Native review | Human process (intake design: CORE-1538, endorse/pass/flag) | Semantic quality, loanword judgment, everything mechanical gates cannot see | Manual ritual, async | Not a merge blocker (mechanical gates are the floor) |
 
 Local commands (repo root unless noted):
@@ -33,6 +34,7 @@ cd libs/i18n && uv run python -m legesher_i18n.scripts.enforce_data_contract   #
 cd libs/i18n && uv run python -m legesher_i18n.scripts.validate_style_guides
 uv run python libs/i18n/scripts/verify_pack_regen.py                 # before any regen
 uv run python libs/i18n/scripts/translate/find_untranslated.py       # untranslated terms
+uv run python libs/i18n/scripts/validate_showcase_examples.py        # showcase examples (needs preview-repo checkout)
 ```
 
 ## Untranslated-terms gate detail

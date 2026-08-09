@@ -146,6 +146,19 @@ repos:
     name: Update Pack README Counts
     pass_filenames: false
 
+  # Showcase example transpile check (CORE-1403): every preview-repo
+  # hello_world.py must reverse-translate through its pack and ast.parse.
+  # --skip-if-missing: contributors without the preview checkout aren't blocked.
+  # --warn-only: 11 pre-existing example regressions at gate introduction
+  # (2026-08-04 run: ar da fr hi ja no pl si sv th vi); drop the flag once
+  # that list clears — same flip ritual as find-untranslated-terms.
+  - entry: uv run python libs/i18n/scripts/validate_showcase_examples.py --skip-if-missing --warn-only --quiet
+    files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
+    id: validate-showcase-examples
+    language: system
+    name: Validate Showcase Examples
+    pass_filenames: false
+
   # Commit message validation with Commitizen
 - repo: https://github.com/commitizen-tools/commitizen
   rev: v4.9.1
