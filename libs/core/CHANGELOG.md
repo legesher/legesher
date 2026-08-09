@@ -9,6 +9,49 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Map correction substrate (register-map schema v1.1.0).** Every register-map
+  entry now carries provenance — `coined_by` (`model | human | import`) and
+  `minted_at` at entry level, with per-language `edited_by` / `edited_at` and
+  native-review status (`none | endorse | pass | flag`; a correction resets
+  only the edited language's review) — plus an alias table that keeps
+  corrected renderings resolvable while never emitting them for new renders.
+  `RegisterMap.resolve_alias` returns `(entry, is_alias)` and resolves live
+  translations across all entries before consulting any alias, so a stale
+  alias never shadows a current rendering. Translations and aliases are
+  stored NFC like `original_text`. v1.0.0 artifacts migrate on load (missing
+  provenance becomes `coined_by="import"`) and are written back as v1.1.0;
+  artifacts from a newer schema minor load read-only (`save` refuses rather
+  than silently dropping fields this reader does not know); serialization
+  stays order-stable. [CORE-1676]
+- **Mapping log — the lineage changelog of the map.** New append-only event log
+  (`legesher_core.register_map.mapping_log`) persisted as
+  `.legesher/mapping_log.jsonl` (one JSON line per event: append-only diffs,
+  clean line-wise git merges). Events cover `mint` / `edit` / `rename` /
+  `deprecate` with node identity, term, language, `old → new` values, actor,
+  provenance, and timestamp. `build_register_map` / `update_register_map`
+  append a `mint` event per newly minted node and stamp mint provenance;
+  `MappingLog.lineage(node_id)` and `lineage_for_term(text)` return the event
+  chain in chronological (timestamp) order. `MappingLog.load` is strict by
+  default; `strict=False` (the CLI read path) recovers a corrupt final line —
+  what an interrupted append leaves — by skipping it with a warning and
+  truncating it on the next append, while mid-file corruption (e.g. git
+  conflict markers) still raises in both modes. [CORE-1676]
+- **`edit_translation` correction workflow**
+  (`legesher_core.register_map.correction`): corrects a coinage by editing the
+  map — the new value must be a valid Python identifier
+  (`IdentifierValidator`), clear of pack reserved-term collisions (reusing
+  `IdentifierMap.validate_against_pack` plus an NFKC+casefold sweep), clear of
+  repo homonyms including other entries' retired renderings, and clean under
+  the Unicode contract (store-NFC, `unicode_guard.scan_text`; applied to every
+  edit, prose included). On accept it updates the edited language's
+  provenance, records the alias, appends the mapping-log event, invalidates
+  the translation memory entry-scoped via `invalidate_node`, and reports
+  dynamic references — whole-word occurrences of the identifier inside
+  classified string/docstring/comment entries (report-only). A rejected edit
+  changes nothing. See `docs/map-correction.md`. [CORE-1676]
+
 ### Security
 
 - **The Unicode guard now rejects the full Default_Ignorable_Code_Point set,

@@ -11,6 +11,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- New **`legesher map edit`** command: fix a bad coinage by editing the map,
+  never refactoring code. Corrects an identifier's rendering for one language
+  (`legesher map edit calculate_tax --lang es --to calcular_impuesto`),
+  re-validating the new value first — it must be a valid Python identifier,
+  clear of language-pack reserved terms (skippable with `--no-pack-check`),
+  clear of repo homonyms (including other identifiers' retired renderings),
+  and clean under the Unicode contract. Requires a built register map
+  (`.legesher/register_map.json`). The pack version for validation resolves
+  `--python-version` → `.legesher/config.yml` → the running interpreter. On
+  accept the map is saved with per-language provenance (`--edited-by`; only
+  the edited language's review status resets), the old rendering stays
+  resolvable as an alias for old branches and PR diffs, stale
+  translation-memory segments are invalidated entry-scoped, and — after the
+  artifacts are saved — a lineage event is appended to
+  `.legesher/mapping_log.jsonl`. Occurrences of the identifier inside
+  strings/docstrings/comments are reported for manual review (never
+  rewritten). Target one exact entry with `--node-id`/`--file`. [CORE-1676]
 - `legesher run` now renders **localized tracebacks**: uncaught exceptions
   print with the traceback structure, exception type name, and error message
   in the script's language (via the new `legesher-runtime` package). The
