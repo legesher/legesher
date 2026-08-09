@@ -1,0 +1,7 @@
+language: su
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: ada96ebb91715cc853c80dfc7e7dced2100118d9e0c3e27a7057bf5de2044228
+terms_screened: 184
+flags: []

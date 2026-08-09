@@ -1,0 +1,12 @@
+language: uz
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: 34aa0b2424216affcf6efdbf6c676c3c40a3b8fa1af2f1bb42ecd49f67d710ce
+terms_screened: 184
+flags:
+- term: otish
+  english: pass
+  partition: keywords
+  category: unfortunate_connotation
+  note: With the modifier letter dropped, the surface form is "otish" ("shooting", verbal noun of otmoq) rather than "o'tish" ("to pass"); torn because apostrophe-dropping is common in informal Uzbek, flagging for native review.

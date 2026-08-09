@@ -1,0 +1,7 @@
+language: ar
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: 432a98b503f8d0bc124b4ef2a5554ace1f7ef573e3d1b7e52d9fdd1c9c63e63a
+terms_screened: 184
+flags: []

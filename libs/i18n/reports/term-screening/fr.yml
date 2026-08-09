@@ -1,0 +1,17 @@
+language: fr
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: b1d8dd10d13a3b6390237687225a51082a4dbd561cdae1aed447b3736d620d2c
+terms_screened: 184
+flags:
+- term: dégager
+  english: yield
+  partition: keywords
+  category: unfortunate_connotation
+  note: "\"Dégage !\" is a rude dismissal (\"get lost / clear off\"); as a keyword every French speaker reads the imperative brush-off, not a value being yielded."
+- term: erreurdepipecassée
+  english: brokenpipeerror
+  partition: exceptions
+  category: sexual
+  note: "\"pipe\" is extremely common French slang for fellatio; the primary reading is the smoking pipe, but a classroom would notice \"pipe cassée\" — genuinely torn, flagging for native review."

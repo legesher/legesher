@@ -18,6 +18,7 @@ listed under the table.
 | Collision audit | `libs/i18n/scripts/audit_collisions.py` | Cross-section/cross-partition collisions across the DB and all packs, incl. non-pack-edit paths (CORE-950, CORE-710) | Workflow-declarative only (`.github/workflows/ci.yml`); run manually | Blocking |
 | Pack schema/format | `libs/i18n/scripts/validate_language_pack_yaml.py` | Non-string values, unquoted YAML booleans, spaces/punctuation in values, structure, intra-pack duplicate translations, script-aware conventions | pre-commit hook `validate-language-pack-yaml` (changed pack files) | Blocking |
 | Data contract | `libs/i18n/legesher_i18n/scripts/enforce_data_contract.py` (uses `data_contract.py`) | "Packs are data, not code" (CORE-1453): file-size cap, YAML tags/anchors/aliases, unknown top-level keys, non-http(s) metadata URLs, render-vs-execute round-trip on the merged pack (soft-keyword divergence exempt) | pre-commit hook `enforce-pack-data-contract` (pack-file changes trigger a full-tree walk) | Blocking |
+| Term screening | `libs/i18n/scripts/translate/screen_terms.py` (prompt: `scripts/translate/prompts/term_screening_prompt.md`) | Offensive/unfortunate translations (CORE-401): profanity, slurs, sexual/scatological readings, unfortunate connotations, embarrassing collisions. LLM screen per language writes `reports/term-screening/<lang>.yml`; `--gate` is mechanical — unscreened language, stale coverage digest (pack changed since screen), or untriaged flag all fail | Manual ritual + generation-ritual step per new pack (`--gate --lang <code>`) | Blocking when run; flags route to native review (CORE-1538) |
 | Style guides | `libs/i18n/legesher_i18n/scripts/validate_style_guides.py` | Style-guide schema violations; drift between guides' derived flags and `legesher_i18n/languages.json` | pre-commit hook `validate-style-guides` | Blocking |
 | Regen integrity | `libs/i18n/scripts/verify_pack_regen.py` | Regen-vs-shipped diff classes (`value_changed`, `key_added`, `key_removed`, `unknown_section`, `not_regenerated`, ...) — proves DB→YAML regeneration is safe (CORE-1400) | Manual ritual; wired into nothing — run before any pack regeneration | Blocking by convention |
 | Untranslated terms | `libs/i18n/scripts/translate/find_untranslated.py` | Pack entries whose translation equals the source term (key == value), net of the intentional-loanword allowlist | pre-commit hook `find-untranslated-terms` (changed pack files) | **Report-only for now** (`--warn-only`); flips strict when pending triage below clears |
@@ -35,6 +36,7 @@ cd libs/i18n && uv run python -m legesher_i18n.scripts.validate_style_guides
 uv run python libs/i18n/scripts/verify_pack_regen.py                 # before any regen
 uv run python libs/i18n/scripts/translate/find_untranslated.py       # untranslated terms
 uv run python libs/i18n/scripts/validate_showcase_examples.py        # showcase examples (needs preview-repo checkout)
+uv run python libs/i18n/scripts/translate/screen_terms.py --gate     # term-screening gate (CORE-401)
 ```
 
 ## Untranslated-terms gate detail

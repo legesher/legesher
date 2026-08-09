@@ -1,0 +1,7 @@
+language: zh
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: 42e4672c980fd96ba91b431648c9d6dafdd51c1157f9786f7475e105dd1fafee
+terms_screened: 184
+flags: []

@@ -1,0 +1,12 @@
+language: th
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: a5c2d4db556327047b735e876b90c4966835beca9c6f591add71b93f8266653e
+terms_screened: 184
+flags:
+- term: เทคนร์ของตับ
+  english: taberror
+  partition: exceptions
+  category: embarrassing_collision
+  note: The "tab" syllable landed as ตับ ("liver"), so the surface reads "…of the liver" — organ humor a Thai classroom would giggle at, with the crude slang เอาตับ adjacent; genuinely torn, flagging per the conservative bar.

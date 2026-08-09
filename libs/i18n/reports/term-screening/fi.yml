@@ -1,0 +1,32 @@
+language: fi
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: 47d7c70a9906efcf439de32dc2064b6a1c1aacd919a5275f137fb0e4a8c50d1c
+terms_screened: 184
+flags:
+- term: kaikkivaltias
+  english: globals
+  partition: builtins
+  category: embarrassing_collision
+  note: This is the standard Finnish epithet for God ("the Almighty"); naming the globals function after God is a reading every Finnish speaker notices and invites classroom ridicule.
+- term: yliulostusvirhe
+  english: overflowerror
+  partition: exceptions
+  category: scatological
+  note: Parses as "yli + ulostus + virhe" = "over-defecation error"; "ulostus" is the ordinary Finnish word for defecation, unmistakable to any native speaker.
+- term: pärinnaita
+  english: format
+  partition: builtins
+  category: sexual
+  note: The coinage ends in "-naita", readable as a form of the vulgar verb "naida" (to screw); genuinely torn since the whole form is gibberish, flagging for native review.
+- term: juhana
+  english: while
+  partition: keywords
+  category: embarrassing_collision
+  note: Juhana is a common Finnish male given name (John); a loop keyword that is simply a man's name reads as a joke to native speakers.
+- term: forza
+  english: for
+  partition: keywords
+  category: embarrassing_collision
+  note: Not a Finnish word at all; identical to Italian "forza" and the well-known Forza racing-game franchise, which Finnish learners will immediately recognize.

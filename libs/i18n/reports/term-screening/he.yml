@@ -1,0 +1,12 @@
+language: he
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: 01c9bf0cfc545938c18159ec85b6d9bfb4660f452f6e0ae03186ce2985cf1602
+terms_screened: 184
+flags:
+- term: התרגוםשלהמונח
+  english: globals
+  partition: builtins
+  category: embarrassing_collision
+  note: Reads as the literal Hebrew phrase "the translation of the term" — a leaked translator placeholder that any Hebrew speaker would immediately notice and ridicule on screen.

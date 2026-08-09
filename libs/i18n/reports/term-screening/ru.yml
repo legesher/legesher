@@ -1,0 +1,12 @@
+language: ru
+target: python
+screener: "claude-fable-5 (linguist framing, CORE-1305/CORE-401)"
+screened_at: "2026-08-04"
+coverage_digest: 4cf49262112c1465e4395a35da58585b852d0c9ab479be18d46aa41f7377ca7a
+terms_screened: 184
+flags:
+- term: призываемый
+  english: callable
+  partition: builtins
+  category: unfortunate_connotation
+  note: Primarily evokes military conscription ("призыв в армию" - one liable to be drafted) rather than "callable"; borderline call, flagged because teen classrooms would likely notice the draft reading where standard "вызываемый" would not.

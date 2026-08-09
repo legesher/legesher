@@ -1,0 +1,12 @@
+language: el
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: 9dc87482bc2b747a743fda67069efb3bb3b630b9e6fd0c328c37346b4d68071e
+terms_screened: 184
+flags:
+- term: χασάπης
+  english: hash
+  partition: builtins
+  category: unfortunate_connotation
+  note: Reads as "butcher" — a real occupation word also used mockingly for someone brutal or sloppy, so a builtin named "butcher" would draw laughs from any Greek classroom.

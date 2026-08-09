@@ -11,6 +11,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Term-screening sweep + release gate (CORE-401).** Every translated
+  term across all pack sections is screened for profanity, slurs, and
+  unfortunate readings using the linguist framing
+  (`scripts/translate/prompts/term_screening_prompt.md`); per-language
+  findings live in `reports/term-screening/<lang>.yml`. The
+  `screen_terms.py --gate` step is mechanical and blocking: an unscreened
+  language, a report whose coverage digest no longer matches the pack
+  surface (i.e. the pack changed since the screen), or an untriaged flag
+  all fail — so every new pack on the way to 103 is screened at birth.
+  Flags are triaged in `scripts/translate/term_screening_triage.yml`
+  (fixed at the DB layer, or accepted with rationale) and route to native
+  review; the screen never rewrites translations.
+
 - **Showcase example transpile gate (CORE-1403).**
   `scripts/validate_showcase_examples.py` verifies every preview-repo
   showcase `hello_world.py` against its shipped Python pack: the example

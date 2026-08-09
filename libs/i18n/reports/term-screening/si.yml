@@ -1,0 +1,12 @@
+language: si
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: 84aedd12f016a5a1914f0f5c6bb722661a1c89d49fdb239331e8e56555029003
+terms_screened: 201
+flags:
+- term: අපවාදය
+  english: exception
+  partition: exceptions
+  category: unfortunate_connotation
+  note: In everyday Sinhala අපවාදය primarily means "slander/defamation", so exception messages (and the compounds මූලඅපවාදය, අපවාදසමූහය, මූලඅපවාදසමූහය) read as "slander" to a native speaker; genuinely torn since Sanskrit apavāda can mean "exception", but the slander reading dominates.

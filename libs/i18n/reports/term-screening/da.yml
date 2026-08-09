@@ -1,0 +1,17 @@
+language: da
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: 805ea368d595558aa1db09b3fd1567b90e3c51469998f096ecd514787e71c8c4
+terms_screened: 184
+flags:
+- term: basecovidsgroup
+  english: baseexceptiongroup
+  partition: exceptions
+  category: embarrassing_collision
+  note: Contains "covid" — any Danish reader sees the pandemic name embedded in a core exception type, which invites instant ridicule and screenshots.
+- term: hekseregel_convertering
+  english: hex
+  partition: builtins
+  category: embarrassing_collision
+  note: Reads as "witch rule" (hekse + regel) rather than hexadecimal, which a Danish classroom would notice and mock; flagged though torn, since it is silly rather than crude.

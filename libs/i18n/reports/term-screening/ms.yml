@@ -1,0 +1,12 @@
+language: ms
+target: python
+screener: "claude-fable-5 (linguist framing, CORE-1305/CORE-401)"
+screened_at: "2026-08-04"
+coverage_digest: 565b8047f55b1afa94e40a7c36b4a04ce586fc11b8e5d3304bdad07a9af53550
+terms_screened: 184
+flags:
+- term: menggugurkan
+  english: callable
+  partition: builtins
+  category: unfortunate_connotation
+  note: Reads as "to abort / cause a miscarriage" ("menggugurkan kandungan") to Malay and Indonesian speakers, a jarring reading for a classroom keyword and semantically unrelated to callable.

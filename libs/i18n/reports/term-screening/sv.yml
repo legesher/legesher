@@ -1,0 +1,12 @@
+language: sv
+target: python
+screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
+screened_at: "2026-08-04"
+coverage_digest: b359addf8953ca51cd760318021d11f14a5924b00286f9cbc03e26038e67e8e9
+terms_screened: 184
+flags:
+- term: brottnöje
+  english: brokenpipeerror
+  partition: exceptions
+  category: unfortunate_connotation
+  note: Parses for a Swedish reader as "brott" (crime) + "nöje" (pleasure), i.e. "crime-pleasure" — a jarring criminal reading with no trace of the intended broken-pipe meaning.

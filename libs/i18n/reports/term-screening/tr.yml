@@ -1,0 +1,7 @@
+language: tr
+target: python
+screener: "claude-fable-5 (linguist framing, CORE-1305/CORE-401)"
+screened_at: "2026-08-04"
+coverage_digest: 5c6dd998f23e9a606a01833ffdd8575d20547e426722b71eddb2faaaee4eaf8f
+terms_screened: 184
+flags: []
