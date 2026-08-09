@@ -1156,7 +1156,7 @@ CREATE TABLE message_translations (
 -- commentary, style ratifications, import-source registry.
 --
 -- The intake layer over the corpus: how structured native review arrives
--- (review bundles — doc: libs/i18n/docs/proposals/native-review-intake/),
+-- (review bundles),
 -- with the same discipline as the corpus itself: append-only community
 -- tables (full UPDATE/DELETE trigger mirrors), content-addressed uids
 -- (formulae in schema_v2.py: session_uid, annotation_uid, expansion_uid,
@@ -1349,6 +1349,9 @@ CREATE TABLE session_rankings (
     UNIQUE (session_uid, concept_id, locale, pl_scope, option_uid)
 );
 
+-- One option per rank slot within a session's view of a concept. pl_scope is
+-- never NULL (it is the '*' sentinel), so this index needs no IFNULL gymnastics
+-- — which is the reason the sentinel exists rather than a nullable column.
 CREATE UNIQUE INDEX uq_ranking_slot
     ON session_rankings(session_uid, concept_id, locale, pl_scope, rank);
 CREATE INDEX idx_rankings_option ON session_rankings(option_uid);
@@ -1405,10 +1408,12 @@ BEGIN SELECT RAISE(ABORT, 'session_rankings are append-only'); END;
 -- Neutral, crowd-attestable DESCRIPTORS of an option — distinct from
 -- option_flags (moderation/harm): no resolution workflow, no negative
 -- charge. This is the transliteration checkbox: transliteration popularity
--- per locale is revealed preference feeding locales.terminology_policy,
--- while option_flags(reason='transliteration') stays reserved for the
+-- per locale is revealed preference feeding locales.terminology_policy
+-- (a Bengali-style community preferring transliteration is legitimate, not a
+-- defect), while option_flags(reason='transliteration') stays reserved for the
 -- model-policy violation (2026-07-05 rule). Vocabulary is a CHECK, matching
--- the house style for flags/methods.
+-- the house style for flags/methods; adding a `kind` rides a migration like
+-- any other vocabulary change.
 CREATE TABLE option_annotations (
     uid             TEXT PRIMARY KEY,
     option_uid      TEXT NOT NULL REFERENCES options(uid) ON DELETE RESTRICT,
