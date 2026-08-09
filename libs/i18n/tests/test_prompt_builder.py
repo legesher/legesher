@@ -243,6 +243,34 @@ class TestSystemPromptContainsStyleGuide:
         )
         assert "This script has no letter case" in system
 
+    def test_word_formation_rules_reach_the_prompt(
+        self,
+        builder: PromptBuilder,
+        sample_identifiers: list[dict[str, Any]],
+    ) -> None:
+        # naming.word_formation carries how terms are COINED (CORE-1706, si).
+        # The field is optional and language-level, so it is easy to add to a
+        # guide and never render — assert every rule si declares arrives.
+        system, _ = builder.build_identifier_prompt(
+            identifiers=sample_identifiers, target_lang="si", existing_glossary={}
+        )
+        guide = builder._loader.load("si")
+        rules = guide["naming"]["word_formation"]
+        assert rules, "si must declare word_formation rules for this test to bite"
+        for rule in rules:
+            assert rule.strip() in system
+
+    def test_word_formation_absent_when_not_declared(
+        self,
+        builder: PromptBuilder,
+    ) -> None:
+        # es declares no word_formation; the Naming section must not grow an
+        # empty bullet or a stray heading for it.
+        guide = builder._loader.load("es")
+        assert "word_formation" not in guide.get("naming", {})
+        section = builder._build_style_guide_section("es")
+        assert "- \n" not in section and not section.endswith("- ")
+
     def test_no_translation_conventions_section(
         self,
         builder: PromptBuilder,

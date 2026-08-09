@@ -601,8 +601,9 @@ class PromptBuilder:
         """Format the naming-convention rules from the rules/profile schema.
 
         Renders the case-substitute strategy (how a caseless script stands in
-        for PEP 8 casing) and, from the ``supports`` flags, the case-based
-        conventions the script can actually express.
+        for PEP 8 casing), any word-formation rules the language declares, and,
+        from the ``supports`` flags, the case-based conventions the script can
+        actually express.
         """
         lines = ["### Naming Conventions"]
 
@@ -623,6 +624,14 @@ class PromptBuilder:
         detail = naming.get("detail")
         if isinstance(detail, str) and detail.strip():
             lines.append(f"- {detail.strip()}")
+
+        # Word-formation rules — how terms are coined in this language. Rules
+        # only; the words they shaped live in the pack.
+        word_formation = naming.get("word_formation")
+        if isinstance(word_formation, list):
+            for rule in word_formation:
+                if isinstance(rule, str) and rule.strip():
+                    lines.append(f"- {rule.strip()}")
 
         if isinstance(supports, dict):
             available = [

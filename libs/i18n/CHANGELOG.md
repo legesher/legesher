@@ -11,6 +11,27 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Style guides carry word-formation rules, and they reach the prompt
+  (CORE-1706).** New optional `naming.word_formation` field — a list of rules
+  for how terms are *coined* in a language (compounding, clipping, which roots
+  stay distinct), as opposed to `naming.case_substitute`, which is about how a
+  caseless script stands in for PEP 8 casing. Declared in `_schema.json`,
+  documented in the style-guide field reference, sketched in `_template.yml`,
+  and rendered into the translation prompt's Naming Conventions section by
+  `PromptBuilder._format_naming_rules`. Rules only — the vocabulary they shape
+  lives in the packs.
+
+  First user is the **si guide, now 0.2.0**, harvested from the first
+  native-speaker review of the Sinhala pack: four word-formation rules (verb
+  keywords built as root + කරන්න clip to the bare root only where the root
+  keeps the action sense; X-error / X-warning modifiers are subject nouns, not
+  past participles; error / exception / warning keep three distinct roots,
+  mirroring Python's hierarchy; established full forms beat invented clippings
+  for rare coined terms) plus two `script.constraints` profile lines — the
+  spaceless-compound garden-path risk, and the SOV/postpositional word-order
+  profile, which is per-construct rather than blanket and flags grammar-aware
+  reordering as a research horizon, not a pack-fixable issue.
+
 - **Identity-translation marker populated and surfaced (CORE-1355).** The
   v1→v2 migration now sets `canon_selections.identity_ok` wherever the
   canon surface equals the concept's English term (NFKC + casefold — the

@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: style guides can declare how terms are *coined*, not just how
+  they are cased. The new optional `naming.word_formation` list carries
+  word-formation rules (compounding, clipping, which roots stay distinct)
+  and renders into the translation prompt's Naming Conventions section.
+  First user is the Sinhala guide at 0.2.0, harvested from the first
+  native-speaker review of the si pack: four word-formation rules plus two
+  script-profile lines covering spaceless-compound garden-path risk and
+  Sinhala's SOV/postpositional word order. Rules only — vocabulary stays in
+  the packs. [CORE-1706]
 - **docs**: shareable playground — playground state now lives in the URL
   (`?code=<base64url>&src=en&tgt=<lang>&sample=<slug>`, with a Copy link
   button), so any language × example combination is a pasteable link,

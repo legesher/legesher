@@ -51,6 +51,11 @@
           "type": "string",
           "enum": ["morphology", "not_needed"],
           "description": "How case is replaced when unsupported. morphology = part of speech signals role; not_needed = PEP 8 casing applies."
+        },
+        "word_formation": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "How terms are coined in this language — compounding, clipping, which roots stay distinct. Rules, not vocabulary; usually harvested from a native review."
         }
       }
     },

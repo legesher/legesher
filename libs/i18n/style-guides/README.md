@@ -47,6 +47,7 @@ CORE-1394). `python.yml` and the `_*.yml` overlays are building blocks and are
 | `supports.diacritics_in_identifiers` | diacritics / tone marks are part of identifier spelling (e.g. Yoruba, Vietnamese) | bool | transfer, validator | profile |
 | `supports.cursive_joining` | letters connect contextually (Arabic-script) | bool | transfer | profile |
 | `naming.case_substitute` | what replaces case | `morphology` \| `not_needed` | prompt‡, transfer | family/lang |
+| `naming.word_formation` | how terms are coined (compounding, clipping, which roots stay distinct) — optional, usually added after a native review | list of strings | prompt‡, human | language |
 | `script.name` | writing-system identity | string | prompt‡, human | language |
 | `script.direction` | text direction | `ltr` \| `rtl` | prompt‡, editor, transfer | direction overlay |
 | `script.constraints` | script-specific rules (incl. a digits line) | list of strings | prompt‡, human, transfer | family + lang |

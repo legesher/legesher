@@ -38,6 +38,10 @@ naming:
   #   stays bare; a multi-word idea joins with underscores. Constants are NOT
   #   prefix-marked — there is simply no ALL_CAPS form.
   # not_needed (bicameral scripts): standard PEP 8 casing applies unchanged.
+  # word_formation:                # optional — how terms are COINED in this
+  # - <word-formation rule>        #   language (compounding, clipping, which
+  #                                #   roots stay distinct). Rules, not words.
+  #                                #   Usually added after a native review.
 
 # Script identity + the constraints its characters impose.
 script:

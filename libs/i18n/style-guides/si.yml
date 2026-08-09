@@ -9,7 +9,7 @@ extends:
 - python.yml
 - _ltr.yml
 - _brahmic.yml
-version: 0.1.0
+version: 0.2.0
 status: experimental
 
 # Which Python naming conventions this script can express, plus profile facts.
@@ -33,6 +33,29 @@ naming:
     — callables are verb phrases, classes and exceptions are noun compounds.
     A single-word name stays bare; a multi-word idea joins with underscores.
     Constants are not marked with a prefix word (there is no ALL_CAPS form).
+  # Word-formation rules harvested from the first native-speaker review of the
+  # si pack. Best-practice guidance for coining terms; the words themselves
+  # live in the packs.
+  word_formation:
+  - >-
+    Verb keywords formed as root + කරන්න ("do") clip to the bare root only
+    when the root alone keeps the action sense (try → උත්සාහ reads as the
+    action; pass keeps කරන්න, since bare පසු defaults to "after / past").
+  - >-
+    In X-error / X-warning compounds the modifier is best read as the noun
+    naming the subject, not a past participle describing the error itself —
+    a warning about deprecation ("abandonment" + warning), never an
+    "abandoned warning".
+  - >-
+    Exception-family naming keeps three distinct roots — error / exception /
+    warning — mirroring Python's hierarchy, where not every exception is an
+    error (StopIteration ends every for loop; nothing failed). Collapsing
+    the roots erases that distinction.
+  - >-
+    Prefer the established full form of rare coined technical terms over an
+    invented clipping (the async coinage stays whole even in long
+    compounds): a novel abbreviation of an unfamiliar word adds a second
+    unfamiliar form instead of easing the first.
 
 # Script identity + the constraints its characters impose.
 script:
@@ -42,6 +65,8 @@ script:
   - "Combining vowel signs are legal in identifiers but each identifier must be an NFKC fixed point. Zero-width joiner (U+200D) is forbidden even where visually customary."
   - "Sinhala conjuncts use ZWJ (U+200D) in normal text — this is the documented min-interpreter / NFKC trap. Identifiers must NOT contain ZWJ; forms that need it for their conventional shape are reviewer-pending."
   - "Digits: Sinhala natively uses ෧෨෩; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+  - "Compounds: Sinhala compounds are spaceless and a leading substring can itself be a real word, so long identifiers can garden-path (මතකදසුන first reads as මතකද \"remember?\" before re-parsing as මතක|දසුන memory|view). Prefer the shortest unambiguous compound; morpheme-boundary rendering hints are a candidate editor feature."
+  - "Word order: Sinhala is SOV and postpositional, so several keywords (for/from/in/with) are naturally postpositive and read unnaturally in Python's keyword-first positions, while others (else) lead their clause exactly as in English. The effect is per-construct, not blanket; token substitution keeps Python's order today, and grammar-aware reordering is a research horizon, not a pack-fixable issue."
 
 # Formatting rules.
 formatting:
