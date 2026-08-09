@@ -34,6 +34,8 @@ import argparse
 import csv
 import json
 import logging
+import sqlite3
+import unicodedata
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import cache
@@ -54,6 +56,96 @@ SKIP_LANGUAGES = {"en"}  # English is the reference, not a translation
 # Entries are "<lang>:<term>" strings; see the file's header comment for the
 # evidence bar. Findings matching the allowlist are not reported.
 ALLOWLIST_PATH = Path(__file__).parent / "untranslated_allowlist.yml"
+
+# The v1 corpus DB the allowlist is drift-checked against (--check-db,
+# CORE-1355). The v2 identity_ok marker is populated from these same rows by
+# migrate_to_v2.py using the same compare rule — one policy, two layers.
+DEFAULT_DB_PATH = (
+    Path(__file__).parent.parent.parent / "legesher_i18n" / "db" / "translations.db"
+)
+
+
+def _identity_fold(value: str) -> str:
+    """The identity-compare rule: NFKC + casefold (policy 2026-07-05).
+
+    Mirrors legesher_i18n.db.schema_v2.is_identity_translation — kept local
+    because this script runs standalone (pre-commit) without the package.
+    """
+    return unicodedata.normalize("NFKC", value).casefold()
+
+
+def check_db_drift(
+    db_path: Path, allowlist_pairs: frozenset[tuple[str, str]] | set[tuple[str, str]]
+) -> list[str]:
+    """Verify every allowlist entry is an identity translation in the DB.
+
+    Two drift shapes, both errors (CORE-1355 "drift fails the check"):
+    an allowlist entry with no DB selection at all for that (term, language),
+    and one whose DB-selected translation is NOT the term itself under the
+    NFKC+casefold rule (i.e. the DB translated it, so the pack-layer
+    "intentional loanword" claim is stale).
+    """
+    errors: list[str] = []
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        for language, term in sorted(allowlist_pairs):
+            rows = conn.execute(
+                "SELECT t.name AS name, st.translation AS translation "
+                "FROM selected_translations st JOIN terms t ON t.id = st.term_id "
+                "WHERE st.language_code = ?",
+                (language,),
+            ).fetchall()
+            matches = [
+                r for r in rows if _identity_fold(r["name"]) == _identity_fold(term)
+            ]
+            if not matches:
+                errors.append(
+                    f"{language}:{term} — allowlist entry has no selected "
+                    "translation in the DB; prune the entry or select the "
+                    "loanword (CORE-1355)"
+                )
+            elif not any(
+                _identity_fold(r["translation"]) == _identity_fold(term)
+                for r in matches
+            ):
+                got = ", ".join(repr(r["translation"]) for r in matches)
+                errors.append(
+                    f"{language}:{term} — DB selected translation is {got}, "
+                    "not the identity loanword the allowlist claims; the "
+                    "allowlist entry is stale (CORE-1355)"
+                )
+    finally:
+        conn.close()
+    return errors
+
+
+def count_allowlisted_cognates_in_yaml(yaml_path: Path, language: str) -> set[str]:
+    """Terms in *yaml_path* that are key == value AND allowlisted.
+
+    These are the deliberate-cognate class (identity_ok at the DB layer,
+    CORE-1355) — reported as their own line in the summary, never as gaps.
+    """
+    cognates: set[str] = set()
+    try:
+        with open(yaml_path, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        if not data:
+            return cognates
+        for section in ["keywords", "builtins", "exceptions"]:
+            section_data = data.get(section, {})
+            if not isinstance(section_data, dict):
+                continue
+            for term, translation in section_data.items():
+                if (
+                    not term.startswith("#")
+                    and term == translation
+                    and (language, term) in load_allowlist()
+                ):
+                    cognates.add(term)
+    except (OSError, yaml.YAMLError):
+        pass
+    return cognates
 
 
 @cache
@@ -108,6 +200,9 @@ class LanguageReport:
     language: str
     untranslated: list[UntranslatedEntry] = field(default_factory=list)
     total_terms: int = 0
+    # Deliberate cognates/loanwords (allowlisted key == value) — their own
+    # class, never counted as gaps (CORE-1355).
+    cognate_terms: set[str] = field(default_factory=set)
 
     @property
     def untranslated_count(self) -> int:
@@ -231,6 +326,7 @@ def scan_language(lang_dir: Path, language: str) -> LanguageReport:
     if base_file.exists():
         report.total_terms = count_terms_in_yaml(base_file)
         report.untranslated.extend(find_untranslated_in_yaml(base_file, language))
+        report.cognate_terms |= count_allowlisted_cognates_in_yaml(base_file, language)
 
     # Also check higher version files for version-specific terms
     for version_file in sorted(packs_dir.glob("3.*.yml")):
@@ -243,6 +339,9 @@ def scan_language(lang_dir: Path, language: str) -> LanguageReport:
         for entry in version_untranslated:
             if entry.term not in existing_terms:
                 report.untranslated.append(entry)
+        report.cognate_terms |= count_allowlisted_cognates_in_yaml(
+            version_file, language
+        )
 
     return report
 
@@ -316,6 +415,7 @@ def scan_paths(paths: list[Path]) -> dict[str, LanguageReport]:
             if entry.term not in existing_terms:
                 report.untranslated.append(entry)
                 existing_terms.add(entry.term)
+        report.cognate_terms |= count_allowlisted_cognates_in_yaml(path, language)
 
     return reports
 
@@ -363,6 +463,14 @@ def print_summary(reports: dict[str, LanguageReport], only_incomplete: bool = Fa
     print(f"Total languages scanned: {len(reports)}")
     print(f"Complete: {len(complete)}")
     print(f"Incomplete: {len(incomplete)}")
+    # Deliberate cognates are their own class, not gaps (CORE-1355).
+    total_cognates = sum(len(r.cognate_terms) for r in reports.values())
+    if total_cognates:
+        langs = sorted(r.language for r in reports.values() if r.cognate_terms)
+        print(
+            f"Intentional cognates (allowlisted, identity_ok class): "
+            f"{total_cognates} across {', '.join(langs)}"
+        )
     print("=" * 70)
 
 
@@ -467,6 +575,22 @@ def main():
         "find-untranslated-terms pre-commit gate; usage errors still exit 1)",
     )
     parser.add_argument(
+        "--check-db",
+        action="store_true",
+        help="Drift-check the allowlist against the corpus DB's selected "
+        "translations (CORE-1355: one policy, two layers). Drift always "
+        "exits non-zero, even with --warn-only. A boolean on purpose: "
+        "pre-commit appends filenames, so an optional-value flag would "
+        "swallow the first pack path.",
+    )
+    parser.add_argument(
+        "--check-db-path",
+        type=Path,
+        default=DEFAULT_DB_PATH,
+        metavar="DB",
+        help="Database for --check-db (default: the in-repo translations.db)",
+    )
+    parser.add_argument(
         "paths",
         nargs="*",
         type=Path,
@@ -499,6 +623,22 @@ def main():
 
     # Show summary
     print_summary(reports, only_incomplete=args.only_incomplete)
+
+    # Allowlist <-> DB reconciliation (CORE-1355): drift is a data-consistency
+    # failure, blocking regardless of --warn-only.
+    if args.check_db:
+        if not args.check_db_path.exists():
+            print(f"ERROR: --check-db database not found: {args.check_db_path}")
+            return 1
+        drift = check_db_drift(args.check_db_path, load_allowlist())
+        for error in drift:
+            print(f"  [drift] {error}")
+        print(
+            f"Allowlist <-> DB reconciliation: {len(load_allowlist())} "
+            f"entries checked, {len(drift)} drift error(s)"
+        )
+        if drift:
+            return 1
 
     # Return exit code based on completeness
     incomplete = sum(1 for r in reports.values() if not r.is_complete)

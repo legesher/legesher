@@ -53,6 +53,7 @@ __all__ = [
     "contributor_id",
     "endorsement_uid",
     "expansion_uid",
+    "is_identity_translation",
     "messages_partition_ddl",
     "normalize_surface_form",
     "option_uid",
@@ -247,6 +248,24 @@ def normalize_surface_form(surface_form: str) -> str:
         The NFC-normalized, whitespace-stripped rendering.
     """
     return unicodedata.normalize("NFC", surface_form).strip()
+
+
+def is_identity_translation(english_term: str, surface_form: str) -> bool:
+    """True when *surface_form* IS the English term — a deliberate cognate.
+
+    The compare half of the Unicode contract: NFKC + casefold on both
+    sides (policy 2026-07-05, CORE-1355). This is the single rule behind
+    ``canon_selections.identity_ok`` — the migration populates the column
+    with it, every future canon writer must call it, and the pack-layer
+    ``untranslated_allowlist.yml`` is drift-checked against the same rule
+    (``find_untranslated.py --check-db``): one policy, two layers.
+
+    An empty pair is not a cognate claim — there is no term to equal.
+    """
+    if not english_term or not surface_form:
+        return False
+    fold = lambda s: unicodedata.normalize("NFKC", s).casefold()  # noqa: E731
+    return fold(english_term) == fold(surface_form)
 
 
 def _digest(prefix: str, *parts: str) -> str:

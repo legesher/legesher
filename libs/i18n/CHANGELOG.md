@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Identity-translation marker populated and surfaced (CORE-1355).** The
+  v1→v2 migration now sets `canon_selections.identity_ok` wherever the
+  canon surface equals the concept's English term (NFKC + casefold — the
+  shared rule is `is_identity_translation` in `schema_v2.py`), and reports
+  the count in its ledger. A new `canon_coverage` view splits coverage
+  into translated terms vs deliberate cognates so cognates are never
+  counted as gaps. `find_untranslated.py` reports allowlisted cognates as
+  their own summary class and gains `--check-db`, which drift-checks the
+  intentional-loanword allowlist against the corpus DB's selected
+  translations (one policy, two layers); drift blocks even under
+  `--warn-only`, and the pre-commit hook now runs it.
+
 - **Term-screening sweep + release gate (CORE-401).** Every translated
   term across all pack sections is screened for profanity, slurs, and
   unfortunate readings using the linguist framing

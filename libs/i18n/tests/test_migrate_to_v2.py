@@ -845,3 +845,45 @@ def test_source_without_message_partition_needs_no_acknowledgement(
 ) -> None:
     conn = _run(v1_db, tmp_path)  # the pre-CORE-1679 shape keeps working
     conn.close()
+
+
+# CORE-1355 -- the migration populates canon_selections.identity_ok
+# ---------------------------------------------------------------------------
+
+
+def test_identity_translations_carry_identity_ok(v1_db: Path, tmp_path: Path) -> None:
+    """Canon rows whose surface equals the English term (case/NFKC-insensitive)
+    carry identity_ok = 1; all others 0. Latin-script locale: the script gate
+    would refuse Latin cognates for `ur`."""
+    conn = sqlite3.connect(v1_db)
+    conn.execute(
+        "INSERT INTO languages (code, name, native_name, bcp47, direction, "
+        "has_case_distinction, status, in_registry) "
+        "VALUES ('cs', 'Czech', 'čeština', 'cs', 'ltr', 1, 'experimental', 1)"
+    )
+    # (term_id, surface): break -> break (identity), None -> none (identity
+    # via casefold), True -> pravda (translated)
+    for term_id, surface in [(3, "break"), (4, "none"), (1, "pravda")]:
+        conn.execute(
+            "INSERT INTO translations (term_id, language_code, translation, "
+            "source, created_by, created_at) "
+            "VALUES (?, 'cs', ?, 'aya', 'ai-aya', '2026-03-19T00:00:00')",
+            (term_id, surface),
+        )
+        conn.execute(
+            "INSERT INTO selected_translations (term_id, language_code, "
+            "translation, selected_by, selected_at, selection_reason) "
+            "VALUES (?, 'cs', ?, 'universal_python', '2026-03-19T00:00:00', 'test')",
+            (term_id, surface),
+        )
+    conn.commit()
+    conn.close()
+
+    v2 = _run(v1_db, tmp_path)
+    got = {
+        row["surface_form"]: row["identity_ok"]
+        for row in v2.execute(
+            "SELECT surface_form, identity_ok FROM canon_selections WHERE locale = 'cs'"
+        )
+    }
+    assert got == {"break": 1, "none": 1, "pravda": 0}

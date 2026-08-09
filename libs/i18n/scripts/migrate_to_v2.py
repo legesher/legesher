@@ -79,6 +79,7 @@ from legesher_i18n.db.schema_v2 import (  # noqa: E402
     apply_schema_v2,
     contributor_id,
     endorsement_uid,
+    is_identity_translation,
     normalize_surface_form,
     option_uid,
     salt_fingerprint,
@@ -992,6 +993,11 @@ def migrate(
     #: for all per-term facts, so the options and canon passes cannot pick up
     #: one dict and miss another.
     concept_of_term: dict[int, tuple[int, str, str]] = {}
+    #: v1 term id -> the English source term, for the identity_ok compare
+    #: (CORE-1355). Distinct from term_name_of_concept: secondary terms
+    #: (python `type` the soft keyword) share a concept but every term row
+    #: still names the same English token it is compared against.
+    english_of_term: dict[int, str] = {}
     #: concept ids that already carry their Tier-1 brief row.
     briefed_concepts: set[int] = set()
     #: v2 concept id -> the English source term (e.g. 'except*'). The identifier
@@ -1046,6 +1052,7 @@ def migrate(
                 )
                 briefed_concepts.add(concept_id)
         concept_of_term[row["id"]] = (concept_id, slug, row["programming_language"])
+        english_of_term[row["id"]] = row["name"]
         term_tokens_seen.add(token)
         dst.execute(
             "INSERT INTO terms (concept_id, programming_language, name, category, subcategory, "
@@ -1301,6 +1308,7 @@ def migrate(
     # which is the CORE-1400 reframe working exactly as designed.
     selected_rows = 0
     canon_rows = 0
+    identity_rows = 0
     rejected: list[tuple[str, str, str, str]] = []
     for row in src.execute("SELECT * FROM selected_translations ORDER BY id"):
         selected_rows += 1
@@ -1338,17 +1346,23 @@ def migrate(
         # shows real per-PL divergence (abs -> قيمة_مطلقة for javascript vs
         # القيمةالمطلقة for python), so canon rows carry the PL rather than
         # claiming the concept-wide '*' scope.
+        # Identity marker (CORE-1355): a surface that IS the English term is
+        # a deliberate cognate/loanword (policy 2026-07-05), not a gap.
+        identity_ok = int(
+            is_identity_translation(english_of_term[row["term_id"]], surface)
+        )
         dst.execute(
             "INSERT INTO canon_selections (concept_id, locale, programming_language, "
-            "option_uid, surface_form, status, "
+            "option_uid, surface_form, status, identity_ok, "
             "decided_by, decided_at, decision_reason, source_file) "
-            "VALUES (?, ?, ?, ?, ?, 'machine', ?, ?, ?, ?)",
+            "VALUES (?, ?, ?, ?, ?, 'machine', ?, ?, ?, ?, ?)",
             (
                 concept_id,
                 locale,
                 term_pl,
                 uid,
                 surface,
+                identity_ok,
                 row["selected_by"],
                 row["selected_at"],
                 row["selection_reason"],
@@ -1356,9 +1370,11 @@ def migrate(
             ),
         )
         canon_rows += 1
+        identity_rows += identity_ok
 
     ledger.record("v1 selected rows", selected_rows)
     ledger.record("canon_selections", canon_rows)
+    ledger.record("  identity_ok (deliberate cognate/loanword)", identity_rows)
     ledger.record("canon REFUSED by gate", len(rejected))
 
     dst.commit()

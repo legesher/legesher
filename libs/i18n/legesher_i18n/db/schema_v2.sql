@@ -1013,6 +1013,20 @@ WHERE export_role = 'primary';
 -- "must be empty, or the pack is ambiguous", a CI gate on it would have made the
 -- feature unusable. Grouping term_resolution (one row per term) reports only a
 -- real cross-concept divergence.
+-- Coverage split (CORE-1355): deliberate cognates/loanwords (identity_ok = 1,
+-- policy 2026-07-05) are their own class, never "untranslated gaps". Anything
+-- reporting coverage numbers (README counts, corpus cards) reads the split
+-- from here instead of re-deriving key == value at the pack layer.
+CREATE VIEW canon_coverage AS
+SELECT
+    locale,
+    pl_scope,
+    COUNT(*)                    AS canon_terms,
+    SUM(identity_ok)            AS identity_cognates,
+    COUNT(*) - SUM(identity_ok) AS translated_terms
+FROM canon_selections
+GROUP BY locale, pl_scope;
+
 CREATE VIEW pack_export_conflicts AS
 SELECT
     programming_language,

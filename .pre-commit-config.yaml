@@ -93,7 +93,7 @@ repos:
   # Runs --warn-only (report mode) while da:stopiteration awaits native-review
   # triage — drop the flag to flip the gate strict once the pending list in
   # libs/i18n/docs/quality-gates.md clears.
-  - entry: uv run python libs/i18n/scripts/translate/find_untranslated.py --warn-only
+  - entry: uv run python libs/i18n/scripts/translate/find_untranslated.py --warn-only --check-db
     files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
     id: find-untranslated-terms
     language: system

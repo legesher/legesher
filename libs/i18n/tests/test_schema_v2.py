@@ -150,10 +150,11 @@ def _select(
     *,
     programming_language: str | None = None,
     status: str = "reviewed",
+    identity_ok: int = 0,
 ) -> None:
     conn.execute(
         "INSERT INTO canon_selections (concept_id, locale, programming_language, option_uid, "
-        "surface_form, status, source_file) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "surface_form, status, identity_ok, source_file) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         (
             concept_id,
             locale,
@@ -161,6 +162,7 @@ def _select(
             uid,
             surface,
             status,
+            identity_ok,
             f"canon/{locale}.toml",
         ),
     )
@@ -1448,3 +1450,39 @@ def test_rotating_the_salt_forks_the_corpus(db: sqlite3.Connection) -> None:
     # original salt -- which is why it is escrowed, not merely secret.
     with pytest.raises(sqlite3.IntegrityError, match="published key"):
         db.execute("UPDATE contributors SET id = ? WHERE id = ?", (rotated, original))
+
+
+# ---------------------------------------------------------------------------
+# CORE-1355 -- identity-translation marker: the compare rule and the
+# coverage split that separates deliberate cognates from untranslated gaps.
+# ---------------------------------------------------------------------------
+
+
+def test_is_identity_translation_rules() -> None:
+    from legesher_i18n.db.schema_v2 import is_identity_translation
+
+    assert is_identity_translation("break", "break")
+    assert is_identity_translation("None", "none")  # case-insensitive
+    assert is_identity_translation("ascii", "ａｓｃｉｉ")  # NFKC-insensitive
+    assert not is_identity_translation("True", "pravda")
+    assert not is_identity_translation("break", "brea")
+    assert not is_identity_translation("", "")  # empty is not a cognate claim
+
+
+def test_canon_coverage_splits_cognates_from_translated(
+    db: sqlite3.Connection,
+) -> None:
+    uid_def = _add_option(db, 1, "function-definition", "tr", "tanımla")
+    _select(db, 1, "tr", uid_def, "tanımla")
+    # canon_selections is a loaded projection (UPDATE is trigger-blocked),
+    # so the marker is set at insert — as the migration does.
+    uid_true = _add_option(db, 2, "boolean-true", "tr", "True")
+    _select(db, 2, "tr", uid_true, "True", identity_ok=1)
+
+    row = db.execute(
+        "SELECT canon_terms, identity_cognates, translated_terms "
+        "FROM canon_coverage WHERE locale = 'tr'"
+    ).fetchone()
+    assert row["canon_terms"] == 2
+    assert row["identity_cognates"] == 1
+    assert row["translated_terms"] == 1
