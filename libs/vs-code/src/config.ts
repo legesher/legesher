@@ -20,6 +20,8 @@ import {
 export interface LanguageConfig {
     targetLanguage: string;
     sourceLanguage: string;
+    /** Which configuration scope supplied targetLanguage. */
+    scope: 'folder' | 'workspace' | 'user' | 'default';
 }
 
 /**
@@ -32,27 +34,41 @@ export interface LanguageInfo {
 }
 
 /**
- * Get the current language configuration from VS Code settings
+ * Get the current language configuration from VS Code settings.
+ *
+ * Resolution follows VS Code's own precedence (folder > workspace > user >
+ * default) via `get()`. The previous implementation read `inspect().globalValue`
+ * directly, which silently ignored workspace and folder settings — a
+ * `legesher.targetLanguage` committed in a project's `.vscode/settings.json`
+ * had no effect at all (CORE-455).
+ *
+ * `inspect()` is still used, but only to report *which* scope won, for the
+ * status bar indicator. It returns each scope's value separately; it is `get()`
+ * that resolves the effective one.
+ *
+ * @param resource Optional document URI. Supply it so folder-level settings in
+ * a multi-root workspace resolve against the right folder.
  */
-export function getLanguageConfig(): LanguageConfig {
-    const config = vscode.workspace.getConfiguration('legesher');
+export function getLanguageConfig(resource?: vscode.Uri): LanguageConfig {
+    const config = vscode.workspace.getConfiguration('legesher', resource);
 
-    // During extension development, inspect() returns the actual effective value
-    // across all configuration scopes (global, workspace, folder)
-    const targetLangInspect = config.inspect<string>('targetLanguage');
-    const sourceLangInspect = config.inspect<string>('sourceLanguage');
+    const targetLanguage = config.get<string>('targetLanguage') || 'en';
+    const sourceLanguage = config.get<string>('sourceLanguage') || 'en';
 
-    // Priority: globalValue > defaultValue
-    const targetLanguage = targetLangInspect?.globalValue ||
-                          targetLangInspect?.defaultValue ||
-                          'en';
-    const sourceLanguage = sourceLangInspect?.globalValue ||
-                          sourceLangInspect?.defaultValue ||
-                          'en';
+    const inspected = config.inspect<string>('targetLanguage');
+    let scope: LanguageConfig['scope'] = 'default';
+    if (inspected?.workspaceFolderValue !== undefined) {
+        scope = 'folder';
+    } else if (inspected?.workspaceValue !== undefined) {
+        scope = 'workspace';
+    } else if (inspected?.globalValue !== undefined) {
+        scope = 'user';
+    }
 
     return {
         targetLanguage,
-        sourceLanguage
+        sourceLanguage,
+        scope
     };
 }
 

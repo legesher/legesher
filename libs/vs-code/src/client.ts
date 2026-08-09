@@ -17,13 +17,20 @@ import { LegesherTelemetry } from './telemetry';
  */
 export function createLanguageClient(
     context: vscode.ExtensionContext,
-    outputChannel: vscode.OutputChannel
+    outputChannel: vscode.OutputChannel,
+    targetLanguageOverride?: string
 ): LanguageClient {
     // Get configuration
     const config = vscode.workspace.getConfiguration('legesher');
     const serverCommand = config.get<string>('serverCommand', 'legesher-lsp');
     const traceLevel = config.get<string>('trace.server', 'off');
-    const languageConfig = getLanguageConfig();
+
+    // The caller may have resolved a language the settings don't name — e.g.
+    // detected from the file's contents (CORE-1729).
+    const resolvedConfig = getLanguageConfig();
+    const languageConfig = targetLanguageOverride
+        ? { ...resolvedConfig, targetLanguage: targetLanguageOverride }
+        : resolvedConfig;
 
     Logger.info(`Creating language client with command: ${serverCommand}`);
     Logger.debug('Language configuration', languageConfig);
