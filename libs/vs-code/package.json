@@ -193,6 +193,19 @@
           "description": "Source language (Python keywords)",
           "markdownDescription": "Source language for Python keywords. **Note:** Only English (en) is currently supported."
         },
+        "legesher.languageDetection": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "off"
+          ],
+          "enumDescriptions": [
+            "Infer each file's language from its contents, falling back to the configured language when the file gives no clear signal.",
+            "Always use the configured language. Set automatically when you pick a language explicitly."
+          ],
+          "description": "Whether to detect a file's language from its contents. Folder and workspace settings always take precedence over detection."
+        },
         "legesher.serverCommand": {
           "type": "string",
           "default": "legesher-lsp",

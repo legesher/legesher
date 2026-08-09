@@ -18,8 +18,27 @@ type WebviewMessage =
  * Manages the translation panel webview.
  * Singleton pattern ensures only one panel exists at a time.
  */
+/**
+ * Resolves the languages in effect for a document, including a language
+ * detected from its contents.
+ *
+ * Injected rather than imported so the panel does not depend on the extension
+ * entry point. Reading configuration directly meant the panel rendered the
+ * configured language while the status bar and the running server both used the
+ * detected one — the same file, described two different ways (CORE-1754).
+ */
+export type PanelLanguageResolver = (
+    document: vscode.TextDocument
+) => { sourceLanguage: string; targetLanguage: string };
+
 export class TranslationPanelManager {
     private static instance: TranslationPanelManager | undefined;
+    private static languageResolver: PanelLanguageResolver | undefined;
+
+    /** Register how the panel should resolve a document's languages. */
+    public static setLanguageResolver(resolver: PanelLanguageResolver): void {
+        TranslationPanelManager.languageResolver = resolver;
+    }
     private panel: vscode.WebviewPanel | undefined;
     private disposables: vscode.Disposable[] = [];
 
@@ -102,9 +121,12 @@ export class TranslationPanelManager {
             // Get original code
             const originalCode = document.getText();
 
-            // Get current language configuration using the proper config reader
-            // that handles global vs workspace settings correctly
-            const { sourceLanguage, targetLanguage } = getLanguageConfig();
+            // Prefer the resolver, which accounts for a language detected from
+            // the document's contents. Fall back to raw configuration only if no
+            // resolver has been registered.
+            const { sourceLanguage, targetLanguage } = TranslationPanelManager.languageResolver
+                ? TranslationPanelManager.languageResolver(document)
+                : getLanguageConfig(document.uri);
 
             // Translate document
             const translatedCode = await translateDocument(document, targetLanguage);

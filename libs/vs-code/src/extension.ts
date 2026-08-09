@@ -62,7 +62,16 @@ function resolveLanguage(
         return { language: config.targetLanguage, source: config.scope };
     }
 
-    if (document && document.languageId === 'python') {
+    // An explicit pick turns detection off, so the chosen language survives
+    // switching to a file that would detect as something else. Detection
+    // outranking a global *preference* is right — a default is not a claim about
+    // the file on screen — but it must not override a deliberate choice
+    // (CORE-1754).
+    const detectionEnabled = vscode.workspace
+        .getConfiguration('legesher', document?.uri)
+        .get<string>('languageDetection', 'auto') === 'auto';
+
+    if (detectionEnabled && document && document.languageId === 'python') {
         const detected = detectLanguage(document.getText(), getVocabularies(context));
         if (detected) {
             Logger.debug(
@@ -87,20 +96,28 @@ function resolveLanguage(
  */
 function ensureServerLanguage(
     context: vscode.ExtensionContext,
-    language: string
+    language: string,
+    sourceLanguage: string
 ): Promise<void> {
+    // The server reads both languages once, in on_initialize, and has no
+    // didChangeConfiguration handler — so its identity is the pair, not the
+    // target alone. Keying on target only meant a sourceLanguage change fired
+    // the listener, matched the cached value, and silently did nothing
+    // (CORE-1754).
+    const identity = `${sourceLanguage}->${language}`;
+
     languageSync = languageSync
         .then(async () => {
-            if (serverLanguage === language) {
+            if (serverLanguage === identity) {
                 return;
             }
-            Logger.info(`Language changed: ${serverLanguage ?? '(none)'} -> ${language}; restarting server`);
-            // Record the language only once the restart has actually succeeded.
+            Logger.info(`Language changed: ${serverLanguage ?? '(none)'} -> ${identity}; restarting server`);
+            // Record the identity only once the restart has actually succeeded.
             // Assigning first means a failed restart leaves the state claiming
             // success, and every later attempt at the same language collapses
             // into a no-op that never retries.
             await restartServer(context, language);
-            serverLanguage = language;
+            serverLanguage = identity;
         })
         .catch(error => {
             Logger.error('Failed to apply language change', error);
@@ -131,8 +148,9 @@ async function syncActiveLanguage(
     }
 
     const resolved = resolveLanguage(context, pythonDocument);
-    updateLanguageStatusBar(resolved);
-    await ensureServerLanguage(context, resolved.language);
+    const config = getLanguageConfig(pythonDocument?.uri);
+    updateLanguageStatusBar(resolved, config.targetLanguage);
+    await ensureServerLanguage(context, resolved.language, config.sourceLanguage);
 }
 
 /**
@@ -160,6 +178,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // Initialize keywords module (loads language packs for translations)
     initializeKeywords(context.extensionPath);
+
+    // Let the translation panel resolve languages the same way everything else
+    // does, so a detected language does not leave it disagreeing with the status
+    // bar and the running server (CORE-1754).
+    TranslationPanelManager.setLanguageResolver(document => ({
+        sourceLanguage: getLanguageConfig(document.uri).sourceLanguage,
+        targetLanguage: resolveLanguage(context, document).language,
+    }));
 
     // Initialize telemetry (respects user settings)
     LegesherTelemetry.initialize(context);
@@ -194,7 +220,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
     languageStatusBarItem.command = 'legesher.selectLanguage';
     context.subscriptions.push(languageStatusBarItem);
-    updateLanguageStatusBar(resolveLanguage(context, vscode.window.activeTextEditor?.document));
+    const activeDocument = vscode.window.activeTextEditor?.document;
+    updateLanguageStatusBar(
+        resolveLanguage(context, activeDocument),
+        getLanguageConfig(activeDocument?.uri).targetLanguage
+    );
     languageStatusBarItem.show();
 
     // Check if extension is enabled
@@ -272,7 +302,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (event) => {
             if (event.affectsConfiguration('legesher.targetLanguage') ||
-                event.affectsConfiguration('legesher.sourceLanguage')) {
+                event.affectsConfiguration('legesher.sourceLanguage') ||
+                // Toggling detection changes which language is in effect without
+                // either language setting changing, so it has to be watched too.
+                event.affectsConfiguration('legesher.languageDetection')) {
                 // A settings edit is explicit, so apply it even with no Python
                 // editor focused.
                 await syncActiveLanguage(context, { requirePythonEditor: false });
@@ -425,7 +458,7 @@ async function restartServer(
  * The icon distinguishes where that language came from, so a detected language
  * is never mistaken for a configured one.
  */
-function updateLanguageStatusBar(resolved: ResolvedLanguage): void {
+function updateLanguageStatusBar(resolved: ResolvedLanguage, preferredLanguage?: string): void {
     const langCode = resolved.language.toUpperCase();
     const langName = getLanguageName(resolved.language);
 
@@ -444,6 +477,25 @@ function updateLanguageStatusBar(resolved: ResolvedLanguage): void {
         default: 'default',
     };
 
+    // When a detected language differs from the one the user works in, show the
+    // mismatch rather than only the detected language (CORE-1755). Without this
+    // the override is invisible: the bar reads "PT" and nothing indicates that
+    // the user's own language was set aside for this file. Surfacing it here
+    // keeps the signal ambient — no notification, no interruption.
+    const isMismatch = resolved.source === 'detected'
+        && !!preferredLanguage
+        && preferredLanguage !== resolved.language;
+
+    if (isMismatch) {
+        const preferredCode = preferredLanguage!.toUpperCase();
+        const preferredName = getLanguageName(preferredLanguage!);
+        languageStatusBarItem.text = `${icons.detected} ${langCode} → ${preferredCode}`;
+        languageStatusBarItem.tooltip =
+            `Legesher: this file is ${langName} (detected from its contents). ` +
+            `You work in ${preferredName}. Click to change language.`;
+        return;
+    }
+
     languageStatusBarItem.text = `${icons[resolved.source]} ${langCode}`;
     languageStatusBarItem.tooltip =
         `Legesher: ${langName} (${origins[resolved.source]}) - Click to change language`;
@@ -455,39 +507,70 @@ function updateLanguageStatusBar(resolved: ResolvedLanguage): void {
 async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
     const currentConfig = getLanguageConfig();
     const languages = getActiveLanguages();
+    const config = vscode.workspace.getConfiguration('legesher');
+    const detectionEnabled = config.get<string>('languageDetection', 'auto') === 'auto';
 
-    // Create quick-pick items with native names
-    const items = languages.map(lang => ({
-        label: lang.code === currentConfig.targetLanguage ? `$(check) ${lang.nativeName}` : lang.nativeName,
-        description: lang.name,
-        detail: lang.code === currentConfig.targetLanguage ? 'Currently selected' : undefined,
-        languageCode: lang.code
-    }));
+    // "Auto" is a first-class choice, not a hidden default: without it, picking
+    // a language would be a one-way door out of detection (CORE-1754).
+    const AUTO = '__auto__';
+    const autoItem = {
+        label: detectionEnabled ? '$(check) Auto' : 'Auto',
+        description: 'Detect from file contents',
+        detail: detectionEnabled ? 'Currently selected' : undefined,
+        languageCode: AUTO
+    };
+
+    const items = [
+        autoItem,
+        ...languages.map(lang => {
+            const isCurrent = !detectionEnabled && lang.code === currentConfig.targetLanguage;
+            return {
+                label: isCurrent ? `$(check) ${lang.nativeName}` : lang.nativeName,
+                description: lang.name,
+                detail: isCurrent ? 'Currently selected' : undefined,
+                languageCode: lang.code
+            };
+        })
+    ];
 
     const selected = await vscode.window.showQuickPick(items, {
-        placeHolder: 'Select target language for code translation'
+        placeHolder: 'Select the language for code translation'
     });
 
     if (!selected) {
         return; // User cancelled
     }
 
-    // Don't restart if same language selected
-    if (selected.languageCode === currentConfig.targetLanguage) {
+    if (selected.languageCode === AUTO) {
+        if (detectionEnabled) {
+            return; // Already automatic
+        }
+        await config.update('languageDetection', 'auto', vscode.ConfigurationTarget.Global);
+        vscode.window.showInformationMessage(
+            'Legesher will detect each file\'s language from its contents.'
+        );
+        await syncActiveLanguage(context, { requirePythonEditor: false });
+        return;
+    }
+
+    // Nothing to do only if this language is already pinned; if detection is on,
+    // an explicit pick still has to turn it off even when the codes match.
+    if (!detectionEnabled && selected.languageCode === currentConfig.targetLanguage) {
         return;
     }
 
     // Track language change in telemetry
     LegesherTelemetry.trackLanguageChange(currentConfig.targetLanguage, selected.languageCode);
 
-    // Update configuration (user-level / global)
-    const config = vscode.workspace.getConfiguration('legesher');
+    // An explicit pick pins the language: write it and turn detection off, so it
+    // survives switching to a file that would detect as something else.
     await config.update('targetLanguage', selected.languageCode, vscode.ConfigurationTarget.Global);
+    await config.update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
 
     // Show notification
     const langName = getLanguageName(selected.languageCode);
     vscode.window.showInformationMessage(
-        `Legesher language changed to ${langName}. Reloading language server...`
+        `Legesher language set to ${langName}. Automatic detection is off — choose Auto to re-enable it.`
     );
 
     // Apply through the same idempotent path the configuration listener uses.
