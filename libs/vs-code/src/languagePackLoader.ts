@@ -36,6 +36,10 @@ export interface KeywordTranslations {
     [lang: string]: { [english: string]: string };
 }
 
+// Data-contract size cap (CORE-1453): mirrors MAX_PACK_FILE_BYTES in
+// legesher_i18n.data_contract — refuse oversized files before parsing.
+const MAX_PACK_FILE_BYTES = 1024 * 1024;
+
 // Cache for loaded language packs
 let _translationsCache: KeywordTranslations | null = null;
 let _allKeywordsCache: Set<string> | null = null;
@@ -83,7 +87,26 @@ function getLanguagePacksPath(extensionPath: string): string | null {
 }
 
 /**
+ * True when value is a plain object whose values are all strings —
+ * the only shape a pack's token partitions may have (CORE-1453).
+ */
+function isStringMap(value: unknown): value is { [key: string]: string } {
+    return (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value) &&
+        Object.values(value).every((v) => typeof v === 'string')
+    );
+}
+
+/**
  * Load a single language pack from YAML file
+ *
+ * Enforces the "packs are data, not code" contract (CORE-1453): a size cap
+ * before parsing, and a runtime shape check on the parsed result — the
+ * compile-time `as LanguagePack` cast alone proves nothing at runtime.
+ * (js-yaml v4 `load()` uses the core schema: no object construction, and
+ * unknown tags throw — the parse itself is safe on untrusted input.)
  */
 function loadLanguagePack(packPath: string): LanguagePack | null {
     try {
@@ -92,10 +115,26 @@ function loadLanguagePack(packPath: string): LanguagePack | null {
             return null;
         }
 
+        const size = fs.statSync(packPath).size;
+        if (size > MAX_PACK_FILE_BYTES) {
+            console.warn(
+                `[Legesher] Language pack exceeds the ${MAX_PACK_FILE_BYTES}-byte ` +
+                `data-contract cap (${size} bytes), refusing to load: ${packPath}`
+            );
+            return null;
+        }
+
         const content = fs.readFileSync(packPath, 'utf8');
         const pack = yaml.load(content) as LanguagePack;
 
-        if (!pack || !pack.keywords) {
+        if (
+            !pack ||
+            typeof pack !== 'object' ||
+            typeof pack.language !== 'string' ||
+            !isStringMap(pack.keywords) ||
+            (pack.builtins !== undefined && !isStringMap(pack.builtins)) ||
+            (pack.exceptions !== undefined && !isStringMap(pack.exceptions))
+        ) {
             console.warn(`[Legesher] Invalid language pack format: ${packPath}`);
             return null;
         }

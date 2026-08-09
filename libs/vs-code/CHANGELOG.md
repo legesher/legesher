@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Language packs**: pack files are now validated at load — a 1 MiB size cap and a runtime shape check on
+  keywords/builtins/exceptions; malformed or oversized packs are skipped with a warning instead of being trusted (CORE-1453)
 - **Telemetry**: defaults to OFF — opt in via `legesher.telemetry.enabled` (CORE-1586)
 
 ## 0.1.5 (2026-03-01)

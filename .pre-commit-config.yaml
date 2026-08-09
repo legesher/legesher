@@ -74,6 +74,19 @@ repos:
     name: Validate Language Pack YAML
     pass_filenames: true
 
+  # Data-contract gate (CORE-1453): packs are data, not code. Size cap,
+  # tag/anchor-free YAML, top-level key allowlist, http(s)-only metadata
+  # URLs, and the render-vs-execute round-trip on the merged pack. Walks
+  # the whole pack tree (merged-pack checks cross file boundaries), so
+  # pass_filenames is off; the pack-file trigger keeps it out of unrelated
+  # commits.
+  - entry: bash -c 'cd libs/i18n && uv run python -m legesher_i18n.scripts.enforce_data_contract --quiet'
+    files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
+    id: enforce-pack-data-contract
+    language: system
+    name: Enforce Pack Data Contract
+    pass_filenames: false
+
   # Untranslated-terms gate (CORE-1021): flags pack entries whose translation
   # equals the source term (key == value), net of the intentional-loanword
   # allowlist (libs/i18n/scripts/translate/untranslated_allowlist.yml).

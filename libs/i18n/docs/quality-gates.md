@@ -17,6 +17,7 @@ listed under the table.
 | Unicode/script audit | `libs/i18n/legesher_i18n/scripts/audit_packs.py` (uses `script_policy.py` + `schema_validator.py`) | NFKC instability, foreign-script bleed-through, illegal bidi/format controls, live-keyword collisions, min-interpreter XID traps, duplicate targets, invalid identifiers; undecodable/malformed packs surface as `load-error` | Workflow-declarative only (`.github/workflows/validate-packs.yml`); run manually | Blocking on errors; warnings advisory (CORE-1318) |
 | Collision audit | `libs/i18n/scripts/audit_collisions.py` | Cross-section/cross-partition collisions across the DB and all packs, incl. non-pack-edit paths (CORE-950, CORE-710) | Workflow-declarative only (`.github/workflows/ci.yml`); run manually | Blocking |
 | Pack schema/format | `libs/i18n/scripts/validate_language_pack_yaml.py` | Non-string values, unquoted YAML booleans, spaces/punctuation in values, structure, intra-pack duplicate translations, script-aware conventions | pre-commit hook `validate-language-pack-yaml` (changed pack files) | Blocking |
+| Data contract | `libs/i18n/legesher_i18n/scripts/enforce_data_contract.py` (uses `data_contract.py`) | "Packs are data, not code" (CORE-1453): file-size cap, YAML tags/anchors/aliases, unknown top-level keys, non-http(s) metadata URLs, render-vs-execute round-trip on the merged pack (soft-keyword divergence exempt) | pre-commit hook `enforce-pack-data-contract` (pack-file changes trigger a full-tree walk) | Blocking |
 | Style guides | `libs/i18n/legesher_i18n/scripts/validate_style_guides.py` | Style-guide schema violations; drift between guides' derived flags and `legesher_i18n/languages.json` | pre-commit hook `validate-style-guides` | Blocking |
 | Regen integrity | `libs/i18n/scripts/verify_pack_regen.py` | Regen-vs-shipped diff classes (`value_changed`, `key_added`, `key_removed`, `unknown_section`, `not_regenerated`, ...) — proves DB→YAML regeneration is safe (CORE-1400) | Manual ritual; wired into nothing — run before any pack regeneration | Blocking by convention |
 | Untranslated terms | `libs/i18n/scripts/translate/find_untranslated.py` | Pack entries whose translation equals the source term (key == value), net of the intentional-loanword allowlist | pre-commit hook `find-untranslated-terms` (changed pack files) | **Report-only for now** (`--warn-only`); flips strict when pending triage below clears |
@@ -28,6 +29,7 @@ Local commands (repo root unless noted):
 cd libs/i18n && uv run python -m legesher_i18n.scripts.audit_packs   # Unicode/script audit
 uv run python libs/i18n/scripts/audit_collisions.py                  # collision audit
 uv run python libs/i18n/scripts/validate_language_pack_yaml.py <files>
+cd libs/i18n && uv run python -m legesher_i18n.scripts.enforce_data_contract   # data contract (CORE-1453)
 cd libs/i18n && uv run python -m legesher_i18n.scripts.validate_style_guides
 uv run python libs/i18n/scripts/verify_pack_regen.py                 # before any regen
 uv run python libs/i18n/scripts/translate/find_untranslated.py       # untranslated terms

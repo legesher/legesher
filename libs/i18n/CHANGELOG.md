@@ -11,6 +11,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **"Packs are data, not code" contract enforcement (CORE-1453).** New
+  `legesher_i18n.data_contract` module and
+  `enforce_data_contract` gate (pre-commit hook
+  `enforce-pack-data-contract`): pack files are refused when they exceed a
+  1 MiB size cap, carry YAML tags or anchors/aliases, declare top-level
+  keys outside the pack schema, or hold non-http(s) URLs in metadata; the
+  merged pack must round-trip render↔execute byte-identically (Python
+  soft-keyword divergence exempt). The pack schema now fails closed on
+  unknown keys (`extra="forbid"`), pack metadata gains a
+  `review_status` trust tier (`experimental`/`reviewed`/`official`,
+  default `experimental`), and `LanguagePackLoader.load(strict=True)`
+  warns when loading any pack below `official`.
+
 - **Localized error-message catalog goes live (CORE-1679).** The messages
   partition (`message_templates` / `message_translations` /
   `message_endorsements`) — shipped DEFERRED/inert with schema v2 — is now

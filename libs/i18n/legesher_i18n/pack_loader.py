@@ -23,6 +23,7 @@ from .exceptions import (
     PathTraversalError,
     UnsupportedInterpreterError,
 )
+from .data_contract import MAX_PACK_FILE_BYTES
 from .schema_validator import LanguagePackMetadata, SchemaValidator
 
 logger = logging.getLogger(__name__)
@@ -298,6 +299,7 @@ class LanguagePackLoader:
         target: str = "python",
         version: str | None = None,
         enforce_min_interpreter: bool = True,
+        strict: bool = False,
     ) -> LanguagePack:
         """Load a language pack with full inheritance resolution.
 
@@ -314,6 +316,10 @@ class LanguagePackLoader:
                 interpreter (e.g. Sinhala ZWJ conjuncts need 3.13+, CORE-1318).
                 Tooling that inspects the raw pack without running translated
                 code (the auditor, exporters) passes ``False``.
+            strict: When True, warn on loading any pack whose
+                ``metadata.review_status`` is not ``official`` (CORE-1453
+                trust tiers). Default False — experimental packs load
+                silently, matching the ship-experimental-packs policy.
 
         Returns:
             Loaded LanguagePack with merged keywords from inheritance
@@ -382,6 +388,19 @@ class LanguagePackLoader:
             extends=pack_schema.extends,
             inheritance_chain=inheritance_chain,
         )
+
+        # Trust tiers (CORE-1453): in strict mode, anything below `official`
+        # on the review ladder loads with a warning, never silently.
+        if strict:
+            review_status = (
+                pack.metadata.review_status if pack.metadata else "experimental"
+            )
+            if review_status != "official":
+                logger.warning(
+                    f"Language pack {language}/{target} has review_status="
+                    f"'{review_status}' — not 'official'. Strict mode loads "
+                    "it with this warning (CORE-1453 trust tiers)."
+                )
 
         return pack
 
@@ -469,6 +488,19 @@ class LanguagePackLoader:
 
         visited_copy = visited.copy()
         visited_copy.add(pack_path_str)
+
+        # Data-contract size cap (CORE-1453): the DoS guard must fire before
+        # the YAML parser ever sees the file.
+        file_size = pack_path.stat().st_size
+        if file_size > MAX_PACK_FILE_BYTES:
+            raise PackValidationError(
+                pack_path_str,
+                [
+                    f"Pack file size {file_size} bytes exceeds the "
+                    f"data-contract cap of {MAX_PACK_FILE_BYTES} bytes "
+                    "(CORE-1453 DoS guard)"
+                ],
+            )
 
         # Load current pack
         with open(pack_path, encoding="utf-8") as f:
@@ -683,7 +715,10 @@ class LanguagePackLoader:
 
                 # Load language name from metadata
                 lang_name = lang_code.upper()
-                if metadata_path.exists():
+                if (
+                    metadata_path.exists()
+                    and metadata_path.stat().st_size <= MAX_PACK_FILE_BYTES
+                ):
                     try:
                         with open(metadata_path, encoding="utf-8") as f:
                             data = yaml.safe_load(f)

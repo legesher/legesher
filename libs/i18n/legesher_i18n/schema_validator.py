@@ -17,12 +17,13 @@ bidi/format controls, and live-keyword collisions). See
 """
 
 import keyword
+import re
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .exceptions import PackValidationError, VersionIndexError
 from .script_policy import (
@@ -34,6 +35,24 @@ from .script_policy import (
     policy_for,
     scripts_of,
 )
+
+# Data-contract URL policy (CORE-1453): the only URL schemes a pack's
+# metadata strings may carry. Everything else — javascript:, file:, data:,
+# vbscript: — fails closed at both the pydantic layer (this module) and the
+# file-level gate (legesher_i18n.data_contract).
+ALLOWED_URL_SCHEMES = frozenset({"http", "https"})
+
+_URL_SCHEME_RE = re.compile(r"\b([A-Za-z][A-Za-z0-9+.-]*)://")
+
+
+def find_disallowed_url_schemes(text: str) -> list[str]:
+    """Return every URL scheme in *text* outside :data:`ALLOWED_URL_SCHEMES`."""
+    return [
+        scheme
+        for scheme in _URL_SCHEME_RE.findall(text)
+        if scheme.lower() not in ALLOWED_URL_SCHEMES
+    ]
+
 
 # Soft keywords that contain special characters but are valid Python syntax
 # These are special cases that bypass the normal identifier validation
@@ -110,7 +129,13 @@ class LanguagePackMetadata(BaseModel):
         community_reviewed: True once the pack has passed community validation.
         author: Pack contributor name or handle.
         license: SPDX license identifier for the translations.
+        review_status: Review-ladder stage (CORE-1453 trust tiers). Every
+            pack starts ``experimental``; native review promotes it to
+            ``reviewed``; ratification promotes it to ``official``. Only
+            ``official`` packs load without a warning in strict mode.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     python_version_min: str | None = None
     python_version_max: str | None = None
@@ -119,6 +144,24 @@ class LanguagePackMetadata(BaseModel):
     community_reviewed: bool = False
     author: str | None = None
     license: str | None = None
+    review_status: Literal["experimental", "reviewed", "official"] = "experimental"
+
+    @model_validator(mode="after")
+    def validate_url_schemes(self) -> "LanguagePackMetadata":
+        """Only http(s) URLs may appear in metadata strings (CORE-1453)."""
+        for field_name in type(self).model_fields:
+            value = getattr(self, field_name)
+            items = value if isinstance(value, list) else [value]
+            for item in items:
+                if not isinstance(item, str):
+                    continue
+                for scheme in find_disallowed_url_schemes(item):
+                    raise ValueError(
+                        f"URL scheme '{scheme}' in metadata.{field_name} is "
+                        "not allowed: only http(s) schemes are permitted in "
+                        "pack metadata (CORE-1453)"
+                    )
+        return self
 
 
 class CulturalNote(BaseModel):
@@ -156,6 +199,10 @@ class LanguagePackSchema(BaseModel):
         cultural_notes: Per-term cultural context notes.
         metadata: Optional pack metadata block.
     """
+
+    # Packs are data, not code (CORE-1453): keys outside the schema fail
+    # closed rather than being silently ignored.
+    model_config = ConfigDict(extra="forbid")
 
     # MLCP v1.0 Core Required Fields
     language: str = Field(..., min_length=2, max_length=3)
