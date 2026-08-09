@@ -49,9 +49,42 @@ Exit codes:
 import argparse
 import ast
 import os
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+
+def _git_main_checkout_root(repo_root: Path) -> Path | None:
+    """The MAIN checkout's root when *repo_root* is a linked git worktree.
+
+    The git common dir is ``<main>/.git`` for every linked worktree; its
+    parent is the main checkout. None when git is unavailable, *repo_root*
+    is not a repository, or it already IS the main checkout.
+    """
+    try:
+        out = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo_root),
+                "rev-parse",
+                "--path-format=absolute",
+                "--git-common-dir",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=10,
+        ).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return None
+    common_dir = Path(out)
+    if common_dir.name != ".git":
+        return None  # bare or unusual layout — no main checkout to offer
+    main_root = common_dir.parent
+    return None if main_root == repo_root.resolve() else main_root
+
 
 # Monorepo root: libs/i18n/scripts/<this file> -> parents[3]
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -82,7 +115,14 @@ def resolve_examples_root(
     """Resolve the preview-repo checkout root.
 
     Priority: CLI arg > LEGESHER_PREVIEW_ROOT env var > sibling checkout
-    ``../preview-repo``. Returns None if no candidate exists on disk.
+    ``../preview-repo`` > the MAIN checkout's sibling when *repo_root*
+    is a linked git worktree. Returns None if no candidate exists on disk.
+
+    The worktree fallback matters: under the standard flow here
+    (``.claude/worktrees/<name>``), the naive sibling resolves to
+    ``.claude/worktrees/preview-repo`` — never a real checkout — and
+    the pre-commit hook would pass vacuously via ``--skip-if-missing``
+    (post-merge review finding, 2026-08-09).
     """
     candidates: list[Path] = []
     if cli_value:
@@ -92,6 +132,9 @@ def resolve_examples_root(
         if env_value:
             candidates.append(Path(env_value))
         candidates.append(repo_root.parent / "preview-repo")
+        main_root = _git_main_checkout_root(repo_root)
+        if main_root is not None:
+            candidates.append(main_root.parent / "preview-repo")
 
     for candidate in candidates:
         if candidate.is_dir():

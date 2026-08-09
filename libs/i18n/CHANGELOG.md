@@ -365,6 +365,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **Post-merge review fixes for the release gates (CORE-1774).** The
+  metadata URL guard now catches slash-less URIs (`javascript:alert(1)`,
+  `data:`) — the previous pattern required `://`, which the dangerous
+  schemes never use. Term-screening triage keys now include the localized
+  surface, so a regen that swaps a flagged word for a different one
+  arrives untriaged instead of inheriting the old acceptance (the 24
+  ledger entries are migrated). The showcase-example gate resolves the
+  preview checkout from linked git worktrees via the git common dir
+  instead of skipping vacuously. One policy, one implementation: the
+  identity-compare rule and the pack-section inventory are now imported
+  from their canonical homes rather than mirrored, and the corpus-push
+  auth error names the renamed `hf auth login` CLI.
+
 - **`db collisions` errors on a missing database instead of creating one
   (CORE-1497).** With no `--db-path` and no database present, the command now
   exits 1 with "Database not found" and creates no file — previously it

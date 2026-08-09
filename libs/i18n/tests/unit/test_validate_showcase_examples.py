@@ -226,3 +226,42 @@ class TestCoverage:
         captured = capsys.readouterr()
         assert exit_code == 1
         assert "missing" in captured.out.lower()
+
+
+@pytest.mark.unit
+class TestWorktreeResolution:
+    def test_worktree_checkout_resolves_main_root_sibling(self, tmp_path, monkeypatch):
+        # From a linked worktree under .claude/worktrees/, the naive
+        # repo_root.parent sibling is .claude/worktrees/preview-repo —
+        # never the real checkout. The resolver must fall back to the MAIN
+        # checkout's sibling via the git common dir (post-merge review
+        # finding, 2026-08-09: the hook was vacuously green from worktrees).
+        import subprocess
+
+        monkeypatch.delenv("LEGESHER_PREVIEW_ROOT", raising=False)
+        main_root = tmp_path / "legesher-next"
+        main_root.mkdir()
+        run = lambda *a: subprocess.run(  # noqa: E731
+            a, cwd=main_root, check=True, capture_output=True
+        )
+        run("git", "init", "-q")
+        run(
+            "git",
+            "-c",
+            "user.email=t@t",
+            "-c",
+            "user.name=t",
+            "commit",
+            "--allow-empty",
+            "-q",
+            "-m",
+            "init",
+        )
+        run("git", "worktree", "add", "-q", ".claude/worktrees/wt")
+        (tmp_path / "preview-repo").mkdir()
+
+        resolved = resolve_examples_root(
+            None, repo_root=main_root / ".claude" / "worktrees" / "wt"
+        )
+
+        assert resolved == tmp_path / "preview-repo"

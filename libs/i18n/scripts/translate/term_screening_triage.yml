@@ -4,7 +4,9 @@
 # disposition `fixed` (corrected at the DB layer per CORE-1400, then
 # re-exported through the regen ritual) or `accepted` (ships for now, with
 # the rationale recorded). `screen_terms.py --gate` fails on any flag
-# missing from this file. Keys are "<lang>:<partition>:<english>".
+# missing from this file. Keys are "<lang>:<partition>:<english>:<term>" — the localized
+# surface is part of the key, so a regen that changes the word arrives
+# untriaged (2026-08-09 fix).
 #
 # 2026-08-09 initial sweep (screener: claude-fable-5, 50 languages, 9,217
 # terms, 24 flags — every flag verified present in the shipped pack
@@ -12,131 +14,131 @@
 # review (CORE-1538 endorse/pass/flag); the DB-fix candidates are marked
 # and tracked on the CORE-401 follow-up ticket.
 
-"da:exceptions:baseexceptiongroup":
+"da:exceptions:baseexceptiongroup:basecovidsgroup":
   disposition: accepted
   rationale: >-
     "basecovidsgroup" embeds "covid" in a core exception name — machine-
     translation damage, not a Danish word choice. DB-fix candidate;
     routed to native review.
-"da:builtins:hex":
+"da:builtins:hex:hekseregel_convertering":
   disposition: accepted
   rationale: >-
     "hekseregel_convertering" reads as "witch rule" instead of
     hexadecimal. DB-fix candidate; routed to native review.
-"el:builtins:hash":
+"el:builtins:hash:χασάπης":
   disposition: accepted
   rationale: >-
     "χασάπης" reads as "butcher" (also mockingly, a brutal/sloppy
     person). Routed to native review for a neutral hashing term.
-"fi:builtins:globals":
+"fi:builtins:globals:kaikkivaltias":
   disposition: accepted
   rationale: >-
     "kaikkivaltias" is the standard Finnish epithet for God ("the
     Almighty"). DB-fix candidate; routed to native review.
-"fi:exceptions:overflowerror":
+"fi:exceptions:overflowerror:yliulostusvirhe":
   disposition: accepted
   rationale: >-
     "yliulostusvirhe" parses as "over-defecation error". DB-fix
     candidate; routed to native review.
-"fi:builtins:format":
+"fi:builtins:format:pärinnaita":
   disposition: accepted
   rationale: >-
     "pärinnaita" ends in a form readable as the vulgar verb "naida";
     screener torn (coinage is gibberish). Routed to native review.
-"fi:keywords:while":
+"fi:keywords:while:juhana":
   disposition: accepted
   rationale: >-
     "juhana" is a common Finnish male given name, not a while-loop word —
     machine-translation damage. DB-fix candidate; routed to native review.
-"fi:keywords:for":
+"fi:keywords:for:forza":
   disposition: accepted
   rationale: >-
     "forza" is Italian, not Finnish (and a game-franchise name) —
     machine-translation damage. DB-fix candidate; routed to native review.
-"fr:keywords:yield":
+"fr:keywords:yield:dégager":
   disposition: accepted
   rationale: >-
     "dégager" carries the rude imperative reading "Dégage !" (get lost).
     Routed to native review for a neutral yield term.
-"fr:exceptions:brokenpipeerror":
+"fr:exceptions:brokenpipeerror:erreurdepipecassée":
   disposition: accepted
   rationale: >-
     "erreurdepipecassée": "pipe" has a common vulgar slang reading in
     French; primary reading is still the pipe. Screener torn; routed to
     native review.
-"gd:builtins:any":
+"gd:builtins:any:gin":
   disposition: accepted
   rationale: >-
     "gin" is ordinary Gaelic but a Latin-script homograph of the English
     spirit in a fully bilingual community; giggle-risk only. Routed to
     native review.
-"he:builtins:globals":
+"he:builtins:globals:התרגוםשלהמונח":
   disposition: accepted
   rationale: >-
     "התרגוםשלהמונח" is a leaked translator placeholder ("the translation
     of the term"), not a translation at all — same fabricated-term class
     as the CORE-1340 findings. DB-fix candidate (top priority of this
     sweep); routed to native review.
-"hi:keywords:except*":
+"hi:keywords:except*:अपराधिक":
   disposition: accepted
   rationale: >-
     "अपराधिक" reads as "criminal/penal" — an exception keyword labeling
     code criminal. Routed to native review.
-"id:exceptions:exception":
+"id:exceptions:exception:kecurangan":
   disposition: accepted
   rationale: >-
     "kecurangan" reads as "cheating/fraud", evoking wrongdoing rather
     than an exceptional condition. Routed to native review.
-"ko:builtins:zip":
+"ko:builtins:zip:자바":
   disposition: accepted
   rationale: >-
     "자바" is the Korean name for the Java language — a Python builtin
     named "Java". DB-fix candidate; routed to native review.
-"ml:reserved_words:cls":
+"ml:reserved_words:cls:സ്വവർഗ്ഗം":
   disposition: accepted
   rationale: >-
     "സ്വവർഗ്ഗം" is literally "own class" but the compound dominantly
     reads as "same-sex" in contemporary usage; classroom snicker-risk.
     Routed to native review.
-"ms:builtins:callable":
+"ms:builtins:callable:menggugurkan":
   disposition: accepted
   rationale: >-
     "menggugurkan" dominantly reads as "to abort / cause a miscarriage".
     Routed to native review.
-"no:keywords:True":
+"no:keywords:True:verre":
   disposition: accepted
   rationale: >-
     "verre" means "worse" in Norwegian — True reads as "worse"; arguably
     a mistranslation more than crudeness. DB-fix candidate; routed to
     native review.
-"pl:builtins:hasattr":
+"pl:builtins:hasattr:mać":
   disposition: accepted
   rationale: >-
     "mać" survives in modern Polish almost only as the tail of the
     expletive "kurwa mać". DB-fix candidate; routed to native review.
-"ru:builtins:callable":
+"ru:builtins:callable:призываемый":
   disposition: accepted
   rationale: >-
     "призываемый" primarily evokes military conscription; standard
     "вызываемый" would not. Borderline; routed to native review.
-"si:exceptions:exception":
+"si:exceptions:exception:අපවාදය":
   disposition: accepted
   rationale: >-
     "අපවාදය" everyday reading is "slander/defamation" (Sanskrit apavāda
     "exception" exists but is dominated). Screener torn; routed to native
     review.
-"sv:exceptions:brokenpipeerror":
+"sv:exceptions:brokenpipeerror:brottnöje":
   disposition: accepted
   rationale: >-
     "brottnöje" parses as "crime-pleasure" ("brott" + "nöje"). Routed to
     native review.
-"th:exceptions:taberror":
+"th:exceptions:taberror:เทคนร์ของตับ":
   disposition: accepted
   rationale: >-
     "เทคนร์ของตับ" renders "tab" as ตับ ("liver") — reads as "…of the
     liver", with crude slang adjacent. Screener torn; routed to native
     review.
-"uz:keywords:pass":
+"uz:keywords:pass:otish":
   disposition: accepted
   rationale: >-
     Without the modifier letter, "otish" reads as "shooting" (otmoq)

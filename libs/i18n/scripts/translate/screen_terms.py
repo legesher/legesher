@@ -41,6 +41,10 @@ from pathlib import Path
 
 import yaml
 
+# Pack sections holding translated identifier surfaces — the schema's
+# inventory, not a copy (post-merge review finding, 2026-08-09).
+from legesher_i18n.schema_validator import TRANSLATION_SECTIONS as PARTITIONS
+
 # Path to language packs (mirrors find_untranslated.py)
 LANGUAGE_PACKS_DIR = Path(__file__).parent.parent.parent / "language-packs" / "python"
 
@@ -50,17 +54,6 @@ TRIAGE_PATH = Path(__file__).parent / "term_screening_triage.yml"
 
 # English is the reference surface, not a translation — never screened.
 SKIP_LANGUAGES = {"en"}
-
-# Pack sections holding translated identifier surfaces.
-PARTITIONS = (
-    "keywords",
-    "builtins",
-    "exceptions",
-    "reserved_words",
-    "members",
-    "operators",
-    "standard_library",
-)
 
 FLAG_CATEGORIES = {
     "profanity",
@@ -123,9 +116,17 @@ def coverage_digest(terms: list[Triple]) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def flag_key(lang: str, partition: str, english: str) -> str:
-    """Stable triage key for a flag: ``<lang>:<partition>:<english>``."""
-    return f"{lang}:{partition}:{english}"
+def flag_key(lang: str, partition: str, english: str, term: str) -> str:
+    """Triage key for a flag: ``<lang>:<partition>:<english>:<term>``.
+
+    The localized surface is part of the key on purpose: a regen can
+    replace a flagged term with a *different* offensive word, and an
+    acceptance recorded for the old surface must not green-light the new
+    one — the new flag must arrive untriaged (post-merge review finding,
+    2026-08-09). The superseded entry then surfaces as a stale-triage
+    warning for pruning.
+    """
+    return f"{lang}:{partition}:{english}:{term}"
 
 
 def load_report(path: Path) -> dict:
@@ -210,7 +211,7 @@ def gate(
                 f"vs current {current[:12]}…). Re-run the screen (CORE-401)."
             )
         for flag in report["flags"]:
-            key = flag_key(lang, flag["partition"], flag["english"])
+            key = flag_key(lang, flag["partition"], flag["english"], flag["term"])
             live_flag_keys.add(key)
             if key not in triage:
                 errors.append(

@@ -305,3 +305,41 @@ class TestEnforceFileContract:
     def test_clean_pack_has_no_findings(self, tmp_path: Path) -> None:
         pack = _write(tmp_path, MINIMAL_PACK)
         assert enforce_file_contract(pack) == []
+
+
+class TestUrlSchemeNoSlashes:
+    # javascript:/data:/vbscript: URIs never use '//' — the canonical forms
+    # of exactly the schemes this gate exists to block (post-merge review
+    # finding, 2026-08-09).
+    def test_rejects_javascript_scheme_without_slashes(self, tmp_path: Path) -> None:
+        pack = _write(
+            tmp_path,
+            MINIMAL_PACK.replace(
+                "author: Legesher Team", "author: see javascript:alert(1)"
+            ),
+        )
+        assert [f.code for f in check_metadata_urls(pack)] == ["url-scheme"]
+
+    def test_rejects_data_uri(self, tmp_path: Path) -> None:
+        pack = _write(
+            tmp_path,
+            MINIMAL_PACK.replace(
+                "author: Legesher Team", 'author: "data:text/html;base64,PHNjcmlwdD4="'
+            ),
+        )
+        assert [f.code for f in check_metadata_urls(pack)] == ["url-scheme"]
+
+    def test_prose_colon_with_space_is_not_a_url(self, tmp_path: Path) -> None:
+        pack = _write(
+            tmp_path,
+            MINIMAL_PACK.replace(
+                "author: Legesher Team", 'author: "Contact: the Legesher Team"'
+            ),
+        )
+        assert check_metadata_urls(pack) == []
+
+    def test_pydantic_rejects_javascript_scheme_without_slashes(self) -> None:
+        from legesher_i18n.schema_validator import LanguagePackMetadata
+
+        with pytest.raises(ValueError, match="scheme"):
+            LanguagePackMetadata(author="javascript:alert(document.cookie)")

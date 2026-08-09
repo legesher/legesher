@@ -34,6 +34,7 @@ import yaml
 
 from .schema_validator import (
     ALLOWED_URL_SCHEMES,
+    TRANSLATION_SECTIONS,
     Finding,
     LanguagePackSchema,
     find_disallowed_url_schemes,
@@ -63,9 +64,11 @@ ALLOWED_TOP_LEVEL_KEYS = frozenset(LanguagePackSchema.model_fields)
 # Python execution flattens the partitions into one token namespace
 # (CPython's ``tokenize`` dispatches flat, CORE-710), so the round-trip
 # check merges these before inverting. Member-bearing targets (JS,
-# CORE-1582) keep partitions separate and check each on its own.
+# CORE-1582) keep partitions separate and check each on its own. The full
+# inventory is the schema's TRANSLATION_SECTIONS — one list, not a copy
+# (post-merge review finding, 2026-08-09).
 _FLAT_PARTITIONS = ("keywords", "builtins", "exceptions", "reserved_words")
-_ALL_PARTITIONS = _FLAT_PARTITIONS + ("members", "operators", "standard_library")
+_ALL_PARTITIONS = TRANSLATION_SECTIONS
 
 # Python soft keywords whose keyword-role and builtin-role surfaces may
 # legally diverge (`type` since 3.12; the engine dispatches contextually).

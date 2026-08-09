@@ -35,13 +35,19 @@ import csv
 import json
 import logging
 import sqlite3
-import unicodedata
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
 
 import yaml
+
+# The identity-compare rule (NFKC + casefold, policy 2026-07-05) has exactly
+# one implementation: legesher_i18n.db.schema_v2.is_identity_translation.
+# The pre-commit hook runs this script via `uv run`, where the package is
+# importable — a local mirror would be a second policy that can drift
+# (post-merge review finding, 2026-08-09).
+from legesher_i18n.db.schema_v2 import is_identity_translation
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
@@ -63,15 +69,6 @@ ALLOWLIST_PATH = Path(__file__).parent / "untranslated_allowlist.yml"
 DEFAULT_DB_PATH = (
     Path(__file__).parent.parent.parent / "legesher_i18n" / "db" / "translations.db"
 )
-
-
-def _identity_fold(value: str) -> str:
-    """The identity-compare rule: NFKC + casefold (policy 2026-07-05).
-
-    Mirrors legesher_i18n.db.schema_v2.is_identity_translation — kept local
-    because this script runs standalone (pre-commit) without the package.
-    """
-    return unicodedata.normalize("NFKC", value).casefold()
 
 
 def check_db_drift(
@@ -96,9 +93,7 @@ def check_db_drift(
                 "WHERE st.language_code = ?",
                 (language,),
             ).fetchall()
-            matches = [
-                r for r in rows if _identity_fold(r["name"]) == _identity_fold(term)
-            ]
+            matches = [r for r in rows if is_identity_translation(r["name"], term)]
             if not matches:
                 errors.append(
                     f"{language}:{term} — allowlist entry has no selected "
@@ -106,8 +101,7 @@ def check_db_drift(
                     "loanword (CORE-1355)"
                 )
             elif not any(
-                _identity_fold(r["translation"]) == _identity_fold(term)
-                for r in matches
+                is_identity_translation(r["translation"], term) for r in matches
             ):
                 got = ", ".join(repr(r["translation"]) for r in matches)
                 errors.append(

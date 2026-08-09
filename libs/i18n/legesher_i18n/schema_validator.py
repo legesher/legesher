@@ -42,7 +42,13 @@ from .script_policy import (
 # file-level gate (legesher_i18n.data_contract).
 ALLOWED_URL_SCHEMES = frozenset({"http", "https"})
 
-_URL_SCHEME_RE = re.compile(r"\b([A-Za-z][A-Za-z0-9+.-]*)://")
+# A URI is `scheme:` followed by non-whitespace — the `//` is authority
+# syntax that exactly the dangerous schemes (javascript:, data:, vbscript:)
+# never use, so requiring `://` would wave the canonical payloads through
+# (post-merge review finding, 2026-08-09). Prose colons ("Contact: the
+# team") are followed by whitespace and never match; URI-shaped prose
+# ("v3:10") fails closed by design.
+_URL_SCHEME_RE = re.compile(r"\b([A-Za-z][A-Za-z0-9+.-]*):(?=\S)")
 
 
 def find_disallowed_url_schemes(text: str) -> list[str]:
@@ -71,6 +77,11 @@ _TRANSLATION_SECTIONS = (
     "operators",
     "standard_library",
 )
+
+#: Public name for the pack-section inventory — the single list the
+#: data-contract and term-screening layers import instead of re-stating it
+#: (post-merge review finding, 2026-08-09).
+TRANSLATION_SECTIONS = _TRANSLATION_SECTIONS
 
 # The one intentional cross-section duplicate: ``type`` is both a Python
 # keyword (3.12+ ``type`` statement) and a builtin. Packs translate both to the

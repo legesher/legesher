@@ -1004,7 +1004,7 @@ def preflight_hub_auth() -> None:
     except Exception as error:  # hub raises several exception types here
         raise SystemExit(
             f"PUSH REFUSED: not authenticated to the Hugging Face Hub ({error}). "
-            "Run `huggingface-cli login` or set HF_TOKEN, then re-run."
+            "Run `hf auth login` or set HF_TOKEN, then re-run."
         ) from None
     print(f"Hub auth ok: {who.get('name', '?')}")
 

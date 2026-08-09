@@ -158,7 +158,7 @@ class TestGate:
         }
         _write_report(tmp_path / "reports", "es", self._digest_for(root, "es"), [flag])
         triage = {
-            "es:keywords:if": {
+            "es:keywords:if:si_kw": {
                 "disposition": "accepted",
                 "rationale": "native review pending; benign in context",
             }
@@ -259,3 +259,41 @@ class TestMain:
         assert {"partition": "keywords", "english": "if", "term": "si_kw"} in payload[
             "es"
         ]["terms"]
+
+
+class TestTriageKeyIncludesSurface:
+    # A regen can replace a flagged term with a DIFFERENT offensive word; an
+    # acceptance recorded for the old surface must not green-light the new
+    # one (post-merge review finding, 2026-08-09), so the triage key carries
+    # the localized term.
+    def test_flag_key_includes_localized_term(self) -> None:
+        assert screen_terms.flag_key("es", "keywords", "if", "si_kw") == (
+            "es:keywords:if:si_kw"
+        )
+
+    def test_old_surface_acceptance_does_not_cover_new_surface(
+        self, tmp_path: Path
+    ) -> None:
+        root = _write_packs(tmp_path, {"es": ES_PACK})
+        digest = screen_terms.coverage_digest(
+            screen_terms.collect_terms(root, lang_filter="es")["es"]
+        )
+        flag = {
+            "term": "si_kw",
+            "english": "if",
+            "partition": "keywords",
+            "category": "profanity",
+            "note": "test",
+        }
+        _write_report(tmp_path / "reports", "es", digest, [flag])
+        triage = {
+            "es:keywords:if:old_word": {
+                "disposition": "accepted",
+                "rationale": "about the OLD surface",
+            }
+        }
+        triage_path = tmp_path / "triage.yml"
+        triage_path.write_text(yaml.safe_dump(triage), encoding="utf-8")
+        errors, warnings = screen_terms.gate(root, tmp_path / "reports", triage_path)
+        assert any("untriaged" in e.lower() and "si_kw" in e for e in errors)
+        assert any("old_word" in w for w in warnings)  # stale entry surfaced
