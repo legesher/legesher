@@ -1,0 +1,21 @@
+{
+  // Integration tests run inside a real VS Code instance, so they compile to
+  // plain JS under out/test/ where .vscode-test.mjs looks for them.
+  //
+  // A separate config is needed because the root tsconfig sets rootDir to src
+  // and includes only src/**/*, so test sources were never emitted at all —
+  // the vscode-test glob matched nothing and `npm test` passed vacuously.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "outDir": "../out",
+    "types": ["mocha", "node", "vscode"],
+    // The root config's moduleResolution=node10 is deprecated under TypeScript
+    // 6 and errors out, which would fail this build. Acknowledged here so the
+    // test compile passes; the migration itself is tracked separately and is
+    // not something these tests should carry.
+    "ignoreDeprecations": "6.0"
+  },
+  "include": ["integration/**/*.ts"],
+  "exclude": []
+}

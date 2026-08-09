@@ -25,7 +25,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     loadEnvVariables(context.extensionPath);
 
     // Create reusable output channel first
-    outputChannel = vscode.window.createOutputChannel('Legesher Language Server');
+    // Must be a LogOutputChannel ({ log: true }). vscode-languageclient 10 calls
+    // outputChannel.error/.warn/.info, which exist only on LogOutputChannel — a
+    // plain OutputChannel makes the client throw "this.outputChannel.error is
+    // not a function" the first time it logs, which happens during startup. That
+    // aborts client.start() and takes down every LSP feature, while masking
+    // whatever the client was actually trying to report.
+    outputChannel = vscode.window.createOutputChannel('Legesher Language Server', { log: true });
     context.subscriptions.push(outputChannel);
 
     // Initialize logger
