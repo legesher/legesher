@@ -1,0 +1,29 @@
+# Identifier glossary for the playground samples (CORE-1696), Turkish.
+# Display/generation layer only: the canonical sources in docs/snippets/*.py
+# stay English. Best-effort translations; entries await native review.
+# Missing entries fall back to the English identifier.
+hello-world:
+  greet: selamla
+  name: isim
+loops:
+  number: sayi
+  total: tutar
+functions:
+  count: adet
+  values: degerler
+classes:
+  Animal: Hayvan
+  Dog: Kopek
+  name: isim
+  sound: ses
+  speak: konus
+error-handling:
+  divide: bol
+  numerator: pay
+  denominator: payda
+async-await:
+  brew: demle
+  drink: icecek
+  seconds: saniye
+  main: ana
+  drinks: icecekler

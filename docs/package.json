@@ -15,9 +15,11 @@
     "@astrojs/starlight": "^0.40.0",
     "@astrojs/vercel": "^10.0.8",
     "@codemirror/lang-python": "^6.2.1",
+    "@codemirror/language": "^6.12.4",
     "@codemirror/state": "^6.7.1",
     "@codemirror/view": "^6.43.6",
     "@fontsource-variable/noto-sans": "^5.2.10",
+    "@lezer/highlight": "^1.2.3",
     "astro": "^6.4.6",
     "codemirror": "^6.0.2",
     "sharp": "^0.35.0"

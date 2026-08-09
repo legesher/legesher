@@ -1,0 +1,27 @@
+# Identifier glossary for the playground samples (CORE-1696), Spanish.
+# Display/generation layer only: the canonical sources in docs/snippets/*.py
+# stay English. Best-effort translations; entries await native review.
+# Missing entries fall back to the English identifier.
+hello-world:
+  greet: saludar
+  name: nombre
+loops:
+  number: numero
+functions:
+  count: cantidad
+  values: valores
+classes:
+  Dog: Perro
+  name: nombre
+  sound: sonido
+  speak: hablar
+error-handling:
+  divide: dividir
+  numerator: numerador
+  denominator: denominador
+async-await:
+  brew: preparar
+  drink: bebida
+  seconds: segundos
+  main: principal
+  drinks: bebidas

@@ -13,7 +13,11 @@ type WorkerMessage =
   | { type: "status"; phase: WorkerStatus; message: string }
   | { id: number; type: "stdout" | "stderr"; line: string }
   | { id: number; type: "result" }
+  | { id: number; type: "translated"; code: string }
   | { id: number; type: "error"; phase: string; message: string };
+
+/** 'to-en' = localized → canonical (what Run uses); 'from-en' = the reverse. */
+export type TranslateDirection = "to-en" | "from-en";
 
 export interface RunnerCallbacks {
   /** Lifecycle hints for the loading modal / status line. */
@@ -28,7 +32,20 @@ export interface RunnerCallbacks {
 
 export interface Runner {
   run(source: string, lang: string, callbacks: RunnerCallbacks): void;
+  /** Translate without executing; resolves to the translated source. */
+  translate(
+    source: string,
+    lang: string,
+    direction: TranslateDirection,
+    onStatus?: (phase: WorkerStatus, message: string) => void,
+  ): Promise<string>;
   dispose(): void;
+}
+
+interface PendingTranslation {
+  resolve: (code: string) => void;
+  reject: (err: Error) => void;
+  onStatus?: (phase: WorkerStatus, message: string) => void;
 }
 
 export function createRunner(): Runner {
@@ -37,6 +54,12 @@ export function createRunner(): Runner {
   let activeId: number | null = null;
   let activeCbs: RunnerCallbacks | null = null;
   let watchdog: ReturnType<typeof setTimeout> | null = null;
+  const pendingTranslations = new Map<number, PendingTranslation>();
+
+  const rejectTranslations = (message: string) => {
+    for (const pending of pendingTranslations.values()) pending.reject(new Error(message));
+    pendingTranslations.clear();
+  };
 
   const clearWatchdog = () => {
     if (watchdog) {
@@ -62,6 +85,7 @@ export function createRunner(): Runner {
         worker.terminate();
         worker = null;
       }
+      rejectTranslations("The Python runtime was stopped by a timed-out run.");
       const cbs = finish();
       cbs?.onError?.(
         "timeout",
@@ -73,8 +97,16 @@ export function createRunner(): Runner {
   const onMessage = (msg: WorkerMessage) => {
     if (msg.type === "status") {
       activeCbs?.onStatus?.(msg.phase, msg.message);
+      for (const pending of pendingTranslations.values()) pending.onStatus?.(msg.phase, msg.message);
       // Only user-code execution is guarded; boot/install/translate are not.
       if (msg.phase === "running") startWatchdog();
+      return;
+    }
+    const pending = pendingTranslations.get(msg.id);
+    if (pending) {
+      pendingTranslations.delete(msg.id);
+      if (msg.type === "translated") pending.resolve(msg.code);
+      else if (msg.type === "error") pending.reject(new Error(msg.message));
       return;
     }
     if (msg.id !== activeId) return; // stale message from a superseded run
@@ -91,6 +123,7 @@ export function createRunner(): Runner {
     const w = new Worker(WORKER_URL, { type: "module" });
     w.onmessage = (ev: MessageEvent<WorkerMessage>) => onMessage(ev.data);
     w.onerror = (ev) => {
+      rejectTranslations(ev.message || "The Python runtime failed to start.");
       const cbs = finish();
       cbs?.onError?.("boot", ev.message || "The Python runtime failed to start.");
     };
@@ -107,12 +140,21 @@ export function createRunner(): Runner {
       activeCbs = callbacks;
       worker.postMessage({ id, type: "run", source, lang });
     },
+    translate(source, lang, direction, onStatus) {
+      if (!worker) worker = spawn();
+      const id = nextId++;
+      return new Promise<string>((resolve, reject) => {
+        pendingTranslations.set(id, { resolve, reject, onStatus });
+        worker!.postMessage({ id, type: "translate", source, lang, direction });
+      });
+    },
     dispose() {
       clearWatchdog();
       if (worker) {
         worker.terminate();
         worker = null;
       }
+      rejectTranslations("The playground was disposed.");
       activeId = null;
       activeCbs = null;
     },

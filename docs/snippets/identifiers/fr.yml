@@ -1,0 +1,27 @@
+# Identifier glossary for the playground samples (CORE-1696), French.
+# Display/generation layer only: the canonical sources in docs/snippets/*.py
+# stay English. Best-effort translations; entries await native review.
+# Missing entries fall back to the English identifier.
+hello-world:
+  greet: saluer
+  name: nom
+loops:
+  number: nombre
+functions:
+  count: compte
+  values: valeurs
+classes:
+  Dog: Chien
+  name: nom
+  sound: son
+  speak: parler
+error-handling:
+  divide: diviser
+  numerator: numerateur
+  denominator: denominateur
+async-await:
+  brew: preparer
+  drink: boisson
+  seconds: secondes
+  main: principal
+  drinks: boissons

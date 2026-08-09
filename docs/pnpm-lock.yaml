@@ -17,6 +17,9 @@ importers:
       '@codemirror/lang-python':
         specifier: ^6.2.1
         version: 6.2.1
+      '@codemirror/language':
+        specifier: ^6.12.4
+        version: 6.12.4
       '@codemirror/state':
         specifier: ^6.7.1
         version: 6.7.1
@@ -26,6 +29,9 @@ importers:
       '@fontsource-variable/noto-sans':
         specifier: ^5.2.10
         version: 5.2.10
+      '@lezer/highlight':
+        specifier: ^1.2.3
+        version: 1.2.3
       astro:
         specifier: ^6.4.6
         version: 6.4.6(@types/node@24.13.2)(@vercel/functions@3.7.0)(rollup@4.61.1)

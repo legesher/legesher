@@ -10,9 +10,11 @@
 //
 // Protocol
 //   main → worker:  { id, type: 'run', source, lang }
+//                   { id, type: 'translate', source, lang, direction }  // to-en | from-en
 //   worker → main:  { type: 'status', phase, message }        // lifecycle
 //                   { id, type: 'stdout' | 'stderr', line }    // streamed output
 //                   { id, type: 'result' }                     // finished OK
+//                   { id, type: 'translated', code }           // translate finished OK
 //                   { id, type: 'error', phase, message }      // translate|run|boot
 //
 // The recipe below (index deps via callKwargs, wheels with deps=false, the
@@ -47,6 +49,16 @@ def _pg_translate(src, lang):
         # from_language_pack(lang) maps en→lang; reverse() gives lang→en.
         t = TokenTranslator.from_language_pack(lang).reverse()
         _pg_translators[lang] = t
+    return t.translate_code(src)
+
+_pg_forward_translators = {}
+
+def _pg_translate_forward(src, lang):
+    t = _pg_forward_translators.get(lang)
+    if t is None:
+        # from_language_pack(lang) is already the en→lang direction.
+        t = TokenTranslator.from_language_pack(lang)
+        _pg_forward_translators[lang] = t
     return t.translate_code(src)
 
 def _pg_run_user(code):
@@ -151,10 +163,41 @@ async function handleRun(id, source, lang) {
   }
 }
 
+// Translate without executing (CORE-1696 source ↔ canonical toggle). Both
+// directions ride the same packs: 'to-en' is the runner's lang→en path,
+// 'from-en' the forward en→lang one.
+async function handleTranslate(id, source, lang, direction) {
+  try {
+    await ensureBooted();
+  } catch (e) {
+    post({ id, type: "error", phase: "boot", message: `Failed to start the Python runtime: ${e && e.message ? e.message : e}` });
+    return;
+  }
+
+  if (lang === "en") {
+    post({ id, type: "translated", code: source });
+    return;
+  }
+  try {
+    await ensurePack(lang);
+    pyodide.globals.set("_pg_src", source);
+    pyodide.globals.set("_pg_lang", lang);
+    const fn = direction === "from-en" ? "_pg_translate_forward" : "_pg_translate";
+    const code = pyodide.runPython(`${fn}(_pg_src, _pg_lang)`);
+    post({ id, type: "translated", code });
+  } catch (e) {
+    post({ id, type: "error", phase: "translate", message: `Could not translate the code: ${e && e.message ? e.message : e}` });
+  } finally {
+    pyodide.globals.set("_pg_src", "");
+  }
+}
+
 self.onmessage = (ev) => {
   const data = ev.data || {};
   if (data.type === "run") {
     handleRun(data.id, data.source, data.lang);
+  } else if (data.type === "translate") {
+    handleTranslate(data.id, data.source, data.lang, data.direction);
   } else if (data.type === "boot") {
     ensureBooted().catch(() => {});
   }

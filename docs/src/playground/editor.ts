@@ -2,12 +2,14 @@
 //
 // Deliberately LTR-only for v1 (RTL editing is CORE-1552). Uses only stock
 // @codemirror/* packages — no @legesher/* dependency (the npm scope is
-// unpublished, CORE-1381). The editor is grammar-agnostic about which natural
-// language the keywords are in: python() gives structural/string/comment
-// highlighting; localized keywords render as identifiers, which is fine for v1.
+// unpublished, CORE-1381). The editor itself is grammar-agnostic about which
+// natural language the keywords are in: python() gives structural/string/
+// comment highlighting, and the pack-driven decoration layer (highlight.ts,
+// passed in via `extensions`) colors localized keywords and names to match
+// the English view.
 
 import { EditorView, keymap } from "@codemirror/view";
-import { EditorState } from "@codemirror/state";
+import { EditorState, type Extension } from "@codemirror/state";
 import { basicSetup } from "codemirror";
 import { python } from "@codemirror/lang-python";
 
@@ -25,9 +27,13 @@ export interface MountOptions {
   doc: string;
   /** Invoked on Mod-Enter (Cmd/Ctrl-Enter) so the page can trigger a Run. */
   onRun?: () => void;
+  /** Invoked whenever the document changes (typing or setDoc). */
+  onChange?: () => void;
+  /** Additional extensions, e.g. the localized highlight layer. */
+  extensions?: Extension[];
 }
 
-export function mountEditor({ parent, doc, onRun }: MountOptions): PlaygroundEditor {
+export function mountEditor({ parent, doc, onRun, onChange, extensions = [] }: MountOptions): PlaygroundEditor {
   const runKey = keymap.of([
     {
       key: "Mod-Enter",
@@ -39,6 +45,10 @@ export function mountEditor({ parent, doc, onRun }: MountOptions): PlaygroundEdi
     },
   ]);
 
+  const changeListener = EditorView.updateListener.of((update) => {
+    if (update.docChanged) onChange?.();
+  });
+
   const view = new EditorView({
     parent,
     state: EditorState.create({
@@ -47,12 +57,14 @@ export function mountEditor({ parent, doc, onRun }: MountOptions): PlaygroundEdi
         basicSetup,
         python(),
         runKey,
+        changeListener,
         EditorState.tabSize.of(4),
         EditorView.theme({
           "&": { fontSize: "0.9rem", borderRadius: "0.5rem" },
           "&.cm-focused": { outline: "2px solid var(--sl-color-accent)" },
           ".cm-scroller": { fontFamily: "var(--__sl-font-mono, ui-monospace, monospace)" },
         }),
+        ...extensions,
       ],
     }),
   });

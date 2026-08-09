@@ -1,0 +1,28 @@
+# Identifier glossary for the playground samples (CORE-1696), Indonesian.
+# Display/generation layer only: the canonical sources in docs/snippets/*.py
+# stay English. Best-effort translations; entries await native review.
+# Missing entries fall back to the English identifier (e.g. 'drinks', which
+# has no natural identifier-safe plural distinct from 'drink').
+hello-world:
+  greet: sapa
+  name: nama
+loops:
+  number: angka
+functions:
+  count: jumlah
+  values: nilai
+classes:
+  Animal: Hewan
+  Dog: Anjing
+  name: nama
+  sound: suara
+  speak: bicara
+error-handling:
+  divide: bagi
+  numerator: pembilang
+  denominator: penyebut
+async-await:
+  brew: seduh
+  drink: minuman
+  seconds: detik
+  main: utama

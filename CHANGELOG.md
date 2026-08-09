@@ -11,6 +11,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **docs**: shareable playground — playground state now lives in the URL
+  (`?code=<base64url>&src=en&tgt=<lang>&sample=<slug>`, with a Copy link
+  button), so any language × example combination is a pasteable link,
+  sample context included; a Show English toggle
+  renders the canonical view with true two-way translation (untouched round
+  trips restore the localized source byte-for-byte); six curated samples on
+  a difficulty ladder (hello world → async/await) generated from canonical
+  sources, with localized identifiers for es/fr/de/pt/it/tr/id pending
+  native review (other languages keep English identifiers); localized
+  buffers now highlight exactly like English — keywords, builtins and
+  definition names take the same colors via pack-driven decoration, all 51
+  packs, no per-language theming. [CORE-1696]
+
 - **mcp**: agent-session artifacts for localized code — the
   `AGENTS-template.md` language-policy declaration (copy into a repo as
   `AGENTS.md`; read by Codex, Cursor, Claude Code, Antigravity, Windsurf)

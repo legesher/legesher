@@ -1,0 +1,27 @@
+# Identifier glossary for the playground samples (CORE-1696), German.
+# Display/generation layer only: the canonical sources in docs/snippets/*.py
+# stay English. Best-effort translations; entries await native review.
+# Missing entries fall back to the English identifier.
+hello-world:
+  greet: begruessen
+loops:
+  number: zahl
+  total: gesamt
+functions:
+  count: anzahl
+  values: werte
+classes:
+  Animal: Tier
+  Dog: Hund
+  sound: laut
+  speak: sprechen
+error-handling:
+  divide: teilen
+  numerator: zaehler
+  denominator: nenner
+async-await:
+  brew: bruehen
+  drink: getraenk
+  seconds: sekunden
+  main: haupt
+  drinks: getraenke
