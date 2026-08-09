@@ -183,6 +183,42 @@ describe('Language Detection (CORE-1729)', () => {
             assert.strictEqual(result, null);
         });
 
+        it('ignores prose in comments', () => {
+            // A Legesher user writes comments in their own language, so prose is
+            // ordinary input. Counting it as keyword evidence lets a comment
+            // block outvote the code it describes: English code with heavy
+            // Spanish comments scored es=14 against the real packs.
+            const spanishProse = [
+                '# definir la funcion para imprimir el resultado',
+                '# si el valor es nada, retornar falso',
+                '# para cada elemento en la lista, continuar',
+                'def f(x):',
+                '    return x',
+                ''
+            ].join('\n');
+
+            const result = detectLanguage(spanishProse, vocabs);
+
+            assert.strictEqual(result, null);
+        });
+
+        it('ignores prose in string literals and docstrings', () => {
+            const withDocstring = [
+                'definit greet(name):',
+                '    """This function prints a greeting and returns it."""',
+                '    drucken(name)',
+                '    zurückgeben name',
+                ''
+            ].join('\n');
+
+            // The German code must still win; the English docstring must not
+            // count against it.
+            const result = detectLanguage(withDocstring, vocabs);
+
+            assert.ok(result, 'should still detect the code language');
+            assert.strictEqual(result!.language, 'de');
+        });
+
         it('returns null when there is too little evidence', () => {
             // A single hit is not enough to switch a user's language.
             const result = detectLanguage('drucken(1)\n', vocabs);

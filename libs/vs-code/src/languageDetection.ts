@@ -145,6 +145,75 @@ export function buildVocabularies(
 }
 
 /**
+ * Remove comments and string literals, leaving the code positions.
+ *
+ * Keyword evidence must come from code, not prose. A Legesher user writes
+ * comments in their own language, so prose is ordinary input rather than an
+ * edge case — and left in, it outvotes the code it describes: English source
+ * with heavy Spanish comments scores `es` 14 against the real packs and the
+ * language server is switched to Spanish for a file that has no Spanish code in
+ * it (CORE-1765).
+ *
+ * A single scan rather than regexes, so a `#` inside a string is not mistaken
+ * for a comment and a quote inside a comment does not open a string. It is not
+ * a Python parser and does not need to be: the scorer only needs the code-ish
+ * remainder, and detection already declines when evidence is thin.
+ */
+export function stripProse(text: string): string {
+    const IDENTIFIER_PREFIX = /[A-Za-z]$/;
+    let out = '';
+    let i = 0;
+
+    while (i < text.length) {
+        const char = text[i];
+
+        // Comment: skip to end of line, leaving the newline in place.
+        if (char === '#') {
+            while (i < text.length && text[i] !== '\n') {
+                i++;
+            }
+            continue;
+        }
+
+        if (char === '"' || char === "'") {
+            // Drop any string prefix already emitted (f, r, b, rb, …) so it is
+            // not left behind as a stray one-character token — packs do contain
+            // single-letter translations.
+            while (IDENTIFIER_PREFIX.test(out)) {
+                out = out.slice(0, -1);
+            }
+
+            const triple = char.repeat(3);
+            if (text.startsWith(triple, i)) {
+                const end = text.indexOf(triple, i + 3);
+                i = end === -1 ? text.length : end + 3;
+            } else {
+                i++;
+                while (i < text.length) {
+                    if (text[i] === '\\') {
+                        i += 2;
+                        continue;
+                    }
+                    if (text[i] === char || text[i] === '\n') {
+                        i++;
+                        break;
+                    }
+                    i++;
+                }
+            }
+            // Stand in for the removed literal so neighbouring tokens stay apart.
+            out += ' ';
+            continue;
+        }
+
+        out += char;
+        i++;
+    }
+
+    return out;
+}
+
+/**
  * Detect which language `text` is written in.
  *
  * Returns null when no language clears `minHits`, or when the leader fails to
@@ -158,7 +227,7 @@ export function detectLanguage(
     const minHits = options.minHits ?? DEFAULT_MIN_HITS;
     const minMargin = options.minMargin ?? DEFAULT_MIN_MARGIN;
 
-    const tokens = new Set(text.match(TOKEN_PATTERN) ?? []);
+    const tokens = new Set(stripProse(text).match(TOKEN_PATTERN) ?? []);
     if (tokens.size === 0) {
         return null;
     }
