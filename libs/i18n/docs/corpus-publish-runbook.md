@@ -44,6 +44,13 @@ formula above, and it never leaves the private `build_meta` table.
 
 ```bash
 cd libs/i18n
+# REBUILDING? The migration refuses outright if the target file already exists
+# ("refusing to overwrite build/translations_v2.db") and has no force flag —
+# it will not clobber a publish-grade artifact. Move the old one aside rather
+# than deleting it: until the new build is pushed, it is the only local copy
+# of what is currently live, and the two are worth diffing.
+[ -f build/translations_v2.db ] && \
+    mv build/translations_v2.db "build/translations_v2.superseded.db"
 # NEVER paste the salt on a command line or in a plain `export` — it lands in
 # shell history and in `ps`, and this secret can never be rotated. Read it
 # without echo (or pipe it in from your secret manager's CLI):
@@ -53,12 +60,35 @@ read -rs LEGESHER_CONTRIBUTOR_SALT && export LEGESHER_CONTRIBUTOR_SALT
 uv run python scripts/migrate_to_v2.py \
     --source legesher_i18n/db/translations.db \
     --target build/translations_v2.db \
-    --publish
+    --publish --acknowledge-message-rows-not-migrated
 ```
 
 `--publish` refuses, before creating anything: a missing/dev/short salt, and
 any unresolved contributor identity. The build stamps `build_meta` with
 `publish_build = 1` and the salt fingerprint — the push gate reads both.
+
+Confirm the build is the one you think it is before exporting:
+
+```bash
+sqlite3 build/translations_v2.db \
+    "select source, count(*) from option_provenance group by 1 order by 2 desc;"
+```
+
+It must print `legesher` / `upstream` / `model` / `community`. Anything else —
+`import` in particular — means the export is about to run against an older
+database, and the card it generates will describe a vocabulary the data does
+not carry. Nothing downstream catches that: the card comes from the code and
+the data comes from this file, and no gate compares them.
+
+`--acknowledge-message-rows-not-migrated` answers a separate refusal. The
+source database carries the `message_templates` partition (CORE-1679), which
+this migration does not carry over, so a v2 build would silently start with
+none. The flag says you know that; re-seed afterwards with
+`scripts/seed_message_templates.py` from `legesher_i18n/db/seeds/`. Dropping
+the partition from the source first is the other way through. Either is fine
+for the corpus — `message_templates` is not one of the five exported configs
+and never reaches the Hub — but it changes what the local v2 database holds,
+so pick deliberately rather than reaching for the flag to clear the error.
 
 The migration is multi-target aware: concepts dedupe by slug across
 programming languages, terms stay per-PL, canon selections carry their
@@ -76,8 +106,11 @@ No network library is touched. Review:
 
 - `build/hf-corpus/reconciliation.json` — row counts must reconcile (the
   export hard-fails if not);
-- `build/hf-corpus/README.md` — the dataset card (license section stays a
-  placeholder until the CORE-1502 license decision);
+- `build/hf-corpus/README.md` — the dataset card. Check the frontmatter reads
+  `license: cc-by-4.0` and that the Licence and attribution section carries
+  all three upstream projects, including the changes-were-made statement
+  Apache-2.0 requires (CORE-1720). A card that still says `license: other`
+  means the build ran against a stale checkout;
 - `build/hf-corpus/data/*.parquet` — five configs, pinned Arrow schemas.
 
 ## 3. The private push (double-keyed + provenance-verified)
@@ -117,8 +150,13 @@ The upload itself is allowlisted to exactly what the exporter writes
 output directory never reaches the Hub.
 
 The repo is created **PRIVATE** (`private=True`) and this tooling never
-flips visibility. Going public is a separate deliberate act on the Hub,
-gated on the remaining CORE-1502 decisions (license, credit, withdrawal).
+flips visibility. Going public is a separate deliberate act on the Hub, and
+two things must be true first: the published revision has to carry the
+current attribution and licence (CORE-1761), and the contributor consent
+notice and withdrawal procedure have to exist, because the card promises a
+right to withdraw that nothing currently implements (CORE-1780). The licence
+itself is settled — CC BY 4.0, decided 2026-07-15.
+
 The salt freezes at this first private push.
 
 ## 4. After the push
