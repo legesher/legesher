@@ -184,6 +184,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **i18n**: the tooling that could silently corrupt translated terms is retired.
+  Two orphaned "fixer" scripts rewrote pack values in place with *contradictory*
+  conventions — one deleted spaces, the other replaced them with underscores —
+  and both had run, which is the mechanical origin of the mixed joining
+  convention still visible in the packs (`ar` 3 underscore / 67 bare in
+  exceptions; `he` 18 / 52). Neither was referenced by CI, pre-commit, or any
+  Makefile; both are deleted rather than deprecated. The guidance that
+  reproduced the damage is corrected in the same pass: the space error in
+  `scripts/translate/validators.py` interpolated `translation.replace(' ', '')`
+  and handed the caller a finished concatenated string, so anyone following it
+  recreated the corruption exactly — it now states the constraint and points at
+  the language's declared convention without prescribing a remedy, and the test
+  that asserted on the concatenated output (pinning the destructive behavior) is
+  inverted to reject it. `validate_language_pack_yaml.py` no longer claims that
+  "RTL scripts (ar, he): Concatenate without separators (Arabic/Hebrew naturally
+  connect)" — Arabic and Hebrew letters join *within* a word as a rendering
+  property, which says nothing about deleting boundaries *between* words, and
+  the false premise had been used to justify destroying word separation in the
+  two worst-affected languages. Validation *behavior* is unchanged; no pack
+  value is touched. Five standing constraints on agent-run data migrations are
+  recorded in `libs/i18n/CLAUDE.md`. [CORE-1713]
+
 - **i18n**: every `languages.bcp47` row now carries a registry-canonical tag.
   The reviewed backfill is applied — three corrections (`sr` → `sr-Cyrl`,
   `uz` → `uz-Latn`, `mn` → `mn-Cyrl`, each matching the script the pack

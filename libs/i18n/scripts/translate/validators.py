@@ -115,10 +115,24 @@ class TranslationValidator:
         warnings = []
 
         # Rule 1: No spaces (critical for keywords/builtins)
+        #
+        # This message deliberately states the constraint WITHOUT prescribing a
+        # remedy. The earlier version handed back ``translation.replace(' ', '')``
+        # as a finished string; anyone following it reproduced the concatenation
+        # damage of commit 5494504 (476 values across 26 languages). Deleting the
+        # space is not the fix -- the joiner is declared per language in
+        # ``style-guides/<lang>.yml`` under ``naming.detail``, which states the
+        # convention in prose today. CORE-1602 replaces that with an enumerated,
+        # machine-checkable ``naming.word_joiner``; until it lands, ``naming.detail``
+        # is the authority and this message must not name a field that does not
+        # exist yet. See CORE-1713.
         if term_type in ["keyword", "builtin"] and " " in translation:
             errors.append(
-                f"Contains space - Python will treat as multiple tokens. "
-                f"Concatenate words: '{translation}' → '{translation.replace(' ', '')}'"
+                f"Contains a space - Python tokenizes '{translation}' as multiple "
+                f"tokens, so it cannot be an identifier. Do NOT simply delete the "
+                f"space: follow the multi-word convention stated for "
+                f"'{language_code}' in style-guides/{language_code}.yml "
+                f"(naming.detail), or choose a single-word term."
             )
 
         # Rule 2: No forbidden punctuation

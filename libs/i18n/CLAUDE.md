@@ -186,6 +186,54 @@ result = await coordinator.translate("Hello", "en", "es")
   the playground highlights and snippets are built from the shipped packs.
 - Run `legesher-i18n validate` and `scripts/verify_pack_regen.py` to check
 
+### Changing Pack Values in Bulk (standing constraints)
+
+These are hard rules for any automated or agent-run change to translated pack values.
+They were written after commit `5494504` (2025-12-09) rewrote 476 values across 26
+languages by deleting spaces and punctuation — the origin of the concatenation damage
+tracked in CORE-1515. Retro: CORE-1713.
+
+**Rule 1 — a data-value change ships alone.**
+`5494504` touched 209 files (+4,553 / −5,870) and bundled a doc move to another repo,
+a build script, 469 lines of new tests, a new prompt file, *and* a 476-value semantic
+rewrite of 26 language packs. The data change was invisible in that diff and nobody
+caught it in review. Any change to pack values ships in its own PR, with a per-language
+before/after table in the body, and nothing else on the branch.
+
+**Rule 2 — a change to a language's values needs a reader of that language on it.**
+The damage commit's own message offered `"error de E/S" → "errordees"` as an example of
+success: Spanish for "I/O error" turned into nonsense, printed in the commit body, and
+approved by people who don't read Spanish. Mechanical validity is not correctness.
+
+**Rule 3 — "we preserve the original" must be durable and tested, or it is not a
+safety net.** The originals were written *inside* the quoted YAML value (packs briefly
+shipped `abs: 'valorabsoluto  #valor absoluto'` as a literal identifier), unquoted into
+real comments a month later by `fc6d01e`, then silently deleted 14 days after that by
+`89f5c8c`. The net lasted six weeks and its disappearance went unnoticed. The only
+reason 55 Arabic values are recoverable today is that the `translations` table kept
+them by accident of design, not by that plan. If a migration claims to preserve
+originals, a test asserts the originals are still retrievable.
+
+**Rule 4 — a validation error states a constraint; it never implies the remedy.**
+"Identifiers can't contain spaces" was auto-remediated as "delete the spaces," because
+nobody had specified what a multi-word concept *should* look like. Never auto-remediate
+a constraint before the remedy is specified. The joiner is declared per language in
+`style-guides/<lang>.yml` — in `naming.detail` (prose) today, and in an enumerated,
+machine-checkable `naming.word_joiner` once CORE-1602 lands. That declaration is the
+only authority, and it is **not** derivable from the script.
+
+**Rule 5 — re-derive the convention before a generation pipeline scales.**
+CORE-675 took 29 → 51 languages in March 2026 *after* concatenation had hardened into
+house style, so new packs were generated to match a corrupted convention. Before the
+next expansion batch runs, confirm the convention it will inherit is the one you want.
+
+> **No "fixer" scripts.** Two orphaned scripts that rewrote pack values in place
+> (`scripts/validate/fix_all_validation_issues.py`, `scripts/translate/fix_validation_issues.py`)
+> were deleted in CORE-1713. They implemented *contradictory* conventions — one deleted
+> spaces, the other replaced them with underscores — and both ran, which is the
+> mechanical origin of the mixed convention in the packs today (ar 3 underscore / 67
+> bare; he 18/52). Diagnostics may report; they may not write.
+
 ### Language Status
 
 All 51 languages are currently **experimental**:

@@ -8,18 +8,31 @@ otherwise be parsed as booleans).
 Rules:
 1. All translations must be strings (not booleans, numbers, or null)
 2. Values that look like YAML booleans must be quoted ('yes', 'no', 'true', 'false')
-3. No spaces in translation values (must be concatenated)
+3. No spaces in translation values (a space makes the value multiple Python tokens)
 4. No punctuation in translation values (no /, -, :, ., parentheses)
 5. Proper YAML structure with required sections
 6. No duplicate translations (same translation for different terms)
 7. Script-aware validation (RTL, CJK, Latin scripts have different conventions)
 
-Script-Specific Concatenation Guidelines:
-- Latin scripts (en, es, fr, de, etc.): Use snake_case for multi-word terms
-- RTL scripts (ar, he): Concatenate without separators (Arabic/Hebrew naturally connect)
-- CJK scripts (zh, ja, ko): No separators needed (characters are self-contained)
-- Cyrillic (ru): Use snake_case similar to Latin
-- Greek (el): Use snake_case similar to Latin
+How multi-word terms join:
+The joining strategy is NOT a property of the script. It is declared per language
+in ``style-guides/<lang>.yml`` under ``naming.detail`` today; CORE-1602 replaces it
+with an enumerated ``naming.word_joiner``. That declaration is the only authority.
+This file enforces rule 3 -- that the shipped value contains no space -- and says
+nothing about how the space should have been resolved.
+
+Rule 3 states a constraint; it does not imply a remedy. Deleting the space is a
+destructive edit, not a fix (see CORE-1713 / the 5494504 retro on CORE-1515).
+
+Historical note: this docstring previously asserted "RTL scripts (ar, he):
+Concatenate without separators (Arabic/Hebrew naturally connect)." That is
+linguistically false and was load-bearing for real damage. Arabic and Hebrew
+letters join *within* a word as a rendering property of the script; this has
+nothing to do with whether a boundary *between* two words may be deleted. The
+claim was used to justify destroying word separation in the two languages that
+ended up worst affected -- 55 of 70 Arabic exception terms, and an 18/52 Hebrew
+convention split. It is removed rather than corrected in place because no
+script-derived joining rule belongs here at all.
 
 Usage:
     python validate_language_pack_yaml.py <file1.yml> <file2.yml> ...
@@ -124,8 +137,10 @@ class LanguagePackValidator:
                 # Check for spaces (except in comments)
                 if " " in value_part:
                     self.errors.append(
-                        f"{section}.{term}: Translation '{value_part}' contains spaces. "
-                        f"Multi-word translations must be concatenated."
+                        f"{section}.{term}: Translation '{value_part}' contains spaces, "
+                        f"so it is not a single Python identifier. Do NOT simply "
+                        f"delete the spaces — follow the multi-word convention stated "
+                        f"for this language in style-guides/<lang>.yml (naming.detail)."
                     )
 
                 # Check for punctuation (including parentheses)

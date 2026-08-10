@@ -72,7 +72,24 @@ class TestTranslationValidator:
 
         assert result.is_valid is False
         assert any("space" in err.lower() for err in result.errors)
-        assert "valorabsoluto" in result.errors[0]  # Suggests concatenation
+
+        # The message must state the constraint WITHOUT prescribing a remedy.
+        # This assertion is inverted from its original form, which required the
+        # error to contain "valorabsoluto" -- i.e. it test-pinned the very
+        # concatenation that corrupted 476 pack values in commit 5494504.
+        # See CORE-1713 / CORE-1602.
+        assert "valorabsoluto" not in result.errors[0], (
+            "error message must not hand back a concatenated string"
+        )
+        assert "valor_absoluto" not in result.errors[0], (
+            "error message must not prescribe a joiner; the convention is stated "
+            "per language in style-guides/<lang>.yml"
+        )
+        # Point at a field that actually exists today. ``naming.word_joiner`` is
+        # CORE-1602's deliverable and is in no style guide yet, so asserting it
+        # here would pin a dead pointer -- the same failure mode as the original
+        # assertion this test replaced. Swap to word_joiner when CORE-1602 lands.
+        assert "naming.detail" in result.errors[0]
 
     def test_no_spaces_in_builtins(self, validator):
         """Test that spaces in builtins are flagged as errors."""
