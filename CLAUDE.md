@@ -175,6 +175,11 @@ Located in `.github/workflows/`:
 - **`release-language-packs.yml`**: Independent language pack releases
   - Auto-detects changed packs and releases individually
   - Manual workflow dispatch for specific languages
+  - Valid languages are read from `libs/i18n/legesher_i18n/languages.json` at run
+    time, so a new pack needs no workflow edit
+  - This workflow is the only release path for packs. There is deliberately no
+    local release script — one existed, rotted after the packs moved under
+    `libs/i18n/language-packs/`, and was removed rather than repaired
 - **`publish-pypi.yml`**: PyPI publishing pipeline
 - **`monitor-python-releases.yml`**: Monitors Python.org for new releases to update packs
 
