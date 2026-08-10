@@ -114,9 +114,18 @@ NEVER_EXPORT: frozenset[str] = frozenset(
 #: * ``github_handle`` / ``contact`` -- the remaining contributor_identities
 #:   re-identification columns; any of them anywhere means the private table
 #:   leaked.
+#: * ``rationale`` / ``model_rationale`` -- model reasoning text.
+#:   ``CONTRIBUTOR_PRIVACY.md`` promises it is never published; listing it here
+#:   turns that promise into a tested guard rather than an accident of which
+#:   columns ``CONFIG_SQL`` happens to select.
 FORBIDDEN_COLUMNS: frozenset[str] = frozenset(
     {
         "source_detail",
+        # Model reasoning text. CONTRIBUTOR_PRIVACY.md promises it is never
+        # published; until now that held only because no config happened to
+        # select the column. Promises belong under the tested guard.
+        "rationale",
+        "model_rationale",
         "source_key",
         "display_name",
         "comment",
@@ -416,8 +425,17 @@ source database's `endorsement_counts` view.
 * Contributor ids are opaque (`c_` + 16 hex, salted digests). They are never a
   name, email, or handle, and the mapping back to a person
   (`contributor_identities`) is never exported.
-* Withdrawal (CORE-1502): the identity row is deleted; the contributor row and
-  their endorsements remain. Counts survive, PII does not.
+* Withdrawal: a contributor may ask to be forgotten at any time. Every column
+  that could identify them is erased and the record is marked withdrawn; their
+  contributor row and their endorsements remain, because other people's picks
+  depend on those counts and an endorsement with no person attached says
+  nothing about anyone. Counts survive, PII does not. **No revision of this
+  dataset is affected** -- it has never carried an identity, so withdrawal is a
+  private-side erasure rather than a retraction. What contributors are promised
+  is `CONTRIBUTOR_PRIVACY.md` and how it is carried out is
+  `libs/i18n/docs/contributor-withdrawal-runbook.md`, both in the project
+  repository; until that repository is public, <privacy@legesher.com> will send
+  either on request.
 * `option_provenance.source_detail` is excluded: it carries v1 reviewer labels
   containing real first names. Only the closed `source` vocabulary is
   published, aggregated into `options.sources`.

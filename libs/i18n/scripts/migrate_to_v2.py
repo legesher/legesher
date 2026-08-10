@@ -251,6 +251,111 @@ class Identity:
         return self.github_handle
 
 
+@dataclass(frozen=True)
+class Withdrawn:
+    """A contributor who asked to be forgotten (CORE-1780).
+
+    Replaces that person's :class:`Identity` in :data:`CONTRIBUTOR_IDENTITY_MAP`.
+
+    It carries the OPAQUE id and NOT the username, and that is the whole point.
+    This map is source code: it is the durable store of who a v1 label is, and it
+    is re-read on every rebuild. Leaving the username here under a "withdrawn"
+    flag would mean nothing had been erased -- the mapping back to the person
+    would simply be annotated. So the username goes, and the id it minted stays.
+
+    Because the id is already published and opaque, keeping it costs the person
+    nothing. What it buys is the two things withdrawal has to do at once:
+
+    * their **endorsements survive** -- the id is what those rows key on, and
+      other people's picks depend on those counts;
+    * their **identity cannot come back** -- a rebuild has no username to mint
+      from, so it cannot recreate the row it just erased.
+
+    ``withdrawn_at`` is an ISO-8601 date, recorded for the same reason the DB
+    column exists: to distinguish "this person withdrew" from "we have never
+    heard of this person". A later import that meets a bundle still carrying the
+    username can then detect the withdrawal rather than honour the bundle. See
+    ``libs/i18n/docs/contributor-withdrawal-runbook.md``.
+    """
+
+    contributor_id: str
+    withdrawn_at: str
+
+    @property
+    def resolved(self) -> bool:
+        """Always ``True``: a withdrawal is a decision, not an open question.
+
+        This matters because ``--publish`` refuses to build while any identity is
+        UNRESOLVED. A withdrawal must not read as unresolved -- we know exactly
+        who this was and we have deliberately forgotten them.
+        """
+        return True
+
+    def source_key(self, created_by: str) -> str:
+        """There is no natural key any more; the opaque id IS the key."""
+        return self.contributor_id
+
+
+#: Contributor ids that are ALREADY PUBLISHED in the corpus.
+#:
+#: These are public values -- they ship in the `contributors` and `endorsements`
+#: configs of `legesher/language-corpus` -- so listing them here discloses
+#: nothing. What they are FOR is the one check a withdrawal cannot make for
+#: itself.
+#:
+#: A :class:`Withdrawn` entry carries an id the migration cannot recompute: the
+#: username it was minted from is gone, which is the point. So a typo, a
+#: truncation, or an id minted under the wrong salt would be taken at face
+#: value, and `contributor_id` is a PUBLISHED column -- the next push would
+#: silently re-key that person's endorsements to an id belonging to nobody,
+#: orphaning their real one. That is precisely the outcome CONTRIBUTOR_PRIVACY.md
+#: and the dataset card promise cannot happen ("no revision of this dataset is
+#: affected"), and every other one-way door in this script hard-fails rather
+#: than trusting the operator.
+#:
+#: Update this set when a NEW contributor first appears in a published revision.
+#: Nothing is removed on withdrawal: the id stays published and stays valid, and
+#: it is the identity behind it that is erased.
+PUBLISHED_CONTRIBUTOR_IDS: frozenset[str] = frozenset(
+    {
+        "c_0c841c2c564b8e7b",
+        "c_21433bed09ebda0b",
+        "c_fff76267e6885d43",
+    }
+)
+
+
+def require_published_withdrawal_ids() -> None:
+    """Refuse to publish while any ``Withdrawn`` names an unpublished id.
+
+    Raises:
+        SystemExit: if a :class:`Withdrawn` entry carries an id that is not in
+            :data:`PUBLISHED_CONTRIBUTOR_IDS`.
+    """
+    unknown = {
+        label: entry.contributor_id
+        for label, entry in CONTRIBUTOR_IDENTITY_MAP.items()
+        if isinstance(entry, Withdrawn)
+        and entry.contributor_id not in PUBLISHED_CONTRIBUTOR_IDS
+    }
+    if unknown:
+        listing = "\n".join(f"  {label} -> {cid}" for label, cid in unknown.items())
+        raise SystemExit(
+            "withdrawn contributor id is not one this corpus has published:\n"
+            f"{listing}\n\n"
+            "A withdrawal carries an id the migration CANNOT recompute -- the "
+            "username it was minted from\nis gone. So this is the only check "
+            "available, and it is not optional: `contributor_id` is a\n"
+            "PUBLISHED column, and a wrong value silently re-keys that person's "
+            "endorsements to an id\nbelonging to nobody while orphaning their "
+            "real one.\n\n"
+            "Either the id is wrong (recompute it from their username BEFORE "
+            "erasing it -- runbook step 1),\nor they are a newer contributor "
+            "whose id has since been published, in which case add it to\n"
+            "PUBLISHED_CONTRIBUTOR_IDS in the same change."
+        )
+
+
 #: v1 `created_by` label -> the person behind it, keyed by GITHUB USERNAME.
 #:
 #: The v1 label is a bad key: `zh_reviewer_review` is a first name, first names are
@@ -268,7 +373,7 @@ class Identity:
 #: way -- and, as it turns out, would also have merged a reviewer with the words
 #: she REJECTED. An unknown label RAISES (:func:`resolve_identity`); it is never
 #: guessed at.
-CONTRIBUTOR_IDENTITY_MAP: dict[str, Identity] = {
+CONTRIBUTOR_IDENTITY_MAP: dict[str, Identity | Withdrawn] = {
     # zh review: NextME14's 31 suggested replacements. These are the words she
     # asserted, and they are the words the pack ships.
     "zh_reviewer_review": Identity("NextME14", "NextME14"),
@@ -606,7 +711,7 @@ def validate_surface(
     )
 
 
-def resolve_identity(created_by: str) -> Identity:
+def resolve_identity(created_by: str) -> Identity | Withdrawn:
     """Map a v1 ``created_by`` label to the person behind it.
 
     Args:
@@ -614,7 +719,14 @@ def resolve_identity(created_by: str) -> Identity:
             :data:`NON_HUMAN_CREATED_BY`).
 
     Returns:
-        The identity, which may be UNRESOLVED (``github_handle is None``).
+        Either an :class:`Identity`, which may be UNRESOLVED
+        (``github_handle is None``), or a :class:`Withdrawn` for someone who
+        asked to be forgotten.
+
+        **Check the type before touching attributes.** ``Withdrawn`` has no
+        ``github_handle``, so the usual unresolved test raises AttributeError on
+        one rather than returning False; ``Withdrawn.resolved`` is always True,
+        because a withdrawal is a decision rather than an open question.
 
     Raises:
         SystemExit: on an unknown label. It is NOT guessed at, and it is NOT
@@ -864,6 +976,7 @@ def migrate(
     """
     if publish:
         require_publishable_salt(salt)
+        require_published_withdrawal_ids()
     if target.exists():
         raise SystemExit(f"refusing to overwrite {target}")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -1115,7 +1228,7 @@ def migrate(
         created_by = (row["created_by"] or "").strip()
         source_detail = row["source"]
         contributor: str | None = None
-        identity: Identity | None = None
+        identity: Identity | Withdrawn | None = None
 
         if created_by in NON_HUMAN_CREATED_BY:
             # A pipeline label, not a person: it must not become a contributor and
@@ -1181,26 +1294,63 @@ def migrate(
 
             contributor = contributors.get(source_key)
             if contributor is None:
-                # Opaque id, minted from the GITHUB USERNAME rather than the v1
-                # first-name label. The public id is unchanged in kind (an opaque
-                # digest); what improves is the private key it is derived from --
-                # stable, unique, verifiable. The mapping lives ONLY in
-                # contributor_identities, which is never exported.
-                contributor = contributor_id(source_key, salt=salt)
+                # For a WITHDRAWN person the id is TAKEN from the map rather
+                # than minted: there is no username left to mint it from, which
+                # is the erasure working, and it is what stops a rebuild undoing
+                # the withdrawal. For everyone else it is minted from the GITHUB
+                # USERNAME rather than the v1 first-name label -- the public id
+                # is unchanged in kind (an opaque digest); what improves is the
+                # private key behind it: stable, unique, verifiable.
+                contributor = (
+                    identity.contributor_id
+                    if isinstance(identity, Withdrawn)
+                    else contributor_id(source_key, salt=salt)
+                )
+                if contributor in set(contributors.values()):
+                    # One person, two v1 labels, only some of them withdrawn --
+                    # the half-finished state runbook step 2 can leave. Checked
+                    # for BOTH kinds because either can be processed first, and
+                    # the failure is the same either way. Without it the build
+                    # dies on a raw UNIQUE constraint naming neither the person
+                    # nor the labels, while the labels left behind still carry
+                    # their username.
+                    raise SystemExit(
+                        f"contributor id {contributor} is claimed by two "
+                        "entries in CONTRIBUTOR_IDENTITY_MAP.\nOne person holds "
+                        "more than one v1 label and only some were withdrawn, "
+                        "so the labels\nleft behind still carry their username "
+                        "and the erasure is incomplete. Convert EVERY\nlabel "
+                        "belonging to that person."
+                    )
                 dst.execute(
                     "INSERT INTO contributors (id, current_rung) VALUES (?, ?)",
                     (contributor, IMPORT_RUNG),
                 )
-                dst.execute(
-                    "INSERT INTO contributor_identities (contributor_id, source_key, "
-                    "display_name, github_handle) VALUES (?, ?, ?, ?)",
-                    (
-                        contributor,
-                        source_key,
-                        identity.display_name,
-                        identity.github_handle,
-                    ),
-                )
+                if isinstance(identity, Withdrawn):
+                    # A TOMBSTONE: every identity column NULL, `withdrawn_at`
+                    # set, so a later import can tell "this person withdrew"
+                    # apart from "we have never met this person". Their
+                    # endorsements below are written exactly as for anyone else
+                    # -- counts survive, PII does not.
+                    dst.execute(
+                        "INSERT INTO contributor_identities "
+                        "(contributor_id, withdrawn_at) VALUES (?, ?)",
+                        (contributor, identity.withdrawn_at),
+                    )
+                else:
+                    # The mapping lives ONLY here, and is never exported.
+                    dst.execute(
+                        "INSERT INTO contributor_identities (contributor_id, source_key, "
+                        "display_name, github_handle) VALUES (?, ?, ?, ?)",
+                        (
+                            contributor,
+                            source_key,
+                            identity.display_name,
+                            identity.github_handle,
+                        ),
+                    )
+                # Cache for BOTH paths: a second row from the same contributor
+                # must reuse the id, not attempt another INSERT.
                 contributors[source_key] = contributor
 
         dst.execute(

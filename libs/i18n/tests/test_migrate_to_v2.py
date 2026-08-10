@@ -887,3 +887,180 @@ def test_identity_translations_carry_identity_ok(v1_db: Path, tmp_path: Path) ->
         )
     }
     assert got == {"break": 1, "none": 1, "pravda": 0}
+
+
+# ---------------------------------------------------------------------------
+# Withdrawal is an erasure that survives a rebuild (CORE-1780)
+# ---------------------------------------------------------------------------
+
+
+def test_a_withdrawn_contributor_keeps_their_endorsements_and_loses_their_identity(
+    v1_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The promise in CONTRIBUTOR_PRIVACY.md, enforced where it can actually hold.
+
+    This map is source code and is re-read on every rebuild, so it -- not the
+    built database -- is where a withdrawal has to be recorded. Editing the
+    built artifact would be undone by the next migration, and dropping the entry
+    outright makes `resolve_identity` refuse the whole build.
+
+    So the entry stays and the USERNAME goes, replaced by the opaque id it
+    already minted. Both halves of the promise are asserted below: the evidence
+    survives, the person does not.
+    """
+    from scripts import migrate_to_v2
+
+    # The id this person already has in the published corpus. Under a withdrawal
+    # it is copied into the map verbatim -- there is no username left to mint it
+    # from, which is precisely what makes the erasure stick.
+    withdrawn_id = contributor_id("sarr266", salt=GOOD_SALT)
+    monkeypatch.setitem(
+        migrate_to_v2.CONTRIBUTOR_IDENTITY_MAP,
+        "alt_ur_modern",
+        migrate_to_v2.Withdrawn(withdrawn_id, "2026-08-10"),
+    )
+    # The test salt mints different ids than the published corpus, so the
+    # published-id gate is pointed at this run's id. The gate itself is tested
+    # separately, including against the shipped map.
+    monkeypatch.setattr(
+        migrate_to_v2, "PUBLISHED_CONTRIBUTOR_IDS", frozenset({withdrawn_id})
+    )
+
+    target = tmp_path / "v2.db"
+    ledger = migrate(v1_db, target, salt=GOOD_SALT, publish=True)
+
+    # A withdrawal is a decision, not an open question: it must not read as an
+    # unresolved identity, which would refuse the build outright.
+    assert ledger.counts["  UNRESOLVED identities"] == 0
+    assert ledger.counts["contributors (people)"] == 3
+
+    db = sqlite3.connect(target)
+
+    # 1. The person is gone. Every column that could lead back to them is NULL,
+    #    and the tombstone says a withdrawal happened rather than leaving a row
+    #    indistinguishable from a contributor we never met.
+    row = db.execute(
+        "SELECT source_key, display_name, github_handle, contact, email, withdrawn_at "
+        "FROM contributor_identities WHERE contributor_id = ?",
+        (withdrawn_id,),
+    ).fetchone()
+    assert row is not None, "the tombstone row must exist"
+    assert row[:5] == (None, None, None, None, None)
+    assert row[5] == "2026-08-10"
+
+    # 2. Their username survives NOWHERE in the built database -- not in the
+    #    identity table, not in provenance, not in a stray label.
+    assert (
+        db.execute(
+            "SELECT COUNT(*) FROM contributor_identities WHERE source_key = 'sarr266'"
+        ).fetchone()[0]
+        == 0
+    )
+
+    # 3. Their evidence is intact. This is the half that is easy to get wrong:
+    #    deleting the endorsements would silently move which word a pack ships,
+    #    for everyone, on the strength of one person's privacy request.
+    assert (
+        db.execute(
+            "SELECT COUNT(*) FROM endorsements WHERE contributor_id = ?",
+            (withdrawn_id,),
+        ).fetchone()[0]
+        > 0
+    )
+    db.close()
+
+
+def test_withdrawal_does_not_change_what_the_corpus_publishes(
+    v1_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """No published value changes when someone withdraws.
+
+    The earlier version of this test compared ledger COUNTS, which are invariant
+    under the one mistake this procedure can actually make -- a wrong
+    ``Withdrawn.contributor_id``. Counts stay identical while the published id
+    set silently changes, so it asserted nothing about the claim it names.
+    ``contributor_id`` is a published column; compare the ids themselves.
+    """
+    from scripts import migrate_to_v2
+
+    def published_ids(db_path: Path) -> set[str]:
+        db = sqlite3.connect(db_path)
+        try:
+            return {r[0] for r in db.execute("SELECT id FROM contributors")}
+        finally:
+            db.close()
+
+    before_path = tmp_path / "before.db"
+    before = migrate(v1_db, before_path, salt=GOOD_SALT, publish=True)
+
+    monkeypatch.setitem(
+        migrate_to_v2.CONTRIBUTOR_IDENTITY_MAP,
+        "alt_ur_modern",
+        migrate_to_v2.Withdrawn(
+            contributor_id("sarr266", salt=GOOD_SALT), "2026-08-10"
+        ),
+    )
+    monkeypatch.setattr(
+        migrate_to_v2,
+        "PUBLISHED_CONTRIBUTOR_IDS",
+        frozenset({contributor_id("sarr266", salt=GOOD_SALT)}),
+    )
+    after_path = tmp_path / "after.db"
+    after = migrate(v1_db, after_path, salt=GOOD_SALT, publish=True)
+
+    assert published_ids(before_path) == published_ids(after_path)
+    for key in ("options", "endorsements", "contributors (people)"):
+        assert before.counts[key] == after.counts[key], key
+
+
+def test_publish_refuses_a_withdrawn_id_the_corpus_has_never_published(
+    v1_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The gate that stands in for a check the migration cannot make itself.
+
+    A withdrawal carries an id that cannot be recomputed -- the username is
+    gone. A typo therefore re-keys a real person's published endorsements to an
+    id belonging to nobody, silently, and the counts do not move. Every other
+    one-way door here hard-fails; so does this one.
+    """
+    from scripts import migrate_to_v2
+
+    monkeypatch.setitem(
+        migrate_to_v2.CONTRIBUTOR_IDENTITY_MAP,
+        "alt_ur_modern",
+        migrate_to_v2.Withdrawn("c_0000000000000000", "2026-08-10"),
+    )
+    target = tmp_path / "v2.db"
+    with pytest.raises(SystemExit, match="not one this corpus has published"):
+        migrate(v1_db, target, salt=GOOD_SALT, publish=True)
+    assert not target.exists(), "the refusal must fire before anything is built"
+
+
+def test_a_half_converted_person_is_refused_by_name_not_by_traceback(
+    v1_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One person, two v1 labels, only one withdrawn.
+
+    The labels are per-review-round, so a person can hold several. Converting
+    some and not others leaves their username in the ones left behind -- an
+    incomplete erasure. Previously this died on a raw UNIQUE constraint naming
+    neither the person nor the labels.
+    """
+    from scripts import migrate_to_v2
+
+    shared = contributor_id("sarr266", salt=GOOD_SALT)
+    monkeypatch.setitem(
+        migrate_to_v2.CONTRIBUTOR_IDENTITY_MAP,
+        "ur_reviewer_review",
+        migrate_to_v2.Withdrawn(shared, "2026-08-10"),
+    )
+    monkeypatch.setattr(migrate_to_v2, "PUBLISHED_CONTRIBUTOR_IDS", frozenset({shared}))
+    with pytest.raises(SystemExit, match="claimed by two entries"):
+        migrate(v1_db, tmp_path / "v2.db", salt=GOOD_SALT, publish=True)
+
+
+def test_the_shipped_map_only_withdraws_published_ids() -> None:
+    """Guards the real map, which the monkeypatching tests above cannot."""
+    from scripts import migrate_to_v2
+
+    migrate_to_v2.require_published_withdrawal_ids()

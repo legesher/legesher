@@ -151,11 +151,13 @@ output directory never reaches the Hub.
 
 The repo is created **PRIVATE** (`private=True`) and this tooling never
 flips visibility. Going public is a separate deliberate act on the Hub, and
-two things must be true first: the published revision has to carry the
-current attribution and licence (CORE-1761), and the contributor consent
-notice and withdrawal procedure have to exist, because the card promises a
-right to withdraw that nothing currently implements (CORE-1780). The licence
-itself is settled — CC BY 4.0, decided 2026-07-15.
+the published revision must carry the current attribution and licence
+(CORE-1761). The licence itself is settled — CC BY 4.0, decided 2026-07-15.
+
+What we promise contributors is in `CONTRIBUTOR_PRIVACY.md`, and honouring a
+withdrawal request is `docs/contributor-withdrawal-runbook.md` — a private-side
+erasure that never touches a published revision, because no export has ever
+carried an identity.
 
 The salt freezes at this first private push.
 

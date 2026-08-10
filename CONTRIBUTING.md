@@ -796,7 +796,11 @@ What that means for you:
 3. **Native review** is how packs climb the ladder from experimental toward official. A dedicated
    reviewer guide ships with the review intake; until then, the
    [Community Guidelines](COMMUNITY_GUIDELINES.md) carry the working agreements.
-4. **Requesting a new language** starts with an issue. Packs are generated from the shared
+4. **Before you submit**, read
+   [Your contributions and your data](CONTRIBUTOR_PRIVACY.md). It is short, and it covers what
+   happens to your word, how you are identified (you are not — credit is opt-in), what we never
+   publish, and how to withdraw.
+5. **Requesting a new language** starts with an issue. Packs are generated from the shared
    database, so the path to a new language runs through collecting its options, not hand-writing
    pack files.
 
@@ -808,7 +812,9 @@ What that means for you:
 
 ## Recognition
 
-Contributors are recognized in:
+Recognition follows your credit preference: anonymous (the default), your handle, or a display
+name — see [Your contributions and your data](CONTRIBUTOR_PRIVACY.md). Where you have asked to be
+credited, contributors are recognized in:
 
 - Repository contributors list
 - Release notes

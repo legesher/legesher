@@ -266,8 +266,11 @@ INSERT INTO review_rungs (rung, rank, weight, counts_as_native, policy_version, 
 
 -- An opaque, stable, pseudonymous handle. This is the ONLY identity column the
 -- corpus exports. Real-world identity lives in contributor_identities, which is
--- never published. Withdrawal (CORE-1502) deletes the identity row and keeps
--- the contributor + their endorsements: counts survive, PII does not.
+-- never published. Withdrawal (CORE-1780) REDACTS AND TOMBSTONES that row --
+-- every identifying column NULL, `withdrawn_at` set, the row itself retained --
+-- and keeps the contributor + their endorsements: counts survive, PII does not.
+-- Do NOT delete the identity row: the tombstone is what stops a replayed review
+-- bundle re-minting the erased identity. See contributor_identities.withdrawn_at.
 --
 -- THE CHECK IS A SHAPE, NOT A PREFIX. `LIKE 'c\_%'` was not a constraint at all:
 -- `c_alt_ur_modern` satisfies it, and that is precisely what a migration
@@ -355,6 +358,26 @@ CREATE TABLE contributor_identities (
                                      AND email LIKE '%_@_%.%_'
                                      AND email NOT LIKE '%@%@%')),
     email_verified_at     TEXT,
+    -- WITHDRAWAL (CORE-1780, decided 2026-08-10). A withdrawal REDACTS and
+    -- TOMBSTONES: source_key, display_name, github_handle, contact, email and
+    -- email_verified_at all go NULL; credit_preference returns to 'anonymous'
+    -- and consent_public_credit to 0 (it is NOT NULL, so it cannot be nulled);
+    -- consent_version and consent_at are cleared, because the consent they
+    -- record has been revoked. Then this timestamp is set. The row stays.
+    --
+    -- It is deliberately NOT a soft delete. A row that keeps source_key and
+    -- merely flags it has erased nothing -- the mapping back to the person is
+    -- still here, annotated. And it is deliberately not a DELETE either: the
+    -- empty row is what lets a later import tell "this person withdrew" apart
+    -- from "we have never met this person", so a replay of an older review
+    -- bundle -- which still carries their username -- cannot silently mint the
+    -- identity again and undo the erasure. See
+    -- `libs/i18n/docs/contributor-withdrawal-runbook.md` for the importer rule
+    -- and `CONTRIBUTOR_PRIVACY.md` (repo root) for what the contributor was
+    -- promised.
+    --
+    -- `contributors` and `endorsements` are untouched: counts survive, PII does
+    -- not. Nothing PUBLISHED changes -- no export has ever carried this table.
     withdrawn_at          TEXT,
     -- A credit choice must have something to credit.
     CHECK (credit_preference <> 'name'   OR display_name  IS NOT NULL),
@@ -696,8 +719,9 @@ BEGIN
 END;
 
 -- Provenance is evidence of who/what proposed a word. (contributor_id is
--- excluded from the UPDATE list: CORE-1502 withdrawal nulls it via ON DELETE
--- SET NULL, which is the one legitimate write.)
+-- excluded from the UPDATE list: it is the one legitimate write. Note this is
+-- NOT the withdrawal path -- withdrawal (CORE-1780) leaves provenance and
+-- endorsements untouched and redacts contributor_identities instead.)
 CREATE TRIGGER trg_provenance_append_only
 BEFORE UPDATE OF id, option_uid, source, source_detail, model_version, created_at
 ON option_provenance

@@ -5,12 +5,14 @@ This directory contains the foundation documents for creating high-quality Pytho
 ## Contents
 
 ### [corpus-publish-runbook.md](./corpus-publish-runbook.md)
+### [contributor-withdrawal-runbook.md](./contributor-withdrawal-runbook.md)
 
-The operator sequence for publishing the translations corpus to the private
-Hugging Face dataset (`legesher/language-corpus`): salt escrow, the publish-grade
-v2 build, the dry export, and the multi-gated push.
+How a contributor's request to be forgotten is honoured: confirming the request
+is theirs, redacting the identity while keeping the tombstone, the three
+verification queries, and the rule a future review-bundle importer must follow
+so a rebuild cannot undo the erasure. No published dataset changes.
 
-**Use this for:** Running or auditing the corpus publish (CORE-1312)
+**Use this for:** Responding to a privacy or withdrawal request (CORE-1780)
 
 ### [database-schema.md](./database-schema.md)
 

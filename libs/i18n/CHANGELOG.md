@@ -11,6 +11,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Contributor withdrawal path (CORE-1780).** A contributor may ask to be
+  forgotten, and the request is now honourable: `migrate_to_v2.py` gains a
+  `Withdrawn` marker that replaces a person's `Identity` in
+  `CONTRIBUTOR_IDENTITY_MAP`, carrying their opaque contributor id instead of
+  the username it was minted from. Their endorsements survive; the identity
+  cannot be re-created by a rebuild. `--publish` refuses a withdrawn id the
+  corpus has never published, and refuses a person half-converted across two v1
+  labels.
+- **`CONTRIBUTOR_PRIVACY.md`** — the versioned notice contributors agree to,
+  recorded against `contributor_identities.consent_version`.
+- **`docs/contributor-withdrawal-runbook.md`** — the operator procedure, the
+  verification queries, and the rule a future review-bundle importer must
+  follow.
 - **Style guides carry word-formation rules, and they reach the prompt
   (CORE-1706).** New optional `naming.word_formation` field — a list of rules
   for how terms are *coined* in a language (compounding, clipping, which roots
@@ -317,6 +330,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- `contributor_identities.withdrawn_at` is specified as redact-and-tombstone:
+  identifying columns NULL, consent cleared, the row retained so a replayed
+  review bundle cannot re-mint an erased identity. Comments describing the
+  earlier delete-based mechanism are corrected.
+- The dataset card's withdrawal text states that no published revision is
+  affected by a withdrawal, and points at both documents.
+- `rationale` / `model_rationale` join `FORBIDDEN_COLUMNS`, putting the "model
+  reasoning text is never published" promise under the existing audit.
 - **BREAKING (corpus consumers): `options.sources` is now cut on obligation
   (CORE-1720).** The published provenance vocabulary changes from
   `import` / `community` / `model` / `maintainer` / `literature` to four
