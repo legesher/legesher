@@ -337,6 +337,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **Showcase-example gate is blocking (CORE-1779).** The
+  `validate-showcase-examples` pre-commit hook no longer runs in report
+  mode: a pack edit that breaks a preview-repo `hello_world.py`
+  showcase now fails the commit. The 11 regressions pending at gate
+  introduction were cleared (example repairs in preview-repo plus the
+  CORE-1763 term replacements; 51/51 on a real run), and the script's
+  `--warn-only` flag was removed so the gate cannot be quietly
+  re-softened. Operational notes live in `docs/quality-gates.md`.
 - `contributor_identities.withdrawn_at` is specified as redact-and-tombstone:
   identifying columns NULL, consent cleared, the row retained so a replayed
   review bundle cannot re-mint an erased identity. Comments describing the

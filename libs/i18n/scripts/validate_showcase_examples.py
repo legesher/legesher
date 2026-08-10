@@ -219,14 +219,6 @@ def main(argv: list[str] | None = None) -> int:
         "(default: warning)",
     )
     parser.add_argument(
-        "--warn-only",
-        action="store_true",
-        help="Report failures but exit 0 (find-untranslated precedent: report "
-        "mode while the pre-existing example regressions are triaged; drop "
-        "the flag to flip the gate strict). Missing-root usage errors still "
-        "exit 2.",
-    )
-    parser.add_argument(
         "-q",
         "--quiet",
         action="store_true",
@@ -305,10 +297,23 @@ def main(argv: list[str] | None = None) -> int:
         f"{len(findings)} failure(s), {len(warnings)} warning(s) "
         f"(examples root: {examples_root})"
     )
-    if findings and args.warn_only:
-        print("(--warn-only: failures reported, exit 0)")
-        return 0
-    return 1 if findings else 0
+    if validated == 0 and packs:
+        # An examples root with nothing to validate (empty placeholder
+        # dir, partial clone) must not read as a green blocking gate —
+        # treat it exactly like a missing root.
+        print(
+            f"notice: examples root {examples_root} contains no validatable "
+            "examples; nothing was checked"
+        )
+        return 0 if args.skip_if_missing else 2
+    if findings:
+        print(
+            "hint: failures in languages you did not touch usually mean a "
+            "stale preview-repo checkout — pull it and re-run "
+            "(see libs/i18n/docs/quality-gates.md, showcase-gate detail)"
+        )
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

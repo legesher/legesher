@@ -136,22 +136,6 @@ class TestValidation:
         assert "es" in captured.out
         assert "parse" in captured.out.lower()
 
-    def test_warn_only_reports_failures_but_exits_zero(self, tmp_path, capsys):
-        # find-untranslated precedent: report mode while the pending failure
-        # list (11 pre-existing example regressions at gate introduction) is
-        # triaged; drop the flag to flip the gate strict.
-        root = make_examples_tree(tmp_path, {"es": BROKEN_ES_EXAMPLE})
-
-        exit_code = main(["--examples-root", str(root), "--warn-only"])
-
-        captured = capsys.readouterr()
-        assert exit_code == 0
-        assert "es" in captured.out
-
-    def test_warn_only_still_exits_two_on_missing_root(self, tmp_path):
-        exit_code = main(["--examples-root", str(tmp_path / "nowhere"), "--warn-only"])
-        assert exit_code == 2
-
     def test_failure_reported_even_in_quiet_mode(self, tmp_path, capsys):
         root = make_examples_tree(tmp_path, {"es": BROKEN_ES_EXAMPLE})
 
