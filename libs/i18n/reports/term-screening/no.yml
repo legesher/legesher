@@ -1,12 +1,7 @@
 language: "no"
 target: python
 screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
-screened_at: "2026-08-04"
-coverage_digest: d3c418661c3ff428813898680afd1386d795d1de231312fda152799e588c2b02
+screened_at: "2026-08-10"
+coverage_digest: eeaef1a230ab595a49c85c4685c24c9037208b9ab9c005a7a9d7a17d6c62f527
 terms_screened: 184
-flags:
-- term: verre
-  english: "True"
-  partition: keywords
-  category: unfortunate_connotation
-  note: "\"verre\" means \"worse\" in Norwegian, so the truth value True literally reads as \"worse\" — a mocking reading every native speaker notices; torn since it is arguably a mistranslation rather than crudeness, flagging for native review."
+flags: []

@@ -144,7 +144,7 @@ Python's built-in functions and types in Korean.
 | `tuple` | `튜플` |
 | `type` | `타입` |
 | `vars` | `변수` |
-| `zip` | `자바` |
+| `zip` | `묶기` |
 
 ## Exceptions (70 terms)
 

@@ -103,7 +103,7 @@ Python's built-in functions and types in Polish.
 | `frozenset` | `zamrożonyZbiór` |
 | `getattr` | `Pobieranieatrybutu` |
 | `globals` | `globalne` |
-| `hasattr` | `mać` |
+| `hasattr` | `ma_atrybut` |
 | `hash` | `hashowanie` |
 | `help` | `pomoc` |
 | `hex` | `szesnastkowa` |

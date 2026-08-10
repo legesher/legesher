@@ -43,7 +43,7 @@ These are Python's reserved words translated to Finnish.
 | `except*` | `exceptiivi` |
 | `False` | `valmis` |
 | `finally` | `seuraaaina` |
-| `for` | `forza` |
+| `for` | `jokaiselle` |
 | `from` | `kaa` |
 | `global` | `yhteensopiva` |
 | `if` | `jos` |
@@ -62,7 +62,7 @@ These are Python's reserved words translated to Finnish.
 | `True` | `tosi` |
 | `try` | `pyyttää` |
 | `type` | `tyyppi` |
-| `while` | `juhana` |
+| `while` | `kun` |
 | `with` | `jäsen` |
 | `yield` | `yields` |
 
@@ -102,7 +102,7 @@ Python's built-in functions and types in Finnish.
 | `format` | `pärinnaita` |
 | `frozenset` | `joukko` |
 | `getattr` | `hakuattribuuti` |
-| `globals` | `kaikkivaltias` |
+| `globals` | `globaalit` |
 | `hasattr` | `ominaisuudella` |
 | `hash` | `hashi` |
 | `help` | `auttaa` |
@@ -193,7 +193,7 @@ Exception classes for error handling.
 | `notadirectoryerror` | `ei_rekisteri_minkä_siirryttävää_hakemistoa` |
 | `notimplementederror` | `ei_toteutettu` |
 | `oserror` | `oserrori` |
-| `overflowerror` | `yliulostusvirhe` |
+| `overflowerror` | `ylivuotovirhe` |
 | `pendingdeprecationwarning` | `odatettavavaarallinenvarmaus` |
 | `permissionerror` | `oikeudenviesti` |
 | `processlookuperror` | `processlookupvirhe` |
@@ -253,15 +253,15 @@ määritellä kertoma(n):
         valita n * kertoma(n - 1)
 
 määritellä paa():
-    numerot = [enteri(x) forza x sisään alue(6)]
+    numerot = [enteri(x) jokaiselle x sisään alue(6)]
 
-    forza numero sisään numerot:
+    jokaiselle numero sisään numerot:
         tulos = kertoma(numero)
         kirjaa(f"{numero}! = {tulos}")
 
     # Esittele while-silmukka
     laskuri = 0
-    juhana laskuri < 3:
+    kun laskuri < 3:
         kirjaa(f"Laskuri: {laskuri}")
         laskuri += 1
 

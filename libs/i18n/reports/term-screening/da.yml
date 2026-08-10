@@ -1,17 +1,12 @@
 language: da
 target: python
 screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
-screened_at: "2026-08-04"
-coverage_digest: 805ea368d595558aa1db09b3fd1567b90e3c51469998f096ecd514787e71c8c4
+screened_at: "2026-08-10"
+coverage_digest: 98c26da4c42c684258df43fdb48c5452b8518fbb49f50a6f41913e2e95a08a6c
 terms_screened: 184
 flags:
-- term: basecovidsgroup
-  english: baseexceptiongroup
-  partition: exceptions
-  category: embarrassing_collision
-  note: Contains "covid" — any Danish reader sees the pandemic name embedded in a core exception type, which invites instant ridicule and screenshots.
-- term: hekseregel_convertering
-  english: hex
+- term: hash_kommer_i_gang
+  english: hash
   partition: builtins
-  category: embarrassing_collision
-  note: Reads as "witch rule" (hekse + regel) rather than hexadecimal, which a Danish classroom would notice and mock; flagged though torn, since it is silly rather than crude.
+  category: unfortunate_connotation
+  note: "\"hash\" is the everyday Danish word for hashish, so \"hash_kommer_i_gang\" reads as \"the hash gets going\" — a drug reading a Danish classroom notices; already queued for native rework (GLOBAL-12)."

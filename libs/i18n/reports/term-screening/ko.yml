@@ -1,12 +1,7 @@
 language: ko
 target: python
 screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
-screened_at: "2026-08-04"
-coverage_digest: 190734767be0965a12ef53d8cb13230fe03696fdb637df77f16ca92454f38aeb
+screened_at: "2026-08-10"
+coverage_digest: f5da424f5b3fc812284e521aa4887e1011f39f46ffc9be740a83357503c6460e
 terms_screened: 184
-flags:
-- term: 자바
-  english: zip
-  partition: builtins
-  category: embarrassing_collision
-  note: 자바 is the universal Korean name for the Java programming language; a Python builtin literally named "Java" is a collision every Korean learner will notice and mock.
+flags: []

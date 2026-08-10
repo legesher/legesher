@@ -414,6 +414,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **Ten corruption-class terms replaced across six packs (CORE-1763).** The
+  CORE-401 screening sweep flagged ten shipped values as machine-translation
+  damage rather than translation-taste questions — a leaked translator
+  placeholder (he `globals`), wrong-language words (fi `for`), given names
+  (fi `while`), and an expletive fragment (pl `hasattr`) among them. Each
+  replacement was selected at the DB layer with recorded provenance and the
+  affected packs (da, fi, he, ko, no, pl) re-exported; the six languages were
+  re-screened and the docs-site snippets regenerated.
 - **Post-merge review fixes for the release gates (CORE-1774).** The
   metadata URL guard now catches slash-less URIs (`javascript:alert(1)`,
   `data:`) — the previous pattern required `://`, which the dangerous

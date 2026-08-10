@@ -106,7 +106,7 @@ Python's built-in functions and types in Danish.
 | `hasattr` | `haveattribut` |
 | `hash` | `hash_kommer_i_gang` |
 | `help` | `hulp` |
-| `hex` | `hekseregel_convertering` |
+| `hex` | `heksadecimal` |
 | `id` | `objekt_id` |
 | `input` | `indgang` |
 | `int` | `ent` |
@@ -156,7 +156,7 @@ Exception classes for error handling.
 | `assertionerror` | `assertfejl` |
 | `attributeerror` | `attributfejl` |
 | `baseexception` | `baseriseksemplet` |
-| `baseexceptiongroup` | `basecovidsgroup` |
+| `baseexceptiongroup` | `basisexceptiongruppe` |
 | `blockingioerror` | `blokeringioerror` |
 | `brokenpipeerror` | `brokkenpypefejl` |
 | `buffererror` | `bufferfejl` |

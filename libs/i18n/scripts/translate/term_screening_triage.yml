@@ -13,48 +13,22 @@
 # surface before triage). All 24 accepted-with-rationale pending native
 # review (CORE-1538 endorse/pass/flag); the DB-fix candidates are marked
 # and tracked on the CORE-401 follow-up ticket.
+#
+# 2026-08-10 (CORE-1763): the 10 DB-fix candidates were replaced at the
+# DB layer, re-exported, and their languages re-screened; the resolved
+# entries were pruned (history in git and on CORE-1763). One flag added
+# on re-screen (da hash, routed to native review). 15 entries remain.
 
-"da:exceptions:baseexceptiongroup:basecovidsgroup":
-  disposition: accepted
-  rationale: >-
-    "basecovidsgroup" embeds "covid" in a core exception name — machine-
-    translation damage, not a Danish word choice. DB-fix candidate;
-    routed to native review.
-"da:builtins:hex:hekseregel_convertering":
-  disposition: accepted
-  rationale: >-
-    "hekseregel_convertering" reads as "witch rule" instead of
-    hexadecimal. DB-fix candidate; routed to native review.
 "el:builtins:hash:χασάπης":
   disposition: accepted
   rationale: >-
     "χασάπης" reads as "butcher" (also mockingly, a brutal/sloppy
     person). Routed to native review for a neutral hashing term.
-"fi:builtins:globals:kaikkivaltias":
-  disposition: accepted
-  rationale: >-
-    "kaikkivaltias" is the standard Finnish epithet for God ("the
-    Almighty"). DB-fix candidate; routed to native review.
-"fi:exceptions:overflowerror:yliulostusvirhe":
-  disposition: accepted
-  rationale: >-
-    "yliulostusvirhe" parses as "over-defecation error". DB-fix
-    candidate; routed to native review.
 "fi:builtins:format:pärinnaita":
   disposition: accepted
   rationale: >-
     "pärinnaita" ends in a form readable as the vulgar verb "naida";
     screener torn (coinage is gibberish). Routed to native review.
-"fi:keywords:while:juhana":
-  disposition: accepted
-  rationale: >-
-    "juhana" is a common Finnish male given name, not a while-loop word —
-    machine-translation damage. DB-fix candidate; routed to native review.
-"fi:keywords:for:forza":
-  disposition: accepted
-  rationale: >-
-    "forza" is Italian, not Finnish (and a game-franchise name) —
-    machine-translation damage. DB-fix candidate; routed to native review.
 "fr:keywords:yield:dégager":
   disposition: accepted
   rationale: >-
@@ -72,13 +46,6 @@
     "gin" is ordinary Gaelic but a Latin-script homograph of the English
     spirit in a fully bilingual community; giggle-risk only. Routed to
     native review.
-"he:builtins:globals:התרגוםשלהמונח":
-  disposition: accepted
-  rationale: >-
-    "התרגוםשלהמונח" is a leaked translator placeholder ("the translation
-    of the term"), not a translation at all — same fabricated-term class
-    as the CORE-1340 findings. DB-fix candidate (top priority of this
-    sweep); routed to native review.
 "hi:keywords:except*:अपराधिक":
   disposition: accepted
   rationale: >-
@@ -89,11 +56,6 @@
   rationale: >-
     "kecurangan" reads as "cheating/fraud", evoking wrongdoing rather
     than an exceptional condition. Routed to native review.
-"ko:builtins:zip:자바":
-  disposition: accepted
-  rationale: >-
-    "자바" is the Korean name for the Java language — a Python builtin
-    named "Java". DB-fix candidate; routed to native review.
 "ml:reserved_words:cls:സ്വവർഗ്ഗം":
   disposition: accepted
   rationale: >-
@@ -105,17 +67,6 @@
   rationale: >-
     "menggugurkan" dominantly reads as "to abort / cause a miscarriage".
     Routed to native review.
-"no:keywords:True:verre":
-  disposition: accepted
-  rationale: >-
-    "verre" means "worse" in Norwegian — True reads as "worse"; arguably
-    a mistranslation more than crudeness. DB-fix candidate; routed to
-    native review.
-"pl:builtins:hasattr:mać":
-  disposition: accepted
-  rationale: >-
-    "mać" survives in modern Polish almost only as the tail of the
-    expletive "kurwa mać". DB-fix candidate; routed to native review.
 "ru:builtins:callable:призываемый":
   disposition: accepted
   rationale: >-
@@ -144,3 +95,10 @@
     Without the modifier letter, "otish" reads as "shooting" (otmoq)
     rather than "oʻtish" (to pass). Screener torn; routed to native
     review.
+"da:builtins:hash:hash_kommer_i_gang":
+  disposition: accepted
+  rationale: >-
+    "hash" is the everyday Danish word for hashish, so the coinage reads
+    as "the hash gets going". Flagged on the 2026-08-10 re-screen;
+    already queued for native rework as GLOBAL-12 — ships until a Danish
+    reviewer supplies the replacement.

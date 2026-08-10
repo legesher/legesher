@@ -63,7 +63,7 @@ builtins:
   hasattr: haveattribut
   hash: hash_kommer_i_gang
   help: hulp
-  hex: hekseregel_convertering
+  hex: heksadecimal
   id: objekt_id
   input: indgang
   isinstance: erInstansAf
@@ -189,7 +189,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2026-01-26'
+  last_updated: '2026-08-10'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

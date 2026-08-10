@@ -59,7 +59,7 @@ These are Python's reserved words translated to Norwegian.
 | `pass` | `gå` |
 | `raise` | `oppnå` |
 | `return` | `retur` |
-| `True` | `verre` |
+| `True` | `sann` |
 | `try` | `prøve` |
 | `type` | `objekt_type` |
 | `while` | `medan` |

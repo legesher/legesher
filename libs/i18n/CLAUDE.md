@@ -177,6 +177,13 @@ result = await coordinator.translate("Hello", "en", "es")
   reverted by the next regen and flagged as a blocking `value_changed` by `scripts/verify_pack_regen.py`.
 - **New Python version terms**: land in that version's YAML file (the exporter places them by
   `version_added`)
+- **A replacement value also needs a candidate row**: `set_selected` alone leaves the selection
+  orphaned from the `translations` pool, which `scripts/migrate_to_v2.py` hard-fails on
+  (selected ⊆ candidates). Record the new surface via `add_translation` with provenance too.
+- **Regenerate downstream artifacts** after a regen: `scripts/generate_reference_docs.py` and
+  `scripts/update_pack_readme_counts.py` (repo root), and the docs-site payloads via
+  `cd docs && python3 scripts/generate_snippets.py --snippets snippets --out generated` —
+  the playground highlights and snippets are built from the shipped packs.
 - Run `legesher-i18n validate` and `scripts/verify_pack_regen.py` to check
 
 ### Language Status

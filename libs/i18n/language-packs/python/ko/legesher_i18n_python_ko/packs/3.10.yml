@@ -90,7 +90,7 @@ builtins:
   sum: 합계
   type: 타입
   vars: 변수
-  zip: 자바
+  zip: 묶기
   bool: 부울
   bytearray: 바이트배열
   bytes: 바이트
@@ -189,7 +189,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2026-01-26'
+  last_updated: '2026-08-10'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

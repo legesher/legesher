@@ -6,13 +6,13 @@ keywords:
   except*: undtiden
 exceptions:
   exceptiongroup: exceptiongruppe
-  baseexceptiongroup: basecovidsgroup
+  baseexceptiongroup: basisexceptiongruppe
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.14'
   compatibility_tested:
   - '3.11'
-  last_updated: '2026-01-26'
+  last_updated: '2026-08-10'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

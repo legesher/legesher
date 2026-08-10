@@ -16,7 +16,7 @@ keywords:
   else: muuttuja
   except: pois
   finally: seuraaaina
-  for: forza
+  for: jokaiselle
   from: kaa
   global: yhteensopiva
   if: jos
@@ -31,7 +31,7 @@ keywords:
   raise: nousia
   return: valita
   try: pyyttää
-  while: juhana
+  while: kun
   with: jäsen
   yield: yields
   None: tähtiäntä
@@ -59,7 +59,7 @@ builtins:
   filter: suodatin
   format: pärinnaita
   getattr: hakuattribuuti
-  globals: kaikkivaltias
+  globals: globaalit
   hasattr: ominaisuudella
   hash: hashi
   help: auttaa
@@ -123,7 +123,7 @@ exceptions:
   keyboardinterrupt: näkyvä_avautumin
   arithmeticerror: aritmetinenvirhe
   floatingpointerror: floatpointerrori
-  overflowerror: yliulostusvirhe
+  overflowerror: ylivuotovirhe
   zerodivisionerror: nulldivisiooneusi
   lookuperror: jälkikärsimyssä
   indexerror: indexerrori
@@ -189,7 +189,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2026-01-26'
+  last_updated: '2026-08-10'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

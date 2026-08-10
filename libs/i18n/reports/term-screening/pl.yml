@@ -1,12 +1,7 @@
 language: pl
 target: python
 screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
-screened_at: "2026-08-04"
-coverage_digest: e6d43efb01ed9397055e7ed226af1a8fcdcd9ea355c6c6d1d1615b95e3df8104
+screened_at: "2026-08-10"
+coverage_digest: af717d306546e1db08f35d3e1fb4fb2e9b67a2a717c6d239c64bdff7eb1c98ee
 terms_screened: 184
-flags:
-- term: mać
-  english: hasattr
-  partition: builtins
-  category: profanity
-  note: In modern Polish "mać" survives almost exclusively as the tail of the expletive "kurwa mać", so on its own it reads as a swear-word fragment every native speaker would notice.
+flags: []

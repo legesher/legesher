@@ -105,7 +105,7 @@ Python's built-in functions and types in Hebrew.
 | `format` | `הפורמט` |
 | `frozenset` | `קבוצהקפואה` |
 | `getattr` | `הגטטרייז` |
-| `globals` | `התרגוםשלהמונח` |
+| `globals` | `טבלת_ערכים_גלובליים` |
 | `hasattr` | `יש_תכונה` |
 | `hash` | `הערךערכיההיסק` |
 | `help` | `עזרה` |

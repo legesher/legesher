@@ -35,7 +35,7 @@ keywords:
   with: med
   yield: yeld
   None: ingen
-  'True': verre
+  'True': sann
   'False': falsk
   match: matching
   case: sak
@@ -189,7 +189,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2026-01-26'
+  last_updated: '2026-08-10'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT
