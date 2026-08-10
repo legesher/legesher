@@ -149,10 +149,10 @@ repos:
   # Showcase example transpile check (CORE-1403): every preview-repo
   # hello_world.py must reverse-translate through its pack and ast.parse.
   # --skip-if-missing: contributors without the preview checkout aren't blocked.
-  # --warn-only: 11 pre-existing example regressions at gate introduction
-  # (2026-08-04 run: ar da fr hi ja no pl si sv th vi); drop the flag once
-  # that list clears — same flip ritual as find-untranslated-terms.
-  - entry: uv run python libs/i18n/scripts/validate_showcase_examples.py --skip-if-missing --warn-only --quiet
+  # Strict since 2026-08-10 (CORE-1779): the pre-existing regression list
+  # cleared (51/51); a pack edit that breaks a showcase example fails the
+  # commit.
+  - entry: uv run python libs/i18n/scripts/validate_showcase_examples.py --skip-if-missing --quiet
     files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
     id: validate-showcase-examples
     language: system
