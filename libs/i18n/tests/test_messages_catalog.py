@@ -20,6 +20,18 @@ from legesher_i18n.messages import MessageRule, load_catalog, match_message
 
 DB_PATH = Path(__file__).parents[1] / "legesher_i18n" / "db" / "translations.db"
 
+#: The database is an untracked working copy since CORE-1794 — a fresh clone
+#: does not have it until it is copied in from the private data home (see
+#: libs/i18n/CLAUDE.md, "Durable home & sync ritual").
+pytestmark = pytest.mark.skipif(
+    not DB_PATH.exists(),
+    reason=(
+        "translations.db is an untracked working copy (CORE-1794); copy it in "
+        "from the private data home — libs/i18n/CLAUDE.md, 'Durable home & "
+        "sync ritual'"
+    ),
+)
+
 SEEDED_LOCALES = ("es", "ar")
 
 #: Message families the CORE-1679 catalog promises to cover.

@@ -273,7 +273,8 @@ INSERT INTO review_rungs (rung, rank, weight, counts_as_native, policy_version, 
 -- bundle re-minting the erased identity. See contributor_identities.withdrawn_at.
 --
 -- THE CHECK IS A SHAPE, NOT A PREFIX. `LIKE 'c\_%'` was not a constraint at all:
--- `c_alt_ur_modern` satisfies it, and that is precisely what a migration
+-- `c_<v1 label>` satisfies it — labels that embed real first names — and that
+-- is precisely what a migration
 -- doing `'c_' || created_by` produces. The id must be `c_` + exactly 16
 -- lowercase hex characters — a token that cannot carry a name (see
 -- schema_v2.contributor_id, which mints it from a SALTED digest of the private
@@ -308,13 +309,14 @@ CREATE TABLE contributors (
 --
 -- IT IS A GITHUB USERNAME, not the raw v1 `created_by` label. A first name is a
 -- bad key: it is ambiguous, it collides, and it changes — and v1's labels show
--- how misleading they can be: `zh_reviewer_review_old` LOOKS like the same person one
--- pack generation earlier, but holds the words her review REJECTED (see
+-- how misleading they can be: a `<label>_old` twin LOOKS like the same person
+-- one pack generation earlier, but holds the words that review REJECTED (see
 -- SUPERSEDED_BY_REVIEW in migrate_to_v2.py; those rows mint no contributor and
 -- no endorsement at all). Usernames are stable, unique and verifiable. (The
 -- PUBLISHED id is unaffected — it stays the opaque digest; only the private key
 -- improves.)
--- The v1 label -> username map is CONTRIBUTOR_IDENTITY_MAP in migrate_to_v2.py,
+-- The v1 label -> username map is CONTRIBUTOR_IDENTITY_MAP, loaded by
+-- migrate_to_v2.py from the private data home (CORE-1794) and
 -- explicit by design: a heuristic that strips `_old`/`_review` would silently
 -- mis-merge a future contributor — and would have merged a reviewer with the
 -- words she threw out.
@@ -322,8 +324,9 @@ CREATE TABLE contributors (
 -- A source_key prefixed `unresolved:` means a label that names a person but not
 -- WHICH person, or not ONE person. It mints no endorsements, and
 -- `migrate_to_v2.py --publish` refuses to build a corpus while one exists.
--- (v1's `alt_ur_modern` sat in this state until Madison resolved it to
--- @sarr266 — one person — on 2026-07-14.)
+-- (One v1 label sat in this state — one label, possibly two humans — until
+-- Madison resolved it to a single person on 2026-07-14; the resolution and its
+-- reasoning live in the data home's identity map.)
 CREATE TABLE contributor_identities (
     contributor_id        TEXT PRIMARY KEY REFERENCES contributors(id) ON DELETE CASCADE,
     source_key            TEXT UNIQUE,        -- GitHub username — NEVER published

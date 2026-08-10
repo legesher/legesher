@@ -428,7 +428,7 @@ class TestHuggingFaceAPIModelDryRun:
 class TestPipelineValidation:
     """Test pipeline-level validation for HF model selection."""
 
-    def test_hf_requires_profile(self):
+    def test_hf_requires_profile(self, tmp_path):
         """--models hf without --hf-profile should raise ValueError."""
         from scripts.translate.pipeline import PipelineConfig, TranslationPipeline
 
@@ -436,11 +436,15 @@ class TestPipelineValidation:
             models=["hf"],
             dry_run=True,
             hf_profile=None,
+            # The pipeline opens (and would CREATE) the real packaged
+            # translations.db before this validation raises — keep every
+            # construction pointed at tmp_path (CORE-1794).
+            output_db=tmp_path / "pipeline.db",
         )
         with pytest.raises(ValueError, match="--models hf requires --hf-profile"):
             TranslationPipeline(config)
 
-    def test_hf_api_requires_profile(self):
+    def test_hf_api_requires_profile(self, tmp_path):
         """--models hf-api without --hf-profile should raise ValueError."""
         from scripts.translate.pipeline import PipelineConfig, TranslationPipeline
 
@@ -448,11 +452,12 @@ class TestPipelineValidation:
             models=["hf-api"],
             dry_run=True,
             hf_profile=None,
+            output_db=tmp_path / "pipeline.db",
         )
         with pytest.raises(ValueError, match="--models hf-api requires --hf-profile"):
             TranslationPipeline(config)
 
-    def test_tiny_aya_uses_default_variant(self):
+    def test_tiny_aya_uses_default_variant(self, tmp_path):
         """--models tiny-aya without --hf-profile uses tiny-aya-earth."""
         from scripts.translate.pipeline import PipelineConfig, TranslationPipeline
 
@@ -460,11 +465,15 @@ class TestPipelineValidation:
             models=["tiny-aya"],
             dry_run=True,
             tiny_aya_variant="earth",
+            # A default (None) output_db would open — and CREATE — the real
+            # packaged translations.db, which is an untracked working copy
+            # since CORE-1794 and must never be materialized by a test.
+            output_db=tmp_path / "pipeline.db",
         )
         pipeline = TranslationPipeline(config)
         assert "tiny-aya" in pipeline.models
 
-    def test_hf_with_profile_works(self):
+    def test_hf_with_profile_works(self, tmp_path):
         """--models hf with --hf-profile creates the model."""
         from scripts.translate.pipeline import PipelineConfig, TranslationPipeline
 
@@ -472,6 +481,7 @@ class TestPipelineValidation:
             models=["hf"],
             dry_run=True,
             hf_profile="tiny-aya-earth",
+            output_db=tmp_path / "pipeline.db",
         )
         pipeline = TranslationPipeline(config)
         assert "hf" in pipeline.models

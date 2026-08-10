@@ -66,6 +66,12 @@ db.sqlite3-journal
 *.db-shm
 *.db-wal
 
+# Operational i18n database — local working copy only; the durable home is the
+# private data repository (see libs/i18n/CLAUDE.md, "Durable home & sync ritual").
+# Untracked ahead of the public flip: the binary carries unredacted reviewer
+# labels the corpus design never exports. [CORE-1794]
+libs/i18n/legesher_i18n/db/translations.db
+
 # Legesher local data
 .legesher/
 

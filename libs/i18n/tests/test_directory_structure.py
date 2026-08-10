@@ -11,6 +11,18 @@ from legesher_i18n.pack_loader import LanguagePackLoader
 from legesher_i18n.db import TranslationDatabase
 from tests import I18N_ROOT, language_packs_root, pack_file
 
+#: The database is an untracked working copy since CORE-1794 — a fresh clone
+#: does not have it until it is copied in from the private data home (see
+#: libs/i18n/CLAUDE.md, "Durable home & sync ritual").
+requires_real_db = pytest.mark.skipif(
+    not (I18N_ROOT / "legesher_i18n" / "db" / "translations.db").exists(),
+    reason=(
+        "translations.db is an untracked working copy (CORE-1794); copy it in "
+        "from the private data home — libs/i18n/CLAUDE.md, 'Durable home & "
+        "sync ritual'"
+    ),
+)
+
 
 class TestDirectoryStructure:
     """Test that all components use the correct directory structure."""
@@ -80,6 +92,7 @@ class TestPackLoaderDefaultPath:
 class TestYAMLExporterDefaultPath:
     """Test that YAMLExporter uses correct default output path."""
 
+    @requires_real_db
     def test_yaml_exporter_default_output_uses_language_packs(self):
         """Verify YAML exporter default output uses language-packs."""
         import sys

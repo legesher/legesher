@@ -44,6 +44,9 @@ legesher-api = "legesher_i18n.api.cli:main"
 
 [tool.pdm.build]
 includes = ["legesher_i18n/"]
+# The operational database is untracked local data (CORE-1794); it must never
+# ship in a wheel or sdist even when present on the building machine.
+excludes = ["legesher_i18n/db/translations.db*"]
 custom-hook = "pdm_build.py"
 
 [tool.uv.sources]

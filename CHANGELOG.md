@@ -808,7 +808,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- **i18n-python-zh**: 33 translation corrections from native speaker review (NextME14) — removed
+- **i18n-python-zh**: 33 translation corrections from native speaker review
+  ([@NextME14](https://github.com/NextME14)) — removed
   English words (`elseif`, `ValueError`, `Nosuchfileordirectory`), fixed meaningless characters
   (`玪抑` for lambda), standardized Unicode exceptions to use `统一码` (AYA-160)
 - **i18n-python-es**: 5 quality fixes — replaced placeholder text (`eltérminotraducido`),
@@ -819,7 +820,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - Community review translation suggestions added to translations.db for zh, ur, and es
-  with source `community_review` (NextME14 zh review,
+  with source `community_review` ([@NextME14](https://github.com/NextME14) zh review,
   [@sarr266](https://github.com/sarr266)/[@rafaym1](https://github.com/rafaym1)
   ur reviews, Universal Python ur alternatives, Latino es alternatives)
 

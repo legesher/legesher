@@ -6,10 +6,27 @@ archived in private-working-memory (scripts/resolve_collisions_core605.py).
 """
 
 import pytest
+from pathlib import Path
 
 from legesher_i18n.db.database import TranslationDatabase
 
 
+#: The database is an untracked working copy since CORE-1794 — a fresh clone
+#: does not have it until it is copied in from the private data home (see
+#: libs/i18n/CLAUDE.md, "Durable home & sync ritual").
+requires_real_db = pytest.mark.skipif(
+    not (
+        Path(__file__).resolve().parents[2] / "legesher_i18n" / "db" / "translations.db"
+    ).exists(),
+    reason=(
+        "translations.db is an untracked working copy (CORE-1794); copy it in "
+        "from the private data home — libs/i18n/CLAUDE.md, 'Durable home & "
+        "sync ritual'"
+    ),
+)
+
+
+@requires_real_db
 @pytest.mark.integration
 class TestCollisionResolution:
     """Integration tests against the real database."""

@@ -60,7 +60,7 @@ PRIVATE_STRINGS = (
     "alice-gh",  # contributor_identities.source_key / github_handle
     "Alice Realname",  # contributor_identities.display_name
     "alice@example.com",  # contributor_identities.email (CORE-1538 contact)
-    "zh_reviewer_review",  # option_provenance.source_detail (a real first name)
+    "reviewer_zh_review",  # option_provenance.source_detail (the label class that embeds a reviewer's first name)
     "great word, Alice!",  # endorsements.comment (free text, may carry PII)
 )
 
@@ -153,7 +153,7 @@ def v2_db(tmp_path: Path) -> Path:
         "model_version, contributor_id) VALUES (?, ?, ?, ?, ?)",
         [
             (OPT_TRUE_UR, "model", "aya", "aya-101", None),
-            (OPT_TRUE_UR, "community", "zh_reviewer_review", None, CONTRIBUTOR_ALICE),
+            (OPT_TRUE_UR, "community", "reviewer_zh_review", None, CONTRIBUTOR_ALICE),
             (OPT_TRUE_ZH, "legesher", "yaml_pack", None, None),
         ],
     )

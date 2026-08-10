@@ -15,10 +15,12 @@ structurally excluded from every export. The link between an id and a person exi
 place, privately. So withdrawal is not a retraction — nothing needs re-pushing, no revision needs
 rewriting, and no consumer of the dataset is affected.
 
-**The withdrawal is recorded in source code, not in a database.** There is no operational v2
+**The withdrawal is recorded in the identity map, not in a database.** There is no operational v2
 database yet: `migrate_to_v2.py` rebuilds it from scratch every time, and identities come from
-`CONTRIBUTOR_IDENTITY_MAP` in that script. Editing a built database would be undone by the next
-rebuild. This surprises people, so it is the first thing stated here.
+the private identity map (`identity/contributor_identity_map.json` in the durable data home,
+loaded via `$LEGESHER_DATA_REPO` — moved out of the script's source on CORE-1794). Editing a
+built database would be undone by the next rebuild. This surprises people, so it is the first
+thing stated here.
 
 ## 1. Get their opaque id
 
@@ -53,15 +55,19 @@ If no contact is on file and the account cannot be confirmed, say so and stop. D
 
 ## 2. Replace their entry in the identity map
 
-In `scripts/migrate_to_v2.py`, swap the `Identity` for a `Withdrawn`:
+In the data home's `identity/contributor_identity_map.json`, move the label from
+`identities` to `withdrawn`:
 
-```python
-# before
-"<v1-label>": Identity("<github-username>", "<display name>"),
+```json
+// before, under "identities"
+"<v1-label>": {"github_handle": "<github-username>", "display_name": "<display name>"}
 
-# after
-"<v1-label>": Withdrawn("c_0123456789abcdef", "2026-08-10"),
+// after, under "withdrawn"
+"<v1-label>": {"contributor_id": "c_0123456789abcdef", "withdrawn_at": "2026-08-10"}
 ```
+
+Then commit and push the data repository — the map there is the durable store,
+and an unpushed withdrawal exists only on one workstation.
 
 The placeholders are deliberate. Never write a worked example here using a real
 map entry: the v1 label carries a real first name and the opaque id is a
@@ -73,7 +79,7 @@ The entry **stays**; only the person leaves. Two failure modes this avoids:
 
 - **Deleting the entry** makes `resolve_identity` refuse the entire build — an unknown v1 label is a
   hard stop by design, so a deletion does not erase them, it just breaks the migration.
-- **Keeping the username with a flag** is not erasure. This file is the durable store; a username
+- **Keeping the username with a flag** is not erasure. The map is the durable store; a username
   annotated "withdrawn" is a mapping we still hold and have merely promised not to use.
 
 The opaque id is safe to keep in source: it is already published, and with the username gone it
@@ -162,7 +168,7 @@ Their historical endorsements reattach automatically, because the opaque id neve
 ## When this procedure changes
 
 Once the review-intake write path lands and the v2 database becomes the operational store rather
-than a build artifact, the tombstone moves from source code to a row update — the same columns, the
+than a build artifact, the tombstone moves from the identity map to a row update — the same columns, the
 same three checks, without the rebuild. The identity map is a migration-era artifact; this document
 should be revisited at that cutover.
 

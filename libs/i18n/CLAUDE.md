@@ -249,6 +249,31 @@ translation data. Schema defined in `legesher_i18n/db/schema.py`.
 
 **Features:** WAL mode, foreign keys with cascading deletes, thread-local connection pooling.
 
+### Durable home & sync ritual (CORE-1794)
+
+The database is **untracked** — it never ships in git or in built wheels (the
+binary carries unredacted `created_by` reviewer labels the corpus design never
+exports). The file on disk here is a **working copy**; the canonical copy lives
+in a private data repository, alongside the private contributor identity map
+that `scripts/migrate_to_v2.py` loads at import.
+
+- **Every clone sets `LEGESHER_DATA_REPO`** to the path of the data-repository
+  checkout (the monorepo never names that repository; ask a maintainer for
+  access). A fresh monorepo clone has **no database** until you copy it in:
+  `cp "$LEGESHER_DATA_REPO/db/translations.db" legesher_i18n/db/`
+- **Every mutating ritual ends with a push to the durable home.** After any
+  regen, migration, review import, or term-screening write:
+
+  ```bash
+  sqlite3 legesher_i18n/db/translations.db "PRAGMA wal_checkpoint(TRUNCATE);"
+  cp legesher_i18n/db/translations.db "$LEGESHER_DATA_REPO/db/translations.db"
+  git -C "$LEGESHER_DATA_REPO" commit -am "db: <ritual> [CORE-###]" && \
+      git -C "$LEGESHER_DATA_REPO" push
+  ```
+
+  An unpushed change exists only on one workstation — local-only is the failure
+  mode the durable home exists to prevent.
+
 ### Tables
 
 #### `terms` — Canonical reserved words
@@ -403,7 +428,7 @@ ORDER BY tm.name, t.source;
 | ---------------------------------------- | --------------------------------------------------------------- |
 | `legesher_i18n/db/schema.py`             | Table definitions and indexes                                   |
 | `legesher_i18n/db/database.py`           | `TranslationDatabase` class with all CRUD methods               |
-| `legesher_i18n/db/translations.db`       | The consolidated SQLite database                                |
+| `legesher_i18n/db/translations.db`       | The database — untracked working copy (see Durable home ritual) |
 | `scripts/translate/pipeline.py`          | Translation pipeline (stores suggestions via `add_translation`) |
 | `scripts/translate/import_yaml_to_db.py` | Bulk YAML-to-DB import utility                                  |
 | `scripts/translate/yaml_exporter.py`     | DB-to-YAML export (reads ONLY `get_all_selected` — CORE-1400)   |

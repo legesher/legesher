@@ -1328,14 +1328,14 @@ def test_contributor_id_cannot_be_a_handle(db: sqlite3.Connection) -> None:
     The old CHECK (``id LIKE 'c\\_%'``) rejected only a *bare* handle, which gave
     false comfort: ``c_<handle>`` sailed straight through it -- and
     ``'c_' || created_by`` is exactly what the migration used to write, minting
-    ``c_alt_ur_modern``, ``c_zh_reviewer_review``, ``c_ur_reviewer_review``. The CHECK
+    ``c_alt_ur_modern``, ``c_reviewer_zh_review``, ``c_reviewer_ur_review``. The CHECK
     is now a SHAPE (``c_`` + 16 hex), which a name cannot satisfy.
     """
     for forged in (
         "madiedgar",  # a bare handle
         "c_madiedgar",  # a handle behind the prefix -- the real hole
         "c_alt_ur_modern",  # what the migration actually produced
-        "c_zh_reviewer_review",
+        "c_reviewer_zh_review",
         "c_" + "z" * 16,  # right length, not hex
         "c_" + "ab" * 4,  # hex, wrong length
         "c_ABCDEF0123456789",  # uppercase hex
@@ -1354,18 +1354,18 @@ def test_contributor_id_is_an_opaque_token_not_a_handle() -> None:
     than the v1 first-name label -- but it is just as private, and the published
     id must leak neither.
     """
-    minted = contributor_id("NextME14", salt=TEST_SALT)
+    minted = contributor_id("zh_reviewer", salt=TEST_SALT)
     assert minted.startswith("c_")
     assert len(minted) == 18
-    assert "NextME14".lower() not in minted.lower()
+    assert "zh_reviewer".lower() not in minted.lower()
     assert int(minted.removeprefix("c_"), 16) >= 0  # pure hex
 
     # A distinct person is a distinct id.
-    assert minted != contributor_id("rafaym1", salt=TEST_SALT)
+    assert minted != contributor_id("ur_reviewer", salt=TEST_SALT)
 
     # And the old first-name label leaks nothing either, wherever it still appears.
     legacy = contributor_id("alt_ur_modern", salt=TEST_SALT)
-    assert "sarr266" not in legacy and "rafaym1" not in legacy
+    assert "alt" not in legacy and "reviewer" not in legacy
 
 
 # ---------------------------------------------------------------------------
@@ -1398,17 +1398,17 @@ def test_contributor_id_is_frozen_for_a_given_salt() -> None:
     ``hmac`` stdlib and ``openssl dgst -sha256 -hmac`` -- so the pin carries
     cross-implementation evidence, not just a snapshot of this module's output:
 
-        $ echo -n "NextME14" | openssl dgst -sha256 -hmac "test-salt"
-        957406473ccd9488...
+        $ echo -n "zh_reviewer" | openssl dgst -sha256 -hmac "test-salt"
+        52380ea8e8a87e15...
     """
     # Determinism, restated as the property it actually is: idempotence.
     for _ in range(3):
-        assert contributor_id("NextME14", salt=TEST_SALT) == "c_957406473ccd9488"
-    assert contributor_id("rafaym1", salt=TEST_SALT) == "c_bee12403e53fced2"
+        assert contributor_id("zh_reviewer", salt=TEST_SALT) == "c_52380ea8e8a87e15"
+    assert contributor_id("ur_reviewer", salt=TEST_SALT) == "c_2a8a31dbb854a12f"
 
     # The shape the `contributors.id` CHECK enforces: 'c_' + exactly 16 lowercase
     # hex. Pinned here too, because the CHECK and the minter must not drift apart.
-    for key in ("NextME14", "rafaym1", "unresolved:alt_ur_modern"):
+    for key in ("zh_reviewer", "ur_reviewer", "unresolved:alt_ur_modern"):
         minted = contributor_id(key, salt=TEST_SALT)
         assert len(minted) == 2 + CONTRIBUTOR_TOKEN_LENGTH == 18
         assert re.fullmatch(r"c_[0-9a-f]{16}", minted), minted
@@ -1421,8 +1421,8 @@ def test_rotating_the_salt_forks_the_corpus(db: sqlite3.Connection) -> None:
     id that has no history, and the id that HAS her history can never be minted
     again. This is the failure the escrow requirement exists to prevent.
     """
-    original = contributor_id("NextME14", salt=TEST_SALT)
-    rotated = contributor_id("NextME14", salt="rotated-salt")
+    original = contributor_id("zh_reviewer", salt=TEST_SALT)
+    rotated = contributor_id("zh_reviewer", salt="rotated-salt")
     assert original != rotated  # the same human, two disjoint corpora
 
     db.execute("INSERT INTO contributors (id) VALUES (?)", (original,))

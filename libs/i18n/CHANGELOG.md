@@ -20,8 +20,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   standing for two people records nobody's consent.
 - **Contributor withdrawal path (CORE-1780).** A contributor may ask to be
   forgotten, and the request is now honourable: `migrate_to_v2.py` gains a
-  `Withdrawn` marker that replaces a person's `Identity` in
-  `CONTRIBUTOR_IDENTITY_MAP`, carrying their opaque contributor id instead of
+  `Withdrawn` marker that replaces a person's identity entry in the
+  contributor identity map (held in the private data home since CORE-1794),
+  carrying their opaque contributor id instead of
   the username it was minted from. Their endorsements survive; the identity
   cannot be re-created by a rebuild. `--publish` refuses a withdrawn id the
   corpus has never published, and refuses a person half-converted across two v1

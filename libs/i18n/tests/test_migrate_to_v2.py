@@ -16,6 +16,7 @@ run against a synthetic v1 fixture rather than the real ``translations.db``.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from collections.abc import Iterator
 from pathlib import Path
@@ -30,7 +31,10 @@ from legesher_i18n.db.schema_v2 import (
 )
 from scripts.migrate_to_v2 import (
     CONTRIBUTOR_IDENTITY_MAP,
+    Identity,
     LEGACY_COMMUNITY_SOURCE_DETAIL,
+    Withdrawn,
+    load_identity_maps,
     NON_HUMAN_CREATED_BY,
     PUBLIC_SOURCES,
     SOURCE_MAP,
@@ -49,20 +53,62 @@ SALT = "test-salt"
 #: A salt that is long enough to be publishable (>= MIN_PUBLISH_SALT_LENGTH).
 GOOD_SALT = "a" * 64
 
+#: Synthetic stand-ins for the private identity data. The REAL label -> person
+#: map is private data in the durable data home and no longer in this tree
+#: (CORE-1794): tests must run without it, and no real label, name, or handle
+#: may appear here. The entries mirror the real data's classes: a zh reviewer
+#: whose review displaced pack words, a ur reviewer likewise, and an
+#: alternatives label that resolves to ONE person.
+TEST_IDENTITIES: dict[str, Identity] = {
+    "reviewer_zh_review": Identity("zh_reviewer", "Reviewer Zh"),
+    "reviewer_ur_review": Identity("ur_reviewer"),
+    "alt_ur_modern": Identity("alt_reviewer", "Alt Reviewer"),
+}
+
+#: `<label>_old` -> the review label that displaced it (see the real map's
+#: `superseded_by_review` in the data home).
+TEST_SUPERSEDED: dict[str, str] = {
+    "reviewer_zh_review_old": "reviewer_zh_review",
+    "reviewer_ur_review_old": "reviewer_ur_review",
+}
+
+
+@pytest.fixture(autouse=True)
+def _synthetic_identity_maps() -> Iterator[None]:
+    """Populate the module maps in place (they load empty without the data home)."""
+    CONTRIBUTOR_IDENTITY_MAP.clear()
+    CONTRIBUTOR_IDENTITY_MAP.update(TEST_IDENTITIES)
+    SUPERSEDED_BY_REVIEW.clear()
+    SUPERSEDED_BY_REVIEW.update(TEST_SUPERSEDED)
+    yield
+    CONTRIBUTOR_IDENTITY_MAP.clear()
+    SUPERSEDED_BY_REVIEW.clear()
+
+
 #: The v1 shape, reduced to what the identity logic reads. One term, one locale,
 #: and one row per `created_by` class the migration must tell apart.
 V1_ROWS = [
     # (term, translation, source, created_by)
-    ("True", "真实", "community_review", "zh_reviewer_review"),  # her suggestion
-    ("True", "真", "community_review", "zh_reviewer_review_old"),  # the word she REJECTED
-    ("False", "نوعیت", "community_review", "ur_reviewer_review"),
-    ("False", "قسم", "community_review", "ur_reviewer_review_old"),  # REJECTED
+    (
+        "True",
+        "真实",
+        "community_review",
+        "reviewer_zh_review",
+    ),  # the reviewer's suggestion
+    (
+        "True",
+        "真",
+        "community_review",
+        "reviewer_zh_review_old",
+    ),  # the word they REJECTED
+    ("False", "نوعیت", "community_review", "reviewer_ur_review"),
+    ("False", "قسم", "community_review", "reviewer_ur_review_old"),  # REJECTED
     (
         "break",
         "توڑ",
         "community_review",
         "alt_ur_modern",
-    ),  # = @sarr266 (resolved 2026-07-14)
+    ),  # = @alt_reviewer (resolved 2026-07-14)
     ("break", "universal", "community_review", "universal_python"),  # a pipeline
     ("None", "legacy", "community", None),  # MIT legacy: no author
     ("None", "machine", "aya", "ai-aya"),  # a model
@@ -151,17 +197,17 @@ def test_the_source_key_is_a_github_username_not_a_first_name(
             "SELECT source_key, github_handle FROM contributor_identities"
         )
     }
-    assert keys["NextME14"] == "NextME14"
-    assert keys["rafaym1"] == "rafaym1"
+    assert keys["zh_reviewer"] == "zh_reviewer"
+    assert keys["ur_reviewer"] == "ur_reviewer"
 
     # The raw v1 labels are gone as keys...
-    assert "zh_reviewer_review" not in keys
-    assert "ur_reviewer_review" not in keys
+    assert "reviewer_zh_review" not in keys
+    assert "reviewer_ur_review" not in keys
 
     # ...and the published id is minted from the username, carrying no name.
     ids = {r["id"] for r in conn.execute("SELECT id FROM contributors")}
-    assert contributor_id("NextME14", salt=SALT) in ids
-    assert all("nextme14" not in i and "rafaym1" not in i for i in ids)
+    assert contributor_id("zh_reviewer", salt=SALT) in ids
+    assert all("reviewer" not in i for i in ids)
     conn.close()
 
 
@@ -176,7 +222,7 @@ def test_a_word_the_reviewer_rejected_is_never_endorsed(
     trustworthy.
 
     Evidence in the real data: zh, 31 term pairs -- `_old` NEVER equals `_new`
-    (0/31) and `_new` is ALWAYS the shipped word (31/31); and `ur_reviewer_review_old`
+    (0/31) and `_new` is ALWAYS the shipped word (31/31); and `reviewer_ur_review_old`
     holds قسم, which the public ur CHANGELOG records as REPLACED by نوعیت.
 
     v2 needs no new machinery for this: endorsements are positive-only, and
@@ -212,14 +258,16 @@ def test_a_word_the_reviewer_rejected_is_never_endorsed(
     conn.close()
 
 
-def test_the_sarr266_label_resolves_to_sarr266(v1_db: Path, tmp_path: Path) -> None:
-    """`alt_ur_modern` is @sarr266 -- ONE person (Madison, 2026-07-14).
+def test_an_ambiguous_label_resolves_to_one_person(v1_db: Path, tmp_path: Path) -> None:
+    """`alt_ur_modern` is @alt_reviewer -- ONE person.
 
-    The label looked like two names, and the ur CHANGELOG credits the review
-    round to "@sarr266 & @rafaym1" jointly -- so the migration held these rows
-    back rather than guess. Madison resolved it: "rafaym1" in the label names the
-    pack her alternatives responded to, not a co-author. Her rows now mint
-    endorsements like anyone else's, and no unresolved identity remains.
+    The real label this stands in for looked like two names, and the public
+    CHANGELOG credited the review round jointly -- so the migration held these
+    rows back rather than guess. Madison resolved it by hand (2026-07-14): the
+    second name in the label named the pack the alternatives responded to, not
+    a co-author. (The real resolution and its reasoning live in the data home's
+    identity map, CORE-1794.) The resolved rows mint endorsements like anyone
+    else's, and no unresolved identity remains.
     """
     assert CONTRIBUTOR_IDENTITY_MAP["alt_ur_modern"].resolved
 
@@ -237,7 +285,7 @@ def test_the_sarr266_label_resolves_to_sarr266(v1_db: Path, tmp_path: Path) -> N
         "SELECT ci.contributor_id, "
         "(SELECT COUNT(*) FROM endorsements e "
         " WHERE e.contributor_id = ci.contributor_id) AS endorsements "
-        "FROM contributor_identities ci WHERE ci.source_key = 'sarr266'"
+        "FROM contributor_identities ci WHERE ci.source_key = 'alt_reviewer'"
     ).fetchone()
     assert row["endorsements"] == 1  # her word now counts
 
@@ -499,7 +547,7 @@ def test_the_migration_reports_the_attribution_row_count(
 def test_superseded_rows_carry_a_neutral_source_detail(
     v1_db: Path, tmp_path: Path
 ) -> None:
-    """The rejected-word rows must not carry `zh_reviewer_review_old` into the corpus.
+    """The rejected-word rows must not carry `reviewer_zh_review_old` into the corpus.
 
     `option_provenance` is a CORPUS-layer table with no publish gate over it,
     and the schema's contract is that `contributors.id` is the ONLY identity
@@ -519,8 +567,7 @@ def test_superseded_rows_carry_a_neutral_source_detail(
     # No name fragment anywhere in the corpus-layer provenance.
     leaked = conn.execute(
         "SELECT COUNT(*) FROM option_provenance "
-        "WHERE source_detail LIKE '%nextme14%' OR source_detail LIKE '%rafaym1%' "
-        "   OR source_detail LIKE '%sarr266%'"
+        "WHERE source_detail LIKE '%reviewer%' OR source_detail LIKE '%alt_ur%'"
     ).fetchone()[0]
     assert leaked == 0
     conn.close()
@@ -913,7 +960,7 @@ def test_a_withdrawn_contributor_keeps_their_endorsements_and_loses_their_identi
     # The id this person already has in the published corpus. Under a withdrawal
     # it is copied into the map verbatim -- there is no username left to mint it
     # from, which is precisely what makes the erasure stick.
-    withdrawn_id = contributor_id("sarr266", salt=GOOD_SALT)
+    withdrawn_id = contributor_id("alt_reviewer", salt=GOOD_SALT)
     monkeypatch.setitem(
         migrate_to_v2.CONTRIBUTOR_IDENTITY_MAP,
         "alt_ur_modern",
@@ -952,7 +999,7 @@ def test_a_withdrawn_contributor_keeps_their_endorsements_and_loses_their_identi
     #    identity table, not in provenance, not in a stray label.
     assert (
         db.execute(
-            "SELECT COUNT(*) FROM contributor_identities WHERE source_key = 'sarr266'"
+            "SELECT COUNT(*) FROM contributor_identities WHERE source_key = 'alt_reviewer'"
         ).fetchone()[0]
         == 0
     )
@@ -997,13 +1044,13 @@ def test_withdrawal_does_not_change_what_the_corpus_publishes(
         migrate_to_v2.CONTRIBUTOR_IDENTITY_MAP,
         "alt_ur_modern",
         migrate_to_v2.Withdrawn(
-            contributor_id("sarr266", salt=GOOD_SALT), "2026-08-10"
+            contributor_id("alt_reviewer", salt=GOOD_SALT), "2026-08-10"
         ),
     )
     monkeypatch.setattr(
         migrate_to_v2,
         "PUBLISHED_CONTRIBUTOR_IDS",
-        frozenset({contributor_id("sarr266", salt=GOOD_SALT)}),
+        frozenset({contributor_id("alt_reviewer", salt=GOOD_SALT)}),
     )
     after_path = tmp_path / "after.db"
     after = migrate(v1_db, after_path, salt=GOOD_SALT, publish=True)
@@ -1048,10 +1095,10 @@ def test_a_half_converted_person_is_refused_by_name_not_by_traceback(
     """
     from scripts import migrate_to_v2
 
-    shared = contributor_id("sarr266", salt=GOOD_SALT)
+    shared = contributor_id("alt_reviewer", salt=GOOD_SALT)
     monkeypatch.setitem(
         migrate_to_v2.CONTRIBUTOR_IDENTITY_MAP,
-        "ur_reviewer_review",
+        "reviewer_ur_review",
         migrate_to_v2.Withdrawn(shared, "2026-08-10"),
     )
     monkeypatch.setattr(migrate_to_v2, "PUBLISHED_CONTRIBUTOR_IDS", frozenset({shared}))
@@ -1113,7 +1160,7 @@ def test_withdrawal_clears_the_consent_it_revoked(
     """A tombstone must not keep asserting consent the person took back."""
     from scripts import migrate_to_v2
 
-    withdrawn_id = contributor_id("sarr266", salt=GOOD_SALT)
+    withdrawn_id = contributor_id("alt_reviewer", salt=GOOD_SALT)
     monkeypatch.setitem(
         migrate_to_v2.CONTRIBUTOR_IDENTITY_MAP,
         "alt_ur_modern",
@@ -1134,3 +1181,162 @@ def test_withdrawal_clears_the_consent_it_revoked(
     assert version is None and consent_at is None
     assert withdrawn_at == "2026-08-10"
     db.close()
+
+
+# ---------------------------------------------------------------------------
+# CORE-1794 -- the identity maps load from the private data home
+# ---------------------------------------------------------------------------
+
+
+def _write_map(path: Path, data: dict) -> Path:
+    path.write_text(json.dumps(data), encoding="utf-8")
+    return path
+
+
+def test_load_identity_maps_round_trips_the_data_home_json(tmp_path: Path) -> None:
+    """The JSON contract: identities, withdrawn, superseded_by_review."""
+    j = _write_map(
+        tmp_path / "map.json",
+        {
+            "identities": {
+                "reviewer_zh_review": {
+                    "github_handle": "zh_reviewer",
+                    "display_name": "Reviewer Zh",
+                    "note": "zh review",
+                },
+                "open_label": {"github_handle": None},
+            },
+            "withdrawn": {
+                "gone_label": {
+                    "contributor_id": "c_0000000000000000",
+                    "withdrawn_at": "2026-08-10",
+                }
+            },
+            "superseded_by_review": {"reviewer_zh_review_old": "reviewer_zh_review"},
+        },
+    )
+    load_identity_maps(j)
+    assert CONTRIBUTOR_IDENTITY_MAP["reviewer_zh_review"] == Identity(
+        "zh_reviewer", "Reviewer Zh", "zh review"
+    )
+    assert not CONTRIBUTOR_IDENTITY_MAP["open_label"].resolved
+    gone = CONTRIBUTOR_IDENTITY_MAP["gone_label"]
+    assert isinstance(gone, Withdrawn) and gone.resolved
+    assert gone.source_key("gone_label") == "c_0000000000000000"
+    assert SUPERSEDED_BY_REVIEW == {"reviewer_zh_review_old": "reviewer_zh_review"}
+
+
+def test_load_identity_maps_missing_file_leaves_maps_empty(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The documented fail-loud contract: no data home, EMPTY maps, no guess."""
+    monkeypatch.delenv("LEGESHER_IDENTITY_MAP", raising=False)
+    monkeypatch.delenv("LEGESHER_DATA_REPO", raising=False)
+    load_identity_maps(tmp_path / "absent.json")
+    assert CONTRIBUTOR_IDENTITY_MAP == {} and SUPERSEDED_BY_REVIEW == {}
+    load_identity_maps()  # no path, no env: same outcome
+    assert CONTRIBUTOR_IDENTITY_MAP == {} and SUPERSEDED_BY_REVIEW == {}
+
+
+def test_load_identity_maps_env_resolution_order(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """$LEGESHER_IDENTITY_MAP (direct file) outranks $LEGESHER_DATA_REPO."""
+    repo = tmp_path / "data-repo"
+    (repo / "identity").mkdir(parents=True)
+    _write_map(
+        repo / "identity" / "contributor_identity_map.json",
+        {"identities": {"from_repo": {"github_handle": "repo_person"}}},
+    )
+    direct = _write_map(
+        tmp_path / "direct.json",
+        {"identities": {"from_direct": {"github_handle": "direct_person"}}},
+    )
+
+    monkeypatch.delenv("LEGESHER_IDENTITY_MAP", raising=False)
+    monkeypatch.setenv("LEGESHER_DATA_REPO", str(repo))
+    load_identity_maps()
+    assert set(CONTRIBUTOR_IDENTITY_MAP) == {"from_repo"}
+
+    monkeypatch.setenv("LEGESHER_IDENTITY_MAP", str(direct))
+    load_identity_maps()
+    assert set(CONTRIBUTOR_IDENTITY_MAP) == {"from_direct"}
+
+
+def test_unknown_label_error_names_the_data_home_when_the_map_is_empty() -> None:
+    """The designed first-contact failure for a clone without the data home."""
+    CONTRIBUTOR_IDENTITY_MAP.clear()
+    with pytest.raises(SystemExit, match="identity map is EMPTY"):
+        resolve_identity("anyone_2027")
+    # And the hint does NOT appear when the map is populated -- the label is
+    # then genuinely unknown, which is a different problem.
+    CONTRIBUTOR_IDENTITY_MAP.update(TEST_IDENTITIES)
+    with pytest.raises(SystemExit, match="unknown v1 created_by label") as exc:
+        resolve_identity("anyone_2027")
+    assert "identity map is EMPTY" not in str(exc.value)
+
+
+def test_load_identity_maps_rejects_malformed_entries(tmp_path: Path) -> None:
+    """A misspelt key must fail at load, not surface later as 'unresolved'."""
+    with pytest.raises(SystemExit, match="github_handle"):
+        load_identity_maps(
+            _write_map(
+                tmp_path / "bad-identity.json",
+                {"identities": {"label": {"handle": "wrong-key-name"}}},
+            )
+        )
+    with pytest.raises(SystemExit, match="contributor_id"):
+        load_identity_maps(
+            _write_map(
+                tmp_path / "bad-withdrawn.json",
+                {"withdrawn": {"label": {"withdrawn_at": "2026-08-10"}}},
+            )
+        )
+
+
+def test_load_identity_maps_enforces_cross_map_consistency(tmp_path: Path) -> None:
+    """A label cannot be two things, and a displaced label needs a person."""
+    with pytest.raises(SystemExit, match="not a known identity"):
+        load_identity_maps(
+            _write_map(
+                tmp_path / "dangling.json",
+                {"superseded_by_review": {"x_old": "nobody"}},
+            )
+        )
+    with pytest.raises(SystemExit, match="both 'identities' and 'withdrawn'"):
+        load_identity_maps(
+            _write_map(
+                tmp_path / "both.json",
+                {
+                    "identities": {"label": {"github_handle": "person"}},
+                    "withdrawn": {
+                        "label": {
+                            "contributor_id": "c_0000000000000000",
+                            "withdrawn_at": "2026-08-10",
+                        }
+                    },
+                },
+            )
+        )
+    with pytest.raises(SystemExit, match="NON_HUMAN_CREATED_BY"):
+        load_identity_maps(
+            _write_map(
+                tmp_path / "pipeline.json",
+                {"identities": {"universal_python": {"github_handle": "person"}}},
+            )
+        )
+
+
+def test_the_database_never_ships_in_built_artifacts() -> None:
+    """The pdm exclude is privacy-gating (CORE-1794): pin it in pyproject.
+
+    The wheel shipped the full database before this exclude existed. The build
+    backend reads files from disk, not from git, so untracking alone does not
+    keep a locally-present database out of an artifact -- the exclude does.
+    """
+    import tomllib
+
+    pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    with pyproject.open("rb") as fh:
+        build = tomllib.load(fh)["tool"]["pdm"]["build"]
+    assert "legesher_i18n/db/translations.db*" in build["excludes"]

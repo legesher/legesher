@@ -54,14 +54,21 @@ silently, the migration REFUSES a source that carries message rows unless
 --acknowledge-message-rows-not-migrated is passed.
 
 Usage:
+    LEGESHER_DATA_REPO=<path-to-private-data-repo-checkout> \\
     LEGESHER_CONTRIBUTOR_SALT=<secret> \\
     python scripts/migrate_to_v2.py --source legesher_i18n/db/translations.db \\
                                     --target build/translations_v2.db [--publish]
+
+LEGESHER_DATA_REPO points at the checkout of the private data repository whose
+``identity/contributor_identity_map.json`` holds the label -> person map
+(CORE-1794); without it the map loads EMPTY and every human ``created_by``
+label refuses the build. ``LEGESHER_IDENTITY_MAP`` may name the JSON directly.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import keyword
 import os
 import sqlite3
@@ -258,8 +265,9 @@ class Withdrawn:
     Replaces that person's :class:`Identity` in :data:`CONTRIBUTOR_IDENTITY_MAP`.
 
     It carries the OPAQUE id and NOT the username, and that is the whole point.
-    This map is source code: it is the durable store of who a v1 label is, and it
-    is re-read on every rebuild. Leaving the username here under a "withdrawn"
+    The map is the durable store of who a v1 label is (a `withdrawn` entry in
+    the data home's contributor_identity_map.json since CORE-1794), and it is
+    re-read on every rebuild. Leaving the username there under a "withdrawn"
     flag would mean nothing had been erased -- the mapping back to the person
     would simply be annotated. So the username goes, and the id it minted stays.
 
@@ -379,35 +387,30 @@ def require_published_withdrawal_ids() -> None:
 
 #: v1 `created_by` label -> the person behind it, keyed by GITHUB USERNAME.
 #:
-#: The v1 label is a bad key: `zh_reviewer_review` is a first name, first names are
-#: ambiguous, they collide, and they change. A GitHub username is stable, unique
-#: and verifiable, so it -- not the label -- is what `contributor_identities.
-#: source_key` holds and what the opaque `c_<hash>` is minted from. (The PUBLIC
-#: id is unchanged: it stays the opaque digest. Only the private key improves.)
+#: The v1 label is a bad key: several embed a reviewer's FIRST NAME, and first
+#: names are ambiguous, they collide, and they change. A GitHub username is
+#: stable, unique and verifiable, so it -- not the label -- is what
+#: `contributor_identities.source_key` holds and what the opaque `c_<hash>` is
+#: minted from. (The PUBLIC id is unchanged: it stays the opaque digest. Only
+#: the private key improves.)
+#:
+#: THE MAP ITSELF IS PRIVATE DATA [CORE-1794]. The labels and the identities
+#: they resolve to are exactly the PII the corpus design never exports, so the
+#: entries live in the durable data home (`identity/contributor_identity_map
+#: .json`), never in this tree. :func:`load_identity_maps` populates this dict
+#: at import -- see it for the resolution order. It remains the durable store
+#: re-read on every rebuild; only its address changed.
 #:
 #: ONLY labels that record a person's OWN assertion belong here. The `_old`
 #: twins do NOT -- see :data:`SUPERSEDED_BY_REVIEW`, which is the more serious
 #: half of this fix.
 #:
-#: THIS MAP IS EXPLICIT ON PURPOSE. A heuristic (strip `_old`, strip `_review`)
+#: THE MAP IS EXPLICIT ON PURPOSE. A heuristic (strip `_old`, strip `_review`)
 #: would silently mis-merge a future contributor whose handle happens to end that
 #: way -- and, as it turns out, would also have merged a reviewer with the words
 #: she REJECTED. An unknown label RAISES (:func:`resolve_identity`); it is never
 #: guessed at.
-CONTRIBUTOR_IDENTITY_MAP: dict[str, Identity | Withdrawn] = {
-    # zh review: NextME14's 31 suggested replacements. These are the words she
-    # asserted, and they are the words the pack ships.
-    "zh_reviewer_review": Identity("NextME14", "NextME14"),
-    # ur review: the 2 applied suggestions the ur CHANGELOG credits to @rafaym1
-    # by name (`type`: قسم -> نوعیت, `userwarning`: صارفانتباہ -> صارفاطلاع).
-    "ur_reviewer_review": Identity("rafaym1"),
-    # ur_modern alternatives (English transliterations in Urdu script).
-    # RESOLVED by Madison (2026-07-14): this is sarr266 (@sarr266), ONE person --
-    # "rafaym1" in the label names the pack her alternatives responded to, not a
-    # co-author of the rows. (The ur CHANGELOG credits "@sarr266 & @rafaym1"
-    # because the REVIEW ROUND was joint; the `alt_ur_modern` rows are hers.)
-    "alt_ur_modern": Identity("sarr266", "sarr266"),
-}
+CONTRIBUTOR_IDENTITY_MAP: dict[str, Identity | Withdrawn] = {}
 
 #: v1 `created_by` label -> the review label that DISPLACED it.
 #:
@@ -420,7 +423,7 @@ CONTRIBUTOR_IDENTITY_MAP: dict[str, Identity | Withdrawn] = {
 #:
 #:   * zh, 31 term pairs: `_old` NEVER equals `_new` (0/31); `_new` is ALWAYS the
 #:     value in `selected_translations` (31/31); `_old` NEVER is (0/31).
-#:   * ur: `ur_reviewer_review_old` holds قسم and صارفانتباہ -- character for character
+#:   * ur: the `_old` twin holds قسم and صارفانتباہ -- character for character
 #:     the two words the PUBLIC ur CHANGELOG records as REPLACED
 #:     ("`type` (builtin): `قسم` -> `نوعیت`").
 #:
@@ -432,28 +435,121 @@ CONTRIBUTOR_IDENTITY_MAP: dict[str, Identity | Withdrawn] = {
 #:
 #: v2 already models this correctly and needs no new machinery. The schema is
 #: explicit that endorsements are POSITIVE only and that "disagreement is
-#: expressed by endorsing a different option" -- which is precisely what NextME14
-#: did: she disagreed with 假 by endorsing 错误. So the superseded word stays in
+#: expressed by endorsing a different option" -- which is precisely what the zh
+#: reviewer did: disagreed with 假 by endorsing 错误. So the superseded word stays in
 #: the corpus as an option (it really did ship once -- that is evidence), with
 #: `legesher` provenance -- it was OUR pack's word, and we owe nothing for it
 #: beyond the dataset licence -- under the NEUTRAL label
 #: :data:`SUPERSEDED_SOURCE_DETAIL`, and it mints NO contributor and NO
-#: endorsement. The v1 label itself (`zh_reviewer_review_old`) contains a real first
-#: name, and `option_provenance` is a CORPUS-layer table with no publish gate
+#: endorsement. The v1 label itself embeds a real first name, and
+#: `option_provenance` is a CORPUS-layer table with no publish gate
 #: over it -- the schema's contract is that `contributors.id` is the ONLY
 #: identity column the corpus exports, so the label must not ride along in
 #: `source_detail`. The audit trail (which label, which review displaced it)
-#: lives here, in this map, on the private side of the boundary.
-SUPERSEDED_BY_REVIEW: dict[str, str] = {
-    "zh_reviewer_review_old": "zh_reviewer_review",  # 31 zh words NextME14 replaced
-    "ur_reviewer_review_old": "ur_reviewer_review",  # 2 ur words @rafaym1 replaced
-}
+#: lives here, in this map, on the private side of the boundary -- and because
+#: the labels themselves are name-bearing, the entries live in the durable data
+#: home alongside the identity map [CORE-1794], loaded by
+#: :func:`load_identity_maps`.
+SUPERSEDED_BY_REVIEW: dict[str, str] = {}
 
 #: The neutral `source_detail` for superseded pack words. Deliberately carries
 #: no trace of WHOSE review displaced the word: `SELECT ... WHERE source_detail
 #: = 'superseded_pack_word'` still answers the audit question ("which options
 #: are pre-review pack words?") without exporting a name fragment.
 SUPERSEDED_SOURCE_DETAIL = "superseded_pack_word"
+
+
+def load_identity_maps(path: Path | None = None) -> None:
+    """(Re)populate the private identity maps from the durable data home.
+
+    The maps are mutated IN PLACE so references already imported elsewhere
+    (``from migrate_to_v2 import CONTRIBUTOR_IDENTITY_MAP``) stay live.
+
+    Resolution order for the JSON file:
+
+    1. an explicit ``path`` argument (tests, one-off overrides);
+    2. ``$LEGESHER_IDENTITY_MAP`` -- a direct file path;
+    3. ``$LEGESHER_DATA_REPO/identity/contributor_identity_map.json`` -- the
+       checkout of the private data repository.
+
+    A missing file leaves the maps EMPTY. That is deliberate fail-loud
+    behaviour, not a default: every human label then raises in
+    :func:`resolve_identity` instead of being guessed at, and the error says
+    how to point the script at the data home. [CORE-1794]
+    """
+    if path is None:
+        direct = os.environ.get("LEGESHER_IDENTITY_MAP")
+        data_repo = os.environ.get("LEGESHER_DATA_REPO")
+        if direct:
+            path = Path(direct)
+        elif data_repo:
+            path = Path(data_repo) / "identity" / "contributor_identity_map.json"
+    CONTRIBUTOR_IDENTITY_MAP.clear()
+    SUPERSEDED_BY_REVIEW.clear()
+    if path is None or not path.exists():
+        return
+    data = json.loads(path.read_text(encoding="utf-8"))
+    identities = data.get("identities", {})
+    withdrawn = data.get("withdrawn", {})
+    superseded = data.get("superseded_by_review", {})
+
+    # Malformed entries fail LOUDLY, at load. A misspelt key silently becoming
+    # Identity(None) would surface only at --publish as a spurious "unresolved
+    # identity" pointing the operator at the wrong problem.
+    for label, entry in identities.items():
+        if not isinstance(entry, dict) or "github_handle" not in entry:
+            raise SystemExit(
+                f"identity map {path}: entry for {label!r} must be an object "
+                "with a 'github_handle' key (null means UNRESOLVED)."
+            )
+        CONTRIBUTOR_IDENTITY_MAP[label] = Identity(
+            entry["github_handle"],
+            entry.get("display_name"),
+            entry.get("note") or "",
+        )
+    for label, entry in withdrawn.items():
+        if label in identities:
+            raise SystemExit(
+                f"identity map {path}: {label!r} appears in both 'identities' "
+                "and 'withdrawn' -- a withdrawal REPLACES the identity entry."
+            )
+        if not isinstance(entry, dict) or not {
+            "contributor_id",
+            "withdrawn_at",
+        } <= set(entry):
+            raise SystemExit(
+                f"identity map {path}: withdrawn entry for {label!r} needs "
+                "'contributor_id' and 'withdrawn_at'."
+            )
+        CONTRIBUTOR_IDENTITY_MAP[label] = Withdrawn(
+            entry["contributor_id"], entry["withdrawn_at"]
+        )
+    for old_label, displaced_by in superseded.items():
+        if displaced_by not in CONTRIBUTOR_IDENTITY_MAP:
+            raise SystemExit(
+                f"identity map {path}: superseded_by_review points "
+                f"{old_label!r} at {displaced_by!r}, which is not a known "
+                "identity -- every displaced label must resolve to a person."
+            )
+        if old_label in CONTRIBUTOR_IDENTITY_MAP:
+            raise SystemExit(
+                f"identity map {path}: {old_label!r} cannot be both a "
+                "superseded label and an identity -- a label cannot be two "
+                "things (it would credit a reviewer with a rejected word)."
+            )
+        SUPERSEDED_BY_REVIEW[old_label] = displaced_by
+    overlap = (set(CONTRIBUTOR_IDENTITY_MAP) | set(SUPERSEDED_BY_REVIEW)) & set(
+        NON_HUMAN_CREATED_BY
+    )
+    if overlap:
+        raise SystemExit(
+            f"identity map {path}: {sorted(overlap)} collide with "
+            "NON_HUMAN_CREATED_BY pipeline labels -- a label cannot be both "
+            "a person and a pipeline."
+        )
+
+
+load_identity_maps()
 
 #: The legacy `community` rows (`created_by` NULL) came from
 #: `legesher/legesher-translations` -- a PUBLIC, MIT-licensed repository (created
@@ -757,14 +853,24 @@ def resolve_identity(created_by: str) -> Identity | Withdrawn:
     try:
         return CONTRIBUTOR_IDENTITY_MAP[created_by]
     except KeyError:
+        empty_hint = (
+            "\nNOTE: the identity map is EMPTY. It is private data and lives in "
+            "the durable\ndata home, not in this tree [CORE-1794] -- set "
+            "$LEGESHER_DATA_REPO to your checkout\nof the private data "
+            "repository (or $LEGESHER_IDENTITY_MAP to the JSON itself)."
+            if not CONTRIBUTOR_IDENTITY_MAP
+            else ""
+        )
         raise SystemExit(
-            f"unknown v1 created_by label {created_by!r}.\n"
+            f"unknown v1 created_by label {created_by!r}.{empty_hint}\n"
             "Every label must be classified BY HAND, because every wrong answer "
             "is silent:\n"
-            "  * a person             -> CONTRIBUTOR_IDENTITY_MAP, with their "
-            "GitHub username\n"
+            "  * a person             -> identities in the data home's "
+            "contributor_identity_map.json,\n"
+            "                            keyed by their GitHub username\n"
             "  * a pipeline / pack    -> NON_HUMAN_CREATED_BY\n"
-            "  * a word a review REPLACED -> SUPERSEDED_BY_REVIEW\n"
+            "  * a word a review REPLACED -> superseded_by_review in the same "
+            "JSON\n"
             "A heuristic (strip '_old' / '_review') would mis-merge two humans "
             "into one\ncontributor, AND would credit a reviewer with the word she "
             "rejected."
@@ -1035,8 +1141,10 @@ def migrate(
             raise SystemExit(
                 f"--publish REFUSED before building: unresolved contributor "
                 f"identity ({labels}) would be frozen into the published "
-                "corpus. Resolve it in CONTRIBUTOR_IDENTITY_MAP first. "
-                "No target database was created."
+                "corpus. Resolve it in the data home's "
+                "contributor_identity_map.json first (the in-tree map is "
+                "empty by design and reloaded from that JSON on every run "
+                "[CORE-1794]). No target database was created."
             )
 
     dst = sqlite3.connect(target)
@@ -1600,7 +1708,7 @@ def migrate(
             "  `<name>_review_old` holds the rendering that was in the pack BEFORE "
             "that\n  person's review -- the word they replaced -- not an earlier "
             "attestation of\n  their own. (zh: `_old` never equals `_new`, 0/31, and "
-            "`_new` is always the\n  shipped word, 31/31. ur: `ur_reviewer_review_old` is "
+            "`_new` is always the\n  shipped word, 31/31. ur: the `_old` twin is "
             "قسم / صارفانتباہ, exactly the\n  two words the public ur CHANGELOG "
             "records as REPLACED.)\n"
             "  Endorsing them would record two native speakers as endorsing the "
@@ -1653,8 +1761,8 @@ def migrate(
         if publish:
             raise SystemExit(
                 "\n--publish REFUSED: an unresolved contributor identity would be "
-                "frozen into the\npublished corpus. Resolve it in "
-                "CONTRIBUTOR_IDENTITY_MAP first."
+                "frozen into the\npublished corpus. Resolve it in the data "
+                "home's contributor_identity_map.json first."
             )
 
     return ledger

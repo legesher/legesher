@@ -42,6 +42,11 @@ formula above, and it never leaves the private `build_meta` table.
 
 ## 1. Build the publish-grade v2 database
 
+The source database is an untracked working copy (CORE-1794) — if
+`legesher_i18n/db/translations.db` is absent (fresh clone, new machine), copy
+it in from the durable data home first:
+`cp "$LEGESHER_DATA_REPO/db/translations.db" legesher_i18n/db/`.
+
 ```bash
 cd libs/i18n
 # REBUILDING? The migration refuses outright if the target file already exists
@@ -51,6 +56,10 @@ cd libs/i18n
 # of what is currently live, and the two are worth diffing.
 [ -f build/translations_v2.db ] && \
     mv build/translations_v2.db "build/translations_v2.superseded.db"
+# The private identity map lives in the durable data home, not in this tree
+# (CORE-1794). Point the build at your checkout of the private data repository
+# — without it the map loads EMPTY and the migration refuses every human label:
+export LEGESHER_DATA_REPO=<path-to-your-checkout-of-the-private-data-repository>
 # NEVER paste the salt on a command line or in a plain `export` — it lands in
 # shell history and in `ps`, and this secret can never be rotated. Read it
 # without echo (or pipe it in from your secret manager's CLI):

@@ -19,6 +19,21 @@ from legesher_i18n.db.database import (
     default_db_path,
 )
 
+#: The database is an untracked working copy since CORE-1794 — a fresh clone
+#: does not have it until it is copied in from the private data home (see
+#: libs/i18n/CLAUDE.md, "Durable home & sync ritual"). Opening the default
+#: path when the file is absent would CREATE an empty database there.
+requires_real_db = pytest.mark.skipif(
+    not (
+        Path(__file__).resolve().parents[2] / "legesher_i18n" / "db" / "translations.db"
+    ).exists(),
+    reason=(
+        "translations.db is an untracked working copy (CORE-1794); copy it in "
+        "from the private data home — libs/i18n/CLAUDE.md, 'Durable home & "
+        "sync ritual'"
+    ),
+)
+
 
 @pytest.mark.unit
 class TestTranslationDatabase:
@@ -68,6 +83,7 @@ class TestTranslationDatabase:
         assert hasattr(db, "db_path")
         assert Path(db.db_path).exists()
 
+    @requires_real_db
     def test_database_default_path(self):
         """Test that default path resolves to translations.db inside the package db directory."""
         expected_dir = Path(__file__).parent.parent.parent / "legesher_i18n" / "db"

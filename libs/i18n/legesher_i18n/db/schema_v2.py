@@ -344,9 +344,9 @@ def contributor_id(natural_key: str, *, salt: str | None = None) -> str:
     ``contributors.id`` is the **only** identity column the corpus exports, and
     the schema promises it is "never a name, email, or handle". A migration that
     writes ``f"c_{created_by}"`` breaks that promise in the one place it is
-    load-bearing: the v1 handles include real first names
-    (``alt_ur_modern``, ``zh_reviewer_review``, ``ur_reviewer_review``), and
-    ``c_<handle>`` satisfies the naive ``LIKE 'c\\_%'`` CHECK.
+    load-bearing: several v1 ``created_by`` labels embed a reviewer's real
+    first name (the label -> person map lives in the private data home,
+    CORE-1794), and ``c_<label>`` satisfies the naive ``LIKE 'c\\_%'`` CHECK.
 
     The token is a salted digest of the private natural key -- the contributor's
     **GitHub username** (stable, unique, verifiable), or a portal account id. The

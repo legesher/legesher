@@ -89,6 +89,18 @@ I18N_ROOT = Path(__file__).resolve().parents[1]
 BACKFILL_TSV = I18N_ROOT / "legesher_i18n" / "db" / "migrations" / "bcp47_backfill.tsv"
 PACK_ROOT = language_packs_root()
 
+#: The database is an untracked working copy since CORE-1794 — a fresh clone
+#: does not have it until it is copied in from the private data home (see
+#: libs/i18n/CLAUDE.md, "Durable home & sync ritual").
+requires_real_db = pytest.mark.skipif(
+    not (I18N_ROOT / "legesher_i18n" / "db" / "translations.db").exists(),
+    reason=(
+        "translations.db is an untracked working copy (CORE-1794); copy it in "
+        "from the private data home — libs/i18n/CLAUDE.md, 'Durable home & "
+        "sync ritual'"
+    ),
+)
+
 
 def _backfill_rows() -> list[dict[str, str]]:
     """The committed proposal TSV, as rows (comments stripped)."""
@@ -458,6 +470,7 @@ class TestBackfillProposal:
             f"scripts/propose_bcp47_backfill.py"
         )
 
+    @requires_real_db
     def test_covers_every_language_in_the_db(self) -> None:
         from legesher_i18n.db import TranslationDatabase
 
@@ -605,6 +618,7 @@ class TestEditorialDecisions:
             assert "DECIDED" in rows[code]["rationale"], code
             assert rows[code]["needs_review"] == "no", code
 
+    @requires_real_db
     def test_committed_tsv_matches_the_generator(self) -> None:
         """Drift guard: the TSV is generated output, not an editable file.
 
@@ -662,6 +676,7 @@ class TestUnresolvedScript:
             assert resolve_proposal(code)[0] == tag
 
 
+@requires_real_db
 class TestBackfillApplied:
     """CORE-1512 slice 1: the DB column carries the reviewed proposal.
 
@@ -676,7 +691,12 @@ class TestBackfillApplied:
         import sqlite3
 
         db_path = I18N_ROOT / "legesher_i18n" / "db" / "translations.db"
-        assert db_path.exists(), f"{db_path} missing"
+        if not db_path.exists():
+            pytest.skip(
+                "translations.db is an untracked working copy (CORE-1794); "
+                "copy it in from the private data home — libs/i18n/CLAUDE.md, "
+                "'Durable home & sync ritual'"
+            )
         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
         try:
             return dict(conn.execute("SELECT code, bcp47 FROM languages"))

@@ -20,6 +20,18 @@ from legesher_i18n.db import TranslationDatabase
 
 I18N_ROOT = Path(__file__).parent.parent
 PKG = I18N_ROOT / "legesher_i18n"
+
+#: The database is an untracked working copy since CORE-1794 — a fresh clone
+#: does not have it until it is copied in from the private data home (see
+#: libs/i18n/CLAUDE.md, "Durable home & sync ritual").
+pytestmark = pytest.mark.skipif(
+    not (PKG / "db" / "translations.db").exists(),
+    reason=(
+        "translations.db is an untracked working copy (CORE-1794); copy it in "
+        "from the private data home — libs/i18n/CLAUDE.md, 'Durable home & "
+        "sync ritual'"
+    ),
+)
 LANGUAGES_JSON = PKG / "languages.json"
 LANGUAGES_TS = I18N_ROOT.parent / "vs-code" / "src" / "generated" / "languages.ts"
 GENERATOR = PKG / "scripts" / "generate_languages.py"

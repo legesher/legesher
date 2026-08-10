@@ -105,7 +105,7 @@ NEVER_EXPORT: frozenset[str] = frozenset(
 #: Column names that must not survive into any written Parquet file.
 #:
 #: * ``source_detail`` -- v1 reviewer labels with real first names ride in this
-#:   column (``zh_reviewer_review``, ``ur_reviewer_review``, ...); only ``source`` is safe.
+#:   column (the ``<firstname>_review`` family); only ``source`` is safe.
 #: * ``source_key`` / ``display_name`` -- contributor_identities columns; their
 #:   presence anywhere means the private table leaked.
 #: * ``comment`` -- endorsement free text; may carry PII (CORE-1502 decision).

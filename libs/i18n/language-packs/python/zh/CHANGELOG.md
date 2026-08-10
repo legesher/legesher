@@ -15,7 +15,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- **Native Speaker Review (NextME14)**: Fixed 33 incorrect translations identified during community review [AYA-160]
+- **Native Speaker Review ([@NextME14](https://github.com/NextME14))**: Fixed 33 incorrect translations
+  identified during community review [AYA-160]
   - **Keywords (14)**: Replaced English words and meaningless characters with proper Chinese
     - `elif`: `elseif` → `否则如果` (was English, not Chinese)
     - `lambda`: `玪抑` → `拉姆达` (meaningless characters)

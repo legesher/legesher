@@ -28,6 +28,20 @@ import verify_pack_regen as gate  # noqa: E402
 import yaml_exporter  # noqa: E402
 from legesher_i18n.db import TranslationDatabase  # noqa: E402
 
+#: The database is an untracked working copy since CORE-1794 — a fresh clone
+#: does not have it until it is copied in from the private data home (see
+#: libs/i18n/CLAUDE.md, "Durable home & sync ritual").
+requires_real_db = pytest.mark.skipif(
+    not (
+        Path(__file__).resolve().parents[1] / "legesher_i18n" / "db" / "translations.db"
+    ).exists(),
+    reason=(
+        "translations.db is an untracked working copy (CORE-1794); copy it in "
+        "from the private data home — libs/i18n/CLAUDE.md, 'Durable home & "
+        "sync ritual'"
+    ),
+)
+
 BASE_PACK = textwrap.dedent(
     """\
     # Test Language Pack for Python 3.10+
@@ -604,6 +618,7 @@ def test_pack_outside_the_expected_matrix_is_blocking() -> None:
     assert len(compared & expected) <= len(expected)
 
 
+@requires_real_db
 def test_expected_versions_match_the_exporter(tmp_path: Path) -> None:
     """Guard the mirrored constant against exporter drift, behaviourally.
 
@@ -704,6 +719,7 @@ def test_a_sentinel_that_does_not_stick_is_fatal(
         gate.seed_scratch(["xx"], tmp_path / "scratch")
 
 
+@requires_real_db
 def test_a_real_export_clears_every_sentinel(tmp_path: Path) -> None:
     """Pin the cross-file coupling the whole sentinel rests on.
 

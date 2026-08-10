@@ -7,9 +7,24 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPTS_DIR = Path(__file__).parent.parent.parent / "scripts"
 SEEDER = SCRIPTS_DIR / "seed_js_terms.py"
 EMITTER = SCRIPTS_DIR / "emit_js_client_pack.py"
+
+#: The database is an untracked working copy since CORE-1794 — a fresh clone
+#: does not have it until it is copied in from the private data home (see
+#: libs/i18n/CLAUDE.md, "Durable home & sync ritual").
+_REAL_DB = SCRIPTS_DIR.parent / "legesher_i18n" / "db" / "translations.db"
+requires_real_db = pytest.mark.skipif(
+    not _REAL_DB.exists(),
+    reason=(
+        "translations.db is an untracked working copy (CORE-1794); copy it in "
+        "from the private data home — libs/i18n/CLAUDE.md, 'Durable home & "
+        "sync ritual'"
+    ),
+)
 
 
 def run_emit(*args: str) -> subprocess.CompletedProcess:
@@ -21,6 +36,7 @@ def run_emit(*args: str) -> subprocess.CompletedProcess:
     )
 
 
+@requires_real_db
 class TestEmitAgainstRealDb:
     """The committed DB carries the ratified selections — emit from it."""
 
