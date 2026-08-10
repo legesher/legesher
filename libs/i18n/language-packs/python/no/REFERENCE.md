@@ -246,7 +246,7 @@ fra typing importere Optional
 definisjon fakultet(n):
     """Beregn fakultet av n."""
     om n < 0:
-        oppnå Værdfeil("Negative tall er ikke tillatt")
+        oppnå værdfeil("Negative tall er ikke tillatt")
     elsif n == 0 eller n == 1:
         retur 1
     annett:
@@ -268,7 +268,7 @@ definisjon hoved():
     # Demonstrer try/except
     prøve:
         fakultet(-1)
-    unntatt Værdfeil som feil:
+    unntatt værdfeil som feil:
         skrive(f"Feil: {feil}")
     forrestil:
         skrive("Ferdig!")

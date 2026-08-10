@@ -246,7 +246,7 @@ z typing importuj Optional
 definuj faktorial(n):
     """Vypočítá faktoriál čísla n."""
     když n < 0:
-        vyvolej Chybahodnoty("Záporná čísla nejsou povolena")
+        vyvolej chybahodnoty("Záporná čísla nejsou povolena")
     neboli n == 0 nebo n == 1:
         vrať 1
     jinak:
@@ -268,7 +268,7 @@ definuj hlavni():
     # Ukázka try/except
     zkus:
         faktorial(-1)
-    kromě Chybahodnoty jako chyba:
+    kromě chybahodnoty jako chyba:
         tiskni(f"Chyba: {chyba}")
     nakonec:
         tiskni("Hotovo!")

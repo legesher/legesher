@@ -246,7 +246,7 @@ kaa typing importoida Optional
 määritellä kertoma(n):
     """Laske n:n kertoma."""
     jos n < 0:
-        nousia Arvovirhe("Negatiiviset luvut eivät ole sallittuja")
+        nousia arvovirhe("Negatiiviset luvut eivät ole sallittuja")
     muuttujilla n == 0 tai n == 1:
         valita 1
     muuttuja:
@@ -268,7 +268,7 @@ määritellä paa():
     # Esittele try/except
     pyyttää:
         kertoma(-1)
-    pois Arvovirhe kuten virhe:
+    pois arvovirhe kuten virhe:
         kirjaa(f"Virhe: {virhe}")
     seuraaaina:
         kirjaa("Valmis!")

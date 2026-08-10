@@ -246,7 +246,7 @@ de typing importar Optional
 definir fatorial(n):
     """Calcular o fatorial de n."""
     se n < 0:
-        elevar Errodevalor("Números negativos não são permitidos")
+        elevar errodevalor("Números negativos não são permitidos")
     senãose n == 0 ou n == 1:
         retornar 1
     senão:
@@ -268,7 +268,7 @@ definir principal():
     # Demonstrar try/except
     tentar:
         fatorial(-1)
-    excepto Errodevalor como erro:
+    excepto errodevalor como erro:
         imprimir(f"Erro: {erro}")
     finalmente:
         imprimir("Pronto!")

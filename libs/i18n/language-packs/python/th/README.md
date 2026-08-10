@@ -2,6 +2,9 @@
 
 Thai (ไทย) language pack for Python in Legesher.
 
+> **Status: experimental** — machine-generated translations; community validation in progress.
+> Terms may change as native speakers review them.
+
 ## Overview
 
 This package provides Thai translations for Python keywords and built-in functions, enabling developers to write

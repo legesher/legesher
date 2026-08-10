@@ -246,7 +246,7 @@ iz typing uvezi Optional
 definisi faktorijel(n):
     """Izračunaj faktorijel broja n."""
     ako n < 0:
-        podigni Greskavrijednosti("Negativni brojevi nisu dozvoljeni")
+        podigni greskavrijednosti("Negativni brojevi nisu dozvoljeni")
     inaceako n == 0 ili n == 1:
         vrati 1
     inace:
@@ -268,7 +268,7 @@ definisi glavni():
     # Demonstracija try/except
     pokusaj:
         faktorijel(-1)
-    osim Greskavrijednosti kao greska:
+    osim greskavrijednosti kao greska:
         ispisi(f"Greška: {greska}")
     konacno:
         ispisi("Gotovo!")

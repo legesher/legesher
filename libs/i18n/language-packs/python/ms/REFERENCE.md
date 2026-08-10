@@ -246,7 +246,7 @@ dari typing mengimpor Optional
 menentukan faktorial(n):
     """Kira faktorial n."""
     jika n < 0:
-        menciptakan Kesalahannilai("Nombor negatif tidak dibenarkan")
+        menciptakan kesalahannilai("Nombor negatif tidak dibenarkan")
     lainjika n == 0 atau n == 1:
         kembali 1
     lainnya:
@@ -268,7 +268,7 @@ menentukan utama():
     # Tunjukkan try/except
     coba:
         faktorial(-1)
-    kecuali Kesalahannilai sebagai ralat:
+    kecuali kesalahannilai sebagai ralat:
         cetak(f"Ralat: {ralat}")
     akhirnya:
         cetak("Selesai!")

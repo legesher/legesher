@@ -1003,11 +1003,11 @@ def generate_example_code(
     ex = exceptions
     txt = EXAMPLE_TEXT.get(lang_code, EXAMPLE_TEXT["es"])  # Fallback to Spanish
 
-    # Get translated ValueError (stored lowercase in exceptions dict)
+    # Get translated ValueError (stored lowercase in exceptions dict).
+    # Use the pack value verbatim: the identifier is case-sensitive, so
+    # "class name style" capitalization would document a name the pack
+    # never maps (the table above and the example must agree).
     value_error = ex.get("valueerror", "ValueError")
-    # Capitalize first letter for class name style
-    if value_error and value_error[0].islower():
-        value_error = value_error[0].upper() + value_error[1:]
 
     # Build example that uses many keywords with localized names
     example = f'''```python

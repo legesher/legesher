@@ -246,7 +246,7 @@ dari typing mengimpor Optional
 definisi faktorial(n):
     """Hitung faktorial dari n."""
     jika n < 0:
-        meningkatkan Kesalahannilai("Angka negatif tidak diperbolehkan")
+        meningkatkan kesalahannilai("Angka negatif tidak diperbolehkan")
     jika_lain n == 0 atau n == 1:
         mengembalikan 1
     lainnya:
@@ -268,7 +268,7 @@ definisi utama():
     # Demonstrasi try/except
     coba:
         faktorial(-1)
-    kecuali Kesalahannilai sebagai kesalahan:
+    kecuali kesalahannilai sebagai kesalahan:
         cetak(f"Kesalahan: {kesalahan}")
     akhirnya:
         cetak("Selesai!")

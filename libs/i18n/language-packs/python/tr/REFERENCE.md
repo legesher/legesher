@@ -246,7 +246,7 @@ dene typing içeriaktarma Optional
 tanımla faktoriyel(n):
     """n'nin faktöriyelini hesapla."""
     eğer n < 0:
-        yükselt Değerhatası("Negatif sayılara izin verilmiyor")
+        yükselt değerhatası("Negatif sayılara izin verilmiyor")
     eğer_de n == 0 veya n == 1:
         dönüş 1
     yoksa:
@@ -268,7 +268,7 @@ tanımla ana():
     # try/except gösterimi
     deneme:
         faktoriyel(-1)
-    yada Değerhatası eşdeğer hata:
+    yada değerhatası eşdeğer hata:
         yazdır(f"Hata: {hata}")
     sonunda:
         yazdır("Bitti!")

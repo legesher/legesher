@@ -246,7 +246,7 @@ van typing importeren Optional
 definitie faculteit(n):
     """Bereken de faculteit van n."""
     indien n < 0:
-        opheffen Waardefout("Negatieve getallen zijn niet toegestaan")
+        opheffen waardefout("Negatieve getallen zijn niet toegestaan")
     alswel n == 0 of n == 1:
         teruggeven 1
     anders:
@@ -268,7 +268,7 @@ definitie hoofd():
     # Demonstreer try/except
     proberen:
         faculteit(-1)
-    behalve Waardefout als fout:
+    behalve waardefout als fout:
         afdrukken(f"Fout: {fout}")
     tenslotte:
         afdrukken("Klaar!")

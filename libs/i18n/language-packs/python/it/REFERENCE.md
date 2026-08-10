@@ -246,7 +246,7 @@ dal typing importare Optional
 definire fattoriale(n):
     """Calcola il fattoriale di n."""
     se n < 0:
-        sollevare Erroredivalore("I numeri negativi non sono consentiti")
+        sollevare erroredivalore("I numeri negativi non sono consentiti")
     sealtrimenti n == 0 o n == 1:
         ritorno 1
     altrimenti:
@@ -268,7 +268,7 @@ definire principale():
     # Dimostra try/except
     prova:
         fattoriale(-1)
-    eccetto Erroredivalore come errore:
+    eccetto erroredivalore come errore:
         stampa(f"Errore: {errore}")
     finalmente:
         stampa("Fatto!")

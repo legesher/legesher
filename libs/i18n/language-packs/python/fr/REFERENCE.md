@@ -246,7 +246,7 @@ de typing importer Optional
 défini factorielle(n):
     """Calculer la factorielle de n."""
     si n < 0:
-        élever Valeurincorrecte("Les nombres négatifs ne sont pas autorisés")
+        élever valeurincorrecte("Les nombres négatifs ne sont pas autorisés")
     sinonsi n == 0 ou n == 1:
         retourner 1
     autre:
@@ -268,7 +268,7 @@ défini principal():
     # Démontrer try/except
     essayer:
         factorielle(-1)
-    sauf Valeurincorrecte comme erreur:
+    sauf valeurincorrecte comme erreur:
         imprimer(f"Erreur: {erreur}")
     enfin:
         imprimer("Terminé!")

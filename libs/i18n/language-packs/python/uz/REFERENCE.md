@@ -246,7 +246,7 @@ dan typing yuklash Optional
 belgilash faktorial(n):
     """n ning faktorialini hisoblang."""
     agar n < 0:
-        chiqarish Qiymat_xatosi("Manfiy sonlar ruxsat etilmaydi")
+        chiqarish qiymat_xatosi("Manfiy sonlar ruxsat etilmaydi")
     yoki_agar n == 0 yoki n == 1:
         qaytarish 1
     aks_holda:
@@ -268,7 +268,7 @@ belgilash asosiy():
     # try/except namoyishi
     urinish:
         faktorial(-1)
-    istisno Qiymat_xatosi sifatida xatolik:
+    istisno qiymat_xatosi sifatida xatolik:
         chop_etish(f"Xatolik: {xatolik}")
     nihoyat:
         chop_etish("Tayyor!")

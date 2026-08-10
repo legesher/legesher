@@ -246,7 +246,7 @@ från typing importera Optional
 definiere fakultet(n):
     """Beräkna fakulteten av n."""
     om n < 0:
-        utlåda Värdefel("Negativa tal är inte tillåtna")
+        utlåda värdefel("Negativa tal är inte tillåtna")
     annansom n == 0 eller n == 1:
         retur 1
     annär:
@@ -268,7 +268,7 @@ definiere huvud():
     # Demonstrera try/except
     prova:
         fakultet(-1)
-    förutom Värdefel som fel:
+    förutom värdefel som fel:
         skrivaut(f"Fel: {fel}")
     slutliggare:
         skrivaut("Klart!")

@@ -246,7 +246,7 @@ z typing importować Optional
 definiuj silnia(n):
     """Oblicz silnię liczby n."""
     jeśli n < 0:
-        wywołać Błądwartości("Liczby ujemne nie są dozwolone")
+        wywołać błądwartości("Liczby ujemne nie są dozwolone")
     jeśli_inne n == 0 lub n == 1:
         zwrot 1
     inną:
@@ -268,7 +268,7 @@ definiuj glowna():
     # Demonstracja try/except
     próbować:
         silnia(-1)
-    wyjątek Błądwartości jako blad:
+    wyjątek błądwartości jako blad:
         wydrukuj(f"Błąd: {blad}")
     wkońcu:
         wydrukuj("Gotowe!")

@@ -246,7 +246,7 @@ de typing importar Optional
 definir factorial(n):
     """Calcula el factorial de n."""
     si n < 0:
-        llençar Errorvalor("Els nombres negatius no estan permesos")
+        llençar errorvalor("Els nombres negatius no estan permesos")
     sinosi n == 0 o n == 1:
         retornar 1
     sino:
@@ -268,7 +268,7 @@ definir principal():
     # Demostració de try/except
     intentar:
         factorial(-1)
-    excepte Errorvalor com error:
+    excepte errorvalor com error:
         imprimir(f"Error: {error}")
     finalment:
         imprimir("Fet!")

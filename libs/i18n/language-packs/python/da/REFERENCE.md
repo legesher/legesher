@@ -246,7 +246,7 @@ fra typing importere Optional
 definer fakultet(n):
     """Beregn fakultet af n."""
     hvis n < 0:
-        oplev Værdfejlighedsfejl("Negative tal er ikke tilladt")
+        oplev værdfejlighedsfejl("Negative tal er ikke tilladt")
     hvisannet n == 0 eller n == 1:
         retur 1
     annelse:
@@ -268,7 +268,7 @@ definer hoved():
     # Demonstrer try/except
     prøve:
         fakultet(-1)
-    undtages Værdfejlighedsfejl som fejl:
+    undtages værdfejlighedsfejl som fejl:
         skrivUd(f"Fejl: {fejl}")
     endelig:
         skrivUd("Færdig!")

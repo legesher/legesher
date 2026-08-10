@@ -246,7 +246,7 @@ din typing importă Optional
 definește factorial(n):
     """Calculează factorialul lui n."""
     dacă n < 0:
-        ridică Eroare_valoare("Numerele negative nu sunt permise")
+        ridică eroare_valoare("Numerele negative nu sunt permise")
     altfel_dacă n == 0 sau n == 1:
         returnează 1
     altfel:
@@ -268,7 +268,7 @@ definește principal():
     # Demonstrare try/except
     încearcă:
         factorial(-1)
-    exceptează Eroare_valoare ca eroare:
+    exceptează eroare_valoare ca eroare:
         afișează(f"Eroare: {eroare}")
     în_final:
         afișează("Gata!")

@@ -246,7 +246,7 @@ oddi typing mewnforio Optional
 diffinio ffactorial(n):
     """Cyfrifo ffactorial n."""
     os n < 0:
-        codi Gwallgwerth("Ni chaniateir rhifau negatif")
+        codi gwallgwerth("Ni chaniateir rhifau negatif")
     arallos n == 0 neu n == 1:
         dychwelyd 1
     arall:
@@ -268,7 +268,7 @@ diffinio prif():
     # Arddangos try/except
     ceisio:
         ffactorial(-1)
-    heblaw Gwallgwerth fel gwall:
+    heblaw gwallgwerth fel gwall:
         argraffu(f"Gwall: {gwall}")
     ynderfynol:
         argraffu("Gorffen!")

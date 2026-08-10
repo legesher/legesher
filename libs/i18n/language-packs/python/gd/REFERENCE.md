@@ -246,7 +246,7 @@ bho typing ion_phortaich Optional
 mìnich factarail(n):
     """Obraich a-mach factarail n."""
     ma n < 0:
-        tog Mearachd_luach("Chan eil àireamhan àicheil ceadaichte")
+        tog mearachd_luach("Chan eil àireamhan àicheil ceadaichte")
     noeirma n == 0 neo n == 1:
         till 1
     noeo:
@@ -268,7 +268,7 @@ mìnich priomh():
     # Taisbeanadh try/except
     feuch:
         factarail(-1)
-    achgidheadh Mearachd_luach mar mearachd:
+    achgidheadh mearachd_luach mar mearachd:
         clò_bhuail(f"Mearachd: {mearachd}")
     mu_dheireadh:
         clò_bhuail("Deiseil!")
