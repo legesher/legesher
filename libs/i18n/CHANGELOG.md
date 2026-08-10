@@ -11,6 +11,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Pre-notice consent is recorded rather than left blank (CORE-1780).**
+  Everyone in the v1 data contributed before `CONTRIBUTOR_PRIVACY.md` existed,
+  so `consent_version` now reads `oss-pre-notice` for them, dated to their
+  earliest recorded work. It is not a signature and grants nothing: they keep
+  `credit_preference = 'anonymous'` and withdrawal applies identically. Notice
+  1.0 is forward-looking. `unresolved:` keys stay blank, since one label
+  standing for two people records nobody's consent.
 - **Contributor withdrawal path (CORE-1780).** A contributor may ask to be
   forgotten, and the request is now honourable: `migrate_to_v2.py` gains a
   `Withdrawn` marker that replaces a person's `Identity` in

@@ -331,6 +331,18 @@ CREATE TABLE contributor_identities (
     github_handle         TEXT,
     contact               TEXT,
     consent_public_credit INTEGER NOT NULL DEFAULT 0 CHECK (consent_public_credit IN (0, 1)),
+    -- Which version of CONTRIBUTOR_PRIVACY.md this person agreed to. Versioned
+    -- because consent describes what someone accepted AT THE TIME; a single
+    -- boolean cannot survive the notice being rewritten.
+    --
+    -- `oss-pre-notice` is a real value and is NOT a signature: it marks people
+    -- who contributed before the notice existed, through public pull requests
+    -- under their own accounts, credited by handle in the pack CHANGELOGs.
+    -- NULL would claim nobody ever agreed to anything; '1.0' would claim they
+    -- accepted a document that did not exist. It grants nothing -- they keep
+    -- credit_preference = 'anonymous' and withdrawal applies identically.
+    -- Notice 1.0 is FORWARD-LOOKING: it governs contributions made after it was
+    -- published. See PRE_NOTICE_CONSENT in scripts/migrate_to_v2.py.
     consent_version       TEXT,
     consent_at            TEXT,
     -- Decided 2026-07-21 (CORE-1538; closes the CORE-1501 Q1 thread): how

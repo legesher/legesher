@@ -153,4 +153,17 @@ change here — we do not quietly amend the old one.
 
 | Version | Date | Change |
 | --- | --- | --- |
-| 1.0 | 2026-08-10 | First published. |
+| 1.0 | 2026-08-10 | First published. Governs contributions made from this date. |
+| `oss-pre-notice` | before 2026-08-10 | Not a version of this notice. See below. |
+
+**If your consent is recorded as `oss-pre-notice`,** it means you contributed
+before this notice existed — through a public pull request under your own
+account, credited by handle in the language pack changelogs at the time. We
+record that rather than leaving it blank, because leaving it blank would say
+nobody ever agreed to anything, and recording `1.0` would claim you accepted a
+document that did not exist.
+
+It grants us nothing. You are anonymous by default like everyone else, and
+withdrawal works for you exactly as described above. If you would like to be
+credited, or to be covered by this notice going forward, tell us and we will
+record it.

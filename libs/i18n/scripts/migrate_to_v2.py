@@ -296,6 +296,27 @@ class Withdrawn:
         return self.contributor_id
 
 
+#: The `consent_version` recorded for people who contributed BEFORE
+#: `CONTRIBUTOR_PRIVACY.md` existed (CORE-1780, decided 2026-08-10).
+#:
+#: It is not a signature, and it must never be read as one. It means: *this
+#: person contributed under the project's open-source terms before a
+#: contributor notice existed, through a public pull request under their own
+#: account, and was credited by handle in the pack CHANGELOGs at the time.*
+#:
+#: Recording it is the accurate answer to a question with three possible ones.
+#: NULL would say nobody ever agreed to anything, which is false. `1.0` would
+#: claim they accepted a document that did not exist. This says what actually
+#: happened, and leaves the version column doing its job -- describing what a
+#: person agreed to *at the time*, which is the only reason to version consent.
+#:
+#: It grants nothing. Everyone carrying it keeps `credit_preference =
+#: 'anonymous'` (the column default), so nothing about them is published beyond
+#: the opaque id, and withdrawal applies to them exactly as it does to anyone
+#: else. Version 1.0 of the notice is FORWARD-LOOKING: it governs contributions
+#: made after its publication.
+PRE_NOTICE_CONSENT = "oss-pre-notice"
+
 #: Contributor ids that are ALREADY PUBLISHED in the corpus.
 #:
 #: These are public values -- they ship in the `contributors` and `endorsements`
@@ -1526,6 +1547,41 @@ def migrate(
     ledger.record("canon_selections", canon_rows)
     ledger.record("  identity_ok (deliberate cognate/loanword)", identity_rows)
     ledger.record("canon REFUSED by gate", len(rejected))
+
+    # -- Pre-notice consent -------------------------------------------------
+    # Everyone the migration mints contributed BEFORE CONTRIBUTOR_PRIVACY.md
+    # existed, so none of them agreed to it -- and leaving consent_version NULL
+    # would say the opposite of what happened, which is that they contributed
+    # through public pull requests under their own accounts and were credited by
+    # handle in the pack CHANGELOGs at the time.
+    #
+    # `consent_at` is the EARLIEST v1 record of their work, not the build date:
+    # it dates their participation as closely as the data allows, and a fresh
+    # timestamp would read as a fresh agreement.
+    #
+    # It grants nothing. credit_preference stays 'anonymous' (the column
+    # default) and withdrawal applies identically -- see PRE_NOTICE_CONSENT.
+    # Skipped for withdrawn rows (the consent is revoked) and for `unresolved:`
+    # keys (one label, two people: neither of them consented to anything as
+    # that row).
+    dst.execute(
+        "UPDATE contributor_identities "
+        "   SET consent_version = ?, "
+        "       consent_at = (SELECT MIN(p.created_at) FROM option_provenance p "
+        "                      WHERE p.contributor_id = "
+        "                            contributor_identities.contributor_id) "
+        " WHERE withdrawn_at IS NULL "
+        "   AND source_key IS NOT NULL "
+        "   AND source_key NOT LIKE ?",
+        (PRE_NOTICE_CONSENT, f"{UNRESOLVED_PREFIX}%"),
+    )
+    ledger.record(
+        f"  consent recorded as {PRE_NOTICE_CONSENT}",
+        dst.execute(
+            "SELECT COUNT(*) FROM contributor_identities WHERE consent_version = ?",
+            (PRE_NOTICE_CONSENT,),
+        ).fetchone()[0],
+    )
 
     dst.commit()
     src.close()

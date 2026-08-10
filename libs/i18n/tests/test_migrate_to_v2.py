@@ -1064,3 +1064,73 @@ def test_the_shipped_map_only_withdraws_published_ids() -> None:
     from scripts import migrate_to_v2
 
     migrate_to_v2.require_published_withdrawal_ids()
+
+
+def test_pre_notice_consent_is_recorded_and_grants_nothing(
+    v1_db: Path, tmp_path: Path
+) -> None:
+    """Everyone in the v1 data contributed before the notice existed.
+
+    Three answers were possible and only one is true. NULL says nobody ever
+    agreed to anything; `1.0` claims they accepted a document that did not
+    exist; `oss-pre-notice` says what happened. The test pins the third, and
+    pins that recording it changed nothing about how they are treated.
+    """
+    from scripts import migrate_to_v2
+
+    target = tmp_path / "v2.db"
+    migrate(v1_db, target, salt=GOOD_SALT, publish=True)
+    db = sqlite3.connect(target)
+
+    rows = db.execute(
+        "SELECT consent_version, credit_preference, consent_public_credit, consent_at "
+        "FROM contributor_identities WHERE source_key IS NOT NULL"
+    ).fetchall()
+    assert rows, "the fixture must mint at least one resolved contributor"
+
+    for version, preference, public_credit, consent_at in rows:
+        assert version == migrate_to_v2.PRE_NOTICE_CONSENT
+        # It is a record, not a grant: nothing about them becomes publishable.
+        assert preference == "anonymous"
+        assert public_credit == 0
+        # Dated to their work, not to the build -- a fresh timestamp would read
+        # as a fresh agreement.
+        assert consent_at is not None
+
+    # An `unresolved:` key is one label standing for two people; neither of them
+    # consented to anything as that row, so it must stay blank.
+    unresolved = db.execute(
+        "SELECT consent_version FROM contributor_identities "
+        "WHERE source_key LIKE 'unresolved:%'"
+    ).fetchall()
+    assert all(v is None for (v,) in unresolved)
+    db.close()
+
+
+def test_withdrawal_clears_the_consent_it_revoked(
+    v1_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A tombstone must not keep asserting consent the person took back."""
+    from scripts import migrate_to_v2
+
+    withdrawn_id = contributor_id("sarr266", salt=GOOD_SALT)
+    monkeypatch.setitem(
+        migrate_to_v2.CONTRIBUTOR_IDENTITY_MAP,
+        "alt_ur_modern",
+        migrate_to_v2.Withdrawn(withdrawn_id, "2026-08-10"),
+    )
+    monkeypatch.setattr(
+        migrate_to_v2, "PUBLISHED_CONTRIBUTOR_IDS", frozenset({withdrawn_id})
+    )
+    target = tmp_path / "v2.db"
+    migrate(v1_db, target, salt=GOOD_SALT, publish=True)
+
+    db = sqlite3.connect(target)
+    version, consent_at, withdrawn_at = db.execute(
+        "SELECT consent_version, consent_at, withdrawn_at FROM contributor_identities "
+        "WHERE contributor_id = ?",
+        (withdrawn_id,),
+    ).fetchone()
+    assert version is None and consent_at is None
+    assert withdrawn_at == "2026-08-10"
+    db.close()
