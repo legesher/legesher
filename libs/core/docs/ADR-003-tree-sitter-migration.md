@@ -1,5 +1,12 @@
 # ADR-003: Tree-sitter Migration
 
+> **Maintainer notes — not newcomer documentation.** Written for someone already
+> working in this code: it assumes repo context, uses internal vocabulary, and
+> may cite work-tracker ids (`CORE-####`) an outside reader cannot resolve.
+> Public on purpose, but not part of the documentation site and not localized —
+> newcomer-facing documentation lives at [docs.legesher.io](https://docs.legesher.io).
+> <!-- disposition: MAINTAINER (CORE-1724 audit, 2026-08-11) -->
+
 **Status:** Accepted
 **Date:** 2025-01-05 (Implementation in Phase 2B, CORE-413)
 **Deciders:** Madison Edgar

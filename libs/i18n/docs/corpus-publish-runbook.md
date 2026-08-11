@@ -1,5 +1,7 @@
 # Corpus publish runbook — `legesher/language-corpus` (CORE-1312)
 
+<!-- disposition: MAINTAINER (CORE-1724 audit, 2026-08-11) -->
+
 > **Maintainer-only.** This is not a contributor workflow — it is the sequence
 > a repository maintainer with publish rights walks once, to create the corpus
 > dataset. Nothing here is required to build Legesher, run the test suite, or

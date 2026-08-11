@@ -1,5 +1,12 @@
 # Translation quality gates — inventory (CORE-1021)
 
+> **Maintainer notes — not newcomer documentation.** Written for someone already
+> working in this code: it assumes repo context, uses internal vocabulary, and
+> may cite work-tracker ids (`CORE-####`) an outside reader cannot resolve.
+> Public on purpose, but not part of the documentation site and not localized —
+> newcomer-facing documentation lives at [docs.legesher.io](https://docs.legesher.io).
+> <!-- disposition: MAINTAINER (CORE-1724 audit, 2026-08-11) -->
+
 The automated quality checks that stand between a pack edit (or a generation
 run) and shipped language packs. The 103-language generation ritual cites this
 inventory: run every gate marked "manual" below as part of that ritual.

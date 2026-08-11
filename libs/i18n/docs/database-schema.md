@@ -1,5 +1,19 @@
 # Translation Database Schema
 
+> **Maintainer notes — not newcomer documentation.** Written for someone already
+> working in this code: it assumes repo context, uses internal vocabulary, and
+> may cite work-tracker ids (`CORE-####`) an outside reader cannot resolve.
+> Public on purpose, but not part of the documentation site and not localized —
+> newcomer-facing documentation lives at [docs.legesher.io](https://docs.legesher.io).
+> <!-- disposition: MAINTAINER (CORE-1724 audit, 2026-08-11) -->
+
+> **Accuracy warning (2026-08-11):** this document describes the v1 schema as
+> designed, not as shipped — it documents tables (`reviews`, `deep_contexts`,
+> `linguistic_standards`) and methods that do not exist, and predates the v2
+> concept-centric schema entirely. Scheduled for removal/rewrite — see the
+> CORE-1724 audit disposition. Trust `legesher_i18n/db/schema.py` and
+> `schema_v2.sql` over anything below.
+
 ## Overview
 
 The Legesher translation database is a SQLite database that stores translations from 4 primary sources:

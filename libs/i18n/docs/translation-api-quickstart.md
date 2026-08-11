@@ -1,5 +1,12 @@
 # Translation API Quick Start Guide
 
+> **Maintainer notes — not newcomer documentation.** Written for someone already
+> working in this code: it assumes repo context, uses internal vocabulary, and
+> may cite work-tracker ids (`CORE-####`) an outside reader cannot resolve.
+> Public on purpose, but not part of the documentation site and not localized —
+> newcomer-facing documentation lives at [docs.legesher.io](https://docs.legesher.io).
+> <!-- disposition: MAINTAINER (CORE-1724 audit, 2026-08-11) -->
+
 Get up and running with the Legesher Translation API in 5 minutes.
 
 ## Installation
