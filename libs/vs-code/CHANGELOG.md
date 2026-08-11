@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Security
+
+- **Dependencies**: cleared all known npm audit advisories in the extension's dependency tree
+  (13 advisories, 7 high) — lockfile-only bumps; the one bundled runtime package moved is
+  `js-yaml` 4.2.0 → 4.3.1 (quadratic-CPU `!!omap` advisory), which ships in the packaged extension
+
 ### Changed
 
 - **Language packs**: pack files are now validated at load — a 1 MiB size cap and a runtime shape check on
