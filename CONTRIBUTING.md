@@ -18,7 +18,7 @@ Python expertise.
 | If you are | Start here | Look for |
 | --- | --- | --- |
 | A speaker of one of our 51 pack languages | Offer a better word. Every translation you propose is collected as an option in the shared map; it is never a conflict with what ships today | `contrib:localization` |
-| A linguist, teacher, or careful reader | Native review: help decide what your language ships with. Reviewer onboarding arrives with the review intake | `contrib:localization` |
+| A linguist, teacher, or careful reader | Native review: help decide what your language ships with. Start with the [reviewer guide](libs/i18n/REVIEWING.md) | `contrib:localization` |
 | A developer | Engine, toolchain, and editor issues scoped for newcomers | `good first issue`, `contrib:code` |
 | A bilingual writer | Docs localization: translate a guide so readers see the same words in the docs and in their editor | `contrib:docs` |
 | Someone with lived language context | Context Calls: tell us how your language is really written, texted, and code-switched. The observation is the contribution | `contrib:community` |
@@ -788,14 +788,18 @@ all 51 packs are available today with community validation in progress.
 
 What that means for you:
 
-1. **Offering a better word** is always in season. Propose your term as an option, with a note on
-   whether it is established usage, a coinage, or a loanword your community genuinely uses. You are
-   adding to the map, not fighting the current pick.
+1. **Offering a better word** is always in season. Propose your term through
+   [Propose a Translation Option](https://github.com/legesher/legesher/issues/new?template=propose_translation.yml),
+   with a note on whether it is established usage, a coinage, or a loanword your community genuinely
+   uses. You are adding to the map, not fighting the current pick.
 2. **Improving existing translations** happens the same way: propose the better option and say why.
    When native reviewers endorse it, the pick moves.
-3. **Native review** is how packs climb the ladder from experimental toward official. A dedicated
-   reviewer guide ships with the review intake; until then, the
-   [Community Guidelines](COMMUNITY_GUIDELINES.md) carry the working agreements.
+3. **Native review** is how packs climb the ladder from experimental toward official. The
+   [reviewer guide](libs/i18n/REVIEWING.md) covers what reviewing involves, how endorsements are
+   weighted, and what makes a pack `reviewed` and then `official`. Sign up through
+   [Native Reviewer Signup](https://github.com/legesher/legesher/issues/new?template=reviewer_signup.yml). The
+   [Community Guidelines](COMMUNITY_GUIDELINES.md) carry the working agreements that sit underneath
+   it.
 4. **Before you submit**, read
    [Your contributions and your data](CONTRIBUTOR_PRIVACY.md). It is short, and it covers what
    happens to your word, how you are identified (you are not — credit is opt-in), what we never
@@ -806,7 +810,7 @@ What that means for you:
 
 ## Questions?
 
-- GitHub Discussions: [github.com/legesher/legesher-next/discussions](https://github.com/legesher/legesher-next/discussions)
+- GitHub Discussions: [github.com/legesher/legesher/discussions](https://github.com/legesher/legesher/discussions)
 - Email: <contribute@legesher.com>
 - Documentation: [docs.legesher.io](https://docs.legesher.io)
 

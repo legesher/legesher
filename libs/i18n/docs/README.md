@@ -12,6 +12,21 @@ This directory contains the foundation documents for creating high-quality Pytho
 ## Contents
 
 ### [corpus-publish-runbook.md](./corpus-publish-runbook.md)
+
+The operator sequence from the working database to the published corpus dataset:
+salt escrow, the publish-grade build, the dry export, and the double-keyed push.
+
+**Use this for:** Publishing or re-pushing the language corpus (CORE-1312)
+
+### [intake-moderation-runbook.md](./intake-moderation-runbook.md)
+
+The interim screening ritual for community submissions: triage the intake queue,
+import, screen each new rendering by hand, clear or hold with a recorded
+decision, reply on the issue, push to the durable data home. Quarantine is the
+default until a person clears it.
+
+**Use this for:** Walking the community intake queue, weekly at minimum (CORE-1828)
+
 ### [contributor-withdrawal-runbook.md](./contributor-withdrawal-runbook.md)
 
 How a contributor's request to be forgotten is honoured: confirming the request

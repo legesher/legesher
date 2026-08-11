@@ -50,7 +50,7 @@ each upstream dependency.
 ## Questions
 
 For licensing questions, contact [legal@legesher.com](mailto:legal@legesher.com) or open a
-[license question issue](.github/issue_template/license_question.yml).
+[license question issue](.github/ISSUE_TEMPLATE/license_question.yml).
 
 ## Trademarks
 

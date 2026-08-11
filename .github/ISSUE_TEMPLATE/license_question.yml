@@ -18,9 +18,9 @@ body:
       service**, where access is gated by account and API key rather than by a license on this
       code. Nothing in this repository needs an account or a network call to work.
 
-      "Legesher" and its logos are trademarks — see [LICENSING.md](../../LICENSING.md).
+      "Legesher" and its logos are trademarks — see [LICENSING.md](https://github.com/legesher/legesher/blob/main/LICENSING.md).
 
-      See [LICENSE](../../LICENSE) for the full Apache 2.0 terms.
+      See [LICENSE](https://github.com/legesher/legesher/blob/main/LICENSE) for the full Apache 2.0 terms.
 
 - type: dropdown
   id: question-type
@@ -94,8 +94,8 @@ body:
   attributes:
     label: Have you reviewed the licensing documentation?
     options:
-    - label: I have read [LICENSING.md](../../LICENSING.md)
-    - label: I have read the [LICENSE](../../LICENSE) file
+    - label: I have read [LICENSING.md](https://github.com/legesher/legesher/blob/main/LICENSING.md)
+    - label: I have read the [LICENSE](https://github.com/legesher/legesher/blob/main/LICENSE) file
 
 - type: markdown
   attributes:

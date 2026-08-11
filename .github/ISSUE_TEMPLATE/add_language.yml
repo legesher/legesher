@@ -9,7 +9,7 @@ body:
       Want to add a new language to Legesher? We'd love your help!
 
       Legesher currently supports 51 languages for Python. If your language isn't on the list,
-      you can help us add it. See the [Contributing Guide](../../CONTRIBUTING.md)
+      you can help us add it. See the [Contributing Guide](https://github.com/legesher/legesher/blob/main/CONTRIBUTING.md)
       for how to get started, and look at an existing pack (e.g., `libs/i18n/language-packs/python/es/`)
       for the expected structure.
 
@@ -93,5 +93,5 @@ body:
   attributes:
     label: Confirmation
     options:
-    - label: I agree to follow this project's [Code of Conduct](../../CODE_OF_CONDUCT.md)
+    - label: I agree to follow this project's [Code of Conduct](https://github.com/legesher/legesher/blob/main/CODE_OF_CONDUCT.md)
       required: true
