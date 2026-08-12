@@ -11,6 +11,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **core**: `legesher map compact` garbage-collects translation-memory
+  segments whose register-map node is gone. Such segments could never be
+  returned by an exact lookup (node IDs are never reused) but stayed in the
+  artifact forever, surfacing in fuzzy suggestions and growing the committed
+  file over a repo's life. They are now demoted to history rather than
+  deleted — a deleted docstring often returns, and its old translation is
+  then the best suggestion available — and the history is capped
+  (`--keep-history`, default 200), which is what actually bounds the file.
+  Live segments are untouched, so replay output is unchanged. `--dry-run`
+  reports without writing. [CORE-1708]
+- **core**: `legesher map edit --dry-run` prints the full would-edit report
+  and writes nothing. Bulk-by-name is the default — passing an identifier
+  edits every entry with that source text across every file — so there is
+  now a way to see the blast radius first. [CORE-1771]
+- **core**: the mapping log emits `deprecate` when a node dies. Reconcile
+  dropped nodes silently, so the lineage changelog recorded every birth and
+  no ending; `lineage()` now shows a node's full life. `lineage_for_term`
+  also follows rename chains end-to-end, so a term's history is reachable
+  from any name it has held. [CORE-1770]
+
 - **i18n**: style guides can declare how terms are *coined*, not just how
   they are cased. The new optional `naming.word_formation` list carries
   word-formation rules (compounding, clipping, which roots stay distinct)
@@ -184,6 +204,41 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **core**: `.legesher/` artifacts normalize text to **LF line endings, then
+  NFC** at extraction (contract change). Previously NFC alone was applied,
+  and since it does not touch line endings, `content_hash("a\nb")` differed
+  from `content_hash("a\r\nb")` — so a Windows checkout with
+  `core.autocrlf=true` missed every multi-line translation-memory segment
+  and re-anchored every multi-line map node, silently, on files nobody had
+  edited. Node identity is now a property of content rather than of the
+  checkout, and the committed artifact is byte-identical whoever wrote it.
+  Artifacts holding CRLF text re-anchor once on the next reconcile, keeping
+  their IDs and translations, and are stable after. U+2028/U+2029/U+0085 are
+  treated as content and survive verbatim. [CORE-1710]
+- **core**: artifact writes are atomic (temp file + `os.replace`). Every
+  writer previously truncated the destination before writing, so a crash
+  mid-write left a truncated, unparseable artifact where a valid one had
+  been. [CORE-1710]
+- **core**: the deterministic emission path decides whether a stored
+  translation is its own stale leftover from **entry-level provenance**
+  (`written_by`) rather than by inspecting the value. The previous heuristic
+  held only while every identifier-layer translation was pack-validated,
+  which is not guaranteed: it could delete an identifier translation that
+  merely resembled a reserved word, and could leave a genuinely stale one in
+  place when re-emitting through a translator with no reserved-word map.
+  Register-map schema `1.1.0 → 1.2.0` (additive; older artifacts migrate on
+  load). [CORE-1767]
+- **core**: `suggest()` is ~12.5× faster at 10k segments (495 ms → 40 ms per
+  call) via a length-band and `quick_ratio()` cascade. Both gates are exact
+  upper bounds on the similarity score, so results are unchanged. Very short
+  segments now need a higher score to be suggested, which drops noise like
+  `# step 1` vs `# step 2` while keeping genuine typo fixes. [CORE-1709]
+- **core**: `legesher map edit --lang` is validated — an unknown code is
+  rejected instead of minting a rendering for a language that does not
+  exist. Editing a comment/docstring/string entry now requires `--prose`,
+  making the weaker prose validation explicit rather than silently inherited
+  from the node's class. Pack `members` joined the collision domain. [CORE-1771]
+
 - **i18n**: the tooling that could silently corrupt translated terms is retired.
   Two orphaned "fixer" scripts rewrote pack values in place with *contradictory*
   conventions — one deleted spaces, the other replaced them with underscores —
@@ -250,6 +305,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   declared floor. [CORE-1521]
 
 ### Fixed
+
+- **core**: a mapping-log append could destroy a concurrent writer's event. The
+  torn-tail repair used a byte count measured when the log was *read*, which is
+  stale as soon as another process appends — applying it later truncated from
+  the new end, cutting that process's record in half and leaving mid-file
+  corruption that then failed every subsequent load. The tail is now repaired
+  from the file's state at write time, under an exclusive advisory lock that
+  covers the whole repair-and-write sequence. A tail that still parses is
+  recognized as a complete record that merely lost its newline and is kept
+  rather than cut. [CORE-1770]
+- **core**: mapping-log events are written in batches — one append and one
+  fsync for a whole build instead of one of each per node (~5× faster on a
+  3000-node file). [CORE-1770]
+- **core**: an unknown mapping-log event kind from a newer client no longer
+  fails the whole log load. The per-record `"v"` now dispatches: unknown
+  kinds from a higher version are preserved and skipped, so a newer client's
+  history cannot brick an older one. Rebuilding a map into an existing log
+  no longer duplicates `mint` events. [CORE-1770]
+- **core**: `legesher map edit` is all-or-nothing across entries — a failure
+  part-way through a multi-file edit previously left the in-memory document
+  half-mutated for library callers. A corrupt `identifier_map.json` now
+  surfaces as an actionable error instead of a bare traceback. [CORE-1771]
 
 - **mcp**: the stdio server now identifies itself truthfully and quietly —
   the MCP `initialize` handshake reports `legesher-mcp`'s own package version

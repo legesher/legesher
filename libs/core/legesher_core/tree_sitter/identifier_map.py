@@ -15,6 +15,8 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ..artifact_io import atomic_write_text
+
 if TYPE_CHECKING:
     from legesher_i18n.pack_loader import LanguagePack
 
@@ -253,17 +255,13 @@ class IdentifierMap:
         Creates parent directories if needed. The JSON format is
         designed to be human-readable and git-friendly.
         """
-        path.parent.mkdir(parents=True, exist_ok=True)
         data = {
             "version": 1,
             "source_lang": self.source_lang,
             "identifier_count": len(self._map),
             "identifiers": dict(sorted(self._map.items())),
         }
-        path.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
+        atomic_write_text(path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
         logger.info("Saved identifier map: %d identifiers to %s", len(self._map), path)
 
     @classmethod

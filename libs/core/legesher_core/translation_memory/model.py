@@ -40,13 +40,20 @@ from __future__ import annotations
 
 import json
 import logging
+import math
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any
+from typing import Any, Collection, Mapping
 
-from ..register_map.node_identity import content_hash, normalize_nfc
+from ..artifact_io import atomic_write_text, parse_semver
+from ..register_map.node_identity import (
+    content_hash,
+    legacy_nfc_hash,
+    normalize_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +68,75 @@ DEFAULT_ARTIFACT_FILENAME = "translation_memory.json"
 
 #: Conservative default similarity floor for fuzzy suggestions.
 DEFAULT_FUZZY_THRESHOLD = 0.85
+
+#: Length-scaled floor (CORE-1709). Similarity is a poor discriminator on
+#: short strings: ``"# step 1"`` vs ``"# step 2"`` scores 0.875 — above
+#: the default threshold — while being a different instruction. One
+#: character in eight is a large semantic difference and a small textual
+#: one. Segments at or under :data:`SHORT_SEGMENT_CHARS` must clear
+#: :data:`SHORT_SEGMENT_FLOOR`; the requirement relaxes linearly back to
+#: the configured threshold by :data:`LONG_SEGMENT_CHARS`, so
+#: long-docstring recall (the high-value case) is untouched.
+#:
+#: Both constants are calibrated against real cases on either side of
+#: the line, not chosen for roundness:
+#:
+#: - ``"# step 1"`` vs ``"# step 2"`` — 0.875, must be REJECTED (a
+#:   different instruction, the noise this gate exists for).
+#: - ``"# helo"`` vs ``"# hello"`` — 0.923, must be KEPT (a typo fix,
+#:   the highest-value short suggestion there is).
+#: - ``"# compute the tax"`` vs ``"# compute the tax rate"`` — 0.87 at
+#:   22 chars, must be KEPT (a genuine edit).
+#:
+#: The first two are the same length, so length alone cannot separate
+#: them — the floor has to sit between their scores, which puts it at
+#: 0.90, not higher. The third is why the scaled band stops at 20 chars
+#: rather than reaching into the range where ordinary edits live.
+SHORT_SEGMENT_CHARS = 12
+LONG_SEGMENT_CHARS = 20
+SHORT_SEGMENT_FLOOR = 0.90
+
+#: Default cap on retained dead-node history per file (CORE-1708).
+DEFAULT_STALE_HISTORY = 200
+
+
+def effective_threshold(floor: float, length: int) -> float:
+    """The similarity floor a candidate of ``length`` chars must clear.
+
+    Never returns less than ``floor``: the scaling only ever tightens,
+    so an explicitly-raised threshold is always honoured.
+    """
+    if length >= LONG_SEGMENT_CHARS:
+        return floor
+    if length <= SHORT_SEGMENT_CHARS:
+        return max(floor, SHORT_SEGMENT_FLOOR)
+    progress = (length - SHORT_SEGMENT_CHARS) / (
+        LONG_SEGMENT_CHARS - SHORT_SEGMENT_CHARS
+    )
+    return max(floor, SHORT_SEGMENT_FLOOR + progress * (floor - SHORT_SEGMENT_FLOOR))
+
+
+def length_band(length: int, floor: float) -> tuple[int, int]:
+    """Inclusive candidate-length range that can still reach ``floor``.
+
+    ``SequenceMatcher.ratio()`` is ``2 * M / T``, where ``T`` is the
+    combined length and ``M`` the number of matched characters. Since
+    ``M <= min(len(a), len(b))``, the ratio is bounded above by
+    ``2 * min / (la + lb)`` — so for a needle of length ``la`` a
+    candidate of length ``lb`` can only reach ``floor`` when
+
+        floor * la / (2 - floor)  <=  lb  <=  la * (2 - floor) / floor
+
+    Anything outside is rejected on arithmetic alone, before difflib is
+    constructed at all. This is an exact bound, not a heuristic: no
+    candidate that could have scored at or above the floor is excluded.
+    """
+    if floor <= 0:
+        return 0, sys.maxsize
+    low = math.ceil(floor * length / (2 - floor)) if floor < 2 else length
+    high = math.floor(length * (2 - floor) / floor)
+    return low, high
+
 
 #: Provenance vocabulary: who minted a cached translation.
 MINTED_BY: frozenset[str] = frozenset({"model", "human", "import"})
@@ -80,6 +156,28 @@ def default_artifact_path(repo_root: Path) -> Path:
 
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+@dataclass(frozen=True)
+class PruneStats:
+    """What one :meth:`TranslationMemory.prune` did.
+
+    Attributes:
+        demoted: Active segments whose node is gone, marked stale.
+        dropped: Stale segments evicted past the history cap.
+        retained: Stale segments kept as fuzzy history.
+    """
+
+    demoted: int = 0
+    dropped: int = 0
+    retained: int = 0
+
+    def __add__(self, other: "PruneStats") -> "PruneStats":
+        return PruneStats(
+            demoted=self.demoted + other.demoted,
+            dropped=self.dropped + other.dropped,
+            retained=self.retained + other.retained,
+        )
 
 
 @dataclass
@@ -121,14 +219,33 @@ class TMSegment:
                 f"Invalid status {self.status!r}; "
                 f"expected one of {sorted(SEGMENT_STATUSES)}"
             )
-        # Store-NFC contract (shared with the register map).
-        self.source_text = normalize_nfc(self.source_text)
-        self.translated_text = normalize_nfc(self.translated_text)
+        # Storage contract, shared with the register map: LF, then NFC
+        # (``node_identity.normalize_text``). The LF half matters most
+        # here — prose segments are the multi-line class, so a CRLF
+        # checkout would otherwise miss every docstring segment.
+        raw_source = self.source_text
+        self.source_text = normalize_text(self.source_text)
+        self.translated_text = normalize_text(self.translated_text)
         if self.source_hash != content_hash(self.source_text):
-            raise ValueError(
-                f"source_hash {self.source_hash!r} does not match the NFC "
-                f"content hash of source_text ({content_hash(self.source_text)!r})"
-            )
+            # Migration (CORE-1710): a segment written before the LF
+            # policy stored CRLF prose and a hash taken over it. Its
+            # stored hash is "wrong" only by that rule, so re-stamp it
+            # rather than refusing to load — an artifact from last week
+            # must not become unopenable, which would brick `map edit`
+            # and `map compact` on every repo that has one.
+            if self.source_hash == legacy_nfc_hash(raw_source):
+                logger.debug(
+                    "Migrating pre-LF-policy TM segment %s: re-hashing "
+                    "normalized source",
+                    self.node_id,
+                )
+                self.source_hash = content_hash(self.source_text)
+            else:
+                raise ValueError(
+                    f"source_hash {self.source_hash!r} does not match the "
+                    f"content hash of source_text "
+                    f"({content_hash(self.source_text)!r})"
+                )
 
     @property
     def key(self) -> SegmentKey:
@@ -255,6 +372,56 @@ class TranslationMemory:
             count += 1
         return count
 
+    # -- Garbage collection (dead-node segments) --
+
+    def prune(
+        self,
+        live_node_ids: Collection[str],
+        *,
+        keep_history: int = DEFAULT_STALE_HISTORY,
+    ) -> PruneStats:
+        """Demote segments whose node is gone, and bound the history.
+
+        A segment whose ``node_id`` no longer exists in the register map
+        can never be returned by :meth:`lookup` — node IDs are never
+        reused — but it stayed ``active`` forever: surfacing in
+        :meth:`suggest`, inflating :meth:`stats`, and growing the
+        committed artifact without bound over a file's life (CORE-1708).
+
+        Retention is **demote, bounded** rather than delete: a deleted
+        docstring frequently comes back, and its old translation is the
+        single best fuzzy candidate when it does. So dead-node segments
+        become ``stale`` — history, invisible to ``lookup``, still
+        available to ``suggest`` — and the stale pool is then capped at
+        ``keep_history`` most recent by ``minted_at``, which is what
+        actually bounds the artifact. Pass ``keep_history=0`` to drop
+        dead history entirely.
+
+        **Live segments are never touched**, so replay for live nodes is
+        byte-identical before and after a prune.
+        """
+        live = set(live_node_ids)
+        demoted = 0
+        for segment in self.segments.values():
+            if segment.node_id in live or segment.status != "active":
+                continue
+            segment.status = "stale"
+            demoted += 1
+        # Newest-first, with the segment key as a deterministic tie-break
+        # so two segments minted in the same second evict reproducibly.
+        stale = sorted(
+            (s for s in self.segments.values() if s.status == "stale"),
+            key=lambda segment: (segment.minted_at, segment.key),
+            reverse=True,
+        )
+        dropped = 0
+        for segment in stale[keep_history:]:
+            del self.segments[segment.key]
+            dropped += 1
+        return PruneStats(
+            demoted=demoted, dropped=dropped, retained=len(stale) - dropped
+        )
+
     # -- Fuzzy matching (suggestions, never auto-applied) --
 
     def suggest(
@@ -263,6 +430,7 @@ class TranslationMemory:
         target_lang: str,
         *,
         threshold: float | None = None,
+        scale_floor: bool = True,
     ) -> list[tuple[float, TMSegment]]:
         """Score-tiered fuzzy candidates for a source segment.
 
@@ -270,21 +438,52 @@ class TranslationMemory:
         (deterministic tie-break on the segment key), including stale
         history. Suggestions are surfaced, never applied: ``lookup``
         ignores them, and promoting one requires an explicit ``add``.
+
+        **Prefilters (CORE-1709).** A full ``SequenceMatcher.ratio()``
+        against every segment is O(n·m²) and measured ~405 ms at 10k
+        segments — fine once per file, ruinous in an agent loop that
+        suggests per segment. Two gates run first, both exact upper
+        bounds on the score, so the result set is unchanged:
+
+        1. :func:`length_band` — arithmetic on lengths alone, no
+           difflib object constructed.
+        2. ``quick_ratio()`` — an O(n) character-multiset bound that
+           difflib guarantees is ``>= ratio()``.
+
+        Only survivors pay for the quadratic ``ratio()``.
+
+        ``scale_floor`` applies the length-scaled floor
+        (:func:`effective_threshold`) that keeps near-identical short
+        comments out of the results; pass ``False`` for the raw
+        flat-threshold behaviour.
         """
         floor = self.fuzzy_threshold if threshold is None else threshold
-        needle = normalize_nfc(source_text)
+        needle = normalize_text(source_text)
+        if scale_floor:
+            floor = effective_threshold(floor, len(needle))
+        low, high = length_band(len(needle), floor)
         scored: list[tuple[float, TMSegment]] = []
+        # autojunk=False: difflib's heuristic demotes characters that
+        # appear in >1% of a sequence longer than 199 chars to junk —
+        # for prose that silently guts spaces, cratering the ratio of
+        # near-identical long comments/docstrings (the highest-value
+        # segment class) far below any sane threshold.
+        #
+        # The needle stays argument `a` and the candidate argument `b`,
+        # matching the pre-prefilter call exactly: difflib's ratio is not
+        # contractually symmetric, so swapping them to exploit its b-side
+        # caching could shift a borderline score across the threshold.
+        matcher = SequenceMatcher(autojunk=False)
+        matcher.set_seq1(needle)
         for segment in self.segments.values():
             if segment.target_lang != target_lang:
                 continue
-            # autojunk=False: difflib's heuristic demotes characters that
-            # appear in >1% of a sequence longer than 199 chars to junk —
-            # for prose that silently guts spaces, cratering the ratio of
-            # near-identical long comments/docstrings (the highest-value
-            # segment class) far below any sane threshold.
-            score = SequenceMatcher(
-                a=needle, b=segment.source_text, autojunk=False
-            ).ratio()
+            if not low <= len(segment.source_text) <= high:
+                continue
+            matcher.set_seq2(segment.source_text)
+            if matcher.quick_ratio() < floor:
+                continue
+            score = matcher.ratio()
             if score >= floor:
                 scored.append((score, segment))
         scored.sort(key=lambda pair: (-pair[0], pair[1].key))
@@ -342,14 +541,6 @@ class TranslationMemory:
         return store
 
 
-def _parse_semver(version: str) -> tuple[int, int, int]:
-    try:
-        major, minor, patch = (int(part) for part in version.split("."))
-    except (ValueError, AttributeError) as exc:
-        raise ValueError(f"Invalid schema_version {version!r}: {exc}") from exc
-    return major, minor, patch
-
-
 @dataclass
 class TranslationMemoryDocument:
     """The persisted TM artifact (one per repo, many files).
@@ -373,6 +564,29 @@ class TranslationMemoryDocument:
             store = TranslationMemory(file=file)
             self.files[file] = store
         return store
+
+    def prune(
+        self,
+        live_node_ids: Mapping[str, Collection[str]],
+        *,
+        keep_history: int = DEFAULT_STALE_HISTORY,
+    ) -> PruneStats:
+        """Prune every per-file store against the map's live node IDs.
+
+        ``live_node_ids`` maps source-file path to the node IDs that
+        file's register map still holds — see
+        :func:`legesher_core.translation_memory.live_node_ids`. A file
+        **absent from the mapping** has every one of its segments treated
+        as dead: the file itself is gone from the map (deleted or
+        renamed), which is exactly when its TM store should collapse to
+        bounded history rather than persist in full.
+        """
+        totals = PruneStats()
+        for path, store in self.files.items():
+            totals = totals + store.prune(
+                live_node_ids.get(path, ()), keep_history=keep_history
+            )
+        return totals
 
     def stats(self) -> dict[str, Any]:
         """Counters aggregated across every per-file store."""
@@ -413,8 +627,8 @@ class TranslationMemoryDocument:
                 f"(expected {ARTIFACT_KIND!r})"
             )
         version = data.get("schema_version", "")
-        major, _minor, _patch = _parse_semver(version)
-        expected_major = _parse_semver(SCHEMA_VERSION)[0]
+        major, _minor, _patch = parse_semver(version)
+        expected_major = parse_semver(SCHEMA_VERSION)[0]
         if major != expected_major:
             raise ValueError(
                 f"Unsupported schema_version {version!r}: this reader "
@@ -430,10 +644,8 @@ class TranslationMemoryDocument:
 
     def save(self, path: Path) -> None:
         """Write the artifact as human-readable, git-friendly JSON."""
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            json.dumps(self.to_dict(), ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
+        atomic_write_text(
+            path, json.dumps(self.to_dict(), ensure_ascii=False, indent=2) + "\n"
         )
         logger.info("Saved translation memory: %d file(s) to %s", len(self.files), path)
 

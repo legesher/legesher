@@ -394,35 +394,53 @@ class TokenTranslator:
         # original_text: on a table miss, a previously recorded value is a
         # stale leftover from a re-anchor (reconcile keeps translations
         # while refreshing the text) and is cleared.
+        #
+        # Ownership is read from ENTRY PROVENANCE, never inferred from the
+        # value (CORE-1767). The old interim discriminator asked "is the
+        # stored value a reserved-word value", which is only correct while
+        # the identifier layer is pack-validated — and `IdentifierMap.add`
+        # validates only when a pack is wired. That heuristic both
+        # destroyed data (an unvalidated identifier translation that
+        # happened to equal a reserved value was cleared as if this layer
+        # owned it) and let data rot (re-emitting through a translator
+        # with no reserved-word map never reached the check, so genuinely
+        # stale reserved values survived a re-anchor). Provenance answers
+        # the question directly and is independent of both.
         reserved_word_map = self.mapper.reserved_word_map
-        reserved_values = frozenset(reserved_word_map.values())
         for entry in register_map.entries.values():
             translation: str | None = None
-            deterministic_owned = False
             if entry.element_class == "keyword":
                 translation = self.mapper.get_keyword(entry.original_text)
-                deterministic_owned = True
             elif entry.element_class == "builtin":
                 translation = self.mapper.get_builtin(entry.original_text)
-                deterministic_owned = True
-            elif entry.element_class == "identifier" and reserved_word_map:
-                translation = reserved_word_map.get(entry.original_text)
-                # Reserved-word records are the ONLY identifier translations
-                # this layer owns — identifier-layer translations (LLM /
-                # IdentifierMap) must survive re-emission. A stale reserved
-                # record is recognizable by its value: IdentifierMap.add
-                # validates against the pack, so an identifier-layer
-                # translation can never equal a reserved-word value.
-                # (Entry-level provenance arrives with the map-correction
-                # workflow; this value check is the interim discriminator.)
-                deterministic_owned = (
-                    translation is not None
-                    or entry.translations.get(target_lang) in reserved_values
+            elif entry.element_class == "identifier":
+                # NOT short-circuited on `reserved_word_map` being
+                # non-empty: an absent table means this translator mints
+                # nothing here, not that it may skip cleaning up after a
+                # previous one that did.
+                translation = (
+                    reserved_word_map.get(entry.original_text)
+                    if reserved_word_map
+                    else None
                 )
+            else:
+                continue
             if translation:
                 entry.translations[target_lang] = translation
-            elif deterministic_owned:
+                entry.provenance.record_write(target_lang, "deterministic")
+                continue
+            owner = entry.provenance.written_by_for(target_lang)
+            # Unknown ownership (pre-1.2.0 artifact) is only treated as
+            # ours for keyword/builtin, classes no other layer writes.
+            # For identifiers it is left alone: an unattributed value may
+            # be an identifier-layer translation, and discarding one is
+            # the data loss this ticket exists to stop.
+            deterministic_owned = owner == "deterministic" or (
+                owner is None and entry.element_class in ("keyword", "builtin")
+            )
+            if deterministic_owned:
                 entry.translations.pop(target_lang, None)
+                entry.provenance.clear_write(target_lang)
         return translated, register_map
 
     def translate_file(self, file_path: Path, target_lang: str) -> str:

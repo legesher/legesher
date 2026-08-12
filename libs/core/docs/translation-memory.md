@@ -79,11 +79,73 @@ model-less preview renders leave the artifact untouched.
 ## Fuzzy matching (suggestions, never auto-applied)
 
 `suggest(source_text, target_lang, threshold=...)` returns
-`[(score, segment)]` sorted by score descending (difflib ratio over NFC
-text; default threshold 0.85, configurable per store or per call),
-including stale history. Suggestions below identity are **surfaced, not
-applied**: `lookup` ignores them entirely, and promoting a candidate
-requires an explicit `add()` (with its own provenance).
+`[(score, segment)]` sorted by score descending (difflib ratio over
+normalized text; default threshold 0.85, configurable per store or per
+call), including stale history. Suggestions below identity are
+**surfaced, not applied**: `lookup` ignores them entirely, and promoting
+a candidate requires an explicit `add()` (with its own provenance).
+
+### Prefilters
+
+A full `SequenceMatcher.ratio()` against every segment is O(n·m²) —
+measured ~495 ms at 10k segments, so an agent loop suggesting per
+segment spends seconds per file. Two gates run first, and **both are
+exact upper bounds on the score**, so the result set is unchanged:
+
+1. **Length band** — since `ratio = 2M/T` and `M ≤ min(la, lb)`, a
+   candidate can only reach `floor` when
+   `floor·la/(2−floor) ≤ lb ≤ la·(2−floor)/floor`. Pure arithmetic; no
+   difflib object is constructed for a rejected candidate.
+2. **`quick_ratio()`** — difflib's O(n) character-multiset bound, which
+   it guarantees is `≥ ratio()`.
+
+Measured **12.5× at 10k segments** (495 ms → 40 ms per suggest), with
+results verified identical to the unfiltered scan on a golden corpus.
+The needle stays argument `a` and the candidate argument `b`: difflib's
+ratio is not contractually symmetric, so swapping them to exploit its
+b-side caching could move a borderline score across the threshold.
+
+### Length-scaled floor
+
+Similarity is a poor discriminator on short strings. `"# step 1"` vs
+`"# step 2"` scores 0.875 — above the default threshold — while being a
+different instruction. Segments at or under 12 chars must clear 0.90,
+relaxing linearly back to the configured threshold by 20 chars.
+
+The constants are calibrated against cases on both sides of the line,
+not chosen for roundness: `"# helo"` → `"# hello"` (0.923, a typo fix)
+must be **kept** and is the same length as the step-1/step-2 pair, so
+only the score can separate them; `"# compute the tax"` →
+`"# compute the tax rate"` (0.87 at 22 chars) must also be kept, which
+is why the scaled band stops well short of where ordinary edits live.
+Pass `scale_floor=False` for the raw flat threshold.
+
+## Pruning dead-node segments
+
+A segment whose register-map node was deleted can never be returned by
+`lookup` — node IDs are never reused — but it used to stay `active`
+forever: surfacing in `suggest`, inflating `stats`, and growing the
+committed artifact without bound over a file's life.
+
+`prune(live_node_ids, keep_history=200)` (and the document-level
+equivalent, driven by `replay.live_node_ids(map_doc)`) fixes that.
+**Retention is demote-then-bound, not delete:**
+
+- Dead-node segments become `stale` — history, invisible to `lookup`,
+  still available to `suggest`. A deleted docstring frequently comes
+  back, and its old translation is then the single best candidate there
+  is; deleting outright throws that away.
+- The stale pool is then capped at `keep_history` most recent by
+  `minted_at` (segment key as a deterministic tie-break). **That cap is
+  what actually bounds the artifact** — demotion alone does not.
+- **Live segments are never touched**, so replay output for live nodes
+  is byte-identical before and after a prune.
+- A file absent from the mapping has every segment treated as dead: the
+  file is gone from the map, which is exactly when its store should
+  collapse to bounded history.
+
+`keep_history=0` drops dead history entirely. Surfaced as
+`legesher map compact` (with `--keep-history` and `--dry-run`).
 
 ## Serialization & artifact family
 
@@ -94,6 +156,14 @@ requires an explicit `add()` (with its own provenance).
 register map document. Content is sorted and order-stable (segments sort
 by `(node_id, target_lang, source_hash)`; files sort by path), so
 save → load → save is byte-identical and diffs stay git-friendly.
+
+Writes are atomic (`artifact_io.atomic_write_text`: sibling temp file,
+fsync, `os.replace`), so a crash mid-write leaves the previous valid
+artifact rather than a truncated one. Segment text obeys the family's
+storage normalization — **LF, then NFC** — which matters most here:
+prose is the multi-line class, so before that rule a CRLF checkout
+missed every docstring segment. See
+`docs/register-map-node-identity.md`.
 
 Artifact-family note: this is the second member of the register-map
 artifact family. The document payload is self-describing and embeds
