@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- **Language selector**: picking a language now takes effect in a project that sets
+  `legesher.targetLanguage` in its workspace settings. The pick was written to user settings, which the
+  workspace value outranks, so the language never changed while the notification said it had. Each
+  setting is now written at the scope that supplies its value, and the notification names that scope
+  when it is not your own settings (CORE-1776)
+- **Language server**: a failed server start no longer leaves the extension claiming the previous
+  language is running. Switching back to that language now restarts the server instead of collapsing
+  into a no-op that never retried (CORE-1776)
+- **Language server**: a folder- or workspace-scoped `legesher.sourceLanguage` now reaches the server.
+  The client re-read the configuration without the document's URI, so it started the server with a
+  different pair than the one the extension recorded (CORE-1776)
+
 ### Security
 
 - **Dependencies**: cleared all known npm audit advisories in the extension's dependency tree
@@ -20,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Language packs**: pack files are now validated at load — a 1 MiB size cap and a runtime shape check on
   keywords/builtins/exceptions; malformed or oversized packs are skipped with a warning instead of being trusted (CORE-1453)
 - **Telemetry**: defaults to OFF — opt in via `legesher.telemetry.enabled` (CORE-1586)
+- **Performance**: content-based language detection is memoized per document and version, instead of
+  re-tokenizing the whole file on every editor switch (CORE-1776)
 
 ## 0.1.5 (2026-03-01)
 

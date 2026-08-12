@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { scopeOf, type SettingScope } from './settingsScope';
 
 // Import from generated language definitions (single source of truth)
 import {
@@ -15,13 +16,24 @@ import {
 } from './generated/languages';
 
 /**
- * Language configuration returned by getLanguageConfig()
+ * The single (source, target) pair a language server instance is started with.
+ *
+ * The server reads both languages once, in on_initialize, so its identity is
+ * the pair rather than the target alone. Passing it as one value keeps the
+ * language that was resolved and the language the server is actually running
+ * from drifting apart (CORE-1776).
  */
-export interface LanguageConfig {
+export interface ResolvedLanguages {
     targetLanguage: string;
     sourceLanguage: string;
+}
+
+/**
+ * Language configuration returned by getLanguageConfig()
+ */
+export interface LanguageConfig extends ResolvedLanguages {
     /** Which configuration scope supplied targetLanguage. */
-    scope: 'folder' | 'workspace' | 'user' | 'default';
+    scope: SettingScope;
 }
 
 /**
@@ -55,22 +67,28 @@ export function getLanguageConfig(resource?: vscode.Uri): LanguageConfig {
     const targetLanguage = config.get<string>('targetLanguage') || 'en';
     const sourceLanguage = config.get<string>('sourceLanguage') || 'en';
 
-    const inspected = config.inspect<string>('targetLanguage');
-    let scope: LanguageConfig['scope'] = 'default';
-    if (inspected?.workspaceFolderValue !== undefined) {
-        scope = 'folder';
-    } else if (inspected?.workspaceValue !== undefined) {
-        scope = 'workspace';
-    } else if (inspected?.globalValue !== undefined) {
-        scope = 'user';
-    }
-
     return {
         targetLanguage,
         sourceLanguage,
-        scope
+        scope: scopeOf(config.inspect<string>('targetLanguage'))
     };
 }
+
+/**
+ * Report which scope currently supplies `key`, for a write that has to land
+ * where it will actually take effect (CORE-1776).
+ *
+ * Pass a `config` obtained with the document's URI so folder-level settings
+ * resolve against the right folder in a multi-root workspace.
+ */
+export function getSettingScope(
+    config: vscode.WorkspaceConfiguration,
+    key: string
+): SettingScope {
+    return scopeOf(config.inspect(key));
+}
+
+export { type SettingScope };
 
 /**
  * Get available languages from the generated language registry.

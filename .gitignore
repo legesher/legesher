@@ -202,3 +202,6 @@ secrets/
 
 # pytest-benchmark cache (per-machine, not for VCS)
 .benchmarks/
+
+# VS Code integration tests write workspace settings into the fixture folder
+libs/vs-code/test/fixtures/.vscode/

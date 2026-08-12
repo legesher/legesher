@@ -2,7 +2,15 @@ import * as vscode from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { createLanguageClient } from './client';
 import { isServerAvailable } from './utils';
-import { getLanguageConfig, getActiveLanguages, getLanguageName } from './config';
+import {
+    getLanguageConfig,
+    getActiveLanguages,
+    getLanguageName,
+    getSettingScope,
+    type LanguageConfig,
+    type ResolvedLanguages,
+    type SettingScope,
+} from './config';
 import { TranslationPanelManager } from './webview/panel';
 import { Logger } from './logger';
 import { LegesherTelemetry } from './telemetry';
@@ -12,6 +20,7 @@ import { loadEnvVariables } from './env';
 import { OnboardingManager } from './onboarding';
 import { loadAllTranslations } from './languagePackLoader';
 import { buildVocabularies, detectLanguage, PackVocabulary } from './languageDetection';
+import { DetectionCache } from './detectionCache';
 
 let client: LanguageClient | undefined;
 let statusBarItem: vscode.StatusBarItem;
@@ -24,13 +33,24 @@ let serverLanguage: string | undefined;
 let languageSync: Promise<void> = Promise.resolve();
 /** Detection vocabularies, built once from the bundled packs. */
 let vocabularies: PackVocabulary[] | undefined;
+/** Detection results by (uri, document version), so editor switches are free. */
+const detectionCache = new DetectionCache();
 
 /** Where the language in effect came from, for the status bar. */
-type LanguageSource = 'folder' | 'workspace' | 'detected' | 'user' | 'default';
+type LanguageSource = SettingScope | 'detected';
 
 interface ResolvedLanguage {
     language: string;
     source: LanguageSource;
+    /**
+     * The configuration read while resolving.
+     *
+     * Returned rather than left for the caller to read again: three call sites
+     * used to pair a resolveLanguage() with their own getLanguageConfig(), and
+     * a pair of reads that can disagree is what let the recorded language and
+     * the running server drift apart (CORE-1776).
+     */
+    config: LanguageConfig;
 }
 
 function getVocabularies(context: vscode.ExtensionContext): PackVocabulary[] {
@@ -39,6 +59,14 @@ function getVocabularies(context: vscode.ExtensionContext): PackVocabulary[] {
         Logger.info(`Language detection ready: ${vocabularies.length} vocabularies`);
     }
     return vocabularies;
+}
+
+/** The (source, target) pair implied by a resolution, ready for the server. */
+function languagesOf(resolved: ResolvedLanguage): ResolvedLanguages {
+    return {
+        sourceLanguage: resolved.config.sourceLanguage,
+        targetLanguage: resolved.language,
+    };
 }
 
 /**
@@ -59,7 +87,7 @@ function resolveLanguage(
     const config = getLanguageConfig(document?.uri);
 
     if (config.scope === 'folder' || config.scope === 'workspace') {
-        return { language: config.targetLanguage, source: config.scope };
+        return { language: config.targetLanguage, source: config.scope, config };
     }
 
     // An explicit pick turns detection off, so the chosen language survives
@@ -72,23 +100,33 @@ function resolveLanguage(
         .get<string>('languageDetection', 'auto') === 'auto';
 
     if (detectionEnabled && document && document.languageId === 'python') {
-        const detected = detectLanguage(document.getText(), getVocabularies(context));
+        // Memoized on (uri, version): this runs on every editor switch, and the
+        // result only changes when the text does (CORE-1776).
+        const detected = detectionCache.get(
+            document.uri.toString(),
+            document.version,
+            () => detectLanguage(document.getText(), getVocabularies(context))
+        );
         if (detected) {
             Logger.debug(
                 `Detected ${detected.language} (score ${detected.score}` +
                 `${detected.runnerUp ? `, runner-up ${detected.runnerUp.language} ${detected.runnerUp.score}` : ''})`
             );
-            return { language: detected.language, source: 'detected' };
+            return { language: detected.language, source: 'detected', config };
         }
     }
 
-    return { language: config.targetLanguage, source: config.scope === 'user' ? 'user' : 'default' };
+    return {
+        language: config.targetLanguage,
+        source: config.scope === 'user' ? 'user' : 'default',
+        config,
+    };
 }
 
 /**
- * Bring the running server in line with `language`.
+ * Bring the running server in line with `languages`.
  *
- * Idempotent and serialised: if the server already speaks `language` this is a
+ * Idempotent and serialised: if the server already speaks that pair this is a
  * no-op, and concurrent callers queue rather than restarting on top of each
  * other. That is what makes it safe to re-enable the configuration listener —
  * whichever trigger arrives first performs the restart and the rest collapse
@@ -96,15 +134,15 @@ function resolveLanguage(
  */
 function ensureServerLanguage(
     context: vscode.ExtensionContext,
-    language: string,
-    sourceLanguage: string
+    languages: ResolvedLanguages,
+    resource?: vscode.Uri
 ): Promise<void> {
     // The server reads both languages once, in on_initialize, and has no
     // didChangeConfiguration handler — so its identity is the pair, not the
     // target alone. Keying on target only meant a sourceLanguage change fired
     // the listener, matched the cached value, and silently did nothing
     // (CORE-1754).
-    const identity = `${sourceLanguage}->${language}`;
+    const identity = identityOf(languages);
 
     languageSync = languageSync
         .then(async () => {
@@ -116,13 +154,18 @@ function ensureServerLanguage(
             // Assigning first means a failed restart leaves the state claiming
             // success, and every later attempt at the same language collapses
             // into a no-op that never retries.
-            await restartServer(context, language);
+            await restartServer(context, languages, resource);
             serverLanguage = identity;
         })
         .catch(error => {
             Logger.error('Failed to apply language change', error);
         });
     return languageSync;
+}
+
+/** The identity a running server is keyed by: the pair it was started with. */
+function identityOf(languages: ResolvedLanguages): string {
+    return `${languages.sourceLanguage}->${languages.targetLanguage}`;
 }
 
 /**
@@ -147,17 +190,43 @@ async function syncActiveLanguage(
         return;
     }
 
+    // One resolution, one configuration read, used by every surface below.
     const resolved = resolveLanguage(context, pythonDocument);
-    const config = getLanguageConfig(pythonDocument?.uri);
-    updateLanguageStatusBar(resolved, config.targetLanguage);
-    await ensureServerLanguage(context, resolved.language, config.sourceLanguage);
+    updateLanguageStatusBar(resolved);
+    await ensureServerLanguage(context, languagesOf(resolved), pythonDocument?.uri);
 }
+
+/**
+ * What `activate()` hands back to anything holding this extension.
+ *
+ * A narrow, read-only view of the language actually in effect. It exists
+ * because "which language is really running" is precisely what the surfaces in
+ * this file kept disagreeing about, and an answer that can be asserted from
+ * outside the extension host is the only way to test that they agree
+ * (CORE-1776).
+ */
+export interface LegesherApi {
+    /**
+     * The `source->target` pair the running server was started with, or
+     * undefined when no server is running — including after a failed start.
+     */
+    getServerLanguage(): string | undefined;
+}
+
+const extensionApi: LegesherApi = {
+    // Gated on a live client, not on the recorded pair alone. `serverLanguage`
+    // is also recorded when the server binary is absent — startServer returns
+    // without starting anything, deliberately, so the check is not retried on
+    // every editor switch — and reporting that as a running server would make
+    // this answer untrue in exactly the case it exists to detect.
+    getServerLanguage: () => (client ? serverLanguage : undefined),
+};
 
 /**
  * Extension activation entry point
  * Called when the extension is activated (when a Python file is opened)
  */
-export async function activate(context: vscode.ExtensionContext): Promise<void> {
+export async function activate(context: vscode.ExtensionContext): Promise<LegesherApi> {
     // Load environment variables from .env file (development only)
     loadEnvVariables(context.extensionPath);
 
@@ -182,10 +251,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Let the translation panel resolve languages the same way everything else
     // does, so a detected language does not leave it disagreeing with the status
     // bar and the running server (CORE-1754).
-    TranslationPanelManager.setLanguageResolver(document => ({
-        sourceLanguage: getLanguageConfig(document.uri).sourceLanguage,
-        targetLanguage: resolveLanguage(context, document).language,
-    }));
+    TranslationPanelManager.setLanguageResolver(
+        document => languagesOf(resolveLanguage(context, document))
+    );
 
     // Initialize telemetry (respects user settings)
     LegesherTelemetry.initialize(context);
@@ -220,11 +288,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
     languageStatusBarItem.command = 'legesher.selectLanguage';
     context.subscriptions.push(languageStatusBarItem);
-    const activeDocument = vscode.window.activeTextEditor?.document;
-    updateLanguageStatusBar(
-        resolveLanguage(context, activeDocument),
-        getLanguageConfig(activeDocument?.uri).targetLanguage
-    );
+    const initial = resolveLanguage(context, vscode.window.activeTextEditor?.document);
+    updateLanguageStatusBar(initial);
     languageStatusBarItem.show();
 
     // Check if extension is enabled
@@ -235,7 +300,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         statusBarItem.text = "$(circle-slash) Legesher";
         statusBarItem.tooltip = "Legesher: Disabled";
         Logger.info('Legesher extension is disabled via configuration');
-        return;
+        return extensionApi;
     }
 
     // Register restart command
@@ -321,15 +386,29 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         })
     );
 
+    // Forget a closed document's detection result. Version numbers restart at 1
+    // when a document is reopened, so a surviving entry could be matched by a
+    // revision it was never computed from — a file edited on disk while closed
+    // would resolve to the language its *previous* contents implied.
+    context.subscriptions.push(
+        vscode.workspace.onDidCloseTextDocument(document => {
+            detectionCache.forget(document.uri.toString());
+        })
+    );
+
     // Start the language server through the same serialised path the listeners
     // use. Calling startServer() directly here would run concurrently with an
     // onDidChangeActiveTextEditor firing during activation: both would assign
     // the module-level `client` and one legesher-lsp process would be orphaned.
     await syncActiveLanguage(context, { requirePythonEditor: false });
 
-    // Track activation with current language
-    const languageConfig = getLanguageConfig();
-    LegesherTelemetry.trackActivation(languageConfig.targetLanguage);
+    // Track activation with the language actually in effect, which is not always
+    // the configured one — it may have been detected from the open file.
+    LegesherTelemetry.trackActivation(
+        resolveLanguage(context, vscode.window.activeTextEditor?.document).language
+    );
+
+    return extensionApi;
 }
 
 /**
@@ -337,7 +416,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
  */
 async function startServer(
     context: vscode.ExtensionContext,
-    language?: string
+    languages: ResolvedLanguages,
+    resource?: vscode.Uri
 ): Promise<void> {
     const startTime = Date.now();
 
@@ -346,7 +426,7 @@ async function startServer(
         statusBarItem.tooltip = "Legesher: Connecting...";
 
         // Check if server is available
-        const config = vscode.workspace.getConfiguration('legesher');
+        const config = vscode.workspace.getConfiguration('legesher', resource);
         const serverCommand = config.get<string>('serverCommand', 'legesher-lsp');
 
         const serverAvailable = await isServerAvailable(serverCommand);
@@ -363,15 +443,13 @@ async function startServer(
             return;
         }
 
-        // Start with the language the caller resolved, which may be detected
-        // from the document's contents rather than configured (CORE-1729).
-        // Passed in rather than read from module state so a failed start never
-        // leaves `serverLanguage` claiming a language the server is not running.
-        const targetLanguage = language
-            ?? resolveLanguage(context, vscode.window.activeTextEditor?.document).language;
-        Logger.info(`Starting language server with target language: ${targetLanguage}`);
+        // Start with the pair the caller resolved: the target may be detected
+        // from the document's contents rather than configured (CORE-1729), and
+        // the source may come from a folder-scoped setting the client could not
+        // see when it read the configuration itself (CORE-1776).
+        Logger.info(`Starting language server with languages: ${identityOf(languages)}`);
 
-        client = createLanguageClient(context, outputChannel, targetLanguage);
+        client = createLanguageClient(context, outputChannel, languages, resource);
 
         // Handle client state changes
         client.onDidChangeState((event) => {
@@ -390,6 +468,13 @@ async function startServer(
         statusBarItem.tooltip = "Legesher: Connected";
         Logger.info('Legesher language server started and connected successfully');
     } catch (error) {
+        // Drop the client that failed to start. It never reached Running, so
+        // there is nothing to stop — and vscode-languageclient rejects stop()
+        // outright in the startFailed state, which is what the *next* restart
+        // would call it in. Left in place, one failed start wedged every
+        // subsequent language change behind an un-stoppable client (CORE-1776).
+        client = undefined;
+
         // Track failed connection
         const durationMs = Date.now() - startTime;
         LegesherTelemetry.trackServerConnection(false, durationMs);
@@ -411,7 +496,9 @@ async function startServer(
             'Retry'
         ).then(action => {
             if (action === 'View Output') {
-                client?.outputChannel.show();
+                // The extension's own channel, not the client's: the client
+                // that failed has already been dropped, and both log here.
+                outputChannel.show();
             } else if (action === 'Retry') {
                 // Re-enters through the queue rather than nesting inside it.
                 void ensureRestart(context);
@@ -426,7 +513,13 @@ async function startServer(
  * Queue a restart at the current resolved language, from outside the sync chain.
  */
 function ensureRestart(context: vscode.ExtensionContext): Promise<void> {
-    serverLanguage = undefined;
+    // Invalidate *inside* the chain, not before it. Clearing synchronously
+    // races an entry that is already running: that entry assigns the identity
+    // on success, after the clear, and the restart queued behind it then sees a
+    // match and collapses into the no-op the user explicitly asked not to have.
+    languageSync = languageSync.then(() => {
+        serverLanguage = undefined;
+    });
     return syncActiveLanguage(context, { requirePythonEditor: false });
 }
 
@@ -435,7 +528,8 @@ function ensureRestart(context: vscode.ExtensionContext): Promise<void> {
  */
 async function restartServer(
     context: vscode.ExtensionContext,
-    language?: string
+    languages: ResolvedLanguages,
+    resource?: vscode.Uri
 ): Promise<void> {
     Logger.info('Restarting Legesher language server...');
 
@@ -449,7 +543,15 @@ async function restartServer(
         }
     }
 
-    await startServer(context, language);
+    // The old server is gone, so the identity it was running under stops being
+    // true here — before the new one is asked to start, which is the step that
+    // can fail. Leaving the old pair in place through a failed start meant
+    // switching back to it matched the cache and collapsed into a no-op that
+    // never retried: no server running, status bar claiming one was, and no way
+    // out short of `legesher.restartServer` (CORE-1776).
+    serverLanguage = undefined;
+
+    await startServer(context, languages, resource);
 }
 
 /**
@@ -458,7 +560,11 @@ async function restartServer(
  * The icon distinguishes where that language came from, so a detected language
  * is never mistaken for a configured one.
  */
-function updateLanguageStatusBar(resolved: ResolvedLanguage, preferredLanguage?: string): void {
+function updateLanguageStatusBar(resolved: ResolvedLanguage): void {
+    // The language the user works in, as distinct from the one resolved for
+    // this file. It comes from the same read that produced `resolved`, so the
+    // two can no longer describe different moments (CORE-1776).
+    const preferredLanguage = resolved.config.targetLanguage;
     const langCode = resolved.language.toUpperCase();
     const langName = getLanguageName(resolved.language);
 
@@ -483,12 +589,11 @@ function updateLanguageStatusBar(resolved: ResolvedLanguage, preferredLanguage?:
     // the user's own language was set aside for this file. Surfacing it here
     // keeps the signal ambient — no notification, no interruption.
     const isMismatch = resolved.source === 'detected'
-        && !!preferredLanguage
         && preferredLanguage !== resolved.language;
 
     if (isMismatch) {
-        const preferredCode = preferredLanguage!.toUpperCase();
-        const preferredName = getLanguageName(preferredLanguage!);
+        const preferredCode = preferredLanguage.toUpperCase();
+        const preferredName = getLanguageName(preferredLanguage);
         languageStatusBarItem.text = `${icons.detected} ${langCode} → ${preferredCode}`;
         languageStatusBarItem.tooltip =
             `Legesher: this file is ${langName} (detected from its contents). ` +
@@ -502,12 +607,58 @@ function updateLanguageStatusBar(resolved: ResolvedLanguage, preferredLanguage?:
 }
 
 /**
+ * Where a setting must be written for the write to actually take effect.
+ *
+ * Resolution honours VS Code's precedence — folder > workspace > user > default
+ * — so a write has to land at the scope that currently wins, or a narrower one
+ * shadows it and the setting appears not to change at all. When nothing is set
+ * anywhere, Global is the right home for a user's choice.
+ *
+ * A reported folder scope maps to Workspace, not WorkspaceFolder. Every
+ * `legesher.*` setting is declared `window`-scoped in package.json, and VS Code
+ * refuses a WorkspaceFolder write for those outright — "does not support the
+ * folder resource scope". The folder value is still reported in a single-root
+ * workspace because there `.vscode/settings.json` *is* the workspace file, so
+ * Workspace writes the very file the value came from. Making per-folder
+ * languages genuinely work in a multi-root workspace means redeclaring these as
+ * `resource`-scoped, which is a larger change than this fix.
+ */
+function writeTargetFor(
+    config: vscode.WorkspaceConfiguration,
+    key: string
+): vscode.ConfigurationTarget {
+    const targets: Record<SettingScope, vscode.ConfigurationTarget> = {
+        folder: vscode.ConfigurationTarget.Workspace,
+        workspace: vscode.ConfigurationTarget.Workspace,
+        user: vscode.ConfigurationTarget.Global,
+        default: vscode.ConfigurationTarget.Global,
+    };
+    return targets[getSettingScope(config, key)];
+}
+
+/**
+ * Name the scope a pick was written to, when it is not the user's own settings.
+ *
+ * Writing into a project's `.vscode/settings.json` is the only way a pick can
+ * win against a value already committed there, but it edits a shared file — so
+ * say so rather than letting the user discover it in a diff.
+ */
+function scopeSuffix(...targets: vscode.ConfigurationTarget[]): string {
+    return targets.includes(vscode.ConfigurationTarget.Workspace) ? ' for this workspace' : '';
+}
+
+/**
  * Show language selection quick-pick and handle selection
  */
 async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
-    const currentConfig = getLanguageConfig();
+    // Scope every read and write to the active document, so a folder-level
+    // setting in a multi-root workspace resolves against the right folder — and
+    // so the checkmark marks the language actually in effect here, not the
+    // global one (CORE-1776).
+    const resource = vscode.window.activeTextEditor?.document.uri;
+    const currentConfig = getLanguageConfig(resource);
     const languages = getActiveLanguages();
-    const config = vscode.workspace.getConfiguration('legesher');
+    const config = vscode.workspace.getConfiguration('legesher', resource);
     const detectionEnabled = config.get<string>('languageDetection', 'auto') === 'auto';
 
     // "Auto" is a first-class choice, not a hidden default: without it, picking
@@ -545,9 +696,11 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
         if (detectionEnabled) {
             return; // Already automatic
         }
-        await config.update('languageDetection', 'auto', vscode.ConfigurationTarget.Global);
+        const autoTarget = writeTargetFor(config, 'languageDetection');
+        await config.update('languageDetection', 'auto', autoTarget);
         vscode.window.showInformationMessage(
-            'Legesher will detect each file\'s language from its contents.'
+            'Legesher will detect each file\'s language from its contents' +
+            `${scopeSuffix(autoTarget)}.`
         );
         await syncActiveLanguage(context, { requirePythonEditor: false });
         return;
@@ -564,13 +717,24 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
 
     // An explicit pick pins the language: write it and turn detection off, so it
     // survives switching to a file that would detect as something else.
-    await config.update('targetLanguage', selected.languageCode, vscode.ConfigurationTarget.Global);
-    await config.update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
+    //
+    // Each write goes to the scope that currently supplies that setting, which
+    // is not always Global and is not always the same scope for both. Writing
+    // Global unconditionally was silently lost whenever a workspace or folder
+    // value outranked it — the pick did nothing while the notification below
+    // claimed it had worked (CORE-1776).
+    const languageTarget = writeTargetFor(config, 'targetLanguage');
+    const detectionTarget = writeTargetFor(config, 'languageDetection');
+    await config.update('targetLanguage', selected.languageCode, languageTarget);
+    await config.update('languageDetection', 'off', detectionTarget);
 
-    // Show notification
+    // Show notification. The suffix covers both writes: the two settings can
+    // live at different scopes, and a pick that edits the project's settings
+    // file through *either* of them should say so.
     const langName = getLanguageName(selected.languageCode);
     vscode.window.showInformationMessage(
-        `Legesher language set to ${langName}. Automatic detection is off — choose Auto to re-enable it.`
+        `Legesher language set to ${langName}${scopeSuffix(languageTarget, detectionTarget)}. ` +
+        'Automatic detection is off — choose Auto to re-enable it.'
     );
 
     // Apply through the same idempotent path the configuration listener uses.
@@ -676,9 +840,22 @@ export async function deactivate(): Promise<void> {
     Logger.info('Legesher extension deactivating...');
 
     if (client) {
-        await client.stop();
-        Logger.info('Legesher language server stopped');
+        // Guarded like the stop in restartServer: a client that never reached
+        // Running rejects stop(), and letting that propagate would skip every
+        // disposal below and leave the state claiming a server is running.
+        try {
+            await client.stop();
+            Logger.info('Legesher language server stopped');
+        } catch (error) {
+            Logger.error('Error stopping language server', error);
+        } finally {
+            client = undefined;
+        }
     }
+
+    // No server runs after this, so nothing may still claim one does.
+    serverLanguage = undefined;
+    detectionCache.clear();
 
     if (statusBarItem) {
         statusBarItem.dispose();

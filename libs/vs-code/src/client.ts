@@ -5,7 +5,7 @@ import {
     ServerOptions,
     Executable,
 } from 'vscode-languageclient/node';
-import { getLanguageConfig } from './config';
+import { type ResolvedLanguages } from './config';
 import { Logger } from './logger';
 import { LegesherTelemetry } from './telemetry';
 
@@ -14,26 +14,28 @@ import { LegesherTelemetry } from './telemetry';
  *
  * This client connects to the legesher-language-server and enables
  * LSP features like hover, completion, diagnostics, etc.
+ *
+ * `languages` is resolved by the caller and passed in whole. It used to
+ * re-read the configuration here, without the document's URI and with only the
+ * target overridden — so a folder-scoped `sourceLanguage` never reached the
+ * server and the identity the extension recorded described a server that was
+ * never started (CORE-1776). There is deliberately no fallback: the caller
+ * always knows the pair, and a second read is exactly how the two drifted.
  */
 export function createLanguageClient(
     context: vscode.ExtensionContext,
     outputChannel: vscode.OutputChannel,
-    targetLanguageOverride?: string
+    languages: ResolvedLanguages,
+    resource?: vscode.Uri
 ): LanguageClient {
-    // Get configuration
-    const config = vscode.workspace.getConfiguration('legesher');
+    // Server settings resolve against the document too, so a project can pin
+    // its own server binary or trace level the same way it pins a language.
+    const config = vscode.workspace.getConfiguration('legesher', resource);
     const serverCommand = config.get<string>('serverCommand', 'legesher-lsp');
     const traceLevel = config.get<string>('trace.server', 'off');
 
-    // The caller may have resolved a language the settings don't name — e.g.
-    // detected from the file's contents (CORE-1729).
-    const resolvedConfig = getLanguageConfig();
-    const languageConfig = targetLanguageOverride
-        ? { ...resolvedConfig, targetLanguage: targetLanguageOverride }
-        : resolvedConfig;
-
     Logger.info(`Creating language client with command: ${serverCommand}`);
-    Logger.debug('Language configuration', languageConfig);
+    Logger.debug('Language configuration', languages);
 
     // Configure server executable
     const serverOptions: ServerOptions = {
@@ -111,7 +113,7 @@ export function createLanguageClient(
         initializationOptions: {
             // These options are sent to the server during initialization
             // Include language configuration for translation
-            ...languageConfig,
+            ...languages,
             trace: traceLevel,
         },
 
