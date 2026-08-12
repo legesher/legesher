@@ -13,12 +13,15 @@ import {
 } from './config';
 import { TranslationPanelManager } from './webview/panel';
 import { Logger } from './logger';
+import { LegesherTelemetry } from './telemetry';
 import {
-    LegesherTelemetry,
+    LanguageServerState,
     type LanguageTrigger,
     type ResolutionSource,
+    type StartResult,
     type TransitionOutcome,
-} from './telemetry';
+    type TransitionRecord,
+} from './serverState';
 import { initializeFeedback, getFeedbackInstance } from './feedback';
 import { initializeKeywords } from './keywords';
 import { loadEnvVariables } from './env';
@@ -32,26 +35,19 @@ let statusBarItem: vscode.StatusBarItem;
 let languageStatusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
 
-/** Language the running server was started with, so restarts stay idempotent. */
-let serverLanguage: string | undefined;
-
 /**
- * Whether anything is actually serving `serverLanguage`.
+ * Everything about which language the server is serving, and the only thing
+ * that changes it (CORE-1847).
  *
- * Tracked apart from the identity because the two answer different questions
- * and the identity alone cannot answer this one. A missing server binary still
- * records an identity — deliberately, so the availability check is not re-run
- * on every editor switch — which meant the next sync matched the cache, called
- * itself unchanged, and repainted the status bar as healthy, erasing the very
- * signal that said no server was running (CORE-1776).
- *
- * `none` means not yet determined, and paints as normal: activation paints
- * once optimistically before the server has been asked for anything.
+ * This replaces five module-level variables — the identity, the status, the
+ * serialisation chain, the last transition and the failure-announcement
+ * suppression — that between them described one situation and could disagree
+ * about it. Every defect fixed in CORE-1776 was two of them out of step. See
+ * `serverState.ts` for the invariants, which are unit-tested there rather than
+ * inferred from a running editor.
  */
-type ServerStatus = 'none' | 'running' | 'unavailable' | 'failed';
-let serverStatus: ServerStatus = 'none';
-/** Serialises language changes so overlapping triggers can't race (CORE-1728). */
-let languageSync: Promise<void> = Promise.resolve();
+const server = new LanguageServerState();
+
 /** Detection vocabularies, built once from the bundled packs. */
 let vocabularies: PackVocabulary[] | undefined;
 /** Detection results by (uri, document version), so editor switches are free. */
@@ -200,105 +196,43 @@ function ensureServerLanguage(
     // (CORE-1754).
     const identity = identityOf(languages);
 
-    const applied = languageSync
-        .then<TransitionOutcome>(async () => {
-            const from = serverLanguage ?? 'none';
-            if (serverLanguage === identity) {
-                report('unchanged');
-                return 'unchanged';
-            }
-
-            Logger.info(`Language changed: ${from} -> ${identity}; restarting server`);
-            const startedAt = Date.now();
-            try {
-                // Record the identity only once the restart has actually
-                // succeeded. Assigning first means a failed restart leaves the
-                // state claiming success, and every later attempt at the same
-                // language collapses into a no-op that never retries.
-                const result = await restartServer(context, languages, options.resource);
-                serverLanguage = identity;
-
-                // A change that worked clears the suppression, so the *next*
-                // failure is announced even if it repeats an earlier one.
-                lastAnnouncedFailure = undefined;
-
-                const outcome: TransitionOutcome =
-                    result === 'started' ? 'applied' : 'serverUnavailable';
-                report(outcome, Date.now() - startedAt);
-                return outcome;
-            } catch (error) {
-                serverStatus = 'failed';
-                // Reported here rather than swallowed into the log. This is the
-                // single place every failed language change passes through, so
-                // it is the one place that can tell the user their editor is not
-                // in the language it claims to be (CORE-1776).
-                Logger.error('Failed to apply language change', error);
-                report('failed', Date.now() - startedAt);
-                announceTransitionFailure(context, identity, error);
-                return 'failed';
-            }
-
-            function report(outcome: TransitionOutcome, durationMs?: number): void {
-                // Drop a no-op that merely restates the transition just
-                // recorded. Two things produce these, both by design and
-                // neither user-meaningful:
-                //
-                //   - a pick triggers its own sync *and* the configuration
-                //     listener, so one user action yields an `applied` followed
-                //     by an `unchanged` (CORE-1728). Keeping the second would
-                //     overwrite the real outcome with a phantom.
-                //   - every editor switch re-syncs, and almost all of them
-                //     resolve to the language already running.
-                //
-                // Anything that actually changed state is always recorded. The
-                // no-op worth seeing — asking for a language and not getting it
-                // — can no longer reach here as an `unchanged`, because a failed
-                // start now clears the identity rather than caching it.
-                if (outcome === 'unchanged' && lastTransition?.to === identity) {
-                    return;
-                }
-
-                lastTransition = {
-                    from,
-                    to: identity,
-                    trigger: options.trigger,
-                    source: options.source,
-                    outcome,
-                };
-                LegesherTelemetry.trackLanguageTransition({ ...lastTransition, durationMs });
-            }
-        });
-
-    // The chain must survive a failure, or one bad start wedges every later
-    // change behind a rejected promise. The outcome is returned to the caller
-    // separately so it can still be acted on.
-    languageSync = applied.then(() => undefined, () => undefined);
-    return applied;
+    // The bookkeeping this used to do inline — serialising, deciding what
+    // counts as a change, remembering what is running, suppressing duplicate
+    // announcements — belongs to the state machine now. What is left here is
+    // only the part that needs the editor: how to actually start a server, and
+    // how to tell the user when that failed (CORE-1847).
+    return server.transition(identity, options, {
+        start: () => {
+            Logger.info(`Applying language ${identity}; restarting server`);
+            return restartServer(context, languages, options.resource);
+        },
+        onRecord: (record, durationMs) => {
+            LegesherTelemetry.trackLanguageTransition({ ...record, durationMs });
+        },
+        onFailure: (failed, error) => {
+            Logger.error('Failed to apply language change', error);
+            announceTransitionFailure(context, failed, error);
+        },
+        now: () => Date.now(),
+    });
 }
 
 /**
- * Tell the user a language change did not take, once per distinct failure.
+ * Tell the user a language change did not take.
  *
  * Every failure mode in this subsystem used to be silent — the log recorded it
- * and every visible surface went on claiming success. Repeats are suppressed
- * because the configuration listener and the editor listener can both drive the
- * same doomed transition, and two identical modals for one problem trains
- * people to dismiss them.
+ * and every visible surface went on claiming success. Whether this should fire
+ * at all is the state machine's call; by the time it is reached the failure is
+ * already known to be one worth showing.
  */
-let lastAnnouncedFailure: string | undefined;
 function announceTransitionFailure(
     context: vscode.ExtensionContext,
     identity: string,
     error: unknown
 ): void {
     const message = error instanceof Error ? error.message : String(error);
-    const signature = `${identity}:${message}`;
-    if (lastAnnouncedFailure === signature) {
-        return;
-    }
-    lastAnnouncedFailure = signature;
 
-    // Deliberately not awaited: this runs inside the languageSync chain, and an
+    // Deliberately not awaited: this runs inside the transition queue, and an
     // unanswered notification would block every later language change.
     void vscode.window.showErrorMessage(
         `Legesher could not switch to ${identity.split('->')[1]}: ${message}. ` +
@@ -388,25 +322,22 @@ export interface LegesherApi {
     getLastTransition(): LanguageTransition | undefined;
 }
 
-/** A completed language change, whatever became of it. */
-export interface LanguageTransition {
-    from: string;
-    to: string;
-    trigger: LanguageTrigger;
-    source: ResolutionSource;
-    outcome: TransitionOutcome;
-}
-
-let lastTransition: LanguageTransition | undefined;
+/**
+ * A completed language change, whatever became of it.
+ *
+ * The state machine's own record type, re-exported so consumers of this API do
+ * not have to reach past it.
+ */
+export type LanguageTransition = TransitionRecord;
 
 const extensionApi: LegesherApi = {
-    // Gated on a live client, not on the recorded pair alone. `serverLanguage`
-    // is also recorded when the server binary is absent — startServer returns
-    // without starting anything, deliberately, so the check is not retried on
-    // every editor switch — and reporting that as a running server would make
-    // this answer untrue in exactly the case it exists to detect.
-    getServerLanguage: () => (client ? serverLanguage : undefined),
-    getLastTransition: () => lastTransition,
+    // Both answers come straight from the state machine, which is what makes
+    // them consistent with each other by construction. `activeIdentity` is
+    // undefined unless something is really serving that pair — the remembered
+    // request outlives a missing binary on purpose, and reporting *that* as a
+    // running server is precisely the confusion this API exists to detect.
+    getServerLanguage: () => server.activeIdentity,
+    getLastTransition: () => server.lastTransition,
 };
 
 /**
@@ -600,9 +531,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<Legesh
     return extensionApi;
 }
 
-/** Whether a start actually produced a running server. */
-type StartResult = 'started' | 'unavailable';
-
 /**
  * Start the language server and create LSP client
  *
@@ -638,7 +566,6 @@ async function startServer(
             statusBarItem.tooltip = "Legesher: Language server not installed (extension features limited)";
             Logger.warn(`Language server '${serverCommand}' not found. Extension will run with limited functionality.`);
             Logger.warn('This is expected during early development. The language server package is planned for future implementation.');
-            serverStatus = 'unavailable';
             return 'unavailable';
         }
 
@@ -666,11 +593,8 @@ async function startServer(
         statusBarItem.text = "$(check) Legesher";
         statusBarItem.tooltip = "Legesher: Connected";
         Logger.info('Legesher language server started and connected successfully');
-        serverStatus = 'running';
         return 'started';
     } catch (error) {
-        serverStatus = 'failed';
-
         // Drop the client that failed to start. It never reached Running, so
         // there is nothing to stop — and vscode-languageclient rejects stop()
         // outright in the startFailed state, which is what the *next* restart
@@ -701,19 +625,12 @@ async function startServer(
  * Queue a restart at the current resolved language, from outside the sync chain.
  */
 function ensureRestart(context: vscode.ExtensionContext): Promise<void> {
-    // Invalidate *inside* the chain, not before it. Clearing synchronously
-    // races an entry that is already running: that entry assigns the identity
-    // on success, after the clear, and the restart queued behind it then sees a
-    // match and collapses into the no-op the user explicitly asked not to have.
-    languageSync = languageSync.then(() => {
-        serverLanguage = undefined;
-    });
-
-    // An explicit retry always deserves an answer. Without this the suppression
-    // that stops two listeners double-reporting one failure also swallows the
-    // response to "Retry" and to `legesher.restartServer`, so a user asking
-    // again about a problem they already saw gets silence (CORE-1776).
-    lastAnnouncedFailure = undefined;
+    // Forget what is running so the next transition restarts even at the same
+    // language, and let the next failure be announced even if it repeats one
+    // already shown — an explicit retry always deserves an answer. Both are
+    // queued rather than applied now, so a transition already in flight cannot
+    // assign its identity afterwards and swallow this (CORE-1776).
+    server.invalidate();
 
     return syncActiveLanguage(context, { requirePythonEditor: false, trigger: 'restart' });
 }
@@ -738,14 +655,9 @@ async function restartServer(
         }
     }
 
-    // The old server is gone, so the identity it was running under stops being
-    // true here — before the new one is asked to start, which is the step that
-    // can fail. Leaving the old pair in place through a failed start meant
-    // switching back to it matched the cache and collapsed into a no-op that
-    // never retried: no server running, status bar claiming one was, and no way
-    // out short of `legesher.restartServer` (CORE-1776).
-    serverLanguage = undefined;
-
+    // Nothing to invalidate here: this runs inside a transition, which already
+    // cleared the remembered request before calling us — precisely because this
+    // next step is the one that can fail (CORE-1776).
     return startServer(context, languages, resource);
 }
 
@@ -771,8 +683,8 @@ function updateLanguageStatusBar(resolved: ResolvedLanguage): void {
     // Read from the persistent server status rather than a single transition's
     // outcome: the transition that failed is followed by no-ops that know
     // nothing about it, and painting from those puts the healthy badge back.
-    if (serverStatus === 'failed' || serverStatus === 'unavailable') {
-        const reason = serverStatus === 'failed'
+    if (server.status === 'failed' || server.status === 'unavailable') {
+        const reason = server.status === 'failed'
             ? 'the language server failed to start'
             : 'the language server is not installed';
         languageStatusBarItem.text = `$(error) ${langCode} (inactive)`;
@@ -782,18 +694,25 @@ function updateLanguageStatusBar(resolved: ResolvedLanguage): void {
         return;
     }
 
+    // Folder and workspace are shown identically, on purpose. Every `legesher.*`
+    // setting is declared `window`-scoped, for which VS Code never applies a
+    // per-folder value — and in a single-root workspace, which is the shape we
+    // actually target, `.vscode/settings.json` *is* the workspace file and
+    // inspect() reports it at both scopes. Advertising a distinct "folder
+    // setting" therefore names something that cannot differ from the workspace
+    // one, which is a claim the editor does not support (CORE-1847).
     const icons: Record<LanguageSource, string> = {
-        folder: '$(folder)',
+        folder: '$(root-folder)',
         workspace: '$(root-folder)',
         detected: '$(search)',
         user: '$(globe)',
         default: '$(globe)',
     };
     const origins: Record<LanguageSource, string> = {
-        folder: 'folder setting',
-        workspace: 'workspace setting',
+        folder: 'project setting',
+        workspace: 'project setting',
         detected: 'detected from file contents',
-        user: 'user setting',
+        user: 'your setting',
         default: 'default',
     };
 
@@ -1188,7 +1107,7 @@ export async function deactivate(): Promise<void> {
     }
 
     // No server runs after this, so nothing may still claim one does.
-    serverLanguage = undefined;
+    server.markStopped();
     detectionCache.clear();
 
     if (statusBarItem) {

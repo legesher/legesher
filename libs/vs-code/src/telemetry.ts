@@ -3,6 +3,11 @@ import { TelemetryReporter } from '@vscode/extension-telemetry';
 import { isPythonKeyword, getEnglishKeyword } from './keywords';
 import { Logger } from './logger';
 import type { SettingScope } from './settingsScope';
+import type {
+    LanguageTrigger,
+    ResolutionSource,
+    TransitionOutcome,
+} from './serverState';
 
 /**
  * Telemetry module for Legesher VS Code extension
@@ -30,27 +35,16 @@ type TrackedCommand = 'restartServer' | 'selectLanguage' | 'showTranslationPanel
 type TrackedErrorType = 'serverError' | 'serverConnectionClosed' | 'serverNotInstalled' | 'serverStartFailed' | 'translationFailed'
     | 'languageWriteFailed' | 'languageWriteShadowed';
 
-/** What asked for a language change, so intent can be told from side effects. */
-export type LanguageTrigger = 'activation' | 'picker' | 'settings' | 'editor' | 'restart';
-
 /**
- * How a requested language change actually ended.
+ * The transition vocabulary is owned by the state machine, not by the analytics
+ * layer, and re-exported here only for convenience at existing call sites.
  *
- * `unchanged` is the one that matters most: it is the shape every silent
- * failure in this subsystem took — a change was requested, nothing happened,
- * and every surface reported success (CORE-1776).
+ * The dependency runs this way deliberately: telemetry describes what the system
+ * did, so the system defines the words. Two hand-maintained copies of the same
+ * enumeration is the shape of the bug class this instrumentation exists to catch
+ * (CORE-1776, CORE-1847).
  */
-export type TransitionOutcome = 'applied' | 'unchanged' | 'failed' | 'serverUnavailable';
-
-/**
- * Where the resolved language came from.
- *
- * Derived from `SettingScope` rather than restated, so the analytics vocabulary
- * cannot drift from the resolver's. Two hand-maintained copies of the same
- * enumeration is the shape of the bug class this instrumentation exists to
- * catch (CORE-1776).
- */
-export type ResolutionSource = SettingScope | 'detected';
+export type { LanguageTrigger, TransitionOutcome, ResolutionSource };
 
 /** Whether a settings write landed where it would actually take effect. */
 export type WriteOutcome = 'applied' | 'shadowed' | 'failed';
@@ -202,7 +196,10 @@ export class LegesherTelemetry {
      */
     static trackLanguageSettingWrite(
         setting: 'targetLanguage' | 'languageDetection',
-        scope: ResolutionSource,
+        // A configuration scope, not a resolution source: a *write* can land in
+        // folder/workspace/user settings, but never in 'detected', which is not
+        // somewhere anything can be written.
+        scope: SettingScope,
         outcome: WriteOutcome
     ): void {
         if (!reporter) return;

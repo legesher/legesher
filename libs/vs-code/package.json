@@ -185,13 +185,14 @@
             "Vietnamese (Tiếng Việt)",
             "Chinese (中文)"
           ],
-          "description": "Target language for code translation"
+          "description": "The language you read and write code in",
+          "markdownDescription": "The language **you** read and write code in.\n\nThis is your own preference — it changes what you see, not what the repository stores, so people on the same project can each work in their own language.\n\nThe language the project's code is stored in is `#legesher.sourceLanguage#`."
         },
         "legesher.sourceLanguage": {
           "type": "string",
           "default": "en",
-          "description": "Source language (Python keywords)",
-          "markdownDescription": "Source language for Python keywords. **Note:** Only English (en) is currently supported."
+          "description": "The language this project's code is stored in",
+          "markdownDescription": "The language this project's code is **stored** in — a property of the repository, not of you. Change it only if the files on disk are genuinely written in something else.\n\nTo change the language *you* read code in, use `#legesher.targetLanguage#`.\n\n**Note:** Only English (`en`) is currently supported."
         },
         "legesher.languageDetection": {
           "type": "string",

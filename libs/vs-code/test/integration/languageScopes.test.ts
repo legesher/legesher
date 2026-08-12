@@ -100,6 +100,30 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 /** Long enough for a server process to stop, respawn and complete a handshake. */
 const settle = () => sleep(6_000);
 
+/**
+ * Wait until `condition` holds, or fail saying what was still true instead.
+ *
+ * Preferred over a fixed `settle()` wherever the thing being waited for is
+ * observable. A fixed sleep is a bet that the machine is not busy: too short and
+ * it flakes, too long and every test pays for the worst case. Polling an actual
+ * condition removes both, and a timeout here reports the state it gave up on
+ * rather than failing later on an assertion that looks unrelated.
+ */
+async function waitUntil(
+    describe: string,
+    condition: () => boolean,
+    timeoutMs = 15_000
+): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        if (condition()) {
+            return;
+        }
+        await sleep(250);
+    }
+    assert.fail(`timed out after ${timeoutMs}ms waiting for ${describe}`);
+}
+
 function api(): LegesherApi {
     const extension = vscode.extensions.getExtension<LegesherApi>(EXTENSION_ID);
     assert.ok(extension?.exports, `${EXTENSION_ID} should export its diagnostic API`);
@@ -124,6 +148,7 @@ function api(): LegesherApi {
 async function pickLanguageAt(offset: number): Promise<string> {
     const languages = getActiveLanguages();
     assert.ok(offset < languages.length, `offset ${offset} should exist in the language list`);
+    const expected = languages[offset].code;
 
     const picked = vscode.commands.executeCommand('legesher.selectLanguage');
     await sleep(3_000); // let the widget render before sending keys
@@ -134,7 +159,18 @@ async function pickLanguageAt(offset: number): Promise<string> {
     await vscode.commands.executeCommand('workbench.action.acceptSelectedQuickOpenItem');
     await picked;
 
-    return languages[offset].code;
+    // Fail here, on the pick, rather than three assertions later on a language
+    // that never changed. Driving a widget with blind keystrokes can miss — the
+    // keys land before it renders and the pick is silently cancelled — and that
+    // failure used to surface as a confusing mismatch in whatever the test was
+    // really about (CORE-1847).
+    await waitUntil(
+        `the picker to select ${expected}`,
+        () => legesherConfig().get<string>('targetLanguage') === expected,
+        20_000
+    );
+
+    return expected;
 }
 
 /** A language near the top of the picker that is not `avoid`. */

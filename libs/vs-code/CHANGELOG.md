@@ -50,6 +50,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Language packs**: pack files are now validated at load — a 1 MiB size cap and a runtime shape check on
   keywords/builtins/exceptions; malformed or oversized packs are skipped with a warning instead of being trusted (CORE-1453)
 - **Telemetry**: defaults to OFF — opt in via `legesher.telemetry.enabled` (CORE-1586)
+- **Settings**: `legesher.targetLanguage` and `legesher.sourceLanguage` now say which is which —
+  the target language is your own preference and changes only what you see; the source language is a
+  property of the repository, describing what its files are actually stored in (CORE-1847)
+- **Status bar**: a project-level language is described as a "project setting" rather than
+  distinguishing folder from workspace. Legesher's settings are window-scoped, for which VS Code
+  never applies a per-folder value, so the distinction named something that cannot differ (CORE-1847)
 - **Performance**: content-based language detection is memoized per document and version, instead of
   re-tokenizing the whole file on every editor switch (CORE-1776)
 
