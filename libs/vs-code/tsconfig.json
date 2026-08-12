@@ -1,17 +1,35 @@
 {
+  // Type checking only. esbuild produces the shipped bundle (out/extension.js)
+  // and strips types without checking them, so this config's whole job is to be
+  // the thing that does check them.
+  //
+  // It deliberately does not emit. It used to, to `out/` — the same directory
+  // and the same filename esbuild writes its bundle to — so running it would
+  // have replaced the bundle with unbundled output. Nothing ran it, which is
+  // how `src/` went untypechecked long enough for a hard TS2440 to pass a full
+  // test suite (CORE-1854).
   "compilerOptions": {
-    "module": "commonjs",
+    // Matches how the code is actually consumed: esbuild resolves like a
+    // bundler, so type resolution should too. Under the previous `node`
+    // (node10) setting, packages that describe themselves with an `exports` map
+    // — vscode-languageclient among them — were simply unresolvable, and every
+    // symbol from them degraded to `any`.
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+
     "target": "ES2020",
-    "outDir": "out",
     "lib": ["ES2020"],
-    "sourceMap": true,
-    "rootDir": "src",
+    // Explicit rather than "whatever is installed": src/ uses node globals
+    // (process, setTimeout) and the VS Code API, and should not see the test
+    // runner's globals just because mocha is a devDependency.
+    "types": ["node", "vscode"],
+
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node"
+    "resolveJsonModule": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "out", "**/*.test.ts"]

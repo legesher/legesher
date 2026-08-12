@@ -2,19 +2,29 @@
   // Integration tests run inside a real VS Code instance, so they compile to
   // plain JS under out/test/ where .vscode-test.mjs looks for them.
   //
-  // A separate config is needed because the root tsconfig sets rootDir to src
-  // and includes only src/**/*, so test sources were never emitted at all —
-  // the vscode-test glob matched nothing and `npm test` passed vacuously.
+  // A separate config is needed because the root tsconfig includes only
+  // src/**/* — so test sources were never emitted at all, the vscode-test glob
+  // matched nothing, and `npm test` passed vacuously.
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "rootDir": "..",
     "outDir": "../out",
     "types": ["mocha", "node", "vscode"],
-    // The root config's moduleResolution=node10 is deprecated under TypeScript
-    // 6 and errors out, which would fail this build. Acknowledged here so the
-    // test compile passes; the migration itself is tracked separately and is
-    // not something these tests should carry.
-    "ignoreDeprecations": "6.0"
+
+    // The root config type-checks and does not emit; this one exists to emit.
+    "noEmit": false,
+    "sourceMap": true,
+
+    // node16 rather than the root's bundler resolution, because this output is
+    // loaded by Node in the extension host rather than fed to esbuild. With no
+    // "type": "module" in package.json, node16 emits CommonJS, which is what
+    // the host requires.
+    //
+    // This also replaces an `ignoreDeprecations: "6.0"` escape hatch that was
+    // here only to tolerate the root config's deprecated node10 resolution —
+    // the thing CORE-1854 removed.
+    "module": "node16",
+    "moduleResolution": "node16"
   },
   "include": ["integration/**/*.ts"],
   "exclude": []

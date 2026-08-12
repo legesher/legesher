@@ -1,8 +1,18 @@
 {
+  // Unit tests are executed by ts-node under mocha, in CommonJS.
+  //
+  // The module settings are overridden rather than inherited: the root config
+  // type-checks code that esbuild bundles, so it uses bundler resolution and
+  // does not emit. Inheriting that here makes ts-node emit ESM, and Node's ESM
+  // loader demands file extensions on relative imports — every
+  // `from '../fixtures/language-source'` becomes ERR_MODULE_NOT_FOUND.
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "rootDir": "..",
-    "types": ["mocha", "node", "sinon"]
+    "types": ["mocha", "node", "sinon"],
+    "noEmit": false,
+    "module": "node16",
+    "moduleResolution": "node16"
   },
   "include": ["**/*.test.ts"],
   "exclude": []

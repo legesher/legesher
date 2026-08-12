@@ -15,6 +15,12 @@ repos:
     exclude: ^libs/language-server/tests/fixtures/language_packs/invalid/.*\.yml$  # Exclude intentionally invalid test fixtures
   - id: check-toml
   - id: check-json
+    # tsconfig/jsconfig files are JSONC — TypeScript documents comment support
+    # and every editor honours it — while this hook parses strict JSON. Without
+    # the exclusion the only way to land one is `--no-verify`, which is how the
+    # commented tsconfig already in the tree got there, and which skips every
+    # other hook on the way past.
+    exclude: '(^|/)(ts|js)config[^/]*\.json$'
   - id: check-added-large-files
     args: [--maxkb=1000]
   - id: check-merge-conflict

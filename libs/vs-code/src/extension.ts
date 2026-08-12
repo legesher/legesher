@@ -33,7 +33,18 @@ import { DetectionCache } from './detectionCache';
 let client: LanguageClient | undefined;
 let statusBarItem: vscode.StatusBarItem;
 let languageStatusBarItem: vscode.StatusBarItem;
-let outputChannel: vscode.OutputChannel;
+/**
+ * The extension's log channel.
+ *
+ * Typed as `LogOutputChannel`, not `OutputChannel`, and that is load-bearing:
+ * vscode-languageclient 10 logs through `.error`/`.warn`/`.info`, which only
+ * exist on the log variant, so a plain channel makes `client.start()` throw
+ * while logging and takes down every LSP feature (CORE-1733). Widening the type
+ * here is what let that be a runtime explosion rather than a compile error —
+ * once `src/` was actually typechecked, this was the one real mistake in the
+ * package (CORE-1854).
+ */
+let outputChannel: vscode.LogOutputChannel;
 
 /**
  * Everything about which language the server is serving, and the only thing

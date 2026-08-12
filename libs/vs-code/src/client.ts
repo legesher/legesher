@@ -24,7 +24,12 @@ import { LegesherTelemetry } from './telemetry';
  */
 export function createLanguageClient(
     context: vscode.ExtensionContext,
-    outputChannel: vscode.OutputChannel,
+    // A LogOutputChannel specifically. vscode-languageclient logs through
+    // .error/.warn/.info, which a plain OutputChannel does not have, so passing
+    // one makes start() throw while logging and every LSP feature dies
+    // (CORE-1733). Stating the requirement in the signature is what makes that
+    // a compile error rather than a startup failure.
+    outputChannel: vscode.LogOutputChannel,
     languages: ResolvedLanguages,
     resource?: vscode.Uri
 ): LanguageClient {
