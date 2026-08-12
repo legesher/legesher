@@ -1538,6 +1538,20 @@ def registry_validate(lang: str, target: str, version: str, strict: bool, quiet:
 # Add registry group to main CLI
 cli.add_command(registry)
 
+# Intake write path (CORE-1688 + CORE-1828). Imported here, at registration
+# time, so `legesher-i18n --help` stays fast if the intake deps ever grow.
+from legesher_i18n.intake.commands import (  # noqa: E402
+    clear_option,
+    import_issue,
+    import_review_bundle,
+    quarantine_queue,
+)
+
+cli.add_command(import_review_bundle)
+cli.add_command(import_issue)
+cli.add_command(quarantine_queue)
+cli.add_command(clear_option)
+
 
 if __name__ == "__main__":
     cli()

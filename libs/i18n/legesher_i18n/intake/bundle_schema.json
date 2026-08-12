@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://legesher.io/schemas/review-bundle-1.0.json",
+  "title": "Legesher review bundle",
+  "description": "One completed review sitting, in the canonical wire shape every intake lane shares (CORE-1688; contract from the CORE-1538 intake architecture, section 4). The canonical-JSON bytes of this document mint the session uid, so the shape is append-only: fields may be ADDED in a later bundle_version, never changed or removed within one. The bundle is a PUBLIC artifact: no email address, no private contact detail, ever — contact rides the private channel (CORE-1568) and only contact_captured (a boolean) is asserted here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bundle_version", "kit_version", "locale", "track", "contributor", "attestations", "responses"],
+  "properties": {
+    "bundle_version": { "const": "1.0" },
+    "kit_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The review-kit build the reviewer saw, or the issue-form format tag for Stage-0 imports (e.g. 'issue-form/language_pack_review@v1')."
+    },
+    "locale": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2})?$",
+      "description": "BCP 47 tag in canonical case (ar, zh-Hans, ar-EG). The database CHECK on locales.tag is the authority; this pattern is the wire-level floor."
+    },
+    "track": { "enum": ["reserved_words", "messages", "style_profile"] },
+    "programming_language": {
+      "type": ["string", "null"],
+      "description": "PL scope of the sitting, or null for locale-wide (required null for style_profile — enforced by the importer and the DB CHECK)."
+    },
+    "contributor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_key"],
+      "properties": {
+        "source_key": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S+$",
+          "description": "The private natural key (GitHub username / portal account id). Feeds the salted contributor_id mint (CORE-1502); never published."
+        },
+        "claimed_rung": {
+          "enum": ["contributor", "native_claimed"],
+          "default": "contributor",
+          "description": "Self-declared. Recorded, not verified — verification moves rungs, not sessions."
+        },
+        "consent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["consent_version", "credit_preference"],
+          "description": "Consent rides every submission (decision 2026-08-11). OPTIONAL at the wire level only because the Stage-0 issue form predates the notice: a submission without it still ingests as evidence but mints NO identity row.",
+          "properties": {
+            "consent_version": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The CONTRIBUTOR_PRIVACY.md version the contributor agreed to (e.g. '1.0'). Recorded on contributor_identities at identity minting."
+            },
+            "credit_preference": { "enum": ["anonymous", "handle", "name"] },
+            "credit_text": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Display name; required by the importer when credit_preference is 'name', ignored otherwise."
+            }
+          }
+        },
+        "contact_captured": {
+          "type": "boolean",
+          "default": false,
+          "description": "The contributor asserts their contact email reached the PRIVATE channel (CORE-1568). The address itself is NEVER in this file."
+        }
+      }
+    },
+    "attestations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["original_work", "license_grant", "coc_agreed", "dco"],
+      "properties": {
+        "native_or_fluent": { "type": "boolean" },
+        "original_work": { "type": "boolean" },
+        "license_grant": { "const": "Apache-2.0" },
+        "coc_agreed": { "type": "boolean" },
+        "dco": { "type": "boolean" },
+        "research_use": {
+          "type": "boolean",
+          "description": "Contribution DATA (terms, endorsements, tags, expansions, published commentary — never identity or private durations) may appear in research datasets and publications."
+        }
+      }
+    },
+    "responses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["concept"],
+        "properties": {
+          "concept": { "type": "string", "minLength": 1, "description": "concepts.slug" },
+          "blind": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["surface_form"],
+            "description": "The reviewer's own suggestion, offered BEFORE candidates were shown. Becomes an option (if new) plus an endorsement, elicited='blind'.",
+            "properties": {
+              "surface_form": { "type": "string", "minLength": 1 },
+              "word_form": { "type": ["string", "null"] },
+              "established_term": { "enum": ["established", "coined", "loanword", null] },
+              "rationale": { "type": ["string", "null"] },
+              "self_annotations": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/annotation_kind" }
+              }
+            }
+          },
+          "endorsements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["surface_form"],
+              "properties": {
+                "surface_form": { "type": "string", "minLength": 1 },
+                "annotations": {
+                  "type": "array",
+                  "items": { "$ref": "#/$defs/annotation_kind" }
+                },
+                "comment": { "type": ["string", "null"] }
+              }
+            }
+          },
+          "ranking": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "description": "Preference order over ENDORSED surface forms only (ranking ⊆ endorsements — bundle-level validation error otherwise; the DB trigger is the floor)."
+          },
+          "flags": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["surface_form", "reason"],
+              "properties": {
+                "surface_form": { "type": "string", "minLength": 1 },
+                "reason": {
+                  "enum": ["offensive", "wrong_meaning", "register_mismatch", "invalid_identifier", "transliteration", "spam"]
+                },
+                "comment": { "type": ["string", "null"] }
+              }
+            }
+          },
+          "expansion": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["for", "text"],
+            "description": "The phrase layer (elif-class concepts): the expanded phrase behind the contracted identifier the option carries.",
+            "properties": {
+              "for": { "type": "string", "minLength": 1, "description": "The endorsed surface form the expansion attaches to." },
+              "text": { "type": "string", "minLength": 1 },
+              "formation_note": { "type": ["string", "null"] }
+            }
+          },
+          "commentary": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["topic", "body"],
+              "properties": {
+                "topic": { "enum": ["word_formation", "expansion", "register", "pedagogy", "style", "general"] },
+                "body": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "style_answers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "value"],
+        "properties": {
+          "field": {
+            "enum": ["word_boundaries", "constants_strategy", "class_marker", "modifier_order", "abbreviation_granularity", "identifier_length_max", "numerals_policy", "docstring_mood", "terminology_policy", "zen_preamble"]
+          },
+          "value": { "type": "string", "minLength": 1 },
+          "rationale": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "started_at": {
+          "type": ["string", "null"],
+          "description": "Client-reported ISO-8601; advisory evidence. Also the timestamp the withdrawal-tombstone importer rule compares (a missing value is treated as POSTDATING any withdrawal — conservative by design)."
+        },
+        "app_version": { "type": ["string", "null"] },
+        "durations_ms": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 },
+          "description": "Per-concept durations. Brigading forensics only; never exported."
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "description": "Where a maintainer-imported bundle came from, when it was not submitted as a bundle file directly (the Stage-0 issue lane). Part of the canonical bytes, so the same issue always re-mints the same session uid.",
+      "properties": {
+        "kind": { "enum": ["github_issue"] },
+        "url": { "type": "string" },
+        "id": { "type": "integer" },
+        "created_at": { "type": ["string", "null"], "description": "GitHub-attested creation time; used as started_at for the withdrawal rule." }
+      }
+    }
+  },
+  "$defs": {
+    "annotation_kind": {
+      "enum": ["transliteration", "cognate_loanword", "established_term", "coined_neologism", "register_formal", "register_informal", "regional"]
+    }
+  }
+}

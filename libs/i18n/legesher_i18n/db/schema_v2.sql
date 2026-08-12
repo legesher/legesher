@@ -625,6 +625,48 @@ CREATE TABLE option_validations (
     CHECK (validator_version <> '' AND validator_version = TRIM(validator_version))
 );
 
+-- Moderation screening verdicts, one row per screening EVENT (CORE-1828;
+-- the verdict shape CORE-1797's automated gate will later write). Sibling to
+-- option_validations by design: validations cache what a machine measured,
+-- screenings record what a screen DECIDED — and the interim screen is a
+-- human (quarantine-by-default, decision 2026-08-11).
+--
+-- Semantics: the LATEST row per option wins (option_screening_status).
+-- 'quarantined' is written by the importer for every community-sourced option
+-- it CREATES; 'cleared' / 'held' are maintainer verdicts from the import
+-- ritual. ABSENCE of any row means "predates the intake path" and changes
+-- nothing — the published corpus and every migrated row are unaffected.
+--
+-- Append-only: clearing a cleared row, or re-quarantining after a report,
+-- is a NEW event — the audit trail is the point. screened_by is required
+-- because an anonymous moderation decision is unauditable.
+CREATE TABLE option_screenings (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    option_uid     TEXT NOT NULL REFERENCES options(uid) ON DELETE RESTRICT,
+    verdict        TEXT NOT NULL CHECK (verdict IN ('quarantined', 'cleared', 'held')),
+    screened_by    TEXT NOT NULL,          -- maintainer handle, or 'importer' for the default
+    screen_version TEXT NOT NULL,          -- 'manual-interim-v1' now; CORE-1797 versions later
+    note           TEXT,
+    screened_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    CHECK (screened_by <> '' AND screen_version <> '')
+);
+
+CREATE INDEX idx_screenings_option ON option_screenings(option_uid, id);
+
+CREATE TRIGGER trg_screenings_append_only
+BEFORE UPDATE ON option_screenings
+BEGIN SELECT RAISE(ABORT, 'option_screenings are append-only: write a new verdict'); END;
+CREATE TRIGGER trg_screenings_no_delete
+BEFORE DELETE ON option_screenings
+BEGIN SELECT RAISE(ABORT, 'option_screenings are append-only: the audit trail stays'); END;
+
+-- The current verdict per option: the latest event wins.
+CREATE VIEW option_screening_status AS
+SELECT s.option_uid, s.verdict, s.screened_by, s.screen_version, s.note, s.screened_at
+FROM option_screenings s
+WHERE s.id = (SELECT MAX(s2.id) FROM option_screenings s2
+               WHERE s2.option_uid = s.option_uid);
+
 -- ===========================================================================
 -- CANON — the maintainer decision. Source of truth is TEXT IN THE MONOREPO.
 -- ===========================================================================
@@ -865,6 +907,32 @@ BEGIN
     SELECT RAISE(ABORT, 'canon: option has been withdrawn');
 END;
 
+-- A quarantined option may not be shipped (CORE-1828): community submissions
+-- are canon-INELIGIBLE until a maintainer clears them. Clearing is the
+-- distinct, audited act recorded in option_screenings.
+CREATE TRIGGER trg_canon_no_quarantined_option
+BEFORE INSERT ON canon_selections
+WHEN EXISTS (
+    SELECT 1 FROM option_screening_status q
+    WHERE q.option_uid = NEW.option_uid AND q.verdict IN ('quarantined', 'held')
+)
+BEGIN
+    SELECT RAISE(ABORT,
+        'canon: option is quarantined pending moderation (CORE-1828); clear it first');
+END;
+
+-- The inverse hazard, mirroring trg_options_no_withdraw_while_canon: a shipped
+-- word may not be quarantined in place — pull it from the canon file first, so
+-- the demotion is a reviewed text change, not a database side effect.
+CREATE TRIGGER trg_screenings_no_quarantine_while_canon
+BEFORE INSERT ON option_screenings
+WHEN NEW.verdict IN ('quarantined', 'held')
+ AND EXISTS (SELECT 1 FROM canon_selections cs WHERE cs.option_uid = NEW.option_uid)
+BEGIN
+    SELECT RAISE(ABORT,
+        'option_screenings: option is canon-selected; remove it from the canon file first');
+END;
+
 -- No UPDATE, ever. The canon is a LOADED PROJECTION of
 -- libs/i18n/canon/<locale>.toml, replaced wholesale on each load — so there is
 -- no legitimate in-place edit, and mirroring each INSERT trigger with a weaker
@@ -962,7 +1030,14 @@ SELECT
 FROM options o
 JOIN concepts c            ON c.id = o.concept_id
 JOIN endorsement_counts ec ON ec.option_uid = o.uid
-LEFT JOIN option_validations v ON v.option_uid = o.uid;
+LEFT JOIN option_validations v ON v.option_uid = o.uid
+-- Quarantined community submissions do not COMPETE (CORE-1828): they are
+-- invisible to standings — and to everything built on standings — until a
+-- maintainer clears them. The quarantine_queue view is the maintainer lens.
+WHERE NOT EXISTS (
+    SELECT 1 FROM option_screening_status q
+    WHERE q.option_uid = o.uid AND q.verdict IN ('quarantined', 'held')
+);
 
 -- Canon resolved through the locale fallback chain.
 CREATE VIEW canon_resolution AS
@@ -1772,6 +1847,25 @@ WHERE reviewed_eligible = 0
   AND open_flags = 0
   AND native_verified_or_above = 1;
 
+-- The maintainer lens on quarantine (CORE-1828): what the import ritual walks.
+-- Standings deliberately cannot see these rows; this view is where they wait.
+CREATE VIEW quarantine_queue AS
+SELECT
+    q.option_uid,
+    c.slug          AS concept_slug,
+    o.locale,
+    o.pl_scope,
+    o.surface_form,
+    q.verdict,
+    q.screened_by,
+    q.screen_version,
+    q.note,
+    q.screened_at
+FROM option_screening_status q
+JOIN options o  ON o.uid = q.option_uid
+JOIN concepts c ON c.id = o.concept_id
+WHERE q.verdict IN ('quarantined', 'held');
+
 -- The experimental -> official gate per (PL x locale) as a query. Threshold
 -- numbers pending ratification; the gate reads THIS view so re-cutting is
 -- one place.
@@ -1835,7 +1929,13 @@ LEFT JOIN canon_selections cs
        ON cs.concept_id = o.concept_id
       AND cs.locale = o.locale
       AND cs.pl_scope = o.pl_scope
-WHERE o.withdrawn_at IS NULL;
+WHERE o.withdrawn_at IS NULL
+  -- Quarantined submissions must not surface as terminology alternates either
+  -- (CORE-1828): this view feeds `legesher translate` prompt assembly.
+  AND NOT EXISTS (
+      SELECT 1 FROM option_screening_status q
+      WHERE q.option_uid = o.uid AND q.verdict IN ('quarantined', 'held')
+  );
 
 -- Transliteration revealed-preference per locale — the aggregate the
 -- annotation exists to measure, and the input to a terminology_policy

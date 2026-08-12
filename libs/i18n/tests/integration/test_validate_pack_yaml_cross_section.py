@@ -20,9 +20,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[4]
 _VALIDATOR = _REPO_ROOT / "libs" / "i18n" / "scripts" / "validate_language_pack_yaml.py"
 
 
-def _make_pack_dir(
-    tmp_path: Path, target: str = "python", lang: str = "ur"
-) -> Path:
+def _make_pack_dir(tmp_path: Path, target: str = "python", lang: str = "ur") -> Path:
     """Build a layout the validator recognises (must contain
     ``language-packs`` and ``packs`` in the path).
     """
@@ -143,9 +141,7 @@ class TestCrossSectionCollisionGate:
         combined = (result.stdout + result.stderr).lower()
         assert "cross" in combined or "collision" in combined
 
-    def test_javascript_pack_allows_cross_section_homonym(
-        self, tmp_path: Path
-    ) -> None:
+    def test_javascript_pack_allows_cross_section_homonym(self, tmp_path: Path) -> None:
         """A JavaScript pack may reuse one value across partitions — acorn's
         AST is category-aware, so cross-partition homonyms are legal (CORE-1372).
         The same shape that fails for a Python pack must pass here.
@@ -154,9 +150,7 @@ class TestCrossSectionCollisionGate:
         version regex; generalizing that grammar is CORE-1503. This isolates the
         cross-section gate.)
         """
-        pack_yml = (
-            _make_pack_dir(tmp_path, target="javascript", lang="ur") / "3.10.yml"
-        )
+        pack_yml = _make_pack_dir(tmp_path, target="javascript", lang="ur") / "3.10.yml"
         pack_yml.write_text(
             textwrap.dedent("""
                 language: ur

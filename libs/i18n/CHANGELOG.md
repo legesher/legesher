@@ -11,6 +11,48 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **The intake write path: reviewer submissions become corpus rows
+  (CORE-1688).** Two new commands feed one six-stage verification pipeline —
+  `legesher-i18n import-review-bundle <file>` for canonical review-bundle
+  files, and `legesher-i18n import-issue <url>` for the existing
+  `language_pack_review` issue form's ✅/❓/🤔 notation. Schema and semantic
+  failures return the bundle with an actionable report; mechanical validator
+  failures ingest as canon-ineligible evidence without dropping the session;
+  quality signals only ever warn — no stage compares a human submission
+  against model output. Re-importing the same submission is a no-op
+  (content-addressed session uids). The bundle wire contract ships as a repo
+  artifact (`legesher_i18n/intake/bundle_schema.json`). Consent is recorded
+  at identity minting (notice version + date); a submission without consent
+  asserted ingests as evidence but mints no identity. The withdrawal
+  tombstone rule from the contributor-withdrawal runbook is enforced from the
+  first import: a bundle predating a withdrawal writes evidence with no
+  identity column, one postdating it halts for a human — and a halted import
+  posts no reply at all, because every sentence available to say there would
+  disclose the withdrawal on the contributor's own public issue.
+
+  A submission is treated as untrusted throughout. The GitHub issue the reply
+  is posted to is named by the maintainer (`--reply-to`, or the URL given to
+  `import-issue`) and validated, never read from submission content. A
+  bundle's `claimed_rung` sets a contributor's rung only when that contributor
+  first appears, so a submission cannot promote someone else and double the
+  weight of their endorsements. Recorded consent is written forward only: a
+  stored credit preference — `oss-pre-notice` included — is never rewritten by
+  an import, because changing it is a maintainer action. A structurally
+  invalid bundle writes nothing, not even a `contributors` row. Imports refuse
+  the public development salt, and refuse a salt whose fingerprint disagrees
+  with the target database's `build_meta`.
+- **Quarantine-by-default for community submissions (CORE-1828).** Every
+  option a community submission creates lands with an auditable `quarantined`
+  screening verdict: invisible to standings, rankings, the second-endorsement
+  queue and terminology export, refused by the canon gate, and held out of
+  the corpus export (counted in the export reconciliation ledger). Clearing
+  is a distinct, attributed maintainer act — `legesher-i18n clear-option
+  <uid> --verdict cleared --by <you>` — and `legesher-i18n quarantine-queue`
+  is the triage lens. The interim ritual (the maintainer is the screen until
+  CORE-1797's automated gate ships) is documented in
+  `docs/intake-import-runbook.md`, and every import run ends with a push to
+  the durable data home.
+
 - **Pre-notice consent is recorded rather than left blank (CORE-1780).**
   Everyone in the v1 data contributed before `CONTRIBUTOR_PRIVACY.md` existed,
   so `consent_version` now reads `oss-pre-notice` for them, dated to their

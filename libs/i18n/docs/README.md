@@ -36,6 +36,15 @@ so a rebuild cannot undo the erasure. No published dataset changes.
 
 **Use this for:** Responding to a privacy or withdrawal request (CORE-1780)
 
+### [intake-import-runbook.md](./intake-import-runbook.md)
+
+The interim moderation ritual: how community submissions become corpus rows
+while the automated screening gate does not yet exist. Quarantine-by-default,
+the per-submission import, the human screen, clearing as an attributed act,
+the contributor reply, and the push to the durable data home.
+
+**Use this for:** Walking the intake queue (CORE-1688 / CORE-1828)
+
 ### [database-schema.md](./database-schema.md)
 
 Reference for the translations database schema (v1 operational layout).

@@ -242,7 +242,11 @@ def test_export_emits_the_five_corpus_configs(exported: Path) -> None:
         parquet_path = exported / "data" / f"{config}.parquet"
         assert parquet_path.exists()
         assert pq.read_table(parquet_path).num_rows == rows
-        assert ledger["configs"][config] == {"db_rows": rows, "parquet_rows": rows}
+        assert ledger["configs"][config] == {
+            "db_rows": rows,
+            "parquet_rows": rows,
+            "quarantined_rows": 0,
+        }
 
 
 def test_options_carry_validations_and_aggregated_sources(exported: Path) -> None:
@@ -853,3 +857,45 @@ def test_every_schema_table_is_deliberately_classified() -> None:
     assert NEVER_EXPORT <= schema_tables
     assert not (NEVER_EXPORT & read_tables)
     assert not (NEVER_EXPORT & NEUTRAL_TABLES)
+
+
+def test_a_quarantined_option_is_absent_from_the_export(
+    v2_db: Path, tmp_path: Path
+) -> None:
+    """CORE-1828: an uncleared community submission never exports.
+
+    The option row and its endorsement rows are held back, the ledger says how
+    many (no silent caps), and a later 'cleared' verdict restores them.
+    """
+    conn = sqlite3.connect(v2_db)
+    conn.execute(
+        "INSERT INTO option_screenings (option_uid, verdict, screened_by, "
+        "screen_version) VALUES (?, 'quarantined', 'importer', 'manual-interim-v1')",
+        (OPT_TRUE_ZH,),
+    )
+    conn.commit()
+    conn.close()
+
+    out = tmp_path / "corpus-quarantined"
+    ledger = export_corpus(v2_db, out)
+    assert ledger["ok"] is True
+    assert OPT_TRUE_ZH not in _read(out, "options")["option_uid"]
+    assert OPT_TRUE_ZH not in _read(out, "endorsements")["option_uid"]
+    assert ledger["configs"]["options"]["quarantined_rows"] == 1
+    assert ledger["configs"]["endorsements"]["quarantined_rows"] == 1
+
+    conn = sqlite3.connect(v2_db)
+    conn.execute(
+        "INSERT INTO option_screenings (option_uid, verdict, screened_by, "
+        "screen_version, note) VALUES (?, 'cleared', 'madi', "
+        "'manual-interim-v1', 'import ritual')",
+        (OPT_TRUE_ZH,),
+    )
+    conn.commit()
+    conn.close()
+
+    out = tmp_path / "corpus-cleared"
+    ledger = export_corpus(v2_db, out)
+    assert ledger["ok"] is True
+    assert OPT_TRUE_ZH in _read(out, "options")["option_uid"]
+    assert ledger["configs"]["options"]["quarantined_rows"] == 0

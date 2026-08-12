@@ -96,6 +96,14 @@ NEVER_EXPORT: frozenset[str] = frozenset(
         # Moderation / harm reports (contributor_id + free-text note); the
         # dataset card promises these stay private pending CORE-1502 policy.
         "option_flags",
+        # Screening verdicts (CORE-1828): maintainer moderation decisions with
+        # free-text notes. Whether verdicts ever publish is an open CORE-1797
+        # sub-decision; until it is decided, they stay private. The EXCLUSION
+        # they drive is public behaviour: quarantined options (and their
+        # endorsements) are held out of the options/endorsements configs via
+        # the option_screening_status view, counted in the reconciliation
+        # ledger's quarantined_rows.
+        "option_screenings",
         # Salt fingerprint + publish provenance -- same boundary as
         # contributor_identities per its own schema comment.
         "build_meta",
@@ -184,13 +192,26 @@ CONFIG_SQL: dict[str, str] = {
         FROM options o
         JOIN concepts c ON c.id = o.concept_id
         LEFT JOIN option_validations v ON v.option_uid = o.uid
+        -- Quarantined community submissions never export until a maintainer
+        -- clears them (CORE-1828); counted in the ledger's quarantined_rows.
+        WHERE NOT EXISTS (
+            SELECT 1 FROM option_screening_status q
+            WHERE q.option_uid = o.uid AND q.verdict IN ('quarantined', 'held')
+        )
         ORDER BY o.uid
     """,
     "endorsements": """
-        SELECT uid, option_uid, contributor_id, method, rung_at_endorsement,
-               created_at, retracted_at
-        FROM endorsements
-        ORDER BY uid
+        SELECT e.uid, e.option_uid, e.contributor_id, e.method,
+               e.rung_at_endorsement, e.created_at, e.retracted_at
+        FROM endorsements e
+        -- An endorsement of a quarantined option would dangle (its option row
+        -- is held back above) and leak that the submission exists; held out
+        -- with its option (CORE-1828).
+        WHERE NOT EXISTS (
+            SELECT 1 FROM option_screening_status q
+            WHERE q.option_uid = e.option_uid AND q.verdict IN ('quarantined', 'held')
+        )
+        ORDER BY e.uid
     """,
     "contributors": """
         SELECT id, current_rung, joined_at
@@ -216,6 +237,27 @@ CONFIG_BASE_TABLE: dict[str, str] = {
     "options": "options",
     "endorsements": "endorsements",
     "contributors": "contributors",
+}
+
+#: How many base-table rows each config held back under quarantine
+#: (CORE-1828). The reconciliation requires db_rows == parquet_rows +
+#: quarantined_rows -- an exclusion the ledger cannot see is a silent cap,
+#: and a count that does not reconcile is a corrupted corpus.
+QUARANTINED_COUNT_SQL: dict[str, str] = {
+    "options": """
+        SELECT COUNT(*) FROM options o
+        WHERE EXISTS (
+            SELECT 1 FROM option_screening_status q
+            WHERE q.option_uid = o.uid AND q.verdict IN ('quarantined', 'held')
+        )
+    """,
+    "endorsements": """
+        SELECT COUNT(*) FROM endorsements e
+        WHERE EXISTS (
+            SELECT 1 FROM option_screening_status q
+            WHERE q.option_uid = e.option_uid AND q.verdict IN ('quarantined', 'held')
+        )
+    """,
 }
 
 #: The PINNED Arrow schema of every config, as (column, kind) pairs.
@@ -1150,19 +1192,38 @@ def export_corpus(db_path: Path, out_dir: Path) -> dict[str, Any]:
         db_rows = conn.execute(
             f"SELECT COUNT(*) FROM {CONFIG_BASE_TABLE[name]}"  # noqa: S608 -- fixed map
         ).fetchone()[0]
-        configs[name] = {"db_rows": db_rows, "parquet_rows": table.num_rows}
+        quarantined = (
+            conn.execute(QUARANTINED_COUNT_SQL[name]).fetchone()[0]
+            if name in QUARANTINED_COUNT_SQL
+            else 0
+        )
+        configs[name] = {
+            "db_rows": db_rows,
+            "parquet_rows": table.num_rows,
+            "quarantined_rows": quarantined,
+        }
 
     _assert_no_forbidden_columns(pq, data_dir)
 
+    # The view sum mirrors the publish surface: endorsements on quarantined
+    # options are held back above, so they are held out of the target too.
     view_sum = conn.execute(
-        "SELECT COALESCE(SUM(endorsements), 0) FROM endorsement_counts"
+        """
+        SELECT COALESCE(SUM(ec.endorsements), 0) FROM endorsement_counts ec
+        WHERE NOT EXISTS (
+            SELECT 1 FROM option_screening_status q
+            WHERE q.option_uid = ec.option_uid
+              AND q.verdict IN ('quarantined', 'held')
+        )
+        """
     ).fetchone()[0]
     dataset_card = _render_dataset_card(conn)
     conn.close()
 
-    ok = all(c["db_rows"] == c["parquet_rows"] for c in configs.values()) and (
-        active_endorsements == view_sum
-    )
+    ok = all(
+        c["db_rows"] == c["parquet_rows"] + c["quarantined_rows"]
+        for c in configs.values()
+    ) and (active_endorsements == view_sum)
     reconciliation: dict[str, Any] = {
         "configs": configs,
         "derived_endorsements": {
@@ -1180,10 +1241,18 @@ def export_corpus(db_path: Path, out_dir: Path) -> dict[str, Any]:
     width = max(len(name) for name in configs)
     print("Export reconciliation:")
     for name, count in configs.items():
-        verdict = "ok" if count["db_rows"] == count["parquet_rows"] else "MISMATCH"
+        reconciled = (
+            count["db_rows"] == count["parquet_rows"] + count["quarantined_rows"]
+        )
+        verdict = "ok" if reconciled else "MISMATCH"
+        held = (
+            f"  quarantined={count['quarantined_rows']:,}"
+            if count["quarantined_rows"]
+            else ""
+        )
         print(
             f"  {name.ljust(width)}  db={count['db_rows']:>7,}  "
-            f"parquet={count['parquet_rows']:>7,}  {verdict}"
+            f"parquet={count['parquet_rows']:>7,}  {verdict}{held}"
         )
     print(
         f"  derived endorsements: parquet(active)={active_endorsements:,}  "

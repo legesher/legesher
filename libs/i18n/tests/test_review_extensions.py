@@ -713,3 +713,116 @@ def test_pack_promotion_counts_native_reviewers(seeded: sqlite3.Connection) -> N
         "SELECT native_reviewers, total_reviewers FROM pack_promotion_status"
         " WHERE locale='ur' AND programming_language='python'",
     ) == (1, 2)  # C_A counts as native; C_C does not
+
+
+# ---------------------------------------------------------------------------
+# interim moderation / quarantine (CORE-1828; verdict shape shared with
+# CORE-1797). Quarantine is an EXPLICIT verdict written by the importer for
+# community-sourced options — absence of a screening row means "predates the
+# intake path" and changes nothing, so the published corpus stays stable.
+# ---------------------------------------------------------------------------
+
+
+def screen(
+    db: sqlite3.Connection,
+    opt: str,
+    verdict: str,
+    by: str = "madi",
+    version: str = "manual-interim-v1",
+    note: str | None = None,
+) -> None:
+    db.execute(
+        "INSERT INTO option_screenings(option_uid, verdict, screened_by,"
+        " screen_version, note) VALUES (?, ?, ?, ?, ?)",
+        (opt, verdict, by, version, note),
+    )
+
+
+def test_screenings_are_append_only(seeded: sqlite3.Connection) -> None:
+    screen(seeded, OPT1, "quarantined", by="importer")
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("UPDATE option_screenings SET verdict='cleared'")
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        seeded.execute("DELETE FROM option_screenings")
+
+
+def test_screening_vocabulary_and_auditability(seeded: sqlite3.Connection) -> None:
+    with pytest.raises(sqlite3.IntegrityError):  # vocabulary is closed
+        screen(seeded, OPT1, "approved")
+    with pytest.raises(sqlite3.IntegrityError):  # anonymous clearing is unauditable
+        screen(seeded, OPT1, "cleared", by="")
+
+
+def test_latest_screening_verdict_wins(seeded: sqlite3.Connection) -> None:
+    screen(seeded, OPT1, "quarantined", by="importer")
+    screen(seeded, OPT1, "cleared", note="import ritual 2026-08-11")
+    assert one(
+        seeded,
+        f"SELECT verdict, screened_by FROM option_screening_status"
+        f" WHERE option_uid='{OPT1}'",
+    ) == ("cleared", "madi")
+
+
+def test_quarantined_option_is_invisible_to_rankings(
+    seeded: sqlite3.Connection,
+) -> None:
+    # Before: OPT1 stands first for elif (two native endorsements).
+    assert one(
+        seeded, f"SELECT standing FROM option_standings WHERE option_uid='{OPT1}'"
+    ) == (1,)
+    screen(seeded, OPT1, "quarantined", by="importer")
+    for view in ("option_standings", "option_promotion_status", "terminology_export"):
+        assert (
+            seeded.execute(
+                f"SELECT 1 FROM {view} WHERE surface_form='ورنہ_اگر'"  # nosec B608
+            ).fetchall()
+            == []
+        ), view
+    # The un-screened sibling now stands first — a quarantined row does not
+    # compete — and the maintainer lens still sees the quarantined one.
+    assert one(
+        seeded, f"SELECT standing FROM option_standings WHERE option_uid='{OPT2}'"
+    ) == (1,)
+    assert one(
+        seeded, f"SELECT verdict FROM quarantine_queue WHERE option_uid='{OPT1}'"
+    ) == ("quarantined",)
+
+
+def test_clearing_restores_visibility(seeded: sqlite3.Connection) -> None:
+    screen(seeded, OPT1, "quarantined", by="importer")
+    screen(seeded, OPT1, "cleared")
+    assert one(
+        seeded, f"SELECT standing FROM option_standings WHERE option_uid='{OPT1}'"
+    ) == (1,)
+    assert seeded.execute("SELECT 1 FROM quarantine_queue").fetchall() == []
+
+
+def test_held_is_quarantine_too(seeded: sqlite3.Connection) -> None:
+    # OPT2 sits in the second-endorsement queue while unscreened…
+    assert seeded.execute(
+        "SELECT option_uid FROM second_endorsement_queue"
+    ).fetchall() == [(OPT2,)]
+    screen(seeded, OPT2, "held", by="importer", note="needs a second look")
+    assert (
+        seeded.execute(
+            f"SELECT 1 FROM option_standings WHERE option_uid='{OPT2}'"
+        ).fetchall()
+        == []
+    )
+    assert (
+        seeded.execute("SELECT option_uid FROM second_endorsement_queue").fetchall()
+        == []
+    )
+
+
+def test_canon_refuses_quarantined_option(seeded: sqlite3.Connection) -> None:
+    screen(seeded, OPT1, "quarantined", by="importer")
+    canon_insert = (
+        "INSERT INTO canon_selections(concept_id, locale, option_uid,"
+        f" surface_form, source_file) VALUES (1, 'ur', '{OPT1}', 'ورنہ_اگر',"
+        " 'libs/i18n/canon/ur.toml')"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="quarantined"):
+        seeded.execute(canon_insert)
+    screen(seeded, OPT1, "cleared")
+    seeded.execute(canon_insert)
