@@ -48,8 +48,14 @@ Open source means the code is publicly visible and accepts contributions from an
 - **Report bugs** you find while using the project
 - **Suggest features** you'd like to see
 - **Fix typos** in documentation
-- **Translate** content to your native language
+- **Translate** content to your native language — with one exception, below
 - **Write code** to add features or fix bugs
+
+> **Legal and policy pages are English-only.** Please don't translate the privacy policy,
+> terms of service, licences, or security disclosures. A translated policy is a second
+> policy: it can drift from the English, and someone may rely on the version that drifted.
+> This is the one place where our own argument for reading in your own language loses to
+> the need for a single authoritative text. Everything else is fair game.
 
 ### Your First Contribution
 
