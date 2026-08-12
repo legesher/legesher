@@ -21,12 +21,14 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Sequence
 from dataclasses import asdict
-from typing import Annotated, Literal, cast
+from typing import Annotated, Any, Literal, cast, get_args
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
-from pydantic import Field
+from mcp.types import ContentBlock, ToolAnnotations
+from pydantic import Field, ValidationError
 
 from . import __version__
 from .engine import (
@@ -34,12 +36,14 @@ from .engine import (
     LANG_CODE_PATTERN,
     PIVOT_LANGUAGE,
     EngineError,
+    LocalEngine,
     get_engine,
 )
 from .schemas import (
     DEFAULT_PYTHON_VERSION,
     LANG_CODE_MAX_LENGTH,
     SOURCE_MAX_CHARS,
+    SUPPORTED_PYTHON_VERSIONS,
     CodebaseMapResult,
     CodebaseMapSummary,
     ConstructMapping,
@@ -69,6 +73,11 @@ telemetry."""
 
 _LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
+#: Derived from the Literal so the accepted names cannot drift from the type.
+_LOG_LEVELS: tuple[str, ...] = get_args(_LogLevel)
+
+_DEFAULT_LOG_LEVEL: _LogLevel = "WARNING"
+
 
 def _log_level_from_env() -> _LogLevel:
     """Log level from LEGESHER_MCP_LOG_LEVEL; quiet (WARNING) by default.
@@ -77,12 +86,78 @@ def _log_level_from_env() -> _LogLevel:
     booting, so anything invalid falls back to the default.
     """
     raw = os.environ.get("LEGESHER_MCP_LOG_LEVEL", "").strip().upper()
-    if raw in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
+    if raw in _LOG_LEVELS:
         return cast(_LogLevel, raw)
-    return "WARNING"
+    return _DEFAULT_LOG_LEVEL
 
 
-mcp = FastMCP("legesher", instructions=_INSTRUCTIONS, log_level=_log_level_from_env())
+#: Cap on how much of a rejection we spell out, so a request with hundreds
+#: of bad fields cannot turn the error into the payload.
+_MAX_REPORTED_ARGUMENT_ERRORS = 5
+
+
+def _argument_error_message(exc: ValidationError) -> str:
+    """Field-by-field rejection text with nothing the caller sent in it.
+
+    Uses pydantic's ``loc`` (field path) and ``msg`` (the constraint that
+    failed) and deliberately drops ``input``, which carries a prefix of the
+    submitted value — for the ``source`` fields that is the caller's code.
+    """
+    errors = exc.errors()
+    parts = [
+        f"{'.'.join(str(piece) for piece in error['loc']) or '<arguments>'} — {error['msg']}"
+        for error in errors[:_MAX_REPORTED_ARGUMENT_ERRORS]
+    ]
+    if len(errors) > _MAX_REPORTED_ARGUMENT_ERRORS:
+        parts.append(f"(+{len(errors) - _MAX_REPORTED_ARGUMENT_ERRORS} more)")
+    return "invalid_arguments: " + "; ".join(parts)
+
+
+class _LegesherMCP(FastMCP):
+    """FastMCP with every tool failure spoken in the server's own voice.
+
+    The SDK renders an argument-validation failure as pydantic's raw dump —
+    which quotes ``input_value``, i.e. a prefix of whatever the caller sent,
+    and links to errors.pydantic.dev. Next to the engine's sanitized
+    ``code: message`` errors that is both off-voice and a small leak: the
+    echoed prefix of a rejected oversized file is the caller's source.
+
+    ``call_tool`` is the SDK's public entry point for a tool call, so
+    overriding it needs no private internals. Four cases:
+
+    - A failure the tools raised themselves is already a machine code plus a
+      content-free message — passed through untouched.
+    - A ``ToolError`` the SDK raised with no ``__cause__`` is a message the
+      SDK composed itself, not an exception repr ("Unknown tool: X" is the
+      only such case in 1.28). Safe, and more useful than a generic error.
+    - A pydantic ``ValidationError`` **for this tool's argument model**
+      becomes ``invalid_arguments``, naming the fields and the constraints
+      and never the values.
+    - Anything else — an engine-boot failure, a bug, a ValidationError from
+      the tool's own output model — collapses to ``internal_error``. Note
+      the last one: the SDK's try block wraps the tool body and the result
+      conversion too, so not every ValidationError here is the caller's
+      fault, and blaming them would invite a retry loop over a server bug.
+    """
+
+    async def call_tool(
+        self, name: str, arguments: dict[str, Any]
+    ) -> Sequence[ContentBlock] | dict[str, Any]:
+        try:
+            return await super().call_tool(name, arguments)
+        except ToolError as exc:
+            cause = exc.__cause__
+            if cause is None or isinstance(cause, ToolError):
+                raise  # SDK-composed text, or already sanitized by _tool_error
+            if isinstance(cause, ValidationError) and cause.title == f"{name}Arguments":
+                # The SDK builds the argument model as `{func.__name__}Arguments`
+                # (func_metadata.py:258), which is what distinguishes a bad
+                # request from a failure inside the tool.
+                raise ToolError(_argument_error_message(cause)) from exc
+            raise ToolError("internal_error: The server could not complete the request.") from exc
+
+
+mcp = _LegesherMCP("legesher", instructions=_INSTRUCTIONS, log_level=_log_level_from_env())
 # The SDK's FastMCP (1.28) has no version passthrough, and the low-level
 # server otherwise reports the SDK's own package version in initialize.
 mcp._mcp_server.version = __version__
@@ -108,15 +183,60 @@ _LangParam = Annotated[
 ]
 
 
+#: Every tool on this server is a pure function of its arguments: it reads
+#: the locally installed packs, never writes a file, never executes the
+#: submitted code (validation is ``compile()`` only), and never opens a
+#: socket. Declaring that lets clients skip or downgrade approval prompts.
+#: A tool that ever stops matching this description must pass its own
+#: annotations — the surface-lock test fails otherwise, which is the point.
+_READ_ONLY = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=False,
+)
+
+
 def _tool_error(exc: EngineError) -> ToolError:
     """Convert an engine failure into a machine-coded MCP tool error."""
     return ToolError(f"{exc.code}: {exc}")
 
 
+def _finish_from_pivot(
+    engine: LocalEngine,
+    *,
+    english: str,
+    original: str,
+    source_lang: str,
+    target_lang: str,
+    python_version: str,
+) -> str:
+    """Translate to ``target_lang`` reusing an already-computed English form.
+
+    Callers that needed the English pivot for scanning or validation have
+    already paid for the X→en hop. Asking the engine for X→Y here would
+    silently redo it — the engine has no direct X→Y path, so it always
+    pivots. Starting from ``english`` runs the remaining en→Y hop only.
+
+    ``original`` is returned untouched when source and target are the same
+    language, preserving the engine's own no-op short-circuit rather than
+    round-tripping the text through English for no reason.
+    """
+    if source_lang == target_lang:
+        return original
+    outcome = engine.translate(
+        source=english,
+        source_lang=PIVOT_LANGUAGE,
+        target_lang=target_lang,
+        python_version=python_version,
+    )
+    return str(outcome.translated_source)
+
+
 # -- tools ----------------------------------------------------------------
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 def translate_to_native(
     source: _SourceParam,
     target_lang: _LangParam,
@@ -150,7 +270,7 @@ def translate_to_native(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 def translate_to_source(
     source: _SourceParam,
     source_lang: _LangParam,
@@ -182,7 +302,7 @@ def translate_to_source(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 def explain_in_language(
     source: _SourceParam,
     explain_in: _LangParam,
@@ -256,12 +376,14 @@ def explain_in_language(
 
         translated_source: str | None = None
         if include_translation:
-            translated_source = engine.translate(
-                source=source,
+            translated_source = _finish_from_pivot(
+                engine,
+                english=english,
+                original=source,
                 source_lang=code_lang,
                 target_lang=explain_in,
                 python_version=python_version,
-            ).translated_source
+            )
     except EngineError as exc:
         raise _tool_error(exc) from exc
 
@@ -286,7 +408,7 @@ def explain_in_language(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 def lookup_keyword_mapping(
     language: _LangParam,
     terms: Annotated[
@@ -334,7 +456,7 @@ def lookup_keyword_mapping(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 def map_existing_codebase(
     files: Annotated[
         list[SourceFile],
@@ -431,12 +553,14 @@ def map_existing_codebase(
 
         if include_translations:
             try:
-                translated = engine.translate(
-                    source=entry.source,
+                translated = _finish_from_pivot(
+                    engine,
+                    english=english,
+                    original=entry.source,
                     source_lang=source_lang,
                     target_lang=target_lang,
                     python_version=python_version,
-                ).translated_source
+                )
             except EngineError as exc:
                 raise _tool_error(exc) from exc
             translated_files.append(TranslatedFile(path=entry.path, translated_source=translated))
@@ -480,12 +604,18 @@ def languages_catalog() -> str:
     )
 
 
-@mcp.resource("legesher://languages/{lang}/terms", mime_type="application/json")
-def language_terms(lang: str) -> str:
-    """Full term dictionary for one language (default Python version)."""
+def _terms_document(lang: str, python_version: str) -> str:
+    """Render one language's full term dictionary for one Python version."""
+    if python_version not in SUPPORTED_PYTHON_VERSIONS:
+        # Gate before the loader: the version is joined into a pack filename
+        # downstream, and the loader's own ValueError is not in our voice.
+        raise ValueError(
+            f"unsupported_python_version: {python_version[:16]!r}. "
+            f"Supported: {', '.join(SUPPORTED_PYTHON_VERSIONS)}."
+        )
     engine = get_engine()
     try:
-        pack = engine.load_pack(lang, DEFAULT_PYTHON_VERSION)
+        pack = engine.load_pack(lang, python_version)
     except EngineError as exc:
         # Sanitized upstream; safe to surface as the resource error.
         raise ValueError(f"{exc.code}: {exc}") from exc
@@ -498,6 +628,23 @@ def language_terms(lang: str) -> str:
         ensure_ascii=False,
         indent=2,
     )
+
+
+@mcp.resource("legesher://languages/{lang}/terms", mime_type="application/json")
+def language_terms(lang: str) -> str:
+    """Full term dictionary for one language (default Python version)."""
+    return _terms_document(lang, DEFAULT_PYTHON_VERSION)
+
+
+@mcp.resource("legesher://languages/{lang}/terms/{python_version}", mime_type="application/json")
+def language_terms_for_version(lang: str, python_version: str) -> str:
+    """Full term dictionary for one language at a specific Python version.
+
+    The explicit-version form of the resource above, for callers pinned to
+    a grammar other than the default — pack contents differ by version
+    (`match`/`case` in 3.10, `except*` in 3.11, and so on).
+    """
+    return _terms_document(lang, python_version)
 
 
 # -- prompts --------------------------------------------------------------

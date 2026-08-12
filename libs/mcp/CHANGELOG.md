@@ -11,6 +11,33 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Independent release train. `legesher-mcp` now versions itself: its own
+  `[tool.semantic_release]` config, `mcp-v{version}` tags, and
+  `release-mcp.yml` triggered by changes under `libs/mcp/`. It no longer
+  inherits the foundation suite's version or bumps when the foundation
+  releases. `major_on_zero` is off, so a breaking change goes 0.1.0 → 0.2.0
+  and 1.0.0 stays a deliberate promotion. The release-tier suites run as a
+  gate *before* the version step, which makes the clean-environment wheel
+  spawn test a real gate on cutting a release rather than a checklist item.
+  [CORE-1851]
+- MCP tests run in CI. `libs/mcp` was absent from `ci.yml`, so its suite had
+  never run there; it now runs on every PR with coverage reported to Codecov.
+  [CORE-1851]
+- All five tools declare MCP annotations matching their actual posture —
+  `readOnlyHint`, `idempotentHint`, `destructiveHint: false`, and
+  `openWorldHint: false` — so clients can reduce or skip approval prompts
+  for a server that never writes, never executes submitted code, and never
+  opens a socket. A surface-lock test asserts them. [CORE-1814]
+- `legesher://languages/{lang}/terms/{python_version}` — the term dictionary
+  for a specific Python grammar. The unversioned URI still resolves to the
+  default version. [CORE-1806]
+- Release-tier test suites, excluded from the default run and available as
+  `make test-mcp-scheduled`: an all-packs round-trip sweep asserting the
+  byte-identical guarantee through an MCP session across every installed
+  pack [CORE-1745], and a clean-environment spawn test that builds the
+  wheels, installs them into a fresh virtualenv in an empty directory, and
+  drives a stdio session with a stripped environment — a publish gate, since
+  it is what proves the artifact works outside the workspace [CORE-1746].
 - Agent-session artifacts for localized code (CORE-1421, CORE-1422):
   `templates/AGENTS-template.md` — the copy-into-your-repo `AGENTS.md`
   language-policy declaration (eight rules: write natively, keywords only
@@ -22,6 +49,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   drift recovery). README section explains the split: the policy file and
   skill are the declaration/playbook half, the server's deterministic
   tools are the guarantee.
+
 - Initial Legesher MCP server package: the engine's translation capability
   as a Model Context Protocol stdio server, per the CORE-1165 architecture
   design (five coarse tools, resources over tool-shaped reads, engine facts
@@ -51,3 +79,38 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
     the MCP layer (SDK in-memory session plus one real stdio subprocess),
     including unsupported-language, pack-not-found, oversized-input, and
     malformed-input paths.
+
+### Changed
+
+- Pack availability is now refreshable instead of computed once per process:
+  the scan expires after a TTL, and `LocalEngine.refresh_packs()` drops
+  every pack-derived cache explicitly. A pack installed mid-session is
+  picked up without a restart — irrelevant for a stdio lifetime, wrong for
+  a long-lived server. [CORE-1806]
+- The `python_version` enum published in every tool schema is derived from
+  the installed packs' version index rather than hand-maintained, so packs
+  for a new Python version need no schema edit. [CORE-1806]
+- Argument-validation failures now speak in the server's own voice —
+  `invalid_arguments: <field> — <constraint>`. The SDK's raw pydantic dump
+  quoted the rejected value back, which for the `source` fields meant a
+  prefix of the caller's code appeared in the error. Field names and
+  constraints are kept; values are not. [CORE-1744]
+- Unexpected failures (including engine-boot failures) collapse to a generic
+  `internal_error` instead of surfacing an exception message that can carry
+  filesystem paths. [CORE-1744]
+
+### Fixed
+
+- `explain_in_language` and `map_existing_codebase` computed the English
+  pivot twice per file when the input was not English — once to scan and
+  validate, then again inside the X→Y translation. The second hop now
+  starts from the pivot form already computed, roughly halving the
+  translation work on non-English input. [CORE-1806]
+- The stdio server identifies itself truthfully and quietly — the MCP
+  `initialize` handshake reports `legesher-mcp`'s own package version
+  instead of the SDK's [CORE-1737], and the default log level is WARNING
+  so a normal session writes no log noise to stderr; set
+  `LEGESHER_MCP_LOG_LEVEL` (DEBUG…CRITICAL) to restore verbose logging for
+  troubleshooting [CORE-1738]. The reported version now reads from the
+  installed distribution's metadata, so it cannot drift from the version
+  in the wheel. [CORE-1749]

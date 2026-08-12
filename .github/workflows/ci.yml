@@ -137,10 +137,16 @@ jobs:
       - name: Run language-server tests
         run: uv run pytest libs/language-server/tests/ -v --cov=legesher_language_server --cov-report=xml:coverage-ls.xml
 
+      # Per-commit tier only. The `scheduled` suites (all-packs round-trip
+      # sweep, clean-environment wheel spawn) are deselected by libs/mcp's
+      # own addopts and gate the release instead — see release-mcp.yml.
+      - name: Run MCP server tests
+        run: uv run pytest libs/mcp/tests/ -v --cov=legesher_mcp --cov-report=xml:coverage-mcp.xml
+
       - name: Upload coverage reports to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage-core.xml,coverage-i18n.xml,coverage-legesher.xml,coverage-ls.xml
+          files: coverage-core.xml,coverage-i18n.xml,coverage-legesher.xml,coverage-ls.xml,coverage-mcp.xml
           fail_ci_if_error: false

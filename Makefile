@@ -2,7 +2,7 @@
 # ===========================
 # Common commands for development, testing, and code generation.
 
-.PHONY: help install generate generate-languages check-generated test test-all test-i18n test-core test-legesher test-language-server test-mcp lint format typecheck clean vscode-compile vscode-package
+.PHONY: help install generate generate-languages check-generated test test-all test-i18n test-core test-legesher test-language-server test-mcp test-mcp-scheduled lint format typecheck clean vscode-compile vscode-package
 
 # Default target
 help:
@@ -24,6 +24,7 @@ help:
 	@echo "  make test-legesher        Run legesher package tests"
 	@echo "  make test-language-server Run language-server tests"
 	@echo "  make test-mcp             Run MCP server tests"
+	@echo "  make test-mcp-scheduled   Run release-tier MCP suites (all packs, wheel spawn)"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make lint                 Run linters (ruff)"
@@ -90,6 +91,14 @@ test-language-server:
 test-mcp:
 	@echo "Running MCP server tests..."
 	cd libs/mcp && uv run pytest tests/ -v
+
+# Release-tier MCP suites: the all-packs round-trip sweep (CORE-1745) and the
+# clean-environment wheel spawn test (CORE-1746). Excluded from `test-mcp`
+# because they build wheels and sweep every pack. Run this green before
+# publishing legesher-mcp — no workflow enforces it yet (see CORE-626).
+test-mcp-scheduled:
+	@echo "Running scheduled (release-tier) MCP suites..."
+	cd libs/mcp && uv run pytest tests/ -v -m scheduled
 
 test-runtime:
 	@echo "Running runtime tests..."

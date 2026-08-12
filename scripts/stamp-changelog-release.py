@@ -23,6 +23,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 # Foundation changelogs to stamp
+# Default target: the foundation suite, which shares one version.
+# Independently-versioned packages (legesher-mcp, the language packs) pass
+# their own changelog with --changelogs so an unrelated version never gets
+# stamped onto them.
 CHANGELOGS = [
     Path("CHANGELOG.md"),
     Path("libs/core/CHANGELOG.md"),
@@ -30,12 +34,15 @@ CHANGELOGS = [
     Path("libs/legesher/CHANGELOG.md"),
 ]
 
-# Package version sources for the root CHANGELOG table
+# Package version sources for the root CHANGELOG table. Every package listed
+# here appears in the table regardless of which train is releasing — the
+# table is read from the pyproject files, not from the release in flight.
 PACKAGE_VERSIONS = {
     "legesher-core": Path("libs/core/pyproject.toml"),
     "legesher-i18n": Path("libs/i18n/pyproject.toml"),
     "legesher (CLI)": Path("libs/legesher/pyproject.toml"),
     "legesher-language-server": Path("libs/language-server/pyproject.toml"),
+    "legesher-mcp": Path("libs/mcp/pyproject.toml"),
     "legesher-vscode": Path("libs/vs-code/package.json"),
 }
 
@@ -130,6 +137,18 @@ def main() -> int:
         "--date",
         help="Release date YYYY-MM-DD (default: today UTC)",
     )
+    parser.add_argument(
+        "--changelogs",
+        nargs="+",
+        type=Path,
+        default=CHANGELOGS,
+        metavar="PATH",
+        help=(
+            "Changelog files to stamp (default: the foundation suite). "
+            "Independently-versioned packages pass their own, e.g. "
+            "--changelogs libs/mcp/CHANGELOG.md"
+        ),
+    )
     args = parser.parse_args()
 
     # Get version
@@ -170,8 +189,8 @@ def main() -> int:
             print(f"  Updated version table in {root_cl}")
             modified_files.append(root_cl)
 
-    # Step 2: Stamp [Unreleased] in all changelogs
-    for cl_path in CHANGELOGS:
+    # Step 2: Stamp [Unreleased] in the targeted changelogs
+    for cl_path in args.changelogs:
         if not cl_path.exists():
             print(f"  Skipping {cl_path} (not found)")
             continue

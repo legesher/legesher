@@ -651,6 +651,51 @@ class LanguagePackLoader:
 
         return merged
 
+    def refresh_discovery(self) -> None:
+        """Drop the pack-discovery cache, keeping already-loaded packs.
+
+        Discovery is what goes stale when a pack is installed or removed
+        mid-process; the packs already parsed into memory are still valid.
+        Long-lived servers call this to pick up new packs without paying to
+        re-parse the YAML for every pack already in use. Use
+        :meth:`clear_cache` when pack *content* may have changed on disk.
+        """
+        self._discovered_packs = None
+
+    def list_available_versions(self, target: str = "python") -> list[str]:
+        """List the ``X.Y`` versions any discovered pack provides for *target*.
+
+        The pack version index: the union of version-named pack files across
+        every installed pack, so callers can derive the set of supported
+        versions instead of hand-maintaining a parallel list. The generic
+        ``default.yml`` is not a version and is excluded.
+
+        Args:
+            target: Target programming language (default: 'python')
+
+        Returns:
+            Version strings sorted numerically, e.g. ``['3.10', '3.13']``.
+
+        Example:
+            >>> loader = LanguagePackLoader()
+            >>> loader.list_available_versions()
+            ['3.10', '3.11', '3.12', '3.13', '3.14']
+        """
+        versions: set[str] = set()
+        for pack_key, pack_dir in self._discover_packs().items():
+            if not pack_key.startswith(f"{target}-"):
+                continue
+            packs_dir = pack_dir / "packs"
+            if not packs_dir.exists():
+                continue
+            for pack_file in packs_dir.glob("*.yml"):
+                stem = pack_file.stem
+                # Reuse the loader's own version grammar so the index can
+                # never admit a name ``load()`` would refuse.
+                if stem != "default" and _VERSION_PATTERN.match(stem):
+                    versions.add(stem)
+        return sorted(versions, key=lambda v: _parse_xy(v) or (0, 0))
+
     def clear_cache(self) -> None:
         """Clear the pack cache and discovered packs.
 

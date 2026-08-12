@@ -27,6 +27,7 @@ from __future__ import annotations
 import io
 import re
 import threading
+import time
 import tokenize
 from dataclasses import dataclass, field
 from typing import Any
@@ -126,6 +127,13 @@ class ConstructScan:
 _COMPILE_FILENAME = "<submitted-source>"
 
 
+#: How long a pack-availability scan stays fresh. A stdio session outlives
+#: the answer rarely; a long-lived HTTP deployment (CORE-1420) would serve a
+#: stale catalog forever without a bound, so the scan expires and is redone
+#: on the next read. Scanning is a directory walk, not a YAML parse.
+PACK_DISCOVERY_TTL_SECONDS = 60.0
+
+
 class LocalEngine:
     """Translate, validate, and look up terms against the local engine.
 
@@ -133,13 +141,38 @@ class LocalEngine:
     python_version)`` — pack loading does filesystem I/O and YAML parsing,
     so construction is the expensive step, not translation. The pack
     loader caches loaded packs internally.
+
+    Two caches with deliberately different lifetimes:
+
+    - **Pack availability** (which languages have a pack) expires after
+      ``pack_discovery_ttl`` seconds, so a pack installed mid-process shows
+      up without a restart.
+    - **Loaded packs and built translators** are kept until
+      :meth:`refresh_packs` is called explicitly. Pack *content* for a given
+      version is immutable in practice, and re-parsing every pack on a timer
+      would be pure cost.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, pack_discovery_ttl: float = PACK_DISCOVERY_TTL_SECONDS) -> None:
         self._loader = LanguagePackLoader()
         self._translators: dict[tuple[str, str, str], Any] = {}
         self._pack_codes: frozenset[str] | None = None
+        self._pack_codes_read_at = 0.0
+        self._pack_discovery_ttl = pack_discovery_ttl
         self._lock = threading.Lock()
+
+    def refresh_packs(self) -> None:
+        """Drop every pack-derived cache: availability, packs, translators.
+
+        The explicit invalidation hook, for when pack *content* may have
+        changed on disk (a pack upgraded in place) rather than just the set
+        of installed packs. The TTL alone does not cover that case.
+        """
+        with self._lock:
+            self._pack_codes = None
+            self._pack_codes_read_at = 0.0
+            self._translators.clear()
+            self._loader.clear_cache()
 
     # -- language registry ------------------------------------------------
 
@@ -178,11 +211,19 @@ class LocalEngine:
         return infos
 
     def _discover_pack_codes(self) -> frozenset[str]:
-        """Discover (once) which languages have a Python pack installed."""
+        """Which languages have a Python pack installed, rescanned on expiry."""
         with self._lock:
-            if self._pack_codes is None:
+            now = time.monotonic()
+            if (
+                self._pack_codes is None
+                or now - self._pack_codes_read_at >= self._pack_discovery_ttl
+            ):
+                # Drop the loader's own discovery cache too: without it the
+                # rescan would just re-read the same stale dict.
+                self._loader.refresh_discovery()
                 pairs = self._loader.list_available_languages("python")
                 self._pack_codes = frozenset(code for code, _name in pairs)
+                self._pack_codes_read_at = now
             return self._pack_codes
 
     # -- packs / terms ----------------------------------------------------

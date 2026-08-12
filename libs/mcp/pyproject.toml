@@ -43,6 +43,56 @@ build-backend = "pdm.backend"
 [tool.pdm]
 distribution = true
 
+# legesher-mcp releases on its OWN train, not with the foundation suite —
+# the language-pack model (CORE-1122), not the core/i18n/legesher one. It is
+# earlier in its life than the foundation packages and should not inherit
+# their version number, nor bump every time they release.
+[tool.semantic_release]
+# The single version source. `legesher_mcp.__version__` deliberately has no
+# entry here: it reads importlib.metadata at import (CORE-1749), so there is
+# no literal to rewrite and nothing that can drift from this file.
+#
+# Paths are relative to the GIT ROOT, not to this file — semantic-release
+# resolves `repo_dir` by walking up to `.git/` and resolves every path
+# against that. A bare "pyproject.toml" here silently reads and rewrites the
+# ROOT pyproject (verified: it reported the foundation's 0.22.0 as this
+# package's last release). Same reason `changelog_file` is spelled out below.
+version_toml = ["libs/mcp/pyproject.toml:project.version"]
+commit_parser = "angular"
+# false, unlike the foundation suite: a breaking change takes 0.1.0 to 0.2.0
+# and the package stays sub-1.0 until 1.0 is declared deliberately.
+major_on_zero = false
+allow_zero_version = true
+branch = "main"
+tag_format = "mcp-v{version}"
+upload_to_vcs_release = true
+upload_to_pypi = false  # publish-pypi.yml owns publishing (CORE-626)
+# Same reason as the root config: semantic-release's default author is a
+# bare word with no `@`, which downstream author-validating tooling rejects.
+commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "feat", "fix", "docs", "style", "refactor",
+    "perf", "test", "build", "ci", "chore", "revert"
+]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    "^chore\\(release\\):",
+    "^Merge",
+]
+
+# The workflow passes --no-changelog: this repo's changelogs are hand-written
+# and stamped by scripts/stamp-changelog-release.py, not generated. This
+# setting is the guard for a manual run that forgets the flag — without it
+# semantic-release defaults to the repo-root CHANGELOG.md and would rewrite
+# the foundation suite's changelog during an mcp release.
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "libs/mcp/CHANGELOG.md"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
@@ -56,7 +106,13 @@ dev = [
 # the SDK session helpers' anyio cancel scopes.
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-v"
+# `scheduled` is deselected by default: those suites are correct but slow
+# (all packs × the round-trip corpus, wheel builds into fresh venvs).
+# Run them with `-m scheduled`, or `make test-mcp-scheduled`.
+addopts = "-v -m 'not scheduled'"
+markers = [
+    "scheduled: slow, release-tier suites — excluded from the per-commit run",
+]
 
 [tool.mypy]
 python_version = "3.10"

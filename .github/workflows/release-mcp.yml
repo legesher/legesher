@@ -1,0 +1,157 @@
+name: Release MCP Server
+
+# legesher-mcp releases independently of the foundation suite — the
+# language-pack model (CORE-1122), not the core/i18n/legesher one. Its
+# version reflects what changed in libs/mcp and nothing else.
+#
+# Lint + tests for PRs live in ci.yml. This workflow is the release pipeline
+# only: gate, version bump, tag, GitHub release, wheel.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'libs/mcp/**'
+      - '.github/workflows/release-mcp.yml'
+  workflow_dispatch:  # Allow manual triggers
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  release:
+    name: Release legesher-mcp
+    runs-on: ubuntu-latest
+    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock') && !contains(github.event.head_commit.message, 'docs(changelog): stamp release'))"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # Fetch all history for semantic-release
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system python-semantic-release
+          uv sync  # Set up workspace for building
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # The publish gate (CORE-1745, CORE-1746). The clean-environment suite
+      # builds the wheels, installs them into a fresh virtualenv in an empty
+      # directory, and drives a stdio session with a stripped environment —
+      # the only check that exercises the artifact the way a host starts it,
+      # rather than from inside this workspace. The all-packs round-trip
+      # sweep runs alongside it.
+      #
+      # Placed BEFORE the version step on purpose: a failure here leaves
+      # nothing bumped, tagged, released, or built.
+      - name: Release-tier suites (publish gate)
+        run: make test-mcp-scheduled
+
+      # Run from the REPO ROOT with an explicit -c, never from libs/mcp.
+      # semantic-release resolves every configured path against the git root,
+      # so a run whose cwd is libs/mcp still reads root-relative paths — and
+      # a config written as if it were cwd-relative silently targets the root
+      # pyproject and the root changelog. Root + explicit -c is unambiguous.
+      #
+      # --no-changelog: this repo's changelogs are hand-written and stamped
+      # by scripts/stamp-changelog-release.py (next step), not generated.
+      - name: Run Semantic Release
+        id: semantic-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📦 Running semantic-release for legesher-mcp..."
+
+          # Capture HEAD before running semantic-release
+          HEAD_BEFORE=$(git rev-parse HEAD)
+
+          # Run semantic-release
+          # Note: Returns exit 0 regardless of whether a release is made
+          uv run semantic-release -c libs/mcp/pyproject.toml version --no-changelog
+
+          # Check if HEAD changed (meaning a release commit was created)
+          HEAD_AFTER=$(git rev-parse HEAD)
+
+          if [ "$HEAD_BEFORE" != "$HEAD_AFTER" ]; then
+            NEW_VERSION=$(python3 -c "import tomllib,pathlib; print(tomllib.loads(pathlib.Path('libs/mcp/pyproject.toml').read_text())['project']['version'])")
+            echo "✅ Release created: legesher-mcp v${NEW_VERSION} (commit: ${HEAD_AFTER:0:7})"
+            echo "release_created=true" >> $GITHUB_OUTPUT
+            echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️ No release needed (HEAD unchanged)"
+            echo "release_created=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Sync uv.lock
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: |
+          echo "🔒 Syncing uv.lock..."
+          uv sync
+
+          # Commit lock file if it changed
+          if [ -n "$(git status --porcelain uv.lock)" ]; then
+            git add uv.lock
+            git commit -m "chore: update uv.lock after version bump"
+          fi
+
+      - name: Stamp changelog
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: |
+          # Only libs/mcp's changelog is stamped with this version — the root
+          # [Unreleased] belongs to the foundation train. The script still
+          # refreshes the root Package Versions table, which reads every
+          # package's pyproject and so picks up the new mcp version.
+          python scripts/stamp-changelog-release.py \
+            --version "${{ steps.semantic-release.outputs.version }}" \
+            --changelogs libs/mcp/CHANGELOG.md
+          git add CHANGELOG.md libs/mcp/CHANGELOG.md
+          if [ -n "$(git diff --cached --name-only)" ]; then
+            git commit -m "docs(changelog): stamp release [CORE-608]"
+          fi
+
+      - name: Push release commits
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: git push origin main
+
+      - name: Build wheel
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: |
+          echo "📦 Building legesher-mcp..."
+          uv build --package legesher-mcp --out-dir libs/mcp/dist/
+
+      - name: Create GitHub Release
+        if: steps.semantic-release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Creating GitHub Release for mcp-v${{ steps.semantic-release.outputs.version }}..."
+          uv run semantic-release -c libs/mcp/pyproject.toml publish
+
+      - name: Upload build artifacts
+        if: steps.semantic-release.outputs.release_created == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: legesher-mcp-dist-${{ github.sha }}
+          path: libs/mcp/dist/
+          retention-days: 30

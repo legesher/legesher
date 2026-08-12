@@ -632,6 +632,34 @@ Fixes #123
 
 Legesher uses **semantic-release** for automated versioning and releases. Here's how the process works:
 
+#### Release trains
+
+Packages do not all share one version. Which train a change lands on decides
+what gets bumped and which tag is cut:
+
+| Train | Packages | Tag | Workflow |
+| --- | --- | --- | --- |
+| Foundation | `legesher-core`, `legesher-i18n`, `legesher` (CLI) | `v{version}` | `release-foundation.yml` |
+| MCP server | `legesher-mcp` | `mcp-v{version}` | `release-mcp.yml` |
+| Language packs | `legesher-i18n-python-{lang}` | `i18n-python-{lang}-v{version}` | `release-language-packs.yml` |
+| VS Code | `legesher-vscode` | `vscode-v{version}` | `release-apps.yml` |
+
+The foundation packages share a single version and move together. The others
+are versioned independently, so their numbers mean something about that
+package rather than about the suite.
+
+Two things worth knowing before touching a per-package release config:
+
+- **Configured paths resolve against the git root**, not against the
+  `pyproject.toml` the config lives in and not against the working directory
+  the run is invoked from. Write them as `libs/<pkg>/pyproject.toml:…`, and
+  invoke semantic-release from the repo root with an explicit
+  `-c libs/<pkg>/pyproject.toml`. A cwd-relative path silently reads and
+  rewrites the *root* files.
+- **Bumps are scoped by tag, not by path.** A package's version increment is
+  computed from every commit since its last matching tag, so the workflow's
+  `paths:` filter controls *when* a release fires, not *what it counts*.
+
 ### During Development (Your Part)
 
 1. **Make your changes** in a feature branch

@@ -52,7 +52,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   CORE-1797's automated gate ships) is documented in
   `docs/intake-moderation-runbook.md`, and every import run ends with a push to
   the durable data home.
-
+- `LanguagePackLoader.list_available_versions(target)` — the pack version
+  index: the union of `X.Y` pack files across every discovered pack, so
+  callers can derive the set of supported Python versions instead of
+  keeping a parallel list by hand. Validated against the loader's own
+  version grammar, so the index can never offer a name `load()` refuses.
+  [CORE-1806]
+- `LanguagePackLoader.refresh_discovery()` — drops the pack-discovery cache
+  while keeping already-parsed packs. Discovery is what goes stale when a
+  pack is installed mid-process; `clear_cache()` remains the heavier hammer
+  for when pack *content* may have changed on disk. [CORE-1806]
 - **Pre-notice consent is recorded rather than left blank (CORE-1780).**
   Everyone in the v1 data contributed before `CONTRIBUTOR_PRIVACY.md` existed,
   so `consent_version` now reads `oss-pre-notice` for them, dated to their

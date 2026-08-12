@@ -18,6 +18,15 @@ Run it:
     uv run legesher-mcp
 """
 
-__version__ = "0.1.0"
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _distribution_version
+
+try:
+    #: Read from the installed distribution's metadata rather than hand-kept
+    #: here, so the `initialize` handshake can never report a version that
+    #: drifts from the one in `pyproject.toml` (the wheel's actual version).
+    __version__ = _distribution_version("legesher-mcp")
+except PackageNotFoundError:  # pragma: no cover — running from an uninstalled tree
+    __version__ = "0.0.0.dev0"
 
 __all__ = ["__version__"]

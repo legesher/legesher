@@ -11,6 +11,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **mcp**: `legesher-mcp` releases on its own train — own semantic-release
+  config, `mcp-v{version}` tags, and `release-mcp.yml` on `libs/mcp/**` —
+  instead of having no versioning at all. Pre-1.0 breaking changes bump the
+  minor rather than jumping to 1.0.0. The release-tier suites gate the
+  version step, so the clean-environment wheel spawn test now blocks a
+  release rather than living in a checklist. `libs/mcp` tests also join the
+  CI test job, which had never run them. [CORE-1851]
 - **core**: `legesher map compact` garbage-collects translation-memory
   segments whose register-map node is gone. Such segments could never be
   returned by an exact lookup (node IDs are never reused) but stayed in the
@@ -30,7 +37,31 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   no ending; `lineage()` now shows a node's full life. `lineage_for_term`
   also follows rename chains end-to-end, so a term's history is reachable
   from any name it has held. [CORE-1770]
-
+- **mcp**: pre-remote hardening of the stdio server. Pack availability is
+  refreshable (TTL plus an explicit `refresh_packs()`) instead of computed
+  once per process; the `python_version` enum published in every tool schema
+  is derived from the installed packs' version index rather than
+  hand-maintained; the English pivot is computed once per file in
+  `explain_in_language` and `map_existing_codebase` instead of twice on
+  non-English input; and `legesher://languages/{lang}/terms/{python_version}`
+  exposes a dictionary at a chosen grammar [CORE-1806]. All five tools now
+  declare `readOnlyHint` / `idempotentHint` / `openWorldHint: false`
+  annotations matching their actual posture, locked by a surface test
+  [CORE-1814].
+- **mcp**: argument-validation failures speak in the server's own voice
+  (`invalid_arguments: <field> — <constraint>`) rather than the SDK's raw
+  pydantic dump, which quoted the rejected value back — for the `source`
+  fields that meant a prefix of the caller's code appeared in the error.
+  Unexpected failures collapse to a generic `internal_error` instead of an
+  exception message that can carry filesystem paths. [CORE-1744]
+- **mcp**: release-tier test suites behind `make test-mcp-scheduled` — an
+  all-packs round-trip sweep through an MCP session [CORE-1745] and a
+  clean-environment spawn test that installs locally built wheels into a
+  fresh virtualenv and drives a stdio session with a stripped environment,
+  which is the publish gate for the artifact [CORE-1746]. Also direct
+  `LocalEngine` unit tests covering the defensive and sanitization branches,
+  plus concurrency coverage for the translator cache and the engine
+  singleton [CORE-1815], and a protocol edge sweep [CORE-1744].
 - **i18n**: style guides can declare how terms are *coined*, not just how
   they are cased. The new optional `naming.word_formation` list carries
   word-formation rules (compounding, clipping, which roots stay distinct)

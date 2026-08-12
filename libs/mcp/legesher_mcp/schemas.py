@@ -9,14 +9,42 @@ returns deterministic engine facts (constructs + validation), never prose.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-#: Python grammar versions with language-pack coverage.
-PythonVersion = Literal["3.10", "3.11", "3.12", "3.13", "3.14"]
+from .versions import DEFAULT_PYTHON_VERSION, SUPPORTED_PYTHON_VERSIONS
 
-DEFAULT_PYTHON_VERSION: PythonVersion = "3.13"
+#: Python grammar versions with language-pack coverage — the enum published
+#: in every tool schema. Built from the pack version index at import
+#: (see ``versions.py``) so shipping packs for a new Python version needs no
+#: edit here. Static checkers see ``str``: the members are only knowable at
+#: runtime, and the engine validates the value against the packs anyway.
+if TYPE_CHECKING:
+    PythonVersion = str
+else:
+    PythonVersion = Literal[SUPPORTED_PYTHON_VERSIONS]
+
+__all__ = [
+    "DEFAULT_PYTHON_VERSION",
+    "SUPPORTED_PYTHON_VERSIONS",
+    "PythonVersion",
+    "LANG_CODE_MAX_LENGTH",
+    "SOURCE_MAX_CHARS",
+    "CodebaseMapResult",
+    "CodebaseMapSummary",
+    "ConstructMapping",
+    "ExplainMaterial",
+    "FileMapEntry",
+    "KeywordMappings",
+    "LookupResult",
+    "SourceFile",
+    "SyntaxIssueModel",
+    "ToolResult",
+    "TranslatedFile",
+    "TranslationResult",
+    "ValidationInfo",
+]
 
 #: Static backstop on source-field length (characters). This is an input
 #: sanity bound for the parser — the same static backstop the open REST

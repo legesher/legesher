@@ -67,7 +67,9 @@ uv run legesher-mcp
 
 The server is quiet by default (log level WARNING). For troubleshooting,
 set `LEGESHER_MCP_LOG_LEVEL` (`DEBUG`, `INFO`, `WARNING`, `ERROR`,
-`CRITICAL`); unrecognized values fall back to the quiet default.
+`CRITICAL`); unrecognized values fall back to the quiet default. GUI
+clients do not run your shell, so the variable has to go in the client's
+own config — every block below shows where.
 
 ## Client configuration
 
@@ -80,7 +82,8 @@ set `LEGESHER_MCP_LOG_LEVEL` (`DEBUG`, `INFO`, `WARNING`, `ERROR`,
   "mcpServers": {
     "legesher": {
       "command": "uvx",
-      "args": ["legesher-mcp"]
+      "args": ["legesher-mcp"],
+      "env": { "LEGESHER_MCP_LOG_LEVEL": "DEBUG" }
     }
   }
 }
@@ -90,6 +93,9 @@ set `LEGESHER_MCP_LOG_LEVEL` (`DEBUG`, `INFO`, `WARNING`, `ERROR`,
 
 ```bash
 claude mcp add legesher -- uvx legesher-mcp
+
+# with troubleshooting logs
+claude mcp add legesher --env LEGESHER_MCP_LOG_LEVEL=DEBUG -- uvx legesher-mcp
 ```
 
 ### Cursor
@@ -101,7 +107,8 @@ claude mcp add legesher -- uvx legesher-mcp
   "mcpServers": {
     "legesher": {
       "command": "uvx",
-      "args": ["legesher-mcp"]
+      "args": ["legesher-mcp"],
+      "env": { "LEGESHER_MCP_LOG_LEVEL": "DEBUG" }
     }
   }
 }
@@ -117,12 +124,16 @@ claude mcp add legesher -- uvx legesher-mcp
     "legesher": {
       "command": {
         "path": "uvx",
-        "args": ["legesher-mcp"]
+        "args": ["legesher-mcp"],
+        "env": { "LEGESHER_MCP_LOG_LEVEL": "DEBUG" }
       }
     }
   }
 }
 ```
+
+The `env` block is optional in every case — drop it to keep the quiet
+default.
 
 ## Making agent sessions stay localized
 
@@ -155,15 +166,59 @@ policy and playbook half for agent sessions:
 - **No persistence.** Submitted source is processed in memory; file *paths*
   passed to `map_existing_codebase` are report labels — echoed back to you,
   never logged, never used to touch the filesystem.
+- **Declared, not just claimed.** All five tools carry MCP annotations
+  saying so — `readOnlyHint: true`, `idempotentHint: true`,
+  `destructiveHint: false`, `openWorldHint: false`. Clients that read the
+  hints (Claude Code among them) can reduce or skip approval prompts,
+  because nothing here writes a file, executes submitted code (validation
+  is `compile()` only), or opens a socket. A surface-lock test asserts the
+  annotations, so a future tool that *does* any of those has to change them
+  deliberately.
 
 ## Development
 
 ```bash
 cd libs/mcp
-uv run pytest          # tests (exercise every tool through the MCP layer)
-uv run ruff check .    # lint
+uv run pytest             # the per-commit suite (every tool, through MCP)
+uv run pytest -m scheduled  # release-tier: all-packs sweep + wheel spawn
+uv run ruff check .       # lint
 uv run mypy legesher_mcp  # types
 ```
+
+Two test tiers. The default run exercises every tool through a real MCP
+client session and stays fast. The `scheduled` tier is excluded from it and
+run before a release:
+
+- **All-packs round-trip sweep** — the byte-identical guarantee across every
+  installed pack and the whole construct corpus (the per-commit run samples
+  three packs). Known engine/pack failures are listed as strict xfails in
+  `tests/test_roundtrip_sweep.py`, so a fix announces itself.
+- **Clean-environment spawn** — builds the wheels, installs them into a
+  fresh virtualenv in an empty directory, and drives a stdio session with a
+  stripped environment. It is the only test that exercises the artifact the
+  way a host actually starts it: outside the workspace, with no
+  `PYTHONPATH` and no repo checkout.
+
+  **It gates the release.** `release-mcp.yml` runs `make test-mcp-scheduled`
+  before the version step, so a failure means no version bump, no tag, and
+  no GitHub release — nothing to un-publish. Run it locally with
+  `make test-mcp-scheduled` before you expect a release to go out.
+
+  Scope, so the guarantee isn't overread: it gates *cutting a version*. The
+  push to a package index is `publish-pypi.yml`, which is dispatch-only and
+  does not yet list `legesher-mcp` — that belongs with CORE-626.
+
+## Versioning
+
+`legesher-mcp` releases on its own train, independent of the foundation
+suite: tags are `mcp-v{version}`, cut by `release-mcp.yml` when something
+under `libs/mcp/` lands on `main`. The version in `pyproject.toml` is the
+single source — `__version__` reads it back through `importlib.metadata`, so
+the `initialize` handshake cannot report a number the wheel does not have.
+
+Pre-1.0, a breaking change bumps the minor (`0.1.0` → `0.2.0`);
+`major_on_zero` is off, so reaching 1.0.0 is a deliberate decision rather
+than a side effect of one commit.
 
 ## License
 
