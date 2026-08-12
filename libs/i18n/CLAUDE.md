@@ -123,6 +123,14 @@ legesher-i18n registry validate --lang es
 # Export
 legesher-i18n export json --lang es
 legesher-i18n export csv --lang ar
+
+# Community intake (CORE-1688/1828) — see docs/intake-moderation-runbook.md.
+# Needs $LEGESHER_CONTRIBUTOR_SALT: these mint contributor ids, and the
+# importer refuses the public dev salt or one that disagrees with build_meta.
+legesher-i18n import-issue <issue-url> --db build/translations_v2.db
+legesher-i18n import-review-bundle <file> --db build/translations_v2.db
+legesher-i18n quarantine-queue --db build/translations_v2.db
+legesher-i18n clear-option <opt_uid> --verdict cleared --by <you> --note "..."
 ```
 
 ## Testing
@@ -273,6 +281,14 @@ that `scripts/migrate_to_v2.py` loads at import.
 
   An unpushed change exists only on one workstation — local-only is the failure
   mode the durable home exists to prevent.
+
+  `--sync` on an intake import performs this whole sequence, and additionally
+  archives the accepted raw payload under `intake/<YYYY-MM>/` in the data home.
+  Those payloads are the rebuild source for the intake layer: `migrate_to_v2.py`
+  rebuilds from scratch and knows nothing about review sessions, so re-running
+  the importer over them is what re-derives it. Screening verdicts are the one
+  thing a from-scratch rebuild does not recover — they live in
+  `option_screenings` inside the database, so carry the previous copy forward.
 
 ### Tables
 

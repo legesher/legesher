@@ -72,7 +72,14 @@ TATWEEL = "\u0640"  # ARABIC TATWEEL — category Lm, a decorative elongation on
 # Built from code points via ``chr()`` so these dangerous characters never
 # appear literally in this file (keeps the source auditable and avoids
 # Trojan-source linters flagging the policy table itself).
-BIDI_CONTROLS: frozenset[str] = frozenset(
+# Split into two halves because consumers need different ones. In an
+# IDENTIFIER all twelve are forbidden, and BIDI_CONTROLS (the union) is what
+# the pack auditor and the format-char gate check. In FREE TEXT — a review
+# comment, a rationale — only the embeddings/overrides/isolates are a smell:
+# the MARKS are ordinary punctuation in Arabic and Urdu prose, and the intake
+# path exists to serve exactly those locales, so flagging every RTL comment
+# would train a maintainer to ignore the screen.
+BIDI_EMBEDDINGS: frozenset[str] = frozenset(
     chr(cp)
     for cp in (
         0x202A,  # LEFT-TO-RIGHT EMBEDDING
@@ -84,11 +91,19 @@ BIDI_CONTROLS: frozenset[str] = frozenset(
         0x2067,  # RIGHT-TO-LEFT ISOLATE
         0x2068,  # FIRST STRONG ISOLATE
         0x2069,  # POP DIRECTIONAL ISOLATE
+    )
+)
+
+BIDI_MARKS: frozenset[str] = frozenset(
+    chr(cp)
+    for cp in (
         0x200E,  # LEFT-TO-RIGHT MARK
         0x200F,  # RIGHT-TO-LEFT MARK
         0x061C,  # ARABIC LETTER MARK
     )
 )
+
+BIDI_CONTROLS: frozenset[str] = BIDI_EMBEDDINGS | BIDI_MARKS
 
 # Format / invisible characters that are forbidden in *every* language unless a
 # language explicitly allow-lists them via ``allowed_format_chars``. Tatweel is

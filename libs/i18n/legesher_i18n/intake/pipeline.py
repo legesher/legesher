@@ -53,6 +53,8 @@ from legesher_i18n.db.schema_v2 import (
     style_uid,
 )
 from legesher_i18n.intake.canonical import canonicalize
+from legesher_i18n.schema_validator import SchemaValidator
+from legesher_i18n.script_policy import BIDI_EMBEDDINGS
 from legesher_i18n.surface_validation import (
     VALIDATOR_VERSION,
     allowed_scripts_for,
@@ -67,16 +69,8 @@ SCREEN_VERSION = "manual-interim-v1"
 
 _SCHEMA_PATH = Path(__file__).with_name("bundle_schema.json")
 
-#: Characters valid in identifiers only from CPython 3.13 (Unicode 13 XID
-#: update) — mirrors ``SchemaValidator._XID_ONLY_FROM_CPYTHON_313``. A surface
-#: using them is version-tiered, not invalid; ``min_interpreter_ok = 0``
-#: records the fact for the pack layer's interpreter-floor policy.
-_XID_ONLY_FROM_CPYTHON_313 = frozenset({"‌", "‍"})
 
 _EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-#: Explicit bidi controls in free text are an injection smell (never a verdict
-#: — native RTL text does not need them; isolates are added by renderers).
-_BIDI_CONTROLS = frozenset("‪‫‬‭‮⁦⁧⁨⁩")
 
 
 @lru_cache(maxsize=1)
@@ -109,12 +103,18 @@ class ImportResult:
     status: str  # accepted | returned | halted | duplicate
     report: dict[str, Any]
     locale: str | None = None
+    #: Options this submission MINTED. Every one is quarantined on arrival
+    #: (CORE-1828), so there is no separate quarantined list to carry.
     created_options: list[str] = field(default_factory=list)
-    quarantined_options: list[str] = field(default_factory=list)
     endorsements_linked: int = 0
     withdrawn_replay: bool = False
     needs_human_eyes: bool = False
     source_ref: str | None = None
+    #: Parse-time notes from the lane that produced the bundle (unknown terms,
+    #: a credit choice the form cannot satisfy). They ride the ledger and the
+    #: verification report, not just stdout: a note that exists only in a
+    #: terminal scrollback is a note nobody acts on.
+    parse_notes: list[str] = field(default_factory=list)
 
     def to_json(self) -> str:
         return json.dumps(
@@ -123,16 +123,29 @@ class ImportResult:
                 "status": self.status,
                 "locale": self.locale,
                 "created_options": self.created_options,
-                "quarantined_options": self.quarantined_options,
                 "endorsements_linked": self.endorsements_linked,
                 "withdrawn_replay": self.withdrawn_replay,
                 "needs_human_eyes": self.needs_human_eyes,
                 "source_ref": self.source_ref,
+                "parse_notes": self.parse_notes,
                 "report": self.report,
             },
             ensure_ascii=False,
             indent=2,
         )
+
+    @staticmethod
+    def _fence(text: str) -> str:
+        """Neutralize submitter-controlled text for a GitHub comment.
+
+        Report details quote surface forms, locales and slugs straight from the
+        submission, and `--reply` posts them under the maintainer's account.
+        Backticks, tags and leading list/heading markers would let a submitter
+        shape a comment we are signing, so the whole detail is rendered as one
+        inline code span with its own backticks stripped.
+        """
+        flattened = " ".join(text.split()).replace("`", "'")
+        return f"`{flattened}`"
 
     def reply_text(self) -> str:
         """The "your contribution landed" reply the ritual posts on the issue."""
@@ -160,7 +173,7 @@ class ImportResult:
             for stage in self.report.get("stages", []):
                 for detail in stage.get("details", []):
                     if stage.get("status") == "fail":
-                        lines.append(f"- {detail}")
+                        lines.append(f"- {self._fence(str(detail))}")
             lines.append("")
             lines.append("Fix the items above and resubmit; nothing you wrote is lost.")
             return "\n".join(lines)
@@ -283,7 +296,10 @@ class BundleImporter:
     # -- public entry -------------------------------------------------------
 
     def import_bundle(
-        self, bundle: dict | bytes | str | Path, source_ref: str | None = None
+        self,
+        bundle: dict | bytes | str | Path,
+        source_ref: str | None = None,
+        parse_notes: list[str] | None = None,
     ) -> ImportResult:
         obj = self._parse(bundle)
         canonical = canonicalize(obj)
@@ -295,7 +311,22 @@ class BundleImporter:
 
         conn = schema_v2.connect(self.db_path)
         try:
+            # A carried-forward database predates the screening objects.
+            schema_v2.ensure_intake_screening(conn)
             self._require_matching_salt(conn)
+            stages: list[_Stage] = []
+            if parse_notes:
+                # From the lane that built this bundle (an unknown term, a
+                # credit choice the form cannot express). Persisted with the
+                # session so the decision is auditable later, not just visible
+                # in whoever ran the import's terminal.
+                #
+                # Built BEFORE the duplicate check: re-running an import is
+                # what a maintainer does to re-read a submission, and a note
+                # that disappears on the second run is a note they cannot go
+                # back and find.
+                stages.append(_Stage("parse", "warn", list(parse_notes)))
+
             existing = conn.execute(
                 "SELECT status FROM review_sessions WHERE uid = ?", (ses_uid,)
             ).fetchone()
@@ -308,13 +339,12 @@ class BundleImporter:
                 return ImportResult(
                     session_uid=ses_uid,
                     status="duplicate",
-                    report={"stages": []},
+                    report={"stages": [s.as_dict() for s in stages]},
                     locale=obj.get("locale"),
                     source_ref=source_ref,
+                    parse_notes=list(parse_notes or []),
                 )
             resuming = existing is not None
-
-            stages: list[_Stage] = []
 
             # ---- stage 1: schema + semantic floor -------------------------
             errors, locale_writable = self._stage_schema(conn, obj)
@@ -468,6 +498,7 @@ class BundleImporter:
             )
             result.needs_human_eyes = bool(findings)
             result.withdrawn_replay = replay
+            result.parse_notes = list(parse_notes or [])
             return result
         finally:
             conn.close()
@@ -677,7 +708,7 @@ class BundleImporter:
                     f"{path}: looks like an email address ({match}) — PII does "
                     "not belong in a public bundle; escalated for human review"
                 )
-            if any(ch in _BIDI_CONTROLS for ch in text):
+            if any(ch in BIDI_EMBEDDINGS for ch in text):
                 findings.append(
                     f"{path}: contains explicit bidi control characters — "
                     "escalated for human review (injection smell)"
@@ -849,11 +880,25 @@ class BundleImporter:
         allowed = allowed_scripts_for(subtag)
         details: list[str] = []
         status = "pass"
+        # One scan of the locale, folded, instead of one per new surface: the
+        # query is O(options in locale) and the loop ran it per candidate.
+        existing_by_fold: dict[str, list[tuple[str, int]]] = {}
+        for other_slug, other_surface, other_concept in conn.execute(
+            "SELECT c.slug, o.surface_form, o.concept_id FROM options o"
+            " JOIN concepts c ON c.id = o.concept_id"
+            " WHERE o.locale = ? AND o.withdrawn_at IS NULL",
+            (locale,),
+        ):
+            key = unicodedata.normalize("NFKC", other_surface).casefold()
+            existing_by_fold.setdefault(key, []).append((other_slug, other_concept))
         for uid, info in plan["options"].items():
             if not info["new"]:
                 continue
             verdict = validate_surface(info["surface"], info["term_name"], allowed)
-            min_ok = not any(ch in _XID_ONLY_FROM_CPYTHON_313 for ch in info["surface"])
+            min_ok = not any(
+                ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313
+                for ch in info["surface"]
+            )
             info["validation"] = verdict
             info["min_interpreter_ok"] = min_ok
             problems = []
@@ -877,23 +922,16 @@ class BundleImporter:
                     "still ingests as evidence, canon-INELIGIBLE (CORE-1400 "
                     "reframe); the session is never dropped"
                 )
-            collision = conn.execute(
-                """
-                SELECT c.slug, o.surface_form FROM options o
-                JOIN concepts c ON c.id = o.concept_id
-                WHERE o.locale = ? AND o.concept_id <> ? AND o.withdrawn_at IS NULL
-                """,
-                (locale, info["concept_id"]),
-            ).fetchall()
             fold = unicodedata.normalize("NFKC", info["surface"]).casefold()
-            for other_slug, other_surface in collision:
-                if unicodedata.normalize("NFKC", other_surface).casefold() == fold:
-                    status = "warn"
-                    details.append(
-                        f"{info['surface']!r}: same word already renders concept "
-                        f"{other_slug!r} in this locale — both recorded; the "
-                        "collision surfaces at selection time"
-                    )
+            for other_slug, other_concept in existing_by_fold.get(fold, ()):
+                if other_concept == info["concept_id"]:
+                    continue
+                status = "warn"
+                details.append(
+                    f"{info['surface']!r}: same word already renders concept "
+                    f"{other_slug!r} in this locale — both recorded; the "
+                    "collision surfaces at selection time"
+                )
         return details or ["all new surfaces pass the mechanical gates"], status
 
     # -- stage 5 ------------------------------------------------------------
@@ -1044,8 +1082,15 @@ class BundleImporter:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(contributor_id) DO UPDATE SET
                 source_key = excluded.source_key,
-                display_name = COALESCE(excluded.display_name, display_name),
-                github_handle = COALESCE(excluded.github_handle, github_handle),
+                -- A downgrade to 'anonymous' must also drop what it stopped
+                -- authorizing: keeping display_name/github_handle would leave
+                -- publishable credit attached to a preference that forbids it.
+                display_name = CASE WHEN excluded.credit_preference = 'anonymous'
+                                    THEN NULL
+                                    ELSE COALESCE(excluded.display_name, display_name) END,
+                github_handle = CASE WHEN excluded.credit_preference = 'anonymous'
+                                     THEN NULL
+                                     ELSE COALESCE(excluded.github_handle, github_handle) END,
                 consent_public_credit = excluded.consent_public_credit,
                 consent_version = excluded.consent_version,
                 consent_at = excluded.consent_at,
@@ -1359,7 +1404,6 @@ class BundleImporter:
             report=report,
             locale=locale,
             created_options=created,
-            quarantined_options=created,
             endorsements_linked=endorsements_linked,
             source_ref=source_ref,
         )

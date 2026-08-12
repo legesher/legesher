@@ -899,3 +899,54 @@ def test_a_quarantined_option_is_absent_from_the_export(
     assert ledger["ok"] is True
     assert OPT_TRUE_ZH in _read(out, "options")["option_uid"]
     assert ledger["configs"]["options"]["quarantined_rows"] == 0
+
+
+def test_export_works_on_a_database_that_predates_screening(
+    v2_db: Path, tmp_path: Path
+) -> None:
+    """A carried-forward database has no `option_withheld` view (CORE-1838).
+
+    The intake ritual carries the previous database copy forward, and only the
+    IMPORT lane upgrades it. An export run before the next import opens the
+    file `mode=ro`, so it cannot install anything — it has to read a
+    pre-screening database as what it is: one where no verdict was ever
+    recorded, and therefore nothing is withheld.
+    """
+    conn = sqlite3.connect(v2_db)
+    conn.execute("DROP TRIGGER trg_canon_no_quarantined_option")
+    for view in ("option_standings", "terminology_export", "quarantine_queue"):
+        conn.execute(f"DROP VIEW {view}")
+    for view in ("option_withheld", "option_screening_status"):
+        conn.execute(f"DROP VIEW {view}")
+    conn.execute("DROP TABLE option_screenings")
+    conn.commit()
+    conn.close()
+
+    ledger = export_corpus(v2_db, tmp_path / "corpus-carried-forward")
+    assert ledger["ok"] is True
+    assert ledger["configs"]["options"]["quarantined_rows"] == 0
+    assert (
+        OPT_TRUE_ZH
+        in _read(tmp_path / "corpus-carried-forward", "options")["option_uid"]
+    )
+
+
+def test_a_held_option_is_withheld_from_the_export_like_a_quarantined_one(
+    v2_db: Path, tmp_path: Path
+) -> None:
+    """Every export predicate is `<> 'cleared'`, so held and rejected behave
+    identically to quarantined. Pinned so a future verdict cannot leak."""
+    for verdict in ("held", "rejected"):
+        conn = sqlite3.connect(v2_db)
+        conn.execute(
+            "INSERT INTO option_screenings (option_uid, verdict, screened_by, "
+            "screen_version) VALUES (?, ?, 'madi', 'manual-interim-v1')",
+            (OPT_TRUE_ZH, verdict),
+        )
+        conn.commit()
+        conn.close()
+        out = tmp_path / f"corpus-{verdict}"
+        ledger = export_corpus(v2_db, out)
+        assert ledger["ok"] is True
+        assert OPT_TRUE_ZH not in _read(out, "options")["option_uid"], verdict
+        assert ledger["configs"]["options"]["quarantined_rows"] == 1, verdict

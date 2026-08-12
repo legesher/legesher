@@ -116,7 +116,12 @@ uv run python scripts/export_corpus.py \
 No network library is touched. Review:
 
 - `build/hf-corpus/reconciliation.json` — row counts must reconcile (the
-  export hard-fails if not);
+  export hard-fails if not). Since CORE-1828 the invariant is
+  `db_rows == parquet_rows + quarantined_rows`, not equality: every config
+  carries a `quarantined_rows` count of the community submissions held back
+  for screening. A non-zero value is normal and is the number to sanity-check
+  against `quarantine-queue` — an exclusion the ledger could not see would be
+  a silent cap;
 - `build/hf-corpus/README.md` — the dataset card. Check the frontmatter reads
   `license: cc-by-4.0` and that the Licence and attribution section carries
   all three upstream projects, including the changes-were-made statement

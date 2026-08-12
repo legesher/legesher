@@ -139,8 +139,9 @@ Be straight about the two things withdrawal cannot reach:
 
 ## The importer rule
 
-**A design constraint for the review-bundle importer (CORE-1688), which is not yet built.** Writing
-it down now is cheaper than retrofitting it.
+**Built and enforced** by the review-bundle importer (CORE-1688) from its first import. This
+section is the specification it implements, kept here because the rule belongs with the promise it
+keeps rather than with the code that happens to keep it.
 
 Review bundles carry the contributor's GitHub username. Because the salt is frozen, an importer can
 always recompute the opaque id from that username — which is how it finds the tombstone without us
@@ -156,6 +157,14 @@ On meeting a bundle whose contributor id has `withdrawn_at` set:
 Without this rule a rebuild silently recreates the identity from the bundle and undoes the
 withdrawal. The date comparison is the entire implementation.
 
+Two things the implementation adds, both erring toward the tombstone:
+
+- **A bundle with no timestamp is treated as postdating**, so a submission that cannot prove it is
+  old is surfaced rather than replayed.
+- **A halted import posts no reply.** The reason names the withdrawal, and posting it on the
+  contributor's own public issue would re-associate that account with the erasure they asked for.
+  Write to them yourself; do not quote the report.
+
 ## Reinstatement
 
 If a withdrawn contributor asks to return, restoring the entry is a deliberate act that re-captures
@@ -169,10 +178,11 @@ Their historical endorsements reattach automatically, because the opaque id neve
 
 ## When this procedure changes
 
-Once the review-intake write path lands and the v2 database becomes the operational store rather
-than a build artifact, the tombstone moves from the identity map to a row update — the same columns, the
-same three checks, without the rebuild. The identity map is a migration-era artifact; this document
-should be revisited at that cutover.
+The write path has landed, but the cutover has not: `migrate_to_v2.py` still rebuilds the database
+from scratch on every run, so the identity map remains the durable store and steps 2–3 above are
+still the procedure. When the v2 database becomes the operational store rather than a build
+artifact, the tombstone moves from the map to a row update — the same columns, the same three
+checks, without the rebuild. Revisit this document at that cutover.
 
 ## What this procedure does not cover
 

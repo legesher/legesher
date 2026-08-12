@@ -73,25 +73,23 @@ def _finish(
     json_report: Path | None,
     reply: bool,
     sync: bool,
-    parse_notes: list[str] | None = None,
     reply_target: str | None = None,
 ) -> None:
     click.echo(f"session: {result.session_uid}")
     click.echo(f"status:  {result.status}")
+    # Parse notes are one of these stages now, not a list printed beside them.
     for stage in result.report.get("stages", []):
         click.echo(f"  [{stage['status']:4}] {stage['stage']}")
         for detail in stage["details"]:
             click.echo(f"         - {detail}")
-    for note in parse_notes or []:
-        click.echo(f"  [note] {note}")
     if result.withdrawn_replay:
         click.echo(
             "  [note] withdrawn-contributor replay: evidence written, no "
             "identity column populated (runbook importer rule)"
         )
-    if result.quarantined_options:
+    if result.created_options:
         click.echo(
-            f"  [note] {len(result.quarantined_options)} option(s) quarantined "
+            f"  [note] {len(result.created_options)} option(s) quarantined "
             "pending the import ritual (CORE-1828): clear with "
             "`legesher-i18n clear-option <uid> --verdict cleared --by <you>`"
         )
@@ -120,19 +118,40 @@ def _finish(
             "your token can write to."
         )
 
+    sync_failed = False
     if sync and result.status == "accepted":
         payloads = [raw_payload] if raw_payload else []
-        sha = sync_to_durable_home(
-            db_path, payloads, ritual="review import [CORE-1688]"
-        )
-        click.echo(
-            f"durable home synced ({sha[:12]})"
-            if sha
-            else "durable home already current"
-        )
+        try:
+            sha = sync_to_durable_home(
+                db_path, payloads, ritual="review import [CORE-1688]"
+            )
+        except (RuntimeError, subprocess.CalledProcessError) as error:
+            sync_failed = True
+            # The import already committed; only the write-through failed. Say
+            # both, so nobody re-runs an idempotent-but-confusing import to
+            # "fix" a git problem.
+            detail = getattr(error, "stderr", None) or error
+            click.echo(
+                f"SYNC FAILED: {detail}\n"
+                "The import itself is committed to the local database — do not "
+                "re-run it. Fix the data home (set $LEGESHER_DATA_REPO, or "
+                "resolve the git state) and push it by hand; the run is not "
+                "complete until the database and payload reach the data home."
+            )
+        else:
+            click.echo(
+                f"durable home synced ({sha[:12]})"
+                if sha
+                else "durable home already current"
+            )
     elif sync:
         click.echo(f"sync skipped: session {result.status}, nothing accepted")
 
+    if sync_failed:
+        # Exit non-zero even though the import itself succeeded: the ritual is
+        # "import AND push", and a scripted caller that reads 0 here would
+        # record a run whose database never left the workstation.
+        sys.exit(4)
     sys.exit(_EXIT_CODES.get(result.status, 1))
 
 
@@ -349,7 +368,10 @@ def import_issue(
             required_attestations=("original_work", "coc_agreed"),
             conduct_wordlist=_load_wordlist(wordlist),
         )
-        result = importer.import_bundle(parsed.bundle)
+        # The notes belong to the IMPORT, not to this terminal: `import_bundle`
+        # records them as a `parse` warn stage and on `ImportResult.parse_notes`,
+        # so they reach the ledger and the verification report (CORE-1838).
+        result = importer.import_bundle(parsed.bundle, parse_notes=parsed.notes)
     except ValueError as error:
         raise click.ClickException(str(error))
     except sqlite3.IntegrityError as error:
@@ -365,7 +387,6 @@ def import_issue(
         json_report=json_report,
         reply=reply,
         sync=sync,
-        parse_notes=parsed.notes,
         reply_target=reply_target,
     )
 
@@ -377,29 +398,48 @@ def quarantine_queue(db_path: Path) -> None:
     _require_db(db_path)
     conn = schema_v2.connect(db_path)
     try:
+        # The lens is what a maintainer reaches for BEFORE importing anything,
+        # so it cannot assume the import lane has already upgraded the
+        # carried-forward database (CORE-1838).
+        schema_v2.ensure_intake_screening(conn)
         rows = conn.execute(
             "SELECT option_uid, concept_slug, locale, surface_form, verdict,"
-            " screened_at, note FROM quarantine_queue ORDER BY screened_at"
+            " screened_at, note FROM quarantine_queue"
+            # 'rejected' is a decision already taken. It stays withheld
+            # forever (append-only, and the view is `<> cleared`), but it is
+            # not awaiting anything, and leaving it here would grow the queue
+            # monotonically until the real work was invisible in it.
+            " WHERE verdict <> 'rejected' ORDER BY screened_at"
         ).fetchall()
+        conn_rejected_count = conn.execute(
+            "SELECT COUNT(*) FROM option_withheld WHERE verdict = 'rejected'"
+        ).fetchone()[0]
     finally:
         conn.close()
+    rejected = conn_rejected_count
     if not rows:
         click.echo("quarantine queue is empty")
+        if rejected:
+            click.echo(f"({rejected} rejected option(s) withheld, decision taken)")
         return
     for uid, slug, locale, surface, verdict, at, note in rows:
         click.echo(f"{uid}  {locale}  {slug}  {surface!r}  [{verdict}] since {at}")
         if note:
             click.echo(f"    {note}")
     click.echo(f"\n{len(rows)} option(s) awaiting a verdict")
+    if rejected:
+        click.echo(f"({rejected} rejected option(s) withheld, decision taken)")
 
 
 @click.command("clear-option")
 @click.argument("option_uid")
 @click.option(
     "--verdict",
-    type=click.Choice(["cleared", "held"]),
+    type=click.Choice(["cleared", "held", "rejected"]),
     required=True,
-    help="'cleared' releases the option to rankings/export; 'held' keeps it back.",
+    help="'cleared' releases the option to rankings and export; 'held' keeps it "
+    "back for eyes you do not have; 'rejected' is the moderation verdict for "
+    "harmful, spam or injection content. Only 'cleared' is visible anywhere.",
 )
 @click.option(
     "--by",
@@ -416,16 +456,36 @@ def clear_option(
     _require_db(db_path)
     conn = schema_v2.connect(db_path)
     try:
+        # Recording the FIRST verdict on a carried-forward database is a normal
+        # thing to do; the table it lands in may not exist yet (CORE-1838).
+        schema_v2.ensure_intake_screening(conn)
         if not conn.execute(
             "SELECT 1 FROM options WHERE uid = ?", (option_uid,)
         ).fetchone():
             raise click.ClickException(f"no option {option_uid} in {db_path}")
-        conn.execute(
-            "INSERT INTO option_screenings(option_uid, verdict, screened_by,"
-            " screen_version, note) VALUES (?, ?, ?, ?, ?)",
-            (option_uid, verdict, screened_by, SCREEN_VERSION, note),
-        )
-        conn.commit()
+        try:
+            conn.execute(
+                "INSERT INTO option_screenings(option_uid, verdict, screened_by,"
+                " screen_version, note) VALUES (?, ?, ?, ?, ?)",
+                (option_uid, verdict, screened_by, SCREEN_VERSION, note),
+            )
+            conn.commit()
+        except sqlite3.IntegrityError as error:
+            conn.rollback()
+            hint = (
+                "An option that is currently canon-selected cannot be withheld "
+                "in place — remove it from libs/i18n/canon/<locale>.toml and "
+                "reload, so the demotion is a reviewed text change rather than "
+                "a side effect."
+                if "canon-selected" in str(error)
+                else "The database refused the verdict itself. If this is a "
+                "carried-forward database built before the 'rejected' verdict "
+                "existed, its CHECK constraint predates the vocabulary; rebuild "
+                "it or apply the current schema."
+            )
+            raise click.ClickException(
+                f"the database refused this verdict: {error}. {hint}"
+            )
         visible = conn.execute(
             "SELECT COUNT(*) FROM option_standings WHERE option_uid = ?",
             (option_uid,),

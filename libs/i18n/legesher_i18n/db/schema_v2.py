@@ -32,6 +32,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import os
+import re
 import sqlite3
 import unicodedata
 from pathlib import Path
@@ -43,6 +44,7 @@ __all__ = [
     "MESSAGE_PARTITION_TABLES",
     "MIN_PUBLISH_SALT_LENGTH",
     "SCHEMA_V2_PATH",
+    "SCREENING_ROOTS",
     "SEEDED_VALIDATOR_VERSION",
     "UID_HASH_LENGTH",
     "annotation_uid",
@@ -52,12 +54,14 @@ __all__ = [
     "connect",
     "contributor_id",
     "endorsement_uid",
+    "ensure_intake_screening",
     "expansion_uid",
     "is_identity_translation",
     "messages_partition_ddl",
     "normalize_surface_form",
     "option_uid",
     "read_schema_sql",
+    "screening_objects",
     "session_uid",
     "style_uid",
 ]
@@ -225,6 +229,100 @@ def messages_partition_ddl() -> list[str]:
     finally:
         conn.close()
     return [row[0] for row in rows]
+
+
+#: The screening objects CORE-1828 introduced, by name. Anything whose DDL
+#: MENTIONS one of these consumes the verdict and belongs to the same upgrade —
+#: which is how :func:`ensure_intake_screening` finds the consumers without a
+#: hand-maintained list that drifts the moment a view is added.
+SCREENING_ROOTS = (
+    "option_screenings",
+    "option_screening_status",
+    "option_withheld",
+)
+
+
+def screening_objects() -> list[tuple[str, str, str]]:
+    """The full CORE-1828 object set, read back from a fresh schema.
+
+    Read from ``sqlite_master`` after applying the schema to a throwaway
+    database — the same approach as :func:`messages_partition_ddl`, and for the
+    same reason: splitting the .sql on semicolons mangles trigger bodies, which
+    contain their own.
+
+    Returns:
+        ``(type, name, sql)`` in creation order — the screening table with its
+        index and triggers, the screening views, AND every view or trigger
+        whose body queries one of :data:`SCREENING_ROOTS`.
+    """
+    scratch = sqlite3.connect(":memory:")
+    try:
+        apply_schema_v2(scratch)
+        rows = scratch.execute(
+            "SELECT type, name, tbl_name, sql FROM sqlite_master "
+            "WHERE sql IS NOT NULL ORDER BY rowid"
+        ).fetchall()
+    finally:
+        scratch.close()
+
+    return [
+        (kind, name, sql)
+        for kind, name, tbl_name, sql in rows
+        if tbl_name in SCREENING_ROOTS
+        or name in SCREENING_ROOTS
+        or any(root in sql for root in SCREENING_ROOTS)
+    ]
+
+
+def ensure_intake_screening(conn: sqlite3.Connection) -> None:
+    """Install the CORE-1828 screening objects on a database that predates them.
+
+    `migrate_to_v2.py` rebuilds from scratch, so a fresh build gets these from
+    the DDL — but the intake ritual deliberately carries the PREVIOUS database
+    copy forward, because clearing verdicts live in `option_screenings` and a
+    from-scratch rebuild would replay every community option back into
+    quarantine. That carried-forward file has no screening table and no
+    `option_withheld` view, and every gate plus the corpus export queries the
+    view: without this they fail with `no such table: option_withheld`.
+
+    Installing the table and its views is only half the upgrade, and the less
+    dangerous half. CORE-1828 also REWROTE the objects that consume the
+    verdict — `option_standings`, `terminology_export` and the canon guard —
+    and a carried-forward database holds those in their old, unfiltered form.
+    Creating the table while leaving them alone produces the worst outcome
+    available: the screening rows exist, nothing reads them, and a quarantined
+    submission ranks in standings and surfaces as a terminology alternate with
+    no error anywhere. So:
+
+    * tables and indexes are created IF NOT EXISTS — they hold rows, and the
+      verdicts already recorded are the reason the file was carried forward;
+    * views and triggers are DROPPED and recreated — they hold no state, and a
+      stale body is exactly what has to go. `IF NOT EXISTS` on a view that
+      already exists in its pre-screening form is a silent no-op.
+
+    Idempotent: re-running it re-derives the same objects from the same DDL,
+    and no row is touched, so it is safe to call on every connection.
+
+    Args:
+        conn: An open connection to the operational database.
+    """
+    for kind, name, statement in screening_objects():
+        if kind in ("view", "trigger"):
+            conn.execute(f"DROP {kind.upper()} IF EXISTS {name}")  # nosec B608
+            conn.execute(statement)
+            continue
+        # The shipped DDL carries no IF NOT EXISTS (a fresh build must fail
+        # loudly on a redefinition); adding it here is what makes the upgrade
+        # re-runnable against a database that already has some of these.
+        conn.execute(
+            re.sub(
+                r"^\s*CREATE (TABLE|INDEX) ",
+                lambda m: f"CREATE {m.group(1)} IF NOT EXISTS ",
+                statement,
+                count=1,
+            )
+        )
+    conn.commit()
 
 
 def normalize_surface_form(surface_form: str) -> str:

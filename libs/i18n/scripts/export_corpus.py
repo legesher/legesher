@@ -195,8 +195,8 @@ CONFIG_SQL: dict[str, str] = {
         -- Quarantined community submissions never export until a maintainer
         -- clears them (CORE-1828); counted in the ledger's quarantined_rows.
         WHERE NOT EXISTS (
-            SELECT 1 FROM option_screening_status q
-            WHERE q.option_uid = o.uid AND q.verdict IN ('quarantined', 'held')
+            SELECT 1 FROM option_withheld q
+            WHERE q.option_uid = o.uid
         )
         ORDER BY o.uid
     """,
@@ -208,8 +208,8 @@ CONFIG_SQL: dict[str, str] = {
         -- is held back above) and leak that the submission exists; held out
         -- with its option (CORE-1828).
         WHERE NOT EXISTS (
-            SELECT 1 FROM option_screening_status q
-            WHERE q.option_uid = e.option_uid AND q.verdict IN ('quarantined', 'held')
+            SELECT 1 FROM option_withheld q
+            WHERE q.option_uid = e.option_uid
         )
         ORDER BY e.uid
     """,
@@ -247,18 +247,50 @@ QUARANTINED_COUNT_SQL: dict[str, str] = {
     "options": """
         SELECT COUNT(*) FROM options o
         WHERE EXISTS (
-            SELECT 1 FROM option_screening_status q
-            WHERE q.option_uid = o.uid AND q.verdict IN ('quarantined', 'held')
+            SELECT 1 FROM option_withheld q
+            WHERE q.option_uid = o.uid
         )
     """,
     "endorsements": """
         SELECT COUNT(*) FROM endorsements e
         WHERE EXISTS (
-            SELECT 1 FROM option_screening_status q
-            WHERE q.option_uid = e.option_uid AND q.verdict IN ('quarantined', 'held')
+            SELECT 1 FROM option_withheld q
+            WHERE q.option_uid = e.option_uid
         )
     """,
 }
+
+#: ``option_withheld`` as an empty relation, prepended to a query when the real
+#: view is absent (CORE-1838). A CTE shadows a table of the same name, so this
+#: needs no second copy of any query — the screening predicate stays written
+#: once, in one place, and simply matches nothing.
+#:
+#: Absent screening objects mean a database carried forward from before
+#: CORE-1828: no verdict was ever recorded on it, so nothing is withheld, and
+#: exporting every row is the CORRECT reading rather than a lenient one. It is
+#: the same rule the schema states for a missing screening ROW ("absence
+#: changes nothing"), one level up. The export cannot install the objects
+#: itself: it opens the database ``mode=ro`` on purpose, so that publishing can
+#: never mutate the artifact it is publishing.
+_NO_SCREENING_CTE = (
+    "WITH option_withheld(option_uid, verdict) AS (SELECT NULL, NULL WHERE 0)\n"
+)
+
+
+def _screening_installed(conn: sqlite3.Connection) -> bool:
+    """Whether this database has the CORE-1828 screening view at all."""
+    return (
+        conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE name = 'option_withheld'"
+        ).fetchone()
+        is not None
+    )
+
+
+def _screening_sql(sql: str, *, installed: bool) -> str:
+    """*sql*, made runnable on a database that predates screening."""
+    return sql if installed else _NO_SCREENING_CTE + sql
+
 
 #: The PINNED Arrow schema of every config, as (column, kind) pairs.
 #:
@@ -1140,6 +1172,7 @@ def export_corpus(db_path: Path, out_dir: Path) -> dict[str, Any]:
 
     conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
+    screening = _screening_installed(conn)
 
     _require_well_formed_locales(conn)
 
@@ -1152,7 +1185,7 @@ def export_corpus(db_path: Path, out_dir: Path) -> dict[str, Any]:
     active_endorsements = 0
 
     for name, sql in CONFIG_SQL.items():
-        cursor = conn.execute(sql)
+        cursor = conn.execute(_screening_sql(sql, installed=screening))
         columns = [description[0] for description in cursor.description]
         rows = cursor.fetchall()
         table_data: dict[str, Any] = {
@@ -1193,7 +1226,9 @@ def export_corpus(db_path: Path, out_dir: Path) -> dict[str, Any]:
             f"SELECT COUNT(*) FROM {CONFIG_BASE_TABLE[name]}"  # noqa: S608 -- fixed map
         ).fetchone()[0]
         quarantined = (
-            conn.execute(QUARANTINED_COUNT_SQL[name]).fetchone()[0]
+            conn.execute(
+                _screening_sql(QUARANTINED_COUNT_SQL[name], installed=screening)
+            ).fetchone()[0]
             if name in QUARANTINED_COUNT_SQL
             else 0
         )
@@ -1208,14 +1243,16 @@ def export_corpus(db_path: Path, out_dir: Path) -> dict[str, Any]:
     # The view sum mirrors the publish surface: endorsements on quarantined
     # options are held back above, so they are held out of the target too.
     view_sum = conn.execute(
-        """
+        _screening_sql(
+            """
         SELECT COALESCE(SUM(ec.endorsements), 0) FROM endorsement_counts ec
         WHERE NOT EXISTS (
-            SELECT 1 FROM option_screening_status q
+            SELECT 1 FROM option_withheld q
             WHERE q.option_uid = ec.option_uid
-              AND q.verdict IN ('quarantined', 'held')
         )
-        """
+        """,
+            installed=screening,
+        )
     ).fetchone()[0]
     dataset_card = _render_dataset_card(conn)
     conn.close()

@@ -15,6 +15,7 @@ digest, a test fails with the exact value that moved.
 
 from __future__ import annotations
 
+import re
 import sqlite3
 from collections.abc import Iterator
 
@@ -826,3 +827,257 @@ def test_canon_refuses_quarantined_option(seeded: sqlite3.Connection) -> None:
         seeded.execute(canon_insert)
     screen(seeded, OPT1, "cleared")
     seeded.execute(canon_insert)
+
+
+def test_rejected_is_withheld_like_quarantine(seeded: sqlite3.Connection) -> None:
+    # 'rejected' is the moderation verdict the intake runbook documents. The
+    # predicate is `<> 'cleared'`, so it needs no per-verdict plumbing.
+    screen(seeded, OPT1, "rejected", note="slur")
+    assert (
+        seeded.execute(
+            f"SELECT 1 FROM option_standings WHERE option_uid='{OPT1}'"
+        ).fetchall()
+        == []
+    )
+    assert one(
+        seeded, f"SELECT verdict FROM option_withheld WHERE option_uid='{OPT1}'"
+    ) == ("rejected",)
+    with pytest.raises(sqlite3.IntegrityError, match="quarantined"):
+        seeded.execute(
+            "INSERT INTO canon_selections(concept_id, locale, option_uid,"
+            f" surface_form, source_file) VALUES (1,'ur','{OPT1}','ورنہ_اگر',"
+            " 'libs/i18n/canon/ur.toml')"
+        )
+
+
+def test_an_unknown_verdict_is_refused(seeded: sqlite3.Connection) -> None:
+    with pytest.raises(sqlite3.IntegrityError):
+        screen(seeded, OPT1, "approved")
+
+
+def test_a_canon_selected_option_cannot_be_withheld_in_place(
+    seeded: sqlite3.Connection,
+) -> None:
+    # The mirror of trg_canon_no_quarantined_option, previously untested.
+    screen(seeded, OPT1, "cleared")
+    seeded.execute(
+        "INSERT INTO canon_selections(concept_id, locale, option_uid,"
+        f" surface_form, source_file) VALUES (1,'ur','{OPT1}','ورنہ_اگر',"
+        " 'libs/i18n/canon/ur.toml')"
+    )
+    for verdict in ("quarantined", "held", "rejected"):
+        with pytest.raises(sqlite3.IntegrityError, match="canon-selected"):
+            screen(seeded, OPT1, verdict)
+
+
+def test_intake_views_can_be_added_to_a_database_that_predates_them(
+    db: sqlite3.Connection,
+) -> None:
+    """A carried-forward operational database has no screening objects.
+
+    `migrate_to_v2.py` rebuilds from scratch, but the intake ritual carries the
+    previous database copy forward to keep its clearing verdicts — so the
+    screening table and views must be installable onto a database built before
+    they existed, or every gate and the corpus export fail with
+    `no such table: option_withheld`.
+
+    The pre-branch state is simulated by dropping exactly those objects from a
+    current schema, which is what a database built at origin/main looks like.
+    """
+    from legesher_i18n.db.schema_v2 import ensure_intake_screening
+
+    for view in ("option_withheld", "option_screening_status"):
+        db.execute(f"DROP VIEW {view}")  # nosec B608 - fixed names
+    db.execute("DROP TABLE option_screenings")
+    with pytest.raises(sqlite3.OperationalError, match="option_withheld"):
+        db.execute("SELECT 1 FROM option_withheld")
+
+    for _ in range(2):  # idempotent: safe to call on every connection
+        ensure_intake_screening(db)
+
+    db.executescript(
+        """
+        INSERT INTO locales(tag, language_subtag, name, native_name, in_registry)
+            VALUES ('ur','ur','Urdu','اردو',1);
+        INSERT INTO concepts(slug, definition_en, category)
+            VALUES ('elif-compound','x','control_flow');
+        INSERT INTO options(uid, concept_id, locale, surface_form)
+            VALUES ('opt_"""
+        + "9" * 24
+        + """', 1, 'ur', 'x');
+        """
+    )
+    opt = "opt_" + "9" * 24
+    assert db.execute("SELECT COUNT(*) FROM option_withheld").fetchone() == (0,)
+    db.execute(
+        "INSERT INTO option_screenings(option_uid, verdict, screened_by,"
+        " screen_version) VALUES (?, 'quarantined', 'importer', 'v1')",
+        (opt,),
+    )
+    assert db.execute(
+        "SELECT verdict FROM option_withheld WHERE option_uid = ?", (opt,)
+    ).fetchone() == ("quarantined",)
+    # The append-only trigger came back with the table, not just the view.
+    with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        db.execute("UPDATE option_screenings SET verdict='cleared'")
+
+
+def test_ensure_intake_screening_leaves_a_current_database_alone(
+    seeded: sqlite3.Connection,
+) -> None:
+    from legesher_i18n.db.schema_v2 import ensure_intake_screening
+
+    screen(seeded, OPT1, "cleared")
+    ensure_intake_screening(seeded)
+    assert one(
+        seeded, f"SELECT verdict FROM option_screening_status WHERE option_uid='{OPT1}'"
+    ) == ("cleared",)
+
+
+# ---------------------------------------------------------------------------
+# The carried-forward database, reproduced honestly (CORE-1838)
+# ---------------------------------------------------------------------------
+#
+# The test above simulates the old database by dropping the three objects
+# CORE-1828 ADDED. That is only half of what the branch did: it also rewrote
+# the views and triggers that CONSUME the screening verdict. A database
+# carried forward from before the branch has those consumers in their OLD,
+# unfiltered form -- so dropping-only leaves the consumers already correct and
+# cannot see whether the upgrade repairs them.
+#
+# This fixture reproduces both halves, and derives the "old" consumer bodies
+# from the shipped DDL rather than hardcoding them, so the day someone moves
+# the filter the fixture fails loudly instead of quietly becoming a no-op.
+
+#: The screening filter as the shipped views spell it. Deleting the clause from
+#: a view body yields exactly that view as it stood before CORE-1828.
+_SCREENING_FILTER = re.compile(
+    r"\s*(?:WHERE|AND)\s+NOT EXISTS\s*\(\s*SELECT 1 FROM option_withheld.*?\)",
+    re.DOTALL,
+)
+
+#: Objects CORE-1828 introduced. `option_screenings` covers its index and its
+#: triggers too (they carry it as `tbl_name`).
+_SCREENING_ADDED = (
+    "option_screenings",
+    "option_screening_status",
+    "option_withheld",
+    "quarantine_queue",
+    "trg_canon_no_quarantined_option",
+)
+
+
+@pytest.fixture()
+def carried_forward(seeded: sqlite3.Connection) -> sqlite3.Connection:
+    """`seeded`, rewound to the schema as it stood before CORE-1828."""
+    consumers = seeded.execute(
+        "SELECT name, sql FROM sqlite_master WHERE type = 'view'"
+        " AND sql LIKE '%option_withheld%' AND name <> 'option_withheld'"
+    ).fetchall()
+    # The branch filtered two views; if that count moves, this fixture is
+    # describing a schema that no longer exists.
+    assert {name for name, _ in consumers} == {"option_standings", "terminology_export"}
+
+    for name, sql in consumers:
+        unfiltered, swaps = _SCREENING_FILTER.subn("", sql)
+        assert swaps == 1, f"no screening filter found in {name}: {sql}"
+        seeded.execute(f"DROP VIEW {name}")  # nosec B608 - name from sqlite_master
+        seeded.execute(unfiltered)
+
+    dropped = seeded.execute(
+        "SELECT name, type FROM sqlite_master"
+        " WHERE tbl_name = 'option_screenings' OR name IN (?, ?, ?, ?)",
+        _SCREENING_ADDED[1:],
+    ).fetchall()
+    for name, kind in dropped:
+        if kind != "index" or name.startswith(
+            "idx_"
+        ):  # implicit indexes go with the table
+            seeded.execute(f"DROP {kind.upper()} IF EXISTS {name}")  # nosec B608
+    seeded.commit()
+
+    with pytest.raises(sqlite3.OperationalError, match="option_withheld"):
+        seeded.execute("SELECT 1 FROM option_withheld")
+    return seeded
+
+
+def test_upgraded_database_hides_quarantined_options_from_standings(
+    carried_forward: sqlite3.Connection,
+) -> None:
+    """Standings must stop ranking a quarantined option after the upgrade.
+
+    The whole point of the screening verdict: an unscreened community
+    submission does not COMPETE. A carried-forward database whose
+    `option_standings` predates the filter keeps ranking it -- and everything
+    built on standings (promotion status, the endorsement queue) inherits that.
+    """
+    from legesher_i18n.db.schema_v2 import ensure_intake_screening
+
+    ensure_intake_screening(carried_forward)
+    screen(carried_forward, OPT1, "quarantined", by="importer")
+
+    ranked = {
+        uid
+        for (uid,) in carried_forward.execute("SELECT option_uid FROM option_standings")
+    }
+    assert OPT1 not in ranked
+    assert OPT2 in ranked  # unscreened options are unaffected
+
+
+def test_upgraded_database_hides_quarantined_options_from_terminology(
+    carried_forward: sqlite3.Connection,
+) -> None:
+    """`terminology_export` feeds `legesher translate` prompt assembly.
+
+    A quarantined submission surfacing as a term alternate is the same leak as
+    exporting it, one layer further out.
+    """
+    from legesher_i18n.db.schema_v2 import ensure_intake_screening
+
+    ensure_intake_screening(carried_forward)
+    screen(carried_forward, OPT1, "quarantined", by="importer")
+
+    alternates = {
+        form
+        for (form,) in carried_forward.execute(
+            "SELECT surface_form FROM terminology_export"
+        )
+    }
+    assert "ورنہ_اگر" not in alternates
+    assert "وگرنہ" in alternates
+
+
+def test_upgraded_database_has_the_maintainer_queue(
+    carried_forward: sqlite3.Connection,
+) -> None:
+    """`legesher-i18n quarantine-queue` is the ritual's triage lens.
+
+    Without the view the command dies with `no such table: quarantine_queue`
+    on exactly the database the ritual carries forward.
+    """
+    from legesher_i18n.db.schema_v2 import ensure_intake_screening
+
+    ensure_intake_screening(carried_forward)
+    screen(carried_forward, OPT1, "quarantined", by="importer", note="new arrival")
+
+    assert one(
+        carried_forward,
+        f"SELECT option_uid, verdict, note FROM quarantine_queue WHERE option_uid='{OPT1}'",
+    ) == (OPT1, "quarantined", "new arrival")
+
+
+def test_upgraded_database_refuses_canon_on_a_quarantined_option(
+    carried_forward: sqlite3.Connection,
+) -> None:
+    """The canon guard is the one that would ship an unscreened word."""
+    from legesher_i18n.db.schema_v2 import ensure_intake_screening
+
+    ensure_intake_screening(carried_forward)
+    screen(carried_forward, OPT1, "quarantined", by="importer")
+
+    with pytest.raises(sqlite3.IntegrityError, match="quarantined"):
+        carried_forward.execute(
+            "INSERT INTO canon_selections(concept_id, locale, option_uid,"
+            f" surface_form, source_file) VALUES (1,'ur','{OPT1}','ورنہ_اگر',"
+            " 'libs/i18n/canon/ur.toml')"
+        )

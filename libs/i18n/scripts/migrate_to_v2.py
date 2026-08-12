@@ -90,17 +90,16 @@ from legesher_i18n.db.schema_v2 import (  # noqa: E402
     salt_fingerprint,
 )
 from legesher_i18n.surface_validation import (  # noqa: E402
-    NON_PACK_SCRIPTS,
     VALIDATOR_VERSION,
     Validation,
     allowed_scripts_for,
     validate_surface,
 )
 
-# Re-exported for compatibility: this script was the validators' home before
-# CORE-1688 moved them into the package (the importer runs the same checks).
+# Re-exported because tests/test_v2_validation_gate.py imports them from here:
+# this script was the validators' home before CORE-1688 moved them into the
+# package so the importer could run the same checks.
 __all__ = [
-    "NON_PACK_SCRIPTS",
     "VALIDATOR_VERSION",
     "Validation",
     "allowed_scripts_for",

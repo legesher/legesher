@@ -38,9 +38,12 @@ unusable in a room full of students do not ship, in any language.
 
 How that is enforced, in order:
 
-1. **A screening gate flags at contribution time.** Automated screening runs per language and flags
-   candidate terms for human attention. A flag is a request for native eyes, not a punishment, and
-   being flagged does not remove your contribution from the record.
+1. **A maintainer screens every submission before it is visible.** Automated screening does not
+   exist yet, and until it does the screen is a person reading each new word. Your contribution is
+   recorded on arrival and is held back from rankings and from the published corpus until it has
+   been read and cleared — usually within a week. Being held is not a punishment and never removes
+   your contribution from the record; it means it has not been read yet, or that it needs eyes the
+   maintainer does not have.
 2. **Native reviewers judge in context.** Words carry weight machines cannot see, in both
    directions: a term that looks innocuous can be a regional slur, and a term that pattern-matches
    badly can be perfectly ordinary. The judgment call belongs to people who live in the language.

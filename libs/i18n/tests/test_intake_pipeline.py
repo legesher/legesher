@@ -665,6 +665,26 @@ def test_an_accepted_bundle_still_reports_duplicate(db_path: Path) -> None:
     assert imp.import_bundle(make_bundle()).status == "duplicate"
 
 
+def test_parse_notes_survive_a_duplicate_reimport(db_path: Path) -> None:
+    """A re-run of the same bundle still reports what the parse noticed.
+
+    The duplicate branch returns before the rest of the stage list is built,
+    so notes raised on the way in would vanish on exactly the run a maintainer
+    makes when re-checking an issue already imported (CORE-1838).
+    """
+    imp = importer(db_path)
+    notes = ["unknown term `walrus`: no concept maps to it; line skipped"]
+
+    assert imp.import_bundle(make_bundle(), parse_notes=notes).status == "accepted"
+    again = imp.import_bundle(make_bundle(), parse_notes=notes)
+
+    assert again.status == "duplicate"
+    assert again.parse_notes == notes
+    assert again.report["stages"] == [
+        {"stage": "parse", "status": "warn", "details": notes}
+    ]
+
+
 def test_a_repeated_ranking_entry_is_returned_not_a_traceback(
     db_path: Path,
 ) -> None:
@@ -925,3 +945,176 @@ def test_consent_already_on_file_is_never_rewritten_by_a_bundle(
     assert any(
         "already on file" in str(d) for d in result.report["stages"][2]["details"]
     )
+
+
+def test_a_returned_reply_cannot_be_shaped_by_the_submitter(db_path: Path) -> None:
+    # Report details quote surface forms verbatim, and --reply posts them under
+    # the maintainer's account. A submitter must not be able to inject markdown
+    # into a comment we are signing.
+    bundle = make_bundle()
+    bundle["responses"][0]["ranking"] = ["`</code>\n\n## Fake heading\n- [x] done"]
+    reply = importer(db_path).import_bundle(bundle).reply_text()
+    bullets = [line for line in reply.splitlines() if line.startswith("- ")]
+    assert bullets, reply
+    for line in bullets:
+        # One inline code span per finding: the payload renders as literal text
+        # rather than as markdown structure in a comment we are signing.
+        assert line.startswith("- `") and line.endswith("`"), line
+        assert line.count("`") == 2, line
+    # Nothing the submitter wrote can start a line, so no heading, list item or
+    # task box of theirs is ever rendered as markup.
+    assert not any(
+        line.lstrip().startswith(("#", "* ", "> ")) for line in reply.splitlines()
+    ), reply
+
+
+def test_the_conduct_screen_flags_bidi_controls_and_credit_text(
+    db_path: Path,
+) -> None:
+    # Bidi is the injection smell that matters most for the RTL locales this
+    # path targets; credit_text is free text like any other.
+    bundle = make_bundle()
+    bundle["responses"][0]["commentary"] = [
+        {"topic": "general", "body": "innocuous‮txet desrever"}
+    ]
+    bundle["contributor"]["consent"] = {
+        "consent_version": "1.0",
+        "credit_preference": "name",
+        "credit_text": "Someone <someone@example.com>",
+    }
+    result = importer(db_path).import_bundle(bundle)
+    conduct = result.report["stages"][1]
+    assert conduct["status"] == "warn"
+    assert any("bidi" in str(d) for d in conduct["details"])
+    assert any("credit_text" in str(d) for d in conduct["details"])
+    assert result.needs_human_eyes
+
+
+def test_credit_preference_name_writes_the_display_name(db_path: Path) -> None:
+    bundle = make_bundle()
+    bundle["contributor"]["consent"] = {
+        "consent_version": "1.0",
+        "credit_preference": "name",
+        "credit_text": "مدیحہ خان",
+    }
+    assert importer(db_path).import_bundle(bundle).status == "accepted"
+    assert q(
+        db_path,
+        "SELECT credit_preference, display_name, consent_public_credit"
+        " FROM contributor_identities WHERE contributor_id = ?",
+        REVIEWER_ID,
+    ) == [("name", "مدیحہ خان", 1)]
+
+
+def test_credit_preference_name_without_a_name_is_returned(db_path: Path) -> None:
+    bundle = make_bundle()
+    bundle["contributor"]["consent"] = {
+        "consent_version": "1.0",
+        "credit_preference": "name",
+    }
+    result = importer(db_path).import_bundle(bundle)
+    assert result.status == "returned"
+    assert any("credit_text" in str(d) for d in result.report["stages"][2]["details"])
+
+
+def test_a_returned_session_can_be_returned_again(db_path: Path) -> None:
+    # The resuming branch of _returned: a second attempt at a still-broken
+    # bundle refreshes the report on the existing row rather than colliding.
+    bundle = make_bundle()
+    bundle["responses"][0]["ranking"] = ["توڑو"]
+    imp = importer(db_path)
+    first = imp.import_bundle(bundle)
+    second = imp.import_bundle(bundle)
+    assert first.status == second.status == "returned"
+    assert counts(db_path)["review_sessions"] == 1
+    assert q(db_path, "SELECT status FROM review_sessions") == [("returned",)]
+
+
+def test_an_unregistered_programming_language_is_returned(db_path: Path) -> None:
+    result = importer(db_path).import_bundle(make_bundle(programming_language="cobol"))
+    assert result.status == "returned"
+    assert any("cobol" in str(d) for d in result.report["stages"][0]["details"])
+
+
+def test_a_style_profile_session_may_not_carry_a_programming_language(
+    db_path: Path,
+) -> None:
+    bundle = make_bundle(
+        track="style_profile", programming_language="python", responses=[]
+    )
+    result = importer(db_path).import_bundle(bundle)
+    assert result.status == "returned"
+    assert any("locale-wide" in str(d) for d in result.report["stages"][0]["details"])
+
+
+def test_an_expansion_must_attach_to_an_endorsed_word(db_path: Path) -> None:
+    bundle = make_bundle()
+    bundle["responses"][0]["expansion"] = {"for": "توڑو", "text": "توڑ دو"}
+    result = importer(db_path).import_bundle(bundle)
+    assert result.status == "returned"
+    assert any("expansion" in str(d) for d in result.report["stages"][0]["details"])
+
+
+def test_ingest_is_atomic_when_a_row_is_refused(
+    db_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The CLI tells the contributor "nothing was written (the ingest is one
+    # transaction)". That promise had no test behind it.
+    from legesher_i18n.intake import pipeline as mod
+
+    real = mod.commentary_uid
+
+    def explode(*args: object, **kwargs: object) -> str:
+        raise sqlite3.IntegrityError("simulated failure late in ingest")
+
+    monkeypatch.setattr(mod, "commentary_uid", explode)
+    with pytest.raises(sqlite3.IntegrityError):
+        importer(db_path).import_bundle(make_bundle())
+    monkeypatch.setattr(mod, "commentary_uid", real)
+
+    # Nothing survives the rollback — not the session, not the options it had
+    # already inserted before the failure.
+    after = counts(db_path)
+    assert after["review_sessions"] == 0
+    assert after["endorsements"] == 0
+    assert after["options"] == 1  # only the pre-seeded model candidate
+    assert after["option_screenings"] == 0
+
+
+def test_quality_warns_on_a_coinage_with_no_established_sibling(
+    db_path: Path,
+) -> None:
+    # Previously asserted only `status in ("pass", "warn")` — the two values the
+    # stage can produce. This exercises the branch itself.
+    bundle = make_bundle()
+    bundle["responses"][0]["concept"] = "break-loop"
+    bundle["responses"][0]["blind"] = {
+        "surface_form": "توڑو",
+        "established_term": "coined",
+    }
+    bundle["responses"][0]["endorsements"] = []
+    bundle["responses"][0]["ranking"] = ["توڑو"]
+    bundle["responses"][0]["expansion"] = None
+    bundle["responses"][0]["commentary"] = []
+    result = importer(db_path).import_bundle(bundle)
+    quality = result.report["stages"][4]
+    assert quality["status"] == "warn"
+    assert any("second-reviewer queue" in str(d) for d in quality["details"])
+
+
+def test_quality_suggests_the_cognate_annotation_on_an_identity_rendering(
+    db_path: Path,
+) -> None:
+    bundle = make_bundle()
+    bundle["responses"][0]["blind"] = None
+    bundle["responses"][0]["endorsements"] = [
+        {"surface_form": "elif", "annotations": [], "comment": None}
+    ]
+    bundle["responses"][0]["ranking"] = []
+    bundle["responses"][0]["expansion"] = None
+    result = importer(db_path).import_bundle(bundle)
+    quality = result.report["stages"][4]
+    assert quality["status"] == "warn"
+    assert any("cognate_loanword" in str(d) for d in quality["details"])
+    # A suggestion, never a mandate: the row still lands.
+    assert result.status == "accepted"

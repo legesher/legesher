@@ -58,9 +58,38 @@ Run the intake importer over the triaged issues. It mints or resolves the
 contributor identity, records the consent version and date, writes the options
 and endorsements, and stamps every new row as **quarantined**.
 
-The importer's command surface is documented with the importer itself; this
-runbook governs the order and the judgment, not the flags. What matters here is
-the contract it must honour:
+**Export the escrowed contributor salt first.** The importer refuses the public
+development salt, and refuses a salt whose fingerprint disagrees with the target
+database's `build_meta`. Both refusals exist because `contributor_id` is an
+ingredient of a primary key: importing under the wrong salt forks every id it
+writes, and the push in step 6 would carry the fork to the durable home.
+
+```bash
+read -rs LEGESHER_CONTRIBUTOR_SALT && export LEGESHER_CONTRIBUTOR_SALT
+uv run legesher-i18n import-issue <issue-url> --db build/translations_v2.db
+uv run legesher-i18n import-review-bundle <file> --db build/translations_v2.db
+```
+
+Read the per-stage report each run prints. Three outcomes need a decision:
+
+- **`returned`** — a rule was broken; the printed report is what you send back.
+  A return is not fatal: once you have fixed the cause (registered a missing
+  concept, added a locale), re-run the import on the *same* file and the session
+  resumes and completes, one row, same session uid.
+- **`halted`** — the withdrawal rule fired: someone who asked to be forgotten
+  appears to have submitted again. **That decision is yours, never the
+  importer's.** Reply by hand, and do not quote the report — it names the
+  withdrawal.
+- **`accepted`** — go to step 3.
+
+Conduct wordlists (the per-locale slur/epithet lists the screen checks free text
+against) live in the durable data home, never in this repository — publishing a
+curated slur list under the project's name is its own harm, and a published
+filter is one an adversary can read around. Pass one with
+`--wordlist "$LEGESHER_DATA_REPO/screening/wordlists/<locale>.txt"`. A hit is a
+triage sort key, not a verdict: everything is quarantined either way.
+
+What matters beyond the flags is the contract the importer honours:
 
 - Import is idempotent. Re-running over the same issue writes nothing new
   (bundle digests are content-addressed).
@@ -106,6 +135,23 @@ auditable and so the automated gate can inherit the same shape later:
 - **Reject** — harmful, spam, or an injection attempt. Record the reason. The row
   stays (the corpus is append-only) and stays out of every export.
 
+```bash
+uv run legesher-i18n quarantine-queue --db build/translations_v2.db
+uv run legesher-i18n clear-option <opt_uid> --verdict cleared --by <you> \
+    --note "import ritual $(date +%F)"
+# or --verdict held / --verdict rejected, each with a --note saying why
+```
+
+`--by` is required: an unattributed moderation decision is not auditable. Every
+verdict is appended, never overwritten, so the sequence of decisions on an
+option stays readable. Only `cleared` is visible anywhere — held and rejected
+are withheld by the same predicate, so nothing depends on the difference except
+the record of what you judged.
+
+An option that is currently canon-selected cannot be withheld in place: pull it
+from `libs/i18n/canon/<locale>.toml` and reload first, so a demotion is always a
+reviewed text change.
+
 A hold that no native reviewer can resolve stays a hold. Time does not clear
 anything by itself.
 
@@ -124,15 +170,38 @@ If a submission was rejected, say which guideline it failed and how an appeal
 works. If it was held for native review, say so plainly rather than leaving it
 sounding accepted.
 
+Every import prints a ready-to-post reply naming the session and option uids.
+`--reply` posts it, labels `contrib:imported` and closes — for accepted
+submissions only. Two rules the flag enforces for you:
+
+- **You name the issue, never the submission.** `import-issue <url>` replies on
+  the URL you typed; a bundle file needs `--reply-to <issue url>`. The target is
+  validated and never read from submission content, because a submitter who
+  controlled it could have `gh` comment on, label and close any issue your token
+  can reach.
+- **A halted import replies with nothing at all**, for the reason in step 2.
+
 ## 6. Push to the durable data home
 
 The working database is untracked. A ritual that ends on your laptop has not
 happened:
 
+`--sync` on the import does this for you — WAL checkpoint, database copy, raw
+payload archived under `intake/<YYYY-MM>/`, path-scoped commit, push — or do it
+by hand after clearing:
+
 ```bash
 cp libs/i18n/legesher_i18n/db/translations.db "$LEGESHER_DATA_REPO/db/"
 cd "$LEGESHER_DATA_REPO" && git add db/translations.db && git commit && git push
 ```
+
+The archived payloads are the rebuild source. `migrate_to_v2.py` rebuilds from
+scratch and knows nothing about sessions, so re-running the importer over the
+archived payloads is what re-derives the intake layer; re-import is idempotent,
+and the withdrawal rule stops a replay resurrecting an erased identity. One
+thing a from-scratch rebuild does NOT recover is your clearing decisions — they
+live in `option_screenings` inside the database itself, so carry the previous
+database copy forward or expect to re-screen.
 
 Commit message names the date and what the run took in ("intake: 2026-08-18, 4
 issues, 31 options, 2 held"). That message is the run log.

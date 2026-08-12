@@ -643,7 +643,11 @@ CREATE TABLE option_validations (
 CREATE TABLE option_screenings (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
     option_uid     TEXT NOT NULL REFERENCES options(uid) ON DELETE RESTRICT,
-    verdict        TEXT NOT NULL CHECK (verdict IN ('quarantined', 'cleared', 'held')),
+    verdict        TEXT NOT NULL
+                   CHECK (verdict IN ('quarantined',  -- default on arrival
+                                      'cleared',      -- competes and exports
+                                      'held',         -- needs eyes I do not have
+                                      'rejected')),   -- harmful / spam / injection
     screened_by    TEXT NOT NULL,          -- maintainer handle, or 'importer' for the default
     screen_version TEXT NOT NULL,          -- 'manual-interim-v1' now; CORE-1797 versions later
     note           TEXT,
@@ -666,6 +670,18 @@ SELECT s.option_uid, s.verdict, s.screened_by, s.screen_version, s.note, s.scree
 FROM option_screenings s
 WHERE s.id = (SELECT MAX(s2.id) FROM option_screenings s2
                WHERE s2.option_uid = s.option_uid);
+
+-- THE screening predicate, in one place. Every gate, view and export asks this
+-- view rather than repeating a verdict list, so re-cutting the rule (or adding
+-- a verdict) is one edit instead of ten.
+--
+-- Stated as "not cleared" rather than "quarantined or held" on purpose: a
+-- verdict added later is withheld until someone deliberately decides otherwise,
+-- which is the safe direction for a moderation gate. An option with NO
+-- screening row is absent from this view and therefore visible — that is the
+-- pre-intake default, and it is what keeps migrated rows unaffected.
+CREATE VIEW option_withheld AS
+SELECT option_uid, verdict FROM option_screening_status WHERE verdict <> 'cleared';
 
 -- ===========================================================================
 -- CANON — the maintainer decision. Source of truth is TEXT IN THE MONOREPO.
@@ -913,8 +929,7 @@ END;
 CREATE TRIGGER trg_canon_no_quarantined_option
 BEFORE INSERT ON canon_selections
 WHEN EXISTS (
-    SELECT 1 FROM option_screening_status q
-    WHERE q.option_uid = NEW.option_uid AND q.verdict IN ('quarantined', 'held')
+    SELECT 1 FROM option_withheld q WHERE q.option_uid = NEW.option_uid
 )
 BEGIN
     SELECT RAISE(ABORT,
@@ -926,7 +941,7 @@ END;
 -- the demotion is a reviewed text change, not a database side effect.
 CREATE TRIGGER trg_screenings_no_quarantine_while_canon
 BEFORE INSERT ON option_screenings
-WHEN NEW.verdict IN ('quarantined', 'held')
+WHEN NEW.verdict <> 'cleared'
  AND EXISTS (SELECT 1 FROM canon_selections cs WHERE cs.option_uid = NEW.option_uid)
 BEGIN
     SELECT RAISE(ABORT,
@@ -1035,8 +1050,7 @@ LEFT JOIN option_validations v ON v.option_uid = o.uid
 -- invisible to standings — and to everything built on standings — until a
 -- maintainer clears them. The quarantine_queue view is the maintainer lens.
 WHERE NOT EXISTS (
-    SELECT 1 FROM option_screening_status q
-    WHERE q.option_uid = o.uid AND q.verdict IN ('quarantined', 'held')
+    SELECT 1 FROM option_withheld q WHERE q.option_uid = o.uid
 );
 
 -- Canon resolved through the locale fallback chain.
@@ -1864,7 +1878,7 @@ SELECT
 FROM option_screening_status q
 JOIN options o  ON o.uid = q.option_uid
 JOIN concepts c ON c.id = o.concept_id
-WHERE q.verdict IN ('quarantined', 'held');
+WHERE q.verdict <> 'cleared';
 
 -- The experimental -> official gate per (PL x locale) as a query. Threshold
 -- numbers pending ratification; the gate reads THIS view so re-cutting is
@@ -1933,8 +1947,7 @@ WHERE o.withdrawn_at IS NULL
   -- Quarantined submissions must not surface as terminology alternates either
   -- (CORE-1828): this view feeds `legesher translate` prompt assembly.
   AND NOT EXISTS (
-      SELECT 1 FROM option_screening_status q
-      WHERE q.option_uid = o.uid AND q.verdict IN ('quarantined', 'held')
+      SELECT 1 FROM option_withheld q WHERE q.option_uid = o.uid
   );
 
 -- Transliteration revealed-preference per locale — the aggregate the

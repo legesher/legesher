@@ -111,7 +111,10 @@ def test_import_review_bundle_accepts_and_prints_the_reply(
     assert NEW_OPT in result.output  # reply names the option uids
     ledger = json.loads(report_path.read_text())
     assert ledger["status"] == "accepted"
-    assert ledger["quarantined_options"] == [NEW_OPT]
+    # Every created option is quarantined on arrival, so the ledger carries
+    # one list, not two copies of it.
+    assert ledger["created_options"] == [NEW_OPT]
+    assert "quarantined_options" not in ledger
 
 
 def test_import_review_bundle_returned_is_actionable_and_nonzero(
@@ -170,12 +173,17 @@ def test_import_issue_from_a_payload_file(
         "author": {"login": "drive-by"},
         "title": "[Review]: Urdu (Python)",
         "createdAt": "2026-08-11T08:00:00Z",
+        # A COMPLETE rendered form: the parser refuses a partial body, because
+        # a missing section is how a forged heading swallows the real ones.
         "body": (
-            "### Language being reviewed\n\nUrdu (ur)\n\n### Review notes\n\n"
-            "- `elif` → `ورنہ_اگر` ✅ reads well\n\n"
-            "### Reviewer confirmation\n\n"
-            "- [x] I am a native or fluent speaker of this language\n"
-            "- [x] I agree to follow this project's Code of Conduct\n"
+            "### Language being reviewed\n\nUrdu (ur)\n\n"
+            "### Your relationship to this language\n\nI am a native speaker\n\n"
+            "### Review notes\n\n- `elif` → `ورنہ_اگر` ✅ reads well\n\n"
+            "### Additional context\n\n_No response_\n\n"
+            "### How would you like to be credited?\n\nAnonymous (default)\n\n"
+            "### Consent\n\n"
+            "- [x] I have read [Your contributions and your data](x) (v1.0) and agree\n"
+            "- [x] I agree to follow this project's [Code of Conduct](y)\n"
         ),
     }
     payload_file = tmp_path / "issue.json"
@@ -190,6 +198,60 @@ def test_import_issue_from_a_payload_file(
     conn = sqlite3.connect(db_path)
     assert conn.execute("SELECT method FROM review_sessions").fetchone() == ("github",)
     conn.close()
+
+
+def test_import_issue_parse_notes_reach_the_ledger(
+    runner: CliRunner, db_path: Path, tmp_path: Path
+) -> None:
+    """CORE-1838: the issue lane is the ONLY one that produces parse notes.
+
+    `ImportResult.parse_notes` exists so a note rides the ledger and the
+    verification report rather than a terminal scrollback — which it cannot do
+    if the lane that generates notes never hands them to the importer.
+    """
+    payload = {
+        "number": 8,
+        "url": "https://github.com/legesher/legesher-next/issues/8",
+        "author": {"login": "drive-by"},
+        "title": "[Review]: Urdu (Python)",
+        "createdAt": "2026-08-11T08:00:00Z",
+        "body": (
+            "### Language being reviewed\n\nUrdu (ur)\n\n"
+            "### Your relationship to this language\n\nI am a native speaker\n\n"
+            "### Review notes\n\n- `elif` → `ورنہ_اگر` ✅ reads well\n"
+            # No concept maps to `walrus`: a note, and the line is skipped.
+            "- `walrus` → `والرس` ✅ fine\n\n"
+            "### Additional context\n\n_No response_\n\n"
+            "### How would you like to be credited?\n\nAnonymous (default)\n\n"
+            "### Consent\n\n"
+            "- [x] I have read [Your contributions and your data](x) (v1.0) and agree\n"
+            "- [x] I agree to follow this project's [Code of Conduct](y)\n"
+        ),
+    }
+    payload_file = tmp_path / "issue.json"
+    payload_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    report = tmp_path / "ledger.json"
+
+    result = runner.invoke(
+        cli,
+        [
+            "import-issue",
+            str(payload_file),
+            "--db",
+            str(db_path),
+            "--json-report",
+            str(report),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    ledger = json.loads(report.read_text(encoding="utf-8"))
+    assert any("walrus" in note for note in ledger["parse_notes"])
+    # And as a stage, so the ledger reads as a record of the run rather than a
+    # loose list beside it.
+    parse_stages = [s for s in ledger["report"]["stages"] if s["stage"] == "parse"]
+    assert len(parse_stages) == 1
+    assert parse_stages[0]["status"] == "warn"
 
 
 def test_quarantine_queue_and_clear_option_roundtrip(
@@ -243,6 +305,78 @@ def test_quarantine_queue_and_clear_option_roundtrip(
 
     empty = runner.invoke(cli, ["quarantine-queue", "--db", str(db_path)])
     assert NEW_OPT not in empty.output
+
+
+def rewind_before_screening(path: Path) -> None:
+    """Strip the CORE-1828 objects: what the ritual actually carries forward.
+
+    The import lane installs them on arrival, so the two commands that read
+    the screening verdict have to survive being the FIRST thing run against a
+    carried-forward database — the triage lens is exactly what a maintainer
+    reaches for before importing anything.
+    """
+    conn = sqlite3.connect(path)
+    conn.execute("DROP TRIGGER trg_canon_no_quarantined_option")
+    for view in (
+        "option_standings",
+        "terminology_export",
+        "quarantine_queue",
+        "option_withheld",
+        "option_screening_status",
+    ):
+        conn.execute(f"DROP VIEW {view}")  # nosec B608 - fixed names
+    conn.execute("DROP TABLE option_screenings")
+    conn.commit()
+    conn.close()
+
+
+def test_quarantine_queue_survives_a_carried_forward_database(
+    runner: CliRunner, db_path: Path
+) -> None:
+    """CORE-1838: the lens must not die with `no such table: quarantine_queue`."""
+    rewind_before_screening(db_path)
+
+    queue = runner.invoke(cli, ["quarantine-queue", "--db", str(db_path)])
+
+    assert queue.exit_code == 0, queue.output
+    assert "quarantine queue is empty" in queue.output
+
+
+def test_clear_option_survives_a_carried_forward_database(
+    runner: CliRunner, db_path: Path
+) -> None:
+    """A verdict is recordable on a database that predates the verdict table."""
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO options(uid, concept_id, locale, surface_form)"
+        " VALUES (?, 1, 'ur', 'ورنہ_اگر')",
+        (NEW_OPT,),
+    )
+    conn.commit()
+    conn.close()
+    rewind_before_screening(db_path)
+
+    result = runner.invoke(
+        cli,
+        [
+            "clear-option",
+            NEW_OPT,
+            "--verdict",
+            "held",
+            "--by",
+            "madi",
+            "--db",
+            str(db_path),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    conn = sqlite3.connect(db_path)
+    assert conn.execute(
+        "SELECT verdict, screened_by FROM option_screening_status WHERE option_uid=?",
+        (NEW_OPT,),
+    ).fetchone() == ("held", "madi")
+    conn.close()
 
 
 def test_sync_to_durable_home_pushes_db_and_payload(
@@ -510,3 +644,170 @@ def test_reply_to_accepts_a_real_github_issue_url() -> None:
 
     url = "https://github.com/legesher/legesher-next/issues/42"
     assert validated_issue_url(url) == url
+
+
+def test_clear_option_covers_held_rejected_and_the_error_paths(
+    runner: CliRunner, db_path: Path, tmp_path: Path
+) -> None:
+    runner.invoke(
+        cli,
+        [
+            "import-review-bundle",
+            str(write_bundle(tmp_path, valid_bundle())),
+            "--db",
+            str(db_path),
+        ],
+    )
+    for verdict in ("held", "rejected", "cleared"):
+        out = runner.invoke(
+            cli,
+            [
+                "clear-option",
+                NEW_OPT,
+                "--verdict",
+                verdict,
+                "--by",
+                "madi",
+                "--db",
+                str(db_path),
+            ],
+        )
+        assert out.exit_code == 0, out.output
+    # The vocabulary is closed, and an unknown option is a clean refusal.
+    assert (
+        runner.invoke(
+            cli,
+            [
+                "clear-option",
+                NEW_OPT,
+                "--verdict",
+                "approved",
+                "--by",
+                "madi",
+                "--db",
+                str(db_path),
+            ],
+        ).exit_code
+        != 0
+    )
+    missing = runner.invoke(
+        cli,
+        [
+            "clear-option",
+            "opt_" + "0" * 24,
+            "--verdict",
+            "cleared",
+            "--by",
+            "madi",
+            "--db",
+            str(db_path),
+        ],
+    )
+    assert missing.exit_code != 0
+    assert "no option" in missing.output
+
+
+def test_clear_option_refuses_to_withhold_a_canon_selected_word(
+    runner: CliRunner, db_path: Path, tmp_path: Path
+) -> None:
+    runner.invoke(
+        cli,
+        [
+            "import-review-bundle",
+            str(write_bundle(tmp_path, valid_bundle())),
+            "--db",
+            str(db_path),
+        ],
+    )
+    runner.invoke(
+        cli,
+        [
+            "clear-option",
+            NEW_OPT,
+            "--verdict",
+            "cleared",
+            "--by",
+            "madi",
+            "--db",
+            str(db_path),
+        ],
+    )
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO option_screenings(option_uid, verdict, screened_by,"
+        " screen_version) VALUES (?, 'cleared', 'madi', 'manual-interim-v1')",
+        (NEW_OPT,),
+    )
+    conn.execute(
+        "INSERT INTO canon_selections(concept_id, locale, option_uid,"
+        " surface_form, source_file) VALUES (1,'ur',?,'ورنہ_اگر',"
+        " 'libs/i18n/canon/ur.toml')",
+        (NEW_OPT,),
+    )
+    conn.commit()
+    conn.close()
+    held = runner.invoke(
+        cli,
+        [
+            "clear-option",
+            NEW_OPT,
+            "--verdict",
+            "held",
+            "--by",
+            "madi",
+            "--db",
+            str(db_path),
+        ],
+    )
+    assert held.exit_code != 0
+    assert "canon" in held.output  # a ClickException, not a traceback
+    assert held.exception is None or isinstance(held.exception, SystemExit)
+
+
+def test_sync_reports_a_failure_without_implying_the_import_was_lost(
+    runner: CliRunner, db_path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("LEGESHER_DATA_REPO", raising=False)
+    result = runner.invoke(
+        cli,
+        [
+            "import-review-bundle",
+            str(write_bundle(tmp_path, valid_bundle())),
+            "--db",
+            str(db_path),
+            "--sync",
+        ],
+    )
+    assert "SYNC FAILED" in result.output
+    assert "do not" in result.output.lower()
+    # The import itself stands.
+    conn = sqlite3.connect(db_path)
+    assert conn.execute("SELECT status FROM review_sessions").fetchone() == (
+        "accepted",
+    )
+    conn.close()
+
+
+def test_sync_is_a_noop_when_nothing_changed(
+    db_path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    remote = tmp_path / "remote3.git"
+    subprocess.run(["git", "init", "--bare", "-q", str(remote)], check=True)
+    home = tmp_path / "home3"
+    subprocess.run(["git", "clone", "-q", str(remote), str(home)], check=True)
+    for k, v in (("user.email", "t@example.invalid"), ("user.name", "T")):
+        subprocess.run(["git", "-C", str(home), "config", k, v], check=True)
+    monkeypatch.setenv("LEGESHER_DATA_REPO", str(home))
+
+    assert sync_to_durable_home(db_path, [], ritual="first") is not None
+    assert sync_to_durable_home(db_path, [], ritual="again") is None
+
+
+def test_sync_refuses_a_directory_that_is_not_a_checkout(
+    db_path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plain = tmp_path / "not-a-repo"
+    plain.mkdir()
+    monkeypatch.setenv("LEGESHER_DATA_REPO", str(plain))
+    with pytest.raises(RuntimeError, match="not a git checkout"):
+        sync_to_durable_home(db_path, [], ritual="x")

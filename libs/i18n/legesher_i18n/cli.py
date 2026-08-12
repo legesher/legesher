@@ -1538,8 +1538,9 @@ def registry_validate(lang: str, target: str, version: str, strict: bool, quiet:
 # Add registry group to main CLI
 cli.add_command(registry)
 
-# Intake write path (CORE-1688 + CORE-1828). Imported here, at registration
-# time, so `legesher-i18n --help` stays fast if the intake deps ever grow.
+# Intake write path (CORE-1688 + CORE-1828). At the bottom because the command
+# modules import from this one's neighbours and a top-of-file import would be
+# circular; the cost is eager either way.
 from legesher_i18n.intake.commands import (  # noqa: E402
     clear_option,
     import_issue,

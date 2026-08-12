@@ -50,7 +50,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   <uid> --verdict cleared --by <you>` — and `legesher-i18n quarantine-queue`
   is the triage lens. The interim ritual (the maintainer is the screen until
   CORE-1797's automated gate ships) is documented in
-  `docs/intake-import-runbook.md`, and every import run ends with a push to
+  `docs/intake-moderation-runbook.md`, and every import run ends with a push to
   the durable data home.
 
 - **Pre-notice consent is recorded rather than left blank (CORE-1780).**
@@ -561,6 +561,50 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
     (`validate-packs.yml`) fails CI on errors only, so the 65 remaining
     long-description warnings surface for native review without blocking.
   - Regenerated the 22 affected `REFERENCE.md` files.
+- **A failed `--sync` no longer looks like a failed import (CORE-1838).** The
+  write-through to the durable data home raised a traceback *after* the import
+  had already committed, which reads as "nothing landed" and invites a re-run.
+  It now says the import is committed and the push is what needs fixing, and
+  exits `4` — the ritual is import *and* push, so a scripted caller must not
+  read success from a database that never left the workstation.
+- **`clear-option` explains the canon refusal.** Withholding a canon-selected
+  word raises the mirrored schema trigger; that surfaced as a raw
+  `sqlite3.IntegrityError`. It now says to pull the word from
+  `libs/i18n/canon/<locale>.toml` first, so a demotion stays a reviewed text
+  change.
+- **Downgrading `credit_preference` to `anonymous` drops the credit it stopped
+  authorizing.** `display_name` and `github_handle` survived the downgrade, so
+  a contributor who moved to anonymous kept publishable credit attached to a
+  preference that forbids it. The lateral moves between `name` and `handle`
+  have the same shape and are tracked as CORE-1844.
+- **The screening upgrade now repairs everything that READS a verdict
+  (CORE-1838).** The intake ritual carries the previous operational database
+  forward rather than rebuilding it, and the upgrade that installs the
+  screening objects onto that file only installed the table and its two views.
+  The objects that *enforce* screening — `option_standings`,
+  `terminology_export`, the maintainer queue and the canon guard — stayed in
+  their pre-screening form, so on a carried-forward database a quarantined
+  submission still ranked in standings, still surfaced as a `legesher
+  translate` term alternate, and was still canon-eligible, with no error
+  anywhere. The upgrade now derives the whole object set from the shipped
+  schema and replaces the stale view and trigger bodies instead of skipping
+  them.
+- **`quarantine-queue` and `clear-option` work on a carried-forward database.**
+  Both died with `no such table` when they were the first intake command run
+  against one — which is the normal order, since the triage lens is what a
+  maintainer opens before importing anything.
+- **The corpus export reads a database that predates screening.** The export
+  opens the database read-only on purpose, so it cannot install the screening
+  objects; it now reads their absence as what it is — no verdict was ever
+  recorded, so nothing is withheld — instead of failing with `no such table:
+  option_withheld`.
+- **Parse notes from an imported issue reach the ledger.** `import-issue` is
+  the only lane that produces them (an unknown term, a credit choice the form
+  cannot express), and it was not handing them to the importer: they printed to
+  the terminal and the `--json-report` ledger recorded `"parse_notes": []`.
+  They are now a `parse` stage on the report, on every run — including a
+  re-import of a submission already accepted, which is exactly when a
+  maintainer goes looking for them.
 
 ### Security
 
@@ -581,6 +625,38 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   is tracked as CORE-1597. Existing `Cf` semantics and the per-language
   allowlist (Sinhala ZWJ, Persian/Urdu ZWNJ) are unchanged; all 255 shipped
   packs audit clean with zero new findings.
+- **The Stage-0 issue parser reads the fields the contributor form actually
+  has (CORE-1838).** The community review form was rewritten (CORE-397) around
+  the same time the importer landed, and the parser was still reading the old
+  one: it looked for a native-speaker checkbox that had become a four-way
+  dropdown, so every reviewer — native speakers included — was recorded at the
+  lowest rung, a published value that weights endorsements. It also dropped the
+  form's consent checkbox and credit choice, so contributors who explicitly
+  consented were given no identity at all. All three are now read, with the
+  privacy-notice version taken from the checkbox's own label so a version bump
+  re-consents naturally. Only an actual native claim counts as native: "fluent"
+  no longer inherits a native speaker's weight, which the single old checkbox
+  had allowed.
+- **Screening gained the `rejected` verdict** the moderation runbook already
+  described (harmful, spam or injection content, distinct from "held for eyes I
+  do not have"), and every gate now asks one `option_withheld` view instead of
+  ten copies of a verdict list — stated as "not cleared", so a verdict added
+  later is withheld by default rather than silently visible.
+- **A submission cannot shape the reply we sign (CORE-1838).** `--reply` posts
+  the import report to the contributor's issue under the maintainer's account,
+  and the report quotes surface forms, locales and slugs straight from the
+  submission — so backticks, tags or a leading list/heading marker could style
+  or restructure a comment carrying our name. Every quoted detail now renders
+  as a single inline code span with its own backticks stripped.
+- **A contributor cannot forge the form fields that decide their standing
+  (CORE-1838).** A GitHub issue form renders every field under a `###`
+  heading, and a contributor can type `###` into any textarea — so a
+  submission that selected "I am learning it" could award itself the native
+  rung (double endorsement weight on a published column) by repeating the
+  heading in a free-text box, and a decoy consent line could forge the notice
+  version or suppress identity minting. Headings are now matched against the
+  form's declared field order, a repeated heading refuses the import outright,
+  and consent is read only from its own section.
 
 ## [0.22.0] - 2026-07-15
 

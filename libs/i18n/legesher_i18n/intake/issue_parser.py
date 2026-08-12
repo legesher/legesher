@@ -15,9 +15,10 @@ parameters). The issue's URL/number/author ride the bundle's ``source`` block,
 which is part of the canonical bytes — the same issue always re-mints the
 same session uid, so re-import is a no-op.
 
-Format registry: ``FORMATS`` maps a format tag to its section parser. The
-CORE-397 forms' new field layout lands as a second entry; nothing in the
-pipeline changes.
+One format today: the ``language_pack_review`` form, tagged in
+:data:`STAGE0_KIT_VERSION`. A second form layout slots in beside it by adding
+its field readers and bumping that tag; nothing in the pipeline changes,
+because every lane produces the same bundle shape.
 
 Two lane-specific notes, both deliberate:
 
@@ -28,10 +29,11 @@ Two lane-specific notes, both deliberate:
   ``false`` in the bundle and the Stage-0 importer runs with
   ``required_attestations=('original_work', 'coc_agreed')``. The Stage-1
   bundle app collects the full set.
-* **Consent.** The old form has no CONTRIBUTOR_PRIVACY checkbox, so the
-  bundle carries no consent block and the importer mints NO identity
-  (decision 2026-08-11) — the reply invites the contributor to consent.
-  The CORE-397 replacement forms add the required checkbox.
+* **Consent.** The form carries the required CONTRIBUTOR_PRIVACY checkbox and
+  a credit-preference dropdown (CORE-397). Both are read here, with the notice
+  version taken from the checkbox's own label so a version bump re-consents
+  naturally. An unticked box means no consent block, and the importer then
+  mints NO identity (decision 2026-08-11) while still recording the words.
 """
 
 from __future__ import annotations
@@ -50,9 +52,36 @@ _NOTE_LINE_RE = re.compile(
     r"^[-*]\s*`(?P<term>[^`]+)`\s*(?:→|->|⇒)\s*`(?P<translation>[^`]+)`\s*(?P<rest>.*)$"
 )
 _BACKTICK_RE = re.compile(r"`([^`]+)`")
-_NATIVE_CLAIM_RE = re.compile(
-    r"^[-*]\s*\[(?P<checked>[xX ])\]\s*I am a native or fluent speaker", re.MULTILINE
+#: The consent checkbox names the notice version it binds ("… (v1.0) and
+#: agree"), so the version is READ FROM THE FORM rather than hardcoded here: a
+#: notice bump re-consents naturally on the next contribution (CORE-397).
+_CONSENT_RE = re.compile(
+    r"^[-*]\s*\[(?P<checked>[xX ])\]\s*I have read .*?\(v(?P<version>[0-9][0-9.]*)\)",
+    re.MULTILINE,
 )
+
+#: How the `language_claim` dropdown maps to a rung and to the fluency
+#: attestation. Only an actual native claim is `native_claimed`: the rung is a
+#: PUBLISHED column that weights endorsements (2.0 vs 1.0), so "fluent" must not
+#: inherit a native speaker's weight — which the old single "native or fluent"
+#: checkbox silently allowed.
+_LANGUAGE_CLAIM: dict[str, tuple[str, bool]] = {
+    "i am a native speaker": ("native_claimed", True),
+    "i am fluent, not native": ("contributor", True),
+    "i work with this language professionally": ("contributor", False),
+    "i am learning it": ("contributor", False),
+}
+
+#: The `credit` dropdown. "A display name I will give you" has NO accompanying
+#: text field on the form, and the importer refuses `credit_preference='name'`
+#: without `credit_text` — so it falls back to the anonymous default and leaves
+#: the maintainer a note. The notice already tells contributors credit can be
+#: changed by asking, so nothing is lost that a reply cannot recover.
+_CREDIT_CHOICE: dict[str, str] = {
+    "anonymous": "anonymous",
+    "my github handle": "handle",
+    "a display name": "anonymous",
+}
 
 _EMOJIS = ("✅", "❓", "🤔")
 
@@ -65,14 +94,94 @@ class ParsedIssue:
     notes: list[str] = field(default_factory=list)
 
 
+#: The form's fields, in the order GitHub renders them. Parsing is matched
+#: against this sequence rather than against whatever `###` lines appear,
+#: because a contributor can TYPE `###` into any textarea: the rendered body
+#: gives a forged heading exactly the same shape as a real one. Reading the
+#: last (or the first) occurrence of a label lets a submitter who chose
+#: "I am learning it" award themselves `native_claimed` — double endorsement
+#: weight on a published column — from the Additional-context box.
+_FIELD_ORDER: tuple[str, ...] = (
+    "Language being reviewed",
+    "Python version reviewed",
+    "Your relationship to this language",
+    "Anything you want us to know about your background",
+    "Review notes",
+    "Additional context",
+    "How would you like to be credited?",
+    "Consent",
+)
+
+#: Fields the form marks required. Their absence means the body is not this
+#: form (or a heading was injected out of order and swallowed them), and the
+#: parse refuses rather than importing a submission it half-understood.
+_REQUIRED_FIELDS: frozenset[str] = frozenset(
+    {
+        "Language being reviewed",
+        "Your relationship to this language",
+        "Review notes",
+        "How would you like to be credited?",
+        "Consent",
+    }
+)
+
+
 def _sections(body: str) -> dict[str, str]:
-    """Split a rendered issue-form body into ``{label: content}``."""
+    """Split a rendered issue-form body into ``{label: content}``.
+
+    Headings are matched against :data:`_FIELD_ORDER` **in sequence**: a known
+    label counts as a section boundary only when it is the next one still
+    expected. A duplicate of a label already consumed is content, not a
+    heading — which is what makes a forged heading inert.
+
+    Raises:
+        ValueError: if a required field never appears in order, which is what a
+            heading injected ahead of its turn produces (it consumes the
+            sections that should have followed).
+    """
+    # A real form emits each heading EXACTLY once, so a repeat is tampering —
+    # and in-order matching alone cannot catch a forgery that jumps exactly one
+    # field ahead (text typed into "Additional context" impersonating the
+    # "credited?" dropdown that legitimately follows it). Refuse, rather than
+    # guess which occurrence was the form's.
+    seen: list[str] = [
+        m.group("label").strip()
+        for m in _SECTION_RE.finditer(body)
+        if m.group("label").strip() in _FIELD_ORDER
+    ]
+    duplicated = sorted({label for label in seen if seen.count(label) > 1})
+    if duplicated:
+        raise ValueError(
+            f"form heading(s) {duplicated} appear more than once in the issue "
+            "body. GitHub renders each field once, so a repeat means the text "
+            "was typed into a free-text box — possibly to override a dropdown "
+            "the submitter did not choose. Import refused; read the issue."
+        )
+
     out: dict[str, str] = {}
-    matches = list(_SECTION_RE.finditer(body))
-    for index, match in enumerate(matches):
-        start = match.end()
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(body)
-        out[match.group("label").strip()] = body[start:end].strip()
+    boundaries: list[tuple[str, int, int]] = []
+    expected = 0
+    for match in _SECTION_RE.finditer(body):
+        label = match.group("label").strip()
+        try:
+            position = _FIELD_ORDER.index(label, expected)
+        except ValueError:
+            continue  # unknown, or already consumed: it is body text
+        boundaries.append((label, match.start(), match.end()))
+        expected = position + 1
+
+    for index, (label, _, content_start) in enumerate(boundaries):
+        end = boundaries[index + 1][1] if index + 1 < len(boundaries) else len(body)
+        out[label] = body[content_start:end].strip()
+
+    missing = _REQUIRED_FIELDS - set(out)
+    if missing:
+        raise ValueError(
+            f"the issue body is missing required form section(s) "
+            f"{sorted(missing)} — either it is not a language_pack_review "
+            "submission, or a heading was typed out of order and swallowed "
+            "them. Import refused rather than reading a partial form."
+        )
     return out
 
 
@@ -123,8 +232,8 @@ def parse_issue(payload: dict, conn: sqlite3.Connection) -> ParsedIssue:
         )
     locale = locale_match.group(1)
 
-    native_match = _NATIVE_CLAIM_RE.search(payload.get("body") or "")
-    native_claimed = bool(native_match and native_match.group("checked") in "xX")
+    claimed_rung, native_or_fluent = _claim_from(sections, notes)
+    consent = _consent_from(sections, notes)
 
     responses: dict[str, dict] = {}
 
@@ -216,16 +325,17 @@ def parse_issue(payload: dict, conn: sqlite3.Connection) -> ParsedIssue:
         "track": "reserved_words",
         "contributor": {
             "source_key": payload["author"]["login"],
-            "claimed_rung": "native_claimed" if native_claimed else "contributor",
+            "claimed_rung": claimed_rung,
             "contact_captured": False,
+            **({"consent": consent} if consent else {}),
         },
         "attestations": {
-            "native_or_fluent": native_claimed,
+            "native_or_fluent": native_or_fluent,
             # Implicit in offering one's own words on a public issue.
             "original_work": True,
             # GitHub inbound=outbound: issue contributions ride the repo license.
             "license_grant": "Apache-2.0",
-            "coc_agreed": _coc_agreed(payload.get("body") or ""),
+            "coc_agreed": _coc_agreed(sections.get("Consent", "")),
             # NOT collected on this lane; the Stage-0 importer does not require it.
             "dco": False,
         },
@@ -248,3 +358,44 @@ _COC_RE = re.compile(
 def _coc_agreed(body: str) -> bool:
     match = _COC_RE.search(body)
     return bool(match and match.group("checked") in "xX")
+
+
+def _claim_from(sections: dict[str, str], notes: list[str]) -> tuple[str, bool]:
+    """Map the `language_claim` dropdown to (rung, native_or_fluent)."""
+    answer = sections.get("Your relationship to this language", "").strip().casefold()
+    for prefix, (rung, fluent) in _LANGUAGE_CLAIM.items():
+        if answer.startswith(prefix):
+            return rung, fluent
+    if answer and answer != "_no response_":
+        notes.append(
+            f"unrecognized language-claim answer {answer!r}: recorded at the "
+            "'contributor' rung, which is the safe default"
+        )
+    return "contributor", False
+
+
+def _consent_from(sections: dict[str, str], notes: list[str]) -> dict[str, str] | None:
+    """The consent block, or None when the privacy checkbox is not ticked.
+
+    A submission without consent still ingests as evidence; it simply mints no
+    identity (decision 2026-08-11). Consent is never inferred.
+    """
+    # Scoped to the Consent section: a whole-body scan takes the FIRST match,
+    # and every free-text field renders before this one, so a decoy line could
+    # both forge the notice version and (unticked) suppress identity minting.
+    match = _CONSENT_RE.search(sections.get("Consent", ""))
+    if not match or match.group("checked") not in "xX":
+        return None
+    choice = sections.get("How would you like to be credited?", "").strip().casefold()
+    preference = "anonymous"
+    for prefix, value in _CREDIT_CHOICE.items():
+        if choice.startswith(prefix):
+            preference = value
+            break
+    if choice.startswith("a display name"):
+        notes.append(
+            "contributor asked to be credited by display name, but the form "
+            "collects no name field: recorded as 'anonymous' for now. Ask them "
+            "for the name in the reply, then set it as a maintainer action."
+        )
+    return {"consent_version": match.group("version"), "credit_preference": preference}
