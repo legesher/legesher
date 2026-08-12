@@ -29,6 +29,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (13 advisories, 7 high) — lockfile-only bumps; the one bundled runtime package moved is
   `js-yaml` 4.2.0 → 4.3.1 (quadratic-CPU `!!omap` advisory), which ships in the packaged extension
 
+- **Language selector**: a language change that does not take effect now says so. A settings write that
+  fails, or that a narrower scope overrides, raises a warning naming what is still in effect instead of
+  reporting success; a language the server never loaded is shown in the status bar as `(inactive)` with
+  the reason, instead of being displayed as though it were running (CORE-1776)
+
+### Added
+
+- **Telemetry**: language changes are now recorded as transitions — what triggered the change (picker,
+  settings edit, editor switch, activation, restart), which scope or mechanism supplied the language,
+  and whether it was applied, unchanged, failed, or had no server to apply to. Previously only picker
+  changes were recorded, and they were recorded before the write they described, so a change that
+  silently did nothing still reported success (CORE-1776)
+- **Telemetry**: settings writes record their scope and whether they took effect, and content detection
+  records its decisions and scores — the thresholds have never been measured against real files
+  (CORE-1776)
+
 ### Changed
 
 - **Language packs**: pack files are now validated at load — a 1 MiB size cap and a runtime shape check on

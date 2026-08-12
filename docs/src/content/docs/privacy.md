@@ -34,6 +34,12 @@ When enabled, we collect anonymous usage statistics to help us improve the produ
 - Extension activation events
 - Feature usage frequency (which commands you use)
 - Language pack usage (which languages you translate to/from)
+- Language changes: what prompted the change (choosing from the language picker, editing a setting,
+  switching files), whether the setting that supplied the language came from your user, workspace, or
+  folder settings, and whether the change succeeded — so we can tell a language you asked for and got
+  from one you asked for and did not
+- Language detection outcomes: whether a file's language was detected or the detector declined, and how
+  strong the match was. Only the language code and the score are sent, never the tokens they came from
 - Extension performance metrics (startup time, responsiveness)
 - Error reports (crash reports, error messages — no code content)
 

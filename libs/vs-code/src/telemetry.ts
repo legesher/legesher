@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { TelemetryReporter } from '@vscode/extension-telemetry';
 import { isPythonKeyword, getEnglishKeyword } from './keywords';
 import { Logger } from './logger';
+import type { SettingScope } from './settingsScope';
 
 /**
  * Telemetry module for Legesher VS Code extension
@@ -26,7 +27,33 @@ let isInitialized = false;
 type TrackedCommand = 'restartServer' | 'selectLanguage' | 'showTranslationPanel' | 'tryTranslationPanel' | 'giveFeedback';
 
 /** Known error types for type-safe error tracking */
-type TrackedErrorType = 'serverError' | 'serverConnectionClosed' | 'serverNotInstalled' | 'serverStartFailed' | 'translationFailed';
+type TrackedErrorType = 'serverError' | 'serverConnectionClosed' | 'serverNotInstalled' | 'serverStartFailed' | 'translationFailed'
+    | 'languageWriteFailed' | 'languageWriteShadowed';
+
+/** What asked for a language change, so intent can be told from side effects. */
+export type LanguageTrigger = 'activation' | 'picker' | 'settings' | 'editor' | 'restart';
+
+/**
+ * How a requested language change actually ended.
+ *
+ * `unchanged` is the one that matters most: it is the shape every silent
+ * failure in this subsystem took — a change was requested, nothing happened,
+ * and every surface reported success (CORE-1776).
+ */
+export type TransitionOutcome = 'applied' | 'unchanged' | 'failed' | 'serverUnavailable';
+
+/**
+ * Where the resolved language came from.
+ *
+ * Derived from `SettingScope` rather than restated, so the analytics vocabulary
+ * cannot drift from the resolver's. Two hand-maintained copies of the same
+ * enumeration is the shape of the bug class this instrumentation exists to
+ * catch (CORE-1776).
+ */
+export type ResolutionSource = SettingScope | 'detected';
+
+/** Whether a settings write landed where it would actually take effect. */
+export type WriteOutcome = 'applied' | 'shadowed' | 'failed';
 
 /**
  * Legesher Telemetry - tracks anonymous usage to improve the extension
@@ -119,6 +146,105 @@ export class LegesherTelemetry {
             });
         } catch (error) {
             Logger.error('Telemetry: Error sending languageChanged:', error);
+        }
+    }
+
+    /**
+     * Track a requested language change and what actually became of it
+     * (CORE-1776).
+     *
+     * `languageChanged` above records only picker *intent*, and it is sent
+     * before the write it describes — so a pick that silently did nothing still
+     * reported success, and the majority of transitions (settings edits,
+     * detection, activation) were never counted at all. This records the whole
+     * transition instead: what asked for it, where the language came from, the
+     * pair the server actually ended on, and whether anything happened.
+     *
+     * Language codes and scope names are not PII; no paths or content are sent.
+     *
+     * @param params.from - Server identity before, or 'none'
+     * @param params.to - Server identity requested, as `source->target`
+     * @param params.trigger - What asked for the change
+     * @param params.source - Which scope or mechanism supplied the language
+     * @param params.outcome - What actually happened
+     * @param params.durationMs - Time to apply, when one was applied
+     */
+    static trackLanguageTransition(params: {
+        from: string;
+        to: string;
+        trigger: LanguageTrigger;
+        source: ResolutionSource;
+        outcome: TransitionOutcome;
+        durationMs?: number;
+    }): void {
+        if (!reporter) return;
+
+        try {
+            reporter.sendTelemetryEvent('languageTransition', {
+                from: params.from,
+                to: params.to,
+                trigger: params.trigger,
+                source: params.source,
+                outcome: params.outcome,
+            }, params.durationMs === undefined ? undefined : { durationMs: params.durationMs });
+        } catch (error) {
+            Logger.error('Telemetry: Error sending languageTransition:', error);
+        }
+    }
+
+    /**
+     * Track a language settings write and whether it can take effect
+     * (CORE-1776).
+     *
+     * The scope is the point: a write to user settings that a workspace value
+     * outranks is indistinguishable from a successful one unless the scope is
+     * recorded alongside the outcome.
+     */
+    static trackLanguageSettingWrite(
+        setting: 'targetLanguage' | 'languageDetection',
+        scope: ResolutionSource,
+        outcome: WriteOutcome
+    ): void {
+        if (!reporter) return;
+
+        try {
+            reporter.sendTelemetryEvent('languageSettingWritten', {
+                setting,
+                scope,
+                outcome,
+            });
+        } catch (error) {
+            Logger.error('Telemetry: Error sending languageSettingWritten:', error);
+        }
+    }
+
+    /**
+     * Track a content-detection decision (CORE-1776).
+     *
+     * Detection's thresholds were tuned against fixtures and have never been
+     * measured against real files. Declines are recorded as well as hits: a
+     * detector that never fires and one that fires constantly are different
+     * problems, and only the scores tell them apart.
+     *
+     * Emitted per document *version*, not per editor switch — the memo absorbs
+     * the repeats.
+     */
+    static trackLanguageDetection(
+        outcome: 'detected' | 'declined',
+        detail: { language?: string; score?: number; runnerUpScore?: number } = {}
+    ): void {
+        if (!reporter) return;
+
+        try {
+            reporter.sendTelemetryEvent('languageDetected', {
+                outcome,
+                language: detail.language ?? 'none',
+            }, {
+                score: detail.score ?? 0,
+                runnerUpScore: detail.runnerUpScore ?? 0,
+            });
+        } catch (error) {
+            Logger.error('Telemetry: Error sending languageDetected:', error);
         }
     }
 

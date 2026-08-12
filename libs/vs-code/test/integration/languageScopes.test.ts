@@ -29,8 +29,17 @@ import { getActiveLanguages } from '../../src/config';
  * also the more honest test: this is the contract as a consumer sees it, and it
  * fails loudly here if the real shape drifts.
  */
+interface LanguageTransition {
+    from: string;
+    to: string;
+    trigger: string;
+    source: string;
+    outcome: 'applied' | 'unchanged' | 'failed' | 'serverUnavailable';
+}
+
 interface LegesherApi {
     getServerLanguage(): string | undefined;
+    getLastTransition(): LanguageTransition | undefined;
 }
 
 const EXTENSION_ID = 'legesher.legesher-vscode';
@@ -305,6 +314,120 @@ describe('Language-resolution scopes (CORE-1776)', function () {
             'en->de',
             'switching back to the previous language should restart, not no-op'
         );
+    });
+
+    describe('transitions are reported rather than swallowed (CORE-1776)', () => {
+        // Every failure in this subsystem used to end in a log line while the
+        // status bar and the notifications went on claiming success. These pin
+        // the outcome each transition actually reached.
+
+        it('reports an applied transition, with what triggered it', async () => {
+            await legesherConfig().update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
+            await legesherConfig().update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
+            await openFixture(ENGLISH_FIXTURE);
+            await settle();
+
+            const chosen = await pickLanguageAt(nearbyLanguageOffset('de'));
+            await settle();
+
+            const transition = api().getLastTransition();
+            assert.ok(transition, 'a transition should have been recorded');
+            assert.strictEqual(transition!.outcome, 'applied');
+            assert.strictEqual(transition!.to, `en->${chosen}`);
+            assert.strictEqual(transition!.trigger, 'picker');
+        });
+
+        it('reports a failed transition instead of logging and moving on', async () => {
+            const config = legesherConfig();
+            await config.update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
+            await config.update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
+            await openFixture(ENGLISH_FIXTURE);
+            await settle();
+
+            await config.update('serverCommand', brokenServerPath(), vscode.ConfigurationTarget.Global);
+            await config.update('targetLanguage', 'fr', vscode.ConfigurationTarget.Global);
+            await settle();
+
+            const transition = api().getLastTransition();
+            assert.ok(transition, 'a failed transition should still be recorded');
+            assert.strictEqual(
+                transition!.outcome,
+                'failed',
+                'a language the server never reached must not report as applied'
+            );
+            assert.strictEqual(transition!.to, 'en->fr');
+            assert.strictEqual(transition!.trigger, 'settings');
+        });
+
+        it('keeps reporting no server when the binary is missing', async () => {
+            // The missing-binary case still records an identity, so that the
+            // availability check is not re-run on every editor switch. That made
+            // the next sync match the cache and call itself unchanged — and
+            // anything painting from that outcome put the healthy badge back
+            // over the warning, which is the signal it was covering up.
+            const config = legesherConfig();
+            await config.update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
+            await config.update(
+                'serverCommand', '/nonexistent/legesher-lsp', vscode.ConfigurationTarget.Global
+            );
+            await config.update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
+            await openFixture(ENGLISH_FIXTURE);
+            await settle();
+
+            assert.strictEqual(
+                api().getLastTransition()!.outcome,
+                'serverUnavailable',
+                'a missing binary is not an applied language change'
+            );
+            assert.strictEqual(api().getServerLanguage(), undefined, 'no server should be running');
+
+            // A re-sync that resolves to the same language, which is the no-op
+            // that used to erase the signal.
+            await openFixture(ENGLISH_FIXTURE);
+            await settle();
+
+            assert.strictEqual(
+                api().getServerLanguage(),
+                undefined,
+                'a no-op re-sync must not start reporting a server that never ran'
+            );
+            assert.strictEqual(
+                api().getLastTransition()!.outcome,
+                'serverUnavailable',
+                'the unavailable outcome must survive the no-ops that follow it'
+            );
+        });
+
+        it('does not let a redundant re-sync overwrite the real outcome', async () => {
+            // A pick fires its own sync *and* the configuration listener, so one
+            // user action produces an `applied` followed by an `unchanged`
+            // (CORE-1728). Recording the second would report every successful
+            // change as a no-op — and every editor switch, which re-resolves to
+            // the language already running, would emit one too.
+            const config = legesherConfig();
+            await config.update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
+            await config.update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
+            await openFixture(ENGLISH_FIXTURE);
+            await settle();
+
+            const applied = api().getLastTransition();
+            assert.ok(applied, 'the change to de should have been recorded');
+            assert.strictEqual(applied!.outcome, 'applied');
+            assert.strictEqual(applied!.to, 'en->de');
+
+            // Re-open the same file: a full re-sync that resolves to the same
+            // language and must leave the record alone.
+            await openFixture(ENGLISH_FIXTURE);
+            await settle();
+
+            const after = api().getLastTransition();
+            assert.strictEqual(
+                after!.outcome,
+                'applied',
+                'a no-op re-sync must not overwrite the outcome that actually happened'
+            );
+            assert.strictEqual(after!.to, 'en->de');
+        });
     });
 });
 
