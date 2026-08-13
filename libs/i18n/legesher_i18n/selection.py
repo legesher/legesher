@@ -13,8 +13,9 @@ The rule, in precedence order (documented in
 
 1. **Validity gate** — a value is only selectable if it is a valid Python
    identifier after the pack-schema check (PEP 3131 ``str.isidentifier``,
-   with the ``except*`` soft-keyword allowance). Invalid candidates are
-   tolerated in the ``translations`` pool but can never become canonical.
+   with a ``*``-suffixed term such as ``except*`` requiring the mirrored
+   trailing ``*``). Invalid candidates are tolerated in the
+   ``translations`` pool but can never become canonical.
 2. **Shipped-pack anchor** — if the language already ships a pack value
    for the term and that value passes the gate, it is canonical. Shipped
    packs have passed the mechanical gates (collision audit, NFKC guard,
@@ -98,8 +99,11 @@ def is_valid_pack_value(term: str, value: str) -> bool:
     and the pack-validation gate can never disagree. The check enforces:
     non-empty, no leading/trailing whitespace, no spaces or punctuation,
     valid Python identifier per PEP 3131 — with the documented allowance
-    for ``except*``-style soft-keyword translations (optional trailing
-    ``*`` on an otherwise-valid identifier).
+    for ``except*``-style soft keywords: a ``*``-suffixed term REQUIRES a
+    ``*``-suffixed translation (an otherwise-valid identifier carrying the
+    mirrored trailing ``*``), and a term without one cannot take a value
+    with one. The mirror was optional until CORE-1839, which is how nine
+    packs shipped values that reverse-translated to ``except**``.
 
     Args:
         term: The source term (e.g. ``"arithmeticerror"``, ``"except*"``).

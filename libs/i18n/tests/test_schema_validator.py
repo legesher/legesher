@@ -3,6 +3,8 @@
 import pytest
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from legesher_i18n.schema_validator import (
     LanguagePackSchema,
     SchemaValidator,
@@ -712,6 +714,114 @@ class TestCheckIdentifierValidity:
         result = SchemaValidator.check_identifier_validity(schema)
         assert result["passed"] is True
         assert result["total_issues"] == 0
+
+    def test_soft_keyword_translation_must_mirror_the_asterisk(self):
+        """A ``*``-suffixed term's translation has to carry the ``*`` too.
+
+        CORE-1839. The translator treats ``except*`` as a compound: it
+        strips a trailing ``*`` from the translation and re-emits the
+        source's own ``*`` token. A translation without the mirror is
+        never found by that path on the way back, so the plain keyword
+        entry matches instead and the ``*`` is appended to an already
+        complete ``except*`` — reverse translation yields ``except**``,
+        which does not parse. Nine shipped packs were in that state.
+
+        The rule keys on the SOURCE term ending in ``*``, not on
+        soft-keyword membership: a future starless soft keyword must not
+        be forced to grow an asterisk.
+
+        Rejected at construction rather than reported by
+        ``check_identifier_validity``, so a pack in this state cannot be
+        loaded at all — the same treatment the inverted case already got.
+        """
+        with pytest.raises(ValidationError) as excinfo:
+            self._make_schema(keywords={"except*": "abgesehenvon"})
+        assert "abgesehenvon" in str(excinfo.value)
+
+    def test_mirrored_soft_keyword_translation_still_loads(self):
+        """The positive control: the corrected form is accepted."""
+        schema = self._make_schema(keywords={"except*": "abgesehenvon*"})
+        result = SchemaValidator.check_identifier_validity(schema)
+        assert result["passed"] is True
+        assert result["total_issues"] == 0
+
+    def test_starless_term_translation_must_not_carry_an_asterisk(self):
+        """The mirror runs both ways, and this direction was already closed.
+
+        ``except: außer*`` is the same defect inverted. It never reaches
+        ``check_identifier_validity`` — the schema rejects it at
+        construction, because ``*`` is not a valid identifier character
+        and ``except`` is not a ``*``-suffixed term. Pinned so the fix for
+        the other direction cannot loosen this one.
+        """
+        with pytest.raises(ValidationError) as excinfo:
+            self._make_schema(keywords={"except": "außer*"})
+        assert "außer*" in str(excinfo.value)
+
+    def test_every_shipped_pack_mirrors_its_soft_keyword_asterisks(self):
+        """The regression guard, run against the packs that actually ship.
+
+        A unit test on a synthetic schema proves the rule; this proves the
+        shipped data obeys it. CORE-1839 was nine packs, all of which
+        passed every gate at the time.
+        """
+        import yaml
+
+        from legesher_i18n.schema_validator import TRANSLATION_SECTIONS
+
+        packs_root = Path(__file__).resolve().parents[1] / "language-packs" / "python"
+        assert packs_root.is_dir(), f"pack root missing: {packs_root}"
+
+        pack_files = sorted(packs_root.glob("*/legesher_i18n_python_*/packs/*.yml"))
+        # Without this the guard passes by matching nothing.
+        assert len(pack_files) > 200, (
+            f"expected the full pack tree, found {len(pack_files)}"
+        )
+
+        offenders: list[str] = []
+        checked = 0
+        for pack_file in pack_files:
+            data = yaml.safe_load(pack_file.read_text(encoding="utf-8")) or {}
+            # Every section validate_mappings covers, not a subset of it.
+            for section in TRANSLATION_SECTIONS:
+                for term, translation in (data.get(section) or {}).items():
+                    if not isinstance(translation, str):
+                        continue
+                    checked += 1
+                    if term.endswith("*") != translation.endswith("*"):
+                        offenders.append(
+                            f"{data.get('language')} {pack_file.name} "
+                            f"{section}.{term} -> {translation!r}"
+                        )
+        assert checked > 1000, (
+            f"only {checked} values scanned — the walk found almost nothing"
+        )
+        assert not offenders, "asterisk mirror broken in shipped packs:\n" + "\n".join(
+            offenders
+        )
+
+    def test_double_marker_is_rejected(self):
+        """`except*: except**` must not validate — it is the corrupt form.
+
+        The mirror rule strips one `*` and validates the base. When that
+        recursive call loses the term context, the base `except*` hits the
+        soft-keyword short-circuit and the double-starred value passes —
+        precisely the output this whole change exists to prevent.
+        """
+        with pytest.raises(ValidationError):
+            self._make_schema(keywords={"except*": "except**"})
+        with pytest.raises(ValidationError):
+            self._make_schema(keywords={"except*": "abgesehenvon**"})
+
+    def test_bare_soft_keyword_is_valid_without_a_term(self):
+        """The `source_key is None` branch — the one that harboured the bug.
+
+        With no term the literal soft keyword is still a legal value; with a
+        term the mirror rule decides and this path is unreachable.
+        """
+        assert LanguagePackSchema._is_valid_identifier("except*") is True
+        assert LanguagePackSchema._is_valid_identifier("except**") is False
+        assert LanguagePackSchema._is_valid_identifier("definir") is True
 
 
 class TestCheckCompletenessEnhanced:

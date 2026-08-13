@@ -40,7 +40,7 @@ These are Python's reserved words translated to German.
 | `elif` | `wennsonst` |
 | `else` | `sonst` |
 | `except` | `außer` |
-| `except*` | `abgesehenvon` |
+| `except*` | `abgesehenvon*` |
 | `False` | `Falsch` |
 | `finally` | `endlich` |
 | `for` | `für` |

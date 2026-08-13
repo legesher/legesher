@@ -47,13 +47,27 @@ class TestValidityGate:
         assert is_valid_pack_value("print", "छापें")
 
     def test_except_star_soft_keyword_forms(self):
-        # 'except*' translations may carry the trailing star...
+        # A '*'-suffixed term REQUIRES a '*'-suffixed translation.
         assert is_valid_pack_value("except*", "except*")
         assert is_valid_pack_value("except*", "excepter*")
-        # ...or omit it (both forms ship today, e.g. ru 'кроме').
-        assert is_valid_pack_value("except*", "кроме")
-        # But a star on a non-soft-keyword term is invalid.
+        # Omitting it used to pass here, justified by "both forms ship
+        # today, e.g. ru 'кроме'". They did ship — and all nine such packs
+        # were broken: the translator re-emits the source's own '*' after
+        # a translation it could not match as a compound, so reverse
+        # translation produced 'except**', which does not parse. The
+        # shipped state was the evidence of the bug, not a specification
+        # of the rule. Corrected in CORE-1839; the nine values now mirror.
+        assert not is_valid_pack_value("except*", "кроме")
+        assert is_valid_pack_value("except*", "кроме*")
+        # And the inverse: a star on a starless term is invalid — including
+        # the literal soft keyword, which a SOFT_KEYWORDS short-circuit used
+        # to wave through for ANY term (`print: except*` passed).
         assert not is_valid_pack_value("except", "excepter*")
+        assert not is_valid_pack_value("except", "except*")
+        assert not is_valid_pack_value("print", "except*")
+        # Exactly one marker: 'except**' is the corrupt form this guards.
+        assert not is_valid_pack_value("except*", "except**")
+        assert not is_valid_pack_value("except*", "кроме**")
 
     def test_underscore_compounds_pass(self):
         assert is_valid_pack_value("type", "tipus_")

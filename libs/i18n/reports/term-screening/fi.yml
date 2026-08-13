@@ -2,7 +2,7 @@ language: fi
 target: python
 screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
 screened_at: "2026-08-10"
-coverage_digest: d9df4047a5c58bb8e077c58c47ca9a97aa7ed470efbbf2abd4939e61be51ad9d
+coverage_digest: fe572df002c7b41434ff37706c452c79662e3295f2907f3cedcf8e9a09bb0b9d
 terms_screened: 184
 flags:
 - term: pärinnaita

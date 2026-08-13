@@ -2,6 +2,6 @@ language: te
 target: python
 screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
 screened_at: "2026-08-04"
-coverage_digest: 85dcdef1ed4c4f75d84d5a58d007749631f93acfdd1f651e4cfa48e7a53db6db
+coverage_digest: 102661d43d12e116912a9245c6ae8311a782a2c90b3c2e5cb251f22c3e952327
 terms_screened: 184
 flags: []

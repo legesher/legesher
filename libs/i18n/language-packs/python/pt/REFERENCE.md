@@ -40,7 +40,7 @@ These are Python's reserved words translated to Portuguese.
 | `elif` | `senãose` |
 | `else` | `senão` |
 | `except` | `excepto` |
-| `except*` | `exceptar` |
+| `except*` | `exceptar*` |
 | `False` | `falso` |
 | `finally` | `finalmente` |
 | `for` | `por` |

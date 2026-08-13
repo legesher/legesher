@@ -474,6 +474,46 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **`except*` reverse-translated to `except**` in nine packs (CORE-1839).**
+  The translator treats `except*` as a compound: it strips a trailing `*`
+  from the translation and re-emits the source's own `*` token. Nine packs
+  stored a translation without that mirror, so the compound lookup missed on
+  the way back, the plain `except` entry matched instead, and the `*` landed
+  on an already complete `except*` — producing `except**`, which does not
+  parse. Corrected at the selection layer and re-exported; the translated
+  word is unchanged in every case, only the syntax marker was added.
+
+| Pack | Before | After |
+| --- | --- | --- |
+| `da` | `undtiden` | `undtiden*` |
+| `de` | `abgesehenvon` | `abgesehenvon*` |
+| `fi` | `exceptiivi` | `exceptiivi*` |
+| `hi` | `अपराधिक` | `अपराधिक*` |
+| `mk` | `освен_ѕвезда` | `освен_ѕвезда*` |
+| `pt` | `exceptar` | `exceptar*` |
+| `ru` | `кроме` | `кроме*` |
+| `te` | `మినహాయింపుగుంపు` | `మినహాయింపుగుంపు*` |
+| `th` | `เครื่องมือที่ใช้ในการเอาเป็น` | `เครื่องมือที่ใช้ในการเอาเป็น*` |
+
+  The identifier check now *requires* the mirror rather than merely allowing
+  it, keyed on the source term's own trailing `*` so a starless soft keyword
+  is never forced to grow one. It rejects at schema construction, so a pack
+  in this state can no longer be loaded, and a data-level test asserts the
+  invariant across every shipped pack. The unit test that previously
+  accepted the unmirrored form — justified by "both forms ship today" — was
+  encoding the defect as a specification; the shipped state was evidence of
+  the bug, not the rule.
+
+  **Behavior change worth flagging:** the check now rejects at schema
+  construction, so an unmirrored value fails the *entire pack load* rather
+  than one entry. Language packs are independently versioned distributions
+  and `_discover_packs` prefers an installed pack over the in-repo one, so a
+  new engine paired with an old pack disables that language outright instead
+  of mistranslating one keyword. That is the safer failure — `except**` does
+  not parse either, and a hard error names the cause — but it is a hard
+  error, not a downgrade. Anyone pinning packs independently of the engine
+  should upgrade both.
+
 - **Ten corruption-class terms replaced across six packs (CORE-1763).** The
   CORE-401 screening sweep flagged ten shipped values as machine-translation
   damage rather than translation-taste questions — a leaked translator

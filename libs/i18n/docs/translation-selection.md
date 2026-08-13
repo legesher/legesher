@@ -35,11 +35,22 @@ For each `(term, language)` pair, in precedence order:
    schema's identifier check (`legesher_i18n.selection.is_valid_pack_value`,
    which delegates to `LanguagePackSchema._is_valid_identifier`):
    non-empty, no leading/trailing whitespace, no spaces or punctuation,
-   valid Python identifier per PEP 3131. The soft keyword `except*` has a
-   documented allowance: its translations may carry an optional trailing
-   `*` on an otherwise-valid identifier (both starred, e.g. `excepter*`,
-   and unstarred, e.g. `кроме`, forms ship today). Invalid candidates
-   stay in the pool; they can never become canonical.
+   valid Python identifier per PEP 3131. A `*`-suffixed term such as the
+   soft keyword `except*` **requires** a `*`-suffixed translation: the
+   value is an otherwise-valid identifier carrying the mirrored trailing
+   `*` (e.g. `excepter*`). The mirror runs both ways — a term without a
+   `*` cannot take a value with one. Invalid candidates stay in the pool;
+   they can never become canonical.
+
+   The mirror is a hard requirement, not a style preference. The
+   translator treats these as compounds, stripping the trailing `*` from
+   the translation and re-emitting the source's own `*` token, so an
+   unmirrored value reverse-translates to `except**`, which does not
+   parse. This rule previously *allowed* the mirror without demanding it,
+   and nine packs shipped unmirrored values (`ru: кроме` among them) that
+   passed every gate — see CORE-1839. The word itself is free: only 38 of
+   51 packs spell `except*` as their `except` term plus `*`; the rest use
+   a distinct term (`zh: 多重捕获*`) and are equally valid.
 
 2. **Shipped-pack anchor.** If the language already ships a pack value
    for the term and that value passes the gate, it is canonical. Shipped

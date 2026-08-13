@@ -40,7 +40,7 @@ These are Python's reserved words translated to Hindi.
 | `elif` | `अगरनहीं` |
 | `else` | `अन्यथा` |
 | `except` | `अभिव्यक्तिकोछोड़दें` |
-| `except*` | `अपराधिक` |
+| `except*` | `अपराधिक*` |
 | `False` | `झूठा` |
 | `finally` | `अंतमें` |
 | `for` | `फ़ॉर` |

@@ -40,7 +40,7 @@ These are Python's reserved words translated to Thai.
 | `elif` | `อีเมลิฟ` |
 | `else` | `อื่นๆ` |
 | `except` | `เลือก` |
-| `except*` | `เครื่องมือที่ใช้ในการเอาเป็น` |
+| `except*` | `เครื่องมือที่ใช้ในการเอาเป็น*` |
 | `False` | `ผลักดัน` |
 | `finally` | `ทำเสมอ` |
 | `for` | `วนรอบ` |

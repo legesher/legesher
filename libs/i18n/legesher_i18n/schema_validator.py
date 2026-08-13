@@ -329,6 +329,20 @@ class LanguagePackSchema(BaseModel):
             # Note: We use a relaxed check that allows Unicode letters per PEP 3131
             # Special case: soft keywords like 'except*' can have translations ending with '*'
             if not cls._is_valid_identifier(value, source_key=key):
+                # Name the constraint that actually failed. The generic
+                # message blames spaces and punctuation, which is misleading
+                # for a mirror violation — 'abgesehenvon' has neither
+                # (CORE-1839).
+                if key.endswith("*") and not value.endswith("*"):
+                    raise ValueError(
+                        f"Translation must carry the trailing '*' its term has: "
+                        f"'{key}' -> '{value}'."
+                    )
+                if value.endswith("*") and not key.endswith("*"):
+                    raise ValueError(
+                        f"Translation carries a trailing '*' its term does not have: "
+                        f"'{key}' -> '{value}'."
+                    )
                 raise ValueError(
                     f"Translation is not a valid Python identifier: '{key}' -> '{value}'. "
                     "Translations must not contain spaces, punctuation, or escape sequences."
@@ -357,17 +371,45 @@ class LanguagePackSchema(BaseModel):
         if not value:
             return False
 
-        # Allow soft keywords (e.g., 'except*' in Python 3.11+)
+        # The trailing '*' must MIRROR the source term's, in both directions
+        # (CORE-1839). The translator handles these as compounds: it strips a
+        # trailing '*' from the translation and re-emits the source's own '*'
+        # token (legesher_core/transformer.py). A translation missing the
+        # mirror is invisible to that path in reverse, so the plain 'except'
+        # entry matches instead and the '*' lands on an already complete
+        # 'except*' — 'except**', which does not parse. Nine shipped packs
+        # were in that state and every gate passed them, because this check
+        # previously only ALLOWED the mirror instead of demanding it.
+        #
+        # Keyed on the source term's own trailing '*', not on SOFT_KEYWORDS
+        # membership: a soft keyword without one (a future 'match'/'case'
+        # entry) must not be forced to grow an asterisk.
+        #
+        # This runs BEFORE the SOFT_KEYWORDS short-circuit below. That
+        # short-circuit accepts the literal 'except*' as a VALUE, and with a
+        # known term that is wrong in both directions — it would let
+        # `print: except*` through.
+        if source_key is not None:
+            if source_key.endswith("*"):
+                if not value.endswith("*"):
+                    return False
+                base_value = value[:-1]
+                # Exactly one marker. Without this the recursive call below
+                # drops source_key, the base 'except*' hits the SOFT_KEYWORDS
+                # short-circuit, and 'except*: except**' validates — the very
+                # corrupt form this rule exists to reject.
+                if not base_value or base_value.endswith("*"):
+                    return False
+                return cls._is_valid_identifier(base_value)
+            if value.endswith("*"):
+                return False
+
+        # No term context: a bare soft keyword is a legal value on its own
+        # (e.g. the English pack's 'except*'). Only reachable when the caller
+        # supplied no source_key, since the mirror rule above decides it
+        # whenever the term is known.
         if value in SOFT_KEYWORDS:
             return True
-
-        # Allow translations of soft keywords (e.g., 'excepto*' for 'except*')
-        # If the source key is a soft keyword, allow the translation to follow the same pattern
-        if source_key in SOFT_KEYWORDS and value.endswith("*"):
-            # Validate the base part (without the *)
-            base_value = value[:-1]
-            if base_value and cls._is_valid_identifier(base_value):
-                return True
 
         # Quick check: if it contains spaces, it's invalid
         if " " in value:
@@ -1559,12 +1601,19 @@ class SchemaValidator:
 
     @staticmethod
     def _strip_soft_keyword_marker(value: str) -> str:
-        """Drop the trailing ``*`` that marks a soft-keyword translation.
+        """Drop the trailing ``*`` that mirrors a ``*``-suffixed term.
 
-        Soft keywords (``match``, ``case``, ``type``, ``_``) carry a trailing
-        ``*`` in pack values to flag that they are contextual keywords. The
-        marker is not part of the identifier, so it must be removed before a
-        value is normalized, script-checked, collision-checked, or measured.
+        The marker belongs to terms whose ENGLISH name ends in ``*`` —
+        ``except*`` is the only one today — whose translations must mirror it
+        (CORE-1839). It is not part of the identifier, so it must be removed
+        before a value is normalized, script-checked, collision-checked, or
+        measured.
+
+        This docstring previously said ``match``, ``case``, ``type`` and ``_``
+        carry the marker. No shipped pack does that — all 204 such entries are
+        plain — and since CORE-1839 a starless term with a starred value fails
+        validation outright, so following the old wording would have broken a
+        whole pack load. Corrected to describe the rule the gate enforces.
         """
         return value[:-1] if value.endswith("*") else value
 

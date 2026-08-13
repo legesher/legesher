@@ -40,7 +40,7 @@ These are Python's reserved words translated to Finnish.
 | `elif` | `muuttujilla` |
 | `else` | `muuttuja` |
 | `except` | `pois` |
-| `except*` | `exceptiivi` |
+| `except*` | `exceptiivi*` |
 | `False` | `valmis` |
 | `finally` | `seuraaaina` |
 | `for` | `jokaiselle` |

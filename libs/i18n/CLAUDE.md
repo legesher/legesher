@@ -361,7 +361,8 @@ Tracks which translation is currently chosen for YAML packs. Decouples "what we 
 **Constraint:** `UNIQUE(term_id, language_code)` — exactly one active translation per term+language.
 
 **Invariant (CORE-1400):** every selected value passes the publish gate — a valid Python identifier
-(with the `except*` soft-keyword allowance) — enforced by `set_selected` and by the canonical selection
+(a `*`-suffixed term such as `except*` requires the mirrored trailing `*`, CORE-1839)
+— enforced by `set_selected` and by the canonical selection
 rule in `legesher_i18n/selection.py`. The candidate pool (`translations`) may be dirty; selections may
 not. See [docs/translation-selection.md](docs/translation-selection.md).
 
@@ -399,7 +400,8 @@ db.get_translations_for_term(term_name, language_code, category=None)  # categor
 
 # Selected translations (active choices)
 db.set_selected(term_id, language_code, translation, selected_by, reason)
-#   Enforces the CORE-1400 publish gate (valid identifier + except* allowance) and the
+#   Enforces the CORE-1400 publish gate (valid identifier; a `*`-suffixed term needs the
+#   mirrored `*`) and the
 #   collision guard at the write boundary — both raise ValueError.
 db.get_selected(term_id, language_code)
 db.get_selected_by_name(term_name, language_code, category=None)

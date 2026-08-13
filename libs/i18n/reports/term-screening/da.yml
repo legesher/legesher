@@ -2,7 +2,7 @@ language: da
 target: python
 screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
 screened_at: "2026-08-10"
-coverage_digest: 98c26da4c42c684258df43fdb48c5452b8518fbb49f50a6f41913e2e95a08a6c
+coverage_digest: 1ffacb1a4471ea582f3c6a3603d00665b1c3cd7bd380b091571c60a8cd109187
 terms_screened: 184
 flags:
 - term: hash_kommer_i_gang

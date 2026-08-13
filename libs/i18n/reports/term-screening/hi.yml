@@ -2,10 +2,10 @@ language: hi
 target: python
 screener: claude-fable-5 (linguist framing, CORE-1305/CORE-401)
 screened_at: "2026-08-04"
-coverage_digest: d4549460717f0ac0343a7d8015649e1f537f4cefd7e50388aaee9949b6665edf
+coverage_digest: cfc9d1bb687f580d9c46f70c4d3bbb5e882a2ff4d85e4ef3229a221805b24654
 terms_screened: 184
 flags:
-- term: अपराधिक
+- term: अपराधिक*
   english: except*
   partition: keywords
   category: unfortunate_connotation

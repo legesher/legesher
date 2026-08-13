@@ -337,6 +337,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **i18n**: `except*` reverse-translated to `except**` in nine language packs
+  (`da`, `de`, `fi`, `hi`, `mk`, `pt`, `ru`, `te`, `th`), producing output
+  that does not parse. Their stored translation omitted the trailing `*` the
+  compound-keyword path re-emits, so reverse translation appended a second
+  one. Fixed at the selection layer and re-exported — the translated word is
+  unchanged, only the syntax marker was added — and the identifier check now
+  requires the mirror instead of merely allowing it, rejecting an unmirrored
+  value at schema construction. Found by the all-packs round-trip sweep
+  added in CORE-1745. Note the failure mode changed: an unmirrored value now
+  fails the whole pack load rather than one entry, so a new engine paired
+  with an old independently-versioned pack disables that language outright
+  instead of mistranslating one keyword. [CORE-1839]
+
 - **core**: a mapping-log append could destroy a concurrent writer's event. The
   torn-tail repair used a byte count measured when the log was *read*, which is
   stale as soon as another process appends — applying it later truncated from

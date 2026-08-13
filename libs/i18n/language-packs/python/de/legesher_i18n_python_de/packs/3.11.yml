@@ -3,7 +3,7 @@ target: python
 version: '3.11'
 extends: 3.10.yml
 keywords:
-  except*: abgesehenvon
+  except*: abgesehenvon*
 exceptions:
   exceptiongroup: Ausnahmegruppe
   baseexceptiongroup: Basisausnahmegruppe
@@ -12,7 +12,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.11'
-  last_updated: '2026-01-26'
+  last_updated: '2026-08-13'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: MIT

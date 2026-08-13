@@ -40,7 +40,7 @@ These are Python's reserved words translated to Danish.
 | `elif` | `hvisannet` |
 | `else` | `annelse` |
 | `except` | `undtages` |
-| `except*` | `undtiden` |
+| `except*` | `undtiden*` |
 | `False` | `falsk` |
 | `finally` | `endelig` |
 | `for` | `gentag` |

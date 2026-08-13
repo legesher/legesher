@@ -40,7 +40,7 @@ These are Python's reserved words translated to Macedonian.
 | `elif` | `инакуако` |
 | `else` | `инаку` |
 | `except` | `освен` |
-| `except*` | `освен_ѕвезда` |
+| `except*` | `освен_ѕвезда*` |
 | `False` | `лажно` |
 | `finally` | `конечно` |
 | `for` | `за` |

@@ -40,7 +40,7 @@ These are Python's reserved words translated to Telugu.
 | `elif` | `లేకుంటేఒకవేళ` |
 | `else` | `లేకుంటే` |
 | `except` | `మినహాయింపు` |
-| `except*` | `మినహాయింపుగుంపు` |
+| `except*` | `మినహాయింపుగుంపు*` |
 | `False` | `తప్పు` |
 | `finally` | `చివరగా` |
 | `for` | `కొరకు` |

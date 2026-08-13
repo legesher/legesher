@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- `except*` now carries the mirrored trailing `*`: `exceptiivi` →
+  `exceptiivi*`. The translator handles `except*` as a compound — it strips a
+  trailing `*` from the translation and re-emits the source's own `*` token.
+  Without the mirror, reverse translation could not match the compound, so
+  the plain `except` entry matched and the `*` landed on an already complete
+  `except*`, producing `except**`, which does not parse. Syntax marker only:
+  the translated word is unchanged. [CORE-1839]
+
 - **Term screening**: Replaced corruption-class translations flagged by the
   CORE-401 screening sweep; fixed at the DB layer and re-exported [CORE-1763]
   - `for`: `forza` → `jokaiselle`

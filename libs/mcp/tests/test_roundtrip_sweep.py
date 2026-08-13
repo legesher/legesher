@@ -36,21 +36,20 @@ pytestmark = pytest.mark.anyio
 #: es — Latin script; ar — RTL, Arabic script; hi — Devanagari.
 SAMPLE_PACKS = ("es", "ar", "hi")
 
-#: Round-trip failures this sweep found on its first run — all pre-existing
+#: Round-trip failures this sweep found on its first run — pre-existing
 #: engine/pack defects, none of them in the MCP layer. Listed rather than
 #: hidden: the corpus keeps exercising them, and each is a strict xfail, so
 #: fixing one turns it into an XPASS failure that says "remove me".
 #:
-#: CORE-1839 — `except*` reverses to `except**` in the 9 packs whose
-#:   translation omits the mirrored asterisk.
+#: CORE-1839 is gone from this list — the nine packs whose `except*`
+#: translation omitted the mirrored asterisk were corrected at the source
+#: (the selection layer) and regenerated, and the identifier check now
+#: refuses an unmirrored value outright, so the state cannot return.
+#:
 #: CORE-1840 — an identifier spelled like a native keyword (`e` = "and" in
 #:   it/pt/gl, `y` = "and" in es) is rewritten into the keyword on the way
 #:   back, so `except KeyError as e:` returns as `except KeyError as and:`.
 KNOWN_ROUND_TRIP_FAILURES: dict[tuple[str, str], str] = {
-    **{
-        (language, "exception_groups.py"): "CORE-1839: except* loses its mirrored asterisk"
-        for language in ("da", "de", "fi", "hi", "mk", "pt", "ru", "te", "th")
-    },
     **{
         (language, "libs/core/tests/fixtures/sample_english.py"): (
             "CORE-1840: identifier `e` collides with the pack's word for `and`"

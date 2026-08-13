@@ -40,7 +40,7 @@ These are Python's reserved words translated to Russian.
 | `elif` | `если_иначе` |
 | `else` | `иначе` |
 | `except` | `за_исключением` |
-| `except*` | `кроме` |
+| `except*` | `кроме*` |
 | `False` | `ложный` |
 | `finally` | `наконец` |
 | `for` | `для` |

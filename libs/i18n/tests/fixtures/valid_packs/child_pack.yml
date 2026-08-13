@@ -4,7 +4,7 @@ version: '3.11'
 extends: base_pack.yml
 
 keywords:
-  except*: test_except_star
+  except*: test_except_star*
   # Overrides parent
   def: test_def_override
 

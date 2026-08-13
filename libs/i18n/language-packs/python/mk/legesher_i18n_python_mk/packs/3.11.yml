@@ -6,7 +6,7 @@ target: python
 version: '3.11'
 extends: 3.10.yml
 keywords:
-  except*: освен_ѕвезда
+  except*: освен_ѕвезда*
 exceptions:
   baseexceptiongroup: основенисклучокгрупа
   exceptiongroup: исклучокгрупа
@@ -17,7 +17,7 @@ metadata:
   - '3.11'
   - '3.12'
   - '3.13'
-  last_updated: '2026-03-15'
+  last_updated: '2026-08-13'
   community_reviewed: false
   author: Legesher Team
   license: MIT
