@@ -343,8 +343,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   compound-keyword path re-emits, so reverse translation appended a second
   one. Fixed at the selection layer and re-exported — the translated word is
   unchanged, only the syntax marker was added — and the identifier check now
-  requires the mirror instead of merely allowing it, rejecting an unmirrored
-  value at schema construction. Found by the all-packs round-trip sweep
+  requires the mirror instead of merely allowing it — in both directions and
+  exactly once — rejecting an unmirrored value at schema construction. Found by the all-packs round-trip sweep
   added in CORE-1745. Note the failure mode changed: an unmirrored value now
   fails the whole pack load rather than one entry, so a new engine paired
   with an old independently-versioned pack disables that language outright

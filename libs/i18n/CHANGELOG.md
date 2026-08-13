@@ -496,10 +496,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 | `th` | `เครื่องมือที่ใช้ในการเอาเป็น` | `เครื่องมือที่ใช้ในการเอาเป็น*` |
 
   The identifier check now *requires* the mirror rather than merely allowing
-  it, keyed on the source term's own trailing `*` so a starless soft keyword
-  is never forced to grow one. It rejects at schema construction, so a pack
-  in this state can no longer be loaded, and a data-level test asserts the
-  invariant across every shipped pack. The unit test that previously
+  it, in both directions and exactly once: a `*`-suffixed term must have a
+  `*`-suffixed translation, a term without one cannot take a value with one,
+  and `except*: except**` is rejected. Keyed on the source term's own
+  trailing `*` rather than soft-keyword membership, so a starless soft
+  keyword is never forced to grow one. It rejects at schema construction, so
+  a pack in this state can no longer be loaded, and a data-level test asserts
+  the invariant across every shipped pack. The unit test that previously
   accepted the unmirrored form — justified by "both forms ship today" — was
   encoding the defect as a specification; the shipped state was evidence of
   the bug, not the rule.
