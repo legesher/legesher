@@ -68,6 +68,10 @@ class AyaModel(TranslationModel):
         """Get model name."""
         return f"aya23-{self.model}"
 
+    def get_model_version(self) -> str | None:
+        """Exact Ollama model tag for provenance."""
+        return self.model
+
     def estimate_cost(self, request: TranslationRequest) -> float:
         """Estimate cost for translation request.
 

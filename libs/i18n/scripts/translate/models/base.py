@@ -101,6 +101,15 @@ class TranslationModel(ABC):
         """Get the name of this model (e.g., 'claude-3.5-sonnet', 'aya23')."""
         pass
 
+    def get_model_version(self) -> str | None:
+        """Exact model identifier for provenance (e.g. 'CohereLabs/aya-101').
+
+        Adapters override this to return their precise identifier field. The
+        default records nothing rather than a guess -- a NULL model_version
+        is recoverable from the source label, a wrong one is not.
+        """
+        return None
+
     @abstractmethod
     def estimate_cost(self, request: TranslationRequest) -> float:
         """Estimate the cost in USD for this translation request.

@@ -577,6 +577,7 @@ class TranslationPipeline:
                     language_code=language,
                     translation=translation.translation,
                     source=model_name,
+                    model_version=model.get_model_version(),
                     word_type=translation.word_type,
                     word_form=translation.form,
                     model_rationale=translation.rationale,

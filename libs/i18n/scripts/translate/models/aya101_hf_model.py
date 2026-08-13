@@ -163,6 +163,10 @@ class Aya101HuggingFaceModel(TranslationModel):
         """Get model name."""
         return "aya-101-hf"
 
+    def get_model_version(self) -> str | None:
+        """Exact HF repo id for provenance."""
+        return self.model_name
+
     def estimate_cost(self, request: TranslationRequest) -> float:
         """Estimate cost for translation request.
 

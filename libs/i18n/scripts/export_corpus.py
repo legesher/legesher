@@ -553,6 +553,30 @@ person. That is also why the project names below live in this card rather than
 in a column -- the obligation is machine-visible (`upstream`), the identity of
 the upstream project is human-readable here.
 
+### Legesher-produced renderings
+
+Renderings marked `legesher` are the project's own work product, and they are
+the bulk of the corpus. They arrive by three routes:
+
+* **Language packs.** Terms authored for Legesher's per-locale language packs,
+  written against the concept inventory (the `concepts` config) and its
+  English definitions, then run through the pack pipeline's mechanical gates.
+  Those per-row verdicts are not summarised away: they ship in this corpus
+  as the validation columns on `options` (listed in that config's section
+  above), so a consumer can apply exactly the filters we do.
+* **Curated corrections.** Fixes a maintainer made to an existing rendering
+  -- a wrong form, a corrupted import, a style-guide violation. The corpus is
+  append-only evidence, so the superseded rendering stays, and the correction
+  enters as a new option alongside it.
+* **Composed values.** Renderings a human assembled from existing pack
+  material, for example compounding two already-attested words to cover a new
+  concept. No model was asked; calling these `model` would overstate the
+  machine's involvement, so they are `legesher`.
+
+`legesher` describes who produced a rendering, not how good it is. Like every
+other source kind, a Legesher-produced rendering has exactly the
+native-speaker standing its `endorsements` rows give it, and no more.
+
 ### Upstream projects
 
 **[legesher-translations](https://github.com/legesher/legesher-translations)**
@@ -636,7 +660,10 @@ THE SOFTWARE.
 ### Community contributors
 
 Renderings marked `community` come from native speakers who reviewed and
-corrected our vocabulary. They are identified in the `contributors` config by
+corrected our vocabulary. Each review is a recorded session in which a
+reviewer endorses, passes on, or flags a rendering; only endorsements appear
+here (the `endorsements` config), and a reviewer's standing at the time rides
+on `rung_at_endorsement`. They are identified in the `contributors` config by
 an opaque, salted id -- never by name, handle, or email -- and that mapping is
 never published. A contributor may ask to be credited by name, or to be
 removed; either request is honoured without losing the endorsement itself, so
@@ -652,14 +679,17 @@ Renderings marked `model` were produced by a language model:
 | [Aya 101](https://huggingface.co/CohereLabs/aya-101) (Cohere For AI) | Apache-2.0 |
 | Claude (Anthropic) | outputs owned by the API customer |
 
+Where the generating run recorded a specific model version it is retained in
+the source database; the earliest machine-generated rows predate version
+recording, so this card discloses the model family rather than promising a
+per-row version.
+
 They are a starting point, not an endorsement. A machine-generated rendering
 carries no native-speaker attestation until one is recorded against it -- which
 is what the `endorsements` config is for, and why packs built from this corpus
-ship labelled experimental.
-
-Values we composed ourselves from existing pack material are `legesher`, not
-`model`: a human assembled them, and calling them `model` would overstate the
-machine's involvement.
+ship labelled experimental. Values a human composed from existing pack
+material are `legesher`, not `model` -- see "Legesher-produced renderings"
+above.
 """
 
 

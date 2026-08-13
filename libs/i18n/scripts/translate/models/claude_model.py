@@ -90,6 +90,10 @@ class ClaudeModel(TranslationModel):
         """Get model name."""
         return f"claude-{self.model}"
 
+    def get_model_version(self) -> str | None:
+        """Exact API model id for provenance."""
+        return self.model
+
     def estimate_cost(self, request: TranslationRequest) -> float:
         """Estimate cost for translation request.
 

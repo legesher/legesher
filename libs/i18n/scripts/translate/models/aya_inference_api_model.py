@@ -141,6 +141,10 @@ class AyaInferenceAPIModel(TranslationModel):
         """Get model name for tracking."""
         return f"aya-api-{self.model.split('/')[-1]}"
 
+    def get_model_version(self) -> str | None:
+        """Exact HF repo id for provenance."""
+        return self.model
+
     def estimate_cost(self, request: TranslationRequest) -> float:
         """Estimate cost for translation request.
 

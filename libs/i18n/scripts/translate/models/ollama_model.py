@@ -74,6 +74,10 @@ class OllamaModel(TranslationModel):
         """Get model name for tracking."""
         return f"ollama-{self.model}"
 
+    def get_model_version(self) -> str | None:
+        """Exact Ollama model tag for provenance."""
+        return self.model
+
     def estimate_cost(self, request: TranslationRequest) -> float:
         """Estimate cost for translation request.
 

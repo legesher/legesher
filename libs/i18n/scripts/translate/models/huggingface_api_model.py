@@ -136,6 +136,10 @@ class HuggingFaceAPIModel(TranslationModel):
         """Get model name from profile."""
         return f"hf-api-{self.profile.name}"
 
+    def get_model_version(self) -> str | None:
+        """Exact HF repo id for provenance."""
+        return self.profile.model_id
+
     def estimate_cost(self, request: TranslationRequest) -> float:
         """HF Inference API — effectively free for our usage patterns."""
         return 0.0

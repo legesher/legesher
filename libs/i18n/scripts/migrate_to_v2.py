@@ -147,6 +147,10 @@ PUBLIC_SOURCES: frozenset[str] = frozenset(
 SOURCE_MAP: dict[str, str] = {
     # machine-generated -- disclose which machine
     "aya": "model",
+    # CORE-1866 regeneration (CohereLabs/aya-101, Apache-2.0). The key is the
+    # pipeline's model-registry key -- the run loop writes source=<registry key>,
+    # not get_model_name().
+    "aya101-hf": "model",
     "claude": "model",
     "claude_agent": "model",
     # our own work -- nothing owed beyond the dataset licence
