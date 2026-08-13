@@ -6,6 +6,16 @@ from pathlib import Path
 
 from .usage_tracker import UsageTracker
 
+
+def fmt_cost(value: float | None) -> str:
+    """Render a cost, or say it is unknown.
+
+    A dashboard that prints ``$0.00`` for an unconfigured rate is the most
+    persuasive way to be wrong — it looks measured.
+    """
+    return "unknown" if value is None else f"${value:.2f}"
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -81,12 +91,13 @@ class DashboardGenerator:
         # Total statistics
         total_requests = total.get("requests", 0)
         total_chars = total.get("characters", 0)
-        total_cost = total.get("cost_usd", 0.0)
+        total_cost = total.get("cost_usd")
         cache_hit_rate = total.get("cache_hit_rate", 0.0)
 
         # Provider data for charts
         provider_labels = [p["provider"] for p in by_provider]
         provider_requests = [p["requests"] for p in by_provider]
+        # None renders as null in a JS literal, which Chart.js gaps correctly.
         provider_costs = [p["cost_usd"] for p in by_provider]
 
         # Language pair data
@@ -287,7 +298,7 @@ class DashboardGenerator:
             </div>
             <div class="stat-card">
                 <div class="stat-label">Total Cost</div>
-                <div class="stat-value cost">${total_cost:.2f}</div>
+                <div class="stat-value cost">{fmt_cost(total_cost)}</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Cache Hit Rate</div>
@@ -345,7 +356,7 @@ class DashboardGenerator:
                         <td>{provider["provider"]}</td>
                         <td>{provider["requests"]:,}</td>
                         <td>{provider["characters"]:,}</td>
-                        <td class="cost">${provider["cost_usd"]:.2f}</td>
+                        <td class="cost">{fmt_cost(provider["cost_usd"])}</td>
                     </tr>
 """
 

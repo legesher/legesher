@@ -13,6 +13,7 @@ except ImportError:
     translate = None  # type: ignore
     google_exceptions = None  # type: ignore
 
+from ..rates import cost_for_chars
 from .base import (
     TranslationProvider,
     TranslationResult,
@@ -45,7 +46,6 @@ class GoogleTranslateProvider(TranslationProvider):
 
     name = "google"
     requires_api_key = True
-    cost_per_million_chars = 20.0  # $20 per 1M chars (Google Translate API)
 
     # Google supports 133+ languages
     # Only listing common ones here, but supports many more
@@ -342,9 +342,8 @@ class GoogleTranslateProvider(TranslationProvider):
         return UsageStats(
             total_requests=self.total_requests,
             total_characters=self.total_characters,
+            cost_estimate_usd=cost_for_chars(self.name, self.total_characters),
             characters_by_provider={self.name: self.total_characters},
-            cost_estimate_usd=(self.total_characters / 1_000_000)
-            * self.cost_per_million_chars,
             period_start=datetime.now(),  # Local tracking only
             period_end=datetime.now(),
         )

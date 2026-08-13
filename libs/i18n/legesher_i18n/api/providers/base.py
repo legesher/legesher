@@ -29,9 +29,10 @@ class UsageStats:
     total_requests: int
     total_characters: int
     characters_by_provider: dict[str, int]
-    cost_estimate_usd: float
     period_start: datetime
     period_end: datetime
+    # None means "no rate configured", never "free". See api/rates.py.
+    cost_estimate_usd: float | None = None
 
 
 class TranslationError(Exception):
@@ -63,7 +64,6 @@ class TranslationProvider(ABC):
 
     name: str
     requires_api_key: bool = False
-    cost_per_million_chars: float = 0.0
 
     @abstractmethod
     def is_available(self) -> bool:
@@ -141,16 +141,3 @@ class TranslationProvider(ABC):
 
         pair = f"{source_lang}-{target_lang}"
         return PROVIDER_QUALITY.get(self.name, {}).get(pair, 5.0)
-
-    def calculate_cost(self, text: str) -> float:
-        """
-        Calculate cost for translating text.
-
-        Args:
-            text: Text to translate
-
-        Returns:
-            float: Estimated cost in USD
-        """
-        chars = len(text)
-        return (chars / 1_000_000) * self.cost_per_million_chars

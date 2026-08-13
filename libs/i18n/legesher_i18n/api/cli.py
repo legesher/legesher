@@ -18,8 +18,10 @@ def format_bytes(bytes_val: int) -> str:
     return f"{bytes_val:.2f} TB"
 
 
-def format_currency(amount: float) -> str:
-    """Format currency to USD."""
+def format_currency(amount: float | None) -> str:
+    """Format currency to USD, or say so when the price is unknown."""
+    if amount is None:
+        return "unknown"
     return f"${amount:.2f}"
 
 

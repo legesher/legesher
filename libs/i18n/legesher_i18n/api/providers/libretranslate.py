@@ -40,7 +40,6 @@ class LibreTranslateProvider(TranslationProvider):
 
     name = "libretranslate"
     requires_api_key = False  # No API key for self-hosted
-    cost_per_million_chars = 0.0  # Free (self-hosted)
 
     # LibreTranslate supports 20+ languages
     SUPPORTED_LANGUAGES = {
@@ -241,8 +240,8 @@ class LibreTranslateProvider(TranslationProvider):
         return UsageStats(
             total_requests=self.total_requests,
             total_characters=self.total_characters,
+            cost_estimate_usd=0.0,  # Self-hosted: zero is a fact, not a guess
             characters_by_provider={self.name: self.total_characters},
-            cost_estimate_usd=0.0,  # Self-hosted = free
             period_start=datetime.now(),
             period_end=datetime.now(),
         )

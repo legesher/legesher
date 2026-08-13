@@ -13,6 +13,7 @@ try:
 except ImportError:
     AsyncAnthropic = None  # type: ignore
 
+from ..rates import cost_for_tokens, format_cost
 from .base import (
     TranslationProvider,
     TranslationResult,
@@ -45,7 +46,6 @@ class AnthropicProvider(TranslationProvider):
     requires_api_key = True
     # Claude 3.5 Sonnet pricing: $3/1M input tokens, $15/1M output tokens
     # Average ~4 chars per token, so roughly $4.5/1M chars ((3+15)/2/4)
-    cost_per_million_chars = 4.5
 
     # Supported languages (Claude supports 100+ languages)
     SUPPORTED_LANGUAGES = {
@@ -120,10 +120,6 @@ class AnthropicProvider(TranslationProvider):
                 self.client = AsyncAnthropic(api_key=self.api_key)
             except Exception as e:
                 logger.error(f"Failed to initialize Anthropic client: {e}")
-
-        # Cost tracking (per 1M tokens)
-        self.input_cost_per_token = 3.0 / 1_000_000  # $3/1M input tokens
-        self.output_cost_per_token = 15.0 / 1_000_000  # $15/1M output tokens
 
         # Cache for semantic analysis results (to avoid duplicate API calls)
         self._semantic_cache: dict[str, dict] = {}
@@ -251,12 +247,10 @@ class AnthropicProvider(TranslationProvider):
             self.total_output_tokens += output_tokens
             self.total_requests += 1
 
-            # Calculate cost
-            cost = self._calculate_cost(input_tokens, output_tokens)
-
             logger.info(
                 f"Anthropic: Tokens: {input_tokens} in / {output_tokens} out | "
-                f"Cost: ${cost:.4f} | Total requests: {self.total_requests}"
+                f"Cost: {format_cost(cost_for_tokens(self.name, input_tokens, output_tokens))} | "
+                f"Total requests: {self.total_requests}"
             )
 
             # Parse JSON response
@@ -281,7 +275,8 @@ class AnthropicProvider(TranslationProvider):
                     "model": self.model,
                     "input_tokens": input_tokens,
                     "output_tokens": output_tokens,
-                    "cost_usd": cost,
+                    # None unless the operator configured a rate — see api/rates.py
+                    "cost_usd": cost_for_tokens(self.name, input_tokens, output_tokens),
                 },
             )
 
@@ -368,15 +363,13 @@ class AnthropicProvider(TranslationProvider):
             self.total_output_tokens += output_tokens
             self.total_requests += 1
 
-            cost = self._calculate_cost(input_tokens, output_tokens)
-
             logger.info(
-                f"Anthropic Semantic Analysis: {input_tokens} in / {output_tokens} out | "
-                f"Cost: ${cost:.4f}"
+                f"Anthropic Semantic Analysis: {input_tokens} in / {output_tokens} out"
             )
 
             result = self._parse_json_response(response.content[0].text)
-            result["cost_usd"] = cost
+            # None unless the operator configured a rate — see api/rates.py
+            result["cost_usd"] = cost_for_tokens(self.name, input_tokens, output_tokens)
             result["model"] = self.model
 
             # Cache the result
@@ -415,24 +408,18 @@ class AnthropicProvider(TranslationProvider):
         total_chars = (
             self.total_input_tokens + self.total_output_tokens
         ) * 4  # ~4 chars/token
-        cost = self._calculate_cost(self.total_input_tokens, self.total_output_tokens)
-
         from datetime import datetime
 
         return UsageStats(
             total_requests=self.total_requests,
             total_characters=total_chars,
             characters_by_provider={self.name: total_chars},
-            cost_estimate_usd=cost,
+            cost_estimate_usd=cost_for_tokens(
+                self.name, self.total_input_tokens, self.total_output_tokens
+            ),
             period_start=datetime.now(),  # Session-based tracking
             period_end=datetime.now(),
         )
-
-    def _calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        """Calculate cost for API usage."""
-        input_cost = input_tokens * self.input_cost_per_token
-        output_cost = output_tokens * self.output_cost_per_token
-        return input_cost + output_cost
 
     def _generate_cache_key(
         self, term: str, translations: list[str], language: str

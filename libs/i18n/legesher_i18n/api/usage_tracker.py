@@ -3,6 +3,8 @@
 import csv
 import logging
 import sqlite3
+
+from .rates import format_cost
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -19,7 +21,7 @@ class UsageRecord:
     source_lang: str
     target_lang: str
     characters: int
-    cost_usd: float
+    cost_usd: float | None  # None = no rate configured; never assume free
     request_id: str
     cached: bool
 
@@ -63,11 +65,44 @@ class UsageTracker:
                 source_lang TEXT NOT NULL,
                 target_lang TEXT NOT NULL,
                 characters INTEGER NOT NULL,
-                cost_usd REAL NOT NULL,
+                cost_usd REAL,
                 request_id TEXT,
                 cached BOOLEAN DEFAULT 0
             )
         """)
+
+        # Relax a pre-existing NOT NULL cost column. CREATE TABLE IF NOT
+        # EXISTS does not alter an existing table, so a database created
+        # before rates became operator-supplied would reject a NULL cost —
+        # and that IntegrityError escapes coordinator.translate(), losing a
+        # translation that already succeeded.
+        cols = conn.execute("PRAGMA table_info(usage)").fetchall()
+        cost_col = next((c for c in cols if c[1] == "cost_usd"), None)
+        if cost_col is not None and cost_col[3]:  # notnull flag
+            conn.execute("ALTER TABLE usage RENAME TO usage_legacy_notnull")
+            conn.execute("""
+                CREATE TABLE usage (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    provider TEXT NOT NULL,
+                    source_lang TEXT NOT NULL,
+                    target_lang TEXT NOT NULL,
+                    characters INTEGER NOT NULL,
+                    cost_usd REAL,
+                    request_id TEXT,
+                    cached BOOLEAN DEFAULT 0
+                )
+            """)
+            conn.execute("""
+                INSERT INTO usage (id, timestamp, provider, source_lang,
+                                   target_lang, characters, cost_usd,
+                                   request_id, cached)
+                SELECT id, timestamp, provider, source_lang, target_lang,
+                       characters, cost_usd, request_id, cached
+                FROM usage_legacy_notnull
+            """)
+            conn.execute("DROP TABLE usage_legacy_notnull")
+            logger.info("migrated usage.cost_usd to nullable")
 
         # Create indices for common queries
         conn.execute("""
@@ -119,7 +154,7 @@ class UsageTracker:
         logger.debug(
             f"Recorded usage: {record.provider} "
             f"{record.source_lang}->{record.target_lang} "
-            f"{record.characters} chars (${record.cost_usd:.4f})"
+            f"{record.characters} chars ({format_cost(record.cost_usd)})"
         )
 
     def record_batch(self, records: list[UsageRecord]):
@@ -162,10 +197,13 @@ class UsageTracker:
         conn.close()
 
         total_chars = sum(r.characters for r in records)
-        total_cost = sum(r.cost_usd for r in records)
+        known = [r.cost_usd for r in records if r.cost_usd is not None]
+        # Partial knowledge is not a total. If any record's price is unknown,
+        # so is the sum.
+        total_cost = sum(known) if len(known) == len(records) else None
         logger.info(
             f"Recorded {len(records)} usage events in batch: "
-            f"{total_chars} chars total (${total_cost:.4f})"
+            f"{total_chars} chars total ({format_cost(total_cost)})"
         )
 
     def get_usage_stats(
@@ -283,7 +321,8 @@ class UsageTracker:
             "total": {
                 "requests": total_requests,
                 "characters": total_stats[1] or 0,
-                "cost_usd": total_stats[2] or 0.0,
+                # None, not 0.0 — unknown price stays unknown.
+                "cost_usd": total_stats[2],
                 "cached_requests": cached_requests,
                 "cache_hit_rate": cache_hit_rate,
             },

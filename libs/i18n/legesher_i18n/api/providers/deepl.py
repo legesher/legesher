@@ -11,6 +11,7 @@ try:
 except ImportError:
     deepl = None  # type: ignore
 
+from ..rates import cost_for_chars
 from .base import (
     TranslationProvider,
     TranslationResult,
@@ -38,7 +39,6 @@ class DeepLProvider(TranslationProvider):
 
     name = "deepl"
     requires_api_key = True
-    cost_per_million_chars = 20.0  # $20 per 1M chars (DeepL API Pro)
 
     # Supported languages (as of DeepL API 2024)
     SUPPORTED_LANGUAGES = {
@@ -263,9 +263,8 @@ class DeepLProvider(TranslationProvider):
             return UsageStats(
                 total_requests=self.total_requests,
                 total_characters=usage.character.count,
+                cost_estimate_usd=cost_for_chars(self.name, usage.character.count),
                 characters_by_provider={self.name: usage.character.count},
-                cost_estimate_usd=(usage.character.count / 1_000_000)
-                * self.cost_per_million_chars,
                 period_start=datetime.now(),  # DeepL doesn't provide period info
                 period_end=datetime.now(),
             )

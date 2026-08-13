@@ -10,6 +10,7 @@ import logging
 import os
 from datetime import datetime
 
+from ..rates import cost_for_chars
 from .base import (
     AuthenticationError,
     TranslationError,
@@ -53,7 +54,6 @@ class CohereAyaProvider(TranslationProvider):
 
     name = "cohere_aya"
     requires_api_key = True
-    cost_per_million_chars = 0.50  # Aya models are relatively cheap
 
     def __init__(
         self,
@@ -273,8 +273,8 @@ class CohereAyaProvider(TranslationProvider):
         return UsageStats(
             total_requests=self._total_requests,
             total_characters=total_chars,
+            cost_estimate_usd=cost_for_chars(self.name, total_chars),
             characters_by_provider={self.name: total_chars},
-            cost_estimate_usd=total_chars / 1_000_000 * self.cost_per_million_chars,
             period_start=datetime.now(),
             period_end=datetime.now(),
         )

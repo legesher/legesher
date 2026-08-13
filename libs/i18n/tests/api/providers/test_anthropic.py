@@ -177,15 +177,43 @@ class TestTranslation:
         assert provider.total_requests == 1
 
     @pytest.mark.asyncio
-    async def test_translate_calculates_cost(self, provider, mock_response):
-        """Test that translation calculates costs."""
+    async def test_translate_reports_cost_from_configured_rate(
+        self, provider, mock_response, monkeypatch
+    ):
+        """With a rate configured, the reported cost uses the operator's price."""
+        from legesher_i18n.api import rates
+
+        monkeypatch.setenv("LEGESHER_RATE_ANTHROPIC_INPUT_PER_MTOK", "3.0")
+        monkeypatch.setenv("LEGESHER_RATE_ANTHROPIC_OUTPUT_PER_MTOK", "15.0")
+        rates.reset_cache()
         provider.client.messages.create = AsyncMock(return_value=mock_response)
 
         result = await provider.translate("def", "en", "es")
 
-        # Cost calculation: (150 * 3 + 50 * 15) / 1M = $0.0012
-        expected_cost = (150 * 3.0 + 50 * 15.0) / 1_000_000
-        assert result.metadata["cost_usd"] == pytest.approx(expected_cost)
+        assert result.metadata["cost_usd"] == pytest.approx(
+            (150 * 3.0 + 50 * 15.0) / 1_000_000
+        )
+
+    @pytest.mark.asyncio
+    async def test_translate_reports_unknown_cost_without_a_rate(
+        self, provider, mock_response, monkeypatch
+    ):
+        """Tokens are still counted — only the price is withheld."""
+        from legesher_i18n.api import rates
+
+        monkeypatch.delenv("LEGESHER_RATES_FILE", raising=False)
+        for var in (
+            "LEGESHER_RATE_ANTHROPIC_INPUT_PER_MTOK",
+            "LEGESHER_RATE_ANTHROPIC_OUTPUT_PER_MTOK",
+        ):
+            monkeypatch.delenv(var, raising=False)
+        rates.reset_cache()
+        provider.client.messages.create = AsyncMock(return_value=mock_response)
+
+        result = await provider.translate("def", "en", "es")
+
+        assert result.metadata["cost_usd"] is None
+        assert provider.total_input_tokens == 150
 
     @pytest.mark.asyncio
     async def test_translate_without_client(self, provider):
@@ -271,7 +299,8 @@ class TestSemanticAnalysis:
         )
 
         assert "cost_usd" in result
-        assert result["cost_usd"] > 0
+        # Reported, but unknown until the operator configures a rate.
+        assert result["cost_usd"] is None
         assert provider.total_input_tokens == 200
         assert provider.total_output_tokens == 80
 
@@ -364,7 +393,8 @@ class TestUsageStats:
         assert stats is not None
         assert stats.total_requests == 0
         assert stats.total_characters == 0
-        assert stats.cost_estimate_usd == 0.0
+        # No rate configured — cost is unknown, never a fabricated zero.
+        assert stats.cost_estimate_usd is None
 
     @pytest.mark.asyncio
     async def test_get_usage_after_requests(self, provider, mock_response):
@@ -378,7 +408,8 @@ class TestUsageStats:
 
         assert stats.total_requests == 1
         assert stats.total_characters > 0
-        assert stats.cost_estimate_usd > 0
+        # Still unknown: usage is measured, price is not ours to assume.
+        assert stats.cost_estimate_usd is None
         assert provider.name in stats.characters_by_provider
 
     @pytest.mark.asyncio
@@ -427,24 +458,64 @@ class TestPromptBuilding:
         assert "similarity_scores" in prompt
 
 
+@pytest.fixture(autouse=True)
+def _isolate_rate_config(monkeypatch):
+    """Rates are process-global and cached; isolate them per test.
+
+    Without this, a test that configures a rate leaves it configured for every
+    test after it, and the failure surfaces somewhere unrelated.
+    """
+    from legesher_i18n.api import rates
+
+    monkeypatch.delenv("LEGESHER_RATES_FILE", raising=False)
+    for key in [
+        k for k in list(__import__("os").environ) if k.startswith("LEGESHER_RATE_")
+    ]:
+        monkeypatch.delenv(key, raising=False)
+    rates.reset_cache()
+    yield
+    rates.reset_cache()
+
+
 class TestCostCalculation:
-    """Test cost calculation."""
+    """Cost is operator-configured, never inferred.
 
-    def test_calculate_cost_basic(self, provider):
-        """Test basic cost calculation."""
-        # 1000 input tokens, 500 output tokens
-        cost = provider._calculate_cost(1000, 500)
+    Legesher ships no rates. Prices change without notice and differ by
+    contract, so a hardcoded figure is wrong the moment a provider updates a
+    price list — quietly, and by a ratio nobody notices. An operator who wants
+    cost reporting supplies the prices they are actually billed.
+    """
 
-        # Expected: (1000 * 3 + 500 * 15) / 1M = $0.0105
-        expected = (1000 * 3.0 + 500 * 15.0) / 1_000_000
-        assert cost == pytest.approx(expected)
+    def test_no_rate_configured_means_unknown_not_free(self, provider, monkeypatch):
+        from legesher_i18n.api import rates
 
-    def test_calculate_cost_zero(self, provider):
-        """Test cost calculation with zero tokens."""
-        cost = provider._calculate_cost(0, 0)
-        assert cost == 0.0
+        monkeypatch.delenv("LEGESHER_RATES_FILE", raising=False)
+        rates.reset_cache()
 
-    def test_cost_per_million_chars(self, provider):
-        """Test cost_per_million_chars attribute."""
-        # Should be approximately $4.5/1M chars
-        assert provider.cost_per_million_chars == 4.5
+        assert rates.cost_for_tokens(provider.name, 1000, 500) is None
+        assert rates.format_cost(None) == "unknown"
+
+    def test_configured_rate_is_applied(self, provider, monkeypatch):
+        from legesher_i18n.api import rates
+
+        monkeypatch.setenv("LEGESHER_RATE_ANTHROPIC_INPUT_PER_MTOK", "3.0")
+        monkeypatch.setenv("LEGESHER_RATE_ANTHROPIC_OUTPUT_PER_MTOK", "15.0")
+        rates.reset_cache()
+
+        cost = rates.cost_for_tokens("anthropic", 1000, 500)
+        assert cost == pytest.approx((1000 * 3.0 + 500 * 15.0) / 1_000_000)
+
+    def test_half_configured_rate_reports_unknown(self, monkeypatch):
+        """Under-reporting is the failure a budget guard can least afford."""
+        from legesher_i18n.api import rates
+
+        monkeypatch.delenv("LEGESHER_RATES_FILE", raising=False)
+        monkeypatch.setenv("LEGESHER_RATE_ANTHROPIC_INPUT_PER_MTOK", "3.0")
+        monkeypatch.delenv("LEGESHER_RATE_ANTHROPIC_OUTPUT_PER_MTOK", raising=False)
+        rates.reset_cache()
+
+        assert rates.cost_for_tokens("anthropic", 1000, 500) is None
+
+    def test_provider_carries_no_rate_constants(self, provider):
+        assert not hasattr(provider, "cost_per_million_chars")
+        assert not hasattr(provider, "input_cost_per_token")

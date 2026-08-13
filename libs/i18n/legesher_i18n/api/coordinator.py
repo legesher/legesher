@@ -11,6 +11,7 @@ from .providers.base import (
     TranslationResult,
 )
 from .quality_validator import QualityValidator
+from .rates import cost_for_chars
 from .usage_tracker import UsageRecord, UsageTracker
 
 logger = logging.getLogger(__name__)
@@ -217,9 +218,15 @@ class TranslationCoordinator:
 
                     # Track usage
                     if self.usage_tracker and result.billed_characters:
-                        cost = (
-                            result.billed_characters / 1_000_000
-                        ) * provider.cost_per_million_chars
+                        # Token-priced providers (Anthropic) already computed
+                        # the correct figure from their token counts. Asking
+                        # for a character rate they have no rate for would
+                        # discard a known cost and report unknown.
+                        cost = result.metadata.get("cost_usd")
+                        if cost is None:
+                            cost = cost_for_chars(
+                                provider.name, result.billed_characters
+                            )
                         self.usage_tracker.record(
                             UsageRecord(
                                 timestamp=result.timestamp,
@@ -227,7 +234,7 @@ class TranslationCoordinator:
                                 source_lang=source_lang,
                                 target_lang=target_lang,
                                 characters=result.billed_characters,
-                                cost_usd=cost,
+                                cost_usd=cost,  # None when no rate configured
                                 request_id=request_id,
                                 cached=False,
                             )
@@ -400,6 +407,7 @@ class TranslationCoordinator:
                 usage_stats[provider.name] = {
                     "total_requests": result.total_requests,
                     "total_characters": result.total_characters,
+                    # Optional, not absent: None means no rate configured.
                     "cost_estimate_usd": result.cost_estimate_usd,
                 }
             else:

@@ -235,6 +235,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **i18n**: provider prices are now **operator-configured, never shipped**.
+  Every provider carried a hardcoded rate — `$3`/`$15` per million tokens for
+  Anthropic, `$20` per million characters for Google and DeepL, and so on —
+  which is wrong the moment a provider updates a price list, quietly and by a
+  ratio nobody notices. Prices also differ by contract and region, so there is
+  no figure that is right for everyone. Rates now come from
+  `LEGESHER_RATES_FILE` or `LEGESHER_RATE_<PROVIDER>_<UNIT>` environment
+  variables, and **an unconfigured rate reports `None`, not `0.0`** — a
+  confident wrong number is worse than an absent one, because absent invites
+  you to go look. A half-configured rate (input price but no output price)
+  also reports unknown rather than under-reporting, which is the failure a
+  budget guard can least afford. Usage itself — requests, characters, tokens —
+  is measured exactly as before; only the price is withheld.
+  `UsageStats.cost_estimate_usd` and `UsageRecord.cost_usd` are now optional,
+  and the usage table's `cost_usd` column is nullable. [CORE-1863]
+
 - **core**: `.legesher/` artifacts normalize text to **LF line endings, then
   NFC** at extraction (contract change). Previously NFC alone was applied,
   and since it does not touch line endings, `content_hash("a\nb")` differed

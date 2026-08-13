@@ -64,7 +64,6 @@ class OpenAICompatProvider(TranslationProvider):
 
     name = "openai_compat"
     requires_api_key = False
-    cost_per_million_chars = 0.0  # Typically free for local models
 
     def __init__(
         self,
@@ -244,8 +243,8 @@ class OpenAICompatProvider(TranslationProvider):
         return UsageStats(
             total_requests=self._total_requests,
             total_characters=total_chars,
+            cost_estimate_usd=0.0,  # Local model: zero is a fact, not a guess
             characters_by_provider={self.name: total_chars},
-            cost_estimate_usd=0.0,
             period_start=datetime.now(),
             period_end=datetime.now(),
         )

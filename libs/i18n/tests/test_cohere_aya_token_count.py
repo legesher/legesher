@@ -109,7 +109,7 @@ async def test_no_usage_data_yields_zero(monkeypatch: pytest.MonkeyPatch) -> Non
 @pytest.mark.asyncio
 async def test_get_usage_after_translations(monkeypatch: pytest.MonkeyPatch) -> None:
     """End-to-end: aggregate get_usage() picks up populated counts so
-    cost_estimate_usd is no longer always zero.
+    characters are counted correctly.
     """
     usage = MagicMock(spec=["tokens"])
     usage.tokens = MagicMock(input_tokens=10, output_tokens=2)
@@ -127,4 +127,5 @@ async def test_get_usage_after_translations(monkeypatch: pytest.MonkeyPatch) -> 
     assert stats is not None
     # 2 calls * (10 + 2) tokens * 4 chars/token = 96 chars
     assert stats.total_characters == 96
-    assert stats.cost_estimate_usd > 0
+    # Characters are measured; price is operator-configured (api/rates.py).
+    assert stats.cost_estimate_usd is None
