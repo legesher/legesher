@@ -212,7 +212,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- **CLI Translation Command** ([#19](https://github.com/madiedgar/legesher/pull/19), [61c1dfc](https://github.com/madiedgar/legesher/commit/61c1dfc))
+- **CLI Translation Command** (#19, 61c1dfc)
   - Comprehensive `legesher translate` command for code translation
   - Single file translation with `--from`, `--to`, `--output` flags
   - Stdin/stdout support for Unix piping workflows (`cat file.py | legesher translate`)
@@ -225,7 +225,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Cross-platform compatibility (Linux, macOS, Windows)
   - Test coverage: 66 tests (37 unit + 29 integration), 97% coverage
 
-- **Git Integration Commands** ([#21](https://github.com/madiedgar/legesher/pull/21), [573bde6](https://github.com/madiedgar/legesher/commit/573bde6))
+- **Git Integration Commands** (#21, 573bde6)
   - `legesher git setup` command for interactive git filter configuration
   - `legesher git status` command to display current filter state
   - Automatic `.gitattributes` configuration for `*.py` files
@@ -236,7 +236,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Repository detection and error handling for non-git directories
   - Test coverage: 19 CLI tests covering all git command scenarios
 
-- **Configuration Management System** ([#21](https://github.com/madiedgar/legesher/pull/21), [573bde6](https://github.com/madiedgar/legesher/commit/573bde6))
+- **Configuration Management System** (#21, 573bde6)
   - `LegesherConfig` class for managing `.legesher/config.yml` files
   - Project-level configuration in `.legesher/config.yml`
   - User-level configuration in `~/.legesher/config.yml`
@@ -249,7 +249,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Configuration validation with error reporting
   - Test coverage: 32 tests covering loading, saving, precedence, and error handling
 
-- **Metadata Management CLI** ([#29](https://github.com/madiedgar/legesher/pull/29), [a51bfa4](https://github.com/madiedgar/legesher/commit/a51bfa4))
+- **Metadata Management CLI** (#29, a51bfa4)
   - `legesher metadata show` command to display file translation history
   - `legesher metadata history` command to view all translation records
   - `legesher metadata list` command to list tracked files
@@ -261,7 +261,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Enables debugging translation issues and history archaeology
   - JSON output option for programmatic access
 
-- **Initial Monorepo Setup** ([#4](https://github.com/madiedgar/legesher/pull/4), [a31a990](https://github.com/madiedgar/legesher/commit/a31a990))
+- **Initial Monorepo Setup** (#4, a31a990)
   - UV-based monorepo structure with workspace configuration
   - Package dependency hierarchy (Tier 3 user-facing tool)
   - Dependencies on `legesher-core` and `legesher-i18n`
@@ -434,8 +434,8 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ## Links
 
-- [GitHub Repository](https://github.com/madiedgar/legesher)
-- [Issue Tracker](https://github.com/madiedgar/legesher/issues)
+- [GitHub Repository](https://github.com/legesher/legesher)
+- [Issue Tracker](https://github.com/legesher/legesher/issues)
 - [Legesher Monorepo CHANGELOG](../../CHANGELOG.md)
 - [legesher-core CHANGELOG](../core/CHANGELOG.md)
 - [legesher-i18n CHANGELOG](../i18n/CHANGELOG.md)

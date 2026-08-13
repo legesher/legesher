@@ -187,7 +187,7 @@ class LanguagePackSchema(BaseModel):
     """Schema for language pack YAML files.
 
     Conforms to MLCP v1.0 specification for multilingual code protocol.
-    Reference: private-working-memory/planning/architecture/mlcp-v1.md
+    Reference: libs/i18n/docs/VALIDATION.md
 
     Attributes:
         language: Target natural language code (ISO 639-1 or 639-2).
@@ -868,7 +868,7 @@ class SchemaValidator:
         """Check MLCP v1.0 specification conformance.
 
         Validates that the language pack conforms to the Multilingual Code Protocol
-        v1.0 specification as defined in private-working-memory/planning/architecture/mlcp-v1.md
+        v1.0 specification as documented in libs/i18n/docs/VALIDATION.md
 
         Args:
             pack_schema: Validated language pack

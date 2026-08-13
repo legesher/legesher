@@ -1,8 +1,8 @@
 """Integration tests for collision resolution (CORE-605).
 
 Verifies the production database has zero collisions after the
-one-time migration was applied. The migration script itself is
-archived in private-working-memory (scripts/resolve_collisions_core605.py).
+one-time migration was applied. The migration script is not retained
+in this repository; these tests assert the post-migration invariant.
 """
 
 import pytest

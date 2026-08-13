@@ -129,8 +129,8 @@ The full record lives in the [changelogs](CHANGELOG.md).
 
 ## Questions or Feedback?
 
-- **Issues:** [github.com/legesher/legesher-next/issues](https://github.com/legesher/legesher-next/issues)
-- **Discussions:** [github.com/legesher/legesher-next/discussions](https://github.com/legesher/legesher-next/discussions)
+- **Issues:** [github.com/legesher/legesher/issues](https://github.com/legesher/legesher/issues)
+- **Discussions:** [github.com/legesher/legesher/discussions](https://github.com/legesher/legesher/discussions)
 - **Email:** <hello@legesher.com>
 
 ---

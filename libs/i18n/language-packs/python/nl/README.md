@@ -67,7 +67,7 @@ Language packs use inheritance to minimize duplication:
 
 To contribute translations or improvements:
 
-1. Fork the [Legesher repository](https://github.com/madiedgar/legesher)
+1. Fork the [Legesher repository](https://github.com/legesher/legesher)
 2. Edit files in `libs/i18n/language-packs/python/nl/legesher_i18n_python_nl/packs/`
 3. Submit a pull request
 

@@ -6,7 +6,7 @@ Comprehensive integration tests for the Legesher CLI with semantic equivalence v
 
 ```bash
 # Navigate to package directory
-cd /Users/madisonedgar/GitHub/MadiEdgar/legesher-core-349/libs/legesher
+cd libs/legesher
 
 # Run all integration tests
 pytest tests/integration/ -v

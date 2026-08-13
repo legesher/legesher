@@ -2,7 +2,7 @@
 
 **Generated**: validate_migration.py
 
-**Database**: /Users/madisonedgar/GitHub/MadiEdgar/legesher-core-395/libs/i18n/legesher_i18n/db/translations.db
+**Database**: libs/i18n/legesher_i18n/db/translations.db
 
 ---
 

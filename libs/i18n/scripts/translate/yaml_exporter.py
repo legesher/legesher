@@ -1019,7 +1019,7 @@ Language packs use inheritance to minimize duplication:
 
 To contribute translations or improvements:
 
-1. Fork the [Legesher repository](https://github.com/legesher/legesher-next)
+1. Fork the [Legesher repository](https://github.com/legesher/legesher)
 2. Edit files in `libs/i18n/language-packs/python/{language_code}/legesher_i18n_python_{language_code}/packs/`
 3. Submit a pull request
 
@@ -1078,7 +1078,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Links
 
-- [GitHub Repository](https://github.com/legesher/legesher-next)
+- [GitHub Repository](https://github.com/legesher/legesher)
 - [Legesher Monorepo](../../../)
 """
         changelog_file = lang_dir / "CHANGELOG.md"

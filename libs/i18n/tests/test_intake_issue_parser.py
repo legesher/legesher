@@ -68,7 +68,7 @@ My GitHub handle
 def issue_payload(body: str = ISSUE_BODY) -> dict:
     return {
         "number": 123,
-        "url": "https://github.com/legesher/legesher-next/issues/123",
+        "url": "https://github.com/legesher/legesher/issues/123",
         "author": {"login": AUTHOR},
         "title": "[Review]: Urdu (Python)",
         "body": body,
@@ -126,7 +126,7 @@ def test_emoji_notation_maps_to_the_wire_contract(db_path: Path) -> None:
     assert bundle["contributor"]["consent"]["consent_version"] == "1.0"
     assert bundle["source"] == {
         "kind": "github_issue",
-        "url": "https://github.com/legesher/legesher-next/issues/123",
+        "url": "https://github.com/legesher/legesher/issues/123",
         "id": 123,
         "created_at": "2026-08-11T08:00:00Z",
     }

@@ -337,8 +337,7 @@ legesher-i18n validate programming_languages/python/3.13/es.yml --json
 
 ## References
 
-- **MLCP v1.0 Specification:** `private-working-memory/planning/architecture/mlcp-v1.md`
-- **Implementation Roadmap:** `private-working-memory/planning/architecture/implementation-roadmap.md`
+- **MLCP v1.0 conformance:** specified by this document — see [Extended MLCP v1.0 Schema Support](#1-extended-mlcp-v10-schema-support) for the field set and [MLCP v1.0 Conformance Levels](#mlcp-v10-conformance-levels) for the core/extended/full criteria — and implemented in `SchemaValidator.check_mlcp_conformance`.
 - **Test Suite:** `libs/i18n/tests/test_schema_validator.py`
 
 ## Changelog

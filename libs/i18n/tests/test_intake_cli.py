@@ -169,7 +169,7 @@ def test_import_issue_from_a_payload_file(
 ) -> None:
     payload = {
         "number": 7,
-        "url": "https://github.com/legesher/legesher-next/issues/7",
+        "url": "https://github.com/legesher/legesher/issues/7",
         "author": {"login": "drive-by"},
         "title": "[Review]: Urdu (Python)",
         "createdAt": "2026-08-11T08:00:00Z",
@@ -211,7 +211,7 @@ def test_import_issue_parse_notes_reach_the_ledger(
     """
     payload = {
         "number": 8,
-        "url": "https://github.com/legesher/legesher-next/issues/8",
+        "url": "https://github.com/legesher/legesher/issues/8",
         "author": {"login": "drive-by"},
         "title": "[Review]: Urdu (Python)",
         "createdAt": "2026-08-11T08:00:00Z",
@@ -429,7 +429,7 @@ def test_reply_steps_gate_on_acceptance_and_stop_on_failure() -> None:
     from legesher_i18n.intake.commands import _reply_steps
     from legesher_i18n.intake.pipeline import ImportResult
 
-    url = "https://github.com/legesher/legesher-next/issues/9"
+    url = "https://github.com/legesher/legesher/issues/9"
 
     accepted = ImportResult(
         session_uid="ses_" + "a" * 24, status="accepted", report={}, source_ref=url
@@ -474,9 +474,9 @@ def test_a_failed_comment_aborts_the_remaining_gh_steps(
         session_uid="ses_" + "b" * 24,
         status="accepted",
         report={},
-        source_ref="https://github.com/legesher/legesher-next/issues/9",
+        source_ref="https://github.com/legesher/legesher/issues/9",
     )
-    commands._post_reply(result, "https://github.com/legesher/legesher-next/issues/9")
+    commands._post_reply(result, "https://github.com/legesher/legesher/issues/9")
     # Closing an issue whose "your contribution landed" reply never posted
     # leaves the contributor with silence and a closed issue.
     assert attempted == ["comment"]
@@ -625,10 +625,10 @@ def test_the_reply_target_never_comes_from_bundle_content(
 @pytest.mark.parametrize(
     "bad",
     [
-        "https://evil.example.com/legesher/legesher-next/issues/1",
-        "https://github.com/legesher/legesher-next/pull/1",
+        "https://evil.example.com/legesher/legesher/issues/1",
+        "https://github.com/legesher/legesher/pull/1",
         "--add-label=owned",
-        "https://github.com/legesher/legesher-next/issues/notanumber",
+        "https://github.com/legesher/legesher/issues/notanumber",
         "not a url at all",
     ],
 )
@@ -642,7 +642,7 @@ def test_reply_to_rejects_anything_that_is_not_a_github_issue_url(bad: str) -> N
 def test_reply_to_accepts_a_real_github_issue_url() -> None:
     from legesher_i18n.intake.commands import validated_issue_url
 
-    url = "https://github.com/legesher/legesher-next/issues/42"
+    url = "https://github.com/legesher/legesher/issues/42"
     assert validated_issue_url(url) == url
 
 

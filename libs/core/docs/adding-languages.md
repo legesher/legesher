@@ -262,7 +262,7 @@ and would follow this same pattern. It is not currently scheduled.
 
 ## Questions?
 
-- See [complete-architecture-guide.md](../../private-working-memory/planning/architecture/complete-architecture-guide.md)
+- See [ADR-003](ADR-003-tree-sitter-migration.md) for the parsing architecture and why it was chosen
 - Open discussion in Linear workspace
 - Reference CORE-415 implementation for patterns
 

@@ -1296,8 +1296,8 @@ See individual package changelogs for full details:
 
 ## Links
 
-- [GitHub Repository](https://github.com/madiedgar/legesher)
-- [Issue Tracker](https://github.com/madiedgar/legesher/issues)
+- [GitHub Repository](https://github.com/legesher/legesher)
+- [Issue Tracker](https://github.com/legesher/legesher/issues)
 - [Documentation](https://docs.legesher.io)
 
 ---

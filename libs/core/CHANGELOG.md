@@ -328,7 +328,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- **Token-Based Translation Engine** ([#11](https://github.com/madiedgar/legesher/pull/11), [703e8b0](https://github.com/madiedgar/legesher/commit/703e8b0))
+- **Token-Based Translation Engine** (#11, 703e8b0)
   - Translates Python code between English, Spanish, and Arabic
   - Supports all 35 Python 3.13 keywords
   - Bidirectional translation with complete reversibility (EN↔ES, EN↔AR)
@@ -339,7 +339,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Test coverage: 91% with 255 passing tests
   - Graceful degradation: handles incomplete code and syntax errors
 
-- **Cultural Comment Parser** ([#12](https://github.com/madiedgar/legesher/pull/12), [493199f](https://github.com/madiedgar/legesher/commit/493199f))
+- **Cultural Comment Parser** (#12, 493199f)
   - Implements MLCP (Multilingual Code Protocol) support
   - Special syntax for cultural context: `@lang:xx`, `@traduce:keyword:translation`
   - Preserves cultural annotations across translations
@@ -347,7 +347,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - IDE-ready for hover tooltips and documentation display
   - Enables developers to explain language-specific idioms and terminology
 
-- **Git Filter System** ([#21](https://github.com/madiedgar/legesher/pull/21), [573bde6](https://github.com/madiedgar/legesher/commit/573bde6))
+- **Git Filter System** (#21, 573bde6)
   - Clean/smudge filters for seamless multilingual git workflows
   - Stores canonical English in repository for universal collaboration
   - Automatic translation on checkout to developer's preferred language
@@ -356,7 +356,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Enables Spanish developer → English repo → Arabic developer workflow
   - Zero git conflicts from keyword differences between languages
 
-- **Language Pack Integration** ([#17](https://github.com/madiedgar/legesher/pull/17), [5a7493e](https://github.com/madiedgar/legesher/commit/5a7493e))
+- **Language Pack Integration** (#17, 5a7493e)
   - Direct integration with `legesher-i18n` language pack system
   - Automatic Python version detection from environment
   - Version-aware translation loading (Python 3.10, 3.11, 3.12, 3.13)
@@ -364,7 +364,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Supports version-specific keywords (match/case, except\*, type parameter syntax)
   - Fallback mechanism for missing or incomplete translations
 
-- **Metadata Tracking System** ([#29](https://github.com/madiedgar/legesher/pull/29), [a51bfa4](https://github.com/madiedgar/legesher/commit/a51bfa4))
+- **Metadata Tracking System** (#29, a51bfa4)
   - Comprehensive translation history tracking with full audit trail
   - Records all translation operations with timestamps and commit SHAs
   - Tracks git filter operations (clean/smudge events) for debugging
@@ -374,14 +374,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Enables debugging translation issues and verifying translation history
   - Supports translation archaeology: "when was this file first translated?"
 
-- **Tree-sitter Foundation** ([#27](https://github.com/madiedgar/legesher/pull/27), [67a3052](https://github.com/madiedgar/legesher/commit/67a3052))
+- **Tree-sitter Foundation** (#27, 67a3052)
   - Added tree-sitter Python bindings and dependencies
   - Infrastructure setup for AST-based translation in Phase 2B
   - Preparation for incremental parsing (faster real-time IDE translation)
   - Foundation for multi-language support (JavaScript, TypeScript, Rust)
   - Enables context-aware translation (distinguishes keyword `type` from variable `type`)
 
-- **Tree-sitter Translation Engine** ([#36](https://github.com/madiedgar/legesher/pull/36), CORE-414)
+- **Tree-sitter Translation Engine** (#36, CORE-414)
   - High-performance AST-based translator with ≥2x speed improvement over token-based approach
   - 100% API compatibility with TokenTranslator - drop-in replacement
   - Recursive AST traversal for precise keyword and builtin detection
@@ -436,6 +436,6 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ## Links
 
-- [GitHub Repository](https://github.com/madiedgar/legesher)
-- [Issue Tracker](https://github.com/madiedgar/legesher/issues)
+- [GitHub Repository](https://github.com/legesher/legesher)
+- [Issue Tracker](https://github.com/legesher/legesher/issues)
 - [Legesher Monorepo CHANGELOG](../../CHANGELOG.md)

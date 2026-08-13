@@ -56,5 +56,5 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Links
 
-- [GitHub Repository](https://github.com/madiedgar/legesher)
+- [GitHub Repository](https://github.com/legesher/legesher)
 - [Legesher Monorepo](../../../)

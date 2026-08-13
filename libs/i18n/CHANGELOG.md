@@ -1493,7 +1493,7 @@ my, ro, sr, su, uz`) into the languages table. [CORE-710]
 
 ### Added
 
-- **Version-Aware Language Pack System** ([#3](https://github.com/madiedgar/legesher/pull/3), [b4c01f5](https://github.com/madiedgar/legesher/commit/b4c01f5c67d3a8025b39dc6196f58646d6f8fb04))
+- **Version-Aware Language Pack System** (#3, b4c01f5)
   - Dynamic language pack loading with automatic Python version detection (3.10-3.13+)
   - Pack inheritance system where child packs extend parents by defining only new features
   - Multi-strategy Python version detection: `pyproject.toml` → `.python-version` → runtime
@@ -1507,7 +1507,7 @@ my, ro, sr, su, uz`) into the languages table. [CORE-710]
   - Package structure follows PEP 8 naming conventions (legesher_i18n)
   - Dependencies: pyyaml, pydantic, packaging
 
-- **Translation Infrastructure and Language Packs** ([#14](https://github.com/madiedgar/legesher/pull/14), [5785621](https://github.com/madiedgar/legesher/commit/5785621a18ea1aecc00fb85735798efb38b4a624))
+- **Translation Infrastructure and Language Packs** (#14, 5785621)
   - Complete translation infrastructure with bidirectional keyword mapping
   - Example language packs demonstrating inheritance and version-specific features
   - Two-tier context template system for AI and human translators
@@ -1525,7 +1525,7 @@ my, ro, sr, su, uz`) into the languages table. [CORE-710]
   - Documentation expanded from 334 to 1,468 lines for translation quality
   - Expected AI translation approval rate: 85-90%
 
-- **Auto-Update GitHub Actions Workflow** ([#20](https://github.com/madiedgar/legesher/pull/20), [033c822](https://github.com/madiedgar/legesher/commit/033c8223a6ccc733041604e809bb6bb30c070a72))
+- **Auto-Update GitHub Actions Workflow** (#20, 033c822)
   - Automated monitoring of CPython repository for new major releases
   - Python content extraction script for all localizable elements:
     - 39 keywords (35 hard + 4 soft) via keyword module
@@ -1539,7 +1539,7 @@ my, ro, sr, su, uz`) into the languages table. [CORE-710]
   - Successfully tested with Python 3.14 (184 items extracted)
   - Scripts: `extract_python_content.py`, `monitor_python.py`, `generate_language_pack.py`, `translate_content.py`
 
-- **Translation API Integration** ([#22](https://github.com/madiedgar/legesher/pull/22), [71b40dd](https://github.com/madiedgar/legesher/commit/71b40dd78dfc933bbfcc45105c78b4f649910a91))
+- **Translation API Integration** (#22, 71b40dd)
   - Multi-provider translation API with quality-based fallback system
   - Three translation providers with unified interface:
     - **DeepL**: Premium quality for European languages (133+ languages)
@@ -1558,7 +1558,7 @@ my, ro, sr, su, uz`) into the languages table. [CORE-710]
   - Optional installation: `pip install legesher-i18n[api]`
   - Zero cost option via self-hosted LibreTranslate
 
-- **Comprehensive Language Pack Validation** ([#23](https://github.com/madiedgar/legesher/pull/23), [aa7ff26](https://github.com/madiedgar/legesher/commit/aa7ff268a1d640376c078d3273bc2f9c0557abb7))
+- **Comprehensive Language Pack Validation** (#23, aa7ff26)
   - MLCP v1.0 specification conformance validation
   - Three conformance levels: core (keywords), extended (+operators), full (+stdlib)
   - Duplicate detection across all mapping types (keywords, operators, builtins)
@@ -1574,7 +1574,7 @@ my, ro, sr, su, uz`) into the languages table. [CORE-710]
   - Schema enhancements: +350 lines to `schema_validator.py`
   - Security: validates pack structure, prevents malformed packs
 
-- **Language Pack Validation CLI and Compatibility Matrix** ([#24](https://github.com/madiedgar/legesher/pull/24), [bda4dc9](https://github.com/madiedgar/legesher/commit/bda4dc93a66bf9616eed76df319b4502382d1757))
+- **Language Pack Validation CLI and Compatibility Matrix** (#24, bda4dc9)
   - Command-line interface for language pack validation and testing
   - Compatibility matrix generator for keyword coverage across Python versions
   - Interactive validation with rich terminal output (colors, tables, progress bars)
@@ -1672,8 +1672,8 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ## Links
 
-- [GitHub Repository](https://github.com/madiedgar/legesher)
-- [Issue Tracker](https://github.com/madiedgar/legesher/issues)
+- [GitHub Repository](https://github.com/legesher/legesher)
+- [Issue Tracker](https://github.com/legesher/legesher/issues)
 - [Legesher Monorepo CHANGELOG](../../CHANGELOG.md)
 - [Documentation](./docs/README.md)
 - [Linguistic Standards](./docs/linguistic-standards.md)

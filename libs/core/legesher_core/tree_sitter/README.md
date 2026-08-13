@@ -501,6 +501,6 @@ performant, extensible solution.
 - Multi-language: Foundation for Python, TypeScript, JavaScript, Rust
 - Error-tolerant: Handles incomplete code during typing
 
-See [Complete Architecture Guide][arch-guide] for more details.
+See [ADR-003][adr-003] for the decision behind this architecture and the alternatives weighed against it.
 
-[arch-guide]: ../../../../../../private-working-memory/planning/architecture/complete-architecture-guide.md
+[adr-003]: ../../docs/ADR-003-tree-sitter-migration.md

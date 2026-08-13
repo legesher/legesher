@@ -58,9 +58,9 @@ HEADER = """\
 // GENERATED FILE — DO NOT EDIT. Pack data is generated in the Legesher
 // monorepo (the source of truth) and only consumed here; corrections go
 // upstream to the generation layer and are re-emitted (CORE-1371).
-// Generator: legesher-next libs/i18n/scripts/emit_js_client_pack.py
+// Generator: legesher libs/i18n/scripts/emit_js_client_pack.py
 // Source: translations.db selected_translations ({language}/{target})
-//         @ legesher-next {source_commit}
+//         @ legesher {source_commit}
 """
 
 
@@ -143,7 +143,7 @@ def main() -> int:
     parser.add_argument(
         "--source-commit",
         default=None,
-        help="legesher-next commit recorded in the header (default: HEAD)",
+        help="legesher commit recorded in the header (default: HEAD)",
     )
     args = parser.parse_args()
 

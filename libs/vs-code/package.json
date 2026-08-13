@@ -16,10 +16,10 @@
   "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
-    "url": "https://github.com/madiedgar/legesher"
+    "url": "https://github.com/legesher/legesher"
   },
   "bugs": {
-    "url": "https://github.com/madiedgar/legesher/issues"
+    "url": "https://github.com/legesher/legesher/issues"
   },
   "homepage": "https://legesher.io",
   "engines": {

@@ -81,7 +81,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- **LSP Server Foundation** ([#25](https://github.com/madiedgar/legesher/pull/25), [1f71c25](https://github.com/madiedgar/legesher/commit/1f71c25))
+- **LSP Server Foundation** (#25, 1f71c25)
   - Complete Language Server Protocol implementation using `pygls` framework
   - Document state management with version tracking and change events
   - Configuration system with Pydantic validation and environment variable support
@@ -92,7 +92,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Test coverage: 100% on config.py (114 tests lines), 100% on document.py (172 test lines)
   - Performance: Sub-millisecond document updates, efficient in-memory state management
 
-- **Hover Provider** ([#26](https://github.com/madiedgar/legesher/pull/26), [9796f52](https://github.com/madiedgar/legesher/commit/9796f52))
+- **Hover Provider** (#26, 9796f52)
   - Translates Python docstrings and provides keyword documentation in target language
   - Docstring translation for functions, classes, and modules
   - Keyword documentation with examples in target language (35 Python keywords)
@@ -103,7 +103,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Test coverage: 581 test lines, 77% coverage on hover.py, 80% on keyword_docs.py
   - Implementation: 341 lines (hover.py), 256 lines (keyword_docs.py)
 
-- **Completion Provider** ([#28](https://github.com/madiedgar/legesher/pull/28), [a2d10bd](https://github.com/madiedgar/legesher/commit/a2d10bd))
+- **Completion Provider** (#28, a2d10bd)
   - Localized code completion suggestions for multilingual Python development
   - Python keyword completion with translations (if, for, while, def, class, etc.)
   - Built-in function completion (print, len, range, etc.) with localized names
@@ -115,7 +115,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Implementation: 489 lines (completion.py)
   - Performance: <5ms for keyword/builtin completions, <10ms for symbol extraction
 
-- **Diagnostic Provider with Error Translation** ([#30](https://github.com/madiedgar/legesher/pull/30), [28a384c](https://github.com/madiedgar/legesher/commit/28a384c))
+- **Diagnostic Provider with Error Translation** (#30, 28a384c)
   - Translates Python error messages while preserving code identifiers
   - 41 error message templates covering 17 Python error types
   - Multi-language error messages (English, Spanish, Arabic)
@@ -133,7 +133,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Coverage: 72% on diagnostic.py, 95% on error_templates.py
   - Implementation: 392 lines (diagnostic.py), 404 lines (error_templates.py)
 
-- **Pylance Integration - Phase 1 Foundation** ([#33](https://github.com/madiedgar/legesher/pull/33), [a2186f5](https://github.com/madiedgar/legesher/commit/a2186f5))
+- **Pylance Integration - Phase 1 Foundation** (#33, a2186f5)
   - Foundation architecture for Pylance semantic analysis integration
   - **SourceMap** (338 lines): Bidirectional position mapping between translated and canonical code
     - Line/column offset tracking with high precision
@@ -313,8 +313,8 @@ const serverOptions: ServerOptions = {
 
 ## Links
 
-- [GitHub Repository](https://github.com/madiedgar/legesher)
-- [Issue Tracker](https://github.com/madiedgar/legesher/issues)
+- [GitHub Repository](https://github.com/legesher/legesher)
+- [Issue Tracker](https://github.com/legesher/legesher/issues)
 - [Architecture Documentation](ARCHITECTURE.md)
 - [Legesher Monorepo CHANGELOG](../../CHANGELOG.md)
 

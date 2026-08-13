@@ -4,7 +4,7 @@ This document provides an overview of the comprehensive integration tests for th
 
 ## Test File
 
-**Location:** `/Users/madisonedgar/GitHub/MadiEdgar/legesher-core-349/libs/legesher/tests/integration/test_cli_integration.py`
+**Location:** `libs/legesher/tests/integration/test_cli_integration.py`
 
 **Lines of Code:** ~1300+ lines
 **Test Cases:** 30+ comprehensive integration tests
@@ -270,7 +270,7 @@ def assert_code_executes_identically(code1: str, code2: str):
 ### Run All Integration Tests
 
 ```bash
-cd /Users/madisonedgar/GitHub/MadiEdgar/legesher-core-349/libs/legesher
+cd libs/legesher
 pytest tests/integration/ -v
 ```
 
@@ -419,10 +419,10 @@ These tests should run in CI/CD pipelines:
 
 ## References
 
-- **Implementation:** `/Users/madisonedgar/GitHub/MadiEdgar/legesher-core-349/libs/legesher/legesher/cli/translate.py`
-- **CLI Entry:** `/Users/madisonedgar/GitHub/MadiEdgar/legesher-core-349/libs/legesher/legesher/cli/main.py`
-- **Core Tests:** `/Users/madisonedgar/GitHub/MadiEdgar/legesher-core-349/libs/core/tests/integration/test_pack_integration.py`
-- **Language Packs:** `/Users/madisonedgar/GitHub/MadiEdgar/legesher-core-349/libs/i18n/language-packs/`
+- **Implementation:** `libs/legesher/legesher/cli/translate.py`
+- **CLI Entry:** `libs/legesher/legesher/cli/main.py`
+- **Core Tests:** `libs/core/tests/integration/test_pack_integration.py`
+- **Language Packs:** `libs/i18n/language-packs/`
 
 ---
 

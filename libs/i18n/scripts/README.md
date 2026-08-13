@@ -394,7 +394,6 @@ cat programming_languages/python/version-index.yml
 
 - **CORE-381**: Auto-Update GitHub Actions Workflow
 - **CORE-346**: Version-Aware Language Packs
-- **Research**: `documentation/research/python-localization-inventory.md` (in private-working-memory)
 
 ## License
 

@@ -174,5 +174,5 @@ When adding new features that impact performance:
 
 For questions about performance benchmarks, see:
 
-- [CORE-446 Implementation](https://github.com/madiedgar/legesher/pull/64)
+- CORE-446 Implementation
 - [Performance Testing Best Practices](../../docs/testing-guide.md)

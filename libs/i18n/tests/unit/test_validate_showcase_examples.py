@@ -78,7 +78,7 @@ class TestResolveExamplesRoot:
 
     def test_sibling_checkout_fallback(self, tmp_path, monkeypatch):
         monkeypatch.delenv("LEGESHER_PREVIEW_ROOT", raising=False)
-        repo_root = tmp_path / "legesher-next"
+        repo_root = tmp_path / "legesher"
         sibling = tmp_path / "preview-repo"
         repo_root.mkdir()
         sibling.mkdir()
@@ -223,7 +223,7 @@ class TestWorktreeResolution:
         import subprocess
 
         monkeypatch.delenv("LEGESHER_PREVIEW_ROOT", raising=False)
-        main_root = tmp_path / "legesher-next"
+        main_root = tmp_path / "legesher"
         main_root.mkdir()
         run = lambda *a: subprocess.run(  # noqa: E731
             a, cwd=main_root, check=True, capture_output=True

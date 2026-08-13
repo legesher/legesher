@@ -136,7 +136,7 @@ Any of these reaches a person:
 - **Privacy, credit, or withdrawal requests** — <privacy@legesher.com>
 - **Anything about contributing** — <contribute@legesher.com>
 - **General discussion** —
-  [GitHub Discussions](https://github.com/legesher/legesher-next/discussions)
+  [GitHub Discussions](https://github.com/legesher/legesher/discussions)
 
 You do not need to use particular wording. "Please remove me" is enough.
 

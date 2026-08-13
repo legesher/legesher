@@ -439,7 +439,7 @@ Planned for future phases:
 
 - **Issue**: CORE-394
 - **Documentation**: [Legesher Docs](https://docs.legesher.io)
-- **Repository**: [github.com/madiedgar/legesher](https://github.com/madiedgar/legesher)
+- **Repository**: [github.com/legesher/legesher](https://github.com/legesher/legesher)
 
 ## License
 

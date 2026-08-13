@@ -46,7 +46,7 @@ class TestEmitAgainstRealDb:
         assert result.returncode == 0, result.stderr
         text = out.read_text(encoding="utf-8")
         assert "GENERATED FILE — DO NOT EDIT" in text
-        assert "@ legesher-next TESTCOMMIT" in text
+        assert "@ legesher TESTCOMMIT" in text
         assert "const AR_PACK: LanguagePack" in text
         assert "locale: 'ar'," in text
         assert "target: 'javascript'," in text

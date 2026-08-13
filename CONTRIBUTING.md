@@ -126,8 +126,8 @@ repository is gated behind them. See [LICENSING.md](LICENSING.md) for the full b
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/legesher-next.git
-cd legesher-next
+git clone https://github.com/YOUR_USERNAME/legesher.git
+cd legesher
 
 # Install dependencies
 uv sync --all-extras
@@ -487,8 +487,7 @@ View coverage:
 
 - **PR comments**: Codecov bot posts a comment on every PR showing coverage
   delta and any files with changed coverage
-- **Dashboard**: <https://codecov.io/gh/madiedgar/legesher> (update to
-  `Legesher/legesher` when the repo transitions public)
+- **Dashboard**: <https://codecov.io/gh/legesher/legesher>
 - **Badge**: See the coverage badge at the top of the main README
 
 Coverage targets are defined in `codecov.yml` and are **informational only** —

@@ -50,7 +50,7 @@ Zed and JetBrains PyCharm etc.
     - `language-packs/python/`: **51 independently versioned Python language packs** (am, ar, bn, bs, ca, cs, cy, da, de,
       el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it, ja, kn, ko, lv, mk, ml, mn, ms, my, nl, no, pl,
       pt, ro, ru, si, sr, su, sv, te, th, tr, ur, uz, vi, zh)
-    - `language-packs-archive/`: Legacy community translations (see private-working-memory repo)
+    - `language-packs-archive/`: Legacy community translations, retained for provenance
   - `vs-code/`: VS Code editor integration for Python language (`legesher-vs-code`)
     - Based on the `vscode-python` package (<https://github.com/microsoft/vscode-python>)
     - Provides language extensions for native language support within the editor

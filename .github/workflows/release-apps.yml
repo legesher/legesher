@@ -125,7 +125,7 @@ jobs:
           - **CLI**: \`code --install-extension legesher-vscode-${{ steps.version.outputs.version }}.vsix\`
 
           ### Changes
-          See [CHANGELOG](https://github.com/MadiEdgar/legesher/blob/main/libs/vs-code/CHANGELOG.md) for details." \
+          See [CHANGELOG](https://github.com/legesher/legesher/blob/main/libs/vs-code/CHANGELOG.md) for details." \
             libs/vs-code/*.vsix
 
       - name: Upload artifact (backup)

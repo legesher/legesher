@@ -268,8 +268,8 @@ libs/core/legesher_core/tree_sitter/
 
 ## References
 
-- [Complete Architecture Guide - AST Transformation](../../../../../private-working-memory/planning/architecture/complete-architecture-guide.md#ast-transformation-approaches)
-- [Implementation Roadmap - Phase 2B](../../../../../private-working-memory/planning/architecture/implementation-roadmap.md#phase-2b-tree-sitter-foundation-weeks-11-14)
+- The AST transformation approaches weighed before this decision are recorded in
+  [Alternatives Considered](#alternatives-considered) above.
 - [Tree-sitter Official Documentation](https://tree-sitter.github.io/tree-sitter/)
 - [Tree-sitter Python Grammar](https://github.com/tree-sitter/tree-sitter-python)
 - [Tree-sitter Query Syntax](https://tree-sitter.github.io/tree-sitter/using-parsers#pattern-matching-with-queries)

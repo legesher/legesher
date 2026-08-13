@@ -492,7 +492,7 @@ review_id = db.add_review(
     emoji="✅",
     comment="Perfect translation! This is how we say it in Mexico.",
     review_source="github-issue",
-    github_issue_url="https://github.com/madiedgar/legesher/issues/123"
+    github_issue_url="https://github.com/legesher/legesher/issues/123"
 )
 
 # Add a review with suggestions

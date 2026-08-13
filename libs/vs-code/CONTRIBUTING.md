@@ -16,7 +16,7 @@ Thank you for your interest in contributing to the Legesher VS Code extension!
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/madiedgar/legesher.git
+   git clone https://github.com/legesher/legesher.git
    cd legesher/libs/vs-code
    ```
 
@@ -287,7 +287,7 @@ The language server runs as a separate process. To debug:
 
 ## Getting Help
 
-- Check existing [issues](https://github.com/madiedgar/legesher/issues)
+- Check existing [issues](https://github.com/legesher/legesher/issues)
 - Join our [Discord community](https://legesher.io/discord)
 - Read the [documentation](https://docs.legesher.io)
 
