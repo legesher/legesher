@@ -337,6 +337,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **cli**: `--llm-model` had no effect on the `anthropic` and `cohere-aya`
+  backends — it was forwarded only to `openai-compat`, so the other two were
+  pinned to their provider defaults no matter what you passed. It now applies
+  to every backend, which is what makes models like `tiny-aya-global`
+  reachable: `cohere-aya` was fixed to `c4ai-aya-expanse-32b`, whose 23
+  languages exclude Amharic. The flag is still optional — omitting it leaves
+  each provider's own default in place rather than the CLI asserting one.
+  `--llm-base-url` remains `openai-compat`-only, which it genuinely is.
+  [CORE-1858]
 - **i18n**: `except*` reverse-translated to `except**` in nine language packs
   (`da`, `de`, `fi`, `hi`, `mk`, `pt`, `ru`, `te`, `th`), producing output
   that does not parse. Their stored translation omitted the trailing `*` the

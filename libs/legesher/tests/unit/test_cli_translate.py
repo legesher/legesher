@@ -1221,3 +1221,58 @@ class TestProgressAndFeedback:
         # Verify success message
         assert result.exit_code == 0
         assert "✓" in result.output or "Translated" in result.output
+
+
+class TestLLMBackendModelSelection:
+    """`--llm-model` must reach every backend, not only openai-compat.
+
+    Each provider takes a ``model`` argument, but the CLI used to pass it
+    for openai-compat alone. That pinned the other backends to their own
+    defaults and made otherwise-reachable models unreachable — notably
+    `tiny-aya-global`, the only Cohere-hosted model covering Amharic.
+    """
+
+    @patch("legesher_i18n.api.providers.CohereAyaProvider")
+    def test_llm_model_reaches_cohere_backend(self, mock_provider):
+        from legesher.cli.translate import _create_llm_backend
+
+        _create_llm_backend("cohere-aya", None, "tiny-aya-global")
+
+        mock_provider.assert_called_once_with(model="tiny-aya-global")
+
+    @patch("legesher_i18n.api.providers.AnthropicProvider")
+    def test_llm_model_reaches_anthropic_backend(self, mock_provider):
+        from legesher.cli.translate import _create_llm_backend
+
+        _create_llm_backend("anthropic", None, "claude-sonnet-5")
+
+        mock_provider.assert_called_once_with(model="claude-sonnet-5")
+
+    @patch("legesher_i18n.api.providers.OpenAICompatProvider")
+    def test_llm_model_and_base_url_reach_openai_compat(self, mock_provider):
+        from legesher.cli.translate import _create_llm_backend
+
+        _create_llm_backend("openai-compat", "http://localhost:11434/v1", "aya:latest")
+
+        mock_provider.assert_called_once_with(
+            model="aya:latest", base_url="http://localhost:11434/v1"
+        )
+
+    @patch("legesher_i18n.api.providers.CohereAyaProvider")
+    def test_omitting_llm_model_leaves_provider_default_intact(self, mock_provider):
+        from legesher.cli.translate import _create_llm_backend
+
+        _create_llm_backend("cohere-aya", None, None)
+
+        # No model kwarg at all — the provider keeps its own default rather
+        # than the CLI asserting one on its behalf.
+        mock_provider.assert_called_once_with()
+
+    def test_llm_model_help_does_not_claim_openai_compat_only(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ["translate", "--help"])
+
+        assert result.exit_code == 0
+        help_text = " ".join(result.output.split())
+        assert "--llm-model" in help_text
+        assert "applies to any backend" in help_text

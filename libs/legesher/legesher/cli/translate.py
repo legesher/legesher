@@ -54,7 +54,11 @@ def _create_llm_backend(
     Args:
         llm_backend: Backend name (anthropic, cohere-aya, openai-compat)
         llm_base_url: Optional base URL for openai-compat backend
-        llm_model: Optional model name for openai-compat backend
+        llm_model: Optional model name. Applies to every backend — each
+            provider takes a ``model`` argument, and pinning the CLI to each
+            provider's default made otherwise-reachable models unreachable
+            (e.g. ``tiny-aya-global``, the only Cohere-hosted model that
+            covers Amharic).
 
     Returns:
         TextTranslationBackend instance
@@ -62,22 +66,25 @@ def _create_llm_backend(
     from legesher_i18n.api import TranslationCoordinator
     from legesher_i18n.api.backends import ProviderBackendAdapter
 
+    # Every provider accepts ``model``; only pass it when the caller asked,
+    # so each provider keeps its own default otherwise.
+    kwargs: dict[str, str] = {}
+    if llm_model:
+        kwargs["model"] = llm_model
+
     if llm_backend == "anthropic":
         from legesher_i18n.api.providers import AnthropicProvider
 
-        coordinator = TranslationCoordinator(providers=[AnthropicProvider()])
+        coordinator = TranslationCoordinator(providers=[AnthropicProvider(**kwargs)])
     elif llm_backend == "cohere-aya":
         from legesher_i18n.api.providers import CohereAyaProvider
 
-        coordinator = TranslationCoordinator(providers=[CohereAyaProvider()])
+        coordinator = TranslationCoordinator(providers=[CohereAyaProvider(**kwargs)])
     elif llm_backend == "openai-compat":
         from legesher_i18n.api.providers import OpenAICompatProvider
 
-        kwargs = {}
         if llm_base_url:
             kwargs["base_url"] = llm_base_url
-        if llm_model:
-            kwargs["model"] = llm_model
         coordinator = TranslationCoordinator(providers=[OpenAICompatProvider(**kwargs)])
     else:
         raise click.BadParameter(
@@ -138,7 +145,11 @@ def _create_llm_backend(
     "--llm-model",
     type=str,
     default=None,
-    help="Model name for openai-compat backend (e.g., aya:latest, aya-expanse:8b)",
+    help=(
+        "Model name; applies to any backend. Defaults to the backend's own "
+        "default. e.g. tiny-aya-global (cohere-aya — the only Cohere-hosted "
+        "model covering Amharic), aya:latest (openai-compat)"
+    ),
 )
 @click.option(
     "--identifier-map",
