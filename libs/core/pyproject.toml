@@ -18,7 +18,7 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 name = "legesher-core"
-version = "1.0.0"
+version = "0.22.0"
 description = "Core library for Legesher Monorepo"
 readme = "README.md"
 keywords = ["translation", "i18n", "programming", "multilingual", "code-translation"]

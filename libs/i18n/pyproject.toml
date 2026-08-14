@@ -21,7 +21,7 @@ dependencies = [
     "jsonschema>=4.21.0",
 ]
 name = "legesher-i18n"
-version = "1.0.0"
+version = "0.22.0"
 description = "i18n for Legesher Monorepo"
 readme = "README.md"
 keywords = ["translation", "i18n", "l10n", "programming", "multilingual", "languages"]
