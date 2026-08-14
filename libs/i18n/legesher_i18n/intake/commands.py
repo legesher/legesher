@@ -253,6 +253,16 @@ def _post_reply(result: ImportResult, target: str) -> None:
 @click.option(
     "--sync", is_flag=True, help="Push DB + payload to the durable data home."
 )
+@click.option(
+    "--recovered-history",
+    is_flag=True,
+    help="Import a bundle reconstructed from recovered public review history "
+    "(the pre-intake GitHub era): only the original_work attestation is "
+    "required, because CoC agreement and DCO sign-off were never collected "
+    "then. The flag relaxes which attestations are REQUIRED — it never "
+    "changes what the bundle asserts, and a bundle claiming coc_agreed or "
+    "dco it does not have is still a lie the maintainer owns.",
+)
 def import_review_bundle(
     bundle_file: Path,
     db_path: Path,
@@ -261,6 +271,7 @@ def import_review_bundle(
     reply: bool,
     reply_to: str | None,
     sync: bool,
+    recovered_history: bool,
 ) -> None:
     """Import a canonical review-bundle file (the Stage-1 lane)."""
     _require_db(db_path)
@@ -271,7 +282,12 @@ def import_review_bundle(
             raise click.ClickException(str(error))
     raw = bundle_file.read_bytes()
     try:
-        importer = BundleImporter(db_path, conduct_wordlist=_load_wordlist(wordlist))
+        lane = (
+            {"required_attestations": ("original_work",)} if recovered_history else {}
+        )
+        importer = BundleImporter(
+            db_path, conduct_wordlist=_load_wordlist(wordlist), **lane
+        )
         result = importer.import_bundle(raw)
     except json.JSONDecodeError as error:
         raise click.ClickException(f"bundle is not valid JSON: {error}")

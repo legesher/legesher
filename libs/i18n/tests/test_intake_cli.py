@@ -811,3 +811,63 @@ def test_sync_refuses_a_directory_that_is_not_a_checkout(
     monkeypatch.setenv("LEGESHER_DATA_REPO", str(plain))
     with pytest.raises(RuntimeError, match="not a git checkout"):
         sync_to_durable_home(db_path, [], ritual="x")
+
+
+def _recovered_era_bundle() -> dict:
+    """A bundle reconstructed from pre-intake GitHub history: original work
+    is honestly attested, CoC agreement and DCO sign-off honestly are not —
+    they were never collected in that era."""
+    bundle = valid_bundle()
+    bundle["attestations"]["coc_agreed"] = False
+    bundle["attestations"]["dco"] = False
+    return bundle
+
+
+def test_recovered_era_bundle_is_refused_on_the_default_lane(
+    runner: CliRunner, db_path: Path, tmp_path: Path
+) -> None:
+    result = runner.invoke(
+        cli,
+        [
+            "import-review-bundle",
+            str(write_bundle(tmp_path, _recovered_era_bundle())),
+            "--db",
+            str(db_path),
+        ],
+    )
+    assert result.exit_code != 0, result.output
+
+
+def test_recovered_history_lane_accepts_the_honest_recovered_bundle(
+    runner: CliRunner, db_path: Path, tmp_path: Path
+) -> None:
+    result = runner.invoke(
+        cli,
+        [
+            "import-review-bundle",
+            str(write_bundle(tmp_path, _recovered_era_bundle())),
+            "--db",
+            str(db_path),
+            "--recovered-history",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "accepted" in result.output
+
+
+def test_recovered_history_lane_still_requires_original_work(
+    runner: CliRunner, db_path: Path, tmp_path: Path
+) -> None:
+    bundle = _recovered_era_bundle()
+    bundle["attestations"]["original_work"] = False
+    result = runner.invoke(
+        cli,
+        [
+            "import-review-bundle",
+            str(write_bundle(tmp_path, bundle)),
+            "--db",
+            str(db_path),
+            "--recovered-history",
+        ],
+    )
+    assert result.exit_code != 0, result.output
