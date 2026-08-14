@@ -133,7 +133,16 @@ version_toml = [
 ]
 
 commit_parser = "angular"
-major_on_zero = true
+# false: a breaking change takes 0.22.0 to 0.23.0, and the foundation stays
+# sub-1.0 until 1.0 is declared deliberately — the same rule libs/mcp already
+# follows (CORE-1851). With `true`, three `feat(i18n)!:` commits from
+# 2026-08-05 auto-cut 1.0.0 the moment the release workflows were re-enabled
+# (reverted in #125): a major release nobody chose, whose "breaking" commits
+# were HuggingFace dataset renames and a corpus taxonomy change — not breaks
+# in the public Python API that a 1.0 is supposed to be a promise about.
+# Every language pack also pins `legesher-i18n<1.0.0`, so a 1.0 foundation is
+# a coordinated 51-package change, never an incidental one.
+major_on_zero = false
 allow_zero_version = true
 branch = "main"
 tag_format = "v{version}"
