@@ -13,7 +13,6 @@ import json
 import logging
 import os
 import shutil
-import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -31,6 +30,49 @@ from .config import LanguageServerConfig
 from .incremental_translator import IncrementalTranslator
 
 logger = logging.getLogger(__name__)
+
+# The language server executable. Note this is NOT `pyright`: that is the
+# command-line type checker, which exits instead of speaking LSP over stdio.
+# Both ship in the same npm package, which is exactly why the wrong one is easy
+# to pick up (CORE-1886).
+LANGSERVER_BIN = "pyright-langserver"
+CLI_BIN = "pyright"
+
+INSTALL_HINT = f"npm install -g {CLI_BIN} (provides `{LANGSERVER_BIN}`)"
+
+# Searched in order when the binary is not on PATH. `/opt/homebrew/bin` is the
+# default Homebrew prefix on Apple Silicon.
+FALLBACK_BIN_DIRS = [
+    "/opt/homebrew/bin",
+    "/usr/local/bin",
+    "/usr/bin",
+    str(Path.home() / ".local/bin"),
+    str(Path.home() / ".npm-global/bin"),
+]
+
+# Generous ceiling for a single buffered LSP message. Hover results carrying
+# rendered documentation comfortably exceed asyncio's 64 KiB default.
+STREAM_LIMIT = 4 * 1024 * 1024
+
+
+def frame_message(message: dict) -> bytes:
+    """Encode a JSON-RPC message with an LSP ``Content-Length`` header.
+
+    The header must count **bytes**, not characters. Deriving it from the
+    encoded payload is the whole point: measuring the str instead under-declares
+    the length for any non-ASCII content, so the server reads a truncated body
+    and every message after it lands at the wrong offset.
+
+    Args:
+        message: JSON-RPC request or notification
+
+    Returns:
+        Framed bytes ready to write to the server's stdin
+    """
+    body = json.dumps(message).encode("utf-8")
+    header = f"Content-Length: {len(body)}\r\n\r\n".encode("ascii")
+    return header + body
+
 
 # Shared language pack loader with LRU cache (CORE-446)
 # Uses lazy initialization to avoid import-time failures
@@ -82,7 +124,7 @@ class PylanceProxy:
             config: Language server configuration
         """
         self.config = config
-        self.process: subprocess.Popen | None = None
+        self.process: asyncio.subprocess.Process | None = None
         self.pyright_path: str | None = None
 
         # Translation engine
@@ -101,7 +143,13 @@ class PylanceProxy:
         self._request_id = 0
         self._pending_requests: dict[int, asyncio.Future] = {}
         self._reader_task: asyncio.Task | None = None
+        self._stderr_task: asyncio.Task | None = None
         self._initialized = False
+        # Liveness of the read side, tracked apart from the handshake flag.
+        # The reader can observe the stream die while `_initialize_pyright`
+        # is still unwinding, and that coroutine would otherwise set
+        # `_initialized = True` *after* the reader had cleared it.
+        self._transport_alive = False
 
         # Performance tracking
         self._request_count = 0
@@ -149,75 +197,102 @@ class PylanceProxy:
             logger.info("Pylance integration disabled in config")
             return False
 
-        # Find Pyright installation
+        # Find the language server
         self.pyright_path = self._find_pyright()
         if not self.pyright_path:
+            # Loud on purpose. This feature defaults to enabled, so failing
+            # quietly leaves the user with a thinner experience and no clue that
+            # a richer one was meant to be there (CORE-1886).
             logger.warning(
-                "Pyright not found. Install with: npm install -g pyright\n"
-                "Pylance features will not be available."
+                "Enhanced Python intelligence is enabled but no language server was found. "
+                f"Install one with: {INSTALL_HINT}. "
+                "Continuing with Legesher-only features."
             )
             return False
 
         try:
-            # Start Pyright in LSP server mode
-            self.process = subprocess.Popen(
-                [self.pyright_path, "--stdio"],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=False,  # Binary mode for proper encoding
+            # Start the language server. asyncio's subprocess gives us streams
+            # we can await; the blocking equivalents would have to run on the
+            # event loop thread, which is what deadlocked this proxy before.
+            self.process = await asyncio.create_subprocess_exec(
+                self.pyright_path,
+                "--stdio",
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                limit=STREAM_LIMIT,
             )
 
-            # Start background reader task
+            self._transport_alive = True
+
+            # Start background reader and stderr drain
             self._reader_task = asyncio.create_task(self._read_responses())
+            self._stderr_task = asyncio.create_task(self._drain_stderr())
 
             # Initialize LSP connection
             initialized = await self._initialize_pyright()
             if not initialized:
-                logger.error("Failed to initialize Pyright")
+                logger.warning(
+                    "Enhanced Python intelligence could not be started: the language "
+                    f"server at {self.pyright_path} did not complete initialization. "
+                    "Continuing with Legesher-only features."
+                )
                 await self.stop()
                 return False
 
-            logger.info(f"Pyright server started and initialized: {self.pyright_path}")
+            logger.info(f"Language server started and initialized: {self.pyright_path}")
             return True
 
         except Exception as e:
-            logger.error(f"Failed to start Pyright: {e}")
-            self.process = None
+            logger.warning(
+                f"Enhanced Python intelligence could not be started: {e}. "
+                "Continuing with Legesher-only features."
+            )
+            await self.stop()
             return False
 
     def _find_pyright(self) -> str | None:
-        """Find Pyright installation.
+        """Find an executable that can actually serve LSP.
 
-        Checks:
-        1. Configured path (config.pylance_path)
-        2. npm global installation
-        3. System PATH
+        Checks, in order:
+        1. Configured path (``config.pylance_path``)
+        2. ``pyright-langserver`` on PATH
+        3. ``pyright-langserver`` in the common install prefixes
+
+        Finding only ``pyright`` counts as finding nothing: it is the CLI type
+        checker, and spawning it produces a process that closes the stream
+        instead of answering, which is indistinguishable from a hang until the
+        request times out.
 
         Returns:
-            Path to Pyright executable or None if not found
+            Path to the language server executable, or None if unavailable
         """
-        # Check configured path first
+        # Check configured path first — an explicit setting always wins.
         if self.config.pylance_path:
             if os.path.isfile(self.config.pylance_path):
                 return self.config.pylance_path
+            logger.warning(
+                f"Configured language server path does not exist: {self.config.pylance_path}"
+            )
 
-        # Check npm global installation
-        npm_global = shutil.which("pyright")
-        if npm_global:
-            return npm_global
+        on_path = shutil.which(LANGSERVER_BIN)
+        if on_path:
+            return on_path
 
-        # Check common installation locations
-        common_paths = [
-            "/usr/local/bin/pyright",
-            "/usr/bin/pyright",
-            str(Path.home() / ".local/bin/pyright"),
-            str(Path.home() / ".npm-global/bin/pyright"),
-        ]
+        for directory in FALLBACK_BIN_DIRS:
+            candidate = os.path.join(directory, LANGSERVER_BIN)
+            if os.path.isfile(candidate):
+                return candidate
 
-        for path in common_paths:
-            if os.path.isfile(path):
-                return path
+        # Distinguish "nothing installed" from "the wrong half installed": the
+        # second is far more confusing to diagnose, and far more common, since
+        # both binaries ship together.
+        if shutil.which(CLI_BIN):
+            logger.warning(
+                f"Found `{CLI_BIN}` but not `{LANGSERVER_BIN}`. `{CLI_BIN}` is the "
+                "command-line type checker and cannot serve LSP. Reinstall with: "
+                f"{INSTALL_HINT}."
+            )
 
         return None
 
@@ -289,10 +364,8 @@ class PylanceProxy:
 
         try:
             # Send request
-            message = json.dumps(request)
-            content = f"Content-Length: {len(message)}\r\n\r\n{message}"
-            self.process.stdin.write(content.encode("utf-8"))
-            self.process.stdin.flush()
+            self.process.stdin.write(frame_message(request))
+            await self.process.stdin.drain()
 
             logger.debug(f"Sent request {request_id}: {method}")
 
@@ -323,10 +396,8 @@ class PylanceProxy:
         notification = {"jsonrpc": "2.0", "method": method, "params": params}
 
         try:
-            message = json.dumps(notification)
-            content = f"Content-Length: {len(message)}\r\n\r\n{message}"
-            self.process.stdin.write(content.encode("utf-8"))
-            self.process.stdin.flush()
+            self.process.stdin.write(frame_message(notification))
+            await self.process.stdin.drain()
 
             logger.debug(f"Sent notification: {method}")
 
@@ -334,61 +405,124 @@ class PylanceProxy:
             logger.error(f"Failed to send notification {method}: {e}")
 
     async def _read_responses(self) -> None:
-        """Background task to read JSON-RPC responses from Pyright stdout."""
-        if not self.process or not self.process.stdout:
+        """Background task reading JSON-RPC messages from the server's stdout.
+
+        Every read here awaits. That is the fix for CORE-1886: the previous
+        version called the blocking ``readline()``/``read()`` from inside this
+        task, which pinned the event loop thread inside a syscall. The response
+        would arrive and resolve its future, then the reader would block again
+        on the next read — leaving the loop unable to schedule the very
+        coroutine that was waiting, or to fire the timeout meant to rescue it.
+        """
+        stdout = self.process.stdout if self.process else None
+        if stdout is None:
             return
 
         try:
-            while self.is_running():
-                # Read Content-Length header
-                header = await self._read_line()
-                if not header:
+            while True:
+                headers = await self._read_headers(stdout)
+                if headers is None:
+                    logger.debug("Language server closed its output stream")
                     break
 
-                # Parse Content-Length
-                if not header.startswith("Content-Length:"):
+                content_length = headers.get("content-length")
+                if not content_length:
+                    # Not a framed message we can act on; the stream is still
+                    # positioned at a boundary, so keep going.
                     continue
 
-                content_length = int(header.split(":")[1].strip())
-
-                # Read blank line
-                await self._read_line()
-
-                # Read message body
-                message_bytes = await self._read_bytes(content_length)
-                if not message_bytes:
+                try:
+                    length = int(content_length)
+                except ValueError:
+                    # A malformed header means we no longer know where the next
+                    # message starts, so there is nothing safe to resynchronise
+                    # to. Stop rather than read at a guessed offset.
+                    logger.error(
+                        f"Malformed Content-Length from language server: {content_length!r}"
+                    )
                     break
 
-                # Parse JSON response
-                try:
-                    response = json.loads(message_bytes.decode("utf-8"))
-                    await self._handle_response(response)
-                except json.JSONDecodeError as e:
-                    logger.error(f"Failed to parse JSON response: {e}")
+                body = await stdout.readexactly(length)
 
+                try:
+                    message = json.loads(body.decode("utf-8"))
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse JSON message: {e}")
+                    continue
+
+                await self._handle_response(message)
+
+        except (asyncio.IncompleteReadError, asyncio.LimitOverrunError) as e:
+            logger.debug(f"Language server stream ended: {e}")
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             logger.error(f"Response reader crashed: {e}")
+        finally:
+            # The reader is the only thing that can deliver a response, so once
+            # it stops the transport is unusable even if the child is still
+            # alive. Marking it uninitialized is what makes that visible: every
+            # call site guards on `is_running() and initialized`, and
+            # `legesher/status` reports the same pair. Without this a crashed
+            # reader leaves the server claiming to be active while every request
+            # burns its full timeout.
+            self._transport_alive = False
 
-    async def _read_line(self) -> str:
-        """Read a line from Pyright stdout."""
-        if not self.process or not self.process.stdout:
-            return ""
+            # Nothing further will arrive, so anyone still waiting would wait
+            # forever. Wake them so they fail fast instead.
+            self._fail_pending_requests()
+
+    async def _read_headers(self, stdout: asyncio.StreamReader) -> dict[str, str] | None:
+        """Read one LSP header block, or None at end of stream.
+
+        Header lines are read individually rather than assumed to arrive
+        together: nothing guarantees a write on the far end maps to one read on
+        ours, and a server that fragments its output is entirely legal.
+        """
+        headers: dict[str, str] = {}
+
+        while True:
+            try:
+                line = await stdout.readuntil(b"\r\n")
+            except asyncio.IncompleteReadError:
+                return None
+
+            text = line.decode("utf-8").strip()
+            if not text:
+                return headers
+
+            key, _, value = text.partition(":")
+            headers[key.strip().lower()] = value.strip()
+
+    async def _drain_stderr(self) -> None:
+        """Continuously drain the server's stderr.
+
+        stderr is a pipe with a finite OS buffer (~64 KiB). Left unread, a
+        server that logs enough will block trying to write to it — and a blocked
+        server never answers the request we are waiting on. Draining costs
+        nothing and removes a whole class of stall.
+        """
+        stderr = self.process.stderr if self.process else None
+        if stderr is None:
+            return
 
         try:
-            line = self.process.stdout.readline()
-            return line.decode("utf-8").strip()
-        except Exception:
-            return ""
+            while True:
+                line = await stderr.readline()
+                if not line:
+                    break
+                logger.debug(f"[langserver] {line.decode('utf-8', errors='replace').rstrip()}")
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            logger.debug(f"stderr drain ended: {e}")
 
-    async def _read_bytes(self, count: int) -> bytes:
-        """Read specified number of bytes from Pyright stdout."""
-        if not self.process or not self.process.stdout:
-            return b""
-
-        try:
-            return self.process.stdout.read(count)
-        except Exception:
-            return b""
+    def _fail_pending_requests(self) -> None:
+        """Resolve every in-flight request with None so no caller waits forever."""
+        for request_id, future in list(self._pending_requests.items()):
+            if not future.done():
+                future.set_result(None)
+            self._pending_requests.pop(request_id, None)
 
     async def _handle_response(self, response: dict) -> None:
         """Handle JSON-RPC response from Pyright.
@@ -396,53 +530,98 @@ class PylanceProxy:
         Args:
             response: Parsed JSON-RPC response
         """
-        # Check if this is a response to our request
-        if "id" in response:
+        # An `id` alone does not mean "this answers us". In JSON-RPC the server
+        # can send its own *requests* (workspace/configuration,
+        # client/registerCapability), and those carry an id too — drawn from the
+        # server's own counter, which overlaps ours. The discriminator is
+        # `method`: requests have one, responses never do. Without this check an
+        # id collision resolves the wrong future, so a hover silently returns
+        # None while the real response is discarded.
+        has_id = "id" in response
+        has_method = "method" in response
+
+        if has_id and not has_method:
             request_id = response["id"]
             future = self._pending_requests.pop(request_id, None)
             if future and not future.done():
                 future.set_result(response)
                 logger.debug(f"Received response for request {request_id}")
+            else:
+                logger.debug(f"Response for unknown or already-settled request {request_id}")
+        elif has_id and has_method:
+            # A request from the server. We do not implement any of these yet;
+            # log it rather than mis-file it as a response. Left unanswered the
+            # server may wait, so this is worth revisiting if we ever declare
+            # capabilities that invite one.
+            logger.debug(f"Unhandled request from language server: {response.get('method')}")
         else:
             # This is a notification from server (e.g., diagnostics)
             logger.debug(f"Received notification: {response.get('method', 'unknown')}")
 
     async def stop(self) -> None:
-        """Stop Pyright subprocess gracefully."""
-        # Cancel reader task
-        if self._reader_task and not self._reader_task.done():
-            self._reader_task.cancel()
-            try:
-                await self._reader_task
-            except asyncio.CancelledError:
-                pass
+        """Stop the language server subprocess gracefully.
 
-        # Stop subprocess
-        if self.process:
+        Safe to call repeatedly, and safe to call after a failed start: both
+        happen in practice, and neither should raise.
+        """
+        process = self.process
+
+        if process is not None:
             try:
-                # Send shutdown request if initialized
-                if self._initialized:
+                # Ask politely first, while the transport is still up.
+                if self.initialized:
                     await self._send_request("shutdown", {}, timeout=2.0)
                     await self._send_notification("exit", {})
 
-                self.process.terminate()
-                self.process.wait(timeout=5)
-                logger.info("Pyright server stopped")
-            except subprocess.TimeoutExpired:
-                # Force kill if not responding
-                self.process.kill()
-                logger.warning("Pyright server forcefully terminated")
+                if process.returncode is None:
+                    process.terminate()
+                    try:
+                        await asyncio.wait_for(process.wait(), timeout=5.0)
+                    except asyncio.TimeoutError:
+                        process.kill()
+                        await process.wait()
+                        logger.warning("Language server forcefully terminated")
+
+                logger.info("Language server stopped")
+            except (ProcessLookupError, OSError) as e:
+                logger.debug(f"Language server already gone: {e}")
             finally:
                 self.process = None
                 self._initialized = False
 
+        # Cancel background tasks only after the child is gone, so the reader
+        # observes a clean end-of-stream rather than being cut off mid-message.
+        for task in (self._reader_task, self._stderr_task):
+            if task and not task.done():
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+
+        self._reader_task = None
+        self._stderr_task = None
+        self._fail_pending_requests()
+
     def is_running(self) -> bool:
-        """Check if Pyright subprocess is running.
+        """Check if the language server subprocess is running.
 
         Returns:
             True if process is alive, False otherwise
         """
-        return self.process is not None and self.process.poll() is None
+        return self.process is not None and self.process.returncode is None
+
+    @property
+    def initialized(self) -> bool:
+        """Whether the LSP handshake completed.
+
+        A live process is not the same as a usable one. It can be running and
+        still not have answered ``initialize``, and it can have answered and
+        since lost its read side — in both cases forwarding anything to it is
+        pointless. Both conditions are folded in here so no caller has to
+        remember to check the second one.
+        """
+        return self._initialized and self._transport_alive
 
     async def forward_hover(self, params: HoverParams) -> Hover | None:
         """Forward hover request to Pylance with translation.
@@ -453,7 +632,7 @@ class PylanceProxy:
         Returns:
             Hover information or None if not available
         """
-        if not self.is_running() or not self._initialized:
+        if not self.is_running() or not self.initialized:
             return None
 
         start_time = time.time()
@@ -540,7 +719,7 @@ class PylanceProxy:
         Returns:
             List of diagnostics with translated messages
         """
-        if not self.is_running() or not self._initialized:
+        if not self.is_running() or not self.initialized:
             return []
 
         try:
@@ -659,7 +838,7 @@ class PylanceProxy:
             "average_latency_ms": avg_latency * 1000,
             "cache_size": len(self._document_cache),
             "translation_cache_size": self.translator.get_cache_size(),
-            "initialized": self._initialized,
+            "initialized": self.initialized,
         }
 
     def clear_caches(self) -> None:
@@ -671,5 +850,5 @@ class PylanceProxy:
     def __repr__(self) -> str:
         """String representation."""
         status = "running" if self.is_running() else "stopped"
-        init_status = "initialized" if self._initialized else "not initialized"
+        init_status = "initialized" if self.initialized else "not initialized"
         return f"PylanceProxy(status={status}, {init_status}, path={self.pyright_path})"

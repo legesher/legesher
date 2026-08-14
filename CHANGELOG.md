@@ -353,6 +353,35 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **language-server**: enhanced Python intelligence has never actually run.
+  The proxy searched for `pyright` — the command-line type checker, which does
+  not speak LSP and closes the stream — rather than `pyright-langserver`, the
+  language server that ships beside it in the same npm package. Pointed at a
+  correct server it then hung anyway: the response reader performed blocking
+  reads from inside an async task, pinning the event loop thread, so the
+  handshake completed but its answer could never be delivered and the timeout
+  meant to rescue it could never fire. The transport is rebuilt on asyncio
+  streams, `Content-Length` now counts encoded bytes rather than characters
+  (localized code and translated diagnostics are exactly the non-ASCII payloads
+  that desynchronised the stream), and the server's stderr is drained so a
+  chatty language server cannot stall behind a full pipe. Discovery prefers
+  `pyright-langserver`, searches Homebrew's Apple Silicon prefix, and treats a
+  CLI-only installation as nothing found rather than launching a process that
+  exits on contact. **If you relied on this feature, install it with
+  `npm install -g pyright` — the `pyright` binary alone is not enough.**
+  [CORE-1886]
+- **language-server**: a failure to start enhanced intelligence is no longer
+  silent. The feature defaults to enabled, so a failed start used to leave you
+  with plain Legesher features and no indication the richer ones were meant to
+  be there. The server now says so once through a client notification, and
+  answers a `legesher/status` request reporting whether enhanced intelligence
+  is enabled, whether it is actually running, and which language server is in
+  use — enabled and running are reported separately, because a feature turned
+  off deliberately and one that tried and failed call for different responses.
+  The status stays honest if the language server exits or its stream breaks
+  mid-session, rather than continuing to report a transport that can no longer
+  carry anything. A reconnecting client also no longer starts a second language
+  server and orphans the first. [CORE-1886]
 - **cli**: `--llm-model` had no effect on the `anthropic` and `cohere-aya`
   backends — it was forwarded only to `openai-compat`, so the other two were
   pinned to their provider defaults no matter what you passed. It now applies

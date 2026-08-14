@@ -1,0 +1,126 @@
+name: Language Server Drift Check
+
+# The language-server transport is covered on every PR by a stub server
+# (libs/language-server/tests/fixtures/stub_langserver.py). The stub is fast,
+# deterministic, needs no Node toolchain, and can be told to misbehave in ways a
+# real server will not reproduce on demand — flooded stderr, fragmented writes,
+# silence.
+#
+# What it cannot do is notice that it has stopped resembling reality. It encodes
+# our beliefs about how a language server behaves; if those beliefs go stale,
+# every stub test still passes and the product is still broken. That is not
+# hypothetical — CORE-1886 was a feature that had never once worked, sitting
+# beside a green test file the whole time.
+#
+# So the real binary runs on a schedule rather than on every PR. Drift is
+# slow-moving, so weekly detection is enough, and keeping pyright out of the PR
+# path means contributors need no Node toolchain and upstream's release cadence
+# cannot break unrelated pull requests.
+
+on:
+  schedule:
+    # Mondays, 13:00 UTC — early enough in the week that a failure has somewhere
+    # to go before the weekend.
+    - cron: '0 13 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    name: Real pyright-langserver vs stub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pyright
+        # `pyright` and `pyright-langserver` ship in the same package. Installing
+        # it is not the same as having the language server, which is the exact
+        # confusion that caused CORE-1886, so the next step checks rather than
+        # assumes.
+        run: npm install -g pyright
+
+      - name: Verify the language server is actually present
+        run: |
+          if ! command -v pyright-langserver >/dev/null 2>&1; then
+            echo "::error::pyright-langserver not on PATH after installing pyright."
+            echo "Without it this job would skip the drift test and report success."
+            exit 1
+          fi
+          echo "pyright-langserver: $(command -v pyright-langserver)"
+          pyright --version
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run the language-server suite against the real language server
+        # LEGESHER_REQUIRE_LANGSERVER turns the skip into a failure. A drift
+        # check that silently does not run is worse than no drift check, because
+        # it reports confidence it has not earned.
+        env:
+          LEGESHER_REQUIRE_LANGSERVER: '1'
+        run: uv run pytest libs/language-server/tests/ -v --no-cov
+
+      - name: Report drift
+        # A scheduled job nobody watches is the same failure in a new costume,
+        # so route it somewhere a person will see. One issue is reopened and
+        # commented on rather than filed weekly: a month of unresolved drift
+        # should read as one problem, not four.
+        #
+        # `bug` is the repository's label. Linear's `type:*` taxonomy does not
+        # exist here, and `gh issue create` fails outright on an unknown label —
+        # which would silently defeat the whole notification path.
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TITLE: 'Language server drift: stub no longer matches pyright-langserver'
+        run: |
+          set -euo pipefail
+
+          body=$(cat <<BODY
+          The weekly drift check failed. The transport passes against the stub language
+          server but not against a real \`pyright-langserver\`, so the stub no longer
+          reflects reality and PR-time coverage is overstating itself.
+
+          Run: ${RUN_URL}
+
+          Start with \`libs/language-server/tests/test_pylance_proxy_transport.py\` and the
+          stub at \`libs/language-server/tests/fixtures/stub_langserver.py\`. Either the
+          transport regressed against real-world behaviour, or the stub needs updating to
+          match it — establish which before changing either.
+          BODY
+          )
+
+          existing=$(gh issue list --repo "${{ github.repository }}" \
+            --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')
+
+          if [ -n "$existing" ]; then
+            echo "Drift already tracked in #${existing}; adding a run link."
+            gh issue comment "$existing" --repo "${{ github.repository }}" --body "$body"
+          else
+            gh issue create --repo "${{ github.repository }}" \
+              --title "$TITLE" --label bug --body "$body"
+          fi

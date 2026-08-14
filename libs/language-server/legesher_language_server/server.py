@@ -3,7 +3,9 @@
 This module provides the main LSP server implementation using pygls.
 """
 
+import asyncio
 import logging
+from dataclasses import dataclass
 
 from legesher_i18n import get_active_language_codes
 from lsprotocol.types import (
@@ -31,11 +33,13 @@ from lsprotocol.types import (
     InitializedParams,
     InitializeParams,
     InitializeResult,
+    MessageType,
     SemanticTokens,
     SemanticTokensLegend,
     SemanticTokensOptions,
     SemanticTokensParams,
     ServerCapabilities,
+    ShowMessageParams,
     TextDocumentSyncKind,
 )
 from pygls.lsp.server import LanguageServer  # pygls 2.0 import path
@@ -48,7 +52,7 @@ from .providers import (
     provide_hover,
     provide_semantic_tokens,
 )
-from .pylance_proxy import PylanceProxy
+from .pylance_proxy import INSTALL_HINT, PylanceProxy
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +114,37 @@ def _deduplicate_diagnostics(diagnostics: list[Diagnostic]) -> list[Diagnostic]:
     return unique
 
 
+# Custom LSP request. Namespaced so it cannot collide with a standard method
+# or with another extension's additions to the same session.
+LEGESHER_STATUS = "legesher/status"
+
+
+@dataclass(frozen=True)
+class EnhancedIntelligenceStatus:
+    """Whether Pyright-backed intelligence is actually available right now.
+
+    ``enabled`` and ``running`` are deliberately separate. A feature switched
+    off on purpose and a feature that tried to start and failed look identical
+    from the outside — both give you plain Legesher features — but they call for
+    completely different responses from the user, so the status has to tell them
+    apart (CORE-1886).
+    """
+
+    enabled: bool
+    running: bool
+    server_path: str | None
+    detail: str
+
+    def to_dict(self) -> dict[str, object]:
+        """Render for the wire, in the camelCase LSP clients expect."""
+        return {
+            "enabled": self.enabled,
+            "running": self.running,
+            "serverPath": self.server_path,
+            "detail": self.detail,
+        }
+
+
 class LegesherLanguageServer(LanguageServer):
     """LSP server for multilingual Python programming.
 
@@ -161,8 +196,69 @@ class LegesherLanguageServer(LanguageServer):
         # initialization_options are processed first (fixes language switching bug)
         self.pylance_proxy: PylanceProxy | None = None
 
+        # One notice per session is information; repeating it is noise the user
+        # learns to dismiss (CORE-1886).
+        self._degradation_notified = False
+
+        # Serialises proxy startup. Checking `is_running()` is not enough on its
+        # own: the check and the spawn are separated by an await, and
+        # `self.process` stays None until the spawn returns, so two concurrently
+        # dispatched `initialized` notifications could both pass the check and
+        # both start a server.
+        self._proxy_start_lock = asyncio.Lock()
+
         # Register all LSP handlers
         self._register_handlers()
+
+    def enhanced_intelligence_status(self) -> EnhancedIntelligenceStatus:
+        """Report whether Pyright-backed intelligence is actually running.
+
+        Answers the question the ticket poses directly — "is enhanced
+        intelligence actually on?" — without the caller having to read a log.
+        """
+        enabled = self.config.pylance_enabled
+        proxy = self.pylance_proxy
+
+        if not enabled:
+            return EnhancedIntelligenceStatus(
+                enabled=False,
+                running=False,
+                server_path=None,
+                detail="Enhanced Python intelligence is disabled by configuration.",
+            )
+
+        running = proxy is not None and proxy.is_running() and proxy.initialized
+        server_path = proxy.pyright_path if proxy else None
+
+        if running:
+            detail = f"Enhanced Python intelligence is active, using {server_path}."
+        else:
+            detail = (
+                "Enhanced Python intelligence is enabled but not running: no Python "
+                f"language server is available. Install one with {INSTALL_HINT}. "
+                "Legesher features are unaffected."
+            )
+
+        return EnhancedIntelligenceStatus(
+            enabled=True,
+            running=running,
+            server_path=server_path,
+            detail=detail,
+        )
+
+    def _notify_degraded_once(self, detail: str) -> None:
+        """Tell the user, once, that a defaulted-on feature is not running.
+
+        `logger.warning` is not a user-visible surface — it lands in a log
+        nobody opens. Silently serving a thinner experience than advertised is
+        the failure this ticket exists to stop, so the notice goes to the client
+        where a person will actually see it.
+        """
+        if self._degradation_notified:
+            return
+
+        self._degradation_notified = True
+        self.window_show_message(ShowMessageParams(type=MessageType.Warning, message=detail))
 
     def _register_handlers(self) -> None:
         """Register all LSP method handlers using decorators."""
@@ -204,6 +300,11 @@ class LegesherLanguageServer(LanguageServer):
         ) -> SemanticTokens | None:
             return await self.on_semantic_tokens_full(params)
 
+        async def status_wrapper(*args, **kwargs) -> dict[str, object]:
+            # Takes no meaningful parameters; accepts whatever the client sends
+            # so a stray argument cannot turn a status query into an error.
+            return self.enhanced_intelligence_status().to_dict()
+
         # Register the wrappers
         # CRITICAL: Must register initialize to process initialization_options
         # for language switching
@@ -221,6 +322,10 @@ class LegesherLanguageServer(LanguageServer):
         self.feature(TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL, self.semantic_tokens_legend)(
             semantic_tokens_full_wrapper
         )
+
+        # Custom request so a client can render an indicator answering "is
+        # enhanced intelligence actually on?" without parsing server logs.
+        self.feature(LEGESHER_STATUS)(status_wrapper)
 
     async def on_initialize(self, params: InitializeParams) -> InitializeResult:
         """Handle initialize request from client.
@@ -326,11 +431,25 @@ class LegesherLanguageServer(LanguageServer):
 
         # Start Pylance proxy if enabled (CORE-360)
         if self.pylance_proxy:
-            started = await self.pylance_proxy.start()
+            # `initialized` can arrive more than once — clients reconnect.
+            # Starting again would spawn a second language server and drop the
+            # handle to the first, orphaning it for the editor's lifetime. The
+            # lock matters as much as the check: they are separated by an await.
+            async with self._proxy_start_lock:
+                if self.pylance_proxy.is_running():
+                    logger.debug("Pylance proxy already running; reusing it")
+                    return
+
+                started = await self.pylance_proxy.start()
+
             if started:
                 logger.info("Pylance proxy started successfully")
             else:
+                # Say it where someone will see it. The proxy already logged the
+                # specifics; this is the part that reaches the user (CORE-1886).
+                status = self.enhanced_intelligence_status()
                 logger.warning("Pylance proxy failed to start, using basic providers only")
+                self._notify_degraded_once(status.detail)
 
     async def on_shutdown(self, params: object) -> None:
         """Handle shutdown request from client.

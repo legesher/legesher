@@ -1,6 +1,7 @@
 """Shared pytest fixtures for language server tests."""
 
 import logging
+import sys
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
@@ -134,8 +135,87 @@ def clean_logs(caplog):
 # ============================================================================
 
 
+@pytest.fixture(scope="session")
+def stub_launcher(tmp_path_factory) -> str:
+    """An executable that starts the stub language server on any platform.
+
+    The proxy spawns its language server as ``[path, "--stdio"]``, so ``path``
+    must be something the OS can execute directly. A bare ``.py`` file satisfies
+    that on POSIX via its shebang but not on Windows — where the CI matrix does
+    run this suite on pushes to main. That gap would have been invisible on the
+    pull request, since PRs are ubuntu-only.
+
+    A shim that re-invokes the current interpreter keeps one code path for every
+    platform.
+    """
+    stub = Path(__file__).parent / "fixtures" / "stub_langserver.py"
+    directory = tmp_path_factory.mktemp("stub-launcher")
+
+    if sys.platform == "win32":
+        launcher = directory / "stub-langserver.cmd"
+        launcher.write_text(f'@echo off\r\n"{sys.executable}" "{stub}" %*\r\n')
+    else:
+        launcher = directory / "stub-langserver"
+        launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{stub}" "$@"\n')
+        launcher.chmod(0o755)
+
+    return str(launcher)
+
+
+_DRIFT_ITEMS: set[str] = set()
+
+
+def pytest_collection_modifyitems(items):
+    """Record which tests guard the stub against drifting from a real server."""
+    for item in items:
+        if item.get_closest_marker("langserver_drift"):
+            _DRIFT_ITEMS.add(item.nodeid)
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    """Say plainly when the drift check did not run (CORE-1886).
+
+    The transport is covered by a stub language server, which encodes our
+    beliefs about how a real one behaves. If those beliefs are wrong, every stub
+    test passes and the product is still broken — which is exactly what happened
+    here: a passing test file sat beside this feature the entire time it was
+    dead.
+
+    A silently skipped drift check reports green having verified nothing. That
+    is the same class of unearned success this ticket exists to stop, so the
+    skip is stated rather than swallowed.
+    """
+    if not _DRIFT_ITEMS:
+        return
+
+    skipped = {report.nodeid for report in terminalreporter.stats.get("skipped", [])}
+    missed = sorted(_DRIFT_ITEMS & skipped)
+    if not missed:
+        return
+
+    terminalreporter.write_sep("=", "STUB DRIFT CHECK DID NOT RUN", yellow=True, bold=True)
+    terminalreporter.write_line(
+        "The language-server transport was exercised against the stub only. Nothing "
+        "in this run verified that the stub still matches a real pyright-langserver."
+    )
+    terminalreporter.write_line("")
+    for nodeid in missed:
+        terminalreporter.write_line(f"  skipped: {nodeid}")
+    terminalreporter.write_line("")
+    terminalreporter.write_line(
+        "To run it locally:  npm install -g pyright   (provides `pyright-langserver`)"
+    )
+    terminalreporter.write_line(
+        "Otherwise it runs on the weekly Language Server Drift Check workflow."
+    )
+
+
 def pytest_configure(config):
     """Register custom pytest markers."""
+    config.addinivalue_line(
+        "markers",
+        "langserver_drift: verifies the stub language server still matches a real one",
+    )
     config.addinivalue_line("markers", "keyword_docs: tests for KeywordDocumentation module")
     config.addinivalue_line("markers", "pack_discovery: tests for pack file discovery")
     config.addinivalue_line("markers", "yaml_parsing: tests for YAML parsing errors")
