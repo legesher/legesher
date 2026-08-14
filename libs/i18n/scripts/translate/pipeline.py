@@ -299,7 +299,10 @@ class TranslationPipeline:
                 )
             self.models["aya101-hf"] = Aya101HuggingFaceModel(
                 dry_run=config.dry_run,
-                device="cpu",  # Force CPU to avoid MPS memory issues
+                # Auto-detect device. MPS is safe since the adapter loads
+                # bf16 there (~26 GB for 13B); the old fp32-on-MPS footprint
+                # was why this used to force CPU.
+                device=None,
             )
         if "aya-api" in config.models:
             if not HAS_AYA_API:

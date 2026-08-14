@@ -139,8 +139,20 @@ class Aya101HuggingFaceModel(TranslationModel):
                             low_cpu_mem_usage=True,  # Reduce memory spikes
                             local_files_only=try_local_first and attempt == 0,
                         ).to(self._device)
+                    elif self._device == "mps":
+                        # bfloat16 on MPS: fp32 (~52 GB for 13B) exceeds
+                        # unified memory, and fp16 overflows T5-family
+                        # activations; bf16 keeps fp32's exponent range at
+                        # half the footprint.
+                        self._model = self._AutoModelForSeq2SeqLM.from_pretrained(
+                            self.model_name,
+                            cache_dir=self.cache_dir,
+                            torch_dtype=self._torch.bfloat16,
+                            low_cpu_mem_usage=True,  # Reduce memory spikes
+                            local_files_only=try_local_first and attempt == 0,
+                        ).to(self._device)
                     else:
-                        # Use float32 on CPU/MPS with memory optimizations
+                        # Use float32 on CPU with memory optimizations
                         self._model = self._AutoModelForSeq2SeqLM.from_pretrained(
                             self.model_name,
                             cache_dir=self.cache_dir,
