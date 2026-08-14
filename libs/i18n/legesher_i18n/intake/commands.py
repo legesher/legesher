@@ -283,7 +283,11 @@ def import_review_bundle(
     raw = bundle_file.read_bytes()
     try:
         lane = (
-            {"required_attestations": ("original_work",)} if recovered_history else {}
+            # Recovered bundles are reconstructed GitHub-era review signal, so
+            # the endorsement channel is github, never the portal default.
+            {"required_attestations": ("original_work",), "method": "github"}
+            if recovered_history
+            else {}
         )
         importer = BundleImporter(
             db_path, conduct_wordlist=_load_wordlist(wordlist), **lane

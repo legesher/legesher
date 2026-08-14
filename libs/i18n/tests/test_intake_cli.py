@@ -871,3 +871,23 @@ def test_recovered_history_lane_still_requires_original_work(
         ],
     )
     assert result.exit_code != 0, result.output
+
+
+def test_recovered_history_lane_records_the_github_channel(
+    runner: CliRunner, db_path: Path, tmp_path: Path
+) -> None:
+    result = runner.invoke(
+        cli,
+        [
+            "import-review-bundle",
+            str(write_bundle(tmp_path, _recovered_era_bundle())),
+            "--db",
+            str(db_path),
+            "--recovered-history",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    conn = sqlite3.connect(db_path)
+    methods = {row[0] for row in conn.execute("SELECT method FROM endorsements")}
+    conn.close()
+    assert methods == {"github"}
