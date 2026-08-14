@@ -23,6 +23,44 @@ NATIVE_RUNTIME = "definir dividir(a, b):\n    devolver a / b\n\ndividir(1, 0)\n"
 NATIVE_SYNTAX = "devolver (1, 2\n"
 
 
+#: Structural frame text ("Archivo", "línea", "en") and localized message
+#: bodies come from the ``traceback.*`` / ``<ExceptionType>.*`` catalog rows,
+#: which live in ``translations.db``. That database is an untracked working
+#: copy since CORE-1794 (see libs/i18n/CLAUDE.md, "Durable home & sync
+#: ritual"), so a fresh clone — CI included — does not have it, and
+#: ``TracebackRenderer`` degrades by design to an empty catalog and English
+#: passthrough. Exception *names* come from the in-repo language pack, so they
+#: localize either way; only catalog-backed assertions need this guard. Same
+#: pattern as libs/i18n/tests/test_messages_catalog.py (CORE-1899).
+def _catalog_available() -> bool:
+    """Whether the ``traceback.*`` rules this test asserts on can be loaded.
+
+    Deliberately checks the catalog's CONTENT, not whether a database file
+    exists. `TranslationDatabase` creates an empty database when the path is
+    missing, and CI runs the i18n suite in the same job before this one — so
+    by the time these tests run, an empty `translations.db` is sitting at the
+    default path. A file-existence guard reads that as "catalog available",
+    runs anyway, and fails on a catalog with no rows in it.
+    """
+    try:
+        from legesher_i18n.messages import load_catalog
+
+        version = f"{sys.version_info[0]}.{sys.version_info[1]}"
+        return any(r.key.startswith("traceback.") for r in load_catalog("es", version))
+    except Exception:  # noqa: BLE001 - no i18n package, no catalog either
+        return False
+
+
+requires_catalog = pytest.mark.skipif(
+    not _catalog_available(),
+    reason=(
+        "translations.db is an untracked working copy (CORE-1794); copy it in "
+        "from the private data home — libs/i18n/CLAUDE.md, 'Durable home & "
+        "sync ritual'"
+    ),
+)
+
+
 @pytest.fixture(autouse=True)
 def clean_mapper():
     reset_source_mapper()
@@ -75,6 +113,19 @@ class TestRuntimeFrames:
         # ("    return a / b"); against "    devolver a / b" they would sit
         # 2-3 columns off. The contract: correctly positioned or absent.
         assert caret_lines(region) == []
+
+    @requires_catalog
+    def test_frame_structure_and_message_are_localized(self, tmp_path):
+        """The catalog-backed half of the contract.
+
+        Split from the native-echo assertions above (CORE-1899): those hold
+        with or without the catalog, and folding both into one test meant the
+        whole case failed wherever ``translations.db`` is absent — which is
+        every CI run — masking a green native-echo path behind a red test.
+        """
+        exc_info, path, mapper = run_translated(tmp_path, NATIVE_RUNTIME)
+        renderer = TracebackRenderer("es", source_map=mapper)
+        region = mapped_region(renderer.render(*exc_info), path)
         # Structure + message are localized end to end.
         assert 'Archivo "' + path + '", línea 2, en dividir' in region
         assert "errordedivisiónporcero: división por cero" in region

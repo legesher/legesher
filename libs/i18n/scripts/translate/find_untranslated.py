@@ -573,9 +573,11 @@ def main():
         action="store_true",
         help="Drift-check the allowlist against the corpus DB's selected "
         "translations (CORE-1355: one policy, two layers). Drift always "
-        "exits non-zero, even with --warn-only. A boolean on purpose: "
-        "pre-commit appends filenames, so an optional-value flag would "
-        "swallow the first pack path.",
+        "exits non-zero, even with --warn-only. If the database is not "
+        "present the check is skipped with a notice — it is gitignored, so "
+        "a clean checkout never has it. A boolean on purpose: pre-commit "
+        "appends filenames, so an optional-value flag would swallow the "
+        "first pack path.",
     )
     parser.add_argument(
         "--check-db-path",
@@ -622,17 +624,27 @@ def main():
     # failure, blocking regardless of --warn-only.
     if args.check_db:
         if not args.check_db_path.exists():
-            print(f"ERROR: --check-db database not found: {args.check_db_path}")
-            return 1
-        drift = check_db_drift(args.check_db_path, load_allowlist())
-        for error in drift:
-            print(f"  [drift] {error}")
-        print(
-            f"Allowlist <-> DB reconciliation: {len(load_allowlist())} "
-            f"entries checked, {len(drift)} drift error(s)"
-        )
-        if drift:
-            return 1
+            # translations.db is gitignored (libs/i18n/.gitignore) and lives in
+            # the private data repo, so a clean checkout — CI included — never
+            # has it. Absence is an environment fact, not allowlist drift:
+            # skip the reconciliation and say so, rather than failing a build
+            # over a file that cannot be present. Drift itself still blocks
+            # wherever the DB IS available, which is the developer machine that
+            # can actually act on it (CORE-1899; the gate itself is CORE-1355).
+            print(
+                f"NOTICE: --check-db skipped, database not present: "
+                f"{args.check_db_path}"
+            )
+        else:
+            drift = check_db_drift(args.check_db_path, load_allowlist())
+            for error in drift:
+                print(f"  [drift] {error}")
+            print(
+                f"Allowlist <-> DB reconciliation: {len(load_allowlist())} "
+                f"entries checked, {len(drift)} drift error(s)"
+            )
+            if drift:
+                return 1
 
     # Return exit code based on completeness
     incomplete = sum(1 for r in reports.values() if not r.is_complete)

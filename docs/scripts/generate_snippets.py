@@ -280,7 +280,7 @@ def emit_artifacts(snippets_dir: Path, out_dir: Path, version: str = PACK_VERSIO
         for c in ordered
     ]
     (out_dir / "snippet-langs.json").write_text(
-        json.dumps(langs_meta, ensure_ascii=False, indent=1), encoding="utf-8"
+        json.dumps(langs_meta, ensure_ascii=False, indent=1) + "\n", encoding="utf-8"
     )
     (out_dir / "legesher-snippets.css").write_text(_css(ordered), encoding="utf-8")
     # One file per language so the playground can lazy-load the selected
@@ -289,7 +289,7 @@ def emit_artifacts(snippets_dir: Path, out_dir: Path, version: str = PACK_VERSIO
     hl_dir.mkdir(parents=True, exist_ok=True)
     for code, payload in _highlight_terms(bundles).items():
         (hl_dir / f"{code}.json").write_text(
-            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+            json.dumps(payload, ensure_ascii=False) + "\n", encoding="utf-8"
         )
 
     for src_file in sorted(snippets_dir.glob("*.py")):
@@ -318,7 +318,7 @@ def emit_artifacts(snippets_dir: Path, out_dir: Path, version: str = PACK_VERSIO
             }
         payload = {"slug": slug, "variants": variants, "identifiers": identifiers}
         (out_dir / "snippets" / f"{src_file.stem}.json").write_text(
-            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+            json.dumps(payload, ensure_ascii=False) + "\n", encoding="utf-8"
         )
 
 

@@ -172,6 +172,10 @@ exclude_commit_patterns = [
 [tool.ruff]
 exclude = [
     "libs/legesher/examples/*",  # Demo files may use native language keywords
+    # Localized-code fixtures are Python written in another language. They are
+    # deliberately not parseable as English Python, which is the whole point of
+    # the fixture — ruff reports them as syntax errors and always will.
+    "libs/vs-code/test/fixtures/*",
 ]
 
 [tool.ruff.lint]

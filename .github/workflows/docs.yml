@@ -12,8 +12,15 @@ jobs:
     defaults: { run: { working-directory: docs } }
     steps:
       - uses: actions/checkout@v4
+      # 3.13, not 3.12: pack validation bottoms out in `str.isidentifier()`,
+      # which is Unicode-version dependent. `ja` `divmod` is
+      # `ディビジョン・モジュール`, and U+30FB (katakana middle dot) only became
+      # identifier-valid in the Unicode tables Python 3.13 ships — 3.12 returns
+      # False and rejects a pack that is correct. Same for the 17 `si` ZWJ
+      # selections. 3.13 is already the de-facto floor for pack validation and
+      # export work; this job was the last one below it (CORE-1899).
       - uses: actions/setup-python@v5
-        with: { python-version: '3.12' }
+        with: { python-version: '3.13' }
       - uses: pnpm/action-setup@v4
         with: { version: 10 }
       - uses: actions/setup-node@v4
