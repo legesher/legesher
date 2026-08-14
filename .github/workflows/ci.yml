@@ -4,6 +4,10 @@ on:
   pull_request:
     branches:
       - main
+    # `ready_for_review` and `labeled` are NOT in the default type set
+    # ([opened, synchronize, reopened]); without them the draft gate below
+    # can never open — the flip out of draft would fire no event at all.
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
   push:
     branches:
       - main
@@ -45,17 +49,29 @@ jobs:
     # Regression shipped in PR #208 (the CORE-1122 merge commit) — its
     # squash-body mentioned all three prefixes in a bullet list, tripping
     # the skip-gate on the very commit that introduced this workflow.
-    # Only fires on `push`; irrelevant on `pull_request`.
-    if: "github.event_name != 'push' || (!startsWith(github.event.head_commit.message, 'chore(release)') && !startsWith(github.event.head_commit.message, 'chore: update uv.lock') && !startsWith(github.event.head_commit.message, 'docs(changelog): stamp'))"
+    # Two independent gates:
+    #  1. push-to-main: skip semantic-release's own auto-commits.
+    #  2. pull_request: skip while the PR is a draft (see /pr draft-first).
+    #     Draft PRs cost zero Actions minutes; marking the PR ready fires
+    #     `ready_for_review` and runs this against the final commit. The
+    #     `ci:run` label forces a run without leaving draft.
+    if: >-
+      (github.event_name != 'push' ||
+       (!startsWith(github.event.head_commit.message, 'chore(release)') &&
+        !startsWith(github.event.head_commit.message, 'chore: update uv.lock') &&
+        !startsWith(github.event.head_commit.message, 'docs(changelog): stamp'))) &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.draft == false ||
+       contains(github.event.pull_request.labels.*.name, 'ci:run'))
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.13'
 
@@ -77,7 +93,20 @@ jobs:
     timeout-minutes: 30
     # Same skip-gate as the `lint` job above — see its comment for why this
     # uses `startsWith` instead of `contains`.
-    if: "github.event_name != 'push' || (!startsWith(github.event.head_commit.message, 'chore(release)') && !startsWith(github.event.head_commit.message, 'chore: update uv.lock') && !startsWith(github.event.head_commit.message, 'docs(changelog): stamp'))"
+    # Two independent gates:
+    #  1. push-to-main: skip semantic-release's own auto-commits.
+    #  2. pull_request: skip while the PR is a draft (see /pr draft-first).
+    #     Draft PRs cost zero Actions minutes; marking the PR ready fires
+    #     `ready_for_review` and runs this against the final commit. The
+    #     `ci:run` label forces a run without leaving draft.
+    if: >-
+      (github.event_name != 'push' ||
+       (!startsWith(github.event.head_commit.message, 'chore(release)') &&
+        !startsWith(github.event.head_commit.message, 'chore: update uv.lock') &&
+        !startsWith(github.event.head_commit.message, 'docs(changelog): stamp'))) &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.draft == false ||
+       contains(github.event.pull_request.labels.*.name, 'ci:run'))
     strategy:
       fail-fast: false
       matrix:
@@ -95,10 +124,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python-version }}
 

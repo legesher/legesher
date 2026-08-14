@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    # `ready_for_review` / `labeled` are not in the default type set; without
+    # them the draft gate below could never open.
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
   schedule:
     - cron: "0 6 * * 1"
 
@@ -12,6 +15,15 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    # Draft PRs skip CodeQL — it is the most expensive job in the repo and a
+    # draft is still being iterated. Marking the PR ready fires
+    # `ready_for_review` and analyzes the final commit; the `ci:run` label
+    # forces a run while still in draft. `push` and the weekly `schedule`
+    # are unaffected, so the security baseline never depends on PR state.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.draft == false ||
+      contains(github.event.pull_request.labels.*.name, 'ci:run')
     permissions:
       security-events: write
       contents: read
@@ -24,7 +36,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4

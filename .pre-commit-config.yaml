@@ -86,6 +86,16 @@ repos:
   # the whole pack tree (merged-pack checks cross file boundaries), so
   # pass_filenames is off; the pack-file trigger keeps it out of unrelated
   # commits.
+  # SHA-pinning gate for GitHub Actions. Blocking, and deliberately narrow:
+  # it enforces exactly what the org policy enforces, but fails here with an
+  # actionable message instead of killing every job at "Set up job" time.
+  - entry: python3 scripts/check_action_pinning.py
+    files: ^\.github/workflows/.*\.ya?ml$
+    id: require-pinned-actions
+    language: system
+    name: Require SHA-pinned GitHub Actions
+    pass_filenames: true
+
   - entry: bash -c 'cd libs/i18n && uv run python -m legesher_i18n.scripts.enforce_data_contract --quiet'
     files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
     id: enforce-pack-data-contract
@@ -163,6 +173,22 @@ repos:
     language: system
     name: Validate Showcase Examples
     pass_filenames: false
+
+  # Full GitHub Actions security audit. Run on demand, NOT on every commit:
+  #     uv run pre-commit run zizmor --hook-stage manual --all-files
+  # A full run currently reports 104 findings (13 high, 26 medium) including a
+  # real template-injection in sync-reference-docs.yml. Triaging those is its
+  # own piece of work, so this stays manual until it is done rather than
+  # blocking every commit in the repo. Scoping it to a single rule is not a
+  # practical alternative: zizmor's `ignore:` matches exact basenames with no
+  # glob support, so silencing 40 rules across ~15 workflows would take ~600
+  # lines of config. The one rule that must hold today (`unpinned-uses`) is
+  # enforced by the blocking local hook below instead (2026-08-14).
+- repo: https://github.com/zizmorcore/zizmor-pre-commit
+  rev: v1.29.0
+  hooks:
+  - id: zizmor
+    stages: [manual]
 
   # Commit message validation with Commitizen
 - repo: https://github.com/commitizen-tools/commitizen

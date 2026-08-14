@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - main
+    # `ready_for_review` / `labeled` are not in the default type set; without
+    # them the draft gate below could never open.
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
   push:
     branches:
       - main
@@ -16,12 +19,19 @@ jobs:
   bandit:
     name: Bandit (Python security linter)
     runs-on: ubuntu-latest
+    # Draft PRs skip this scan; marking the PR ready fires `ready_for_review`
+    # and scans the final commit. The `ci:run` label forces a run while still
+    # in draft. `push` to main is unaffected.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.draft == false ||
+      contains(github.event.pull_request.labels.*.name, 'ci:run')
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.13'
 
