@@ -214,35 +214,35 @@ class TestKeywordDocsCache:
         assert second_time < 1, f"Cached lookup took {second_time:.2f}ms, expected <1ms"
 
 
-class TestPylanceProxyCache:
-    """Test pylance_proxy.py cache performance after refactoring."""
+class TestEnhancedIntelligenceProxyCache:
+    """Test enhanced_intelligence.py cache performance after refactoring."""
 
     def test_keyword_map_initialization_with_cache(self):
-        """Test PylanceProxy initialization uses cached language pack.
+        """Test EnhancedIntelligenceProxy initialization uses cached language pack.
 
         Success Criteria:
             - Second initialization significantly faster
             - Keyword maps are identical
         """
         from legesher_language_server.config import LanguageServerConfig
-        from legesher_language_server.pylance_proxy import PylanceProxy
+        from legesher_language_server.enhanced_intelligence import EnhancedIntelligenceProxy
 
         config = LanguageServerConfig(
-            source_language="es", target_language="en", pylance_enabled=False
+            source_language="es", target_language="en", enhanced_intelligence_enabled=False
         )
 
         # First initialization (may load pack)
         start = time.perf_counter()
-        proxy1 = PylanceProxy(config)
+        proxy1 = EnhancedIntelligenceProxy(config)
         first_time = (time.perf_counter() - start) * 1000
 
         # Second initialization (should use cache)
         start = time.perf_counter()
-        proxy2 = PylanceProxy(config)
+        proxy2 = EnhancedIntelligenceProxy(config)
         second_time = (time.perf_counter() - start) * 1000
 
         print(f"\n{'=' * 60}")
-        print("CORE-446: PylanceProxy initialization cache performance")
+        print("CORE-446: EnhancedIntelligenceProxy initialization cache performance")
         print(f"{'=' * 60}")
         print(f"First init: {first_time:.2f}ms")
         print(f"Second init: {second_time:.2f}ms")

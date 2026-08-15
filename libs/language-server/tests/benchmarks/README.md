@@ -12,13 +12,13 @@ Records "before" performance metrics to enable before/after comparison.
 **Benchmarks:**
 
 - `test_baseline_keyword_translation_lookup()` - Measures keyword translation lookup time
-- `test_baseline_pylance_keyword_map_load()` - Measures PylanceProxy initialization time
+- `test_baseline_enhanced_intelligence_keyword_map_load()` - Measures EnhancedIntelligenceProxy initialization time
 - `test_baseline_language_pack_file_size()` - Measures language pack file sizes for memory estimation
 
 **Results (before CORE-446):**
 
 - Avg per lookup: **14.03ms**
-- PylanceProxy init: **~60ms+**
+- EnhancedIntelligenceProxy init: **~60ms+**
 - Total language pack size: ~2.6 MB on disk
 
 ### [`test_cache_performance.py`](test_cache_performance.py)
@@ -38,7 +38,7 @@ Validates that cache improvements meet performance targets.
 
 - `test_keyword_translation_with_cache()` - Translation lookup <1ms ✅ **0.00ms**
 
-#### PylanceProxy Cache (1 test)
+#### EnhancedIntelligenceProxy Cache (1 test)
 
 - `test_keyword_map_initialization_with_cache()` - Init <10ms ✅ **0.01ms**
 
@@ -54,8 +54,8 @@ Validates that cache improvements meet performance targets.
 | Cold pack load | <100ms | N/A | 37.18ms | ✅ 63% under target |
 | Warm pack load | <1ms | N/A | 0.00ms | ✅ Instant |
 | Cache hit rate | >95% | 0% | 100% | ✅ Perfect |
-| PylanceProxy init (cold) | N/A | ~60ms | ~19ms | 68% faster |
-| PylanceProxy init (warm) | <10ms | ~60ms | 0.01ms | 6,000x faster |
+| EnhancedIntelligenceProxy init (cold) | N/A | ~60ms | ~19ms | 68% faster |
+| EnhancedIntelligenceProxy init (warm) | <10ms | ~60ms | 0.01ms | 6,000x faster |
 
 ## Running Benchmarks
 

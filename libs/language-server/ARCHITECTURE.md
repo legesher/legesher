@@ -200,7 +200,7 @@ ErrorDeNombre: el nombre 'imprimir' no está definido
 
 **Future Integration (CORE-360):**
 
-- Pylance integration for semantic errors
+- Enhanced-intelligence proxy for semantic errors
 - Type checker integration (mypy, pyright)
 - Linter integration (ruff, pylint)
 
@@ -282,11 +282,11 @@ The VS Code extension will:
 
 See [Integration Guide](docs/integration-guide.md) for details.
 
-## Pylance Integration (CORE-360)
+## Enhanced Python Intelligence (CORE-360, CORE-1890)
 
 ### Overview
 
-The Pylance integration provides advanced Python intelligence (type checking,
+The enhanced-intelligence proxy provides advanced Python information (type checking,
 advanced hover, go-to-definition) for localized code through a translation
 proxy architecture.
 
@@ -307,9 +307,9 @@ proxy architecture.
 │  cadena: TypeAlias = str                        │
 │  def foo(x: entero) -> cadena:                  │
 └──────────────────┬──────────────────────────────┘
-                   │ Forward to Pylance
+                   │ Forward to language server
 ┌──────────────────▼──────────────────────────────┐
-│  Pylance/Pyright                                │
+│  pyright-langserver                             │
 │  Type checks with TypeAlias understanding       │
 │  Returns diagnostics, hover, etc.               │
 └──────────────────┬──────────────────────────────┘
@@ -345,22 +345,24 @@ source_map.to_original(Position(0, 6))  # Returns Position(0, 10)
 
 **The Key Innovation**: Generates Python `TypeAlias` statements to preserve localized type hints.
 
-**Problem**: Pylance expects English type names (`int`, `str`), but users write localized types (`entero`, `cadena`).
+**Problem**: The type checker expects English type names (`int`, `str`), but users write localized types (`entero`, `cadena`).
 
 **Solution**: Instead of translating (losing semantics), generate TypeAlias:
 
 ```python
 from typing import TypeAlias
+
 entero: TypeAlias = int
 cadena: TypeAlias = str
 
-def foo(x: entero) -> cadena:  # ✅ Valid Python, Pylance understands!
+
+def foo(x: entero) -> cadena:  # ✅ Valid Python, the type checker understands!
     return str(x)
 ```
 
 **Why This Works**:
 
-- Pylance understands `entero` as `int` via TypeAlias
+- The type checker understands `entero` as `int` via TypeAlias
 - Type checking works correctly
 - Error messages preserve user's original type names
 - Zero translation loss
@@ -402,7 +404,7 @@ result = await translator.translate_to_english(spanish_code)
 # result.content_hash: Cache key
 ```
 
-#### 4. PylanceProxy (`pylance_proxy.py`)
+#### 4. EnhancedIntelligenceProxy (`enhanced_intelligence.py`)
 
 Manages Pyright subprocess and coordinates translation.
 
@@ -411,14 +413,14 @@ Manages Pyright subprocess and coordinates translation.
 - Start/stop Pyright subprocess
 - Auto-detect Pyright installation
 - Forward LSP requests with translation
-- Graceful degradation when Pylance unavailable
+- Graceful degradation when the language server is unavailable
 - Performance monitoring
 
 **Lifecycle**:
 
 ```python
 # Initialization
-proxy = PylanceProxy(config)
+proxy = EnhancedIntelligenceProxy(config)
 
 # On server start
 await proxy.start()  # Starts Pyright subprocess
@@ -499,13 +501,16 @@ stats = proxy.get_performance_stats()
 
 ```python
 # Environment variables
-LEGESHER_PYLANCE_ENABLED=true    # Enable/disable Pylance
-LEGESHER_PYLANCE_PATH=/path/to/pyright  # Custom path (optional)
+LEGESHER_ENHANCED_INTELLIGENCE_ENABLED=true    # Enable/disable enhanced Python intelligence
+LEGESHER_LANGUAGE_SERVER_PATH=/path/to/pyright-langserver  # Custom path (optional)
+# Note: `pyright` is the CLI type checker and does not speak LSP.
+# An explicit path is used as given, so pointing it at the CLI
+# disables enhanced intelligence silently.
 
 # In code
 config = LanguageServerConfig(
-    pylance_enabled=True,
-    pylance_path=None,  # Auto-detect
+    enhanced_intelligence_enabled=True,
+    language_server_path=None,  # Auto-detect
 )
 ```
 
@@ -514,7 +519,7 @@ config = LanguageServerConfig(
 **Pyright Not Found**:
 
 ```python
-# Logs warning, disables Pylance features
+# Logs warning, disables enhanced-intelligence features
 logger.warning("Pyright not found. Install with: npm install -g pyright")
 # Falls back to basic providers (hover, completion, diagnostics)
 ```
@@ -589,7 +594,7 @@ logger.warning("Pyright not found. Install with: npm install -g pyright")
 
 **Architectural**:
 
-- Requires Pyright/Pylance installation (graceful degradation if missing)
+- Requires `pyright-langserver` (graceful degradation if missing)
 - TypeAlias approach requires Python 3.10+ (typing.TypeAlias)
 - Position mapping assumes keywords don't span multiple lines
 
@@ -604,7 +609,7 @@ logger.warning("Pyright not found. Install with: npm install -g pyright")
 
 ## Future Work
 
-### CORE-360: Complete Pylance Integration
+### CORE-360: Complete enhanced-intelligence integration
 
 - ✅ Foundation architecture (SourceMap, TypeAlias, Translator, Proxy)
 - ✅ Comprehensive tests (40 tests passing)

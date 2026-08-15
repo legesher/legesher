@@ -14,6 +14,17 @@ from pydantic import BaseModel, Field, field_validator
 logger = logging.getLogger(__name__)
 
 
+# Settings renamed in CORE-1890, mapped to what replaced them. Deliberately not
+# honoured — the rename ships without aliases because nothing is published and a
+# compatibility layer would be debt with no debtor. Kept at module level rather
+# than on the model: pydantic reinterprets underscore-prefixed class attributes
+# as private attributes, which are not plain dicts.
+RETIRED_ENV_VARS = {
+    "LEGESHER_PYLANCE_ENABLED": "LEGESHER_ENHANCED_INTELLIGENCE_ENABLED",
+    "LEGESHER_PYLANCE_PATH": "LEGESHER_LANGUAGE_SERVER_PATH",
+}
+
+
 class LanguageServerConfig(BaseModel):
     """Configuration for Legesher Language Server.
 
@@ -23,8 +34,8 @@ class LanguageServerConfig(BaseModel):
         python_version: Python version for language pack selection (auto-detected if None)
         cache_size: Maximum number of cached translations (LRU cache)
         cache_ttl: Time-to-live for cache entries in seconds
-        pylance_enabled: Whether to enable Pylance proxy integration
-        pylance_path: Path to Pylance language server executable
+        enhanced_intelligence_enabled: Whether to enable enhanced Python intelligence
+        language_server_path: Path to the Python language server executable
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
     """
 
@@ -45,10 +56,12 @@ class LanguageServerConfig(BaseModel):
         default=3600, ge=0, description="Cache time-to-live in seconds (0 = no expiration)"
     )
 
-    # Pylance integration (CORE-360)
-    pylance_enabled: bool = Field(default=True, description="Enable Pylance proxy integration")
-    pylance_path: str | None = Field(
-        default=None, description="Path to Pylance server (auto-detected if None)"
+    # Enhanced Python intelligence (CORE-360, CORE-1890)
+    enhanced_intelligence_enabled: bool = Field(
+        default=True, description="Enable enhanced Python intelligence"
+    )
+    language_server_path: str | None = Field(
+        default=None, description="Path to the Python language server (auto-detected if None)"
     )
 
     # Logging
@@ -152,6 +165,25 @@ class LanguageServerConfig(BaseModel):
         return v
 
     @classmethod
+    def _warn_about_retired_variables(cls) -> None:
+        """Say when a retired setting is present but no longer read.
+
+        Dropping the old names is the right call, but dropping them *silently*
+        is not: someone who set ``LEGESHER_PYLANCE_ENABLED=false`` would find
+        the feature switched back on, because the replacement defaults to true.
+        The value is not honoured — that would reintroduce the alias we
+        deliberately avoided — but its presence is announced, so the change is
+        something a user can see rather than something they discover.
+        """
+        for retired, replacement in RETIRED_ENV_VARS.items():
+            if retired in os.environ:
+                logger.warning(
+                    f"{retired} is set but no longer read; it was renamed to "
+                    f"{replacement} (CORE-1890). The old value is being ignored — "
+                    "set the new variable to keep your configuration."
+                )
+
+    @classmethod
     def from_env(cls) -> "LanguageServerConfig":
         """Load configuration from environment variables with validation.
 
@@ -161,8 +193,8 @@ class LanguageServerConfig(BaseModel):
             LEGESHER_PYTHON_VERSION: Python version
             LEGESHER_CACHE_SIZE: Cache size
             LEGESHER_CACHE_TTL: Cache TTL in seconds
-            LEGESHER_PYLANCE_ENABLED: Enable Pylance (true/false)
-            LEGESHER_PYLANCE_PATH: Path to Pylance
+            LEGESHER_ENHANCED_INTELLIGENCE_ENABLED: Enable enhanced Python intelligence (true/false)
+            LEGESHER_LANGUAGE_SERVER_PATH: Path to the Python language server
             LEGESHER_LOG_LEVEL: Logging level
 
         Returns:
@@ -172,6 +204,8 @@ class LanguageServerConfig(BaseModel):
             Falls back to safe defaults if environment variables contain invalid values.
             Validation errors are logged as warnings (CORE-446 security).
         """
+        cls._warn_about_retired_variables()
+
         try:
             # Parse cache values with error handling
             try:
@@ -192,8 +226,11 @@ class LanguageServerConfig(BaseModel):
                 python_version=os.getenv("LEGESHER_PYTHON_VERSION"),
                 cache_size=cache_size,
                 cache_ttl=cache_ttl,
-                pylance_enabled=os.getenv("LEGESHER_PYLANCE_ENABLED", "true").lower() == "true",
-                pylance_path=os.getenv("LEGESHER_PYLANCE_PATH"),
+                enhanced_intelligence_enabled=os.getenv(
+                    "LEGESHER_ENHANCED_INTELLIGENCE_ENABLED", "true"
+                ).lower()
+                == "true",
+                language_server_path=os.getenv("LEGESHER_LANGUAGE_SERVER_PATH"),
                 log_level=os.getenv("LEGESHER_LOG_LEVEL", "INFO"),
             )
         except ValueError as e:

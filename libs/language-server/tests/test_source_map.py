@@ -3,7 +3,7 @@
 Tests the bidirectional position mapping system used to translate
 positions between localized and English code when keyword lengths differ.
 
-Test for CORE-360 - Pylance Integration.
+Test for CORE-360 - enhanced Python intelligence.
 """
 
 import pytest

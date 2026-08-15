@@ -46,13 +46,13 @@ from pygls.lsp.server import LanguageServer  # pygls 2.0 import path
 
 from .config import LanguageServerConfig
 from .document import DocumentManager
+from .enhanced_intelligence import INSTALL_HINT, EnhancedIntelligenceProxy
 from .providers import (
     provide_completion,
     provide_diagnostics,
     provide_hover,
     provide_semantic_tokens,
 )
-from .pylance_proxy import INSTALL_HINT, PylanceProxy
 
 logger = logging.getLogger(__name__)
 
@@ -191,10 +191,10 @@ class LegesherLanguageServer(LanguageServer):
         # to avoid loading language packs during initialization
         self.translator: object | None = None
 
-        # Pylance proxy for advanced Python intelligence (CORE-360)
+        # Enhanced-intelligence proxy for advanced Python information (CORE-360)
         # Note: Initialization deferred until on_initialized() to ensure
         # initialization_options are processed first (fixes language switching bug)
-        self.pylance_proxy: PylanceProxy | None = None
+        self.intelligence_proxy: EnhancedIntelligenceProxy | None = None
 
         # One notice per session is information; repeating it is noise the user
         # learns to dismiss (CORE-1886).
@@ -216,8 +216,8 @@ class LegesherLanguageServer(LanguageServer):
         Answers the question the ticket poses directly — "is enhanced
         intelligence actually on?" — without the caller having to read a log.
         """
-        enabled = self.config.pylance_enabled
-        proxy = self.pylance_proxy
+        enabled = self.config.enhanced_intelligence_enabled
+        proxy = self.intelligence_proxy
 
         if not enabled:
             return EnhancedIntelligenceStatus(
@@ -228,7 +228,7 @@ class LegesherLanguageServer(LanguageServer):
             )
 
         running = proxy is not None and proxy.is_running() and proxy.initialized
-        server_path = proxy.pyright_path if proxy else None
+        server_path = proxy.server_path if proxy else None
 
         if running:
             detail = f"Enhanced Python intelligence is active, using {server_path}."
@@ -412,7 +412,7 @@ class LegesherLanguageServer(LanguageServer):
         """Handle initialized notification from client.
 
         Note: initialization_options are now processed in on_initialize() which runs first.
-        This method just initializes PylanceProxy after config has been updated.
+        This method just initializes EnhancedIntelligenceProxy after config has been updated.
 
         Args:
             params: Initialized parameters
@@ -423,32 +423,34 @@ class LegesherLanguageServer(LanguageServer):
         )
         logger.info("Server initialized successfully")
 
-        # Initialize Pylance proxy now that config is finalized (CORE-360)
+        # Initialize the enhanced-intelligence proxy now that config is finalized (CORE-360)
         # This must happen AFTER processing initialization_options above
-        if self.config.pylance_enabled and self.pylance_proxy is None:
-            self.pylance_proxy = PylanceProxy(self.config)
-            logger.info("Pylance proxy initialized")
+        if self.config.enhanced_intelligence_enabled and self.intelligence_proxy is None:
+            self.intelligence_proxy = EnhancedIntelligenceProxy(self.config)
+            logger.info("Enhanced-intelligence proxy initialized")
 
-        # Start Pylance proxy if enabled (CORE-360)
-        if self.pylance_proxy:
+        # Start the enhanced-intelligence proxy if enabled (CORE-360)
+        if self.intelligence_proxy:
             # `initialized` can arrive more than once — clients reconnect.
             # Starting again would spawn a second language server and drop the
             # handle to the first, orphaning it for the editor's lifetime. The
             # lock matters as much as the check: they are separated by an await.
             async with self._proxy_start_lock:
-                if self.pylance_proxy.is_running():
-                    logger.debug("Pylance proxy already running; reusing it")
+                if self.intelligence_proxy.is_running():
+                    logger.debug("Enhanced-intelligence proxy already running; reusing it")
                     return
 
-                started = await self.pylance_proxy.start()
+                started = await self.intelligence_proxy.start()
 
             if started:
-                logger.info("Pylance proxy started successfully")
+                logger.info("Enhanced-intelligence proxy started successfully")
             else:
                 # Say it where someone will see it. The proxy already logged the
                 # specifics; this is the part that reaches the user (CORE-1886).
                 status = self.enhanced_intelligence_status()
-                logger.warning("Pylance proxy failed to start, using basic providers only")
+                logger.warning(
+                    "Enhanced-intelligence proxy failed to start, using Legesher-only providers"
+                )
                 self._notify_degraded_once(status.detail)
 
     async def on_shutdown(self, params: object) -> None:
@@ -459,10 +461,10 @@ class LegesherLanguageServer(LanguageServer):
         """
         logger.info("Server shutting down")
 
-        # Stop Pylance proxy if running (CORE-360)
-        if self.pylance_proxy:
-            await self.pylance_proxy.stop()
-            logger.info("Pylance proxy stopped")
+        # Stop the enhanced-intelligence proxy if running (CORE-360)
+        if self.intelligence_proxy:
+            await self.intelligence_proxy.stop()
+            logger.info("Enhanced-intelligence proxy stopped")
 
     async def on_did_open(self, params: DidOpenTextDocumentParams) -> None:
         """Handle document open notification.
@@ -476,15 +478,16 @@ class LegesherLanguageServer(LanguageServer):
         )
         logger.debug(f"Document opened: {doc.uri}")
 
-        # Translate document for Pylance if enabled (CORE-360)
-        if self.pylance_proxy and self.pylance_proxy.is_running():
+        # Translate document for the language server if enabled (CORE-360)
+        if self.intelligence_proxy and self.intelligence_proxy.is_running():
             try:
-                await self.pylance_proxy.translate_document_for_pylance(doc.uri, doc.text)
+                await self.intelligence_proxy.translate_document_for_server(doc.uri, doc.text)
             except (TimeoutError, RuntimeError, ValueError) as e:
-                logger.warning(f"Failed to translate document for Pylance: {e!r}")
+                logger.warning(f"Failed to translate document for the language server: {e!r}")
             except Exception as e:
                 logger.error(
-                    f"Unexpected error translating document for Pylance: {e!r}", exc_info=True
+                    f"Unexpected error translating document for the language server: {e!r}",
+                    exc_info=True,
                 )
 
     async def on_did_change(self, params: DidChangeTextDocumentParams) -> None:
@@ -501,17 +504,18 @@ class LegesherLanguageServer(LanguageServer):
             )
             logger.debug(f"Document changed: {params.text_document.uri}")
 
-            # Update translation for Pylance if enabled (CORE-360)
-            if self.pylance_proxy and self.pylance_proxy.is_running():
+            # Update translation for the language server if enabled (CORE-360)
+            if self.intelligence_proxy and self.intelligence_proxy.is_running():
                 try:
-                    await self.pylance_proxy.translate_document_for_pylance(
+                    await self.intelligence_proxy.translate_document_for_server(
                         params.text_document.uri, params.content_changes[0].text
                     )
                 except (TimeoutError, RuntimeError, ValueError) as e:
-                    logger.warning(f"Failed to update translation for Pylance: {e!r}")
+                    logger.warning(f"Failed to update translation for the language server: {e!r}")
                 except Exception as e:
                     logger.error(
-                        f"Unexpected error updating translation for Pylance: {e!r}", exc_info=True
+                        f"Unexpected error updating translation for the language server: {e!r}",
+                        exc_info=True,
                     )
 
     async def on_did_close(self, params: DidCloseTextDocumentParams) -> None:
@@ -535,18 +539,20 @@ class LegesherLanguageServer(LanguageServer):
             Hover information or None
 
         Note:
-            Implementation in CORE-357 with Pylance enhancement in CORE-360
+            Implementation in CORE-357 with enhanced-intelligence enrichment in CORE-360
         """
-        # Try Pylance first for advanced type information (CORE-360)
-        if self.pylance_proxy and self.pylance_proxy.is_running():
+        # Try the language server first for advanced type information (CORE-360)
+        if self.intelligence_proxy and self.intelligence_proxy.is_running():
             try:
-                pylance_hover = await self.pylance_proxy.forward_hover(params)
-                if pylance_hover:
-                    return pylance_hover
+                enhanced_hover = await self.intelligence_proxy.forward_hover(params)
+                if enhanced_hover:
+                    return enhanced_hover
             except (TimeoutError, RuntimeError, ValueError) as e:
-                logger.warning(f"Pylance hover request failed: {e!r}")
+                logger.warning(f"Enhanced-intelligence hover request failed: {e!r}")
             except Exception as e:
-                logger.error(f"Unexpected error in Pylance hover: {e!r}", exc_info=True)
+                logger.error(
+                    f"Unexpected error in enhanced-intelligence hover: {e!r}", exc_info=True
+                )
 
         # Fallback to basic hover provider
         return await provide_hover(self, params.text_document.uri, params.position)
@@ -581,22 +587,25 @@ class LegesherLanguageServer(LanguageServer):
         # Get basic diagnostics
         basic_diagnostics = await provide_diagnostics(self, params.text_document.uri)
 
-        # Try to get Pylance diagnostics if available (CORE-360)
-        pylance_diagnostics: list[Diagnostic] = []
-        if self.pylance_proxy and self.pylance_proxy.is_running():
+        # Try to get language-server diagnostics if available (CORE-360)
+        enhanced_diagnostics: list[Diagnostic] = []
+        if self.intelligence_proxy and self.intelligence_proxy.is_running():
             doc = self.document_manager.get_document(params.text_document.uri)
             if doc:
                 try:
-                    pylance_diagnostics = await self.pylance_proxy.forward_diagnostic(
+                    enhanced_diagnostics = await self.intelligence_proxy.forward_diagnostic(
                         params.text_document.uri, doc.text
                     )
                 except (TimeoutError, RuntimeError, ValueError) as e:
-                    logger.warning(f"Pylance diagnostic request failed: {e!r}")
+                    logger.warning(f"Enhanced-intelligence diagnostic request failed: {e!r}")
                 except Exception as e:
-                    logger.error(f"Unexpected error in Pylance diagnostics: {e!r}", exc_info=True)
+                    logger.error(
+                        f"Unexpected error in enhanced-intelligence diagnostics: {e!r}",
+                        exc_info=True,
+                    )
 
         # Merge and deduplicate diagnostics
-        all_diagnostics = _deduplicate_diagnostics(list(pylance_diagnostics) + basic_diagnostics)
+        all_diagnostics = _deduplicate_diagnostics(list(enhanced_diagnostics) + basic_diagnostics)
 
         return FullDocumentDiagnosticReport(
             kind="full",

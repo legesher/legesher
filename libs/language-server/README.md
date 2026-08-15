@@ -26,9 +26,9 @@ your preferred language.
 - **Diagnostic Provider** (CORE-359): Translated error messages (41 templates, 17 error types)
 - **Semantic Tokens Provider** (CORE-450): Syntax highlighting for translated keywords
 
-✅ **Pylance Integration** (CORE-360)
+✅ **Enhanced Python intelligence** (CORE-360)
 
-- PylanceProxy for real-time code translation
+- EnhancedIntelligenceProxy for real-time code translation
 - Caching with LanguagePackLoader (CORE-446)
 - Thread-safe position mapping
 
@@ -334,7 +334,7 @@ Multiple licenses apply - see LICENSE files in the monorepo root.
 
 **Phase 2A: Python Language Server - Integration (CORE-360)**
 
-- 🔄 CORE-360: Pylance integration
+- 🔄 CORE-360: enhanced Python intelligence
 
 ### Upcoming
 

@@ -1,4 +1,4 @@
-"""Edge case tests for Pylance integration robustness.
+"""Edge case tests for enhanced-intelligence robustness.
 
 Tests error handling, cleanup, and graceful degradation scenarios.
 """
@@ -6,7 +6,7 @@ Tests error handling, cleanup, and graceful degradation scenarios.
 import pytest
 
 from legesher_language_server.config import LanguageServerConfig
-from legesher_language_server.pylance_proxy import PylanceProxy
+from legesher_language_server.enhanced_intelligence import EnhancedIntelligenceProxy
 
 
 class TestCacheCleanup:
@@ -16,15 +16,15 @@ class TestCacheCleanup:
     async def test_clear_caches_removes_documents(self):
         """Test that clear_caches cleans up document cache."""
         config = LanguageServerConfig(
-            source_language="es", target_language="en", pylance_enabled=True
+            source_language="es", target_language="en", enhanced_intelligence_enabled=True
         )
 
-        proxy = PylanceProxy(config)
+        proxy = EnhancedIntelligenceProxy(config)
 
         # Add document to cache
         uri = "file:///test.py"
         spanish_code = "definir foo():\n    pasar"
-        await proxy.translate_document_for_pylance(uri, spanish_code)
+        await proxy.translate_document_for_server(uri, spanish_code)
 
         # Verify it's in cache
         assert uri in proxy._document_cache
@@ -39,10 +39,10 @@ class TestCacheCleanup:
     async def test_clear_caches_idempotent(self):
         """Test that clearing empty cache doesn't error."""
         config = LanguageServerConfig(
-            source_language="es", target_language="en", pylance_enabled=True
+            source_language="es", target_language="en", enhanced_intelligence_enabled=True
         )
 
-        proxy = PylanceProxy(config)
+        proxy = EnhancedIntelligenceProxy(config)
 
         # Should not raise error when cache is empty
         proxy.clear_caches()
@@ -56,13 +56,13 @@ class TestErrorHandling:
     async def test_translate_invalid_code_returns_gracefully(self):
         """Test that invalid code is handled gracefully."""
         config = LanguageServerConfig(
-            source_language="es", target_language="en", pylance_enabled=True
+            source_language="es", target_language="en", enhanced_intelligence_enabled=True
         )
 
-        proxy = PylanceProxy(config)
+        proxy = EnhancedIntelligenceProxy(config)
 
         # Invalid Python syntax - tokenizer handles gracefully by returning unchanged
-        result = await proxy.translate_document_for_pylance(
+        result = await proxy.translate_document_for_server(
             "file:///test.py", "!!!! invalid syntax !!!!"
         )
 
@@ -78,10 +78,10 @@ class TestStopCleanup:
     async def test_stop_without_start_no_error(self):
         """Test that stop() without start() doesn't error."""
         config = LanguageServerConfig(
-            source_language="es", target_language="en", pylance_enabled=True
+            source_language="es", target_language="en", enhanced_intelligence_enabled=True
         )
 
-        proxy = PylanceProxy(config)
+        proxy = EnhancedIntelligenceProxy(config)
 
         # Should not raise error
         await proxy.stop()
@@ -90,10 +90,10 @@ class TestStopCleanup:
     async def test_stop_idempotent(self):
         """Test that calling stop() multiple times is safe."""
         config = LanguageServerConfig(
-            source_language="es", target_language="en", pylance_enabled=True
+            source_language="es", target_language="en", enhanced_intelligence_enabled=True
         )
 
-        proxy = PylanceProxy(config)
+        proxy = EnhancedIntelligenceProxy(config)
 
         # Multiple stops should not raise errors
         await proxy.stop()
@@ -102,7 +102,7 @@ class TestStopCleanup:
 
 
 class TestGracefulDegradation:
-    """Test graceful degradation when Pylance unavailable."""
+    """Test graceful degradation when the language server is unavailable."""
 
     @pytest.mark.asyncio
     async def test_hover_when_not_running_returns_none(self):
@@ -110,10 +110,10 @@ class TestGracefulDegradation:
         from lsprotocol.types import HoverParams, Position, TextDocumentIdentifier
 
         config = LanguageServerConfig(
-            source_language="es", target_language="en", pylance_enabled=True
+            source_language="es", target_language="en", enhanced_intelligence_enabled=True
         )
 
-        proxy = PylanceProxy(config)
+        proxy = EnhancedIntelligenceProxy(config)
 
         params = HoverParams(
             text_document=TextDocumentIdentifier(uri="file:///test.py"),
@@ -129,10 +129,10 @@ class TestGracefulDegradation:
     async def test_diagnostic_when_not_running_returns_empty(self):
         """Test that diagnostics return empty list when proxy not running."""
         config = LanguageServerConfig(
-            source_language="es", target_language="en", pylance_enabled=True
+            source_language="es", target_language="en", enhanced_intelligence_enabled=True
         )
 
-        proxy = PylanceProxy(config)
+        proxy = EnhancedIntelligenceProxy(config)
 
         diagnostics = await proxy.forward_diagnostic("file:///test.py", "definir foo():\n    pasar")
 
@@ -141,29 +141,29 @@ class TestGracefulDegradation:
 
 
 class TestDocumentLifecycleWithFailure:
-    """Test complete document lifecycle with Pylance failures."""
+    """Test complete document lifecycle with language-server failures."""
 
     @pytest.mark.asyncio
-    async def test_document_lifecycle_with_pylance_stopped(self):
-        """Test complete lifecycle when Pylance is not running.
+    async def test_document_lifecycle_with_server_stopped(self):
+        """Test complete lifecycle when the language server is not running.
 
         Scenario:
-        1. Create proxy without starting Pylance
+        1. Create proxy without starting the language server
         2. Translate documents (should work using translator directly)
         3. Verify cache is populated
         4. Clear cache (cleanup)
         """
         config = LanguageServerConfig(
-            source_language="es", target_language="en", pylance_enabled=True
+            source_language="es", target_language="en", enhanced_intelligence_enabled=True
         )
 
-        proxy = PylanceProxy(config)
+        proxy = EnhancedIntelligenceProxy(config)
 
         uri = "file:///test.py"
         spanish_code_v1 = "definir foo():\n    pasar"
 
-        # Step 1: Translate without Pylance running
-        result = await proxy.translate_document_for_pylance(uri, spanish_code_v1)
+        # Step 1: Translate without the language server running
+        result = await proxy.translate_document_for_server(uri, spanish_code_v1)
 
         # Should still return translated code (using translator directly)
         assert result is not None
@@ -171,7 +171,7 @@ class TestDocumentLifecycleWithFailure:
 
         # Step 2: Change document
         spanish_code_v2 = "definir foo():\n    retornar 42"
-        result = await proxy.translate_document_for_pylance(uri, spanish_code_v2)
+        result = await proxy.translate_document_for_server(uri, spanish_code_v2)
 
         # Should still work
         assert result is not None
@@ -188,18 +188,18 @@ class TestDocumentLifecycleWithFailure:
         import asyncio
 
         config = LanguageServerConfig(
-            source_language="es", target_language="en", pylance_enabled=True
+            source_language="es", target_language="en", enhanced_intelligence_enabled=True
         )
 
-        proxy = PylanceProxy(config)
+        proxy = EnhancedIntelligenceProxy(config)
 
         # Create multiple translation tasks that will all "fail"
-        # (since Pylance isn't actually running)
+        # (since the language server isn't actually running)
         tasks = []
         for i in range(10):
             uri = f"file:///test{i}.py"
             code = f"definir test{i}():\n    pasar"
-            tasks.append(proxy.translate_document_for_pylance(uri, code))
+            tasks.append(proxy.translate_document_for_server(uri, code))
 
         # All should complete without crashing
         results = await asyncio.gather(*tasks, return_exceptions=False)
@@ -215,14 +215,14 @@ class TestDocumentLifecycleWithFailure:
     async def test_stop_after_translation_cleans_up(self):
         """Test that stop() after translations still works properly."""
         config = LanguageServerConfig(
-            source_language="es", target_language="en", pylance_enabled=True
+            source_language="es", target_language="en", enhanced_intelligence_enabled=True
         )
 
-        proxy = PylanceProxy(config)
+        proxy = EnhancedIntelligenceProxy(config)
 
         # Translate some documents
-        await proxy.translate_document_for_pylance("file:///test1.py", "definir foo(): pasar")
-        await proxy.translate_document_for_pylance("file:///test2.py", "definir bar(): pasar")
+        await proxy.translate_document_for_server("file:///test1.py", "definir foo(): pasar")
+        await proxy.translate_document_for_server("file:///test2.py", "definir bar(): pasar")
 
         # Verify documents are cached
         assert len(proxy._document_cache) == 2

@@ -12,7 +12,7 @@ from pathlib import Path
 import yaml
 
 from legesher_language_server.config import LanguageServerConfig
-from legesher_language_server.pylance_proxy import PylanceProxy
+from legesher_language_server.enhanced_intelligence import EnhancedIntelligenceProxy
 from legesher_language_server.utils.keyword_docs import KeywordDocumentation
 
 # Set up logging to see the diagnostic messages
@@ -100,13 +100,13 @@ def scenario_3_mixed_valid_invalid():
         with open(pack_file, "w") as f:
             yaml.dump(mixed_pack, f)
 
-        # Test with PylanceProxy
+        # Test with EnhancedIntelligenceProxy
         from unittest.mock import patch
 
         config = LanguageServerConfig(source_language="en", target_language="es")
 
-        with patch.object(PylanceProxy, "_find_language_pack", return_value=pack_dir):
-            proxy = PylanceProxy(config)
+        with patch.object(EnhancedIntelligenceProxy, "_find_language_pack", return_value=pack_dir):
+            proxy = EnhancedIntelligenceProxy(config)
 
         result = proxy.translator.keyword_map
         print(f"\n📊 Result: {result}")
@@ -144,8 +144,8 @@ def scenario_4_version_fallback():
 
         config = LanguageServerConfig(source_language="en", target_language="es")
 
-        with patch.object(PylanceProxy, "_find_language_pack", return_value=pack_dir):
-            proxy = PylanceProxy(config)
+        with patch.object(EnhancedIntelligenceProxy, "_find_language_pack", return_value=pack_dir):
+            proxy = EnhancedIntelligenceProxy(config)
 
         result = proxy.translator.keyword_map
         print(f"\n📊 Result: {result}")
@@ -180,8 +180,8 @@ def scenario_5_successful_load():
 
         config = LanguageServerConfig(source_language="en", target_language="es")
 
-        with patch.object(PylanceProxy, "_find_language_pack", return_value=pack_dir):
-            proxy = PylanceProxy(config)
+        with patch.object(EnhancedIntelligenceProxy, "_find_language_pack", return_value=pack_dir):
+            proxy = EnhancedIntelligenceProxy(config)
 
         result = proxy.translator.keyword_map
         print(f"\n📊 Result: {result}")

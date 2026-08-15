@@ -235,6 +235,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **language-server**: enhanced Python intelligence no longer calls itself
+  Pylance. The proxy has never launched Microsoft's Pylance and never will —
+  its licence grants use only with Microsoft products and forbids standalone
+  redistribution, and its bundled server does not speak plain `--stdio` in any
+  case. The backend is `pyright-langserver` (Apache-2.0). Naming it after a
+  product we deliberately do not run was misleading to anyone reading the code
+  or the settings, so the configuration is renamed to say what it does:
+  `pylance_enabled` becomes `enhanced_intelligence_enabled`, `pylance_path`
+  becomes `language_server_path`, and the environment variables
+  `LEGESHER_PYLANCE_ENABLED` / `LEGESHER_PYLANCE_PATH` become
+  `LEGESHER_ENHANCED_INTELLIGENCE_ENABLED` / `LEGESHER_LANGUAGE_SERVER_PATH`.
+  `PylanceProxy` is now `EnhancedIntelligenceProxy`, in
+  `legesher_language_server.enhanced_intelligence`. Diagnostics produced by the
+  backend are now sourced as `pyright` rather than `pylance`, which is what
+  actually produced them. **These are breaking renames with no aliases**: the
+  package has not been published, so nothing external can depend on the old
+  names and carrying a deprecation layer for them would be debt with no
+  debtor. [CORE-1890]
+
 - **i18n**: provider prices are now **operator-configured, never shipped**.
   Every provider carried a hardcoded rate — `$3`/`$15` per million tokens for
   Anthropic, `$20` per million characters for Google and DeepL, and so on —

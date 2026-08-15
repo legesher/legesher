@@ -14,7 +14,7 @@ Language Server Protocol (LSP) implementation for IDE integration, built on pygl
 ## Key Capabilities
 
 - **Four LSP Providers**: Hover, Completion, Diagnostic, Semantic Tokens
-- **Pylance Integration**: Real-time code translation proxy
+- **Enhanced Python intelligence**: real-time code translation proxy
 - **Multi-Language**: Supports all 51 experimental languages
 - **Configuration**: Environment variable and Pydantic-based config
 - **pygls 2.0**: Latest LSP library for Python 3.13 compatibility
@@ -32,7 +32,7 @@ libs/language-server/
 │   │   ├── completion.py     # Completion provider (CORE-358)
 │   │   ├── diagnostic.py     # Diagnostic provider (CORE-359)
 │   │   └── semantic_tokens.py # Semantic tokens (CORE-450)
-│   └── pylance/              # Pylance integration (CORE-360)
+│   └── enhanced_intelligence.py  # Language-server proxy (CORE-360)
 ├── tests/
 │   ├── unit/
 │   └── integration/
@@ -146,6 +146,6 @@ Key changes:
 - CORE-357: Hover provider
 - CORE-358: Completion provider
 - CORE-359: Diagnostic provider
-- CORE-360: Pylance integration
+- CORE-360: enhanced Python intelligence
 - CORE-448: pygls 2.0 migration
 - CORE-450: Semantic tokens provider

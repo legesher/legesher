@@ -4,7 +4,7 @@ This module provides efficient incremental translation of Python code,
 only retranslating changed portions when documents are edited. This
 dramatically improves performance for real-time IDE features.
 
-Implementation for CORE-360 - Pylance Integration.
+Implementation for CORE-360 - enhanced Python intelligence.
 """
 
 import hashlib

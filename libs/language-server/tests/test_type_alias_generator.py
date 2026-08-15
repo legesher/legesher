@@ -1,9 +1,9 @@
 """Tests for type alias generation for localized type hints.
 
 Tests the TypeAliasGenerator which creates Python TypeAlias statements
-to preserve localized type hint names while maintaining Pylance compatibility.
+to preserve localized type hint names while maintaining type-checker compatibility.
 
-Test for CORE-360 - Pylance Integration.
+Test for CORE-360 - enhanced Python intelligence.
 """
 
 from legesher_language_server.type_alias_generator import TypeAlias, TypeAliasGenerator
@@ -310,10 +310,10 @@ def sumar(a: entero, b: entero) -> entero:
 
         result = generator.generate_with_aliases(original_code)
 
-        # Result should be valid Python that tools like Pylance can understand
+        # Result should be valid Python that tools like Pyright can understand
         assert result.startswith("from typing import TypeAlias")
         assert "entero: TypeAlias = int" in result
         assert "def sumar(a: entero, b: entero) -> entero:" in result
 
         # The function signature is preserved with localized names
-        # But Pylance will understand 'entero' as 'int' via the TypeAlias
+        # But the type checker will understand 'entero' as 'int' via the TypeAlias

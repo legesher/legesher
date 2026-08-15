@@ -107,7 +107,7 @@ jobs:
 
           Run: ${RUN_URL}
 
-          Start with \`libs/language-server/tests/test_pylance_proxy_transport.py\` and the
+          Start with \`libs/language-server/tests/test_enhanced_intelligence_transport.py\` and the
           stub at \`libs/language-server/tests/fixtures/stub_langserver.py\`. Either the
           transport regressed against real-world behaviour, or the stub needs updating to
           match it — establish which before changing either.

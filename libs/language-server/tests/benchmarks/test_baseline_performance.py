@@ -44,20 +44,20 @@ def test_baseline_keyword_translation_lookup():
     assert avg_per_lookup > 0  # Sanity check
 
 
-def test_baseline_pylance_keyword_map_load():
-    """Baseline: PylanceProxy._get_keyword_map() performance."""
+def test_baseline_enhanced_intelligence_keyword_map_load():
+    """Baseline: EnhancedIntelligenceProxy._get_keyword_map() performance."""
     from legesher_language_server.config import LanguageServerConfig
-    from legesher_language_server.pylance_proxy import PylanceProxy
+    from legesher_language_server.enhanced_intelligence import EnhancedIntelligenceProxy
 
     config = LanguageServerConfig(source_language="es", target_language="en")
 
     # Measure initialization time (loads keyword map)
     start = time.perf_counter()
-    proxy = PylanceProxy(config)
+    proxy = EnhancedIntelligenceProxy(config)
     elapsed_ms = (time.perf_counter() - start) * 1000
 
     print(f"\n{'=' * 60}")
-    print("BASELINE: PylanceProxy initialization (keyword map load)")
+    print("BASELINE: EnhancedIntelligenceProxy initialization (keyword map load)")
     print(f"{'=' * 60}")
     print(f"Initialization time: {elapsed_ms:.2f}ms")
     print(f"Language: {config.source_language}")

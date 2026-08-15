@@ -1,6 +1,6 @@
-"""Unit tests for pylance_proxy.py error handling.
+"""Unit tests for enhanced_intelligence.py error handling.
 
-Tests comprehensive error handling for language pack loading in PylanceProxy including:
+Tests comprehensive error handling for language pack loading in EnhancedIntelligenceProxy including:
 - Missing language packs
 - Invalid language lookups
 - Successful loads with logging
@@ -9,7 +9,7 @@ Tests comprehensive error handling for language pack loading in PylanceProxy inc
 After CORE-446 refactoring, error handling is delegated to LanguagePackLoader
 which has its own comprehensive tests in legesher_i18n package.
 
-These tests verify that PylanceProxy._get_keyword_map() gracefully handles errors
+These tests verify that EnhancedIntelligenceProxy._get_keyword_map() gracefully handles errors
 by returning empty dict and logging warnings.
 
 Related to CORE-447, CORE-446
@@ -20,11 +20,11 @@ import logging
 import pytest
 
 from legesher_language_server.config import LanguageServerConfig
-from legesher_language_server.pylance_proxy import PylanceProxy
+from legesher_language_server.enhanced_intelligence import EnhancedIntelligenceProxy
 
 
-class TestPylanceProxyErrorHandling:
-    """Test error handling in PylanceProxy._get_keyword_map()."""
+class TestEnhancedIntelligenceProxyErrorHandling:
+    """Test error handling in EnhancedIntelligenceProxy._get_keyword_map()."""
 
     @pytest.fixture
     def config(self):
@@ -32,13 +32,13 @@ class TestPylanceProxyErrorHandling:
         return LanguageServerConfig(
             source_language="en",
             target_language="es",
-            pylance_enabled=False,  # Don't start Pyright process in tests
+            enhanced_intelligence_enabled=False,  # Don't start Pyright process in tests
         )
 
     @pytest.fixture
     def proxy(self, config):
-        """Create PylanceProxy instance."""
-        return PylanceProxy(config)
+        """Create EnhancedIntelligenceProxy instance."""
+        return EnhancedIntelligenceProxy(config)
 
     def test_directory_not_found(self, proxy, caplog):
         """Test handling when language pack doesn't exist."""
@@ -92,9 +92,9 @@ class TestPylanceProxyErrorHandling:
         assert second_time < 5, f"Cached call took {second_time:.2f}ms, expected <5ms"
 
     def test_proxy_initialization_loads_target_language(self, config, caplog):
-        """Test that PylanceProxy initialization loads the target language pack."""
+        """Test that EnhancedIntelligenceProxy initialization loads the target language pack."""
         with caplog.at_level(logging.DEBUG):
-            proxy = PylanceProxy(config)
+            proxy = EnhancedIntelligenceProxy(config)
 
         # Verify translator has keyword map for target language
         assert len(proxy.translator.keyword_map) > 30

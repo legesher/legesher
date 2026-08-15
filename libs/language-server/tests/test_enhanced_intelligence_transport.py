@@ -1,4 +1,4 @@
-"""Transport-level tests for PylanceProxy (CORE-1886).
+"""Transport-level tests for EnhancedIntelligenceProxy (CORE-1886).
 
 These cover the two defects that kept the Pyright proxy from ever completing an
 LSP handshake, plus a latent framing bug found in the same code path:
@@ -40,7 +40,10 @@ from pathlib import Path
 import pytest
 
 from legesher_language_server.config import LanguageServerConfig
-from legesher_language_server.pylance_proxy import PylanceProxy
+from legesher_language_server.enhanced_intelligence import (
+    EnhancedIntelligenceProxy,
+    default_fallback_bin_dirs,
+)
 
 STUB = Path(__file__).parent / "fixtures" / "stub_langserver.py"
 
@@ -67,16 +70,7 @@ DEADLINE = 25.0
 MAX_LOOP_STALL = 1.0
 
 
-posix_only = pytest.mark.skipif(
-    sys.platform == "win32",
-    reason=(
-        "plants shebang executables on PATH; Windows resolves executables via "
-        "PATHEXT, so discovery there needs its own test (see CORE-1886 follow-up)"
-    ),
-)
-
-
-def _force_kill(proxy: PylanceProxy) -> None:
+def _force_kill(proxy: EnhancedIntelligenceProxy) -> None:
     """Kill the child so a wedged reader thread can unwind.
 
     A blocked ``readline()`` returns as soon as the pipe closes, so killing the
@@ -91,7 +85,7 @@ def _force_kill(proxy: PylanceProxy) -> None:
             pass
 
 
-def _run_off_loop(coro, proxy: PylanceProxy, timeout: float = DEADLINE):
+def _run_off_loop(coro, proxy: EnhancedIntelligenceProxy, timeout: float = DEADLINE):
     """Run ``coro`` in its own thread and event loop, under an external deadline.
 
     The deadline has to be imposed from outside the loop under test: a blocked
@@ -113,7 +107,7 @@ def _run_off_loop(coro, proxy: PylanceProxy, timeout: float = DEADLINE):
         executor.shutdown(wait=False)
 
 
-async def _start_and_snapshot(proxy: PylanceProxy) -> dict:
+async def _start_and_snapshot(proxy: EnhancedIntelligenceProxy) -> dict:
     """Start the proxy, record its state while alive, then stop it.
 
     All of it inside one event loop. An asyncio subprocess transport belongs to
@@ -126,7 +120,7 @@ async def _start_and_snapshot(proxy: PylanceProxy) -> dict:
         "started": started,
         "running": proxy.is_running(),
         "initialized": proxy.initialized,
-        "server_path": proxy.pyright_path,
+        "server_path": proxy.server_path,
     }
     await proxy.stop()
     return snapshot
@@ -137,10 +131,18 @@ def _make_executable(directory: Path, name: str) -> Path:
 
     Real files on a real PATH beat monkeypatching ``shutil.which``: the test
     then asserts on what discovery *chose*, not on how it went looking.
+
+    Windows resolves executables through PATHEXT rather than a shebang, so the
+    file needs the extension there. Callers compare stems, not full names, so
+    the difference stays inside this helper.
     """
-    path = directory / name
-    path.write_text("#!/bin/sh\nexit 0\n")
-    path.chmod(0o755)
+    if sys.platform == "win32":
+        path = directory / f"{name}.cmd"
+        path.write_text("@echo off\r\nexit /b 0\r\n")
+    else:
+        path = directory / name
+        path.write_text("#!/bin/sh\nexit 0\n")
+        path.chmod(0o755)
     return path
 
 
@@ -150,7 +152,7 @@ def config():
     return LanguageServerConfig(
         source_language="en",
         target_language="es",
-        pylance_enabled=True,
+        enhanced_intelligence_enabled=True,
     )
 
 
@@ -168,7 +170,7 @@ def isolated_discovery(tmp_path, monkeypatch):
     bindir = tmp_path / "bin"
     bindir.mkdir()
     monkeypatch.setenv("PATH", str(bindir))
-    monkeypatch.setattr("legesher_language_server.pylance_proxy.FALLBACK_BIN_DIRS", [])
+    monkeypatch.setattr("legesher_language_server.enhanced_intelligence.FALLBACK_BIN_DIRS", [])
     return bindir
 
 
@@ -176,7 +178,7 @@ def isolated_discovery(tmp_path, monkeypatch):
 def stub_config(config, monkeypatch, stub_launcher):
     """Config pinned to the stub server, in its default well-behaved mode."""
     monkeypatch.setenv("STUB_MODE", "normal")
-    config.pylance_path = stub_launcher
+    config.language_server_path = stub_launcher
     return config
 
 
@@ -185,7 +187,7 @@ class TestHandshake:
 
     def test_start_completes_handshake(self, stub_config):
         """start() reports success and the proxy is genuinely initialized."""
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
 
         try:
             snapshot = _run_off_loop(_start_and_snapshot(proxy), proxy)
@@ -204,7 +206,7 @@ class TestHandshake:
         longest interval the loop went unserviced, because during that interval
         every hover and every diagnostic in the language server is frozen too.
         """
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
         gaps = []
 
         async def scenario():
@@ -247,7 +249,7 @@ class TestHandshake:
         triggers is another request through the same reader, so the loop has to
         survive repeated use.
         """
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
 
         async def scenario():
             if not await proxy.start():
@@ -276,7 +278,7 @@ class TestHandshake:
         character-counted Content-Length under-declares the body, so the server
         reads a truncated message and the stream desynchronises from there on.
         """
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
         probe = "definir función(): pasar  # 日本語 ✓ مرحبا"
 
         async def scenario():
@@ -303,7 +305,7 @@ class TestHostileServers:
         that assumes they do works until the day the pipe splits them.
         """
         monkeypatch.setenv("STUB_MODE", "chunked")
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
 
         try:
             snapshot = _run_off_loop(_start_and_snapshot(proxy), proxy)
@@ -321,7 +323,7 @@ class TestHostileServers:
         answering us — and we wait forever for an answer it cannot send.
         """
         monkeypatch.setenv("STUB_MODE", "stderr_flood")
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
 
         try:
             snapshot = _run_off_loop(_start_and_snapshot(proxy), proxy)
@@ -336,7 +338,7 @@ class TestHostileServers:
         assumes the next message is its answer will mis-correlate.
         """
         monkeypatch.setenv("STUB_MODE", "noisy")
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
 
         async def scenario():
             if not await proxy.start():
@@ -359,7 +361,7 @@ class TestHostileServers:
         fire any timer at all, because the timer needs the loop it has blocked.
         """
         monkeypatch.setenv("STUB_MODE", "silent")
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
 
         try:
             snapshot = _run_off_loop(_start_and_snapshot(proxy), proxy)
@@ -383,7 +385,7 @@ class TestMessageCorrelation:
         discriminator — requests carry one, responses never do.
         """
         monkeypatch.setenv("STUB_MODE", "collide")
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
         probe = "correlated"
 
         async def scenario():
@@ -417,7 +419,7 @@ class TestTransportDeath:
         cannot carry anything.
         """
         monkeypatch.setenv("STUB_MODE", "die_after_init")
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
 
         async def scenario():
             started = await proxy.start()
@@ -446,7 +448,7 @@ class TestTransportDeath:
         that a corrupt stream cannot leave the proxy wedged or lying.
         """
         monkeypatch.setenv("STUB_MODE", "bad_header")
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
 
         async def scenario():
             started = await proxy.start()
@@ -471,7 +473,7 @@ class TestLifecycle:
 
     def test_stop_terminates_the_child_and_is_idempotent(self, stub_config):
         """stop() leaves nothing running and tolerates being called twice."""
-        proxy = PylanceProxy(stub_config)
+        proxy = EnhancedIntelligenceProxy(stub_config)
 
         async def scenario():
             if not await proxy.start():
@@ -495,7 +497,6 @@ class TestLifecycle:
 class TestDiscovery:
     """Discovery must find a binary that can actually serve LSP."""
 
-    @posix_only
     def test_prefers_langserver_over_the_cli_type_checker(self, config, isolated_discovery):
         """`pyright-langserver` wins when both binaries are on PATH.
 
@@ -505,29 +506,27 @@ class TestDiscovery:
         _make_executable(isolated_discovery, "pyright")
         _make_executable(isolated_discovery, "pyright-langserver")
 
-        found = PylanceProxy(config)._find_pyright()
+        found = EnhancedIntelligenceProxy(config)._find_language_server()
 
         assert found is not None, "discovery found nothing with both binaries present"
-        assert found.endswith("pyright-langserver"), (
+        assert Path(found).stem == "pyright-langserver", (
             f"discovery chose {found!r}; `pyright` is the CLI type checker and "
             "returns EOF when spoken to over stdio"
         )
 
-    @posix_only
     def test_configured_path_outranks_path_lookup(self, config, tmp_path, isolated_discovery):
-        """An explicit `pylance_path` is honoured even when PATH has a candidate."""
+        """An explicit `language_server_path` is honoured even when PATH has a candidate."""
         _make_executable(isolated_discovery, "pyright-langserver")
 
         elsewhere = tmp_path / "elsewhere"
         elsewhere.mkdir()
         pinned = _make_executable(elsewhere, "my-langserver")
-        config.pylance_path = str(pinned)
+        config.language_server_path = str(pinned)
 
-        found = PylanceProxy(config)._find_pyright()
+        found = EnhancedIntelligenceProxy(config)._find_language_server()
 
         assert found == str(pinned), f"configured path ignored; discovery chose {found!r}"
 
-    @posix_only
     def test_cli_only_installation_is_not_accepted(self, config, isolated_discovery, caplog):
         """Finding only the CLI is the same as finding nothing.
 
@@ -539,7 +538,7 @@ class TestDiscovery:
         _make_executable(isolated_discovery, "pyright")
 
         with caplog.at_level(logging.WARNING):
-            found = PylanceProxy(config)._find_pyright()
+            found = EnhancedIntelligenceProxy(config)._find_language_server()
 
         assert found is None, (
             f"discovery returned {found!r} — the CLI type checker cannot serve LSP"
@@ -554,7 +553,7 @@ class TestDiscovery:
         It is the default prefix on Apple Silicon and was absent from a list
         that named only Intel and npm locations.
         """
-        from legesher_language_server.pylance_proxy import FALLBACK_BIN_DIRS
+        from legesher_language_server.enhanced_intelligence import FALLBACK_BIN_DIRS
 
         assert "/opt/homebrew/bin" in FALLBACK_BIN_DIRS, (
             f"Homebrew prefix missing from fallback search: {FALLBACK_BIN_DIRS}"
@@ -571,7 +570,7 @@ class TestFraming:
         anything outside ASCII. Every byte of that difference is a byte the
         server waits for and never receives.
         """
-        from legesher_language_server.pylance_proxy import frame_message
+        from legesher_language_server.enhanced_intelligence import frame_message
 
         framed = frame_message(
             {
@@ -600,7 +599,7 @@ class TestDegradation:
     ):
         """The failure is visible and names something that actually helps.
 
-        `pylance_enabled` defaults to True, so a silent False is the whole bug
+        `enhanced_intelligence_enabled` defaults to True, so a silent False is the whole bug
         class: the server quietly degrades and the user never learns the richer
         experience was meant to be there. The old message named `pyright`, which
         is precisely the install that leaves you without a language server.
@@ -608,7 +607,7 @@ class TestDegradation:
         # isolated_discovery leaves PATH pointing at an empty directory and
         # empties the fallback search, so nothing installed on this machine can
         # accidentally satisfy discovery and mask the behaviour under test.
-        proxy = PylanceProxy(config)
+        proxy = EnhancedIntelligenceProxy(config)
 
         with caplog.at_level(logging.WARNING):
             started = asyncio.run(proxy.start())
@@ -646,8 +645,8 @@ class TestAgainstRealLangserver:
                 "so the drift check did not run. Install it with: npm install -g pyright"
             )
 
-        config.pylance_path = LANGSERVER
-        proxy = PylanceProxy(config)
+        config.language_server_path = LANGSERVER
+        proxy = EnhancedIntelligenceProxy(config)
 
         try:
             snapshot = _run_off_loop(_start_and_snapshot(proxy), proxy)
@@ -657,3 +656,56 @@ class TestAgainstRealLangserver:
             assert snapshot["initialized"] is True
         finally:
             _force_kill(proxy)
+
+
+class TestPlatformDiscoveryPaths:
+    """Fallback locations must be right for the platform we are actually on.
+
+    The platform is injected rather than inferred so Windows behaviour is
+    covered from any host. Waiting for a Windows runner to find out whether
+    Windows discovery works is how the gap in CORE-1886 survived: a code path
+    nothing exercises is a code path nobody has checked.
+    """
+
+    def test_windows_searches_the_npm_install_location(self):
+        """`%APPDATA%\\npm` is where `npm install -g` puts binaries on Windows.
+
+        None of the POSIX prefixes can exist on Windows, so without this the
+        fallback chain is dead weight there and discovery rests entirely on
+        PATH.
+        """
+        dirs = default_fallback_bin_dirs(
+            platform="win32",
+            environ={
+                "APPDATA": r"C:\Users\dev\AppData\Roaming",
+                "LOCALAPPDATA": r"C:\Users\dev\AppData\Local",
+            },
+        )
+
+        assert any("npm" in d for d in dirs), f"npm install location not searched: {dirs}"
+        assert any(d.startswith(r"C:\Users\dev\AppData\Roaming") for d in dirs), (
+            f"APPDATA npm directory missing: {dirs}"
+        )
+
+    def test_windows_does_not_search_posix_prefixes(self):
+        """Unix paths on Windows are noise: they cost a stat and can never hit."""
+        dirs = default_fallback_bin_dirs(platform="win32", environ={"APPDATA": r"C:\a"})
+
+        assert not any(d.startswith("/") for d in dirs), f"POSIX paths offered on Windows: {dirs}"
+
+    def test_windows_tolerates_a_missing_appdata(self):
+        """A stripped environment yields no candidates rather than a crash."""
+        assert default_fallback_bin_dirs(platform="win32", environ={}) == []
+
+    def test_posix_searches_the_homebrew_and_npm_prefixes(self):
+        """The Apple Silicon prefix and the npm global bin are both covered."""
+        dirs = default_fallback_bin_dirs(platform="darwin", environ={})
+
+        assert "/opt/homebrew/bin" in dirs
+        assert any(d.endswith(".npm-global/bin") for d in dirs), dirs
+
+    def test_posix_does_not_offer_windows_paths(self):
+        """Guards the tests above: the two branches must actually differ."""
+        dirs = default_fallback_bin_dirs(platform="linux", environ={"APPDATA": r"C:\a"})
+
+        assert not any("AppData" in d for d in dirs), f"Windows paths offered on POSIX: {dirs}"

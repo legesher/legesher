@@ -3,7 +3,7 @@
 The transport fix makes the Pyright proxy *able* to run. These tests cover the
 other half of the ticket: making it observable whether it actually is.
 
-`pylance_enabled` defaults to True, so when the proxy cannot start the server
+`enhanced_intelligence_enabled` defaults to True, so when the proxy cannot start the server
 silently drops to Legesher-only features. Nothing tells the user, and every call
 site simply guards on `is_running()`. A thinner experience arrives with no
 indication that a richer one was meant to be there — the same failure class as
@@ -42,7 +42,7 @@ def isolated_discovery(tmp_path, monkeypatch):
     bindir = tmp_path / "bin"
     bindir.mkdir()
     monkeypatch.setenv("PATH", str(bindir))
-    monkeypatch.setattr("legesher_language_server.pylance_proxy.FALLBACK_BIN_DIRS", [])
+    monkeypatch.setattr("legesher_language_server.enhanced_intelligence.FALLBACK_BIN_DIRS", [])
     return bindir
 
 
@@ -52,7 +52,7 @@ def config():
         source_language="en",
         target_language="es",
         python_version="3.10",
-        pylance_enabled=True,
+        enhanced_intelligence_enabled=True,
     )
 
 
@@ -91,7 +91,7 @@ class TestStatusReporting:
 
     def test_reports_disabled_when_turned_off_in_config(self, config):
         """Disabled by choice is distinct from broken, and must read that way."""
-        config.pylance_enabled = False
+        config.enhanced_intelligence_enabled = False
         status = LegesherLanguageServer(config).enhanced_intelligence_status()
 
         assert status.enabled is False
@@ -124,7 +124,7 @@ class TestStatusReporting:
         thing production ever does, and not a thing the test should do either.
         """
         monkeypatch.setenv("STUB_MODE", "normal")
-        config.pylance_path = stub_launcher
+        config.language_server_path = stub_launcher
 
         try:
             await server.on_initialized(InitializedParams())
@@ -203,7 +203,7 @@ class TestUserVisibleWarning:
     ):
         """Working software is quiet. A popup on every launch trains people to dismiss them."""
         monkeypatch.setenv("STUB_MODE", "normal")
-        config.pylance_path = stub_launcher
+        config.language_server_path = stub_launcher
 
         try:
             await server.on_initialized(InitializedParams())
@@ -227,7 +227,7 @@ class TestUserVisibleWarning:
 
     async def test_disabled_by_config_is_not_warned_about(self, config, shown_messages):
         """Turning the feature off is not a malfunction and must not warn."""
-        config.pylance_enabled = False
+        config.enhanced_intelligence_enabled = False
         server = LegesherLanguageServer(config)
 
         await server.on_initialized(InitializedParams())
@@ -254,7 +254,7 @@ class TestProxyLifecycle:
         symptom is a child nobody holds a handle to any more.
         """
         monkeypatch.setenv("STUB_MODE", "normal")
-        config.pylance_path = stub_launcher
+        config.language_server_path = stub_launcher
 
         spawns = []
         real_exec = asyncio.create_subprocess_exec
@@ -287,14 +287,14 @@ class TestProxyLifecycle:
         handle to the first, orphaning it for the lifetime of the editor.
         """
         monkeypatch.setenv("STUB_MODE", "normal")
-        config.pylance_path = stub_launcher
+        config.language_server_path = stub_launcher
 
         try:
             await server.on_initialized(InitializedParams())
-            first_pid = server.pylance_proxy.process.pid
+            first_pid = server.intelligence_proxy.process.pid
 
             await server.on_initialized(InitializedParams())
-            second_pid = server.pylance_proxy.process.pid
+            second_pid = server.intelligence_proxy.process.pid
 
             assert first_pid == second_pid, (
                 f"second initialize spawned pid {second_pid}, orphaning pid {first_pid}"

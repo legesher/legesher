@@ -1,7 +1,7 @@
 """Type alias generation for localized type hints.
 
 This module generates Python TypeAlias statements to preserve localized
-type hint names while maintaining compatibility with Pylance's type checker.
+type hint names while maintaining compatibility with the backing type checker.
 
 For example, if a Spanish developer writes:
     def foo(x: entero) -> cadena:
@@ -15,10 +15,10 @@ We generate:
     def foo(x: entero) -> cadena:
         return str(x)
 
-This allows Pylance to understand the types while preserving the user's
+This allows the type checker to understand the types while preserving the user's
 localized type names in error messages.
 
-Implementation for CORE-360 - Pylance Integration.
+Implementation for CORE-360 - enhanced Python intelligence.
 """
 
 import ast
@@ -79,7 +79,7 @@ class TypeAliasGenerator:
 
     This class scans Python code for localized type hints and generates
     the necessary TypeAlias imports to make them valid Python that
-    Pylance can type-check.
+    the type checker can verify.
 
     Example:
         >>> generator = TypeAliasGenerator(target_lang='es')

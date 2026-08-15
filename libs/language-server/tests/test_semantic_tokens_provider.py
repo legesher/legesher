@@ -604,7 +604,7 @@ class TestSemanticTokensIntegration:
     def test_provide_semantic_tokens_integration(self):
         """Test provide_semantic_tokens with server instance."""
         config = LanguageServerConfig(
-            source_language="en", target_language="es", pylance_enabled=False
+            source_language="en", target_language="es", enhanced_intelligence_enabled=False
         )
         server = LegesherLanguageServer(config)
 
@@ -626,7 +626,7 @@ class TestSemanticTokensIntegration:
     def test_missing_document(self):
         """Test semantic tokens for non-existent document."""
         config = LanguageServerConfig(
-            source_language="en", target_language="es", pylance_enabled=False
+            source_language="en", target_language="es", enhanced_intelligence_enabled=False
         )
         server = LegesherLanguageServer(config)
 
@@ -638,7 +638,7 @@ class TestSemanticTokensIntegration:
     def test_real_world_code_spanish(self):
         """Test with real-world-style Spanish code."""
         config = LanguageServerConfig(
-            source_language="en", target_language="es", pylance_enabled=False
+            source_language="en", target_language="es", enhanced_intelligence_enabled=False
         )
         server = LegesherLanguageServer(config)
 

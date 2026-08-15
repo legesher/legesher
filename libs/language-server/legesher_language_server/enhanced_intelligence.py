@@ -1,11 +1,24 @@
-"""Pylance/Pyright proxy for Python intelligence with translation.
+"""Enhanced Python intelligence: proxying an external language server.
 
-This module provides a proxy layer between Legesher Language Server and
-Pylance (Microsoft's Python language server), enabling advanced Python
-intelligence features (type checking, advanced hover, go-to-definition)
-while translating between localized keywords and English.
+Legesher's own features work on localized source directly. This module adds the
+things a type-aware server provides — type checking, richer hover, go-to-
+definition — by running one alongside and translating in both directions:
+localized code goes out as canonical English, and the answer comes back mapped
+onto the reader's own positions.
 
-Implementation for CORE-360 - Pylance Integration.
+The backend is ``pyright-langserver`` (Apache-2.0). It is deliberately **not**
+Pylance, despite the history in CORE-360: Pylance's licence grants use only
+with Microsoft products (§1(a)) and forbids standalone redistribution (§2(e)),
+and its bundled server does not answer plain ``--stdio`` in any case. Anything
+here that reads as Pylance-specific is a leftover, not a design intent — see
+CORE-1890.
+
+Note ``pyright`` and ``pyright-langserver`` are different executables shipped in
+the same npm package. The first is a command-line type checker that closes the
+stream instead of speaking LSP; picking it is what made this feature silently
+dead until CORE-1886.
+
+Implementation for CORE-360; renamed and re-scoped in CORE-1890.
 """
 
 import asyncio
@@ -13,7 +26,9 @@ import json
 import logging
 import os
 import shutil
+import sys
 import time
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -40,15 +55,51 @@ CLI_BIN = "pyright"
 
 INSTALL_HINT = f"npm install -g {CLI_BIN} (provides `{LANGSERVER_BIN}`)"
 
-# Searched in order when the binary is not on PATH. `/opt/homebrew/bin` is the
-# default Homebrew prefix on Apple Silicon.
-FALLBACK_BIN_DIRS = [
-    "/opt/homebrew/bin",
-    "/usr/local/bin",
-    "/usr/bin",
-    str(Path.home() / ".local/bin"),
-    str(Path.home() / ".npm-global/bin"),
-]
+
+def default_fallback_bin_dirs(
+    platform: str | None = None,
+    environ: Mapping[str, str] | None = None,
+) -> list[str]:
+    """Directories to search when the language server is not on PATH.
+
+    The platform and environment are injectable so each branch can be tested
+    from any host. That is not fastidiousness: the POSIX list below can never
+    match anything on Windows, which meant Windows had no fallback at all and
+    nothing to reveal it short of a Windows runner.
+
+    Args:
+        platform: ``sys.platform`` value; defaults to the running platform
+        environ: environment mapping; defaults to ``os.environ``
+
+    Returns:
+        Candidate directories, most likely first
+    """
+    platform = sys.platform if platform is None else platform
+    environ = os.environ if environ is None else environ
+
+    if platform == "win32":
+        # `npm install -g` writes to %APPDATA%\npm; %LOCALAPPDATA% shows up in
+        # some per-user installs. Absent either variable there is simply
+        # nothing to offer, which is not an error.
+        candidates = []
+        for variable in ("APPDATA", "LOCALAPPDATA"):
+            root = environ.get(variable)
+            if root:
+                candidates.append(os.path.join(root, "npm"))
+        return candidates
+
+    return [
+        "/opt/homebrew/bin",  # Homebrew's default prefix on Apple Silicon
+        "/usr/local/bin",
+        "/usr/bin",
+        str(Path.home() / ".local/bin"),
+        str(Path.home() / ".npm-global/bin"),
+    ]
+
+
+# Resolved once at import; tests substitute this directly to isolate discovery
+# from whatever the host machine happens to have installed.
+FALLBACK_BIN_DIRS = default_fallback_bin_dirs()
 
 # Generous ceiling for a single buffered LSP message. Hover results carrying
 # rendered documentation comfortably exceed asyncio's 64 KiB default.
@@ -98,34 +149,34 @@ def _get_pack_loader() -> LanguagePackLoader:
     return _pack_loader
 
 
-class PylanceProxy:
-    """Proxy to Pylance/Pyright for Python intelligence.
+class EnhancedIntelligenceProxy:
+    """Proxy to an external Python language server.
 
-    This class manages a Pyright subprocess and translates LSP requests/
-    responses between localized code and English, enabling Pylance features
-    to work with non-English keywords.
+    Manages a ``pyright-langserver`` subprocess and translates LSP requests and
+    responses between localized code and English, so type-aware features work
+    on source written with non-English keywords.
 
     Architecture:
-        User Code (Spanish) →  Translate to English  → Pylance
+        User Code (Spanish) →  Translate to English  → Language server
                                                         ↓
-        User IDE (Spanish)  ←  Translate to Spanish  ← Pylance Response
+        User IDE (Spanish)  ←  Translate to Spanish  ← Server response
 
     Example:
-        >>> proxy = PylanceProxy(config)
+        >>> proxy = EnhancedIntelligenceProxy(config)
         >>> await proxy.start()
         >>> if proxy.is_running():
         ...     hover = await proxy.forward_hover(params)
     """
 
     def __init__(self, config: LanguageServerConfig):
-        """Initialize Pylance proxy.
+        """Initialize the enhanced-intelligence proxy.
 
         Args:
             config: Language server configuration
         """
         self.config = config
         self.process: asyncio.subprocess.Process | None = None
-        self.pyright_path: str | None = None
+        self.server_path: str | None = None
 
         # Translation engine
         # TODO: Load actual keyword maps from legesher-i18n
@@ -146,7 +197,7 @@ class PylanceProxy:
         self._stderr_task: asyncio.Task | None = None
         self._initialized = False
         # Liveness of the read side, tracked apart from the handshake flag.
-        # The reader can observe the stream die while `_initialize_pyright`
+        # The reader can observe the stream die while `_initialize_server`
         # is still unwinding, and that coroutine would otherwise set
         # `_initialized = True` *after* the reader had cleared it.
         self._transport_alive = False
@@ -193,13 +244,13 @@ class PylanceProxy:
         Returns:
             True if successfully started, False otherwise
         """
-        if not self.config.pylance_enabled:
-            logger.info("Pylance integration disabled in config")
+        if not self.config.enhanced_intelligence_enabled:
+            logger.info("Enhanced Python intelligence disabled in config")
             return False
 
         # Find the language server
-        self.pyright_path = self._find_pyright()
-        if not self.pyright_path:
+        self.server_path = self._find_language_server()
+        if not self.server_path:
             # Loud on purpose. This feature defaults to enabled, so failing
             # quietly leaves the user with a thinner experience and no clue that
             # a richer one was meant to be there (CORE-1886).
@@ -215,7 +266,7 @@ class PylanceProxy:
             # we can await; the blocking equivalents would have to run on the
             # event loop thread, which is what deadlocked this proxy before.
             self.process = await asyncio.create_subprocess_exec(
-                self.pyright_path,
+                self.server_path,
                 "--stdio",
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
@@ -230,17 +281,17 @@ class PylanceProxy:
             self._stderr_task = asyncio.create_task(self._drain_stderr())
 
             # Initialize LSP connection
-            initialized = await self._initialize_pyright()
+            initialized = await self._initialize_server()
             if not initialized:
                 logger.warning(
                     "Enhanced Python intelligence could not be started: the language "
-                    f"server at {self.pyright_path} did not complete initialization. "
+                    f"server at {self.server_path} did not complete initialization. "
                     "Continuing with Legesher-only features."
                 )
                 await self.stop()
                 return False
 
-            logger.info(f"Language server started and initialized: {self.pyright_path}")
+            logger.info(f"Language server started and initialized: {self.server_path}")
             return True
 
         except Exception as e:
@@ -251,11 +302,11 @@ class PylanceProxy:
             await self.stop()
             return False
 
-    def _find_pyright(self) -> str | None:
+    def _find_language_server(self) -> str | None:
         """Find an executable that can actually serve LSP.
 
         Checks, in order:
-        1. Configured path (``config.pylance_path``)
+        1. Configured path (``config.language_server_path``)
         2. ``pyright-langserver`` on PATH
         3. ``pyright-langserver`` in the common install prefixes
 
@@ -268,11 +319,12 @@ class PylanceProxy:
             Path to the language server executable, or None if unavailable
         """
         # Check configured path first — an explicit setting always wins.
-        if self.config.pylance_path:
-            if os.path.isfile(self.config.pylance_path):
-                return self.config.pylance_path
+        if self.config.language_server_path:
+            if os.path.isfile(self.config.language_server_path):
+                return self.config.language_server_path
             logger.warning(
-                f"Configured language server path does not exist: {self.config.pylance_path}"
+                "Configured language server path does not exist: "
+                f"{self.config.language_server_path}"
             )
 
         on_path = shutil.which(LANGSERVER_BIN)
@@ -296,7 +348,7 @@ class PylanceProxy:
 
         return None
 
-    async def _initialize_pyright(self) -> bool:
+    async def _initialize_server(self) -> bool:
         """Initialize Pyright with LSP initialize handshake.
 
         Returns:
@@ -550,9 +602,14 @@ class PylanceProxy:
                 logger.debug(f"Response for unknown or already-settled request {request_id}")
         elif has_id and has_method:
             # A request from the server. We do not implement any of these yet;
-            # log it rather than mis-file it as a response. Left unanswered the
-            # server may wait, so this is worth revisiting if we ever declare
-            # capabilities that invite one.
+            # log it rather than mis-file it as a response.
+            #
+            # It goes unanswered, which JSON-RPC says it should not. That is
+            # survivable only because our declared capabilities are minimal
+            # enough that pyright asks for nothing — verified by probe. Declare
+            # `workspace.configuration` or dynamic registration and it
+            # immediately sends three requests that will wait forever. Tracked
+            # in CORE-1898, which must land before those capabilities widen.
             logger.debug(f"Unhandled request from language server: {response.get('method')}")
         else:
             # This is a notification from server (e.g., diagnostics)
@@ -624,7 +681,7 @@ class PylanceProxy:
         return self._initialized and self._transport_alive
 
     async def forward_hover(self, params: HoverParams) -> Hover | None:
-        """Forward hover request to Pylance with translation.
+        """Forward hover request to the language server with translation.
 
         Args:
             params: Hover request parameters
@@ -710,7 +767,7 @@ class PylanceProxy:
             return None
 
     async def forward_diagnostic(self, uri: str, content: str) -> list[Diagnostic]:
-        """Forward diagnostic request to Pylance with translation.
+        """Forward diagnostic request to the language server with translation.
 
         Args:
             uri: Document URI
@@ -787,7 +844,7 @@ class PylanceProxy:
                     range=diag_range,
                     message=item.get("message", ""),
                     severity=item.get("severity", 1),
-                    source="pylance",
+                    source="pyright",
                 )
 
                 diagnostics.append(diagnostic)
@@ -798,8 +855,8 @@ class PylanceProxy:
             logger.error(f"Diagnostic forward failed: {e}")
             return []
 
-    async def translate_document_for_pylance(self, uri: str, content: str) -> str | None:
-        """Translate document content for Pylance.
+    async def translate_document_for_server(self, uri: str, content: str) -> str | None:
+        """Translate document content for the language server.
 
         Args:
             uri: Document URI
@@ -851,4 +908,4 @@ class PylanceProxy:
         """String representation."""
         status = "running" if self.is_running() else "stopped"
         init_status = "initialized" if self.initialized else "not initialized"
-        return f"PylanceProxy(status={status}, {init_status}, path={self.pyright_path})"
+        return f"EnhancedIntelligenceProxy(status={status}, {init_status}, path={self.server_path})"
