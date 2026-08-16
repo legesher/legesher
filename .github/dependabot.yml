@@ -7,6 +7,12 @@ updates:
   # parse failures (dependabot-core#13366); external deps still work.
   - package-ecosystem: uv
     directory: /
+    # Wait before proposing a freshly published version. A compromised
+    # or yanked release is usually caught within days, and nothing here
+    # is urgent enough to be worth being first (CORE-1920).
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
     schedule:
       interval: weekly
       day: monday
@@ -38,6 +44,12 @@ updates:
   # automatically. Verify post-deployment; may need manual pnpm install.
   - package-ecosystem: npm
     directory: /docs
+    # Wait before proposing a freshly published version. A compromised
+    # or yanked release is usually caught within days, and nothing here
+    # is urgent enough to be worth being first (CORE-1920).
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
     schedule:
       interval: weekly
       day: monday
@@ -62,6 +74,12 @@ updates:
   # ── Node.js: VS Code extension ─────────────────────────
   - package-ecosystem: npm
     directory: /libs/vs-code
+    # Wait before proposing a freshly published version. A compromised
+    # or yanked release is usually caught within days, and nothing here
+    # is urgent enough to be worth being first (CORE-1920).
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
     schedule:
       interval: weekly
       day: monday
@@ -87,6 +105,12 @@ updates:
   # Updates pinned action versions across all workflows.
   - package-ecosystem: github-actions
     directory: /
+    # Wait before proposing a freshly published version. A compromised
+    # or yanked release is usually caught within days, and nothing here
+    # is urgent enough to be worth being first (CORE-1920).
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
     schedule:
       interval: weekly
       day: monday

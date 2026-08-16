@@ -26,6 +26,8 @@ jobs:
     defaults: { run: { working-directory: docs } }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       # 3.13, not 3.12: pack validation bottoms out in `str.isidentifier()`,
       # which is Unicode-version dependent. `ja` `divmod` is
       # `ディビジョン・モジュール`, and U+30FB (katakana middle dot) only became

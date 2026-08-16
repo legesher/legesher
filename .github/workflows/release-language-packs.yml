@@ -166,12 +166,15 @@ jobs:
         working-directory: libs/i18n/language-packs/python/${{ matrix.pack }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Bound here rather than interpolated into the script below, so the
+          # value arrives as data instead of as shell source (CORE-1920).
+          PACK: ${{ matrix.pack }}
         run: |
-          echo "📦 Releasing i18n-python-${{ matrix.pack }}..."
+          echo "📦 Releasing i18n-python-$PACK..."
           if python -m semantic_release version --verbose; then
             echo "released=true" >> $GITHUB_OUTPUT
           else
-            echo "ℹ️ No release needed for i18n-python-${{ matrix.pack }}"
+            echo "ℹ️ No release needed for i18n-python-$PACK"
             echo "released=false" >> $GITHUB_OUTPUT
           fi
 
@@ -194,8 +197,10 @@ jobs:
       # form `publish-pypi.yml` already uses.
       - name: Build package
         if: steps.version.outputs.released == 'true'
+        env:
+          PACK: ${{ matrix.pack }}
         run: |
-          uv build "libs/i18n/language-packs/python/${{ matrix.pack }}"
+          uv build "libs/i18n/language-packs/python/$PACK"
 
       - name: Upload build artifacts
         if: steps.version.outputs.released == 'true'
