@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-08-16
+
 > **On the version number.** This release carries breaking changes and is
 > still a minor bump. The foundation is pre-1.0 and stays there until 1.0 is
 > declared deliberately — `major_on_zero = false` on the foundation and on
@@ -873,9 +875,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.22.0  | Yes      |
-| legesher-i18n            | 0.22.0  | Yes      |
-| legesher (CLI)           | 0.22.0  | —        |
+| legesher-core            | 0.23.0  | Yes      |
+| legesher-i18n            | 0.23.0  | Yes      |
+| legesher (CLI)           | 0.23.0  | —        |
 | legesher-language-server | 0.1.3   | Yes      |
 | legesher-vscode          | 0.1.5   | —        |
 

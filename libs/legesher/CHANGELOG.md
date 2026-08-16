@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-08-16
+
 ### Added
 
 - New **`legesher map edit`** command: fix a bad coinage by editing the map,
