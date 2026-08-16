@@ -86,15 +86,11 @@ repos:
   # the whole pack tree (merged-pack checks cross file boundaries), so
   # pass_filenames is off; the pack-file trigger keeps it out of unrelated
   # commits.
-  # SHA-pinning gate for GitHub Actions. Blocking, and deliberately narrow:
-  # it enforces exactly what the org policy enforces, but fails here with an
-  # actionable message instead of killing every job at "Set up job" time.
-  - entry: python3 scripts/check_action_pinning.py
-    files: ^\.github/workflows/.*\.ya?ml$
-    id: require-pinned-actions
-    language: system
-    name: Require SHA-pinned GitHub Actions
-    pass_filenames: true
+  # The SHA-pinning gate moved to the zizmor hooks at the end of this file
+  # (CORE-1922). scripts/check_action_pinning.py was deleted with it: zizmor's
+  # `unpinned-uses` already enforced the same rule, and being a single static
+  # binary it works in every repo regardless of language — which is what let
+  # the "one checker per repo, per language" plan collapse.
 
   - entry: bash -c 'cd libs/i18n && uv run python -m legesher_i18n.scripts.enforce_data_contract --quiet'
     files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
@@ -193,6 +189,33 @@ repos:
   hooks:
   - id: zizmor
     stages: [manual]
+
+    # The blocking half of the SHA-pinning gate (CORE-1922). Same binary and
+    # the same pinned rev as the manual hook above — only the severity floor
+    # differs, so there is one zizmor version in this repo rather than two.
+    #
+    # `unpinned-uses` is an `error` at High confidence under zizmor's default
+    # blanket policy, so --min-severity=high catches an unpinned `uses:` with
+    # no configuration at all. That is what let scripts/check_action_pinning.py
+    # be deleted: 73 lines reimplementing a rule already installed here.
+    #
+    # Severity filtering is what makes scoping practical. The note above is
+    # right that per-rule `ignore:` lists would run to ~600 lines, but that is
+    # an argument about `ignore:`, not about zizmor — --min-severity needs no
+    # config. CORE-1920 cleared the high tier, so this passes today and fires
+    # only on a regression; the 25 remaining mediums stay out of scope until
+    # that triage lands.
+    #
+    # --no-online-audits keeps commit time offline. The transitive half of the
+    # gate does need network, which is exactly why it is not a hook:
+    # scripts/audit_action_graph.py resolves each `uses:` to its action.yml and
+    # recurses through composite actions. A pinned SHA is immutable, so a clean
+    # reference cannot rot — that walk only needs to run when a `uses:` line
+    # changes, which makes it a CI job on .github/** instead.
+  - id: zizmor
+    alias: require-pinned-actions
+    args: [--min-severity=high, --no-online-audits]
+    name: Require SHA-pinned GitHub Actions
 
   # Commit message validation with Commitizen
 - repo: https://github.com/commitizen-tools/commitizen

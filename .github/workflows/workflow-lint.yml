@@ -1,0 +1,79 @@
+name: Workflow Lint
+
+# The transitive half of the SHA-pinning gate (CORE-1922).
+#
+# The commit-time hook runs zizmor offline, which sees every `uses:` line in
+# files we own. What it structurally cannot see is inside a third party's
+# composite action: `pre-commit/action` pinned to a full SHA, carrying an
+# unpinned `actions/cache@v4` in its own action.yml, is invisible to zizmor
+# offline *and* online. That exact reference took `Lint & Validate` down on
+# every run and needed CORE-1926 to fix, while every gate reported green.
+#
+# Resolving it needs network, which a pre-commit hook cannot assume — hence a
+# CI job rather than a hook. It is cheap to run here because a pinned SHA is
+# immutable: a reference that resolves clean cannot rot, so the walk only has
+# to happen when a `uses:` line actually changes. The paths filter below is
+# what makes that true, and Dependabot's bumps come through it like any other
+# change — which local hooks would never have caught, since Dependabot does
+# not run them.
+#
+# `workflow_call` is here so the other repos reuse this job instead of each
+# growing its own copy in its own language.
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  action-graph:
+    name: Transitive action pinning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          # This job only reads workflow files and calls the public API. It
+          # never pushes, so leaving a credential in .git/config would be a
+          # gift to anything else running in the job.
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Walk the transitive action graph
+        env:
+          # `gh api` reads this. The default token is read-only per the
+          # workflow-level permissions above, which is all the walk needs —
+          # it fetches public action manifests.
+          GH_TOKEN: ${{ github.token }}
+        run: uv run python scripts/audit_action_graph.py
+
+      - name: Test the auditor itself
+        run: uv run pytest scripts/tests -q
