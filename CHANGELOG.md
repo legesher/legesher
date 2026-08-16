@@ -9,6 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+> **On the version number.** This release carries breaking changes and is
+> still a minor bump. The foundation is pre-1.0 and stays there until 1.0 is
+> declared deliberately — `major_on_zero = false` on the foundation and on
+> `libs/mcp`, though not on the packs, which version independently. A 1.0
+> foundation is a coordinated 56-package change: all 51 language packs pin
+> `legesher-i18n<1.0.0`, and so do `core`, `legesher`, `mcp`,
+> `language-server` and `runtime`. Never an incidental consequence of a
+> commit marker. Breaking items are called out in place below.
+
 ### Added
 
 - **mcp**: `legesher-mcp` releases on its own train — own semantic-release
@@ -254,6 +263,38 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   names and carrying a deprecation layer for them would be debt with no
   debtor. [CORE-1890]
 
+- **i18n**: the Hugging Face corpus dataset publishes to
+  `legesher/language-corpus`. It was `legesher/translations`, and briefly
+  `legesher/language-packs` before that name was reserved for the other
+  artifact: the corpus is the *evidence* — every term a speaker offered, with
+  endorsements and provenance, including the ones that were not chosen — while
+  the canon dataset is the *decision*, the words that actually ship. Someone
+  fetching `legesher/language-packs` should get shipped vocabulary, not the
+  11,335 candidate options the corpus carries, so the pair now reads
+  `language-corpus` / `language-packs`. **A breaking rename with nothing to
+  migrate**: no artifact was ever pushed under any prior name. Scoped to the
+  `legesher/` prefix, so the `libs/i18n/language-packs/` source directory and
+  the local `~/.legesher/translations.db` path are untouched. [CORE-1312]
+- **i18n**: `options.sources` is cut on **obligation** rather than pipeline
+  origin. It is the only provenance column the corpus publishes —
+  `source_detail` stays private — so its vocabulary is a public promise, and
+  the old cut put 13,650 rows in an `import` grab-bag holding our own packs,
+  curated corrections, superseded pack words *and* two other projects' work.
+  Nothing in the published data said "someone else's licence applies here",
+  which is how UniversalPython (24 rows) and Latino (11 rows) sat unattributed.
+  Each bucket now answers what we owe for a row: `legesher` (our own work —
+  nothing beyond the licence), `upstream` (another open-source project — retain
+  their notice, credit them), `community` (an individual via native review —
+  credit and withdrawal on request), `model` (machine-generated — disclose
+  which model). Two reassignments worth knowing: `machine-composed` rows go to
+  `legesher`, not `model`, because a human assembled them from existing pack
+  material; and 2,169 legacy `community` rows become `upstream`, because what
+  is owed there is a repository's notice rather than a person's credit — and a
+  licence notice is not ours to drop on request. **A breaking change to the
+  published `sources` vocabulary, with nothing yet published to break.**
+  Per-bucket row counts are deliberately omitted: they are a snapshot of an
+  uncommitted build and drift between rebuilds, and a changelog is permanent.
+  [CORE-1720]
 - **i18n**: provider prices are now **operator-configured, never shipped**.
   Every provider carried a hardcoded rate — `$3`/`$15` per million tokens for
   Anthropic, `$20` per million characters for Google and DeepL, and so on —
