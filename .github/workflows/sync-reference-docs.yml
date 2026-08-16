@@ -34,9 +34,15 @@ jobs:
           path: preview
 
       - name: Sync REFERENCE.md files
+        # Bound through `env:` rather than interpolated into the script —
+        # `${{ }}` substitutes before bash parses, making the value shell
+        # source (CORE-1920). `force` is a boolean input, so the reachable
+        # values are narrow, but the fix costs nothing and the next input
+        # added here will not be.
+        env:
+          FORCE: ${{ github.event.inputs.force || 'false' }}
         run: |
           echo "📚 Syncing REFERENCE.md files to preview-repo..."
-          FORCE="${{ github.event.inputs.force || 'false' }}"
 
           # Sync all language pack REFERENCE.md files
           for lang_dir in libs/i18n/language-packs/python/*/; do

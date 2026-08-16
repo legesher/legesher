@@ -19,10 +19,12 @@ on:
   # schedule:
   #   - cron: '0 12 * * 1'
 
+# `peter-evans/create-pull-request` needs contents + pull-requests. Nothing
+# in this workflow touches the Issues API, so `issues: write` was scope this
+# job never used (CORE-1920).
 permissions:
   contents: write
   pull-requests: write
-  issues: write
 
 jobs:
   monitor-and-update:
@@ -48,24 +50,44 @@ jobs:
 
       - name: Check for new Python release
         id: check_release
+        # `python_version` is a free-text dispatch input. Interpolated with
+        # `${{ }}` it is substituted into the script before bash ever sees
+        # it, so its contents become shell source. Bound through `env:` it
+        # arrives as a variable value and stays data (CORE-1920).
+        env:
+          PYTHON_VERSION: ${{ inputs.python_version }}
         run: |
           cd libs/i18n
 
           # If version provided manually, use it
-          if [ -n "${{ inputs.python_version }}" ]; then
-            echo "version=${{ inputs.python_version }}" >> $GITHUB_OUTPUT
-            echo "Manual version specified: ${{ inputs.python_version }}"
+          if [ -n "$PYTHON_VERSION" ]; then
+            VERSION="$PYTHON_VERSION"
+            echo "Manual version specified: $VERSION"
           else
             # Auto-detect new version
-            NEW_VERSION=$(uv run python scripts/monitor_python.py)
-            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            VERSION=$(uv run python scripts/monitor_python.py)
 
-            if [ -z "$NEW_VERSION" ]; then
+            if [ -z "$VERSION" ]; then
               echo "No new Python version detected"
             else
-              echo "New Python version detected: $NEW_VERSION"
+              echo "New Python version detected: $VERSION"
             fi
           fi
+
+          # Validate BEFORE publishing to $GITHUB_OUTPUT. Binding the input
+          # through `env:` in this step alone would only move the injection
+          # three steps down: five later steps interpolate
+          # `steps.check_release.outputs.version` straight into `run:` blocks
+          # and into create-pull-request's branch / title / labels, and this
+          # job holds `contents: write` + `pull-requests: write`. The output
+          # is the boundary that actually matters, so the value is checked
+          # here once and every consumer downstream inherits the guarantee.
+          if [ -n "$VERSION" ] && ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+$'; then
+            echo "::error::Refusing a Python version that is not N.N: $VERSION"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Extract Python content
         if: steps.check_release.outputs.version != ''

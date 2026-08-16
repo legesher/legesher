@@ -176,14 +176,18 @@ repos:
 
   # Full GitHub Actions security audit. Run on demand, NOT on every commit:
   #     uv run pre-commit run zizmor --hook-stage manual --all-files
-  # A full run currently reports 104 findings (13 high, 26 medium) including a
-  # real template-injection in sync-reference-docs.yml. Triaging those is its
-  # own piece of work, so this stays manual until it is done rather than
-  # blocking every commit in the repo. Scoping it to a single rule is not a
-  # practical alternative: zizmor's `ignore:` matches exact basenames with no
-  # glob support, so silencing 40 rules across ~15 workflows would take ~600
-  # lines of config. The one rule that must hold today (`unpinned-uses`) is
-  # enforced by the blocking local hook below instead (2026-08-14).
+  # A full run reports 84 findings: 0 high, 25 medium, 1 low, 19 informational
+  # (CORE-1920 cleared all 13 highs, including a real template-injection in
+  # sync-reference-docs.yml). The medium tier is mostly 18 `artipacked` —
+  # checkout without `persist-credentials: false` — plus 4
+  # `dependabot-cooldown`. Triaging those is its own piece of work, so this
+  # stays manual until it is done rather than blocking every commit. Scoping
+  # it to a single rule is not a practical alternative: zizmor's `ignore:`
+  # matches exact basenames with no glob support, so silencing 40 rules across
+  # ~15 workflows would take ~600 lines of config. The one rule that must hold
+  # today (`unpinned-uses`) is enforced by the blocking local hook below
+  # instead — though note that hook reads workflow files only, and pinning is
+  # really a property of the transitive action graph (CORE-1926).
 - repo: https://github.com/zizmorcore/zizmor-pre-commit
   rev: v1.29.0
   hooks:

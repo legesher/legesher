@@ -16,7 +16,14 @@ on:
         description: 'Target language (e.g., python)'
         required: true
         default: 'python'
-        type: string
+        # `choice`, not `string` (CORE-1920). This value names a directory
+        # under libs/i18n/language-packs/ and is interpolated into shell and
+        # into `working-directory:`; as free text it was the one genuinely
+        # unconstrained input in this workflow. `language` was already a
+        # choice. Add an option here when a second target ships.
+        type: choice
+        options:
+          - python
       language:
         description: 'Language code (e.g., es, ar)'
         required: true
@@ -75,10 +82,14 @@ on:
           - vi
           - zh
 
+# Read-only by default; the two jobs that cut a release opt up to
+# `contents: write` themselves (CORE-1920). This was `contents: write` +
+# `issues: write` + `pull-requests: write` for the whole workflow, which
+# handed the detect job — a checkout and two shell steps — a token that
+# could push tags, cut releases, and write issues and pull requests.
+# Nothing here has ever used the issues or pull-requests scopes.
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 jobs:
   detect-changed-packs:
@@ -117,6 +128,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-changed-packs]
     if: needs.detect-changed-packs.outputs.packs != '[]'
+    permissions:
+      contents: write  # tags, and the GitHub release body
     strategy:
       matrix:
         pack: ${{ fromJson(needs.detect-changed-packs.outputs.packs) }}
@@ -170,10 +183,19 @@ jobs:
         run: |
           python -m semantic_release publish --verbose
 
+      # `uv build <path>` — positional, and WITH build isolation.
+      # Two bugs lived on this line (CORE-1920 review). `-p` is uv's short
+      # form of `--python`, not `--package`, so the pack path was handed to
+      # interpreter discovery and the build failed every time — after
+      # `semantic_release version` had already pushed the tag and cut the
+      # GitHub Release, so a release could ship with no dists and a red job.
+      # And `--no-build-isolation` cannot work here regardless: the packs
+      # build with `pdm-backend`, which this job never installs. Matches the
+      # form `publish-pypi.yml` already uses.
       - name: Build package
         if: steps.version.outputs.released == 'true'
         run: |
-          uv build --no-build-isolation -p libs/i18n/language-packs/python/${{ matrix.pack }}
+          uv build "libs/i18n/language-packs/python/${{ matrix.pack }}"
 
       - name: Upload build artifacts
         if: steps.version.outputs.released == 'true'
@@ -187,6 +209,8 @@ jobs:
     name: Manual Release ${{ github.event.inputs.target }}-${{ github.event.inputs.language }}
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write  # tags, and the GitHub release body
 
     steps:
       - name: Checkout code
@@ -218,15 +242,20 @@ jobs:
       - name: Release language pack
         id: version
         working-directory: libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
+        # Dispatch inputs reach the script as variables, never as `${{ }}`
+        # substituted into it — substitution happens before bash parses, so
+        # an interpolated input is shell source rather than data (CORE-1920).
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET: ${{ github.event.inputs.target }}
+          LANGUAGE: ${{ github.event.inputs.language }}
         run: |
-          echo "📦 Releasing i18n-${{ github.event.inputs.target }}-${{ github.event.inputs.language }}..."
+          echo "📦 Releasing i18n-$TARGET-$LANGUAGE..."
           if python -m semantic_release version --verbose; then
-            echo "released=true" >> $GITHUB_OUTPUT
+            echo "released=true" >> "$GITHUB_OUTPUT"
           else
             echo "ℹ️ No release needed"
-            echo "released=false" >> $GITHUB_OUTPUT
+            echo "released=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create GitHub Release
@@ -237,10 +266,22 @@ jobs:
         run: |
           python -m semantic_release publish --verbose
 
+      # `uv build <path>` — positional, and WITH build isolation.
+      # Two bugs lived on this line (CORE-1920 review). `-p` is uv's short
+      # form of `--python`, not `--package`, so the pack path was handed to
+      # interpreter discovery and the build failed every time — after
+      # `semantic_release version` had already pushed the tag and cut the
+      # GitHub Release, so a release could ship with no dists and a red job.
+      # And `--no-build-isolation` cannot work here regardless: the packs
+      # build with `pdm-backend`, which this job never installs. Matches the
+      # form `publish-pypi.yml` already uses.
       - name: Build package
         if: steps.version.outputs.released == 'true'
+        env:
+          TARGET: ${{ github.event.inputs.target }}
+          LANGUAGE: ${{ github.event.inputs.language }}
         run: |
-          uv build --no-build-isolation -p libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
+          uv build "libs/i18n/language-packs/$TARGET/$LANGUAGE"
 
       - name: Upload build artifacts
         if: steps.version.outputs.released == 'true'

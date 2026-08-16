@@ -8,8 +8,13 @@ on:
       - 'libs/vs-code/**'
   workflow_dispatch:
 
+# Read-only by default; only the release job opts up (CORE-1920). The
+# workflow-level `contents: write` also reached the three-OS `test` job,
+# which compiles and runs a test suite — the job most exposed to whatever
+# the diff contains, and the one with no reason to hold a token that can
+# push tags.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   # Job 1: Test on multiple platforms
@@ -56,6 +61,8 @@ jobs:
     name: Build and Release
     runs-on: ubuntu-latest
     needs: test
+    permissions:
+      contents: write  # git tag + GitHub release
     # Only release from main branch, skip release commits to prevent loops
     if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(release)')
 

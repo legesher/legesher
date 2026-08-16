@@ -7,6 +7,13 @@ on:
     branches: [main]
     paths: ['docs/**', 'libs/i18n/language-packs/**']
 
+# Declared rather than inherited (CORE-1920). With no block this job took the
+# repository default token on push-to-main, then ran `pip install -r`,
+# `pnpm install` and `playwright install` — three package managers executing
+# third-party lifecycle scripts. It only ever reads the checkout.
+permissions:
+  contents: read
+
 jobs:
   docs:
     # Draft PRs skip this; marking the PR ready fires `ready_for_review` and

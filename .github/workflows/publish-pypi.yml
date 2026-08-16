@@ -90,7 +90,14 @@ jobs:
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
           version: "latest"
-          enable-cache: true
+          # Cache deliberately OFF here, unlike every other workflow
+          # (CORE-1920). The Actions cache is shared across the repository
+          # and writable by lower-privileged workflows, so a cache entry
+          # restored into the job that builds and uploads a release artifact
+          # is an input this workflow does not control. This is a manual,
+          # rare, dispatch-only publish; a cold uv install costs it seconds
+          # and buys a build whose dependencies came from the index.
+          enable-cache: false
 
       - name: Install build dependencies
         run: |

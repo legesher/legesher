@@ -18,10 +18,12 @@ on:
       - 'pyproject.toml'
   workflow_dispatch:  # Allow manual triggers
 
+# Nothing here calls the Issues or Pulls APIs — `semantic_release version`
+# commits and tags, `publish` uploads release assets. Single-job workflow, so
+# zizmor's excessive-permissions audit never fires on it; narrowed by hand for
+# the same reason release-language-packs was (CORE-1920).
 permissions:
   contents: write
-  issues: write
-  pull-requests: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
