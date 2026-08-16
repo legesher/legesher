@@ -24,7 +24,7 @@ dependencies = [
     "legesher-runtime>=0.1.0,<1.0.0",
 ]
 name = "legesher"
-version = "0.22.0"
+version = "0.23.0"
 description = "main build for Legesher Monorepo"
 readme = "README.md"
 keywords = ["translation", "programming", "multilingual", "i18n", "cli", "developer-tools"]
