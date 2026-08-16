@@ -260,6 +260,42 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   instead of a hand-maintained copy. [CORE-1548, CORE-1549, CORE-1553]
 - **docs**: in-browser Python playground — edit and run localized code from the
   docs, via a Pyodide web worker with a CodeMirror editor island. [CORE-1551]
+- **i18n**: a contributor consent notice, and the withdrawal path that makes it
+  true. The published dataset card already promised a right to withdraw, and
+  nothing implemented it — withdrawal was not merely undocumented, it was not
+  possible. Identities resolve from a map the v2 database is rebuilt from on
+  every run, so editing a built database was undone by the next rebuild,
+  dropping a map entry made the build refuse, and flagging one left the
+  username in source. Withdrawing now replaces a person's identity with a
+  marker carrying the opaque contributor id instead of their username: the id
+  is already public and leads nowhere alone, while the username it was minted
+  from is gone. Endorsements survive, because the id is what those rows key on;
+  the identity cannot come back, because a rebuild has no username to mint
+  from. A tombstone row lets a later import tell a withdrawal from a stranger.
+  [CORE-1780]
+- **i18n**: `import-review-bundle --recovered-history` accepts bundles
+  reconstructed from pre-intake GitHub review history. Such bundles honestly
+  attest original work but cannot attest Code of Conduct agreement or DCO
+  sign-off, because neither was collected in that era. The flag relaxes which
+  attestations are *required* and never changes what a bundle asserts.
+  [CORE-1868]
+- **i18n**: showcase examples are gated on transpiling. Every
+  `hello_world.py` in preview-repo must reverse-translate to canonical
+  English through its own pack and survive `ast.parse`. Shipped warn-only
+  against a 40/51 baseline, then flipped blocking once a real run reported
+  51/51. [CORE-1403, CORE-1779]
+- **i18n**: identity translations are marked and surfaced rather than
+  silently counted as coverage. A term whose translation equals its English
+  form under NFKC and casefolding is a cognate, not a gap — 208 of 9,443 canon
+  selections. `canon_coverage` splits the two, `find-untranslated` reports the
+  cognate class, and `--check-db` blocks on drift between the allowlist and the
+  database. [CORE-1355]
+- **i18n**: a term-screening sweep and release gate across 50 languages —
+  9,217 terms screened for offensive or unfortunate renderings, with
+  per-language reports and coverage digests. `screen_terms.py --gate` is
+  mechanical and blocking: an unscreened language, a stale digest or an
+  untriaged flag all fail it. All 24 flags were verified against the shipped
+  surface and triaged. [CORE-401]
 
 ### Changed
 
@@ -429,6 +465,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   ligature, and stays pending Sinhala native review. A new general guard test
   rejects any pack value carrying a 3.13-only identifier character below its
   declared floor. [CORE-1521]
+- **docs**: legal and policy pages ship in English only. A translated legal
+  document is a second legal document: it can drift from the English, and a
+  reader who acts on the drifted version has a claim on it. This project argues
+  that people should read in their own language, which makes policy the one
+  place that argument has to lose — and makes it easy to do the wrong thing by
+  reflex. The Arabic and Spanish privacy pages had already drifted, last
+  touched in July against an English page last touched in April. Both are
+  removed; `/ar/privacy` and `/es/privacy` still resolve and now serve the
+  English policy inside localized navigation, so there are no dead links and
+  exactly one authoritative text. `CONTRIBUTING.md` previously invited
+  contributors to translate any documentation page without exception, which is
+  how a well-meaning contribution would have recreated the problem; the
+  carve-out is stated there, where someone about to translate a page will read
+  it.
 
 ### Fixed
 
@@ -579,6 +629,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   needs is missing. All generator file I/O is explicitly utf-8, so non-ASCII
   pack values no longer depend on the build machine's locale.
   [CORE-1574, CORE-1577]
+- **vs-code**: language detection scored prose as if it were code. Detection
+  tokenized the whole document, so comments and string literals counted as
+  keyword evidence — and a Legesher user writes comments in their own language,
+  which makes this ordinary input rather than an edge case. English source with
+  Spanish comments scored `es=14` against the real packs and switched the
+  language server to Spanish for a file containing no Spanish code. Comments
+  and string literals are now stripped before tokenizing, in a single scan
+  rather than by regex, so a `#` inside a string is not read as a comment and a
+  quote inside a comment does not open a string. String prefixes are dropped
+  with their literal instead of being left as stray single-character tokens,
+  which packs do contain. [CORE-1765]
+- **vs-code**: every surface now agrees on the language in effect. An explicit
+  language pick could be silently discarded: `selectLanguage` writes to user
+  scope and detection outranks user scope, so choosing a language while a file
+  that detected otherwise was focused did nothing visible. Detection beating a
+  global *preference* is right — a default is not a claim about the file on
+  screen — but a deliberate choice is different. `legesher.languageDetection`
+  (`auto` | `off`, default `auto`) makes the distinction explicit: the picker
+  offers "Auto — detect from file contents" as a first-class entry, picking a
+  concrete language pins it and turns detection off, and picking Auto restores
+  it. Persisted and visible rather than hidden session state, so choosing a
+  language is no longer a one-way door. [CORE-1754, CORE-1776]
 
 ### Security
 
