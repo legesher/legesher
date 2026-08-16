@@ -30,6 +30,7 @@ from legesher_core.register_map.correction import compare_key
 from legesher_core.tree_sitter.identifier_map import IdentifierMap
 from legesher_core.tree_sitter.identifier_validator import IdentifierValidator
 from legesher_core.unicode_guard import scan_text
+from legesher_i18n.script_policy import has_policy, policy_for
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import ContentBlock, ToolAnnotations
@@ -565,6 +566,17 @@ def validate_identifier_translations(
         owners, _origin = owners_of.setdefault(compare_key(term), (set(), "glossary"))
         owners.add(source)
 
+    # Format characters this locale's script legitimately needs inside an
+    # identifier. Without it the Unicode gate rejects orthography the language
+    # requires: Sinhala forms conjuncts with virama+ZWJ, so `සත්‍ය` — the value
+    # Legesher's own `si` pack ships for `True` on 3.13+ — scans as an
+    # `invisible` U+200D and every Sinhala proposal is refused. Default-deny is
+    # still the rule; `policy_for` opens exactly the characters a registered
+    # script declares, and bidi controls are never suppressed by this argument.
+    allowed_format_chars = (
+        policy_for(target_lang).allowed_format_chars if has_policy(target_lang) else frozenset()
+    )
+
     verdicts: list[IdentifierVerdict] = []
     accepted: dict[str, str] = {}
 
@@ -593,7 +605,38 @@ def validate_identifier_translations(
                 )
             )
 
-        issues = scan_text(candidate)
+        # The SOURCE is checked too. It becomes a key in ``accepted``, which the
+        # response describes as ready to merge into the project glossary, so an
+        # unvalidated source lets `{"calculate tax": "..."}` come back ok=true
+        # and seed a glossary key that can never match an identifier in code.
+        # English source identifiers carry no format characters, so the scan
+        # runs default-deny here regardless of the target locale's policy.
+        if not IdentifierValidator().is_valid(source):
+            conflicts.append(
+                IdentifierConflict(
+                    kind="malformed",
+                    against="python",
+                    detail=(
+                        f"source {source!r} must satisfy str.isidentifier() and "
+                        f"not be a Python keyword"
+                    ),
+                )
+            )
+
+        source_issues = scan_text(source)
+        if source_issues:
+            conflicts.append(
+                IdentifierConflict(
+                    kind="unsafe_text",
+                    against="unicode_contract",
+                    detail="; ".join(
+                        f"source {issue.codepoint} {issue.char_name} at {issue.offset}"
+                        for issue in source_issues
+                    ),
+                )
+            )
+
+        issues = scan_text(candidate, allowed_format_chars=allowed_format_chars)
         if issues:
             conflicts.append(
                 IdentifierConflict(

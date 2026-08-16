@@ -385,3 +385,94 @@ async def test_unknown_language_is_a_clean_error(client: ClientSession) -> None:
     )
     assert "unsupported_language" in message
     assert_sanitized(message)
+
+
+async def test_sinhala_conjunct_zwj_is_accepted(client: ClientSession) -> None:
+    """Sinhala forms conjuncts with virama+ZWJ, so U+200D is orthography here.
+
+    The gate scans for invisible format characters, which is right by default —
+    but ZWJ is not decoration in Sinhala, it is how the script joins consonants.
+    Legesher's own `si` pack ships `සත්‍ය` for `True` on 3.13+, so a blanket
+    rejection refuses the vocabulary we publish. `script_policy` opens exactly
+    the characters a registered script declares, and nothing more.
+    """
+    conjunct = "සත්‍යය"
+    assert conjunct.isidentifier()
+
+    result = await call_ok(
+        client,
+        "validate_identifier_translations",
+        {
+            "target_lang": "si",
+            "proposals": [{"source": "is_true", "translation": conjunct}],
+        },
+    )
+
+    entry = result["results"][0]
+    assert entry["ok"] is True, entry["conflicts"]
+    assert result["accepted"] == {"is_true": conjunct}
+
+
+async def test_zwj_is_still_rejected_for_a_script_that_does_not_declare_it(
+    client: ClientSession,
+) -> None:
+    """The allowance is per script, not global — default-deny still holds."""
+    result = await call_ok(
+        client,
+        "validate_identifier_translations",
+        {
+            "target_lang": "es",
+            "proposals": [{"source": "total", "translation": "tot‍al"}],
+        },
+    )
+
+    entry = result["results"][0]
+    assert entry["ok"] is False
+    assert "unsafe_text" in {conflict["kind"] for conflict in entry["conflicts"]}
+
+
+async def test_a_source_that_is_not_an_identifier_is_rejected(
+    client: ClientSession,
+) -> None:
+    """`accepted` keys are described as ready to merge into a glossary.
+
+    An unvalidated source seeds a key that can never match an identifier in
+    code, and the caller is told the pair is fine.
+    """
+    result = await call_ok(
+        client,
+        "validate_identifier_translations",
+        {
+            "target_lang": "es",
+            "proposals": [
+                {"source": "calculate tax", "translation": "calcular_impuesto"},
+                {"source": "class", "translation": "clase_usuario"},
+            ],
+        },
+    )
+
+    assert [entry["ok"] for entry in result["results"]] == [False, False]
+    assert all(
+        any(conflict["kind"] == "malformed" for conflict in entry["conflicts"])
+        for entry in result["results"]
+    )
+    assert result["accepted"] == {}
+
+
+async def test_a_source_carrying_an_invisible_is_rejected(
+    client: ClientSession,
+) -> None:
+    """A source with a hidden codepoint is two glossary keys that look like one."""
+    result = await call_ok(
+        client,
+        "validate_identifier_translations",
+        {
+            "target_lang": "es",
+            "proposals": [{"source": "user͏name", "translation": "nombre_usuario"}],
+        },
+    )
+
+    entry = result["results"][0]
+    assert entry["ok"] is False
+    assert "unsafe_text" in {conflict["kind"] for conflict in entry["conflicts"]}
+    assert result["accepted"] == {}

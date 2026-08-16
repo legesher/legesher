@@ -16,16 +16,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   identifiers are invented by the model, so this is the check they get
   instead. Given proposed source/translation pairs it reports five
   failures: `malformed` (not a valid Python identifier), `unsafe_text`
-  (bidi controls and invisibles, via the shared Unicode guard),
+  (bidi controls and invisibles, via the shared Unicode guard, with the
+  target language's `script_policy` allowing the format characters its
+  script actually needs — Sinhala joins consonants with virama+ZWJ, so
+  U+200D is orthography there and a blanket rejection would refuse the
+  vocabulary Legesher itself ships),
   `reserved_term` (a name the pack claims — exact *and* NFKC+casefold, so
   a case variant of `definir` is caught too), *drift* — one concept
   acquiring a second term — and *collision* — one term acquiring a second
   concept. Drift and collision are checked against the existing glossary
   and against the rest of the batch, so a first session with no glossary
   yet still has to be self-consistent, and comparison is NFKC+casefold so
-  a decomposed twin is the same term rather than a second one. The
-  conflict-free pairs come back in `accepted`, NFC-normalized per the
-  storage contract.
+  a decomposed twin is the same term rather than a second one. Both sides
+  of a pair are checked, not just the translation: an `accepted` key is
+  described as ready to merge into your glossary, so a source that is not
+  itself an identifier is rejected rather than seeded as a key nothing in
+  code can match. The conflict-free pairs come back in `accepted`,
+  NFC-normalized per the storage contract.
 
   The pack, Unicode, and well-formedness checks are the ones
   `register_map.correction` already applies to register-map identifier
