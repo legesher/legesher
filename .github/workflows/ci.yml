@@ -160,12 +160,38 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
+        id: deps
         run: uv sync
 
+      # Every suite below runs even when an earlier SUITE fails (CORE-1921).
+      # GitHub stops a job at the first failing step, so a red `libs/core`
+      # used to mark the other five `skipped` and report a single failure —
+      # which looked like "core is broken" but actually meant "we have no
+      # idea about the other five". On `windows-latest` that hid i18n, the
+      # collision audit, legesher, language-server and MCP for the entire
+      # life of the Windows job: it had never once reached them.
+      #
+      # `!cancelled()` rather than `always()` — `always()` also keeps going
+      # after someone manually cancels a run, which burns minutes on a run
+      # nobody wants any more. The job still fails if any step fails; the
+      # difference is that the summary names all of them.
+      #
+      # Gated on `steps.deps.outcome` as well, so this only widens reporting
+      # for *test* failures. A broken environment is not six broken packages:
+      # when `uv sync` fails (run 31832469690, windows leg, 1s) every suite
+      # would otherwise run `uv run` against it, fail identically, and each
+      # re-attempt the sync — six red steps naming five innocent packages,
+      # on the slowest runner. That inverts the point of the change.
+      #
+      # NOTE: this depends on `fail-fast: false` above. Under `fail-fast:
+      # true` a sibling leg's failure cancels this one, `cancelled()` flips
+      # true, and every gated step would skip — losing exactly the
+      # visibility this buys.
       - name: Run core tests
         run: uv run pytest libs/core/tests/ -v --cov=legesher_core --cov-report=xml:coverage-core.xml
 
       - name: Run i18n tests
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         run: uv run pytest libs/i18n/tests/ -v --cov=legesher_i18n --cov-report=xml:coverage-i18n.xml
 
       # CORE-950 collision guardrail. Pre-commit's
@@ -180,20 +206,29 @@ jobs:
       # avoids YAML-block-scalar indentation pitfalls (Copilot review
       # on PR #237).
       - name: i18n collision audit (DB + all 51 packs)
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         run: uv run python libs/i18n/scripts/audit_collisions.py
 
       - name: Run legesher tests
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         run: uv run pytest libs/legesher/tests/ -v --cov=legesher --cov-report=xml:coverage-legesher.xml
 
       - name: Run language-server tests
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         run: uv run pytest libs/language-server/tests/ -v --cov=legesher_language_server --cov-report=xml:coverage-ls.xml
 
       # Per-commit tier only. The `scheduled` suites (all-packs round-trip
       # sweep, clean-environment wheel spawn) are deselected by libs/mcp's
       # own addopts and gate the release instead — see release-mcp.yml.
       - name: Run MCP server tests
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         run: uv run pytest libs/mcp/tests/ -v --cov=legesher_mcp --cov-report=xml:coverage-mcp.xml
 
+      # Deliberately NOT given `!cancelled()` (CORE-1921). Every suite above
+      # now runs regardless, so all five XMLs exist even on a red job — but
+      # coverage from a run whose assertions failed is lines executed, not
+      # behaviour verified, and publishing it as the project number would
+      # overstate what is actually covered. Fix the build, then measure.
       - name: Upload coverage reports to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
