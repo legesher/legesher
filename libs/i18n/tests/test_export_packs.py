@@ -273,3 +273,29 @@ def test_licence_agreement_is_case_insensitive() -> None:
     assert export_packs.licenses_agree({"apache-2.0": 255})
     assert not export_packs.licenses_agree({"MIT": 255})
     assert not export_packs.licenses_agree({"Apache-2.0": 254, "MIT": 1})
+
+
+def test_shipped_packs_agree_with_the_declared_licence() -> None:
+    """Both claims are public, so they must not drift apart again.
+
+    Every pack carries its own `metadata.license`, and the dataset card
+    declares one for the compilation. Until CORE-1043 the packs said `MIT`
+    while the distribution that ships them said `Apache-2.0`; this pins the
+    reconciliation so a regenerated or newly added pack cannot reintroduce it.
+    """
+    seen = export_packs.check_license_consistency(export_packs.pack_locales())
+    assert export_packs.licenses_agree(seen), (
+        f"pack metadata.license disagrees with "
+        f"{export_packs.DECLARED_LICENSE!r}: {seen}"
+    )
+
+
+def test_the_card_carries_no_licence_caveat_when_they_agree() -> None:
+    """The caveat is for a real disagreement, not decoration."""
+    locales = export_packs.pack_locales()
+    card = export_packs.render_card(_manifest(locales), {"Apache-2.0": 255})
+    assert "Note on the licence field" not in card
+
+    # ...and it still appears when they genuinely differ.
+    mixed = export_packs.render_card(_manifest(locales), {"MIT": 255})
+    assert "Note on the licence field" in mixed

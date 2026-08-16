@@ -91,11 +91,15 @@ SECTIONS = ("keywords", "builtins", "exceptions", "reserved_words")
 #: The only target this artifact covers. Asserted against every emitted row.
 TARGET = "python"
 
-#: SPDX identifier declared for the published compilation. Matches the
-#: monorepo LICENSE and ``libs/i18n/pyproject.toml``. NOTE: every shipped pack
-#: also carries a ``metadata.license`` field, and today all 255 of them say
-#: ``MIT``. :func:`check_license_consistency` surfaces that disagreement at
-#: build time rather than leaving it to be found after the dataset is public.
+#: SPDX identifier declared for the published compilation. Matches the monorepo
+#: LICENSE, ``libs/i18n/pyproject.toml``, all 51 per-pack ``pyproject.toml``
+#: files, and — since CORE-1043 — every pack's own ``metadata.license``.
+#:
+#: The in-pack field said ``MIT`` on all 255 files until then, contradicting the
+#: distribution that shipped them. :func:`check_license_consistency` keeps the
+#: two claims from drifting apart again: both are public, and a card asserting
+#: one licence over rows asserting another is not a discrepancy anyone should
+#: find after the fact.
 DECLARED_LICENSE = "apache-2.0"
 
 #: The corpus/canon distinction, in one wording. The dataset card, the site

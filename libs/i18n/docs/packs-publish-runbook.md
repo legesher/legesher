@@ -55,8 +55,10 @@ Check the summary before going further:
   exporter refuses to run if the registry and the pack tree disagree.
 * `tiers present` — `experimental` for every locale, until the ladder in
   [`pack-maturity-ladder.md`](pack-maturity-ladder.md) promotes one.
-* Any `WARNING:` line. The licence warning is expected until the in-pack
-  `metadata.license` field is reconciled.
+* Any `WARNING:` line. There should be none. The licence check compares the
+  declared compilation licence against every pack's own `metadata.license`;
+  both are public, so a disagreement is a warning rather than something to
+  discover in the card after the fact.
 
 ## Outputs
 

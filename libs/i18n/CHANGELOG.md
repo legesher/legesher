@@ -9,6 +9,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **Every shipped pack now declares `Apache-2.0` in its own
+  `metadata.license`.** All 255 pack files said `MIT`, contradicting the
+  distribution that ships them: the monorepo `LICENSE`, `libs/i18n`'s
+  `pyproject.toml`, and all 51 per-pack `pyproject.toml` files have declared
+  `Apache-2.0` throughout. The stale field was the only thing saying otherwise,
+  and it was about to become a second, conflicting public licence claim next to
+  the canon dataset card. Nothing was relicensed — the packaging metadata is
+  unchanged, and the pack exporter already defaulted new packs to `Apache-2.0`;
+  only the in-file field was out of date. A test now pins the two claims
+  together so they cannot drift apart again. [CORE-1043]
+
 ## [0.23.0] - 2026-08-16
 
 ### Added
