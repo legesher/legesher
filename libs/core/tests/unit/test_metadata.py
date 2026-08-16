@@ -819,3 +819,54 @@ class TestEdgeCases:
         # (This might log a warning depending on implementation)
         retrieved = metadata_manager.get_metadata(file_path)
         assert retrieved is not None
+
+
+class TestWindowsReplaceRace:
+    """`_write_yaml` must survive a scanner holding the destination.
+
+    CORE-1931: on Windows `os.replace` raises PermissionError while any
+    handle is open on the destination, including a transient one from
+    Defender or the indexer. `test_concurrent_history_appends_are_not_lost`
+    drives 50 read-modify-write cycles over one file and failed roughly 2
+    runs in 5 on `windows-latest` for exactly this reason.
+
+    The per-path lock is not at fault and cannot help: the conflicting
+    handle belongs to another process entirely.
+    """
+
+    def test_a_history_append_survives_a_transient_denial(
+        self, metadata_manager, temp_repo, monkeypatch
+    ):
+        import os as _os
+
+        source = temp_repo / "src.py"
+        source.write_text("print('hi')\n", encoding="utf-8")
+        metadata_manager.create_metadata(source, "en", "3.13")
+
+        real_replace = _os.replace
+        calls = {"n": 0}
+
+        def flaky(a, b):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise PermissionError(13, "Access is denied")
+            return real_replace(a, b)
+
+        monkeypatch.setattr(_os, "replace", flaky)
+        monkeypatch.setattr("legesher_core.artifact_io.time.sleep", lambda _: None)
+
+        entry: HistoryEntry = {
+            "action": "clean",
+            "from_language": "es",
+            "to_language": "en",
+            "timestamp": "2026-08-16T00:00:00Z",
+            "commit_sha": "deadbeef",
+        }
+        metadata_manager.add_history_entry(source, entry)
+
+        assert calls["n"] >= 2, "the denial should have been retried, not swallowed"
+        metadata = metadata_manager.get_metadata(source)
+        assert metadata is not None, "the metadata file survived the race"
+        assert any(
+            h["commit_sha"] == "deadbeef" for h in metadata.get("history", [])
+        ), "the appended entry must actually be on disk"

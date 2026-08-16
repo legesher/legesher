@@ -11,7 +11,11 @@ from pathlib import Path
 
 import pytest
 
-from legesher_core.artifact_io import atomic_write_text, parse_semver
+from legesher_core.artifact_io import (
+    atomic_write_text,
+    parse_semver,
+    replace_with_retry,
+)
 from legesher_core.register_map import (
     RegisterMap,
     RegisterMapDocument,
@@ -249,3 +253,118 @@ class TestFileMode:
         atomic_write_text(target, "first\n")
         atomic_write_text(target, "second\n")
         assert target.read_text(encoding="utf-8") == "second\n"
+
+
+class TestReplaceWithRetry:
+    """A transient PermissionError on the rename is not a failed write.
+
+    On Windows ``os.replace`` fails with "Access is denied" whenever any
+    handle is open on the destination — including one opened for a few
+    milliseconds by Defender, the indexer or a backup agent. The write
+    succeeded; the rename lost a race (CORE-1931). In-process locking
+    cannot help, because the conflicting handle is not in this process.
+
+    These drive the retry through an injected ``os.replace``, so the
+    Windows-only failure is reproduced on every platform — which is the
+    point, since the Windows runners are not always available.
+    """
+
+    def test_a_replace_that_succeeds_first_time_does_not_sleep(
+        self, tmp_path: Path
+    ) -> None:
+        source = tmp_path / "src"
+        source.write_text("payload", encoding="utf-8")
+        slept: list[float] = []
+
+        replace_with_retry(source, tmp_path / "dest", sleep=slept.append)
+
+        assert (tmp_path / "dest").read_text(encoding="utf-8") == "payload"
+        assert slept == [], "the happy path must not pay for the retry"
+
+    def test_it_recovers_from_a_transient_denial(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Two scanners' worth of bad luck, then the rename lands."""
+        source = tmp_path / "src"
+        source.write_text("payload", encoding="utf-8")
+        real_replace = os.replace
+        calls = {"n": 0}
+
+        def flaky(a, b):
+            calls["n"] += 1
+            if calls["n"] <= 2:
+                raise PermissionError(13, "Access is denied")
+            return real_replace(a, b)
+
+        monkeypatch.setattr(os, "replace", flaky)
+        slept: list[float] = []
+
+        replace_with_retry(source, tmp_path / "dest", sleep=slept.append)
+
+        assert (tmp_path / "dest").read_text(encoding="utf-8") == "payload"
+        assert calls["n"] == 3
+        assert slept == [0.05, 0.1], "backoff should double between attempts"
+
+    def test_a_permanent_denial_still_raises_the_original_error(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The retry must not disguise a real permission problem, and must
+        not hang trying."""
+        source = tmp_path / "src"
+        source.write_text("payload", encoding="utf-8")
+
+        def always_denied(a, b):
+            raise PermissionError(13, "Access is denied")
+
+        monkeypatch.setattr(os, "replace", always_denied)
+        slept: list[float] = []
+
+        with pytest.raises(PermissionError) as caught:
+            replace_with_retry(source, tmp_path / "dest", sleep=slept.append)
+
+        assert "Access is denied" in str(caught.value)
+        assert len(slept) == 4, "5 attempts means 4 waits, then re-raise"
+
+    def test_an_error_that_is_not_a_denial_is_not_retried(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Only the scanner-race signature is transient. A missing source
+        is a bug, and retrying it just delays the report."""
+        calls = {"n": 0}
+
+        def missing(a, b):
+            calls["n"] += 1
+            raise FileNotFoundError(2, "No such file")
+
+        monkeypatch.setattr(os, "replace", missing)
+
+        with pytest.raises(FileNotFoundError):
+            replace_with_retry(
+                tmp_path / "src", tmp_path / "dest", sleep=lambda _: None
+            )
+
+        assert calls["n"] == 1, "a non-transient error must fail fast"
+
+    def test_atomic_write_text_goes_through_the_retry(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The shared primitive must be covered, not just the metadata
+        writer — it renames into the same .legesher/ directory and is
+        exposed to exactly the same scanner."""
+        destination = tmp_path / "artifact.json"
+        real_replace = os.replace
+        calls = {"n": 0}
+
+        def flaky(a, b):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise PermissionError(13, "Access is denied")
+            return real_replace(a, b)
+
+        monkeypatch.setattr(os, "replace", flaky)
+        monkeypatch.setattr("legesher_core.artifact_io.time.sleep", lambda _: None)
+
+        atomic_write_text(destination, "contents")
+
+        assert destination.read_text(encoding="utf-8") == "contents"
+        assert calls["n"] == 2

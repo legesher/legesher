@@ -50,6 +50,7 @@ from typing import Any
 
 import yaml
 
+from .artifact_io import replace_with_retry
 from .types import FileMetadata, HistoryEntry, TranslationRecord
 
 # Configure module logger
@@ -522,8 +523,12 @@ class MetadataManager:
                     sort_keys=False,
                 )
 
-            # Atomic rename
-            temp_path.replace(path)
+            # Atomic rename, retried past a transient PermissionError. The
+            # per-path lock above serialises this process's writers, but on
+            # Windows the rename also loses to any *external* handle on the
+            # destination — a scanner or indexer opening it for a few
+            # milliseconds is enough (CORE-1931).
+            replace_with_retry(temp_path, path)
             logger.debug(f"Wrote YAML file atomically: {path}")
 
         except Exception as e:

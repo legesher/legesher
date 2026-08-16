@@ -21,9 +21,57 @@ from __future__ import annotations
 
 import os
 import tempfile
+import time
+from collections.abc import Callable
 from pathlib import Path
 
-__all__ = ["atomic_write_text", "parse_semver"]
+__all__ = ["atomic_write_text", "parse_semver", "replace_with_retry"]
+
+#: Attempts, and the first backoff, for :func:`replace_with_retry`. Five
+#: attempts with doubling backoff spans roughly 0.75s — long enough to
+#: outlast a scanner's handle on a small file, short enough that a genuine
+#: permission error is not disguised as a hang.
+_REPLACE_ATTEMPTS = 5
+_REPLACE_BACKOFF_SECONDS = 0.05
+
+
+def replace_with_retry(
+    source: Path,
+    destination: Path,
+    *,
+    attempts: int = _REPLACE_ATTEMPTS,
+    sleep: Callable[[float], None] = time.sleep,
+) -> None:
+    """``os.replace`` that survives a transient ``PermissionError``.
+
+    On Windows, ``os.replace`` fails with ``PermissionError: Access is
+    denied`` when *any* handle is open on the destination — including a
+    handle we do not own and cannot prevent, opened for a few milliseconds
+    by Defender, the search indexer or a backup agent. The write itself is
+    fine; the rename lost a race with a scanner (CORE-1931).
+
+    In-process locking cannot help, because the conflicting handle is
+    outside the process. Retrying can, because the handle is transient.
+
+    Not guarded by ``sys.platform``, deliberately. ``os.replace`` on POSIX
+    raises ``PermissionError`` only for a genuine permission problem, which
+    exhausts the attempts and re-raises with the original error — so the
+    guard would buy nothing, while its absence lets this be exercised on
+    any platform. That matters here: the bug is Windows-only and the
+    Windows runners are not always available to prove a fix.
+
+    *sleep* is injectable so tests do not spend real time backing off.
+    """
+    for attempt in range(1, attempts + 1):
+        try:
+            os.replace(source, destination)
+            return
+        except PermissionError:
+            if attempt == attempts:
+                # Out of attempts: this is not the transient case. Let the
+                # original error through rather than dressing it up.
+                raise
+            sleep(_REPLACE_BACKOFF_SECONDS * 2 ** (attempt - 1))
 
 
 def _fsync_directory(directory: Path) -> None:
@@ -104,7 +152,7 @@ def atomic_write_text(path: Path, content: str, *, encoding: str = "utf-8") -> N
             handle.flush()
             os.fsync(handle.fileno())
         _restore_mode(temp_path, path)
-        os.replace(temp_path, path)
+        replace_with_retry(temp_path, path)
     except BaseException:
         # Includes KeyboardInterrupt/SystemExit on purpose: an abandoned
         # temp file in .legesher/ would show up in git status.

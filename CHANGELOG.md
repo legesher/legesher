@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **core**: saving metadata or any `.legesher/` artifact could fail on Windows
+  for a reason that had nothing to do with the write. `os.replace` raises
+  `PermissionError: Access is denied` while *any* handle is open on the
+  destination — including one held for a few milliseconds by Defender, the
+  search indexer or a backup agent. The file was written correctly; the rename
+  lost a race with a scanner. No amount of in-process locking helps, because
+  the conflicting handle belongs to another process. The rename is now retried
+  with a doubling backoff over roughly 0.75s, in one shared helper used by both
+  the metadata writer and `atomic_write_text`, so every artifact in the family
+  is covered rather than just the one where it was noticed. A genuine
+  permission error still surfaces as itself, unchanged, once the attempts are
+  spent. [CORE-1931]
 - **i18n**, **cli**: both shipped CLIs and the language-pack validator crashed
   on Windows while reporting their own results. Windows Python does not default
   `sys.stdout` to UTF-8; piped — which is what a pre-commit hook, a subprocess
