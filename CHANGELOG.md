@@ -9,6 +9,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **i18n**, **cli**: both shipped CLIs and the language-pack validator crashed
+  on Windows while reporting their own results. Windows Python does not default
+  `sys.stdout` to UTF-8; piped — which is what a pre-commit hook, a subprocess
+  and a CI step all hand it — it falls back to the machine's ANSI code page,
+  where the status markers these tools print (`✅`, `❌`, `→`) have no mapping.
+  `legesher-i18n validate` and the pack validator therefore ran every check,
+  passed, then died on the line that says so. A valid pack exited 1 with an
+  empty stdout, so the commit hook reported it invalid; an invalid one printed
+  no errors at all, because the same crash landed on the line that prints them
+  — leaving a contributor with a traceback about a code page instead of the
+  collision they needed to fix. Entry points now reconfigure stdio to UTF-8
+  with `errors="replace"`, so a console that genuinely cannot render a glyph
+  degrades to `?` rather than aborting: no output statement should ever be the
+  thing that kills the process. [CORE-1927]
+
 ## [0.23.0] - 2026-08-16
 
 > **On the version number.** This release carries breaking changes and is

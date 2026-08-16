@@ -20,7 +20,11 @@ dependencies = [
     # semantic-release (major_on_zero = true) moves 0.x to 1.0 on a
     # breaking change.
     "legesher-core[treesitter]>=0.22.0,<1.0.0",
-    "legesher-i18n>=0.22.0,<1.0.0",
+    # 0.23.0, not 0.22.0: `cli/main.py` imports `legesher_i18n.console_encoding`,
+    # a module that does not exist in 0.22.0 (CORE-1927). The floor states the
+    # minimum API this package uses, and resolving against 0.22.0 would kill the
+    # `legesher` CLI with an ImportError before it parsed an argument.
+    "legesher-i18n>=0.23.0,<1.0.0",
     "legesher-runtime>=0.1.0,<1.0.0",
 ]
 name = "legesher"

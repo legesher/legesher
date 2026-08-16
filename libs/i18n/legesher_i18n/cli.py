@@ -22,6 +22,7 @@ from rich.progress import (
 )
 from rich.table import Table
 
+from .console_encoding import ensure_utf8_stdio
 from .exceptions import PackValidationError
 from .pack_loader import LanguagePackLoader, LanguagePack
 from .schema_validator import SchemaValidator
@@ -36,6 +37,14 @@ _DB_PATH_DEFAULT_HELP = (
     "bundled db in source checkouts; "
     "~/.legesher/translations.db in installed environments"
 )
+
+# Before anything constructs a Console or prints: on Windows, stdout piped
+# to anything other than a terminal defaults to the ANSI code page, and this
+# CLI's status output ("✅ Schema validation passed", "❌ Validation failed")
+# is outside it. `legesher-i18n validate` died with UnicodeEncodeError rather
+# than reporting its verdict (CORE-1927). Rich does not rescue this — it
+# writes through the stream's own encoding.
+ensure_utf8_stdio()
 
 # Global console instance - can be replaced with quiet version
 console = Console()

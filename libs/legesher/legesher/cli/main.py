@@ -12,6 +12,8 @@ from importlib.metadata import version as get_version
 
 import click
 
+from legesher_i18n.console_encoding import ensure_utf8_stdio
+
 from legesher.cli import config_cmd
 from legesher.cli import git as git_module
 from legesher.cli import init as init_module
@@ -19,6 +21,14 @@ from legesher.cli import map_cmd
 from legesher.cli import metadata as metadata_module
 from legesher.cli import run as run_module
 from legesher.cli import translate
+
+
+# Every subcommand of this group prints through `rich`, and several use box
+# and status glyphs (`━`, `✗`) that a Windows ANSI code page cannot encode.
+# Done once here rather than per-module so a new subcommand inherits it —
+# and a tool whose entire subject is non-English text should never be the
+# thing that cannot print non-English text (CORE-1927).
+ensure_utf8_stdio()
 
 
 def _get_legesher_version() -> str:

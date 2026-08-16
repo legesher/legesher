@@ -43,6 +43,33 @@ from pathlib import Path
 import re
 import yaml
 
+
+def _ensure_utf8_stdio() -> None:
+    """Make stdout safe for the status markers below (CORE-1927).
+
+    Duplicated from ``legesher_i18n.console_encoding`` on purpose: this
+    script is a pre-commit hook and stays importable with nothing but the
+    standard library plus PyYAML, so a contributor gets pack validation
+    without a working package install. Adding an intra-repo import here to
+    save eight lines would trade that away.
+
+    Without it, Windows pipes stdout through the ANSI code page and every
+    ``print`` below carrying a status marker raises UnicodeEncodeError —
+    killing the script mid-report, so a valid pack exits 1 with empty
+    stdout and an invalid one prints no errors at all.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):
+            pass
+
+
+_ensure_utf8_stdio()
+
 # Cross-partition collision detection is Python-specific: CPython's ``tokenize``
 # dispatches tokens flat, so a value shared across partitions round-trips to the
 # wrong token (CORE-710). Acorn-style targets (JavaScript) are category-aware, so
