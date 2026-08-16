@@ -36,6 +36,10 @@ __all__ = [
     "ConstructMapping",
     "ExplainMaterial",
     "FileMapEntry",
+    "IdentifierConflict",
+    "IdentifierProposal",
+    "IdentifierValidationResult",
+    "IdentifierVerdict",
     "KeywordMappings",
     "LookupResult",
     "SourceFile",
@@ -53,6 +57,10 @@ SOURCE_MAX_CHARS = 2_000_000
 
 #: Length bound for language-code fields (registry pattern is the gate).
 LANG_CODE_MAX_LENGTH = 16
+
+#: Length bound for identifier fields. Generous next to any real name —
+#: a sanity bound on input, not a naming rule.
+IDENTIFIER_MAX_LENGTH = 512
 
 
 class ToolResult(BaseModel):
@@ -200,6 +208,93 @@ class CodebaseMapResult(ToolResult):
     files: list[FileMapEntry]
     summary: CodebaseMapSummary
     translated_files: list[TranslatedFile] | None = None
+
+
+class IdentifierProposal(BaseModel):
+    """One proposed identifier translation, awaiting validation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source: str = Field(
+        min_length=1,
+        max_length=IDENTIFIER_MAX_LENGTH,
+        description="The canonical (source-language) identifier, e.g. 'calculate_tax'.",
+    )
+    translation: str = Field(
+        min_length=1,
+        max_length=IDENTIFIER_MAX_LENGTH,
+        description="The proposed rendering in the target language.",
+    )
+
+
+class IdentifierConflict(ToolResult):
+    """One reason a proposal is not safe to record."""
+
+    kind: Literal["malformed", "unsafe_text", "reserved_term", "drift", "collision"] = Field(
+        description=(
+            "malformed — not a valid Python identifier; "
+            "unsafe_text — violates the Unicode contract (bidi controls, "
+            "invisibles); "
+            "reserved_term — the translation is a name the pack has claimed; "
+            "drift — this source already has a different translation "
+            "(one concept, two terms); "
+            "collision — this translation already belongs to a different "
+            "source (two concepts, one term)."
+        )
+    )
+    against: Literal["python", "unicode_contract", "pack", "glossary", "batch"] = Field(
+        description="What the translation was checked against."
+    )
+    detail: str = Field(
+        description=(
+            "For reserved_term, the pack entry taken, e.g. 'keyword:def'. "
+            "For malformed/unsafe_text, why it was rejected. Otherwise the "
+            "other side of the conflict — the competing translation (drift) "
+            "or the competing source identifier (collision)."
+        )
+    )
+
+
+class IdentifierVerdict(ToolResult):
+    """The verdict for one proposal."""
+
+    source: str
+    translation: str = Field(
+        description=(
+            "The rendering to record — NFC-normalized, and settled to the "
+            "glossary's existing spelling when the proposal was a variant of "
+            "it. Use this value, not the one you proposed."
+        )
+    )
+    proposed: str | None = Field(
+        default=None,
+        description=(
+            "Set only when `translation` differs from what was proposed — "
+            "echoes the original so the substitution is visible rather than "
+            "silent. Write `translation` to the glossary and use it in code."
+        ),
+    )
+    ok: bool = Field(description="True when no conflicts were found — safe to record.")
+    conflicts: list[IdentifierConflict] = Field(default_factory=list)
+
+
+class IdentifierValidationResult(ToolResult):
+    """Per-proposal verdicts plus the glossary entries that are safe to record."""
+
+    target_lang: str
+    python_version: PythonVersion
+    results: list[IdentifierVerdict]
+    accepted: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "The conflict-free proposals as a source -> translation mapping, "
+            "ready to merge into the project glossary. The caller persists it; "
+            "this server writes nothing. Both sides are NFC-normalized per the "
+            "storage contract — so if your glossary holds a source key in a "
+            "different normal form, merge on the normalized key rather than "
+            "adding this one alongside it."
+        ),
+    )
 
 
 class SourceFile(BaseModel):

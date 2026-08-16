@@ -1,4 +1,4 @@
-"""The advertised surface: five tools, two resources, three prompts, stdio."""
+"""The advertised surface: six tools, two resources, three prompts, stdio."""
 
 from __future__ import annotations
 
@@ -16,10 +16,11 @@ EXPECTED_TOOLS = {
     "explain_in_language",
     "lookup_keyword_mapping",
     "map_existing_codebase",
+    "validate_identifier_translations",
 }
 
 
-async def test_exactly_five_coarse_tools(client: ClientSession) -> None:
+async def test_exactly_six_coarse_tools(client: ClientSession) -> None:
     result = await client.list_tools()
     assert {tool.name for tool in result.tools} == EXPECTED_TOOLS
 
@@ -43,7 +44,7 @@ async def test_catalog_resource_and_terms_templates_listed(client: ClientSession
 
 
 async def test_every_tool_is_annotated_read_only(client: ClientSession) -> None:
-    """The five tools declare the posture they actually have.
+    """The six tools declare the posture they actually have.
 
     Read-only, idempotent, closed-world (no network) — asserted here so a
     future tool that writes, mutates, or reaches outside the local packs

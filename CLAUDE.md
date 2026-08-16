@@ -448,6 +448,57 @@ The `legesher-i18n` package includes:
 - Editor integrations isolated in their respective packages
 - Shared utilities and types in `libs/core/`
 
+### One contract, one implementation
+
+This repo exposes the same capabilities through several surfaces — the CLI,
+the MCP server, the hosted REST API, the VS Code extension — over a shared
+set of artifacts: language packs, `.legesher/identifier_map.json`, register
+maps, the translations DB. When a new surface needs to validate, read, or
+write one of those, the check almost always exists somewhere already.
+
+**Prefer finding the existing owner over writing a second implementation.**
+
+A useful question before adding any validation or normalization: *does
+another surface already write this artifact, and what does it enforce when
+it does?* If the answer is yes, that surface owns the contract. Import its
+implementation — promoting a helper to public API if needed — rather than
+re-deriving the rules from the same underlying data.
+
+The failure mode is specific and worth naming, because it does not look
+like a bug. Two implementations of one contract drift apart, and the
+weaker one starts accepting input the stricter one rejects. Nothing
+crashes. The weaker surface reports success, callers are told to trust it,
+and the rejection surfaces later somewhere else — or worse, never, and the
+bad value lands in an artifact. **A validator that is weaker than the one
+guarding the same file is worse than no validator, because it converts
+"unchecked" into "checked and fine".**
+
+Signals that you are about to do this:
+
+- You are re-deriving rules from a pack, a schema, or a map that some other
+  module already reads for the same purpose.
+- You are writing a comparison over user-visible text and reaching for
+  `==`. Text comparison in this repo is `compare_key` — NFKC + casefold,
+  storage NFC. Raw equality is the bug, not the baseline.
+- You are validating an identifier without `IdentifierValidator` or
+  `unicode_guard.scan_text`.
+- Your docstring is about to promise a guarantee. Check that the code
+  delivers the whole of it, then say exactly that much and no more.
+
+When reuse genuinely is not possible — a different runtime, a different
+repo, a network boundary — pin the two implementations together with
+**shared test vectors** rather than parallel test suites, so divergence
+fails a test instead of reaching a user.
+
+Worked example: `validate_identifier_translations` in `libs/mcp` first
+re-derived its checks and accepted malformed identifiers, invisible
+codepoints, case variants of pack terms, and decomposed spellings — every
+one of which `register_map.correction` already rejected for the register
+map's embedded identifier entries. Different artifact, same contract:
+what makes an identifier rendering legal in a language does not change
+with the file it lands in. The fix was deletion, not addition — reuse
+`IdentifierValidator`, `scan_text`, and `compare_key`.
+
 ### Release Process
 
 When bumping package versions or creating a release, follow these steps:

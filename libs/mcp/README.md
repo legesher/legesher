@@ -2,7 +2,7 @@
 
 The Legesher [Model Context Protocol](https://modelcontextprotocol.io) server:
 the engine's translation capability inside every MCP-capable client — Claude,
-IDE assistants, agent frameworks — as five coarse, task-shaped tools.
+IDE assistants, agent frameworks — as six coarse, task-shaped tools.
 
 **Free forever. Apache-2.0. No telemetry.** This server runs entirely against
 the locally installed Legesher engine: it makes no network calls, requires no
@@ -18,6 +18,7 @@ nothing else.
 | `explain_in_language` | Return the *engine facts* an assistant needs to explain code in your language: construct-by-construct keyword mappings, a static validation result, and (optionally) the translated source. The model writes the prose; the tool never does. |
 | `lookup_keyword_mapping` | Quick-reference lookup: how do specific terms (or the full mapping) render in a language. |
 | `map_existing_codebase` | The legibility report: given a set of files, what would translating this codebase into a language look like — per-file coverage, unmapped constructs, and optionally the translated files. |
+| `validate_identifier_translations` | Check proposed identifier translations before recording them: malformed identifiers, unsafe text, names the pack has reserved, drift (one concept, two terms) and collision (two concepts, one term) — against both your existing glossary and the rest of the batch. Comparison is NFKC+casefold, so case variants and decomposed forms count as the same term. Returns the conflict-free subset, NFC-normalized and ready to record. |
 
 Notes on shape, straight from the design:
 
@@ -165,8 +166,15 @@ policy and playbook half for agent sessions:
 - **No network.** Every tool call is served by the local engine.
 - **No persistence.** Submitted source is processed in memory; file *paths*
   passed to `map_existing_codebase` are report labels — echoed back to you,
-  never logged, never used to touch the filesystem.
-- **Declared, not just claimed.** All five tools carry MCP annotations
+  never logged, never used to touch the filesystem. This is why
+  `validate_identifier_translations` takes your glossary as *content* and
+  hands back the accepted entries rather than saving them: recording is
+  yours to do, whether that is `.legesher/identifier_map.json` in your repo
+  or the `legesher` CLI, which already maintains that file. A durable
+  glossary that outlives the session and is shared across repos and
+  teammates is a system of record, and belongs behind the hosted API — not
+  in a local subprocess.
+- **Declared, not just claimed.** All six tools carry MCP annotations
   saying so — `readOnlyHint: true`, `idempotentHint: true`,
   `destructiveHint: false`, `openWorldHint: false`. Clients that read the
   hints (Claude Code among them) can reduce or skip approval prompts,

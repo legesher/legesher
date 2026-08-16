@@ -1,8 +1,8 @@
-"""The Legesher MCP server: five coarse tools, resources, and prompts.
+"""The Legesher MCP server: six coarse tools, resources, and prompts.
 
 Design (CORE-1165 architecture doc, §2/§5):
 
-- Five task-shaped tools instead of an endpoint mirror; catalog and
+- Task-shaped tools instead of an endpoint mirror; catalog and
   dictionary reads are resources, not tools.
 - ``explain_in_language`` returns deterministic engine facts — the calling
   model composes the prose.
@@ -21,10 +21,15 @@ from __future__ import annotations
 
 import json
 import os
+import unicodedata
 from collections.abc import Sequence
 from dataclasses import asdict
 from typing import Annotated, Any, Literal, cast, get_args
 
+from legesher_core.register_map.correction import compare_key
+from legesher_core.tree_sitter.identifier_map import IdentifierMap
+from legesher_core.tree_sitter.identifier_validator import IdentifierValidator
+from legesher_core.unicode_guard import scan_text
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import ContentBlock, ToolAnnotations
@@ -49,6 +54,10 @@ from .schemas import (
     ConstructMapping,
     ExplainMaterial,
     FileMapEntry,
+    IdentifierConflict,
+    IdentifierProposal,
+    IdentifierValidationResult,
+    IdentifierVerdict,
     KeywordMappings,
     LookupResult,
     PythonVersion,
@@ -64,9 +73,11 @@ Legesher translates Python between natural languages via reviewed language
 packs. Use translate_to_native to make code readable in a language,
 translate_to_source to get the English-keyword form toolchains understand,
 explain_in_language for the engine facts behind an explanation (you write
-the prose), lookup_keyword_mapping for quick term lookups, and
-map_existing_codebase for a repo-level legibility report. The language
-catalog is the legesher://languages resource; full dictionaries are
+the prose), lookup_keyword_mapping for quick term lookups,
+validate_identifier_translations to check identifier names you invented
+before recording them, and map_existing_codebase for a repo-level
+legibility report. The language catalog is the legesher://languages
+resource; full dictionaries are
 legesher://languages/{lang}/terms. X→Y translation pivots through English
 (results say so via `pivoted`). Everything runs locally: no network, no
 telemetry."""
@@ -453,6 +464,182 @@ def lookup_keyword_mapping(
         python_version=python_version,
         mappings=mappings,
         unmatched_terms=unmatched,
+    )
+
+
+#: Where a drift or collision was found. Narrower than IdentifierConflict's
+#: full `against` set, because only these two can own a prior rendering.
+_ConflictOrigin = Literal["glossary", "batch"]
+
+
+def _nfc(text: str) -> str:
+    """The storage form. Values are stored NFC and compared NFKC+fold."""
+    return unicodedata.normalize("NFC", text)
+
+
+def _pack_collision(candidate: str, pack: Any) -> str | None:
+    """The pack entry ``candidate`` takes, or None.
+
+    Mirrors ``register_map.correction._validate_pack`` so the MCP tool and
+    the CLI write path agree about what collides: the exact sweep first
+    (CORE-710), then NFKC+casefold, which catches case variants and
+    decomposed forms an equality check misses. ``members`` is in the domain
+    because the MLCP members partition is an identifier class (CORE-1372) —
+    a no-op for Python, wrong for JS the moment the section is populated.
+    """
+    exact = IdentifierMap().validate_against_pack(candidate, pack)
+    if exact is not None:
+        return exact
+    key = compare_key(candidate)
+    for section, mapping in (
+        ("keyword", pack.keywords),
+        ("builtin", pack.builtins),
+        ("exception", pack.exceptions),
+        ("reserved_word", pack.reserved_words),
+        ("member", getattr(pack, "members", {}) or {}),
+    ):
+        for source_key, target_value in mapping.items():
+            if compare_key(target_value) == key:
+                return f"{section}:{source_key}"
+    return None
+
+
+@mcp.tool(annotations=_READ_ONLY)
+def validate_identifier_translations(
+    proposals: Annotated[
+        list[IdentifierProposal],
+        Field(
+            min_length=1,
+            description="Proposed identifier translations to check, as source/translation pairs.",
+        ),
+    ],
+    target_lang: _LangParam,
+    glossary: Annotated[
+        dict[str, str] | None,
+        Field(
+            description=(
+                "The project's existing identifier translations for this "
+                "one language, flat: {source_identifier: translation}. If "
+                "your repo has .legesher/identifier_map.json, that file is "
+                "nested by language — send the slice for target_lang (what "
+                "IdentifierMap.get_glossary(target_lang) returns), not the "
+                "file verbatim. Pass it as content: the server never reads "
+                "your filesystem. Omit on a first pass."
+            ),
+        ),
+    ] = None,
+    python_version: PythonVersion = DEFAULT_PYTHON_VERSION,
+) -> IdentifierValidationResult:
+    """Check proposed identifier translations before you record them.
+
+    Packs make keywords deterministic; identifiers have no pack, so this is
+    the guarantee they get instead. Each proposal is checked for a name the
+    pack has reserved, for drift (one concept acquiring a second term) and
+    for collision (one term acquiring a second concept) — against both the
+    existing glossary and the rest of the batch.
+
+    Returns a verdict per proposal plus ``accepted``, the conflict-free
+    subset as a mapping ready to merge into the project glossary. Recording
+    it is the caller's to do: this server writes nothing.
+    """
+    engine = get_engine()
+    try:
+        pack = engine.load_pack(target_lang, python_version)
+    except EngineError as exc:
+        raise _tool_error(exc) from exc
+
+    # Both sides are normalized: an NFD source key would otherwise never match
+    # an NFC proposal, so drift would go unreported and the merged glossary
+    # would gain a second key for one concept.
+    established = {_nfc(source): _nfc(term) for source, term in (glossary or {}).items()}
+    # One concept, one term — in both directions, each side carrying where it
+    # came from. Accepted proposals join as the batch is walked, so a batch
+    # with no glossary behind it still has to be self-consistent. Comparison
+    # is NFKC+casefold (compare_key), so an NFD twin or a case variant is the
+    # same term, not a second one.
+    translation_of: dict[str, tuple[str, _ConflictOrigin]] = {
+        source: (term, "glossary") for source, term in established.items()
+    }
+    owners_of: dict[str, tuple[set[str], _ConflictOrigin]] = {}
+    for source, term in established.items():
+        owners, _origin = owners_of.setdefault(compare_key(term), (set(), "glossary"))
+        owners.add(source)
+
+    verdicts: list[IdentifierVerdict] = []
+    accepted: dict[str, str] = {}
+
+    for proposal in proposals:
+        # Storage is NFC; every check below runs on the stored form.
+        source = _nfc(proposal.source)
+        candidate = _nfc(proposal.translation)
+
+        # A variant spelling of this source's own established term is the
+        # same term under the contract, so settle on the spelling already
+        # recorded. Taking the proposal's instead would let a merge quietly
+        # rewrite a settled entry to a case or fullwidth variant — precisely
+        # the confusable NFKC exists to keep out of storage.
+        prior = translation_of.get(source)
+        if prior is not None and compare_key(prior[0]) == compare_key(candidate):
+            candidate = prior[0]
+
+        conflicts: list[IdentifierConflict] = []
+
+        if not IdentifierValidator().is_valid(candidate):
+            conflicts.append(
+                IdentifierConflict(
+                    kind="malformed",
+                    against="python",
+                    detail="must satisfy str.isidentifier() and not be a Python keyword",
+                )
+            )
+
+        issues = scan_text(candidate)
+        if issues:
+            conflicts.append(
+                IdentifierConflict(
+                    kind="unsafe_text",
+                    against="unicode_contract",
+                    detail="; ".join(
+                        f"{issue.codepoint} {issue.char_name} at {issue.offset}" for issue in issues
+                    ),
+                )
+            )
+
+        reserved = _pack_collision(candidate, pack)
+        if reserved is not None:
+            conflicts.append(
+                IdentifierConflict(kind="reserved_term", against="pack", detail=reserved)
+            )
+
+        if prior is not None and compare_key(prior[0]) != compare_key(candidate):
+            conflicts.append(IdentifierConflict(kind="drift", against=prior[1], detail=prior[0]))
+
+        owned = owners_of.get(compare_key(candidate))
+        if owned is not None and source not in owned[0]:
+            conflicts.append(
+                IdentifierConflict(kind="collision", against=owned[1], detail=sorted(owned[0])[0])
+            )
+
+        verdicts.append(
+            IdentifierVerdict(
+                source=source,
+                translation=candidate,
+                proposed=(proposal.translation if proposal.translation != candidate else None),
+                ok=not conflicts,
+                conflicts=conflicts,
+            )
+        )
+        if not conflicts:
+            accepted[source] = candidate
+            translation_of.setdefault(source, (candidate, "batch"))
+            owners, _origin = owners_of.setdefault(compare_key(candidate), (set(), "batch"))
+            owners.add(source)
+
+    return IdentifierValidationResult(
+        target_lang=target_lang,
+        python_version=python_version,
+        results=verdicts,
+        accepted=accepted,
     )
 
 

@@ -35,6 +35,7 @@ a builtin's rendering is how localized code silently breaks.
 | Canonical form of native code (to run, diff, or ship upstream) | `translate_to_source` |
 | Engine facts to explain code or an error in the user's language | `explain_in_language` — it returns construct mappings + a static validation result; you write the prose |
 | How specific terms render in a language | `lookup_keyword_mapping` |
+| Whether the identifier names you invented are safe to use | `validate_identifier_translations` — before you write them, not after |
 | The full dictionary for a language | resource `legesher://languages/{lang}/terms` |
 | Coverage picture of an existing repo | `map_existing_codebase` |
 
@@ -66,6 +67,17 @@ stdio server makes no network calls.
 - **Pack terms are reserved.** Never use a word the pack claims for a
   keyword, builtin, or exception as an identifier — shadowing is silent
   and valid-looking. When in doubt, `lookup_keyword_mapping` the candidate.
+- **Don't check by eye — call the tool.** Pass every new name to
+  `validate_identifier_translations` along with the existing glossary. It
+  catches five failures at once: a malformed identifier, unsafe text
+  (invisibles, bidi controls), a reserved pack term, *drift* (this concept
+  already has a different term) and *collision* (this term already belongs
+  to another concept). Case variants and decomposed forms count as the
+  same term, so `DEFINIR` collides with `definir`. Batch the whole file's
+  new names into one call. What comes back in `accepted` is what you write
+  into the glossary — already normalized, and the tool does not save it for
+  you, because the server never writes. Anything with a conflict gets
+  renamed and re-checked, never recorded.
 - **Never "correct" localized names to English.** Localized identifiers
   are the repository working as intended.
 

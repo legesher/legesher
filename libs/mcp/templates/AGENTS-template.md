@@ -41,7 +41,9 @@ tools translate between the two; both forms are the same program.
    introduce a new identifier translation, add it to the glossary in the
    same change — never invent a synonym for a concept that already has a
    term, and never reuse a word the language pack already claims for a
-   keyword or builtin.
+   keyword or builtin. Do not judge this by eye: pass new names through
+   `validate_identifier_translations` with the existing glossary, and
+   record only what comes back accepted.
 5. **Do not "fix" non-English identifiers to English.** Localized code is
    this repository working as intended, not a defect.
 6. **Comments and docstrings** follow the declared language. User-facing

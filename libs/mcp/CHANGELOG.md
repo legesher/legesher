@@ -11,6 +11,37 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- `validate_identifier_translations` — the deterministic layer for the part
+  of localized code that has no pack. Keywords are dictionary lookups;
+  identifiers are invented by the model, so this is the check they get
+  instead. Given proposed source/translation pairs it reports five
+  failures: `malformed` (not a valid Python identifier), `unsafe_text`
+  (bidi controls and invisibles, via the shared Unicode guard),
+  `reserved_term` (a name the pack claims — exact *and* NFKC+casefold, so
+  a case variant of `definir` is caught too), *drift* — one concept
+  acquiring a second term — and *collision* — one term acquiring a second
+  concept. Drift and collision are checked against the existing glossary
+  and against the rest of the batch, so a first session with no glossary
+  yet still has to be self-consistent, and comparison is NFKC+casefold so
+  a decomposed twin is the same term rather than a second one. The
+  conflict-free pairs come back in `accepted`, NFC-normalized per the
+  storage contract.
+
+  The pack, Unicode, and well-formedness checks are the ones
+  `register_map.correction` already applies to register-map identifier
+  entries, reusing `IdentifierValidator`, the Unicode guard, and
+  `compare_key` rather than re-deriving them — a different artifact, but
+  the same question about what makes a rendering legal. The tool sees only
+  what you pass it, so it cannot speak for checks that need the register
+  map itself: homonyms and retired aliases stay `legesher map --edit`'s to
+  catch.
+
+  Recording is the caller's: the server takes the glossary as content,
+  returns a mapping, and writes nothing — the local server's no-filesystem
+  posture is unchanged and all six tools remain read-only. In a repo, that
+  file is `.legesher/identifier_map.json`, which the `legesher` CLI already
+  maintains. [CORE-1670]
+
 - Independent release train. `legesher-mcp` now versions itself: its own
   `[tool.semantic_release]` config, `mcp-v{version}` tags, and
   `release-mcp.yml` triggered by changes under `libs/mcp/`. It no longer
