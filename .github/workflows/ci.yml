@@ -84,8 +84,30 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      # `pre-commit/action@v3.0.1` inlined (CORE-1924). We pinned our own
+      # reference to it, but its `action.yml` calls `actions/cache@v4` — an
+      # unpinned ref inside someone else's action, which nothing on our side
+      # can pin. The org policy resolves transitively and rejects it at job
+      # dispatch, so `Lint & Validate` died at `Set up job` on every run from
+      # the moment SHA pinning was re-enabled:
+      #
+      #   The action actions/cache@v4 is not allowed in legesher/legesher-next
+      #   because all actions must be pinned to a full-length commit SHA.
+      #
+      # The action is four steps and two of them (install pre-commit, freeze)
+      # are redundant here — `uv sync` above already installs the pinned
+      # `pre-commit>=4.6.0` from the workspace. Inlining costs less than
+      # vendoring a fork, drops a supply-chain hop from the job that runs
+      # every hook, and runs the version the lockfile chose rather than
+      # whatever `pip install pre-commit` resolves to.
+      - name: Cache pre-commit environments
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
       - name: Run pre-commit
-        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+        run: uv run pre-commit run --show-diff-on-failure --color=always --all-files
 
   test:
     name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
