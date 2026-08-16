@@ -175,11 +175,26 @@ class TestParseSemver:
         assert not hasattr(tm_model, "_parse_semver")
 
 
+#: Windows has no Unix permission bits. ``os.chmod`` there honours exactly
+#: one thing — the read-only attribute — so every writable file reports
+#: ``0o666`` back through ``stat()`` and a ``chmod(0o644)`` is a no-op the
+#: following assertion cannot survive. The *behaviour* these tests cover is
+#: POSIX-only too: there is no mode on Windows for a temp+replace to
+#: tighten. The Windows-meaningful half is asserted separately below
+#: (CORE-1919).
+posix_modes_only = pytest.mark.skipif(
+    os.name == "nt",
+    reason="Windows os.chmod only honours the read-only bit; there are no "
+    "permission bits to preserve",
+)
+
+
 class TestFileMode:
     """mkstemp creates 0600 and os.replace carries the temp file's mode
     onto the destination — a plain temp+replace silently tightens a
     world-readable artifact to owner-only on its first save."""
 
+    @posix_modes_only
     def test_existing_mode_is_preserved(self, tmp_path):
         target = tmp_path / "artifact.json"
         target.write_text("old\n", encoding="utf-8")
@@ -187,6 +202,7 @@ class TestFileMode:
         atomic_write_text(target, "new\n")
         assert target.stat().st_mode & 0o777 == 0o644
 
+    @posix_modes_only
     def test_an_unusual_existing_mode_is_preserved(self, tmp_path):
         target = tmp_path / "artifact.json"
         target.write_text("old\n", encoding="utf-8")
@@ -195,15 +211,41 @@ class TestFileMode:
         assert target.stat().st_mode & 0o777 == 0o664
 
     def test_a_new_file_gets_the_umask_default_not_0600(self, tmp_path):
+        """Unguarded deliberately — this one already passes on Windows,
+        where a new file reports 0o666 and the umask is 0."""
         target = tmp_path / "artifact.json"
         atomic_write_text(target, "x\n")
         umask = os.umask(0)
         os.umask(umask)
         assert target.stat().st_mode & 0o777 == 0o666 & ~umask
 
+    @posix_modes_only
     def test_register_map_save_does_not_tighten_permissions(self, tmp_path):
         path = tmp_path / ".legesher" / "register_map.json"
         _register_document().save(path)
         os.chmod(path, 0o644)
         _register_document().save(path)
         assert path.stat().st_mode & 0o777 == 0o644
+
+    def test_replacing_an_existing_artifact_works(self, tmp_path):
+        """``os.replace`` over a destination that already exists.
+
+        Narrow on purpose. An earlier draft of this test asserted
+        ``os.access(target, os.W_OK)`` and claimed to cover the Windows half
+        of "does not tighten permissions" — it did not. ``mkstemp`` opens at
+        ``0o600``, which still has the owner-write bit, so the assertion
+        holds even when the mode-restoring code is deleted outright. Two
+        mutations proved it green: removing ``_restore_mode``, and actively
+        tightening to ``0o600`` on every write. A test that cannot fail for
+        the bug it names is worse than no test, because it reads as coverage.
+
+        What is left is the one thing here with real platform signal, and it
+        is not about permissions: ``TestAtomicWrite.test_writes_content``
+        only ever writes to a fresh path, and on Windows replacing an
+        *existing* file is the case that separates ``os.replace`` from
+        ``os.rename`` — the latter fails there.
+        """
+        target = tmp_path / "artifact.json"
+        atomic_write_text(target, "first\n")
+        atomic_write_text(target, "second\n")
+        assert target.read_text(encoding="utf-8") == "second\n"
