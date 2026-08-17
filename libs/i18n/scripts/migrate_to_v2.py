@@ -230,7 +230,8 @@ ENDORSING_SOURCES: frozenset[str] = frozenset({"community_review"})
 #: TWO obligations. Two of them are OTHER PROJECTS' work and are the reason
 #: CORE-1720 exists: under the old cut they landed in `import` alongside our own
 #: packs, so the published corpus never said a third-party licence applied.
-#: Their licences are verified (2026-08-05) and carried in the dataset card:
+#: Their licences are verified (2026-08-05); the card credits them and the
+#: NOTICE file beside it retains their text:
 #: UniversalPython is Apache-2.0, Latino is MIT.
 NON_HUMAN_CREATED_BY: dict[str, str] = {
     "universal_python": "upstream",  # 24 rows (ur) — UniversalPython, Apache-2.0
@@ -593,9 +594,13 @@ LEGACY_COMMUNITY_REPO = "https://github.com/legesher/legesher-translations"
 #:
 #: This drives the pre-publish checklist, which names each project and its terms
 #: so an unattributed upstream can never again reach a push unnoticed. The
-#: VERBATIM notices live in the dataset card (`export_corpus.DATASET_CARD`) --
-#: that is the artifact a consumer actually receives, and a notice that only
-#: exists in a build log satisfies nothing.
+#: VERBATIM notices live in `export_corpus.NOTICE_FILE`, shipped beside the
+#: dataset card and linked from it -- a notice that only exists in a build log
+#: satisfies nothing, so it has to travel with what a consumer receives.
+#:
+#: ADDING A PROJECT HERE IS HALF THE WORK: its notice must be added to
+#: `NOTICE_FILE` and its row to the card's Upstream projects table in the same
+#: change. A test asserts every project named here appears in both.
 UPSTREAM_PROJECTS: dict[str, tuple[str, str, str]] = {
     LEGACY_COMMUNITY_SOURCE_DETAIL: (
         "legesher-translations",
@@ -653,13 +658,16 @@ PRE-PUBLISH CHECKLIST (the first HF push freezes all of this)
      CONTRIBUTOR_IDENTITY_MAP). Publishing it would either half-count or
      double-count real people. BLOCKER: Madison must split it.
 
-  3. UPSTREAM ATTRIBUTION.  [manual -- the dataset card]
+  3. UPSTREAM ATTRIBUTION.  [manual -- the card and its NOTICE]
      Rows marked `source='upstream'` are ANOTHER PROJECT'S WORK. Three projects,
      all verified 2026-08-05, each named with its row count in the ledger above
      and its terms in the ATTRIBUTION block printed before this checklist.
-     Their VERBATIM notices must be in the dataset card: a summary does not
-     satisfy a retention clause, and Apache-2.0 (UniversalPython) additionally
-     requires STATING THAT CHANGES WERE MADE.
+     Each is CREDITED in the card's Upstream projects table, and its VERBATIM
+     notice lives in the `NOTICE` file shipped beside the card: a summary does
+     not satisfy a retention clause, and Apache-2.0 (UniversalPython)
+     additionally requires STATING THAT CHANGES WERE MADE. Both halves ship on
+     every export and both are on the push allowlist; do NOT paste the notices
+     back into the card, which is tested to be free of them.
      `source` is the only provenance column that ships, so `upstream` is what
      makes the obligation machine-visible in the published artifact.
      `source_detail` -- which names WHICH project -- never leaves the database,
@@ -1246,7 +1254,7 @@ def migrate(
             # wholesale from legesher/legesher-translations (MIT, 149 contributors).
             # `upstream` on the row is what makes the attribution obligation
             # visible IN THE PUBLISHED CORPUS; the label naming which project
-            # stays private, so the dataset card carries the notice.
+            # stays private, so the card credits it and NOTICE retains its text.
             source_detail = LEGACY_COMMUNITY_SOURCE_DETAIL
             upstream_project_rows[LEGACY_COMMUNITY_SOURCE_DETAIL] += 1
         elif source_kind == "upstream":
@@ -1581,9 +1589,9 @@ def migrate(
         total = sum(upstream_project_rows.values())
         print(
             f"\nATTRIBUTION: {total:,} rows are ANOTHER PROJECT'S WORK and carry "
-            "that project's\n  licence terms. Every one of them must be credited "
-            "in the dataset card,\n  with the notice itself -- a summary does not "
-            "satisfy a retention clause.\n"
+            "that project's\n  licence terms. Every one must be credited in the "
+            "dataset card, and its notice\n  retained in the NOTICE file beside it "
+            "-- a summary satisfies neither.\n"
         )
         for detail, rows in sorted(
             upstream_project_rows.items(), key=lambda kv: -kv[1]
@@ -1594,8 +1602,8 @@ def migrate(
             "\n  Published as `source='upstream'` on each row, so `options.sources` "
             "tells a\n  consumer that a third-party licence applies. WHICH project "
             "is NOT published:\n  `source_detail` never ships (it carries v1 reviewer "
-            "labels with real first\n  names), so the card is the only place the "
-            "project names and notices exist.\n"
+            "labels with real first\n  names), so the card and its NOTICE are the "
+            "only place the project names\n  and notices exist.\n"
             f"  {LEGACY_COMMUNITY_REPO}\n"
             "  is OURS (Copyright (c) 2019 Legesher) -- retaining its notice is a "
             "commitment\n  to its 149 contributors, not third-party legal exposure. "

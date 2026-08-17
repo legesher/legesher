@@ -22,6 +22,42 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   only the in-file field was out of date. A test now pins the two claims
   together so they cannot drift apart again. [CORE-1043]
 
+### Changed
+
+- **The published corpus dataset card is now about the corpus, and nothing
+  else.** It opens with a banner image and says plainly that this is a
+  growing, append-only dataset — a snapshot of the evidence to date, not a
+  finished vocabulary. Sections run orientation first, then provenance, then
+  posture: what this corpus is, languages, configs, where each rendering came
+  from, then upstream projects / Legesher-produced renderings / community
+  contributions / machine-generated renderings, then licence and privacy. The
+  four provenance sections used to be nested under the licence heading, which
+  buried the substance of the corpus under a legal one; they now read as one
+  argument, that upstream, Legesher and the models all *propose* while only
+  community endorsements *attest*, and that the quality signal is the
+  `options`→`endorsements` join rather than the `sources` column.
+
+  Configs is a table. The locale list is a flowing `` `tag` Name `` list
+  rather than a table, because a markdown table must carry a header row and
+  every column held the same thing — the header was either repeated labels or
+  an empty band. It also reflows on a phone instead of forcing a horizontal
+  scrollbar.
+
+  Two long-form commitments moved off the card into companions it links, both
+  shipped by the exporter and both on the push allowlist: `NOTICE` for the
+  upstream licence text (retention is preserved — the text moved, it did not
+  go) and `PRIVACY.md` for the privacy posture, which had grown to restate
+  what the community section already said.
+
+  Gone: the private-first banner, the corpus/canon split, and the
+  derived-counts section. The canon is documented where the canon lives, and
+  the count rule now rides on the `endorsements` config where a consumer would
+  look for it.
+
+  **No published file cites an internal ticket.** These are read outside the
+  project, where a bare issue key is an unresolvable reference; a test asserts
+  it across the card and both companions. [CORE-1904]
+
 ## [0.23.0] - 2026-08-16
 
 ### Added

@@ -113,7 +113,10 @@ uv run python scripts/export_corpus.py \
     --db build/translations_v2.db --out build/hf-corpus
 ```
 
-No network library is touched. Review:
+No network library is touched. `--out` names a directory the export takes
+over entirely, so it refuses up front on a `README.md` that is not a
+dataset card — pointing it at a package directory would overwrite that
+package's README. Review:
 
 - `build/hf-corpus/reconciliation.json` — row counts must reconcile (the
   export hard-fails if not). Since CORE-1828 the invariant is
@@ -123,10 +126,17 @@ No network library is touched. Review:
   against `quarantine-queue` — an exclusion the ledger could not see would be
   a silent cap;
 - `build/hf-corpus/README.md` — the dataset card. Check the frontmatter reads
-  `license: cc-by-4.0` and that the Licence and attribution section carries
-  all three upstream projects, including the changes-were-made statement
-  Apache-2.0 requires (CORE-1720). A card that still says `license: other`
-  means the build ran against a stale checkout;
+  `license: cc-by-4.0` and that Upstream projects lists all three projects. A
+  card that still says `license: other` means the build ran against a stale
+  checkout. Check too that the `language:` header and the `## Languages` list
+  name the locales you expect: both render from the options actually being
+  published, so a locale missing there is quarantine holding back everything
+  in it;
+- `build/hf-corpus/NOTICE` — the three upstream licence notices, including the
+  changes-were-made statement Apache-2.0 requires;
+- `build/hf-corpus/PRIVACY.md` — the privacy posture the card links;
+- `build/hf-corpus/assets/*.png` — the card's banner, and nothing else beside
+  it;
 - `build/hf-corpus/data/*.parquet` — five configs, pinned Arrow schemas.
 
 ## 3. The private push (double-keyed + provenance-verified)
@@ -162,8 +172,28 @@ Note the CLI is `hf`, not `huggingface-cli` — the latter was renamed and no
 longer works. `hf auth login` replaces `huggingface-cli login`.
 
 The upload itself is allowlisted to exactly what the exporter writes
-(`README.md`, `reconciliation.json`, `data/*.parquet`) — a stray file in the
-output directory never reaches the Hub.
+(`README.md`, `NOTICE`, `PRIVACY.md`, `reconciliation.json`,
+`data/*.parquet`, `assets/*.png`) — a stray file in the output directory never
+reaches the Hub.
+
+Three of those are the card's companions rather than data, and each is on the
+allowlist for a reason:
+
+- `assets/*.png` is the card's banner. The card links it relatively, so it has
+  to ride along or the public page opens on a broken image. The exporter
+  refuses to start without it. It also refuses if any OTHER image is sitting
+  in `<out>/assets`, rather than deleting it: everything there is published,
+  and no sweep can tell a renamed banner from a file that simply lives in that
+  directory. If you renamed the banner, delete the old one yourself. The push
+  removes the superseded remote copy for you (`delete_patterns`).
+- `NOTICE` carries the upstream licence text. It is off the card by choice —
+  the card describes *this* dataset's licence — but the retention obligation
+  attaches to the data, so the notices travel with it.
+- `PRIVACY.md` is the privacy posture, likewise moved off the card and linked
+  from it.
+
+Dropping any of the three from the allowlist does not fail the push; it
+publishes a card whose links resolve to nothing.
 
 The repo is created **PRIVATE** (`private=True`) and this tooling never
 flips visibility. Going public is a separate deliberate act on the Hub, and

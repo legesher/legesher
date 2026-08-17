@@ -16,12 +16,14 @@ here are about what must NEVER cross the boundary, not just what does:
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import re
 import sqlite3
 import sys
 import types
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -34,12 +36,14 @@ from legesher_i18n.db.schema_v2 import (
     option_uid,
     salt_fingerprint,
 )
+import scripts.export_corpus as export_corpus_module
 from scripts.export_corpus import (
     CONFIG_BASE_TABLE,
     CONFIG_SCHEMA,
     CONFIG_SQL,
     DEFAULT_TARGET_REPO,
     FORBIDDEN_COLUMNS,
+    LANGUAGE_LIST_WIDTH,
     NEVER_EXPORT,
     PUSH_ALLOW_PATTERNS,
     TARGET_OVERRIDE_ENV_VAR,
@@ -400,17 +404,525 @@ def test_endorsement_counts_are_derivable_and_match_the_view(
 def test_dataset_card_names_the_configs_and_the_governance_gate(
     exported: Path,
 ) -> None:
-    """README.md carries the config table and the CORE-1502 private-first banner."""
+    """README.md carries the config table, the locale list, and the promises."""
     card = (exported / "README.md").read_text(encoding="utf-8")
     for config in CONFIG_SQL:
         assert f"config_name: {config}" in card
         assert f"data/{config}.parquet" in card
+        assert f"| `{config}` |" in card  # the Configs table names every one
     assert "license: cc-by-4.0" in card
-    assert "Private-first" in card
     assert "language:\n  - ur\n  - zh\n" in card  # exact primary-subtag rollup
-    assert "| zh-Hans |" in card  # exact locale list, straight from options.locale
-    assert "CORE-1502" in card
-    assert "never published" in card  # the corpus/canon split
+    assert "growing dataset" in card
+
+
+def test_no_published_file_cites_an_internal_ticket(exported: Path) -> None:
+    """Nothing a reader can see may reference a Linear issue.
+
+    The card and its companions are read outside the project, where a bare
+    ``CORE-####`` is an unresolvable reference. This is a publish-surface
+    rule, not a style preference, so it is asserted over every text file the
+    export writes rather than over the card alone.
+    """
+    for name in ("README.md", "NOTICE", "PRIVACY.md"):
+        text = (exported / name).read_text(encoding="utf-8")
+        assert not re.search(r"CORE-\d+", text), f"{name} cites an internal ticket"
+
+
+def test_every_upstream_project_is_both_credited_and_its_notice_retained(
+    exported: Path,
+) -> None:
+    """A fourth upstream cannot ship credited but unretained, or vice versa.
+
+    ``migrate_to_v2.UPSTREAM_PROJECTS`` is where a new project gets classified
+    as ``upstream``; the card's table is where it gets credited and NOTICE is
+    where its licence text is retained. Nothing but this test connects the
+    three, and the failure mode -- rows attributed to a project whose notice
+    was never carried across -- is a licence breach, not a typo.
+    """
+    from scripts.migrate_to_v2 import UPSTREAM_PROJECTS
+
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    notice = (exported / "NOTICE").read_text(encoding="utf-8")
+
+    # A licence BODY, not just a mention: a one-line credit satisfies nothing.
+    bodies = {
+        "MIT": "Permission is hereby granted, free of charge",
+        "Apache-2.0": "Licensed under the Apache License, Version 2.0",
+    }
+
+    assert UPSTREAM_PROJECTS, "expected at least one upstream project"
+    for name, url, licence in UPSTREAM_PROJECTS.values():
+        assert name in card, f"{name} is not credited on the card"
+        assert url in card, f"{name}'s repository is not linked on the card"
+
+        # Bound the search to THIS project's block. Searching the remainder
+        # of the file lets a later project's MIT copy satisfy an earlier one
+        # whose own body was deleted -- which is the licence breach this test
+        # is the only guard against.
+        assert name in notice, f"{name} has no section in NOTICE"
+        after = notice.split(name, 1)[1]
+        others = [
+            after.index(other)
+            for other, *_ in ((v[0],) for v in UPSTREAM_PROJECTS.values())
+            if other != name and other in after
+        ]
+        block = after[: min(others)] if others else after
+
+        assert licence in bodies, f"no known licence body for {licence}"
+        assert bodies[licence] in block, (
+            f"{name} is named in NOTICE but its own {licence} text is not "
+            "retained in its section"
+        )
+
+
+def test_the_locale_query_is_gated_like_every_other_published_query() -> None:
+    """The card's locale SQL sits under the NEVER_EXPORT gate.
+
+    It feeds published text, so it is publish-surface SQL. The gate is
+    structural precisely so that "it only reads `locales` today" is not the
+    thing standing between a private table and the Hub.
+    """
+    from scripts.export_corpus import (
+        CARD_LOCALE_SQL,
+        _assert_configs_avoid_private_tables,
+    )
+
+    _assert_configs_avoid_private_tables()  # the real queries pass
+
+    with mock.patch(
+        "scripts.export_corpus.CARD_LOCALE_SQL",
+        CARD_LOCALE_SQL + "\nJOIN contributor_identities ci ON 1=0",
+    ):
+        with pytest.raises(SystemExit, match="contributor_identities"):
+            _assert_configs_avoid_private_tables()
+
+
+def test_the_push_commit_message_names_no_internal_ticket() -> None:
+    """Hub commit history is as public as the files it carries."""
+    recorded: dict[str, object] = {}
+
+    class _Api:
+        def create_repo(self, **kwargs: object) -> None:
+            recorded["create"] = kwargs
+
+        def upload_folder(self, **kwargs: object) -> None:
+            recorded.update(kwargs)
+
+    with mock.patch("scripts.export_corpus._require_hf_api", lambda: lambda: _Api()):
+        export_corpus_module.push_to_hub(Path("/tmp/nowhere"), DEFAULT_TARGET_REPO)
+
+    assert not re.search(r"CORE-\d+", str(recorded["commit_message"]))
+    # And a renamed banner cannot linger on the remote beside its replacement.
+    assert recorded["delete_patterns"] == ["assets/*.png"]
+
+
+def test_exporting_over_the_source_banner_does_not_delete_it(
+    v2_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A wrong --out wastes a run; it must not damage the working tree.
+
+    ``--out libs/i18n`` makes ``<out>/assets`` the repository's own asset
+    directory, so the stale-PNG sweep would delete the tracked banner and every
+    later export would refuse until someone restored it from git. Reproduced
+    against a temporary tree rather than the real one -- a test that writes a
+    dataset card over ``libs/i18n/README.md`` to prove a point is a worse bug
+    than the one it is checking for.
+    """
+    fake_repo = tmp_path / "i18n"
+    (fake_repo / "assets").mkdir(parents=True)
+    source = fake_repo / "assets" / "language-corpus-card.png"
+    source.write_bytes(export_corpus_module.CARD_IMAGE_SOURCE.read_bytes())
+    before = source.read_bytes()
+    # Another tracked image in the same directory: exempting only the banner
+    # would still delete this one out of the working tree.
+    bystander = fake_repo / "assets" / "some-other-diagram.png"
+    bystander.write_bytes(b"\x89PNG\r\n\x1a\n bystander")
+    monkeypatch.setattr(export_corpus_module, "CARD_IMAGE_SOURCE", source)
+
+    with pytest.raises(SystemExit, match="this export did not write"):
+        export_corpus(v2_db, fake_repo)
+
+    assert source.is_file(), "the source banner was deleted"
+    assert source.read_bytes() == before
+    assert bystander.is_file(), "an unrelated tracked image was deleted"
+
+
+def test_the_push_allowlist_covers_exactly_what_the_export_writes(
+    exported: Path,
+) -> None:
+    """Nothing the export writes may be missing from the push allowlist.
+
+    Dropping a pattern does not fail anything: the push simply leaves that
+    file behind, and the card ships pointing at something that is not there.
+    The banner is the loud case (a broken image at the top of the page);
+    NOTICE and PRIVACY.md are the quiet ones -- links that resolve to nothing.
+    """
+    written = sorted(
+        path.relative_to(exported).as_posix()
+        for path in exported.rglob("*")
+        if path.is_file()
+    )
+    assert written, "the export wrote nothing"
+
+    for relative in written:
+        assert any(
+            fnmatch.fnmatch(relative, pattern) for pattern in PUSH_ALLOW_PATTERNS
+        ), f"{relative} is written but not on the push allowlist"
+
+    # And no pattern is dead weight -- one that matches nothing is either a
+    # typo or a file we stopped writing.
+    for pattern in PUSH_ALLOW_PATTERNS:
+        assert any(fnmatch.fnmatch(rel, pattern) for rel in written), (
+            f"allowlist pattern {pattern!r} matches nothing the export writes"
+        )
+
+
+def test_the_card_states_the_config_count_it_can_prove(exported: Path) -> None:
+    """The configs count is rendered from CONFIG_SQL, not asserted."""
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    rows = [line for line in card.splitlines() if line.startswith("| `")]
+    config_rows = [line for line in rows if line.split("`")[1] in CONFIG_SQL]
+
+    assert len(config_rows) == len(CONFIG_SQL)
+    assert f"{'Five' if len(CONFIG_SQL) == 5 else len(CONFIG_SQL)} configs" in card
+    assert export_corpus_module.CARD_CONFIG_COUNT_PLACEHOLDER not in card
+
+
+def test_a_broken_card_template_refuses_before_anything_is_written(
+    v2_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A lost placeholder aborts pre-flight, not mid-export."""
+    out = tmp_path / "corpus"
+    monkeypatch.setattr(
+        export_corpus_module,
+        "DATASET_CARD",
+        export_corpus_module.DATASET_CARD.replace(
+            export_corpus_module.CARD_REPO_PLACEHOLDER, "legesher/language-corpus"
+        ),
+    )
+
+    with pytest.raises(SystemExit, match="has vanished from DATASET_CARD"):
+        export_corpus(v2_db, out)
+
+    assert not (out / "data").exists()
+    assert not (out / "README.md").exists()
+
+
+def test_a_foreign_readme_refuses_before_anything_is_written(
+    v2_db: Path, tmp_path: Path
+) -> None:
+    """--out over a package directory must not overwrite its README.
+
+    This is not hypothetical: an earlier draft of the banner test pointed
+    --out at libs/i18n and overwrote the package README. The refusal is
+    PRE-FLIGHT, so a wrong --out leaves the directory exactly as it was
+    rather than dropping fresh Parquet beside a stale card and a
+    reconciliation ledger reporting the wrong counts.
+    """
+    victim = tmp_path / "some-package"
+    victim.mkdir()
+    readme = victim / "README.md"
+    readme.write_text("# some-package\n\nNot a dataset card.\n")
+
+    with pytest.raises(SystemExit, match="not a dataset card"):
+        export_corpus(v2_db, victim)
+
+    assert readme.read_text() == "# some-package\n\nNot a dataset card.\n"
+    assert not (victim / "data").exists()
+    assert not (victim / "reconciliation.json").exists()
+
+
+def test_a_stray_image_refuses_before_anything_is_written(
+    v2_db: Path, tmp_path: Path
+) -> None:
+    """The stray-image refusal is pre-flight too.
+
+    It used to run after every Parquet file had been rewritten, leaving fresh
+    data beside the previous run's card and a ledger reporting counts that no
+    longer matched the files next to it.
+    """
+    out = tmp_path / "corpus"
+    export_corpus(v2_db, out)
+    ledger_before = (out / "reconciliation.json").read_text()
+    (out / "assets" / "old-banner.png").write_bytes(b"\x89PNG\r\n\x1a\n stray")
+    parquet = out / "data" / "options.parquet"
+    stamp = parquet.stat().st_mtime_ns
+
+    with pytest.raises(SystemExit, match="this export did not write"):
+        export_corpus(v2_db, out)
+
+    assert parquet.stat().st_mtime_ns == stamp, "Parquet was rewritten anyway"
+    assert (out / "reconciliation.json").read_text() == ledger_before
+
+
+def test_the_card_names_the_repo_it_is_actually_published_to(
+    v2_db: Path, tmp_path: Path
+) -> None:
+    """A rehearsal push must not ship a card pointing at the real dataset.
+
+    The load example and the "suggest a dataset" link both name the repo, and
+    the push target is a runtime value -- so both follow ``--target-repo``
+    rather than being frozen to the canonical id.
+    """
+    out = tmp_path / "rehearsal"
+    export_corpus(v2_db, out, "someone-else/rehearsal-corpus")
+    card = (out / "README.md").read_text(encoding="utf-8")
+
+    assert 'load_dataset("someone-else/rehearsal-corpus", "options")' in card
+    assert "huggingface.co/datasets/someone-else/rehearsal-corpus/discussions" in card
+    assert DEFAULT_TARGET_REPO not in card
+    assert export_corpus_module.CARD_REPO_PLACEHOLDER not in card
+
+
+def test_the_card_links_nowhere_that_a_public_reader_cannot_reach(
+    exported: Path,
+) -> None:
+    """No outbound link may point at a private Legesher repository.
+
+    The dataset page is read by people with no access to our source repos, so
+    a link there is a 404 with our name on it. The Hub discussions tab is the
+    reply channel that is as public as the dataset itself.
+    """
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    private_repos = ("legesher/legesher-next", "legesher/legesher-hosted")
+    for repo in private_repos:
+        assert f"github.com/{repo}" not in card, f"card links private {repo}"
+    assert "/discussions" in card  # the reply channel is on the Hub
+
+
+def test_the_privacy_posture_ships_as_its_own_file(exported: Path) -> None:
+    """The posture left the card for PRIVACY.md, and the card links it."""
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    privacy = (exported / "PRIVACY.md").read_text(encoding="utf-8")
+
+    assert "[`PRIVACY.md`](PRIVACY.md)" in card
+    assert "PRIVACY.md" in PUSH_ALLOW_PATTERNS
+    # The card keeps a short pointer, not the bullet list it used to carry.
+    assert "## PII posture" not in card
+    assert "## Privacy" in card
+
+    for promise in ("Withdrawal", "Counts survive", "privacy@legesher.com"):
+        assert promise in privacy
+
+
+def test_dataset_card_lists_every_locale_with_its_name(exported: Path) -> None:
+    """The locale list is flowing text, not a table.
+
+    A markdown table must carry a header row, and every column here held the
+    same thing -- so the header was either the same words repeated across the
+    page or a blank band above the data. A list has no header to get wrong.
+    """
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    section = card.split("## Languages")[1].split("## Configs")[0]
+
+    assert "| --- |" not in section, "the locale list should not be a table"
+    assert "`ur` Urdu" in section
+    assert "`zh-Hans` Chinese (Simplified)" in section
+    assert "All 2 locales" in section  # the count is rendered, never hardcoded
+
+    body = [line for line in section.splitlines() if line.startswith("`")]
+    assert body and " · " in body[0], "entries are separated for scanning"
+    for line in section.splitlines():
+        assert len(line) <= LANGUAGE_LIST_WIDTH, f"unwrapped line: {line!r}"
+
+    # Markdown joins the wrapped lines back into one paragraph with a single
+    # space, so every line but the last must carry its trailing separator --
+    # without it two languages render run together with nothing between them.
+    for line in body[:-1]:
+        assert line.endswith(" ·"), f"separator lost at a line break: {line!r}"
+    assert not body[-1].endswith("·")
+    assert " ·  · " not in " ".join(body)  # and never doubled
+
+
+def test_the_locale_list_keeps_its_separators_when_markdown_reflows_it(
+    v2_db: Path, tmp_path: Path
+) -> None:
+    """A many-locale list still reads correctly once the line breaks collapse.
+
+    The fixture has two locales and never wraps, so the wrap path needs a
+    database wide enough to exercise it.
+    """
+    conn = sqlite3.connect(v2_db)
+    for index in range(40):
+        locale = f"q{chr(ord('a') + index % 26)}{chr(ord('a') + index // 26)}"
+        conn.execute(
+            "INSERT INTO locales (tag, language_subtag, name, native_name) "
+            "VALUES (?, ?, ?, ?)",
+            (locale, locale, f"Testlang {index}", f"Testlang {index}"),
+        )
+        conn.execute(
+            "INSERT INTO options (uid, concept_id, locale, surface_form) "
+            "VALUES (?, 1, ?, ?)",
+            (option_uid("true-constant", locale, f"w{index}"), locale, f"w{index}"),
+        )
+    conn.commit()
+    conn.close()
+
+    out = tmp_path / "corpus-wide"
+    export_corpus(v2_db, out)
+    card = (out / "README.md").read_text(encoding="utf-8")
+    section = card.split("## Languages")[1].split("## Configs")[0]
+    body = [line for line in section.splitlines() if line.startswith("`")]
+
+    assert len(body) > 1, "expected the list to wrap across several lines"
+    # Collapse the line breaks the way a markdown renderer does.
+    reflowed = " ".join(body)
+    assert reflowed.count(" · ") == reflowed.count("`") // 2 - 1
+    assert "` `" not in reflowed  # no two entries touching without a separator
+
+
+def test_dataset_card_sections_run_in_the_agreed_order(exported: Path) -> None:
+    """The card's shape is a decision, not an accident (Madison, 2026-08-17).
+
+    Orientation first (what it is, which languages, what the columns are),
+    then provenance walked in the order the work happened (upstream who came
+    before us, our own renderings, the people who attest them, the machine),
+    then the legal and privacy posture last.
+    """
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    sections = [line[3:] for line in card.splitlines() if line.startswith("## ")]
+    assert sections == [
+        "What this corpus is",
+        "Languages",
+        "Configs",
+        "Where each rendering came from",
+        "Upstream projects",
+        "Legesher-produced renderings",
+        "Community contributions",
+        "Machine-generated renderings",
+        "Licence and attribution",
+        "Privacy",
+    ]
+
+
+def test_every_internal_card_link_resolves_to_a_heading(exported: Path) -> None:
+    """No `](#anchor)` may point at a heading the card does not have.
+
+    The sections move around; a stale in-page link is silent on the Hub and
+    only shows up as a click that goes nowhere.
+    """
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    slugs = {
+        re.sub(r"[^a-z0-9 -]", "", line.lstrip("#").strip().lower()).replace(" ", "-")
+        for line in card.splitlines()
+        if line.startswith("#")
+    }
+    anchors = set(re.findall(r"\]\(#([^)]+)\)", card))
+    assert anchors, "expected the card to cross-reference its own sections"
+    assert anchors <= slugs, f"dangling anchors: {sorted(anchors - slugs)}"
+
+
+def test_upstream_notices_leave_the_card_but_still_travel_with_the_data(
+    exported: Path,
+) -> None:
+    """Third-party licence text lives in NOTICE, not on the card.
+
+    The card is about this dataset's licence; the retention obligation is
+    satisfied by a file shipped beside it, which is on the push allowlist. So
+    the card must NOT carry the licence bodies, and NOTICE must.
+    """
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    notice = (exported / "NOTICE").read_text(encoding="utf-8")
+
+    warranty = "THE SOFTWARE IS PROVIDED"
+    assert warranty not in card
+    assert "Permission is hereby granted" not in card
+    assert "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND" not in card
+
+    assert card.count(warranty) == 0
+    assert notice.count(warranty) == 2  # both MIT-licensed upstreams
+    assert "Copyright (c) 2019 Legesher" in notice
+    assert "Copyright (c) 2015 - Latino" in notice
+    assert "apache.org/licenses/LICENSE-2.0" in notice
+    assert "CHANGES WERE MADE" in notice  # Apache-2.0 section 4(b)
+
+    # The card still points at it, and the pointer resolves.
+    assert "[`NOTICE`](NOTICE)" in card
+    assert "NOTICE" in PUSH_ALLOW_PATTERNS
+
+
+def test_dataset_card_invites_dataset_suggestions(exported: Path) -> None:
+    """The upstream section asks readers to name projects we should include."""
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    assert "Is there a dataset we should add?" in card
+    assert "Open a discussion" in card
+
+
+def test_dataset_card_banner_image_ships_with_the_export(exported: Path) -> None:
+    """The card's relative image link resolves inside the export directory."""
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    assert "![Legesher language corpus](assets/language-corpus-card.png)" in card
+    assert (exported / "assets" / "language-corpus-card.png").is_file()
+
+
+def test_a_stray_image_beside_the_banner_refuses_the_export(
+    v2_db: Path, tmp_path: Path
+) -> None:
+    """A bystander PNG is REFUSED, never deleted.
+
+    Everything under ``assets/`` is published, so a stray image would ship on
+    the dataset page. Refusing rather than deleting is what makes the sweep
+    safe for an arbitrary ``--out``: the export cannot tell a stale banner
+    from a file that simply lives there, so it must not guess.
+    """
+    out = tmp_path / "corpus"
+    export_corpus(v2_db, out)
+    stray = out / "assets" / "old-banner.png"
+    stray.write_bytes(b"\x89PNG\r\n\x1a\n stray")
+
+    with pytest.raises(SystemExit, match="this export did not write"):
+        export_corpus(v2_db, out)
+
+    assert stray.exists(), "the bystander was deleted rather than refused"
+    assert (out / "assets" / "language-corpus-card.png").is_file()
+
+
+def test_a_missing_banner_refuses_before_any_file_is_written(
+    v2_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The banner gate aborts with the output directory untouched.
+
+    Every other refusal in ``export_corpus`` runs before a byte is written;
+    this one must too, or a missing image leaves a half-built export whose
+    Parquet files have no card beside them.
+    """
+    out = tmp_path / "corpus"
+    monkeypatch.setattr(
+        export_corpus_module, "CARD_IMAGE_SOURCE", tmp_path / "not-there.png"
+    )
+
+    with pytest.raises(SystemExit, match="banner image is missing"):
+        export_corpus(v2_db, out)
+
+    assert not (out / "data").exists()
+    assert not (out / "README.md").exists()
+
+
+def test_a_locale_whose_every_option_is_quarantined_leaves_the_card(
+    v2_db: Path, tmp_path: Path
+) -> None:
+    """The card names only locales the `options` config actually publishes.
+
+    ``zh-Hans`` has exactly one option in the fixture. Quarantining it (CORE-1828)
+    exports no zh-Hans rows, so announcing `zh` in the Hub-indexed `language:`
+    header would claim coverage the data does not have.
+    """
+    conn = sqlite3.connect(v2_db)
+    conn.execute(
+        "INSERT INTO option_screenings (option_uid, verdict, screened_by, "
+        "screen_version) VALUES (?, 'quarantined', 'importer', 'manual-interim-v1')",
+        (OPT_TRUE_ZH,),
+    )
+    conn.commit()
+    conn.close()
+
+    out = tmp_path / "corpus-quarantined"
+    export_corpus(v2_db, out)
+    card = (out / "README.md").read_text(encoding="utf-8")
+
+    assert OPT_TRUE_ZH not in _read(out, "options")["option_uid"]
+    assert "zh-Hans" not in card
+    assert "language:\n  - ur\n" in card  # the zh rollup entry is gone too
 
 
 def test_push_without_signoff_exits_before_writing_anything(
