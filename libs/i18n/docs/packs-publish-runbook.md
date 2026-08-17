@@ -82,6 +82,14 @@ Not scripted, deliberately. A maintainer uploads `build/hf-packs/` to
 `legesher/language-packs` and pins the revision against the release ticket.
 The first push freezes the layout for every consumer that pins it.
 
+The Hub commit message must not name an internal ticket (`CORE-####` or
+`HOME-####`) — Hub commit history is as public as the files it carries, and
+an issue key resolves to nothing for a reader outside the project. Pin the
+revision against the release ticket in Linear, not in the message. The corpus
+exporter pushes from a script and a test holds its commit message to this
+(`test_export_corpus.py`, `test_the_push_commit_message_names_no_internal_ticket`);
+this push is manual, so the operator carries the rule.
+
 Before pushing, confirm the card's figures match the artifact rather than any
 milestone or release description — several still say 51 locales where they
 mean something else, and several say 52 where the answer is 51.

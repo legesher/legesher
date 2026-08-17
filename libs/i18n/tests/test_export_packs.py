@@ -9,8 +9,10 @@ defined.
 from __future__ import annotations
 
 import importlib.util
+import re
 import sys
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -299,3 +301,102 @@ def test_the_card_carries_no_licence_caveat_when_they_agree() -> None:
     # ...and it still appears when they genuinely differ.
     mixed = export_packs.render_card(_manifest(locales), {"MIT": 255})
     assert "Note on the licence field" in mixed
+
+
+# ---------------------------------------------------------------------------
+# The publish surface
+# ---------------------------------------------------------------------------
+
+
+#: The publish-surface rule as a pattern. Case-insensitive because `source.tag`
+#: is rendered verbatim into the card's provenance line and a branch or tag
+#: named for the release ticket arrives lowercased, which a case-sensitive
+#: match would wave through. ``\b`` so an ordinary word merely ending in the
+#: prefix -- ``score-12`` -- is not read as a ticket.
+TICKET = re.compile(r"\b(?:CORE|HOME)-\d+", re.IGNORECASE)
+
+
+def test_the_ticket_pattern_matches_the_forms_that_reach_the_card() -> None:
+    """A form the pattern misses is a leak the guard permits."""
+    assert TICKET.search("still being defined** (CORE-1513).")
+    assert TICKET.search("the announcement (HOME-44)")
+    assert TICKET.search("commit `abc123` (core-1905)")  # a lowercased git tag
+    assert not TICKET.search("score-12")
+    assert not TICKET.search("CORE-")
+
+
+@pytest.fixture(scope="module")
+def exported(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Run the export once and return the output directory."""
+    out = tmp_path_factory.mktemp("canon") / "packs"
+    with mock.patch.object(sys, "argv", ["export_packs.py", "--out", str(out)]):
+        assert export_packs.main() == 0
+    return out
+
+
+def test_no_published_file_cites_an_internal_ticket(exported: Path) -> None:
+    """Nothing a reader can see may reference a Linear issue.
+
+    The card and the files beside it are read outside the project, where a
+    bare ``CORE-####`` is an unresolvable reference. This is a publish-surface
+    rule, not a style preference, so it is asserted over every file the export
+    writes -- walked from the output tree rather than listed here, so a file
+    the artifact gains later is covered without anyone remembering to add it.
+    """
+    import pyarrow.parquet as pq
+
+    files = sorted(p for p in exported.rglob("*") if p.is_file())
+    assert files, "the export wrote nothing; the guard would pass vacuously"
+
+    for path in files:
+        name = path.relative_to(exported)
+        if path.suffix == ".parquet":
+            # Parquet is compressed, so the bytes on disk are not searchable.
+            # The values have to be decoded before they can be cleared.
+            text = str(pq.read_table(path).to_pydict())
+        else:
+            # Bytes with undecodable sequences dropped, not `read_text`. The
+            # sibling corpus card ships a banner PNG and this artifact may
+            # gain one; a UnicodeDecodeError there would be the guard falling
+            # over rather than the rule being broken.
+            text = path.read_bytes().decode("utf-8", errors="ignore")
+        assert not TICKET.search(text), f"{name} cites an internal ticket"
+
+
+def test_the_cards_conditional_sections_cite_no_internal_ticket() -> None:
+    """The rule reaches the card branches today's data never renders.
+
+    :func:`test_no_published_file_cites_an_internal_ticket` runs the real
+    export, so it only ever sees the card the CURRENT data produces: every
+    locale `experimental`, every pack agreeing with the declared licence. Two
+    sections are dark under that data -- the licence caveat and the
+    promoted-tier paragraph -- so a ticket reference reintroduced into either
+    would ship on the first promotion, or the first licence drift, with
+    nothing having failed. They are rendered here from synthetic manifests.
+    """
+    locales = export_packs.pack_locales()
+
+    # Rendered only when the packs' own metadata.license contradicts
+    # DECLARED_LICENSE, which the shipped packs no longer do.
+    caveat = export_packs.render_card(_manifest(locales), {"MIT": 255})
+    assert "Note on the licence field" in caveat, "the caveat branch went dark"
+    assert not TICKET.search(caveat)
+
+    # Rendered only once something has been promoted off `experimental`,
+    # which nothing yet has.
+    promoted = export_packs.render_card(
+        _manifest(
+            locales,
+            tiers=["experimental", "reviewed", "official"],
+            tier_counts={
+                "experimental": len(locales) - 3,
+                "reviewed": 2,
+                "official": 1,
+            },
+        ),
+        {"Apache-2.0": 255},
+    )
+    assert "Nothing has been promoted yet" not in promoted, (
+        "the promoted-tier branch went dark"
+    )
+    assert not TICKET.search(promoted)

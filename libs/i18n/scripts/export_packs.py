@@ -48,6 +48,13 @@ path the runtime uses -- rather than by re-implementing the merge here. Rows
 record whether a term was defined at that version or inherited, so the delta
 structure survives the flattening instead of being erased by it.
 
+Nothing written here may cite an internal ticket. These files are read by
+people outside the project, to whom a bare ``CORE-####`` is an unresolvable
+reference; the test suite asserts it over every file the export writes, and
+over the card branches this data does not currently render. The same rule
+governs the Hub commit message, which the publish runbook carries rather than
+a test, because this artifact is pushed by hand.
+
 Usage:
     uv run python scripts/export_packs.py --out build/hf-packs
     uv run python scripts/export_packs.py --out build/hf-packs --verify-deterministic
@@ -528,8 +535,8 @@ def render_card(manifest: dict[str, Any], pack_licenses: dict[str, int]) -> str:
             f"carry their own `metadata.license`, currently {rendered}, while "
             f"this dataset and the `legesher-i18n` package are "
             f"`{DECLARED_LICENSE}`. The compilation licence above is the one "
-            f"that governs this dataset; the in-pack field is being reconciled "
-            f"(CORE-1043).\n"
+            f"that governs this dataset; the in-pack field is being "
+            f"reconciled.\n"
         )
 
     return f"""\
@@ -579,8 +586,8 @@ not chosen.
 
 {promotion_note}**What exactly moves a language from `experimental` to
 `reviewed` — how many endorsements, from how varied a set of voices — is still
-being defined** (CORE-1513). Treat an `experimental` pack as a serious starting
-point that wants native review, not as settled terminology.
+being defined.** Treat an `experimental` pack as a serious starting point that
+wants native review, not as settled terminology.
 
 ## Contents
 

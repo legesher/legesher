@@ -22,6 +22,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   only the in-file field was out of date. A test now pins the two claims
   together so they cannot drift apart again. [CORE-1043]
 
+- **The canon packs dataset card no longer cites internal issue keys.** The
+  Maturity section closed its promotion-criteria sentence with one, and the
+  licence-disagreement note carried another. Both are read outside the
+  project, where an issue key resolves to nothing; the sentences say what they
+  said without them. A test now asserts the rule across every file the packs
+  export writes — card, manifest, the resolved JSON packs and both Parquet
+  files — matching the guard already standing over the corpus export.
+  [CORE-1905]
+
 ### Changed
 
 - **The published corpus dataset card is now about the corpus, and nothing
