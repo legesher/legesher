@@ -42,6 +42,11 @@ CORE-1400 contract — pack regeneration is safe because:
   that is no longer reversible on 3.10-3.12. Like the DB-side guard, it
   groups by term NAME: the dual-slot ``type`` term is one surface token
   in two sections, not two colliding terms.
+- Tiering only ever DELETES a character, so it is restricted to the
+  characters whose deletion leaves the same word (ZWJ, ZWNJ, the two
+  katakana middle dots). A value needing any other member of the
+  3.10 -> 3.13 XID delta raises :class:`UnstrippableXIDError` rather
+  than being silently mangled into a different word.
 - A bulk run reports EVERY language it could not export
   (:class:`BulkExportError`, raised at the end) rather than aborting on
   the first, so which packs a run produces never depends on where the
@@ -61,6 +66,7 @@ CORE-1400 contract — pack regeneration is safe because:
 """
 
 import logging
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 
@@ -68,6 +74,7 @@ import yaml
 
 from legesher_i18n.db import TranslationDatabase
 from legesher_i18n.language_registry import get_language_name
+from legesher_i18n.schema_validator import SchemaValidator
 from legesher_i18n.selection import is_valid_pack_value
 from legesher_i18n.term_definitions import (
     BUILTIN_FUNCTIONS,
@@ -124,14 +131,34 @@ NATURAL_LANGUAGE_NAMES = {
 # Categories tried, in order, when resolving a builtins-section slot.
 _BUILTIN_CATEGORIES = ("builtin_func", "builtin_type", "special_constant")
 
-# Characters that are valid identifier chars only on CPython 3.13+
-# (Unicode 15.1 XID) — the Sinhala-ZWJ trap. Mirrors
-# SchemaValidator._XID_ONLY_FROM_CPYTHON_313. Canonical values containing
-# these are exported version-tiered (CORE-1521): the pre-3.13 files carry
-# the stripped compatibility form; the 3.13 overlay restores the canonical
-# conjunct spelling.
-_XID_ONLY_FROM_CPYTHON_313 = frozenset({"\u200d", "\u200c"})
-_XID_STRIP_TABLE = {ord(ch): None for ch in _XID_ONLY_FROM_CPYTHON_313}
+# Characters valid in identifiers only on CPython 3.13+ (Unicode 15.1 XID)
+# WHOSE REMOVAL LEAVES THE SAME WORD. Canonical values containing one are
+# exported version-tiered (CORE-1521): the pre-3.13 files carry the stripped
+# compatibility form, the 3.13 overlay restores the canonical spelling.
+#
+# Deliberately NARROWER than SchemaValidator._XID_ONLY_FROM_CPYTHON_313, which
+# is the full 5,674-codepoint 3.10 -> 3.13 delta. That set is for DETECTION and
+# must be complete. This one authorises silent deletion, so it holds only
+# characters that carry no phonetic content:
+#
+#   U+200D ZERO WIDTH JOINER      Sinhala conjuncts — an invisible ligature cue
+#   U+200C ZERO WIDTH NON-JOINER  Persian/Urdu — the same, negated
+#   U+30FB KATAKANA MIDDLE DOT    separates the parts of a Japanese compound;
+#                                 removing it leaves the reading unchanged
+#   U+FF65                        the halfwidth twin of U+30FB
+#
+# Stripping anything else in the delta — a Telugu nukta, an Arabic letter, a
+# Vithkuqi vowel — would silently publish a DIFFERENT word under the same term.
+# Values needing such a character are refused (:class:`UnstrippableXIDError`)
+# rather than mangled.
+_XID_STRIPPABLE_BELOW_313 = frozenset({"\u200d", "\u200c", "\u30fb", "\uff65"})
+_XID_STRIP_TABLE = {ord(ch): None for ch in _XID_STRIPPABLE_BELOW_313}
+
+# Detection is the validator's job, and its set is the complete delta. Imported
+# rather than mirrored: the previous copy here drifted from it by two
+# characters, which is how U+30FB reached a 3.10 pack.
+_XID_ONLY_FROM_CPYTHON_313 = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
+
 
 # Pack sections, in emitted file order.
 _PACK_SECTIONS = ("keywords", "builtins", "exceptions", "reserved_words")
@@ -159,6 +186,19 @@ class InterpreterFloorCollisionError(ValueError):
     """Interpreter-floor stripping would collapse two distinct terms."""
 
 
+class UnstrippableXIDError(ValueError):
+    """A canonical value needs a 3.13-only character that cannot be removed.
+
+    Tiering works by DELETING the offending character from the pre-3.13
+    files, which is only honest for characters carrying no phonetic
+    content (:data:`_XID_STRIPPABLE_BELOW_313`). For anything else in the
+    3.10 -> 3.13 XID delta — a Telugu nukta, an Arabic letter — deletion
+    would publish a different word under the same term, so the export
+    refuses. The fix is a maintainer's: respell the term, or raise the
+    language's interpreter floor.
+    """
+
+
 # Failures that mean the DATA is wrong. Ranked above everything else a
 # language can raise (see :class:`BulkExportError`).
 _DATA_INTEGRITY_FAILURES = (
@@ -166,6 +206,7 @@ _DATA_INTEGRITY_FAILURES = (
     IncompleteSelectionError,
     InterpreterFloorCollisionError,
     UnparseablePackError,
+    UnstrippableXIDError,
 )
 
 
@@ -373,7 +414,13 @@ class YAMLExporter:
         def tier(section: str, values: dict[str, str]) -> dict[str, str]:
             tiered: dict[str, str] = {}
             for name, value in values.items():
-                if any(ch in _XID_ONLY_FROM_CPYTHON_313 for ch in value):
+                needs_313 = {ch for ch in value if ch in _XID_ONLY_FROM_CPYTHON_313}
+                if needs_313:
+                    unstrippable = sorted(needs_313 - _XID_STRIPPABLE_BELOW_313)
+                    if unstrippable:
+                        self._raise_unstrippable(
+                            language_code, section, name, value, unstrippable
+                        )
                     overlay_313[section][name] = value
                     tiered[name] = value.translate(_XID_STRIP_TABLE)
                 else:
@@ -411,6 +458,27 @@ class YAMLExporter:
 
         self._assert_no_strip_collisions(language_code, stripped_index)
         return sections
+
+    @staticmethod
+    def _raise_unstrippable(
+        language_code: str,
+        section: str,
+        name: str,
+        value: str,
+        offending: list[str],
+    ) -> None:
+        """Refuse a value whose 3.13-only character cannot be dropped safely."""
+        pretty = ", ".join(
+            f"U+{ord(ch):04X} {unicodedata.name(ch, 'unnamed')}" for ch in offending
+        )
+        raise UnstrippableXIDError(
+            f"'{language_code}' {section}.{name} = {value!r} uses {pretty}, which "
+            f"is a valid identifier character only on CPython 3.13+. Tiering can "
+            f"only remove characters that leave the word unchanged (ZWJ, ZWNJ, the "
+            f"katakana middle dots); deleting this one would publish a different "
+            f"word under the same term. Respell the term, or raise the language's "
+            f"interpreter floor to 3.13."
+        )
 
     @staticmethod
     def _assert_no_strip_collisions(

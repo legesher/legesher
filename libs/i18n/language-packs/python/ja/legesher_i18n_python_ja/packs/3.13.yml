@@ -1,11 +1,17 @@
 # Japanese Language Pack for Python 3.13+
-# Extends 3.12 pack (no new keywords in 3.13)
+# Extends 3.12 pack (no new keywords in 3.13).
+# Also restores the canonical spelling of `divmod`, `ディビジョン・モジュール`: the
+# U+30FB KATAKANA MIDDLE DOT separating the compound is a valid identifier
+# character only on CPython 3.13+ (Unicode 15.1 XID), so the 3.10-3.12 packs
+# carry the dot-free form and this overlay upgrades it. See CORE-1905.
 
 language: ja
 target: python
 version: '3.13'
 extends: 3.12.yml
 keywords: {}
+builtins:
+  divmod: ディビジョン・モジュール
 exceptions:
   pythonfinalizationerror: パイソン終了処理エラー
 metadata:
@@ -13,7 +19,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.13'
-  last_updated: '2026-01-26'
+  last_updated: '2026-08-18'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: Apache-2.0

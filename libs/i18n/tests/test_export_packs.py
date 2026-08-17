@@ -209,10 +209,22 @@ def test_the_row_value_matches_the_version_it_claims(rows: list[dict]) -> None:
     )
 
 
+#: An NFKC-instability block shaped like the measured one, so the card's
+#: normalization section renders from a manifest in tests the way it does in a
+#: real export.
+_NFKC_BLOCK = {
+    "rows": 110,
+    "renderings": 22,
+    "locales": [{"locale": "th", "language_name": "Thai"}],
+    "characters": [{"codepoint": "U+0E33", "name": "THAI CHARACTER SARA AM"}],
+}
+
+
 def _manifest(
     locales: list[str],
     tiers: list[str] | None = None,
     tier_counts: dict[str, int] | None = None,
+    nfkc: dict | None = None,
 ) -> dict:
     """Minimal manifest shaped like the real one, for card rendering."""
     tiers = tiers or ["experimental"]
@@ -225,6 +237,7 @@ def _manifest(
         "locales": locales,
         "tiers_present": tiers,
         "tier_counts": tier_counts or {"experimental": len(locales)},
+        "nfkc_unstable": _NFKC_BLOCK if nfkc is None else nfkc,
         "source": {"commit": "0" * 40, "tag": "(untagged)"},
     }
 
@@ -301,6 +314,164 @@ def test_the_card_carries_no_licence_caveat_when_they_agree() -> None:
     # ...and it still appears when they genuinely differ.
     mixed = export_packs.render_card(_manifest(locales), {"MIT": 255})
     assert "Note on the licence field" in mixed
+
+
+# ---------------------------------------------------------------------------
+# What the card has to say out loud
+# ---------------------------------------------------------------------------
+
+
+def test_the_card_states_how_the_vocabulary_was_reviewed() -> None:
+    """The provenance paragraph is not optional decoration (CORE-1905).
+
+    A reader deciding whether to depend on these words needs to know they are
+    machine-drafted and maintainer-curated, and that no native speaker has
+    signed a pack off. The `experimental` stamp means that; the card must say
+    it in words too.
+    """
+    card = export_packs.render_card(_manifest(export_packs.pack_locales()), {"MIT": 1})
+    assert "Who chose these words" in card
+    assert "drafted by a language model" in card
+    assert "no pack in this release has been signed off by a native" in card
+    assert "contributor rung" in card
+
+
+def test_no_pack_claims_community_review() -> None:
+    """The card's claim and the packs' own metadata must not contradict.
+
+    Five `en` packs carried ``community_reviewed: true`` while the card said no
+    native speaker had signed anything off, and no review evidence existed
+    anywhere. Both claims are public; this is the one that keeps them one claim.
+    """
+    import yaml
+
+    claimed = []
+    for locale in export_packs.pack_locales():
+        for version in export_packs.VERSIONS:
+            path = (
+                export_packs.PACKS_DIR
+                / locale
+                / f"legesher_i18n_python_{locale}"
+                / "packs"
+                / f"{version}.yml"
+            )
+            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            if (data.get("metadata") or {}).get("community_reviewed"):
+                claimed.append(f"{locale}/{version}")
+    assert claimed == [], (
+        f"packs claim community review the card says nobody has given: {claimed}"
+    )
+
+
+def test_the_card_scopes_the_artifact_against_the_corpus() -> None:
+    """Two joins-and-scope facts a consumer gets wrong without being told.
+
+    The corpus holds Arabic renderings of JavaScript concepts that this dataset
+    does not cover, and pack ids are not locale tags — `no` here is `nb` there.
+    Someone joining on `locale` silently drops exactly the rows that differ.
+    """
+    card = export_packs.render_card(_manifest(export_packs.pack_locales()), {"MIT": 1})
+    assert "Arabic" in card and "JavaScript" in card
+    assert "`target` is\n`python` on every row in this dataset." in card
+    assert "Join this dataset to the corpus on `bcp47`" in card
+    assert "`no` here is `nb` in the corpus" in card
+
+
+def test_the_pack_ids_the_card_calls_out_really_do_differ_from_bcp47() -> None:
+    """The join advice must stay true to the registry it describes."""
+    registry = export_packs.load_registry()
+    assert registry["no"]["bcp47"] == "nb"
+    assert registry["zh"]["bcp47"] == "zh-Hans"
+
+
+class TestTheNormalizationNote:
+    """The NFKC caveat is measured from the rows, never written down."""
+
+    def test_it_names_the_measured_count_locale_and_character(self) -> None:
+        card = export_packs.render_card(
+            _manifest(export_packs.pack_locales()), {"MIT": 1}
+        )
+        assert "## Normalization" in card
+        assert "PEP 3131" in card
+        assert "22 renderings in this release are NFKC-unstable" in card
+        assert "Thai (`th`)" in card
+        assert "`U+0E33` THAI CHARACTER SARA AM" in card
+
+    def test_it_follows_the_data_rather_than_a_hard_coded_figure(self) -> None:
+        """A different measurement must produce a different sentence.
+
+        This is the whole point of deriving it: the packs are regenerated, so a
+        count written into the template would outlive the thing it counted.
+        """
+        card = export_packs.render_card(
+            _manifest(
+                export_packs.pack_locales(),
+                nfkc={
+                    "rows": 5,
+                    "renderings": 1,
+                    "locales": [{"locale": "xx", "language_name": "Examplish"}],
+                    "characters": [{"codepoint": "U+FFFF", "name": "NOT A CHARACTER"}],
+                },
+            ),
+            {"MIT": 1},
+        )
+        assert "One rendering in this release is NFKC-unstable" in card
+        assert "Examplish (`xx`)" in card
+        assert "22 renderings" not in card
+
+    def test_an_all_stable_release_says_so(self) -> None:
+        """The empty branch must be a true statement, not a missing section."""
+        card = export_packs.render_card(
+            _manifest(
+                export_packs.pack_locales(),
+                nfkc={"rows": 0, "renderings": 0, "locales": [], "characters": []},
+            ),
+            {"MIT": 1},
+        )
+        assert "## Normalization" in card
+        assert "No rendering in this release is NFKC-unstable" in card
+
+    def test_the_measurement_reads_the_emitted_rows(self) -> None:
+        measured = export_packs.nfkc_instability(
+            [
+                {"locale": "th", "language_name": "Thai", "translation": "ทำ"},
+                {"locale": "th", "language_name": "Thai", "translation": "ทำ"},
+                {"locale": "es", "language_name": "Spanish", "translation": "para"},
+            ]
+        )
+        # Two rows, one distinct rendering, one locale, one character.
+        assert measured["rows"] == 2
+        assert measured["renderings"] == 1
+        assert measured["locales"] == [{"locale": "th", "language_name": "Thai"}]
+        assert measured["characters"] == [
+            {"codepoint": "U+0E33", "name": "THAI CHARACTER SARA AM"}
+        ]
+
+    def test_a_stable_vocabulary_measures_as_empty(self) -> None:
+        measured = export_packs.nfkc_instability(
+            [{"locale": "es", "language_name": "Spanish", "translation": "para"}]
+        )
+        assert measured == {
+            "rows": 0,
+            "renderings": 0,
+            "locales": [],
+            "characters": [],
+        }
+
+    def test_the_shipped_vocabulary_matches_what_the_card_will_say(
+        self, rows: list[dict]
+    ) -> None:
+        """Measured over the real rows, so the class the card describes is real.
+
+        The card asserts the instability is confined to one character class. If
+        a regenerated pack introduces a second one, the card says so on its own
+        — but the claim that it is a SMALL, single-character class is worth
+        knowing about the moment it stops being true.
+        """
+        measured = export_packs.nfkc_instability(rows)
+        assert measured["characters"] == [
+            {"codepoint": "U+0E33", "name": "THAI CHARACTER SARA AM"}
+        ], f"a new NFKC-instability class appeared: {measured['characters']}"
 
 
 # ---------------------------------------------------------------------------

@@ -1,3 +1,15 @@
+# Japanese base pack (Python 3.10+ floor).
+#
+# CORE-1905: `divmod` is carried here WITHOUT the U+30FB KATAKANA MIDDLE DOT
+# that separates the two halves of its canonical reading. U+30FB became a valid
+# identifier character only in CPython 3.13 (Unicode 15.1 XID); on 3.10-3.12
+# `ディビジョン・モジュール` is a hard SyntaxError. The canonical spelling lives in
+# 3.13.yml (the 3.13+ overlay) and in translations.db; the dot-free
+# `ディビジョンモジュール` here is the same reading with the separator removed.
+# This base pack therefore deliberately DIVERGES from the DB for that one value
+# — an intentional interpreter-compat downgrade, not drift. Same mechanism as
+# Sinhala's ZWJ conjuncts (CORE-1521).
+
 language: ja
 target: python
 version: '3.10'
@@ -52,7 +64,7 @@ builtins:
   compile: コンパイル
   delattr: 削除属性
   dir: ディレクトリ
-  divmod: ディビジョン・モジュール
+  divmod: ディビジョンモジュール
   enumerate: イテレート
   eval: 評価
   exec: 実行する
@@ -189,7 +201,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2026-01-26'
+  last_updated: '2026-08-18'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: Apache-2.0

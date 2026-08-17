@@ -101,6 +101,115 @@ _ALLOWED_DUPLICATE_KEYS = frozenset({"type"})
 MAX_TERM_LENGTH = 40
 
 
+# Codepoint ranges that are XID_Continue on CPython 3.13 but NOT on CPython
+# 3.10 — the interpreter-version trap the min-interpreter check exists to
+# catch. 3.10/3.11/3.12 ship Unicode 13.0/14.0/15.0 and raise SyntaxError on
+# every codepoint below; 3.13 ships 15.1 and accepts them all.
+#
+# PINNED, not derived at runtime. ``unicodedata`` exposes only the RUNNING
+# interpreter's Unicode version, so a gate executing on 3.13 has no way to ask
+# what 3.10 believed. This table is the measured difference between
+# ``("a" + chr(cp)).isidentifier()`` on CPython 3.10.20 and on CPython 3.13.13
+# across the whole codepoint space: 77 ranges, 5,674 codepoints, none removed.
+# ``tests/test_min_interpreter_identifier.py`` re-derives the 3.13 half on any
+# interpreter at 3.13 or newer, so a stale table is caught rather than trusted.
+#
+# It replaces a two-member denylist (ZWJ, ZWNJ) — the two characters someone
+# had already been bitten by. That list missed U+30FB KATAKANA MIDDLE DOT,
+# which ordinary Japanese orthography uses to separate the parts of a compound
+# and which shipped in a pack declaring a 3.10 floor, where it is a hard
+# SyntaxError. A denylist of past bites is a record, not a check.
+#
+# This table answers "3.10 vs 3.13" and nothing else. A future interpreter that
+# widens XID again needs its own table, not a new row here.
+_XID_RANGES_ADDED_BY_CPYTHON_313: tuple[tuple[int, int], ...] = (
+    (0x0870, 0x0887),  # ARABIC LETTER ALEF WITH ATTACHED FATHA +23
+    (0x0889, 0x088E),  # ARABIC LETTER NOON WITH INVERTED SMALL V +5
+    (0x0898, 0x089F),  # ARABIC SMALL HIGH WORD AL-JUZ +7
+    (0x08B5, 0x08B5),  # ARABIC LETTER QAF WITH DOT BELOW AND NO DOTS ABOVE
+    (0x08C8, 0x08D2),  # ARABIC LETTER GRAF +10
+    (0x0C3C, 0x0C3C),  # TELUGU SIGN NUKTA
+    (0x0C5D, 0x0C5D),  # TELUGU LETTER NAKAARA POLLU
+    (0x0CDD, 0x0CDD),  # KANNADA LETTER NAKAARA POLLU
+    (0x0CF3, 0x0CF3),  # KANNADA SIGN COMBINING ANUSVARA ABOVE RIGHT
+    (0x0ECE, 0x0ECE),  # LAO YAMAKKAN
+    (0x170D, 0x170D),  # TAGALOG LETTER RA
+    (0x1715, 0x1715),  # TAGALOG SIGN PAMUDPOD
+    (0x171F, 0x171F),  # TAGALOG LETTER ARCHAIC RA
+    (0x180F, 0x180F),  # MONGOLIAN FREE VARIATION SELECTOR FOUR
+    (0x1AC1, 0x1ACE),  # COMBINING LEFT PARENTHESIS ABOVE LEFT +13
+    (0x1B4C, 0x1B4C),  # BALINESE LETTER ARCHAIC JNYA
+    (0x1DFA, 0x1DFA),  # COMBINING DOT BELOW LEFT
+    (0x200C, 0x200D),  # ZERO WIDTH NON-JOINER +1
+    (0x2C2F, 0x2C2F),  # GLAGOLITIC CAPITAL LETTER CAUDATE CHRIVI
+    (0x2C5F, 0x2C5F),  # GLAGOLITIC SMALL LETTER CAUDATE CHRIVI
+    (0x30FB, 0x30FB),  # KATAKANA MIDDLE DOT
+    (0x9FFD, 0x9FFF),  # CJK UNIFIED IDEOGRAPH-9FFD +2
+    (0xA7C0, 0xA7C1),  # LATIN CAPITAL LETTER OLD POLISH O +1
+    (0xA7D0, 0xA7D1),  # LATIN CAPITAL LETTER CLOSED INSULAR G +1
+    (0xA7D3, 0xA7D3),  # LATIN SMALL LETTER DOUBLE THORN
+    (0xA7D5, 0xA7D9),  # LATIN SMALL LETTER DOUBLE WYNN +4
+    (0xA7F2, 0xA7F4),  # MODIFIER LETTER CAPITAL C +2
+    (0xFF65, 0xFF65),  # HALFWIDTH KATAKANA MIDDLE DOT
+    (0x10570, 0x1057A),  # VITHKUQI CAPITAL LETTER A +10
+    (0x1057C, 0x1058A),  # VITHKUQI CAPITAL LETTER HA +14
+    (0x1058C, 0x10592),  # VITHKUQI CAPITAL LETTER SE +6
+    (0x10594, 0x10595),  # VITHKUQI CAPITAL LETTER Y +1
+    (0x10597, 0x105A1),  # VITHKUQI SMALL LETTER A +10
+    (0x105A3, 0x105B1),  # VITHKUQI SMALL LETTER HA +14
+    (0x105B3, 0x105B9),  # VITHKUQI SMALL LETTER SE +6
+    (0x105BB, 0x105BC),  # VITHKUQI SMALL LETTER Y +1
+    (0x10780, 0x10785),  # MODIFIER LETTER SMALL CAPITAL AA +5
+    (0x10787, 0x107B0),  # MODIFIER LETTER SMALL DZ DIGRAPH +41
+    (0x107B2, 0x107BA),  # MODIFIER LETTER SMALL CAPITAL Y +8
+    (0x10EFD, 0x10EFF),  # ARABIC SMALL LOW WORD SAKTA +2
+    (0x10F70, 0x10F85),  # OLD UYGHUR LETTER ALEPH +21
+    (0x11070, 0x11075),  # BRAHMI SIGN OLD TAMIL VIRAMA +5
+    (0x110C2, 0x110C2),  # KAITHI VOWEL SIGN VOCALIC R
+    (0x1123F, 0x11241),  # KHOJKI LETTER QA +2
+    (0x11740, 0x11746),  # AHOM LETTER CA +6
+    (0x11AB0, 0x11ABF),  # CANADIAN SYLLABICS NATTILIK HI +15
+    (0x11F00, 0x11F10),  # KAWI SIGN CANDRABINDU +16
+    (0x11F12, 0x11F3A),  # KAWI LETTER KA +40
+    (0x11F3E, 0x11F42),  # KAWI VOWEL SIGN E +4
+    (0x11F50, 0x11F59),  # KAWI DIGIT ZERO +9
+    (0x12F90, 0x12FF0),  # CYPRO-MINOAN SIGN CM001 +96
+    (0x1342F, 0x1342F),  # EGYPTIAN HIEROGLYPH V011D
+    (0x13440, 0x13455),  # EGYPTIAN HIEROGLYPH MIRROR HORIZONTALLY +21
+    (0x16A70, 0x16ABE),  # TANGSA LETTER OZ +78
+    (0x16AC0, 0x16AC9),  # TANGSA DIGIT ZERO +9
+    (0x1AFF0, 0x1AFF3),  # KATAKANA LETTER MINNAN TONE-2 +3
+    (0x1AFF5, 0x1AFFB),  # KATAKANA LETTER MINNAN TONE-7 +6
+    (0x1AFFD, 0x1AFFE),  # KATAKANA LETTER MINNAN NASALIZED TONE-7 +1
+    (0x1B11F, 0x1B122),  # HIRAGANA LETTER ARCHAIC WU +3
+    (0x1B132, 0x1B132),  # HIRAGANA LETTER SMALL KO
+    (0x1B155, 0x1B155),  # KATAKANA LETTER SMALL KO
+    (0x1CF00, 0x1CF2D),  # ZNAMENNY COMBINING MARK GORAZDO NIZKO S KRYZHEM ON LEFT +45
+    (0x1CF30, 0x1CF46),  # ZNAMENNY COMBINING TONAL RANGE MARK MRACHNO +22
+    (0x1DF00, 0x1DF1E),  # LATIN SMALL LETTER FENG DIGRAPH WITH TRILL +30
+    (0x1DF25, 0x1DF2A),  # LATIN SMALL LETTER D WITH MID-HEIGHT LEFT HOOK +5
+    (0x1E030, 0x1E06D),  # MODIFIER LETTER CYRILLIC SMALL A +61
+    (0x1E08F, 0x1E08F),  # COMBINING CYRILLIC SMALL LETTER BYELORUSSIAN-UKRAINIAN I
+    (0x1E290, 0x1E2AE),  # TOTO LETTER PA +30
+    (0x1E4D0, 0x1E4F9),  # NAG MUNDARI LETTER O +41
+    (0x1E7E0, 0x1E7E6),  # ETHIOPIC SYLLABLE HHYA +6
+    (0x1E7E8, 0x1E7EB),  # ETHIOPIC SYLLABLE GURAGE HHWA +3
+    (0x1E7ED, 0x1E7EE),  # ETHIOPIC SYLLABLE GURAGE MWI +1
+    (0x1E7F0, 0x1E7FE),  # ETHIOPIC SYLLABLE GURAGE QWI +14
+    (0x2A6DE, 0x2A6DF),  # CJK UNIFIED IDEOGRAPH-2A6DE +1
+    (0x2B735, 0x2B739),  # CJK UNIFIED IDEOGRAPH-2B735 +4
+    (0x2EBF0, 0x2EE5D),  # CJK UNIFIED IDEOGRAPH-2EBF0 +621
+    (0x31350, 0x323AF),  # CJK UNIFIED IDEOGRAPH-31350 +4191
+)
+
+#: The same table expanded for O(1) membership: 5,674 one-character strings.
+_XID_CHARS_ADDED_BY_CPYTHON_313: frozenset[str] = frozenset(
+    chr(codepoint)
+    for first, last in _XID_RANGES_ADDED_BY_CPYTHON_313
+    for codepoint in range(first, last + 1)
+)
+
+
 @dataclass(frozen=True)
 class Finding:
     """A single validation finding from the script-safety layer.
@@ -1408,11 +1517,16 @@ class SchemaValidator:
     # Characters that only became valid in identifiers on newer interpreters.
     # The behavior boundary is CPython version, not a single Unicode version:
     # 3.10/3.11/3.12 ship Unicode 13.0/14.0/15.0 and raise SyntaxError on these,
-    # while 3.13+ (Unicode 15.1) accepts them as XID — the exact Sinhala-ZWJ
-    # trap. We do a *static* membership test rather than calling ``compile()`` so
-    # the check is deterministic regardless of the interpreter running the gate.
-    # ZWJ (U+200D) is the load-bearing case; ZWNJ (U+200C) follows the same rule.
-    _XID_ONLY_FROM_CPYTHON_313: frozenset[str] = frozenset({"\u200d", "\u200c"})
+    # while 3.13+ (Unicode 15.1) accepts them as XID. The test is *static*
+    # membership rather than a call to ``compile()``, so the check is
+    # deterministic regardless of which interpreter runs the gate.
+    #
+    # This is the FULL 3.10 -> 3.13 delta, from the pinned table at module
+    # level — not the two format characters the check was originally written
+    # around. ZWJ (U+200D) is the Sinhala conjunct case and ZWNJ (U+200C) the
+    # Persian/Urdu one; U+30FB KATAKANA MIDDLE DOT belongs here for exactly the
+    # same reason and a set naming only the first two waved it through.
+    _XID_ONLY_FROM_CPYTHON_313: frozenset[str] = _XID_CHARS_ADDED_BY_CPYTHON_313
 
     @staticmethod
     def check_min_interpreter_identifier(
@@ -1422,11 +1536,17 @@ class SchemaValidator:
     ) -> list["Finding"]:
         """Flag values that aren't valid identifiers on the pack's *minimum* CPython.
 
-        The Sinhala ZWJ trap: ``virama + ZWJ + consonant`` is a valid identifier
-        on CPython 3.13+ (Unicode 13.0 XID update) but a ``SyntaxError`` on
-        3.10-3.12. A value that requires a format char allow-listed by the
-        language's policy is therefore only safe if the pack declares a minimum
-        interpreter of 3.13 or newer.
+        Two shipped instances, one mechanism. The Sinhala ZWJ trap: ``virama +
+        ZWJ + consonant`` is a valid identifier on CPython 3.13+ but a
+        ``SyntaxError`` on 3.10-3.12. The Japanese one: ``U+30FB KATAKANA MIDDLE
+        DOT``, which separates the parts of a compound reading, crossed into
+        XID_Continue in the same Unicode release. A value using either is safe
+        only if the pack declares a minimum interpreter of 3.13 or newer.
+
+        The character set is the FULL measured 3.10 -> 3.13 delta
+        (:data:`_XID_RANGES_ADDED_BY_CPYTHON_313`), not a list of the traps
+        someone has already hit — U+30FB shipped in a 3.10-floor pack precisely
+        because the old two-member set did not name it.
 
         This is a **static** XID check (never calls ``compile()``): if a value
         contains any character in
@@ -1450,8 +1570,8 @@ class SchemaValidator:
         if declared is None:
             declared = pack_schema.version
 
-        supports_unicode13_xid = SchemaValidator._version_at_least(declared, 3, 13)
-        if supports_unicode13_xid:
+        supports_unicode15_1_xid = SchemaValidator._version_at_least(declared, 3, 13)
+        if supports_unicode15_1_xid:
             return []
 
         findings: list[Finding] = []
@@ -1460,7 +1580,10 @@ class SchemaValidator:
                 {ch for ch in value if ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313}
             )
             if offending:
-                pretty = ", ".join(f"U+{ord(ch):04X}" for ch in offending)
+                pretty = ", ".join(
+                    f"U+{ord(ch):04X} {unicodedata.name(ch, 'unnamed')}"
+                    for ch in offending
+                )
                 findings.append(
                     Finding(
                         severity="error",
@@ -1469,9 +1592,11 @@ class SchemaValidator:
                         message=(
                             f"Value '{value}' uses {pretty}, which only became "
                             f"a valid identifier character in CPython 3.13 "
-                            f"(Unicode 13.0 XID). The pack declares minimum "
+                            f"(Unicode 15.1 XID). The pack declares minimum "
                             f"interpreter '{declared}'; this raises SyntaxError "
-                            "on 3.10-3.12. Raise python_version_min to '3.13'."
+                            "on 3.10-3.12. Raise python_version_min to '3.13', "
+                            "or give the pre-3.13 packs a spelling that avoids "
+                            "the character."
                         ),
                     )
                 )

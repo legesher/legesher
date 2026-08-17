@@ -11,6 +11,33 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **i18n**: the Japanese pack's `divmod` did not compile on the interpreters it
+  claimed to support. Its rendering, `ディビジョン・モジュール`, separates the two
+  halves of the compound with `U+30FB KATAKANA MIDDLE DOT` — ordinary Japanese
+  orthography, and a valid Python identifier character only from CPython 3.13
+  (Unicode 15.1). On 3.10, 3.11 and 3.12 it is a `SyntaxError`, so any file
+  using it failed to parse. The 3.10 base pack now carries the dot-free
+  `ディビジョンモジュール` — the same reading with the separator removed — and the
+  3.13 overlay restores the canonical spelling, the same version tiering
+  Sinhala already uses for its ZWJ conjuncts. The gate that should have caught
+  this checked a two-character denylist (ZWJ, ZWNJ) against a 5,674-codepoint
+  difference between the two interpreters' identifier rules; it now checks the
+  whole measured difference. [CORE-1905]
+- **i18n**: five English packs declared `community_reviewed: true` while no
+  native-speaker review exists for any pack in the release. The field is now
+  `false` on all five, which is what the maturity ladder and the published
+  dataset card have said all along. [CORE-1905]
+- **i18n**: the published language-packs dataset card left four things for a
+  reader to discover on their own. It now states them: that a small class of
+  Thai renderings is NFKC-unstable and why that is harmless (Python normalises
+  identifiers when it parses them, so the typed spelling and the bound name
+  differ in bytes but name the same identifier); that the vocabulary is
+  machine-drafted and maintainer-curated with no native-speaker sign-off on any
+  pack; that the companion corpus holds Arabic renderings of JavaScript
+  concepts this dataset does not cover; and that joining the two datasets needs
+  the `bcp47` column, because a pack id is not a locale tag (`no` here is `nb`
+  there). The NFKC figure is measured during the export rather than written
+  into the template, so it cannot outlive the packs it counts. [CORE-1905]
 - **core**: saving metadata or any `.legesher/` artifact could fail on Windows
   for a reason that had nothing to do with the write. `os.replace` raises
   `PermissionError: Access is denied` while *any* handle is open on the

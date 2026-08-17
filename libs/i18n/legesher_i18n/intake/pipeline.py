@@ -911,9 +911,19 @@ class BundleImporter:
             if verdict.collides_en_keyword:
                 problems.append("collides with an English keyword")
             if not min_ok:
+                offending = ", ".join(
+                    f"U+{ord(ch):04X}"
+                    for ch in sorted(
+                        {
+                            ch
+                            for ch in info["surface"]
+                            if ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313
+                        }
+                    )
+                )
                 details.append(
-                    f"{info['surface']!r}: uses ZWJ/ZWNJ — identifier-valid only "
-                    "on CPython 3.13+ (version-tiered, not invalid)"
+                    f"{info['surface']!r}: uses {offending} — identifier-valid "
+                    "only on CPython 3.13+ (version-tiered, not invalid)"
                 )
             if problems:
                 status = "warn"

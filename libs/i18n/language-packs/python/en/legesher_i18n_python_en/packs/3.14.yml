@@ -14,6 +14,6 @@ metadata:
   compatibility_tested:
   - '3.14'
   last_updated: '2025-11-23'
-  community_reviewed: true
+  community_reviewed: false
   author: Legesher Team
   license: Apache-2.0

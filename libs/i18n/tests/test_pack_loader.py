@@ -8,6 +8,7 @@ import yaml
 from pathlib import Path
 
 from legesher_i18n.pack_loader import LanguagePackLoader
+from legesher_i18n.schema_validator import SchemaValidator
 from legesher_i18n.exceptions import (
     CircularInheritanceError,
     MaxInheritanceDepthError,
@@ -771,15 +772,69 @@ class TestSinhalaInterpreterTiers:
         assert drifted == {}, f"tier spellings drifted apart: {drifted}"
 
 
+class TestJapaneseInterpreterTiers:
+    """CORE-1905: `ja` tiers `divmod` around U+30FB KATAKANA MIDDLE DOT.
+
+    The canonical reading `ディビジョン・モジュール` separates its two halves with
+    U+30FB, an identifier character only from CPython 3.13 (Unicode 15.1 XID).
+    It shipped in the 3.10 base pack, where it is a hard SyntaxError. The base
+    packs now carry the dot-free `ディビジョンモジュール` — the same reading, the
+    separator removed — and the 3.13 overlay restores the canonical spelling.
+
+    The same shape as ``TestSinhalaInterpreterTiers``, because it is the same
+    mechanism: both tiers must be the same word, differing only by the character
+    the older interpreter cannot parse.
+    """
+
+    MIDDLE_DOT = "\u30fb"
+    DOTTED = "ディビジョン・モジュール"
+    DOT_FREE = "ディビジョンモジュール"
+
+    def test_lower_tiers_carry_the_dot_free_form(self):
+        loader = LanguagePackLoader()
+        for version in ("3.10", "3.11", "3.12"):
+            pack = loader.load("ja", "python", version)
+            assert pack.builtins["divmod"] == self.DOT_FREE
+            assert self.MIDDLE_DOT not in pack.builtins["divmod"]
+
+    def test_313_plus_restores_the_canonical_spelling(self):
+        loader = LanguagePackLoader()
+        for version in ("3.13", "3.14"):
+            pack = loader.load("ja", "python", version)
+            assert pack.builtins["divmod"] == self.DOTTED
+
+    def test_the_tiers_are_the_same_word_minus_the_separator(self):
+        assert self.DOTTED.replace(self.MIDDLE_DOT, "") == self.DOT_FREE
+
+    def test_no_other_ja_value_needs_a_313_only_character(self):
+        """The tiering is one term wide; a second one would want its own note."""
+        loader = LanguagePackLoader()
+        pack = loader.load("ja", "python", "3.10")
+        offenders = {
+            f"{section}.{key}": value
+            for section in ("keywords", "builtins", "exceptions", "reserved_words")
+            for key, value in (getattr(pack, section, {}) or {}).items()
+            if any(ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313 for ch in value)
+        }
+        assert offenders == {}, (
+            f"ja 3.10 still carries 3.13-only characters: {offenders}"
+        )
+
+
 def test_no_xid_313_only_char_below_the_declared_floor():
     """No pack value may contain a character that only became a valid identifier
-    on CPython 3.13 (ZWJ U+200D / ZWNJ U+200C) while the pack declares a floor
-    below 3.13 — that value would ``SyntaxError`` on the interpreter it targets.
+    on CPython 3.13 while the pack declares a floor below 3.13 — that value would
+    ``SyntaxError`` on the interpreter it targets.
 
     Generalises the CORE-1521 Sinhala fix to every shipped pack: the deterministic
     static guarantee that each tier parses on its own interpreter.
+
+    The character set is the validator's own, not a local copy. A local
+    ``{ZWJ, ZWNJ}`` literal is what let ``ja`` ship ``U+30FB KATAKANA MIDDLE DOT``
+    under a 3.10 floor with this test green (CORE-1905): the test asserted the
+    two characters its author knew about rather than the rule.
     """
-    xid_313_only = {"‍", "‌"}
+    xid_313_only = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
     loader = LanguagePackLoader()
     offenders = []
     for code, _name in loader.list_available_languages("python"):

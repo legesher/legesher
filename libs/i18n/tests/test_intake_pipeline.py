@@ -811,7 +811,12 @@ def test_every_mechanical_gate_signal_is_cached_on_the_row(db_path: Path) -> Non
     # The ZWJ case is reported through repr(), which escapes the format
     # character to ‍ — the only way an invisible character is legible in
     # a terminal report. Assert the escape, not the raw codepoint.
-    assert any("ZWJ" in str(d) and "\\u200d" in str(d) for d in gates["details"])
+    #
+    # The report names the offending CODEPOINT rather than a mnemonic: the
+    # 3.13-only set is the full 5,674-character delta, not the ZWJ/ZWNJ pair the
+    # message was originally written for, and "uses ZWJ/ZWNJ" is a false
+    # description of U+30FB KATAKANA MIDDLE DOT (CORE-1905).
+    assert any("U+200D" in str(d) and "\\u200d" in str(d) for d in gates["details"])
 
 
 def test_canon_refuses_every_mechanically_invalid_row(db_path: Path) -> None:

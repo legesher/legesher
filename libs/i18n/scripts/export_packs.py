@@ -71,6 +71,7 @@ import json
 import shutil
 import subprocess
 import sys
+import unicodedata
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -355,6 +356,48 @@ def build_locale_rows(
     return out
 
 
+def nfkc_instability(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Describe the NFKC-unstable renderings in the emitted vocabulary.
+
+    Python normalises identifiers to NFKC at parse time (PEP 3131), so a
+    rendering whose NFKC form differs from itself is typed one way and resolved
+    another. That is not a defect -- both spellings name the same identifier --
+    but it is a property a consumer diffing this dataset against source code, or
+    joining it to another corpus, has to know about before they are surprised by
+    it.
+
+    MEASURED, never asserted. The count and the characters involved come from
+    the rows about to be published, so the card cannot claim a number the data
+    stopped supporting. Today it is one locale and one character (Thai
+    ``U+0E33 SARA AM``, which decomposes to ``U+0E4D U+0E32``); a regenerated
+    pack could move that figure in either direction, and a hand-written "22" is
+    exactly how a card outlives the thing it counted.
+    """
+    by_locale: dict[tuple[str, str], set[str]] = {}
+    characters: set[str] = set()
+    affected_rows = 0
+
+    for row in rows:
+        value = row["translation"]
+        if unicodedata.normalize("NFKC", value) == value:
+            continue
+        affected_rows += 1
+        by_locale.setdefault((row["locale"], row["language_name"]), set()).add(value)
+        characters.update(ch for ch in value if unicodedata.normalize("NFKC", ch) != ch)
+
+    return {
+        "rows": affected_rows,
+        "renderings": sum(len(values) for values in by_locale.values()),
+        "locales": [
+            {"locale": code, "language_name": name} for code, name in sorted(by_locale)
+        ],
+        "characters": [
+            {"codepoint": f"U+{ord(ch):04X}", "name": unicodedata.name(ch, "unnamed")}
+            for ch in sorted(characters)
+        ],
+    }
+
+
 def assert_python_only(rows: list[dict[str, Any]]) -> None:
     """Re-prove the CORE-1913 property on the emitted rows.
 
@@ -483,6 +526,49 @@ def licenses_agree(pack_licenses: dict[str, int]) -> bool:
     return {name.casefold() for name in pack_licenses} == {declared}
 
 
+def render_normalization(nfkc: dict[str, Any]) -> str:
+    """Render the card's normalization note from the measured instability.
+
+    Two branches, both true statements about the data. The populated one names
+    the count, the locales and the characters :func:`nfkc_instability` actually
+    found; the empty one says so. Neither hard-codes a figure, because the
+    packs are regenerated and the figure moves with them.
+    """
+    preamble = (
+        "Python normalises identifiers to NFKC when it parses them (PEP 3131). "
+        "A rendering whose own NFKC form differs from it is therefore typed one "
+        "way and resolved another: the bytes in your source file and the bytes "
+        "of the name the interpreter binds are not the same, though they are the "
+        "same identifier."
+    )
+
+    renderings = nfkc.get("renderings", 0)
+    if not renderings:
+        return (
+            f"{preamble}\n\nNo rendering in this release is NFKC-unstable, so "
+            f"every `translation` value here is byte-identical to the name it "
+            f"binds."
+        )
+
+    locales = nfkc.get("locales") or []
+    characters = nfkc.get("characters") or []
+    who = ", ".join(f"{item['language_name']} (`{item['locale']}`)" for item in locales)
+    which = ", ".join(f"`{item['codepoint']}` {item['name']}" for item in characters)
+    count = f"{renderings} renderings" if renderings != 1 else "One rendering"
+    verb = "are" if renderings != 1 else "is"
+    only = "the same character" if len(characters) == 1 else "the same few characters"
+
+    return (
+        f"{preamble}\n\n"
+        f"{count} in this release {verb} NFKC-unstable, all in {who}, and all "
+        f"through {only}: {which}. Nothing else in the vocabulary is affected. "
+        f"The figure is measured over the rows this release actually contains, "
+        f"not asserted, so it moves when the packs do. If you compare a "
+        f"`translation` value against a name taken from a running interpreter, "
+        f"normalise both to NFKC first."
+    )
+
+
 def render_card(manifest: dict[str, Any], pack_licenses: dict[str, int]) -> str:
     """Render the Hugging Face dataset card.
 
@@ -525,6 +611,7 @@ def render_card(manifest: dict[str, Any], pack_licenses: dict[str, int]) -> str:
     version_rows = "\n".join(
         f"| {version} | {by_version[version]} |" for version in VERSIONS
     )
+    normalization_section = render_normalization(manifest.get("nfkc_unstable") or {})
     license_note = ""
     if not licenses_agree(pack_licenses):
         rendered = ", ".join(
@@ -574,6 +661,10 @@ Take this dataset if you want the words Legesher ships. Take the corpus if you
 want the evidence behind them, including the renderings that were proposed and
 not chosen.
 
+The corpus is also wider in one respect: it holds a small set of Arabic
+renderings of JavaScript concepts, which are out of scope here — `target` is
+`python` on every row in this dataset.
+
 ## Maturity
 
 {tier_paragraph}The ladder:
@@ -588,6 +679,17 @@ not chosen.
 `reviewed` — how many endorsements, from how varied a set of voices — is still
 being defined.** Treat an `experimental` pack as a serious starting point that
 wants native review, not as settled terminology.
+
+### Who chose these words
+
+Every rendering here was drafted by a language model and then curated by
+Legesher's maintainers, who kept it, replaced it, or rewrote it. That is the
+whole provenance: no pack in this release has been signed off by a native
+speaker of its language, and none of the maintainers is a native speaker of most
+of them. Endorsements do exist, but they live in the corpus and they are at
+contributor rung — one person backing one rendering, which is a data point about
+that rendering and not a review of the pack it sits in. Nothing on the review
+ladder above `experimental` has been earned yet.
 
 ## Contents
 
@@ -622,10 +724,18 @@ interpreter. `defined_at` and `inherited` preserve the delta structure.
 One row per shipped locale: identity (`iso639_2`, `bcp47`), script properties
 (`rtl`, `has_case_distinction`), `tier`, and term counts.
 
+Join this dataset to the corpus on `bcp47`, not on `locale`: a pack id is not a
+locale tag (`no` here is `nb` in the corpus, `zh` is `zh-Hans`), so joining on
+the pack id drops exactly the rows that differ.
+
 ### JSON
 
 `json/<locale>/<version>.json` mirrors the resolved pack for consumers that
 would rather not read Parquet.
+
+## Normalization
+
+{normalization_section}
 
 ## Provenance
 
@@ -741,6 +851,10 @@ def main() -> int:
         "tier_counts": {
             tier: sum(1 for r in locale_rows if r["tier"] == tier) for tier in tiers
         },
+        # Measured on the emitted rows so the card's normalization note and the
+        # manifest cannot disagree, and so neither carries a number that the
+        # next pack regeneration silently invalidates.
+        "nfkc_unstable": nfkc_instability(rows),
         "declared_license": DECLARED_LICENSE,
         "pack_metadata_licenses": pack_licenses,
         "categories": list(SECTIONS),

@@ -22,8 +22,11 @@ from legesher_i18n.schema_validator import LanguagePackSchema, SchemaValidator
 from legesher_i18n.scripts import audit_packs
 
 # A character that only became a valid identifier char in CPython 3.13
-# (Unicode 13.0 XID). Pulled from the validator's own set so the test tracks it.
-_XID_313_ONLY = next(iter(SchemaValidator._XID_ONLY_FROM_CPYTHON_313))
+# (Unicode 15.1 XID). Pulled from the validator's own set so the test tracks it,
+# and taken as ``min`` rather than ``next(iter(...))``: the set now holds 5,674
+# characters, and frozenset iteration order over strings varies with the hash
+# seed, so an arbitrary member would make the fixture differ run to run.
+_XID_313_ONLY = min(SchemaValidator._XID_ONLY_FROM_CPYTHON_313)
 
 
 def _schema(**sections: object) -> LanguagePackSchema:

@@ -48,12 +48,24 @@ from scripts.translate.yaml_exporter import (
     IncompleteSelectionError,
     InterpreterFloorCollisionError,
     UnparseablePackError,
+    UnstrippableXIDError,
     YAMLExporter,
 )
 
 # Zero-width joiner: a valid identifier character only on CPython 3.13+
 # (Unicode 15.1 XID) — the Sinhala conjunct trap behind CORE-1521.
 ZWJ = "‍"
+
+# Katakana middle dot: the same trap in a VISIBLE character. It separates the
+# parts of a Japanese compound reading and entered XID_Continue in the same
+# Unicode release as ZWJ, which is how `ja` shipped a hard SyntaxError in a
+# 3.10-floor pack (CORE-1905).
+MIDDLE_DOT = "・"
+
+# In the 3.10 -> 3.13 delta but NOT strippable: removing a Telugu nukta changes
+# the word rather than its rendering, so tiering must refuse instead of silently
+# publishing something else.
+TELUGU_NUKTA = "఼"
 
 _CATEGORY_TERMS = [
     (
@@ -916,6 +928,93 @@ class TestInterpreterFloorTiering:
         assert _load(_pack_file(temp_output_dir, "si", "3.12"))["keywords"]["type"] == (
             "tipo"
         )
+
+
+class TestKatakanaMiddleDotTiering:
+    """CORE-1905: the tiering mechanism is not ZWJ-specific.
+
+    U+30FB KATAKANA MIDDLE DOT is a valid identifier character only from
+    CPython 3.13, exactly like ZWJ, and removing it leaves the same reading —
+    so it tiers by the same route. The exporter's strip set had been written as
+    a copy of a two-member ZWJ/ZWNJ list, and `ja`'s `divmod` went out
+    untiered.
+    """
+
+    @staticmethod
+    def _populate_middle_dot(db, lang: str = "ja") -> dict:
+        ids = _populate_full_language(db, lang)
+        _reselect(db, ids, lang, "builtin_func", "divmod", f"t_divi{MIDDLE_DOT}mod")
+        return ids
+
+    def test_310_carries_the_dot_free_form(self, exporter, temp_db, temp_output_dir):
+        self._populate_middle_dot(temp_db)
+        exporter.export_language("ja", overwrite=True)
+        d310 = _load(_pack_file(temp_output_dir, "ja", "3.10"))
+
+        assert d310["builtins"]["divmod"] == "t_divimod"
+        assert MIDDLE_DOT not in _pack_file(temp_output_dir, "ja", "3.10").read_text(
+            encoding="utf-8"
+        )
+
+    def test_313_overlay_restores_the_dot(self, exporter, temp_db, temp_output_dir):
+        self._populate_middle_dot(temp_db)
+        exporter.export_language("ja", overwrite=True)
+        d313 = _load(_pack_file(temp_output_dir, "ja", "3.13"))
+
+        assert d313["builtins"]["divmod"] == f"t_divi{MIDDLE_DOT}mod"
+        # The overlay carries the tiered term and nothing it did not need to.
+        assert set(d313["builtins"]) == {"divmod"}
+
+    def test_the_two_tiers_are_the_same_word_minus_the_separator(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        self._populate_middle_dot(temp_db)
+        exporter.export_language("ja", overwrite=True)
+        low = _load(_pack_file(temp_output_dir, "ja", "3.10"))["builtins"]["divmod"]
+        high = _load(_pack_file(temp_output_dir, "ja", "3.13"))["builtins"]["divmod"]
+        assert high.replace(MIDDLE_DOT, "") == low
+
+    def test_a_middle_dot_collision_is_still_refused(self, exporter, temp_db):
+        """Stripping must not make two different terms one token, dot or not."""
+        ids = _populate_full_language(temp_db, "ja")
+        _reselect(temp_db, ids, "ja", "keyword", "while", f"t_du{MIDDLE_DOT}p")
+        _reselect(temp_db, ids, "ja", "keyword", "for", "t_dup")
+
+        with pytest.raises(InterpreterFloorCollisionError):
+            exporter.export_language("ja", overwrite=True)
+
+
+class TestUnstrippableXIDCharacters:
+    """Tiering deletes a character, so it may only delete meaningless ones.
+
+    The validator's detection set is the whole 5,674-codepoint 3.10 -> 3.13
+    delta. Most of it is real letters and marks. Stripping one of those would
+    publish a DIFFERENT word under the same term while every gate stayed green,
+    which is strictly worse than refusing to export.
+    """
+
+    def test_an_unstrippable_character_refuses_the_export(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        ids = _populate_full_language(temp_db, "te")
+        _reselect(temp_db, ids, "te", "keyword", "while", f"t_whi{TELUGU_NUKTA}le")
+
+        with pytest.raises(UnstrippableXIDError) as excinfo:
+            exporter.export_language("te", overwrite=True)
+        assert "U+0C3C" in str(excinfo.value)
+        assert "keywords.while" in str(excinfo.value)
+        # Nothing was written: the refusal happens during resolution.
+        assert not (temp_output_dir / "te").exists()
+
+    def test_a_bulk_run_reports_it_as_a_data_integrity_failure(self, exporter, temp_db):
+        _populate_full_language(temp_db, "es")
+        ids = _populate_full_language(temp_db, "te")
+        _reselect(temp_db, ids, "te", "keyword", "while", f"t_whi{TELUGU_NUKTA}le")
+
+        with pytest.raises(BulkExportError) as excinfo:
+            exporter.export_all_languages(overwrite=True)
+        assert isinstance(excinfo.value.failures["te"], UnstrippableXIDError)
+        assert "te" in excinfo.value.data_integrity
 
 
 class TestBulkExportBlastRadius:
