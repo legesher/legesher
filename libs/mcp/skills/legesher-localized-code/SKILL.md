@@ -33,6 +33,7 @@ a builtin's rendering is how localized code silently breaks.
 | --- | --- |
 | Native rendering of canonical code | `translate_to_native` |
 | Canonical form of native code (to run, diff, or ship upstream) | `translate_to_source` |
+| Proof that a file round-trips | either translate tool with `verify_round_trip: true` |
 | Engine facts to explain code or an error in the user's language | `explain_in_language` — it returns construct mappings + a static validation result; you write the prose |
 | How specific terms render in a language | `lookup_keyword_mapping` |
 | Whether the identifier names you invented are safe to use | `validate_identifier_translations` — before you write them, not after |
@@ -51,10 +52,11 @@ stdio server makes no network calls.
    identifiers, comments, docstrings. Look terms up rather than guessing
    (`lookup_keyword_mapping` for keywords/builtins; the project glossary
    for identifiers).
-3. **Round-trip before you finish.** `translate_to_source` on the file,
-   then `translate_to_native` on the result. Byte-identical output is the
-   guarantee holding; anything else means stop and report which construct
-   broke it.
+3. **Round-trip before you finish.** Call `translate_to_source` on the file
+   with `verify_round_trip: true`. The engine translates back, compares
+   byte-for-byte, and checks the canonical form compiles; you do not.
+   Quote the returned `verdict_line` and do not restate the verdict in your
+   own words — the line states what was verified and what was not.
 4. **Validate.** `explain_in_language` includes the static validation
    verdict for the code you touched (compile-level, never executed).
 
@@ -101,7 +103,19 @@ before continuing.
 
 ## When something doesn't map
 
-A missing pack term, an untranslatable construct, a round-trip mismatch:
-flag it explicitly in your response and keep the affected code canonical
-rather than improvising a translation. That is a pack-gap signal the
-Legesher project collects — not a rule you may quietly relax.
+A round-trip failure names the `layer` that broke it, and the layer decides
+the move:
+
+- **`keywords`, `builtins`, `exceptions`, `reserved_words`** — the
+  deterministic layer failed: a pack or engine defect. Report it with the
+  verdict line and keep the affected code canonical.
+- **`collision`** — an identifier is spelled like a pack rendering
+  (a known class: CORE-1840). Rename the identifier; the pack is correct.
+- **`identifiers`** — expected today; canonical storage retains native
+  identifiers. Disclosed residue, not a failure. Carry on.
+- **`comments`, `strings`** — your own layer drifted. Fix it and re-verify.
+
+A missing pack term or an untranslatable construct: flag it explicitly and
+keep the affected code canonical rather than improvising a translation. That
+is a pack-gap signal the Legesher project collects — not a rule you may
+quietly relax.

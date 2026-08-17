@@ -27,6 +27,12 @@ Public API:
         - TranslationTracker: High-level API for tracking translations
         - MetadataManager: Low-level metadata persistence (internal)
 
+    Round-Trip Verification:
+        - first_divergence: Locate where two renderings stop matching
+        - verify_round_trip: Round-trip source through a language and back,
+          returning an earned, content-safe report
+        - RoundTripReport: The result of one round trip - facts, not policy
+
     Exceptions:
         - TranslationError: Base exception class
         - InvalidCodeError: Raised for unparseable code
@@ -93,6 +99,11 @@ from .language_interface import (
     get_supported_languages,
 )
 from .metadata import MetadataManager
+from .round_trip import (
+    RoundTripReport,
+    first_divergence,
+    verify_round_trip,
+)
 from .token_mapper import TokenMapper
 from .transformer import TokenTranslator
 from .translation_tracker import TranslationTracker
@@ -141,6 +152,10 @@ __all__ = [
     # Git integration & metadata
     "TranslationTracker",
     "MetadataManager",
+    # Round-trip verification
+    "RoundTripReport",
+    "first_divergence",
+    "verify_round_trip",
     # Exceptions
     "TranslationError",
     "InvalidCodeError",

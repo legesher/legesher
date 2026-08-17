@@ -36,6 +36,7 @@ libs/core/
 │   ├── tree_sitter/          # TreeSitterTranslator implementation
 │   ├── language_interface.py # create_translator() factory and Protocol
 │   ├── git_filter.py         # Git clean/smudge filters
+│   ├── round_trip.py         # Round-trip verification (comparator/classifier/report)
 │   ├── metadata.py           # MetadataManager for tracking
 │   ├── types.py              # Type definitions
 │   └── utils.py              # Utility functions

@@ -10,6 +10,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from legesher_core.git_filter import GitFilter, clean_filter, smudge_filter
+from legesher_core.round_trip import first_divergence
 
 
 @pytest.fixture
@@ -278,6 +279,10 @@ class TestRoundTripTranslation:
         assert spanish_keywords["return"] in result
         # Check identifiers preserved
         assert "nombre" in result
+        # The actual guarantee: clean then smudge is byte-identical. The
+        # containment checks above pass on any translation that mentions the
+        # right words; only this pins the round trip itself (CORE-1813).
+        assert first_divergence(original, result) is None
 
     def test_roundtrip_preserves_semantics(self, spanish_filter, spanish_keywords):
         """Test round trip preserves semantic meaning."""
@@ -296,6 +301,10 @@ class TestRoundTripTranslation:
         # Semantic meaning preserved
         assert spanish_keywords["def"] in result or "def" in result
         assert spanish_keywords["return"] in result or "return" in result
+        # The or-clauses above pass even on a completely untranslated
+        # result. The byte-identity assertion is the one that means
+        # something (CORE-1813).
+        assert first_divergence(original, result) is None
 
 
 class TestLanguageDetection:

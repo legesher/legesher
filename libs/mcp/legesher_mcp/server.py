@@ -27,6 +27,8 @@ from dataclasses import asdict
 from typing import Annotated, Any, Literal, cast, get_args
 
 from legesher_core.register_map.correction import compare_key
+from legesher_core.round_trip import Divergence
+from legesher_core.round_trip import verify_round_trip as core_verify_round_trip
 from legesher_core.tree_sitter.identifier_map import IdentifierMap
 from legesher_core.tree_sitter.identifier_validator import IdentifierValidator
 from legesher_core.unicode_guard import scan_text
@@ -43,16 +45,19 @@ from .engine import (
     PIVOT_LANGUAGE,
     EngineError,
     LocalEngine,
+    TranslationOutcome,
     get_engine,
 )
 from .schemas import (
     DEFAULT_PYTHON_VERSION,
     LANG_CODE_MAX_LENGTH,
+    SNIPPET_MAX_CHARS,
     SOURCE_MAX_CHARS,
     SUPPORTED_PYTHON_VERSIONS,
     CodebaseMapResult,
     CodebaseMapSummary,
     ConstructMapping,
+    DivergenceModel,
     ExplainMaterial,
     FileMapEntry,
     IdentifierConflict,
@@ -62,6 +67,7 @@ from .schemas import (
     KeywordMappings,
     LookupResult,
     PythonVersion,
+    RoundTripInfo,
     SourceFile,
     SyntaxIssueModel,
     TranslatedFile,
@@ -193,6 +199,18 @@ _LangParam = Annotated[
         description="ISO 639 language code from the legesher://languages catalog.",
     ),
 ]
+_VerifyParam = Annotated[
+    bool,
+    Field(
+        description=(
+            "Also verify the round trip: translate the result back, compare "
+            "byte-for-byte, and check the canonical form compiles. Use this "
+            "instead of comparing two renderings yourself — exact comparison "
+            "over a long file is not a judgement to make by eye. Doubles "
+            "translation cost; quadruples via a pivot."
+        ),
+    ),
+]
 
 
 #: Every tool on this server is a pure function of its arguments: it reads
@@ -245,6 +263,147 @@ def _finish_from_pivot(
     return str(outcome.translated_source)
 
 
+def _snippet(text: str) -> tuple[str, bool]:
+    """Bound one divergence text field for the wire."""
+    if len(text) > SNIPPET_MAX_CHARS:
+        return text[:SNIPPET_MAX_CHARS], True
+    return text, False
+
+
+def _divergence_model(divergence: Divergence) -> DivergenceModel:
+    """Project a core divergence onto the bounded wire shape."""
+    expected, expected_truncated = _snippet(divergence.expected)
+    actual, actual_truncated = _snippet(divergence.actual)
+    return DivergenceModel(
+        line=divergence.line,
+        offset=divergence.offset,
+        expected=expected,
+        actual=actual,
+        truncated=expected_truncated or actual_truncated,
+        kind=divergence.kind.value,
+        layer=divergence.layer.value if divergence.layer is not None else None,
+    )
+
+
+def _round_trip(
+    engine: LocalEngine,
+    *,
+    source: str,
+    forward: TranslationOutcome,
+    source_lang: str,
+    through_lang: str,
+    python_version: str,
+) -> RoundTripInfo:
+    """Verify the round trip, reusing the already-computed forward hop.
+
+    The forward hop is the translation the caller asked for: it already ran
+    (so its failures already surfaced as ordinary tool errors, flag or no
+    flag), and the adapter serves its result rather than translating the
+    same hop twice. Only the return hop reaches the engine, and a failure
+    there is a verdict inside the report, never an exception.
+
+    Classification runs against the non-pivot language's pack — the side
+    whose renderings can diverge — preferring the source side when neither
+    language is English (the compared strings are written in it).
+
+    Raises:
+        EngineError: ``vacuous_round_trip`` when both languages are the
+            same — the engine short-circuits identity, so both hops would
+            be no-ops and the comparison would verify nothing.
+    """
+    pack_lang = source_lang if source_lang != PIVOT_LANGUAGE else through_lang
+    pack = engine.load_pack(pack_lang, python_version)
+
+    def hop(text: str, src: str, tgt: str, version: str) -> tuple[str, bool]:
+        if text == source and src == source_lang and tgt == through_lang:
+            return forward.translated_source, forward.pivoted
+        outcome = engine.translate(
+            source=text, source_lang=src, target_lang=tgt, python_version=version
+        )
+        return outcome.translated_source, outcome.pivoted
+
+    # compile_check understands English keywords only, and the validator
+    # receives the forward rendering — which is canonical English exactly
+    # when the trip goes THROUGH the pivot language. Anywhere else the
+    # compile fact is unknown, not assumed: forward_valid stays null.
+    validate = (
+        (lambda text: engine.compile_check(text).valid) if through_lang == PIVOT_LANGUAGE else None
+    )
+
+    try:
+        report = core_verify_round_trip(
+            source,
+            source_lang,
+            through_lang,
+            python_version,
+            translate=hop,
+            pack=pack,
+            validate=validate,
+        )
+    except ValueError as exc:
+        raise EngineError(
+            "vacuous_round_trip",
+            "source and verification languages are identical; the round trip would verify nothing",
+        ) from exc
+
+    return RoundTripInfo(
+        round_trips=report.round_trips,
+        forward_valid=report.forward_valid,
+        verdict_line=report.verdict_line,
+        divergence_count=report.divergence_count,
+        divergences=[_divergence_model(d) for d in report.divergences],
+        verified=sorted(layer.value for layer in report.verified),
+        grammar_version=report.grammar_version,
+        pivoted=report.pivoted,
+        schema_version=report.schema_version,
+    )
+
+
+def _translate(
+    source: str,
+    source_lang: str,
+    target_lang: str,
+    python_version: str,
+    verify: bool,
+) -> TranslationResult:
+    """The one translation body both translate tools share.
+
+    The two tools differ only in which side is fixed; a duplicated body is
+    how the verify plumbing drifts between them (one contract, one
+    implementation - the same rule this feature exists to apply).
+    """
+    engine = get_engine()
+    try:
+        outcome = engine.translate(
+            source=source,
+            source_lang=source_lang,
+            target_lang=target_lang,
+            python_version=python_version,
+        )
+        round_trip = (
+            _round_trip(
+                engine,
+                source=source,
+                forward=outcome,
+                source_lang=source_lang,
+                through_lang=target_lang,
+                python_version=python_version,
+            )
+            if verify
+            else None
+        )
+    except EngineError as exc:
+        raise _tool_error(exc) from exc
+    return TranslationResult(
+        translated_source=outcome.translated_source,
+        source_lang=source_lang,
+        target_lang=target_lang,
+        python_version=python_version,
+        pivoted=outcome.pivoted,
+        round_trip=round_trip,
+    )
+
+
 # -- tools ----------------------------------------------------------------
 
 
@@ -254,6 +413,7 @@ def translate_to_native(
     target_lang: _LangParam,
     source_lang: _LangParam = PIVOT_LANGUAGE,
     python_version: PythonVersion = DEFAULT_PYTHON_VERSION,
+    verify_round_trip: _VerifyParam = False,
 ) -> TranslationResult:
     """Translate Python source code into the caller's natural language.
 
@@ -264,22 +424,7 @@ def translate_to_native(
     string contents are preserved; only keywords, builtins, exceptions,
     and reserved words are translated.
     """
-    try:
-        outcome = get_engine().translate(
-            source=source,
-            source_lang=source_lang,
-            target_lang=target_lang,
-            python_version=python_version,
-        )
-    except EngineError as exc:
-        raise _tool_error(exc) from exc
-    return TranslationResult(
-        translated_source=outcome.translated_source,
-        source_lang=source_lang,
-        target_lang=target_lang,
-        python_version=python_version,
-        pivoted=outcome.pivoted,
-    )
+    return _translate(source, source_lang, target_lang, python_version, verify_round_trip)
 
 
 @mcp.tool(annotations=_READ_ONLY)
@@ -287,6 +432,7 @@ def translate_to_source(
     source: _SourceParam,
     source_lang: _LangParam,
     python_version: PythonVersion = DEFAULT_PYTHON_VERSION,
+    verify_round_trip: _VerifyParam = False,
 ) -> TranslationResult:
     """Translate native-language code back to English-keyword Python.
 
@@ -296,22 +442,7 @@ def translate_to_source(
     English — for a general X→Y translation call translate_to_native with
     an explicit source_lang.
     """
-    try:
-        outcome = get_engine().translate(
-            source=source,
-            source_lang=source_lang,
-            target_lang=PIVOT_LANGUAGE,
-            python_version=python_version,
-        )
-    except EngineError as exc:
-        raise _tool_error(exc) from exc
-    return TranslationResult(
-        translated_source=outcome.translated_source,
-        source_lang=source_lang,
-        target_lang=PIVOT_LANGUAGE,
-        python_version=python_version,
-        pivoted=outcome.pivoted,
-    )
+    return _translate(source, source_lang, PIVOT_LANGUAGE, python_version, verify_round_trip)
 
 
 @mcp.tool(annotations=_READ_ONLY)

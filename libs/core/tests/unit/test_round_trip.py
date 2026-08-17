@@ -7,6 +7,7 @@ Uses real language pack translations.
 
 import pytest
 
+from legesher_core.round_trip import first_divergence
 from legesher_core.transformer import TokenTranslator
 
 
@@ -64,7 +65,7 @@ class TestRoundTripTranslation:
         back_to_english = es_to_en_translator.translate_code(spanish, "es", "en")
 
         # Should be byte-for-byte identical
-        assert original == back_to_english
+        assert first_divergence(original, back_to_english) is None
 
     def test_complex_code_round_trip_spanish(
         self, en_to_es_translator, es_to_en_translator
@@ -80,7 +81,7 @@ class TestRoundTripTranslation:
         spanish = en_to_es_translator.translate_code(original, "en", "es")
         back_to_english = es_to_en_translator.translate_code(spanish, "es", "en")
 
-        assert original == back_to_english
+        assert first_divergence(original, back_to_english) is None
 
     def test_round_trip_with_comments_spanish(
         self, en_to_es_translator, es_to_en_translator
@@ -94,7 +95,7 @@ class TestRoundTripTranslation:
         spanish = en_to_es_translator.translate_code(original, "en", "es")
         back_to_english = es_to_en_translator.translate_code(spanish, "es", "en")
 
-        assert original == back_to_english
+        assert first_divergence(original, back_to_english) is None
         assert "# This is a comment" in spanish  # Comment unchanged
 
     def test_simple_function_round_trip_arabic(
@@ -112,7 +113,7 @@ class TestRoundTripTranslation:
         back_to_english = ar_to_en_translator.translate_code(arabic, "ar", "en")
 
         # Should be byte-for-byte identical
-        assert original == back_to_english
+        assert first_divergence(original, back_to_english) is None
 
     def test_complex_code_round_trip_arabic(
         self, en_to_ar_translator, ar_to_en_translator
@@ -128,7 +129,7 @@ class TestRoundTripTranslation:
         arabic = en_to_ar_translator.translate_code(original, "en", "ar")
         back_to_english = ar_to_en_translator.translate_code(arabic, "ar", "en")
 
-        assert original == back_to_english
+        assert first_divergence(original, back_to_english) is None
 
     def test_round_trip_preserves_indentation(
         self, en_to_es_translator, es_to_en_translator
@@ -143,7 +144,7 @@ class TestRoundTripTranslation:
         spanish = en_to_es_translator.translate_code(original, "en", "es")
         back_to_english = es_to_en_translator.translate_code(spanish, "es", "en")
 
-        assert original == back_to_english
+        assert first_divergence(original, back_to_english) is None
 
         # Verify indentation levels
         lines = original.split("\n")
@@ -183,7 +184,7 @@ async def process():
         spanish = en_to_es_translator.translate_code(original, "en", "es")
         back_to_english = es_to_en_translator.translate_code(spanish, "es", "en")
 
-        assert original == back_to_english
+        assert first_divergence(original, back_to_english) is None
 
     def test_round_trip_preserves_blank_lines(
         self, en_to_es_translator, es_to_en_translator
@@ -201,7 +202,7 @@ async def process():
         spanish = en_to_es_translator.translate_code(original, "en", "es")
         back_to_english = es_to_en_translator.translate_code(spanish, "es", "en")
 
-        assert original == back_to_english
+        assert first_divergence(original, back_to_english) is None
         assert original.count("\n\n") == back_to_english.count("\n\n")
 
     def test_round_trip_unicode_identifiers(
@@ -213,7 +214,7 @@ async def process():
         spanish = en_to_es_translator.translate_code(original, "en", "es")
         back_to_english = es_to_en_translator.translate_code(spanish, "es", "en")
 
-        assert original == back_to_english
+        assert first_divergence(original, back_to_english) is None
         assert "café" in spanish
         assert "☕" in spanish
 
@@ -243,7 +244,7 @@ async def process():
         assert "income" in arabic
 
         back = ar_to_en_translator.translate_code(arabic, "ar", "en")
-        assert original == back
+        assert first_divergence(original, back) is None
 
 
 class TestRoundTripWhitespace:
@@ -291,7 +292,7 @@ class TestRoundTripWhitespace:
         spanish = en_to_es.translate_code(original, "en", "es")
         back = es_to_en.translate_code(spanish, "es", "en")
 
-        assert original == back
+        assert first_divergence(original, back) is None
 
     def test_trailing_newline_preserved(self, en_to_es, es_to_en):
         """Trailing newline is preserved through round-trip."""
@@ -300,7 +301,7 @@ class TestRoundTripWhitespace:
         spanish = en_to_es.translate_code(original, "en", "es")
         back = es_to_en.translate_code(spanish, "es", "en")
 
-        assert original == back
+        assert first_divergence(original, back) is None
         assert back.endswith("\n")
 
     def test_blank_lines_preserved(self, en_to_es, es_to_en):
@@ -310,7 +311,7 @@ class TestRoundTripWhitespace:
         spanish = en_to_es.translate_code(original, "en", "es")
         back = es_to_en.translate_code(spanish, "es", "en")
 
-        assert original == back
+        assert first_divergence(original, back) is None
 
     def test_multiple_trailing_newlines_preserved(self, en_to_es, es_to_en):
         """Multiple trailing newlines are preserved."""
@@ -319,7 +320,7 @@ class TestRoundTripWhitespace:
         spanish = en_to_es.translate_code(original, "en", "es")
         back = es_to_en.translate_code(spanish, "es", "en")
 
-        assert original == back
+        assert first_divergence(original, back) is None
 
     def test_mixed_crlf_lf_normalized(self, en_to_es, es_to_en):
         """Mixed CRLF and LF lines are all normalized to LF."""
@@ -394,7 +395,7 @@ class TestLatinScriptCollision:
         spanish = en_to_es.translate_code(original, "en", "es")
         back = es_to_en.translate_code(spanish, "es", "en")
 
-        assert original == back
+        assert first_divergence(original, back) is None
 
     @pytest.mark.xfail(
         reason="CORE-704: Latin-script reverse collision — "
@@ -408,7 +409,7 @@ class TestLatinScriptCollision:
         spanish = en_to_es.translate_code(original, "en", "es")
         back = es_to_en.translate_code(spanish, "es", "en")
 
-        assert original == back
+        assert first_divergence(original, back) is None
 
     @pytest.mark.xfail(
         reason="CORE-704: Latin-script reverse collision — "
@@ -422,7 +423,7 @@ class TestLatinScriptCollision:
         spanish = en_to_es.translate_code(original, "en", "es")
         back = es_to_en.translate_code(spanish, "es", "en")
 
-        assert original == back
+        assert first_divergence(original, back) is None
 
     @pytest.mark.xfail(
         reason="CORE-704: Latin-script reverse collision — "
@@ -436,7 +437,7 @@ class TestLatinScriptCollision:
         spanish = en_to_es.translate_code(original, "en", "es")
         back = es_to_en.translate_code(spanish, "es", "en")
 
-        assert original == back
+        assert first_divergence(original, back) is None
 
     def test_chinese_immune_to_collision(self, en_to_zh, zh_to_en):
         """Same variables round-trip perfectly with Chinese (non-Latin immune)."""
@@ -445,7 +446,7 @@ class TestLatinScriptCollision:
         chinese = en_to_zh.translate_code(original, "en", "zh")
         back = zh_to_en.translate_code(chinese, "zh", "en")
 
-        assert original == back
+        assert first_divergence(original, back) is None
 
     def test_spanish_without_collision_variables(self, en_to_es, es_to_en):
         """Code without collision-prone variable names round-trips perfectly."""
@@ -454,4 +455,4 @@ class TestLatinScriptCollision:
         spanish = en_to_es.translate_code(original, "en", "es")
         back = es_to_en.translate_code(spanish, "es", "en")
 
-        assert original == back
+        assert first_divergence(original, back) is None

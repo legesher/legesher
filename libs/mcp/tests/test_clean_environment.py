@@ -209,6 +209,7 @@ async def test_a_host_can_initialize_list_and_translate(
                 "explain_in_language",
                 "lookup_keyword_mapping",
                 "map_existing_codebase",
+                "validate_identifier_translations",
             }
 
             result = await session.call_tool(

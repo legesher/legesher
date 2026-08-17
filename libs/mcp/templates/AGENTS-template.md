@@ -52,9 +52,11 @@ tools translate between the two; both forms are the same program.
    untranslatable construct), flag it explicitly rather than improvising —
    that is a pack-gap signal the Legesher project wants to hear about.
 8. **Round-trip guarantee:** any file you touch must survive
-   native → canonical → native byte-identically through the deterministic
-   tools (`translate_to_source`, then `translate_to_native`). If it does
-   not, stop and report rather than committing.
+   native → canonical → native byte-identically. Verify it through the
+   call — `translate_to_source` with `verify_round_trip: true` — and
+   quote the returned `verdict_line`; the verdict comes from the engine,
+   never by comparing the two renderings yourself. If it reports a
+   failure, stop and report rather than committing.
 
 ## Project glossary
 

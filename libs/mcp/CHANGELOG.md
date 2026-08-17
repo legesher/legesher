@@ -11,6 +11,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- `verify_round_trip` flag on both `translate_to_native` and
+  `translate_to_source` — ask the engine to prove the translation
+  round-trips instead of comparing two renderings by eye. The result gains
+  a `round_trip` block (absent entirely when the flag is off) carrying the
+  byte-for-byte verdict, a quotable single-line `verdict_line`, and each
+  divergence located by line and column and named by the token layer that
+  broke it — pack layers (`keywords`/`builtins`/`exceptions`/
+  `reserved_words`) mean a pack or engine defect, `collision` is an
+  identifier spelled like a pack rendering, `identifiers` is expected
+  residue, `comments`/`strings` are the caller's own drift. `verified`
+  lists only the layers the source actually exercised and came back clean
+  — a clean run claims nothing about layers it never touched (coverage
+  widens under CORE-1841). `forward_valid` reports whether the canonical
+  form compiles, catching the collision that cancels itself on the way
+  back; it is `null` when the forward rendering is not English, since the
+  compile fact would be unknowable rather than assumed. Divergence
+  snippets are truncated to 200 characters with a `truncated` marker, so
+  a long line never ships the file back through its own diff. The flag
+  doubles translation cost (quadruples via a pivot) and never changes the
+  translation itself; a same-language round trip is refused as
+  `vacuous_round_trip` rather than reported as a verification it never
+  performed.
 - `validate_identifier_translations` — the deterministic layer for the part
   of localized code that has no pack. Keywords are dictionary lookups;
   identifiers are invented by the model, so this is the check they get

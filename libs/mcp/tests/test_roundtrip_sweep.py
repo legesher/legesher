@@ -20,6 +20,7 @@ A failure names the language, the file, and the first line that diverged.
 from __future__ import annotations
 
 import pytest
+from legesher_core.round_trip import first_divergence
 from mcp import ClientSession
 from mcp.shared.memory import create_connected_server_and_client_session
 
@@ -69,18 +70,6 @@ def all_pack_languages() -> list[str]:
         for info in get_engine().list_languages()
         if info.pack_available and info.code != "en"
     )
-
-
-def first_divergence(left: str, right: str) -> str:
-    """Human-readable report of where two sources stop matching."""
-    left_lines = left.splitlines()
-    right_lines = right.splitlines()
-    for number, (before, after) in enumerate(zip(left_lines, right_lines), start=1):
-        if before != after:
-            return f"line {number}:\n  expected: {before!r}\n  actual:   {after!r}"
-    if len(left_lines) != len(right_lines):
-        return f"line count differs: expected {len(left_lines)}, got {len(right_lines)}"
-    return "sources differ only in trailing whitespace"
 
 
 async def assert_round_trips(

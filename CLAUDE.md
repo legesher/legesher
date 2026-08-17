@@ -221,13 +221,14 @@ The packages have a logical dependency hierarchy defined in the architecture:
 
 **Tier 1 - Foundation**:
 
-- `legesher-core`: Foundation package (no internal dependencies)
-  - Token-based transformer, AST utilities, git filters
+- `legesher-i18n`: Foundation package (no internal dependencies)
+  - Language packs, term definitions, translation DB, pack loader
 
-**Tier 2 - Language Support**:
+**Tier 2 - Translation Engine**:
 
-- `legesher-i18n`: Depends on `core`
-  - Version-aware language packs, translation API, cultural comments
+- `legesher-core`: Depends on `i18n`
+  - Token-based transformer, AST utilities, git filters, round-trip
+    verification. Loads packs through `legesher_i18n.pack_loader`.
 
 **Tier 3 - User-Facing Tools**:
 

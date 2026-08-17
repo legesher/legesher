@@ -9,9 +9,15 @@ returns deterministic engine facts (constructs + validation), never prose.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializerFunctionWrapHandler,
+    model_serializer,
+)
 
 from .versions import DEFAULT_PYTHON_VERSION, SUPPORTED_PYTHON_VERSIONS
 
@@ -31,9 +37,11 @@ __all__ = [
     "PythonVersion",
     "LANG_CODE_MAX_LENGTH",
     "SOURCE_MAX_CHARS",
+    "SNIPPET_MAX_CHARS",
     "CodebaseMapResult",
     "CodebaseMapSummary",
     "ConstructMapping",
+    "DivergenceModel",
     "ExplainMaterial",
     "FileMapEntry",
     "IdentifierConflict",
@@ -42,6 +50,7 @@ __all__ = [
     "IdentifierVerdict",
     "KeywordMappings",
     "LookupResult",
+    "RoundTripInfo",
     "SourceFile",
     "SyntaxIssueModel",
     "ToolResult",
@@ -57,6 +66,12 @@ SOURCE_MAX_CHARS = 2_000_000
 
 #: Length bound for language-code fields (registry pattern is the gate).
 LANG_CODE_MAX_LENGTH = 16
+
+#: Bound on divergence snippet fields (characters). A physical line is
+#: unbounded below SOURCE_MAX_CHARS — 2 MB legally fits on one line — so
+#: unbounded snippets would put copies of the file on the wire through the
+#: field that exists to avoid exactly that.
+SNIPPET_MAX_CHARS = 200
 
 #: Length bound for identifier fields. Generous next to any real name —
 #: a sanity bound on input, not a naming rule.
@@ -83,6 +98,79 @@ class TranslationResult(ToolResult):
             "packs and round-trip fidelity depends on both."
         )
     )
+    round_trip: RoundTripInfo | None = Field(
+        default=None,
+        description=(
+            "Round-trip verification result. Present only when the tool was "
+            "called with verify_round_trip: true; absent otherwise."
+        ),
+    )
+
+    @model_serializer(mode="wrap")
+    def _omit_unrequested_round_trip(
+        self, handler: SerializerFunctionWrapHandler
+    ) -> dict[str, Any]:
+        """Serialize with ``round_trip`` ABSENT — not null — when the flag
+        was off: a null field is still tokens in every response."""
+        data = handler(self)
+        if isinstance(data, dict) and data.get("round_trip") is None:
+            data.pop("round_trip", None)
+        return data
+
+
+class DivergenceModel(ToolResult):
+    """One located difference (1-based line/column). Text fields are
+    truncated to SNIPPET_MAX_CHARS: a physical line is unbounded below
+    SOURCE_MAX_CHARS, and unbounded lines put copies of the file on the
+    wire through the field that exists to avoid exactly that."""
+
+    line: int
+    offset: int | None = None
+    expected: str = Field(max_length=SNIPPET_MAX_CHARS)
+    actual: str = Field(max_length=SNIPPET_MAX_CHARS)
+    truncated: bool = False
+    kind: str
+    layer: str | None = Field(
+        default=None,
+        description=(
+            "keywords | builtins | exceptions | reserved_words | collision | "
+            "identifiers | comments | strings. Routes the fix: pack layers are "
+            "engine/pack defects, collision is a known identifier class "
+            "(CORE-1840), identifiers are expected residue, comments/strings "
+            "are the writer's own drift."
+        ),
+    )
+
+
+class RoundTripInfo(ToolResult):
+    """Result of verifying that translating back reproduces the input."""
+
+    round_trips: bool
+    forward_valid: bool | None = Field(
+        description=(
+            "Whether the canonical form compiles. A round trip can be "
+            "byte-identical over an invalid canonical form when a collision "
+            "cancels itself; this field carries that fact."
+        )
+    )
+    verdict_line: str = Field(
+        description=(
+            "Single-line verdict stating its own limits; contains no source "
+            "content. Quote it rather than restating the verdict in your own "
+            "words."
+        )
+    )
+    divergence_count: int
+    divergences: list[DivergenceModel]
+    verified: list[str] = Field(
+        description=(
+            "Layers this run actually exercised AND found clean. A clean "
+            "result says nothing about layers absent from this list."
+        )
+    )
+    grammar_version: str
+    pivoted: bool
+    schema_version: str
 
 
 class SyntaxIssueModel(ToolResult):

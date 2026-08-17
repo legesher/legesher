@@ -9,6 +9,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Round-trip verification owns one implementation (`legesher_core.round_trip`):
+  `first_divergence`/`all_divergences` locate where two renderings stop
+  matching (line, column, terminator-exact), `classify_divergence` names the
+  token layer a divergence sits in — including `collision` for identifiers
+  spelled like pack renderings — and `verify_round_trip` runs native →
+  canonical → native and returns a `RoundTripReport` with an earned
+  verified-layer set, a compile fact for the canonical form, and a
+  content-safe single-line verdict. Replaces per-caller re-derivations in
+  the test suites and downstream verifiers. [CORE-1813]
+
 ## [0.23.0] - 2026-08-16
 
 ### Added

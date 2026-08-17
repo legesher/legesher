@@ -23,9 +23,10 @@ import pytest
 from legesher_core.exceptions import TranslationError
 from legesher_i18n.exceptions import LanguagePackError
 from legesher_i18n.pack_loader import LanguagePackLoader
+from legesher_i18n.term_definitions import YAML_SECTION_CATEGORIES
 
 from legesher_mcp import engine as engine_module
-from legesher_mcp.engine import EngineError, LocalEngine, get_engine
+from legesher_mcp.engine import CATEGORIES, EngineError, LocalEngine, get_engine
 
 #: A message shaped like the ones the loader really raises: absolute path,
 #: pack filename, and a traceback fragment. None of it may escape.
@@ -564,3 +565,19 @@ def test_refresh_packs_is_safe_under_concurrency() -> None:
         worker.join()
 
     assert not errors, errors
+
+
+# -- category vocabulary ----------------------------------------------------
+
+
+def test_categories_matches_the_canonical_section_vocabulary() -> None:
+    """CATEGORIES covers exactly the pack's own section names.
+
+    Set equality on purpose, against a literal on purpose: CATEGORIES
+    stays a hand-written tuple because its ORDER is a contract (lookup
+    precedence — ``keywords`` wins over ``reserved_words`` on conflict),
+    while ``YAML_SECTION_CATEGORIES``'s ordering is an accident of how the
+    dict was authored. Deriving one from the other would launder that
+    accident into a contract; this pins membership and nothing more.
+    """
+    assert set(CATEGORIES) == set(YAML_SECTION_CATEGORIES)
