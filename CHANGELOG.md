@@ -51,6 +51,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **mcp**: `libs/mcp/evals/grounding_eval.py` measures whether a model
+  *relays* the server's engine facts or *invents* them. Tool selection alone
+  is not enough to judge a client: a model can call every tool correctly and
+  then narrate its own mappings, which breaks the server's division of labour
+  while looking like it honoured it — and the failure is invisible, because a
+  fabricated mapping reads exactly like a real one. The harness scores `hit`
+  (called the expected tool), `fidelity` (the engine's facts survived into the
+  prose) and `envelope` (arguments needed unwrapping), extracting facts from
+  what the tool returned on the run rather than from a snapshot, so it stays
+  correct as packs change. High hit with low fidelity is reported as the
+  dangerous result it is, low fidelity prints the prose so a human can
+  adjudicate, and transport failures are marked inconclusive instead of
+  counted as a refusal to call. [CORE-1843]
 - **mcp**: `legesher-mcp` releases on its own train — own semantic-release
   config, `mcp-v{version}` tags, and `release-mcp.yml` on `libs/mcp/**` —
   instead of having no versioning at all. Pre-1.0 breaking changes bump the
