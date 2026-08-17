@@ -115,7 +115,7 @@ Python's built-in functions and types in Malay.
 | `iter` | `mengiterasi` |
 | `len` | `panjang` |
 | `list` | `daftar` |
-| `locals` | `thelocalvariables` |
+| `locals` | `pembolehubahsetempat` |
 | `map` | `memetakan` |
 | `max` | `maksimum` |
 | `memoryview` | `view_memori` |

@@ -94,7 +94,7 @@ builtins:
   bool: logikai_értékek
   bytearray: bajt_kutat
   bytes: bajtok
-  classmethod: the_classmethod
+  classmethod: osztálymetódus
   complex: komplex
   dict: szótár
   float: tizedesegyenes
@@ -189,7 +189,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2026-01-26'
+  last_updated: '2026-08-18'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: Apache-2.0

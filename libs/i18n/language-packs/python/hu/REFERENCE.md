@@ -86,7 +86,7 @@ Python's built-in functions and types in Hungarian.
 | `bytes` | `bajtok` |
 | `callable` | `hivatázható` |
 | `chr` | `karakterszerkezet` |
-| `classmethod` | `the_classmethod` |
+| `classmethod` | `osztálymetódus` |
 | `compile` | `kompilál` |
 | `complex` | `komplex` |
 | `delattr` | `törölni` |

@@ -18,7 +18,7 @@ keywords:
   finally: ทำเสมอ
   for: วนรอบ
   from: ฝัน
-  global: เครื่องมือภาษาไทยทั้งหมด
+  global: ส่วนกลาง
   if: ถ้า
   import: ยินดี
   in: อยู่ใน
@@ -78,7 +78,7 @@ builtins:
   oct: อัก
   open: เปิด
   ord: ออร์ด
-  pow: เครื่องหมายนี้จะถูกแปลเป็นภาษาไทย
+  pow: ยกกำลัง
   print: เจตนา
   range: เลขที่มาตราฐาน
   repr: การแทนค่า
@@ -189,7 +189,7 @@ metadata:
   python_version_max: '3.14'
   compatibility_tested:
   - '3.10'
-  last_updated: '2026-01-26'
+  last_updated: '2026-08-18'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: Apache-2.0

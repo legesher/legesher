@@ -102,7 +102,7 @@ Python's built-in functions and types in Turkish.
 | `format` | `biçim` |
 | `frozenset` | `dondurulmuşküme` |
 | `getattr` | `özniteliğeeriş` |
-| `globals` | `theglobalvariables` |
+| `globals` | `küreseldeğişkenler` |
 | `hasattr` | `sahip` |
 | `hash` | `özet_değeri` |
 | `help` | `yardım` |

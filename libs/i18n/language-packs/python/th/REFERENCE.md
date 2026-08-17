@@ -45,7 +45,7 @@ These are Python's reserved words translated to Thai.
 | `finally` | `ทำเสมอ` |
 | `for` | `วนรอบ` |
 | `from` | `ฝัน` |
-| `global` | `เครื่องมือภาษาไทยทั้งหมด` |
+| `global` | `ส่วนกลาง` |
 | `if` | `ถ้า` |
 | `import` | `ยินดี` |
 | `in` | `อยู่ใน` |
@@ -126,7 +126,7 @@ Python's built-in functions and types in Thai.
 | `oct` | `อัก` |
 | `open` | `เปิด` |
 | `ord` | `ออร์ด` |
-| `pow` | `เครื่องหมายนี้จะถูกแปลเป็นภาษาไทย` |
+| `pow` | `ยกกำลัง` |
 | `print` | `เจตนา` |
 | `property` | `คุณสำหรับ` |
 | `range` | `เลขที่มาตราฐาน` |

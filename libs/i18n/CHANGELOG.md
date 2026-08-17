@@ -11,6 +11,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **Five renderings that were never translations are replaced** — th `pow`
+  and th `global` carried prompt residue (one literally read "this symbol
+  will be translated into Thai"), and hu `classmethod`, tr `globals`, ms
+  `locals` were untranslated English carrying an article
+  (`the_classmethod`, `theglobalvariables`, `thelocalvariables`). The new
+  values follow each pack's existing conventions (tr `globals` mirrors
+  `locals`=`yereldeğişkenler`; ms `locals` mirrors
+  `globals`=`pembolehubahsejagat`) and are recorded as pending native
+  review. Breaking for code that used the old identifiers.
+
 - **Every shipped pack now declares `Apache-2.0` in its own
   `metadata.license`.** All 255 pack files said `MIT`, contradicting the
   distribution that ships them: the monorepo `LICENSE`, `libs/i18n`'s
