@@ -118,6 +118,13 @@ Additional recommendations:
 4. **Regular security audits** of your Legesher implementation
 5. **Contact us** for enterprise security assessments
 
+## Threat Model
+
+The product-wide script-inclusion threat model — the surfaces where code or
+render-shaping data can enter a Legesher product, the attack classes per
+surface, and the mitigations that hold each boundary — lives in
+[THREAT_MODEL.md](THREAT_MODEL.md).
+
 ## Known Security Considerations
 
 ### License Structure
