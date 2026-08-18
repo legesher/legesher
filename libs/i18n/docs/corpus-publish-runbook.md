@@ -17,6 +17,15 @@ Face corpus dataset. Every one-way door has a blocking gate in code; this
 document is the order you walk through them, not a checklist you must hold
 in your head.
 
+Since CORE-1800 this export is no longer free-floating: it is a named step of
+the canon packs release ([`packs-publish-runbook.md`](packs-publish-runbook.md),
+precondition 4). Every tier-transition release runs
+`scripts/check_corpus_freshness.py`, and the release fails while the published
+corpus revision predates the canon state it ships — when that gate says
+`STALE`, sections 1–3 below are the remedy. The freshness gate is read-only
+and separate from the four CORE-1502 push gates in section 3, which are
+unchanged.
+
 The publish surface is the CORPUS layer only (concepts / terms / options /
 endorsements / contributors). The canon, contributor identities, and the
 whole review-intake layer are structurally excluded (`NEVER_EXPORT` in

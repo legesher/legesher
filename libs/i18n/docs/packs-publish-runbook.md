@@ -35,6 +35,29 @@ pack tree at a release commit, never from `canon_selections` — see
 3. **`audit_packs` and `audit_collisions` are clean** — the mechanical gates
    behind the `experimental` stamp.
 
+4. **Corpus export rides the release (CORE-1800).** The corpus is the evidence
+   layer behind the canon; **a release cannot complete with a published corpus
+   revision older than the canon state it ships**. The gate is code, not a
+   checklist item:
+
+   ```sh
+   cd libs/i18n
+   uv run python scripts/check_corpus_freshness.py
+   ```
+
+   `FRESH` (exit 0) — proceed. `STALE` (exit 1) — the published corpus
+   predates the last change to `language-packs/`: walk the corpus export
+   first — [`corpus-publish-runbook.md`](corpus-publish-runbook.md) §§1–3,
+   i.e. `migrate_to_v2.py --publish` then `export_corpus.py --push` — and
+   re-run the check.
+
+   This step sequences *when* the export runs; it changes nothing about
+   *whether* a push is allowed. The four CORE-1502 push gates
+   (double-keyed sign-off, target-repo confirmation, `build_meta` salt
+   provenance, Hub auth preflight) live in `export_corpus.py` and still
+   decide that on every push. The check itself is read-only — one anonymous
+   Hub metadata read, one local `git log` — and never pushes anything.
+
 ## Build
 
 ```sh
