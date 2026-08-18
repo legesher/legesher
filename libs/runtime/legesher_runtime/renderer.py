@@ -74,15 +74,39 @@ it; the excepthooks are thin adapters over it.
 
 from __future__ import annotations
 
+import logging
 import re
 import sys
 import traceback
+from pathlib import Path
 from types import TracebackType
 from typing import Any
 
 from legesher_i18n.messages import MessageRule, load_catalog, match_message
 
 __all__ = ["TracebackRenderer"]
+
+logger = logging.getLogger(__name__)
+
+
+def _empty_catalog_reason(db_path: object) -> str:
+    """Why :func:`load_catalog` came back empty — the two cases look identical
+    at the call site (CORE-1848): no database file at all, or a database that
+    predates/skips the messages partition. Diagnostic only; never raises.
+    """
+    try:
+        from legesher_i18n.db.database import default_db_path
+
+        path = Path(db_path) if db_path is not None else default_db_path()  # type: ignore[arg-type]
+    except Exception:  # noqa: BLE001 - a diagnostic must not out-crash the renderer
+        return f"could not resolve a database path from {db_path!r}"
+    if not path.exists():
+        return f"no translations database at {path}"
+    return (
+        f"translations database at {path} has no message catalog rows "
+        "(messages partition missing or unseeded)"
+    )
+
 
 #: A structural frame line: ``  File "x", line 1, in f`` (indent preserved).
 _FRAME_LINE = re.compile(
@@ -144,6 +168,14 @@ class TracebackRenderer:
             rules = load_catalog(lang, self.python_version, db_path=db_path)
         except Exception:  # noqa: BLE001 - degraded catalog, never a crash
             rules = []
+        if not rules:  # say WHICH degraded mode this is, or the next person bisects
+            logger.debug(
+                "empty message catalog for %r (python %s): %s — structural lines "
+                "and messages pass through in English",
+                lang,
+                self.python_version,
+                _empty_catalog_reason(db_path),
+            )
         self._structural: dict[str, MessageRule] = {
             r.key: r for r in rules if r.key.startswith("traceback.")
         }

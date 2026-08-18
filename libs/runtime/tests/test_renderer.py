@@ -209,6 +209,34 @@ class TestNeverRaise:
         assert renderer.render_text(line) == line
 
 
+class TestEmptyCatalogDiagnostic:
+    """An empty catalog logs WHICH degraded mode it is (CORE-1848).
+
+    ``load_catalog`` returns ``[]`` both when the database file is absent and
+    when the file exists without the messages partition; the renderer's debug
+    line is the one place that tells them apart.
+    """
+
+    def test_missing_database_is_named(self, tmp_path, caplog):
+        with caplog.at_level("DEBUG", logger="legesher_runtime.renderer"):
+            TracebackRenderer("es", db_path=tmp_path / "missing.db")
+        assert "no translations database at" in caplog.text
+        assert str(tmp_path / "missing.db") in caplog.text
+
+    def test_database_without_messages_partition_is_named(self, tmp_path, caplog):
+        import sqlite3
+
+        db = tmp_path / "translations.db"
+        connection = sqlite3.connect(db)
+        connection.execute("CREATE TABLE unrelated (id INTEGER PRIMARY KEY)")
+        connection.commit()
+        connection.close()
+        with caplog.at_level("DEBUG", logger="legesher_runtime.renderer"):
+            TracebackRenderer("es", db_path=db)
+        assert "messages partition missing or unseeded" in caplog.text
+        assert str(db) in caplog.text
+
+
 class TestPep657Preservation:
     def test_caret_and_anchor_lines_are_byte_identical(self, raise_from_script):
         cap = raise_from_script("def sumar(a, b):\n    return a + b\n\nsumar('x', 1)\n")
