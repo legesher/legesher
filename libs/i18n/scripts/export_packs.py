@@ -4,10 +4,15 @@
 This is the CANON artifact: the words Legesher actually ships. Its counterpart,
 ``legesher/language-corpus`` (``export_corpus.py``), is the EVIDENCE layer --
 every rendering anyone proposed, append-only, with endorsements attached. The
-two answer different questions and must never be conflated:
+three answer different questions and must never be conflated:
 
 * corpus -- "what did people offer, and who backed it?"  (researcher-facing)
-* canon  -- "what does `import legesher` actually give me?" (developer-facing)
+* canon  -- "which rendering was chosen, and how reviewed is it?"
+* packs  -- "what does `import legesher` actually give me?" (developer-facing)
+
+``canon`` here means ``legesher/language-canon``, a separate dataset since
+2026-08-19. Before that it was a second name for THIS artifact, which is why
+older references to "the canon dataset" mean the packs.
 
 The source is the YAML PACK TREE, never ``canon_selections`` (CORE-1913)
 -------------------------------------------------------------------------
@@ -110,17 +115,25 @@ TARGET = "python"
 #: find after the fact.
 DECLARED_LICENSE = "apache-2.0"
 
-#: The corpus/canon distinction, in one wording. The dataset card, the site
-#: (CORE-1930), the language-support page (CORE-1929) and the announcement
-#: (HOME-44) all have to state this, and three near-miss paraphrases of the
-#: same idea read worse than one sentence repeated. This is the sentence.
-CANON_VS_CORPUS = """\
-**The corpus is the evidence; the canon is the decision.**
+#: The three layers, in one wording. The dataset cards, the site (CORE-1930),
+#: the language-support page (CORE-1929) and the announcement (HOME-44) all
+#: have to state this, and near-miss paraphrases of the same idea read worse
+#: than one sentence repeated. This is the sentence.
+#:
+#: It became three-way on 2026-08-19, when the canon shipped as its own dataset
+#: and stopped being a second name for this one. The middle layer had always
+#: existed conceptually; until then it had no artifact, so the split was
+#: written as two.
+THREE_LAYERS = """\
+**The corpus is the evidence; the canon is the decision; the packs are what
+ships.**
 [`legesher/language-corpus`](https://huggingface.co/datasets/legesher/language-corpus)
-records every rendering anyone proposed for a programming concept — append-only,
-with the endorsements attached to it. **This** dataset records the one rendering
-per concept that Legesher actually ships in its language packs: what you get
-when you write `import legesher`.
+records every rendering anyone proposed for a programming concept, append-only,
+with the endorsements attached.
+[`legesher/language-canon`](https://huggingface.co/datasets/legesher/language-canon)
+records which rendering was selected for each concept in each language, and how
+much review stands behind that choice. **This** dataset is the vocabulary those
+decisions produce: what you get when you write `import legesher`.
 """
 
 
@@ -411,7 +424,7 @@ def assert_python_only(rows: list[dict[str, Any]]) -> None:
     if targets != {TARGET}:
         raise SystemExit(
             f"Refusing to export: expected only target {TARGET!r}, found "
-            f"{sorted(targets)}. The canon artifact covers Python packs; "
+            f"{sorted(targets)}. This artifact covers Python packs; "
             f"non-Python selections must not be published labelled by target "
             f"(CORE-1913)."
         )
@@ -634,7 +647,7 @@ tags:
   - code
   - programming
   - localization
-pretty_name: Legesher Language Packs (canon)
+pretty_name: Legesher Language Packs
 language:
 {lang_yaml}
 configs:
@@ -648,18 +661,18 @@ configs:
         path: data/locales.parquet
 ---
 
-# Legesher Language Packs — the canon
+# Legesher Language Packs
 
 The vocabulary Legesher ships: Python's keywords, builtins, exceptions and
 reserved words, rendered in {counts["locales"]} human languages across
 {counts["python_versions"]} interpreter versions.
 
-## Corpus or canon — which one do I want?
+## Corpus, canon, or packs — which one do I want?
 
-{CANON_VS_CORPUS}
-Take this dataset if you want the words Legesher ships. Take the corpus if you
-want the evidence behind them, including the renderings that were proposed and
-not chosen.
+{THREE_LAYERS}
+Take this dataset if you want the words Legesher ships. Take the canon if you
+want the decision and its maturity. Take the corpus if you want the evidence
+behind both, including the renderings that were proposed and not chosen.
 
 The corpus is also wider in one respect: it holds a small set of Arabic
 renderings of JavaScript concepts, which are out of scope here — `target` is
