@@ -692,6 +692,10 @@ def render_card(
 ) -> str:
     """Render the dataset card.
 
+    Follows the corpus card's flow -- what it is, languages, the substance,
+    configs, licence -- so a reader moving between the two Legesher datasets
+    finds the same shape rather than relearning where things are.
+
     Every count is taken from the exported rows rather than asserted, so the
     headline numbers are reproducible from what a consumer downloads.
     """
@@ -700,21 +704,20 @@ def render_card(
         f"  - {subtag}"
         for subtag in sorted({locale.split("-")[0] for locale in locales})
     )
-    rung_rows = "\n".join(
-        f"| `{rung}` | {summary['by_rung'][rung]:,} |"
-        for rung in LADDER
-        if summary["by_rung"][rung]
+    language_rows = "\n".join(
+        f"| `{row['locale']}` | {row['language_name']} | {row['native_name']} "
+        f"| {row['decisions']} | {row['machine']} | {row['experimental']} "
+        f"| {row['reviewed']} | {row['official']} |"
+        for row in locale_rows
     )
     examples = card_examples(rows, locale_rows)
     opening = (
-        "**"
-        + " ".join(
+        " ".join(
             f"In {language}, `{concept}` is `{form}`."
             for language, concept, form in examples
         )
-        + "**"
         if examples
-        else "**Programming concepts, named in the languages people actually speak.**"
+        else "Programming concepts, named in the languages people actually speak."
     )
     reviewed = summary["by_rung"]["reviewed"] + summary["by_rung"]["official"]
     native_touched = summary["by_role"]["native-reviewer"]
@@ -741,84 +744,88 @@ configs:
         path: data/locales.parquet
 ---
 
+# Legesher language canon
+
 ![Legesher language canon]({CARD_IMAGE_TARGET.as_posix()})
 
-# Legesher Language Canon
+## What this canon is
 
-{opening}
+**{opening}**
 
-{summary["concepts"]} programming concepts, named in {summary["locales"]} human
-languages. {summary["rows"]:,} decisions, each carrying the amount of review
-that stands behind it.
+The word each programming concept goes by in each human language —
+{summary["concepts"]} concepts across {summary["locales"]} languages,
+{summary["rows"]:,} decisions in all, every one of them carrying the amount of
+review that stands behind it.
 
-Programming languages are written in English. `if`, `while`, `class`, `import`:
-a developer who does not read English is memorising shapes. Naming those
-concepts in someone's own language is the work, and naming them *well* is a
-question only speakers of that language can settle. This dataset is where those
-decisions are recorded while they are still being made.
+Programming languages are written in English. `if`, `while`, `class`,
+`import`: a developer who does not read English is memorising shapes. Choosing
+what those concepts are called in someone's own language is the work, and
+choosing *well* is a question only speakers of that language can settle.
 
-## What you can do with it
+This is a **growing dataset**. A rendering here is the current answer, not a
+final one: renderings change as speakers of the language weigh in, and each
+one's rung records how much of that has happened yet. Treat a revision as a
+snapshot of the decisions to date.
 
-- **Look up a concept in a language.** One row per concept per language, with
-  the chosen rendering and its maturity.
-- **See how far a language has come.** The `locales` config gives per-language
-  counts across the maturity ladder, so you can tell at a glance which
-  languages have had human attention and which are still machine drafts.
-- **Trace a decision back to its evidence.** `option_uid` is a stable,
-  content-addressed key. It resolves in
-  [`legesher/language-corpus`](https://huggingface.co/datasets/legesher/language-corpus)
-  to every alternative that was proposed for that concept and every endorsement
-  attached to them.
-- **Build terminology tooling.** Glossaries, translation memories, IDE
-  vocabularies, evaluation sets for multilingual code models.
+Renderings are keyed by content-addressed uids (`opt_` + 24 hex) shared with
+[`legesher/language-corpus`](https://huggingface.co/datasets/legesher/language-corpus),
+so an `option_uid` resolves there to every alternative that was proposed for
+that concept and every endorsement attached to them.
+
+## Languages
+
+All {summary["locales"]} languages in this export, with where each one stands
+on the maturity ladder. The primary-subtag rollup in the frontmatter is what
+the Hub indexes for search; this is the full list, script subtags and all.
+
+| Tag | Language | Native name | Renderings | `machine` | `experimental` | `reviewed` | `official` |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+{language_rows}
+
+The same table is the `locales` config, so you can sort and filter it rather
+than read it.
 
 ## The maturity ladder
 
-Every rendering carries a rung. The rung is the honest answer to "how much
-human judgement is behind this word?", and it is the single most important
-column in the dataset.
-
-| Rung | Rows |
-| --- | ---: |
-{rung_rows}
+Every rendering carries a rung. It is the honest answer to "how much human
+judgement is behind this word?", and it is the most important column here.
 
 ### `machine`
 
 Selected without anyone judging this particular word — carried over from a
 shipped language pack, or picked by a batch job resolving a collision.
 
-It is not arbitrary: every rendering passes mechanical gates before it can be
-selected at all. It has to be a valid identifier in its language, stable under
+It is not arbitrary. Every rendering clears mechanical gates before it can be
+selected at all: it has to be a valid identifier in its language, stable under
 the Unicode normalisation the interpreter applies, and free of collisions with
 other terms in its own vocabulary. What no one has asked is whether it is the
 *right* word — whether a programmer who speaks that language would recognise
 it, or would wince.
 
-**Treat these as proposals.** They are a starting point that wants a reader.
+**Treat these as proposals.**
 
 ### `experimental`
 
 A person has looked at this specific rendering and kept it, replaced it, or
-rewritten it. That may be a maintainer curating a batch, or a native speaker of
-the language making a correction.
+rewritten it — a maintainer curating a batch, or a native speaker of the
+language making a correction.
 
 One informed opinion stands behind it. That is meaningfully more than
-`machine`, and meaningfully less than agreement — which is exactly why it is
-its own rung rather than being folded into either neighbour.
+`machine` and meaningfully less than agreement, which is why it is its own
+rung rather than folded into either neighbour.
 
 ### `reviewed`
 
 Native speakers have signed off, and more than one, so the rendering reflects
 agreement rather than a single person's preference.
 
-Terminology is not a popularity contest, but it is also not a solo decision:
-the risk with one reviewer is not that they are wrong, it is that they are
-unrepresentative — a regional form, a register that reads as formal or childish
-elsewhere, a loanword one community accepts and another rejects. Multiple
-voices is what makes a rendering a *shared* answer.
+The risk with one reviewer is not that they are wrong — it is that they are
+unrepresentative. A regional form, a register that reads formal or childish
+somewhere else, a loanword one community has absorbed and another rejects.
+More than one voice is what turns a rendering into a *shared* answer.
 
 **How many voices, and how varied, is still being defined.** We would rather
-say that than publish a threshold we have not actually set.
+say so than publish a threshold we have not actually set.
 
 ### `official`
 
@@ -826,7 +833,7 @@ Ratified in a convened session, and screened.
 
 Screening is a separate axis from accuracy: a rendering can be a perfectly
 correct translation and still be the wrong word to ship — offensive in another
-register, unfortunate next to a neighbouring term, or colliding with something
+register, unfortunate beside a neighbouring term, or colliding with something
 in the language it should not. `official` means both questions were asked and
 answered by people with standing to answer them.
 
@@ -835,25 +842,24 @@ reaches.
 
 ### Where things stand today
 
-{reviewed} renderings are at `reviewed` or above.
+{reviewed} renderings are at `reviewed` or above. {native_touched:,} have had a
+native speaker's attention, one reviewer each, which is why they sit at
+`experimental`. The remaining {unreviewed:,} are machine or maintainer
+selections that **no native speaker has looked at yet.**
 
-{native_touched:,} have had a native speaker's attention — one reviewer each,
-which is why they sit at `experimental`. The remaining {unreviewed:,} are
-machine or maintainer selections that **no native speaker has looked at yet.**
+We publish at this stage deliberately. A terminology set developed privately
+and released once it is "ready" has already made every decision without the
+people it is for. Publishing early makes the current state visible, citable
+and arguable, while it is still genuinely open.
 
-We publish at this stage deliberately. A terminology set that is developed
-privately and released when it is "ready" has already made every decision
-without the people it is for. Publishing early means the current state is
-visible, citable, and arguable — and that the communities who speak these
-languages can see what is being proposed in their name while it is still
-genuinely open.
+A rung describes one rendering. It says nothing about the language pack that
+rendering ships in.
 
-The rung applies to one rendering. It is not a statement about the language
-pack that rendering ships in.
+## Configs
 
-## Columns
+Two, joined on `locale`.
 
-### `canon`
+**`canon`** — one row per decision.
 
 | Column | Meaning |
 | --- | --- |
@@ -868,50 +874,40 @@ pack that rendering ships in.
 | `decided_at` | When the selection was made |
 
 `identity_ok` marks a deliberate cognate or loanword — `stopiteration` in
-Danish, `Lambda` in German. It does not mean "not translated yet". Without it,
-a reader would have no way to tell a considered borrowing from an oversight.
+Danish, `Lambda` in German. It does not mean "not translated yet"; without it
+a reader could not tell a considered borrowing from an oversight.
 
-### `locales`
+**`locales`** — one row per language: `locale`, `language_name`,
+`native_name`, `rtl`, `decisions`, a count at each rung, and
+`native_reviewed`. Language attributes live only here, so a language is
+described in exactly one place.
 
-| Column | Meaning |
-| --- | --- |
-| `locale` | BCP 47 language tag — join key to `canon` |
-| `language_name` | English name |
-| `native_name` | The language's name in itself |
-| `rtl` | Written right-to-left |
-| `decisions` | Renderings for this language |
-| `machine` / `experimental` / `reviewed` / `official` | Count at each rung |
-| `native_reviewed` | Renderings a native speaker has looked at |
+## Who decides, and how to take part
 
-## Who decides
-
-`decided_by` records the role that made a selection, not the person:
-`automated` for migrations and batch jobs, `maintainer` for curation, and
-`native-reviewer` for a speaker of the language.
-
-It answers a different question from `status`, and the two are deliberately
-independent. `status` says **how much** review stands behind a rendering;
-`decided_by` says **who** made the most recent call. A single native reviewer
-is visible here without moving the rung, because their judgement is real and is
-not yet a consensus.
-
-## Contributors
-
-Contributor identities are never published in this dataset. Where a native
-speaker made a selection, the record shows their role and nothing else.
-
-Endorsements, attribution and withdrawal are handled through
+`decided_by` records the **role** that made a selection, never the person:
+`automated` for migrations and batch jobs, `maintainer` for curation,
+`native-reviewer` for a speaker of the language. Contributor identities are
+not published in this dataset. Endorsements, attribution and withdrawal are
+handled through
 [`legesher/language-corpus`](https://huggingface.co/datasets/legesher/language-corpus),
 which is the artifact that carries them.
 
-## Contributing
+The role answers a different question from the rung, and the two are
+deliberately independent: `status` says **how much** review stands behind a
+rendering, `decided_by` says **who** made the most recent call. A single
+native reviewer is visible here without moving the rung, because their
+judgement is real and is not yet a consensus.
 
-If you program in one of these languages, or speak one we have not reached
-yet, the renderings here want your eyes. Corrections, endorsements and
-objections all move a rendering up the ladder — and disagreement is a
-contribution, not an obstacle.
+If you program in one of these languages, or speak one not yet covered, these
+renderings want your eyes. Corrections, endorsements and objections all move a
+rendering up the ladder — and disagreement is a contribution, not an obstacle.
 
-## Citation
+## Licence and citation
+
+Released under **Apache-2.0**. Legesher holds the compilation right in this
+dataset and licenses it on those terms; the individual renderings arrive from
+the corpus, whose own licence and attribution notices govern the contributed
+parts.
 
 ```bibtex
 @misc{{legesher_language_canon,

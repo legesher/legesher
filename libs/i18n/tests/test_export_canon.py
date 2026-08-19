@@ -327,7 +327,7 @@ def test_the_card_scopes_the_rung_to_one_rendering(
     out = tmp_path / "out"
     export_canon(canon_db, out)
     card = (out / "README.md").read_text(encoding="utf-8")
-    assert "applies to one rendering" in card
+    assert "describes one rendering" in card
 
 
 def test_the_card_carries_its_banner(canon_db: Path, tmp_path: Path) -> None:
@@ -549,3 +549,27 @@ def test_a_locale_with_no_metadata_row_refuses(canon_db: Path, tmp_path: Path) -
 
     with pytest.raises(ExportRefused, match="no row in the locales table"):
         export_canon(canon_db, tmp_path / "out")
+
+
+def test_the_card_tables_every_language_with_its_ladder(
+    canon_db: Path, tmp_path: Path
+) -> None:
+    """One row per language, carrying its rung counts.
+
+    The card's job is to let someone see how far along their language is
+    before they download anything.
+    """
+    out = tmp_path / "out"
+    export_canon(canon_db, out)
+    card = (out / "README.md").read_text(encoding="utf-8")
+    for locale in sorted(set(_rows(out)["locale"])):
+        assert f"| `{locale}` |" in card
+
+
+def test_the_card_states_the_licence_in_prose(canon_db: Path, tmp_path: Path) -> None:
+    """A frontmatter tag is machine-readable; a reader needs the sentence."""
+    out = tmp_path / "out"
+    export_canon(canon_db, out)
+    card = (out / "README.md").read_text(encoding="utf-8")
+    assert "## Licence and citation" in card
+    assert "Apache-2.0" in card.split("## Licence and citation", 1)[1]
