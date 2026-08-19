@@ -38,3 +38,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
     reuse by localized logging.
   - RTL v1 posture: Arabic output is emitted in logical order with no bidi
     control characters; see README for the display-order limitation.
+
+### Fixed
+
+- Consistency hardening in the traceback renderer; neither entry changes
+  output for any pack or mapper shipping today. [CORE-1777]
+  - The fallback frame header (used when the message catalog is missing or a
+    frame rule does not match) now applies the same line-number remap the
+    localized path applies, keeping the header consistent with the echoed
+    native source when a future non-1:1 mapper remaps a line. The mapper
+    shipping today is strictly 1:1, so the remap is a no-op in production.
+  - `localized_type_name` consumes the shared identity predicate
+    (`schema_v2.is_identity_translation`, NFKC + casefold, CORE-1355) instead
+    of re-deriving identity with `.lower()`, so a width- or case-variant
+    cognate cannot render as a fake localization. All 51 packs shipping today
+    agree under both rules; this closes the divergence rather than fixing an
+    observed misrendering.
+
+### Changed
+
+- The `legesher-i18n` floor is now `>=0.23.0`, the first release containing
+  `schema_v2.is_identity_translation`. [CORE-1777]

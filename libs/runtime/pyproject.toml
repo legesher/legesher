@@ -23,7 +23,11 @@ dependencies = [
     # Sibling ranges ship in the wheel metadata; in-repo the workspace override
     # in [tool.uv.sources] applies. <1.0.0 because semantic-release
     # (major_on_zero = true) moves 0.x to 1.0 on a breaking change.
-    "legesher-i18n>=0.22.0,<1.0.0",  # message catalog + language pack loader
+    # >=0.23.0: renderer.py imports db.schema_v2.is_identity_translation, which
+    # first ships in 0.23.0 (CORE-1355). Against 0.22.0 the module-level import
+    # fails and the whole package is unimportable — masked in-repo by the
+    # workspace override, so the floor is the only thing protecting the wheel.
+    "legesher-i18n>=0.23.0,<1.0.0",  # message catalog + language pack loader
 ]
 
 [tool.uv.sources]

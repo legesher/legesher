@@ -82,6 +82,7 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any
 
+from legesher_i18n.db.schema_v2 import is_identity_translation
 from legesher_i18n.messages import MessageRule, load_catalog, match_message
 
 __all__ = ["TracebackRenderer"]
@@ -279,12 +280,14 @@ class TracebackRenderer:
 
         Packs key exceptions lowercase (``zerodivisionerror``) while Python
         spells them PascalCase (see ``legesher_core.utils
-        .merge_exception_translations``). When the pack word is merely the
-        case-folded English name (the ``en`` pack's identity mappings), the
-        canonical PascalCase spelling wins.
+        .merge_exception_translations``). When the pack word IS the English
+        name — judged by the canonical identity predicate,
+        :func:`legesher_i18n.db.schema_v2.is_identity_translation` (NFKC +
+        casefold, CORE-1355) — the canonical PascalCase spelling wins, so a
+        width/case-variant cognate never renders as a fake localization.
         """
         word = self._exception_names.get(type_name.lower())
-        if word is None or word.lower() == type_name.lower():
+        if word is None or is_identity_translation(type_name, word):
             return type_name
         return word
 
@@ -375,7 +378,18 @@ class TracebackRenderer:
         localized = self._structural_sub(key, stripped, overrides)
         if localized is not None:
             return indent + localized + newline
-        return frame.group(0) + newline
+        body = frame.group(0)
+        if line_no is not None and str(line_no) != frame.group("line"):
+            # Fallback (missing or unmatched catalog rule, e.g. a stale
+            # database without the messages partition) must still remap the
+            # line number for mapped frames: render_text has already replaced
+            # the echoed source below with the NATIVE line at the REMAPPED
+            # number, and an unremapped header above it is exactly the
+            # mismatch the source map exists to prevent. Splice the number
+            # into the otherwise-verbatim header.
+            start, end = frame.span("line")
+            body = body[:start] + str(line_no) + body[end:]
+        return body + newline
 
     def _render_flush_left(self, body: str, stripped: str, newline: str) -> str | None:
         """Rewrite a flush-left structural line; None = pass through."""

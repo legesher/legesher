@@ -172,6 +172,114 @@ class TestMappedFrames:
         assert "~~^~~" in out  # treated as unmapped, never raises
 
 
+class ShiftedSourceMapper(FakeSourceMapper):
+    """Mapper where translated line N maps to native line N - 3.
+
+    The MVP mapper is 1:1, but the renderer's mapper protocol allows shifts
+    (a translation that folds or expands lines). The CORE-1777 repro is a
+    header naming translated line 12 above the source text of native line 9.
+    """
+
+    SHIFT = 3
+
+    def get_native_line(self, filename: str, english_line: int) -> int | None:
+        return english_line - self.SHIFT if filename == self.filename else None
+
+
+class TestFallbackFrameRemap:
+    """Empty-catalog fallback frames still remap line numbers (CORE-1777).
+
+    With a stale or missing translations database, ``load_catalog`` degrades
+    to an empty catalog and ``_render_frame`` falls back to re-emitting the
+    header. That fallback used to keep the TRANSLATED-source line number
+    while ``render_text`` had already swapped the echoed source below it for
+    the NATIVE line at the REMAPPED number.
+    """
+
+    #: Native line 9 is the line the ticket's repro echoes.
+    NATIVE = "\n" * 8 + "    devolver a / b\n"
+
+    def renderer(self, tmp_path, mapper) -> TracebackRenderer:
+        # A missing database is the stale-DB degraded mode: empty catalog,
+        # no structural rules, fallback path guaranteed — no requires_catalog
+        # guard needed because the test DEPENDS on the catalog being absent.
+        return TracebackRenderer("es", db_path=tmp_path / "missing.db", source_map=mapper)
+
+    def test_fallback_header_shows_the_remapped_line_number(self, tmp_path):
+        mapper = ShiftedSourceMapper("/tmp/programa.py", self.NATIVE)
+        renderer = self.renderer(tmp_path, mapper)
+        formatted = '  File "/tmp/programa.py", line 12, in dividir\n    return a / b\n'
+        out = renderer.render_text(formatted)
+        assert '  File "/tmp/programa.py", line 9, in dividir\n' in out
+        assert "line 12" not in out
+        # The header now matches the echoed source: native line 9.
+        assert "    devolver a / b\n" in out
+
+    def test_fallback_syntaxerror_header_is_remapped_too(self, tmp_path):
+        # The no-scope frame shape (SyntaxError) takes the same fallback.
+        mapper = ShiftedSourceMapper("/tmp/programa.py", self.NATIVE)
+        renderer = self.renderer(tmp_path, mapper)
+        out = renderer.render_text('  File "/tmp/programa.py", line 12\n')
+        assert out == '  File "/tmp/programa.py", line 9\n'
+
+    def test_unmapped_fallback_frame_passes_through_byte_identical(self, tmp_path):
+        mapper = ShiftedSourceMapper("/tmp/programa.py", self.NATIVE)
+        renderer = self.renderer(tmp_path, mapper)
+        formatted = '  File "/tmp/otro.py", line 12, in f\n    return a / b\n'
+        assert renderer.render_text(formatted) == formatted
+
+    def test_one_to_one_mapped_fallback_frame_is_unchanged(self, tmp_path):
+        # The production shape: `legesher run` registers a strictly 1:1
+        # mapping (LegesherSourceMapper.register_mapping), so the remap
+        # resolves to the same number and the header must come out exactly as
+        # CPython wrote it — only the source echo is swapped for the native
+        # line. This is the case a regression in the splice would actually
+        # reach today.
+        mapper = FakeSourceMapper("/tmp/programa.py", "\n" * 11 + "    devolver a / b\n")
+        renderer = self.renderer(tmp_path, mapper)
+        formatted = '  File "/tmp/programa.py", line 12, in dividir\n    return a / b\n'
+        out = renderer.render_text(formatted)
+        assert '  File "/tmp/programa.py", line 12, in dividir\n' in out
+        assert "    devolver a / b\n" in out  # native echo still applies
+
+
+class TestIdentityCognates:
+    """``localized_type_name`` consumes the canonical identity predicate.
+
+    ``schema_v2.is_identity_translation`` (NFKC + casefold, CORE-1355) is the
+    single rule behind ``canon_selections.identity_ok``; the renderer's old
+    ``.lower()`` re-derivation disagreed with it on width/compatibility
+    variants, so a cognate the DB marks ``identity_ok`` rendered as a fake
+    localization (CORE-1777).
+    """
+
+    def renderer_with_vocabulary(self, tmp_path, names: dict) -> TracebackRenderer:
+        renderer = TracebackRenderer("es", db_path=tmp_path / "missing.db")
+        renderer._exception_names = dict(names)
+        return renderer
+
+    def test_width_variant_cognate_renders_as_identity(self, tmp_path):
+        # Fullwidth "ValueError" is the same word under NFKC + casefold; the
+        # old comparison saw a different string and rendered the fullwidth
+        # form as if it were a localization.
+        renderer = self.renderer_with_vocabulary(tmp_path, {"valueerror": "ＶａｌｕｅＥｒｒｏｒ"})
+        assert renderer.localized_type_name("ValueError") == "ValueError"
+
+    def test_exception_line_with_width_variant_pack_word(self, tmp_path):
+        renderer = self.renderer_with_vocabulary(tmp_path, {"valueerror": "ＶａｌｕｅＥｒｒｏｒ"})
+        out = renderer.render_text("ValueError: boom\n")
+        assert out == "ValueError: boom\n"
+
+    def test_case_variant_identity_still_wins(self, tmp_path):
+        # The en pack's identity mappings: lowercase word == English name.
+        renderer = self.renderer_with_vocabulary(tmp_path, {"valueerror": "valueerror"})
+        assert renderer.localized_type_name("ValueError") == "ValueError"
+
+    def test_real_localization_still_renders(self, tmp_path):
+        renderer = self.renderer_with_vocabulary(tmp_path, {"valueerror": "errordevalor"})
+        assert renderer.localized_type_name("ValueError") == "errordevalor"
+
+
 class TestNeverRaise:
     def test_render_falls_back_to_original_on_internal_failure(self, raise_from_script):
         cap = raise_from_script("1 / 0\n")
