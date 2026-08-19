@@ -12,11 +12,37 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
+def context_fingerprint(context: dict | None) -> str | None:
+    """Stable fingerprint of a translation context dict (CORE-1805).
+
+    The coordinator used to bypass the cache whenever ``context`` was
+    present, which made every context-carrying call (i.e. every call in the
+    full-code translation flow) uncached. Instead, the context now
+    contributes a deterministic hash to the cache key: identical
+    (text, languages, context) hit the cache, different contexts get
+    distinct entries.
+
+    Returns ``None`` for an absent or empty context, which keeps the
+    historical key shape (and existing cache entries) for context-free
+    calls.
+    """
+    if not context:
+        return None
+    canonical = json.dumps(context, sort_keys=True, ensure_ascii=False, default=str)
+    return hashlib.sha256(canonical.encode()).hexdigest()[:16]
+
+
 class CacheBackend(ABC):
     """Abstract base class for cache backends."""
 
     @abstractmethod
-    def get(self, text: str, source_lang: str, target_lang: str) -> str | None:
+    def get(
+        self,
+        text: str,
+        source_lang: str,
+        target_lang: str,
+        context_hash: str | None = None,
+    ) -> str | None:
         """Retrieve cached translation."""
         pass
 
@@ -28,6 +54,7 @@ class CacheBackend(ABC):
         target_lang: str,
         translation: str,
         provider: str,
+        context_hash: str | None = None,
     ):
         """Cache translation."""
         pass
@@ -43,9 +70,20 @@ class CacheBackend(ABC):
         pass
 
     @staticmethod
-    def _make_key(text: str, source_lang: str, target_lang: str) -> str:
-        """Generate cache key from text and languages."""
+    def _make_key(
+        text: str,
+        source_lang: str,
+        target_lang: str,
+        context_hash: str | None = None,
+    ) -> str:
+        """Generate cache key from text, languages, and optional context hash.
+
+        ``context_hash=None`` reproduces the historical key exactly, so
+        existing cache entries for context-free calls stay valid.
+        """
         content = f"translation:{text}|{source_lang}|{target_lang}"
+        if context_hash:
+            content += f"|ctx:{context_hash}"
         return hashlib.sha256(content.encode()).hexdigest()
 
 
@@ -144,9 +182,15 @@ class SQLiteCache(CacheBackend):
 
         logger.debug(f"SQLite cache initialized at {self.db_path}")
 
-    def get(self, text: str, source_lang: str, target_lang: str) -> str | None:
+    def get(
+        self,
+        text: str,
+        source_lang: str,
+        target_lang: str,
+        context_hash: str | None = None,
+    ) -> str | None:
         """Retrieve cached translation if not expired."""
-        key = self._make_key(text, source_lang, target_lang)
+        key = self._make_key(text, source_lang, target_lang, context_hash)
 
         conn = self._get_connection()
         cursor = conn.execute(
@@ -179,9 +223,10 @@ class SQLiteCache(CacheBackend):
         target_lang: str,
         translation: str,
         provider: str,
+        context_hash: str | None = None,
     ):
         """Cache translation with current timestamp."""
-        key = self._make_key(text, source_lang, target_lang)
+        key = self._make_key(text, source_lang, target_lang, context_hash)
 
         conn = self._get_connection()
         conn.execute(
@@ -321,9 +366,15 @@ class RedisCache(CacheBackend):
             logger.error(f"Failed to connect to Redis at {host}:{port}: {e}")
             raise
 
-    def get(self, text: str, source_lang: str, target_lang: str) -> str | None:
+    def get(
+        self,
+        text: str,
+        source_lang: str,
+        target_lang: str,
+        context_hash: str | None = None,
+    ) -> str | None:
         """Retrieve cached translation from Redis."""
-        key = self._make_key(text, source_lang, target_lang)
+        key = self._make_key(text, source_lang, target_lang, context_hash)
 
         try:
             value = self.client.get(key)
@@ -347,9 +398,10 @@ class RedisCache(CacheBackend):
         target_lang: str,
         translation: str,
         provider: str,
+        context_hash: str | None = None,
     ):
         """Cache translation in Redis with TTL."""
-        key = self._make_key(text, source_lang, target_lang)
+        key = self._make_key(text, source_lang, target_lang, context_hash)
 
         # Store with metadata as JSON
         value = json.dumps(

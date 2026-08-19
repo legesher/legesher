@@ -156,14 +156,11 @@ class TestTranslation:
         kwargs = call_args.kwargs
         prompt = kwargs["messages"][0]["content"]
 
-        if "system" in kwargs:
-            # PromptBuilder path: system prompt has style guide markers
-            assert "Critical Rules" in kwargs["system"]
-            assert "`def`" in prompt  # term appears in identifier table
-        else:
-            # Legacy path: context embedded in prompt body
-            assert "ADDITIONAL CONTEXT" in prompt
-            assert "Keyword for defining functions" in prompt
+        assert "system" in kwargs
+        # System prompt is a cacheable block list (CORE-1805)
+        system_text = kwargs["system"][0]["text"]
+        assert "Critical Rules" in system_text
+        assert "`def`" in prompt  # term appears in identifier table
 
     @pytest.mark.asyncio
     async def test_translate_tracks_usage(self, provider, mock_response):
@@ -435,7 +432,7 @@ class TestPromptBuilding:
 
         kwargs = provider.client.messages.create.call_args.kwargs
         assert "system" in kwargs  # PromptBuilder always produces a system prompt
-        assert "## Critical Rules" in kwargs["system"]
+        assert "## Critical Rules" in kwargs["system"][0]["text"]
         assert "`def`" in kwargs["messages"][0]["content"]
         assert result.metadata["prompt_source"] == "prompt_builder"
 

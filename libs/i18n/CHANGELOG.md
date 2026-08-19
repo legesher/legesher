@@ -79,6 +79,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **Full-code translation stopped leaking model calls.** The batch
+  identifier path is restored end-to-end: context-carrying batches now go
+  through `PromptBuilder.build_identifier_prompt(identifiers=[...])` /
+  `build_text_prompt(texts=[...])` as one API round-trip per batch instead
+  of one call per identifier. The response cache keys on a hash of the
+  translation context instead of being bypassed whenever context is
+  present, so repeat runs with identical context hit the cache. The
+  Anthropic provider sends the static system prompt with `cache_control`
+  so provider-side prompt caching applies, and cache reads/writes appear
+  in its usage accounting. [CORE-1805]
+
 - **The model-provider layer is one layer now.** The generation pipeline's
   Claude model delegates to the translation API's Anthropic provider, so one
   Anthropic client, one retry loop, and one JSON parser serve both surfaces.

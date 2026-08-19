@@ -4,7 +4,7 @@ import logging
 import uuid
 from datetime import datetime
 
-from .cache import CacheBackend, SQLiteCache
+from .cache import CacheBackend, SQLiteCache, context_fingerprint
 from .providers.base import (
     TranslationError,
     TranslationProvider,
@@ -155,10 +155,15 @@ class TranslationCoordinator:
                 "Configure API keys or start LibreTranslate server."
             )
 
-        # Check cache first — skip cache when context is provided since the
-        # PromptBuilder produces different prompts depending on context
-        if not skip_cache and context is None:
-            cached = self.cache.get(text, source_lang, target_lang)
+        # Check cache first. Context contributes a hash to the cache key
+        # (CORE-1805) — the old behavior bypassed the cache entirely
+        # whenever context was present, which made every full-code
+        # translation call uncached.
+        context_hash = context_fingerprint(context)
+        if not skip_cache:
+            cached = self.cache.get(
+                text, source_lang, target_lang, context_hash=context_hash
+            )
             if cached:
                 logger.info(f"Cache hit: {source_lang}->{target_lang}")
                 # Return cached result with metadata
@@ -211,9 +216,14 @@ class TranslationCoordinator:
                         f"(quality: {result.quality_score:.1f})"
                     )
 
-                    # Cache result
+                    # Cache result (context-aware key, CORE-1805)
                     self.cache.set(
-                        text, source_lang, target_lang, result.text, provider.name
+                        text,
+                        source_lang,
+                        target_lang,
+                        result.text,
+                        provider.name,
+                        context_hash=context_hash,
                     )
 
                     # Track usage
@@ -308,6 +318,143 @@ class TranslationCoordinator:
                 final_results.append(result)
 
         return final_results
+
+    async def translate_batch_with_context(
+        self,
+        items: list[dict],
+        source_lang: str,
+        target_lang: str,
+        skip_cache: bool = False,
+        preferred_provider: str | None = None,
+    ) -> list[TranslationResult]:
+        """Translate context-carrying items with O(batches) provider calls.
+
+        CORE-1805: the backend adapter used to degrade to one provider call
+        per item whenever context was present. This method checks the cache
+        per item (context-aware keys), then hands ALL misses to a single
+        ``provider.translate_batch_with_context`` call — one API round-trip
+        per batch for providers with a batched prompt path, with the same
+        provider-ordering fallback as ``translate()``.
+
+        Args:
+            items: ``{"text": str, "context": dict | None}`` dicts, in order.
+            source_lang: Source language code.
+            target_lang: Target language code.
+            skip_cache: Skip cache lookup.
+            preferred_provider: Try this provider first.
+
+        Returns:
+            ``TranslationResult`` list aligned with *items*. Failed items
+            carry ``provider="error"``.
+        """
+        if not items:
+            return []
+
+        if not self.available_providers:
+            raise TranslationError(
+                "No translation providers available. "
+                "Configure API keys or start LibreTranslate server."
+            )
+
+        results: list[TranslationResult | None] = [None] * len(items)
+        miss_indexes: list[int] = []
+
+        # Per-item cache lookup with context-aware keys.
+        for i, item in enumerate(items):
+            text = item["text"]
+            context_hash = context_fingerprint(item.get("context"))
+            cached = None
+            if not skip_cache:
+                cached = self.cache.get(
+                    text, source_lang, target_lang, context_hash=context_hash
+                )
+            if cached:
+                results[i] = TranslationResult(
+                    text=cached,
+                    source_lang=source_lang,
+                    target_lang=target_lang,
+                    provider="cache",
+                    cached=True,
+                    timestamp=datetime.now(),
+                )
+            else:
+                miss_indexes.append(i)
+
+        if not miss_indexes:
+            return [r for r in results if r is not None]
+
+        miss_items = [items[i] for i in miss_indexes]
+        ordered_providers = self._order_providers_by_preference(
+            source_lang, target_lang, preferred_provider
+        )
+
+        request_id = str(uuid.uuid4())
+        errors: list[str] = []
+        batch_results: list[TranslationResult] | None = None
+        for attempt, provider in enumerate(ordered_providers):
+            if attempt >= self.max_fallback_attempts:
+                break
+            if not provider.supports(source_lang, target_lang):
+                continue
+            try:
+                logger.info(
+                    f"Batch translating {len(miss_items)} items with "
+                    f"{provider.name} ({source_lang}->{target_lang})"
+                )
+                batch_results = await provider.translate_batch_with_context(
+                    miss_items, source_lang, target_lang
+                )
+                break
+            except TranslationError as e:
+                logger.error(f"Batch translation failed with {provider.name}: {e}")
+                errors.append(f"{provider.name}: {e}")
+                continue
+
+        if batch_results is None or len(batch_results) != len(miss_items):
+            error_summary = "; ".join(errors) or "no provider produced a batch"
+            for i in miss_indexes:
+                results[i] = TranslationResult(
+                    text="",
+                    source_lang=source_lang,
+                    target_lang=target_lang,
+                    provider="error",
+                    metadata={"error": error_summary},
+                )
+            return [r for r in results if r is not None]
+
+        for j, i in enumerate(miss_indexes):
+            result = batch_results[j]
+            results[i] = result
+            # Cache with the item's context-aware key.
+            context_hash = context_fingerprint(items[i].get("context"))
+            self.cache.set(
+                items[i]["text"],
+                source_lang,
+                target_lang,
+                result.text,
+                result.provider,
+                context_hash=context_hash,
+            )
+            # Track usage — batch-level tokens/cost ride on the result that
+            # carries them (the first of each provider sub-batch).
+            if self.usage_tracker and result.billed_characters:
+                cost = result.metadata.get("cost_usd")
+                if cost is None and "input_tokens" not in result.metadata:
+                    cost = cost_for_chars(result.provider, result.billed_characters)
+                self.usage_tracker.record(
+                    UsageRecord(
+                        timestamp=result.timestamp,
+                        provider=result.provider,
+                        source_lang=source_lang,
+                        target_lang=target_lang,
+                        characters=result.billed_characters,
+                        cost_usd=cost,
+                        request_id=request_id,
+                        cached=False,
+                    )
+                )
+
+        return [r for r in results if r is not None]
 
     def _order_providers_by_preference(
         self,

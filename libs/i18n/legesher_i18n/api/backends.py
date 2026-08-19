@@ -103,14 +103,14 @@ class ProviderBackendAdapter:
     ) -> list[str]:
         """Translate a batch of items synchronously.
 
-        When items carry context (glossary, kind, role), translates each
-        item individually so per-item context reaches the provider via
-        the PromptBuilder.  Falls back to the coordinator's batch API
-        when no context is present, preserving batching performance.
+        CORE-1805: context-carrying items (glossary, kind, role — i.e.
+        every item in the LLMTranslator flow) go through the coordinator's
+        batch-with-context API, which issues O(batches) provider calls via
+        ``PromptBuilder.build_identifier_prompt(identifiers=[...])`` /
+        ``build_text_prompt(texts=[...])`` instead of the old one call per
+        item. Context-free items keep the coordinator's plain batch API.
         """
-        # Only use per-item path when context carries PromptBuilder-relevant
-        # data (glossary, element kind, or identifier role).
-        # Empty context dicts use the fast batch path.
+        # Context-free items use the plain batch path.
         has_prompt_context = any(
             item.get("context", {}).get("glossary")
             or item.get("context", {}).get("kind")
@@ -119,7 +119,6 @@ class ProviderBackendAdapter:
         )
 
         if not has_prompt_context:
-            # Fast path: no context to forward, use batch API
             texts = [item["text"] for item in items]
             results = _run_async(
                 self._coordinator.translate_batch(
@@ -133,26 +132,30 @@ class ProviderBackendAdapter:
                 for r, original in zip(results, texts)
             ]
 
-        # Per-item path: forward context to providers
-        results = []
-        for item in items:
-            text = item["text"]
-            context = item.get("context")
-            try:
-                result = _run_async(
-                    self._coordinator.translate(
-                        text=text,
-                        source_lang=source_lang,
-                        target_lang=target_lang,
-                        preferred_provider=self._preferred_provider,
-                        context=context,
-                    )
+        # Batched context path: ONE coordinator call for the whole batch.
+        try:
+            results = _run_async(
+                self._coordinator.translate_batch_with_context(
+                    items,
+                    source_lang=source_lang,
+                    target_lang=target_lang,
+                    preferred_provider=self._preferred_provider,
                 )
-                if result.text and result.provider != "error":
-                    results.append(result.text)
-                else:
-                    results.append(text)
-            except Exception:
-                logger.warning("Translation failed for item: %s...", text[:50])
-                results.append(text)
-        return results
+            )
+        except Exception as e:
+            logger.warning(
+                "Batch translation failed for %d items (%s->%s): %s",
+                len(items),
+                source_lang,
+                target_lang,
+                e,
+            )
+            return [item["text"] for item in items]
+
+        translated: list[str] = []
+        for item, result in zip(items, results):
+            if result.text and result.provider != "error":
+                translated.append(result.text)
+            else:
+                translated.append(item["text"])
+        return translated

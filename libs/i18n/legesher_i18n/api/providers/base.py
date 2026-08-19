@@ -116,6 +116,45 @@ class TranslationProvider(ABC):
         """
         pass
 
+    async def translate_batch_with_context(
+        self,
+        items: list[dict[str, Any]],
+        source_lang: str,
+        target_lang: str,
+    ) -> list["TranslationResult"]:
+        """Translate a batch of context-carrying items.
+
+        Each item is ``{"text": str, "context": dict | None}``. The default
+        implementation issues one ``translate()`` call per item — correct,
+        but O(items). Providers with a batched prompt path (CORE-1805)
+        override this to issue O(1) API calls per batch;
+        ``PromptBuilder.build_identifier_prompt`` / ``build_text_prompt``
+        were designed for lists, and this is the method that uses that
+        capacity.
+
+        Args:
+            items: Items to translate, in order.
+            source_lang: Source language code.
+            target_lang: Target language code.
+
+        Returns:
+            ``TranslationResult`` list aligned with *items*.
+
+        Raises:
+            TranslationError: If translation fails.
+        """
+        results: list[TranslationResult] = []
+        for item in items:
+            results.append(
+                await self.translate(
+                    item["text"],
+                    source_lang,
+                    target_lang,
+                    context=item.get("context"),
+                )
+            )
+        return results
+
     @abstractmethod
     async def get_usage(self) -> UsageStats | None:
         """

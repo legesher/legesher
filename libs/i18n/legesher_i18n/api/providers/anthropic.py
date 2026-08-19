@@ -2,6 +2,7 @@
 
 import asyncio
 import hashlib
+import json
 import logging
 import os
 from typing import Any
@@ -21,7 +22,7 @@ except ImportError:
     AnthropicRateLimitError = None  # type: ignore
 
 from legesher_i18n.language_names import language_name, supported_language_codes
-from legesher_i18n.llm_json import parse_json_object
+from legesher_i18n.llm_json import parse_json_object, strip_code_fences
 from legesher_i18n.model_config import anthropic_model
 
 from ..rates import cost_for_tokens, format_cost
@@ -99,6 +100,9 @@ class AnthropicProvider(TranslationProvider):
         self.total_input_tokens = 0
         self.total_output_tokens = 0
         self.total_requests = 0
+        # System-prompt cache accounting (CORE-1805)
+        self.total_cache_read_tokens = 0
+        self.total_cache_creation_tokens = 0
 
         # Initialize client if key available
         self.client: AsyncAnthropic | None = None
@@ -303,6 +307,205 @@ class AnthropicProvider(TranslationProvider):
                     f"Anthropic translation failed for term '{text}' ({source_lang}->{target_lang}): {e}"
                 )
 
+    async def translate_batch_with_context(
+        self,
+        items: list[dict[str, Any]],
+        source_lang: str,
+        target_lang: str,
+    ) -> list[TranslationResult]:
+        """Translate a batch of context-carrying items in O(1) API calls.
+
+        CORE-1805: ``PromptBuilder.build_identifier_prompt`` and
+        ``build_text_prompt`` take lists; this method finally uses that
+        capacity. Identifier items (no ``kind``) and text items (``kind``
+        present) each get ONE API round-trip per batch instead of one per
+        item.
+
+        Batch-level token counts and cost ride on the FIRST result of each
+        sub-batch (``input_tokens``/``output_tokens``/``cost_usd``); the
+        other results carry ``batch_size`` so accounting stays whole.
+
+        Falls back to the per-item base implementation when PromptBuilder
+        is unavailable.
+        """
+        if not items:
+            return []
+        if self._prompt_builder is None:
+            return await super().translate_batch_with_context(
+                items, source_lang, target_lang
+            )
+        if not self.client:
+            raise AuthenticationError("Anthropic client not initialized (no API key)")
+        if not self.supports(source_lang, target_lang):
+            raise UnsupportedLanguageError(
+                f"Anthropic does not support {source_lang}-{target_lang}"
+            )
+
+        # Group into identifier items and text items, preserving positions.
+        identifier_idx = [
+            i for i, it in enumerate(items) if not (it.get("context") or {}).get("kind")
+        ]
+        text_idx = [
+            i for i, it in enumerate(items) if (it.get("context") or {}).get("kind")
+        ]
+
+        results: list[TranslationResult | None] = [None] * len(items)
+
+        if identifier_idx:
+            translations, usage = await self._translate_identifier_group(
+                [items[i] for i in identifier_idx], target_lang
+            )
+            for j, i in enumerate(identifier_idx):
+                results[i] = self._batch_result(
+                    items[i]["text"],
+                    translations[j],
+                    source_lang,
+                    target_lang,
+                    usage if j == 0 else None,
+                    len(identifier_idx),
+                )
+
+        if text_idx:
+            translations, usage = await self._translate_text_group(
+                [items[i] for i in text_idx], target_lang
+            )
+            for j, i in enumerate(text_idx):
+                results[i] = self._batch_result(
+                    items[i]["text"],
+                    translations[j],
+                    source_lang,
+                    target_lang,
+                    usage if j == 0 else None,
+                    len(text_idx),
+                )
+
+        return [r for r in results if r is not None]
+
+    async def _translate_identifier_group(
+        self, group: list[dict[str, Any]], target_lang: str
+    ) -> tuple[list[str], tuple[int, int]]:
+        """One API call for a batch of identifier items.
+
+        Returns (translations aligned with *group*, (input_tokens,
+        output_tokens)). An identifier missing from the response maps to
+        its original text (the caller's collision/retry logic treats that
+        as untranslated).
+        """
+        first_context = group[0].get("context") or {}
+        glossary = first_context.get("glossary", {})
+        forbidden: list[str] = []
+        for item in group:
+            for value in (item.get("context") or {}).get("forbidden_values") or []:
+                if value not in forbidden:
+                    forbidden.append(value)
+
+        system_prompt, user_prompt = self._prompt_builder.build_identifier_prompt(
+            identifiers=[
+                {
+                    "text": item["text"],
+                    "role": (item.get("context") or {}).get("role", "unknown"),
+                    "context": item.get("context") or {},
+                }
+                for item in group
+            ],
+            target_lang=target_lang,
+            existing_glossary=glossary,
+            forbidden_values=forbidden or None,
+        )
+
+        try:
+            raw_text, input_tokens, output_tokens = await self.complete(
+                system_prompt, user_prompt
+            )
+            mapping = parse_json_object(raw_text)
+        except Exception as e:
+            raise TranslationError(
+                f"Anthropic identifier batch failed "
+                f"({len(group)} items, ->{target_lang}): {e}"
+            ) from e
+
+        translations = [str(mapping.get(item["text"], item["text"])) for item in group]
+        return translations, (input_tokens, output_tokens)
+
+    async def _translate_text_group(
+        self, group: list[dict[str, Any]], target_lang: str
+    ) -> tuple[list[str], tuple[int, int]]:
+        """One API call for a batch of text items (comments/docstrings/strings).
+
+        The response is a JSON list in item order; a short or non-list
+        response is a batch failure (the caller falls back to originals).
+        """
+        first_context = group[0].get("context") or {}
+        glossary = first_context.get("glossary", {})
+
+        system_prompt, user_prompt = self._prompt_builder.build_text_prompt(
+            texts=[
+                {
+                    "text": item["text"],
+                    "kind": (item.get("context") or {}).get("kind", "unknown"),
+                    "context": item.get("context") or {},
+                }
+                for item in group
+            ],
+            target_lang=target_lang,
+            identifier_glossary=glossary,
+        )
+
+        try:
+            raw_text, input_tokens, output_tokens = await self.complete(
+                system_prompt, user_prompt
+            )
+            parsed = json.loads(strip_code_fences(raw_text))
+        except Exception as e:
+            raise TranslationError(
+                f"Anthropic text batch failed ({len(group)} items, "
+                f"->{target_lang}): {e}"
+            ) from e
+
+        if not isinstance(parsed, list) or len(parsed) < len(group):
+            raise TranslationError(
+                f"Anthropic text batch returned {type(parsed).__name__} with "
+                f"{len(parsed) if isinstance(parsed, list) else 'n/a'} entries "
+                f"for {len(group)} items"
+            )
+
+        translations = [str(value) for value in parsed[: len(group)]]
+        return translations, (input_tokens, output_tokens)
+
+    def _batch_result(
+        self,
+        original: str,
+        translated: str,
+        source_lang: str,
+        target_lang: str,
+        usage: tuple[int, int] | None,
+        batch_size: int,
+    ) -> TranslationResult:
+        """Build a TranslationResult for one item of a batched call."""
+        metadata: dict[str, Any] = {
+            "model": self.model,
+            "prompt_source": "prompt_builder",
+            "batch_size": batch_size,
+        }
+        if usage is not None:
+            input_tokens, output_tokens = usage
+            metadata["input_tokens"] = input_tokens
+            metadata["output_tokens"] = output_tokens
+            # None unless the operator configured a rate — see api/rates.py
+            metadata["cost_usd"] = cost_for_tokens(
+                self.name, input_tokens, output_tokens
+            )
+        return TranslationResult(
+            text=translated,
+            source_lang=source_lang,
+            target_lang=target_lang,
+            provider=self.name,
+            confidence=0.9,
+            billed_characters=len(original),
+            quality_score=self.get_quality_score(source_lang, target_lang),
+            metadata=metadata,
+        )
+
     async def analyze_semantic_similarity(
         self,
         term: str,
@@ -473,7 +676,19 @@ class AnthropicProvider(TranslationProvider):
                 "messages": [{"role": "user", "content": user_prompt}],
             }
             if system_prompt:
-                kwargs["system"] = system_prompt
+                # CORE-1805: the PromptBuilder system prompt is static per
+                # (language, target) pair — exactly the stable prefix
+                # Anthropic prompt caching is for. Cache writes cost 1.25x,
+                # reads 0.1x; below the model's minimum cacheable prefix
+                # the marker is silently ignored, so this is safe for
+                # short prompts too.
+                kwargs["system"] = [
+                    {
+                        "type": "text",
+                        "text": system_prompt,
+                        "cache_control": {"type": "ephemeral"},
+                    }
+                ]
             return await client.messages.create(**kwargs)
 
         response = await self._call_api_with_retry(
@@ -486,8 +701,19 @@ class AnthropicProvider(TranslationProvider):
         self.total_output_tokens += output_tokens
         self.total_requests += 1
 
+        # System-prompt cache accounting (CORE-1805): make cache hits
+        # visible in usage accounting. The fields are absent on responses
+        # that never touched the prompt cache.
+        cache_read = getattr(response.usage, "cache_read_input_tokens", None) or 0
+        cache_written = (
+            getattr(response.usage, "cache_creation_input_tokens", None) or 0
+        )
+        self.total_cache_read_tokens += cache_read
+        self.total_cache_creation_tokens += cache_written
+
         logger.info(
             f"Anthropic: Tokens: {input_tokens} in / {output_tokens} out | "
+            f"Cache: {cache_read} read / {cache_written} written | "
             f"Cost: {format_cost(cost_for_tokens(self.name, input_tokens, output_tokens))} | "
             f"Total requests: {self.total_requests}"
         )
