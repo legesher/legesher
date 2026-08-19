@@ -537,3 +537,19 @@ class TestCostCalculation:
     def test_provider_carries_no_rate_constants(self, provider):
         assert not hasattr(provider, "cost_per_million_chars")
         assert not hasattr(provider, "input_cost_per_token")
+
+
+class TestSupportedLanguageInventory:
+    """The derived inventory must not silently drop pairs that used to work."""
+
+    def test_grandfathered_codes_survive_the_derivation(self, provider):
+        """bg and uk predate languages.json and have no pack; Claude still serves them."""
+        for code in ("bg", "uk"):
+            assert code in provider.SUPPORTED_LANGUAGES
+            assert provider.supports("en", code)
+
+    def test_shipped_inventory_is_covered(self, provider):
+        from legesher_i18n.language_names import supported_language_codes
+
+        assert set(supported_language_codes()) <= set(provider.SUPPORTED_LANGUAGES)
+        assert provider.supports("en", "es")

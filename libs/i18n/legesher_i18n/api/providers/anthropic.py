@@ -61,7 +61,10 @@ class AnthropicProvider(TranslationProvider):
     # Supported languages: derived from languages.json (single source,
     # CORE-1804). Claude supports 100+ languages; this set is the shipped
     # Legesher language inventory plus English as the source language.
-    SUPPORTED_LANGUAGES = frozenset(supported_language_codes()) | {"en"}
+    # bg and uk are grandfathered: the pre-consolidation hardcoded set listed
+    # them and Claude supports them, but they have no shipped pack yet, so
+    # deriving from languages.json alone would silently drop working pairs.
+    SUPPORTED_LANGUAGES = frozenset(supported_language_codes()) | {"en", "bg", "uk"}
 
     def __init__(
         self,
