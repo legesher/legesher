@@ -21,6 +21,7 @@ from scripts.export_canon import (
     PUSH_ENV_VAR,
     ROLE_BY_DECIDER,
     TARGET_OVERRIDE_ENV_VAR,
+    LADDER,
     ExportRefused,
     export_canon,
     map_decider_role,
@@ -306,25 +307,46 @@ def test_the_card_declares_the_licence(canon_db: Path, tmp_path: Path) -> None:
     assert DECLARED_LICENSE == "apache-2.0"
 
 
-def test_the_card_states_the_three_layers(canon_db: Path, tmp_path: Path) -> None:
-    """The naming split is the point; the card has to carry it."""
+def test_the_card_explains_every_rung(canon_db: Path, tmp_path: Path) -> None:
+    """The ladder is the most important column, so all four rungs get prose.
+
+    A rung table alone tells a reader the counts without telling them what the
+    counts mean, and `reviewed` vs `official` is exactly where a consumer would
+    otherwise guess.
+    """
+    out = tmp_path / "out"
+    card = (export_canon(canon_db, out), (out / "README.md").read_text("utf-8"))[1]
+    for rung in LADDER:
+        assert f"### `{rung}`" in card
+
+
+def test_the_card_scopes_the_rung_to_one_rendering(
+    canon_db: Path, tmp_path: Path
+) -> None:
+    """A rung describes a word, not the pack it ships in."""
     out = tmp_path / "out"
     export_canon(canon_db, out)
     card = (out / "README.md").read_text(encoding="utf-8")
-    assert "the corpus is the evidence" in card.lower()
-    assert "legesher/language-corpus" in card
-    assert "legesher/language-packs" in card
+    assert "applies to one rendering" in card
 
 
-def test_the_card_separates_row_rung_from_pack_tier(
-    canon_db: Path, tmp_path: Path
-) -> None:
-    """Two ladders that move independently; conflating them is a known failure."""
+def test_the_card_carries_its_banner(canon_db: Path, tmp_path: Path) -> None:
+    """The card links the image relatively, so it has to ship beside it."""
     out = tmp_path / "out"
     export_canon(canon_db, out)
-    assert "Row rung is not pack tier" in (out / "README.md").read_text(
-        encoding="utf-8"
-    )
+    card = (out / "README.md").read_text(encoding="utf-8")
+    assert "![Legesher language canon](assets/language-canon-card.png)" in card
+    assert (out / "assets" / "language-canon-card.png").is_file()
+
+
+def test_a_stray_image_refuses_the_export(canon_db: Path, tmp_path: Path) -> None:
+    """Everything under assets/ is push-eligible."""
+    out = tmp_path / "out"
+    export_canon(canon_db, out)
+    (out / "assets" / "old-banner.png").write_text("stale")
+
+    with pytest.raises(ExportRefused, match="does not\\n?\\s*write"):
+        export_canon(canon_db, out)
 
 
 def test_push_refuses_without_the_governance_signoff() -> None:
