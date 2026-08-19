@@ -734,33 +734,33 @@ configs:
 
 # Legesher language canon
 
-![Legesher language canon]({CARD_IMAGE_TARGET.as_posix()})
+![Legesher Language Canon]({CARD_IMAGE_TARGET.as_posix()})
 
-## What this canon is
+## What this Canon is
 
-A centralized standard, created and curated by language communities, for what
+A **centralized standard, created and curated by language communities**, for what
 programming concepts are called in each natural language.
 
 It holds language-specific renderings of programming keywords, builtins and
-exceptions — {summary["concepts"]} concepts across {summary["locales"]}
-languages, {summary["rows"]:,} decisions — and documents where each language
-stands in that process.
+exceptions, and documents where each language stands in that process.
 
-It builds on
+The language-canon builds on
 [`legesher/language-corpus`](https://huggingface.co/datasets/legesher/language-corpus),
 which gathers every rendering anyone has proposed. The corpus is the full
 record of what has been suggested; the canon is the vocabulary that downstream
 applications actually use.
 
-Programming languages are written in English, so a developer who does not read
-English is memorising shapes rather than reading words. The hard part is not
-the obvious vocabulary. It is the gray areas, where words are borrowed,
-created, or derived from English — `elif` and `lambda` have no obvious answer
-in any language, and settling them takes people who know a language's culture
-and the stories woven into it, not only its grammar.
+Computer science as a global discipline is primarily based in English. A
+developer who does not read English memorizes shapes rather than reading words
+and connecting the terminology to related context. The hard part is not the
+obvious vocabulary. It is the gray areas, where words are borrowed, created, or
+derived from English (`elif` and `lambda` have no obvious answer in any
+language), and settling them takes people who know a language's culture and the
+stories woven into it, not only its grammar.
 
-This is a growing dataset. A rendering here is the current answer, not a final
-one, and each carries a rung recording how much review stands behind it.
+_Note: This is a **growing dataset**. A rendering here is the current answer,
+not a final one, and each carries a rung recording how much review stands
+behind it._
 
 Renderings are keyed by content-addressed uids (`opt_` + 24 hex) shared with
 the corpus, so an `option_uid` resolves there to every alternative proposed for
@@ -800,7 +800,7 @@ art, and nobody has weighed in on any of it yet.
 
 It is not arbitrary. Every rendering clears mechanical checks before it can be
 selected: it has to be a valid identifier in its language, stable under the
-Unicode normalisation the interpreter applies, and free of collisions with
+Unicode normalization the interpreter applies, and free of collisions with
 other terms in its vocabulary. What nobody has asked is whether it is the right
 word — whether a programmer who speaks the language would recognise it.
 

@@ -384,7 +384,7 @@ def test_the_card_carries_its_banner(canon_db: Path, tmp_path: Path) -> None:
     out = tmp_path / "out"
     export_canon(canon_db, out)
     card = (out / "README.md").read_text(encoding="utf-8")
-    assert "![Legesher language canon](assets/language-canon-card.png)" in card
+    assert "![Legesher Language Canon](assets/language-canon-card.png)" in card
     assert (out / "assets" / "language-canon-card.png").is_file()
 
 
