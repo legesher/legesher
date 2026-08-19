@@ -637,54 +637,6 @@ def copy_card_image(out_dir: Path) -> None:
     shutil.copyfile(CARD_IMAGE_SOURCE, out_dir / CARD_IMAGE_TARGET)
 
 
-#: Concepts to open the card with, most recognisable first. The renderings are
-#: looked up in the EXPORTED ROWS rather than written into this file, so the
-#: card's most prominent sentence cannot go stale or be wrong about its own
-#: data -- an earlier draft of it named a language the dataset does not carry.
-CARD_EXAMPLE_CONCEPTS: tuple[str, ...] = ("if", "return", "while", "print")
-
-
-def card_examples(
-    rows: list[dict[str, Any]], locale_rows: list[dict[str, Any]], limit: int = 2
-) -> list[tuple[str, str, str]]:
-    """Pick (language, concept, rendering) triples for the card opening.
-
-    Prefers non-Latin scripts, because the point being made is that a
-    programmer reading these has to recognise words rather than shapes, and a
-    Latin-script example undersells it.
-
-    Returns:
-        Up to ``limit`` triples, fewer if the data cannot supply them.
-    """
-    names = {row["locale"]: row["language_name"] for row in locale_rows}
-    by_key = {
-        (row["locale"], row["concept"]): row["surface_form"]
-        for row in rows
-        if row["locale"] != "en"
-    }
-    non_latin = sorted(
-        {
-            locale
-            for (locale, _concept), form in by_key.items()
-            if any(ord(char) > 0x2FF for char in form)
-        }
-    )
-    picked: list[tuple[str, str, str]] = []
-    used: set[str] = set()
-    for concept in CARD_EXAMPLE_CONCEPTS:
-        for locale in non_latin:
-            if len(picked) >= limit:
-                return picked
-            if locale in used:
-                continue
-            form = by_key.get((locale, concept))
-            if form:
-                picked.append((names.get(locale, locale), concept, form))
-                used.add(locale)
-                break
-    return picked
-
-
 def render_card(
     summary: dict[str, Any],
     rows: list[dict[str, Any]],
@@ -710,18 +662,14 @@ def render_card(
         f"| {row['reviewed']} | {row['official']} |"
         for row in locale_rows
     )
-    examples = card_examples(rows, locale_rows)
-    opening = (
-        " ".join(
-            f"In {language}, `{concept}` is `{form}`."
-            for language, concept, form in examples
-        )
-        if examples
-        else "Programming concepts, named in the languages people actually speak."
-    )
     reviewed = summary["by_rung"]["reviewed"] + summary["by_rung"]["official"]
-    native_touched = summary["by_role"]["native-reviewer"]
-    unreviewed = summary["rows"] - reviewed - native_touched
+    # Counted from the RUNG, not the role: a rendering the machine picked and a
+    # person later endorsed is human-touched, and its role is still
+    # `automated`. Reading the role here would report 32 where the truth is
+    # hundreds, which is the exact erasure this rung correction fixed.
+    human_touched = summary["by_rung"]["experimental"]
+    human_locales = sum(1 for row in locale_rows if row["experimental"])
+    unreviewed = summary["rows"] - reviewed - human_touched
     return f"""---
 license: {DECLARED_LICENSE}
 tags:
@@ -750,26 +698,32 @@ configs:
 
 ## What this canon is
 
-**{opening}**
+A centralized standard, created and curated by language communities, for what
+programming concepts are called in each natural language.
 
-The word each programming concept goes by in each human language —
-{summary["concepts"]} concepts across {summary["locales"]} languages,
-{summary["rows"]:,} decisions in all, every one of them carrying the amount of
-review that stands behind it.
+It holds language-specific renderings of programming keywords, builtins and
+exceptions — {summary["concepts"]} concepts across {summary["locales"]}
+languages, {summary["rows"]:,} decisions — and documents where each language
+stands in that process.
 
-Programming languages are written in English. `if`, `while`, `class`,
-`import`: a developer who does not read English is memorising shapes. Choosing
-what those concepts are called in someone's own language is the work, and
-choosing *well* is a question only speakers of that language can settle.
+It builds on
+[`legesher/language-corpus`](https://huggingface.co/datasets/legesher/language-corpus),
+which gathers every rendering anyone has proposed. The corpus is the full
+record of what has been suggested; the canon is the vocabulary that downstream
+applications actually use.
 
-This is a **growing dataset**. A rendering here is the current answer, not a
-final one: renderings change as speakers of the language weigh in, and each
-one's rung records how much of that has happened yet. Treat a revision as a
-snapshot of the decisions to date.
+Programming languages are written in English, so a developer who does not read
+English is memorising shapes rather than reading words. The hard part is not
+the obvious vocabulary. It is the gray areas, where words are borrowed,
+created, or derived from English — `elif` and `lambda` have no obvious answer
+in any language, and settling them takes people who know a language's culture
+and the stories woven into it, not only its grammar.
+
+This is a growing dataset. A rendering here is the current answer, not a final
+one, and each carries a rung recording how much review stands behind it.
 
 Renderings are keyed by content-addressed uids (`opt_` + 24 hex) shared with
-[`legesher/language-corpus`](https://huggingface.co/datasets/legesher/language-corpus),
-so an `option_uid` resolves there to every alternative that was proposed for
+the corpus, so an `option_uid` resolves there to every alternative proposed for
 that concept and every endorsement attached to them.
 
 ## Languages
@@ -787,65 +741,77 @@ than read it.
 
 ## The maturity ladder
 
-Every rendering carries a rung. It is the honest answer to "how much human
-judgement is behind this word?", and it is the most important column here.
+Without other global examples to build from, each language's canon starts
+drafted from machines and prior art. From there native speakers move it up:
+`experimental`, then `reviewed`, then `official`. Once a language reaches
+`official`, its canon becomes a resource for the community it exists to serve.
+
+Every rendering carries its own rung, so a language moves as its words do.
 
 ### `machine`
 
-Selected without anyone judging this particular word — carried over from a
-shipped language pack, or picked by a batch job resolving a collision.
+Drafted, not decided. The rendering came from a machine draft or from prior
+art, and no one has weighed in on it since.
 
-It is not arbitrary. Every rendering clears mechanical gates before it can be
-selected at all: it has to be a valid identifier in its language, stable under
-the Unicode normalisation the interpreter applies, and free of collisions with
-other terms in its own vocabulary. What no one has asked is whether it is the
-*right* word — whether a programmer who speaks that language would recognise
-it, or would wince.
+It is not arbitrary. Every rendering clears mechanical checks before it can be
+selected: it has to be a valid identifier in its language, stable under the
+Unicode normalisation the interpreter applies, and free of collisions with
+other terms in its vocabulary. What nobody has asked is whether it is the right
+word — whether a programmer who speaks the language would recognise it.
 
-**Treat these as proposals.**
+Treat these as proposals.
 
 ### `experimental`
 
-A person has looked at this specific rendering and kept it, replaced it, or
-rewritten it — a maintainer curating a batch, or a native speaker of the
-language making a correction.
+A person has engaged with this specific rendering. Either they **chose** it — a
+maintainer curating a batch, a native speaker correcting the word — or they
+**endorsed** it, putting their name behind a rendering someone else proposed.
 
-One informed opinion stands behind it. That is meaningfully more than
-`machine` and meaningfully less than agreement, which is why it is its own
-rung rather than folded into either neighbour.
+Most of the endorsements here predate this dataset: they are the review history
+of the community that built Legesher's original translations, where
+contributors voted on renderings word by word. An endorsement attaches to the
+specific option that was later selected, so it is evidence about *this word*,
+not about the concept in general.
+
+At least one person has weighed in. That is not yet agreement, which is why
+`experimental` is its own rung.
 
 ### `reviewed`
 
-Native speakers have signed off, and more than one, so the rendering reflects
-agreement rather than a single person's preference.
+Several native speakers have signed off, so the rendering reflects agreement
+rather than one person's preference.
 
-The risk with one reviewer is not that they are wrong — it is that they are
-unrepresentative. A regional form, a register that reads formal or childish
-somewhere else, a loanword one community has absorbed and another rejects.
-More than one voice is what turns a rendering into a *shared* answer.
+The risk with a single reviewer is not that they are wrong. It is that they are
+unrepresentative — a regional form, a register that reads formal or childish
+elsewhere, a loanword one community has absorbed and another rejects. More than
+one voice is what makes a rendering a shared answer.
 
-**How many voices, and how varied, is still being defined.** We would rather
-say so than publish a threshold we have not actually set.
+How many voices, and how varied, is still being defined. We would rather say so
+than publish a threshold we have not set.
 
 ### `official`
 
 Ratified in a convened session, and screened.
 
-Screening is a separate axis from accuracy: a rendering can be a perfectly
-correct translation and still be the wrong word to ship — offensive in another
-register, unfortunate beside a neighbouring term, or colliding with something
-in the language it should not. `official` means both questions were asked and
-answered by people with standing to answer them.
+Screening is separate from accuracy. A rendering can be a correct translation
+and still be the wrong word to ship: offensive in another register, unfortunate
+beside a neighbouring term, or colliding with something it should not. A rung
+of `official` means both questions were asked and answered by people with
+standing to answer them.
 
-This is a decision a language community makes. It is not a number a counter
-reaches.
+A language community makes this decision, not a threshold.
 
 ### Where things stand today
 
-{reviewed} renderings are at `reviewed` or above. {native_touched:,} have had a
-native speaker's attention, one reviewer each, which is why they sit at
-`experimental`. The remaining {unreviewed:,} are machine or maintainer
-selections that **no native speaker has looked at yet.**
+{reviewed} renderings are at `reviewed` or above.
+
+{human_touched:,} sit at `experimental` — chosen or endorsed by at least one
+person, across {human_locales} of the {summary["locales"]} languages here. The
+remaining {unreviewed:,} are machine or maintainer selections that **no one has
+weighed in on yet.**
+
+Nothing has reached `reviewed`, because that needs more than one voice and the
+threshold is not set.
 
 We publish at this stage deliberately. A terminology set developed privately
 and released once it is "ready" has already made every decision without the
@@ -898,9 +864,10 @@ rendering, `decided_by` says **who** made the most recent call. A single
 native reviewer is visible here without moving the rung, because their
 judgement is real and is not yet a consensus.
 
-If you program in one of these languages, or speak one not yet covered, these
-renderings want your eyes. Corrections, endorsements and objections all move a
-rendering up the ladder — and disagreement is a contribution, not an obstacle.
+This requires collaboration from people who do not just speak a language other
+than English, but know its culture. If that is you, corrections, endorsements
+and objections all move a rendering up the ladder, and disagreement is a
+contribution rather than an obstacle.
 
 ## Licence and citation
 

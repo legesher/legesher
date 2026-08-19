@@ -14,7 +14,11 @@ from pathlib import Path
 
 import pytest
 
-from legesher_i18n.db.schema_v2 import apply_schema_v2
+from legesher_i18n.db.schema_v2 import (
+    apply_schema_v2,
+    contributor_id,
+    endorsement_uid,
+)
 from scripts.export_canon import (
     DECLARED_LICENSE,
     DEFAULT_TARGET_REPO,
@@ -573,3 +577,82 @@ def test_the_card_states_the_licence_in_prose(canon_db: Path, tmp_path: Path) ->
     card = (out / "README.md").read_text(encoding="utf-8")
     assert "## Licence and citation" in card
     assert "Apache-2.0" in card.split("## Licence and citation", 1)[1]
+
+
+def _endorse(db: Path, option_uid: str, method: str = "github") -> None:
+    """Attach one live endorsement from a real person to an option."""
+    person = contributor_id("someone")
+    created = "2026-07-01T00:00:00"
+    conn = sqlite3.connect(db)
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("INSERT OR IGNORE INTO contributors (id) VALUES (?)", (person,))
+    conn.execute(
+        "INSERT INTO endorsements (uid, option_uid, contributor_id, method, "
+        "rung_at_endorsement, created_at) VALUES (?, ?, ?, ?, 'contributor', ?)",
+        (
+            endorsement_uid(option_uid, person, method, created),
+            option_uid,
+            person,
+            method,
+            created,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_an_endorsed_rendering_is_not_machine(canon_db: Path) -> None:
+    """Someone put their name behind this word; `machine` says nobody did.
+
+    This is the population the recovered legesher-translations review history
+    lands in: contributors voted on renderings that were later selected as
+    canon, and the rung was reporting them as auto-picked and unreviewed.
+    """
+    _endorse(canon_db, OPT_ZH)
+    conn = sqlite3.connect(canon_db)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    try:
+        result = correct(conn)
+        rung = conn.execute(
+            "SELECT status FROM canon_selections WHERE option_uid = ? "
+            "AND pl_scope = 'python'",
+            (OPT_ZH,),
+        ).fetchone()["status"]
+    finally:
+        conn.close()
+
+    assert result["moved"] >= 1
+    assert rung == "experimental"
+
+
+def test_an_endorsement_on_a_different_option_moves_nothing(
+    canon_db: Path,
+) -> None:
+    """Evidence has to be about THIS word, not about the concept.
+
+    A rendering that was proposed and endorsed but NOT selected says nothing
+    about the rendering that was; counting it would inflate the ladder with
+    other options' support.
+    """
+    conn = sqlite3.connect(canon_db)
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute(
+        "INSERT INTO options (uid, concept_id, locale, surface_form, "
+        "first_seen_at) VALUES (?, 1, 'zh-Hans', '真', '2026-06-01T00:00:00')",
+        ("opt_" + "d" * 24,),
+    )
+    conn.commit()
+    conn.close()
+    _endorse(canon_db, "opt_" + "d" * 24)
+
+    conn = sqlite3.connect(canon_db)
+    conn.row_factory = sqlite3.Row
+    try:
+        rows = correct(conn, dry_run=True)
+    finally:
+        conn.close()
+
+    # Only the native-reviewer row qualifies; the rival option's endorsement
+    # is not evidence about the selected rendering.
+    assert rows["found"] == 1

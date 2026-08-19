@@ -1,19 +1,29 @@
 #!/usr/bin/env python
-"""Move native-speaker canon selections off the ``machine`` rung.
+"""Move human-touched canon selections off the ``machine`` rung.
 
-Thirty-two rows in ``canon_selections`` were decided by a native speaker of
-the language — 31 in Chinese, 1 in Urdu, their ``decision_reason`` recording a
-"Native speaker review correction" or "suggestion". They are stored as
-``status = 'machine'``, which the schema defines as "auto-picked, unreviewed".
-That is factually wrong about them, and it is wrong in the direction that
-matters: it hides the only genuine native review in the database from the
-artifact whose entire purpose is to show how much review stands behind a word.
+``status = 'machine'`` is defined as "auto-picked, unreviewed". Two populations
+in ``canon_selections`` carry it and should not:
 
-They move to ``experimental``, not to ``reviewed``. A single native reviewer
-never promotes a rung on their own — ``reviewed`` means a variety of community
-voices, and one person's judgement is real without being a consensus. The
-reviewer stays visible through the published ``decided_by`` role instead.
-That separation is the whole reason the artifact carries two axes.
+**Renderings a person endorsed.** Hundreds of canon-selected options carry live
+endorsements — most of them the recovered review history from the community
+that built ``legesher-translations``, where contributors voted on renderings
+long before this database existed. Those endorsements attach to the specific
+option that was later selected as canon, so they are evidence about *this
+word*, not merely about the concept. Labelling them ``machine`` erases the
+contribution outright: it tells a reader nobody looked, when in fact a
+community did.
+
+**Renderings a native reviewer decided.** A speaker of the language corrected
+the word directly.
+
+Both move to ``experimental``, not to ``reviewed``. One informed opinion is
+real without being a consensus, and these endorsements sit at contributor rung
+rather than verified native sign-off. Whether many contributor endorsements can
+ever compound into ``reviewed`` is the open ladder question, and it is not this
+script's to answer.
+
+The two axes stay separate: the rung says how much review a rendering has, and
+the published ``decided_by`` role says who made the last call.
 
 ## Why this is a delete-and-reinsert rather than an UPDATE
 
@@ -99,15 +109,26 @@ def correct(conn: sqlite3.Connection, *, dry_run: bool = False) -> dict[str, int
     # `pl_scope` is selected but never re-inserted: it is a STORED generated
     # column, so it cannot be written, but it is half of the UNIQUE key the
     # delete below has to match.
+    #
+    # `endorsed` is the load-bearing half of the predicate. A rendering that a
+    # real person put their name behind is not "auto-picked, unreviewed" no
+    # matter how it was first drafted -- and the endorsement attaches to THIS
+    # option, not merely to the concept, so it is evidence about this word.
     rows = [
         row
         for row in conn.execute(
-            f"SELECT {', '.join(CARRIED_COLUMNS)}, pl_scope FROM canon_selections "
-            "ORDER BY locale, concept_id"
+            f"SELECT {', '.join(CARRIED_COLUMNS)}, pl_scope, "
+            "EXISTS (SELECT 1 FROM endorsements e "
+            "        WHERE e.option_uid = canon_selections.option_uid "
+            "          AND e.retracted_at IS NULL) AS endorsed "
+            "FROM canon_selections ORDER BY locale, concept_id"
         )
-        if row["decided_by"]
-        and HANDLE_PATTERN.match(row["decided_by"])
-        and row["decided_by"] not in EXCLUDED_DECIDERS
+        if row["endorsed"]
+        or (
+            row["decided_by"]
+            and HANDLE_PATTERN.match(row["decided_by"])
+            and row["decided_by"] not in EXCLUDED_DECIDERS
+        )
     ]
 
     already = sum(1 for row in rows if row["status"] == TARGET_STATUS)
