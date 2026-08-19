@@ -44,6 +44,27 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `source_file` and `source_revision` are withheld this revision — the first
   needs a controlled vocabulary, and the other two name files that do not exist.
   [CORE-1985]
+- **Community submissions now pass an automated moderation gate at intake.**
+  No community rendering goes live unscreened: on top of the mechanical
+  validator suite the importer already runs, a new safety stage screens every
+  newly-minted option for bidi/invisible-character injection, homoglyph and
+  confusable-skeleton spoofing (of English keywords and of established words
+  in the same locale), per-locale offensive-term wordlists (word-boundary
+  aware; lists live in the private data home), spam heuristics, and
+  per-contributor rate limits. Findings escalate to a human — the gate never
+  auto-rejects. Contributors whose maintainer-verified rung meets the
+  fast-path bar have clean options released immediately; everyone else stays
+  quarantined for the import ritual exactly as before. Verdicts land in the
+  same auditable `option_screenings` trail the interim ritual writes (as
+  `auto-gate-v1`), so rankings, reviewer views and the corpus export needed
+  no schema change. A model screen is a pluggable linguist-review hook; the
+  default is offline and blocks nothing. New `rescreen-flagged` command pulls
+  visible community options with open flags back behind the screen, and
+  `quarantine-queue` now lists escalations first, then higher submitter
+  rungs. Three policy knobs ship as configuration with conservative
+  defaults: quarantine fully hidden, screening verdicts private (an opt-in
+  flag exports a sanitized trail), escalations to maintainers plus certified
+  reviewers. [CORE-1797]
 
 ### Fixed
 

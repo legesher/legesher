@@ -1555,12 +1555,14 @@ from legesher_i18n.intake.commands import (  # noqa: E402
     import_issue,
     import_review_bundle,
     quarantine_queue,
+    rescreen_flagged,
 )
 
 cli.add_command(import_review_bundle)
 cli.add_command(import_issue)
 cli.add_command(quarantine_queue)
 cli.add_command(clear_option)
+cli.add_command(rescreen_flagged)
 
 
 if __name__ == "__main__":

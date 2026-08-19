@@ -194,6 +194,7 @@ def test_valid_bundle_ingests_end_to_end(db_path: Path) -> None:
         "identity",
         "gates",
         "quality",
+        "safety",
         "ingest",
     ]
 
@@ -209,13 +210,15 @@ def test_valid_bundle_ingests_end_to_end(db_path: Path) -> None:
         " WHERE option_uid=?",
         new_opt,
     ) == [(1, 1)]
-    # …and QUARANTINED by default (CORE-1828), while the pre-existing model
-    # candidate the reviewer merely endorsed is untouched.
+    # …and QUARANTINED by default (CORE-1828). The first verdict is now
+    # written by the CORE-1797 automated gate (screened, low stored rung, so
+    # no fast path), while the pre-existing model candidate the reviewer
+    # merely endorsed is untouched.
     assert q(
         db_path,
         "SELECT verdict, screened_by FROM option_screening_status WHERE option_uid=?",
         new_opt,
-    ) == [("quarantined", "importer")]
+    ) == [("quarantined", "auto-gate")]
     assert q(
         db_path,
         "SELECT COUNT(*) FROM option_screenings WHERE option_uid=?",

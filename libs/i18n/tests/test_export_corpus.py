@@ -1366,8 +1366,13 @@ def test_every_schema_table_is_deliberately_classified() -> None:
         "exists to prevent."
     )
     # No stale or typo'd declarations, and no table in two buckets.
+    # ONE sanctioned exception: option_screenings is private BY DEFAULT
+    # (NEVER_EXPORT) and joins the read-set only when the CORE-1797
+    # export_verdicts flag is on, through the sanitized SCREENINGS_CONFIG_SQL.
+    # Being declared in both buckets is that flag's design, not drift.
+    sanctioned_dual = {"option_screenings"}
     assert NEVER_EXPORT <= schema_tables
-    assert not (NEVER_EXPORT & read_tables)
+    assert not (NEVER_EXPORT & (read_tables - sanctioned_dual))
     assert not (NEVER_EXPORT & NEUTRAL_TABLES)
 
 
@@ -1411,6 +1416,39 @@ def test_a_quarantined_option_is_absent_from_the_export(
     assert ledger["ok"] is True
     assert OPT_TRUE_ZH in _read(out, "options")["option_uid"]
     assert ledger["configs"]["options"]["quarantined_rows"] == 0
+
+
+def test_screening_verdicts_export_only_under_the_flag(
+    v2_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """CORE-1797 sub-decision: verdicts stay private by default; the
+    export_verdicts flag publishes a SANITIZED trail — no screened_by, no
+    note, and no event for an option the export itself withholds."""
+    conn = sqlite3.connect(v2_db)
+    conn.execute(
+        "INSERT INTO option_screenings (option_uid, verdict, screened_by, "
+        "screen_version, note) VALUES (?, 'cleared', 'madi', "
+        "'auto-gate-v1', 'fast path')",
+        (OPT_TRUE_ZH,),
+    )
+    conn.commit()
+    conn.close()
+
+    off = tmp_path / "corpus-verdicts-off"
+    assert export_corpus(v2_db, off)["ok"] is True
+    assert not (off / "data" / "screenings.parquet").exists()
+
+    monkeypatch.setenv("LEGESHER_MODERATION_EXPORT_VERDICTS", "1")
+    on = tmp_path / "corpus-verdicts-on"
+    ledger = export_corpus(v2_db, on)
+    assert ledger["ok"] is True
+    table = _read(on, "screenings")
+    assert set(table) == {"option_uid", "verdict", "screen_version", "screened_at"}
+    assert OPT_TRUE_ZH in table["option_uid"]
+    # Every published event belongs to an option the export publishes: a
+    # verdict trail on a withheld option would leak that it exists.
+    assert set(table["option_uid"]) <= set(_read(on, "options")["option_uid"])
+    assert ledger["configs"]["screenings"]["db_rows"] == len(table["option_uid"])
 
 
 def test_export_works_on_a_database_that_predates_screening(

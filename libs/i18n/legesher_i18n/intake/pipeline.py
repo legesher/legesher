@@ -1,4 +1,4 @@
-"""The six-stage review-bundle verification pipeline (CORE-1688).
+"""The seven-stage review-bundle verification pipeline (CORE-1688).
 
 One pipeline for every intake lane: Stage-0 issue imports and Stage-1 bundle
 files call the same :class:`BundleImporter`; the Stage-2 portal will too. The
@@ -20,9 +20,17 @@ stages, in order, each recorded in ``review_sessions.verification_report``:
 5. **quality** — WARN-only signals. Policy, stated here because it is
    load-bearing: no stage compares a human submission against model output,
    and disagreement with a model panel is not a signal at all.
-6. **ingest** — append-only rows in one transaction; content-addressed uids
-   make re-import a no-op; community-sourced NEW options land quarantined
-   (CORE-1828) until the maintainer clears them during the ritual.
+6. **safety** — the automated moderation gate (CORE-1797,
+   :mod:`legesher_i18n.intake.moderation`): homoglyph/bidi/confusable
+   injection, per-locale wordlists, spam heuristics, per-contributor rate
+   limits, and the linguist-review hook. Decides each new option's FIRST
+   screening verdict — findings escalate (``held``), a trusted stored rung
+   fast-paths a clean option to ``cleared``, everyone else stays
+   ``quarantined``. Screened always; auto-rejected never.
+7. **ingest** — append-only rows in one transaction; content-addressed uids
+   make re-import a no-op; community-sourced NEW options land with the
+   safety stage's verdict, withheld from rankings and export (CORE-1828
+   semantics) until cleared.
 """
 
 from __future__ import annotations
@@ -53,6 +61,12 @@ from legesher_i18n.db.schema_v2 import (
     style_uid,
 )
 from legesher_i18n.intake.canonical import canonicalize
+from legesher_i18n.intake.moderation import (
+    AUTO_SCREEN_VERSION,
+    AUTO_SCREENED_BY,
+    ModerationGate,
+    OptionScreenPlan,
+)
 from legesher_i18n.schema_validator import SchemaValidator
 from legesher_i18n.script_policy import BIDI_EMBEDDINGS
 from legesher_i18n.surface_validation import (
@@ -63,8 +77,10 @@ from legesher_i18n.surface_validation import (
 
 __all__ = ["BundleImporter", "ImportResult", "SCREEN_VERSION"]
 
-#: The interim screening regime (CORE-1828): the maintainer is the screen.
-#: CORE-1797's automated gate will introduce its own versions.
+#: The screening regime for HUMAN verdicts (CORE-1828): the maintainer acts
+#: during the import ritual. Automated verdicts carry
+#: :data:`~legesher_i18n.intake.moderation.AUTO_SCREEN_VERSION` instead, so the
+#: two regimes stay distinguishable in the audit trail.
 SCREEN_VERSION = "manual-interim-v1"
 
 _SCHEMA_PATH = Path(__file__).with_name("bundle_schema.json")
@@ -103,9 +119,12 @@ class ImportResult:
     status: str  # accepted | returned | halted | duplicate
     report: dict[str, Any]
     locale: str | None = None
-    #: Options this submission MINTED. Every one is quarantined on arrival
-    #: (CORE-1828), so there is no separate quarantined list to carry.
+    #: Options this submission MINTED, in creation order.
     created_options: list[str] = field(default_factory=list)
+    #: First screening verdict per created option (CORE-1797 safety stage):
+    #: ``cleared`` (fast-pathed, screened), ``quarantined`` (awaiting the
+    #: import ritual), or ``held`` (escalated to a human moderator).
+    option_verdicts: dict[str, str] = field(default_factory=dict)
     endorsements_linked: int = 0
     withdrawn_replay: bool = False
     needs_human_eyes: bool = False
@@ -123,6 +142,7 @@ class ImportResult:
                 "status": self.status,
                 "locale": self.locale,
                 "created_options": self.created_options,
+                "option_verdicts": self.option_verdicts,
                 "endorsements_linked": self.endorsements_linked,
                 "withdrawn_replay": self.withdrawn_replay,
                 "needs_human_eyes": self.needs_human_eyes,
@@ -186,14 +206,31 @@ class ImportResult:
             lines.append(f"- New option recorded: `{uid}`")
         if self.endorsements_linked:
             lines.append(f"- Endorsements recorded: {self.endorsements_linked}")
-        lines += [
-            "",
-            "**What happens next:** every community submission is screened by",
-            "a human maintainer before it becomes visible in rankings or the",
-            "published corpus (see CONTRIBUTOR_PRIVACY.md and REVIEWING.md).",
-            "The queue is walked at least weekly; once your options clear the",
-            "screen they compete for the pack like every other candidate.",
-        ]
+        all_cleared = bool(self.created_options) and all(
+            self.option_verdicts.get(uid) == "cleared" for uid in self.created_options
+        )
+        if all_cleared:
+            # The fast path (CORE-1797): every screen ran and the submitter's
+            # maintainer-verified standing released the words immediately.
+            # Saying "a human will look first" here would be false.
+            lines += [
+                "",
+                "**What happens next:** your options passed the automated",
+                "screening checks, and your verified reviewer standing",
+                "released them immediately — they now compete for the pack",
+                "like every other candidate.",
+            ]
+        else:
+            # Held and quarantined read identically on purpose: the reply is
+            # public, and distinguishing them would advertise the filter.
+            lines += [
+                "",
+                "**What happens next:** every community submission is screened",
+                "before it becomes visible in rankings or the published corpus",
+                "(see CONTRIBUTOR_PRIVACY.md and REVIEWING.md). The queue is",
+                "walked at least weekly; once your options clear the screen",
+                "they compete for the pack like every other candidate.",
+            ]
         return "\n".join(lines)
 
 
@@ -212,6 +249,11 @@ class BundleImporter:
             (``after_reveal`` for the review app, ``quick`` for issues).
         conduct_wordlist: Locale wordlist terms whose presence in free text
             escalates to the human screen. Never auto-rejects.
+        moderation: The CORE-1797 automated gate deciding each new option's
+            first screening verdict. Defaults to a gate built from
+            ``LEGESHER_MODERATION_*`` environment config; pass an explicit
+            :class:`~legesher_i18n.intake.moderation.ModerationGate` to pin
+            policy or inject a linguist-review model.
         screened_by: Recorded on the quarantine verdicts this importer writes.
         required_attestations: Which boolean attestations must be affirmed for
             this lane. The bundle lane requires the full set; the Stage-0
@@ -236,6 +278,7 @@ class BundleImporter:
         method: str = "portal",
         elicited_default: str = "after_reveal",
         conduct_wordlist: list[str] | None = None,
+        moderation: ModerationGate | None = None,
         screened_by: str = "importer",
         required_attestations: tuple[str, ...] = ("original_work", "coc_agreed", "dco"),
         allow_dev_salt: bool = False,
@@ -245,6 +288,7 @@ class BundleImporter:
         self.method = method
         self.elicited_default = elicited_default
         self.conduct_wordlist = [w.casefold() for w in (conduct_wordlist or [])]
+        self.moderation = moderation or ModerationGate()
         self.screened_by = screened_by
         self.required_attestations = required_attestations
         self.allow_dev_salt = allow_dev_salt
@@ -393,6 +437,17 @@ class BundleImporter:
             cid = contributor_id(
                 obj["contributor"]["source_key"], salt=self._effective_salt
             )
+            # The safety stage's fast path reads the rung a MAINTAINER stored
+            # BEFORE this session touched the database — never the bundle's
+            # self-claim, which `_upsert_contributor` writes for a first-time
+            # contributor. Captured here, ahead of any upsert.
+            pre_rung = conn.execute(
+                "SELECT r.rank FROM contributors c"
+                " JOIN review_rungs r ON r.rung = c.current_rung"
+                " WHERE c.id = ?",
+                (cid,),
+            ).fetchone()
+            stored_rung_rank = pre_rung[0] if pre_rung else 0
             withdrawn_at = self._withdrawn_at(conn, cid)
             replay = False
             identity_notes: list[str] = []
@@ -482,7 +537,39 @@ class BundleImporter:
                 )
             )
 
-            # ---- stage 6: idempotent append-only ingest -------------------
+            # ---- stage 6: safety — the automated moderation gate ----------
+            slug_by_concept = {r["concept_id"]: r["slug"] for r in plan["responses"]}
+            new_plans = [
+                OptionScreenPlan(
+                    uid=uid,
+                    surface=info["surface"],
+                    concept_slug=slug_by_concept[info["concept_id"]],
+                    mechanical_clean=info["mechanical_clean"],
+                )
+                for uid, info in plan["options"].items()
+                if info["new"]
+            ]
+            subtag = conn.execute(
+                "SELECT language_subtag FROM locales WHERE tag = ?",
+                (obj["locale"],),
+            ).fetchone()[0]
+            outcome = self.moderation.screen_session(
+                conn,
+                contributor_id=cid,
+                stored_rung_rank=stored_rung_rank,
+                locale=obj["locale"],
+                language_subtag=subtag,
+                new_options=new_plans,
+            )
+            stages.append(
+                _Stage(
+                    "safety",
+                    "warn" if outcome.escalated else "pass",
+                    outcome.details,
+                )
+            )
+
+            # ---- stage 7: idempotent append-only ingest -------------------
             result = self._stage_ingest(
                 conn,
                 obj,
@@ -495,8 +582,9 @@ class BundleImporter:
                 stages,
                 source_ref,
                 resuming,
+                verdicts=outcome.verdicts,
             )
-            result.needs_human_eyes = bool(findings)
+            result.needs_human_eyes = bool(findings) or outcome.escalated
             result.withdrawn_replay = replay
             result.parse_notes = list(parse_notes or [])
             return result
@@ -902,6 +990,16 @@ class BundleImporter:
             info["validation"] = verdict
             info["min_interpreter_ok"] = min_ok
             problems = []
+            # Whether EVERY mechanical gate passed, cached for the safety
+            # stage: the cleared fast path (CORE-1797) requires it, while a
+            # failure still ingests as canon-ineligible evidence (CORE-1400).
+            info["mechanical_clean"] = (
+                verdict.identifier_valid
+                and (verdict.nfkc_stable or verdict.nfkc_delta_class == "sara-am-only")
+                and verdict.script_consistent
+                and not verdict.collides_en_keyword
+                and min_ok
+            )
             if not verdict.identifier_valid:
                 problems.append("not a valid identifier")
             if not verdict.nfkc_stable and verdict.nfkc_delta_class == "other":
@@ -1057,7 +1155,7 @@ class BundleImporter:
             source_ref=source_ref,
         )
 
-    # -- stage 6 ------------------------------------------------------------
+    # -- stage 7 ------------------------------------------------------------
 
     def _upsert_contributor(self, conn: sqlite3.Connection, cid: str, obj: dict) -> str:
         claimed = obj.get("contributor", {}).get("claimed_rung") or "contributor"
@@ -1131,8 +1229,10 @@ class BundleImporter:
         stages: list[_Stage],
         source_ref: str | None,
         resuming: bool = False,
+        verdicts: dict[str, tuple[str, str]] | None = None,
     ) -> ImportResult:
         now = _now_iso()
+        verdicts = verdicts or {}
         locale = obj["locale"]
         pl = obj.get("programming_language")
         created: list[str] = []
@@ -1213,17 +1313,25 @@ class BundleImporter:
                         self._blind_field(plan, uid, "rationale"),
                     ),
                 )
-                # Quarantine-by-default (CORE-1828): every community-created
-                # option is invisible to rankings and export until cleared.
+                # The first verdict is the safety stage's decision
+                # (CORE-1797): quarantine-by-default stays the floor, findings
+                # escalate to `held`, and only a screened option with a
+                # maintainer-verified rung fast-paths to `cleared`. A missing
+                # entry (a lane bypassing the gate) falls back to quarantine —
+                # the fail-safe direction.
+                verdict, gate_note = verdicts.get(
+                    uid, ("quarantined", "no gate verdict recorded; quarantined")
+                )
                 conn.execute(
                     "INSERT INTO option_screenings(option_uid, verdict,"
                     " screened_by, screen_version, note) VALUES"
-                    " (?, 'quarantined', ?, ?, ?)",
+                    " (?, ?, ?, ?, ?)",
                     (
                         uid,
-                        self.screened_by,
-                        SCREEN_VERSION,
-                        f"community submission via session {ses_uid}",
+                        verdict,
+                        AUTO_SCREENED_BY,
+                        AUTO_SCREEN_VERSION,
+                        f"community submission via session {ses_uid} — {gate_note}",
                     ),
                 )
 
@@ -1384,15 +1492,24 @@ class BundleImporter:
                     ),
                 )
 
+            if created:
+                by_verdict: dict[str, int] = {}
+                for uid in created:
+                    v = verdicts.get(uid, ("quarantined", ""))[0]
+                    by_verdict[v] = by_verdict.get(v, 0) + 1
+                breakdown = ", ".join(
+                    f"{count} {verdict}"
+                    for verdict, count in sorted(by_verdict.items())
+                )
+                created_detail = f"options created: {len(created)} ({breakdown})"
+            else:
+                created_detail = "options created: 0"
             stages.append(
                 _Stage(
                     "ingest",
                     "pass",
                     [
-                        f"options created: {len(created)} (all quarantined pending "
-                        f"the import ritual)"
-                        if created
-                        else "options created: 0",
+                        created_detail,
                         f"endorsements linked to session: {endorsements_linked}",
                     ],
                 )
@@ -1414,6 +1531,9 @@ class BundleImporter:
             report=report,
             locale=locale,
             created_options=created,
+            option_verdicts={
+                uid: verdicts.get(uid, ("quarantined", ""))[0] for uid in created
+            },
             endorsements_linked=endorsements_linked,
             source_ref=source_ref,
         )

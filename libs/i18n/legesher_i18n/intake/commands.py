@@ -5,9 +5,13 @@ Registered on the main ``legesher-i18n`` group by ``legesher_i18n.cli``:
 * ``import-review-bundle <file>`` — the Stage-1 lane (canonical bundle files).
 * ``import-issue <url-or-json-file>`` — the Stage-0 lane (issue-form emoji
   notation); a URL is fetched with ``gh issue view``.
-* ``quarantine-queue`` — the triage lens the import ritual walks.
+* ``quarantine-queue`` — the triage lens the import ritual walks
+  (escalations first, then higher submitter rungs — CORE-1797 queue order).
 * ``clear-option <uid>`` — the DISTINCT, attributed maintainer act that ends
   (or extends) a quarantine; writes the auditable per-option verdict.
+* ``rescreen-flagged`` — feeds ``option_flags`` reports back into screening
+  (CORE-1797): visible community options with open flags are held for a
+  human moderator.
 
 Exit codes: 0 accepted/duplicate · 1 returned (actionable report printed) ·
 3 halted (withdrawal rule: a human must decide — never code).
@@ -31,6 +35,7 @@ import click
 
 from legesher_i18n.db import schema_v2
 from legesher_i18n.intake.issue_parser import parse_issue
+from legesher_i18n.intake.moderation import AUTO_SCREEN_VERSION, AUTO_SCREENED_BY
 from legesher_i18n.intake.pipeline import SCREEN_VERSION, BundleImporter, ImportResult
 from legesher_i18n.intake.sync import sync_to_durable_home
 
@@ -88,11 +93,25 @@ def _finish(
             "identity column populated (runbook importer rule)"
         )
     if result.created_options:
-        click.echo(
-            f"  [note] {len(result.created_options)} option(s) quarantined "
-            "pending the import ritual (CORE-1828): clear with "
-            "`legesher-i18n clear-option <uid> --verdict cleared --by <you>`"
-        )
+        pending = [
+            uid
+            for uid in result.created_options
+            if result.option_verdicts.get(uid) != "cleared"
+        ]
+        held = sum(1 for uid in pending if result.option_verdicts.get(uid) == "held")
+        cleared = len(result.created_options) - len(pending)
+        if cleared:
+            click.echo(
+                f"  [note] {cleared} option(s) cleared by the automated gate "
+                "(fast path, CORE-1797) — live in rankings"
+            )
+        if pending:
+            click.echo(
+                f"  [note] {len(pending)} option(s) withheld pending the "
+                f"import ritual ({held} escalated by the safety screen): "
+                "clear with `legesher-i18n clear-option <uid> --verdict "
+                "cleared --by <you>`"
+            )
 
     if json_report:
         json_report.write_text(result.to_json(), encoding="utf-8")
@@ -423,13 +442,25 @@ def quarantine_queue(db_path: Path) -> None:
         # carried-forward database (CORE-1838).
         schema_v2.ensure_intake_screening(conn)
         rows = conn.execute(
-            "SELECT option_uid, concept_slug, locale, surface_form, verdict,"
-            " screened_at, note FROM quarantine_queue"
+            "SELECT q.option_uid, q.concept_slug, q.locale, q.surface_form,"
+            " q.verdict, q.screened_at, q.note FROM quarantine_queue q"
             # 'rejected' is a decision already taken. It stays withheld
             # forever (append-only, and the view is `<> cleared`), but it is
             # not awaiting anything, and leaving it here would grow the queue
             # monotonically until the real work was invisible in it.
-            " WHERE verdict <> 'rejected' ORDER BY screened_at"
+            " WHERE q.verdict <> 'rejected'"
+            # Triage order (CORE-1797): escalations first — a `held` verdict
+            # is the safety screen saying "a human must look" — then higher
+            # submitter rungs fast-path the queue (never the screen), oldest
+            # first within a band. Rung read from the submitter's STORED rung
+            # via community provenance; options without one sort last.
+            " ORDER BY (q.verdict = 'held') DESC,"
+            " COALESCE((SELECT MAX(r.rank) FROM option_provenance p"
+            "   JOIN contributors c ON c.id = p.contributor_id"
+            "   JOIN review_rungs r ON r.rung = c.current_rung"
+            "   WHERE p.option_uid = q.option_uid AND p.source = 'community'),"
+            " -1) DESC,"
+            " q.screened_at"
         ).fetchall()
         conn_rejected_count = conn.execute(
             "SELECT COUNT(*) FROM option_withheld WHERE verdict = 'rejected'"
@@ -520,3 +551,78 @@ def clear_option(
         "remember: the ritual ends with a push to the durable data home "
         "(run the sync or re-run the import with --sync)"
     )
+
+
+@click.command("rescreen-flagged")
+@click.option(
+    "--dry-run", is_flag=True, help="Report what would be re-screened; write nothing."
+)
+@_DB_OPTION
+def rescreen_flagged(dry_run: bool, db_path: Path) -> None:
+    """Pull flagged community options back behind the screen (CORE-1797).
+
+    ``option_flags`` is the post-hoc report channel, and this is where it
+    feeds re-screening: every community-sourced option carrying an UNRESOLVED
+    flag while currently visible (verdict ``cleared``, or no verdict at all)
+    gets a new ``held`` verdict — withdrawn from rankings, views and export
+    until a human moderator decides. A flag is a person saying "look at
+    this"; the automated gate never converts it into a rejection.
+    """
+    _require_db(db_path)
+    conn = schema_v2.connect(db_path)
+    wrote = 0
+    blocked: list[tuple[str, str]] = []
+    try:
+        schema_v2.ensure_intake_screening(conn)
+        rows = conn.execute(
+            "SELECT o.uid, o.surface_form,"
+            " (SELECT GROUP_CONCAT(DISTINCT f.reason) FROM option_flags f"
+            "   WHERE f.option_uid = o.uid AND f.resolved_at IS NULL) AS reasons"
+            " FROM options o"
+            " WHERE EXISTS (SELECT 1 FROM option_flags f WHERE f.option_uid = o.uid"
+            "               AND f.resolved_at IS NULL)"
+            "   AND EXISTS (SELECT 1 FROM option_provenance p"
+            "               WHERE p.option_uid = o.uid AND p.source = 'community')"
+            "   AND NOT EXISTS (SELECT 1 FROM option_withheld q"
+            "                   WHERE q.option_uid = o.uid)"
+            " ORDER BY o.uid"
+        ).fetchall()
+        for uid, surface, reasons in rows:
+            click.echo(f"{uid}  {surface!r}  open flag(s): {reasons}")
+            if dry_run:
+                continue
+            try:
+                conn.execute(
+                    "INSERT INTO option_screenings(option_uid, verdict,"
+                    " screened_by, screen_version, note) VALUES"
+                    " (?, 'held', ?, ?, ?)",
+                    (
+                        uid,
+                        AUTO_SCREENED_BY,
+                        AUTO_SCREEN_VERSION,
+                        f"re-screen on open flag(s): {reasons} — a report is a "
+                        "question for a human, never a verdict",
+                    ),
+                )
+                conn.commit()
+                wrote += 1
+            except sqlite3.IntegrityError as error:
+                conn.rollback()
+                blocked.append((uid, str(error)))
+    finally:
+        conn.close()
+    if dry_run:
+        click.echo(f"{len(rows)} flagged option(s) would be re-screened (dry run)")
+        return
+    click.echo(f"{wrote} option(s) held for re-screening")
+    for uid, error in blocked:
+        click.echo(
+            f"  BLOCKED {uid}: {error} — a canon-selected option cannot be "
+            "withheld in place; remove it from libs/i18n/canon/<locale>.toml "
+            "and reload first"
+        )
+    if wrote:
+        click.echo(
+            "remember: the ritual ends with a push to the durable data home "
+            "(run the sync or re-run the import with --sync)"
+        )

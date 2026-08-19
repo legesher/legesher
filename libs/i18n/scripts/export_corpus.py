@@ -159,6 +159,9 @@ FORBIDDEN_COLUMNS: frozenset[str] = frozenset(
         "verification_report",
         "github_handle",
         "contact",
+        # Screening attribution (CORE-1797): even when the sanitized verdict
+        # trail exports, WHO screened is a maintainer handle and stays private.
+        "screened_by",
     }
 )
 
@@ -255,6 +258,7 @@ CONFIG_BASE_TABLE: dict[str, str] = {
     "options": "options",
     "endorsements": "endorsements",
     "contributors": "contributors",
+    "screenings": "option_screenings",
 }
 
 #: How many base-table rows each config held back under quarantine
@@ -276,7 +280,38 @@ QUARANTINED_COUNT_SQL: dict[str, str] = {
             WHERE q.option_uid = e.option_uid
         )
     """,
+    "screenings": """
+        SELECT COUNT(*) FROM option_screenings s
+        WHERE EXISTS (
+            SELECT 1 FROM option_withheld q
+            WHERE q.option_uid = s.option_uid
+        )
+    """,
 }
+
+#: The OPT-IN screening-verdict config (CORE-1797 sub-decision). Exported ONLY
+#: when the moderation config says so (``LEGESHER_MODERATION_EXPORT_VERDICTS``;
+#: conservative default: private — a published filter is one an adversary reads
+#: around). Sanitized by construction:
+#:
+#: * ``screened_by`` is NOT selected — it is a maintainer handle;
+#: * ``note`` is NOT selected — free text that may quote wordlist terms or
+#:   name escalation targets;
+#: * only events for options the export itself publishes appear: a verdict
+#:   trail on a withheld option would leak that the submission exists.
+#:
+#: This is the ONE sanctioned mention of ``option_screenings`` in publish
+#: SQL; :func:`_assert_configs_avoid_private_tables` permits it here and
+#: nowhere else, and only when the flag is on.
+SCREENINGS_CONFIG_SQL = """
+    SELECT s.option_uid, s.verdict, s.screen_version, s.screened_at
+    FROM option_screenings s
+    WHERE NOT EXISTS (
+        SELECT 1 FROM option_withheld q
+        WHERE q.option_uid = s.option_uid
+    )
+    ORDER BY s.option_uid, s.id
+"""
 
 #: ``option_withheld`` as an empty relation, prepended to a query when the real
 #: view is absent (CORE-1838). A CTE shadows a table of the same name, so this
@@ -384,6 +419,13 @@ CONFIG_SCHEMA: dict[str, list[tuple[str, str]]] = {
         ("id", "string"),
         ("current_rung", "string"),
         ("joined_at", "string"),
+    ],
+    # Opt-in (CORE-1797 export_verdicts flag); see SCREENINGS_CONFIG_SQL.
+    "screenings": [
+        ("option_uid", "string"),
+        ("verdict", "string"),
+        ("screen_version", "string"),
+        ("screened_at", "string"),
     ],
 }
 
@@ -1044,7 +1086,7 @@ def _require_pyarrow() -> tuple[Any, Any]:
     return pa, pq
 
 
-def _assert_configs_avoid_private_tables() -> None:
+def _assert_configs_avoid_private_tables(*, include_screenings: bool = False) -> None:
     """Structural gate: no published config may mention a NEVER_EXPORT table.
 
     A word-boundary scan of the ENTIRE SQL text, deliberately NOT a FROM/JOIN
@@ -1068,10 +1110,17 @@ def _assert_configs_avoid_private_tables() -> None:
     # but "today" is the whole reason this gate is structural rather than a
     # code review: every query whose result reaches a reader belongs here.
     queries["card.languages"] = CARD_LOCALE_SQL
+    if include_screenings:
+        # The CORE-1797 export_verdicts flag is on: the sanitized screenings
+        # config joins the surface. Its SQL necessarily reads
+        # `option_screenings`, so that ONE table is permitted in that ONE
+        # config -- everywhere else it stays a refusal.
+        queries["screenings"] = SCREENINGS_CONFIG_SQL
     for name, sql in queries.items():
+        allowed = {"option_screenings"} if name == "screenings" else set()
         mentioned = {
             table
-            for table in NEVER_EXPORT
+            for table in NEVER_EXPORT - allowed
             if re.search(rf"\b{re.escape(table)}\b", sql, re.IGNORECASE)
         }
         if mentioned:
@@ -1715,7 +1764,10 @@ def push_to_hub(out_dir: Path, target_repo: str) -> None:
 def export_corpus(
     db_path: Path, out_dir: Path, target_repo: str = DEFAULT_TARGET_REPO
 ) -> dict[str, Any]:
-    """Export the five corpus configs, the dataset card, and the ledger.
+    """Export the corpus configs, the dataset card, and the ledger.
+
+    Five configs always; a sixth sanitized ``screenings`` config when the
+    CORE-1797 ``export_verdicts`` flag is on (default: off, verdicts private).
 
     Args:
         db_path: Path to a v2 database. Opened read-only.
@@ -1743,7 +1795,13 @@ def export_corpus(
         )
 
     pa, pq = _require_pyarrow()
-    _assert_configs_avoid_private_tables()
+    # The CORE-1797 sub-decision "do screening verdicts export" is a config
+    # flag, not a rebuild. Conservative default: private. Imported lazily so
+    # every other code path keeps working without the package installed.
+    from legesher_i18n.intake.moderation import ModerationConfig
+
+    export_verdicts = ModerationConfig.from_env().export_verdicts
+    _assert_configs_avoid_private_tables(include_screenings=export_verdicts)
     # Before any Parquet is written: every other refusal in this function
     # aborts with the output directory untouched, and a missing banner should
     # not be the one gate that leaves a half-built export behind.
@@ -1754,6 +1812,13 @@ def export_corpus(
     conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
     screening = _screening_installed(conn)
+    if export_verdicts and not screening:
+        raise SystemExit(
+            "EXPORT REFUSED: LEGESHER_MODERATION_EXPORT_VERDICTS is on, but "
+            "this database has no screening objects — there is no verdict "
+            "trail to publish. Unset the flag, or run the export against a "
+            "database the intake path has upgraded."
+        )
 
     _require_well_formed_locales(conn)
 
@@ -1765,7 +1830,10 @@ def export_corpus(
     configs: dict[str, dict[str, int]] = {}
     active_endorsements = 0
 
-    for name, sql in CONFIG_SQL.items():
+    config_sql = dict(CONFIG_SQL)
+    if export_verdicts:
+        config_sql["screenings"] = SCREENINGS_CONFIG_SQL
+    for name, sql in config_sql.items():
         cursor = conn.execute(_screening_sql(sql, installed=screening))
         columns = [description[0] for description in cursor.description]
         rows = cursor.fetchall()
