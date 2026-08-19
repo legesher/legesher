@@ -2,16 +2,27 @@
 
 import asyncio
 import hashlib
-import json
 import logging
 import os
-import re
 from typing import Any
 
 try:
     from anthropic import AsyncAnthropic
+
+    try:
+        from anthropic import APIError as AnthropicAPIError
+        from anthropic import RateLimitError as AnthropicRateLimitError
+    except ImportError:  # pragma: no cover - very old SDK
+        AnthropicAPIError = None  # type: ignore
+        AnthropicRateLimitError = None  # type: ignore
 except ImportError:
     AsyncAnthropic = None  # type: ignore
+    AnthropicAPIError = None  # type: ignore
+    AnthropicRateLimitError = None  # type: ignore
+
+from legesher_i18n.language_names import language_name, supported_language_codes
+from legesher_i18n.llm_json import parse_json_object
+from legesher_i18n.model_config import anthropic_model
 
 from ..rates import cost_for_tokens, format_cost
 from .base import (
@@ -23,6 +34,7 @@ from .base import (
     AuthenticationError,
     UnsupportedLanguageError,
 )
+from .response_parser import parse_llm_response
 
 logger = logging.getLogger(__name__)
 
@@ -44,47 +56,17 @@ class AnthropicProvider(TranslationProvider):
 
     name = "anthropic"
     requires_api_key = True
-    # Claude 3.5 Sonnet pricing: $3/1M input tokens, $15/1M output tokens
-    # Average ~4 chars per token, so roughly $4.5/1M chars ((3+15)/2/4)
+    # Pricing is operator-configured via api/rates.py — never hardcoded here.
 
-    # Supported languages (Claude supports 100+ languages)
-    SUPPORTED_LANGUAGES = {
-        "ar",  # Arabic
-        "bg",  # Bulgarian
-        "bn",  # Bengali
-        "cs",  # Czech
-        "da",  # Danish
-        "de",  # German
-        "el",  # Greek
-        "en",  # English
-        "es",  # Spanish
-        "fa",  # Persian
-        "fi",  # Finnish
-        "fr",  # French
-        "he",  # Hebrew
-        "hi",  # Hindi
-        "hu",  # Hungarian
-        "id",  # Indonesian
-        "it",  # Italian
-        "ja",  # Japanese
-        "ko",  # Korean
-        "nl",  # Dutch
-        "pl",  # Polish
-        "pt",  # Portuguese
-        "ro",  # Romanian
-        "ru",  # Russian
-        "sv",  # Swedish
-        "th",  # Thai
-        "tr",  # Turkish
-        "uk",  # Ukrainian
-        "vi",  # Vietnamese
-        "zh",  # Chinese
-    }
+    # Supported languages: derived from languages.json (single source,
+    # CORE-1804). Claude supports 100+ languages; this set is the shipped
+    # Legesher language inventory plus English as the source language.
+    SUPPORTED_LANGUAGES = frozenset(supported_language_codes()) | {"en"}
 
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = "claude-3-5-sonnet-20241022",
+        model: str | None = None,
         max_tokens: int = 1024,
     ):
         """
@@ -92,7 +74,9 @@ class AnthropicProvider(TranslationProvider):
 
         Args:
             api_key: Anthropic API key (if not provided, reads from ANTHROPIC_API_KEY env var)
-            model: Claude model to use (default: claude-3-5-sonnet-20241022)
+            model: Claude model to use. Defaults to the configured model
+                (``LEGESHER_ANTHROPIC_MODEL`` env var, else the packaged
+                default in ``legesher_i18n.model_config``).
             max_tokens: Maximum tokens in response
         """
         if AsyncAnthropic is None:
@@ -107,7 +91,7 @@ class AnthropicProvider(TranslationProvider):
                 "Never commit API keys to version control. Use environment variables or secure secrets management."
             )
 
-        self.model = model
+        self.model = model or anthropic_model()
         self.max_tokens = max_tokens
         self.total_input_tokens = 0
         self.total_output_tokens = 0
@@ -124,7 +108,9 @@ class AnthropicProvider(TranslationProvider):
         # Cache for semantic analysis results (to avoid duplicate API calls)
         self._semantic_cache: dict[str, dict] = {}
 
-        # Try to initialize PromptBuilder for enhanced prompts
+        # Initialize PromptBuilder — the sole prompt source (CORE-1804).
+        # Failure is loud: style guides are load-bearing (CORE-1354), so a
+        # broken PromptBuilder must never quietly downgrade the prompts.
         self._prompt_builder = None
         try:
             from legesher_i18n.style_guides import StyleGuideLoader
@@ -133,7 +119,12 @@ class AnthropicProvider(TranslationProvider):
             loader = StyleGuideLoader()
             self._prompt_builder = PromptBuilder(loader)
         except Exception as exc:
-            logger.debug("PromptBuilder not available, using legacy prompts: %s", exc)
+            logger.warning(
+                "PromptBuilder failed to initialize — falling back to the "
+                "minimal plain-text prompt; style guides will NOT be applied "
+                "and results are flagged prompt_source='legacy_fallback': %s",
+                exc,
+            )
 
     def is_available(self) -> bool:
         """Check if Anthropic is configured and ready."""
@@ -187,29 +178,28 @@ class AnthropicProvider(TranslationProvider):
         """
         if not self.client:
             raise AuthenticationError("Anthropic client not initialized (no API key)")
-        # Bind to a local so the narrowing survives into the api_call closure
-        # (CORE-816: mypy cannot narrow attribute access across function
-        # boundaries).
-        client = self.client
 
         if not self.supports(source_lang, target_lang):
             raise UnsupportedLanguageError(
                 f"Anthropic does not support {source_lang}-{target_lang}"
             )
 
-        # Build translation prompt, using PromptBuilder if available
+        # Build translation prompt — PromptBuilder is the sole prompt
+        # source (CORE-1804). The minimal plain-text prompt remains only as
+        # the loudly-flagged last resort when PromptBuilder failed to
+        # initialize.
         prompt_builder = self._prompt_builder
-        if prompt_builder is not None and context:
-            glossary = context.get("glossary", {})
-            kind = context.get("kind")
-
-            if kind:  # text element (comment/docstring/string)
+        prompt_source = "prompt_builder"
+        if prompt_builder is not None:
+            if context and context.get("kind"):
+                # text element (comment/docstring/string)
                 system_prompt, user_prompt = prompt_builder.build_text_prompt(
-                    texts=[{"text": text, "kind": kind, "context": context}],
+                    texts=[{"text": text, "kind": context["kind"], "context": context}],
                     target_lang=target_lang,
-                    identifier_glossary=glossary,
+                    identifier_glossary=context.get("glossary", {}),
                 )
-            else:  # identifier
+            elif context:
+                # identifier
                 system_prompt, user_prompt = prompt_builder.build_identifier_prompt(
                     identifiers=[
                         {
@@ -219,48 +209,57 @@ class AnthropicProvider(TranslationProvider):
                         }
                     ],
                     target_lang=target_lang,
-                    existing_glossary=glossary,
+                    existing_glossary=context.get("glossary", {}),
                     forbidden_values=context.get("forbidden_values"),
                 )
+            else:
+                # Context-free term translation with linguistic metadata —
+                # the same prompt the generation pipeline uses.
+                system_prompt, user_prompt = prompt_builder.build_term_prompt(
+                    text, target_lang, role="term"
+                )
         else:
-            system_prompt = None
-            user_prompt = self._build_translation_prompt(text, target_lang, context)
+            prompt_source = "legacy_fallback"
+            logger.warning(
+                "PromptBuilder unavailable — translating '%s' (%s->%s) with "
+                "the minimal fallback prompt; style guides NOT applied",
+                text,
+                source_lang,
+                target_lang,
+            )
+            from legesher_i18n.prompt_builder import PLAIN_TEXT_SYSTEM_PROMPT
 
-        # Call Claude API with retry logic
-        async def api_call():
-            kwargs: dict[str, Any] = {
-                "model": self.model,
-                "max_tokens": self.max_tokens,
-                "messages": [{"role": "user", "content": user_prompt}],
-            }
-            if system_prompt:
-                kwargs["system"] = system_prompt
-            return await client.messages.create(**kwargs)
+            system_prompt = PLAIN_TEXT_SYSTEM_PROMPT.format(
+                source_lang=source_lang, target_lang=target_lang
+            )
+            user_prompt = text
 
         try:
-            response = await self._call_api_with_retry(api_call)
-
-            # Track usage
-            input_tokens = response.usage.input_tokens
-            output_tokens = response.usage.output_tokens
-            self.total_input_tokens += input_tokens
-            self.total_output_tokens += output_tokens
-            self.total_requests += 1
-
-            logger.info(
-                f"Anthropic: Tokens: {input_tokens} in / {output_tokens} out | "
-                f"Cost: {format_cost(cost_for_tokens(self.name, input_tokens, output_tokens))} | "
-                f"Total requests: {self.total_requests}"
+            raw_text, input_tokens, output_tokens = await self.complete(
+                system_prompt, user_prompt
             )
 
-            # Parse JSON response
-            result_data = self._parse_json_response(response.content[0].text)
+            # Parse the response with the shared parser (CORE-1804).
+            result_data: dict[str, Any] = {}
+            if prompt_source == "prompt_builder":
+                try:
+                    parsed = parse_json_object(raw_text)
+                    if isinstance(parsed, dict):
+                        result_data = parsed
+                except ValueError:
+                    result_data = {}
+                if "translation" in result_data:
+                    translated_text = str(result_data["translation"])
+                else:
+                    translated_text = parse_llm_response(raw_text, text, context or {})
+            else:
+                translated_text = raw_text.strip()
 
             # Calculate billed characters (approximate from tokens)
             billed_chars = len(text)
 
             return TranslationResult(
-                text=result_data["translation"],
+                text=translated_text,
                 source_lang=source_lang,
                 target_lang=target_lang,
                 provider=self.name,
@@ -277,6 +276,10 @@ class AnthropicProvider(TranslationProvider):
                     "output_tokens": output_tokens,
                     # None unless the operator configured a rate — see api/rates.py
                     "cost_usd": cost_for_tokens(self.name, input_tokens, output_tokens),
+                    # Provenance: which prompt surface produced this result
+                    # (CORE-1804). "legacy_fallback" marks a style-guide
+                    # regression.
+                    "prompt_source": prompt_source,
                 },
             )
 
@@ -331,9 +334,6 @@ class AnthropicProvider(TranslationProvider):
         """
         if not self.client:
             raise AuthenticationError("Anthropic client not initialized (no API key)")
-        # Local binding so the narrowing survives into the api_call closure
-        # (CORE-816).
-        client = self.client
 
         # Check cache first
         cache_key = self._generate_cache_key(term, translations, language)
@@ -345,29 +345,14 @@ class AnthropicProvider(TranslationProvider):
 
         prompt = self._build_similarity_prompt(term, translations, language)
 
-        # Call API with retry logic
-        async def api_call():
-            return await client.messages.create(
-                model=self.model,
-                max_tokens=self.max_tokens,
-                messages=[{"role": "user", "content": prompt}],
-            )
-
         try:
-            response = await self._call_api_with_retry(api_call)
-
-            # Track usage
-            input_tokens = response.usage.input_tokens
-            output_tokens = response.usage.output_tokens
-            self.total_input_tokens += input_tokens
-            self.total_output_tokens += output_tokens
-            self.total_requests += 1
+            raw_text, input_tokens, output_tokens = await self.complete(None, prompt)
 
             logger.info(
                 f"Anthropic Semantic Analysis: {input_tokens} in / {output_tokens} out"
             )
 
-            result = self._parse_json_response(response.content[0].text)
+            result = self._parse_json_response(raw_text)
             # None unless the operator configured a rate — see api/rates.py
             result["cost_usd"] = cost_for_tokens(self.name, input_tokens, output_tokens)
             result["model"] = self.model
@@ -447,6 +432,78 @@ class AnthropicProvider(TranslationProvider):
         self._semantic_cache.clear()
         logger.info("Semantic analysis cache cleared")
 
+    async def complete(
+        self,
+        system_prompt: str | None,
+        user_prompt: str,
+        *,
+        max_retries: int = 3,
+        initial_delay: float = 1.0,
+    ) -> tuple[str, int, int]:
+        """Send one prompt pair through the single Anthropic call path.
+
+        This is THE Anthropic client call site (CORE-1804): one client, one
+        retry loop, one usage tracker. The generation-side ``ClaudeModel``
+        delegates here instead of carrying its own client and retry loop.
+
+        Args:
+            system_prompt: Optional system prompt.
+            user_prompt: User prompt content.
+            max_retries: Maximum retry attempts (exponential backoff).
+            initial_delay: Initial backoff delay in seconds.
+
+        Returns:
+            Tuple of ``(response_text, input_tokens, output_tokens)``.
+
+        Raises:
+            AuthenticationError: If the client is not initialized.
+            Exception: Whatever the API raised after retries are exhausted.
+        """
+        if not self.client:
+            raise AuthenticationError("Anthropic client not initialized (no API key)")
+        client = self.client
+
+        async def api_call():
+            kwargs: dict[str, Any] = {
+                "model": self.model,
+                "max_tokens": self.max_tokens,
+                "messages": [{"role": "user", "content": user_prompt}],
+            }
+            if system_prompt:
+                kwargs["system"] = system_prompt
+            return await client.messages.create(**kwargs)
+
+        response = await self._call_api_with_retry(
+            api_call, max_retries=max_retries, initial_delay=initial_delay
+        )
+
+        input_tokens = response.usage.input_tokens
+        output_tokens = response.usage.output_tokens
+        self.total_input_tokens += input_tokens
+        self.total_output_tokens += output_tokens
+        self.total_requests += 1
+
+        logger.info(
+            f"Anthropic: Tokens: {input_tokens} in / {output_tokens} out | "
+            f"Cost: {format_cost(cost_for_tokens(self.name, input_tokens, output_tokens))} | "
+            f"Total requests: {self.total_requests}"
+        )
+
+        return response.content[0].text, input_tokens, output_tokens
+
+    @staticmethod
+    def _is_retryable(exc: Exception) -> bool:
+        """Classify an exception as retryable (rate limit / transient)."""
+        if AnthropicRateLimitError is not None and isinstance(
+            exc, AnthropicRateLimitError
+        ):
+            return True
+        error_str = str(exc).lower()
+        return any(
+            marker in error_str
+            for marker in ("rate limit", "rate_limit", "overloaded", "529")
+        )
+
     async def _call_api_with_retry(
         self,
         func,
@@ -485,7 +542,7 @@ class AnthropicProvider(TranslationProvider):
 
                 # Retry on rate limits and transient errors
                 if attempt < max_retries - 1:
-                    if "rate limit" in error_str or "overloaded" in error_str:
+                    if self._is_retryable(e):
                         logger.warning(
                             f"API call failed (attempt {attempt + 1}/{max_retries}): {e}. "
                             f"Retrying in {delay:.1f}s..."
@@ -507,93 +564,11 @@ class AnthropicProvider(TranslationProvider):
             else Exception("Unknown error in retry logic")
         )
 
-    def _build_translation_prompt(
-        self, term: str, language: str, context: dict | None
-    ) -> str:
-        """Build prompt for translation task."""
-        # Map language codes to full names
-        lang_names = {
-            "es": "Spanish",
-            "ar": "Arabic",
-            "fr": "French",
-            "zh": "Chinese",
-            "hi": "Hindi",
-            "ru": "Russian",
-            "pt": "Portuguese",
-            "de": "German",
-            "ja": "Japanese",
-            "ko": "Korean",
-            "it": "Italian",
-            "nl": "Dutch",
-            "pl": "Polish",
-            "tr": "Turkish",
-            "th": "Thai",
-            "vi": "Vietnamese",
-            "id": "Indonesian",
-            "bn": "Bengali",
-            "fa": "Persian",
-            "he": "Hebrew",
-        }
-        lang_name = lang_names.get(language, language.upper())
-
-        context_section = ""
-        if context:
-            context_parts = []
-            if "explanation" in context:
-                context_parts.append(f"Explanation: {context['explanation']}")
-            if "etymology" in context:
-                context_parts.append(f"Etymology: {context['etymology']}")
-            if "usage" in context:
-                context_parts.append(f"Usage: {context['usage']}")
-
-            if context_parts:
-                context_section = "\n\nADDITIONAL CONTEXT:\n" + "\n".join(context_parts)
-
-        prompt = f"""You are translating Python programming terms to {lang_name}.
-
-TERM TO TRANSLATE: "{term}"
-
-TASK:
-Translate "{term}" to {lang_name} following these guidelines:
-1. Focus on the CONCEPT, not word-for-word translation
-2. Consider what native {lang_name} speakers would naturally use
-3. Preserve technical accuracy for programming context
-4. Prefer appropriate word forms:
-   - Action verbs (def, return, yield): Use infinitive form
-   - State verbs (is, in): Use present tense
-   - Nouns/objects: Use singular form
-5. Keep it concise - typically a single word or short phrase{context_section}
-
-OUTPUT FORMAT (JSON):
-{{
-  "translation": "the translated term",
-  "word_type": "verb|noun|adjective|etc",
-  "form": "infinitive|present|singular|etc",
-  "confidence": 0.0-1.0,
-  "alternatives": ["alternative1", "alternative2"],
-  "rationale": "Brief explanation of why this translation was chosen"
-}}
-
-Respond ONLY with the JSON object, no additional text."""
-
-        return prompt
-
     def _build_similarity_prompt(
         self, term: str, translations: list[str], language: str
     ) -> str:
         """Build prompt for semantic similarity analysis."""
-        lang_names = {
-            "es": "Spanish",
-            "ar": "Arabic",
-            "fr": "French",
-            "zh": "Chinese",
-            "hi": "Hindi",
-            "ru": "Russian",
-            "pt": "Portuguese",
-            "de": "German",
-            "ja": "Japanese",
-        }
-        lang_name = lang_names.get(language, language.upper())
+        lang_name = language_name(language)
 
         translations_list = "\n".join(
             f"{i + 1}. {t}" for i, t in enumerate(translations)
@@ -630,32 +605,15 @@ Respond ONLY with the JSON object, no additional text."""
         return prompt
 
     def _parse_json_response(self, content: str) -> dict:
+        """Extract and parse a JSON object from Claude's response.
+
+        Delegates to the shared parser (CORE-1804): fence-stripping,
+        repair, and last-resort field extraction live in one place
+        (``legesher_i18n.llm_json``).
         """
-        Extract and parse JSON from Claude's response.
-
-        Claude often wraps JSON in markdown code blocks, so we need to extract it.
-        """
-        # Try to find JSON in markdown code block first
-        json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
-
-        if json_match:
-            json_str = json_match.group(1)
-        else:
-            # Try to find raw JSON
-            json_match = re.search(r"\{.*\}", content, re.DOTALL)
-            if json_match:
-                json_str = json_match.group(0)
-            else:
-                raise ValueError(f"No JSON found in response: {content}")
-
-        try:
-            data = json.loads(json_str)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in response: {json_str}") from e
-
+        data = parse_json_object(content)
         if not isinstance(data, dict):
             raise ValueError(
-                f"Expected a JSON object in response, got {type(data).__name__}: "
-                f"{json_str}"
+                f"Expected a JSON object in response, got {type(data).__name__}"
             )
         return data

@@ -197,38 +197,11 @@ class AyaModel(TranslationModel):
         Returns:
             Formatted prompt string
         """
-        # Map language codes to full names
-        LANGUAGE_NAMES = {
-            "es": "Spanish",
-            "ar": "Arabic",
-            "fr": "French",
-            "zh": "Chinese (Simplified)",
-            "hi": "Hindi",
-            "ru": "Russian",
-            "pt": "Portuguese",
-            "de": "German",
-            "ja": "Japanese",
-            "ko": "Korean",
-            "it": "Italian",
-            "pl": "Polish",
-            "tr": "Turkish",
-            "vi": "Vietnamese",
-            "th": "Thai",
-            "nl": "Dutch",
-            "sv": "Swedish",
-            "no": "Norwegian",
-            "da": "Danish",
-            "fi": "Finnish",
-            "el": "Greek",
-            "he": "Hebrew",
-            "id": "Indonesian",
-            "ms": "Malay",
-            "hu": "Hungarian",
-        }
+        # Language names come from languages.json — the single source
+        # (CORE-1804).
+        from legesher_i18n.language_names import language_name as _resolve_name
 
-        language_name = LANGUAGE_NAMES.get(
-            request.target_language, request.target_language.upper()
-        )
+        language_name = _resolve_name(request.target_language)
 
         prompt = f"""You are a multilingual expert translating Python programming terms.
 

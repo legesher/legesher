@@ -99,8 +99,12 @@ class TestClaudeModel:
         assert translation.model_name.startswith("claude")
 
     def test_json_parsing(self):
-        """Test JSON response parsing."""
-        model = ClaudeModel(dry_run=True)
+        """The shared parser handles the response formats Claude produces.
+
+        CORE-1804: ClaudeModel no longer carries its own JSON parser — the
+        single implementation lives in ``legesher_i18n.llm_json``.
+        """
+        from legesher_i18n.llm_json import parse_json_object
 
         # Test with markdown code block
         response_with_block = """Here is the translation:
@@ -116,7 +120,7 @@ class TestClaudeModel:
 ```
 That's my answer!"""
 
-        result = model._parse_json_response(response_with_block)
+        result = parse_json_object(response_with_block)
         assert result["translation"] == "imprimir"
         assert result["word_type"] == "verb"
         assert result["confidence"] == 0.98
@@ -127,8 +131,57 @@ That's my answer!"""
   "confidence": 0.95
 }"""
 
-        result2 = model._parse_json_response(response_raw)
+        result2 = parse_json_object(response_raw)
         assert result2["translation"] == "retornar"
+
+    async def test_translate_delegates_to_provider(self):
+        """CORE-1804: one Anthropic client — ClaudeModel calls the API-side
+        provider's ``complete()`` instead of owning a client/retry loop."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        provider = MagicMock()
+        provider.complete = AsyncMock(
+            return_value=(
+                '{"translation": "definir", "word_type": "verb", '
+                '"form": "infinitive", "confidence": 0.95, '
+                '"alternatives": ["crear"], "rationale": "Standard form"}',
+                150,
+                50,
+            )
+        )
+
+        model = ClaudeModel(api_key="sk-ant-test", provider=provider)
+        request = TranslationRequest(term="def", target_language="es")
+
+        translation = await model.translate(request)
+
+        assert provider.complete.await_count == 1
+        system_prompt, user_prompt = provider.complete.await_args.args
+        assert "## Critical Rules" in system_prompt
+        assert "`def`" in user_prompt
+        assert translation.translation == "definir"
+        assert translation.input_tokens == 150
+        assert translation.output_tokens == 50
+        # No rate configured in tests — cost is 0.0, never fabricated
+        assert translation.cost == 0.0
+
+    def test_prompt_pair_includes_context_and_standards(self):
+        """Deep context and linguistic standards reach the user prompt."""
+        model = ClaudeModel(dry_run=True)
+        request = TranslationRequest(
+            term="def",
+            target_language="es",
+            context="Deep context about 'def'...",
+            linguistic_standards="Spanish uses infinitive verbs...",
+        )
+
+        system, user = model._build_prompt_pair(request)
+
+        assert "DEEP CONTEXT:" in user
+        assert "Deep context about 'def'..." in user
+        assert "LINGUISTIC STANDARDS FOR SPANISH:" in user
+        assert '"translation"' in user  # metadata JSON format
+        assert "## Style Guide" in system
 
 
 @pytest.mark.asyncio

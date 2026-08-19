@@ -307,94 +307,11 @@ class AyaInferenceAPIModel(TranslationModel):
         Returns:
             Formatted prompt string
         """
-        # Language code to full name mapping
-        # Supports both ISO 639-1 (2-letter) and ISO 639-2 (3-letter) codes
-        language_names = {
-            "am": "Amharic",
-            "amh": "Amharic",
-            "ar": "Arabic",
-            "bn": "Bengali",
-            "ben": "Bengali",
-            "bs": "Bosnian",
-            "bos": "Bosnian",
-            "ca": "Catalan",
-            "cat": "Catalan",
-            "cs": "Czech",
-            "ces": "Czech",
-            "cy": "Welsh",
-            "cym": "Welsh",
-            "da": "Danish",
-            "de": "German",
-            "el": "Greek",
-            "en": "English",
-            "es": "Spanish",
-            "fa": "Persian",
-            "fas": "Persian",
-            "fi": "Finnish",
-            "fr": "French",
-            "ga": "Irish",
-            "gle": "Irish",
-            "gd": "Scottish Gaelic",
-            "gla": "Scottish Gaelic",
-            "gl": "Galician",
-            "glg": "Galician",
-            "gu": "Gujarati",
-            "guj": "Gujarati",
-            "he": "Hebrew",
-            "hi": "Hindi",
-            "hr": "Croatian",
-            "hrv": "Croatian",
-            "hu": "Hungarian",
-            "id": "Indonesian",
-            "it": "Italian",
-            "ja": "Japanese",
-            "kn": "Kannada",
-            "kan": "Kannada",
-            "ko": "Korean",
-            "lv": "Latvian",
-            "lav": "Latvian",
-            "mk": "Macedonian",
-            "mkd": "Macedonian",
-            "ml": "Malayalam",
-            "mal": "Malayalam",
-            "mn": "Mongolian",
-            "mon": "Mongolian",
-            "ms": "Malay",
-            "my": "Burmese",
-            "mya": "Burmese",
-            "nl": "Dutch",
-            "no": "Norwegian",
-            "pl": "Polish",
-            "pt": "Portuguese",
-            "ro": "Romanian",
-            "ron": "Romanian",
-            "ru": "Russian",
-            "si": "Sinhala",
-            "sin": "Sinhala",
-            "sr": "Serbian",
-            "srp": "Serbian",
-            "su": "Sundanese",
-            "sun": "Sundanese",
-            "sv": "Swedish",
-            "sw": "Swahili",
-            "swa": "Swahili",
-            "ta": "Tamil",
-            "tam": "Tamil",
-            "te": "Telugu",
-            "tel": "Telugu",
-            "th": "Thai",
-            "tr": "Turkish",
-            "ur": "Urdu",
-            "urd": "Urdu",
-            "uz": "Uzbek",
-            "uzb": "Uzbek",
-            "vi": "Vietnamese",
-            "zh": "Chinese (Simplified)",
-        }
+        # Language names come from languages.json — the single source
+        # (CORE-1804). Both 639-1 keys and iso639_2 aliases resolve.
+        from legesher_i18n.language_names import language_name as _resolve_name
 
-        language_name = language_names.get(
-            request.target_language, request.target_language.upper()
-        )
+        language_name = _resolve_name(request.target_language)
 
         # Build structured prompt with critical constraints
         prompt = f"""You are translating Python programming keywords for multilingual coding.

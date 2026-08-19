@@ -13,7 +13,6 @@ All tests run without torch, transformers, or huggingface_hub installed.
 import pytest
 from scripts.translate.models.base import TranslationRequest
 from scripts.translate.models.hf_profiles import (
-    DEFAULT_LANGUAGE_NAMES,
     HF_PROFILES,
     HFModelProfile,
     default_prompt_builder,
@@ -89,7 +88,7 @@ class TestHFModelProfile:
         assert profile.language_names is None
 
     def test_get_language_name_from_default(self, sample_profile):
-        """Test language name resolution from DEFAULT_LANGUAGE_NAMES."""
+        """Test language name resolution from the shared languages.json source."""
         assert sample_profile.get_language_name("es") == "Spanish"
         assert sample_profile.get_language_name("ar") == "Arabic"
         assert sample_profile.get_language_name("ja") == "Japanese"
@@ -201,11 +200,25 @@ class TestDefaultPromptBuilder:
         """Prompt includes term, language, and JSON format instructions."""
         prompt = default_prompt_builder(sample_request, sample_profile)
 
-        assert '"def"' in prompt
+        assert "`def`" in prompt
         assert "Spanish" in prompt
         assert '"translation"' in prompt
         assert "JSON" in prompt
         assert "Python identifier" in prompt
+
+    def test_prompt_is_style_guide_aware(self, sample_request, sample_profile):
+        """HF prompts carry the PromptBuilder style-guide sections.
+
+        CORE-1804 acceptance: tiny-aya/HF generations demonstrably receive
+        style-guide sections in their prompts (the old inline builder
+        bypassed CORE-1354 entirely).
+        """
+        prompt = default_prompt_builder(sample_request, sample_profile)
+
+        assert "## Style Guide" in prompt
+        assert "## Critical Rules" in prompt
+        # System-prompt framing from PromptBuilder
+        assert "IMAGINE" in prompt
 
     def test_prompt_includes_context(self, sample_request, sample_profile):
         """Prompt includes context when available."""
@@ -252,8 +265,14 @@ class TestDefaultPromptBuilder:
         prompt = default_prompt_builder(request, profile)
         assert "CONTEXT:" not in prompt
 
-    def test_prompt_uses_profile_language_name(self):
-        """Custom language names from profile are used in prompt."""
+    def test_prompt_language_name_from_shared_source(self):
+        """The default builder resolves names from languages.json.
+
+        CORE-1804: per-profile ``language_names`` overrides still apply to
+        ``get_language_name()`` (and to custom ``prompt_builder``
+        functions), but the default builder goes through the canonical
+        PromptBuilder, whose names come from the single shared source.
+        """
         profile = HFModelProfile(
             name="custom-lang",
             model_id="org/model",
@@ -261,31 +280,47 @@ class TestDefaultPromptBuilder:
         )
         request = TranslationRequest(term="while", target_language="es")
         prompt = default_prompt_builder(request, profile)
-        assert "Castellano" in prompt
+        assert "Spanish" in prompt
+        # The override still answers get_language_name()
+        assert profile.get_language_name("es") == "Castellano"
 
 
 # ---------------------------------------------------------------------------
-# DEFAULT_LANGUAGE_NAMES Tests
+# Shared language-name source tests (CORE-1804)
 # ---------------------------------------------------------------------------
 
 
 class TestLanguageNames:
-    """Test the DEFAULT_LANGUAGE_NAMES mapping."""
+    """The single language-name source derived from languages.json."""
 
     def test_has_iso_639_1_codes(self):
         """Common ISO 639-1 codes should be present."""
-        for code in ("en", "es", "fr", "de", "ar", "zh", "ja", "ko", "ru", "hi"):
-            assert code in DEFAULT_LANGUAGE_NAMES
+        from legesher_i18n.language_names import language_names
 
-    def test_has_iso_639_3_codes(self):
-        """Extended ISO 639-3 codes (used by Aya-101) should be present."""
-        for code in ("amh", "ben", "urd", "tam"):
-            assert code in DEFAULT_LANGUAGE_NAMES
+        names = language_names()
+        for code in ("en", "es", "fr", "de", "ar", "zh", "ja", "ko", "ru", "hi"):
+            assert code in names
+
+    def test_has_iso_639_2_aliases(self):
+        """Three-letter aliases (used by Aya-101) resolve through iso639_2."""
+        from legesher_i18n.language_names import language_names
+
+        names = language_names()
+        for code in ("amh", "ben", "urd", "spa"):
+            assert code in names
 
     def test_has_tiny_aya_languages(self):
         """Languages specifically needed for Tiny Aya should be present."""
-        assert DEFAULT_LANGUAGE_NAMES.get("am") == "Amharic"
-        assert DEFAULT_LANGUAGE_NAMES.get("ur") == "Urdu"
+        from legesher_i18n.language_names import language_names
+
+        names = language_names()
+        assert names.get("am") == "Amharic"
+        assert names.get("ur") == "Urdu"
+
+    def test_unknown_code_uppercased(self):
+        from legesher_i18n.language_names import language_name
+
+        assert language_name("xx") == "XX"
 
 
 # ---------------------------------------------------------------------------

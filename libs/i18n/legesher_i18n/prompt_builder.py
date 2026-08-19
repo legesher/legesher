@@ -29,6 +29,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from legesher_i18n.language_names import language_names
 from legesher_i18n.style_guides import StyleGuideLoader
 from legesher_i18n.target_profiles import TargetProfileLoader
 
@@ -39,17 +40,6 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _LANGUAGES_JSON = Path(__file__).parent / "languages.json"
-
-
-def _load_language_names() -> dict[str, str]:
-    """Load language code -> English name mapping from ``languages.json``."""
-    try:
-        with open(_LANGUAGES_JSON, encoding="utf-8") as fh:
-            data = json.load(fh)
-        return {code: meta["name"] for code, meta in data.get("languages", {}).items()}
-    except (OSError, json.JSONDecodeError, KeyError) as exc:
-        logger.warning("Failed to load languages.json, using fallback: %s", exc)
-        return {}
 
 
 def _load_language_case_distinction() -> dict[str, bool]:
@@ -78,63 +68,10 @@ def _load_language_case_distinction() -> dict[str, bool]:
         return {}
 
 
-# Built-in fallback so the module works even if languages.json is missing.
-_FALLBACK_LANGUAGE_NAMES: dict[str, str] = {
-    "am": "Amharic",
-    "ar": "Arabic",
-    "bn": "Bengali",
-    "bs": "Bosnian",
-    "ca": "Catalan",
-    "cs": "Czech",
-    "cy": "Welsh",
-    "da": "Danish",
-    "de": "German",
-    "el": "Greek",
-    "en": "English",
-    "es": "Spanish",
-    "fa": "Persian",
-    "fi": "Finnish",
-    "fr": "French",
-    "ga": "Irish",
-    "gd": "Scottish Gaelic",
-    "gl": "Galician",
-    "gu": "Gujarati",
-    "he": "Hebrew",
-    "hi": "Hindi",
-    "hr": "Croatian",
-    "hu": "Hungarian",
-    "id": "Indonesian",
-    "it": "Italian",
-    "ja": "Japanese",
-    "kn": "Kannada",
-    "ko": "Korean",
-    "lv": "Latvian",
-    "mk": "Macedonian",
-    "ml": "Malayalam",
-    "mn": "Mongolian",
-    "ms": "Malay",
-    "my": "Burmese",
-    "nl": "Dutch",
-    "no": "Norwegian",
-    "pl": "Polish",
-    "pt": "Portuguese",
-    "ro": "Romanian",
-    "ru": "Russian",
-    "si": "Sinhala",
-    "sr": "Serbian",
-    "su": "Sundanese",
-    "sv": "Swedish",
-    "te": "Telugu",
-    "th": "Thai",
-    "tr": "Turkish",
-    "ur": "Urdu",
-    "uz": "Uzbek",
-    "vi": "Vietnamese",
-    "zh": "Chinese",
-}
-
-# Merged at import time: languages.json values override fallback.
-LANGUAGE_NAMES: dict[str, str] = {**_FALLBACK_LANGUAGE_NAMES, **_load_language_names()}
+# CORE-1804: the single language-name source. Derived from languages.json
+# (DB-generated per CORE-611) via legesher_i18n.language_names; the old
+# in-module fallback table was one of three drifting copies and is deleted.
+LANGUAGE_NAMES: dict[str, str] = language_names()
 
 # Loaded at import time. Empty dict if ``languages.json`` is missing or
 # malformed; lookups fall through to the safe default (True). CORE-950.
@@ -252,6 +189,51 @@ _DEFAULT_IDENTIFIER_RULE = (
 _DEFAULT_CASING_RULE = (
     "snake_case identifiers stay snake_case, PascalCase stays PascalCase."
 )
+
+# ---------------------------------------------------------------------------
+# Shared prompt fragments (CORE-1804: one prompt source)
+# ---------------------------------------------------------------------------
+
+# Minimal plain-text engine prompt. This is the ONLY fallback prompt in the
+# codebase: API providers use it for context-free text translation and as
+# the loudly-flagged last resort when PromptBuilder itself fails to
+# initialize. Formerly duplicated as ``_SYSTEM_PROMPT`` in cohere_aya.py and
+# openai_compat.py. The no-trace-wrapper anchoring is CORE-950 empirical.
+PLAIN_TEXT_SYSTEM_PROMPT = (
+    "You are a precise translation engine for code-related content. "
+    "Translate the given text from {source_lang} to {target_lang}. "
+    "Return ONLY the translated text -- no prefix, no suffix, no "
+    "explanation, no markup, no trace-format wrappers, and no "
+    "surrounding commentary. Do NOT emit patterns like "
+    "`__original_X_translation_Y_Explanation_...`, "
+    "`____translated_identifier_X____`, or JSON-style metadata "
+    "wrappers around the translation. Output the translation value alone."
+)
+
+# Linguistic-metadata response format for single-term translation. Appended
+# after the identifier user prompt; overrides its mapping-format instruction
+# with the metadata-object shape the generation pipeline stores in the DB.
+# Formerly inlined in claude_model.py.
+TERM_METADATA_FORMAT = (
+    "IMPORTANT: For EACH identifier, also provide linguistic "
+    "metadata. Respond with ONLY valid JSON in this format:\n"
+    "{\n"
+    '  "translation": "the translated term",\n'
+    '  "word_type": "verb|noun|adjective|preposition|conjunction|etc",\n'
+    '  "form": "infinitive|present|singular|etc",\n'
+    '  "confidence": 0.95,\n'
+    '  "alternatives": ["alternative1", "alternative2"],\n'
+    '  "rationale": "Brief explanation (2-3 sentences)"\n'
+    "}\n"
+    "Do not wrap JSON in markdown code blocks."
+)
+
+
+def _truncate(text: str, max_chars: int | None) -> str:
+    """Truncate *text* to *max_chars*, appending an ellipsis when cut."""
+    if max_chars is None or len(text) <= max_chars:
+        return text
+    return text[:max_chars] + "..."
 
 
 # ---------------------------------------------------------------------------
@@ -404,6 +386,62 @@ class PromptBuilder:
             examples,
         )
         return system, user
+
+    def build_term_prompt(
+        self,
+        term: str,
+        target_lang: str,
+        *,
+        role: str = "keyword",
+        deep_context: str | None = None,
+        linguistic_standards: str | None = None,
+        context_max_chars: int | None = None,
+        standards_max_chars: int | None = None,
+    ) -> tuple[str, str]:
+        """Build prompts for single-term translation with linguistic metadata.
+
+        The canonical prompt for the generation pipeline (CORE-1804): one
+        term in, a JSON metadata object out (translation, word_type, form,
+        confidence, alternatives, rationale). Replaces the inline prompt
+        surfaces that used to live in ``claude_model.py`` and
+        ``hf_profiles.default_prompt_builder`` — both of which either
+        bypassed style guides entirely or dropped the deep-context
+        documents on the PromptBuilder path.
+
+        Args:
+            term: The term to translate (e.g. ``"def"``).
+            target_lang: ISO 639-1 language code.
+            role: Identifier role rendered in the prompt table.
+            deep_context: Optional deep-context document content.
+            linguistic_standards: Optional language-specific guidelines.
+            context_max_chars: Truncate ``deep_context`` to this many
+                characters (``None`` = no truncation).
+            standards_max_chars: Truncate ``linguistic_standards``
+                (``None`` = no truncation).
+
+        Returns:
+            Tuple of ``(system_prompt, user_prompt)``.
+        """
+        system = self._build_system_prompt(target_lang)
+        lang_name = self._resolve_language_name(target_lang)
+
+        parts: list[str] = []
+        if deep_context:
+            parts.append(f"DEEP CONTEXT:\n{_truncate(deep_context, context_max_chars)}")
+        if linguistic_standards:
+            parts.append(
+                f"LINGUISTIC STANDARDS FOR {lang_name.upper()}:\n"
+                f"{_truncate(linguistic_standards, standards_max_chars)}"
+            )
+        parts.append(
+            self._build_identifier_user_prompt(
+                [{"text": term, "role": role, "context": {}}],
+                target_lang,
+                {},
+            )
+        )
+        parts.append(TERM_METADATA_FORMAT)
+        return system, "\n\n".join(parts)
 
     def estimate_tokens(self, system: str, user: str) -> int:
         """Rough token estimate for a prompt pair.

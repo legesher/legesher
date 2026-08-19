@@ -214,6 +214,20 @@ print(result.text)  # "¡Hola, mundo!"
 - [Full API Documentation](docs/translation-api.md)
 - [Quick Start Guide](docs/translation-api-quickstart.md)
 
+### Model and pricing configuration
+
+Model IDs and pricing live in configuration, never in code (CORE-1804):
+
+| Variable | Purpose |
+|---|---|
+| `LEGESHER_ANTHROPIC_MODEL` | Anthropic model ID used by both the generation pipeline and the translation API (default lives in `legesher_i18n/model_config.py`) |
+| `LEGESHER_RATES_FILE` | JSON file of operator-supplied provider rates (see `legesher_i18n/api/rates.py`) |
+| `LEGESHER_RATE_ANTHROPIC_INPUT_PER_MTOK` / `LEGESHER_RATE_ANTHROPIC_OUTPUT_PER_MTOK` | Inline per-provider rate overrides |
+
+Legesher ships no prices. Without a configured rate, costs report as
+unknown (API layer) or `0.0` (generation pipeline, with a warning at
+startup) and the pipeline's `--max-budget` guard cannot enforce.
+
 ## CLI Tools
 
 The `legesher-i18n` package includes powerful command-line tools for validating and managing

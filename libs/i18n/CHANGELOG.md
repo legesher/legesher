@@ -79,6 +79,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **The model-provider layer is one layer now.** The generation pipeline's
+  Claude model delegates to the translation API's Anthropic provider, so one
+  Anthropic client, one retry loop, and one JSON parser serve both surfaces.
+  `PromptBuilder` is the sole prompt source — HF/tiny-aya generations now
+  receive the same style-guide-aware prompts as every other model, and the
+  inline legacy prompts are deleted. Language names derive from
+  `languages.json` alone (the three drifting in-code copies are gone). The
+  Anthropic model ID is configurable via `LEGESHER_ANTHROPIC_MODEL`, and the
+  generation pipeline prices calls through the operator-supplied rates
+  configuration instead of hardcoded constants. A PromptBuilder failure is
+  loud: providers warn and flag results with `prompt_source`, and the
+  generation pipeline refuses to run without style-guide-aware prompts.
+  [CORE-1804]
+
 - **The published corpus dataset card is now about the corpus, and nothing
   else.** It opens with a banner image and says plainly that this is a
   growing, append-only dataset — a snapshot of the evidence to date, not a

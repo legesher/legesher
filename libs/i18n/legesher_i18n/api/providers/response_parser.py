@@ -8,14 +8,11 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from legesher_i18n.llm_json import strip_code_fences
 
-# Patterns for stripping markdown code fences
-_FENCE_START = re.compile(r"^```(?:json)?\s*")
-_FENCE_END = re.compile(r"\s*```$")
+logger = logging.getLogger(__name__)
 
 
 def parse_llm_response(
@@ -48,11 +45,8 @@ def parse_llm_response(
     if context is None:
         return raw_text
 
-    # Strip markdown code fences if present
-    cleaned = raw_text.strip()
-    cleaned = _FENCE_START.sub("", cleaned)
-    cleaned = _FENCE_END.sub("", cleaned)
-    cleaned = cleaned.strip()
+    # Strip markdown code fences if present (shared helper — CORE-1804)
+    cleaned = strip_code_fences(raw_text)
 
     try:
         parsed = json.loads(cleaned)
@@ -60,10 +54,13 @@ def parse_llm_response(
         logger.debug("Response is not JSON, using raw text: %s", cleaned[:100])
         return cleaned
 
-    # JSON dict: {"original": "translated"} — extract the value
+    # JSON dict — either {"original": "translated"} (mapping format) or a
+    # linguistic-metadata object with a "translation" key (term format).
     if isinstance(parsed, dict):
         if original_text in parsed:
             return str(parsed[original_text])
+        if "translation" in parsed:
+            return str(parsed["translation"])
         if parsed:
             return str(next(iter(parsed.values())))
 

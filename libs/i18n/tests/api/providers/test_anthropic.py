@@ -371,14 +371,14 @@ Hope that helps!"""
         """Test parsing invalid JSON raises error."""
         content = "This is not JSON at all"
 
-        with pytest.raises(ValueError, match="No JSON found"):
+        with pytest.raises(ValueError, match="Failed to parse JSON"):
             provider._parse_json_response(content)
 
     def test_parse_json_malformed(self, provider):
-        """Test parsing malformed JSON raises error."""
-        content = '```json\n{"translation": broken}\n```'
+        """Unrepairable JSON with no extractable fields raises."""
+        content = "```json\n{this is: not, even close}\n```"
 
-        with pytest.raises(ValueError, match="Invalid JSON"):
+        with pytest.raises(ValueError, match="Failed to parse JSON"):
             provider._parse_json_response(content)
 
 
@@ -422,30 +422,48 @@ class TestUsageStats:
 
 
 class TestPromptBuilding:
-    """Test prompt construction."""
+    """Test prompt construction (PromptBuilder is the sole source, CORE-1804)."""
 
-    def test_build_translation_prompt_basic(self, provider):
-        """Test basic translation prompt."""
-        prompt = provider._build_translation_prompt("def", "es", None)
+    @pytest.mark.asyncio
+    async def test_context_free_translate_uses_prompt_builder(
+        self, provider, mock_response
+    ):
+        """No-context calls go through the PromptBuilder term prompt."""
+        provider.client.messages.create = AsyncMock(return_value=mock_response)
 
-        assert "Spanish" in prompt
-        assert '"def"' in prompt
-        assert "JSON" in prompt
-        assert "translation" in prompt
-        assert "ADDITIONAL CONTEXT" not in prompt
+        result = await provider.translate("def", "en", "es")
 
-    def test_build_translation_prompt_with_context(self, provider):
-        """Test translation prompt with context."""
-        context = {
-            "explanation": "Defines a function",
-            "etymology": "From 'define'",
-        }
+        kwargs = provider.client.messages.create.call_args.kwargs
+        assert "system" in kwargs  # PromptBuilder always produces a system prompt
+        assert "## Critical Rules" in kwargs["system"]
+        assert "`def`" in kwargs["messages"][0]["content"]
+        assert result.metadata["prompt_source"] == "prompt_builder"
 
-        prompt = provider._build_translation_prompt("def", "es", context)
+    @pytest.mark.asyncio
+    async def test_prompt_builder_failure_is_loud_and_flagged(
+        self, provider, mock_response, caplog
+    ):
+        """PromptBuilder failure warns and flags the result (CORE-1804)."""
+        import logging
 
-        assert "ADDITIONAL CONTEXT" in prompt
-        assert "Defines a function" in prompt
-        assert "From 'define'" in prompt
+        provider._prompt_builder = None
+        response = MagicMock()
+        response.content = [MagicMock(text="definir")]
+        response.usage = MagicMock(input_tokens=10, output_tokens=5)
+        provider.client.messages.create = AsyncMock(return_value=response)
+
+        with caplog.at_level(logging.WARNING):
+            result = await provider.translate("def", "en", "es")
+
+        assert result.metadata["prompt_source"] == "legacy_fallback"
+        assert result.text == "definir"
+        assert any(
+            "PromptBuilder unavailable" in record.message for record in caplog.records
+        )
+
+    def test_no_legacy_prompt_surface_remains(self, provider):
+        """The inline legacy prompt builder is deleted (CORE-1804)."""
+        assert not hasattr(provider, "_build_translation_prompt")
 
     def test_build_similarity_prompt(self, provider):
         """Test semantic similarity prompt."""

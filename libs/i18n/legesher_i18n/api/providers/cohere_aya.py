@@ -10,6 +10,8 @@ import logging
 import os
 from datetime import datetime
 
+from legesher_i18n.prompt_builder import PLAIN_TEXT_SYSTEM_PROMPT
+
 from ..rates import cost_for_chars
 from .base import (
     AuthenticationError,
@@ -21,21 +23,10 @@ from .base import (
 
 logger = logging.getLogger(__name__)
 
-# Translation system prompt — fallback path used only when PromptBuilder
-# fails to initialize. Empirical CORE-950 finding: lower-resource targets
-# (zh, ur) trigger trace-format pollution on weak prompts; the rule list
-# below mirrors PromptBuilder's `_CRITICAL_RULES` no-explanation entry so
-# both paths share the same failure-mode anchoring.
-_SYSTEM_PROMPT = (
-    "You are a precise translation engine for code-related content. "
-    "Translate the given text from {source_lang} to {target_lang}. "
-    "Return ONLY the translated text -- no prefix, no suffix, no "
-    "explanation, no markup, no trace-format wrappers, and no "
-    "surrounding commentary. Do NOT emit patterns like "
-    "`__original_X_translation_Y_Explanation_...`, "
-    "`____translated_identifier_X____`, or JSON-style metadata "
-    "wrappers around the translation. Output the translation value alone."
-)
+# CORE-1804: the fallback prompt lives in ONE place now
+# (legesher_i18n.prompt_builder.PLAIN_TEXT_SYSTEM_PROMPT); the provider-local
+# copy is deleted. Kept as a module alias for existing imports.
+_SYSTEM_PROMPT = PLAIN_TEXT_SYSTEM_PROMPT
 
 
 class CohereAyaProvider(TranslationProvider):
@@ -67,7 +58,8 @@ class CohereAyaProvider(TranslationProvider):
         self._total_tokens_out = 0
         self._total_requests = 0
 
-        # Try to initialize PromptBuilder for style-guide-aware prompts
+        # Initialize PromptBuilder — the sole prompt source (CORE-1804).
+        # Failure is loud: style guides are load-bearing (CORE-1354).
         self._prompt_builder = None
         try:
             from legesher_i18n.style_guides import StyleGuideLoader
@@ -76,7 +68,12 @@ class CohereAyaProvider(TranslationProvider):
             loader = StyleGuideLoader()
             self._prompt_builder = PromptBuilder(loader)
         except Exception as exc:
-            logger.debug("PromptBuilder not available, using legacy prompts: %s", exc)
+            logger.warning(
+                "PromptBuilder failed to initialize — falling back to the "
+                "minimal plain-text prompt; style guides will NOT be applied "
+                "and results are flagged prompt_source='legacy_fallback': %s",
+                exc,
+            )
 
     def _get_client(self):
         if self._client is None:
@@ -113,6 +110,7 @@ class CohereAyaProvider(TranslationProvider):
         client = self._get_client()
 
         # Use PromptBuilder when available and context is provided
+        prompt_source = "prompt_builder"
         if self._prompt_builder and context:
             glossary = context.get("glossary", {})
             kind = context.get("kind")
@@ -139,7 +137,21 @@ class CohereAyaProvider(TranslationProvider):
                     )
                 )
         else:
-            system_prompt = _SYSTEM_PROMPT.format(
+            if context:
+                # Context was provided but PromptBuilder is broken — this is
+                # a style-guide regression; make it loud and flag it.
+                prompt_source = "legacy_fallback"
+                logger.warning(
+                    "PromptBuilder unavailable — translating '%s' (%s->%s) "
+                    "with the minimal fallback prompt; style guides NOT "
+                    "applied",
+                    text[:50],
+                    source_lang,
+                    target_lang,
+                )
+            else:
+                prompt_source = "plain_text"
+            system_prompt = PLAIN_TEXT_SYSTEM_PROMPT.format(
                 source_lang=source_lang, target_lang=target_lang
             )
             user_prompt = text
@@ -183,6 +195,9 @@ class CohereAyaProvider(TranslationProvider):
                     "model": self._model,
                     "tokens_in": tokens_in,
                     "tokens_out": tokens_out,
+                    # Provenance flag (CORE-1804): "legacy_fallback" marks a
+                    # style-guide regression.
+                    "prompt_source": prompt_source,
                 },
             )
         except (AuthenticationError, TranslationError):

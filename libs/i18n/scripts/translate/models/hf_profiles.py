@@ -18,161 +18,10 @@ from collections.abc import Callable
 
 from .base import TranslationRequest
 
-# Comprehensive language code → name mapping (merged from all existing models)
-DEFAULT_LANGUAGE_NAMES: dict[str, str] = {
-    # ISO 639-1 codes (used by Legesher language packs)
-    "ar": "Arabic",
-    "da": "Danish",
-    "de": "German",
-    "el": "Greek",
-    "en": "English",
-    "es": "Spanish",
-    "fi": "Finnish",
-    "fr": "French",
-    "he": "Hebrew",
-    "hi": "Hindi",
-    "hu": "Hungarian",
-    "id": "Indonesian",
-    "it": "Italian",
-    "ja": "Japanese",
-    "ko": "Korean",
-    "ms": "Malay",
-    "nl": "Dutch",
-    "no": "Norwegian",
-    "pl": "Polish",
-    "pt": "Portuguese",
-    "ru": "Russian",
-    "sv": "Swedish",
-    "th": "Thai",
-    "tr": "Turkish",
-    "vi": "Vietnamese",
-    "zh": "Chinese",
-    # Additional languages supported by Tiny Aya / Aya-101
-    "am": "Amharic",
-    "bn": "Bengali",
-    "bg": "Bulgarian",
-    "bs": "Bosnian",
-    "ca": "Catalan",
-    "cs": "Czech",
-    "cy": "Welsh",
-    "et": "Estonian",
-    "eu": "Basque",
-    "fa": "Persian",
-    "ga": "Irish",
-    "gd": "Scottish Gaelic",
-    "gl": "Galician",
-    "gu": "Gujarati",
-    "ha": "Hausa",
-    "hr": "Croatian",
-    "ig": "Igbo",
-    "jv": "Javanese",
-    "kn": "Kannada",
-    "km": "Khmer",
-    "lo": "Lao",
-    "lt": "Lithuanian",
-    "lv": "Latvian",
-    "mg": "Malagasy",
-    "mk": "Macedonian",
-    "ml": "Malayalam",
-    "mn": "Mongolian",
-    "mr": "Marathi",
-    "mt": "Maltese",
-    "my": "Burmese",
-    "ne": "Nepali",
-    "pa": "Punjabi",
-    "ro": "Romanian",
-    "sk": "Slovak",
-    "sl": "Slovenian",
-    "sn": "Shona",
-    "sr": "Serbian",
-    "su": "Sundanese",
-    "sw": "Swahili",
-    "ta": "Tamil",
-    "te": "Telugu",
-    "tl": "Tagalog",
-    "uk": "Ukrainian",
-    "ur": "Urdu",
-    "uz": "Uzbek",
-    "wo": "Wolof",
-    "xh": "Xhosa",
-    "yo": "Yoruba",
-    "zu": "Zulu",
-    # ISO 639-3 codes (used by Aya-101)
-    "afr": "Afrikaans",
-    "amh": "Amharic",
-    "aze": "Azerbaijani",
-    "bel": "Belarusian",
-    "ben": "Bengali",
-    "bul": "Bulgarian",
-    "cat": "Catalan",
-    "ceb": "Cebuano",
-    "ces": "Czech",
-    "cym": "Welsh",
-    "epo": "Esperanto",
-    "est": "Estonian",
-    "eus": "Basque",
-    "fil": "Filipino",
-    "fry": "Frisian",
-    "gla": "Scottish Gaelic",
-    "gle": "Irish",
-    "glg": "Galician",
-    "guj": "Gujarati",
-    "hat": "Haitian Creole",
-    "hau": "Hausa",
-    "hye": "Armenian",
-    "ibo": "Igbo",
-    "isl": "Icelandic",
-    "jav": "Javanese",
-    "kan": "Kannada",
-    "kat": "Georgian",
-    "kaz": "Kazakh",
-    "khm": "Khmer",
-    "kir": "Kyrgyz",
-    "kur": "Kurdish",
-    "lao": "Lao",
-    "lat": "Latin",
-    "lav": "Latvian",
-    "lit": "Lithuanian",
-    "ltz": "Luxembourgish",
-    "mal": "Malayalam",
-    "mar": "Marathi",
-    "mkd": "Macedonian",
-    "mlg": "Malagasy",
-    "mlt": "Maltese",
-    "mon": "Mongolian",
-    "mri": "Maori",
-    "mya": "Burmese",
-    "nep": "Nepali",
-    "nso": "Northern Sotho",
-    "nya": "Nyanja",
-    "ory": "Oriya",
-    "pan": "Punjabi",
-    "pes": "Persian",
-    "pus": "Pashto",
-    "sin": "Sinhala",
-    "slk": "Slovak",
-    "slv": "Slovenian",
-    "smo": "Samoan",
-    "sna": "Shona",
-    "snd": "Sindhi",
-    "som": "Somali",
-    "sot": "Southern Sotho",
-    "sqi": "Albanian",
-    "srp": "Serbian",
-    "sun": "Sundanese",
-    "swa": "Swahili",
-    "tam": "Tamil",
-    "tel": "Telugu",
-    "tgk": "Tajik",
-    "twi": "Twi",
-    "ukr": "Ukrainian",
-    "urd": "Urdu",
-    "uzb": "Uzbek",
-    "xho": "Xhosa",
-    "yid": "Yiddish",
-    "yor": "Yoruba",
-    "zul": "Zulu",
-}
+# CORE-1804: the language-name map that used to live here (~150 entries
+# mixing ISO 639-1 and 639-3) was one of three drifting copies. Names now
+# come from languages.json via legesher_i18n.language_names, which carries
+# both the 639-1 keys and the iso639_2 aliases.
 
 
 @dataclass
@@ -217,77 +66,82 @@ class HFModelProfile:
     language_names: dict[str, str] | None = None
 
     def get_language_name(self, code: str) -> str:
-        """Resolve a language code to its human-readable name."""
-        names = self.language_names or DEFAULT_LANGUAGE_NAMES
-        return names.get(code, code.upper())
+        """Resolve a language code to its human-readable name.
+
+        Profile-level overrides win; otherwise the shared languages.json
+        derivation is the single source (CORE-1804).
+        """
+        if self.language_names:
+            return self.language_names.get(code, code.upper())
+        from legesher_i18n.language_names import language_name
+
+        return language_name(code)
+
+
+_SHARED_PROMPT_BUILDER = None
+
+
+def _shared_prompt_builder():
+    """Build (once) the shared PromptBuilder for HF profiles.
+
+    Raises loudly when the style-guide stack is broken — there is no
+    legacy prompt to fall back to (CORE-1804), and a silent downgrade is
+    exactly the CORE-1354 regression this exists to prevent.
+    """
+    global _SHARED_PROMPT_BUILDER
+    if _SHARED_PROMPT_BUILDER is None:
+        try:
+            from legesher_i18n.prompt_builder import PromptBuilder
+            from legesher_i18n.style_guides import StyleGuideLoader
+
+            _SHARED_PROMPT_BUILDER = PromptBuilder(StyleGuideLoader())
+        except Exception as exc:
+            raise RuntimeError(
+                "PromptBuilder failed to initialize — HF generations "
+                "require style-guide-aware prompts (CORE-1354) and have "
+                f"no legacy fallback (CORE-1804): {exc}"
+            ) from exc
+    return _SHARED_PROMPT_BUILDER
 
 
 def default_prompt_builder(
     request: TranslationRequest,
     profile: HFModelProfile,
 ) -> str:
-    """Build a standard translation prompt for HuggingFace models.
+    """Build the standard translation prompt for HuggingFace models.
 
-    This prompt works well for most multilingual models. Custom prompt
-    builders can be provided per profile for models with special needs.
+    CORE-1804: delegates to the canonical ``PromptBuilder`` so HF/tiny-aya
+    generations receive the same style-guide-aware prompts as every other
+    model (the old inline prompt here never applied style guides,
+    bypassing CORE-1354). Profile truncation limits still apply to the
+    deep-context and linguistic-standards sections; a limit of ``None``
+    omits the section, matching the old behavior.
 
     Args:
         request: Translation request with term, language, and optional context
-        profile: Model profile (for language names and truncation settings)
+        profile: Model profile (for truncation settings)
 
     Returns:
-        Formatted prompt string
+        Formatted prompt string (system + user joined — HF models take a
+        single prompt string)
     """
-    language_name = profile.get_language_name(request.target_language)
-
-    prompt = f"""You are a multilingual expert translating Python programming terms.
-
-TERM TO TRANSLATE: "{request.term}"
-TARGET LANGUAGE: {language_name}
-"""
-
-    # Add context if available and profile allows it
-    if request.context and profile.context_max_chars is not None:
-        context_short = request.context[: profile.context_max_chars]
-        if len(request.context) > profile.context_max_chars:
-            context_short += "..."
-        prompt += f"""
-CONTEXT:
-{context_short}
-"""
-
-    # Add linguistic standards if available and profile allows it
-    if request.linguistic_standards and profile.standards_max_chars is not None:
-        standards_short = request.linguistic_standards[: profile.standards_max_chars]
-        if len(request.linguistic_standards) > profile.standards_max_chars:
-            standards_short += "..."
-        prompt += f"""
-STANDARDS:
-{standards_short}
-"""
-
-    prompt += f"""
-TASK:
-Translate "{request.term}" to {language_name} for Python programming:
-1. Focus on the programming CONCEPT, not word-for-word translation
-2. Use natural {language_name} that programmers would understand
-3. Prefer appropriate grammatical forms (infinitive for verbs, singular for nouns)
-4. The translation MUST be a valid Python identifier (no spaces, no punctuation)
-5. Do NOT transliterate English — translate the meaning
-
-OUTPUT:
-Respond with ONLY a valid JSON object (no markdown, no extra text):
-{{
-  "translation": "the translated term",
-  "word_type": "verb|noun|etc",
-  "form": "infinitive|singular|etc",
-  "confidence": 0.85,
-  "alternatives": ["alt1", "alt2"],
-  "rationale": "Why you chose this translation"
-}}
-"""
-
-    return prompt
+    builder = _shared_prompt_builder()
+    system, user = builder.build_term_prompt(
+        request.term,
+        request.target_language,
+        role="keyword",
+        deep_context=(
+            request.context if profile.context_max_chars is not None else None
+        ),
+        linguistic_standards=(
+            request.linguistic_standards
+            if profile.standards_max_chars is not None
+            else None
+        ),
+        context_max_chars=profile.context_max_chars,
+        standards_max_chars=profile.standards_max_chars,
+    )
+    return f"{system}\n\n{user}"
 
 
 # ---------------------------------------------------------------------------

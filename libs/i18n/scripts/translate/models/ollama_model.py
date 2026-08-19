@@ -186,40 +186,11 @@ class OllamaModel(TranslationModel):
         Returns:
             Formatted prompt string
         """
-        # Map language codes to full names
-        language_names = {
-            "ar": "Arabic",
-            "bn": "Bengali",
-            "da": "Danish",
-            "de": "German",
-            "el": "Greek",
-            "en": "English",
-            "es": "Spanish",
-            "fi": "Finnish",
-            "fr": "French",
-            "he": "Hebrew",
-            "hi": "Hindi",
-            "hu": "Hungarian",
-            "id": "Indonesian",
-            "it": "Italian",
-            "ja": "Japanese",
-            "ko": "Korean",
-            "ms": "Malay",
-            "nl": "Dutch",
-            "no": "Norwegian",
-            "pl": "Polish",
-            "pt": "Portuguese",
-            "ru": "Russian",
-            "sv": "Swedish",
-            "th": "Thai",
-            "tr": "Turkish",
-            "vi": "Vietnamese",
-            "zh": "Chinese",
-        }
+        # Language names come from languages.json — the single source
+        # (CORE-1804).
+        from legesher_i18n.language_names import language_name as _resolve_name
 
-        language_name = language_names.get(
-            request.target_language, request.target_language.upper()
-        )
+        language_name = _resolve_name(request.target_language)
 
         # Term concept explanations - what the term DOES, not what it's CALLED
         term_concepts = {
