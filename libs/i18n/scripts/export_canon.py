@@ -224,6 +224,7 @@ LOCALE_COLUMNS: tuple[tuple[str, str], ...] = (
     ("locale", "string"),
     ("language_name", "string"),
     ("native_name", "string"),
+    ("status", "string"),
     ("rtl", "bool"),
     ("decisions", "int"),
     ("machine", "int"),
@@ -369,6 +370,41 @@ def build_rows(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     return rows
 
 
+#: How a LANGUAGE's rung is derived from its renderings.
+#:
+#: The published unit is the language, not the word. A reader wants to know
+#: whether Amharic's canon has been through review, not whether one Amharic
+#: rendering has, and the per-rendering rung exists to make that answer
+#: auditable rather than to be read directly.
+#:
+#: The rule, top down:
+#:
+#: * ``official``     -- every rendering is ``official``
+#: * ``reviewed``     -- every rendering is ``reviewed`` or better
+#: * ``experimental`` -- at least one rendering has had human input
+#: * ``machine``      -- none has
+#:
+#: So ``experimental`` means *in progress* while ``reviewed`` and ``official``
+#: mean *complete at that level*. A language does not stop being in progress
+#: because its first word was endorsed, and it does not claim review it has
+#: only partly had.
+#:
+#: The machine -> experimental threshold is deliberately "any", not a
+#: percentage. Coverage thresholds belong to the review policy, which is still
+#: open; asserting one here would invent it. When it lands, this is the single
+#: place it changes.
+def language_status(counts: dict[str, int]) -> str:
+    """Return the rung for one language, given its per-rung rendering counts."""
+    total = sum(counts[rung] for rung in LADDER)
+    if total and counts["official"] == total:
+        return "official"
+    if total and counts["official"] + counts["reviewed"] == total:
+        return "reviewed"
+    if total - counts["machine"] > 0:
+        return "experimental"
+    return "machine"
+
+
 def build_locale_rows(
     conn: sqlite3.Connection, rows: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -410,6 +446,7 @@ def build_locale_rows(
             "locale": locale,
             "language_name": meta[locale]["name"],
             "native_name": meta[locale]["native_name"],
+            "status": language_status(tally[locale]),
             "rtl": meta[locale]["direction"] == "rtl",
             "decisions": tally[locale]["decisions"],
             "machine": tally[locale]["machine"],
@@ -658,18 +695,21 @@ def render_card(
     )
     language_rows = "\n".join(
         f"| `{row['locale']}` | {row['language_name']} | {row['native_name']} "
-        f"| {row['decisions']} | {row['machine']} | {row['experimental']} "
-        f"| {row['reviewed']} | {row['official']} |"
+        f"| `{row['status']}` | {row['decisions']} | {row['experimental']} |"
         for row in locale_rows
     )
-    reviewed = summary["by_rung"]["reviewed"] + summary["by_rung"]["official"]
+    by_status = {rung: 0 for rung in LADDER}
+    for row in locale_rows:
+        by_status[row["status"]] += 1
+    status_summary = ", ".join(
+        f"**{by_status[rung]}** at `{rung}`" for rung in LADDER if by_status[rung]
+    )
     # Counted from the RUNG, not the role: a rendering the machine picked and a
     # person later endorsed is human-touched, and its role is still
     # `automated`. Reading the role here would report 32 where the truth is
     # hundreds, which is the exact erasure this rung correction fixed.
     human_touched = summary["by_rung"]["experimental"]
     human_locales = sum(1 for row in locale_rows if row["experimental"])
-    unreviewed = summary["rows"] - reviewed - human_touched
     return f"""---
 license: {DECLARED_LICENSE}
 tags:
@@ -732,12 +772,14 @@ All {summary["locales"]} languages in this export, with where each one stands
 on the maturity ladder. The primary-subtag rollup in the frontmatter is what
 the Hub indexes for search; this is the full list, script subtags and all.
 
-| Tag | Language | Native name | Renderings | `machine` | `experimental` | `reviewed` | `official` |
-| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Tag | Language | Native name | Status | Renderings | Human input |
+| --- | --- | --- | --- | ---: | ---: |
 {language_rows}
 
-The same table is the `locales` config, so you can sort and filter it rather
-than read it.
+Today: {status_summary}.
+
+"Human input" counts renderings a person has chosen or endorsed. The same table
+is the `locales` config, so you can sort and filter it rather than read it.
 
 ## The maturity ladder
 
@@ -746,12 +788,15 @@ drafted from machines and prior art. From there native speakers move it up:
 `experimental`, then `reviewed`, then `official`. Once a language reaches
 `official`, its canon becomes a resource for the community it exists to serve.
 
-Every rendering carries its own rung, so a language moves as its words do.
+**The rung belongs to the language.** Each rendering carries its own so the
+label stays auditable, but what you should read is the language's status: a
+language is `experimental` while it is in progress, and `reviewed` or
+`official` only once every one of its words has got there.
 
 ### `machine`
 
-Drafted, not decided. The rendering came from a machine draft or from prior
-art, and no one has weighed in on it since.
+Drafted, not decided. The vocabulary came from a machine draft or from prior
+art, and nobody has weighed in on any of it yet.
 
 It is not arbitrary. Every rendering clears mechanical checks before it can be
 selected: it has to be a valid identifier in its language, stable under the
@@ -759,13 +804,13 @@ Unicode normalisation the interpreter applies, and free of collisions with
 other terms in its vocabulary. What nobody has asked is whether it is the right
 word — whether a programmer who speaks the language would recognise it.
 
-Treat these as proposals.
+Treat the whole vocabulary as a proposal.
 
 ### `experimental`
 
-A person has engaged with this specific rendering. Either they **chose** it — a
-maintainer curating a batch, a native speaker correcting the word — or they
-**endorsed** it, putting their name behind a rendering someone else proposed.
+Review has begun. At least one word has been chosen or endorsed by a person —
+a maintainer curating a batch, a native speaker correcting a term, or a
+contributor putting their name behind a rendering someone else proposed.
 
 Most of the endorsements here predate this dataset: they are the review history
 of the community that built Legesher's original translations, where
@@ -773,18 +818,18 @@ contributors voted on renderings word by word. An endorsement attaches to the
 specific option that was later selected, so it is evidence about *this word*,
 not about the concept in general.
 
-At least one person has weighed in. That is not yet agreement, which is why
-`experimental` is its own rung.
+A language stays here for as long as the work is under way, however far along
+it is. The `Human input` column says how far.
 
 ### `reviewed`
 
-Several native speakers have signed off, so the rendering reflects agreement
-rather than one person's preference.
+Every word has been signed off by several native speakers, so the vocabulary
+reflects agreement rather than one person's preference.
 
 The risk with a single reviewer is not that they are wrong. It is that they are
 unrepresentative — a regional form, a register that reads formal or childish
 elsewhere, a loanword one community has absorbed and another rejects. More than
-one voice is what makes a rendering a shared answer.
+one voice is what makes a vocabulary a shared answer.
 
 How many voices, and how varied, is still being defined. We would rather say so
 than publish a threshold we have not set.
@@ -795,31 +840,28 @@ Ratified in a convened session, and screened.
 
 Screening is separate from accuracy. A rendering can be a correct translation
 and still be the wrong word to ship: offensive in another register, unfortunate
-beside a neighbouring term, or colliding with something it should not. A rung
-of `official` means both questions were asked and answered by people with
-standing to answer them.
+beside a neighbouring term, or colliding with something it should not. A status
+of `official` means both questions were asked of the whole vocabulary and
+answered by people with standing to answer them.
 
 A language community makes this decision, not a threshold.
 
 ### Where things stand today
 
-{reviewed} renderings are at `reviewed` or above.
+{status_summary}.
 
-{human_touched:,} sit at `experimental` — chosen or endorsed by at least one
-person, across {human_locales} of the {summary["locales"]} languages here. The
-remaining {unreviewed:,} are machine or maintainer selections that **no one has
-weighed in on yet.**
-
-Nothing has reached `reviewed`, because that needs more than one voice and the
-threshold is not set.
+Review has begun in {human_locales} languages, covering {human_touched:,} of
+{summary["rows"]:,} renderings. No language has reached `reviewed`: that needs
+every word signed off by more than one native speaker, and the threshold for
+how many voices is still being defined.
 
 We publish at this stage deliberately. A terminology set developed privately
 and released once it is "ready" has already made every decision without the
 people it is for. Publishing early makes the current state visible, citable
 and arguable, while it is still genuinely open.
 
-A rung describes one rendering. It says nothing about the language pack that
-rendering ships in.
+A language's status here describes its canon. It is not the same as the tier
+of the language pack that ships from it.
 
 ## Configs
 

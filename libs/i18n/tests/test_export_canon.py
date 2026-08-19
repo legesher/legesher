@@ -324,14 +324,59 @@ def test_the_card_explains_every_rung(canon_db: Path, tmp_path: Path) -> None:
         assert f"### `{rung}`" in card
 
 
-def test_the_card_scopes_the_rung_to_one_rendering(
+def test_the_card_separates_canon_status_from_pack_tier(
     canon_db: Path, tmp_path: Path
 ) -> None:
-    """A rung describes a word, not the pack it ships in."""
+    """Two ladders over two different things; conflating them is a known failure."""
     out = tmp_path / "out"
     export_canon(canon_db, out)
     card = (out / "README.md").read_text(encoding="utf-8")
-    assert "describes one rendering" in card
+    assert "not the same as the tier" in card
+
+
+def test_a_language_with_no_human_input_is_machine(
+    canon_db: Path, tmp_path: Path
+) -> None:
+    """Status is derived from the renderings, so it cannot drift from them."""
+    out = tmp_path / "out"
+    export_canon(canon_db, out)
+    rows = _locale_rows(out)
+    assert rows["status"] == ["machine"]
+
+
+def test_one_reviewed_word_makes_a_language_experimental(
+    canon_db: Path, tmp_path: Path
+) -> None:
+    """`experimental` means in progress, at any coverage.
+
+    A coverage threshold belongs to the review policy, which is still open;
+    asserting one here would invent it.
+    """
+    conn = sqlite3.connect(canon_db)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    try:
+        correct(conn)
+    finally:
+        conn.close()
+
+    out = tmp_path / "out"
+    export_canon(canon_db, out)
+    rows = _locale_rows(out)
+    assert rows["status"] == ["experimental"]
+    assert rows["experimental"] == [1]
+
+
+def test_a_language_is_only_reviewed_when_every_word_is(canon_db: Path) -> None:
+    """Partial review must not claim a reviewed vocabulary."""
+    from scripts.export_canon import language_status
+
+    partial = {"machine": 10, "experimental": 5, "reviewed": 20, "official": 0}
+    assert language_status(partial) == "experimental"
+    complete = {"machine": 0, "experimental": 0, "reviewed": 35, "official": 0}
+    assert language_status(complete) == "reviewed"
+    certified = {"machine": 0, "experimental": 0, "reviewed": 0, "official": 35}
+    assert language_status(certified) == "official"
 
 
 def test_the_card_carries_its_banner(canon_db: Path, tmp_path: Path) -> None:
