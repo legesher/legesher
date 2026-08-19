@@ -695,7 +695,7 @@ def render_card(
     )
     language_rows = "\n".join(
         f"| `{row['locale']}` | {row['language_name']} | {row['native_name']} "
-        f"| `{row['status']}` | {row['decisions']} | {row['experimental']} |"
+        f"| `{row['status']}` |"
         for row in locale_rows
     )
     by_status = {rung: 0 for rung in LADDER}
@@ -772,14 +772,14 @@ All {summary["locales"]} languages in this export, with where each one stands
 on the maturity ladder. The primary-subtag rollup in the frontmatter is what
 the Hub indexes for search; this is the full list, script subtags and all.
 
-| Tag | Language | Native name | Status | Renderings | Human input |
-| --- | --- | --- | --- | ---: | ---: |
+| Tag | Language | Native name | Status |
+| --- | --- | --- | --- |
 {language_rows}
 
 Today: {status_summary}.
 
-"Human input" counts renderings a person has chosen or endorsed. The same table
-is the `locales` config, so you can sort and filter it rather than read it.
+The `locales` config carries the same list with the counts behind each status,
+so you can sort and filter it rather than read it.
 
 ## The maturity ladder
 
@@ -819,7 +819,7 @@ specific option that was later selected, so it is evidence about *this word*,
 not about the concept in general.
 
 A language stays here for as long as the work is under way, however far along
-it is. The `Human input` column says how far.
+it is. The `locales` config carries the counts if you want to know how far.
 
 ### `reviewed`
 
