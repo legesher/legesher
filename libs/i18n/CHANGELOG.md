@@ -9,6 +9,42 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **The language canon publishes as its own dataset.** `legesher/language-canon`
+  carries 9,375 terminology decisions across 51 languages — which rendering was
+  selected for each programming concept in each language, and how much review
+  stands behind that choice. It completes a three-artifact split that the names
+  had been blurring: the corpus is the evidence, the canon is the decision, and
+  the packs are what ships. Until now "canon" was doing double duty as a second
+  name for the packs dataset.
+
+  Two configs. `canon` carries one row per decision (`concept`, `locale`,
+  `option_uid`, `surface_form`, `status`, `identity_ok`, `decided_by`,
+  `decided_at`); `locales` carries one row per language with its identity and
+  its ladder state, so a reader can see how far along a language is without
+  downloading the whole thing. Language attributes live only in `locales` and
+  `canon` joins on `locale` — deliberately unlike the packs dataset, where the
+  same attributes are repeated across 46,512 rows.
+
+  The dataset is published early and says so. Rows sit at `machine` or
+  `experimental` and climb to `reviewed` and `official` as native review lands;
+  the card states plainly that nothing has reached `reviewed`, that 32
+  renderings have had input from a single native speaker, and that what moves a
+  rendering up the ladder is still being defined. `status` and `decided_by`
+  answer different questions on purpose — how much review, and who decided — so
+  one reviewer becomes visible without promoting anything. Row rung is not pack
+  tier, and the card says that too.
+
+  Three exclusions, each deliberate: JavaScript-scoped selections (unreviewed
+  draft terminology, and the same set the pack exporter already drops), the six
+  Ukrainian showcase rows that have no pack behind them, and the raw
+  `decided_by` values, which are published as a role because the column carries
+  internal issue keys and contributor handles in the clear. `decision_reason`,
+  `source_file` and `source_revision` are withheld this revision — the first
+  needs a controlled vocabulary, and the other two name files that do not exist.
+  [CORE-1985]
+
 ### Fixed
 
 - **Five renderings that were never translations are replaced** — th `pow`

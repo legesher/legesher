@@ -77,10 +77,19 @@ from typing import Any
 #: Tables that must never appear in a published config, under any name, ever.
 #:
 #: ``contributor_identities`` is the pre-image of the opaque contributor ids --
-#: the ONLY way back from ``c_<hex>`` to a person (CORE-1502). ``canon_selections``
-#: is the maintainer decision, which lives in the monorepo as reviewable text
-#: and is not community data. :func:`_assert_configs_avoid_private_tables` scans
-#: every config's SQL against this set before a single row is read.
+#: the ONLY way back from ``c_<hex>`` to a person (CORE-1502).
+#: :func:`_assert_configs_avoid_private_tables` scans every config's SQL
+#: against this set before a single row is read.
+#:
+#: ``canon_selections`` is excluded from THIS exporter because it is a
+#: different artifact, not because it is unpublishable. It ships as
+#: ``legesher/language-canon`` via ``export_canon.py`` (2026-08-19), with its
+#: own filters and its own role mapping. The corpus is the evidence layer and
+#: mixing the decision layer into it would collapse the distinction both cards
+#: are built to state. An earlier version of this comment said the canon
+#: "lives in the monorepo as reviewable text" -- ``libs/i18n/canon/*.toml``
+#: has never existed in git history, so that was a description of a target
+#: state rather than of the code.
 #:
 #: The review-intake layer (CORE-1538) is excluded BY DECLARATION, not by
 #: omission: ``review_sessions`` carries contact/verification signals, the

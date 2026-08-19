@@ -9,6 +9,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **i18n**: the language canon is published as its own HuggingFace dataset,
+  `legesher/language-canon` — 9,375 terminology decisions across 51 languages,
+  recording which rendering was chosen for each programming concept and how
+  much review stands behind it. It completes the three-artifact split the names
+  had been blurring: the corpus is the evidence, the canon is the decision, the
+  packs are what ships. Two configs, `canon` and `locales`, joined on `locale`.
+
+  It is published early and says so on the card: every rendering sits at
+  `machine` or `experimental`, nothing has reached `reviewed`, and 32
+  renderings have had input from a single native speaker — which shows up as
+  the reviewer's role rather than as a promotion, because one voice is not a
+  consensus. What moves a rendering up the ladder is still being defined, and
+  the card says that rather than implying a threshold exists.
+
+  Contributor identities are never published: where a native speaker made a
+  selection, the artifact records the role and not the person. [CORE-1985]
+
 ### Fixed
 
 - **i18n**: the Japanese pack's `divmod` did not compile on the interpreters it
