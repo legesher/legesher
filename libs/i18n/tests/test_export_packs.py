@@ -220,6 +220,21 @@ _NFKC_BLOCK = {
 }
 
 
+def _locale_rows(locales: list[str]) -> list[dict]:
+    """Locale rows shaped like the real ones, for card rendering."""
+    registry = export_packs.load_registry()
+    return [
+        {
+            "locale": code,
+            "language_name": registry[code].get("name"),
+            "native_name": registry[code].get("native"),
+            "tier": registry[code].get("status"),
+            "package_version": "0.0.1",
+        }
+        for code in locales
+    ]
+
+
 def _manifest(
     locales: list[str],
     tiers: list[str] | None = None,
@@ -249,7 +264,9 @@ def test_card_states_the_tiers_the_artifact_actually_carries() -> None:
     `tier` column — the failure generation exists to prevent.
     """
     locales = export_packs.pack_locales()
-    all_experimental = export_packs.render_card(_manifest(locales), {"MIT": 1})
+    all_experimental = export_packs.render_card(
+        _manifest(locales), {"MIT": 1}, _locale_rows(locales)
+    )
     assert "Nothing has been promoted yet" in all_experimental
     assert f"All {len(locales)} locales are stamped" in all_experimental
 
@@ -260,6 +277,7 @@ def test_card_states_the_tiers_the_artifact_actually_carries() -> None:
             tier_counts={"experimental": len(locales) - 1, "reviewed": 1},
         ),
         {"MIT": 1},
+        _locale_rows(locales),
     )
     assert "Nothing has been promoted yet" not in mixed
     assert "`reviewed`" in mixed
@@ -275,7 +293,9 @@ def test_card_language_codes_survive_a_yaml_parse() -> None:
     import yaml
 
     locales = export_packs.pack_locales()
-    card = export_packs.render_card(_manifest(locales), {"MIT": 255})
+    card = export_packs.render_card(
+        _manifest(locales), {"MIT": 255}, _locale_rows(locales)
+    )
     front = yaml.safe_load(card.split("---")[1])
     assert front["language"] == locales
     assert all(isinstance(code, str) for code in front["language"])
@@ -308,11 +328,15 @@ def test_shipped_packs_agree_with_the_declared_licence() -> None:
 def test_the_card_carries_no_licence_caveat_when_they_agree() -> None:
     """The caveat is for a real disagreement, not decoration."""
     locales = export_packs.pack_locales()
-    card = export_packs.render_card(_manifest(locales), {"Apache-2.0": 255})
+    card = export_packs.render_card(
+        _manifest(locales), {"Apache-2.0": 255}, _locale_rows(locales)
+    )
     assert "Note on the licence field" not in card
 
     # ...and it still appears when they genuinely differ.
-    mixed = export_packs.render_card(_manifest(locales), {"MIT": 255})
+    mixed = export_packs.render_card(
+        _manifest(locales), {"MIT": 255}, _locale_rows(locales)
+    )
     assert "Note on the licence field" in mixed
 
 
@@ -329,11 +353,15 @@ def test_the_card_states_how_the_vocabulary_was_reviewed() -> None:
     signed a pack off. The `experimental` stamp means that; the card must say
     it in words too.
     """
-    card = export_packs.render_card(_manifest(export_packs.pack_locales()), {"MIT": 1})
+    card = export_packs.render_card(
+        _manifest(export_packs.pack_locales()),
+        {"MIT": 1},
+        _locale_rows(export_packs.pack_locales()),
+    )
     assert "Who chose these words" in card
     assert "drafted by a language model" in card
     assert "no pack in this release has been signed off by a native" in card
-    assert "contributor rung" in card
+    assert "Nothing on the review ladder above `experimental` has been earned" in card
 
 
 def test_no_pack_claims_community_review() -> None:
@@ -363,18 +391,80 @@ def test_no_pack_claims_community_review() -> None:
     )
 
 
-def test_the_card_scopes_the_artifact_against_the_corpus() -> None:
-    """Two joins-and-scope facts a consumer gets wrong without being told.
+def test_the_card_states_its_target_scope_and_the_join_key() -> None:
+    """Two facts a consumer gets wrong without being told.
 
-    The corpus holds Arabic renderings of JavaScript concepts that this dataset
-    does not cover, and pack ids are not locale tags — `no` here is `nb` there.
-    Someone joining on `locale` silently drops exactly the rows that differ.
+    A pack is defined by its target, and this release carries one of several:
+    selections exist internally for other targets and are excluded, so the card
+    has to say which target these words are for rather than let a reader assume
+    they cover the language they happen to use.
+
+    And pack ids are not locale tags — `no` here is `nb` in the corpus — so
+    someone joining on `locale` silently drops exactly the rows that differ.
     """
-    card = export_packs.render_card(_manifest(export_packs.pack_locales()), {"MIT": 1})
-    assert "Arabic" in card and "JavaScript" in card
-    assert "`target` is\n`python` on every row in this dataset." in card
-    assert "Join this dataset to the corpus on `bcp47`" in card
-    assert "`no` here is `nb` in the corpus" in card
+    card = export_packs.render_card(
+        _manifest(export_packs.pack_locales()),
+        {"MIT": 1},
+        _locale_rows(export_packs.pack_locales()),
+    )
+    assert "This release ships the `python` target" in card
+    assert "Selections exist internally for other targets" in card
+    assert "`target` is not a column: every row in this release is" in card
+    assert "`locale` is a pack id, not a language tag" in card
+    assert "`no` is BCP 47 `nb`" in card
+
+
+def test_the_card_describes_a_pack_without_assuming_its_target() -> None:
+    """A pack is a shape, and Python is the target that shape is filled for.
+
+    The card used to open by defining the artifact as Python's vocabulary,
+    which reads as though a pack IS a Python thing. The target is one of a
+    pack's parts, so the opening has to survive a second target existing.
+    """
+    card = export_packs.render_card(
+        _manifest(export_packs.pack_locales()),
+        {"MIT": 1},
+        _locale_rows(export_packs.pack_locales()),
+    )
+    opening = card.split("## Languages")[0]
+    assert "Python" not in opening, (
+        "the definition of a language pack must not name one target -- "
+        "the target belongs in the Target section, as one of a pack's parts"
+    )
+    for heading in ("### Target", "### Categories", "### Versions"):
+        assert heading in card, f"{heading} missing from the pack breakdown"
+
+    # The style guide is a sibling system, not part of this dataset. Saying so
+    # is the difference between describing the artifact and overclaiming it.
+    assert "style guide" in card and "not exported in this dataset" in card
+
+
+def test_the_card_lists_every_language_with_its_status_and_version() -> None:
+    """Listed out the way the canon and corpus cards list theirs."""
+    locales = export_packs.pack_locales()
+    rows = _locale_rows(locales)
+    card = export_packs.render_card(_manifest(locales), {"MIT": 1}, rows)
+
+    table = card.split("## Languages")[1].split("##")[0]
+    for row in rows:
+        assert f"| `{row['locale']}` |" in table, f"{row['locale']} missing"
+        assert row["native_name"] in table, f"{row['locale']} native name missing"
+    assert "| `0.0.1` |" in table, "package version column not rendered"
+
+
+def test_every_category_the_export_ships_is_described_on_the_card() -> None:
+    """A partition added for another target must not reach the card unexplained."""
+    card = export_packs.render_card(
+        _manifest(export_packs.pack_locales()),
+        {"MIT": 1},
+        _locale_rows(export_packs.pack_locales()),
+    )
+    assert set(export_packs.CATEGORY_BLURBS) == set(export_packs.SECTIONS), (
+        "CATEGORY_BLURBS and SECTIONS have drifted; the card would render a "
+        "KeyError or a bare category name"
+    )
+    for name in export_packs.SECTIONS:
+        assert f"| `{name}` |" in card
 
 
 def test_the_pack_ids_the_card_calls_out_really_do_differ_from_bcp47() -> None:
@@ -389,7 +479,9 @@ class TestTheNormalizationNote:
 
     def test_it_names_the_measured_count_locale_and_character(self) -> None:
         card = export_packs.render_card(
-            _manifest(export_packs.pack_locales()), {"MIT": 1}
+            _manifest(export_packs.pack_locales()),
+            {"MIT": 1},
+            _locale_rows(export_packs.pack_locales()),
         )
         assert "## Normalization" in card
         assert "PEP 3131" in card
@@ -414,6 +506,7 @@ class TestTheNormalizationNote:
                 },
             ),
             {"MIT": 1},
+            _locale_rows(export_packs.pack_locales()),
         )
         assert "One rendering in this release is NFKC-unstable" in card
         assert "Examplish (`xx`)" in card
@@ -427,6 +520,7 @@ class TestTheNormalizationNote:
                 nfkc={"rows": 0, "renderings": 0, "locales": [], "characters": []},
             ),
             {"MIT": 1},
+            _locale_rows(export_packs.pack_locales()),
         )
         assert "## Normalization" in card
         assert "No rendering in this release is NFKC-unstable" in card
@@ -549,7 +643,9 @@ def test_the_cards_conditional_sections_cite_no_internal_ticket() -> None:
 
     # Rendered only when the packs' own metadata.license contradicts
     # DECLARED_LICENSE, which the shipped packs no longer do.
-    caveat = export_packs.render_card(_manifest(locales), {"MIT": 255})
+    caveat = export_packs.render_card(
+        _manifest(locales), {"MIT": 255}, _locale_rows(locales)
+    )
     assert "Note on the licence field" in caveat, "the caveat branch went dark"
     assert not TICKET.search(caveat)
 
@@ -566,8 +662,342 @@ def test_the_cards_conditional_sections_cite_no_internal_ticket() -> None:
             },
         ),
         {"Apache-2.0": 255},
+        _locale_rows(locales),
     )
     assert "Nothing has been promoted yet" not in promoted, (
         "the promoted-tier branch went dark"
     )
     assert not TICKET.search(promoted)
+
+
+# --- push gates (CORE-2017) -------------------------------------------------
+#
+# This script pushed nothing until 2026-08-24. The gates below are the reason
+# it is allowed to now: each one is a refusal the hand-push had no way to make.
+
+
+def test_push_refuses_without_the_governance_signoff() -> None:
+    with pytest.raises(export_packs.ExportRefused, match="governance-signoff"):
+        export_packs.require_push_approval(None)
+    with pytest.raises(export_packs.ExportRefused, match="governance-signoff"):
+        export_packs.require_push_approval("CORE-0000")
+
+
+def test_push_refuses_without_the_env_approval(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The flag and the variable are two keys on purpose."""
+    monkeypatch.delenv(export_packs.PUSH_ENV_VAR, raising=False)
+    with pytest.raises(export_packs.ExportRefused, match=export_packs.PUSH_ENV_VAR):
+        export_packs.require_push_approval(export_packs.GOVERNANCE_TICKET)
+
+    monkeypatch.setenv(export_packs.PUSH_ENV_VAR, "1")
+    export_packs.require_push_approval(export_packs.GOVERNANCE_TICKET)
+
+
+def test_the_canonical_target_needs_no_second_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(export_packs.TARGET_OVERRIDE_ENV_VAR, raising=False)
+    export_packs.require_intended_target(export_packs.DEFAULT_TARGET_REPO)
+
+
+def test_a_non_default_target_must_be_repeated_verbatim(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A typo must not be able to publish into the wrong namespace."""
+    monkeypatch.delenv(export_packs.TARGET_OVERRIDE_ENV_VAR, raising=False)
+    with pytest.raises(export_packs.ExportRefused, match="not the canonical"):
+        export_packs.require_intended_target("someone-else/language-packs")
+
+    monkeypatch.setenv(export_packs.TARGET_OVERRIDE_ENV_VAR, "someone-else/other")
+    with pytest.raises(export_packs.ExportRefused, match="not the canonical"):
+        export_packs.require_intended_target("someone-else/language-packs")
+
+    monkeypatch.setenv(
+        export_packs.TARGET_OVERRIDE_ENV_VAR, "someone-else/language-packs"
+    )
+    export_packs.require_intended_target("someone-else/language-packs")
+
+
+def _source(**overrides: str) -> dict[str, str]:
+    base = {
+        "worktree": "clean",
+        "commit": "abc123",
+        "tag": f"{export_packs.TAG_PREFIX}2026.08.24",
+    }
+    base.update(overrides)
+    return base
+
+
+def test_push_refuses_a_dirty_or_unverifiable_worktree() -> None:
+    """A pinned revision must rebuild from the commit its manifest names."""
+    export_packs.require_reproducible_source(_source())
+
+    for worktree in ("dirty", "unknown (git unavailable)"):
+        with pytest.raises(export_packs.ExportRefused, match="worktree is"):
+            export_packs.require_reproducible_source(_source(worktree=worktree))
+
+
+def test_push_refuses_an_untagged_commit() -> None:
+    """The tag is the one version string the Hub, Linear and the card share.
+
+    An untagged push stamps ``(untagged)`` into the card's provenance line and
+    leaves the revision with no name its release ticket also knows.
+    """
+    with pytest.raises(export_packs.ExportRefused, match="carries no"):
+        export_packs.require_reproducible_source(_source(tag=export_packs.UNTAGGED))
+
+    # Absent key is treated as untagged rather than passing by omission.
+    with pytest.raises(export_packs.ExportRefused, match="carries no"):
+        export_packs.require_reproducible_source(
+            {"worktree": "clean", "commit": "abc123"}
+        )
+
+
+def test_the_gate_refuses_every_tag_that_is_not_a_packs_tag() -> None:
+    """The repo tags a lot, and only one shape names a revision of THIS dataset.
+
+    `v0.24.0`, `mcp-v0.1.0` and the per-pack `i18n-python-ar-v0.0.4` all sit on
+    release commits. Accepting any of them would stamp a version string this
+    dataset does not have -- which is the failure the gate exists to prevent,
+    not a near-miss of it.
+    """
+    for tag in ("v0.24.0", "mcp-v0.1.0", "i18n-python-ar-v0.0.4", "scratch"):
+        with pytest.raises(export_packs.ExportRefused, match="carries no"):
+            export_packs.require_reproducible_source(_source(tag=tag))
+
+    export_packs.require_reproducible_source(
+        _source(tag=f"{export_packs.TAG_PREFIX}2026.08.24")
+    )
+
+
+def test_git_describe_only_ever_reports_a_packs_tag(tmp_path: Path) -> None:
+    """The producer and the gate must agree, or the gate is dead in practice.
+
+    Built on a real repo carrying a decoy tag alongside the packs tag, because
+    the bug this guards against is `git describe --exact-match` returning
+    whichever of several tags it likes.
+    """
+    import subprocess
+
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    git("init", "-q")
+    git("config", "user.email", "t@example.com")
+    git("config", "user.name", "t")
+    (tmp_path / "f").write_text("x", encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-qm", "c")
+
+    assert export_packs.git_describe(tmp_path)["tag"] == export_packs.UNTAGGED
+
+    git("tag", "v9.9.9")
+    assert export_packs.git_describe(tmp_path)["tag"] == export_packs.UNTAGGED, (
+        "a non-packs tag must not satisfy the gate"
+    )
+
+    git("tag", f"{export_packs.TAG_PREFIX}2026.08.24")
+    assert (
+        export_packs.git_describe(tmp_path)["tag"]
+        == f"{export_packs.TAG_PREFIX}2026.08.24"
+    )
+
+
+def test_published_schema_drops_the_redundant_columns(exported: Path) -> None:
+    """CORE-1986: seven columns that carried no information per row.
+
+    Asserted on the written Parquet, not the builders, because the builders
+    deliberately keep the fuller dicts.
+    """
+    import pyarrow.parquet as pq
+
+    vocab = pq.read_table(exported / "data" / "vocabulary.parquet")
+    locales = pq.read_table(exported / "data" / "locales.parquet")
+
+    assert tuple(vocab.column_names) == export_packs.VOCABULARY_COLUMNS
+    assert tuple(locales.column_names) == export_packs.LOCALE_COLUMNS
+
+    for gone in ("language_name", "native_name", "rtl", "tier", "target"):
+        assert gone not in vocab.column_names, (
+            f"{gone} is dependent on `locale` alone and belongs in `locales`"
+        )
+    for gone in ("terms_latest", "pack_versions"):
+        assert gone not in locales.column_names
+
+    # tier stays in `locales` -- one row per locale is the one place it is
+    # designed to vary, and the place a promotion writes.
+    assert "tier" in locales.column_names
+
+
+def test_package_version_matches_each_pack_pyproject(exported: Path) -> None:
+    """The alignment claim the card makes has to be true of the bytes.
+
+    A row reading `ar` / `0.0.4` says these words are in
+    `legesher-i18n-python-ar==0.0.4`. If the column drifts from the pyproject
+    the export is describing, the dataset misstates which package it matches.
+    """
+    import pyarrow.parquet as pq
+
+    rows = pq.read_table(exported / "data" / "locales.parquet").to_pylist()
+    assert rows
+
+    for row in rows:
+        declared = export_packs.read_package_version(row["locale"])
+        assert row["package_version"] == declared, (
+            f"{row['locale']}: dataset says {row['package_version']}, "
+            f"pyproject says {declared}"
+        )
+        assert row["package_version"], "a locale must not publish a null version"
+
+
+def test_main_wires_every_push_gate_and_pushes_last(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Deleting the `if args.push:` block must fail something.
+
+    Every other gate test calls the helpers directly, so without this the whole
+    wiring could be dropped and the suite would stay green -- with the first
+    symptom being a published revision.
+    """
+    called: list[str] = []
+
+    def _record(name: str, result: object = None):
+        def _fn(*_a: object, **_k: object) -> object:
+            called.append(name)
+            return result
+
+        return _fn
+
+    monkeypatch.setattr(export_packs, "preflight_hub_auth", _record("auth"))
+    monkeypatch.setattr(export_packs, "push_to_hub", _record("push"))
+    monkeypatch.setenv(export_packs.PUSH_ENV_VAR, "1")
+    monkeypatch.setattr(
+        export_packs,
+        "git_describe",
+        lambda _repo: _source(tag=f"{export_packs.TAG_PREFIX}2026.08.24"),
+    )
+
+    out = tmp_path / "packs"
+    argv = [
+        "export_packs.py",
+        "--out",
+        str(out),
+        "--push",
+        "--governance-signoff",
+        export_packs.GOVERNANCE_TICKET,
+    ]
+    with mock.patch.object(sys, "argv", argv):
+        assert export_packs.main() == 0
+
+    assert called == ["auth", "push"], (
+        "auth must be proven before the export, and the push must come last -- "
+        f"after the determinism check, not before it. Got {called}"
+    )
+    # --push forces the determinism proof on, whether or not it was asked for.
+    assert (out.parent / f"{out.name}-verify").exists()
+
+
+def test_main_refuses_push_flags_without_push(tmp_path: Path) -> None:
+    """A forgotten --push must not exit 0 looking like a successful publish."""
+    argv = [
+        "export_packs.py",
+        "--out",
+        str(tmp_path / "packs"),
+        "--governance-signoff",
+        export_packs.GOVERNANCE_TICKET,
+    ]
+    with mock.patch.object(sys, "argv", argv):
+        with pytest.raises(SystemExit, match="push options"):
+            export_packs.main()
+
+
+def test_the_push_never_changes_visibility_and_cites_no_internal_ticket() -> None:
+    """Hub commit history is as public as the files it carries.
+
+    This rule used to live in the runbook, because the artifact was pushed by
+    hand and only an operator could carry it. Now the push is code, so a test
+    carries it -- matching ``test_export_corpus.py``.
+    """
+    recorded: dict[str, object] = {}
+
+    class _Api:
+        def create_repo(self, **kwargs: object) -> None:
+            recorded["create"] = kwargs
+
+        def upload_folder(self, **kwargs: object) -> None:
+            recorded.update(kwargs)
+
+    with mock.patch.object(export_packs, "_require_hf_api", lambda: lambda: _Api()):
+        export_packs.push_to_hub(Path("/tmp/nowhere"), export_packs.DEFAULT_TARGET_REPO)
+
+    assert not TICKET.search(str(recorded["commit_message"]))
+
+    # Private-first, always. Going public stays a deliberate act on the Hub,
+    # so no invocation of this script can publish a private dataset.
+    create = recorded["create"]
+    assert isinstance(create, dict)
+    assert create["private"] is True
+    assert "public" not in str(recorded).lower()
+
+
+def test_the_allow_list_covers_every_file_the_export_writes(exported: Path) -> None:
+    """An upload allow-list that misses a file drops it silently.
+
+    Walked from the real output tree rather than listed here, so a file the
+    artifact gains later fails this instead of vanishing from the dataset.
+    """
+    import fnmatch
+
+    written = sorted(
+        str(p.relative_to(exported)) for p in exported.rglob("*") if p.is_file()
+    )
+    assert written, "the export produced no files"
+
+    uncovered = [
+        name
+        for name in written
+        if not any(
+            fnmatch.fnmatch(name, pattern)
+            for pattern in export_packs.PUSH_ALLOW_PATTERNS
+        )
+    ]
+    assert not uncovered, (
+        f"PUSH_ALLOW_PATTERNS does not cover {uncovered} -- these files would "
+        f"be built and then silently left out of the upload"
+    )
+
+
+def test_no_published_file_mentions_the_sibling_datasets(exported: Path) -> None:
+    """This artifact describes itself and nothing else.
+
+    The packs card used to open by positioning the packs against the canon and
+    spend a section choosing between three datasets. That is not what a reader
+    who landed here came for, and a card that explains its neighbours is a card
+    that has to be re-edited whenever they change.
+
+    Asserted over every published file rather than the card alone, because the
+    manifest sits beside it and was making the same claim in prose.
+    """
+    import pyarrow.parquet as pq
+
+    offenders: list[str] = []
+    for path in sorted(exported.rglob("*")):
+        if not path.is_file():
+            continue
+        if path.suffix == ".parquet":
+            text = " ".join(
+                str(v) for v in pq.read_table(path).to_pydict().get("locale", [])
+            )
+        else:
+            text = path.read_text(encoding="utf-8")
+        for word in ("language-canon", "language-corpus"):
+            if word in text:
+                offenders.append(f"{path.relative_to(exported)}: {word}")
+        # `canon_selections` is a table name, not a pointer at the dataset.
+        for word in ("the canon", "the corpus"):
+            if word in text.lower():
+                offenders.append(f"{path.relative_to(exported)}: {word!r}")
+
+    assert not offenders, f"published files point at a sibling dataset: {offenders}"

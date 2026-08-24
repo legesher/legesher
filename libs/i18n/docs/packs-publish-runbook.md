@@ -1,17 +1,32 @@
-# Canon packs publish runbook (`legesher/language-packs`)
+# Packs publish runbook (`legesher/language-packs`)
 
-How a pinned revision of the canon dataset is built and published. The
-counterpart for the evidence layer is [`corpus-publish-runbook.md`](corpus-publish-runbook.md).
+How a pinned revision of the packs dataset is built and published. The
+counterpart for the evidence layer is [`corpus-publish-runbook.md`](corpus-publish-runbook.md),
+and for the decision layer [`legesher/language-canon`](https://huggingface.co/datasets/legesher/language-canon).
 
-The export is automated; **publishing is not**. `export_packs.py` has no
-`--push` and never touches the Hub. Pushing a revision is a maintainer action
-against a release ticket.
+Both the export and the push are scripted, and **the push is gated rather than
+free**. `export_packs.py --push` refuses on any of six conditions; see
+[Publish](#publish). Pushing a revision is still a maintainer action against a
+release ticket — what changed is that the script now enforces that rather than
+asking the operator to remember it.
+
+> Until 2026-08-24 this script had no `--push` at all, on the reasoning that
+> publishing is a governance act and not a script flag. The act still is. The
+> mechanism was the problem: a hand-push has no gates, and the published
+> artifact drifted three revisions behind the generator with nothing to notice
+> (CORE-2017).
 
 ## What this artifact is
 
-The decision layer: the vocabulary Legesher actually ships. Built from the YAML
-pack tree at a release commit, never from `canon_selections` — see
+What ships: the vocabulary Legesher's Python language packs carry. Built from
+the YAML pack tree at a release commit, never from `canon_selections` — see
 [Why not the database](#why-not-the-database).
+
+It is not the decision layer; that is
+[`legesher/language-canon`](https://huggingface.co/datasets/legesher/language-canon),
+a separate dataset since 2026-08-19. References written before then that call
+this artifact "the canon" mean the packs, because that is what the word meant
+when they were written.
 
 ## Preconditions
 
@@ -28,9 +43,10 @@ pack tree at a release commit, never from `canon_selections` — see
    Expect `PASS: regeneration reproduces all 255 shipped pack file(s)`.
    Informational findings (`comment_lost`, `not_byte_identical`) do not block.
 
-2. **The working tree is clean and tagged.** The manifest records the commit
-   and reports `worktree: dirty` otherwise, which makes the revision
-   unreproducible from the commit it names.
+2. **The working tree is clean and carries a `language-packs-v*` tag.** The
+   manifest records both. On `--push` these are gates rather than preconditions
+   — a dirty tree makes the revision unreproducible from the commit it names,
+   and an untagged one leaves it sharing no version string with its release.
 
 3. **`audit_packs` and `audit_collisions` are clean** — the mechanical gates
    behind the `experimental` stamp.
@@ -80,8 +96,8 @@ Check the summary before going further:
   [`pack-maturity-ladder.md`](pack-maturity-ladder.md) promotes one.
 * Any `WARNING:` line. There should be none. The licence check compares the
   declared compilation licence against every pack's own `metadata.license`;
-  both are public, so a disagreement is a warning rather than something to
-  discover in the card after the fact.
+  both are public, so a disagreement is surfaced here rather than discovered in
+  the card after the fact. On `--push` it is a refusal, not a warning.
 
 ## Outputs
 
@@ -101,17 +117,42 @@ across machines.
 
 ## Publish
 
-Not scripted, deliberately. A maintainer uploads `build/hf-packs/` to
-`legesher/language-packs` and pins the revision against the release ticket.
-The first push freezes the layout for every consumer that pins it.
+```sh
+cd libs/i18n
+LEGESHER_HF_PUSH_APPROVED=1 uv run python scripts/export_packs.py \
+  --out build/hf-packs --push --governance-signoff CORE-1502
+```
 
-The Hub commit message must not name an internal ticket (`CORE-####` or
-`HOME-####`) — Hub commit history is as public as the files it carries, and
-an issue key resolves to nothing for a reader outside the project. Pin the
-revision against the release ticket in Linear, not in the message. The corpus
-exporter pushes from a script and a test holds its commit message to this
-(`test_export_corpus.py`, `test_the_push_commit_message_names_no_internal_ticket`);
-this push is manual, so the operator carries the rule.
+The first push freezes the layout for every consumer that pins it, so the
+script refuses on any of the following. All of them read git, the registry or
+the pack YAML, so all of them run **before the export writes a byte** — a
+refused run leaves nothing on disk that could be mistaken for push-ready:
+
+| Gate | Refuses when |
+| --- | --- |
+| `--governance-signoff CORE-1502` | the sign-off is absent or wrong |
+| `LEGESHER_HF_PUSH_APPROVED=1` | the environment key is unset — the flag and the variable are two keys so a command-line typo cannot publish |
+| `--target-repo` | a non-default destination is not repeated verbatim in `LEGESHER_HF_TARGET_OVERRIDE` |
+| clean worktree | the tree is dirty, or git is unavailable — a revision pinned to a commit it did not come from cannot be reproduced |
+| tagged commit | `HEAD` carries no `language-packs-v<YYYY.MM.DD>` tag — the tag is the one version string the Hub revision, the release ticket and the card's provenance line all share, and an untagged push stamps `(untagged)` into the card. Checked against the prefix: this repo also tags `v0.24.0` and `i18n-python-ar-v0.0.4`, and neither names a revision of this dataset |
+| licence agreement | the declared compilation licence and the packs' own `metadata.license` disagree — both claims become public in the same revision, so "reconcile before publishing" becomes a refusal rather than a warning |
+| Hub auth | no usable token |
+
+Then `--verify-deterministic` turns itself on and the upload runs only if it
+passes: a revision that does not reproduce is not one to pin consumers against.
+The proof covers the card and the manifest as well as the data files.
+
+**`--push` never changes visibility.** It creates private and uploads; going
+public stays a deliberate act on the Hub. `private` and `gated` are independent
+flags and a gated failure is invisible to a signed-in maintainer, so verify a
+publish anonymously, never from the pushing session.
+
+Pin the revision against the release ticket in Linear. The Hub commit message
+must not name an internal ticket (`CORE-####` or `HOME-####`) — Hub commit
+history is as public as the files it carries, and an issue key resolves to
+nothing for a reader outside the project. A test holds this
+(`test_export_packs.py`, `test_the_push_never_changes_visibility_and_cites_no_internal_ticket`),
+matching the corpus exporter; it is no longer a rule the operator carries.
 
 Before pushing, confirm the card's figures match the artifact rather than any
 milestone or release description — several still say 51 locales where they

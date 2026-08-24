@@ -57,15 +57,48 @@ Nothing written here may cite an internal ticket. These files are read by
 people outside the project, to whom a bare ``CORE-####`` is an unresolvable
 reference; the test suite asserts it over every file the export writes, and
 over the card branches this data does not currently render. The same rule
-governs the Hub commit message, which the publish runbook carries rather than
-a test, because this artifact is pushed by hand.
+governs the Hub commit message, and a test now holds it (it used to be carried
+by the runbook, because this artifact was pushed by hand).
 
 Usage:
     uv run python scripts/export_packs.py --out build/hf-packs
     uv run python scripts/export_packs.py --out build/hf-packs --verify-deterministic
+    uv run python scripts/export_packs.py --out build/hf-packs --push \\
+        --governance-signoff CORE-1502
 
-This script NEVER pushes. Publishing is a governance act that belongs to the
-release ticket (CORE-1905), not to a script flag.
+Pushing is gated, not free (CORE-2017)
+--------------------------------------
+This script pushed nothing until 2026-08-24, on the reasoning that publishing
+is a governance act belonging to the release ticket rather than to a script
+flag. That reasoning was right about the act and wrong about the mechanism: a
+hand-push has no gates at all, and the consequence was a published artifact
+that sat three revisions behind this file with nothing to notice. The rule the
+runbook asked an operator to remember is now a set of refusals, matching
+``export_canon.py`` and ``export_corpus.py``. Every one of them runs BEFORE the
+export writes a byte, so a refused run leaves nothing on disk that could be
+mistaken for push-ready:
+
+* ``--governance-signoff`` and ``LEGESHER_HF_PUSH_APPROVED=1`` -- two separate
+  keys, so a command-line typo cannot publish
+* a non-default ``--target-repo`` repeated verbatim in the environment
+* a clean worktree, because a pinned revision built over uncommitted changes
+  cannot be reproduced from the commit its manifest names
+* a ``language-packs-v*`` tag on that commit -- the one version string the Hub
+  revision, the release ticket and the card's provenance line share. Checked
+  against the prefix, not merely "is there a tag": this repo tags releases
+  ``v0.24.0`` and packs ``i18n-python-ar-v0.0.4``, and neither names a revision
+  of this dataset
+* agreement between the declared compilation licence and the packs' own
+  ``metadata.license``, because both claims become public in the same revision
+* Hub auth
+
+Then ``--verify-deterministic`` turns itself on, and the push runs only after
+it passes: a revision that does not reproduce is not one to pin consumers
+against.
+
+Visibility is NOT one of them. ``push_to_hub`` creates private and never
+changes visibility, so no invocation of this script can publish a private
+dataset -- going public stays a deliberate act on the Hub.
 """
 
 from __future__ import annotations
@@ -73,6 +106,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -90,6 +124,79 @@ from legesher_i18n.pack_loader import LanguagePackLoader  # noqa: E402
 PACKS_DIR = _I18N_ROOT / "language-packs" / "python"
 REGISTRY = _I18N_ROOT / "legesher_i18n" / "languages.json"
 
+#: Where a push goes unless a second key says otherwise.
+DEFAULT_TARGET_REPO = "legesher/language-packs"
+
+#: What the manifest records when ``git describe`` finds no tag on the commit.
+UNTAGGED = "(untagged)"
+
+#: Tag shape a published revision is expected to carry, e.g.
+#: ``language-packs-v2026.08.24``. The date is the version the Hub revision,
+#: the release ticket and the card's provenance line all say.
+TAG_PREFIX = "language-packs-v"
+
+#: The governance decision a push asserts has been taken. Shared verbatim with
+#: ``export_canon.py`` and ``export_corpus.py``: one key turns all three, so a
+#: maintainer does not have to remember which artifact wants which ticket.
+GOVERNANCE_TICKET = "CORE-1502"
+
+#: Second key for the sign-off, and second key for a non-default destination.
+PUSH_ENV_VAR = "LEGESHER_HF_PUSH_APPROVED"
+TARGET_OVERRIDE_ENV_VAR = "LEGESHER_HF_TARGET_OVERRIDE"
+
+#: Exactly what an upload may carry. An allow-list rather than the whole
+#: directory, because ``--out`` is an ordinary directory a maintainer can put
+#: anything in: an editor swap file, a stray notebook, a `.DS_Store`. The
+#: export rebuilds ``--out`` from scratch, but that says nothing about what a
+#: later hand lands beside it before the push.
+PUSH_ALLOW_PATTERNS: tuple[str, ...] = (
+    "README.md",
+    "manifest.json",
+    "data/*.parquet",
+    "json/*/*.json",
+)
+
+#: Published columns, per config (CORE-1986). The row dicts built in memory
+#: carry more than this on purpose -- ``assert_python_only`` needs ``target``,
+#: ``nfkc_instability`` and the card need ``language_name`` -- so the published
+#: schema is a projection applied at write time rather than a restructuring of
+#: the builders. It is also then one list to read when asking "what does this
+#: dataset expose", instead of an argument reconstructed from three functions.
+#:
+#: What was dropped and why: ``language_name``, ``native_name`` and ``rtl`` are
+#: functionally dependent on ``locale`` and already in ``locales``; ``target``
+#: is ``python`` on every row; ``tier`` belongs in ``locales`` alone, where it
+#: is designed to vary -- carrying it here too means a promotion rewrites 912
+#: vocabulary rows and one locales row, which is two places to drift.
+VOCABULARY_COLUMNS: tuple[str, ...] = (
+    "locale",
+    "python_version",
+    "category",
+    "source_term",
+    "translation",
+    "defined_at",
+    "inherited",
+)
+
+#: ``terms_latest`` and ``pack_versions`` are gone: the first was a cached
+#: aggregate of the ``vocabulary`` config in the same dataset, the second was
+#: ``len(VERSIONS)`` on every row -- a property of the dataset, not the locale.
+#:
+#: ``package_version`` replaces them with the number that actually varies and
+#: actually matters: the semver of THIS locale's distributable, so a reader can
+#: line a Hub revision up against PyPI without guessing.
+LOCALE_COLUMNS: tuple[str, ...] = (
+    "locale",
+    "language_name",
+    "native_name",
+    "iso639_2",
+    "bcp47",
+    "rtl",
+    "has_case_distinction",
+    "tier",
+    "package_version",
+)
+
 #: Interpreter versions each locale ships a pack for. Mirrors
 #: ``verify_pack_regen.EXPECTED_VERSIONS``; the two must agree or the dataset
 #: would claim a matrix the regen gate does not certify.
@@ -100,6 +207,29 @@ VERSIONS = ("3.10", "3.11", "3.12", "3.13", "3.14")
 #: JavaScript (CORE-1372) and is empty for every Python pack. Exporting an
 #: always-empty column would advertise a surface this artifact does not cover.
 SECTIONS = ("keywords", "builtins", "exceptions", "reserved_words")
+
+#: One line per category, for the card. Keyed by :data:`SECTIONS` so a partition
+#: added for another target cannot reach the card undescribed -- the render
+#: raises rather than printing a bare name a reader cannot interpret.
+CATEGORY_BLURBS: dict[str, str] = {
+    "keywords": (
+        "The words the grammar reserves. A parser recognises these, so a "
+        "rendering has to be a legal identifier and cannot collide with "
+        "anything else in the vocabulary."
+    ),
+    "builtins": (
+        "Functions and types available without importing anything — `print`, "
+        "`len`, `dict`. Callable names rather than grammar."
+    ),
+    "exceptions": (
+        "The error hierarchy. These reach a reader at the worst moment, in a "
+        "traceback, which is where reading your own language matters most."
+    ),
+    "reserved_words": (
+        "Names the language treats as special without reserving them in the "
+        "grammar — soft keywords and contextual forms."
+    ),
+}
 
 #: The only target this artifact covers. Asserted against every emitted row.
 TARGET = "python"
@@ -165,8 +295,21 @@ def git_describe(repo: Path) -> dict[str, str]:
             return False, ""
 
     commit_ok, commit = run("rev-parse", "HEAD")
-    _, tag = run("describe", "--tags", "--exact-match")
     status_ok, status = run("status", "--porcelain")
+
+    # `git describe --tags --exact-match` picks ONE tag arbitrarily when the
+    # commit carries several, and this repo tags a lot: 49 tags, of which one
+    # is a packs release and the rest are `v0.24.0`, `mcp-v0.1.0`,
+    # `i18n-python-ar-v0.0.4` and so on. A release commit routinely carries
+    # more than one, so asking for "the tag" would stamp whichever git
+    # happened to return. Ask for the packs tag by name instead.
+    _, points_at = run("tag", "--points-at", "HEAD")
+    packs_tags = sorted(
+        line.strip()
+        for line in points_at.splitlines()
+        if line.strip().startswith(TAG_PREFIX)
+    )
+    tag = packs_tags[-1] if packs_tags else ""
 
     if not (commit_ok and status_ok):
         worktree = "unknown (git unavailable)"
@@ -175,7 +318,7 @@ def git_describe(repo: Path) -> dict[str, str]:
 
     return {
         "commit": commit if commit_ok else "unknown",
-        "tag": tag or "(untagged)",
+        "tag": tag or UNTAGGED,
         "worktree": worktree,
     }
 
@@ -334,6 +477,72 @@ def _read_yaml(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
+def terms_per_version(rows: list[dict[str, Any]]) -> dict[str, int]:
+    """One term count per interpreter version.
+
+    Every locale ships the same term set at a given version, so this is one
+    number per version, not a distribution. Asserted rather than assumed: an
+    uneven locale would make the card's headline count a fiction.
+
+    Raises:
+        SystemExit: if locales disagree at any version.
+    """
+    per_pack: Counter[tuple[str, str]] = Counter(
+        (r["locale"], r["python_version"]) for r in rows
+    )
+    out: dict[str, int] = {}
+    for version in VERSIONS:
+        sizes = {n for (_, v), n in per_pack.items() if v == version}
+        if len(sizes) != 1:
+            raise SystemExit(
+                f"Locales disagree on term count at Python {version}: "
+                f"{sorted(sizes)}. The dataset cannot state one number per "
+                f"version until they agree."
+            )
+        out[version] = sizes.pop()
+    return out
+
+
+def read_package_version(locale: str) -> str:
+    """Return the semver of ``locale``'s distributable, from its pyproject.
+
+    This is the number PyPI publishes for that pack, and publishing it here is
+    what lets a reader align the two: revision R of this dataset says Arabic is
+    at ``0.0.4``, and ``legesher-i18n-python-ar==0.0.4`` is the wheel carrying
+    those words. Without it the two artifacts version on unrelated clocks --
+    this dataset on a release date, each pack on its own semver -- and nothing
+    states which pack version a given revision actually describes.
+
+    Read from ``pyproject.toml`` rather than the installed distribution: the
+    export must describe the packs in the tree it is exporting, not whatever
+    happens to be installed in the environment running it.
+
+    Raises:
+        SystemExit: if the pyproject is missing or declares no version. A
+            locale whose version cannot be read must not publish a null and
+            let a consumer read it as "unversioned".
+    """
+    pyproject = PACKS_DIR / locale / "pyproject.toml"
+    if not pyproject.exists():
+        raise SystemExit(
+            f"{locale}: no pyproject.toml at {pyproject}. Every shipped pack "
+            f"is a distributable and must declare the version it ships as."
+        )
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover - Python < 3.11
+        import tomli as tomllib  # type: ignore[no-redef]
+
+    data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    version = (data.get("project") or {}).get("version")
+    if not version:
+        raise SystemExit(
+            f"{locale}: pyproject.toml declares no [project] version, so the "
+            f"dataset cannot state which package version this locale ships."
+        )
+    return str(version)
+
+
 def build_locale_rows(
     locales: list[str], registry: dict[str, Any], rows: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -361,8 +570,11 @@ def build_locale_rows(
                 "rtl": bool(meta.get("rtl", False)),
                 "has_case_distinction": bool(meta.get("has_case_distinction", True)),
                 "tier": meta.get("status"),
+                "package_version": read_package_version(locale),
+                # Kept on the in-memory row for the card's headline count, and
+                # projected out of the published table by LOCALE_COLUMNS: it is
+                # derivable from the vocabulary config sitting beside it.
                 "terms_latest": per_locale_terms[locale],
-                "pack_versions": len(VERSIONS),
             }
         )
     out.sort(key=lambda r: r["locale"])
@@ -478,14 +690,32 @@ def write_json(
     return written
 
 
-def write_parquet(out: Path, name: str, rows: list[dict[str, Any]]) -> Path:
-    """Write one Parquet file with deterministic settings."""
+def write_parquet(
+    out: Path, name: str, rows: list[dict[str, Any]], columns: tuple[str, ...]
+) -> Path:
+    """Write one Parquet file with deterministic settings.
+
+    ``columns`` is the published schema and is applied here rather than in the
+    row builders, which keep the fuller dicts the assertions and the card read
+    (CORE-1986). Projecting is explicit and ordered: ``from_pylist`` would
+    otherwise take its column order from the first row's insertion order, which
+    is a property of how a dict happened to be built.
+    """
     import pyarrow as pa
     import pyarrow.parquet as pq
 
+    missing = [c for c in columns if rows and c not in rows[0]]
+    if missing:
+        raise SystemExit(
+            f"{name}: published schema names {missing}, which the rows do not "
+            f"carry. A column silently dropped from the builders would "
+            f"otherwise become a column silently missing from the dataset."
+        )
+    projected = [{c: row[c] for c in columns} for row in rows]
+
     path = out / "data" / f"{name}.parquet"
     path.parent.mkdir(parents=True, exist_ok=True)
-    table = pa.Table.from_pylist(rows)
+    table = pa.Table.from_pylist(projected)
     pq.write_table(
         table,
         path,
@@ -582,7 +812,11 @@ def render_normalization(nfkc: dict[str, Any]) -> str:
     )
 
 
-def render_card(manifest: dict[str, Any], pack_licenses: dict[str, int]) -> str:
+def render_card(
+    manifest: dict[str, Any],
+    pack_licenses: dict[str, int],
+    locale_rows: list[dict[str, Any]],
+) -> str:
     """Render the Hugging Face dataset card.
 
     Generated, never hand-edited: the card states counts, and a hand-edited
@@ -590,7 +824,6 @@ def render_card(manifest: dict[str, Any], pack_licenses: dict[str, int]) -> str:
     """
     counts = manifest["counts"]
     locales = manifest["locales"]
-    by_version = counts["terms_per_locale_by_version"]
     src = manifest["source"]
 
     # Quoted, always. Unquoted, YAML 1.1 reads `no` as boolean false, which is
@@ -621,9 +854,20 @@ def render_card(manifest: dict[str, Any], pack_licenses: dict[str, int]) -> str:
             f"honest state of that pack. "
         )
         promotion_note = ""
-    version_rows = "\n".join(
-        f"| {version} | {by_version[version]} |" for version in VERSIONS
+    # Listed out the way the canon and corpus cards list theirs: the frontmatter
+    # rollup is what the Hub indexes, this is what a reader actually reads.
+    language_rows = "\n".join(
+        f"| `{r['locale']}` | {r['language_name']} | {r['native_name']} "
+        f"| `{r['tier']}` | `{r['package_version']}` |"
+        for r in locale_rows
     )
+    tier_spread = ", ".join(
+        f"**{tier_counts.get(tier, 0)}** at `{tier}`" for tier in tiers_present
+    )
+    category_rows = "\n".join(
+        f"| `{name}` | {CATEGORY_BLURBS[name]} |" for name in SECTIONS
+    )
+    target_versions = ", ".join(f"`{v}`" for v in VERSIONS)
     normalization_section = render_normalization(manifest.get("nfkc_unstable") or {})
     license_note = ""
     if not licenses_agree(pack_licenses):
@@ -663,20 +907,76 @@ configs:
 
 # Legesher Language Packs
 
-The vocabulary Legesher ships: Python's keywords, builtins, exceptions and
-reserved words, rendered in {counts["locales"]} human languages across
-{counts["python_versions"]} interpreter versions.
+A **language pack** is what a programming language's reserved words are called
+in one natural language.
 
-## Corpus, canon, or packs — which one do I want?
+Every word a programming language reserves — its keywords, its builtins, its
+exception hierarchy — rendered in a natural language, in a form that language's
+own script and grammar accept as an identifier. A developer who does not read
+English memorises `def` and `ValueError` as shapes; a pack lets them read the
+words instead.
 
-{THREE_LAYERS}
-Take this dataset if you want the words Legesher ships. Take the canon if you
-want the decision and its maturity. Take the corpus if you want the evidence
-behind both, including the renderings that were proposed and not chosen.
+A pack is what the tooling loads: the terminology settled, resolved into the
+structure its target programming language needs, and stamped with how much
+review stands behind it.
 
-The corpus is also wider in one respect: it holds a small set of Arabic
-renderings of JavaScript concepts, which are out of scope here — `target` is
-`python` on every row in this dataset.
+This release carries {counts["locales"]} natural languages.
+
+## Languages
+
+Every language in this export, with where it sits on the maturity ladder and
+the version of its own package. The primary-subtag rollup in the frontmatter is
+what the Hub indexes for search; this is the full list.
+
+| Pack | Language | Native name | Status | Package |
+| --- | --- | --- | --- | --- |
+{language_rows}
+
+Today: {tier_spread}.
+
+The `locales` config carries this same list, so you can sort and filter it
+rather than read it.
+
+## What a pack is made of
+
+### Target
+
+Every pack targets **one programming language**, and the target is what decides
+the pack's shape: which categories exist, what counts as a reserved word, and
+which forms a rendering is allowed to take. One settled term is rendered
+differently for different targets, because each programming language's grammar
+admits different identifiers.
+
+**This release ships the `python` target**, across
+{counts["python_versions"]} interpreter versions ({target_versions}).
+Selections exist internally for other targets and are deliberately excluded:
+exporting them would publish terminology labelled by a target it has not been
+reviewed for.
+
+### Categories
+
+Terminology is partitioned, and the partitions are the target's, not ours:
+
+| Category | What it holds |
+| --- | --- |
+{category_rows}
+
+### Versions
+
+A target moves, and its vocabulary moves with it. Packs for later versions
+carry only what changed and inherit the rest, so a pack is a delta over its
+base rather than a full copy.
+
+The rows in this dataset are given **resolved**: each one states what you would
+actually get on that version, with the delta structure preserved alongside it
+rather than erased by the flattening.
+
+### What is not here
+
+The **style guide** — the rules that govern how a rendering is formed for a
+language, such as how multi-word terms are joined — is a separate system and is
+not exported in this dataset. A pack is the result those rules produced, not
+the rules themselves.
 
 ## Maturity
 
@@ -699,26 +999,16 @@ Every rendering here was drafted by a language model and then curated by
 Legesher's maintainers, who kept it, replaced it, or rewrote it. That is the
 whole provenance: no pack in this release has been signed off by a native
 speaker of its language, and none of the maintainers is a native speaker of most
-of them. Endorsements do exist, but they live in the corpus and they are at
-contributor rung — one person backing one rendering, which is a data point about
-that rendering and not a review of the pack it sits in. Nothing on the review
-ladder above `experimental` has been earned yet.
+of them. Nothing on the review ladder above `experimental` has been earned yet.
 
-## Contents
-
-| Python | Terms per locale |
-| --- | --- |
-{version_rows}
-
-The vocabulary grows with the language: 3.11 adds `except*` and the two
-exception-group types, 3.12 adds `type`.
+## The dataset
 
 ### `vocabulary`
 
 One row per (locale, interpreter version, category, source term):
 
-* `locale`, `language_name`, `native_name`, `rtl`
-* `target` — always `python` in this release
+* `locale` — join key into `locales`, which carries the language's names,
+  script direction and maturity
 * `python_version`, `category` (`keywords` / `builtins` / `exceptions` /
   `reserved_words`)
 * `source_term` — the English term, e.g. `for`, `ValueError`
@@ -726,20 +1016,30 @@ One row per (locale, interpreter version, category, source term):
 * `defined_at` — the interpreter version whose pack file defines this term
 * `inherited` — true when the term is inherited rather than defined at
   `python_version`
-* `tier` — the maturity stamp
 
-Packs for 3.11+ carry only a delta and inherit the rest, so rows are given
-**resolved**: `python_version` is what you would actually get on that
-interpreter. `defined_at` and `inherited` preserve the delta structure.
+`defined_at` and `inherited` are what preserve the delta structure through the
+resolution described above.
+
+Everything true of a language rather than of a row lives in `locales` and is
+joined, not repeated. `target` is not a column: every row in this release is
+Python.
 
 ### `locales`
 
 One row per shipped locale: identity (`iso639_2`, `bcp47`), script properties
-(`rtl`, `has_case_distinction`), `tier`, and term counts.
+(`rtl`, `has_case_distinction`), `tier`, and `package_version`.
 
-Join this dataset to the corpus on `bcp47`, not on `locale`: a pack id is not a
-locale tag (`no` here is `nb` in the corpus, `zh` is `zh-Hans`), so joining on
-the pack id drops exactly the rows that differ.
+`package_version` is the semver of that language's own distributable, and it is
+how you line this dataset up against the packages: a row reading
+`ar` / `0.0.4` means these are the words in `legesher-i18n-python-ar==0.0.4`.
+Each language versions on its own clock, because each is corrected and promoted
+on its own — so there is no single "pack version" for the set, and this column
+is the per-language answer instead.
+
+**`locale` is a pack id, not a language tag.** Where the two differ, `locale` is
+the shorter form: `no` is BCP 47 `nb`, `zh` is `zh-Hans`, `sr` is `sr-Cyrl`.
+Join to anything keyed by language tag on `bcp47`, or you drop exactly the rows
+that differ.
 
 ### JSON
 
@@ -757,15 +1057,16 @@ Generated from the pack tree at monorepo commit `{src["commit"][:12]}`
 regenerable: `manifest.json` carries a SHA-256 for every file and names the
 toolchain that produced them.
 
-The source is the YAML pack tree, not the selection database. This matters:
-the database also holds selections for other targets, and sourcing from it
-would publish terminology this artifact does not claim to cover.
+The source is the YAML pack tree, not the selection database. This matters: the
+database also holds selections for targets this release does not cover, and
+sourcing from it would publish terminology labelled by a target it has not been
+reviewed for.
 {license_note}
 ## Citation
 
 ```bibtex
 @misc{{legesher_language_packs,
-  title        = {{Legesher Language Packs: Python reserved-word vocabulary in {counts["locales"]} languages}},
+  title        = {{Legesher Language Packs: programming vocabulary rendered in {counts["locales"]} natural languages}},
   author       = {{Legesher}},
   year         = {{2026}},
   publisher    = {{Hugging Face}},
@@ -785,6 +1086,196 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+class ExportRefused(SystemExit):
+    """A gate refused the push. Named so a caller can tell it from a crash."""
+
+
+def require_push_approval(governance_signoff: str | None) -> None:
+    """Refuse to push without the governance sign-off AND the env approval.
+
+    Runs BEFORE the export writes anything and BEFORE any network library is
+    imported.
+
+    Raises:
+        ExportRefused: unless both keys are turned.
+    """
+    if governance_signoff != GOVERNANCE_TICKET:
+        raise ExportRefused(
+            f"PUSH REFUSED: --push requires --governance-signoff "
+            f"{GOVERNANCE_TICKET}. Publishing terminology under a community's "
+            "name is a governance decision, not a scripting one."
+        )
+    if os.environ.get(PUSH_ENV_VAR) != "1":
+        raise ExportRefused(
+            f"PUSH REFUSED: --push requires {PUSH_ENV_VAR}=1 in the "
+            "environment. The flag and the variable are deliberately two "
+            "separate keys: a command-line typo must not be able to publish."
+        )
+
+
+def require_intended_target(target_repo: str) -> None:
+    """Refuse to push anywhere but the canonical repo without a second key.
+
+    Raises:
+        ExportRefused: if the target is non-default and not repeated in
+            :data:`TARGET_OVERRIDE_ENV_VAR`.
+    """
+    if target_repo == DEFAULT_TARGET_REPO:
+        return
+    if os.environ.get(TARGET_OVERRIDE_ENV_VAR) != target_repo:
+        raise ExportRefused(
+            f"PUSH REFUSED: --target-repo {target_repo!r} is not the canonical "
+            f"{DEFAULT_TARGET_REPO!r}. A non-default destination must be "
+            f"repeated verbatim in {TARGET_OVERRIDE_ENV_VAR} -- a typo must not "
+            "be able to publish to the wrong namespace."
+        )
+
+
+def require_reproducible_source(source: dict[str, str]) -> None:
+    """Refuse to push a revision that cannot be rebuilt from the commit it names.
+
+    The runbook's second precondition is "clean AND tagged". Both halves are
+    checked here, because the manifest records both and recording only helps a
+    reader who checks.
+
+    Clean: a published revision is pinned by consumers against the commit in
+    its manifest; if the tree had uncommitted changes, that commit rebuilds
+    something else. Export freely from a dirty tree -- publish from one, never.
+    "git unavailable" is refused with the same force, because both mean the
+    provenance claim is unverified and only one of them looks alarming.
+
+    Tagged: the tag is how a Hub revision, a release ticket and the card's
+    provenance line say the same version out loud. An untagged push stamps
+    ``(untagged)`` into the card and leaves the three with no shared name.
+
+    Raises:
+        ExportRefused: unless the worktree was clean and the commit tagged.
+    """
+    worktree = source.get("worktree")
+    if worktree != "clean":
+        raise ExportRefused(
+            f"PUSH REFUSED: worktree is {worktree!r}, so the manifest's commit "
+            f"({source.get('commit', 'unknown')[:12]}) does not rebuild this "
+            "artifact. Commit or stash, then re-run. Exporting from a dirty "
+            "tree is fine; pinning a public revision to a commit it did not "
+            "come from is not."
+        )
+    tag = source.get("tag", UNTAGGED)
+    # Checked against the prefix, not merely against "is there a tag". A
+    # release commit here routinely carries `v0.24.0` and a per-pack
+    # `i18n-python-ar-v0.0.4` as well; accepting any of them would stamp a
+    # version string this dataset does not have, which is the failure this
+    # gate exists to prevent rather than a near-miss of it.
+    if not tag.startswith(TAG_PREFIX):
+        raise ExportRefused(
+            f"PUSH REFUSED: commit {source.get('commit', 'unknown')[:12]} "
+            f"carries no {TAG_PREFIX}* tag (found {tag!r}), so the card's "
+            f"provenance would name no version this dataset shares with its "
+            f"release. Tag first, e.g. `git tag {TAG_PREFIX}<YYYY.MM.DD>`, "
+            f"then re-run."
+        )
+
+
+def require_license_agreement(pack_licenses: dict[str, int]) -> None:
+    """Refuse to push while the declared and per-pack licences disagree.
+
+    "Reconcile before publishing" is what the export has always printed here.
+    On a push that is a gate, not advice: both claims become public in the same
+    revision, and a reader has no way to tell which one is load-bearing.
+
+    Reads only the pack YAML, so it belongs with the pre-export gates rather
+    than after the artifact is built.
+
+    Raises:
+        ExportRefused: if the compilation licence and the packs disagree.
+    """
+    if licenses_agree(pack_licenses):
+        return
+    rendered = ", ".join(f"{n}={c}" for n, c in sorted(pack_licenses.items()))
+    raise ExportRefused(
+        f"PUSH REFUSED: the card declares {DECLARED_LICENSE!r} for the "
+        f"compilation, but the packs' own metadata.license says: {rendered}. "
+        f"Both claims are public once pushed; reconcile them first."
+    )
+
+
+def _require_hf_api() -> Any:
+    """Import huggingface_hub lazily and return the ``HfApi`` class."""
+    try:
+        from huggingface_hub import HfApi
+    except ImportError:  # pragma: no cover - environment-dependent
+        raise ExportRefused(
+            "huggingface_hub is required to push. Install it with "
+            "`uv pip install huggingface_hub`, then `hf auth login`."
+        ) from None
+    return HfApi
+
+
+def preflight_hub_auth() -> None:
+    """Fail a push on missing Hub auth BEFORE the export runs.
+
+    Without a preflight an unauthenticated run does all the export work and
+    then dies mid-upload, leaving a fully-built artifact behind as if it were
+    push-ready.
+
+    Raises:
+        ExportRefused: if the library is missing or the token is absent/bad.
+    """
+    hf_api = _require_hf_api()
+    try:
+        who = hf_api().whoami()
+    except Exception as error:  # hub raises several exception types here
+        raise ExportRefused(
+            f"PUSH REFUSED: not authenticated to the Hugging Face Hub ({error}). "
+            "Run `hf auth login` or set HF_TOKEN, then re-run."
+        ) from None
+    print(f"Hub auth ok: {who.get('name', '?')}")
+
+
+def push_to_hub(out_dir: Path, target_repo: str) -> None:
+    """Upload the exported packs to the Hugging Face Hub.
+
+    Private-first, and this tool NEVER changes visibility. Going public is a
+    separate deliberate action on the Hub, so no invocation of this script can
+    accidentally publish. Note that ``private`` and ``gated`` are independent
+    flags and a gated failure is invisible to a signed-in maintainer: verify a
+    publish anonymously, never from the pushing session.
+    """
+    api = _require_hf_api()()
+    api.create_repo(
+        repo_id=target_repo,
+        repo_type="dataset",
+        private=True,
+        exist_ok=True,
+    )
+    info = api.upload_folder(
+        folder_path=str(out_dir),
+        repo_id=target_repo,
+        repo_type="dataset",
+        allow_patterns=list(PUSH_ALLOW_PATTERNS),
+        # upload_folder only ADDS. The export rebuilds --out from scratch, but
+        # that says nothing about the remote: a locale withdrawn by a
+        # contributor, or a Python version dropped at EOL, leaves its files on
+        # the Hub forever -- present in the dataset, absent from manifest.json,
+        # accounted for by nothing. Scoped to the same patterns the upload
+        # carries so it can only ever remove files this export owns.
+        delete_patterns=list(PUSH_ALLOW_PATTERNS),
+        # A dataset repo's commit history is as public as its files, so the
+        # message obeys the same rule they do: no internal ticket.
+        commit_message="packs export",
+    )
+    print(f"Pushed {out_dir} -> {target_repo}")
+    # The runbook says to pin the revision against the release ticket, so
+    # print the thing being pinned rather than sending the operator to the Hub
+    # to copy it by hand.
+    revision = getattr(info, "oid", None)
+    if revision:
+        print(f"revision:         {revision}")
+    url = getattr(info, "commit_url", None)
+    if url:
+        print(f"commit:           {url}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True, help="Output directory")
@@ -793,7 +1284,40 @@ def main() -> int:
         action="store_true",
         help="Export twice into separate trees and compare every checksum",
     )
+    parser.add_argument(
+        "--push",
+        action="store_true",
+        help=(
+            "upload to the Hub. Refuses without the gates below; never changes "
+            "visibility, so it cannot publish a private dataset"
+        ),
+    )
+    parser.add_argument(
+        "--target-repo",
+        default=DEFAULT_TARGET_REPO,
+        help=(
+            f"push destination (default {DEFAULT_TARGET_REPO}). Anything else "
+            f"must be repeated verbatim in {TARGET_OVERRIDE_ENV_VAR}"
+        ),
+    )
+    parser.add_argument(
+        "--governance-signoff",
+        help=(
+            f"must be {GOVERNANCE_TICKET} to push, and {PUSH_ENV_VAR}=1 must be "
+            f"set in the environment: two keys, so a typo cannot publish"
+        ),
+    )
     args = parser.parse_args()
+
+    # Silently accepting push flags without --push lets a forgotten --push exit
+    # 0 looking like a successful publish.
+    if not args.push and (
+        args.governance_signoff or args.target_repo != DEFAULT_TARGET_REPO
+    ):
+        raise SystemExit(
+            "--target-repo/--governance-signoff are push options, but --push "
+            "was not given. Nothing would be uploaded. Add --push, or drop them."
+        )
 
     registry = load_registry()
     locales = pack_locales()
@@ -802,6 +1326,29 @@ def main() -> int:
     rows = build_rows(locales, registry)
     assert_python_only(rows)
     locale_rows = build_locale_rows(locales, registry, rows)
+
+    # ONE snapshot, taken before anything is written and reused for both the
+    # gate and the manifest. Two calls would let the gate pass on a clean tree
+    # and the manifest then record `dirty`, because writing the export into a
+    # non-ignored --out dirties the very tree being described -- publishing as
+    # false the exact claim the gate exists to protect.
+    source = git_describe(_I18N_ROOT)
+    pack_licenses = check_license_consistency(locales)
+
+    # Every gate that can run before the export does. An unauthenticated or
+    # unapproved run must not leave a fully-built artifact sitting there
+    # looking push-ready. All of these read git, the registry or the pack YAML
+    # -- none needs a built artifact -- so the export never starts.
+    if args.push:
+        require_push_approval(args.governance_signoff)
+        require_intended_target(args.target_repo)
+        require_reproducible_source(source)
+        require_license_agreement(pack_licenses)
+        preflight_hub_auth()
+        # The runbook has always said determinism should be verified for any
+        # revision that will be published. A push makes that mechanical rather
+        # than remembered.
+        args.verify_deterministic = True
 
     out: Path = args.out
     # Rebuilt from scratch. A folder upload publishes whatever is on disk, so a
@@ -812,80 +1359,85 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
 
     json_files = write_json(out, rows, locales, registry)
-    vocab_parquet = write_parquet(out, "vocabulary", rows)
-    locales_parquet = write_parquet(out, "locales", locale_rows)
+    vocab_parquet = write_parquet(out, "vocabulary", rows, VOCABULARY_COLUMNS)
+    locales_parquet = write_parquet(out, "locales", locale_rows, LOCALE_COLUMNS)
 
     import pyarrow
 
-    source = git_describe(_I18N_ROOT)
     tiers = sorted({r["tier"] for r in locale_rows})
-    pack_licenses = check_license_consistency(locales)
 
-    # Every locale ships the same term set at a given version, so this is one
-    # number per version, not a distribution. Assert that rather than assume
-    # it: an uneven locale would make the card's headline count a fiction.
-    per_pack: Counter[tuple[str, str]] = Counter(
-        (r["locale"], r["python_version"]) for r in rows
+    def build_manifest(
+        tree: Path,
+        files: list[Path],
+        vocab_rows: list[dict[str, Any]],
+        loc_rows: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """The manifest for one exported tree.
+
+        A function rather than a literal so the determinism pass can rebuild it
+        for the second tree and compare.
+
+        Both row sets are PARAMETERS, never captured from the enclosing scope.
+        Closing over the first pass's rows would make the second manifest a
+        partial copy of the first, and the determinism check would then be
+        comparing a file against itself -- proving nothing about exactly the
+        file it was widened to cover.
+        """
+        pass_tiers = sorted({r["tier"] for r in loc_rows})
+        return {
+            # Named from the push target so a rehearsal artifact does not tell its
+            # readers to cite the production one.
+            "artifact": args.target_repo,
+            "layer": "packs",
+            "description": (
+                "The reserved-word vocabulary Legesher's language packs "
+                "carry: what a programming language's keywords, builtins and "
+                "exceptions are called in each natural language."
+            ),
+            "source": source,
+            "toolchain": {
+                "pyarrow": pyarrow.__version__,
+                "python": f"{sys.version_info.major}.{sys.version_info.minor}",
+            },
+            "counts": {
+                "locales": len(locales),
+                "python_versions": len(VERSIONS),
+                "pack_files": len(locales) * len(VERSIONS),
+                "vocabulary_rows": len(vocab_rows),
+                # Per interpreter version, because the vocabulary grows with the
+                # language: 3.11 adds except* and the two exception-group types,
+                # 3.12 adds type. A single "terms per locale" figure would be an
+                # average of five different numbers and match none of them.
+                "terms_per_locale_by_version": terms_per_version(vocab_rows),
+            },
+            "tiers_present": pass_tiers,
+            "tier_counts": {
+                tier: sum(1 for r in loc_rows if r["tier"] == tier)
+                for tier in pass_tiers
+            },
+            # Measured on the emitted rows so the card's normalization note and the
+            # manifest cannot disagree, and so neither carries a number that the
+            # next pack regeneration silently invalidates.
+            "nfkc_unstable": nfkc_instability(vocab_rows),
+            "declared_license": DECLARED_LICENSE,
+            "pack_metadata_licenses": pack_licenses,
+            "categories": list(SECTIONS),
+            "python_versions": list(VERSIONS),
+            "locales": locales,
+            "files": {
+                str(f.relative_to(tree)): sha256(f)
+                for f in sorted(files, key=lambda f: str(f.relative_to(tree)))
+            },
+        }
+
+    manifest = build_manifest(
+        out, [vocab_parquet, locales_parquet, *json_files], rows, locale_rows
     )
-    terms_by_version: dict[str, int] = {}
-    for version in VERSIONS:
-        sizes = {n for (_, v), n in per_pack.items() if v == version}
-        if len(sizes) != 1:
-            raise SystemExit(
-                f"Locales disagree on term count at Python {version}: "
-                f"{sorted(sizes)}. The dataset cannot state one number per "
-                f"version until they agree."
-            )
-        terms_by_version[version] = sizes.pop()
-    manifest = {
-        "artifact": "legesher/language-packs",
-        "layer": "canon",
-        "description": (
-            "The decision layer: the vocabulary Legesher ships in its Python "
-            "language packs. The evidence layer is legesher/language-corpus."
-        ),
-        "source": source,
-        "toolchain": {
-            "pyarrow": pyarrow.__version__,
-            "python": f"{sys.version_info.major}.{sys.version_info.minor}",
-        },
-        "counts": {
-            "locales": len(locales),
-            "python_versions": len(VERSIONS),
-            "pack_files": len(locales) * len(VERSIONS),
-            "vocabulary_rows": len(rows),
-            # Per interpreter version, because the vocabulary grows with the
-            # language: 3.11 adds except* and the two exception-group types,
-            # 3.12 adds type. A single "terms per locale" figure would be an
-            # average of five different numbers and match none of them.
-            "terms_per_locale_by_version": terms_by_version,
-        },
-        "tiers_present": tiers,
-        "tier_counts": {
-            tier: sum(1 for r in locale_rows if r["tier"] == tier) for tier in tiers
-        },
-        # Measured on the emitted rows so the card's normalization note and the
-        # manifest cannot disagree, and so neither carries a number that the
-        # next pack regeneration silently invalidates.
-        "nfkc_unstable": nfkc_instability(rows),
-        "declared_license": DECLARED_LICENSE,
-        "pack_metadata_licenses": pack_licenses,
-        "categories": list(SECTIONS),
-        "python_versions": list(VERSIONS),
-        "locales": locales,
-        "files": {
-            str(p.relative_to(out)): sha256(p)
-            for p in sorted(
-                [vocab_parquet, locales_parquet, *json_files],
-                key=lambda p: str(p.relative_to(out)),
-            )
-        },
-    }
     (out / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     (out / "README.md").write_text(
-        render_card(manifest, pack_licenses), encoding="utf-8"
+        render_card(manifest, pack_licenses, locale_rows), encoding="utf-8"
     )
 
     print(f"locales:          {len(locales)}")
@@ -912,18 +1464,38 @@ def main() -> int:
             shutil.rmtree(second)
         second.mkdir(parents=True)
         rows2 = build_rows(locales, registry)
+        locale_rows2 = build_locale_rows(locales, registry, rows2)
         json2 = write_json(second, rows2, locales, registry)
-        v2 = write_parquet(second, "vocabulary", rows2)
-        l2 = write_parquet(
-            second, "locales", build_locale_rows(locales, registry, rows2)
+        v2 = write_parquet(second, "vocabulary", rows2, VOCABULARY_COLUMNS)
+        l2 = write_parquet(second, "locales", locale_rows2, LOCALE_COLUMNS)
+        # The card and the manifest are two of the four published file classes,
+        # and the two this export most recently got wrong. Leaving them out of
+        # the determinism proof means the operator reads a green line about a
+        # surface it never checked.
+        manifest2 = build_manifest(second, [v2, l2, *json2], rows2, locale_rows2)
+        m2 = second / "manifest.json"
+        m2.write_text(
+            json.dumps(manifest2, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        r2 = second / "README.md"
+        r2.write_text(
+            render_card(manifest2, pack_licenses, locale_rows2), encoding="utf-8"
         )
         # Keyed on the relative path, never zipped. Zipping two sorted lists
         # silently truncates to the shorter one, so a run that produced FEWER
         # files than the first would still report "deterministic".
         first_map = {
-            p.relative_to(out): p for p in [vocab_parquet, locales_parquet, *json_files]
+            p.relative_to(out): p
+            for p in [
+                vocab_parquet,
+                locales_parquet,
+                out / "manifest.json",
+                out / "README.md",
+                *json_files,
+            ]
         }
-        second_map = {p.relative_to(second): p for p in [v2, l2, *json2]}
+        second_map = {p.relative_to(second): p for p in [v2, l2, m2, r2, *json2]}
         only_first = sorted(str(k) for k in first_map.keys() - second_map.keys())
         only_second = sorted(str(k) for k in second_map.keys() - first_map.keys())
         mismatches = sorted(
@@ -940,6 +1512,11 @@ def main() -> int:
                 print(f"  {name}")
             return 1
         print(f"deterministic:    {len(first_map)} file(s) reproduced identically")
+
+    # Last, and only after determinism proved: a revision that does not
+    # reproduce is not one to pin consumers against.
+    if args.push:
+        push_to_hub(out, args.target_repo)
 
     return 0
 
