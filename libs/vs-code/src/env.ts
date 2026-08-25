@@ -29,7 +29,8 @@ export function loadEnvVariables(extensionPath: string): void {
 
     // Try to find .env file in monorepo root
     const possiblePaths = [
-        // Development: extensionPath is /tmp/CORE-XXX/libs/vs-code or /path/to/legesher/libs/vs-code
+        // Development: extensionPath ends in libs/vs-code, so the repo root
+        // holding .env is two levels up.
         path.join(extensionPath, '..', '..', '.env'),
         // Packaged extension fallback
         path.join(extensionPath, '.env'),

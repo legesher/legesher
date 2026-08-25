@@ -1,4 +1,4 @@
-"""Legesher runtime — localized tracebacks for Python (CORE-1679).
+"""Legesher runtime — localized tracebacks for Python.
 
 ``legesher_runtime`` re-renders uncaught-exception tracebacks in the
 developer's natural language: structural strings and message templates come

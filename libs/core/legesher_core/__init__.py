@@ -9,7 +9,7 @@ Public API:
         - TreeSitterTranslator: Tree-sitter translation engine (4x faster, AST-based)
         - TokenMapper: Language map abstraction
 
-    Language Abstraction Interface (CORE-415):
+    Language Abstraction Interface:
         - Translator: Protocol defining translator interface
         - create_translator: Factory function for creating translators
         - create_translator_from_language_pack: Convenience factory for language packs
@@ -47,7 +47,7 @@ Example:
     >>> code = "def greet():\\n    print('Hello')"
     >>> spanish_code = translator.translate_code(code, "en", "es")
 
-    >>> # Using factory function (CORE-415)
+    >>> # Using factory function
     >>> from legesher_core import create_translator
     >>> translator = create_translator("python", spanish_keywords, spanish_builtins)
     >>> # Or use environment variable: export LEGESHER_USE_TREE_SITTER=true

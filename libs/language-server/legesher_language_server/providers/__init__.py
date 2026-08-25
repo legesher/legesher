@@ -1,12 +1,26 @@
 """LSP feature providers for Legesher Language Server.
 
-This package contains provider modules for various LSP features:
-- hover: Hover tooltips with translated docstrings (CORE-357)
-- completion: IntelliSense with localized keywords (CORE-358)
-- diagnostic: Translated error messages (CORE-359)
-- semantic_tokens: Syntax highlighting for translated keywords (CORE-450)
+Each module answers one LSP request against the user's language pack:
 
-All providers are currently stubs and will be implemented in subsequent issues.
+- ``hover``: hover tooltips with translated keyword and builtin documentation
+- ``completion``: completion items for localized keywords, Python's builtins
+  under their English names, and symbols declared in the current file
+- ``diagnostic``: parse-time errors (SyntaxError and its kin) rendered from
+  translated message templates
+- ``semantic_tokens``: token classification so translated keywords highlight
+  like their English counterparts
+
+In ``hover`` and ``semantic_tokens``, which word a keyword or builtin maps to
+comes from the user's language pack, so that part follows all shipped packs;
+``completion`` reads the pack for keywords only and offers builtins under
+their English names. The prose attached to a word — the documentation
+``hover`` shows and the message text ``diagnostic`` renders — is written out
+in this package and currently covers English, Spanish, and Arabic only; other
+languages get the localized word without the explanation.
+
+The server calls these directly; they are the baseline that works with no
+external tooling installed. When an external type-aware server is configured,
+``enhanced_intelligence`` enriches the hover and diagnostic answers on top.
 """
 
 from .completion import provide_completion

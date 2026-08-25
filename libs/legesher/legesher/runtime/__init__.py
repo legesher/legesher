@@ -1,18 +1,23 @@
-"""Legesher runtime package for native language Python execution.
+"""Import and traceback support for running localized Python.
 
-This package provides the revolutionary import hook system that enables
-seamless execution of Python code written in any natural language.
+This package is what ``legesher run`` installs. The import hook translates a
+localized module to canonical Python at import time, and the source mapper
+keeps a record of where each translated line came from so tracebacks can point
+back at the file the developer actually wrote.
 
 Components:
-- Import hooks for native language modules (import_hook.py)
-- Source mapping for accurate error reporting (source_mapper.py)
-- Error translation for native language exceptions (error_handler.py)
+- Import hooks for native language modules (``import_hook``)
+- Source mapping for accurate error reporting (``source_mapper``)
+- Traceback frames rendered against the localized source (``error_handler``)
+
+Exception *messages* are a separate concern, handled by the ``legesher_runtime``
+package, which renders type names and message text from the language pack.
 
 Example:
     >>> from legesher.runtime import install_import_hook, install_error_handler
     >>> install_import_hook("es")  # Spanish
     >>> install_error_handler("es")
-    >>> import mi_modulo  # Works seamlessly!
+    >>> import mi_modulo
 """
 
 from legesher.runtime.error_handler import LegesherErrorHandler, install_error_handler

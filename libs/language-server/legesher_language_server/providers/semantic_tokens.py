@@ -4,8 +4,6 @@ This module provides LSP semantic token highlighting for translated Python keywo
 builtins, exceptions, class names, function names, and first function parameters.
 Uses Python's tokenize module with a lightweight state machine for context-aware
 token classification.
-
-Implementation for CORE-450, extended by CORE-709 and CORE-895.
 """
 
 import builtins as builtins_module
@@ -57,8 +55,9 @@ def provide_semantic_tokens(server: "LegesherLanguageServer", uri: str) -> Seman
     Returns:
         Semantic tokens encoded in LSP delta format, or None if document not found
 
-    Note:
-        Implementation for CORE-450 - Phase 1: Basic keyword highlighting
+    Classifies translated keywords, builtins, exceptions, class and function
+    names, and first parameters, so an editor colors them the same way it
+    colors their English counterparts.
     """
     # Get document
     doc = server.document_manager.get_document(uri)

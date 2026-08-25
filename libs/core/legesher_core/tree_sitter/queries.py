@@ -1,7 +1,10 @@
 """Pre-defined tree-sitter queries for common Python patterns.
 
-These queries provide convenient patterns for matching common Python
-constructs. They will be used extensively in CORE-414 for keyword translation.
+These are reference patterns for matching common Python constructs with
+tree-sitter. Nothing in the engine reads them: ``TreeSitterTranslator``
+finds the nodes it rewrites by walking the parse tree itself. They are kept
+as a starting point for callers writing their own queries against a Legesher
+parse tree.
 """
 
 # Query for all function definitions
@@ -26,15 +29,17 @@ CLASS_DEFINITIONS = """
 ) @class
 """
 
-# Query for all Python keywords (for translation in CORE-414)
+# Query for all Python keywords
 # Captures: @keyword (each keyword token individually)
 # Validation: Uses tree-sitter's string literal matching to identify exact keywords
 # Note: True, False, None are keyword constants in Python, not just identifiers.
 #       This pattern ensures we match them as keywords, not as variable names.
 #       The query deliberately uses exact string matching [literals] instead of
 #       named node types, which is tree-sitter's recommended pattern for keywords.
-# TODO: Consider generating this dynamically from legesher_i18n.scripts.translate.term_classifier
-#       Currently missing Python 3.11+ (except*) and 3.12+ (type) keywords
+# Scope: this list is written out by hand and covers Python 3.10. It omits the
+#       later additions (3.11 `except*`, 3.12 `type`). Nothing in the engine
+#       runs this query, so the gap is inert — but derive the set from the
+#       language pack before making it load-bearing.
 KEYWORDS_QUERY = """
 [
   "def" "class" "if" "elif" "else"

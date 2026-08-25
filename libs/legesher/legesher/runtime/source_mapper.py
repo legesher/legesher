@@ -61,9 +61,11 @@ class LegesherSourceMapper:
         """
         self._native_sources[filename] = native_source
 
-        # Create line-by-line mapping
-        # For MVP: Simple 1:1 mapping (line N in native = line N in English)
-        # TODO: Future enhancement with AST-based structural matching
+        # Line N in the native source maps to line N in the English source.
+        # That holds because keyword/builtin substitution is line-preserving:
+        # the translator never splits, joins, or reorders lines. A future
+        # translation mode that did would need structural (AST-based)
+        # matching here instead of this index identity.
         native_lines = native_source.splitlines()
         english_lines = english_source.splitlines()
 

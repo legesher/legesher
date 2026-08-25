@@ -128,7 +128,7 @@ class TreeSitterTranslator:
         Translation process:
         1. Normalize line endings (\\r\\n → \\n)
         2. Parse source code using tree-sitter
-        3. Query for keyword nodes using KEYWORDS_QUERY
+        3. Walk the parse tree for keyword and identifier nodes
         4. Identify builtin function calls in the AST
         5. Replace keywords/builtins with translated versions
         6. Reconstruct code preserving exact formatting

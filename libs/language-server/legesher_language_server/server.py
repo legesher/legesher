@@ -150,10 +150,10 @@ class LegesherLanguageServer(LanguageServer):
 
     This server provides translation-aware IDE features including:
     - Document synchronization
-    - Hover tooltips (CORE-357)
-    - Code completion (CORE-358)
-    - Diagnostics (CORE-359)
-    - Semantic token highlighting (CORE-450)
+    - Hover tooltips
+    - Code completion
+    - Diagnostics
+    - Semantic token highlighting
     """
 
     def __init__(self, config: LanguageServerConfig):
@@ -557,7 +557,9 @@ class LegesherLanguageServer(LanguageServer):
         self.document_manager.close_document(params.text_document.uri)
         logger.debug(f"Document closed: {params.text_document.uri}")
 
-    # Provider stubs - Implemented in CORE-357, 358, 359
+    # LSP request handlers. Each delegates to the matching module in
+    # `providers/`, and the two that an external type-aware server can improve
+    # on — hover and diagnostics — try `enhanced_intelligence` first.
 
     async def on_hover(self, params: HoverParams) -> Hover | None:
         """Provide hover information at cursor position.
@@ -568,8 +570,9 @@ class LegesherLanguageServer(LanguageServer):
         Returns:
             Hover information or None
 
-        Note:
-            Implementation in CORE-357 with enhanced-intelligence enrichment in CORE-360
+        Tries the external type-aware server first when one is running, and
+        falls back to the built-in provider if it is absent, times out, or
+        returns nothing.
         """
         # Try the language server first for advanced type information (CORE-360)
         if self.intelligence_proxy and self.intelligence_proxy.is_running():
@@ -596,8 +599,8 @@ class LegesherLanguageServer(LanguageServer):
         Returns:
             List of completion items
 
-        Note:
-            STUB - Full implementation in CORE-358
+        The list is marked complete, so an editor may filter it client-side as
+        typing continues instead of re-requesting.
         """
         items = await provide_completion(self, params.text_document.uri, params.position)
         return CompletionList(is_incomplete=False, items=items)
@@ -611,8 +614,9 @@ class LegesherLanguageServer(LanguageServer):
         Returns:
             Document diagnostics
 
-        Note:
-            STUB - Full implementation in CORE-359
+        Merges the built-in translated diagnostics with anything the external
+        type-aware server reports, deduplicated. The built-in set is always
+        produced, so diagnostics survive that server being unavailable.
         """
         # Get basic diagnostics
         basic_diagnostics = await provide_diagnostics(self, params.text_document.uri)
@@ -651,8 +655,7 @@ class LegesherLanguageServer(LanguageServer):
         Returns:
             Semantic tokens for syntax highlighting
 
-        Note:
-            Implementation in CORE-450 - Phase 1: Basic keyword highlighting
+        Returns None when the document is not open.
         """
         return provide_semantic_tokens(self, params.text_document.uri)
 

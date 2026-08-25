@@ -5,7 +5,9 @@ Python code between languages. When keywords change length (e.g.,
 'definir' (7) → 'def' (3)), line/column positions shift. This class
 tracks those shifts to accurately map positions in both directions.
 
-Implementation for CORE-360 - enhanced Python intelligence.
+It is what lets an answer computed against canonical English text — a hover
+range, a diagnostic span — land on the right characters of the localized
+source the reader is actually looking at.
 """
 
 from dataclasses import dataclass

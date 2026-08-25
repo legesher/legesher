@@ -3,11 +3,12 @@
 This module provides factory functions and utilities for creating translator instances,
 supporting multiple backends (token-based, tree-sitter) and programming languages.
 
-Introduced in CORE-415 to enable:
-- Polymorphic translator usage via Protocol
-- Easy switching between translator backends
-- Environment-based configuration
-- Foundation for multi-language support (TypeScript, JavaScript, etc.)
+What the indirection buys you:
+- Translators are used through a Protocol, so calling code does not name a
+  concrete class
+- Backends are swapped without touching that calling code
+- The backend can be chosen from the environment rather than in source
+- Targets beyond Python (TypeScript, JavaScript) fit the same interface
 """
 
 from __future__ import annotations

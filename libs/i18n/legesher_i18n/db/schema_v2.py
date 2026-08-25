@@ -23,8 +23,8 @@ Three layers live in the schema, and the boundary is load-bearing:
     ``canon_selections``. A loaded projection of ``libs/i18n/canon/<locale>.toml``;
     the text files are the source of truth and the DB table is rebuilt from them.
 
-The full design rationale lives in the CORE-1501 design docs, which are not
-part of this repository.
+The DDL in ``schema_v2.sql`` carries the per-table commentary; read it
+alongside this module for the constraints and triggers each layer relies on.
 """
 
 from __future__ import annotations

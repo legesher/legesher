@@ -1,14 +1,11 @@
 """Completion provider for localized IntelliSense.
 
 This module provides completion items including:
-- Keywords in target language (def→definir, class→clase)
-- Builtins in target language (print→imprimir, len→longitud)
-- User-defined symbols (functions, variables, classes from current file)
-- Context-aware filtering
-- Scope-aware symbol suggestions
-- Fuzzy matching for typo tolerance
-
-Implementation for CORE-358.
+- Keywords in the target language (def→definir, class→clase), from the pack
+- Python's builtins, offered under their English names
+- User-defined symbols (functions, variables, classes) from the current file,
+  excluding anything declared below the cursor
+- Case-insensitive prefix narrowing on the partial word at the cursor
 """
 
 import ast
@@ -93,14 +90,11 @@ async def provide_completion(
     Returns:
         List of completion items (keywords, builtins, user symbols)
 
-    Note:
-        Implementation for CORE-358 - Provides:
-        - Localized keyword completions
-        - Localized builtin completions
-        - User-defined symbol completions
-        - Context-aware filtering
-        - Scope-aware suggestions
-        - Fuzzy matching
+    Offers the target language's keywords, Python's builtins, and symbols
+    declared earlier in the current document. When the cursor sits on a partial
+    word, candidates are narrowed to those whose label starts with it — a
+    case-insensitive prefix match, not a typo-tolerant one. Returns an empty
+    list when the document is not open.
     """
     # Get document
     doc = server.document_manager.get_document(uri)
@@ -123,8 +117,10 @@ async def provide_completion(
 class CompletionProvider:
     """Provides completion items for code elements.
 
-    This class handles keyword completions, builtin function completions,
-    user-defined symbol completions, context awareness, and scope filtering.
+    Offers the target language's keywords, Python's builtins under their
+    English names, and user-defined symbols declared on earlier lines of the
+    document. When the cursor sits on a partial word, candidates are narrowed
+    to those whose label starts with it — a case-insensitive prefix match.
     """
 
     def __init__(
@@ -282,10 +278,9 @@ class CompletionProvider:
         ]
 
         for builtin in builtins_to_complete:
-            # Get translation (for MVP, assume English)
-            # TODO (CORE-360 or future): Use translation API/pack for builtins
-            # See: CORE-444 (Snippet Completions) and CORE-445 (Signature Help)
-            # for related enhancements to builtin function support
+            # Builtin names are offered in English; reading them from the
+            # language pack is not wired up here yet. Related builtin-completion
+            # work: CORE-444 (snippet completions), CORE-445 (signature help).
             translated = builtin
 
             items.append(
@@ -321,10 +316,11 @@ class CompletionProvider:
             _symbol_cache[cache_key] = self.symbols
             return
 
-        # Walk AST and extract symbols
-        # Note: Currently extracts module-level symbols only
-        # TODO (Future): Support nested scope (function-local variables, nested functions)
-        # This would require tracking scope hierarchy and filtering based on cursor position
+        # Walk the AST and extract symbols. The walk is recursive, so
+        # function-local names and class members are collected too, and every
+        # symbol is recorded with scope "module" and offered on every later
+        # line of the file. Confining a local name to its function would need
+        # a scope hierarchy tracked against the cursor position.
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 self.symbols.append(

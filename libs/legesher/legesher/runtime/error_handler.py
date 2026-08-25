@@ -1,15 +1,22 @@
-"""Native language error handling and traceback translation.
+"""Traceback frames rendered against localized source.
 
-This module intercepts Python exceptions and translates them to
-the user's native language, providing a truly localized debugging experience.
+When code is executed through the import hook, CPython reports positions in
+the translated file it actually compiled. This handler replaces ``sys.excepthook``
+so each frame instead shows the line and line number from the source the
+developer wrote, resolved through ``legesher.runtime.source_mapper``.
+
+It does not translate the exception type or the message text — those pass
+through in English. Localized type names and message templates come from the
+separate ``legesher_runtime`` package, which reads the language pack's message
+catalog.
 
 Example:
-    Instead of:
-        NameError: name 'x' is not defined
+    A NameError raised from Spanish source reports the Spanish line::
 
-    Spanish users see:
-        NameError: name 'x' is not defined
-        (with native source code lines in the traceback)
+        Traceback (most recent call last):
+          File "mi_modulo.py", line 3, in saludar
+            imprimir(nombre)
+        NameError: name 'nombre' is not defined
 """
 
 import sys
@@ -21,10 +28,11 @@ from legesher_core import TokenTranslator
 
 
 class LegesherErrorHandler:
-    """Translates Python exceptions to native language.
+    """Formats Python exceptions against the developer's own source.
 
-    This handler intercepts Python exceptions and formats them with
-    native language source code lines and (future) translated error messages.
+    Frames are rewritten to show localized source lines and their line
+    numbers. Exception type names and message text are left in English; see
+    the module docstring for where those are handled.
     """
 
     def __init__(self, language: str):
@@ -44,8 +52,9 @@ class LegesherErrorHandler:
     def _load_exception_translations(self) -> dict[str, str]:
         """Load exception type name translations.
 
-        TODO: Add exception names to language packs in future
-        For MVP: Return empty dict (use English names)
+        Always empty here, so type names render in English. The pack's
+        exception vocabulary is consumed by ``legesher_runtime`` instead
+        (CORE-1679), which owns the localized-rendering path.
 
         Returns:
             Dictionary mapping English exception names to native names
@@ -55,8 +64,9 @@ class LegesherErrorHandler:
     def _load_message_templates(self) -> dict[str, str]:
         """Load error message templates for common errors.
 
-        TODO: Add message templates to language packs
-        For MVP: Return empty dict (use English messages)
+        Always empty here, so messages render in English. The message
+        catalog and its pattern matching live in ``legesher_i18n.messages``
+        and are consumed by ``legesher_runtime`` (CORE-1679).
 
         Examples:
             "name '{name}' is not defined" -> "el nombre '{name}' no está definido"
@@ -119,16 +129,17 @@ class LegesherErrorHandler:
         return "".join(tb_lines)
 
     def _translate_message(self, message: str) -> str:
-        """Translate error message to native language.
+        """Return the exception message unchanged.
 
-        TODO: Use message templates and NLP for better translation
-        For MVP: Keep English message
+        The seam exists so ``format_exception`` reads the same whether or not
+        a catalog is loaded; this handler never loads one. Message translation
+        is ``legesher_runtime``'s responsibility (CORE-1679).
 
         Args:
             message: Error message in English
 
         Returns:
-            Translated error message (currently returns English)
+            The same message, untranslated
         """
         return message
 

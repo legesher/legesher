@@ -21,7 +21,7 @@ from legesher_language_server.source_map import (
 
 @pytest.mark.xfail(
     reason="Deferred: proportional interior mapping does not round-trip "
-    "(and counts Python-str, not UTF-16, units). Tracked TODO in document.py.",
+    "(and counts Python-str, not UTF-16, units). Known gap noted in document.py.",
     strict=False,
 )
 def test_proportional_interior_mapping_round_trips():

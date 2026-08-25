@@ -9,16 +9,12 @@ onto the reader's own positions.
 The backend is ``pyright-langserver`` (Apache-2.0). It is deliberately **not**
 Pylance, despite the history in CORE-360: Pylance's licence grants use only
 with Microsoft products (§1(a)) and forbids standalone redistribution (§2(e)),
-and its bundled server does not answer plain ``--stdio`` in any case. Anything
-here that reads as Pylance-specific is a leftover, not a design intent — see
-CORE-1890.
+and its bundled server does not answer plain ``--stdio`` in any case.
 
 Note ``pyright`` and ``pyright-langserver`` are different executables shipped in
 the same npm package. The first is a command-line type checker that closes the
-stream instead of speaking LSP; picking it is what made this feature silently
-dead until CORE-1886.
-
-Implementation for CORE-360; renamed and re-scoped in CORE-1890.
+stream instead of speaking LSP, so pointing this module at it leaves the
+feature silently dead; the second is the one that speaks the protocol.
 """
 
 import asyncio
@@ -178,8 +174,10 @@ class EnhancedIntelligenceProxy:
         self.process: asyncio.subprocess.Process | None = None
         self.server_path: str | None = None
 
-        # Translation engine
-        # TODO: Load actual keyword maps from legesher-i18n
+        # Translation engine. Keywords come from the language pack via
+        # `_get_keyword_map`; builtins are left untranslated here because the
+        # proxy only needs the source to parse as canonical Python, and
+        # builtin names already do.
         self.translator = IncrementalTranslator(
             source_lang=config.source_language,
             target_lang=config.target_language,
@@ -838,8 +836,10 @@ class EnhancedIntelligenceProxy:
                     end=Position(line=end_pos.line, character=end_pos.character),
                 )
 
-                # Create diagnostic
-                # TODO: Translate message using error_templates.py
+                # Create diagnostic. The message is the backend's own English
+                # text, passed through untranslated: these are type-checker
+                # findings, which the `diagnostic` provider's templates (built
+                # for CPython's error messages) do not cover.
                 diagnostic = Diagnostic(
                     range=diag_range,
                     message=item.get("message", ""),

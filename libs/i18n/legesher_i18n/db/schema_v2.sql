@@ -76,11 +76,11 @@ CREATE TABLE programming_languages (
 -- until someone extends this list on purpose, because every tag admitted here
 -- becomes a permanent key.
 --
---   TODO(CORE-1500): PR #18 lands `legesher_i18n/bcp47.py` with is_canonical()
---   / validate() — a full RFC 5646 parser with IANA subtag-registry lookup.
---   Once it merges, the WRITE PATH must call it (a GLOB cannot know that
---   'qq-Zzzz-ZZ' is well-formed but unregistered), and this CHECK stays as the
---   last-resort DB-level floor.
+--   This CHECK is the last-resort DB-level floor, not the real validator. A
+--   GLOB cannot know that 'qq-Zzzz-ZZ' is well-formed but unregistered, so the
+--   write path is expected to go through `legesher_i18n.bcp47` — a full RFC
+--   5646 parser with IANA subtag-registry lookup — and use is_canonical() /
+--   is_valid() before inserting a tag here.
 CREATE TABLE locales (
     tag                  TEXT PRIMARY KEY,     -- 'ar', 'ar-EG', 'zh-Hans', 'din'
     parent_tag           TEXT REFERENCES locales(tag) ON DELETE RESTRICT,

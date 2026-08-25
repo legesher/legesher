@@ -1,12 +1,13 @@
 """Diagnostic provider for translated error messages.
 
-This module translates Python error messages and warnings:
-- Syntax errors
-- Type errors
-- Runtime errors
-- Linting warnings
+The document is parsed with ``ast.parse``, so what this reports is what a
+parse can detect: SyntaxError, IndentationError, TabError, and decoding
+failures. Nothing here executes the code, so runtime errors (NameError,
+TypeError) never reach it; those come from the external type-aware server
+when one is configured.
 
-Implementation for CORE-359.
+Message text is drawn from templates written for English, Spanish, and
+Arabic. For other languages the message is left in English.
 """
 
 import ast
@@ -76,9 +77,11 @@ async def provide_diagnostics(server: "LegesherLanguageServer", uri: str) -> lis
     Returns:
         List of translated diagnostics
 
-    Note:
-        Implementation for CORE-359 - Translates Python error messages
-        while preserving variable names and code structure.
+    Reports what parsing the document detects — SyntaxError and its kin — with
+    the message rendered from a template in the configured target language
+    where one exists, and left in English otherwise. Variable names and code
+    structure are never rewritten. Returns an empty list when the document is
+    not open or parses cleanly.
     """
     # Get document
     doc = server.document_manager.get_document(uri)

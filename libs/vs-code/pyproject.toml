@@ -21,7 +21,7 @@ dependencies = [
 ]
 name = "legesher-vs-code"
 version = "0.1.0"
-description = "vs code extension for Legesher Monorepo"
+description = "Dependency bundle installing the Python side of the Legesher VS Code extension"
 readme = "README.md"
 keywords = ["vscode", "editor", "extension", "translation", "multilingual", "python"]
 classifiers = [

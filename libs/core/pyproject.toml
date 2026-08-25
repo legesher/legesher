@@ -19,7 +19,7 @@ dependencies = [
 ]
 name = "legesher-core"
 version = "0.23.0"
-description = "Core library for Legesher Monorepo"
+description = "Translation engine for multilingual Python — keyword, builtin, and identifier rewriting"
 readme = "README.md"
 keywords = ["translation", "i18n", "programming", "multilingual", "code-translation"]
 classifiers = [

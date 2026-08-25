@@ -31,8 +31,9 @@ export async function translateDocument(
     }
 
     try {
-        // TODO: Integrate with LSP server for actual translation
-        // For now, return a simulated translation for demo purposes
+        // Preview-quality translation, computed in the extension from the
+        // bundled language packs rather than by the engine. See
+        // `simulateTranslation` for what that does and does not cover.
         const translated = await simulateTranslation(originalCode, targetLanguage);
         return translated;
     } catch (error) {
@@ -42,12 +43,20 @@ export async function translateDocument(
 }
 
 /**
- * Simulate translation for demo purposes.
- * This will be replaced with actual LSP server integration.
+ * Translate keywords by word-boundary substitution against the bundled packs.
+ *
+ * This is the panel's preview path, not the engine. It rewrites every
+ * word-boundary match, so unlike `legesher translate` it has no lexical
+ * awareness: a keyword spelled inside a string literal or a comment is
+ * rewritten too, and an identifier that happens to match a keyword is not
+ * protected. Good enough to show what a file looks like translated; not the
+ * path to use for output that has to run.
+ *
+ * Returns the code unchanged when no pack is bundled for the language.
  *
  * @param code The original Python code
  * @param targetLanguage The target language code
- * @returns Simulated translated code
+ * @returns Code with pack keywords substituted
  */
 async function simulateTranslation(code: string, targetLanguage: string): Promise<string> {
     // Get translations for the target language from language packs

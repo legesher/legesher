@@ -3,10 +3,12 @@
 This module provides hover information showing:
 - Translated keyword documentation
 - Translated builtin function docstrings
-- User function docstrings with translation
+- The user's own function and class docstrings, shown verbatim
 - Cultural context comments
 
-Implementation for CORE-357.
+The keyword and builtin documentation is written out in this package and
+currently covers English, Spanish, and Arabic. Hovering a keyword in any
+other language returns nothing rather than an English fallback.
 """
 
 import ast
@@ -158,12 +160,12 @@ async def provide_hover(
     Returns:
         Hover information with translated documentation or None
 
-    Note:
-        Implementation for CORE-357 - Full hover provider with:
-        - Keyword documentation
-        - Builtin function docstrings
-        - User function docstrings
-        - Cultural comment integration
+    Resolves the word under the cursor through the target language pack, then
+    returns whichever of keyword documentation, builtin documentation, the
+    user's own docstring, or a cultural comment that word matches. Returns
+    None when the document is not open, when the word matches nothing, or
+    when no documentation exists for the target language — see the module
+    docstring for which languages carry it.
     """
     # Get document
     doc = server.document_manager.get_document(uri)
@@ -613,9 +615,10 @@ class HoverProvider:
                             signature = f"class {name}"
                             kind = "class"
 
-                        # Format as markdown
-                        # For MVP, show docstring as-is
-                        # TODO: Integrate translation for user docstrings
+                        # The user's own docstring is shown verbatim. Unlike
+                        # keyword and builtin documentation, it has no entry in
+                        # the language pack to translate against, and running
+                        # it through a model would make hover a network call.
                         return f"**`{signature}`** — User-defined {kind}\n\n{docstring}"
 
             return None

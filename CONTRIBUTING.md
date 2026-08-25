@@ -586,6 +586,40 @@ def test_translate_keyword_from_spanish_to_english():
 - Write clear, self-documenting code
 - Add comments for complex logic
 
+### Docstrings vs. Comments
+
+These two have different audiences, and the difference decides where a note
+belongs.
+
+**Docstrings ship.** They go into the wheel and surface in `help()`, in IDE
+hovers, and in any generated API reference. Their reader has the package
+installed and no access to this repository. A shipped docstring should:
+
+- Open with a **complete thought** saying what the thing does and what it
+  returns — not a sentence fragment or a bare label.
+- **Explain, rather than point.** "See CORE-1234 for why" tells an installed
+  user nothing, because they cannot open CORE-1234. State the reason, or cite
+  a record they can actually reach.
+- **Stay true.** A docstring describing behaviour that has since changed is
+  worse than no docstring, because it is trusted. "STUB — to be implemented"
+  on code that works is the same problem in reverse.
+- **Define its terms.** Vocabulary that only means something from inside a
+  ticket does not mean anything in `help()`.
+
+**`#` comments are for maintainers**, read by whoever is editing that file
+with the surrounding code in view. Density here is a feature, not a liability.
+Issue references are welcome — a `CORE-1234` in a comment is useful
+traceability. The same reference used as the *only* explanation in a docstring
+is not.
+
+So: keep the reason in the docstring, and put the paper trail in a comment. A
+trailing `(CORE-1234)` after a docstring sentence that already explains itself
+is fine — it is provenance, not the explanation.
+
+Prefer a stated limitation over a bare marker. `TODO`/`FIXME`/`HACK` with no
+explanation reads badly in a public repository; say what the gap is and, if
+it is tracked, name the issue.
+
 ### Commit Messages
 
 - Use clear, descriptive commit messages

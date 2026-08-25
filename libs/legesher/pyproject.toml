@@ -29,7 +29,7 @@ dependencies = [
 ]
 name = "legesher"
 version = "0.23.0"
-description = "main build for Legesher Monorepo"
+description = "Command-line tools to write, translate, and run Python in your own language"
 readme = "README.md"
 keywords = ["translation", "programming", "multilingual", "i18n", "cli", "developer-tools"]
 classifiers = [

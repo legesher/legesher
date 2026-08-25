@@ -17,8 +17,6 @@ We generate:
 
 This allows the type checker to understand the types while preserving the user's
 localized type names in error messages.
-
-Implementation for CORE-360 - enhanced Python intelligence.
 """
 
 import ast

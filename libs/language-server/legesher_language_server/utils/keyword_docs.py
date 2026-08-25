@@ -9,9 +9,11 @@ import threading
 
 from legesher_i18n import LanguagePackLoader
 
-# TODO: Consider validating keys against legesher_i18n.scripts.translate.term_classifier
-#       to ensure all Python keywords are documented and no deprecated keywords remain.
-#       Currently missing Python 3.11+ (except*) and 3.12+ (type) keywords.
+# The documented keyword set below is maintained by hand and covers Python
+# 3.10. It does not yet carry the later additions (3.11 `except*`, 3.12
+# `type`), so hovering those falls through to no documentation rather than
+# showing something wrong. Deriving the set from the language pack instead
+# would keep the two in step.
 
 logger = logging.getLogger(__name__)
 

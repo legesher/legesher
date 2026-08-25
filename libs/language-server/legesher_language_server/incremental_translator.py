@@ -4,7 +4,9 @@ This module provides efficient incremental translation of Python code,
 only retranslating changed portions when documents are edited. This
 dramatically improves performance for real-time IDE features.
 
-Implementation for CORE-360 - enhanced Python intelligence.
+Part of the enhanced-intelligence path: it prepares the canonical English
+text an external type-aware server is asked about, and keeps that text in
+step with the editor buffer without retranslating the whole document.
 """
 
 import hashlib

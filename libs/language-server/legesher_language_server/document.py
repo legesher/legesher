@@ -4,14 +4,14 @@ This module handles tracking open documents, their content, versions,
 and cached translations.
 """
 
-# TODO(CORE, deferred): The proportional interior mapping in source_map.py
-# (SourceMap._map_to_translated / _map_to_original) measures positions in
-# Python str characters, while LSP Position.character has no defined unit and
-# clients commonly count UTF-16 code units. For non-BMP characters (emoji,
-# astral CJK) this desyncs offsets. The full offset rework is out of scope for
-# this PR; see the xfail regression test
-# tests/test_source_map_offset_gap.py which captures the failing case so the
-# gap is tracked, not silently shipped.
+# Known gap — non-BMP offsets. The proportional interior mapping in
+# source_map.py (SourceMap._map_to_translated / _map_to_original) measures
+# positions in Python str characters, while LSP Position.character has no
+# defined unit and clients commonly count UTF-16 code units. For non-BMP
+# characters (emoji, astral CJK) the two disagree and offsets drift. The
+# failing case is pinned by the xfail regression test
+# tests/test_source_map_offset_gap.py, so the gap stays visible rather than
+# being silently shipped; closing it means reworking the offset model.
 
 from dataclasses import dataclass, field
 from datetime import datetime
