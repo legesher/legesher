@@ -81,6 +81,8 @@ describe('Language resolution (CORE-1754)', function () {
     afterEach(async () => {
         const config = vscode.workspace.getConfiguration('legesher');
         await config.update('targetLanguage', undefined, vscode.ConfigurationTarget.Global);
+        await config.update('workingLanguage', undefined, vscode.ConfigurationTarget.Global);
+        await config.update('knownLanguages', undefined, vscode.ConfigurationTarget.Global);
         await config.update('languageDetection', undefined, vscode.ConfigurationTarget.Global);
     });
 

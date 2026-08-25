@@ -258,3 +258,98 @@ async def test_multiple_documents(server):
     assert server.document_manager.has_document("file:///test1.py")
     assert not server.document_manager.has_document("file:///test2.py")
     assert server.document_manager.has_document("file:///test3.py")
+
+
+@pytest.mark.asyncio
+async def test_initialize_carries_file_and_working_languages_separately(server):
+    """The named roles arrive as separate slots and stay separate (CORE-1760).
+
+    The client resolves the file language (detection) and the working language
+    (settings) independently and must not collapse them before the server sees
+    them — a Farsi file opened by a Portuguese speaker is exactly the case the
+    two-slot model got wrong.
+    """
+    params = InitializeParams(
+        process_id=None,
+        root_uri="file:///test",
+        capabilities=ClientCapabilities(),
+        initialization_options={
+            "sourceLanguage": "en",
+            "fileLanguage": "fa",
+            "workingLanguage": "pt",
+            # The deprecated compat slot mirrors fileLanguage on the wire.
+            "targetLanguage": "fa",
+        },
+    )
+
+    await server.on_initialize(params)
+
+    assert server.config.source_language == "en"
+    assert server.config.file_language == "fa"
+    assert server.config.working_language == "pt"
+    # Providers written against the old slot parse the file with it, so it
+    # tracks the file language — never the working language.
+    assert server.config.target_language == "fa"
+
+
+@pytest.mark.asyncio
+async def test_initialize_legacy_target_language_seeds_all_roles(server):
+    """A client that predates the role split keeps working (CORE-1760).
+
+    Old clients send only targetLanguage, and that one value always meant the
+    file and working languages at once — so it seeds both.
+    """
+    params = InitializeParams(
+        process_id=None,
+        root_uri="file:///test",
+        capabilities=ClientCapabilities(),
+        initialization_options={"sourceLanguage": "en", "targetLanguage": "de"},
+    )
+
+    await server.on_initialize(params)
+
+    assert server.config.target_language == "de"
+    assert server.config.file_language == "de"
+    assert server.config.working_language == "de"
+
+
+@pytest.mark.asyncio
+async def test_initialize_role_slots_override_the_deprecated_slot(server):
+    """When both protocols appear, the named roles win (CORE-1760)."""
+    params = InitializeParams(
+        process_id=None,
+        root_uri="file:///test",
+        capabilities=ClientCapabilities(),
+        initialization_options={
+            "targetLanguage": "de",
+            "fileLanguage": "fa",
+            "workingLanguage": "pt",
+        },
+    )
+
+    await server.on_initialize(params)
+
+    assert server.config.file_language == "fa"
+    assert server.config.working_language == "pt"
+    assert server.config.target_language == "fa"
+
+
+@pytest.mark.asyncio
+async def test_initialize_invalid_working_language_fails_secure(server):
+    """An invalid role value is rejected without taking the server down.
+
+    Same fail-secure contract the deprecated slot has (CORE-446): the value is
+    dropped, the server keeps its previous configuration, and initialize still
+    answers with capabilities.
+    """
+    params = InitializeParams(
+        process_id=None,
+        root_uri="file:///test",
+        capabilities=ClientCapabilities(),
+        initialization_options={"workingLanguage": "../etc/passwd"},
+    )
+
+    result = await server.on_initialize(params)
+
+    assert server.config.working_language == "en"
+    assert result.capabilities.hover_provider is True

@@ -9,6 +9,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `file_language` and `working_language` configuration fields, read from
+  `initializationOptions` as separate `fileLanguage` and `workingLanguage` slots
+  with the same fail-secure validation as the original pair. `fileLanguage`
+  keeps `target_language` in lockstep so providers written against the old slot
+  keep parsing files correctly, and a client that sends only the deprecated
+  `targetLanguage` seeds all three roles — older clients keep working
+  unchanged. (CORE-1760)
+
 ## [0.1.3] - 2026-04-29
 
 ### Changed

@@ -80,26 +80,54 @@ In VS Code settings (`settings.json`):
 
 ```json
 {
-  "legesher.targetLanguage": "es", // Any of 51 supported languages
+  "legesher.workingLanguage": "es", // Any of 51 supported languages
+  "legesher.knownLanguages": ["es", "en"], // Seeded from workingLanguage when empty
   "legesher.sourceLanguage": "en", // Only en currently
+  "legesher.languageDetection": "auto", // auto, off
   "legesher.serverCommand": "legesher-lsp",
   "legesher.trace.server": "off", // off, messages, verbose
   "legesher.enabled": true
 }
 ```
 
+### Language roles (CORE-1760)
+
+`legesher.targetLanguage` is **deprecated** — it meant the file's language and
+the reader's language at once, which diverge the moment you open someone
+else's file. It is still honoured wherever `legesher.workingLanguage` is not
+set, at its own scope: VS Code precedence (folder > workspace > user) decides
+first, and only within one scope does the new name outrank the old.
+
+| Role     | Setting                      | Meaning                                |
+| -------- | ---------------------------- | -------------------------------------- |
+| Canonical| `legesher.sourceLanguage`    | What Python itself defines; the pivot  |
+| File     | detected per file            | What a given file is written in        |
+| Working  | `legesher.workingLanguage`   | What the user reads and writes in      |
+| Known    | `legesher.knownLanguages`    | What the user reads comfortably        |
+
+The file and working languages reach the language server as **separate**
+`initializationOptions` slots (`fileLanguage`, `workingLanguage`), plus a
+deprecated `targetLanguage` slot mirroring `fileLanguage` for older servers.
+Never collapse them client-side — the server cannot un-collapse one value.
+The rules live in `src/languageProfile.ts`, which is free of `vscode` imports
+so they are unit-testable without an editor host.
+
 ## Commands
 
 Access via Command Palette (Cmd+Shift+P / Ctrl+Shift+P):
 
 - **Legesher: Show Translation Panel** - Open side-by-side view
-- **Legesher: Select Language** - Choose target language
+- **Legesher: Select Language** - Choose the working language
+- **Legesher: Manage My Languages** - Edit the known-language set
 - **Legesher: Restart Language Server** - Restart connection
 
 ## Status Bar Indicators
 
 - **Connection**: `$(check) Legesher`, `$(sync~spin) Legesher`, `$(warning) Legesher`
-- **Language**: `$(globe) {LANG_CODE}` - Shows current target language code
+- **Language**: `$(globe) {LANG_CODE}` - The language in effect for this file
+- **Mismatch**: `$(search) {FILE} → {WORKING}` - The file is written in a
+  language that is neither your working language nor one you have marked as
+  known; a file in a known language shows no mismatch
 
 ## Telemetry
 

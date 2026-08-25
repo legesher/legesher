@@ -11,6 +11,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **vs-code**, **language-server**: the language roles are named — canonical /
+  file / working / known — and carried separately end to end. One
+  `legesher.targetLanguage` setting used to mean both the language a file is
+  written in and the language its reader wants, which are the same only on
+  your own files; hover decoded a Farsi file into English for a Portuguese
+  speaker because English was the only thing the model could express. New
+  settings `legesher.workingLanguage` (what you read and write in) and
+  `legesher.knownLanguages` (what you read comfortably — seeded from the
+  working language, so nothing needs configuring to start) replace it;
+  `legesher.targetLanguage` keeps working as a deprecated alias. A
+  `Legesher: Manage My Languages` command edits the known set, the language
+  picker lists known languages first, and a file already in a known language
+  raises no mismatch signal. The file and working languages reach the
+  language server as separate `initializationOptions` slots, with the old
+  slot still honoured for older clients — the protocol groundwork for
+  rendering someone else's file in your own language. [CORE-1760]
 - **i18n**: the language canon is published as its own HuggingFace dataset,
   `legesher/language-canon` — 9,375 terminology decisions across 51 languages,
   recording which rendering was chosen for each programming concept and how

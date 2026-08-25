@@ -116,8 +116,13 @@ export function createLanguageClient(
 
         // Initialization options passed to the server
         initializationOptions: {
-            // These options are sent to the server during initialization
-            // Include language configuration for translation
+            // The full language profile, roles kept separate (CORE-1760):
+            // sourceLanguage (canonical), fileLanguage (what the file is
+            // written in), workingLanguage (what the user reads in), and the
+            // deprecated targetLanguage compat slot mirroring fileLanguage
+            // for servers that predate the split. Collapsing file and working
+            // into one value here is exactly the defect the vocabulary
+            // exists to prevent — the server cannot un-collapse them.
             ...languages,
             trace: traceLevel,
         },

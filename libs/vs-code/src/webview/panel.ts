@@ -122,11 +122,19 @@ export class TranslationPanelManager {
             const originalCode = document.getText();
 
             // Prefer the resolver, which accounts for a language detected from
-            // the document's contents. Fall back to raw configuration only if no
-            // resolver has been registered.
-            const { sourceLanguage, targetLanguage } = TranslationPanelManager.languageResolver
-                ? TranslationPanelManager.languageResolver(document)
-                : getLanguageConfig(document.uri);
+            // the document's contents. Fall back to raw configuration only if
+            // no resolver has been registered — rendering into the working
+            // language, which is what the old single setting meant here.
+            let sourceLanguage: string;
+            let targetLanguage: string;
+            if (TranslationPanelManager.languageResolver) {
+                ({ sourceLanguage, targetLanguage } =
+                    TranslationPanelManager.languageResolver(document));
+            } else {
+                const languageConfig = getLanguageConfig(document.uri);
+                sourceLanguage = languageConfig.sourceLanguage;
+                targetLanguage = languageConfig.workingLanguage;
+            }
 
             // Translate document
             const translatedCode = await translateDocument(document, targetLanguage);

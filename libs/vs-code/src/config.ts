@@ -1,5 +1,10 @@
 import * as vscode from 'vscode';
 import { scopeOf, type SettingScope } from './settingsScope';
+import {
+    resolveKnownLanguages,
+    resolveWorkingLanguage,
+    type ResolvedLanguages,
+} from './languageProfile';
 
 // Import from generated language definitions (single source of truth)
 import {
@@ -15,24 +20,29 @@ import {
     type LanguageMetadata as GeneratedLanguageMetadata
 } from './generated/languages';
 
-/**
- * The single (source, target) pair a language server instance is started with.
- *
- * The server reads both languages once, in on_initialize, so its identity is
- * the pair rather than the target alone. Passing it as one value keeps the
- * language that was resolved and the language the server is actually running
- * from drifting apart (CORE-1776).
- */
-export interface ResolvedLanguages {
-    targetLanguage: string;
-    sourceLanguage: string;
-}
+// The languages a server instance is started with. Defined with the rest of
+// the role vocabulary in languageProfile.ts; re-exported here because this
+// module is where every consumer already looks for it. The server reads all of
+// it once, in on_initialize, so its identity is the whole set — passing it as
+// one value keeps the languages that were resolved and the languages the
+// server is actually running from drifting apart (CORE-1776).
+export { type ResolvedLanguages };
 
 /**
  * Language configuration returned by getLanguageConfig()
+ *
+ * The user's side of the language profile (CORE-1760): the roles that come
+ * from settings rather than from the file on screen. The file language is
+ * resolved per document, by detection, and never lives here.
  */
-export interface LanguageConfig extends ResolvedLanguages {
-    /** Which configuration scope supplied targetLanguage. */
+export interface LanguageConfig {
+    /** Canonical: the language the project's code is stored in. */
+    sourceLanguage: string;
+    /** The language the user reads and writes in right now. */
+    workingLanguage: string;
+    /** The languages the user reads comfortably; never empty (seeded). */
+    knownLanguages: string[];
+    /** Which configuration scope supplied the working language (or its deprecated alias). */
     scope: SettingScope;
 }
 
@@ -58,19 +68,41 @@ export interface LanguageInfo {
  * status bar indicator. It returns each scope's value separately; it is `get()`
  * that resolves the effective one.
  *
+ * The working language honours `legesher.targetLanguage` as a deprecated
+ * alias, without letting the alias escape VS Code's precedence: scope decides
+ * first (folder > workspace > user > default), and only within one scope does
+ * `workingLanguage` outrank `targetLanguage`. So an existing configuration
+ * keeps working, a migrated one is never overridden by the setting it migrated
+ * from, and a project that pins the old key still beats the reader's own
+ * global preference (CORE-1760). See `resolveWorkingLanguage` for why
+ * resolving by key first is the wrong shape.
+ *
  * @param resource Optional document URI. Supply it so folder-level settings in
  * a multi-root workspace resolve against the right folder.
  */
 export function getLanguageConfig(resource?: vscode.Uri): LanguageConfig {
     const config = vscode.workspace.getConfiguration('legesher', resource);
 
-    const targetLanguage = config.get<string>('targetLanguage') || 'en';
+    // Resolved together rather than as two independent lookups: the scope that
+    // supplies the value and the value itself have to come from the same pass,
+    // or the picker writes to a scope that does not hold what it just read.
+    const { language: workingLanguage, scope } = resolveWorkingLanguage(
+        config.inspect<string>('workingLanguage'),
+        config.inspect<string>('targetLanguage')
+    );
     const sourceLanguage = config.get<string>('sourceLanguage') || 'en';
+    // Deliberately untyped: `get<string[]>` is a claim, not a check, and a
+    // hand-edited settings file can hold anything.
+    const knownLanguages = resolveKnownLanguages(
+        config.get('knownLanguages'),
+        workingLanguage
+    );
 
     return {
-        targetLanguage,
         sourceLanguage,
-        scope: scopeOf(config.inspect<string>('targetLanguage'))
+        workingLanguage,
+        knownLanguages,
+        scope
     };
 }
 

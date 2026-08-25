@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- **Language profile**: the language roles are named — canonical / file / working / known — so one
+  setting no longer has to mean both the language a file is written in and the language you want to
+  read it in. `legesher.workingLanguage` is the language you read and write in;
+  `legesher.knownLanguages` is the set you read comfortably, seeded from your working language so
+  nothing needs configuring to start. A `Legesher: Manage My Languages` command edits the known set,
+  the language picker lists known languages first under a separator, and a file already written in a
+  language you know raises no mismatch signal. The file and working languages are sent to the
+  language server as separate slots, so cross-language rendering has somewhere to say which language
+  to render into (CORE-1760)
+
+### Deprecated
+
+- **`legesher.targetLanguage`**: replaced by `legesher.workingLanguage`. Still honoured wherever the
+  new setting is not set, at its own scope — VS Code precedence (folder > workspace > user) decides
+  first, and only within one scope does the new name outrank the old, so a project that pins the old
+  key still beats your global preference. Existing configurations keep working with no action needed,
+  and choosing a language from the picker migrates the setting for you (CORE-1760)
+
 ### Fixed
 
 - **Language selector**: picking a language now takes effect in a project that sets

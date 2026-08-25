@@ -80,7 +80,9 @@ Environment Variables:
     if args.source_lang:
         config.source_language = args.source_lang
     if args.target_lang:
-        config.target_language = args.target_lang
+        # Seeds file_language and working_language too: the flag predates the
+        # role split and stands for both (CORE-1760).
+        config.apply_legacy_target_language(args.target_lang)
     if args.python_version:
         config.python_version = args.python_version
     if args.log_level:

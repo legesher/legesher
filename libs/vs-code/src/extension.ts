@@ -11,6 +11,13 @@ import {
     type ResolvedLanguages,
     type SettingScope,
 } from './config';
+import {
+    buildResolvedLanguages,
+    identityFileLanguage,
+    isUnfamiliarFileLanguage,
+    partitionByKnown,
+    serverIdentityOf,
+} from './languageProfile';
 import { TranslationPanelManager } from './webview/panel';
 import { Logger } from './logger';
 import { LegesherTelemetry } from './telemetry';
@@ -106,12 +113,21 @@ function getVocabularies(context: vscode.ExtensionContext): PackVocabulary[] {
     return vocabularies;
 }
 
-/** The (source, target) pair implied by a resolution, ready for the server. */
+/**
+ * The language roles implied by a resolution, ready for the server.
+ *
+ * The resolved language is the *file* language — it is what detection decides
+ * — and the working language rides alongside it from the same configuration
+ * read. They are carried as separate slots all the way to the server; the old
+ * model collapsed them into one value here, which is why hover could only
+ * ever render a file back into itself or English (CORE-1760).
+ */
 function languagesOf(resolved: ResolvedLanguage): ResolvedLanguages {
-    return {
-        sourceLanguage: resolved.config.sourceLanguage,
-        targetLanguage: resolved.language,
-    };
+    return buildResolvedLanguages(
+        resolved.config.sourceLanguage,
+        resolved.language,
+        resolved.config.workingLanguage
+    );
 }
 
 /**
@@ -132,7 +148,7 @@ function resolveLanguage(
     const config = getLanguageConfig(document?.uri);
 
     if (config.scope === 'folder' || config.scope === 'workspace') {
-        return { language: config.targetLanguage, source: config.scope, config };
+        return { language: config.workingLanguage, source: config.scope, config };
     }
 
     // An explicit pick turns detection off, so the chosen language survives
@@ -180,7 +196,7 @@ function resolveLanguage(
     }
 
     return {
-        language: config.targetLanguage,
+        language: config.workingLanguage,
         source: config.scope === 'user' ? 'user' : 'default',
         config,
     };
@@ -200,12 +216,12 @@ function ensureServerLanguage(
     languages: ResolvedLanguages,
     options: { resource?: vscode.Uri; trigger: LanguageTrigger; source: ResolutionSource }
 ): Promise<TransitionOutcome> {
-    // The server reads both languages once, in on_initialize, and has no
-    // didChangeConfiguration handler — so its identity is the pair, not the
-    // target alone. Keying on target only meant a sourceLanguage change fired
-    // the listener, matched the cached value, and silently did nothing
-    // (CORE-1754).
-    const identity = identityOf(languages);
+    // The server reads its languages once, in on_initialize, and has no
+    // didChangeConfiguration handler — so its identity is everything it read,
+    // not the target alone. Keying on fewer slots than the server consumes is
+    // how a sourceLanguage change fired the listener, matched the cached
+    // value, and silently did nothing (CORE-1754).
+    const identity = serverIdentityOf(languages);
 
     // The bookkeeping this used to do inline — serialising, deciding what
     // counts as a change, remembering what is running, suppressing duplicate
@@ -246,7 +262,7 @@ function announceTransitionFailure(
     // Deliberately not awaited: this runs inside the transition queue, and an
     // unanswered notification would block every later language change.
     void vscode.window.showErrorMessage(
-        `Legesher could not switch to ${identity.split('->')[1]}: ${message}. ` +
+        `Legesher could not switch to ${identityFileLanguage(identity)}: ${message}. ` +
         'The editor is not translating in that language.',
         'View Output',
         'Retry'
@@ -258,11 +274,6 @@ function announceTransitionFailure(
             void ensureRestart(context);
         }
     });
-}
-
-/** The identity a running server is keyed by: the pair it was started with. */
-function identityOf(languages: ResolvedLanguages): string {
-    return `${languages.sourceLanguage}->${languages.targetLanguage}`;
 }
 
 /**
@@ -448,6 +459,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<Legesh
         })
     );
 
+    // Register known-languages management command (CORE-1760)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('legesher.manageMyLanguages', async () => {
+            LegesherTelemetry.trackCommand('manageMyLanguages');
+            await manageKnownLanguages(context);
+        })
+    );
+
     // Register translation panel command
     context.subscriptions.push(
         vscode.commands.registerCommand('legesher.showTranslationPanel', async () => {
@@ -495,8 +514,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<Legesh
     // running server on the old language with no indication anything was stale.
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (event) => {
-            if (event.affectsConfiguration('legesher.targetLanguage') ||
+            if (event.affectsConfiguration('legesher.workingLanguage') ||
+                // Deprecated alias for workingLanguage: still watched, because
+                // an existing configuration edits the old key (CORE-1760).
+                event.affectsConfiguration('legesher.targetLanguage') ||
                 event.affectsConfiguration('legesher.sourceLanguage') ||
+                // The known set changes no server identity, but it decides
+                // whether the status bar signals a mismatch, and the repaint
+                // rides the same sync.
+                event.affectsConfiguration('legesher.knownLanguages') ||
                 // Toggling detection changes which language is in effect without
                 // either language setting changing, so it has to be watched too.
                 event.affectsConfiguration('legesher.languageDetection')) {
@@ -584,7 +610,7 @@ async function startServer(
         // from the document's contents rather than configured (CORE-1729), and
         // the source may come from a folder-scoped setting the client could not
         // see when it read the configuration itself (CORE-1776).
-        Logger.info(`Starting language server with languages: ${identityOf(languages)}`);
+        Logger.info(`Starting language server with languages: ${serverIdentityOf(languages)}`);
 
         client = createLanguageClient(context, outputChannel, languages, resource);
 
@@ -682,7 +708,7 @@ function updateLanguageStatusBar(resolved: ResolvedLanguage): void {
     // The language the user works in, as distinct from the one resolved for
     // this file. It comes from the same read that produced `resolved`, so the
     // two can no longer describe different moments (CORE-1776).
-    const preferredLanguage = resolved.config.targetLanguage;
+    const preferredLanguage = resolved.config.workingLanguage;
     const langCode = resolved.language.toUpperCase();
     const langName = getLanguageName(resolved.language);
 
@@ -732,8 +758,17 @@ function updateLanguageStatusBar(resolved: ResolvedLanguage): void {
     // the override is invisible: the bar reads "PT" and nothing indicates that
     // the user's own language was set aside for this file. Surfacing it here
     // keeps the signal ambient — no notification, no interruption.
+    //
+    // A file in a language the user already knows is not a mismatch worth
+    // signalling: opening a Farsi file is only noteworthy to someone who does
+    // not read Farsi (CORE-1760). Known files fall through to the plain
+    // "detected" rendering below — correct, and quiet.
     const isMismatch = resolved.source === 'detected'
-        && preferredLanguage !== resolved.language;
+        && isUnfamiliarFileLanguage(
+            resolved.language,
+            preferredLanguage,
+            resolved.config.knownLanguages
+        );
 
     if (isMismatch) {
         const preferredCode = preferredLanguage.toUpperCase();
@@ -767,17 +802,21 @@ function updateLanguageStatusBar(resolved: ResolvedLanguage): void {
  * languages genuinely work in a multi-root workspace means redeclaring these as
  * `resource`-scoped, which is a larger change than this fix.
  */
-function writeTargetFor(
-    config: vscode.WorkspaceConfiguration,
-    key: string
-): vscode.ConfigurationTarget {
+function targetForScope(scope: SettingScope): vscode.ConfigurationTarget {
     const targets: Record<SettingScope, vscode.ConfigurationTarget> = {
         folder: vscode.ConfigurationTarget.Workspace,
         workspace: vscode.ConfigurationTarget.Workspace,
         user: vscode.ConfigurationTarget.Global,
         default: vscode.ConfigurationTarget.Global,
     };
-    return targets[getSettingScope(config, key)];
+    return targets[scope];
+}
+
+function writeTargetFor(
+    config: vscode.WorkspaceConfiguration,
+    key: string
+): vscode.ConfigurationTarget {
+    return targetForScope(getSettingScope(config, key));
 }
 
 /**
@@ -812,6 +851,63 @@ async function asPickerAction(apply: () => Promise<void>): Promise<void> {
     }
 }
 
+/** A quick-pick row that may carry a language, or be a separator. */
+type LanguagePickItem = vscode.QuickPickItem & { languageCode?: string };
+
+/**
+ * `Legesher: Manage My Languages` — edit the known-language set (CORE-1760).
+ *
+ * A multi-select over the same list the language picker offers, pre-checked
+ * with the current known set. That set is seeded from the working language
+ * when nothing is configured, so the dialog never opens empty — and clearing
+ * every box does not empty it either: resolution falls back to the seed, so
+ * the working language always counts as known.
+ */
+async function manageKnownLanguages(context: vscode.ExtensionContext): Promise<void> {
+    const resource = vscode.window.activeTextEditor?.document.uri;
+    const currentConfig = getLanguageConfig(resource);
+    const config = vscode.workspace.getConfiguration('legesher', resource);
+
+    const items = getActiveLanguages().map(lang => ({
+        label: lang.nativeName,
+        description: lang.name,
+        picked: currentConfig.knownLanguages.includes(lang.code),
+        languageCode: lang.code,
+    }));
+
+    const selected = await vscode.window.showQuickPick(items, {
+        canPickMany: true,
+        placeHolder: 'Select the languages you read comfortably',
+    });
+
+    if (!selected) {
+        return; // User cancelled
+    }
+
+    const codes = selected.map(item => item.languageCode);
+    const target = writeTargetFor(config, 'knownLanguages');
+
+    await asPickerAction(async () => {
+        if (!await applySetting(resource, 'knownLanguages', codes, target)) {
+            return;
+        }
+
+        const workingName = getLanguageName(currentConfig.workingLanguage);
+        vscode.window.showInformationMessage(
+            codes.length > 0
+                ? `Legesher will treat ${codes.map(getLanguageName).join(', ')} as ` +
+                  `languages you know${scopeSuffix(target)}.`
+                : 'Legesher cleared your known languages; ' +
+                  `${workingName}, your working language, still counts as known.`
+        );
+
+        // The known set changes no server identity, but the status bar's
+        // mismatch signal reads it — repaint through the same path everything
+        // else uses.
+        await syncActiveLanguage(context, { requirePythonEditor: false, trigger: 'picker' });
+    });
+}
+
 async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
     // Scope every read and write to the active document, so a folder-level
     // setting in a multi-root workspace resolves against the right folder — and
@@ -826,35 +922,48 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
     // "Auto" is a first-class choice, not a hidden default: without it, picking
     // a language would be a one-way door out of detection (CORE-1754).
     const AUTO = '__auto__';
-    const autoItem = {
+    const autoItem: LanguagePickItem = {
         label: detectionEnabled ? '$(check) Auto' : 'Auto',
         description: 'Detect from file contents',
         detail: detectionEnabled ? 'Currently selected' : undefined,
         languageCode: AUTO
     };
 
-    const items = [
+    const toItem = (lang: { code: string; name: string; nativeName: string }): LanguagePickItem => {
+        const isCurrent = !detectionEnabled && lang.code === currentConfig.workingLanguage;
+        return {
+            label: isCurrent ? `$(check) ${lang.nativeName}` : lang.nativeName,
+            description: lang.name,
+            detail: isCurrent ? 'Currently selected' : undefined,
+            languageCode: lang.code
+        };
+    };
+
+    // Known languages first, under a separator: on a 51-language list this is
+    // the difference between a picker you scan and one you search (CORE-1760).
+    // The known set is seeded from the working language, so the first section
+    // is never empty.
+    const { known, others } = partitionByKnown(languages, currentConfig.knownLanguages);
+    const items: LanguagePickItem[] = [
         autoItem,
-        ...languages.map(lang => {
-            const isCurrent = !detectionEnabled && lang.code === currentConfig.targetLanguage;
-            return {
-                label: isCurrent ? `$(check) ${lang.nativeName}` : lang.nativeName,
-                description: lang.name,
-                detail: isCurrent ? 'Currently selected' : undefined,
-                languageCode: lang.code
-            };
-        })
+        { label: 'Languages you know', kind: vscode.QuickPickItemKind.Separator },
+        ...known.map(toItem),
+        { label: 'All languages', kind: vscode.QuickPickItemKind.Separator },
+        ...others.map(toItem)
     ];
 
     const selected = await vscode.window.showQuickPick(items, {
         placeHolder: 'Select the language for code translation'
     });
 
-    if (!selected) {
+    if (!selected?.languageCode) {
         return; // User cancelled
     }
 
-    if (selected.languageCode === AUTO) {
+    // Captured once so the narrowing survives into the async closures below.
+    const pickedCode = selected.languageCode;
+
+    if (pickedCode === AUTO) {
         if (detectionEnabled) {
             return; // Already automatic
         }
@@ -872,14 +981,17 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
             if (currentConfig.scope === 'folder' || currentConfig.scope === 'workspace') {
                 void vscode.window.showWarningMessage(
                     'Legesher detection is on, but this project pins ' +
-                    `${getLanguageName(currentConfig.targetLanguage)} in its ` +
+                    `${getLanguageName(currentConfig.workingLanguage)} in its ` +
                     `${currentConfig.scope} settings, which takes precedence. ` +
                     'Detection will not run until that setting is removed.',
                     'Open Settings'
                 ).then(action => {
                     if (action === 'Open Settings') {
+                        // Broad on purpose: the pin can live in either
+                        // workingLanguage or its deprecated targetLanguage
+                        // alias, and a query naming one would hide the other.
                         void vscode.commands.executeCommand(
-                            'workbench.action.openSettings', 'legesher.targetLanguage'
+                            'workbench.action.openSettings', 'legesher'
                         );
                     }
                 });
@@ -897,12 +1009,12 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
 
     // Nothing to do only if this language is already pinned; if detection is on,
     // an explicit pick still has to turn it off even when the codes match.
-    if (!detectionEnabled && selected.languageCode === currentConfig.targetLanguage) {
+    if (!detectionEnabled && pickedCode === currentConfig.workingLanguage) {
         return;
     }
 
     // Track language change in telemetry
-    LegesherTelemetry.trackLanguageChange(currentConfig.targetLanguage, selected.languageCode);
+    LegesherTelemetry.trackLanguageChange(currentConfig.workingLanguage, pickedCode);
 
     // An explicit pick pins the language: write it and turn detection off, so it
     // survives switching to a file that would detect as something else.
@@ -912,13 +1024,28 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
     // Global unconditionally was silently lost whenever a workspace or folder
     // value outranked it — the pick did nothing while the notification below
     // claimed it had worked (CORE-1776).
-    const languageTarget = writeTargetFor(config, 'targetLanguage');
+    //
+    // The write lands on `workingLanguage`, at the scope the *effective* value
+    // came from — which for a configuration that predates the rename is the
+    // scope of the deprecated `targetLanguage` alias. Writing the new key at
+    // that same scope is what lets it win there: an alias pinned in the
+    // project's settings would otherwise outrank a pick written to Global,
+    // and the pick would silently change nothing (CORE-1760).
+    const languageTarget = targetForScope(currentConfig.scope);
     const detectionTarget = writeTargetFor(config, 'languageDetection');
 
     await asPickerAction(async () => {
-        if (!await applySetting(resource, 'targetLanguage', selected.languageCode, languageTarget)) {
+        if (!await applySetting(resource, 'workingLanguage', pickedCode, languageTarget)) {
             return;
         }
+
+        // Retire the alias at the scope just written, so the settings file does
+        // not keep a `targetLanguage` that resolution now ignores. Leaving it
+        // there turns a hand-edit of the name the user recognises into a silent
+        // no-op — the new key beside it wins and nothing says so (CORE-1760).
+        // Best-effort: the pick has already taken effect, so a failure to tidy
+        // up is not a failure of the pick, and must not be reported as one.
+        await retireDeprecatedAlias(resource, languageTarget);
 
         // Whether detection was actually turned off decides what can honestly be
         // claimed below. If that write did not land, detection is still on and
@@ -927,7 +1054,7 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
         const detectionOff =
             await applySetting(resource, 'languageDetection', 'off', detectionTarget);
 
-        const langName = getLanguageName(selected.languageCode);
+        const langName = getLanguageName(pickedCode);
         // The scope suffix covers both writes: the two settings can live at
         // different scopes, and a pick that edits the project's settings file
         // through *either* of them should say so.
@@ -948,6 +1075,40 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
 }
 
 /**
+ * Clear `legesher.targetLanguage` at `target`, if it is set there.
+ *
+ * Only at that one scope: the alias may also be set somewhere wider, where it
+ * is still the value in effect for other projects, and a pick in this one is
+ * not permission to edit those.
+ */
+async function retireDeprecatedAlias(
+    resource: vscode.Uri | undefined,
+    target: vscode.ConfigurationTarget
+): Promise<void> {
+    const inspected = vscode.workspace
+        .getConfiguration('legesher', resource)
+        .inspect<string>('targetLanguage');
+    const setHere = target === vscode.ConfigurationTarget.Workspace
+        ? inspected?.workspaceValue
+        : inspected?.globalValue;
+
+    if (setHere === undefined) {
+        return;
+    }
+
+    try {
+        await vscode.workspace
+            .getConfiguration('legesher', resource)
+            .update('targetLanguage', undefined, target);
+        Logger.info('Retired the deprecated legesher.targetLanguage in favour of workingLanguage');
+    } catch (error) {
+        // Logged, not surfaced: the language did change, and a notification
+        // about a cleanup step would report a failure the user did not have.
+        Logger.warn('Could not clear the deprecated legesher.targetLanguage', error);
+    }
+}
+
+/**
  * Write a setting and confirm it actually took effect.
  *
  * Returns false, and tells the user why, when it did not.
@@ -963,8 +1124,8 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
  */
 async function applySetting(
     resource: vscode.Uri | undefined,
-    key: 'targetLanguage' | 'languageDetection',
-    value: string,
+    key: 'workingLanguage' | 'languageDetection' | 'knownLanguages',
+    value: string | string[],
     target: vscode.ConfigurationTarget
 ): Promise<boolean> {
     const scope = getSettingScope(vscode.workspace.getConfiguration('legesher', resource), key);
@@ -983,8 +1144,8 @@ async function applySetting(
     // Re-read through the same resolution the rest of the extension uses.
     const effective = vscode.workspace
         .getConfiguration('legesher', resource)
-        .get<string>(key);
-    if (effective !== value) {
+        .get<string | string[]>(key);
+    if (!settingValuesEqual(effective, value)) {
         Logger.error(
             `legesher.${key} was written but resolves to '${effective}', not '${value}' — ` +
             'a narrower configuration scope is overriding it'
@@ -1007,6 +1168,20 @@ async function applySetting(
 
     LegesherTelemetry.trackLanguageSettingWrite(key, scope, 'applied');
     return true;
+}
+
+/**
+ * Whether a read-back matches what was written — element-wise for the one
+ * array-valued setting, `===` for the rest.
+ */
+function settingValuesEqual(
+    a: string | string[] | undefined,
+    b: string | string[]
+): boolean {
+    if (Array.isArray(a) && Array.isArray(b)) {
+        return a.length === b.length && a.every((item, i) => item === b[i]);
+    }
+    return a === b;
 }
 
 /**
@@ -1036,7 +1211,7 @@ async function showTranslationPanel(context: vscode.ExtensionContext): Promise<v
  */
 async function tryTranslationPanel(context: vscode.ExtensionContext): Promise<void> {
     const config = getLanguageConfig();
-    const langName = getLanguageName(config.targetLanguage);
+    const langName = getLanguageName(config.workingLanguage);
 
     // Sample Python code that showcases various keywords and builtins
     const sampleCode = `# Legesher Demo - See your code in ${langName}!

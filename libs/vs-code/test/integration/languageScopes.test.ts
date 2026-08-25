@@ -19,7 +19,8 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { getActiveLanguages } from '../../src/config';
+import { getActiveLanguages, getLanguageConfig } from '../../src/config';
+import { partitionByKnown } from '../../src/languageProfile';
 
 /**
  * The extension's diagnostic API, restated rather than imported.
@@ -142,11 +143,23 @@ function api(): LegesherApi {
  * Offsets are counted from the start of the list rather than searched for by
  * language code: every keystroke sent blind at a widget is a chance to be sent
  * before it has rendered, so the tests below choose languages near the top and
- * assert on what landed. The items are `Auto` followed by getActiveLanguages()
- * in order, and the widget opens with `Auto` active.
+ * assert on what landed. The items are `Auto` followed by known languages and
+ * then the rest (CORE-1760) — reproduced here by `pickerOrder()`, since
+ * separators are not focusable and cost no keystrokes — and the widget opens
+ * with `Auto` active.
  */
+
+/** The selectable languages in the order the picker presents them. */
+function pickerOrder(): Array<{ code: string }> {
+    const { known, others } = partitionByKnown(
+        getActiveLanguages(),
+        getLanguageConfig().knownLanguages
+    );
+    return [...known, ...others];
+}
+
 async function pickLanguageAt(offset: number): Promise<string> {
-    const languages = getActiveLanguages();
+    const languages = pickerOrder();
     assert.ok(offset < languages.length, `offset ${offset} should exist in the language list`);
     const expected = languages[offset].code;
 
@@ -166,7 +179,7 @@ async function pickLanguageAt(offset: number): Promise<string> {
     // really about (CORE-1847).
     await waitUntil(
         `the picker to select ${expected}`,
-        () => legesherConfig().get<string>('targetLanguage') === expected,
+        () => legesherConfig().get<string>('workingLanguage') === expected,
         20_000
     );
 
@@ -175,7 +188,7 @@ async function pickLanguageAt(offset: number): Promise<string> {
 
 /** A language near the top of the picker that is not `avoid`. */
 function nearbyLanguageOffset(avoid: string): number {
-    const offset = getActiveLanguages().findIndex(lang => lang.code !== avoid);
+    const offset = pickerOrder().findIndex(lang => lang.code !== avoid);
     assert.notStrictEqual(offset, -1, 'the picker should offer at least one other language');
     return offset;
 }
@@ -213,7 +226,10 @@ describe('Language-resolution scopes (CORE-1776)', function () {
         // test's global setup and would fail it for the wrong reason. Only what
         // is actually set is written, so cleanup does not trigger a restart per
         // key that was never touched.
-        for (const key of ['targetLanguage', 'sourceLanguage', 'languageDetection']) {
+        for (const key of [
+            'targetLanguage', 'workingLanguage', 'knownLanguages',
+            'sourceLanguage', 'languageDetection',
+        ]) {
             const inspected = legesherConfig().inspect(key);
             if (inspected?.workspaceValue !== undefined) {
                 await legesherConfig().update(key, undefined, vscode.ConfigurationTarget.Workspace);
@@ -247,15 +263,18 @@ describe('Language-resolution scopes (CORE-1776)', function () {
 
         const chosen = await pickLanguageAt(nearbyLanguageOffset('de'));
 
-        // The write has to land where it can win, not merely be written.
-        const inspected = legesherConfig().inspect<string>('targetLanguage');
+        // The write has to land where it can win, not merely be written. The
+        // pick writes the new setting, but at the scope the deprecated alias
+        // supplied — Global would lose to the alias's workspace value
+        // (CORE-1760).
+        const inspected = legesherConfig().inspect<string>('workingLanguage');
         assert.strictEqual(
             inspected?.workspaceValue,
             chosen,
             'the pick should be written at the scope that supplies the value'
         );
         assert.strictEqual(
-            legesherConfig().get<string>('targetLanguage'),
+            legesherConfig().get<string>('workingLanguage'),
             chosen,
             'the effective setting should be the picked language'
         );
@@ -287,7 +306,7 @@ describe('Language-resolution scopes (CORE-1776)', function () {
 
         const chosen = await pickLanguageAt(nearbyLanguageOffset('de'));
 
-        const inspected = legesherConfig().inspect<string>('targetLanguage');
+        const inspected = legesherConfig().inspect<string>('workingLanguage');
         assert.strictEqual(inspected?.globalValue, chosen, 'should write user settings');
         assert.strictEqual(
             inspected?.workspaceValue,
@@ -324,14 +343,29 @@ describe('Language-resolution scopes (CORE-1776)', function () {
         await config.update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
 
         await openFixture(ENGLISH_FIXTURE);
-        await settle();
-        assert.strictEqual(api().getServerLanguage(), 'en->de', 'precondition: server running');
+        // Polled rather than slept: transitions queued by earlier tests'
+        // cleanup all run through the same serialised queue, and a fixed
+        // settle() is a bet on how long that backlog takes — a bet this test
+        // lost once the picker tests before it started completing real picks.
+        await waitUntil(
+            'the server to be running at en->de',
+            () => api().getServerLanguage() === 'en->de',
+            45_000
+        );
 
         // A binary that answers --version but dies on the LSP handshake, which
         // is what a broken install or a version mismatch looks like in practice.
         await config.update('serverCommand', brokenServerPath(), vscode.ConfigurationTarget.Global);
         await config.update('targetLanguage', 'fr', vscode.ConfigurationTarget.Global);
-        await settle();
+        // The observable end of the failed change is its recorded outcome; the
+        // identity check below is the claim under test, made once the
+        // transition has actually finished.
+        await waitUntil(
+            'the change to fr to be recorded as failed',
+            () => api().getLastTransition()?.to === 'en->fr'
+                && api().getLastTransition()?.outcome === 'failed',
+            45_000
+        );
 
         assert.strictEqual(
             api().getServerLanguage(),
@@ -343,7 +377,11 @@ describe('Language-resolution scopes (CORE-1776)', function () {
         // swallowed as a no-op against a stale cache entry.
         await config.update('serverCommand', serverPath, vscode.ConfigurationTarget.Global);
         await config.update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
-        await settle();
+        await waitUntil(
+            'the server to be running at en->de again',
+            () => api().getServerLanguage() === 'en->de',
+            45_000
+        );
 
         assert.strictEqual(
             api().getServerLanguage(),

@@ -164,3 +164,56 @@ class TestRetiredEnvironmentVariables:
             LanguageServerConfig.from_env()
 
         assert "LEGESHER_PYLANCE" not in caplog.text
+
+
+def test_language_role_defaults():
+    """The named role slots default to English like the rest (CORE-1760)."""
+    config = LanguageServerConfig()
+
+    assert config.file_language == "en"
+    assert config.working_language == "en"
+
+
+def test_language_role_validation():
+    """The role slots get the same code validation as the original pair."""
+    config = LanguageServerConfig(file_language="FA", working_language="PT")
+    assert config.file_language == "fa"
+    assert config.working_language == "pt"
+
+    with pytest.raises(ValueError):
+        LanguageServerConfig(working_language="../etc")
+    with pytest.raises(ValueError):
+        LanguageServerConfig(file_language="")
+
+
+def test_validate_languages_covers_role_slots():
+    """validate_languages() answers for every role, not just the old pair."""
+    assert LanguageServerConfig(file_language="fa", working_language="pt").validate_languages()
+    assert not LanguageServerConfig(working_language="por").validate_languages()
+
+
+def test_legacy_target_language_seeds_roles_from_env(monkeypatch):
+    """LEGESHER_TARGET_LANG stands for every role it used to mean (CORE-1760).
+
+    Setting only target_language would leave file_language and
+    working_language at "en" while the file is actually parsed as the chosen
+    language — the lockstep this model advertises, silently broken.
+    """
+    monkeypatch.setenv("LEGESHER_TARGET_LANG", "ja")
+
+    config = LanguageServerConfig.from_env()
+
+    assert config.target_language == "ja"
+    assert config.file_language == "ja"
+    assert config.working_language == "ja"
+
+
+def test_apply_legacy_target_language_keeps_roles_in_lockstep():
+    """The shared helper every old-vocabulary entry point routes through."""
+    config = LanguageServerConfig()
+
+    config.apply_legacy_target_language("de")
+
+    assert config.target_language == "de"
+    assert config.file_language == "de"
+    assert config.working_language == "de"

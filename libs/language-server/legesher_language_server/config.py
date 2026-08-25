@@ -29,8 +29,15 @@ class LanguageServerConfig(BaseModel):
     """Configuration for Legesher Language Server.
 
     Attributes:
-        source_language: Source code language (default: 'en' for English)
-        target_language: Target display language for translation
+        source_language: Canonical language the project's code is stored in
+            (default: 'en' for English)
+        target_language: Deprecated single slot for "the other language"; kept
+            in lockstep with file_language so providers written against it
+            keep working (CORE-1760)
+        file_language: Language the current file is written in — what the
+            server parses and maps keywords by
+        working_language: Language the user reads and writes in right now —
+            what hover and other render surfaces should target
         python_version: Python version for language pack selection (auto-detected if None)
         cache_size: Maximum number of cached translations (LRU cache)
         cache_ttl: Time-to-live for cache entries in seconds
@@ -39,10 +46,20 @@ class LanguageServerConfig(BaseModel):
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
     """
 
-    # Language configuration
+    # Language configuration (CORE-1760: the roles are named — canonical /
+    # file / working — because one "target" slot cannot say both what a file
+    # is written in and what the user wants to read in.)
     source_language: str = Field(default="en", description="Source code language (ISO 639-1 code)")
     target_language: str = Field(
-        default="en", description="Target display language (ISO 639-1 code)"
+        default="en",
+        description="Deprecated alias kept in lockstep with file_language (ISO 639-1 code)",
+    )
+    file_language: str = Field(
+        default="en", description="Language the current file is written in (ISO 639-1 code)"
+    )
+    working_language: str = Field(
+        default="en",
+        description="Language the user reads and writes in right now (ISO 639-1 code)",
     )
 
     # Python configuration
@@ -67,7 +84,7 @@ class LanguageServerConfig(BaseModel):
     # Logging
     log_level: str = Field(default="INFO", description="Logging level")
 
-    @field_validator("source_language", "target_language")
+    @field_validator("source_language", "target_language", "file_language", "working_language")
     @classmethod
     def validate_language_code(cls, v: str) -> str:
         """Validate language code format (ISO 639-1/639-2).
@@ -220,9 +237,17 @@ class LanguageServerConfig(BaseModel):
                 logger.warning("Invalid LEGESHER_CACHE_TTL, using default 3600")
                 cache_ttl = 3600
 
+            # LEGESHER_TARGET_LANG predates the role split and stands for all
+            # three of the slots it used to mean at once (CORE-1760); passing
+            # it once would leave file_language and working_language at "en"
+            # while the file is parsed as something else.
+            target_lang = os.getenv("LEGESHER_TARGET_LANG", "en")
+
             return cls(
                 source_language=os.getenv("LEGESHER_SOURCE_LANG", "en"),
-                target_language=os.getenv("LEGESHER_TARGET_LANG", "en"),
+                target_language=target_lang,
+                file_language=target_lang,
+                working_language=target_lang,
                 python_version=os.getenv("LEGESHER_PYTHON_VERSION"),
                 cache_size=cache_size,
                 cache_ttl=cache_ttl,
@@ -238,6 +263,24 @@ class LanguageServerConfig(BaseModel):
             logger.info("Using safe default configuration")
             # Fall back to safe defaults rather than crash
             return cls()
+
+    def apply_legacy_target_language(self, code: str) -> None:
+        """Set the deprecated target slot and the roles it used to stand for.
+
+        ``target_language`` predates the role split and always meant the file
+        and working languages at once (CORE-1760). Every entry point that
+        still speaks the old vocabulary — the ``--target-lang`` flag,
+        ``LEGESHER_TARGET_LANG``, a client sending only ``targetLanguage`` —
+        therefore has to seed all three, or the roles this model advertises as
+        being in lockstep silently disagree: the file would be parsed as the
+        chosen language while ``file_language`` still read ``en``.
+
+        Args:
+            code: Validated ISO 639-1 language code.
+        """
+        self.target_language = code
+        self.file_language = code
+        self.working_language = code
 
     def detect_python_version(self) -> str:
         """Detect or return configured Python version.
@@ -255,11 +298,14 @@ class LanguageServerConfig(BaseModel):
         """Validate that language codes are valid ISO 639-1 codes.
 
         Returns:
-            True if both languages are valid 2-letter codes
+            True if every language role holds a valid 2-letter code
         """
-        return (
-            len(self.source_language) == 2
-            and len(self.target_language) == 2
-            and self.source_language.isalpha()
-            and self.target_language.isalpha()
+        return all(
+            len(code) == 2 and code.isalpha()
+            for code in (
+                self.source_language,
+                self.target_language,
+                self.file_language,
+                self.working_language,
+            )
         )

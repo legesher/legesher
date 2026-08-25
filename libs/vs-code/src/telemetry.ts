@@ -29,7 +29,7 @@ let reporter: TelemetryReporter | undefined;
 let isInitialized = false;
 
 /** Known command names for type-safe telemetry tracking */
-type TrackedCommand = 'restartServer' | 'selectLanguage' | 'showTranslationPanel' | 'tryTranslationPanel' | 'giveFeedback';
+type TrackedCommand = 'restartServer' | 'selectLanguage' | 'manageMyLanguages' | 'showTranslationPanel' | 'tryTranslationPanel' | 'giveFeedback';
 
 /** Known error types for type-safe error tracking */
 type TrackedErrorType = 'serverError' | 'serverConnectionClosed' | 'serverNotInstalled' | 'serverStartFailed' | 'translationFailed'
@@ -195,7 +195,7 @@ export class LegesherTelemetry {
      * recorded alongside the outcome.
      */
     static trackLanguageSettingWrite(
-        setting: 'targetLanguage' | 'languageDetection',
+        setting: 'workingLanguage' | 'languageDetection' | 'knownLanguages',
         // A configuration scope, not a resolution source: a *write* can land in
         // folder/workspace/user settings, but never in 'detected', which is not
         // somewhere anything can be written.

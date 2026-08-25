@@ -49,24 +49,52 @@ For complete installation instructions (VS Code extension + Python packages), se
 
 ## Commands
 
-| Command                             | Description                         |
-| ----------------------------------- | ----------------------------------- |
-| `Legesher: Select Language`         | Choose your target language         |
-| `Legesher: Show Translation Panel`  | Open side-by-side translation view  |
-| `Legesher: Restart Language Server` | Reconnect to the language server    |
-| `Legesher: Give Feedback`           | Submit feedback about the extension |
+| Command                             | Description                          |
+| ----------------------------------- | ------------------------------------ |
+| `Legesher: Select Language`         | Choose the language you work in      |
+| `Legesher: Manage My Languages`     | Edit the set of languages you read   |
+| `Legesher: Show Translation Panel`  | Open side-by-side translation view   |
+| `Legesher: Restart Language Server` | Reconnect to the language server     |
+| `Legesher: Give Feedback`           | Submit feedback about the extension  |
 
 ## Configuration
 
 Access via Settings (`Cmd+,`) → search "Legesher":
 
-| Setting                      | Default        | Description                    |
-| ---------------------------- | -------------- | ------------------------------ |
-| `legesher.targetLanguage`    | `en`           | Your preferred coding language |
-| `legesher.enabled`           | `true`         | Enable/disable the extension   |
-| `legesher.serverCommand`     | `legesher-lsp` | Path to language server        |
-| `legesher.trace.server`      | `off`          | Debug logging level            |
-| `legesher.telemetry.enabled` | `false`        | Anonymous usage telemetry      |
+| Setting                      | Default        | Description                            |
+| ---------------------------- | -------------- | -------------------------------------- |
+| `legesher.workingLanguage`   | `en`           | The language you read and write in     |
+| `legesher.knownLanguages`    | `[]`           | The languages you read comfortably     |
+| `legesher.sourceLanguage`    | `en`           | The language the project is stored in  |
+| `legesher.languageDetection` | `auto`         | Infer each file's language from it     |
+| `legesher.enabled`           | `true`         | Enable/disable the extension           |
+| `legesher.serverCommand`     | `legesher-lsp` | Path to language server                |
+| `legesher.trace.server`      | `off`          | Debug logging level                    |
+| `legesher.telemetry.enabled` | `false`        | Anonymous usage telemetry              |
+
+> **`legesher.targetLanguage` is deprecated.** It was one setting for two
+> different things — the language a file is written in, and the language you
+> want to read it in — which are only the same on your own files. Use
+> `legesher.workingLanguage` instead. Existing settings keep working: the old
+> name is still honoured wherever the new one is not set.
+
+### Language roles
+
+Legesher distinguishes four roles, so opening someone else's file does the
+right thing:
+
+- **Working language** (`legesher.workingLanguage`) — what you read and write
+  in. Change it from the status bar or `Legesher: Select Language`.
+- **File language** — what a given file is actually written in, detected from
+  its contents (`legesher.languageDetection`).
+- **Known languages** (`legesher.knownLanguages`) — the languages you read
+  comfortably. Legesher lists these first in the language picker and stays
+  quiet about files already written in one of them, instead of flagging every
+  file that is not in your working language. Seeded from your working language,
+  so there is nothing to configure to get started; edit it with
+  `Legesher: Manage My Languages`.
+- **Canonical** (`legesher.sourceLanguage`) — the English terms Python itself
+  defines, which every translation routes through.
 
 ### Language Codes
 

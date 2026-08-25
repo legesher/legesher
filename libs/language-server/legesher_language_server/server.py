@@ -355,10 +355,14 @@ class LegesherLanguageServer(LanguageServer):
             if isinstance(init_opts, dict):
                 logger.info(f"DEBUG: Keys in init_opts: {list(init_opts.keys())}")
                 try:
+                    # The deprecated single slot first, so the named roles can
+                    # override it. A client that predates the role split sends
+                    # only targetLanguage, and that one value was always three
+                    # things at once — so it seeds all three (CORE-1760).
                     if "targetLanguage" in init_opts:
                         logger.info(f"DEBUG: Found targetLanguage = {init_opts['targetLanguage']}")
-                        self.config.target_language = validate_language_code(
-                            init_opts["targetLanguage"], "targetLanguage"
+                        self.config.apply_legacy_target_language(
+                            validate_language_code(init_opts["targetLanguage"], "targetLanguage")
                         )
                         logger.info(
                             f"Updated target language from init options: "
@@ -373,6 +377,30 @@ class LegesherLanguageServer(LanguageServer):
                             f"Updated source language from init options: "
                             f"{self.config.source_language}"
                         )
+                    # The named roles (CORE-1760), carried as separate slots.
+                    # target_language shadows file_language deliberately:
+                    # every provider written against the old slot parses the
+                    # file with it, and that is the file-language role.
+                    if "fileLanguage" in init_opts:
+                        logger.info(f"DEBUG: Found fileLanguage = {init_opts['fileLanguage']}")
+                        self.config.file_language = validate_language_code(
+                            init_opts["fileLanguage"], "fileLanguage"
+                        )
+                        self.config.target_language = self.config.file_language
+                        logger.info(
+                            f"Updated file language from init options: {self.config.file_language}"
+                        )
+                    if "workingLanguage" in init_opts:
+                        logger.info(
+                            f"DEBUG: Found workingLanguage = {init_opts['workingLanguage']}"
+                        )
+                        self.config.working_language = validate_language_code(
+                            init_opts["workingLanguage"], "workingLanguage"
+                        )
+                        logger.info(
+                            f"Updated working language from init options: "
+                            f"{self.config.working_language}"
+                        )
                 except ValueError as e:
                     logger.warning(
                         f"Invalid language configuration from client: {e}. Using defaults."
@@ -381,7 +409,9 @@ class LegesherLanguageServer(LanguageServer):
 
         logger.info(
             f"DEBUG: config AFTER - target: {self.config.target_language}, "
-            f"source: {self.config.source_language}"
+            f"source: {self.config.source_language}, "
+            f"file: {self.config.file_language}, "
+            f"working: {self.config.working_language}"
         )
 
         return InitializeResult(
