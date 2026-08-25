@@ -102,7 +102,7 @@ def test_every_locale_ships_the_same_terms_at_a_given_version(
     """The card states one term count per version; that requires uniformity."""
     from collections import Counter
 
-    per_pack = Counter((r["locale"], r["python_version"]) for r in rows)
+    per_pack = Counter((r["locale"], r["pl_version"]) for r in rows)
     for version in export_packs.VERSIONS:
         sizes = {n for (_, v), n in per_pack.items() if v == version}
         assert len(sizes) == 1, f"locales disagree at {version}: {sorted(sizes)}"
@@ -119,7 +119,7 @@ def test_inheritance_is_resolved_and_labelled(rows: list[dict]) -> None:
         r
         for r in rows
         if r["locale"] == "es"
-        and r["python_version"] == "3.12"
+        and r["pl_version"] == "3.12"
         and r["source_term"] == "for"
     ]
     assert len(match) == 1
@@ -132,7 +132,7 @@ def test_inheritance_is_resolved_and_labelled(rows: list[dict]) -> None:
         r
         for r in rows
         if r["locale"] == "es"
-        and r["python_version"] == "3.11"
+        and r["pl_version"] == "3.11"
         and r["source_term"] == "except*"
     ]
     assert len(star) == 1
@@ -168,7 +168,7 @@ def test_a_redefined_term_points_at_the_redefinition(rows: list[dict]) -> None:
     showing a value 3.10 does not carry.
     """
     by_version = {
-        r["python_version"]: r
+        r["pl_version"]: r
         for r in rows
         if r["locale"] == "si" and r["source_term"] == "True"
     }
@@ -185,14 +185,14 @@ def test_a_redefined_term_points_at_the_redefinition(rows: list[dict]) -> None:
 def test_defined_at_never_points_forward(rows: list[dict]) -> None:
     """A row can only inherit from a version at or below its own."""
     order = {v: i for i, v in enumerate(export_packs.VERSIONS)}
-    bad = [r for r in rows if order[r["defined_at"]] > order[r["python_version"]]]
+    bad = [r for r in rows if order[r["defined_at"]] > order[r["pl_version"]]]
     assert not bad, f"{len(bad)} row(s) claim a future definition: {bad[:3]}"
 
 
 def test_the_row_value_matches_the_version_it_claims(rows: list[dict]) -> None:
     """``defined_at`` must be checkable: that pack's row carries this value."""
     at = {
-        (r["locale"], r["python_version"], r["category"], r["source_term"]): r[
+        (r["locale"], r["pl_version"], r["category"], r["source_term"]): r[
             "translation"
         ]
         for r in rows
@@ -246,7 +246,9 @@ def _manifest(
     return {
         "counts": {
             "locales": len(locales),
-            "python_versions": len(export_packs.VERSIONS),
+            "pl_versions": len(export_packs.VERSIONS),
+            "pl_terminology_rows": 0,
+            "packs_rows": len(locales),
             "terms_per_locale_by_version": dict.fromkeys(export_packs.VERSIONS, 1),
         },
         "locales": locales,
@@ -409,7 +411,9 @@ def test_the_card_states_its_target_scope_and_the_join_key() -> None:
     )
     assert "This release ships the `python` target" in card
     assert "Selections exist internally for other targets" in card
-    assert "`target` is not a column: every row in this release is" in card
+    # `target` returned as a key column with the four-config split -- the join
+    # into pl_terminology spans targets. The card now says so.
+    assert "`target`, `category`, `source_term` — the key" in card
     assert "`locale` is a pack id, not a language tag" in card
     assert "`no` is BCP 47 `nb`" in card
 
@@ -459,11 +463,11 @@ def test_every_category_the_export_ships_is_described_on_the_card() -> None:
         {"MIT": 1},
         _locale_rows(export_packs.pack_locales()),
     )
-    assert set(export_packs.CATEGORY_BLURBS) == set(export_packs.SECTIONS), (
-        "CATEGORY_BLURBS and SECTIONS have drifted; the card would render a "
-        "KeyError or a bare category name"
+    assert set(export_packs.CATEGORY_BLURBS) == set(export_packs.CATEGORY_FAMILIES), (
+        "CATEGORY_BLURBS and CATEGORY_FAMILIES have drifted; the card would "
+        "render a KeyError or a bare category name"
     )
-    for name in export_packs.SECTIONS:
+    for name in export_packs.CATEGORY_FAMILIES:
         assert f"| `{name}` |" in card
 
 
@@ -805,30 +809,36 @@ def test_git_describe_only_ever_reports_a_packs_tag(tmp_path: Path) -> None:
     )
 
 
-def test_published_schema_drops_the_redundant_columns(exported: Path) -> None:
-    """CORE-1986: seven columns that carried no information per row.
+def test_published_schema_is_the_four_decided_configs(exported: Path) -> None:
+    """CORE-2022: every config's published columns are exactly the decided set.
 
     Asserted on the written Parquet, not the builders, because the builders
-    deliberately keep the fuller dicts.
+    deliberately keep fuller dicts.
     """
     import pyarrow.parquet as pq
 
-    vocab = pq.read_table(exported / "data" / "vocabulary.parquet")
-    locales = pq.read_table(exported / "data" / "locales.parquet")
+    expected = {
+        "vocabulary": export_packs.VOCABULARY_COLUMNS,
+        "locales": export_packs.LOCALE_COLUMNS,
+        "pl_terminology": export_packs.PL_TERMINOLOGY_COLUMNS,
+        "packs": export_packs.PACKS_COLUMNS,
+    }
+    for name, columns in expected.items():
+        table = pq.read_table(exported / "data" / f"{name}.parquet")
+        assert tuple(table.column_names) == columns, name
 
-    assert tuple(vocab.column_names) == export_packs.VOCABULARY_COLUMNS
-    assert tuple(locales.column_names) == export_packs.LOCALE_COLUMNS
-
-    for gone in ("language_name", "native_name", "rtl", "tier", "target"):
-        assert gone not in vocab.column_names, (
-            f"{gone} is dependent on `locale` alone and belongs in `locales`"
-        )
-    for gone in ("terms_latest", "pack_versions"):
-        assert gone not in locales.column_names
-
-    # tier stays in `locales` -- one row per locale is the one place it is
-    # designed to vary, and the place a promotion writes.
-    assert "tier" in locales.column_names
+    # The loop proved the parquet columns ARE the constants, so the rest
+    # asserts on the constants: per-locale facts stay out of vocabulary,
+    # per-pairing state stays out of locales, and the vocabulary key keeps
+    # `target` and `category` (the join spans targets, and `type` is rendered
+    # once as a keyword and once as a builtin).
+    assert not {"language_name", "native_name", "rtl"} & set(
+        export_packs.VOCABULARY_COLUMNS
+    )
+    assert not {"tier", "package_version", "terms_latest", "pack_versions"} & set(
+        export_packs.LOCALE_COLUMNS
+    ), "(locale x target) facts belong in `packs`"
+    assert {"target", "category"} <= set(export_packs.VOCABULARY_COLUMNS)
 
 
 def test_package_version_matches_each_pack_pyproject(exported: Path) -> None:
@@ -840,7 +850,7 @@ def test_package_version_matches_each_pack_pyproject(exported: Path) -> None:
     """
     import pyarrow.parquet as pq
 
-    rows = pq.read_table(exported / "data" / "locales.parquet").to_pylist()
+    rows = pq.read_table(exported / "data" / "packs.parquet").to_pylist()
     assert rows
 
     for row in rows:
@@ -849,7 +859,8 @@ def test_package_version_matches_each_pack_pyproject(exported: Path) -> None:
             f"{row['locale']}: dataset says {row['package_version']}, "
             f"pyproject says {declared}"
         )
-        assert row["package_version"], "a locale must not publish a null version"
+        assert row["package_version"], "a pairing must not publish a null version"
+        assert row["target"] == "python"
 
 
 def test_main_wires_every_push_gate_and_pushes_last(
@@ -1001,3 +1012,273 @@ def test_no_published_file_mentions_the_sibling_datasets(exported: Path) -> None
                 offenders.append(f"{path.relative_to(exported)}: {word!r}")
 
     assert not offenders, f"published files point at a sibling dataset: {offenders}"
+
+
+# --- the four-config split (CORE-2022) --------------------------------------
+
+
+@pytest.fixture(scope="module")
+def terminology(rows: list[dict]) -> list[dict]:
+    """Derived from the SAME rows instance the integrity test joins against.
+
+    Building from scratch here would double the module's most expensive
+    setup and make the referential-integrity test validate a join between
+    two independently built row sets -- one the export never performs.
+    """
+    return export_packs.build_pl_terminology(rows)
+
+
+def test_pl_terminology_covers_every_category_family(terminology: list[dict]) -> None:
+    """286 rows: 184 terms + 33 symbols + 15 conventions + 54 messages.
+
+    54, not the seed's 55 entries: CPython reworded one message at 3.11 and
+    the seed carries both wordings under one key, which the grain merges.
+    """
+    from collections import Counter
+
+    by_family = Counter(r["category"] for r in terminology)
+    assert by_family["symbols"] == 33
+    assert by_family["variable_conventions"] == 15
+    assert by_family["messages"] == 54
+    term_rows = sum(by_family[s] for s in export_packs.SECTIONS)
+    assert term_rows == 184
+    assert set(by_family) == set(export_packs.CATEGORY_FAMILIES)
+    assert all(r["target"] == "python" for r in terminology)
+
+
+def test_type_carries_two_rows_with_their_own_validity(
+    terminology: list[dict],
+) -> None:
+    """The one term in two categories, each with its own set and kind."""
+    rows = {r["category"]: r for r in terminology if r["source_term"] == "type"}
+    assert set(rows) == {"keywords", "builtins"}
+    assert rows["builtins"]["subcategory"] == "builtin_type"
+    assert rows["builtins"]["pl_versions"] == list(export_packs.VERSIONS)
+    assert rows["keywords"]["subcategory"] == "keyword"
+    assert rows["keywords"]["pl_versions"] == ["3.12", "3.13", "3.14"]
+
+
+def test_every_term_subcategory_is_admitted_by_its_section(
+    terminology: list[dict],
+) -> None:
+    """A subcategory outside its section's kinds means the taxonomy drifted."""
+    from legesher_i18n.term_definitions import YAML_SECTION_CATEGORIES
+
+    for row in terminology:
+        if row["category"] in export_packs.SECTIONS:
+            assert row["subcategory"] in YAML_SECTION_CATEGORIES[row["category"]], row
+
+
+def test_messages_come_from_the_tracked_seed_with_version_windows(
+    terminology: list[dict],
+) -> None:
+    """The messages category reads the seed file, never the database.
+
+    CPython reworded ``UnboundLocalError.before_assignment`` at 3.11, and the
+    seed carries both wordings as separate version-windowed entries. For this
+    config that is ONE term whose English surface changed -- so it merges to a
+    single row: union validity, latest wording. The old wording must NOT
+    surface as a phantom "removed at 3.11" term.
+    """
+    messages = [r for r in terminology if r["category"] == "messages"]
+    # `is not None`, not truthiness: three templates have a legitimately EMPTY
+    # English surface (a bare `assert`, StopIteration with no value,
+    # KeyboardInterrupt) -- the empty string IS the template, matcher `^$`.
+    assert all(r["source_text"] is not None for r in messages), (
+        "a message row without its English template is a key with no content"
+    )
+
+    reworded = [
+        r for r in messages if r["source_term"] == "UnboundLocalError.before_assignment"
+    ]
+    assert len(reworded) == 1, "the seed's duplicate key must merge, not repeat"
+    assert reworded[0]["pl_versions"] == list(export_packs.VERSIONS)
+    assert reworded[0]["source_text"].startswith("cannot access local variable"), (
+        "the merged row must carry the CURRENT wording, matching the JSON's "
+        "union-at-latest convention"
+    )
+
+    windowed = [r for r in messages if r["pl_versions"] != list(export_packs.VERSIONS)]
+    assert all(
+        r["pl_versions"] == sorted(r["pl_versions"], key=export_packs.VERSIONS.index)
+        for r in windowed
+    )
+
+
+def test_message_subcategory_is_the_keys_leading_component(
+    terminology: list[dict],
+) -> None:
+    """Total grouping, no null bucket beside deliberate nulls.
+
+    The seed's `cluster` field covers a minority of templates; a column the
+    card documents as "the message cluster" that is null for most rows
+    collapses "uncurated" onto the symbols rows' by-design nulls. The key
+    convention is `<Surface>.<slug>`, and the leading component is a real,
+    total grouping.
+    """
+    messages = [r for r in terminology if r["category"] == "messages"]
+    for row in messages:
+        assert row["subcategory"] == row["source_term"].split(".", 1)[0]
+
+
+def test_message_windows_agree_with_the_runtime_catalog(
+    terminology: list[dict],
+) -> None:
+    """Shared vectors against messages.py -- one window contract, not two.
+
+    load_catalog resolves validity by numeric comparison; the exporter must
+    agree on every published row, or the dataset documents behaviour the
+    runtime does not have. Vectors include the case index-membership
+    semantics got wrong: a boundary OUTSIDE the shipped range.
+    """
+    from legesher_i18n.messages import _parse_version
+
+    def runtime_valid(version: str, added: str, removed: str | None) -> bool:
+        if _parse_version(added) > _parse_version(version):
+            return False
+        return not (removed and _parse_version(removed) <= _parse_version(version))
+
+    vectors = [
+        ("3.10", None),
+        ("3.11", None),
+        ("3.10", "3.11"),
+        ("3.12", "3.14"),
+        ("3.15", None),  # future add: valid nowhere in range
+        ("3.10", "3.9"),  # removed before range: valid nowhere
+        ("3.8", None),  # added before range: valid everywhere
+    ]
+    for added, removed in vectors:
+        expected = [
+            v for v in export_packs.VERSIONS if runtime_valid(v, added, removed)
+        ]
+        assert export_packs._message_pl_versions(added, removed) == expected, (
+            added,
+            removed,
+        )
+
+
+def test_pl_terminology_grain_is_unique(terminology: list[dict]) -> None:
+    """One row per (target, category, source_term) -- the declared grain."""
+    from collections import Counter
+
+    keys = Counter((r["target"], r["category"], r["source_term"]) for r in terminology)
+    duplicated = {k: n for k, n in keys.items() if n > 1}
+    assert not duplicated, duplicated
+
+
+def test_source_text_is_present_exactly_when_the_key_is_not_the_text(
+    terminology: list[dict],
+) -> None:
+    for row in terminology:
+        if row["category"] in export_packs.SECTIONS:
+            assert row["source_text"] is None, (
+                f"{row['source_term']}: a term's source_term IS its English"
+            )
+        else:
+            # Empty string is a real value here (see the messages test);
+            # absence is the defect.
+            assert row["source_text"] is not None, (
+                f"{row['source_term']}: slug/key rows must carry the English"
+            )
+
+
+def test_every_vocabulary_row_is_inside_its_terms_validity_set(
+    rows: list[dict], terminology: list[dict]
+) -> None:
+    """Referential integrity between the fact table and the dimension.
+
+    This is the join the gap queries stand on: a vocabulary row whose
+    (category, source_term, pl_version) is not covered by pl_terminology's
+    validity set is a rendering of a term the dataset claims does not exist
+    there.
+    """
+    valid = {
+        (r["category"], r["source_term"]): set(r["pl_versions"]) for r in terminology
+    }
+    orphans = [
+        r
+        for r in rows
+        if r["pl_version"] not in valid.get((r["category"], r["source_term"]), set())
+    ]
+    assert not orphans, (
+        f"{len(orphans)} vocabulary rows outside validity: {orphans[:3]}"
+    )
+
+
+def test_the_known_gaps_are_the_expected_ones(
+    rows: list[dict], terminology: list[dict]
+) -> None:
+    """symbols, variable_conventions and messages ship source-side only today.
+
+    The inventory is deliberately ahead of the renderings — that is what makes
+    the gap measurable. If this test fails because renderings EXIST, the gap
+    closed: delete the expectation, not the mechanism.
+    """
+    rendered_categories = {r["category"] for r in rows}
+    inventory_categories = {r["category"] for r in terminology}
+    assert inventory_categories - rendered_categories == {
+        "symbols",
+        "variable_conventions",
+        "messages",
+    }
+
+
+def test_packs_rows_are_one_per_pairing(exported: Path) -> None:
+    import pyarrow.parquet as pq
+
+    packs = pq.read_table(exported / "data" / "packs.parquet").to_pylist()
+    locales = pq.read_table(exported / "data" / "locales.parquet").to_pylist()
+    assert len(packs) == len(locales) == 51
+    assert {r["locale"] for r in packs} == {r["locale"] for r in locales}
+    assert all(r["pl_versions"] == list(export_packs.VERSIONS) for r in packs)
+
+
+def test_json_is_one_loadable_file_per_pairing(exported: Path) -> None:
+    """json/<locale>/<target>.json: translations alone, semver and range."""
+    import json as jsonlib
+
+    files = sorted((exported / "json").rglob("*.json"))
+    assert len(files) == 51
+    assert all(f.name == "python.json" for f in files)
+
+    ar = jsonlib.loads((exported / "json" / "ar" / "python.json").read_text("utf-8"))
+    assert ar["package_version"] == export_packs.read_package_version("ar")
+    assert ar["pl_version_range"] == "3.10-3.14"
+    # Union across the range: a mid-range arrival is present.
+    assert "type" in {k.lower() for k in ar["keywords"]}
+    # Translations alone -- no per-term structure.
+    flat = set(ar) - {
+        "locale",
+        "target",
+        "package_version",
+        "tier",
+        "pl_version_range",
+    }
+    assert flat <= set(export_packs.CATEGORY_FAMILIES)
+    for section in flat:
+        assert all(isinstance(v, str) for v in ar[section].values())
+
+
+def test_json_union_carries_the_latest_rendering(
+    exported: Path, rows: list[dict]
+) -> None:
+    """Sinhala's 3.13 conjunct redefinitions appear in their current form."""
+    import json as jsonlib
+
+    si = jsonlib.loads((exported / "json" / "si" / "python.json").read_text("utf-8"))
+    latest = next(
+        r["translation"]
+        for r in rows
+        if r["locale"] == "si"
+        and r["source_term"] == "True"
+        and r["pl_version"] == "3.14"
+    )
+    earliest = next(
+        r["translation"]
+        for r in rows
+        if r["locale"] == "si"
+        and r["source_term"] == "True"
+        and r["pl_version"] == "3.10"
+    )
+    assert latest != earliest, "fixture assumption broken: si stopped redefining True"
+    assert si["keywords"]["True"] == latest

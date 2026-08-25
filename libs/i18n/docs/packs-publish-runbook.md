@@ -105,9 +105,11 @@ Check the summary before going further:
 build/hf-packs/
   README.md          the dataset card — generated, never hand-edited
   manifest.json      commit, toolchain, counts, SHA-256 per file
-  data/vocabulary.parquet
-  data/locales.parquet
-  json/<locale>/<version>.json
+  data/vocabulary.parquet       the renderings (fact table)
+  data/locales.parquet          natural-language identity
+  data/pl_terminology.parquet   the target's own terminology + validity sets
+  data/packs.parquet            per-(locale × target) state: tier, semver
+  json/<locale>/<target>.json   the loadable form: translations alone
 ```
 
 Regeneration is byte-identical for a pinned toolchain; `manifest.json` records

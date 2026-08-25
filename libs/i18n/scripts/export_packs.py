@@ -119,7 +119,16 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 _I18N_ROOT = _SCRIPT_DIR.parent
 sys.path.insert(0, str(_I18N_ROOT))
 
+from legesher_i18n.messages import _parse_version  # noqa: E402
 from legesher_i18n.pack_loader import LanguagePackLoader  # noqa: E402
+from legesher_i18n.term_definitions import (  # noqa: E402
+    YAML_SECTION_CATEGORIES,
+    classify_term,
+)
+from legesher_i18n.vocabulary_definitions import (  # noqa: E402
+    VOCABULARY_SECTIONS,
+    english_values,
+)
 
 PACKS_DIR = _I18N_ROOT / "language-packs" / "python"
 REGISTRY = _I18N_ROOT / "legesher_i18n" / "languages.json"
@@ -156,21 +165,26 @@ PUSH_ALLOW_PATTERNS: tuple[str, ...] = (
     "json/*/*.json",
 )
 
-#: Published columns, per config (CORE-1986). The row dicts built in memory
-#: carry more than this on purpose -- ``assert_python_only`` needs ``target``,
-#: ``nfkc_instability`` and the card need ``language_name`` -- so the published
-#: schema is a projection applied at write time rather than a restructuring of
-#: the builders. It is also then one list to read when asking "what does this
-#: dataset expose", instead of an argument reconstructed from three functions.
+#: Published columns, per config (CORE-1986, reshaped by CORE-2022). The row
+#: dicts built in memory carry more than this on purpose -- the card and the
+#: assertions read the fuller dicts -- so the published schema is a projection
+#: applied at write time. Four configs, each answering one question:
 #:
-#: What was dropped and why: ``language_name``, ``native_name`` and ``rtl`` are
-#: functionally dependent on ``locale`` and already in ``locales``; ``target``
-#: is ``python`` on every row; ``tier`` belongs in ``locales`` alone, where it
-#: is designed to vary -- carrying it here too means a promotion rewrites 912
-#: vocabulary rows and one locales row, which is two places to drift.
+#: * ``locales`` -- who is this natural language?
+#: * ``pl_terminology`` -- what does the programming language reserve, and on
+#:   which of its versions?
+#: * ``vocabulary`` -- what is it called in this natural language?
+#: * ``packs`` -- how far along is this (natural language x target) pairing?
+#:
+#: ``category`` stays in the vocabulary key: ``type`` is rendered once as a
+#: keyword and once as a builtin, and collapsing the key to (locale, target,
+#: pl_version, source_term) would conflate two renderings that may differ.
+#: ``target`` is a key column even while it is constant, because the join into
+#: ``pl_terminology`` spans targets the moment a second one ships.
 VOCABULARY_COLUMNS: tuple[str, ...] = (
     "locale",
-    "python_version",
+    "target",
+    "pl_version",
     "category",
     "source_term",
     "translation",
@@ -178,13 +192,10 @@ VOCABULARY_COLUMNS: tuple[str, ...] = (
     "inherited",
 )
 
-#: ``terms_latest`` and ``pack_versions`` are gone: the first was a cached
-#: aggregate of the ``vocabulary`` config in the same dataset, the second was
-#: ``len(VERSIONS)`` on every row -- a property of the dataset, not the locale.
-#:
-#: ``package_version`` replaces them with the number that actually varies and
-#: actually matters: the semver of THIS locale's distributable, so a reader can
-#: line a Hub revision up against PyPI without guessing.
+#: Pure natural-language identity. ``tier`` and ``package_version`` moved to
+#: ``packs`` (CORE-2022): both are properties of a (locale x target) pairing,
+#: not of the language -- the moment a second target ships, Arabic-Python and
+#: Arabic-JavaScript stop sharing either value.
 LOCALE_COLUMNS: tuple[str, ...] = (
     "locale",
     "language_name",
@@ -193,8 +204,35 @@ LOCALE_COLUMNS: tuple[str, ...] = (
     "bcp47",
     "rtl",
     "has_case_distinction",
-    "tier",
+)
+
+#: The programming language's own terminology: one row per (target, category,
+#: source_term), carrying the set of the target's versions the term is valid
+#: for. No natural language appears in this config. ``subcategory`` is the
+#: finer semantic kind (``keyword`` / ``builtin_func`` / ``builtin_type`` /
+#: ``special_constant`` / ``exception`` / ``reserved_word``) from
+#: ``term_definitions.py`` for term rows, and the message cluster for
+#: ``messages`` rows. ``source_text`` is the English surface when the key is
+#: not itself the text: a symbol's English name, a message's template.
+PL_TERMINOLOGY_COLUMNS: tuple[str, ...] = (
+    "target",
+    "category",
+    "subcategory",
+    "source_term",
+    "source_text",
+    "pl_versions",
+)
+
+#: The shipping unit and its state: one row per (locale, target) pairing.
+#: ``package_version`` is the semver of that pairing's own distributable, so a
+#: reader can line a Hub revision up against PyPI without guessing; ``tier`` is
+#: the maturity of exactly this pairing.
+PACKS_COLUMNS: tuple[str, ...] = (
+    "locale",
+    "target",
     "package_version",
+    "tier",
+    "pl_versions",
 )
 
 #: Interpreter versions each locale ships a pack for. Mirrors
@@ -208,9 +246,26 @@ VERSIONS = ("3.10", "3.11", "3.12", "3.13", "3.14")
 #: always-empty column would advertise a surface this artifact does not cover.
 SECTIONS = ("keywords", "builtins", "exceptions", "reserved_words")
 
-#: One line per category, for the card. Keyed by :data:`SECTIONS` so a partition
-#: added for another target cannot reach the card undescribed -- the render
-#: raises rather than printing a bare name a reader cannot interpret.
+#: Every category family ``pl_terminology`` publishes, in the order a reader
+#: meets them: the four translation sections, then the two vocabulary sections
+#: (CORE-1396), then the error-message templates (CORE-1679). The vocabulary
+#: sections and messages have no per-locale rows in ``vocabulary`` yet -- the
+#: pack files do not carry the sections, and message translations are
+#: publish-gated -- but the source-side inventory is target truth and ships
+#: now, which is what makes the gap measurable instead of invisible.
+CATEGORY_FAMILIES: tuple[str, ...] = (
+    *SECTIONS,
+    # Splatted from the canonical inventory, not spelled out: a section
+    # registered in vocabulary_definitions.py must surface here (and fail the
+    # blurb check) rather than silently missing from the config whose point
+    # is making gaps measurable.
+    *VOCABULARY_SECTIONS,
+    "messages",
+)
+
+#: One line per category, for the card. Keyed by :data:`CATEGORY_FAMILIES` so a
+#: partition added later cannot reach the card undescribed -- the render raises
+#: rather than printing a bare name a reader cannot interpret.
 CATEGORY_BLURBS: dict[str, str] = {
     "keywords": (
         "The words the grammar reserves. A parser recognises these, so a "
@@ -229,10 +284,32 @@ CATEGORY_BLURBS: dict[str, str] = {
         "Names the language treats as special without reserving them in the "
         "grammar — soft keywords and contextual forms."
     ),
+    "symbols": (
+        "What a symbol is called — `_` is *underscore* in English, and every "
+        "language has its own name for it. Prose names, not identifiers; "
+        "teaching text and error messages say them out loud."
+    ),
+    "variable_conventions": (
+        "The idiomatic short name for a variable role — the loop counter, the "
+        "throwaway, the accumulator. These are identifiers someone actually "
+        "types."
+    ),
+    "messages": (
+        "Error-message templates, with named `{placeholders}`. Sentences with "
+        "grammar rather than identifiers — the words a traceback says."
+    ),
 }
 
 #: The only target this artifact covers. Asserted against every emitted row.
 TARGET = "python"
+
+#: The tracked catalog the ``messages`` category is built from (CORE-1679).
+#: The seed file, not the database: the database is untracked (CORE-1794) and
+#: an export input that is not a tracked file breaks "regenerable from the
+#: tag". Only the English side is read -- the seed also carries ar/es
+#: translations, and those stay out of ``vocabulary`` until the
+#: content-addressed-key gate (CORE-1565) clears.
+MESSAGES_SEED = _I18N_ROOT / "legesher_i18n" / "db" / "seeds" / "cpython_messages.json"
 
 #: SPDX identifier declared for the published compilation. Matches the monorepo
 #: LICENSE, ``libs/i18n/pyproject.toml``, all 51 per-pack ``pyproject.toml``
@@ -447,7 +524,7 @@ def build_rows(locales: list[str], registry: dict[str, Any]) -> list[dict[str, A
                             "language_name": meta.get("name"),
                             "native_name": meta.get("native"),
                             "target": TARGET,
-                            "python_version": version,
+                            "pl_version": version,
                             "category": section,
                             "source_term": term,
                             "translation": str(translation),
@@ -461,7 +538,7 @@ def build_rows(locales: list[str], registry: dict[str, Any]) -> list[dict[str, A
     rows.sort(
         key=lambda r: (
             r["locale"],
-            r["python_version"],
+            r["pl_version"],
             SECTIONS.index(r["category"]),
             r["source_term"],
         )
@@ -477,6 +554,247 @@ def _read_yaml(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
+def build_packs_rows(
+    locales: list[str],
+    registry: dict[str, Any],
+    rows: list[dict[str, Any]],
+    package_versions: dict[str, str],
+) -> list[dict[str, Any]]:
+    """One row per (locale, target) pairing: the shipping unit and its state.
+
+    This is the grain progress lives at. ``tier`` and ``package_version`` were
+    per-locale columns while Python was the only target; they are per-pairing
+    facts, and this config gives them the key they actually vary on.
+
+    ``pl_versions`` is DERIVED from the pairing's own vocabulary rows, not
+    stamped from the module constant: a per-pairing column fed by a
+    dataset-global constant is the ``pack_versions`` smell CORE-1986 removed,
+    and a pack covering a partial slice becomes representable the day one
+    exists. (Today every pairing covers all of :data:`VERSIONS`; the
+    exporter's uniformity assertion guarantees it.)
+    """
+    covered: dict[str, set[str]] = {}
+    for row in rows:
+        covered.setdefault(row["locale"], set()).add(row["pl_version"])
+    # pack_locales() is sorted and target is single, so input order is the
+    # published order.
+    return [
+        {
+            "locale": locale,
+            "target": TARGET,
+            "package_version": package_versions[locale],
+            "tier": registry[locale].get("status"),
+            "pl_versions": sorted(covered.get(locale, ()), key=VERSIONS.index),
+        }
+        for locale in locales
+    ]
+
+
+def _subcategory_for(section: str, term: str, earliest: str) -> str:
+    """The finer semantic kind of a term, constrained to its section.
+
+    Classified at the EARLIEST version the (section, term) pairing is valid
+    for, which is what makes ``type`` come out right twice: at 3.10 it is a
+    ``builtin_type`` (its builtins-section row), and at 3.12 -- the earliest
+    version of its keywords-section row -- ``classify_term`` calls it a
+    ``keyword``. Classifying both rows at one fixed version would mislabel one
+    of them.
+
+    Refuses a classification outside the section's allowed kinds rather than
+    publishing it: that disagreement means ``term_definitions.py`` and the
+    pack tree have drifted, which is an alarm, not a value.
+    """
+    kind = classify_term(term, earliest)
+    allowed = YAML_SECTION_CATEGORIES[section]
+    if kind not in allowed:
+        raise SystemExit(
+            f"pl_terminology: {term!r} in section {section!r} classifies as "
+            f"{kind!r}, which the section does not admit ({allowed}). "
+            f"term_definitions.py and the pack tree disagree; reconcile "
+            f"before publishing a subcategory that misdescribes the term."
+        )
+    return kind
+
+
+def _message_pl_versions(added: str, removed: str | None) -> list[str]:
+    """The slice of :data:`VERSIONS` a message template is valid on.
+
+    Numeric comparison via the same ``_parse_version`` the runtime catalog
+    uses (``messages.load_catalog``), so the published windows and the
+    runtime's cannot disagree: a template added at 3.15 is valid on NO
+    shipped version, not -- as index-membership semantics would have it --
+    on all of them.
+
+    Raises:
+        SystemExit: on an unparseable boundary. A window the parser cannot
+            read must not silently publish as full validity.
+    """
+    try:
+        added_v = _parse_version(added)
+        removed_v = _parse_version(removed) if removed else None
+    except Exception:
+        raise SystemExit(
+            f"messages seed: unparseable version window ({added!r}, "
+            f"{removed!r}); refusing to publish a validity set for it."
+        ) from None
+    return [
+        v
+        for v in VERSIONS
+        if _parse_version(v) >= added_v
+        and (removed_v is None or _parse_version(v) < removed_v)
+    ]
+
+
+def build_pl_terminology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One row per (target, category, source_term): the target's own facts.
+
+    No natural language appears in this config. Three sources, every one a
+    tracked file, so the config stays regenerable from the tag:
+
+    * the pack tree, via the vocabulary ``rows`` -- which terms exist, in
+      which sections, on which versions
+    * ``vocabulary_definitions.py`` -- the symbol and variable-convention
+      inventory (CORE-1396). The pack files do not carry these sections yet,
+      so their per-locale renderings are absent from ``vocabulary``; shipping
+      the inventory anyway is what makes that gap measurable.
+    * the ``cpython_messages.json`` seed -- the error-message templates
+      (CORE-1679), English side only. The seed also carries ar/es
+      translations; those stay out of ``vocabulary`` until the
+      content-addressed-key gate (CORE-1565) clears.
+    """
+    # Terms: collapse the per-version vocabulary rows to validity sets.
+    versions_of: dict[tuple[str, str], set[str]] = {}
+    for row in rows:
+        versions_of.setdefault((row["category"], row["source_term"]), set()).add(
+            row["pl_version"]
+        )
+    out: list[dict[str, Any]] = []
+    for (section, term), versions in versions_of.items():
+        ordered = sorted(versions, key=VERSIONS.index)
+        out.append(
+            {
+                "target": TARGET,
+                "category": section,
+                "subcategory": _subcategory_for(section, term, ordered[0]),
+                "source_term": term,
+                "source_text": None,
+                "pl_versions": ordered,
+            }
+        )
+
+    # The vocabulary sections come through the inventory's own accessor, so a
+    # section added there is exported here without a hand-written twin loop.
+    for section in VOCABULARY_SECTIONS:
+        for slug, english in english_values(section).items():
+            out.append(
+                {
+                    "target": TARGET,
+                    "category": section,
+                    "subcategory": None,
+                    "source_term": slug,
+                    "source_text": english,
+                    "pl_versions": list(VERSIONS),
+                }
+            )
+
+    seed = json.loads(MESSAGES_SEED.read_text(encoding="utf-8"))
+    if seed.get("implementation") != "cpython":
+        raise SystemExit(
+            f"messages seed: implementation {seed.get('implementation')!r} is "
+            f"not this target's -- the v8 seed uses a different version "
+            f"scheme, and mislabelling it as python validity would publish "
+            f"windows that mean nothing."
+        )
+    # The seed-level default is REQUIRED, matching seed_message_templates.py:
+    # a seed that omits it is malformed there and must be malformed here,
+    # not silently defaulted to the range floor.
+    default_added = seed["version_added"]
+    # A key may appear more than once: CPython reworded
+    # UnboundLocalError.before_assignment at 3.11, and the seed carries both
+    # wordings as separate version-windowed entries. For this config that is
+    # ONE term whose English surface changed -- the same phenomenon as a
+    # locale redefining a rendering mid-range -- so the rows merge: the
+    # validity set is the union of the windows, and `source_text` is the
+    # latest wording, matching the union-at-latest convention the JSON uses.
+    by_key: dict[str, list[dict[str, Any]]] = {}
+    for template in seed["templates"]:
+        by_key.setdefault(template["key"], []).append(template)
+    for key, entries in by_key.items():
+        windows: list[str] = []
+        for entry in entries:
+            # `or default_added`, not a .get default: an explicit null in the
+            # seed would bypass dict.get and silently mean "range floor".
+            added = entry.get("version_added") or default_added
+            window = _message_pl_versions(added, entry.get("version_removed"))
+            if not window and entry.get("version_removed"):
+                removed = entry["version_removed"]
+                if _parse_version(added) >= _parse_version(removed):
+                    raise SystemExit(
+                        f"messages seed: {key!r} has an empty window "
+                        f"(added {added}, removed {removed}) -- seed "
+                        f"corruption, not a template to silently drop."
+                    )
+            windows.extend(window)
+        pl_versions = sorted(set(windows), key=VERSIONS.index)
+        if not pl_versions:
+            # Every window falls outside the shipped range (e.g. a template
+            # added at a future version). Not an error -- just not in this
+            # release.
+            continue
+        current = max(
+            entries,
+            key=lambda e: (
+                VERSIONS.index(e.get("version_added", default_added))
+                if e.get("version_added", default_added) in VERSIONS
+                else -1
+            ),
+        )
+        out.append(
+            {
+                "target": TARGET,
+                "category": "messages",
+                # The key convention is "<Surface>.<slug>" -- the leading
+                # component IS the message's grouping (ZeroDivisionError,
+                # traceback, ...), and unlike the seed's sparse `cluster`
+                # field it is total, so no reader meets a null bucket that
+                # means "uncurated" beside nulls that mean "not applicable".
+                "subcategory": key.split(".", 1)[0],
+                "source_term": key,
+                "source_text": current["template_en"],
+                "pl_versions": pl_versions,
+            }
+        )
+
+    emitted = {r["category"] for r in out}
+    if emitted != set(CATEGORY_FAMILIES):
+        raise SystemExit(
+            f"pl_terminology categories and CATEGORY_FAMILIES disagree -- "
+            f"undescribed: {sorted(emitted - set(CATEGORY_FAMILIES))}, "
+            f"declared with no builder: "
+            f"{sorted(set(CATEGORY_FAMILIES) - emitted)}. Both directions "
+            f"are drift."
+        )
+    # The declared grain, enforced rather than assumed: one row per
+    # (target, category, source_term). The message-rewording merge above is
+    # what keeps the seed's duplicate keys from violating it; a duplicate
+    # surviving to here means a new source repeated a key and the config
+    # would publish an ambiguous join target.
+    keys = Counter((r["target"], r["category"], r["source_term"]) for r in out)
+    duplicated = sorted(k for k, n in keys.items() if n > 1)
+    if duplicated:
+        raise SystemExit(
+            f"pl_terminology grain violated -- duplicate keys: {duplicated[:5]}"
+        )
+    out.sort(
+        key=lambda r: (
+            r["target"],
+            CATEGORY_FAMILIES.index(r["category"]),
+            r["source_term"],
+        )
+    )
+    return out
+
+
 def terms_per_version(rows: list[dict[str, Any]]) -> dict[str, int]:
     """One term count per interpreter version.
 
@@ -488,8 +806,25 @@ def terms_per_version(rows: list[dict[str, Any]]) -> dict[str, int]:
         SystemExit: if locales disagree at any version.
     """
     per_pack: Counter[tuple[str, str]] = Counter(
-        (r["locale"], r["python_version"]) for r in rows
+        (r["locale"], r["pl_version"]) for r in rows
     )
+    # Completeness before uniformity: a (locale, version) with ZERO rows is
+    # invisible to the size-agreement check below -- absent keys contribute
+    # nothing to `sizes` -- so a pack whose version file resolves to nothing
+    # would slip through and publish coverage the pack does not provide.
+    locales_present = {loc for loc, _ in per_pack}
+    missing = [
+        (loc, v)
+        for loc in sorted(locales_present)
+        for v in VERSIONS
+        if (loc, v) not in per_pack
+    ]
+    if missing:
+        raise SystemExit(
+            f"{len(missing)} (locale, version) pairing(s) produced no rows: "
+            f"{missing[:5]}. A version a pack does not cover must not be "
+            f"published as covered."
+        )
     out: dict[str, int] = {}
     for version in VERSIONS:
         sizes = {n for (_, v), n in per_pack.items() if v == version}
@@ -544,19 +879,11 @@ def read_package_version(locale: str) -> str:
 
 
 def build_locale_rows(
-    locales: list[str], registry: dict[str, Any], rows: list[dict[str, Any]]
+    locales: list[str],
+    registry: dict[str, Any],
+    package_versions: dict[str, str],
 ) -> list[dict[str, Any]]:
-    """One row per shipped locale: identity, tier, and derived term counts.
-
-    Counts are DERIVED from the exported vocabulary rows, never stored
-    separately, so the headline number on the card is reproducible from the
-    rows a consumer downloads instead of being asserted at them.
-    """
-    per_locale_terms: Counter[str] = Counter()
-    for row in rows:
-        if row["python_version"] == VERSIONS[-1]:
-            per_locale_terms[row["locale"]] += 1
-
+    """One row per shipped locale: identity, plus card-only pairing state."""
     out = []
     for locale in locales:
         meta = registry[locale]
@@ -569,12 +896,12 @@ def build_locale_rows(
                 "bcp47": meta.get("bcp47"),
                 "rtl": bool(meta.get("rtl", False)),
                 "has_case_distinction": bool(meta.get("has_case_distinction", True)),
+                # tier and package_version stay on the in-memory row for the
+                # card's Languages table and are projected out of the
+                # published table by LOCALE_COLUMNS: both live in `packs`,
+                # where they vary by pairing.
                 "tier": meta.get("status"),
-                "package_version": read_package_version(locale),
-                # Kept on the in-memory row for the card's headline count, and
-                # projected out of the published table by LOCALE_COLUMNS: it is
-                # derivable from the vocabulary config sitting beside it.
-                "terms_latest": per_locale_terms[locale],
+                "package_version": package_versions[locale],
             }
         )
     out.sort(key=lambda r: r["locale"])
@@ -642,51 +969,102 @@ def assert_python_only(rows: list[dict[str, Any]]) -> None:
         )
 
 
+def format_version_range(versions: list[str]) -> str:
+    """Render a validity list as the range string the JSON carries.
+
+    One decision, one place: the JSON field is named ``pl_version_range`` and
+    is a STRING, while the parquet configs carry ``pl_versions`` lists -- the
+    same name carrying two types would hand consumers Python's
+    substring-containment trap (``"3.1" in "3.10-3.14"`` is True).
+
+    Asserts contiguity, because a range string cannot represent a gap; the
+    parquet lists can, and are the form that survives one appearing.
+    """
+    if not versions:
+        raise SystemExit(
+            "a pairing with no covered versions has no range to publish -- "
+            "a locale that resolved to zero rows should have been refused "
+            "upstream, not rendered here."
+        )
+    ordered = sorted(versions, key=VERSIONS.index)
+    lo, hi = VERSIONS.index(ordered[0]), VERSIONS.index(ordered[-1])
+    if ordered != list(VERSIONS[lo : hi + 1]):
+        raise SystemExit(
+            f"version set {ordered} is not contiguous; a range string would "
+            f"misstate it. Publish the list form instead."
+        )
+    return f"{ordered[0]}-{ordered[-1]}" if lo != hi else ordered[0]
+
+
 def write_json(
     out: Path,
     rows: list[dict[str, Any]],
     locales: list[str],
     registry: dict[str, Any],
+    package_versions: dict[str, str],
 ) -> list[Path]:
-    """Write the resolved pack per (locale, version) as JSON.
+    """Write one loadable JSON per (locale, target): the translations alone.
+
+    ``json/<locale>/<target>.json`` (CORE-2020). The parquet configs are the
+    queryable form and carry the structure -- validity sets, delta markers,
+    subcategories. This file is the loadable form, shaped like what the
+    published package ships: the pack's own semver, the version range it
+    covers, and the translations as flat key/value sections.
+
+    Values are the LATEST version's resolved rendering, over the union of
+    terms across the range -- ``build_rows`` sorts ascending by version
+    within a locale, so a single overwrite pass keeps the last value seen.
+    Sections are whatever categories the rows actually carry, in
+    :data:`CATEGORY_FAMILIES` order: when symbol or message renderings land
+    in the packs, they appear here without this function changing, rather
+    than being silently filtered to the four sections of 2026.
 
     Sorted keys and a trailing newline, so the bytes are stable and the files
-    diff cleanly between revisions -- the point of a pinned artifact is that
-    two revisions can be compared.
+    diff cleanly between revisions.
     """
     written: list[Path] = []
-    by_key: dict[tuple[str, str], dict[str, dict[str, str]]] = {}
+    sections_of: dict[str, dict[str, dict[str, str]]] = {}
+    versions_of: dict[str, set[str]] = {}
     for row in rows:
-        bucket = by_key.setdefault((row["locale"], row["python_version"]), {})
-        bucket.setdefault(row["category"], {})[row["source_term"]] = row["translation"]
+        sections_of.setdefault(row["locale"], {}).setdefault(row["category"], {})[
+            row["source_term"]
+        ] = row["translation"]
+        versions_of.setdefault(row["locale"], set()).add(row["pl_version"])
 
+    # One key set for every file in a revision: a family ANY locale renders
+    # appears in ALL payloads (empty where absent), so a loader written
+    # against one locale's file works against every other's, and a locale's
+    # missing section reads as the visible gap it is rather than a KeyError.
+    published_families = [
+        family
+        for family in CATEGORY_FAMILIES
+        if any(family in secs for secs in sections_of.values())
+    ]
     for locale in locales:
-        for version in VERSIONS:
-            payload = {
-                "locale": locale,
-                "target": TARGET,
-                "python_version": version,
-                # From the registry, not a scan of the row list: a locale that
-                # contributed no rows would make a generator scan raise a bare
-                # StopIteration halfway through writing the tree.
-                "tier": registry[locale].get("status"),
-                **{
-                    section: dict(
-                        sorted(
-                            by_key.get((locale, version), {}).get(section, {}).items()
-                        )
-                    )
-                    for section in SECTIONS
-                },
-            }
-            path = out / "json" / locale / f"{version}.json"
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(
-                json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=False)
-                + "\n",
-                encoding="utf-8",
-            )
-            written.append(path)
+        secs = sections_of.get(locale, {})
+        payload = {
+            "locale": locale,
+            "target": TARGET,
+            # The distinction between the two distribution channels, stated
+            # in the file: this artifact snapshots what the versioned package
+            # ships, and this is the version that ships it.
+            "package_version": package_versions[locale],
+            "tier": registry[locale].get("status"),
+            "pl_version_range": format_version_range(
+                sorted(versions_of.get(locale, ()), key=VERSIONS.index)
+            ),
+            **{
+                family: dict(sorted(secs.get(family, {}).items()))
+                for family in published_families
+            },
+        }
+        path = out / "json" / locale / f"{TARGET}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=False) + "\n",
+            encoding="utf-8",
+        )
+        written.append(path)
     return written
 
 
@@ -865,7 +1243,7 @@ def render_card(
         f"**{tier_counts.get(tier, 0)}** at `{tier}`" for tier in tiers_present
     )
     category_rows = "\n".join(
-        f"| `{name}` | {CATEGORY_BLURBS[name]} |" for name in SECTIONS
+        f"| `{name}` | {CATEGORY_BLURBS[name]} |" for name in CATEGORY_FAMILIES
     )
     target_versions = ", ".join(f"`{v}`" for v in VERSIONS)
     normalization_section = render_normalization(manifest.get("nfkc_unstable") or {})
@@ -891,6 +1269,13 @@ tags:
   - code
   - programming
   - localization
+task_categories:
+  - translation
+annotations_creators:
+  - machine-generated
+  - expert-generated
+size_categories:
+  - 10K<n<100K
 pretty_name: Legesher Language Packs
 language:
 {lang_yaml}
@@ -903,6 +1288,14 @@ configs:
     data_files:
       - split: train
         path: data/locales.parquet
+  - config_name: pl_terminology
+    data_files:
+      - split: train
+        path: data/pl_terminology.parquet
+  - config_name: packs
+    data_files:
+      - split: train
+        path: data/packs.parquet
 ---
 
 # Legesher Language Packs
@@ -934,7 +1327,8 @@ what the Hub indexes for search; this is the full list.
 
 Today: {tier_spread}.
 
-The `locales` config carries this same list, so you can sort and filter it
+The `locales` and `packs` configs carry this list between them — identity in
+`locales`, status and package in `packs` — so you can sort and filter it
 rather than read it.
 
 ## What a pack is made of
@@ -948,7 +1342,7 @@ differently for different targets, because each programming language's grammar
 admits different identifiers.
 
 **This release ships the `python` target**, across
-{counts["python_versions"]} interpreter versions ({target_versions}).
+{counts["pl_versions"]} versions of it ({target_versions}).
 Selections exist internally for other targets and are deliberately excluded:
 exporting them would publish terminology labelled by a target it has not been
 reviewed for.
@@ -1003,48 +1397,89 @@ of them. Nothing on the review ladder above `experimental` has been earned yet.
 
 ## The dataset
 
+Four configs. Two are dimensions, one is the mapping, one is the state:
+
+| Config | One row per | Answers |
+| --- | --- | --- |
+| `locales` | natural language | who is this language? |
+| `pl_terminology` | (target, category, source term) | what does the programming language reserve, and on which versions? |
+| `vocabulary` | (locale, target, version, category, source term) | what is it called in this language? |
+| `packs` | (locale, target) | how far along is this pairing? |
+
+### `pl_terminology`
+
+The programming language's own terminology — no natural language appears in
+this config:
+
+* `target`, `category`, `source_term` — the key
+* `subcategory` — the finer semantic kind for terms (`keyword` /
+  `builtin_func` / `builtin_type` / `special_constant` / `exception` /
+  `reserved_word`), and the message cluster for `messages`
+* `source_text` — the English surface when the key is not itself the text: a
+  symbol's English name, a message's template. Empty for terms, whose
+  `source_term` is the English
+* `pl_versions` — the list of the target's versions the entry is valid for
+
+Availability lives here, once: `except*` carries `["3.11", ...]`, and a term
+in two categories carries two rows with their own sets — `type` is a builtin
+on every version and a keyword only from 3.12.
+
+This config is also the coverage checklist. A `pl_terminology` entry with no
+matching `vocabulary` rows for a locale is a gap in that pack, stated by the
+data rather than discovered downstream: the `symbols`,
+`variable_conventions` and `messages` categories ship their source-side
+inventory ahead of any locale's renderings for exactly that reason.
+
 ### `vocabulary`
 
-One row per (locale, interpreter version, category, source term):
+The renderings — one row per (locale, target, version, category, source term):
 
-* `locale` — join key into `locales`, which carries the language's names,
-  script direction and maturity
-* `python_version`, `category` (`keywords` / `builtins` / `exceptions` /
-  `reserved_words`)
-* `source_term` — the English term, e.g. `for`, `ValueError`
+* `locale` — join into `locales`; `target`, `category`, `source_term` — join
+  into `pl_terminology`
+* `pl_version` — rows are given **resolved**: each states what you would
+  actually get on that version of the target
 * `translation` — the rendering Legesher ships
-* `defined_at` — the interpreter version whose pack file defines this term
-* `inherited` — true when the term is inherited rather than defined at
-  `python_version`
+* `defined_at` — the version whose pack file defines this rendering, and
+  `inherited` — true when the row inherits it. These are facts about the
+  rendering, not the term: Sinhala redefines terms at 3.13 to conjunct forms,
+  so its `defined_at` differs from every other language's on the same term
 
-`defined_at` and `inherited` are what preserve the delta structure through the
-resolution described above.
-
-Everything true of a language rather than of a row lives in `locales` and is
-joined, not repeated. `target` is not a column: every row in this release is
-Python.
+`category` is part of the key on purpose: `type` is rendered once as a
+keyword and once as a builtin, and those renderings may differ.
 
 ### `locales`
 
-One row per shipped locale: identity (`iso639_2`, `bcp47`), script properties
-(`rtl`, `has_case_distinction`), `tier`, and `package_version`.
-
-`package_version` is the semver of that language's own distributable, and it is
-how you line this dataset up against the packages: a row reading
-`ar` / `0.0.4` means these are the words in `legesher-i18n-python-ar==0.0.4`.
-Each language versions on its own clock, because each is corrected and promoted
-on its own — so there is no single "pack version" for the set, and this column
-is the per-language answer instead.
+Natural-language identity, nothing else: names (`language_name`,
+`native_name`), identity tags (`iso639_2`, `bcp47`), script properties
+(`rtl`, `has_case_distinction`).
 
 **`locale` is a pack id, not a language tag.** Where the two differ, `locale` is
 the shorter form: `no` is BCP 47 `nb`, `zh` is `zh-Hans`, `sr` is `sr-Cyrl`.
 Join to anything keyed by language tag on `bcp47`, or you drop exactly the rows
 that differ.
 
+### `packs`
+
+The shipping unit — one row per (locale, target) pairing:
+
+* `package_version` — the semver of this pairing's own distributable. A row
+  reading `ar` / `python` / `0.0.4` means these are the words in
+  `legesher-i18n-python-ar==0.0.4`. Each pairing versions on its own clock,
+  so there is no single version for the set; this is the per-pairing answer
+* `tier` — the maturity of exactly this pairing
+* `pl_versions` — the target versions this pack covers
+
+This is the grain progress lives at: one language's standing in one
+programming language is one row here.
+
 ### JSON
 
-`json/<locale>/<version>.json` mirrors the resolved pack for consumers that
-would rather not read Parquet.
+`json/<locale>/<target>.json` — the loadable form: the translations alone,
+with the pack's `package_version` and a `pl_version_range` string naming the
+versions it covers.
+Values are the latest version's resolved rendering over the union of terms
+across the range; the parquet configs carry the full per-version structure
+the JSON deliberately leaves out.
 
 ## Normalization
 
@@ -1325,7 +1760,11 @@ def main() -> int:
 
     rows = build_rows(locales, registry)
     assert_python_only(rows)
-    locale_rows = build_locale_rows(locales, registry, rows)
+    # One read per locale per pass -- three builders consume it, and reading
+    # it three times would open a window where a mid-export pyproject edit
+    # publishes one version in packs.parquet and another in the JSON.
+    package_versions = {loc: read_package_version(loc) for loc in locales}
+    locale_rows = build_locale_rows(locales, registry, package_versions)
 
     # ONE snapshot, taken before anything is written and reused for both the
     # gate and the manifest. Two calls would let the gate pass on a clean tree
@@ -1358,9 +1797,15 @@ def main() -> int:
         shutil.rmtree(out)
     out.mkdir(parents=True, exist_ok=True)
 
-    json_files = write_json(out, rows, locales, registry)
+    json_files = write_json(out, rows, locales, registry, package_versions)
+    terminology_rows = build_pl_terminology(rows)
+    packs_rows = build_packs_rows(locales, registry, rows, package_versions)
     vocab_parquet = write_parquet(out, "vocabulary", rows, VOCABULARY_COLUMNS)
     locales_parquet = write_parquet(out, "locales", locale_rows, LOCALE_COLUMNS)
+    terminology_parquet = write_parquet(
+        out, "pl_terminology", terminology_rows, PL_TERMINOLOGY_COLUMNS
+    )
+    packs_parquet = write_parquet(out, "packs", packs_rows, PACKS_COLUMNS)
 
     import pyarrow
 
@@ -1371,6 +1816,8 @@ def main() -> int:
         files: list[Path],
         vocab_rows: list[dict[str, Any]],
         loc_rows: list[dict[str, Any]],
+        term_rows: list[dict[str, Any]],
+        pk_rows: list[dict[str, Any]],
     ) -> dict[str, Any]:
         """The manifest for one exported tree.
 
@@ -1401,10 +1848,16 @@ def main() -> int:
             },
             "counts": {
                 "locales": len(locales),
-                "python_versions": len(VERSIONS),
-                "pack_files": len(locales) * len(VERSIONS),
+                "pl_versions": len(VERSIONS),
+                # SOURCE files in the pack tree, not files in this artifact:
+                # the artifact's own inventory is the `files` map below. The
+                # old name `pack_files` became a dangling number when the JSON
+                # mirror went per-pairing (51 files) and stopped equalling it.
+                "pack_source_files": len(locales) * len(VERSIONS),
                 "vocabulary_rows": len(vocab_rows),
-                # Per interpreter version, because the vocabulary grows with the
+                "pl_terminology_rows": len(term_rows),
+                "packs_rows": len(pk_rows),
+                # Per target version, because the vocabulary grows with the
                 # language: 3.11 adds except* and the two exception-group types,
                 # 3.12 adds type. A single "terms per locale" figure would be an
                 # average of five different numbers and match none of them.
@@ -1421,8 +1874,8 @@ def main() -> int:
             "nfkc_unstable": nfkc_instability(vocab_rows),
             "declared_license": DECLARED_LICENSE,
             "pack_metadata_licenses": pack_licenses,
-            "categories": list(SECTIONS),
-            "python_versions": list(VERSIONS),
+            "categories": list(CATEGORY_FAMILIES),
+            "pl_versions": list(VERSIONS),
             "locales": locales,
             "files": {
                 str(f.relative_to(tree)): sha256(f)
@@ -1431,7 +1884,18 @@ def main() -> int:
         }
 
     manifest = build_manifest(
-        out, [vocab_parquet, locales_parquet, *json_files], rows, locale_rows
+        out,
+        [
+            vocab_parquet,
+            locales_parquet,
+            terminology_parquet,
+            packs_parquet,
+            *json_files,
+        ],
+        rows,
+        locale_rows,
+        terminology_rows,
+        packs_rows,
     )
     (out / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -1441,7 +1905,7 @@ def main() -> int:
     )
 
     print(f"locales:          {len(locales)}")
-    print(f"pack files:       {len(locales) * len(VERSIONS)}")
+    print(f"pack source files: {len(locales) * len(VERSIONS)}")
     print(f"vocabulary rows:  {len(rows)}")
     print(f"tiers present:    {', '.join(tiers)}")
     print(f"source commit:    {source['commit'][:12]} ({source['worktree']})")
@@ -1464,15 +1928,32 @@ def main() -> int:
             shutil.rmtree(second)
         second.mkdir(parents=True)
         rows2 = build_rows(locales, registry)
-        locale_rows2 = build_locale_rows(locales, registry, rows2)
-        json2 = write_json(second, rows2, locales, registry)
+        # Recomputed, not reused: the determinism proof rebuilds every input
+        # from scratch, and a cached mapping would let the second pass ride
+        # the first pass's reads.
+        package_versions2 = {loc: read_package_version(loc) for loc in locales}
+        locale_rows2 = build_locale_rows(locales, registry, package_versions2)
+        terminology_rows2 = build_pl_terminology(rows2)
+        packs_rows2 = build_packs_rows(locales, registry, rows2, package_versions2)
+        json2 = write_json(second, rows2, locales, registry, package_versions2)
         v2 = write_parquet(second, "vocabulary", rows2, VOCABULARY_COLUMNS)
         l2 = write_parquet(second, "locales", locale_rows2, LOCALE_COLUMNS)
-        # The card and the manifest are two of the four published file classes,
-        # and the two this export most recently got wrong. Leaving them out of
-        # the determinism proof means the operator reads a green line about a
-        # surface it never checked.
-        manifest2 = build_manifest(second, [v2, l2, *json2], rows2, locale_rows2)
+        t2 = write_parquet(
+            second, "pl_terminology", terminology_rows2, PL_TERMINOLOGY_COLUMNS
+        )
+        pk2 = write_parquet(second, "packs", packs_rows2, PACKS_COLUMNS)
+        # The card and the manifest are two of the published file classes this
+        # export once got wrong. Leaving anything out of the determinism proof
+        # means the operator reads a green line about a surface it never
+        # checked, so every file class is in.
+        manifest2 = build_manifest(
+            second,
+            [v2, l2, t2, pk2, *json2],
+            rows2,
+            locale_rows2,
+            terminology_rows2,
+            packs_rows2,
+        )
         m2 = second / "manifest.json"
         m2.write_text(
             json.dumps(manifest2, ensure_ascii=False, indent=2) + "\n",
@@ -1490,12 +1971,16 @@ def main() -> int:
             for p in [
                 vocab_parquet,
                 locales_parquet,
+                terminology_parquet,
+                packs_parquet,
                 out / "manifest.json",
                 out / "README.md",
                 *json_files,
             ]
         }
-        second_map = {p.relative_to(second): p for p in [v2, l2, m2, r2, *json2]}
+        second_map = {
+            p.relative_to(second): p for p in [v2, l2, t2, pk2, m2, r2, *json2]
+        }
         only_first = sorted(str(k) for k in first_map.keys() - second_map.keys())
         only_second = sorted(str(k) for k in second_map.keys() - first_map.keys())
         mismatches = sorted(

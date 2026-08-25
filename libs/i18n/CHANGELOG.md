@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **The language-packs dataset splits into four configs.** `pl_terminology`
+  carries the programming language's own terminology — every term, symbol
+  name, variable convention and error-message template, each with the set of
+  target versions it is valid for — with no natural language in it. `packs`
+  carries per-(language × target) state: the pack's own semver and its
+  maturity tier. `vocabulary` reduces to the renderings, and `locales` to
+  natural-language identity. Gaps become queryable: a `pl_terminology` entry
+  with no matching `vocabulary` row for a language is a gap in that pack,
+  stated by the data. The per-version JSON mirrors are replaced by one
+  loadable `json/<language>/<target>.json` per pairing — the translations
+  alone, with the pack's version and the range it covers.
+
 - **Language packs can now say what a symbol is called, and which short
   variable names a language's programmers actually type.** Two new pack
   sections: `symbols` maps a stable slug to the name speakers use for a mark
