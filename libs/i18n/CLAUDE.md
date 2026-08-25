@@ -294,6 +294,27 @@ that `scripts/migrate_to_v2.py` loads at import.
   thing a from-scratch rebuild does not recover — they live in
   `option_screenings` inside the database, so carry the previous copy forward.
 
+### Messages partition (CORE-1679) — formation ritual
+
+`message_templates` / `message_translations` / `message_endorsements` live in
+this same operational database (schema defined in `schema_v2.sql`, DEFERRED
+section; explicitly OUTSIDE the HF corpus one-way door — publishing stays
+gated on content-addressed keys, CORE-1565). The write paths, in order:
+
+1. **Activate** (once per database): `python scripts/activate_messages_partition.py --db <db>`
+2. **Seed a catalog** (templates + their initial translations together,
+   append-once): `python scripts/seed_message_templates.py --db <db> --seed legesher_i18n/db/seeds/<catalog>.json`.
+   A reworded message is a NEW row under a new `version_added`, never an edit.
+3. **Add a locale to existing templates** (CORE-1850):
+   `python scripts/add_message_locale.py --db <db> --file <locale_addition>.json`.
+   Inserts only into `message_translations`, all-or-nothing across the
+   implementation's template rows, with the seeder's validation (placeholder
+   parity, bidi hygiene, locale existence) and idempotent re-runs. This is
+   the path for a third language — never invent a `version_added` for it and
+   never INSERT directly.
+4. **Finish with the durable-home push** (below) — the messages partition
+   rides the same untracked `translations.db`.
+
 ### Tables
 
 #### Vocabulary partition (CORE-1396)

@@ -82,11 +82,90 @@ FORBIDDEN_BIDI = {
 
 PLACEHOLDER = re.compile(r"\{(\w+)\}")
 
+#: The ``message_translations.status`` CHECK set, mirrored for callers that
+#: validate input files before writing (``add_message_locale.py`` reports a
+#: bad status as a named problem instead of a SQLite CHECK error).
+ALLOWED_STATUSES = ("machine", "experimental", "reviewed", "official")
+
 
 def used_placeholders(template: str) -> set[str]:
     """Placeholder names a template interpolates, ignoring ``{{ }}`` escapes."""
     stripped = template.replace("{{", "").replace("}}", "")
     return set(PLACEHOLDER.findall(stripped))
+
+
+def bidi_controls(text: str) -> list[str]:
+    """The forbidden bidi control codepoints ``text`` carries, as U+ labels."""
+    return [f"U+{ord(ch):04X}" for ch in text if ord(ch) in FORBIDDEN_BIDI]
+
+
+def _has_table(connection: sqlite3.Connection, name: str) -> bool:
+    return (
+        connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", (name,)
+        ).fetchone()
+        is not None
+    )
+
+
+def probe_database(db_path: Path) -> bool:
+    """Check ``db_path`` is a translations database with an active partition.
+
+    Returns:
+        True when the database is a v2 build (carries ``locales``), False for
+        the operational v1 file (carries ``languages``).
+
+    Raises:
+        SystemExit: if the database is missing (checked first — a bare
+            ``sqlite3.connect`` would CREATE an empty file as a side
+            effect), if the file is neither flavor, or if the messages
+            partition is not activated in it.
+    """
+    if not db_path.exists():
+        raise SystemExit(f"database not found: {db_path}")
+    probe = sqlite3.connect(db_path)
+    try:
+        is_v2 = _has_table(probe, "locales")
+        if not is_v2 and not _has_table(probe, "languages"):
+            raise SystemExit(
+                f"{db_path} has neither `locales` (v2) nor `languages` (v1) — "
+                "not a translations database"
+            )
+        if not _has_table(probe, "message_templates"):
+            raise SystemExit(
+                f"{db_path} does not carry the messages partition — run "
+                "activate_messages_partition.py first (v1) or rebuild the v2 artifact"
+            )
+    finally:
+        probe.close()
+    return is_v2
+
+
+def missing_locales(
+    connection: sqlite3.Connection, is_v2: bool, locales_needed: list[str]
+) -> list[str]:
+    """The subset of ``locales_needed`` the target database does not know.
+
+    On a v2 build locales live in ``locales``; the operational v1 file
+    predates that table, so validation falls back to ``languages``.
+    """
+    if not locales_needed:
+        return []
+    locale_sql = (
+        "SELECT tag FROM locales WHERE tag IN ({})"
+        if is_v2
+        else "SELECT code FROM languages WHERE code IN ({})"
+    )
+    known = {
+        row[0]
+        for row in connection.execute(
+            # Only the placeholder COUNT is interpolated; values are
+            # bound parameters.
+            locale_sql.format(",".join("?" * len(locales_needed))),  # nosec B608
+            locales_needed,
+        )
+    }
+    return [locale for locale in locales_needed if locale not in known]
 
 
 def render_example(template: str, placeholders: list[dict]) -> str:
@@ -161,7 +240,7 @@ def validate_seed(seed: dict) -> list[str]:
                 problems.append(
                     f"{t['key']}: {label} placeholders {sorted(used)} != declared {sorted(declared)}"
                 )
-            bad = [f"U+{ord(ch):04X}" for ch in text if ord(ch) in FORBIDDEN_BIDI]
+            bad = bidi_controls(text)
             if bad:
                 problems.append(f"{t['key']}: {label} stores bidi controls {bad}")
         problems.extend(validate_matcher(t))
@@ -175,57 +254,19 @@ def seed_database(
     implementation = seed["implementation"]
     templates = seed["templates"]
 
-    def has_table(conn: sqlite3.Connection, name: str) -> bool:
-        return (
-            conn.execute(
-                "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", (name,)
-            ).fetchone()
-            is not None
-        )
-
     # A v2 build carries `locales` and gets the stated v2 connection contract
     # (foreign_keys + recursive_triggers ON). The operational v1 file carries
     # `languages` instead — its message-partition FK targets do not exist, so
     # the connection must keep foreign_keys OFF (SQLite resolves FK targets at
     # DML time) and locale validation happens against `languages` here.
-    probe = sqlite3.connect(db_path)
-    try:
-        is_v2 = has_table(probe, "locales")
-        if not is_v2 and not has_table(probe, "languages"):
-            raise SystemExit(
-                f"{db_path} has neither `locales` (v2) nor `languages` (v1) — "
-                "not a translations database"
-            )
-        if not has_table(probe, "message_templates"):
-            raise SystemExit(
-                f"{db_path} does not carry the messages partition — run "
-                "activate_messages_partition.py first (v1) or rebuild the v2 artifact"
-            )
-    finally:
-        probe.close()
+    is_v2 = probe_database(db_path)
 
     connection = connect(db_path) if is_v2 else sqlite3.connect(db_path)
-    locale_sql = (
-        "SELECT tag FROM locales WHERE tag IN ({})"
-        if is_v2
-        else "SELECT code FROM languages WHERE code IN ({})"
-    )
     try:
         locales_needed = sorted(
             {loc for t in templates for loc in t.get("translations", {})}
         )
-        known: set[str] = set()
-        if locales_needed:
-            known = {
-                row[0]
-                for row in connection.execute(
-                    # Only the placeholder COUNT is interpolated; values are
-                    # bound parameters.
-                    locale_sql.format(",".join("?" * len(locales_needed))),  # nosec B608
-                    locales_needed,
-                )
-            }
-        missing = [loc for loc in locales_needed if loc not in known]
+        missing = missing_locales(connection, is_v2, locales_needed)
         if missing:
             raise SystemExit(
                 f"locales missing from the target database: {missing} — "

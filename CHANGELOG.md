@@ -11,6 +11,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: localized error messages can now gain languages. The message
+  catalog's seeder is append-once by design — templates and their
+  translations enter together, and revisions land as a new version — which
+  left no path to add a locale to templates that already exist: the catalog
+  was frozen at Arabic and Spanish. `scripts/add_message_locale.py` is that
+  path. It writes only `message_translations`, against the template rows
+  already present, with the seeder's own validation: every `{placeholder}`
+  in a translation must match its template's declared set exactly (a
+  translated placeholder breaks substitution silently, and the failure would
+  only surface in a learner's traceback), stored strings carry no bidi
+  control characters, the locale must already exist in the registry, and a
+  locale is added all-or-nothing across an implementation's templates.
+  Re-running an addition that is already stored is an explicit no-op, and a
+  locale that predates a later-seeded version tier catches up by inserting
+  only the missing rows — never a duplicate, never a revision. [CORE-1850]
 - **vs-code**, **language-server**: the language roles are named — canonical /
   file / working / known — and carried separately end to end. One
   `legesher.targetLanguage` setting used to mean both the language a file is
