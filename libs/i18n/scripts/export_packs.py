@@ -486,7 +486,7 @@ def build_rows(locales: list[str], registry: dict[str, Any]) -> list[dict[str, A
                 / f"{version}.yml"
             )
             raw = _read_yaml(raw_path)
-            for section in SECTIONS:
+            for section in (*SECTIONS, *VOCABULARY_SECTIONS):
                 for term in raw.get(section) or {}:
                     defined_in.setdefault((section, str(term)), []).append(version)
 
@@ -511,7 +511,13 @@ def build_rows(locales: list[str], registry: dict[str, Any]) -> list[dict[str, A
                 version=version,
                 enforce_min_interpreter=False,
             )
-            for section in SECTIONS:
+            # Every family the pack format can carry, not only the term
+            # sections: when a pack YAML gains a `symbols:` block, its
+            # renderings must reach `vocabulary` -- the alternative is the
+            # documented gap silently never closing, with shipped
+            # translations excluded from the dataset and nothing reporting
+            # it.
+            for section in (*SECTIONS, *VOCABULARY_SECTIONS):
                 entries: dict[str, str] = getattr(pack, section) or {}
                 for term, translation in entries.items():
                     if translation is None:
@@ -539,7 +545,7 @@ def build_rows(locales: list[str], registry: dict[str, Any]) -> list[dict[str, A
         key=lambda r: (
             r["locale"],
             r["pl_version"],
-            SECTIONS.index(r["category"]),
+            CATEGORY_FAMILIES.index(r["category"]),
             r["source_term"],
         )
     )
@@ -665,9 +671,14 @@ def build_pl_terminology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     # Terms: collapse the per-version vocabulary rows to validity sets.
     versions_of: dict[tuple[str, str], set[str]] = {}
     for row in rows:
-        versions_of.setdefault((row["category"], row["source_term"]), set()).add(
-            row["pl_version"]
-        )
+        # Term sections only: the vocabulary families' inventory comes from
+        # vocabulary_definitions/the seed below, so a pack rendering a symbol
+        # must not ALSO mint an inventory row for it (the grain guard would
+        # refuse the duplicate).
+        if row["category"] in SECTIONS:
+            versions_of.setdefault((row["category"], row["source_term"]), set()).add(
+                row["pl_version"]
+            )
     out: list[dict[str, Any]] = []
     for (section, term), versions in versions_of.items():
         ordered = sorted(versions, key=VERSIONS.index)
@@ -721,10 +732,17 @@ def build_pl_terminology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         by_key.setdefault(template["key"], []).append(template)
     for key, entries in by_key.items():
         windows: list[str] = []
+        # Resolved ONCE per entry and reused for both the window and the
+        # current-wording ranking: two resolutions with different null
+        # handling would let an explicit null count as range-floor for
+        # validity but rank lowest for wording, publishing a superseded
+        # template as the term's English surface. `or default_added`, not a
+        # .get default, because an explicit null bypasses dict.get.
+        added_of = {
+            id(entry): entry.get("version_added") or default_added for entry in entries
+        }
         for entry in entries:
-            # `or default_added`, not a .get default: an explicit null in the
-            # seed would bypass dict.get and silently mean "range floor".
-            added = entry.get("version_added") or default_added
+            added = added_of[id(entry)]
             window = _message_pl_versions(added, entry.get("version_removed"))
             if not window and entry.get("version_removed"):
                 removed = entry["version_removed"]
@@ -741,14 +759,7 @@ def build_pl_terminology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             # added at a future version). Not an error -- just not in this
             # release.
             continue
-        current = max(
-            entries,
-            key=lambda e: (
-                VERSIONS.index(e.get("version_added", default_added))
-                if e.get("version_added", default_added) in VERSIONS
-                else -1
-            ),
-        )
+        current = max(entries, key=lambda e: _parse_version(added_of[id(e)]))
         out.append(
             {
                 "target": TARGET,
@@ -805,8 +816,12 @@ def terms_per_version(rows: list[dict[str, Any]]) -> dict[str, int]:
     Raises:
         SystemExit: if locales disagree at any version.
     """
+    # Scoped to the term sections: "every locale ships the same term set" is
+    # a claim about the translation sections, and the vocabulary families
+    # (symbols, messages) are expected to roll out unevenly -- that is the
+    # measurable gap, not a uniformity failure.
     per_pack: Counter[tuple[str, str]] = Counter(
-        (r["locale"], r["pl_version"]) for r in rows
+        (r["locale"], r["pl_version"]) for r in rows if r["category"] in SECTIONS
     )
     # Completeness before uniformity: a (locale, version) with ZERO rows is
     # invisible to the size-agreement check below -- absent keys contribute
@@ -1760,6 +1775,13 @@ def main() -> int:
 
     rows = build_rows(locales, registry)
     assert_python_only(rows)
+    rowless = sorted(set(locales) - {r["locale"] for r in rows})
+    if rowless:
+        raise SystemExit(
+            f"locale(s) produced no vocabulary rows: {rowless}. A scaffolded "
+            f"pack with empty sections must be finished or removed, not "
+            f"published as an empty pairing."
+        )
     # One read per locale per pass -- three builders consume it, and reading
     # it three times would open a window where a mid-export pyproject edit
     # publishes one version in packs.parquet and another in the JSON.

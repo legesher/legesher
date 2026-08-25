@@ -1282,3 +1282,68 @@ def test_json_union_carries_the_latest_rendering(
     )
     assert latest != earliest, "fixture assumption broken: si stopped redefining True"
     assert si["keywords"]["True"] == latest
+
+
+def test_uniformity_gate_ignores_the_unevenly_rolling_families() -> None:
+    """symbols/messages arriving for SOME locales must not fail uniformity.
+
+    "Every locale ships the same term set" is a claim about the term
+    sections; the vocabulary families roll out unevenly by design -- that is
+    the measurable gap, not a defect.
+    """
+    term_rows = [
+        {"locale": loc, "pl_version": v, "category": "keywords", "source_term": "for"}
+        for loc in ("aa", "bb")
+        for v in export_packs.VERSIONS
+    ]
+    uneven = [
+        {
+            "locale": "aa",
+            "pl_version": "3.14",
+            "category": "symbols",
+            "source_term": "colon",
+        }
+    ]
+    counts = export_packs.terms_per_version(term_rows + uneven)
+    assert counts == dict.fromkeys(export_packs.VERSIONS, 1)
+
+
+def test_null_version_added_ranks_by_the_shared_resolution(
+    rows: list[dict], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An explicit null version_added must not demote the current wording.
+
+    The window resolution treats null as the seed default; if the wording
+    ranking resolved it independently (ranking null lowest), a null-added
+    rewording would publish the superseded template as the English surface.
+    One resolution feeds both.
+    """
+    import json as jsonlib
+
+    seed = {
+        "implementation": "cpython",
+        "version_added": "3.12",
+        "templates": [
+            {
+                "key": "X.reworded",
+                "template_en": "old wording",
+                "version_added": "3.10",
+                "version_removed": "3.12",
+            },
+            {
+                # Explicit null: resolves to the seed default (3.12), which
+                # outranks 3.10 -- this is the CURRENT wording.
+                "key": "X.reworded",
+                "template_en": "current wording",
+                "version_added": None,
+            },
+        ],
+    }
+    path = tmp_path / "seed.json"
+    path.write_text(jsonlib.dumps(seed), encoding="utf-8")
+    monkeypatch.setattr(export_packs, "MESSAGES_SEED", path)
+
+    terminology = export_packs.build_pl_terminology(rows)
+    row = next(r for r in terminology if r["source_term"] == "X.reworded")
+    assert row["source_text"] == "current wording"
+    assert row["pl_versions"] == list(export_packs.VERSIONS)
