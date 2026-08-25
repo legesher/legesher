@@ -13,6 +13,15 @@ booleans, symbol names, and idiomatic variable names live in the **language
 packs**, not here. Key/value pairs are written in **English**, except where a
 value must be in the target script (e.g. a native-digit sample).
 
+The pack side of that sentence is concrete since CORE-1396: symbol names live
+in a pack's `symbols` section (what `_` and `:` are *called* in the language)
+and idiomatic short names in `variable_conventions` (the loop counter, the
+index, the throwaway). See [../docs/pack-vocabulary.md](../docs/pack-vocabulary.md).
+The test that separates the two: a rule is something you can check code
+against; "`_` is called *guion bajo*" is a lookup table, and no rule derives
+it. Nothing moved out of these guides to build that — they were already
+vocabulary-free.
+
 ## How the files fit together
 
 ```text

@@ -25,6 +25,11 @@ CORE-1400 contract — pack regeneration is safe because:
 - ``reserved_words`` (``self``/``cls``) is a first-class section and
   survives rewrites; the dual-slot ``type`` term (3.10 builtin vs 3.12
   soft keyword) exports each slot from its own term row.
+- The vocabulary partition (``symbols`` / ``variable_conventions``,
+  CORE-1396) reads ``selected_vocabulary`` instead, rides the 3.10 base
+  file, and is OPTIONAL — a language with none exports exactly as it did
+  before the partition existed. A section that is present but incomplete
+  is skipped with a warning rather than emitted half-filled.
 - Existing file header comments, metadata, and key order are preserved;
   ``metadata.last_updated`` only changes when section content changed.
 - An existing pack file that cannot be parsed, or does not parse to a
@@ -75,7 +80,7 @@ import yaml
 from legesher_i18n.db import TranslationDatabase
 from legesher_i18n.language_registry import get_language_name
 from legesher_i18n.schema_validator import SchemaValidator
-from legesher_i18n.selection import is_valid_pack_value
+from legesher_i18n.selection import is_valid_pack_value, vocabulary_value_error
 from legesher_i18n.term_definitions import (
     BUILTIN_FUNCTIONS,
     BUILTIN_TYPES,
@@ -89,6 +94,10 @@ from legesher_i18n.term_definitions import (
     RESERVED_WORDS,
     SPECIAL_CONSTANTS,
     SPECIAL_VALUES,
+)
+from legesher_i18n.vocabulary_definitions import (
+    VOCABULARY_SECTIONS,
+    slugs_for_section,
 )
 
 logger = logging.getLogger(__name__)
@@ -161,7 +170,32 @@ _XID_ONLY_FROM_CPYTHON_313 = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
 
 
 # Pack sections, in emitted file order.
-_PACK_SECTIONS = ("keywords", "builtins", "exceptions", "reserved_words")
+#
+# CORE-1396 appends the vocabulary partition. It is NOT part of the term
+# inventory and does not follow the term rules:
+#
+# * Source table: ``selected_vocabulary``, not ``selected_translations``.
+# * Version tiering: none. Symbol names and variable idiom do not change
+#   with the interpreter, so the whole partition lives in 3.10.yml and the
+#   later files inherit it through ``extends``.
+# * Completeness: OPTIONAL, per section, all-or-nothing. Missing vocabulary
+#   never blocks a pack the way a missing term does — the 51 shipped packs
+#   predate the partition and must keep exporting unchanged — but a
+#   half-filled section is never emitted either. See
+#   ``_build_vocabulary_sections``.
+_PACK_SECTIONS = (
+    "keywords",
+    "builtins",
+    "exceptions",
+    "reserved_words",
+    "symbols",
+    "variable_conventions",
+)
+
+# The subset of _PACK_SECTIONS that comes from the term layer. Everything
+# the interpreter-floor tiering and the completeness gate touch is scoped
+# to these, so adding a vocabulary section cannot widen either by accident.
+_TERM_SECTIONS = ("keywords", "builtins", "exceptions", "reserved_words")
 
 
 class IncompleteSelectionError(ValueError):
@@ -405,7 +439,7 @@ class YAMLExporter:
         if missing:
             return {}
 
-        overlay_313: dict[str, dict[str, str]] = {s: {} for s in _PACK_SECTIONS}
+        overlay_313: dict[str, dict[str, str]] = {s: {} for s in _TERM_SECTIONS}
         # Emitted pre-3.13 value -> {"section.term": (term name, canonical)}.
         # A value reached by two DIFFERENT term names whose canonical
         # spellings differ is a collision stripping fabricated (see below).
@@ -458,6 +492,81 @@ class YAMLExporter:
 
         self._assert_no_strip_collisions(language_code, stripped_index)
         return sections
+
+    def _build_vocabulary_sections(self, language_code: str) -> dict[str, dict]:
+        """Resolve the vocabulary partition for one language (CORE-1396).
+
+        Returns ``{section: {slug: value}}`` for every section this language
+        can ship, and omits the rest. Three rules, and each exists because
+        the alternative fails quietly:
+
+        1. **Optional.** A language with no vocabulary at all exports
+           exactly as it did before this partition existed. Vocabulary can
+           therefore be filled language by language without any pack
+           becoming unexportable in the meantime — unlike the term
+           inventory, where an unresolved slot is a hard stop.
+        2. **All-or-nothing per section.** A section ships with every slug
+           the canonical inventory declares, or not at all. A pack carrying
+           20 of 33 symbol names would render an English fallback in the
+           middle of localized teaching text with nothing to signal it, and
+           the consumer could not distinguish "no word for this" from "not
+           generated yet".
+        3. **Inventory order, not database order.** The mapping is built in
+           the order ``vocabulary_definitions`` declares rather than in
+           whatever order SQLite returned, so a regeneration is
+           byte-reproducible. (``_write_yaml_pack`` then applies the same
+           existing-order-first rule it applies to every other section.)
+
+        Values are re-checked against the publish gate on the way out, the
+        same way ``_load_selected_slots`` re-checks term selections:
+        ``set_selected_vocabulary`` refuses a bad value, so seeing one back
+        means the selection layer is damaged, not that this language is
+        merely incomplete.
+
+        Raises:
+            CorruptSelectionError: If a stored value fails the publish gate.
+        """
+        resolved: dict[str, dict] = {}
+        for section in VOCABULARY_SECTIONS:
+            rows = self.db.get_selected_vocabulary(language_code, section=section)
+            if not rows:
+                continue
+
+            values = {row["slug"]: row["value"] for row in rows}
+            invalid = [
+                error
+                for slug, value in values.items()
+                if (error := vocabulary_value_error(section, slug, value)) is not None
+            ]
+            if invalid:
+                raise CorruptSelectionError(
+                    f"Selected vocabulary for '{language_code}' fails the "
+                    f"publish gate (selection layer corrupt?): {invalid}"
+                )
+
+            expected = slugs_for_section(section)
+            missing = [slug for slug in expected if slug not in values]
+            if missing:
+                logger.warning(
+                    f"Language '{language_code}' has {len(values)} of "
+                    f"{len(expected)} '{section}' values (missing "
+                    f"{missing[:8]}{' ...' if len(missing) > 8 else ''}). "
+                    "Section skipped — a vocabulary section ships complete "
+                    "or not at all."
+                )
+                continue
+
+            unknown = sorted(set(values) - set(expected))
+            if unknown:
+                logger.warning(
+                    f"Language '{language_code}' carries {len(unknown)} "
+                    f"'{section}' value(s) outside the canonical inventory "
+                    f"({unknown[:8]}); not exported. Add them to "
+                    "legesher_i18n/vocabulary_definitions.py first."
+                )
+
+            resolved[section] = {slug: values[slug] for slug in expected}
+        return resolved
 
     @staticmethod
     def _raise_unstrippable(
@@ -614,6 +723,13 @@ class YAMLExporter:
                 raise IncompleteSelectionError(message)
             logger.warning(message + " Skipping language.")
             return None
+
+        # Vocabulary rides the 3.10 base file and inherits upward through
+        # ``extends`` — it has no version semantics, so there is nothing for
+        # the later files to override (CORE-1396). Resolved AFTER the term
+        # slots and BEFORE any write, keeping the "nothing reaches disk
+        # until everything resolves" property intact.
+        sections["3.10"].update(self._build_vocabulary_sections(language_code))
 
         lang_name = get_language_name(language_code)
         # (file, version, extends, header used only for a file created

@@ -35,6 +35,7 @@ from .script_policy import (
     policy_for,
     scripts_of,
 )
+from .vocabulary_definitions import slugs_for_section
 
 # Data-contract URL policy (CORE-1453): the only URL schemes a pack's
 # metadata strings may carry. Everything else — javascript:, file:, data:,
@@ -82,6 +83,32 @@ _TRANSLATION_SECTIONS = (
 #: data-contract and term-screening layers import instead of re-stating it
 #: (post-merge review finding, 2026-08-09).
 TRANSLATION_SECTIONS = _TRANSLATION_SECTIONS
+
+# The vocabulary partition (CORE-1396) is deliberately NOT part of
+# _TRANSLATION_SECTIONS, and the reason is worth stating because the
+# omission looks like one:
+#
+# * ``symbols`` values are prose names, so every identifier-shaped check
+#   would be a category error on them.
+# * ``variable_conventions`` values ARE identifiers, but they are advice,
+#   not a translation map. Three of the generic checks would fight correct
+#   data if applied to them:
+#     - script consistency would flag a language that keeps ``i`` for the
+#       loop counter. Many will, and rightly: ``i`` descends from
+#       mathematical notation, not from English.
+#     - the round-trip bijection (data_contract) would demand that no two
+#       roles share a value, when nothing reverse-translates advice.
+#     - keyword collision uses ``keyword.softkwlist``, which contains
+#       ``_`` — the canonical throwaway name, and legal exactly where it
+#       is a soft keyword.
+#   So the section gets ``check_variable_conventions`` instead, which
+#   applies the parts that DO transfer (identifier validity, hard-keyword
+#   collision, collision with the pack's own translated surfaces) and
+#   nothing that does not.
+_VOCABULARY_SECTIONS = ("symbols", "variable_conventions")
+
+#: Public name for the vocabulary partition's sections.
+VOCABULARY_SECTIONS = _VOCABULARY_SECTIONS
 
 # The one intentional cross-section duplicate: ``type`` is both a Python
 # keyword (3.12+ ``type`` statement) and a builtin. Packs translate both to the
@@ -316,6 +343,15 @@ class LanguagePackSchema(BaseModel):
             may serve several receivers. Used by member-bearing targets such
             as JavaScript; in-partition uniqueness applies, cross-partition
             homonyms are legal (MLCP extended field, CORE-1582).
+        symbols: What each Python symbol is CALLED in this language, keyed
+            by the stable slug from
+            :mod:`legesher_i18n.vocabulary_definitions` (``colon`` ->
+            "dos puntos"). Prose, for teaching text and error messages —
+            never an identifier, never executed (CORE-1396).
+        variable_conventions: The idiomatic short name this language's
+            programmers reach for, keyed by the ROLE it fills
+            (``loop_index`` -> ``i``). Real identifiers: this is advice a
+            developer types into their own code (CORE-1396).
         cultural_notes: Per-term cultural context notes.
         metadata: Optional pack metadata block.
     """
@@ -341,6 +377,11 @@ class LanguagePackSchema(BaseModel):
     operators: dict[str, str] = Field(default_factory=dict)
     standard_library: dict[str, str] = Field(default_factory=dict)
     cultural_notes: list[CulturalNote] = Field(default_factory=list)
+
+    # Vocabulary partition (CORE-1396). Both default empty, so every pack
+    # shipped before this partition existed validates unchanged.
+    symbols: dict[str, str] = Field(default_factory=dict)
+    variable_conventions: dict[str, str] = Field(default_factory=dict)
 
     # Metadata
     metadata: LanguagePackMetadata | None = None
@@ -403,6 +444,66 @@ class LanguagePackSchema(BaseModel):
         if not (v.endswith(".yml") or v.endswith(".yaml")):
             raise ValueError(f"Extends must point to a YAML file: {v}")
 
+        return v
+
+    @field_validator("symbols")
+    @classmethod
+    def validate_symbols(cls, v: dict[str, str]) -> dict[str, str]:
+        """Validate the ``symbols`` mapping — prose names, not identifiers.
+
+        Deliberately NOT routed through :meth:`validate_mappings`: a symbol
+        name is what a person says out loud ("opening parenthesis", "guion
+        bajo"). It has spaces, it is never tokenized, and the identifier
+        gate would reject every correct value.
+
+        The gate that does apply is
+        :func:`legesher_i18n.selection.vocabulary_value_error`, so the pack
+        layer and the database write boundary can never disagree about what
+        is publishable.
+        """
+        from .selection import vocabulary_value_error
+
+        for key, value in v.items():
+            if not key or not isinstance(key, str):
+                raise ValueError("Empty keys not allowed in symbols")
+            if not isinstance(value, str):
+                raise ValueError(f"symbols values must be strings: {key}={value!r}")
+            error = vocabulary_value_error("symbols", key, value)
+            if error is not None:
+                raise ValueError(error)
+        return v
+
+    @field_validator("variable_conventions")
+    @classmethod
+    def validate_variable_conventions(cls, v: dict[str, str]) -> dict[str, str]:
+        """Validate ``variable_conventions`` — real identifiers, one authority.
+
+        Deliberately NOT routed through :meth:`validate_mappings`: that gate
+        enforces what a term *translation* needs and nothing more. A
+        recommended variable name takes the vocabulary gate,
+        :func:`legesher_i18n.selection.vocabulary_value_error`, which carries
+        the identifier check PLUS the rules a translation does not (no
+        trailing ``*``, no CPython-3.13-only XID character,
+        normalization-stability with the SARA-AM allowance) — and it is the
+        SAME function the database write boundary calls, so pack-load and
+        the DB gate cannot return different verdicts for one value. They
+        used to: the DB gate accepted the literal ``'except*'`` (via the
+        ``SOFT_KEYWORDS`` short-circuit) and the fullwidth ``ｉ`` (which
+        CPython NFKC-folds to ``i`` at parse time) while this layer rejected
+        the first and, worse, also accepted the second.
+        """
+        from .selection import vocabulary_value_error
+
+        for key, value in v.items():
+            if not key or not isinstance(key, str):
+                raise ValueError("Empty keys not allowed in variable_conventions")
+            if not isinstance(value, str):
+                raise ValueError(
+                    f"variable_conventions values must be strings: {key}={value!r}"
+                )
+            error = vocabulary_value_error("variable_conventions", key, value)
+            if error is not None:
+                raise ValueError(error)
         return v
 
     @field_validator(
@@ -1808,6 +1909,233 @@ class SchemaValidator:
         return findings
 
     @staticmethod
+    def check_vocabulary_inventory(
+        pack_schema: "LanguagePackSchema",
+    ) -> list["Finding"]:
+        """Flag partial or unknown vocabulary sections (CORE-1396).
+
+        A vocabulary section is all-or-nothing: it ships with every slug the
+        canonical inventory declares, or it does not ship. A pack carrying
+        20 of 33 symbol names is worse than a pack carrying none — the
+        consumer cannot tell "this language has no word for it" from "nobody
+        has generated it yet", and it will render an English fallback in the
+        middle of localized teaching text without saying so.
+
+        The exporter enforces the same rule on the way out, by skipping an
+        incomplete section rather than emitting it. This check is the
+        matching gate on the way in, for a pack edited by hand.
+        """
+        findings: list[Finding] = []
+        for section in _VOCABULARY_SECTIONS:
+            present: dict[str, str] = getattr(pack_schema, section, {}) or {}
+            if not present:
+                continue
+            expected = set(slugs_for_section(section))
+            unknown = sorted(set(present) - expected)
+            missing = sorted(expected - set(present))
+            for slug in unknown:
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="unknown-vocabulary-slug",
+                        location=f"{section}.{slug}",
+                        message=(
+                            f"'{slug}' is not in the canonical {section} "
+                            "inventory (legesher_i18n/vocabulary_definitions.py). "
+                            "Add it there first — the inventory is shared by "
+                            "the database, the exporter and the prompt."
+                        ),
+                    )
+                )
+            if missing:
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="partial-vocabulary-section",
+                        location=section,
+                        message=(
+                            f"Section '{section}' carries {len(present)} of "
+                            f"{len(expected)} inventory slugs; missing "
+                            f"{missing[:8]}{' ...' if len(missing) > 8 else ''}. "
+                            "A vocabulary section ships complete or not at all."
+                        ),
+                    )
+                )
+        return findings
+
+    @staticmethod
+    def check_symbols(pack_schema: "LanguagePackSchema") -> list["Finding"]:
+        """Validate symbol NAMES: prose, publishable, normalization-stable.
+
+        The publishability half delegates to
+        :func:`legesher_i18n.selection.vocabulary_value_error`, the same
+        function the database write boundary calls, so a value can never be
+        publishable in one layer and not the other.
+
+        On top of that: a name must be NFC-stable. Symbol names are
+        rendered into teaching text and error messages and compared by
+        downstream tooling; an unnormalized name compares unequal to its own
+        rendered form. NFKC is deliberately NOT required here — unlike an
+        identifier, a name may legitimately contain a character NFKC would
+        fold, and nothing about it is executed.
+        """
+        from .selection import vocabulary_value_error
+
+        findings: list[Finding] = []
+        for slug, value in (pack_schema.symbols or {}).items():
+            error = vocabulary_value_error("symbols", slug, value)
+            if error is not None:
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="invalid-symbol-name",
+                        location=f"symbols.{slug}",
+                        message=error,
+                    )
+                )
+                continue
+            if value != unicodedata.normalize("NFC", value):
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="unnormalized-symbol-name",
+                        location=f"symbols.{slug}",
+                        message=(
+                            f"Symbol name '{value}' is not NFC-stable; store the "
+                            "NFC form so it compares equal to its rendered form."
+                        ),
+                    )
+                )
+        return findings
+
+    @staticmethod
+    def check_variable_conventions(
+        pack_schema: "LanguagePackSchema",
+    ) -> list["Finding"]:
+        """Validate recommended variable names (CORE-1396).
+
+        These are names a developer is being told to type, so the failure
+        modes are the ones that bite at the keyboard:
+
+        * **not an identifier** (error) — it would not parse.
+        * **a trailing ``*``** (error) — the starred soft-keyword form is a
+          term-section device; a recommended name cannot carry one, and the
+          gate refuses it before the identifier check so the literal
+          ``except*`` cannot ride the ``SOFT_KEYWORDS`` short-circuit.
+        * **not normalization-stable** (error) — Python NFKC-folds
+          identifiers at parse time, so a fullwidth ``ｉ`` would silently
+          bind ``i``. Same SARA-AM allowance as :meth:`check_normalization`
+          (CORE-1514): NFC-stable, sara-am-only deltas pass.
+        * **a 3.13-only XID character** (error) — it would not parse on the
+          3.10 floor, and advice has no version overlay to be tiered into.
+        * **a live Python keyword** (error) — ``for`` as a variable name is
+          a SyntaxError. Checked against ``keyword.kwlist`` only: the soft
+          keywords are excluded on purpose, because ``_`` is one of them and
+          ``_`` is the canonical throwaway name this section exists to
+          record.
+        * **a translated surface this very pack already uses** (error) — the
+          engine rewrites that token, so following the advice would silently
+          turn a variable into a keyword.
+        * **a builtin's name** (warning) — shadowing ``list`` or ``id``
+          parses fine and is merely a smell, so it is advisory.
+        * **two roles sharing one name** (warning) — legal (``x`` can be
+          both a coordinate and a generic first value), but usually a sign
+          the model reached for the same answer twice.
+        """
+        from .selection import vocabulary_value_error
+
+        conventions: dict[str, str] = pack_schema.variable_conventions or {}
+        if not conventions:
+            return []
+
+        import builtins as _builtins
+
+        hard_keywords = frozenset(keyword.kwlist)
+        builtin_names = frozenset(dir(_builtins))
+        translated_surfaces = {
+            value: f"{section}.{key}"
+            for section, key, value in SchemaValidator._iter_translation_items(
+                pack_schema
+            )
+        }
+
+        findings: list[Finding] = []
+        by_value: dict[str, list[str]] = {}
+        for slug, value in conventions.items():
+            by_value.setdefault(value, []).append(slug)
+
+            error = vocabulary_value_error("variable_conventions", slug, value)
+            if error is not None:
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="invalid-variable-convention",
+                        location=f"variable_conventions.{slug}",
+                        message=error,
+                    )
+                )
+                continue
+
+            if value in hard_keywords:
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="variable-convention-keyword",
+                        location=f"variable_conventions.{slug}",
+                        message=(
+                            f"'{value}' is a Python keyword; recommending it as "
+                            "a variable name would produce a SyntaxError."
+                        ),
+                    )
+                )
+                continue
+
+            shadowed = translated_surfaces.get(value)
+            if shadowed is not None:
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="variable-convention-shadows-term",
+                        location=f"variable_conventions.{slug}",
+                        message=(
+                            f"'{value}' is this pack's translated surface for "
+                            f"{shadowed}; the engine rewrites that token, so a "
+                            "variable named it would not survive translation."
+                        ),
+                    )
+                )
+                continue
+
+            if value in builtin_names:
+                findings.append(
+                    Finding(
+                        severity="warning",
+                        code="variable-convention-shadows-builtin",
+                        location=f"variable_conventions.{slug}",
+                        message=(
+                            f"'{value}' shadows the builtin of the same name. "
+                            "Legal, but a smell worth a native reviewer's eye."
+                        ),
+                    )
+                )
+
+        for value, slugs in by_value.items():
+            if len(slugs) > 1:
+                findings.append(
+                    Finding(
+                        severity="warning",
+                        code="duplicate-variable-convention",
+                        location=f"variable_conventions.{'/'.join(sorted(slugs))}",
+                        message=(
+                            f"'{value}' is recommended for {len(slugs)} different "
+                            f"roles ({', '.join(sorted(slugs))}). Legal, but "
+                            "often a sign the same answer was given twice."
+                        ),
+                    )
+                )
+        return findings
+
+    @staticmethod
     def validate_pack_strict(
         pack_schema: "LanguagePackSchema",
         language: str | None = None,
@@ -1837,6 +2165,15 @@ class SchemaValidator:
            (via :meth:`_strict_identifier_findings`)
         8. :meth:`check_ascii_digits` — the ASCII-digit policy (warning)
         9. :meth:`check_term_length` — description-as-term length (warning)
+        10. :meth:`check_vocabulary_inventory` — vocabulary sections ship
+            complete or not at all (CORE-1396)
+        11. :meth:`check_symbols` — symbol names are publishable prose
+        12. :meth:`check_variable_conventions` — recommended names parse,
+            and do not collide with a keyword or with the pack's own
+            translated surfaces
+
+        The last three are unconditional: both vocabulary sections default
+        empty, so every pack predating the partition runs them over nothing.
 
         Two of the aggregated checks are Python-specific and are gated by the
         ``run_min_interpreter`` / ``run_cross_section`` toggles (CORE-1372):
@@ -1887,4 +2224,7 @@ class SchemaValidator:
         findings += SchemaValidator._strict_identifier_findings(pack_schema)
         findings += SchemaValidator.check_ascii_digits(pack_schema)
         findings += SchemaValidator.check_term_length(pack_schema)
+        findings += SchemaValidator.check_vocabulary_inventory(pack_schema)
+        findings += SchemaValidator.check_symbols(pack_schema)
+        findings += SchemaValidator.check_variable_conventions(pack_schema)
         return findings

@@ -16,9 +16,10 @@ Blocking classes:
   compare. ``_write_yaml_pack`` rebuilds the YAML from a fixed set of
   keys, so anything else is silently dropped on regen — and, worse,
   would not be diffed even if both sides carried it. Adding a new pack
-  layer (e.g. MLCP ``members``) must therefore extend :data:`SECTIONS`
-  here AND ``_PACK_SECTIONS`` in ``yaml_exporter``; this class is what
-  forces that. Reported once per key per run, not once per pack file.
+  layer (e.g. MLCP ``members``, or the CORE-1396 vocabulary partition)
+  must therefore extend :data:`SECTIONS` here AND ``_PACK_SECTIONS`` in
+  ``yaml_exporter``; this class is what forces that. Reported once per
+  key per run, not once per pack file.
 - ``metadata_changed`` — metadata block differs
 - ``header_changed``   — leading comment block differs
 - ``not_regenerated``  — the export left the seeded copy of a shipped
@@ -103,7 +104,20 @@ from yaml_exporter import YAMLExporter  # type: ignore[import-not-found]  # noqa
 DB_PATH = _I18N_ROOT / "legesher_i18n" / "db" / "translations.db"
 PACKS_DIR = _I18N_ROOT / "language-packs" / "python"
 
-SECTIONS = ("keywords", "builtins", "exceptions", "reserved_words")
+# Kept in step with ``_PACK_SECTIONS`` in scripts/translate/yaml_exporter.py
+# — the ``unknown_section`` finding class below is what forces that. The
+# last two are the vocabulary partition (CORE-1396); they diff exactly like
+# the term sections, since both sides are ``{key: string}`` mappings, and
+# they are absent from every pack until a language's vocabulary is
+# generated.
+SECTIONS = (
+    "keywords",
+    "builtins",
+    "exceptions",
+    "reserved_words",
+    "symbols",
+    "variable_conventions",
+)
 SCALAR_FIELDS = ("language", "target", "version", "extends")
 
 #: Every top-level key this gate knows how to diff. Anything outside it

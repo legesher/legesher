@@ -67,6 +67,14 @@ class LanguagePack:
         members: Merged member/property-name translations — labels bounded
             by their receiver, for member-bearing targets such as JavaScript
             (CORE-1582). Empty for Python packs.
+        symbols: What each Python symbol is CALLED in this language, keyed
+            by the slug from :mod:`legesher_i18n.vocabulary_definitions`
+            (CORE-1396). Prose for teaching text and error messages — never
+            substituted into code. Empty until a language's vocabulary is
+            generated.
+        variable_conventions: The idiomatic short name for each variable
+            ROLE (``loop_index`` -> ``i``), CORE-1396. Advice for a human
+            writing new code, not a substitution the engine performs.
         metadata: Optional metadata about the pack
         extends: Optional path to parent pack (for reference)
         inheritance_chain: List of pack paths in inheritance order
@@ -80,6 +88,8 @@ class LanguagePack:
     exceptions: dict[str, str] = field(default_factory=dict)
     reserved_words: dict[str, str] = field(default_factory=dict)
     members: dict[str, str] = field(default_factory=dict)
+    symbols: dict[str, str] = field(default_factory=dict)
+    variable_conventions: dict[str, str] = field(default_factory=dict)
     metadata: LanguagePackMetadata | None = None
     extends: str | None = None
     inheritance_chain: list[str] = field(default_factory=list)
@@ -162,13 +172,44 @@ class LanguagePack:
         """
         return reserved_word in self.reserved_words
 
+    def get_symbol_name(self, slug: str) -> str | None:
+        """What this language calls the symbol identified by *slug*.
+
+        Args:
+            slug: A slug from :data:`legesher_i18n.vocabulary_definitions.SYMBOLS`
+                (e.g. ``"colon"``, ``"underscore"``, ``"indentation"``).
+
+        Returns:
+            The localized name, or None when this pack carries no symbol
+            vocabulary. Callers rendering teaching text should fall back to
+            the canonical English name from ``vocabulary_definitions`` and
+            say so, rather than silently mixing languages.
+        """
+        return self.symbols.get(slug)
+
+    def get_variable_convention(self, role: str) -> str | None:
+        """The idiomatic short name this language uses for *role*.
+
+        Args:
+            role: A slug from
+                :data:`legesher_i18n.vocabulary_definitions.VARIABLE_CONVENTIONS`
+                (e.g. ``"loop_index"``, ``"throwaway"``).
+
+        Returns:
+            The recommended name, or None when this pack carries no
+            variable conventions.
+        """
+        return self.variable_conventions.get(role)
+
     def __repr__(self) -> str:
         """String representation of language pack."""
         return (
             f"LanguagePack(language={self.language}, target={self.target}, "
             f"version={self.version}, keywords={len(self.keywords)}, "
             f"builtins={len(self.builtins)}, exceptions={len(self.exceptions)}, "
-            f"reserved_words={len(self.reserved_words)}, members={len(self.members)})"
+            f"reserved_words={len(self.reserved_words)}, members={len(self.members)}, "
+            f"symbols={len(self.symbols)}, "
+            f"variable_conventions={len(self.variable_conventions)})"
         )
 
 
@@ -384,6 +425,8 @@ class LanguagePackLoader:
             exceptions=dict(pack_schema.exceptions),
             reserved_words=dict(pack_schema.reserved_words),
             members=dict(pack_schema.members),
+            symbols=dict(pack_schema.symbols),
+            variable_conventions=dict(pack_schema.variable_conventions),
             metadata=pack_schema.metadata,
             extends=pack_schema.extends,
             inheritance_chain=inheritance_chain,
@@ -643,6 +686,24 @@ class LanguagePackLoader:
             base_members = base.get("members", {})
             override_members = override.get("members", {})
             merged["members"] = {**base_members, **override_members}
+
+        # Merge the vocabulary partition (override takes precedence) —
+        # CORE-1396. Per-key override, exactly like every other section,
+        # rather than whole-section replacement: that is the semantics the
+        # pack chain has always had, and the ambiguity CORE-1782 is
+        # settling for STYLE-GUIDE lists does not arise here because these
+        # sections are mappings, not lists.
+        #
+        # In practice the vocabulary lives entirely in 3.10.yml — symbol
+        # names and variable idiom do not change with the interpreter — so
+        # the merge is a pass-through today. It is written out anyway so a
+        # future version overlay inherits rather than silently drops.
+        for section in ("symbols", "variable_conventions"):
+            if section in base or section in override:
+                merged[section] = {
+                    **base.get(section, {}),
+                    **override.get(section, {}),
+                }
 
         # Override scalar fields
         for key in ["language", "target", "version", "extends", "metadata"]:

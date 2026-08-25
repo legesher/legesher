@@ -32,9 +32,11 @@ The rule, in precedence order (documented in
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass
 
-from .schema_validator import LanguagePackSchema
+from .schema_validator import LanguagePackSchema, SchemaValidator
+from .script_policy import nfkc_delta_class
 
 # Translation sources ordered from most to least trusted. Sources not in
 # this tuple rank below all listed sources. See
@@ -117,6 +119,158 @@ def is_valid_pack_value(term: str, value: str) -> bool:
     if value != value.strip():
         return False
     return LanguagePackSchema._is_valid_identifier(value, source_key=term)
+
+
+# A symbol NAME is a short noun phrase ("opening parenthesis", "guion
+# bajo"), not the sentence that explains what the symbol does. The cap is
+# code points and deliberately generous: the longest English name in the
+# inventory is 24 ("triple quotation mark"), and agglutinative languages
+# will run longer. 60 leaves room for those while still catching the
+# failure mode this exists for — a model answering with the ``role``
+# sentence it was given as context instead of the name it was asked for.
+MAX_SYMBOL_NAME_LENGTH = 60
+
+# Unicode general categories a symbol name may never contain. Cc/Cf cover
+# control and format characters (bidi overrides included); Zl/Zp are the
+# line/paragraph separators; Cs/Co/Cn are surrogates, private use, and
+# unassigned. Ordinary spaces (Zs) ARE allowed — a symbol name is prose and
+# most of them are multi-word.
+_FORBIDDEN_NAME_CATEGORIES = frozenset({"Cc", "Cf", "Cs", "Co", "Cn", "Zl", "Zp"})
+
+
+def vocabulary_value_error(section: str, slug: str, value: str) -> str | None:
+    """The publish gate for the vocabulary partition (CORE-1396).
+
+    Returns a human-readable reason the value may not be published, or
+    ``None`` when it passes. Two sections, two regimes, because the two
+    hold different kinds of thing:
+
+    ``symbols``
+        Prose — the NAME of a symbol, for teaching text and error
+        messages. Never parsed, never executed, so the identifier gate
+        would be exactly wrong. What it must be: non-empty, not padded,
+        free of control/format characters, and short enough to be a name
+        rather than a definition.
+
+    ``variable_conventions``
+        Real identifiers — these are names a developer is being advised to
+        type into their own code. They take the same PEP 3131 gate as a
+        pack translation, plus three rules a translation does not:
+
+        * **No trailing ``*``.** The starred soft-keyword form
+          (``except*``) is a term-section device — the star mirrors the
+          source term's own star. A variable role never carries one, so no
+          recommended name may either. Checked before the identifier gate,
+          which (called without a source term) would otherwise
+          short-circuit on ``SOFT_KEYWORDS`` and accept the literal
+          ``except*`` that the pack-load validator rejects.
+        * **No CPython-3.13-only XID character.** Pack values get that
+          guarantee from the exporter's interpreter-floor tiering, which
+          strips such characters for the pre-3.13 files. Tiering is not
+          available here — a recommended NAME has no version-overlay file
+          to live in — so the character is refused at the write boundary
+          instead.
+        * **Normalization-stable.** Python NFKC-folds identifiers at parse
+          time, so a value like fullwidth ``ｉ`` would silently bind ``i``
+          — the advice a reader sees would not be the identifier the
+          interpreter creates. Same allowance as the term-side
+          ``check_normalization`` gate (CORE-1514): an NFC-stable value
+          whose ONLY NFKC delta is Thai SARA AM (U+0E33) is legitimate
+          orthography, folded by CPython itself, and passes.
+
+        This function is called by the pydantic pack-load validator, the
+        strict validator, the database write boundary, the exporter and the
+        generation script; keeping every rule HERE is what makes those
+        layers unable to disagree.
+
+    Args:
+        section: ``"symbols"`` or ``"variable_conventions"``.
+        slug: The entry slug, used only in the message.
+        value: The candidate value.
+    """
+    if not isinstance(value, str) or not value:
+        return f"{section}.{slug}: value is empty"
+    if value != value.strip():
+        return f"{section}.{slug}: value has leading/trailing whitespace ({value!r})"
+
+    if section == "symbols":
+        bad = sorted(
+            {c for c in value if unicodedata.category(c) in _FORBIDDEN_NAME_CATEGORIES}
+        )
+        if bad:
+            points = ", ".join(f"U+{ord(c):04X}" for c in bad)
+            return f"symbols.{slug}: name contains control/format character(s) {points}"
+        if len(value) > MAX_SYMBOL_NAME_LENGTH:
+            return (
+                f"symbols.{slug}: name is {len(value)} characters; the cap is "
+                f"{MAX_SYMBOL_NAME_LENGTH} — a symbol name is a short noun "
+                "phrase, not a description of what the symbol does"
+            )
+        if value.endswith("*"):
+            return (
+                f"symbols.{slug}: name ends with '*' — a name is the word for "
+                "a glyph, not the glyph itself, and the trailing star is the "
+                "term sections' soft-keyword marker; no starred value may "
+                "enter this partition"
+            )
+        return None
+
+    if section == "variable_conventions":
+        # Before the identifier gate on purpose: _is_valid_identifier with
+        # no source term short-circuits on SOFT_KEYWORDS and would accept
+        # the literal 'except*' — a verdict the pack-load validator does
+        # not share. Rejecting every trailing '*' first makes that
+        # short-circuit unreachable from this branch (SOFT_KEYWORDS members
+        # all carry the star) and keeps the two layers in agreement.
+        if value.endswith("*"):
+            return (
+                f"variable_conventions.{slug}: '{value}' ends with '*'. The "
+                "starred soft-keyword form belongs to the term sections, "
+                "where it mirrors the source term's own star; a recommended "
+                "variable name cannot carry one"
+            )
+        if not LanguagePackSchema._is_valid_identifier(value, source_key=None):
+            return (
+                f"variable_conventions.{slug}: '{value}' is not a valid Python "
+                "identifier, so it cannot be recommended as a variable name"
+            )
+        needs_313 = sorted(
+            {c for c in value if c in SchemaValidator._XID_ONLY_FROM_CPYTHON_313}
+        )
+        if needs_313:
+            points = ", ".join(f"U+{ord(c):04X}" for c in needs_313)
+            return (
+                f"variable_conventions.{slug}: '{value}' uses {points}, which "
+                "only became a valid identifier character in CPython 3.13. A "
+                "recommended name has no version overlay to be tiered into, so "
+                "it must parse on the 3.10 floor — respell it"
+            )
+        nfc = unicodedata.normalize("NFC", value)
+        nfkc = unicodedata.normalize("NFKC", value)
+        if not (value == nfc == nfkc):
+            # Same allowance as the term-side check_normalization gate
+            # (CORE-1514 policy): an NFC-stable value whose ONLY NFKC delta
+            # is Thai SARA AM (U+0E33) is legitimate orthography — CPython
+            # folds it in identifiers (PEP 3131), so both spellings are one
+            # identifier and there is no spoofing surface. Everything else
+            # unstable is refused: a fullwidth 'ｉ' would silently bind 'i',
+            # making the advice wrong about the very name it recommends.
+            if not (
+                value == nfc and nfkc_delta_class(value, nfkc=nfkc) == "sara-am-only"
+            ):
+                return (
+                    f"variable_conventions.{slug}: '{value}' is not stable "
+                    f"under Unicode normalization (NFC='{nfc}', NFKC='{nfkc}'). "
+                    "Python NFKC-folds identifiers at parse time, so the "
+                    "spelling recommended and the identifier bound would "
+                    "silently differ — respell it in normalized form"
+                )
+        return None
+
+    return (
+        f"unknown vocabulary section '{section}'; expected 'symbols' or "
+        "'variable_conventions'"
+    )
 
 
 def source_trust_rank(source: str | None) -> int:

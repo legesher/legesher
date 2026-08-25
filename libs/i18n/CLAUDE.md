@@ -24,6 +24,10 @@ and multi-provider translation API.
   `keywords:` because they're Python conventions (not actual reserved
   words in the language). Eliminates LLM-driven self-reference drift
   and keyword collisions (see `scripts/translate/prompts/reserved_words_prompt.md`).
+- **Pack vocabulary** (CORE-1396): `symbols:` (what `_`, `:`, indentation are
+  *called* in the language) and `variable_conventions:` (the idiomatic short
+  names — loop `i`, index, `x`/`y`). Vocabulary, not rules, so it lives here
+  and not in the style guides. See `docs/pack-vocabulary.md`.
 
 ## Directory Structure
 
@@ -291,6 +295,23 @@ that `scripts/migrate_to_v2.py` loads at import.
   `option_screenings` inside the database, so carry the previous copy forward.
 
 ### Tables
+
+#### Vocabulary partition (CORE-1396)
+
+`vocabulary_entries` / `vocabulary_translations` / `selected_vocabulary` mirror
+the `terms` / `translations` / `selected_translations` trio for the two
+vocabulary pack sections. A partition of its own because neither term-layer
+rule fits: `set_selected`'s publish gate demands a valid Python identifier
+(a symbol NAME is prose), and `find_collisions` treats a shared value as a
+round-trip break (nothing reverse-translates a symbol name).
+
+The canonical inventory is **code**, in `legesher_i18n/vocabulary_definitions.py`
+— identical in all 51 languages, so there is one place to change it and nothing
+to keep in sync. `scripts/seed_vocabulary.py` projects it into the DB and seeds
+the `en` values (English is seeded, never generated);
+`scripts/translate/generate_vocabulary.py` fills the other 50 from a
+linguist-framed prompt. Sections are optional but all-or-nothing: the exporter
+skips an incomplete one rather than shipping it half-filled.
 
 #### `terms` — Canonical reserved words
 

@@ -11,6 +11,57 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Language packs can now say what a symbol is called, and which short
+  variable names a language's programmers actually type.** Two new pack
+  sections: `symbols` maps a stable slug to the name speakers use for a mark
+  (`colon` → "dos puntos", `underscore` → "guion bajo"), and
+  `variable_conventions` maps a variable *role* to the idiomatic short name
+  for it (`loop_index` → `i`, `throwaway` → `_`). Teaching text and error
+  messages need both, and neither is derivable from a rule — which is exactly
+  why they belong in the packs rather than the style guides, where the README
+  had been pointing all along.
+
+  The two sections validate differently because they hold different things. A
+  symbol name is prose: it has spaces, it is never executed, and the identifier
+  gate would reject every correct value; what it must be is unpadded, free of
+  control characters, and short enough to be a name rather than a definition. A
+  variable convention is a real identifier someone types into their own code,
+  so it takes the full PEP 3131 gate plus rules a translation does not: no
+  character that only became identifier-legal in CPython 3.13 (a recommended
+  name has no version overlay to be tiered into), stable under Unicode
+  normalization (Python NFKC-folds identifiers at parse time, so a fullwidth
+  `ｉ` would silently bind `i`; the Thai SARA-AM allowance the term gates
+  apply carries over unchanged), no soft-keyword star (the trailing `*` is a
+  term-section device, and refusing it keeps the literal `except*` out of a
+  partition whose pack loader rejects it), not a Python keyword, and not a
+  surface this pack already translates a term to — the engine would rewrite
+  it, and the variable would not survive translation. One function is the
+  authority for both regimes, called from the schema layer, the strict
+  validator, the database write boundary, the exporter and the generation
+  script, and a regression suite asserts the database gate and pack-load
+  return the same verdict value by value, so no two layers can disagree
+  about what is publishable.
+
+  Both sections are optional and all-or-nothing. A language with no vocabulary
+  exports exactly as it did before, so the 51 shipped packs are untouched and
+  vocabulary can be filled one language at a time; a section that is present
+  but incomplete is skipped with a warning rather than emitted half-filled,
+  because a pack carrying 20 of 33 symbol names would put English fallbacks
+  inside localized teaching text with nothing to signal it.
+
+  The canonical inventory — 33 symbols, 15 variable roles, their glyphs and
+  their English values — is code rather than data, for the same reason the term
+  inventory is: it is identical in every language. English is seeded from it
+  and never generated. The other 50 locales come from a linguist-framed prompt
+  that asks what speakers *say* rather than for a calque of the English name,
+  and that tells the model outright that `i` is usually the right answer for a
+  loop counter — the interesting finding is which roles a language genuinely
+  renames, and a response that renames all fifteen describes no real codebase.
+  Generated values enter at the experimental tier, where the packs already sit.
+
+  Nothing was removed from any style guide: across all 61 guide files there was
+  no vocabulary-shaped key to remove.
+
 - **The language canon publishes as its own dataset.** `legesher/language-canon`
   carries 9,375 terminology decisions across 51 languages — which rendering was
   selected for each programming concept in each language, and how much review

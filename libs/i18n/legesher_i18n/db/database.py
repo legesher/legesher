@@ -1026,6 +1026,255 @@ class TranslationDatabase:
         return cursor.rowcount > 0
 
     # ===========================
+    # Vocabulary partition (CORE-1396)
+    # ===========================
+
+    def get_or_create_vocabulary_entry(
+        self,
+        section: str,
+        slug: str,
+        english_value: str,
+        role: str | None = None,
+        sort_order: int = 0,
+        programming_language: str = "python",
+    ) -> int:
+        """Get (or create) a canonical vocabulary entry, returning its id.
+
+        Idempotent on ``(section, slug, programming_language)``: a second
+        call with a changed ``english_value``/``role``/``sort_order``
+        UPDATES the existing row rather than creating a rival one, so
+        re-running the seeder after editing
+        :mod:`legesher_i18n.vocabulary_definitions` converges instead of
+        forking the inventory.
+
+        Args:
+            section: ``"symbols"`` or ``"variable_conventions"``.
+            slug: Stable ASCII key (e.g. ``"colon"``, ``"loop_index"``).
+            english_value: The canonical English value for the entry.
+            role: What the entry is for — prompt context, never shipped.
+            sort_order: Inventory position, for stable listing.
+            programming_language: Target language the entry belongs to.
+
+        Returns:
+            The ``vocabulary_entries.id``.
+        """
+        conn = self._get_connection()
+        row = conn.execute(
+            "SELECT id FROM vocabulary_entries "
+            "WHERE section = ? AND slug = ? AND programming_language = ?",
+            (section, slug, programming_language),
+        ).fetchone()
+        if row is not None:
+            conn.execute(
+                "UPDATE vocabulary_entries SET english_value = ?, role = ?, "
+                "sort_order = ?, updated_at = datetime('now') WHERE id = ?",
+                (english_value, role, sort_order, row[0]),
+            )
+            conn.commit()
+            return int(row[0])
+
+        cursor = conn.execute(
+            "INSERT INTO vocabulary_entries "
+            "(section, slug, programming_language, english_value, role, sort_order) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (section, slug, programming_language, english_value, role, sort_order),
+        )
+        conn.commit()
+        return int(cursor.lastrowid)
+
+    def get_vocabulary_entries(
+        self,
+        section: str | None = None,
+        programming_language: str = "python",
+    ) -> list[dict]:
+        """List canonical vocabulary entries, in inventory order."""
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+        query = "SELECT * FROM vocabulary_entries WHERE programming_language = ?"
+        params: list = [programming_language]
+        if section is not None:
+            query += " AND section = ?"
+            params.append(section)
+        query += " ORDER BY section, sort_order, slug"
+        rows = conn.execute(query, params).fetchall()
+        conn.row_factory = None
+        return [dict(row) for row in rows]
+
+    def add_vocabulary_translation(
+        self,
+        entry_id: int,
+        language_code: str,
+        value: str,
+        source: str,
+        model_version: str | None = None,
+        confidence: str | None = None,
+        model_rationale: str | None = None,
+        created_by: str | None = None,
+    ) -> int:
+        """Record a candidate value for an entry+language.
+
+        The candidate pool is dirty-tolerant, exactly like ``translations``:
+        raw model output lands here unjudged, and the publish gate applies
+        only when a value is SELECTED. Duplicate ``(entry, language, source,
+        value)`` rows are silently skipped (``INSERT OR IGNORE``).
+
+        Returns:
+            The new row id, or 0 when the row already existed.
+        """
+        conn = self._get_connection()
+        cursor = conn.execute(
+            "INSERT OR IGNORE INTO vocabulary_translations "
+            "(entry_id, language_code, value, source, model_version, "
+            "confidence, model_rationale, created_by) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                entry_id,
+                language_code,
+                value,
+                source,
+                model_version,
+                confidence,
+                model_rationale,
+                created_by,
+            ),
+        )
+        conn.commit()
+        return int(cursor.lastrowid) if cursor.rowcount else 0
+
+    def get_vocabulary_translations(
+        self,
+        entry_id: int | None = None,
+        language_code: str | None = None,
+    ) -> list[dict]:
+        """Candidate vocabulary values, optionally filtered."""
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+        query = (
+            "SELECT vt.*, ve.section, ve.slug FROM vocabulary_translations vt "
+            "JOIN vocabulary_entries ve ON ve.id = vt.entry_id WHERE 1=1"
+        )
+        params: list = []
+        if entry_id is not None:
+            query += " AND vt.entry_id = ?"
+            params.append(entry_id)
+        if language_code is not None:
+            query += " AND vt.language_code = ?"
+            params.append(language_code)
+        query += " ORDER BY ve.section, ve.sort_order, vt.source"
+        rows = conn.execute(query, params).fetchall()
+        conn.row_factory = None
+        return [dict(row) for row in rows]
+
+    def set_selected_vocabulary(
+        self,
+        entry_id: int,
+        language_code: str,
+        value: str,
+        selected_by: str | None = None,
+        selection_reason: str | None = None,
+    ) -> int:
+        """Make ``value`` the active vocabulary value for entry+language.
+
+        The publish gate runs HERE, at the write boundary, the same way
+        ``set_selected`` gates term translations: the exporter reads this
+        table and nothing else for these sections, so a value that cannot
+        ship must not be able to enter it. See
+        :func:`legesher_i18n.selection.vocabulary_value_error` for the two
+        regimes (prose names vs real identifiers).
+
+        Deliberately absent: the collision guard ``set_selected`` carries.
+        Vocabulary is not a token map — nothing reverse-translates a symbol
+        name back into source code — so two entries sharing one value is a
+        quality signal for review, not a reversibility break. The pack
+        validator reports it as a warning.
+
+        Raises:
+            ValueError: If the entry does not exist, or the value fails the
+                publish gate for its section.
+        """
+        from ..selection import vocabulary_value_error
+
+        conn = self._get_connection()
+        entry = conn.execute(
+            "SELECT section, slug FROM vocabulary_entries WHERE id = ?",
+            (entry_id,),
+        ).fetchone()
+        if entry is None:
+            raise ValueError(f"No vocabulary entry with id {entry_id}")
+
+        section, slug = entry[0], entry[1]
+        error = vocabulary_value_error(section, slug, value)
+        if error is not None:
+            raise ValueError(
+                f"Refusing to select vocabulary value for '{language_code}' — {error}"
+            )
+
+        cursor = conn.execute(
+            "INSERT INTO selected_vocabulary "
+            "(entry_id, language_code, value, selected_by, selection_reason) "
+            "VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(entry_id, language_code) DO UPDATE SET "
+            "value = excluded.value, selected_by = excluded.selected_by, "
+            "selection_reason = excluded.selection_reason, "
+            "selected_at = datetime('now')",
+            (entry_id, language_code, value, selected_by, selection_reason),
+        )
+        conn.commit()
+        return int(cursor.lastrowid)
+
+    def get_selected_vocabulary(
+        self,
+        language_code: str,
+        section: str | None = None,
+        programming_language: str = "python",
+    ) -> list[dict]:
+        """Active vocabulary values for a language, joined to their entries.
+
+        Rows carry ``section`` and ``slug`` so the exporter can build pack
+        sections without a second query.
+        """
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+        query = (
+            "SELECT sv.*, ve.section, ve.slug, ve.english_value, ve.sort_order "
+            "FROM selected_vocabulary sv "
+            "JOIN vocabulary_entries ve ON ve.id = sv.entry_id "
+            "WHERE sv.language_code = ? AND ve.programming_language = ?"
+        )
+        params: list = [language_code, programming_language]
+        if section is not None:
+            query += " AND ve.section = ?"
+            params.append(section)
+        query += " ORDER BY ve.section, ve.sort_order, ve.slug"
+        rows = conn.execute(query, params).fetchall()
+        conn.row_factory = None
+        return [dict(row) for row in rows]
+
+    def get_vocabulary_coverage(
+        self, programming_language: str = "python"
+    ) -> dict[str, dict[str, int]]:
+        """Selected-value counts per language per section.
+
+        The answer to "which languages are ready to ship a vocabulary
+        section?" — a section is emitted only when its count equals the
+        inventory size, so this is what the generation run is measured
+        against.
+        """
+        conn = self._get_connection()
+        rows = conn.execute(
+            "SELECT sv.language_code, ve.section, COUNT(*) "
+            "FROM selected_vocabulary sv "
+            "JOIN vocabulary_entries ve ON ve.id = sv.entry_id "
+            "WHERE ve.programming_language = ? "
+            "GROUP BY sv.language_code, ve.section",
+            (programming_language,),
+        ).fetchall()
+        coverage: dict[str, dict[str, int]] = {}
+        for language_code, section, count in rows:
+            coverage.setdefault(language_code, {})[section] = count
+        return coverage
+
+    # ===========================
     # Statistics
     # ===========================
 
@@ -1064,6 +1313,17 @@ class TranslationDatabase:
             "SELECT category, COUNT(*) FROM terms GROUP BY category"
         ).fetchall()
         stats["terms_by_category"] = {row[0]: row[1] for row in rows}
+
+        # Vocabulary partition (CORE-1396)
+        stats["vocabulary_entries_count"] = conn.execute(
+            "SELECT COUNT(*) FROM vocabulary_entries"
+        ).fetchone()[0]
+        stats["vocabulary_translations_count"] = conn.execute(
+            "SELECT COUNT(*) FROM vocabulary_translations"
+        ).fetchone()[0]
+        stats["selected_vocabulary_count"] = conn.execute(
+            "SELECT COUNT(*) FROM selected_vocabulary"
+        ).fetchone()[0]
 
         return stats
 
