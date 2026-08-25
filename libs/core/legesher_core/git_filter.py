@@ -225,15 +225,42 @@ class GitFilter:
             # controls and disallowed invisibles in code are rejected before we
             # translate — never write attacker bytes into git. Legitimate
             # ZWJ/ZWNJ inside string/comment content is allowlisted.
-            allowed = self._collect_string_comment_format_chars(source_code)
+            # Two allowlists, because the two scans ask different questions.
+            # The whole-text scan may meet an invisible anywhere, so it honors
+            # both what strings/comments legitimately contain and what this
+            # language's orthography needs inside a name — without the second
+            # half, Sinhala `විද්‍යා` and Persian `می‌رود` are refused as
+            # invisible even though their policies declare the joiner.
+            allowed = (
+                self._collect_string_comment_format_chars(source_code)
+                | self._identifier_format_allowlist()
+            )
             issues = unicode_guard.scan_text(source_code, allowed_format_chars=allowed)
-            blocking = [i for i in issues if i.kind in ("bidi", "invisible", "tatweel")]
+            # The code-position scan (CORE-1558) then re-narrows: the script
+            # allowlist applies there, and the only format characters licensed
+            # are the language's own — so a U+FE0F inside a comment no longer
+            # licenses a U+FE0F inside a name. Strings and comments carry prose
+            # in any script and are exempt; code position is the only place a
+            # character becomes a runtime binding. Isolated in its own try so a
+            # defect in the newest layer can never take the Trojan Source check
+            # down with it.
+            try:
+                issues = issues + self._scan_identifier_scripts(source_code)
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.error(f"Clean filter: identifier scan failed: {exc}")
+            issues = sorted(issues, key=lambda i: i.offset)
+            blocking = [
+                i
+                for i in issues
+                if i.kind in ("bidi", "invisible", "tatweel", "script")
+            ]
             if blocking:
                 first = blocking[0]
                 classification = {
                     "bidi": "Trojan Source bidi reordering attack (CVE-2021-42574)",
                     "invisible": "invisible/format-character attack",
                     "tatweel": "tatweel padding character",
+                    "script": "identifier character outside every supported script",
                 }.get(first.kind, "disallowed Unicode control")
                 sys.stderr.write(
                     "legesher: refusing to stage source containing a "
@@ -401,6 +428,136 @@ class GitFilter:
         except (tokenize.TokenError, IndentationError, SyntaxError, ValueError):
             return set()
         return allowed
+
+    def _identifier_format_allowlist(self) -> frozenset[str]:
+        """Return the format characters this language's identifiers may contain.
+
+        Read from the language's :class:`~legesher_i18n.script_policy.ScriptPolicy`
+        — today the Sinhala ZWJ (U+200D, virama+ZWJ conjuncts) and the
+        Persian/Urdu ZWNJ (U+200C). Empty for every other language, and empty
+        for a language with no registered policy: default-deny.
+
+        Deliberately *not* the string/comment allowlist
+        (:meth:`_collect_string_comment_format_chars`) — a ZWJ appearing in a
+        comment must never license one inside an identifier.
+        """
+        try:
+            from legesher_i18n.script_policy import policy_for
+
+            return frozenset(policy_for(self.language).allowed_format_chars)
+        except (ImportError, KeyError):
+            return frozenset()
+
+    @staticmethod
+    def _literal_spans(source_code: str) -> list[tuple[int, int]] | None:
+        """Return the character spans of every string/comment token.
+
+        The complement is code position. Returns ``None`` when the source
+        cannot be tokenized, which the caller treats as "scan nothing" — the
+        clean filter passes incomplete code through rather than breaking a
+        ``git add`` mid-edit.
+        """
+        import io
+        import tokenize
+
+        # tokenize reports (row, column) and its line model is its own: it
+        # breaks lines only at \n, \r\n and \r, while ``str.splitlines`` also
+        # breaks at U+000B, U+000C, U+0085, U+2028 and U+2029. Using splitlines
+        # here shifts every later offset by one per such character (trivially
+        # reachable inside a string literal), so build the line table from the
+        # tokenizer's own line breaks.
+        line_starts = [0]
+        index = 0
+        length = len(source_code)
+        while index < length:
+            char = source_code[index]
+            if char == "\r":
+                index += 2 if source_code[index + 1 : index + 2] == "\n" else 1
+                line_starts.append(index)
+            elif char == "\n":
+                index += 1
+                line_starts.append(index)
+            else:
+                index += 1
+
+        def offset_of(position: tuple[int, int]) -> int | None:
+            row, column = position
+            if not 0 < row <= len(line_starts):
+                return None
+            return line_starts[row - 1] + column
+
+        spans: list[tuple[int, int]] = []
+        try:
+            for tok in tokenize.generate_tokens(io.StringIO(source_code).readline):
+                is_literal = tok.type in (tokenize.STRING, tokenize.COMMENT) or (
+                    hasattr(tokenize, "FSTRING_MIDDLE")
+                    and tok.type == tokenize.FSTRING_MIDDLE
+                )
+                if not is_literal:
+                    continue
+                start, end = offset_of(tok.start), offset_of(tok.end)
+                if start is None or end is None:
+                    continue
+                spans.append((start, end))
+        except (tokenize.TokenError, IndentationError, SyntaxError, ValueError):
+            return None
+        return spans
+
+    def _scan_identifier_scripts(self, source_code: str) -> list["unicode_guard.Issue"]:
+        """Apply the identifier allowlist to every character in code position.
+
+        Deliberately NOT driven by ``NAME`` tokens. On CPython 3.10 and 3.11
+        ``tokenize`` is the pure-Python implementation whose name pattern is
+        ``\\w+``, which does not match a nonspacing mark — ``to<U+2D7F>tal``
+        lexes as ``NAME`` / ``ERRORTOKEN`` / ``NAME`` and the mark is in no
+        NAME token at all. A NAME-driven scan is therefore silently inert on
+        two of the four interpreters this package supports, for exactly the
+        character class the check exists to catch.
+
+        Scanning the complement of the string/comment spans has no such
+        version dependence, and is a superset: a character in code position
+        that no token claims is still caught. ASCII outside ``[A-Za-z0-9_]`` is
+        skipped because it is Python's own syntax, never an identifier
+        character.
+
+        Both the ``"script"`` and the ``"invisible"`` findings are returned.
+        The whole-text scan above runs with the string/comment allowlist, so an
+        invisible that appears in a comment is licensed everywhere — including
+        inside an identifier, which is the one place it must never be. Here the
+        allowlist is the language's own :class:`ScriptPolicy` list, so a U+FE0F
+        in a comment no longer licenses a U+FE0F in a name.
+        """
+        spans = self._literal_spans(source_code)
+        if spans is None:
+            return []
+
+        allowed = self._identifier_format_allowlist()
+        issues: list[unicode_guard.Issue] = []
+        cursor = 0
+        for start, end in [*spans, (len(source_code), len(source_code))]:
+            if start > cursor:
+                issues.extend(
+                    self._scan_code_region(source_code, cursor, start, allowed)
+                )
+            cursor = max(cursor, end)
+        return issues
+
+    @staticmethod
+    def _scan_code_region(
+        source_code: str, start: int, end: int, allowed: frozenset[str]
+    ) -> list["unicode_guard.Issue"]:
+        """Scan one code-position slice, skipping Python's own ASCII syntax."""
+        issues: list[unicode_guard.Issue] = []
+        for offset in range(start, end):
+            ch = source_code[offset]
+            if ch.isascii() and not (ch.isalnum() or ch == "_"):
+                continue
+            issues.extend(
+                issue
+                for issue in unicode_guard.scan_identifier(ch, allowed, start=offset)
+                if issue.kind in ("script", "invisible")
+            )
+        return issues
 
     def _record_metadata_history(
         self, action: str, from_language: str, to_language: str

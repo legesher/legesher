@@ -14,10 +14,14 @@ import pytest
 from legesher_i18n.script_policy import (
     ALWAYS_ALLOWED_SCRIPTS,
     SCRIPT_POLICIES,
+    ZWJ,
+    ZWNJ,
     ScriptPolicy,
     has_policy,
+    identifier_script_of,
     policy_for,
     scripts_of,
+    supported_scripts,
 )
 from tests import language_packs_root
 
@@ -113,3 +117,170 @@ class TestScriptsOf:
     def test_mixed_detects_both(self) -> None:
         # Latin + Han: the foreign-script failure mode.
         assert scripts_of("bool布尔") == {"Latin", "Han"}
+
+
+class TestIdentifierAllowlist:
+    """CORE-1558: the positive, script-aware identifier allowlist.
+
+    :func:`scripts_of` answers "does this pack value stay inside its language's
+    scripts". :func:`identifier_script_of` answers the engine's narrower
+    question about a character it is about to emit into runnable code, and it
+    has to be stricter: the pack classifier reports any unrecognised combining
+    mark as ``Inherited``, which would wave through an invisible joiner from a
+    script nothing ships.
+    """
+
+    #: The cross-engine contract. ``SUPPORTED_SCRIPTS`` in ``@legesher/core``'s
+    #: ``script-allowlist.ts`` (js-engine-repo) carries the same names; the two
+    #: engines ship from different repositories, so this list is the forcing
+    #: function — adding a language whose script is new fails here, and the
+    #: failure is the reminder to update the JavaScript engine in the same beat.
+    PINNED_SCRIPTS = {
+        "Arabic",
+        "Bengali",
+        "Cyrillic",
+        "Devanagari",
+        "Ethiopic",
+        "Greek",
+        "Gujarati",
+        "Han",
+        "Hangul",
+        "Hebrew",
+        "Hiragana",
+        "Kannada",
+        "Katakana",
+        "Latin",
+        "Malayalam",
+        "Myanmar",
+        "Sinhala",
+        "Telugu",
+        "Thai",
+    }
+
+    def test_supported_scripts_is_the_union_of_the_policies(self) -> None:
+        expected: set[str] = set()
+        for policy in SCRIPT_POLICIES.values():
+            expected |= policy.scripts
+        assert supported_scripts() == expected
+
+    def test_supported_scripts_matches_the_pinned_cross_engine_list(self) -> None:
+        assert supported_scripts() == self.PINNED_SCRIPTS
+
+    def test_supported_scripts_excludes_the_always_allowed_pseudo_scripts(self) -> None:
+        assert not (supported_scripts() & ALWAYS_ALLOWED_SCRIPTS)
+
+    def test_rejects_the_tifinagh_consonant_joiner(self) -> None:
+        # U+2D7F: Mn + ID_Continue, NOT Default_Ignorable, NFKC-stable — the
+        # exact character every property-based net misses.
+        assert identifier_script_of("⵿") == "Unknown"
+
+    def test_the_pack_classifier_would_have_admitted_it(self) -> None:
+        # Records WHY a second classifier exists: the pack-value fallback calls
+        # it Inherited, which an identifier gate must not accept.
+        assert scripts_of("⵿") == {"Inherited"}
+
+    def test_keeps_arabic_harakat(self) -> None:
+        # Same general category as U+2D7F and essential to Arabic — the reason
+        # a blanket Mn rejection is not an option.
+        assert identifier_script_of("ً") == "Arabic"
+
+    def test_keeps_generic_combining_marks_as_inherited(self) -> None:
+        assert identifier_script_of("́") == "Inherited"  # combining acute
+
+    def test_format_characters_defer_to_the_invisibles_layer(self) -> None:
+        # ZWJ/ZWNJ carry no script here: the guard's invisibles net and the
+        # per-language allowed_format_chars decide them, so classifying them
+        # would double-report or silently re-admit.
+        assert identifier_script_of(ZWJ) == "Common"
+        assert identifier_script_of(ZWNJ) == "Common"
+
+    def test_ascii_identifier_characters_are_common(self) -> None:
+        for char in "0_$":
+            assert identifier_script_of(char) == "Common", char
+
+    def test_letters_from_unshipped_scripts_are_unknown(self) -> None:
+        assert identifier_script_of("க") == "Unknown"  # Tamil KA
+
+    def test_katakana_middle_dot_resolves_to_katakana(self) -> None:
+        # U+30FB is Script=Common but Script_Extensions names Katakana, and the
+        # shipped `ja` pack renders `divmod` as ディビジョン・モジュール on 3.13+.
+        # A block-only table calls it Unknown and rejects a value we ship.
+        assert identifier_script_of("・") == "Katakana"
+
+    def test_the_shipped_japanese_divmod_rendering_is_writable(self) -> None:
+        value = "ディビジョン・モジュール"
+        assert value.isidentifier()
+        allowed = supported_scripts() | ALWAYS_ALLOWED_SCRIPTS
+        assert {identifier_script_of(ch) for ch in value} <= allowed
+
+    def test_catalan_interpunct_resolves_to_latin(self) -> None:
+        # U+00B7 is a Python identifier character (Other_ID_Continue) and its
+        # Script_Extensions include Latin — col·lecció is ordinary Catalan.
+        assert identifier_script_of("·") == "Latin"
+
+    def test_ideographic_iteration_mark_resolves_to_han(self) -> None:
+        assert identifier_script_of("々") == "Han"
+
+    def test_every_shipped_pack_value_stays_writable(self) -> None:
+        # The whole-corpus check: no shipped pack value may contain a character
+        # the identifier gate refuses, or the gate breaks Legesher's own output.
+        allowed = supported_scripts() | ALWAYS_ALLOWED_SCRIPTS
+        offenders: set[str] = set()
+        for path in _PACKS_ROOT.rglob("packs/*.yml"):
+            for value in _pack_string_values(path):
+                if not value.isidentifier():
+                    continue
+                offenders |= {
+                    f"{hex(ord(ch))} in {value}"
+                    for ch in value
+                    if identifier_script_of(ch) not in allowed
+                }
+        assert offenders == set()
+
+    def test_every_policy_script_classifies_a_sample_correctly(self) -> None:
+        samples = {
+            "Arabic": "م",
+            "Bengali": "ক",
+            "Cyrillic": "д",
+            "Devanagari": "क",
+            "Ethiopic": "አ",
+            "Greek": "α",
+            "Gujarati": "ક",
+            "Han": "合",
+            "Hangul": "합",
+            "Hebrew": "א",
+            "Hiragana": "あ",
+            "Kannada": "ಕ",
+            "Katakana": "ア",
+            "Latin": "a",
+            "Malayalam": "ക",
+            "Myanmar": "က",
+            "Sinhala": "අ",
+            "Telugu": "క",
+            "Thai": "ก",
+        }
+        assert set(samples) == supported_scripts()
+        for script, sample in samples.items():
+            assert identifier_script_of(sample) == script, script
+
+
+def _pack_string_values(path) -> list[str]:
+    """Yield every string leaf of a pack YAML file."""
+    import yaml
+
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return []
+
+    values: list[str] = []
+    stack = [data]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, dict):
+            stack.extend(node.values())
+        elif isinstance(node, list):
+            stack.extend(node)
+        elif isinstance(node, str):
+            values.append(node)
+    return values

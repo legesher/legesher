@@ -100,6 +100,48 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   degrades to `?` rather than aborting: no output statement should ever be the
   thing that kills the process. [CORE-1927]
 
+### Security
+
+- **core**: identifiers are now checked against a positive, script-aware
+  allowlist, and the git clean filter rejects source that fails it.
+  The guard's earlier layers reject characters by Unicode *property* — bidi
+  controls, format characters, the default-ignorable set — and that stops
+  wherever an invisible character shares a property with a visible one a
+  language needs. `U+2D7F TIFINAGH CONSONANT JOINER` is the case in point: a
+  nonspacing mark that is a valid identifier character and NFKC-stable, so
+  nothing upstream flagged it, yet it renders as nothing. Spliced into a name,
+  it produced two bindings a reviewer reads as one — the same "what you see is
+  what runs" break the guard exists to prevent. It cannot be closed by
+  rejecting nonspacing marks, because the Arabic harakat are nonspacing marks
+  and Arabic cannot be written without them, and it cannot be closed by naming
+  the character, because the next Unicode release brings more.
+
+  So the question asked of each identifier character changed from "is this one
+  of the characters we refuse" to "is this a character some shipped language
+  actually needs". The supported-script set is derived from the per-language
+  script policy rather than written down twice, so a language's script becomes
+  writable when its pack ships and not before; today that is 19 scripts.
+  Strings and comments are untouched — prose is legitimately written in any
+  script, and only code position produces a runtime binding. Every existing
+  bidi, invisible, tatweel and BOM check still runs first.
+
+  Two things the same pass corrects. An invisible character that appeared
+  anywhere in a file — a variation selector inside an emoji in a string, say —
+  was licensed everywhere in that file, including inside a name, which is the
+  one place it must never be; the code-position scan now licenses only the
+  format characters the language's own policy declares. And the format
+  characters an orthography genuinely requires now reach that policy: Sinhala
+  `විද්‍යා` and Persian `می‌رود` were being refused as invisible under their
+  own languages, and are accepted. [CORE-1558]
+
+- **mcp**: `validate_identifier_translations` applies the same allowlist. It
+  was checking proposed renderings with the text-level scan, which is the right
+  check for prose and the wrong one for a value about to become a glossary key
+  — a proposal carrying an invisible mark from an unsupported script satisfied
+  `str.isidentifier()`, survived the collision check, and merged. Proposals
+  that are not identifiers at all are still reported as malformed and nothing
+  else, so the new layer never buries the real problem. [CORE-1558]
+
 ## [0.23.0] - 2026-08-16
 
 > **On the version number.** This release carries breaking changes and is

@@ -19,12 +19,18 @@ Attack classes covered:
     * Arabic tatweel (U+0640) padding used to disguise identifiers.
     * Byte-order marks (BOM) that desync byte/character offsets and PEP 263
       encoding detection.
+    * Identifier characters belonging to no supported script — invisible marks
+      whose General_Category is indistinguishable from a legitimate one
+      (U+2D7F TIFINAGH CONSONANT JOINER is ``Mn``, exactly like the Arabic
+      harakat the packs need). Only a positive, script-aware allowlist
+      separates them; see :func:`scan_identifier` (CORE-1558).
 
 Note:
-    A future PR should consolidate this module with the ``script_policy``
-    helper in ``libs/i18n`` so the engine and the pack-validation layer share
-    one allow/deny policy. They are intentionally kept separate here to keep
-    this PR scoped to the engine.
+    Text-level scanning (:func:`scan_text`) stays dependency-free. The
+    identifier allowlist reads its supported-script set from
+    ``legesher_i18n.script_policy``, imported lazily inside
+    :func:`supported_identifier_scripts` so the import cost lands only on
+    callers that gate identifiers.
 """
 
 from __future__ import annotations
@@ -177,7 +183,8 @@ class Issue:
     """A single Unicode/script finding.
 
     Attributes:
-        kind: One of ``"bidi"``, ``"invisible"``, ``"tatweel"``, ``"bom"``.
+        kind: One of ``"bidi"``, ``"invisible"``, ``"tatweel"``, ``"bom"``,
+            ``"script"``.
         codepoint: The offending code point (e.g. ``"U+202E"``).
         offset: Character offset (0-indexed) into the scanned text.
         char_name: Best-effort Unicode name for the character.
@@ -319,6 +326,148 @@ def scan_text(
             )
 
     return issues
+
+
+@functools.lru_cache(maxsize=1)
+def supported_identifier_scripts() -> frozenset[str]:
+    """Return the Unicode scripts an identifier character may belong to.
+
+    Derived from the shipped language registry — the per-language table in
+    ``legesher_i18n.script_policy``, whose coverage against
+    ``language-packs/python/`` is itself asserted by
+    ``libs/i18n/tests/test_script_policy_coverage.py`` — rather than hardcoded
+    here, so a new language's script becomes writable the moment its pack ships
+    and no earlier. ``Common`` and ``Inherited`` are included: they are
+    script-agnostic by definition and every language needs them.
+
+    Imported lazily: ``legesher-core`` depends on ``legesher-i18n``, but the
+    text-level scanners above must stay importable on their own.
+    """
+    from legesher_i18n.script_policy import ALWAYS_ALLOWED_SCRIPTS, supported_scripts
+
+    return frozenset(supported_scripts()) | frozenset(ALWAYS_ALLOWED_SCRIPTS)
+
+
+def scan_identifier(
+    identifier: str,
+    allowed_format_chars: frozenset[str] | set[str] | None = None,
+    *,
+    start: int = 0,
+) -> list[Issue]:
+    """Scan one identifier against the positive script allowlist.
+
+    Runs every :func:`scan_text` check first, then adds the layer that only an
+    identifier context can support: each remaining character must belong to a
+    script some shipped language pack uses (:func:`supported_identifier_scripts`).
+    Anything else is reported as ``kind="script"``.
+
+    Why a positive allowlist and not one more denylist: some invisible joiners
+    share a General_Category with the combining marks supported scripts
+    *require*. U+2D7F TIFINAGH CONSONANT JOINER is ``Mn`` and ``ID_Continue``
+    yet not Default_Ignorable, so no property-based net separates it from
+    U+064B ARABIC FATHATAN. Rejecting all ``Mn`` would break Arabic; naming
+    U+2D7F drifts as Unicode grows. Membership of a *supported script* is the
+    only test that both closes the class and stays true.
+
+    This layers on top of — never replaces — the bidi, invisible,
+    Default_Ignorable, tatweel, and BOM checks: a character already reported by
+    :func:`scan_text` is not re-reported here.
+
+    Args:
+        identifier: The identifier text (already extracted from source).
+        allowed_format_chars: Per-call allowlist of format characters this
+            orthography legitimately needs inside identifiers — the Sinhala ZWJ
+            (U+200D) and the Persian/Urdu ZWNJ (U+200C) of
+            ``ScriptPolicy.allowed_format_chars``. Bidi controls are never
+            suppressed.
+        start: Offset of ``identifier`` inside the enclosing source, added to
+            every reported offset so callers can point at the original text.
+
+    Returns:
+        A list of :class:`Issue` in offset order. Empty if the identifier is
+        clean.
+    """
+    allow = frozenset(allowed_format_chars or ())
+    from legesher_i18n.script_policy import identifier_script_of
+
+    scripts = supported_identifier_scripts()
+    issues = [
+        Issue(
+            kind=issue.kind,
+            codepoint=issue.codepoint,
+            offset=issue.offset + start,
+            char_name=issue.char_name,
+            message=issue.message,
+        )
+        for issue in scan_text(identifier, allowed_format_chars=allow)
+    ]
+    already_flagged = {issue.offset for issue in issues}
+
+    for offset, ch in enumerate(identifier):
+        if offset + start in already_flagged:
+            continue
+        # ``allow`` suppresses the FORMAT layer only. Letting it suppress the
+        # script layer too would mean a language policy that opens one
+        # invisible joiner silently opens every unsupported script as well —
+        # and a caller who passed the wrong allowlist would disable the gate
+        # outright. Category Cf is the exact scope of what the parameter is
+        # documented to license.
+        if ch in allow and unicodedata.category(ch) == "Cf":
+            continue
+        script = identifier_script_of(ch)
+        if script in scripts:
+            continue
+        issues.append(
+            Issue(
+                kind="script",
+                codepoint=_codepoint(ch),
+                offset=offset + start,
+                char_name=_name(ch),
+                message=(
+                    f"Identifier character ({_codepoint(ch)}) belongs to no "
+                    f"supported script (classified '{script}') — an invisible "
+                    "or unsupported-script mark can split one visible "
+                    "identifier into two runtime bindings"
+                ),
+            )
+        )
+
+    issues.sort(key=lambda issue: issue.offset)
+    return issues
+
+
+def assert_identifier_safe(
+    identifier: str,
+    allowed_format_chars: frozenset[str] | set[str] | None = None,
+    *,
+    start: int = 0,
+) -> None:
+    """Raise :class:`UnicodeGuardError` on the first :func:`scan_identifier` issue.
+
+    The fail-closed wrapper: callers that cannot act on a list of findings get
+    an exception naming the first offending codepoint and its offset. Mirrors
+    ``assertSourceSafe``/``UnicodeGuardError`` in ``@legesher/core``.
+
+    Args:
+        identifier: The identifier text.
+        allowed_format_chars: See :func:`scan_identifier`.
+        start: See :func:`scan_identifier`.
+
+    Raises:
+        UnicodeGuardError: If any character fails the guard.
+    """
+    from .exceptions import UnicodeGuardError
+
+    issues = scan_identifier(identifier, allowed_format_chars, start=start)
+    if not issues:
+        return
+    first = issues[0]
+    raise UnicodeGuardError(
+        f"disallowed codepoint {first.codepoint} at offset {first.offset}: "
+        f"{first.message}",
+        codepoint=first.codepoint,
+        offset=first.offset,
+    )
 
 
 def has_trojan_source(text: str) -> bool:

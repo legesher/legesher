@@ -31,7 +31,7 @@ from legesher_core.round_trip import Divergence
 from legesher_core.round_trip import verify_round_trip as core_verify_round_trip
 from legesher_core.tree_sitter.identifier_map import IdentifierMap
 from legesher_core.tree_sitter.identifier_validator import IdentifierValidator
-from legesher_core.unicode_guard import scan_text
+from legesher_core.unicode_guard import Issue, scan_identifier, scan_text
 from legesher_i18n.script_policy import has_policy, policy_for
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
@@ -609,6 +609,33 @@ def _nfc(text: str) -> str:
     return unicodedata.normalize("NFC", text)
 
 
+def _identifier_issues(
+    value: str,
+    is_identifier: bool,
+    allowed_format_chars: frozenset[str] = frozenset(),
+) -> list[Issue]:
+    """Unicode-contract findings for one proposed identifier.
+
+    The text-level checks (bidi, invisibles, Default_Ignorable, tatweel, BOM)
+    always run. The positive script allowlist (CORE-1558) runs only when
+    ``value`` is a valid identifier: it closes the class no property-based net
+    can see — U+2D7F is ``Mn`` + ``ID_Continue``, NFKC-stable, and not
+    Default_Ignorable, so it satisfies ``str.isidentifier()`` and would
+    otherwise be merged into the glossary — but a value that is not an
+    identifier at all has already been reported as ``malformed``, and calling
+    its spaces a Unicode-contract violation would only bury the real problem.
+    """
+    issues = scan_text(value, allowed_format_chars=allowed_format_chars)
+    if is_identifier:
+        issues += [
+            issue
+            for issue in scan_identifier(value, allowed_format_chars)
+            if issue.kind == "script"
+        ]
+        issues.sort(key=lambda issue: issue.offset)
+    return issues
+
+
 def _pack_collision(candidate: str, pack: Any) -> str | None:
     """The pack entry ``candidate`` takes, or None.
 
@@ -727,7 +754,10 @@ def validate_identifier_translations(
 
         conflicts: list[IdentifierConflict] = []
 
-        if not IdentifierValidator().is_valid(candidate):
+        candidate_is_identifier = IdentifierValidator().is_valid(candidate)
+        source_is_identifier = IdentifierValidator().is_valid(source)
+
+        if not candidate_is_identifier:
             conflicts.append(
                 IdentifierConflict(
                     kind="malformed",
@@ -742,7 +772,7 @@ def validate_identifier_translations(
         # and seed a glossary key that can never match an identifier in code.
         # English source identifiers carry no format characters, so the scan
         # runs default-deny here regardless of the target locale's policy.
-        if not IdentifierValidator().is_valid(source):
+        if not source_is_identifier:
             conflicts.append(
                 IdentifierConflict(
                     kind="malformed",
@@ -754,7 +784,7 @@ def validate_identifier_translations(
                 )
             )
 
-        source_issues = scan_text(source)
+        source_issues = _identifier_issues(source, source_is_identifier)
         if source_issues:
             conflicts.append(
                 IdentifierConflict(
@@ -767,7 +797,7 @@ def validate_identifier_translations(
                 )
             )
 
-        issues = scan_text(candidate, allowed_format_chars=allowed_format_chars)
+        issues = _identifier_issues(candidate, candidate_is_identifier, allowed_format_chars)
         if issues:
             conflicts.append(
                 IdentifierConflict(

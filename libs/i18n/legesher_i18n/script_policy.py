@@ -54,6 +54,7 @@ fallback: an un-policied language must not silently pass the script gate.
 from __future__ import annotations
 
 import bisect
+import functools
 import unicodedata
 from dataclasses import dataclass, field
 
@@ -477,6 +478,201 @@ def scripts_of(value: str) -> set[str]:
         Set of script names (e.g. ``{"Latin", "Common"}``).
     """
     return {_script_of_char(ch) for ch in value}
+
+
+# ---------------------------------------------------------------------------
+# Positive identifier allowlist (CORE-1558).
+#
+# The pack validator asks "does this value stay inside its language's scripts".
+# The engine asks a narrower question of every identifier it is about to emit
+# into runnable code: "is this character required by SOME supported script".
+# The two share this module's range table so the answer cannot drift, but they
+# need different fallbacks — see :func:`identifier_script_of`.
+# ---------------------------------------------------------------------------
+
+#: Combining-mark blocks that belong to no script of their own: they attach to
+#: a base character from whatever script precedes them (Latin diacritics,
+#: Greek/Cyrillic accents, IPA marks). :func:`identifier_script_of` reports
+#: these — and only these — as ``Inherited``.
+_GENERIC_MARK_RANGES: tuple[tuple[int, int], ...] = (
+    (0x0300, 0x036F),  # Combining Diacritical Marks
+    (0x1AB0, 0x1AFF),  # Combining Diacritical Marks Extended
+    (0x1DC0, 0x1DFF),  # Combining Diacritical Marks Supplement
+    (0x20D0, 0x20F0),  # Combining Diacritical Marks for Symbols
+    (0xFE20, 0xFE2F),  # Combining Half Marks
+)
+
+#: Script-agnostic characters legitimate *inside an identifier*: the ASCII
+#: digits plus the connector/currency characters the target languages accept
+#: (``_`` in Python, ``_`` and ``$`` in JavaScript). Deliberately tiny — the
+#: wide ``Common`` pseudo-script also covers spaces and punctuation, which can
+#: never appear in an identifier and so must not be waved through here.
+_IDENTIFIER_COMMON: frozenset[str] = frozenset("0123456789_$")
+
+#: Identifier characters whose Unicode ``Script`` is ``Common`` but whose
+#: ``Script_Extensions`` name a real script, resolved to that script.
+#:
+#: The block table above is a ``Script`` approximation, and ``Script`` alone is
+#: wrong for characters a specific orthography owns while Unicode files them as
+#: shared. U+30FB KATAKANA MIDDLE DOT is the one that bites: the shipped ``ja``
+#: pack renders ``divmod`` as ``ディビジョン・モジュール`` on 3.13+, so a table
+#: without it rejects a value Legesher itself ships. The JavaScript engine has
+#: the real property (``\p{Script_Extensions=…}``) and admits these already;
+#: this list is how the Python side reaches the same answer (CORE-1558).
+#:
+#: Only characters whose Unicode NAME does not already name their script belong
+#: here — the rest are resolved by :data:`_SCRIPT_NAME_PREFIXES` below.
+#:
+#: Consulted only by :func:`identifier_script_of`. The pack-value classifier is
+#: left alone — widening it would change what the validator accepts in values,
+#: which is a separate decision.
+_IDENTIFIER_SCX_RANGES: tuple[tuple[int, int, str], ...] = (
+    (0x00B7, 0x00B7, "Latin"),  # MIDDLE DOT — the Catalan interpunct (l·l)
+    (0x02B0, 0x02FF, "Latin"),  # Spacing Modifier Letters — Uzbek oʻ / maʼno
+    # Phonetic / modifier-letter blocks. Their names say MODIFIER LETTER SMALL
+    # TURNED ALPHA, never LATIN, so nothing downstream can place them; they are
+    # Latin-alphabet phonetic notation and several are ordinary orthography.
+    (0x1D2C, 0x1D6A, "Latin"),  # Phonetic Extensions
+    (0x1D9B, 0x1DBF, "Latin"),  # Phonetic Extensions Supplement
+    (0x2C60, 0x2C7F, "Latin"),  # Latin Extended-C
+    (0xA717, 0xA721, "Latin"),  # modifier tone + stress letters
+    (0xA770, 0xA770, "Latin"),  # MODIFIER LETTER US
+    (0xA788, 0xA788, "Latin"),  # MODIFIER LETTER LOW CIRCUMFLEX ACCENT
+    (0xA7F2, 0xA7F9, "Latin"),  # Latin Extended-D modifier capitals
+    (0xAB5C, 0xAB69, "Latin"),  # Latin Extended-E modifier letters
+    (0x10780, 0x107BA, "Latin"),  # Latin Extended-F
+    (0x3005, 0x3007, "Han"),  # ideographic iteration/closing marks, number zero
+    (0x3021, 0x3029, "Han"),  # Hangzhou numerals one..nine
+    (0x3038, 0x303B, "Han"),  # Hangzhou tens + vertical ideographic iteration
+)
+
+#: Unicode NAME prefixes that identify a character's script, consulted when the
+#: block tables miss.
+#:
+#: A block table cannot be complete: the supported scripts occupy ~340 disjoint
+#: runs of identifier characters across the code space (Latin Extended-C/D/E,
+#: IPA Extensions, Arabic Extended-B, Hebrew presentation forms, Cyrillic
+#: Extended-B/C, halfwidth katakana, the astral kana, CJK Extensions B–I …),
+#: and a positive allowlist turns every omission into a rejection of legitimate
+#: code — ~29,000 characters were refused before this fallback existed, CJK
+#: Extension C–I alone accounting for 27,906.
+#:
+#: Deriving the script from the character's name is the heuristic an earlier
+#: engine used and this module's docstring warns against — correctly, for
+#: *detecting* confusables, where a name says nothing about what a character
+#: looks like. It is sound in the other direction: a character named ``LATIN
+#: SMALL LETTER SCHWA`` really is Latin, so admitting it cannot be a false
+#: accept. The failure mode is the safe one — an unnamed or oddly-named
+#: character reports ``Unknown`` and is refused. U+2D7F is named ``TIFINAGH
+#: CONSONANT JOINER``: Tifinagh is not here, so it stays out.
+_SCRIPT_NAME_PREFIXES: dict[str, str] = {
+    "ARABIC": "Arabic",
+    "BENGALI": "Bengali",
+    "CJK": "Han",
+    "CYRILLIC": "Cyrillic",
+    "DEVANAGARI": "Devanagari",
+    "ETHIOPIC": "Ethiopic",
+    "GREEK": "Greek",
+    "GUJARATI": "Gujarati",
+    "HANGUL": "Hangul",
+    "HEBREW": "Hebrew",
+    "HIRAGANA": "Hiragana",
+    "IDEOGRAPHIC": "Han",
+    "KANGXI": "Han",
+    "KANNADA": "Kannada",
+    "KATAKANA": "Katakana",
+    "KATAKANA-HIRAGANA": "Katakana",
+    "LATIN": "Latin",
+    "MALAYALAM": "Malayalam",
+    "MYANMAR": "Myanmar",
+    "SINHALA": "Sinhala",
+    "TELUGU": "Telugu",
+    "THAI": "Thai",
+}
+
+
+@functools.lru_cache(maxsize=4096)
+def _script_from_name(char: str) -> str:
+    """Return the script named by ``char``'s Unicode name, or ``"Unknown"``.
+
+    Scans the whole name, not just its head: the script keyword is the head for
+    ``LATIN SMALL LETTER SCHWA`` but sits behind a qualifier in ``HALFWIDTH
+    KATAKANA LETTER WO``, ``MODIFIER LETTER CYRILLIC EN``, and ``COMBINING
+    DEVANAGARI DIGIT ZERO``. A name that mentions no supported script — every
+    Tangut character has no name at all, and ``TIFINAGH CONSONANT JOINER``,
+    ``MATHEMATICAL BOLD CAPITAL A`` and ``MUSICAL SYMBOL COMBINING STEM`` name
+    none of them — returns ``Unknown`` and is refused.
+    """
+    name = unicodedata.name(char, "")
+    if not name:
+        return "Unknown"
+    for token in name.split(" "):
+        script = _SCRIPT_NAME_PREFIXES.get(token)
+        if script is not None:
+            return script
+    return "Unknown"
+
+
+def identifier_script_of(char: str) -> str:
+    """Return the script of *char* for identifier-allowlist purposes.
+
+    Stricter than the pack-value classifier behind :func:`scripts_of`, which
+    reports **any** unrecognised combining mark as ``Inherited``. That fallback
+    is right for translation values — an unknown mark beside a known base is
+    usually a diacritic — but it is a hole in an identifier gate: U+2D7F
+    TIFINAGH CONSONANT JOINER is an invisible ``Mn`` that is *not*
+    Default_Ignorable, so it would ride through as ``Inherited`` and split one
+    visible identifier into two runtime bindings (CORE-1558). Here only the
+    generic combining-mark blocks are ``Inherited``; a mark belonging to an
+    unsupported script reports ``Unknown``.
+
+    Format and default-ignorable characters report ``Common`` because they are
+    policed by a different layer — the guard's invisibles net, and the
+    per-language ``allowed_format_chars`` hole punched for the Sinhala ZWJ and
+    the Persian/Urdu ZWNJ. Classifying them here would double-report the same
+    character or, worse, silently re-admit one.
+
+    Args:
+        char: A single character from an identifier.
+
+    Returns:
+        A script name, ``"Common"``, ``"Inherited"``, or ``"Unknown"``.
+    """
+    if unicodedata.category(char) == "Cf" or is_default_ignorable(char):
+        return "Common"
+
+    cp = ord(char)
+    for start, end, name in _SCRIPT_RANGES:
+        if start <= cp <= end:
+            return name
+    for start, end, name in _IDENTIFIER_SCX_RANGES:
+        if start <= cp <= end:
+            return name
+    for start, end in _GENERIC_MARK_RANGES:
+        if start <= cp <= end:
+            return "Inherited"
+    if char in _IDENTIFIER_COMMON:
+        return "Common"
+    return _script_from_name(char)
+
+
+@functools.lru_cache(maxsize=1)
+def supported_scripts() -> frozenset[str]:
+    """Return every Unicode script some shipped language pack legitimately uses.
+
+    Derived from :data:`SCRIPT_POLICIES` rather than hardcoded, so a new
+    language's script becomes writable in identifiers the moment its policy
+    lands — and no earlier. ``Common`` and ``Inherited`` are excluded; callers
+    add :data:`ALWAYS_ALLOWED_SCRIPTS` themselves.
+
+    The engine's positive identifier allowlist (CORE-1558) is this set. Its
+    JavaScript twin — ``SUPPORTED_SCRIPTS`` in ``@legesher/core``'s
+    ``script-allowlist.ts`` — mirrors the same names by hand, because the two
+    engines ship from different repositories;
+    ``tests/test_script_policy_coverage.py`` pins the list so a change here
+    fails loudly rather than drifting apart unnoticed.
+    """
+    return frozenset().union(*(policy.scripts for policy in SCRIPT_POLICIES.values()))
 
 
 # ---------------------------------------------------------------------------

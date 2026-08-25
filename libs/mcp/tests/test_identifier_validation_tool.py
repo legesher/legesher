@@ -237,6 +237,49 @@ async def test_invisible_codepoints_are_rejected(client: ClientSession) -> None:
     assert result["accepted"] == {}
 
 
+async def test_unsupported_script_marks_are_rejected(client: ClientSession) -> None:
+    """U+2D7F defeats every property-based net: only script membership sees it.
+
+    Mn, ID_Continue, NFKC-stable, and NOT Default_Ignorable — so it satisfies
+    ``str.isidentifier()``, survives the collision check, and renders as
+    nothing. Without the script allowlist it would merge into the glossary
+    (CORE-1558).
+    """
+    result = await call_ok(
+        client,
+        "validate_identifier_translations",
+        {
+            "target_lang": "es",
+            "proposals": [{"source": "a", "translation": "calcular" + chr(0x2D7F) + "impuesto"}],
+        },
+    )
+
+    entry = result["results"][0]
+    assert entry["ok"] is False
+    assert entry["conflicts"][0]["kind"] == "unsafe_text"
+    assert "U+2D7F" in entry["conflicts"][0]["detail"]
+    assert result["accepted"] == {}
+
+
+async def test_arabic_harakat_are_accepted(client: ClientSession) -> None:
+    """The false positive that would make the allowlist unshippable.
+
+    U+064B is Mn too. A category-based rule would reject vocalized Arabic
+    outright; script membership keeps it writable.
+    """
+    result = await call_ok(
+        client,
+        "validate_identifier_translations",
+        {
+            "target_lang": "ar",
+            "proposals": [{"source": "greeting", "translation": "مَرْحَبًا"}],
+        },
+    )
+
+    assert result["results"][0]["ok"] is True
+    assert result["accepted"] == {"greeting": "مَرْحَبًا"}
+
+
 async def test_nfkc_equivalent_translations_are_the_same_identifier(
     client: ClientSession,
 ) -> None:

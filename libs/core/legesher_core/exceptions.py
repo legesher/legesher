@@ -43,6 +43,26 @@ class UnsupportedLanguageError(TranslationError):
     pass
 
 
+class UnicodeGuardError(TranslationError):
+    """Raised when a codepoint fails the engine's Unicode defense.
+
+    The fail-closed counterpart to :func:`legesher_core.unicode_guard.scan_text`,
+    which reports findings instead of raising. Carries the first offending
+    codepoint and its character offset so an editor can point at it. Named to
+    match ``UnicodeGuardError`` in ``@legesher/core`` so the two engines report
+    the same class of refusal under the same name.
+
+    Example:
+        >>> assert_identifier_safe("to\\u2d7ftal")
+        UnicodeGuardError: disallowed codepoint U+2D7F at offset 2
+    """
+
+    def __init__(self, message: str, *, codepoint: str = "", offset: int = -1) -> None:
+        super().__init__(message)
+        self.codepoint = codepoint
+        self.offset = offset
+
+
 class EncodingError(TranslationError):
     """Raised when file encoding is not UTF-8 or cannot be decoded.
 
