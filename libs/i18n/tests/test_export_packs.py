@@ -844,6 +844,43 @@ def test_the_card_promises_an_install_only_if_the_packages_publish(
         assert "not on PyPI yet" in card
 
 
+def test_the_banner_ships_and_the_manifest_accounts_for_it(exported: Path) -> None:
+    """The card links its banner relatively, so the file has to ride along.
+
+    Three things have to line up or the dataset page shows a broken image, or
+    ships a file nothing accounts for: the card references it, the export
+    writes it, and the manifest checksums it. The first version of this copied
+    the image AFTER the manifest was built, so the card's own promise of "a
+    SHA-256 for every file" was false about the one file it had just added.
+    """
+    import fnmatch
+
+    target = export_packs.CARD_IMAGE_TARGET.as_posix()
+
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    assert f"({target})" in card, "the card does not link its banner"
+
+    assert (exported / target).is_file(), "the banner was not written"
+
+    manifest = json.loads((exported / "manifest.json").read_text(encoding="utf-8"))
+    assert target in dict(manifest["files"]), (
+        "the banner ships without a checksum, contradicting the card"
+    )
+
+    assert any(
+        fnmatch.fnmatch(target, pattern) for pattern in export_packs.PUSH_ALLOW_PATTERNS
+    ), "the banner is built but would be left out of the upload"
+
+
+def test_the_export_refuses_when_the_banner_is_missing(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A missing source image must stop the export, not ship a broken page."""
+    monkeypatch.setattr(export_packs, "CARD_IMAGE_SOURCE", tmp_path / "not-here.png")
+    with pytest.raises(SystemExit, match="banner image is missing"):
+        export_packs.require_card_image()
+
+
 def test_the_card_carries_no_em_dashes(exported: Path) -> None:
     """House voice, and a rule prose drifts back into without a guard.
 
@@ -1150,6 +1187,10 @@ def test_no_published_file_mentions_the_sibling_datasets(exported: Path) -> None
             text = " ".join(
                 str(v) for v in pq.read_table(path).to_pydict().get("locale", [])
             )
+        elif path.suffix == ".png":
+            # The card's banner. Binary, and its filename is checked by the
+            # sweep below like every other path, so there is no text to read.
+            continue
         else:
             text = path.read_text(encoding="utf-8")
         for word in ("language-canon", "language-corpus"):

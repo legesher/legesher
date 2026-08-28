@@ -138,6 +138,16 @@ REGISTRY = _I18N_ROOT / "legesher_i18n" / "languages.json"
 #: Where a push goes unless a second key says otherwise.
 DEFAULT_TARGET_REPO = "legesher/language-packs"
 
+#: The card's banner image: source path in this repo, and the path it is
+#: published at inside the dataset repo (the ``![](...)`` target in the card).
+#: The card references it relatively, so the file has to ride along in the
+#: export directory AND in :data:`PUSH_ALLOW_PATTERNS`. Same shape as the
+#: corpus and canon banners, 1200x630.
+CARD_IMAGE_SOURCE = (
+    Path(__file__).resolve().parents[1] / "assets" / "language-packs-card.png"
+)
+CARD_IMAGE_TARGET = Path("assets") / "language-packs-card.png"
+
 #: What the manifest records when ``git describe`` finds no tag on the commit.
 UNTAGGED = "(untagged)"
 
@@ -208,6 +218,9 @@ PUSH_ALLOW_PATTERNS: tuple[str, ...] = (
     "manifest.json",
     "data/*.parquet",
     "json/*/*.json",
+    # The card links its banner relatively, so the image has to be uploaded
+    # with it or the dataset page shows a broken image.
+    "assets/*.png",
 )
 
 #: Published columns, per config (CORE-1986, reshaped by CORE-2022). The row
@@ -917,6 +930,47 @@ def read_package_version(locale: str) -> str:
     return str(version)
 
 
+def require_card_image() -> None:
+    """The card's banner must exist before the export writes anything.
+
+    The card links the image relatively, so a missing file is not cosmetic: it
+    is a broken image at the top of a public dataset page. Checked with the
+    other refusals, before a byte is written, so a failed run leaves nothing
+    that could be mistaken for publishable.
+
+    Raises:
+        SystemExit: if the source image is not in the repository.
+    """
+    if not CARD_IMAGE_SOURCE.is_file():
+        raise SystemExit(
+            f"EXPORT REFUSED: the dataset card's banner image is missing from "
+            f"{CARD_IMAGE_SOURCE}. The card links it relatively, so exporting "
+            "without it ships a broken image on the dataset page. Restore the "
+            "file, or drop the ![](...) line from the card."
+        )
+
+
+def copy_card_image(out_dir: Path) -> Path:
+    """Place the banner where the card's relative link points, and return it.
+
+    Returns the written path so the caller can put it in the manifest's file
+    list. The card promises a checksum for every file it ships, and an image
+    copied in without one makes that a false claim about a published file.
+
+    ``export_corpus.py`` pairs its copy with a bystander sweep over
+    ``<out>/assets``, because a stray PNG there would ship on the dataset page
+    under the same allow-list. This export needs no such check: it ``rmtree``s
+    ``--out`` and rebuilds it, so nothing it did not write can be in the
+    directory to begin with. The guard would be code that never runs, which is
+    code nobody has ever exercised.
+    """
+    target = out_dir / CARD_IMAGE_TARGET
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.resolve() != CARD_IMAGE_SOURCE.resolve():
+        shutil.copyfile(CARD_IMAGE_SOURCE, target)
+    return target
+
+
 def packages_availability(on_pypi: bool) -> str:
     """Return the card's paragraph on how to get the packs.
 
@@ -1359,12 +1413,11 @@ def render_card(
             f"`{name}` ({count} files)" for name, count in sorted(pack_licenses.items())
         )
         license_note = (
-            f"\n> **Note on the licence field inside the packs.** The pack files "
-            f"carry their own `metadata.license`, currently {rendered}, while "
-            f"this dataset and the `legesher-i18n` package are "
-            f"`{DECLARED_LICENSE}`. The compilation licence above is the one "
-            f"that governs this dataset; the in-pack field is being "
-            f"reconciled.\n"
+            f"\n> **Note on the licence field inside the packs.** The pack "
+            f"files carry their own `metadata.license`, currently {rendered}, "
+            f"while this dataset is `{DECLARED_LICENSE}`. The compilation "
+            f"licence is the one that governs this dataset; the in-pack field "
+            f"is being reconciled.\n"
         )
 
     return f"""\
@@ -1405,6 +1458,8 @@ configs:
 ---
 
 # Legesher Language Packs
+
+![Legesher language packs](assets/language-packs-card.png)
 
 A **language pack** is what a programming language's reserved words are called
 in one natural language.
@@ -1593,10 +1648,9 @@ the JSON deliberately leaves out.
 ## Packages
 
 The vocabulary in this dataset is what Legesher's language packs ship. Each
-language is its own distribution, `legesher-i18n-python-<locale>`: Arabic is
-`legesher-i18n-python-ar`: and they are loaded by `legesher-i18n`, which
-resolves a pack against the interpreter you are running. Both the distributions
-and this dataset are `{DECLARED_LICENSE}`.
+language is its own distribution, `legesher-i18n-python-<locale>` (Arabic is
+`legesher-i18n-python-ar`), loaded by `legesher-i18n`, which resolves a pack
+against the interpreter you are running.
 
 {availability}
 
@@ -1910,6 +1964,11 @@ def main() -> int:
     source = git_describe(_I18N_ROOT)
     pack_licenses = check_license_consistency(locales)
 
+    # Not gated on --push: the card links its banner relatively, so a missing
+    # image is a broken picture at the top of the page on EVERY export, not
+    # only a published one. Cheaper to fail here than to notice on the Hub.
+    require_card_image()
+
     # Every gate that can run before the export does. An unauthenticated or
     # unapproved run must not leave a fully-built artifact sitting there
     # looking push-ready. All of these read git, the registry or the pack YAML
@@ -2029,6 +2088,11 @@ def main() -> int:
             },
         }
 
+    # Copied BEFORE the manifest is built, not after the card is written. The
+    # card promises "manifest.json carries a SHA-256 for every file", and a
+    # banner placed afterwards is a published file that claim does not cover.
+    banner = copy_card_image(out)
+
     manifest = build_manifest(
         out,
         [
@@ -2036,6 +2100,7 @@ def main() -> int:
             locales_parquet,
             terminology_parquet,
             packs_parquet,
+            banner,
             *json_files,
         ],
         rows,
@@ -2092,9 +2157,10 @@ def main() -> int:
         # export once got wrong. Leaving anything out of the determinism proof
         # means the operator reads a green line about a surface it never
         # checked, so every file class is in.
+        banner2 = copy_card_image(second)
         manifest2 = build_manifest(
             second,
-            [v2, l2, t2, pk2, *json2],
+            [v2, l2, t2, pk2, banner2, *json2],
             rows2,
             locale_rows2,
             terminology_rows2,
@@ -2121,11 +2187,12 @@ def main() -> int:
                 packs_parquet,
                 out / "manifest.json",
                 out / "README.md",
+                banner,
                 *json_files,
             ]
         }
         second_map = {
-            p.relative_to(second): p for p in [v2, l2, t2, pk2, m2, r2, *json2]
+            p.relative_to(second): p for p in [v2, l2, t2, pk2, m2, r2, banner2, *json2]
         }
         only_first = sorted(str(k) for k in first_map.keys() - second_map.keys())
         only_second = sorted(str(k) for k in second_map.keys() - first_map.keys())
