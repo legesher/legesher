@@ -83,11 +83,13 @@ mistaken for push-ready:
 * a non-default ``--target-repo`` repeated verbatim in the environment
 * a clean worktree, because a pinned revision built over uncommitted changes
   cannot be reproduced from the commit its manifest names
-* a ``language-packs-v*`` tag on that commit -- the one version string the Hub
-  revision, the release ticket and the card's provenance line share. Checked
-  against the prefix, not merely "is there a tag": this repo tags releases
-  ``v0.24.0`` and packs ``i18n-python-ar-v0.0.4``, and neither names a revision
-  of this dataset
+* the ``language-packs-v<DATASET_VERSION>`` tag on that commit -- the one
+  version string the Hub revision, the release ticket and the card share.
+  Checked against the exact tag, not merely "is there a tag" or "does one start
+  with the prefix": this repo tags releases ``v0.24.0`` and packs
+  ``i18n-python-ar-v0.0.4``, neither of which names a revision of this dataset,
+  and a stale ``language-packs-v*`` tag would let a build publish under a
+  version it does not declare
 * agreement between the declared compilation licence and the packs' own
   ``metadata.license``, because both claims become public in the same revision
 * Hub auth
@@ -139,10 +141,53 @@ DEFAULT_TARGET_REPO = "legesher/language-packs"
 #: What the manifest records when ``git describe`` finds no tag on the commit.
 UNTAGGED = "(untagged)"
 
+#: This dataset's own version, and the single source of truth for it: the tag
+#: a push demands, the version the card states, and the number the manifest
+#: records all read it from here.
+#:
+#: Semantic, not date-based (2026-08-28). Every other tag family in this repo
+#: is semver -- the monorepo ``v0.24.0``, ``vscode-v0.1.5``, the per-pack
+#: ``i18n-python-ar-v0.0.4`` -- and this artifact was the lone exception.
+#:
+#: What each part means HERE, since a dataset is not a library:
+#:
+#: * major -- a breaking schema change. Going from two configs to four was one
+#: * minor -- new locales, new terms, or a new interpreter version
+#: * patch -- corrections to renderings this release already carried
+#:
+#: Deliberately NOT aligned to ``legesher-i18n``'s version, though the two look
+#: like one product. That number tracks the library, and the pack data ships in
+#: separately versioned distributions: aligning would move this version when
+#: the content had not changed, and hold it still when it had. The linkage is
+#: recorded instead -- see ``legesher_i18n`` in the manifest's toolchain block.
+#:
+#: Starts at 0.1.0 rather than 1.0.0 because every locale is stamped
+#: ``experimental`` with no native-speaker sign-off, and the schema is still
+#: moving. A 0.x says usable-not-settled, which is what the card says in prose.
+DATASET_VERSION = "0.1.0"
+
+#: Whether the per-language distributions are installable from PyPI yet.
+#:
+#: They are not, as of this release: ``legesher-i18n`` and every
+#: ``legesher-i18n-python-<locale>`` return 404, because first publish is part
+#: of the open-source release. The card names the packages either way -- the
+#: ``packs`` config points at them by version, and a column pointing at
+#: something unnamed is worse than one pointing at something forthcoming -- but
+#: it must not print an install command that fails for every reader who tries
+#: it. Flip this to True when the packages actually publish, and the card
+#: starts telling people how to install them.
+PACKAGES_ON_PYPI = False
+
 #: Tag shape a published revision is expected to carry, e.g.
-#: ``language-packs-v2026.08.24``. The date is the version the Hub revision,
-#: the release ticket and the card's provenance line all say.
+#: ``language-packs-v0.1.0``. The one version string the Hub revision, the
+#: release ticket and the card all say out loud.
 TAG_PREFIX = "language-packs-v"
+
+#: The exact tag a push demands. Prefix-plus-version rather than "some tag
+#: starting with the prefix": the gate exists so a revision cannot claim a
+#: version it does not have, and any-tag-with-the-prefix leaves exactly that
+#: hole open.
+RELEASE_TAG = f"{TAG_PREFIX}{DATASET_VERSION}"
 
 #: The governance decision a push asserts has been taken. Shared verbatim with
 #: ``export_canon.py`` and ``export_corpus.py``: one key turns all three, so a
@@ -321,27 +366,6 @@ MESSAGES_SEED = _I18N_ROOT / "legesher_i18n" / "db" / "seeds" / "cpython_message
 #: one licence over rows asserting another is not a discrepancy anyone should
 #: find after the fact.
 DECLARED_LICENSE = "apache-2.0"
-
-#: The three layers, in one wording. The dataset cards, the site (CORE-1930),
-#: the language-support page (CORE-1929) and the announcement (HOME-44) all
-#: have to state this, and near-miss paraphrases of the same idea read worse
-#: than one sentence repeated. This is the sentence.
-#:
-#: It became three-way on 2026-08-19, when the canon shipped as its own dataset
-#: and stopped being a second name for this one. The middle layer had always
-#: existed conceptually; until then it had no artifact, so the split was
-#: written as two.
-THREE_LAYERS = """\
-**The corpus is the evidence; the canon is the decision; the packs are what
-ships.**
-[`legesher/language-corpus`](https://huggingface.co/datasets/legesher/language-corpus)
-records every rendering anyone proposed for a programming concept, append-only,
-with the endorsements attached.
-[`legesher/language-canon`](https://huggingface.co/datasets/legesher/language-canon)
-records which rendering was selected for each concept in each language, and how
-much review stands behind that choice. **This** dataset is the vocabulary those
-decisions produce: what you get when you write `import legesher`.
-"""
 
 
 def git_describe(repo: Path) -> dict[str, str]:
@@ -860,8 +884,8 @@ def read_package_version(locale: str) -> str:
     what lets a reader align the two: revision R of this dataset says Arabic is
     at ``0.0.4``, and ``legesher-i18n-python-ar==0.0.4`` is the wheel carrying
     those words. Without it the two artifacts version on unrelated clocks --
-    this dataset on a release date, each pack on its own semver -- and nothing
-    states which pack version a given revision actually describes.
+    this dataset on :data:`DATASET_VERSION`, each pack on its own semver -- and
+    nothing states which pack version a given revision actually describes.
 
     Read from ``pyproject.toml`` rather than the installed distribution: the
     export must describe the packs in the tree it is exporting, not whatever
@@ -889,6 +913,74 @@ def read_package_version(locale: str) -> str:
         raise SystemExit(
             f"{locale}: pyproject.toml declares no [project] version, so the "
             f"dataset cannot state which package version this locale ships."
+        )
+    return str(version)
+
+
+def packages_availability(on_pypi: bool) -> str:
+    """Return the card's paragraph on how to get the packs.
+
+    An install command is a promise. Printing one the reader cannot follow is
+    worse than printing none, and every ``legesher-i18n-python-<locale>``
+    currently 404s on PyPI, so the card names the distributions without telling
+    anyone to install them.
+
+    A function rather than a branch inside the card template, so BOTH wordings
+    are exercised by tests. The variant this repo does not currently emit is
+    the one that ships unread the day the flag flips, which is exactly when
+    nobody is looking at it.
+    """
+    if on_pypi:
+        return (
+            "```\n"
+            "pip install legesher-i18n-python-<locale>"
+            "    # e.g. legesher-i18n-python-ar\n"
+            "```"
+        )
+    return (
+        "**These packages are not on PyPI yet**, so this dataset is currently "
+        "the way to get the vocabulary. They are named here because the "
+        "`packs` config already points at them by version, and a column "
+        "pointing at something unnamed is worse than one pointing at something "
+        "forthcoming."
+    )
+
+
+def legesher_i18n_version() -> str:
+    """Return the version of the library the packs load through.
+
+    Recorded in the manifest's toolchain block beside pyarrow and Python,
+    because that is what it is: something that built this export, not
+    something that versions it. This dataset carries its own
+    :data:`DATASET_VERSION`, deliberately decoupled -- ``legesher-i18n`` moves
+    for library reasons and stands still through pack corrections, so binding
+    the two would make each lie about the other. Recording it keeps the
+    relationship answerable without making it an identity.
+
+    Read from ``pyproject.toml`` rather than the imported module, for the same
+    reason :func:`read_package_version` does: the export must describe the tree
+    it is exporting, not whatever is installed in the environment running it.
+
+    Raises:
+        SystemExit: if the pyproject is missing or declares no version.
+    """
+    pyproject = _I18N_ROOT / "pyproject.toml"
+    if not pyproject.exists():
+        raise SystemExit(
+            f"no pyproject.toml at {pyproject}, so the export cannot record "
+            f"which legesher-i18n built it."
+        )
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover - Python < 3.11
+        import tomli as tomllib  # type: ignore[no-redef]
+
+    data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    version = (data.get("project") or {}).get("version")
+    if not version:
+        raise SystemExit(
+            f"{pyproject} declares no [project] version, so the export cannot "
+            f"record which legesher-i18n built it."
         )
     return str(version)
 
@@ -1217,11 +1309,19 @@ def render_card(
     """
     counts = manifest["counts"]
     locales = manifest["locales"]
-    src = manifest["source"]
+    # `manifest["source"]` is deliberately NOT read here. The card used to cite
+    # the monorepo commit and tag it was cut from; `legesher-next` is private,
+    # so a public reader could not resolve either, and a card naming an
+    # unreachable revision is worse than one naming none. The manifest still
+    # carries it -- a bare SHA is a reproducibility anchor for anyone with repo
+    # access and inert to everyone else. CORE-2057 restores the citation to the
+    # card once the monorepo is public.
 
     # Quoted, always. Unquoted, YAML 1.1 reads `no` as boolean false, which is
     # how Norwegian silently disappears from the Hub's language facet.
     lang_yaml = "\n".join(f'  - "{code}"' for code in locales)
+
+    availability = packages_availability(PACKAGES_ON_PYPI)
 
     # Derived from what the artifact actually stamps. Hard-coding "every pack
     # is experimental" would survive the first promotion and publish a card
@@ -1328,7 +1428,11 @@ A pack is what the tooling loads: the terminology settled, resolved into the
 structure its target programming language needs, and stamped with how much
 review stands behind it.
 
-This release carries {counts["locales"]} natural languages.
+This is release **`{DATASET_VERSION}`**, carrying {counts["locales"]} natural
+languages. The version is this dataset's own: **major** marks a breaking change
+to the configs below, **minor** new languages, terms or interpreter versions,
+and **patch** corrections to renderings a release already carried. It does not
+track the version of any package — see [Packages](#packages).
 
 ## Languages
 
@@ -1479,8 +1583,9 @@ The shipping unit — one row per (locale, target) pairing:
 
 * `package_version` — the semver of this pairing's own distributable. A row
   reading `ar` / `python` / `0.0.4` means these are the words in
-  `legesher-i18n-python-ar==0.0.4`. Each pairing versions on its own clock,
-  so there is no single version for the set; this is the per-pairing answer
+  `legesher-i18n-python-ar==0.0.4`. Each pairing versions on its own clock, so
+  this column is the per-pairing answer; the release as a whole is versioned
+  separately, at the top of this card
 * `tier` — the maturity of exactly this pairing
 * `pl_versions` — the target versions this pack covers
 
@@ -1500,12 +1605,28 @@ the JSON deliberately leaves out.
 
 {normalization_section}
 
+## Packages
+
+The vocabulary in this dataset is what Legesher's language packs ship. Each
+language is its own distribution, `legesher-i18n-python-<locale>` — Arabic is
+`legesher-i18n-python-ar` — and they are loaded by `legesher-i18n`, which
+resolves a pack against the interpreter you are running. Both the distributions
+and this dataset are `{DECLARED_LICENSE}`.
+
+{availability}
+
+The `packs` config is the join between the two: its `package_version` column is
+the version of that language's distribution, so a row reading `ar` / `python` /
+`0.0.4` says these are the words in `legesher-i18n-python-ar==0.0.4`. Each
+language's package moves on its own clock, independently of this dataset's
+version and of `legesher-i18n`'s.
+
 ## Provenance
 
-Generated from the pack tree at monorepo commit `{src["commit"][:12]}`
-(`{src["tag"]}`) by `libs/i18n/scripts/export_packs.py`. Not hand-edited, and
-regenerable: `manifest.json` carries a SHA-256 for every file and names the
-toolchain that produced them.
+Generated from the pack tree by `libs/i18n/scripts/export_packs.py`. Not
+hand-edited, and regenerable: `manifest.json` carries a SHA-256 for every file,
+the toolchain that produced them, and the source revision this release was cut
+from.
 
 The source is the YAML pack tree, not the selection database. This matters: the
 database also holds selections for targets this release does not cover, and
@@ -1611,18 +1732,24 @@ def require_reproducible_source(source: dict[str, str]) -> None:
             "come from is not."
         )
     tag = source.get("tag", UNTAGGED)
-    # Checked against the prefix, not merely against "is there a tag". A
-    # release commit here routinely carries `v0.24.0` and a per-pack
+    # Checked against the EXACT release tag, not merely the prefix. A release
+    # commit here routinely carries `v0.24.0` and a per-pack
     # `i18n-python-ar-v0.0.4` as well; accepting any of them would stamp a
     # version string this dataset does not have, which is the failure this
     # gate exists to prevent rather than a near-miss of it.
-    if not tag.startswith(TAG_PREFIX):
+    #
+    # Prefix-matching was the earlier rule and it left the real hole open: it
+    # accepted `language-packs-v2026.08.24` against a build declaring 0.1.0,
+    # so a revision could publish under a version it did not claim. The
+    # declared version is the one in this file; the tag has to agree with it.
+    if tag != RELEASE_TAG:
         raise ExportRefused(
             f"PUSH REFUSED: commit {source.get('commit', 'unknown')[:12]} "
-            f"carries no {TAG_PREFIX}* tag (found {tag!r}), so the card's "
-            f"provenance would name no version this dataset shares with its "
-            f"release. Tag first, e.g. `git tag {TAG_PREFIX}<YYYY.MM.DD>`, "
-            f"then re-run."
+            f"carries {tag!r}, not {RELEASE_TAG!r}. This export declares "
+            f"version {DATASET_VERSION}, and a published revision has to be "
+            f"reachable by the version it announces. Either tag this commit "
+            f"(`git tag {RELEASE_TAG}`), or bump DATASET_VERSION if this is a "
+            f"new release, then re-run."
         )
 
 
@@ -1857,6 +1984,10 @@ def main() -> int:
             # Named from the push target so a rehearsal artifact does not tell its
             # readers to cite the production one.
             "artifact": args.target_repo,
+            # This dataset's own version, not any package's. Recorded here as
+            # well as stated on the card so a consumer who pulled the files
+            # without the card can still tell which release they hold.
+            "version": DATASET_VERSION,
             "layer": "packs",
             "description": (
                 "The reserved-word vocabulary Legesher's language packs "
@@ -1867,6 +1998,12 @@ def main() -> int:
             "toolchain": {
                 "pyarrow": pyarrow.__version__,
                 "python": f"{sys.version_info.major}.{sys.version_info.minor}",
+                # The library the packs load through. This dataset's version
+                # is deliberately not tied to it -- that number moves for
+                # library reasons and stands still through pack corrections --
+                # so the relationship is recorded rather than encoded, and a
+                # reader can still say which library built a given revision.
+                "legesher_i18n": legesher_i18n_version(),
             },
             "counts": {
                 "locales": len(locales),

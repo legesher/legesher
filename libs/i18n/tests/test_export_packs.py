@@ -8,6 +8,7 @@ defined.
 
 from __future__ import annotations
 
+import json
 import importlib.util
 import re
 import sys
@@ -728,7 +729,7 @@ def _source(**overrides: str) -> dict[str, str]:
     base = {
         "worktree": "clean",
         "commit": "abc123",
-        "tag": f"{export_packs.TAG_PREFIX}2026.08.24",
+        "tag": export_packs.RELEASE_TAG,
     }
     base.update(overrides)
     return base
@@ -746,16 +747,134 @@ def test_push_refuses_a_dirty_or_unverifiable_worktree() -> None:
 def test_push_refuses_an_untagged_commit() -> None:
     """The tag is the one version string the Hub, Linear and the card share.
 
-    An untagged push stamps ``(untagged)`` into the card's provenance line and
-    leaves the revision with no name its release ticket also knows.
+    An untagged push leaves the revision with no name its release ticket also
+    knows.
     """
-    with pytest.raises(export_packs.ExportRefused, match="carries no"):
+    with pytest.raises(export_packs.ExportRefused, match="not 'language-packs-v"):
         export_packs.require_reproducible_source(_source(tag=export_packs.UNTAGGED))
 
     # Absent key is treated as untagged rather than passing by omission.
-    with pytest.raises(export_packs.ExportRefused, match="carries no"):
+    with pytest.raises(export_packs.ExportRefused, match="not 'language-packs-v"):
         export_packs.require_reproducible_source(
             {"worktree": "clean", "commit": "abc123"}
+        )
+
+
+def test_the_gate_refuses_a_packs_tag_for_a_different_version() -> None:
+    """A tag with the right shape but the wrong version must not pass.
+
+    This is the hole the earlier prefix check left open, and it is the one that
+    actually ships a lie: a commit still carrying ``language-packs-v2026.08.24``
+    would satisfy "starts with the prefix" while the build declares a different version,
+    publishing a revision under a version it does not claim. Unlike an untagged
+    commit, nothing downstream would look wrong.
+    """
+    stale = f"{export_packs.TAG_PREFIX}2026.08.24"
+    with pytest.raises(export_packs.ExportRefused, match="not 'language-packs-v"):
+        export_packs.require_reproducible_source(_source(tag=stale))
+
+    # ...and so must the next version's tag on this version's build, which is
+    # the same failure walking the other way.
+    ahead = f"{export_packs.TAG_PREFIX}9.9.9"
+    with pytest.raises(export_packs.ExportRefused, match="not 'language-packs-v"):
+        export_packs.require_reproducible_source(_source(tag=ahead))
+
+
+def test_the_card_states_the_release_version(exported: Path) -> None:
+    """The card has to name its own version, or nothing published does.
+
+    It used to borrow one from the git tag it quoted in the provenance line.
+    That line is suppressed while the monorepo is private, so without this the
+    artifact would ship announcing no version at all.
+    """
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    assert f"`{export_packs.DATASET_VERSION}`" in card
+
+    manifest = json.loads((exported / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["version"] == export_packs.DATASET_VERSION, (
+        "the card and the manifest must state one version, not two"
+    )
+
+
+def test_the_card_names_no_monorepo_revision_while_it_is_private(
+    exported: Path,
+) -> None:
+    """A public card must not cite a commit its reader cannot resolve.
+
+    The manifest keeps it -- a bare SHA is inert without repo access -- so this
+    asserts the split, not the absence. CORE-2057 restores the citation.
+    """
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    assert "monorepo commit" not in card
+    assert export_packs.UNTAGGED not in card
+
+    manifest = json.loads((exported / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["source"]["commit"], "the manifest is where provenance lives now"
+
+
+def test_the_card_promises_an_install_only_if_the_packages_publish(
+    exported: Path,
+) -> None:
+    """An install command for a package that 404s is a lie the card tells.
+
+    Every ``legesher-i18n-python-<locale>`` is unpublished today (CORE-626), so
+    the card names the distributions without telling anyone to install them.
+    This fails the moment the two disagree -- in either direction, so flipping
+    the flag without the card following is caught too.
+    """
+    card = (exported / "README.md").read_text(encoding="utf-8")
+
+    # Named either way: the `packs` config points at these by version.
+    assert "legesher-i18n-python-ar" in card
+
+    if export_packs.PACKAGES_ON_PYPI:
+        assert "pip install" in card
+        assert "not on PyPI yet" not in card
+    else:
+        assert "pip install" not in card, (
+            "the card tells the reader to install a package that is not "
+            "published -- flip PACKAGES_ON_PYPI only when PyPI actually serves "
+            "these distributions"
+        )
+        assert "not on PyPI yet" in card
+
+
+def test_both_availability_wordings_are_exercised() -> None:
+    """The unflipped branch is the one that ships unread.
+
+    ``PACKAGES_ON_PYPI`` is False today, so without this the install wording
+    would first render on the day CORE-626 flips it — with nobody reading the
+    card that morning.
+    """
+    unpublished = export_packs.packages_availability(False)
+    assert "not on PyPI yet" in unpublished
+    assert "pip install" not in unpublished
+
+    published = export_packs.packages_availability(True)
+    assert "pip install legesher-i18n-python-<locale>" in published
+    assert "not on PyPI yet" not in published
+
+
+def test_the_release_tag_is_built_from_the_declared_version() -> None:
+    """One source of truth, so the tag cannot drift from what the card says.
+
+    If these were maintained separately, the gate would compare two strings
+    that agree only by someone remembering to edit both.
+    """
+    assert export_packs.RELEASE_TAG == (
+        f"{export_packs.TAG_PREFIX}{export_packs.DATASET_VERSION}"
+    )
+
+    # Semantic, not date-based. A date would parse as three ints too, so this
+    # asserts the shape a consumer can actually order: no component may carry
+    # a leading zero the way `2026.08.24` does.
+    parts = export_packs.DATASET_VERSION.split(".")
+    assert len(parts) == 3, export_packs.DATASET_VERSION
+    for part in parts:
+        assert part.isdigit(), export_packs.DATASET_VERSION
+        assert part == str(int(part)), (
+            f"{export_packs.DATASET_VERSION} is not semver -- {part!r} is "
+            f"zero-padded, which is the date shape this replaced"
         )
 
 
@@ -768,12 +887,10 @@ def test_the_gate_refuses_every_tag_that_is_not_a_packs_tag() -> None:
     not a near-miss of it.
     """
     for tag in ("v0.24.0", "mcp-v0.1.0", "i18n-python-ar-v0.0.4", "scratch"):
-        with pytest.raises(export_packs.ExportRefused, match="carries no"):
+        with pytest.raises(export_packs.ExportRefused, match="not 'language-packs-v"):
             export_packs.require_reproducible_source(_source(tag=tag))
 
-    export_packs.require_reproducible_source(
-        _source(tag=f"{export_packs.TAG_PREFIX}2026.08.24")
-    )
+    export_packs.require_reproducible_source(_source(tag=export_packs.RELEASE_TAG))
 
 
 def test_git_describe_only_ever_reports_a_packs_tag(tmp_path: Path) -> None:
@@ -802,11 +919,8 @@ def test_git_describe_only_ever_reports_a_packs_tag(tmp_path: Path) -> None:
         "a non-packs tag must not satisfy the gate"
     )
 
-    git("tag", f"{export_packs.TAG_PREFIX}2026.08.24")
-    assert (
-        export_packs.git_describe(tmp_path)["tag"]
-        == f"{export_packs.TAG_PREFIX}2026.08.24"
-    )
+    git("tag", export_packs.RELEASE_TAG)
+    assert export_packs.git_describe(tmp_path)["tag"] == export_packs.RELEASE_TAG
 
 
 def test_published_schema_is_the_four_decided_configs(exported: Path) -> None:
@@ -887,7 +1001,7 @@ def test_main_wires_every_push_gate_and_pushes_last(
     monkeypatch.setattr(
         export_packs,
         "git_describe",
-        lambda _repo: _source(tag=f"{export_packs.TAG_PREFIX}2026.08.24"),
+        lambda _repo: _source(tag=export_packs.RELEASE_TAG),
     )
 
     out = tmp_path / "packs"

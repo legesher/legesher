@@ -43,10 +43,21 @@ when they were written.
    Expect `PASS: regeneration reproduces all 255 shipped pack file(s)`.
    Informational findings (`comment_lost`, `not_byte_identical`) do not block.
 
-2. **The working tree is clean and carries a `language-packs-v*` tag.** The
-   manifest records both. On `--push` these are gates rather than preconditions
-   — a dirty tree makes the revision unreproducible from the commit it names,
-   and an untagged one leaves it sharing no version string with its release.
+2. **The working tree is clean and carries the release tag.** The manifest
+   records both. On `--push` these are gates rather than preconditions — a
+   dirty tree makes the revision unreproducible from the commit it names, and a
+   wrongly-tagged one leaves it sharing no version string with its release.
+
+   The tag is `language-packs-v<DATASET_VERSION>`, matching the version
+   declared in `scripts/export_packs.py` — `language-packs-v0.1.0` for this
+   release. **Semantic, not date-based** (2026-08-28): major for a breaking
+   schema change, minor for new languages, terms or interpreter versions, patch
+   for corrections to renderings a release already carried.
+
+   Cutting a release therefore has two steps in one order: bump
+   `DATASET_VERSION` in the exporter, commit, then tag the commit to match. The
+   gate compares the two, so tagging a commit whose declared version differs is
+   refused rather than published.
 
 3. **`audit_packs` and `audit_collisions` are clean** — the mechanical gates
    behind the `experimental` stamp.
@@ -136,7 +147,7 @@ refused run leaves nothing on disk that could be mistaken for push-ready:
 | `LEGESHER_HF_PUSH_APPROVED=1` | the environment key is unset — the flag and the variable are two keys so a command-line typo cannot publish |
 | `--target-repo` | a non-default destination is not repeated verbatim in `LEGESHER_HF_TARGET_OVERRIDE` |
 | clean worktree | the tree is dirty, or git is unavailable — a revision pinned to a commit it did not come from cannot be reproduced |
-| tagged commit | `HEAD` carries no `language-packs-v<YYYY.MM.DD>` tag — the tag is the one version string the Hub revision, the release ticket and the card's provenance line all share, and an untagged push stamps `(untagged)` into the card. Checked against the prefix: this repo also tags `v0.24.0` and `i18n-python-ar-v0.0.4`, and neither names a revision of this dataset |
+| tagged commit | `HEAD` does not carry `language-packs-v<DATASET_VERSION>` — the tag is the one version string the Hub revision, the release ticket and the card all share. Checked against the **exact** tag, not the prefix: this repo also tags `v0.24.0` and `i18n-python-ar-v0.0.4`, neither of which names a revision of this dataset, and a leftover `language-packs-v*` from an earlier release would otherwise let a build publish under a version it does not declare |
 | licence agreement | the declared compilation licence and the packs' own `metadata.license` disagree — both claims become public in the same revision, so "reconcile before publishing" becomes a refusal rather than a warning |
 | Hub auth | no usable token |
 
