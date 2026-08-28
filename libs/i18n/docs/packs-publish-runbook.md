@@ -130,11 +130,34 @@ across machines.
 
 ## Publish
 
+**Run this from the repository root, not from `libs/i18n`.**
+
 ```sh
-cd libs/i18n
-LEGESHER_HF_PUSH_APPROVED=1 uv run python scripts/export_packs.py \
+cd <repo root>
+uv sync                    # once per checkout — see below
+LEGESHER_HF_PUSH_APPROVED=1 uv run python libs/i18n/scripts/export_packs.py \
   --out build/hf-packs --push --governance-signoff CORE-1502
 ```
+
+`huggingface-hub` is declared in the **root** `pyproject.toml`, not in
+`libs/i18n`. Running `uv run` from inside `libs/i18n` resolves that package's
+own dependencies, which do not include it, so the push dies after every gate
+has passed with:
+
+```
+huggingface_hub is required to push. Install it with `uv pip install
+huggingface_hub`, then `hf auth login`.
+```
+
+This bites hardest in a **fresh worktree cut for a release**, where the venv is
+new and has never been synced from the root. It is also the least informative
+moment to hit it: the export has already run and reported success, so the
+failure reads as an auth or Hub problem rather than a missing dependency. `uv
+sync` at the root fixes it.
+
+A `VIRTUAL_ENV ... will be ignored` warning here is noise, not a problem — it
+means a shell-activated venv from another checkout is being correctly bypassed
+in favour of the worktree's own.
 
 The first push freezes the layout for every consumer that pins it, so the
 script refuses on any of the following. All of them read git, the registry or
