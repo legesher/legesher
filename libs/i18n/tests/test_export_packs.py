@@ -796,20 +796,25 @@ def test_the_card_states_the_release_version(exported: Path) -> None:
     )
 
 
-def test_the_card_names_no_monorepo_revision_while_it_is_private(
-    exported: Path,
-) -> None:
-    """A public card must not cite a commit its reader cannot resolve.
+def test_the_card_cites_the_revision_the_manifest_records(exported: Path) -> None:
+    """The card and the manifest must name ONE revision, not two.
 
-    The manifest keeps it -- a bare SHA is inert without repo access -- so this
-    asserts the split, not the absence. CORE-2057 restores the citation.
+    They are written from the same ``source`` block, so a drift here means the
+    card was rendered from something other than the export it describes -- the
+    failure that let a card documenting one provenance vocabulary ship over
+    data carrying another.
     """
     card = (exported / "README.md").read_text(encoding="utf-8")
-    assert "monorepo commit" not in card
-    assert export_packs.UNTAGGED not in card
-
     manifest = json.loads((exported / "manifest.json").read_text(encoding="utf-8"))
-    assert manifest["source"]["commit"], "the manifest is where provenance lives now"
+
+    assert manifest["source"]["commit"][:12] in card
+    assert export_packs.RELEASE_TAG in card
+
+    # The card names the tag a push WILL carry, not whatever git reports on a
+    # working checkout -- the gate makes those the same thing at push time, and
+    # this way a dry-run export does not render "(untagged)" as if it were a
+    # revision anyone could fetch.
+    assert export_packs.UNTAGGED not in card
 
 
 def test_the_card_promises_an_install_only_if_the_packages_publish(

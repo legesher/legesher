@@ -1309,13 +1309,7 @@ def render_card(
     """
     counts = manifest["counts"]
     locales = manifest["locales"]
-    # `manifest["source"]` is deliberately NOT read here. The card used to cite
-    # the monorepo commit and tag it was cut from; `legesher-next` is private,
-    # so a public reader could not resolve either, and a card naming an
-    # unreachable revision is worse than one naming none. The manifest still
-    # carries it -- a bare SHA is a reproducibility anchor for anyone with repo
-    # access and inert to everyone else. CORE-2057 restores the citation to the
-    # card once the monorepo is public.
+    src = manifest["source"]
 
     # Quoted, always. Unquoted, YAML 1.1 reads `no` as boolean false, which is
     # how Norwegian silently disappears from the Hub's language facet.
@@ -1623,10 +1617,11 @@ version and of `legesher-i18n`'s.
 
 ## Provenance
 
-Generated from the pack tree by `libs/i18n/scripts/export_packs.py`. Not
-hand-edited, and regenerable: `manifest.json` carries a SHA-256 for every file,
-the toolchain that produced them, and the source revision this release was cut
-from.
+Release `{DATASET_VERSION}` was cut from the pack tree at monorepo commit
+`{src["commit"][:12]}`, tagged `{TAG_PREFIX}{DATASET_VERSION}`, by
+`libs/i18n/scripts/export_packs.py`. Not hand-edited, and regenerable:
+`manifest.json` carries a SHA-256 for every file, the toolchain that produced
+them, and that same revision.
 
 The source is the YAML pack tree, not the selection database. This matters: the
 database also holds selections for targets this release does not cover, and
