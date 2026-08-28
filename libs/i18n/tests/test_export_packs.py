@@ -270,8 +270,8 @@ def test_card_states_the_tiers_the_artifact_actually_carries() -> None:
     all_experimental = export_packs.render_card(
         _manifest(locales), {"MIT": 1}, _locale_rows(locales)
     )
-    assert "Nothing has been promoted yet" in all_experimental
-    assert f"All {len(locales)} locales are stamped" in all_experimental
+    assert "No pack in this release carries" in all_experimental
+    assert "Every locale is stamped" in all_experimental
 
     mixed = export_packs.render_card(
         _manifest(
@@ -282,7 +282,7 @@ def test_card_states_the_tiers_the_artifact_actually_carries() -> None:
         {"MIT": 1},
         _locale_rows(locales),
     )
-    assert "Nothing has been promoted yet" not in mixed
+    assert "No pack in this release carries" not in mixed
     assert "`reviewed`" in mixed
     assert f"**{len(locales) - 1}** `experimental`" in mixed
 
@@ -410,11 +410,11 @@ def test_the_card_states_its_target_scope_and_the_join_key() -> None:
         {"MIT": 1},
         _locale_rows(export_packs.pack_locales()),
     )
-    assert "This release ships the `python` target" in card
+    assert f"Release `{export_packs.DATASET_VERSION}` ships the `python` target" in card
     assert "Selections exist internally for other targets" in card
     # `target` returned as a key column with the four-config split -- the join
     # into pl_terminology spans targets. The card now says so.
-    assert "`target`, `category`, `source_term` — the key" in card
+    assert "`target`, `category`, `source_term`: the key" in card
     assert "`locale` is a pack id, not a language tag" in card
     assert "`no` is BCP 47 `nb`" in card
 
@@ -842,6 +842,36 @@ def test_the_card_promises_an_install_only_if_the_packages_publish(
             "these distributions"
         )
         assert "not on PyPI yet" in card
+
+
+def test_the_card_carries_no_em_dashes(exported: Path) -> None:
+    """House voice, and a rule prose drifts back into without a guard.
+
+    The Legesher voice charter (CORE-1465) rules them out of titles and asks
+    that body copy avoid them. This card had 33 before the pass that removed
+    them, all added a few at a time.
+    """
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    offenders = [line for line in card.splitlines() if "—" in line]
+    assert not offenders, "em dashes in the card:\n" + "\n".join(offenders[:8])
+
+
+def test_the_locale_count_is_stated_once(exported: Path) -> None:
+    """One source of truth reads as several when repeated per section.
+
+    The count belongs in the opening and nowhere else. Restating it in the
+    languages table, the maturity section and the citation made a single fact
+    look like four claims that could drift apart.
+    """
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    manifest = json.loads((exported / "manifest.json").read_text(encoding="utf-8"))
+    count = str(manifest["counts"]["locales"])
+
+    hits = [line for line in card.splitlines() if re.search(rf"\b{count}\b", line)]
+    assert len(hits) == 1, (
+        f"the locale count ({count}) appears {len(hits)} times; state it once "
+        f"in the opening:\n" + "\n".join(hits)
+    )
 
 
 def test_both_availability_wordings_are_exercised() -> None:

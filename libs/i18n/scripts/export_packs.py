@@ -318,7 +318,7 @@ CATEGORY_BLURBS: dict[str, str] = {
         "anything else in the vocabulary."
     ),
     "builtins": (
-        "Functions and types available without importing anything — `print`, "
+        "Functions and types available without importing anything: `print`, "
         "`len`, `dict`. Callable names rather than grammar."
     ),
     "exceptions": (
@@ -327,21 +327,21 @@ CATEGORY_BLURBS: dict[str, str] = {
     ),
     "reserved_words": (
         "Names the language treats as special without reserving them in the "
-        "grammar — soft keywords and contextual forms."
+        "grammar: soft keywords and contextual forms."
     ),
     "symbols": (
-        "What a symbol is called — `_` is *underscore* in English, and every "
+        "What a symbol is called: `_` is *underscore* in English, and every "
         "language has its own name for it. Prose names, not identifiers; "
         "teaching text and error messages say them out loud."
     ),
     "variable_conventions": (
-        "The idiomatic short name for a variable role — the loop counter, the "
+        "The idiomatic short name for a variable role: the loop counter, the "
         "throwaway, the accumulator. These are identifiers someone actually "
         "types."
     ),
     "messages": (
         "Error-message templates, with named `{placeholders}`. Sentences with "
-        "grammar rather than identifiers — the words a traceback says."
+        "grammar rather than identifiers: the words a traceback says."
     ),
 }
 
@@ -1319,26 +1319,26 @@ def render_card(
 
     # Derived from what the artifact actually stamps. Hard-coding "every pack
     # is experimental" would survive the first promotion and publish a card
-    # that contradicts its own `tier` column — the failure this function is
+    # that contradicts its own `tier` column, the failure this function is
     # generated to prevent.
+    #
+    # The locale count is deliberately absent: it is stated once, in the
+    # opening, and repeating it in every section makes a single source of truth
+    # read as four.
     tiers_present: list[str] = manifest["tiers_present"]
     tier_counts: dict[str, int] = manifest.get("tier_counts") or {}
     if tiers_present == ["experimental"]:
         tier_paragraph = (
-            f"All {counts['locales']} locales are stamped **`experimental`**, and "
-            f"that is not a formality — it is the honest state of the work. "
+            "Every locale is stamped **`experimental`**. That is not a "
+            "formality; it is the honest state of the work. "
         )
-        promotion_note = (
-            "Nothing has been promoted yet, so no pack in this release carries "
-            "`reviewed` or `official`. "
-        )
+        promotion_note = "No pack in this release carries `reviewed` or `official`. "
     else:
         spread = ", ".join(
             f"**{tier_counts.get(tier, 0)}** `{tier}`" for tier in tiers_present
         )
         tier_paragraph = (
-            f"Across {counts['locales']} locales: {spread}. Each stamp is the "
-            f"honest state of that pack. "
+            f"Locales by stamp: {spread}. Each stamp is the honest state of that pack. "
         )
         promotion_note = ""
     # Listed out the way the canon and corpus cards list theirs: the frontmatter
@@ -1347,9 +1347,6 @@ def render_card(
         f"| `{r['locale']}` | {r['language_name']} | {r['native_name']} "
         f"| `{r['tier']}` | `{r['package_version']}` |"
         for r in locale_rows
-    )
-    tier_spread = ", ".join(
-        f"**{tier_counts.get(tier, 0)}** at `{tier}`" for tier in tiers_present
     )
     category_rows = "\n".join(
         f"| `{name}` | {CATEGORY_BLURBS[name]} |" for name in CATEGORY_FAMILIES
@@ -1412,8 +1409,8 @@ configs:
 A **language pack** is what a programming language's reserved words are called
 in one natural language.
 
-Every word a programming language reserves — its keywords, its builtins, its
-exception hierarchy — rendered in a natural language, in a form that language's
+Every word a programming language reserves (its keywords, its builtins, its
+exception hierarchy), rendered in a natural language, in a form that language's
 own script and grammar accept as an identifier. A developer who does not read
 English memorises `def` and `ValueError` as shapes; a pack lets them read the
 words instead.
@@ -1422,11 +1419,11 @@ A pack is what the tooling loads: the terminology settled, resolved into the
 structure its target programming language needs, and stamped with how much
 review stands behind it.
 
-This is release **`{DATASET_VERSION}`**, carrying {counts["locales"]} natural
-languages. The version is this dataset's own: **major** marks a breaking change
-to the configs below, **minor** new languages, terms or interpreter versions,
-and **patch** corrections to renderings a release already carried. It does not
-track the version of any package — see [Packages](#packages).
+Release **`{DATASET_VERSION}`** carries {counts["locales"]} natural languages.
+The version is this dataset's own: **major** marks a breaking change to the
+configs below, **minor** new languages, terms or interpreter versions, and
+**patch** corrections to renderings a release already carried. It does not
+track the version of any package (see [Packages](#packages)).
 
 ## Languages
 
@@ -1438,12 +1435,6 @@ what the Hub indexes for search; this is the full list.
 | --- | --- | --- | --- | --- |
 {language_rows}
 
-Today: {tier_spread}.
-
-The `locales` and `packs` configs carry this list between them — identity in
-`locales`, status and package in `packs` — so you can sort and filter it
-rather than read it.
-
 ## What a pack is made of
 
 ### Target
@@ -1454,7 +1445,7 @@ which forms a rendering is allowed to take. One settled term is rendered
 differently for different targets, because each programming language's grammar
 admits different identifiers.
 
-**This release ships the `python` target**, across
+**Release `{DATASET_VERSION}` ships the `python` target**, across
 {counts["pl_versions"]} versions of it ({target_versions}).
 Selections exist internally for other targets and are deliberately excluded:
 exporting them would publish terminology labelled by a target it has not been
@@ -1462,7 +1453,7 @@ reviewed for.
 
 ### Categories
 
-Terminology is partitioned, and the partitions are the target's, not ours:
+Terminology is partitioned, and the partitions belong to the target language:
 
 | Category | What it holds |
 | --- | --- |
@@ -1480,9 +1471,9 @@ rather than erased by the flattening.
 
 ### What is not here
 
-The **style guide** — the rules that govern how a rendering is formed for a
-language, such as how multi-word terms are joined — is a separate system and is
-not exported in this dataset. A pack is the result those rules produced, not
+The **style guide** is a separate system and is not exported in this dataset.
+It holds the rules that govern how a rendering is formed for a language, such
+as how multi-word terms are joined. A pack is the result those rules produced, not
 the rules themselves.
 
 ## Maturity
@@ -1495,10 +1486,10 @@ the rules themselves.
 | `reviewed` | A native speaker of the language has reviewed the pack and signed off on it. |
 | `official` | Certified review plus term screening. |
 
-{promotion_note}**What exactly moves a language from `experimental` to
-`reviewed` — how many endorsements, from how varied a set of voices — is still
-being defined.** Treat an `experimental` pack as a serious starting point that
-wants native review, not as settled terminology.
+{promotion_note}**What moves a language from `experimental` to `reviewed` is
+still being defined: how many endorsements, and from how varied a set of
+voices.** An `experimental` pack is a serious starting point that wants native
+review, not settled terminology.
 
 ### Who chose these words
 
@@ -1521,20 +1512,20 @@ Four configs. Two are dimensions, one is the mapping, one is the state:
 
 ### `pl_terminology`
 
-The programming language's own terminology — no natural language appears in
+The programming language's own terminology: no natural language appears in
 this config:
 
-* `target`, `category`, `source_term` — the key
-* `subcategory` — the finer semantic kind for terms (`keyword` /
+* `target`, `category`, `source_term`: the key
+* `subcategory`: the finer semantic kind for terms (`keyword` /
   `builtin_func` / `builtin_type` / `special_constant` / `exception` /
   `reserved_word`), and the message cluster for `messages`
-* `source_text` — the English surface when the key is not itself the text: a
+* `source_text`: the English surface when the key is not itself the text: a
   symbol's English name, a message's template. Empty for terms, whose
   `source_term` is the English
-* `pl_versions` — the list of the target's versions the entry is valid for
+* `pl_versions`: the list of the target's versions the entry is valid for
 
 Availability lives here, once: `except*` carries `["3.11", ...]`, and a term
-in two categories carries two rows with their own sets — `type` is a builtin
+in two categories carries two rows with their own sets: `type` is a builtin
 on every version and a keyword only from 3.12.
 
 This config is also the coverage checklist. A `pl_terminology` entry with no
@@ -1545,15 +1536,15 @@ inventory ahead of any locale's renderings for exactly that reason.
 
 ### `vocabulary`
 
-The renderings — one row per (locale, target, version, category, source term):
+The renderings, one row per (locale, target, version, category, source term):
 
-* `locale` — join into `locales`; `target`, `category`, `source_term` — join
+* `locale`: join into `locales`; `target`, `category`, `source_term`: join
   into `pl_terminology`
-* `pl_version` — rows are given **resolved**: each states what you would
+* `pl_version`: rows are given **resolved**: each states what you would
   actually get on that version of the target
-* `translation` — the rendering Legesher ships
-* `defined_at` — the version whose pack file defines this rendering, and
-  `inherited` — true when the row inherits it. These are facts about the
+* `translation`: the rendering Legesher ships
+* `defined_at`: the version whose pack file defines this rendering, and
+  `inherited`: true when the row inherits it. These are facts about the
   rendering, not the term: Sinhala redefines terms at 3.13 to conjunct forms,
   so its `defined_at` differs from every other language's on the same term
 
@@ -1573,22 +1564,22 @@ that differ.
 
 ### `packs`
 
-The shipping unit — one row per (locale, target) pairing:
+The shipping unit, one row per (locale, target) pairing:
 
-* `package_version` — the semver of this pairing's own distributable. A row
+* `package_version`: the semver of this pairing's own distributable. A row
   reading `ar` / `python` / `0.0.4` means these are the words in
   `legesher-i18n-python-ar==0.0.4`. Each pairing versions on its own clock, so
   this column is the per-pairing answer; the release as a whole is versioned
   separately, at the top of this card
-* `tier` — the maturity of exactly this pairing
-* `pl_versions` — the target versions this pack covers
+* `tier`: the maturity of exactly this pairing
+* `pl_versions`: the target versions this pack covers
 
 This is the grain progress lives at: one language's standing in one
 programming language is one row here.
 
 ### JSON
 
-`json/<locale>/<target>.json` — the loadable form: the translations alone,
+`json/<locale>/<target>.json` is the loadable form: the translations alone,
 with the pack's `package_version` and a `pl_version_range` string naming the
 versions it covers.
 Values are the latest version's resolved rendering over the union of terms
@@ -1602,8 +1593,8 @@ the JSON deliberately leaves out.
 ## Packages
 
 The vocabulary in this dataset is what Legesher's language packs ship. Each
-language is its own distribution, `legesher-i18n-python-<locale>` — Arabic is
-`legesher-i18n-python-ar` — and they are loaded by `legesher-i18n`, which
+language is its own distribution, `legesher-i18n-python-<locale>`: Arabic is
+`legesher-i18n-python-ar`: and they are loaded by `legesher-i18n`, which
 resolves a pack against the interpreter you are running. Both the distributions
 and this dataset are `{DECLARED_LICENSE}`.
 
@@ -1632,7 +1623,8 @@ reviewed for.
 
 ```bibtex
 @misc{{legesher_language_packs,
-  title        = {{Legesher Language Packs: programming vocabulary rendered in {counts["locales"]} natural languages}},
+  title        = {{Legesher Language Packs: programming vocabulary rendered in natural languages}},
+  version      = {{{DATASET_VERSION}}},
   author       = {{Legesher}},
   year         = {{2026}},
   publisher    = {{Hugging Face}},
@@ -1642,7 +1634,7 @@ reviewed for.
 
 ## Licence
 
-`{DECLARED_LICENSE}`, matching the `legesher-i18n` package the packs ship in.
+Apache-2.0.
 """
 
 
