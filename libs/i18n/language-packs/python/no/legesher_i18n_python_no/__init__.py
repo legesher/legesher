@@ -4,7 +4,7 @@ This package provides Norwegian translations for Python keywords and built-ins,
 supporting Python versions 3.10 through 3.14.
 """
 
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 from pathlib import Path
 

@@ -112,6 +112,26 @@ repos:
     name: Find Untranslated Terms
     pass_filenames: true
 
+  # Version gate (CORE-1655): a pack's content IS its API, so a content change
+  # that leaves the version alone ships two vocabularies under one number --
+  # silent, because nothing about the install looks different.
+  #
+  # It also requires the pack's two version declarations to agree. That half is
+  # CORE-2058: 50 of 51 packs had drifted apart because the bumps moved
+  # pyproject.toml and not __init__.py, and "the version changed" alone would
+  # let that back in one pack at a time.
+  #
+  # Local rather than CI on purpose: the failure is a commit that looks
+  # complete, and catching it afterwards means a published version already
+  # means two things. Run with --fix to bump both files across every pack a
+  # regeneration touched.
+  - entry: uv run python libs/i18n/scripts/require_pack_version_bump.py
+    files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
+    id: require-pack-version-bump
+    language: system
+    name: Require Pack Version Bump
+    pass_filenames: true
+
   # Style-guide schema + languages.json consistency validation. Runs on both
   # style-guide edits AND languages.json edits (a change to the case/rtl source
   # of truth must re-check every guide's derived flags).

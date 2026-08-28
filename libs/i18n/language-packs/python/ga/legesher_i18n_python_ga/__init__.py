@@ -4,7 +4,7 @@ This package provides Irish (Gaeilge) translations for Python keywords and built
 supporting Python versions 3.10 through 3.14.
 """
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 from pathlib import Path
 
