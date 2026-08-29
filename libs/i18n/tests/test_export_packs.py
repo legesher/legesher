@@ -685,6 +685,63 @@ def test_the_renamed_category_reaches_every_published_surface(
     assert "reserved_words" not in card
 
 
+def test_the_worked_example_is_read_from_the_data(exported: Path) -> None:
+    """The card's example version must be the one the `packs` row carries.
+
+    It was typed as `0.0.4` and stayed there while CORE-2060 bumped all 51 pack
+    versions, so the card told a reader to expect `legesher-i18n-python-ar==0.0.4`
+    beside a `packs` row saying `0.0.5`. A generated card exists so a figure
+    cannot outlive the thing it describes; this one was prose, so it did.
+    """
+    import pyarrow.parquet as pq
+
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    rows = pq.read_table(exported / "data" / "packs.parquet").to_pylist()
+    shipped = {r["locale"]: r["package_version"] for r in rows}
+
+    version = shipped["ar"]
+    assert f"`legesher-i18n-python-ar=={version}`" in card
+    assert f"`ar` / `python` / `{version}`" in card
+
+    # No other pack version may appear as the example, which is what makes this
+    # fail on a bump rather than passing on a coincidence.
+    stale = {v for v in shipped.values() if v != version}
+    for other in stale:
+        assert f"legesher-i18n-python-ar=={other}" not in card
+
+
+def test_the_card_does_not_call_every_partition_reserved(exported: Path) -> None:
+    """`pl_terminology` carries more than what the grammar reserves.
+
+    Symbols, variable conventions and message templates are none of them
+    reserved by anything, and they are the majority of that config's rows once
+    the four translation sections are set aside. The summary table used to ask
+    "what does the programming language reserve", which was true of 184 rows
+    and false of 102.
+    """
+    import pyarrow.parquet as pq
+
+    rows = pq.read_table(exported / "data" / "pl_terminology.parquet").to_pylist()
+    unreserved = [
+        r
+        for r in rows
+        if r["category"] in {"symbols", "variable_conventions", "messages"}
+    ]
+    assert unreserved, "fixture assumption broken: those partitions are empty"
+
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    assert "what does the programming language reserve" not in card
+
+    # `except*` is a keyword and is not a legal identifier, so the keywords
+    # blurb may not claim that all of them are.
+    keywords = [r["source_term"] for r in rows if r["category"] == "keywords"]
+    assert [k for k in keywords if not k.isidentifier()] == ["except*"], (
+        "the set of non-identifier keywords changed; the blurb names except* "
+        "specifically and would now be wrong"
+    )
+    assert "except `except*`" in card
+
+
 def test_the_pack_ids_the_card_calls_out_really_do_differ_from_bcp47() -> None:
     """The join advice must stay true to the registry it describes."""
     registry = export_packs.load_registry()

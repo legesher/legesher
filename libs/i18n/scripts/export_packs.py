@@ -167,7 +167,9 @@ UNTAGGED = "(untagged)"
 #:   column or category value, or a rewrite of the card's published prose.
 #:   Below 1.0 this is where breaking changes land, which is the semver
 #:   convention for 0.x and the reason 0.2.0 follows 0.1.0 rather than 1.0.0
-#: * patch -- corrections to renderings this release already carried
+#: * patch -- corrections to renderings this release already carried, or to
+#:   the card's prose where no data file changes. 0.4.1 is the second kind:
+#:   every one of the 56 hashed files was byte-identical to 0.4.0
 #:
 #: Deliberately NOT aligned to ``legesher-i18n``'s version, though the two look
 #: like one product. That number tracks the library, and the pack data ships in
@@ -178,7 +180,7 @@ UNTAGGED = "(untagged)"
 #: Started at 0.1.0 rather than 1.0.0 because every locale is stamped
 #: ``experimental`` with no native-speaker sign-off, and the schema is still
 #: moving. A 0.x says usable-not-settled, which is what the card says in prose.
-DATASET_VERSION = "0.4.0"
+DATASET_VERSION = "0.4.1"
 
 #: Tag shape a published revision is expected to carry, e.g.
 #: ``language-packs-v0.1.0``. The one version string the Hub revision, the
@@ -337,8 +339,9 @@ CATEGORY_FAMILIES: tuple[str, ...] = (
 #: so no figure lives here to go stale.
 CATEGORY_BLURBS: dict[str, str] = {
     "keywords": (
-        "The words the grammar reserves. A rendering has to be a legal "
-        "identifier and cannot collide with anything else in the vocabulary."
+        "The words the grammar reserves. A rendering cannot collide with "
+        "anything else in the vocabulary. All are legal identifiers except "
+        "`except*`, whose renderings carry the marker through."
     ),
     "builtins": (
         "Functions, types and constants available without importing anything: "
@@ -1408,6 +1411,17 @@ def render_card(
         for r in locale_rows
     )
     category_rows = category_table(terminology_rows)
+
+    # The worked example is READ from the rows, never typed. It said `0.0.4`
+    # while `ar` shipped `0.0.5`, because a pack bump moves 51 versions and a
+    # sentence does not move with them.
+    example = next(
+        (r for r in locale_rows if r["locale"] == "ar"),
+        locale_rows[0] if locale_rows else {"locale": "ar", "package_version": "0.0.0"},
+    )
+    eg_locale = example["locale"]
+    eg_version = example["package_version"]
+    eg_package = f"legesher-i18n-python-{eg_locale}"
     # A range, not a list. Five cells' worth of versions in one column is a
     # column nobody can read; the per-version facts are in `pl_versions`.
     target_versions = f"`{VERSIONS[0]}`-`{VERSIONS[-1]}`"
@@ -1513,7 +1527,7 @@ so the language pack grows with the progression of a programming language.
 | Config | One row per | Answers |
 | --- | --- | --- |
 | `locales` | natural language | who is this language? |
-| `pl_terminology` | (target, category, source term) | what does the programming language reserve, and on which versions? |
+| `pl_terminology` | (target, category, source term) | what vocabulary does the target carry, and on which versions? |
 | `vocabulary` | (locale, target, version, category, source term) | what is it called in this language? |
 | `packs` | (locale, target) | how far along is this pairing? |
 
@@ -1579,8 +1593,8 @@ that differ.
 The shipping unit, one row per (locale, target) pairing.
 
 * `package_version`: the semver of this pairing's own distributable. A row
-  reading `ar` / `python` / `0.0.4` means these are the words in
-  `legesher-i18n-python-ar==0.0.4`. Each pairing versions on its own clock
+  reading `{eg_locale}` / `{TARGET}` / `{eg_version}` means these are the words
+  in `{eg_package}=={eg_version}`. Each pairing versions on its own clock
 * `tier`: the maturity of exactly this pairing
 * `pl_versions`: the target versions this pack covers
 
@@ -1600,9 +1614,9 @@ per-version structure the JSON leaves out.
 
 Legesher uses this dataset as the language packs for coding in other natural
 languages. Each language ships as its own distribution,
-`legesher-i18n-python-<locale>`, so Arabic is `legesher-i18n-python-ar`, and
-they are loaded by `legesher-i18n`, which resolves a pack against the
-interpreter you are running.
+`legesher-i18n-python-<locale>`, so Arabic is `{eg_package}`, and they are
+loaded by `legesher-i18n`, which resolves a pack against the interpreter you are
+running.
 {license_note}
 ## Citation
 
