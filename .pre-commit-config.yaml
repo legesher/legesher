@@ -126,7 +126,11 @@ repos:
   # means two things. Run with --fix to bump both files across every pack a
   # regeneration touched.
   - entry: uv run python libs/i18n/scripts/require_pack_version_bump.py
-    files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
+    # Version files as well as pack content. A commit that edits only
+    # pyproject.toml desyncs it from __init__.py without touching a single
+    # YAML, which is CORE-2058 exactly, and a content-only pattern would
+    # let that commit straight through.
+    files: ^libs/i18n/language-packs/[^/]+/[^/]+/(.*/packs/.*\.yml|pyproject\.toml|[^/]+/__init__\.py)$
     id: require-pack-version-bump
     language: system
     name: Require Pack Version Bump

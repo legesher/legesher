@@ -112,9 +112,11 @@ def test_every_locale_ships_the_same_terms_at_a_given_version(
 def test_inheritance_is_resolved_and_labelled(rows: list[dict]) -> None:
     """A 3.12 pack carries only a delta; the export must resolve the rest.
 
-    ``for`` is defined in the 3.10 base and must still appear on 3.12, flagged
-    as inherited and pointing at 3.10 — the delta structure preserved rather
-    than erased by the flattening.
+    ``for`` is defined in the 3.10 base and must still appear on 3.12, pointing
+    at 3.10: the delta structure preserved rather than erased by the
+    flattening. A row inherits exactly when ``defined_at`` differs from
+    ``pl_version``, which is what the dropped ``inherited`` column used to say
+    (0.3.0).
     """
     match = [
         r
@@ -125,7 +127,7 @@ def test_inheritance_is_resolved_and_labelled(rows: list[dict]) -> None:
     ]
     assert len(match) == 1
     assert match[0]["defined_at"] == "3.10"
-    assert match[0]["inherited"] is True
+    assert match[0]["defined_at"] != match[0]["pl_version"], "3.12 inherits"
 
     # ``except*`` arrives with PEP 654 in 3.11, so on 3.11 it is defined, not
     # inherited.
@@ -138,7 +140,7 @@ def test_inheritance_is_resolved_and_labelled(rows: list[dict]) -> None:
     ]
     assert len(star) == 1
     assert star[0]["defined_at"] == "3.11"
-    assert star[0]["inherited"] is False
+    assert star[0]["defined_at"] == star[0]["pl_version"], "3.11 defines it"
 
 
 def test_star_suffixed_terms_keep_their_mirror(rows: list[dict]) -> None:
@@ -177,10 +179,27 @@ def test_a_redefined_term_points_at_the_redefinition(rows: list[dict]) -> None:
     assert early["translation"] != late["translation"], (
         "fixture assumption broken: si no longer redefines True at 3.13"
     )
-    assert early["defined_at"] == "3.10"
-    assert early["inherited"] is False
-    assert late["defined_at"] == "3.13"
-    assert late["inherited"] is False
+    assert early["defined_at"] == early["pl_version"] == "3.10"
+    assert late["defined_at"] == late["pl_version"] == "3.13"
+
+
+def test_the_published_columns_carry_no_derived_flag(rows: list[dict]) -> None:
+    """Dropping ``inherited`` lost nothing, and the schema must stay that way.
+
+    It was ``defined_at != pl_version`` restated as a column, so a consumer
+    could always compute it and a bug could make the three disagree. This
+    asserts both halves: the flag is gone from what ships, and the two columns
+    that replaced it still resolve every row.
+    """
+    assert "inherited" not in export_packs.VOCABULARY_COLUMNS
+    assert "inherited" not in rows[0]
+
+    inheriting = [r for r in rows if r["defined_at"] != r["pl_version"]]
+    defining = [r for r in rows if r["defined_at"] == r["pl_version"]]
+    assert inheriting and defining, (
+        "every row falls on one side, so the distinction is still expressible"
+    )
+    assert len(inheriting) + len(defining) == len(rows)
 
 
 def test_defined_at_never_points_forward(rows: list[dict]) -> None:
@@ -256,35 +275,71 @@ def _manifest(
         "tiers_present": tiers,
         "tier_counts": tier_counts or {"experimental": len(locales)},
         "nfkc_unstable": _NFKC_BLOCK if nfkc is None else nfkc,
+        # The card's release block prints the library version out of here, so
+        # a fixture without it renders a KeyError rather than a card.
+        "toolchain": {"legesher_i18n": "0.0.0"},
         "source": {"commit": "0" * 40, "tag": "(untagged)"},
     }
+
+
+def _term_rows() -> list[dict]:
+    """One `pl_terminology` row per (category, subcategory) the export ships.
+
+    Shaped like the real rows rather than the real rows themselves: the card's
+    category table counts what it is handed, and a fixture that counted the
+    live pack tree would pin the table to today's vocabulary instead of to the
+    code that renders it.
+    """
+    kinds = {
+        "keywords": ["keyword"],
+        "builtins": ["builtin_func", "builtin_type", "special_constant"],
+        "exceptions": ["exception"],
+        "reserved_words": ["reserved_word"],
+        "symbols": [None],
+        "variable_conventions": [None],
+        "messages": ["SyntaxError", "ValueError"],
+    }
+    rows = []
+    for family in export_packs.CATEGORY_FAMILIES:
+        for kind in kinds[family]:
+            rows.append(
+                {
+                    "target": "python",
+                    "category": family,
+                    "subcategory": kind,
+                    "source_term": f"{family}-{kind}",
+                    "source_text": "",
+                    "pl_versions": list(export_packs.VERSIONS),
+                }
+            )
+    return rows
 
 
 def test_card_states_the_tiers_the_artifact_actually_carries() -> None:
     """The card must not hard-code "everything is experimental".
 
     Promoting one locale would otherwise publish a card contradicting its own
-    `tier` column — the failure generation exists to prevent.
+    `tier` column, the failure generation exists to prevent. Every stamp is now
+    a Status cell in the Languages table and nowhere else: prose asserting the
+    spread was a second place for the same fact to go stale, and it went when
+    the card was rewritten (2026-08-29).
     """
     locales = export_packs.pack_locales()
+    rows = _locale_rows(locales)
     all_experimental = export_packs.render_card(
-        _manifest(locales), {"MIT": 1}, _locale_rows(locales)
+        _manifest(locales), {"MIT": 1}, rows, _term_rows()
     )
-    assert "No pack in this release carries" in all_experimental
-    assert "Every locale is stamped" in all_experimental
+    table = all_experimental.split("## Languages")[1].split("\n## ")[0]
+    assert "`reviewed`" not in table
+    assert table.count("| `experimental` |") == len(rows)
 
+    promoted = [{**r, "tier": "reviewed"} if i == 0 else r for i, r in enumerate(rows)]
     mixed = export_packs.render_card(
-        _manifest(
-            locales,
-            tiers=["experimental", "reviewed"],
-            tier_counts={"experimental": len(locales) - 1, "reviewed": 1},
-        ),
-        {"MIT": 1},
-        _locale_rows(locales),
+        _manifest(locales), {"MIT": 1}, promoted, _term_rows()
     )
-    assert "No pack in this release carries" not in mixed
-    assert "`reviewed`" in mixed
-    assert f"**{len(locales) - 1}** `experimental`" in mixed
+    mixed_table = mixed.split("## Languages")[1].split("\n## ")[0]
+    assert mixed_table.count("| `reviewed` |") == 1
+    assert mixed_table.count("| `experimental` |") == len(rows) - 1
 
 
 def test_card_language_codes_survive_a_yaml_parse() -> None:
@@ -297,7 +352,7 @@ def test_card_language_codes_survive_a_yaml_parse() -> None:
 
     locales = export_packs.pack_locales()
     card = export_packs.render_card(
-        _manifest(locales), {"MIT": 255}, _locale_rows(locales)
+        _manifest(locales), {"MIT": 255}, _locale_rows(locales), _term_rows()
     )
     front = yaml.safe_load(card.split("---")[1])
     assert front["language"] == locales
@@ -332,15 +387,15 @@ def test_the_card_carries_no_licence_caveat_when_they_agree() -> None:
     """The caveat is for a real disagreement, not decoration."""
     locales = export_packs.pack_locales()
     card = export_packs.render_card(
-        _manifest(locales), {"Apache-2.0": 255}, _locale_rows(locales)
+        _manifest(locales), {"Apache-2.0": 255}, _locale_rows(locales), _term_rows()
     )
-    assert "Note on the licence field" not in card
+    assert "Note on the license field" not in card
 
     # ...and it still appears when they genuinely differ.
     mixed = export_packs.render_card(
-        _manifest(locales), {"MIT": 255}, _locale_rows(locales)
+        _manifest(locales), {"MIT": 255}, _locale_rows(locales), _term_rows()
     )
-    assert "Note on the licence field" in mixed
+    assert "Note on the license field" in mixed
 
 
 # ---------------------------------------------------------------------------
@@ -349,22 +404,24 @@ def test_the_card_carries_no_licence_caveat_when_they_agree() -> None:
 
 
 def test_the_card_states_how_the_vocabulary_was_reviewed() -> None:
-    """The provenance paragraph is not optional decoration (CORE-1905).
+    """The `experimental` stamp has to be defined, not just printed.
 
     A reader deciding whether to depend on these words needs to know they are
     machine-drafted and maintainer-curated, and that no native speaker has
-    signed a pack off. The `experimental` stamp means that; the card must say
-    it in words too.
+    signed a pack off. That definition lives in the Maturity table, one row per
+    stage; the prose section that used to repeat it was removed as a second
+    statement of one fact (2026-08-29).
     """
     card = export_packs.render_card(
         _manifest(export_packs.pack_locales()),
         {"MIT": 1},
         _locale_rows(export_packs.pack_locales()),
+        _term_rows(),
     )
-    assert "Who chose these words" in card
-    assert "drafted by a language model" in card
-    assert "no pack in this release has been signed off by a native" in card
-    assert "Nothing on the review ladder above `experimental` has been earned" in card
+    ladder = card.split("## Maturity")[1].split("\n## ")[0]
+    assert "Machine-drafted, then curated by maintainers" in ladder
+    assert "No native speaker has signed off." in ladder
+    assert "A native speaker of the language has reviewed the pack" in ladder
 
 
 def test_no_pack_claims_community_review() -> None:
@@ -397,23 +454,21 @@ def test_no_pack_claims_community_review() -> None:
 def test_the_card_states_its_target_scope_and_the_join_key() -> None:
     """Two facts a consumer gets wrong without being told.
 
-    A pack is defined by its target, and this release carries one of several:
-    selections exist internally for other targets and are excluded, so the card
-    has to say which target these words are for rather than let a reader assume
-    they cover the language they happen to use.
+    A pack is defined by its target, and this release carries one of several,
+    so the card has to say which target these words are for rather than let a
+    reader assume they cover the language they happen to use. That now lives in
+    the release table rather than a paragraph.
 
-    And pack ids are not locale tags — `no` here is `nb` in the corpus — so
+    And pack ids are not locale tags -- `no` here is `nb` in the corpus -- so
     someone joining on `locale` silently drops exactly the rows that differ.
     """
     card = export_packs.render_card(
         _manifest(export_packs.pack_locales()),
         {"MIT": 1},
         _locale_rows(export_packs.pack_locales()),
+        _term_rows(),
     )
-    assert f"Release `{export_packs.DATASET_VERSION}` ships the `python` target" in card
-    assert "Selections exist internally for other targets" in card
-    # `target` returned as a key column with the four-config split -- the join
-    # into pl_terminology spans targets. The card now says so.
+    assert f"| `{export_packs.TARGET}` |" in card.split("## Languages")[0]
     assert "`target`, `category`, `source_term`: the key" in card
     assert "`locale` is a pack id, not a language tag" in card
     assert "`no` is BCP 47 `nb`" in card
@@ -430,25 +485,26 @@ def test_the_card_describes_a_pack_without_assuming_its_target() -> None:
         _manifest(export_packs.pack_locales()),
         {"MIT": 1},
         _locale_rows(export_packs.pack_locales()),
+        _term_rows(),
     )
-    opening = card.split("## Languages")[0]
-    assert "Python" not in opening, (
+    definition = card.split("| Release |")[0]
+    assert "Python" not in definition, (
         "the definition of a language pack must not name one target -- "
-        "the target belongs in the Target section, as one of a pack's parts"
+        "the target belongs in the release table, as one of a pack's parts"
     )
-    for heading in ("### Target", "### Categories", "### Versions"):
+    for heading in ("### Target", "### Categories"):
         assert heading in card, f"{heading} missing from the pack breakdown"
 
-    # The style guide is a sibling system, not part of this dataset. Saying so
-    # is the difference between describing the artifact and overclaiming it.
-    assert "style guide" in card and "not exported in this dataset" in card
+    # The version range is a table cell now, not a paragraph.
+    header = card.split("## Languages")[0]
+    assert f"`{export_packs.VERSIONS[0]}`-`{export_packs.VERSIONS[-1]}`" in header
 
 
 def test_the_card_lists_every_language_with_its_status_and_version() -> None:
     """Listed out the way the canon and corpus cards list theirs."""
     locales = export_packs.pack_locales()
     rows = _locale_rows(locales)
-    card = export_packs.render_card(_manifest(locales), {"MIT": 1}, rows)
+    card = export_packs.render_card(_manifest(locales), {"MIT": 1}, rows, _term_rows())
 
     table = card.split("## Languages")[1].split("##")[0]
     for row in rows:
@@ -463,6 +519,7 @@ def test_every_category_the_export_ships_is_described_on_the_card() -> None:
         _manifest(export_packs.pack_locales()),
         {"MIT": 1},
         _locale_rows(export_packs.pack_locales()),
+        _term_rows(),
     )
     assert set(export_packs.CATEGORY_BLURBS) == set(export_packs.CATEGORY_FAMILIES), (
         "CATEGORY_BLURBS and CATEGORY_FAMILIES have drifted; the card would "
@@ -470,6 +527,73 @@ def test_every_category_the_export_ships_is_described_on_the_card() -> None:
     )
     for name in export_packs.CATEGORY_FAMILIES:
         assert f"| `{name}` |" in card
+
+
+def test_the_release_block_carries_the_provenance_a_reader_needs() -> None:
+    """Seven facts, stated once, at the top.
+
+    Release, languages, target, version range, license, library version and
+    commit used to be spread across an opening sentence, a Target paragraph, a
+    Provenance section and a License section. A reader checking what they held
+    had to read the whole card, and the release number appeared three times.
+    All seven are now one table row, every value read from the manifest or a
+    module constant rather than typed.
+    """
+    locales = export_packs.pack_locales()
+    card = export_packs.render_card(
+        _manifest(locales), {"MIT": 1}, _locale_rows(locales), _term_rows()
+    )
+    header = card.split("## Languages")[0]
+
+    assert (
+        "| Release | Languages supported | Target | Versions "
+        "| License | `legesher-i18n` | Commit |"
+    ) in header
+    row = (
+        f"| `{export_packs.DATASET_VERSION}` | {len(locales)} "
+        f"| `{export_packs.TARGET}` | `{export_packs.VERSIONS[0]}`-"
+        f"`{export_packs.VERSIONS[-1]}` | Apache-2.0 | `0.0.0` | `{'0' * 12}` |"
+    )
+    assert row in header, f"release block not rendered from the manifest: {row}"
+
+    # Stated in the table and nowhere else. A second home is a second place to
+    # go stale, which is why the prose sections that repeated these are gone.
+    assert "## Provenance" not in card
+    assert "## License" not in card
+    assert card.count(export_packs.DATASET_VERSION) == 2, (
+        "the release number belongs in the table and the citation, nowhere else"
+    )
+
+
+def test_the_category_table_counts_the_rows_it_was_given() -> None:
+    """Subcategories and term counts are derived, never written down.
+
+    The table used to be one blurb per category. It now carries the finer
+    kinds and how many source terms sit under each, and both have to come off
+    the emitted rows: a figure typed into the template outlives the vocabulary
+    it counted, which is the whole reason this card is generated.
+    """
+    rows = _term_rows()
+    table = export_packs.category_table(rows)
+
+    # Counted, not asserted: change the fixture and the table changes with it.
+    for family in export_packs.CATEGORY_FAMILIES:
+        expected = sum(1 for r in rows if r["category"] == family)
+        line = next(ln for ln in table.splitlines() if ln.startswith(f"| `{family}` |"))
+        assert f"| {expected} |" in line, f"{family} count not derived: {line}"
+
+    builtins = next(ln for ln in table.splitlines() if ln.startswith("| `builtins` |"))
+    assert "`builtin_func`, `builtin_type`, `special_constant`" in builtins
+
+    # symbols and variable_conventions never pass through classify_term, so
+    # their cell is a rule rather than an invented kind. The table is allowed
+    # to be uneven, because the data is.
+    for family in ("symbols", "variable_conventions"):
+        line = next(ln for ln in table.splitlines() if ln.startswith(f"| `{family}` |"))
+        assert "| -- |" in line, f"{family} claims a subcategory it has not got"
+
+    messages = next(ln for ln in table.splitlines() if ln.startswith("| `messages` |"))
+    assert "message families" in messages, "twenty families would not fit in a cell"
 
 
 def test_the_pack_ids_the_card_calls_out_really_do_differ_from_bcp47() -> None:
@@ -487,6 +611,7 @@ class TestTheNormalizationNote:
             _manifest(export_packs.pack_locales()),
             {"MIT": 1},
             _locale_rows(export_packs.pack_locales()),
+            _term_rows(),
         )
         assert "## Normalization" in card
         assert "PEP 3131" in card
@@ -512,6 +637,7 @@ class TestTheNormalizationNote:
             ),
             {"MIT": 1},
             _locale_rows(export_packs.pack_locales()),
+            _term_rows(),
         )
         assert "One rendering in this release is NFKC-unstable" in card
         assert "Examplish (`xx`)" in card
@@ -526,6 +652,7 @@ class TestTheNormalizationNote:
             ),
             {"MIT": 1},
             _locale_rows(export_packs.pack_locales()),
+            _term_rows(),
         )
         assert "## Normalization" in card
         assert "No rendering in this release is NFKC-unstable" in card
@@ -634,51 +761,24 @@ def test_no_published_file_cites_an_internal_ticket(exported: Path) -> None:
 
 
 def test_the_cards_conditional_sections_cite_no_internal_ticket() -> None:
-    """The rule reaches the card branches today's data never renders.
+    """The rule reaches the card branch today's data never renders.
 
     :func:`test_no_published_file_cites_an_internal_ticket` runs the real
-    export, so it only ever sees the card the CURRENT data produces: every
-    locale `experimental`, every pack agreeing with the declared licence. Two
-    sections are dark under that data -- the licence caveat and the
-    promoted-tier paragraph -- so a ticket reference reintroduced into either
-    would ship on the first promotion, or the first licence drift, with
-    nothing having failed. They are rendered here from synthetic manifests.
+    export, so it only ever sees the card the CURRENT data produces, in which
+    every pack agrees with the declared license. The license caveat is dark
+    under that data, so a ticket reference reintroduced into it would ship on
+    the first license drift with nothing having failed. It is rendered here
+    from a synthetic manifest.
     """
     locales = export_packs.pack_locales()
 
     # Rendered only when the packs' own metadata.license contradicts
     # DECLARED_LICENSE, which the shipped packs no longer do.
     caveat = export_packs.render_card(
-        _manifest(locales), {"MIT": 255}, _locale_rows(locales)
+        _manifest(locales), {"MIT": 255}, _locale_rows(locales), _term_rows()
     )
-    assert "Note on the licence field" in caveat, "the caveat branch went dark"
+    assert "Note on the license field" in caveat, "the caveat branch went dark"
     assert not TICKET.search(caveat)
-
-    # Rendered only once something has been promoted off `experimental`,
-    # which nothing yet has.
-    promoted = export_packs.render_card(
-        _manifest(
-            locales,
-            tiers=["experimental", "reviewed", "official"],
-            tier_counts={
-                "experimental": len(locales) - 3,
-                "reviewed": 2,
-                "official": 1,
-            },
-        ),
-        {"Apache-2.0": 255},
-        _locale_rows(locales),
-    )
-    assert "Nothing has been promoted yet" not in promoted, (
-        "the promoted-tier branch went dark"
-    )
-    assert not TICKET.search(promoted)
-
-
-# --- push gates (CORE-2017) -------------------------------------------------
-#
-# This script pushed nothing until 2026-08-24. The gates below are the reason
-# it is allowed to now: each one is a refusal the hand-push had no way to make.
 
 
 def test_push_refuses_without_the_governance_signoff() -> None:
@@ -808,40 +908,29 @@ def test_the_card_cites_the_revision_the_manifest_records(exported: Path) -> Non
     manifest = json.loads((exported / "manifest.json").read_text(encoding="utf-8"))
 
     assert manifest["source"]["commit"][:12] in card
-    assert export_packs.RELEASE_TAG in card
 
-    # The card names the tag a push WILL carry, not whatever git reports on a
-    # working checkout -- the gate makes those the same thing at push time, and
-    # this way a dry-run export does not render "(untagged)" as if it were a
-    # revision anyone could fetch.
+    # A dry-run export must not render "(untagged)" as if it were a revision
+    # anyone could fetch. The tag itself is the push gate's business, not the
+    # card's, so the card names the commit and stops there.
     assert export_packs.UNTAGGED not in card
 
 
-def test_the_card_promises_an_install_only_if_the_packages_publish(
+def test_the_card_never_tells_a_reader_to_install_an_unpublished_package(
     exported: Path,
 ) -> None:
     """An install command for a package that 404s is a lie the card tells.
 
-    Every ``legesher-i18n-python-<locale>`` is unpublished today (CORE-626), so
-    the card names the distributions without telling anyone to install them.
-    This fails the moment the two disagree -- in either direction, so flipping
-    the flag without the card following is caught too.
+    Every ``legesher-i18n-python-<locale>`` is unpublished (CORE-626). The card
+    names the distributions, because the `packs` config points at them by
+    version, and stops short of telling anyone to install one. The paragraph
+    that used to say so out loud was cut; this is the floor that remains.
     """
     card = (exported / "README.md").read_text(encoding="utf-8")
 
-    # Named either way: the `packs` config points at these by version.
     assert "legesher-i18n-python-ar" in card
-
-    if export_packs.PACKAGES_ON_PYPI:
-        assert "pip install" in card
-        assert "not on PyPI yet" not in card
-    else:
-        assert "pip install" not in card, (
-            "the card tells the reader to install a package that is not "
-            "published -- flip PACKAGES_ON_PYPI only when PyPI actually serves "
-            "these distributions"
-        )
-        assert "not on PyPI yet" in card
+    assert "pip install" not in card, (
+        "the card tells the reader to install a package that is not published"
+    )
 
 
 def test_the_banner_ships_and_the_manifest_accounts_for_it(exported: Path) -> None:
@@ -909,22 +998,6 @@ def test_the_locale_count_is_stated_once(exported: Path) -> None:
         f"the locale count ({count}) appears {len(hits)} times; state it once "
         f"in the opening:\n" + "\n".join(hits)
     )
-
-
-def test_both_availability_wordings_are_exercised() -> None:
-    """The unflipped branch is the one that ships unread.
-
-    ``PACKAGES_ON_PYPI`` is False today, so without this the install wording
-    would first render on the day CORE-626 flips it — with nobody reading the
-    card that morning.
-    """
-    unpublished = export_packs.packages_availability(False)
-    assert "not on PyPI yet" in unpublished
-    assert "pip install" not in unpublished
-
-    published = export_packs.packages_availability(True)
-    assert "pip install legesher-i18n-python-<locale>" in published
-    assert "not on PyPI yet" not in published
 
 
 def test_the_release_tag_is_built_from_the_declared_version() -> None:

@@ -19,7 +19,7 @@ The source is the YAML PACK TREE, never ``canon_selections`` (CORE-1913)
 ``canon_selections`` carries selections for targets other than Python -- 62
 Arabic JavaScript rows, where ``programming_language`` is a real populated
 column. Exporting from it would publish unreviewed Arabic JavaScript
-terminology *labelled by target*, asserting a level of review that population
+terminology *labeled by target*, asserting a level of review that population
 has not had (CORE-1913).
 
 The pack tree cannot carry them: ``yaml_exporter.py`` drops every selection
@@ -49,9 +49,9 @@ Inheritance is resolved through the real loader
 Packs for 3.11+ carry only a delta and ``extends:`` their base. A consumer
 asking "what is `for` in Spanish on 3.12?" wants the RESOLVED answer, so each
 (locale, version) is materialised through :class:`LanguagePackLoader` -- the same code
-path the runtime uses -- rather than by re-implementing the merge here. Rows
-record whether a term was defined at that version or inherited, so the delta
-structure survives the flattening instead of being erased by it.
+path the runtime uses -- rather than by re-implementing the merge here. Each row
+records the version whose pack file supplied its value, so the delta structure
+survives the flattening instead of being erased by it.
 
 Nothing written here may cite an internal ticket. These files are read by
 people outside the project, to whom a bare ``CORE-####`` is an unresolvable
@@ -90,7 +90,7 @@ mistaken for push-ready:
   ``i18n-python-ar-v0.0.4``, neither of which names a revision of this dataset,
   and a stale ``language-packs-v*`` tag would let a build publish under a
   version it does not declare
-* agreement between the declared compilation licence and the packs' own
+* agreement between the declared compilation license and the packs' own
   ``metadata.license``, because both claims become public in the same revision
 * Hub auth
 
@@ -161,8 +161,11 @@ UNTAGGED = "(untagged)"
 #:
 #: What each part means HERE, since a dataset is not a library:
 #:
-#: * major -- a breaking schema change. Going from two configs to four was one
-#: * minor -- new locales, new terms, or a new interpreter version
+#: * major -- reserved. Below 1.0 it does not move at all
+#: * minor -- new locales, new terms, a new interpreter version, a renamed
+#:   column or category value, or a rewrite of the card's published prose.
+#:   Below 1.0 this is where breaking changes land, which is the semver
+#:   convention for 0.x and the reason 0.2.0 follows 0.1.0 rather than 1.0.0
 #: * patch -- corrections to renderings this release already carried
 #:
 #: Deliberately NOT aligned to ``legesher-i18n``'s version, though the two look
@@ -171,22 +174,10 @@ UNTAGGED = "(untagged)"
 #: the content had not changed, and hold it still when it had. The linkage is
 #: recorded instead -- see ``legesher_i18n`` in the manifest's toolchain block.
 #:
-#: Starts at 0.1.0 rather than 1.0.0 because every locale is stamped
+#: Started at 0.1.0 rather than 1.0.0 because every locale is stamped
 #: ``experimental`` with no native-speaker sign-off, and the schema is still
 #: moving. A 0.x says usable-not-settled, which is what the card says in prose.
-DATASET_VERSION = "0.1.0"
-
-#: Whether the per-language distributions are installable from PyPI yet.
-#:
-#: They are not, as of this release: ``legesher-i18n`` and every
-#: ``legesher-i18n-python-<locale>`` return 404, because first publish is part
-#: of the open-source release. The card names the packages either way -- the
-#: ``packs`` config points at them by version, and a column pointing at
-#: something unnamed is worse than one pointing at something forthcoming -- but
-#: it must not print an install command that fails for every reader who tries
-#: it. Flip this to True when the packages actually publish, and the card
-#: starts telling people how to install them.
-PACKAGES_ON_PYPI = False
+DATASET_VERSION = "0.3.0"
 
 #: Tag shape a published revision is expected to carry, e.g.
 #: ``language-packs-v0.1.0``. The one version string the Hub revision, the
@@ -239,6 +230,21 @@ PUSH_ALLOW_PATTERNS: tuple[str, ...] = (
 #: pl_version, source_term) would conflate two renderings that may differ.
 #: ``target`` is a key column even while it is constant, because the join into
 #: ``pl_terminology`` spans targets the moment a second one ships.
+#:
+#: There was an ``inherited`` boolean here until 0.3.0. It was not a fact about
+#: the row; it was ``defined_at != pl_version`` restated, true on all 46,512
+#: rows and false on none, and nothing outside this script ever read it. A
+#: column a consumer can compute from the two beside it is a column that can
+#: disagree with them.
+#:
+#: Rows stay RESOLVED -- one per (locale, target, version, category, term) --
+#: and that is a decision, not an oversight. 79.8% of them repeat a rendering
+#: their neighbour already carries, because only 18 of 9,384 keys render
+#: differently across versions at all, so a delta form would be 4.9x smaller.
+#: The multiplication buys the thing this config exists for: ``pl_version ==
+#: '3.12'`` answers "what do I get on 3.12" with no join and no window
+#: function. The parquet is the queryable form and the JSON is the loadable
+#: one (CORE-2020), and 46,512 rows is a ratio, not a size problem.
 VOCABULARY_COLUMNS: tuple[str, ...] = (
     "locale",
     "target",
@@ -247,7 +253,6 @@ VOCABULARY_COLUMNS: tuple[str, ...] = (
     "source_term",
     "translation",
     "defined_at",
-    "inherited",
 )
 
 #: Pure natural-language identity. ``tier`` and ``package_version`` moved to
@@ -324,39 +329,81 @@ CATEGORY_FAMILIES: tuple[str, ...] = (
 #: One line per category, for the card. Keyed by :data:`CATEGORY_FAMILIES` so a
 #: partition added later cannot reach the card undescribed -- the render raises
 #: rather than printing a bare name a reader cannot interpret.
+#:
+#: Each line says what the category holds and nothing else. The subcategories
+#: and the term count beside it on the card are counted off the emitted rows,
+#: so no figure lives here to go stale.
 CATEGORY_BLURBS: dict[str, str] = {
     "keywords": (
-        "The words the grammar reserves. A parser recognises these, so a "
-        "rendering has to be a legal identifier and cannot collide with "
-        "anything else in the vocabulary."
+        "The words the grammar reserves. A rendering has to be a legal "
+        "identifier and cannot collide with anything else in the vocabulary."
     ),
     "builtins": (
-        "Functions and types available without importing anything: `print`, "
-        "`len`, `dict`. Callable names rather than grammar."
+        "Functions, types and constants available without importing anything: "
+        "`print`, `dict`, `Ellipsis`."
     ),
-    "exceptions": (
-        "The error hierarchy. These reach a reader at the worst moment, in a "
-        "traceback, which is where reading your own language matters most."
-    ),
+    "exceptions": ("The error hierarchy, from `BaseException` down."),
+    # Two entries, `self` and `cls`. Neither is reserved by the Python
+    # grammar, which the section name says and this line corrects; the name
+    # itself is CORE-2060.
     "reserved_words": (
-        "Names the language treats as special without reserving them in the "
-        "grammar: soft keywords and contextual forms."
+        "`self` and `cls`. Conventional parameter names that Legesher treats "
+        "deterministically, not words the grammar reserves."
     ),
     "symbols": (
-        "What a symbol is called: `_` is *underscore* in English, and every "
-        "language has its own name for it. Prose names, not identifiers; "
-        "teaching text and error messages say them out loud."
+        "What a symbol is called: `_` is *underscore* in English. Prose names, "
+        "not identifiers."
     ),
     "variable_conventions": (
         "The idiomatic short name for a variable role: the loop counter, the "
-        "throwaway, the accumulator. These are identifiers someone actually "
-        "types."
+        "throwaway, the accumulator."
     ),
     "messages": (
-        "Error-message templates, with named `{placeholders}`. Sentences with "
-        "grammar rather than identifiers: the words a traceback says."
+        "Error-message templates with named `{placeholders}`, and the "
+        "traceback scaffolding that frames them."
     ),
 }
+
+
+def category_table(term_rows: list[dict[str, Any]]) -> str:
+    """The card's category table, counted off the emitted terminology rows.
+
+    Three columns are derived rather than written: the subcategories present,
+    how many source terms the category carries, and nothing at all where a
+    category has no subcategory. Writing any of them by hand is how a card
+    outlives the data it describes.
+
+    ``symbols`` and ``variable_conventions`` carry no subcategory -- they never
+    pass through ``classify_term`` -- so their cell is an em-rule, not an
+    invented kind. The table is deliberately not uniform, because the data is
+    not.
+    """
+    per_category: dict[str, int] = {}
+    subs: dict[str, set[str]] = {}
+    for row in term_rows:
+        family = row["category"]
+        per_category[family] = per_category.get(family, 0) + 1
+        if row.get("subcategory"):
+            subs.setdefault(family, set()).add(row["subcategory"])
+
+    lines = []
+    for name in CATEGORY_FAMILIES:
+        found = sorted(subs.get(name, ()))
+        # Twenty message families listed in full would be a paragraph inside a
+        # cell. The count is the useful fact there; the values ship in the
+        # `subcategory` column for anyone who wants them.
+        if name == "messages":
+            kinds = f"{len(found)} message families"
+        elif found:
+            kinds = ", ".join(f"`{kind}`" for kind in found)
+        else:
+            kinds = "--"
+        lines.append(
+            f"| `{name}` | {kinds} | {per_category.get(name, 0)} "
+            f"| {CATEGORY_BLURBS[name]} |"
+        )
+    return "\n".join(lines)
+
 
 #: The only target this artifact covers. Asserted against every emitted row.
 TARGET = "python"
@@ -376,7 +423,7 @@ MESSAGES_SEED = _I18N_ROOT / "legesher_i18n" / "db" / "seeds" / "cpython_message
 #: The in-pack field said ``MIT`` on all 255 files until then, contradicting the
 #: distribution that shipped them. :func:`check_license_consistency` keeps the
 #: two claims from drifting apart again: both are public, and a card asserting
-#: one licence over rows asserting another is not a discrepancy anyone should
+#: one license over rows asserting another is not a discrepancy anyone should
 #: find after the fact.
 DECLARED_LICENSE = "apache-2.0"
 
@@ -489,9 +536,9 @@ def build_rows(locales: list[str], registry: dict[str, Any]) -> list[dict[str, A
     Each (locale, version) is resolved through :class:`LanguagePackLoader`, so the
     ``translation`` column is the value the runtime would actually use --
     inheritance applied, not the raw delta. ``defined_at`` records the version
-    whose pack file supplies the value SEEN ON THIS ROW, and ``inherited`` is
-    the derived flag, so the delta structure the pack tree encodes is still
-    legible after flattening.
+    whose pack file supplies the value SEEN ON THIS ROW, so the delta structure
+    the pack tree encodes is still legible after flattening: a row inherits
+    exactly when ``defined_at`` differs from ``pl_version``.
 
     A term may be defined more than once in a chain: Sinhala redefines 17 terms
     at 3.13 to their ZWJ conjunct forms (CORE-1318 script tiering), so ``True``
@@ -572,7 +619,6 @@ def build_rows(locales: list[str], registry: dict[str, Any]) -> list[dict[str, A
                             "source_term": term,
                             "translation": str(translation),
                             "defined_at": origin,
-                            "inherited": origin != version,
                             "tier": meta.get("status"),
                             "rtl": bool(meta.get("rtl", False)),
                         }
@@ -750,7 +796,7 @@ def build_pl_terminology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         raise SystemExit(
             f"messages seed: implementation {seed.get('implementation')!r} is "
             f"not this target's -- the v8 seed uses a different version "
-            f"scheme, and mislabelling it as python validity would publish "
+            f"scheme, and mislabeling it as python validity would publish "
             f"windows that mean nothing."
         )
     # The seed-level default is REQUIRED, matching seed_message_templates.py:
@@ -971,35 +1017,6 @@ def copy_card_image(out_dir: Path) -> Path:
     return target
 
 
-def packages_availability(on_pypi: bool) -> str:
-    """Return the card's paragraph on how to get the packs.
-
-    An install command is a promise. Printing one the reader cannot follow is
-    worse than printing none, and every ``legesher-i18n-python-<locale>``
-    currently 404s on PyPI, so the card names the distributions without telling
-    anyone to install them.
-
-    A function rather than a branch inside the card template, so BOTH wordings
-    are exercised by tests. The variant this repo does not currently emit is
-    the one that ships unread the day the flag flips, which is exactly when
-    nobody is looking at it.
-    """
-    if on_pypi:
-        return (
-            "```\n"
-            "pip install legesher-i18n-python-<locale>"
-            "    # e.g. legesher-i18n-python-ar\n"
-            "```"
-        )
-    return (
-        "**These packages are not on PyPI yet**, so this dataset is currently "
-        "the way to get the vocabulary. They are named here because the "
-        "`packs` config already points at them by version, and a column "
-        "pointing at something unnamed is worse than one pointing at something "
-        "forthcoming."
-    )
-
-
 def legesher_i18n_version() -> str:
     """Return the version of the library the packs load through.
 
@@ -1072,7 +1089,7 @@ def build_locale_rows(
 def nfkc_instability(rows: list[dict[str, Any]]) -> dict[str, Any]:
     """Describe the NFKC-unstable renderings in the emitted vocabulary.
 
-    Python normalises identifiers to NFKC at parse time (PEP 3131), so a
+    Python normalizes identifiers to NFKC at parse time (PEP 3131), so a
     rendering whose NFKC form differs from itself is typed one way and resolved
     another. That is not a defect -- both spellings name the same identifier --
     but it is a property a consumer diffing this dataset against source code, or
@@ -1125,7 +1142,7 @@ def assert_python_only(rows: list[dict[str, Any]]) -> None:
         raise SystemExit(
             f"Refusing to export: expected only target {TARGET!r}, found "
             f"{sorted(targets)}. This artifact covers Python packs; "
-            f"non-Python selections must not be published labelled by target "
+            f"non-Python selections must not be published labeled by target "
             f"(CORE-1913)."
         )
 
@@ -1273,9 +1290,9 @@ def check_license_consistency(locales: list[str]) -> dict[str, int]:
 
     The dataset declares :data:`DECLARED_LICENSE` for the compilation, but each
     pack file also carries its own ``metadata.license``. Those are different
-    claims and they are allowed to differ in principle -- a compilation licence
-    is not the licence of every part. What is NOT acceptable is publishing a
-    card that asserts one licence while every row's own metadata asserts
+    claims and they are allowed to differ in principle -- a compilation license
+    is not the license of every part. What is NOT acceptable is publishing a
+    card that asserts one license while every row's own metadata asserts
     another, with nobody having decided which is right.
 
     So this reports rather than assumes: the counts land in the manifest and
@@ -1298,7 +1315,7 @@ def check_license_consistency(locales: list[str]) -> dict[str, int]:
 
 
 def licenses_agree(pack_licenses: dict[str, int]) -> bool:
-    """Do the packs' own licence fields agree with the declared licence?
+    """Do the packs' own license fields agree with the declared license?
 
     Case-folded: SPDX writes ``Apache-2.0`` and the Hub frontmatter wants
     ``apache-2.0``. A case-sensitive comparison would keep warning forever the
@@ -1317,19 +1334,15 @@ def render_normalization(nfkc: dict[str, Any]) -> str:
     packs are regenerated and the figure moves with them.
     """
     preamble = (
-        "Python normalises identifiers to NFKC when it parses them (PEP 3131). "
-        "A rendering whose own NFKC form differs from it is therefore typed one "
-        "way and resolved another: the bytes in your source file and the bytes "
-        "of the name the interpreter binds are not the same, though they are the "
-        "same identifier."
+        "Python normalizes identifiers to NFKC when it parses them (PEP 3131), "
+        "so a rendering whose own NFKC form differs from it is typed one way "
+        "and resolved another."
     )
 
     renderings = nfkc.get("renderings", 0)
     if not renderings:
         return (
-            f"{preamble}\n\nNo rendering in this release is NFKC-unstable, so "
-            f"every `translation` value here is byte-identical to the name it "
-            f"binds."
+            f"{preamble}\n\n> [!NOTE]\n> No rendering in this release is NFKC-unstable."
         )
 
     locales = nfkc.get("locales") or []
@@ -1338,16 +1351,13 @@ def render_normalization(nfkc: dict[str, Any]) -> str:
     which = ", ".join(f"`{item['codepoint']}` {item['name']}" for item in characters)
     count = f"{renderings} renderings" if renderings != 1 else "One rendering"
     verb = "are" if renderings != 1 else "is"
-    only = "the same character" if len(characters) == 1 else "the same few characters"
 
     return (
         f"{preamble}\n\n"
-        f"{count} in this release {verb} NFKC-unstable, all in {who}, and all "
-        f"through {only}: {which}. Nothing else in the vocabulary is affected. "
-        f"The figure is measured over the rows this release actually contains, "
-        f"not asserted, so it moves when the packs do. If you compare a "
-        f"`translation` value against a name taken from a running interpreter, "
-        f"normalise both to NFKC first."
+        f"> [!NOTE]\n"
+        f"> {count} in this release {verb} NFKC-unstable, all in {who}, all "
+        f"through {which}. If you compare a `translation` value against a name "
+        f"taken from a running interpreter, normalize both to NFKC first."
     )
 
 
@@ -1355,11 +1365,16 @@ def render_card(
     manifest: dict[str, Any],
     pack_licenses: dict[str, int],
     locale_rows: list[dict[str, Any]],
+    terminology_rows: list[dict[str, Any]],
 ) -> str:
     """Render the Hugging Face dataset card.
 
     Generated, never hand-edited: the card states counts, and a hand-edited
     card is how a count survives the thing it counted changing.
+
+    ``terminology_rows`` is a parameter for the same reason the manifest's row
+    sets are: the category table counts them, and counting a set the card did
+    not receive is how the table starts describing a previous export.
     """
     counts = manifest["counts"]
     locales = manifest["locales"]
@@ -1369,43 +1384,19 @@ def render_card(
     # how Norwegian silently disappears from the Hub's language facet.
     lang_yaml = "\n".join(f'  - "{code}"' for code in locales)
 
-    availability = packages_availability(PACKAGES_ON_PYPI)
-
-    # Derived from what the artifact actually stamps. Hard-coding "every pack
-    # is experimental" would survive the first promotion and publish a card
-    # that contradicts its own `tier` column, the failure this function is
-    # generated to prevent.
-    #
-    # The locale count is deliberately absent: it is stated once, in the
-    # opening, and repeating it in every section makes a single source of truth
-    # read as four.
-    tiers_present: list[str] = manifest["tiers_present"]
-    tier_counts: dict[str, int] = manifest.get("tier_counts") or {}
-    if tiers_present == ["experimental"]:
-        tier_paragraph = (
-            "Every locale is stamped **`experimental`**. That is not a "
-            "formality; it is the honest state of the work. "
-        )
-        promotion_note = "No pack in this release carries `reviewed` or `official`. "
-    else:
-        spread = ", ".join(
-            f"**{tier_counts.get(tier, 0)}** `{tier}`" for tier in tiers_present
-        )
-        tier_paragraph = (
-            f"Locales by stamp: {spread}. Each stamp is the honest state of that pack. "
-        )
-        promotion_note = ""
-    # Listed out the way the canon and corpus cards list theirs: the frontmatter
-    # rollup is what the Hub indexes, this is what a reader actually reads.
+    # Every per-pack fact is a table cell, never a sentence. Maturity used to
+    # get a prose paragraph asserting the spread; it was both a broad claim and
+    # a second place for a number to go stale, and the Status column already
+    # states each pack's stamp one row at a time.
     language_rows = "\n".join(
         f"| `{r['locale']}` | {r['language_name']} | {r['native_name']} "
         f"| `{r['tier']}` | `{r['package_version']}` |"
         for r in locale_rows
     )
-    category_rows = "\n".join(
-        f"| `{name}` | {CATEGORY_BLURBS[name]} |" for name in CATEGORY_FAMILIES
-    )
-    target_versions = ", ".join(f"`{v}`" for v in VERSIONS)
+    category_rows = category_table(terminology_rows)
+    # A range, not a list. Five cells' worth of versions in one column is a
+    # column nobody can read; the per-version facts are in `pl_versions`.
+    target_versions = f"`{VERSIONS[0]}`-`{VERSIONS[-1]}`"
     normalization_section = render_normalization(manifest.get("nfkc_unstable") or {})
     license_note = ""
     if not licenses_agree(pack_licenses):
@@ -1413,10 +1404,10 @@ def render_card(
             f"`{name}` ({count} files)" for name, count in sorted(pack_licenses.items())
         )
         license_note = (
-            f"\n> **Note on the licence field inside the packs.** The pack "
+            f"\n> **Note on the license field inside the packs.** The pack "
             f"files carry their own `metadata.license`, currently {rendered}, "
             f"while this dataset is `{DECLARED_LICENSE}`. The compilation "
-            f"licence is the one that governs this dataset; the in-pack field "
+            f"license is the one that governs this dataset; the in-pack field "
             f"is being reconciled.\n"
         )
 
@@ -1461,30 +1452,19 @@ configs:
 
 ![Legesher language packs](assets/language-packs-card.png)
 
-A **language pack** is what a programming language's reserved words are called
-in one natural language.
+Legesher's language packs 📦 are the localization layer for code; the fixed
+vocabulary of a programming language in other natural languages.
 
-Every word a programming language reserves (its keywords, its builtins, its
-exception hierarchy), rendered in a natural language, in a form that language's
-own script and grammar accept as an identifier. A developer who does not read
-English memorises `def` and `ValueError` as shapes; a pack lets them read the
-words instead.
+Every reserved word within a programming language's grammar (keywords,
+builtins, exceptions, error messages) is compiled into a language pack that,
+when utilized by Legesher, allows code to be in any language and it compiles
+all the same.
 
-A pack is what the tooling loads: the terminology settled, resolved into the
-structure its target programming language needs, and stamped with how much
-review stands behind it.
-
-Release **`{DATASET_VERSION}`** carries {counts["locales"]} natural languages.
-The version is this dataset's own: **major** marks a breaking change to the
-configs below, **minor** new languages, terms or interpreter versions, and
-**patch** corrections to renderings a release already carried. It does not
-track the version of any package (see [Packages](#packages)).
+| Release | Languages supported | Target | Versions | License | `legesher-i18n` | Commit |
+| --- | --- | --- | --- | --- | --- | --- |
+| `{DATASET_VERSION}` | {counts["locales"]} | `{TARGET}` | {target_versions} | Apache-2.0 | `{manifest["toolchain"]["legesher_i18n"]}` | `{src["commit"][:12]}` |
 
 ## Languages
-
-Every language in this export, with where it sits on the maturity ladder and
-the version of its own package. The primary-subtag rollup in the frontmatter is
-what the Hub indexes for search; this is the full list.
 
 | Pack | Language | Native name | Status | Package |
 | --- | --- | --- | --- | --- |
@@ -1494,69 +1474,27 @@ what the Hub indexes for search; this is the full list.
 
 ### Target
 
-Every pack targets **one programming language**, and the target is what decides
-the pack's shape: which categories exist, what counts as a reserved word, and
-which forms a rendering is allowed to take. One settled term is rendered
-differently for different targets, because each programming language's grammar
-admits different identifiers.
-
-**Release `{DATASET_VERSION}` ships the `python` target**, across
-{counts["pl_versions"]} versions of it ({target_versions}).
-Selections exist internally for other targets and are deliberately excluded:
-exporting them would publish terminology labelled by a target it has not been
-reviewed for.
+Each language pack is created based on the requirements of a programming
+language, its target, which sets the categories it carries, the reserved words
+in each, and the forms a rendering is allowed to take. The specific versions of
+a programming language a particular reserved word belongs to are noted as well,
+so the language pack grows with the progression of a programming language.
 
 ### Categories
 
-Terminology is partitioned, and the partitions belong to the target language:
-
-| Category | What it holds |
-| --- | --- |
+| Category | Subcategories | Terms | What it holds |
+| --- | --- | --- | --- |
 {category_rows}
-
-### Versions
-
-A target moves, and its vocabulary moves with it. Packs for later versions
-carry only what changed and inherit the rest, so a pack is a delta over its
-base rather than a full copy.
-
-The rows in this dataset are given **resolved**: each one states what you would
-actually get on that version, with the delta structure preserved alongside it
-rather than erased by the flattening.
-
-### What is not here
-
-The **style guide** is a separate system and is not exported in this dataset.
-It holds the rules that govern how a rendering is formed for a language, such
-as how multi-word terms are joined. A pack is the result those rules produced, not
-the rules themselves.
 
 ## Maturity
 
-{tier_paragraph}The ladder:
-
 | Stage | What it means |
 | --- | --- |
-| `experimental` | Machine-drafted, then curated by maintainers and passed through the mechanical gates: identifier validity, cross-section collision checks, Unicode normalization, and a regeneration check proving the packs match their source of truth. **No native speaker has signed off.** |
+| `experimental` | Machine-drafted, then curated by maintainers and passed through the mechanical gates: identifier validity, cross-section collision checks, Unicode normalization, and a regeneration check proving the packs match their source of truth. No native speaker has signed off. |
 | `reviewed` | A native speaker of the language has reviewed the pack and signed off on it. |
 | `official` | Certified review plus term screening. |
 
-{promotion_note}**What moves a language from `experimental` to `reviewed` is
-still being defined: how many endorsements, and from how varied a set of
-voices.** An `experimental` pack is a serious starting point that wants native
-review, not settled terminology.
-
-### Who chose these words
-
-Every rendering here was drafted by a language model and then curated by
-Legesher's maintainers, who kept it, replaced it, or rewrote it. That is the
-whole provenance: no pack in this release has been signed off by a native
-speaker of its language, and none of the maintainers is a native speaker of most
-of them. Nothing on the review ladder above `experimental` has been earned yet.
-
 ## The dataset
-
-Four configs. Two are dimensions, one is the mapping, one is the state:
 
 | Config | One row per | Answers |
 | --- | --- | --- |
@@ -1567,79 +1505,73 @@ Four configs. Two are dimensions, one is the mapping, one is the state:
 
 ### `pl_terminology`
 
-The programming language's own terminology: no natural language appears in
-this config:
+The programming language's own terminology. No natural language appears in
+this config.
 
 * `target`, `category`, `source_term`: the key
-* `subcategory`: the finer semantic kind for terms (`keyword` /
-  `builtin_func` / `builtin_type` / `special_constant` / `exception` /
-  `reserved_word`), and the message cluster for `messages`
-* `source_text`: the English surface when the key is not itself the text: a
-  symbol's English name, a message's template. Empty for terms, whose
-  `source_term` is the English
-* `pl_versions`: the list of the target's versions the entry is valid for
+* `subcategory`: the finer kind, as in the table above
+* `source_text`: the English surface, where `source_term` is not itself that
+  surface. `symbols` carry the name, so `paren_open` is *opening parenthesis*.
+  `variable_conventions` carry the identifier, so `accumulator` is `total`.
+  `messages` carry the template. Null on `keywords`, `builtins`, `exceptions`
+  and `reserved_words`, where `source_term` is the English
+* `pl_versions`: the target versions the entry is valid for
 
 Availability lives here, once: `except*` carries `["3.11", ...]`, and a term
-in two categories carries two rows with their own sets: `type` is a builtin
+in two categories carries two rows with their own sets, so `type` is a builtin
 on every version and a keyword only from 3.12.
 
 This config is also the coverage checklist. A `pl_terminology` entry with no
 matching `vocabulary` rows for a locale is a gap in that pack, stated by the
-data rather than discovered downstream: the `symbols`,
-`variable_conventions` and `messages` categories ship their source-side
-inventory ahead of any locale's renderings for exactly that reason.
+data rather than discovered downstream: the `symbols`, `variable_conventions`
+and `messages` categories ship their source-side inventory ahead of any
+locale's renderings for exactly that reason.
 
 ### `vocabulary`
 
-The renderings, one row per (locale, target, version, category, source term):
+The renderings, one row per (locale, target, version, category, source term).
 
 * `locale`: join into `locales`; `target`, `category`, `source_term`: join
   into `pl_terminology`
-* `pl_version`: rows are given **resolved**: each states what you would
-  actually get on that version of the target
+* `pl_version`: rows are given resolved, so each states what you would get on
+  that version of the target
 * `translation`: the rendering Legesher ships
-* `defined_at`: the version whose pack file defines this rendering, and
-  `inherited`: true when the row inherits it. These are facts about the
-  rendering, not the term: Sinhala redefines terms at 3.13 to conjunct forms,
-  so its `defined_at` differs from every other language's on the same term
+* `defined_at`: the version whose pack file defines this rendering. A row
+  inherits when `defined_at` differs from `pl_version`. This is a fact about
+  the rendering, not the term: Sinhala redefines terms at 3.13 to conjunct
+  forms, so its `defined_at` differs from every other language's on the same
+  term
 
 `category` is part of the key on purpose: `type` is rendered once as a
 keyword and once as a builtin, and those renderings may differ.
 
 ### `locales`
 
-Natural-language identity, nothing else: names (`language_name`,
-`native_name`), identity tags (`iso639_2`, `bcp47`), script properties
-(`rtl`, `has_case_distinction`).
+Natural-language identity: names (`language_name`, `native_name`), identity
+tags (`iso639_2`, `bcp47`), script properties (`rtl`, `has_case_distinction`).
 
-**`locale` is a pack id, not a language tag.** Where the two differ, `locale` is
+`locale` is a pack id, not a language tag. Where the two differ, `locale` is
 the shorter form: `no` is BCP 47 `nb`, `zh` is `zh-Hans`, `sr` is `sr-Cyrl`.
 Join to anything keyed by language tag on `bcp47`, or you drop exactly the rows
 that differ.
 
 ### `packs`
 
-The shipping unit, one row per (locale, target) pairing:
+The shipping unit, one row per (locale, target) pairing.
 
 * `package_version`: the semver of this pairing's own distributable. A row
   reading `ar` / `python` / `0.0.4` means these are the words in
-  `legesher-i18n-python-ar==0.0.4`. Each pairing versions on its own clock, so
-  this column is the per-pairing answer; the release as a whole is versioned
-  separately, at the top of this card
+  `legesher-i18n-python-ar==0.0.4`. Each pairing versions on its own clock
 * `tier`: the maturity of exactly this pairing
 * `pl_versions`: the target versions this pack covers
-
-This is the grain progress lives at: one language's standing in one
-programming language is one row here.
 
 ### JSON
 
 `json/<locale>/<target>.json` is the loadable form: the translations alone,
 with the pack's `package_version` and a `pl_version_range` string naming the
-versions it covers.
-Values are the latest version's resolved rendering over the union of terms
-across the range; the parquet configs carry the full per-version structure
-the JSON deliberately leaves out.
+versions it covers. Values are the latest version's resolved rendering over
+the union of terms across the range; the parquet configs carry the full
+per-version structure the JSON leaves out.
 
 ## Normalization
 
@@ -1647,31 +1579,11 @@ the JSON deliberately leaves out.
 
 ## Packages
 
-The vocabulary in this dataset is what Legesher's language packs ship. Each
-language is its own distribution, `legesher-i18n-python-<locale>` (Arabic is
-`legesher-i18n-python-ar`), loaded by `legesher-i18n`, which resolves a pack
-against the interpreter you are running.
-
-{availability}
-
-The `packs` config is the join between the two: its `package_version` column is
-the version of that language's distribution, so a row reading `ar` / `python` /
-`0.0.4` says these are the words in `legesher-i18n-python-ar==0.0.4`. Each
-language's package moves on its own clock, independently of this dataset's
-version and of `legesher-i18n`'s.
-
-## Provenance
-
-Release `{DATASET_VERSION}` was cut from the pack tree at monorepo commit
-`{src["commit"][:12]}`, tagged `{TAG_PREFIX}{DATASET_VERSION}`, by
-`libs/i18n/scripts/export_packs.py`. Not hand-edited, and regenerable:
-`manifest.json` carries a SHA-256 for every file, the toolchain that produced
-them, and that same revision.
-
-The source is the YAML pack tree, not the selection database. This matters: the
-database also holds selections for targets this release does not cover, and
-sourcing from it would publish terminology labelled by a target it has not been
-reviewed for.
+Legesher uses this dataset as the language packs for coding in other natural
+languages. Each language ships as its own distribution,
+`legesher-i18n-python-<locale>`, so Arabic is `legesher-i18n-python-ar`, and
+they are loaded by `legesher-i18n`, which resolves a pack against the
+interpreter you are running.
 {license_note}
 ## Citation
 
@@ -1685,10 +1597,6 @@ reviewed for.
   howpublished = {{\\url{{https://huggingface.co/datasets/legesher/language-packs}}}}
 }}
 ```
-
-## Licence
-
-Apache-2.0.
 """
 
 
@@ -1795,7 +1703,7 @@ def require_reproducible_source(source: dict[str, str]) -> None:
 
 
 def require_license_agreement(pack_licenses: dict[str, int]) -> None:
-    """Refuse to push while the declared and per-pack licences disagree.
+    """Refuse to push while the declared and per-pack licenses disagree.
 
     "Reconcile before publishing" is what the export has always printed here.
     On a push that is a gate, not advice: both claims become public in the same
@@ -1805,7 +1713,7 @@ def require_license_agreement(pack_licenses: dict[str, int]) -> None:
     than after the artifact is built.
 
     Raises:
-        ExportRefused: if the compilation licence and the packs disagree.
+        ExportRefused: if the compilation license and the packs disagree.
     """
     if licenses_agree(pack_licenses):
         return
@@ -2088,9 +1996,10 @@ def main() -> int:
             },
         }
 
-    # Copied BEFORE the manifest is built, not after the card is written. The
-    # card promises "manifest.json carries a SHA-256 for every file", and a
-    # banner placed afterwards is a published file that claim does not cover.
+    # Copied BEFORE the manifest is built. The manifest is the artifact's own
+    # inventory, so a file placed afterwards ships unaccounted for, and the
+    # determinism pass reports it as "missing on re-run" rather than as the
+    # ordering bug it is.
     banner = copy_card_image(out)
 
     manifest = build_manifest(
@@ -2112,7 +2021,8 @@ def main() -> int:
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     (out / "README.md").write_text(
-        render_card(manifest, pack_licenses, locale_rows), encoding="utf-8"
+        render_card(manifest, pack_licenses, locale_rows, terminology_rows),
+        encoding="utf-8",
     )
 
     print(f"locales:          {len(locales)}")
@@ -2173,7 +2083,8 @@ def main() -> int:
         )
         r2 = second / "README.md"
         r2.write_text(
-            render_card(manifest2, pack_licenses, locale_rows2), encoding="utf-8"
+            render_card(manifest2, pack_licenses, locale_rows2, terminology_rows2),
+            encoding="utf-8",
         )
         # Keyed on the relative path, never zipped. Zipping two sorted lists
         # silently truncates to the shorter one, so a run that produced FEWER
