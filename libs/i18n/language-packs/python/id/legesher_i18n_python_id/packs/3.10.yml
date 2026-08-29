@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: peringatanunicode
   byteswarning: peringatanbyte
   resourcewarning: peringatansumberdaya
-reserved_words:
+implicit_params:
   self: diri
   cls: kelasnya
 metadata:

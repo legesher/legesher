@@ -181,7 +181,7 @@ exceptions:
   valueerror: errordevalor
   warning: advertencia
   zerodivisionerror: errordedivisiónporcero
-reserved_words:
+implicit_params:
   self: mismo
   cls: misma_clase
 metadata:

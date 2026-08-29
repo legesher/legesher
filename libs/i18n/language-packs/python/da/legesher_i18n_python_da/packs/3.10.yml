@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: unicodeadvars
   byteswarning: byteadvars
   resourcewarning: ressourceadvars
-reserved_words:
+implicit_params:
   self: sig
   cls: klasseselv
 metadata:

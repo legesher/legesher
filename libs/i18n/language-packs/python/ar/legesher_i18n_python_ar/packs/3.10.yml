@@ -181,7 +181,7 @@ exceptions:
   valueerror: خطأالقيمة
   warning: تحذير
   zerodivisionerror: خطأالقسمةعلىالصفر
-reserved_words:
+implicit_params:
   self: نفس
   cls: الصفنفسه
 metadata:

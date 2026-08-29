@@ -105,7 +105,7 @@ class IdentifierMap:
             source_lang: Source language code (default: "en")
             pack: Optional language pack used to detect collisions when
                 ``add()`` is called. If provided, any translation that
-                matches an existing keyword/builtin/exception/reserved_word
+                matches an existing keyword/builtin/exception/implicit_param
                 value in the pack will raise ``ValueError`` (CORE-710).
         """
         self.source_lang = source_lang
@@ -139,7 +139,7 @@ class IdentifierMap:
 
         Returns:
             None if no collision; otherwise a string identifying the colliding
-            section and source key, e.g. ``"keyword:def"`` or ``"reserved_word:self"``.
+            section and source key, e.g. ``"keyword:def"`` or ``"implicit_param:self"``.
 
         Example:
             >>> imap = IdentifierMap()
@@ -151,7 +151,7 @@ class IdentifierMap:
             ("keyword", pack.keywords),
             ("builtin", pack.builtins),
             ("exception", pack.exceptions),
-            ("reserved_word", pack.reserved_words),
+            ("implicit_param", pack.implicit_params),
         ):
             for source_key, target_value in mapping.items():
                 if target_value == translation:
@@ -181,7 +181,7 @@ class IdentifierMap:
                 back to ``self.pack`` (set at construction).
 
         Raises:
-            ValueError: If ``translation`` collides with a reserved word,
+            ValueError: If ``translation`` collides with an implicit param,
                 keyword, builtin, or exception translation in the pack.
                 The message contains the substring ``"collision"`` and
                 identifies the colliding section.

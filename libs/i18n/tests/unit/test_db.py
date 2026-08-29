@@ -1119,7 +1119,7 @@ class TestTermCategoryValidation:
     """get_or_create_term rejects unknown categories (CORE-710).
 
     SQLite accepts any string in the category column. Without runtime
-    validation, a typo (`reserved_words`, `reservedword`) would silently
+    validation, a typo (`implicit_params`, `reservedword`) would silently
     insert a ghost row that no consumer can find via the documented
     categories. This pins the validation behavior.
     """
@@ -1140,7 +1140,7 @@ class TestTermCategoryValidation:
                 "builtin_type",
                 "exception",
                 "special_constant",
-                "reserved_word",
+                "implicit_param",
                 "helper",
                 "unknown",
             ):
@@ -1149,12 +1149,12 @@ class TestTermCategoryValidation:
         finally:
             path.unlink()
 
-    def test_typo_reserved_words_plural_rejected(self):
-        """The exact typo from review feedback (reserved_words plural)."""
+    def test_typo_implicit_params_plural_rejected(self):
+        """The exact typo from review feedback (implicit_params plural)."""
         db, path = self._make_db()
         try:
             with pytest.raises(ValueError, match="Unknown term category"):
-                db.get_or_create_term("test_term", "python", "reserved_words")
+                db.get_or_create_term("test_term", "python", "implicit_params")
         finally:
             path.unlink()
 
@@ -1184,7 +1184,7 @@ class TestTermCategoryValidation:
                 db.get_or_create_term("test_term4", "python", "wrong")
             msg = str(exc_info.value)
             # Each canonical category name appears in the message
-            for cat in ("keyword", "reserved_word", "exception", "unknown"):
+            for cat in ("keyword", "implicit_param", "exception", "unknown"):
                 assert cat in msg
         finally:
             path.unlink()

@@ -106,7 +106,7 @@ before continuing.
 A round-trip failure names the `layer` that broke it, and the layer decides
 the move:
 
-- **`keywords`, `builtins`, `exceptions`, `reserved_words`** — the
+- **`keywords`, `builtins`, `exceptions`, `implicit_params`** — the
   deterministic layer failed: a pack or engine defect. Report it with the
   verdict line and keep the affected code canonical.
 - **`collision`** — an identifier is spelled like a pack rendering

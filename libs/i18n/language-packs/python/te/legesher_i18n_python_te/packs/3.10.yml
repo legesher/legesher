@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: యూనికోడ్హెచ్చరిక
   byteswarning: బైట్లహెచ్చరిక
   resourcewarning: వనరులహెచ్చరిక
-reserved_words:
+implicit_params:
   self: స్వయం
   cls: తరగతిస్వయం
 metadata:

@@ -73,7 +73,7 @@ _TRANSLATION_SECTIONS = (
     "keywords",
     "builtins",
     "exceptions",
-    "reserved_words",
+    "implicit_params",
     "members",
     "operators",
     "standard_library",
@@ -333,7 +333,7 @@ class LanguagePackSchema(BaseModel):
         keywords: Python keyword translations (e.g., ``{"def": "definir"}``).
         builtins: Built-in function and type translations.
         exceptions: Exception class name translations.
-        reserved_words: Translations for Python conventions like ``self`` and
+        implicit_params: Translations for Python conventions like ``self`` and
             ``cls`` that aren't actual Python keywords but are treated
             deterministically by Legesher (CORE-710).
         operators: Operator translations (MLCP extended field).
@@ -370,7 +370,7 @@ class LanguagePackSchema(BaseModel):
     keywords: dict[str, str] = Field(default_factory=dict)
     builtins: dict[str, str] = Field(default_factory=dict)
     exceptions: dict[str, str] = Field(default_factory=dict)
-    reserved_words: dict[str, str] = Field(default_factory=dict)
+    implicit_params: dict[str, str] = Field(default_factory=dict)
 
     # MLCP v1.0 Extended Optional Fields
     members: dict[str, str] = Field(default_factory=dict)
@@ -510,14 +510,14 @@ class LanguagePackSchema(BaseModel):
         "keywords",
         "builtins",
         "exceptions",
-        "reserved_words",
+        "implicit_params",
         "members",
         "operators",
         "standard_library",
     )
     @classmethod
     def validate_mappings(cls, v: dict[str, str]) -> dict[str, str]:
-        """Validate keyword/builtin/exception/reserved_word/operator/stdlib mappings.
+        """Validate keyword/builtin/exception/implicit_param/operator/stdlib mappings.
 
         Translations must be valid Python identifiers to work with the
         TokenTranslator, which uses Python's tokenize module.
@@ -946,9 +946,9 @@ class SchemaValidator:
            Each section produces its own ``{section}_duplicates`` list.
         2. **Cross-section collisions** (CORE-710) — the SAME translation
            value appears in TWO OR MORE different sections (e.g., a
-           ``reserved_words.self`` value matching a ``keywords.in`` value).
+           ``implicit_params.self`` value matching a ``keywords.in`` value).
            This is exactly the AYA-213 Cycle-4 Urdu failure mode the
-           reserved_words category was introduced to prevent: at runtime
+           implicit_params category was introduced to prevent: at runtime
            the dispatch order resolves keyword first, so the
            reserved-word value silently round-trips to the wrong source
            token. ``cross_section_collisions`` lists these.
@@ -962,7 +962,7 @@ class SchemaValidator:
             - keyword_duplicates: list of conflicts in keywords
             - builtin_duplicates: list of conflicts in builtins
             - exception_duplicates: list of conflicts in exceptions
-            - reserved_word_duplicates: list of conflicts in reserved words
+            - implicit_param_duplicates: list of conflicts in reserved words
             - operator_duplicates: list of conflicts in operators
             - stdlib_duplicates: list of conflicts in standard_library
             - cross_section_collisions: list of values appearing in
@@ -1028,7 +1028,7 @@ class SchemaValidator:
         keyword_duplicates = find_duplicate_values(pack_schema.keywords)
         builtin_duplicates = find_duplicate_values(pack_schema.builtins)
         exception_duplicates = find_duplicate_values(pack_schema.exceptions)
-        reserved_word_duplicates = find_duplicate_values(pack_schema.reserved_words)
+        implicit_param_duplicates = find_duplicate_values(pack_schema.implicit_params)
         member_duplicates = find_duplicate_values(pack_schema.members)
         operator_duplicates = find_duplicate_values(pack_schema.operators)
         stdlib_duplicates = find_duplicate_values(pack_schema.standard_library)
@@ -1043,7 +1043,7 @@ class SchemaValidator:
                 ("keyword", pack_schema.keywords),
                 ("builtin", pack_schema.builtins),
                 ("exception", pack_schema.exceptions),
-                ("reserved_word", pack_schema.reserved_words),
+                ("implicit_param", pack_schema.implicit_params),
                 ("operator", pack_schema.operators),
                 ("standard_library", pack_schema.standard_library),
             ]
@@ -1053,7 +1053,7 @@ class SchemaValidator:
             len(keyword_duplicates)
             + len(builtin_duplicates)
             + len(exception_duplicates)
-            + len(reserved_word_duplicates)
+            + len(implicit_param_duplicates)
             + len(member_duplicates)
             + len(operator_duplicates)
             + len(stdlib_duplicates)
@@ -1065,7 +1065,7 @@ class SchemaValidator:
             "keyword_duplicates": keyword_duplicates,
             "builtin_duplicates": builtin_duplicates,
             "exception_duplicates": exception_duplicates,
-            "reserved_word_duplicates": reserved_word_duplicates,
+            "implicit_param_duplicates": implicit_param_duplicates,
             "member_duplicates": member_duplicates,
             "operator_duplicates": operator_duplicates,
             "stdlib_duplicates": stdlib_duplicates,
@@ -1242,7 +1242,7 @@ class SchemaValidator:
             "keywords_count": len(pack_schema.keywords),
             "builtins_count": len(pack_schema.builtins),
             "exceptions_count": len(pack_schema.exceptions),
-            "reserved_words_count": len(pack_schema.reserved_words),
+            "implicit_params_count": len(pack_schema.implicit_params),
             "warnings": warnings,
             "has_metadata": pack_schema.metadata is not None,
             "completeness_score": (
@@ -1266,14 +1266,14 @@ class SchemaValidator:
             - invalid_keywords: list - Keywords with invalid translations
             - invalid_builtins: list - Builtins with invalid translations
             - invalid_exceptions: list - Exceptions with invalid translations
-            - invalid_reserved_words: list - Reserved words with invalid translations
+            - invalid_implicit_params: list - Reserved words with invalid translations
             - total_issues: int - Total number of invalid translations
             - issues: list - Human-readable issue descriptions
         """
         invalid_keywords = []
         invalid_builtins = []
         invalid_exceptions = []
-        invalid_reserved_words = []
+        invalid_implicit_params = []
         issues = []
 
         def check_mapping(
@@ -1321,15 +1321,15 @@ class SchemaValidator:
         invalid_keywords = check_mapping(pack_schema.keywords, "keyword")
         invalid_builtins = check_mapping(pack_schema.builtins, "builtin")
         invalid_exceptions = check_mapping(pack_schema.exceptions, "exception")
-        invalid_reserved_words = check_mapping(
-            pack_schema.reserved_words, "reserved_word"
+        invalid_implicit_params = check_mapping(
+            pack_schema.implicit_params, "implicit_param"
         )
 
         total_issues = (
             len(invalid_keywords)
             + len(invalid_builtins)
             + len(invalid_exceptions)
-            + len(invalid_reserved_words)
+            + len(invalid_implicit_params)
         )
 
         return {
@@ -1337,7 +1337,7 @@ class SchemaValidator:
             "invalid_keywords": invalid_keywords,
             "invalid_builtins": invalid_builtins,
             "invalid_exceptions": invalid_exceptions,
-            "invalid_reserved_words": invalid_reserved_words,
+            "invalid_implicit_params": invalid_implicit_params,
             "total_issues": total_issues,
             "issues": issues,
         }
@@ -1359,7 +1359,7 @@ class SchemaValidator:
         """Yield ``(section, key, value)`` for every translation in the pack.
 
         Covers all seven identifier-bearing sections (keywords, builtins,
-        exceptions, reserved_words, members, operators, standard_library).
+        exceptions, implicit_params, members, operators, standard_library).
         Prose and metadata are excluded.
         """
         items: list[tuple[str, str, str]] = []
@@ -1751,7 +1751,7 @@ class SchemaValidator:
             "keyword_duplicates": "keywords",
             "builtin_duplicates": "builtins",
             "exception_duplicates": "exceptions",
-            "reserved_word_duplicates": "reserved_words",
+            "implicit_param_duplicates": "implicit_params",
             "member_duplicates": "members",
             "operator_duplicates": "operators",
             "stdlib_duplicates": "standard_library",
@@ -1809,7 +1809,7 @@ class SchemaValidator:
             ("keywords", "invalid_keywords"),
             ("builtins", "invalid_builtins"),
             ("exceptions", "invalid_exceptions"),
-            ("reserved_words", "invalid_reserved_words"),
+            ("implicit_params", "invalid_implicit_params"),
         ):
             for entry in result.get(dict_key, []):
                 findings.append(

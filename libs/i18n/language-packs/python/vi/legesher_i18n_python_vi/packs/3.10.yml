@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: cảnhbáounicode
   byteswarning: cảnhbáobyte
   resourcewarning: cảnhbáotàinguyên
-reserved_words:
+implicit_params:
   self: bảnthân
   cls: lớpbảnthân
 metadata:

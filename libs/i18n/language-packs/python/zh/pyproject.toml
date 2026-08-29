@@ -12,7 +12,7 @@ dependencies = [
     "legesher-i18n>=0.2.0,<1.0.0",
 ]
 name = "legesher-i18n-python-zh"
-version = "0.0.5"
+version = "0.0.6"
 description = "Chinese language pack for Python in Legesher"
 readme = "README.md"
 keywords = ["legesher", "i18n", "chinese", "python", "translation", "multilingual"]

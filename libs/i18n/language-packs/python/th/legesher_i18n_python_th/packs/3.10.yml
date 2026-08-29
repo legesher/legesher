@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: ฟังก์ชั่นสำหรับความเห็นชัดของอัครโลยี
   byteswarning: คำเตือนแบทซ์
   resourcewarning: คำเตือนแบนด์
-reserved_words:
+implicit_params:
   self: ตนเอง
   cls: ชั้นตนเอง
 metadata:

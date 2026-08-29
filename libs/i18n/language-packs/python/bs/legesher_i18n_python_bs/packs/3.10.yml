@@ -181,7 +181,7 @@ exceptions:
   valueerror: greskavrijednosti
   warning: upozorenje
   zerodivisionerror: greskadijeljenjasanulom
-reserved_words:
+implicit_params:
   self: sebe
   cls: klasasama
 metadata:

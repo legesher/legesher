@@ -384,10 +384,10 @@ class TestIdentifierMapIntegration:
 
 
 class TestLLMTranslatorReservedWords:
-    """LLMTranslator threads reserved_word_map through to inner deps (CORE-710).
+    """LLMTranslator threads implicit_param_map through to inner deps (CORE-710).
 
     Pre-fix regression: LLMTranslator constructed `TreeSitterTranslator(...)`
-    and `TokenMapper(...)` without `reserved_word_map=`, so when
+    and `TokenMapper(...)` without `implicit_param_map=`, so when
     `create_translator(..., backend=<llm>)` was used, self/cls remained
     English in translated output (extractor skipped, but dispatch had
     nothing to fire on).
@@ -398,19 +398,19 @@ class TestLLMTranslatorReservedWords:
     actual return value doesn't matter for these tests.
     """
 
-    def test_reserved_word_map_threads_to_inner_translator(self):
-        """LLMTranslator.__init__ forwards reserved_word_map to inner deps."""
+    def test_implicit_param_map_threads_to_inner_translator(self):
+        """LLMTranslator.__init__ forwards implicit_param_map to inner deps."""
         translator = LLMTranslator(
             keyword_map={"def": "definir"},
             builtin_map={"print": "imprimir"},
             backend=MockBackend(),
-            reserved_word_map={"self": "propio", "cls": "clase_ref"},
+            implicit_param_map={"self": "propio", "cls": "clase_ref"},
         )
-        assert translator.keyword_translator.mapper.reserved_word_map == {
+        assert translator.keyword_translator.mapper.implicit_param_map == {
             "self": "propio",
             "cls": "clase_ref",
         }
-        assert translator.mapper.reserved_word_map == {
+        assert translator.mapper.implicit_param_map == {
             "self": "propio",
             "cls": "clase_ref",
         }
@@ -419,13 +419,13 @@ class TestLLMTranslatorReservedWords:
         """Substitution path fires for self/cls — the regression target.
 
         Pre-fix, the inner TreeSitterTranslator had an empty
-        reserved_word_map so nothing substituted.
+        implicit_param_map so nothing substituted.
         """
         translator = LLMTranslator(
             keyword_map={"def": "definir", "return": "retornar"},
             builtin_map={"print": "imprimir"},
             backend=MockBackend(),
-            reserved_word_map={"self": "propio"},
+            implicit_param_map={"self": "propio"},
         )
         out = translator.keyword_translator.translate_code(
             "def foo(self): return self.x", "en", "es"
@@ -433,59 +433,59 @@ class TestLLMTranslatorReservedWords:
         assert "propio" in out
         assert out.count("propio") == 2  # signature + attribute access
 
-    def test_constructor_backward_compat_no_reserved_word_map(self):
-        """Existing callers without reserved_word_map kwarg still work."""
+    def test_constructor_backward_compat_no_implicit_param_map(self):
+        """Existing callers without implicit_param_map kwarg still work."""
         translator = LLMTranslator(
             keyword_map={"def": "definir"},
             builtin_map={"print": "imprimir"},
             backend=MockBackend(),
         )
-        assert translator.mapper.reserved_word_map == {}
+        assert translator.mapper.implicit_param_map == {}
 
-    def test_reverse_reverses_reserved_word_map(self):
+    def test_reverse_reverses_implicit_param_map(self):
         """LLMTranslator.reverse() restores self/cls on round-trip."""
         en_to_es = LLMTranslator(
             keyword_map={"def": "definir"},
             builtin_map={"print": "imprimir"},
             backend=MockBackend(),
-            reserved_word_map={"self": "propio", "cls": "clase_ref"},
+            implicit_param_map={"self": "propio", "cls": "clase_ref"},
         )
         es_to_en = en_to_es.reverse()
-        assert es_to_en.mapper.reserved_word_map == {
+        assert es_to_en.mapper.implicit_param_map == {
             "propio": "self",
             "clase_ref": "cls",
         }
 
-    def test_from_language_pack_picks_up_reserved_words(self):
-        """from_language_pack reads pack.reserved_words and threads through."""
+    def test_from_language_pack_picks_up_implicit_params(self):
+        """from_language_pack reads pack.implicit_params and threads through."""
         translator = LLMTranslator.from_language_pack(
             "es", "3.13", backend=MockBackend()
         )
-        assert translator.mapper.reserved_word_map.get("self") is not None
-        assert translator.mapper.reserved_word_map.get("cls") is not None
+        assert translator.mapper.implicit_param_map.get("self") is not None
+        assert translator.mapper.implicit_param_map.get("cls") is not None
         # Same map flows through to inner keyword_translator
         assert (
-            translator.keyword_translator.mapper.reserved_word_map
-            == translator.mapper.reserved_word_map
+            translator.keyword_translator.mapper.implicit_param_map
+            == translator.mapper.implicit_param_map
         )
 
-    def test_factory_create_translator_with_llm_backend_threads_reserved_word_map(
+    def test_factory_create_translator_with_llm_backend_threads_implicit_param_map(
         self,
     ):
-        """create_translator(..., backend=<llm>, reserved_word_map=...) wires correctly.
+        """create_translator(..., backend=<llm>, implicit_param_map=...) wires correctly.
 
-        Pre-fix the factory dropped reserved_word_map when backend was set;
+        Pre-fix the factory dropped implicit_param_map when backend was set;
         this pins that it now propagates.
         """
         translator = create_translator(
             "python",
             keyword_map={"def": "definir"},
             builtin_map={"print": "imprimir"},
-            reserved_word_map={"self": "propio", "cls": "clase_ref"},
+            implicit_param_map={"self": "propio", "cls": "clase_ref"},
             backend=MockBackend(),
         )
         assert isinstance(translator, LLMTranslator)
-        assert translator.mapper.reserved_word_map == {
+        assert translator.mapper.implicit_param_map == {
             "self": "propio",
             "cls": "clase_ref",
         }

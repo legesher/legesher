@@ -5,7 +5,7 @@ The exporter's safety contract:
 - exports ONLY from ``selected_translations`` (the publish-gated
   canonical layer), never from the dirty-tolerant candidate pool
 - rewrites pack sections authoritatively (add / remove / relocate)
-- preserves ``reserved_words``, header comments, metadata, and key order
+- preserves ``implicit_params``, header comments, metadata, and key order
 - refuses to write anything for a language with incomplete selections
   (the pre-CORE-1400 partial-rewrite bug class)
 - refuses to rewrite an existing pack file it cannot parse back, because
@@ -38,7 +38,7 @@ from legesher_i18n.term_definitions import (
     KEYWORDS_3_11,
     KEYWORDS_3_12,
     KEYWORDS_BASE,
-    RESERVED_WORDS,
+    IMPLICIT_PARAMS,
     SPECIAL_CONSTANTS,
     SPECIAL_VALUES,
 )
@@ -76,7 +76,7 @@ _CATEGORY_TERMS = [
     (BUILTIN_TYPES, "builtin_type"),
     (SPECIAL_CONSTANTS, "special_constant"),
     (EXCEPTIONS + EXCEPTIONS_3_11 + EXCEPTIONS_3_13, "exception"),
-    (RESERVED_WORDS, "reserved_word"),
+    (IMPLICIT_PARAMS, "implicit_param"),
 ]
 
 
@@ -252,16 +252,16 @@ class TestAuthoritativeRewrite:
         data = _load(_pack_file(temp_output_dir, "es", "3.10"))
         assert data["keywords"]["while"] == "mientras"
 
-    def test_reserved_words_survive_rewrite(self, exporter, temp_db, temp_output_dir):
-        """The old exporter silently dropped reserved_words on rewrite."""
+    def test_implicit_params_survive_rewrite(self, exporter, temp_db, temp_output_dir):
+        """The old exporter silently dropped implicit_params on rewrite."""
         _populate_full_language(temp_db, "es")
         exporter.export_language("es", overwrite=True)
         pack = _pack_file(temp_output_dir, "es", "3.10")
-        assert _load(pack)["reserved_words"] == {"self": "t_self", "cls": "t_cls"}
+        assert _load(pack)["implicit_params"] == {"self": "t_self", "cls": "t_cls"}
 
         # Rewrite again — still present.
         exporter.export_language("es", overwrite=True)
-        assert _load(pack)["reserved_words"] == {"self": "t_self", "cls": "t_cls"}
+        assert _load(pack)["implicit_params"] == {"self": "t_self", "cls": "t_cls"}
 
     def test_version_slot_placement(self, exporter, temp_db, temp_output_dir):
         """Version-specific terms land in their version file only."""
@@ -699,7 +699,7 @@ class TestInterpreterFloorTiering:
         _reselect(db, ids, lang, "builtin_func", "print", f"t_pri{ZWJ}nt")
         _reselect(db, ids, lang, "exception", "valueerror", f"t_valu{ZWJ}eerror")
         _reselect(db, ids, lang, "keyword", "except*", f"t_exce{ZWJ}pt*")
-        _reselect(db, ids, lang, "reserved_word", "self", f"t_se{ZWJ}lf")
+        _reselect(db, ids, lang, "implicit_param", "self", f"t_se{ZWJ}lf")
         return ids
 
     def test_310_carries_the_stripped_form(self, exporter, temp_db, temp_output_dir):
@@ -710,7 +710,7 @@ class TestInterpreterFloorTiering:
         assert d310["keywords"]["while"] == "t_while"
         assert d310["builtins"]["print"] == "t_print"
         assert d310["exceptions"]["valueerror"] == "t_valueerror"
-        assert d310["reserved_words"]["self"] == "t_self"
+        assert d310["implicit_params"]["self"] == "t_self"
         assert ZWJ not in _pack_file(temp_output_dir, "si", "3.10").read_text(
             encoding="utf-8"
         )
@@ -727,7 +727,7 @@ class TestInterpreterFloorTiering:
         assert d313["keywords"]["while"] == f"t_whi{ZWJ}le"
         assert d313["builtins"]["print"] == f"t_pri{ZWJ}nt"
         assert d313["exceptions"]["valueerror"] == f"t_valu{ZWJ}eerror"
-        assert d313["reserved_words"]["self"] == f"t_se{ZWJ}lf"
+        assert d313["implicit_params"]["self"] == f"t_se{ZWJ}lf"
         # The 3.13-native term still ships alongside the overlay.
         assert d313["exceptions"]["pythonfinalizationerror"] == (
             "t_pythonfinalizationerror"
@@ -736,7 +736,7 @@ class TestInterpreterFloorTiering:
         # of the base pack.
         assert set(d313["keywords"]) == {"while", "except*"}
         assert set(d313["builtins"]) == {"print"}
-        assert set(d313["reserved_words"]) == {"self"}
+        assert set(d313["implicit_params"]) == {"self"}
 
     def test_311_keyword_is_tiered_in_its_own_file(
         self, exporter, temp_db, temp_output_dir
@@ -750,13 +750,13 @@ class TestInterpreterFloorTiering:
         assert d311["keywords"]["except*"] == "t_except*"
         assert d313["keywords"]["except*"] == f"t_exce{ZWJ}pt*"
 
-    def test_reserved_words_section_appears_only_when_tiered(
+    def test_implicit_params_section_appears_only_when_tiered(
         self, exporter, temp_db, temp_output_dir
     ):
-        """Without a ZWJ reserved word, 3.13 grows no reserved_words stub."""
+        """Without a ZWJ reserved word, 3.13 grows no implicit_params stub."""
         _populate_full_language(temp_db, "es")
         exporter.export_language("es", overwrite=True)
-        assert "reserved_words" not in _load(_pack_file(temp_output_dir, "es", "3.13"))
+        assert "implicit_params" not in _load(_pack_file(temp_output_dir, "es", "3.13"))
 
     def test_tiering_is_idempotent(self, exporter, temp_db, temp_output_dir):
         """Re-export must not re-strip, re-tier, or churn last_updated."""
@@ -791,7 +791,7 @@ class TestInterpreterFloorTiering:
             "keywords",
             "builtins",
             "exceptions",
-            "reserved_words",
+            "implicit_params",
         }
         assert set(sections["3.11"]) == {"keywords", "exceptions"}
         assert set(sections["3.12"]) == {"keywords", "exceptions"}

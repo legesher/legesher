@@ -38,7 +38,7 @@ def _schema(**sections: object) -> LanguagePackSchema:
         keywords=sections.get("keywords", {}),
         builtins=sections.get("builtins", {}),
         exceptions=sections.get("exceptions", {}),
-        reserved_words=sections.get("reserved_words", {}),
+        implicit_params=sections.get("implicit_params", {}),
         operators={},
         standard_library={},
         cultural_notes=[],
@@ -56,7 +56,7 @@ class TestCrossSectionToggle:
     def test_cross_section_runs_by_default(self) -> None:
         schema = _schema(
             builtins={"len": "shared"},
-            reserved_words={"self": "shared"},
+            implicit_params={"self": "shared"},
         )
         findings = SchemaValidator._strict_duplicate_findings(schema)
         assert any(
@@ -67,7 +67,7 @@ class TestCrossSectionToggle:
     def test_cross_section_suppressed_when_off(self) -> None:
         schema = _schema(
             builtins={"len": "shared"},
-            reserved_words={"self": "shared"},
+            implicit_params={"self": "shared"},
         )
         findings = SchemaValidator._strict_duplicate_findings(
             schema, include_cross_section=False
@@ -114,7 +114,7 @@ class TestAuditPackFileTargetGating:
             keywords={},
             builtins={"len": "shared"},
             exceptions={},
-            reserved_words={"self": "shared", "cls": f"y{_XID_313_ONLY}"},
+            implicit_params={"self": "shared", "cls": f"y{_XID_313_ONLY}"},
             metadata=None,
         )
 

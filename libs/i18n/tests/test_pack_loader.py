@@ -440,16 +440,16 @@ class TestPackLoaderEdgeCases:
 
 
 class TestReservedWordsLanguagePack:
-    """Test LanguagePack reserved_words support (CORE-710)."""
+    """Test LanguagePack implicit_params support (CORE-710)."""
 
-    def test_default_reserved_words_is_empty(self):
-        """Backward-compat: constructor without reserved_words defaults to empty."""
+    def test_default_implicit_params_is_empty(self):
+        """Backward-compat: constructor without implicit_params defaults to empty."""
         from legesher_i18n.pack_loader import LanguagePack
 
         pack = LanguagePack(language="es", target="python", version="3.10")
-        assert pack.reserved_words == {}
+        assert pack.implicit_params == {}
 
-    def test_get_reserved_word_translation_returns_value(self):
+    def test_get_implicit_param_translation_returns_value(self):
         """Canonical accessor returns the configured translation."""
         from legesher_i18n.pack_loader import LanguagePack
 
@@ -457,33 +457,33 @@ class TestReservedWordsLanguagePack:
             language="es",
             target="python",
             version="3.10",
-            reserved_words={"self": "propio", "cls": "clase"},
+            implicit_params={"self": "propio", "cls": "clase"},
         )
-        assert pack.get_reserved_word_translation("self") == "propio"
-        assert pack.get_reserved_word_translation("cls") == "clase"
+        assert pack.get_implicit_param_translation("self") == "propio"
+        assert pack.get_implicit_param_translation("cls") == "clase"
 
-    def test_get_reserved_word_translation_returns_none_for_missing(self):
+    def test_get_implicit_param_translation_returns_none_for_missing(self):
         """Missing reserved word returns None, not raises."""
         from legesher_i18n.pack_loader import LanguagePack
 
         pack = LanguagePack(language="es", target="python", version="3.10")
-        assert pack.get_reserved_word_translation("self") is None
+        assert pack.get_implicit_param_translation("self") is None
 
-    def test_has_reserved_word(self):
-        """has_reserved_word predicate matches presence in reserved_words dict."""
+    def test_has_implicit_param(self):
+        """has_implicit_param predicate matches presence in implicit_params dict."""
         from legesher_i18n.pack_loader import LanguagePack
 
         pack = LanguagePack(
             language="es",
             target="python",
             version="3.10",
-            reserved_words={"self": "propio"},
+            implicit_params={"self": "propio"},
         )
-        assert pack.has_reserved_word("self") is True
-        assert pack.has_reserved_word("cls") is False
+        assert pack.has_implicit_param("self") is True
+        assert pack.has_implicit_param("cls") is False
 
-    def test_get_keyword_translation_falls_back_to_reserved_words(self):
-        """get_keyword_translation falls back to reserved_words when keyword missing.
+    def test_get_keyword_translation_falls_back_to_implicit_params(self):
+        """get_keyword_translation falls back to implicit_params when keyword missing.
 
         Madison's CORE-710 test API uses pack.get_keyword_translation("self")
         as the unified accessor; this assertion pins that contract.
@@ -495,17 +495,17 @@ class TestReservedWordsLanguagePack:
             target="python",
             version="3.10",
             keywords={"def": "definir"},
-            reserved_words={"self": "propio", "cls": "clase"},
+            implicit_params={"self": "propio", "cls": "clase"},
         )
         # Primary keyword still works
         assert pack.get_keyword_translation("def") == "definir"
-        # Falls back to reserved_words for self/cls
+        # Falls back to implicit_params for self/cls
         assert pack.get_keyword_translation("self") == "propio"
         assert pack.get_keyword_translation("cls") == "clase"
         # Neither section: returns None
         assert pack.get_keyword_translation("xyz") is None
 
-    def test_keyword_section_wins_over_reserved_words_on_conflict(self):
+    def test_keyword_section_wins_over_implicit_params_on_conflict(self):
         """Lookup-order regression: keyword translation never shadowed.
 
         If a synthetic conflict is constructed (a key in BOTH sections),
@@ -519,26 +519,26 @@ class TestReservedWordsLanguagePack:
             target="python",
             version="3.10",
             keywords={"self": "KEYWORD_VALUE"},
-            reserved_words={"self": "RESERVED_VALUE"},
+            implicit_params={"self": "RESERVED_VALUE"},
         )
         assert pack.get_keyword_translation("self") == "KEYWORD_VALUE"
 
-    def test_repr_includes_reserved_words_count(self):
-        """__repr__ surfaces the reserved_words count for debug visibility."""
+    def test_repr_includes_implicit_params_count(self):
+        """__repr__ surfaces the implicit_params count for debug visibility."""
         from legesher_i18n.pack_loader import LanguagePack
 
         pack = LanguagePack(
             language="es",
             target="python",
             version="3.10",
-            reserved_words={"self": "propio", "cls": "clase"},
+            implicit_params={"self": "propio", "cls": "clase"},
         )
-        assert "reserved_words=2" in repr(pack)
+        assert "implicit_params=2" in repr(pack)
 
-    def test_existing_pack_loads_with_reserved_words(self):
-        """End-to-end: real es pack ships reserved_words at 3.13.
+    def test_existing_pack_loads_with_implicit_params(self):
+        """End-to-end: real es pack ships implicit_params at 3.13.
 
-        Post-CORE-710: every pack has a ``reserved_words:`` section.
+        Post-CORE-710: every pack has a ``implicit_params:`` section.
         This test confirms the section is loaded correctly through the
         inheritance chain (we wrote to 3.10.yml; 3.13 inherits from 3.12
         from 3.11 from 3.10).
@@ -546,64 +546,64 @@ class TestReservedWordsLanguagePack:
         loader = LanguagePackLoader()
         pack = loader.load("es", "python", "3.13")
         # Reserved words populated via inheritance from 3.10
-        assert pack.reserved_words.get("self") is not None
-        assert pack.reserved_words.get("cls") is not None
+        assert pack.implicit_params.get("self") is not None
+        assert pack.implicit_params.get("cls") is not None
         # Existing keyword lookup still works
         assert pack.get_keyword_translation("def") is not None
 
 
 class TestReservedWordsInheritance:
-    """Test that reserved_words are inherited via _merge_packs (CORE-710).
+    """Test that implicit_params are inherited via _merge_packs (CORE-710).
 
     Pack 3.10 is the canonical base; 3.11/3.12/3.13 extend via the
-    ``extends:`` field. After step 9 lands reserved_words only in 3.10.yml,
+    ``extends:`` field. After step 9 lands implicit_params only in 3.10.yml,
     higher versions should inherit through the merge logic. These tests
     pin that behavior with synthetic dicts (mirrors pack_loader's
     `_merge_packs` semantics).
     """
 
-    def test_merge_inherits_reserved_words_from_base(self):
-        """Child pack with no reserved_words inherits base pack's section."""
+    def test_merge_inherits_implicit_params_from_base(self):
+        """Child pack with no implicit_params inherits base pack's section."""
         loader = LanguagePackLoader()
         base = {
             "language": "es",
             "target": "python",
             "version": "3.10",
             "keywords": {"def": "definir"},
-            "reserved_words": {"self": "propio", "cls": "clase"},
+            "implicit_params": {"self": "propio", "cls": "clase"},
         }
         override = {
             "language": "es",
             "target": "python",
             "version": "3.11",
-            # No reserved_words — should inherit
+            # No implicit_params — should inherit
             "keywords": {"match": "coincidir"},
         }
         merged = loader._merge_packs(base, override)
-        assert merged["reserved_words"] == {"self": "propio", "cls": "clase"}
+        assert merged["implicit_params"] == {"self": "propio", "cls": "clase"}
 
-    def test_merge_override_reserved_words_take_precedence(self):
-        """Child pack's reserved_words override base for matching keys."""
+    def test_merge_override_implicit_params_take_precedence(self):
+        """Child pack's implicit_params override base for matching keys."""
         loader = LanguagePackLoader()
         base = {
             "language": "es",
             "target": "python",
             "version": "3.10",
-            "reserved_words": {"self": "propio", "cls": "clase"},
+            "implicit_params": {"self": "propio", "cls": "clase"},
         }
         override = {
             "language": "es",
             "target": "python",
             "version": "3.11",
-            "reserved_words": {"self": "instancia"},  # override only `self`
+            "implicit_params": {"self": "instancia"},  # override only `self`
         }
         merged = loader._merge_packs(base, override)
         # `self` overridden, `cls` inherited from base
-        assert merged["reserved_words"]["self"] == "instancia"
-        assert merged["reserved_words"]["cls"] == "clase"
+        assert merged["implicit_params"]["self"] == "instancia"
+        assert merged["implicit_params"]["cls"] == "clase"
 
-    def test_merge_no_reserved_words_in_either_pack(self):
-        """When neither base nor override has reserved_words, key absent."""
+    def test_merge_no_implicit_params_in_either_pack(self):
+        """When neither base nor override has implicit_params, key absent."""
         loader = LanguagePackLoader()
         base = {
             "language": "es",
@@ -619,10 +619,10 @@ class TestReservedWordsInheritance:
         }
         merged = loader._merge_packs(base, override)
         # Reserved_words key not added when not present in either
-        assert "reserved_words" not in merged
+        assert "implicit_params" not in merged
 
-    def test_merge_only_override_has_reserved_words(self):
-        """If only the override has reserved_words, they're preserved."""
+    def test_merge_only_override_has_implicit_params(self):
+        """If only the override has implicit_params, they're preserved."""
         loader = LanguagePackLoader()
         base = {
             "language": "es",
@@ -634,18 +634,18 @@ class TestReservedWordsInheritance:
             "language": "es",
             "target": "python",
             "version": "3.11",
-            "reserved_words": {"self": "propio"},
+            "implicit_params": {"self": "propio"},
         }
         merged = loader._merge_packs(base, override)
-        assert merged["reserved_words"] == {"self": "propio"}
+        assert merged["implicit_params"] == {"self": "propio"}
 
-    def test_loaded_pack_with_synthetic_reserved_words_section(self, tmp_path):
-        """Integration: pack file with reserved_words: section loads correctly.
+    def test_loaded_pack_with_synthetic_implicit_params_section(self, tmp_path):
+        """Integration: pack file with implicit_params: section loads correctly.
 
-        Constructs a synthetic on-disk pack with reserved_words populated,
+        Constructs a synthetic on-disk pack with implicit_params populated,
         loads it via LanguagePackLoader, and confirms the section flows
-        through to LanguagePack.reserved_words. This pins the behavior
-        that step 9 will rely on once we write reserved_words to all 51
+        through to LanguagePack.implicit_params. This pins the behavior
+        that step 9 will rely on once we write implicit_params to all 51
         real pack YAMLs.
         """
         import yaml
@@ -656,7 +656,7 @@ class TestReservedWordsInheritance:
             "version": "3.10",
             "keywords": {"def": "definir"},
             "builtins": {"print": "imprimir"},
-            "reserved_words": {"self": "propio", "cls": "clase"},
+            "implicit_params": {"self": "propio", "cls": "clase"},
         }
         pack_path = tmp_path / "3.10.yml"
         pack_path.write_text(yaml.safe_dump(pack_data), encoding="utf-8")
@@ -665,11 +665,11 @@ class TestReservedWordsInheritance:
         from legesher_i18n.schema_validator import SchemaValidator
 
         schema = SchemaValidator.validate_pack(pack_data, pack_path)
-        assert schema.reserved_words == {"self": "propio", "cls": "clase"}
+        assert schema.implicit_params == {"self": "propio", "cls": "clase"}
         # Schema-level validation also passes the identifier-validity check
         result = SchemaValidator.check_identifier_validity(schema)
         assert result["passed"] is True
-        assert result["invalid_reserved_words"] == []
+        assert result["invalid_implicit_params"] == []
 
 
 class TestMinInterpreterEnforcement:
@@ -738,7 +738,7 @@ class TestSinhalaInterpreterTiers:
     @staticmethod
     def _values(pack):
         merged = {}
-        for section in ("keywords", "builtins", "exceptions", "reserved_words"):
+        for section in ("keywords", "builtins", "exceptions", "implicit_params"):
             merged.update(getattr(pack, section, {}) or {})
         return merged
 
@@ -812,7 +812,7 @@ class TestJapaneseInterpreterTiers:
         pack = loader.load("ja", "python", "3.10")
         offenders = {
             f"{section}.{key}": value
-            for section in ("keywords", "builtins", "exceptions", "reserved_words")
+            for section in ("keywords", "builtins", "exceptions", "implicit_params")
             for key, value in (getattr(pack, section, {}) or {}).items()
             if any(ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313 for ch in value)
         }
@@ -854,7 +854,7 @@ def test_no_xid_313_only_char_below_the_declared_floor():
                 below_313 = True
             if not below_313:
                 continue
-            for section in ("keywords", "builtins", "exceptions", "reserved_words"):
+            for section in ("keywords", "builtins", "exceptions", "implicit_params"):
                 for key, value in (getattr(pack, section, {}) or {}).items():
                     if any(ch in xid_313_only for ch in value):
                         offenders.append((code, version, key, value))

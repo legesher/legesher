@@ -7,6 +7,6 @@ terms_screened: 184
 flags:
 - term: സ്വവർഗ്ഗം
   english: cls
-  partition: reserved_words
+  partition: implicit_params
   category: embarrassing_collision
   note: Literally "own class/kind", but in contemporary Malayalam the compound സ്വവർഗ്ഗ- is dominantly heard in സ്വവർഗ്ഗാനുരാഗം/സ്വവർഗ്ഗവിവാഹം (same-sex attraction/marriage), so a classroom would read the bare word as "same-sex" and snicker.

@@ -22,7 +22,7 @@ CORE-1400 contract — pack regeneration is safe because:
   Incomplete languages are skipped (or raise, in strict mode) — partial
   packs are never emitted, so a half-translated language can never
   clobber a shipped pack.
-- ``reserved_words`` (``self``/``cls``) is a first-class section and
+- ``implicit_params`` (``self``/``cls``) is a first-class section and
   survives rewrites; the dual-slot ``type`` term (3.10 builtin vs 3.12
   soft keyword) exports each slot from its own term row.
 - The vocabulary partition (``symbols`` / ``variable_conventions``,
@@ -91,7 +91,7 @@ from legesher_i18n.term_definitions import (
     KEYWORDS_3_11,
     KEYWORDS_3_12,
     KEYWORDS_BASE,
-    RESERVED_WORDS,
+    IMPLICIT_PARAMS,
     SPECIAL_CONSTANTS,
     SPECIAL_VALUES,
 )
@@ -187,7 +187,7 @@ _PACK_SECTIONS = (
     "keywords",
     "builtins",
     "exceptions",
-    "reserved_words",
+    "implicit_params",
     "symbols",
     "variable_conventions",
 )
@@ -195,7 +195,7 @@ _PACK_SECTIONS = (
 # The subset of _PACK_SECTIONS that comes from the term layer. Everything
 # the interpreter-floor tiering and the completeness gate touch is scoped
 # to these, so adding a vocabulary section cannot widen either by accident.
-_TERM_SECTIONS = ("keywords", "builtins", "exceptions", "reserved_words")
+_TERM_SECTIONS = ("keywords", "builtins", "exceptions", "implicit_params")
 
 
 class IncompleteSelectionError(ValueError):
@@ -372,8 +372,8 @@ class YAMLExporter:
                 categories = _BUILTIN_CATEGORIES
             elif section == "exceptions":
                 categories = ("exception",)
-            else:  # reserved_words
-                categories = ("reserved_word",)
+            else:  # implicit_params
+                categories = ("implicit_param",)
 
             for category in categories:
                 if (category, name) in slots:
@@ -395,7 +395,7 @@ class YAMLExporter:
         section payload each pack file gets. The section *keys* present
         per version are load-bearing: ``_write_yaml_pack`` emits an empty
         ``keywords``/``exceptions`` stub for a new file but never
-        introduces ``builtins``/``reserved_words`` stubs, so 3.11/3.12/3.14
+        introduces ``builtins``/``implicit_params`` stubs, so 3.11/3.12/3.14
         deliberately carry only the two sections they can contain.
 
         Every slot is resolved BEFORE anything is written: a partial pack
@@ -425,7 +425,7 @@ class YAMLExporter:
             slots, "exceptions", EXCEPTIONS, missing
         )
         reserved_310 = self._resolve_section_slots(
-            slots, "reserved_words", RESERVED_WORDS, missing
+            slots, "implicit_params", IMPLICIT_PARAMS, missing
         )
         kw_311 = self._resolve_section_slots(slots, "keywords", KEYWORDS_3_11, missing)
         exceptions_311 = self._resolve_section_slots(
@@ -474,7 +474,7 @@ class YAMLExporter:
                 "keywords": tier("keywords", kw_310),
                 "builtins": tier("builtins", builtins_310),
                 "exceptions": tier("exceptions", exceptions_310),
-                "reserved_words": tier("reserved_words", reserved_310),
+                "implicit_params": tier("implicit_params", reserved_310),
             },
             "3.11": {
                 "keywords": tier("keywords", kw_311),
@@ -485,7 +485,7 @@ class YAMLExporter:
                 "keywords": overlay_313["keywords"],
                 "builtins": overlay_313["builtins"],
                 "exceptions": {**exceptions_313, **overlay_313["exceptions"]},
-                "reserved_words": overlay_313["reserved_words"],
+                "implicit_params": overlay_313["implicit_params"],
             },
             "3.14": {"keywords": {}, "exceptions": {}},
         }
@@ -656,7 +656,7 @@ class YAMLExporter:
             legesher_i18n_python_{lang}/
               packs/
                 3.10.yml  (base pack: keywords, builtins, exceptions,
-                           reserved_words)
+                           implicit_params)
                 3.11.yml  (extends 3.10: except*, exception groups)
                 3.12.yml  (extends 3.11: type soft keyword)
                 3.13.yml  (extends 3.12: PythonFinalizationError)

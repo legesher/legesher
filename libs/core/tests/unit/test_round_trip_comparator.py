@@ -150,7 +150,7 @@ class TestLayerVocabulary:
             Layer.KEYWORDS,
             Layer.BUILTINS,
             Layer.EXCEPTIONS,
-            Layer.RESERVED_WORDS,
+            Layer.IMPLICIT_PARAMS,
         }
         assert {layer.value for layer in pack_layers} == set(YAML_SECTION_CATEGORIES)
 

@@ -56,7 +56,7 @@
   rationale: >-
     "kecurangan" reads as "cheating/fraud", evoking wrongdoing rather
     than an exceptional condition. Routed to native review.
-"ml:reserved_words:cls:സ്വവർഗ്ഗം":
+"ml:implicit_params:cls:സ്വവർഗ്ഗം":
   disposition: accepted
   rationale: >-
     "സ്വവർഗ്ഗം" is literally "own class" but the compound dominantly

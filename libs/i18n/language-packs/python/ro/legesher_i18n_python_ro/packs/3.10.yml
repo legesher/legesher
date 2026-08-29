@@ -181,7 +181,7 @@ exceptions:
   valueerror: eroare_valoare
   warning: avertisment
   zerodivisionerror: eroare_împărțire_zero
-reserved_words:
+implicit_params:
   self: sine
   cls: clasă_însăși
 metadata:

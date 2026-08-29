@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class TokenMapper:
-    """Abstract translation map lookup for keywords, builtins, and reserved words.
+    """Abstract translation map lookup for keywords, builtins, and implicit params.
 
     This class provides a clean interface for looking up keyword, builtin, and
     reserved word translations, abstracting the underlying map implementation.
@@ -19,7 +19,7 @@ class TokenMapper:
     Attributes:
         keyword_map: Dictionary mapping English keywords to target language
         builtin_map: Dictionary mapping English builtins to target language
-        reserved_word_map: Dictionary mapping Python convention names like
+        implicit_param_map: Dictionary mapping Python convention names like
             ``self`` and ``cls`` (CORE-710) to target-language equivalents.
             Optional; defaults to empty.
 
@@ -30,7 +30,7 @@ class TokenMapper:
         >>> mapper = TokenMapper(spanish_keywords, spanish_builtins, spanish_reserved)
         >>> mapper.get_keyword("def")
         'definir'
-        >>> mapper.get_reserved_word("self")
+        >>> mapper.get_implicit_param("self")
         'propio'
         >>> mapper.is_builtin("print")
         True
@@ -40,28 +40,28 @@ class TokenMapper:
         self,
         keyword_map: dict[str, str],
         builtin_map: dict[str, str],
-        reserved_word_map: dict[str, str] | None = None,
+        implicit_param_map: dict[str, str] | None = None,
     ) -> None:
         """Initialize TokenMapper with translation maps.
 
         Args:
             keyword_map: Mapping of English keywords to target language
             builtin_map: Mapping of English builtins to target language
-            reserved_word_map: Optional mapping of Python conventions like
+            implicit_param_map: Optional mapping of Python conventions like
                 ``self`` and ``cls`` to target language. Defaults to empty
                 so existing callers don't need to change. Empty is allowed
                 (unlike keyword_map / builtin_map) because most existing
-                packs don't yet have a reserved_words section.
+                packs don't yet have a implicit_params section.
 
         Raises:
             ValueError: If keyword_map or builtin_map is empty or None.
-                reserved_word_map is allowed to be empty.
+                implicit_param_map is allowed to be empty.
 
         Example:
             >>> mapper = TokenMapper(
             ...     keyword_map={"def": "definir"},
             ...     builtin_map={"print": "imprimir"},
-            ...     reserved_word_map={"self": "propio"},
+            ...     implicit_param_map={"self": "propio"},
             ... )
         """
         if not keyword_map:
@@ -71,7 +71,7 @@ class TokenMapper:
 
         self.keyword_map = keyword_map
         self.builtin_map = builtin_map
-        self.reserved_word_map = reserved_word_map or {}
+        self.implicit_param_map = implicit_param_map or {}
 
         # Additive NFKC-normalized indexes. Exact lookups still win; these are
         # consulted only as a fallback so the packs that already match exactly
@@ -79,7 +79,7 @@ class TokenMapper:
         # round-trip and the fullwidth 'ｉｆ' -> 'if' spoof.
         self._keyword_nfkc = self._build_nfkc_index(self.keyword_map)
         self._builtin_nfkc = self._build_nfkc_index(self.builtin_map)
-        self._reserved_nfkc = self._build_nfkc_index(self.reserved_word_map)
+        self._reserved_nfkc = self._build_nfkc_index(self.implicit_param_map)
 
     @staticmethod
     def _build_nfkc_index(mapping: dict[str, str]) -> dict[str, str]:
@@ -182,7 +182,7 @@ class TokenMapper:
         """
         return token in self.builtin_map
 
-    def get_reserved_word(self, reserved_word: str) -> str | None:
+    def get_implicit_param(self, implicit_param: str) -> str | None:
         """Get translated reserved word, or None if not found (CORE-710).
 
         Reserved words are Python conventions like ``self`` and ``cls`` that
@@ -192,37 +192,37 @@ class TokenMapper:
         ``get_builtin`` so true Python keywords always win on conflict.
 
         Args:
-            reserved_word: English reserved word to translate (e.g., 'self', 'cls')
+            implicit_param: English reserved word to translate (e.g., 'self', 'cls')
 
         Returns:
             Translated reserved word if found, None otherwise
 
         Example:
-            >>> mapper.get_reserved_word("self")
+            >>> mapper.get_implicit_param("self")
             'propio'
-            >>> mapper.get_reserved_word("unknown")
+            >>> mapper.get_implicit_param("unknown")
             None
         """
         return self._normalized_get(
-            reserved_word, self.reserved_word_map, self._reserved_nfkc
+            implicit_param, self.implicit_param_map, self._reserved_nfkc
         )
 
-    def is_reserved_word(self, token: str) -> bool:
+    def is_implicit_param(self, token: str) -> bool:
         """Check if token is a reserved word in the translation map (CORE-710).
 
         Args:
             token: Token string to check
 
         Returns:
-            True if token is in reserved_word_map, False otherwise
+            True if token is in implicit_param_map, False otherwise
 
         Example:
-            >>> mapper.is_reserved_word("self")
+            >>> mapper.is_implicit_param("self")
             True
-            >>> mapper.is_reserved_word("def")
+            >>> mapper.is_implicit_param("def")
             False
         """
-        return token in self.reserved_word_map
+        return token in self.implicit_param_map
 
     def reverse(self) -> "TokenMapper":
         """Create a reversed mapper (target → source language).
@@ -248,7 +248,7 @@ class TokenMapper:
         reversed_keywords = self._invert_checked(self.keyword_map, "keyword")
         reversed_builtins = self._invert_checked(self.builtin_map, "builtin")
         reversed_reserved = self._invert_checked(
-            self.reserved_word_map, "reserved_word"
+            self.implicit_param_map, "implicit_param"
         )
         return TokenMapper(reversed_keywords, reversed_builtins, reversed_reserved)
 

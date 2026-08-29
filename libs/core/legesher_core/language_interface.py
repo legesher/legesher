@@ -138,7 +138,7 @@ def create_translator(
     programming_language_version: str = "3.13",
     use_tree_sitter: bool | None = None,
     backend: TextTranslationBackend | None = None,
-    reserved_word_map: dict[str, str] | None = None,
+    implicit_param_map: dict[str, str] | None = None,
 ) -> Translator:
     """Factory function to create a translator instance.
 
@@ -155,7 +155,7 @@ def create_translator(
             - True: Use TreeSitterTranslator (AST-based, better error handling)
             - False: Use TokenTranslator (simpler, token-based)
             - None: Check LEGESHER_USE_TREE_SITTER environment variable
-        reserved_word_map: Optional mapping of Python conventions like ``self``
+        implicit_param_map: Optional mapping of Python conventions like ``self``
             and ``cls`` to target language (CORE-710). Forwarded to the
             translator. Defaults to None (empty) for backward compat.
 
@@ -206,14 +206,14 @@ def create_translator(
                 builtin_map=builtin_map,
                 backend=backend,
                 python_version=programming_language_version,
-                reserved_word_map=reserved_word_map,
+                implicit_param_map=implicit_param_map,
             )
         elif should_use_ts:
             TreeSitterTranslator = _get_tree_sitter_translator()
             return TreeSitterTranslator(
                 keyword_map=keyword_map,
                 builtin_map=builtin_map,
-                reserved_word_map=reserved_word_map,
+                implicit_param_map=implicit_param_map,
                 python_version=programming_language_version,
             )
         else:
@@ -221,7 +221,7 @@ def create_translator(
             return TokenTranslator(
                 keyword_map=keyword_map,
                 builtin_map=builtin_map,
-                reserved_word_map=reserved_word_map,
+                implicit_param_map=implicit_param_map,
                 python_version=programming_language_version,
             )
     elif programming_language == "typescript":

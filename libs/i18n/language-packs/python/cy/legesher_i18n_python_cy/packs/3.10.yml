@@ -181,7 +181,7 @@ exceptions:
   valueerror: gwallgwerth
   warning: rhybudd
   zerodivisionerror: gwallrhannuasero
-reserved_words:
+implicit_params:
   self: hun
   cls: dosbarthhun
 metadata:

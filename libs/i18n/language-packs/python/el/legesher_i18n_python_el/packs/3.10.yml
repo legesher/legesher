@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: προειδοποίηση_γιούνικοντ
   byteswarning: προειδοποίηση_ψηφιολέξεων
   resourcewarning: προειδοποίηση_πόρων
-reserved_words:
+implicit_params:
   self: εαυτός
   cls: εαυτόςκλάσης
 metadata:

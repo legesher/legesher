@@ -181,7 +181,7 @@ exceptions:
   valueerror: VērtībasKļūda
   warning: Brīdinājums
   zerodivisionerror: DalīšanasArNulliKļūda
-reserved_words:
+implicit_params:
   self: sevis
   cls: pašaKlase
 metadata:

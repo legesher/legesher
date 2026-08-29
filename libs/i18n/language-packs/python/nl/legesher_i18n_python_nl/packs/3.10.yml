@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: unicodewaarschuwing
   byteswarning: byteswaarschuwing
   resourcewarning: resourcewaarschuwing
-reserved_words:
+implicit_params:
   self: zichzelf
   cls: eigenklasse
 metadata:

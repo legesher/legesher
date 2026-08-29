@@ -209,10 +209,10 @@ class LanguagePackValidator:
         # Single source of truth: ``SchemaValidator.check_duplicates()``.
         # It surfaces both intra-section duplicates (e.g., two keywords
         # mapping to the same value) AND cross-section collisions (e.g.,
-        # ``reserved_words.self`` matching ``keywords.in`` -- the
+        # ``implicit_params.self`` matching ``keywords.in`` -- the
         # AYA-213 Cycle-4 Urdu failure mode CORE-710 fixed). It covers
         # all 6 sections: keywords / builtins / exceptions /
-        # reserved_words / operators / standard_library.
+        # implicit_params / operators / standard_library.
         #
         # The previous in-script duplicate pass only covered the first
         # 3 sections AND emitted a duplicate error for any cross-section
@@ -247,7 +247,7 @@ class LanguagePackValidator:
                 ("keywords", "keyword_duplicates"),
                 ("builtins", "builtin_duplicates"),
                 ("exceptions", "exception_duplicates"),
-                ("reserved_words", "reserved_word_duplicates"),
+                ("implicit_params", "implicit_param_duplicates"),
                 ("operators", "operator_duplicates"),
                 ("standard_library", "stdlib_duplicates"),
             ]:

@@ -181,7 +181,7 @@ exceptions:
   valueerror: EarráidLuacha
   warning: Rabhadh
   zerodivisionerror: EarráidRoinntArNialas
-reserved_words:
+implicit_params:
   self: féin
   cls: féinaicme
 metadata:

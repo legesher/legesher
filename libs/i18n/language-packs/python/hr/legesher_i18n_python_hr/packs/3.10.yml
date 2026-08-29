@@ -181,7 +181,7 @@ exceptions:
   valueerror: greškavrijednosti
   warning: upozorenje
   zerodivisionerror: greškadijeljenjasonulom
-reserved_words:
+implicit_params:
   self: sebe
   cls: samaklasa
 metadata:

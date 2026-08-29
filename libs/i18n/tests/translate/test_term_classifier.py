@@ -10,10 +10,10 @@ from scripts.translate.term_classifier import (
     EXCEPTIONS,
     HELPER_TERMS,
     KEYWORDS_BASE,
-    RESERVED_WORDS,
+    IMPLICIT_PARAMS,
     SPECIAL_CONSTANTS,
     classify_term,
-    get_reserved_words_for_version,
+    get_implicit_params_for_version,
     get_yaml_section_for_term_type,
     is_python_term,
     is_valid_term_type,
@@ -38,8 +38,8 @@ class TestTermTypeYamlSectionsMapping:
     def test_special_constant_maps_to_builtins(self):
         assert TERM_TYPE_YAML_SECTIONS["special_constant"] == "builtins"
 
-    def test_reserved_word_maps_to_reserved_words(self):
-        assert TERM_TYPE_YAML_SECTIONS["reserved_word"] == "reserved_words"
+    def test_implicit_param_maps_to_implicit_params(self):
+        assert TERM_TYPE_YAML_SECTIONS["implicit_param"] == "implicit_params"
 
     def test_helper_maps_to_none(self):
         assert TERM_TYPE_YAML_SECTIONS["helper"] is None
@@ -60,8 +60,8 @@ class TestGetYamlSectionForTermType:
     def test_returns_exceptions_for_exception(self):
         assert get_yaml_section_for_term_type("exception") == "exceptions"
 
-    def test_returns_reserved_words_for_reserved_word(self):
-        assert get_yaml_section_for_term_type("reserved_word") == "reserved_words"
+    def test_returns_implicit_params_for_implicit_param(self):
+        assert get_yaml_section_for_term_type("implicit_param") == "implicit_params"
 
     def test_returns_none_for_helper(self):
         assert get_yaml_section_for_term_type("helper") is None
@@ -82,7 +82,7 @@ class TestIsValidTermType:
         assert is_valid_term_type("builtin_type")
         assert is_valid_term_type("exception")
         assert is_valid_term_type("special_constant")
-        assert is_valid_term_type("reserved_word")
+        assert is_valid_term_type("implicit_param")
         assert is_valid_term_type("helper")
         assert is_valid_term_type("unknown")
 
@@ -115,9 +115,9 @@ class TestClassifyTerm:
     def test_special_constants(self):
         assert classify_term("ellipsis") == "special_constant"
 
-    def test_reserved_words(self):
-        assert classify_term("self") == "reserved_word"
-        assert classify_term("cls") == "reserved_word"
+    def test_implicit_params(self):
+        assert classify_term("self") == "implicit_param"
+        assert classify_term("cls") == "implicit_param"
 
     def test_helper_terms(self):
         assert classify_term("README") == "helper"
@@ -134,7 +134,7 @@ class TestIsPythonTerm:
         assert is_python_term("print")
         assert is_python_term("ValueError")
 
-    def test_reserved_words_return_true(self):
+    def test_implicit_params_return_true(self):
         assert is_python_term("self")
         assert is_python_term("cls")
 
@@ -144,21 +144,21 @@ class TestIsPythonTerm:
 
 
 class TestGetReservedWordsForVersion:
-    """Test get_reserved_words_for_version() function."""
+    """Test get_implicit_params_for_version() function."""
 
     def test_returns_self_and_cls(self):
-        words = get_reserved_words_for_version("3.13")
+        words = get_implicit_params_for_version("3.13")
         assert "self" in words
         assert "cls" in words
 
     def test_version_invariant(self):
         for version in ("3.10", "3.11", "3.12", "3.13", "3.14"):
-            assert get_reserved_words_for_version(version) == ["self", "cls"]
+            assert get_implicit_params_for_version(version) == ["self", "cls"]
 
     def test_returns_copy_not_reference(self):
-        words = get_reserved_words_for_version("3.13")
+        words = get_implicit_params_for_version("3.13")
         words.append("mutated")
-        assert "mutated" not in get_reserved_words_for_version("3.13")
+        assert "mutated" not in get_implicit_params_for_version("3.13")
 
 
 class TestTermListConsistency:
@@ -184,9 +184,9 @@ class TestTermListConsistency:
         for term in SPECIAL_CONSTANTS:
             assert classify_term(term) == "special_constant"
 
-    def test_reserved_words_classify_as_reserved_word(self):
-        for term in RESERVED_WORDS:
-            assert classify_term(term) == "reserved_word"
+    def test_implicit_params_classify_as_implicit_param(self):
+        for term in IMPLICIT_PARAMS:
+            assert classify_term(term) == "implicit_param"
 
     def test_helper_terms_classify_as_helper(self):
         for term in HELPER_TERMS:

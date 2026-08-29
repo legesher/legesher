@@ -18,7 +18,7 @@ async def test_omitting_terms_returns_the_full_mapping(client: ClientSession) ->
     assert result["mappings"]["keywords"] == expected["keywords"]
     assert result["mappings"]["builtins"] == expected["builtins"]
     assert result["mappings"]["exceptions"] == expected["exceptions"]
-    assert result["mappings"]["reserved_words"] == expected["reserved_words"]
+    assert result["mappings"]["implicit_params"] == expected["implicit_params"]
     assert result["unmatched_terms"] == []
     assert result["language"] == "es"
     assert result["python_version"] == "3.13"
@@ -38,7 +38,7 @@ async def test_filtered_terms_across_categories(client: ClientSession) -> None:
     assert list(mappings["builtins"]) == ["print"]
     # Canonical PascalCase spelling matches what appears in code.
     assert list(mappings["exceptions"]) == ["ValueError"]
-    assert list(mappings["reserved_words"]) == ["self"]
+    assert list(mappings["implicit_params"]) == ["self"]
     assert result["unmatched_terms"] == ["no_such_term"]
 
 

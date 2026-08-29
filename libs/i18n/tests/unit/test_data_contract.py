@@ -110,7 +110,7 @@ class TestTopLevelKeys:
         assert "on_load" in findings[0].message
 
     def test_accepts_all_schema_keys(self, tmp_path: Path) -> None:
-        pack = _write(tmp_path, MINIMAL_PACK + "reserved_words:\n  self: yo\n")
+        pack = _write(tmp_path, MINIMAL_PACK + "implicit_params:\n  self: yo\n")
         assert check_top_level_keys(pack) == []
 
     def test_schema_rejects_unknown_top_level_key(self, tmp_path: Path) -> None:
@@ -171,7 +171,7 @@ class TestMapRoundtrip:
             "keywords": {"if": "ako"},
             "builtins": {"print": "ako"},
             "exceptions": {},
-            "reserved_words": {},
+            "implicit_params": {},
         }
         findings = check_map_roundtrip(pack, flat=True)
         assert len(findings) == 1
@@ -183,7 +183,7 @@ class TestMapRoundtrip:
             "keywords": {"if": "ako"},
             "builtins": {"if": "wenn"},
             "exceptions": {},
-            "reserved_words": {},
+            "implicit_params": {},
         }
         findings = check_map_roundtrip(pack, flat=True)
         assert [f.code for f in findings] == ["roundtrip"]
@@ -196,7 +196,7 @@ class TestMapRoundtrip:
             "keywords": {"type": "tipus_"},
             "builtins": {"type": "tipus"},
             "exceptions": {},
-            "reserved_words": {},
+            "implicit_params": {},
         }
         assert check_map_roundtrip(pack, flat=True) == []
 
@@ -207,7 +207,7 @@ class TestMapRoundtrip:
             "keywords": {"type": "tip"},
             "builtins": {"id": "tip"},
             "exceptions": {},
-            "reserved_words": {},
+            "implicit_params": {},
         }
         findings = check_map_roundtrip(pack, flat=True)
         assert [f.code for f in findings] == ["roundtrip"]
@@ -217,7 +217,7 @@ class TestMapRoundtrip:
             "keywords": {"if": "si_kw", "for": "para"},
             "builtins": {"print": "imprimir"},
             "exceptions": {"ValueError": "ErrorDeValor"},
-            "reserved_words": {"self": "yo"},
+            "implicit_params": {"self": "yo"},
         }
         assert check_map_roundtrip(pack, flat=True) == []
 

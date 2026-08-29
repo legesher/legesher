@@ -181,7 +181,7 @@ exceptions:
   valueerror: утгыналдаа
   warning: анхааруулга
   zerodivisionerror: тэгдхуваахалдаа
-reserved_words:
+implicit_params:
   self: өөрөө
   cls: өөрийнАнги
 metadata:

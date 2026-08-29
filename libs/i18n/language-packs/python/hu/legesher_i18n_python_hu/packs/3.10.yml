@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: unicodeavériség
   byteswarning: bajt_rőlévő_vágás
   resourcewarning: erőforrásfigyelmén
-reserved_words:
+implicit_params:
   self: maga
   cls: osztálymaga
 metadata:

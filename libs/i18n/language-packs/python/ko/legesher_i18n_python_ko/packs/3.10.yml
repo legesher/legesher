@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: 유니코드경고
   byteswarning: 바이트경고
   resourcewarning: 리소스경고
-reserved_words:
+implicit_params:
   self: 자신
   cls: 자기클래스
 metadata:

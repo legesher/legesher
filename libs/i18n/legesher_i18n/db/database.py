@@ -348,9 +348,9 @@ class TranslationDatabase:
                 row is created. Must be one of the canonical categories
                 defined in ``legesher_i18n.term_definitions.TermCategory`` —
                 ``keyword``, ``builtin_func``, ``builtin_type``,
-                ``exception``, ``special_constant``, ``reserved_word``,
+                ``exception``, ``special_constant``, ``implicit_param``,
                 ``helper``, or ``unknown``. CORE-710 added the
-                ``reserved_word`` category for ``self``/``cls``. ``None``
+                ``implicit_param`` category for ``self``/``cls``. ``None``
                 (the default) means "caller does not care", and stores
                 ``unknown`` on create.
             subcategory: Term subcategory (used only if creating)
@@ -366,7 +366,7 @@ class TranslationDatabase:
         Raises:
             ValueError: If ``category`` is not a recognized value (SQLite
                 accepts any string in the column, so this runtime check
-                guards against typos like ``"reserved_words"`` or
+                guards against typos like ``"implicit_params"`` or
                 ``"reservedword"`` silently corrupting the table), or if
                 ``name`` is ambiguous — more than one row — and no
                 ``category`` selects exactly one of them. Returning an
@@ -383,7 +383,7 @@ class TranslationDatabase:
             raise ValueError(
                 f"Unknown term category: {category!r}. Must be one of "
                 f"keyword, builtin_func, builtin_type, exception, "
-                f"special_constant, reserved_word, helper, unknown, "
+                f"special_constant, implicit_param, helper, unknown, "
                 f"builtin, member."
             )
 

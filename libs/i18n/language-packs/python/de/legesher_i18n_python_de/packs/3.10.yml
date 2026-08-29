@@ -181,7 +181,7 @@ exceptions:
   byteswarning: ByteWarnung
   resourcewarning: Ressourcenwarnung
   assertionerror: Assertionfehler
-reserved_words:
+implicit_params:
   self: sich
   cls: Klasse_selbst
 metadata:

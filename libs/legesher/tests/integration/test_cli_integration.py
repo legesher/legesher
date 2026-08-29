@@ -619,14 +619,14 @@ def process_files(directory: Path) -> List[str]:
             or ("devolver" in translated)
             or ("retornar" in translated)
         )
-        # CORE-710 added the `reserved_words` category for deterministic
+        # CORE-710 added the `implicit_params` category for deterministic
         # `self`/`cls` translation. The Spanish pack defines
-        # `reserved_words.self -> mismo`, so post-CORE-710 the translation
+        # `implicit_params.self -> mismo`, so post-CORE-710 the translation
         # MUST contain `mismo`. If this fails, check that the es pack
-        # still has `reserved_words.self` populated.
+        # still has `implicit_params.self` populated.
         assert "mismo" in translated, (
             "Spanish pack should translate self -> mismo per CORE-710's "
-            "reserved_words category. Got: " + translated[:200]
+            "implicit_params category. Got: " + translated[:200]
         )
 
     def test_translate_with_decorators(self, tmp_path: Path):

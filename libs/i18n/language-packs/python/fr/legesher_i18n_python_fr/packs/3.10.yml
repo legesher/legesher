@@ -181,7 +181,7 @@ exceptions:
   valueerror: valeurincorrecte
   warning: avertissement
   zerodivisionerror: erreurdedivisionparzéro
-reserved_words:
+implicit_params:
   self: soi
   cls: soiclasse
 metadata:

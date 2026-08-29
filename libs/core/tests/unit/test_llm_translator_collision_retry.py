@@ -36,7 +36,7 @@ def _mock_pack(
     pack.keywords = {"def": "definir", "return": "devolver"}
     pack.builtins = {"print": "imprimir"}
     pack.exceptions = {}
-    pack.reserved_words = {"self": self_value, "cls": cls_value}
+    pack.implicit_params = {"self": self_value, "cls": cls_value}
     pack.language = "es"
     return pack
 
@@ -80,7 +80,7 @@ class TestPackAwareCollisionRetry:
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
             backend=backend,
-            reserved_word_map=pack.reserved_words,
+            implicit_param_map=pack.implicit_params,
             identifier_map=ident_map,
         )
 
@@ -109,7 +109,7 @@ class TestPackAwareCollisionRetry:
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
             backend=backend,
-            reserved_word_map=pack.reserved_words,
+            implicit_param_map=pack.implicit_params,
             identifier_map=ident_map,
         )
 
@@ -137,7 +137,7 @@ class TestPackAwareCollisionRetry:
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
             backend=backend,
-            reserved_word_map=pack.reserved_words,
+            implicit_param_map=pack.implicit_params,
             identifier_map=ident_map,
         )
 
@@ -183,7 +183,7 @@ class TestSuffixRecoveryStableHash:
         ``hashlib.sha256`` branch.
         """
         pack = _mock_pack()
-        pack.reserved_words = {
+        pack.implicit_params = {
             "self": "propio",
             "cls": "clase",
             **{f"_n{i}": f"propio_{i}" for i in range(2, 10)},
@@ -194,7 +194,7 @@ class TestSuffixRecoveryStableHash:
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
             backend=backend,
-            reserved_word_map=pack.reserved_words,
+            implicit_param_map=pack.implicit_params,
             identifier_map=ident_map,
         )
         return translator, ident_map

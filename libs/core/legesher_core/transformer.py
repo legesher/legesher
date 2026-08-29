@@ -63,7 +63,7 @@ class TokenTranslator:
         keyword_map: dict[str, str],
         builtin_map: dict[str, str],
         python_version: str = "3.13",
-        reserved_word_map: dict[str, str] | None = None,
+        implicit_param_map: dict[str, str] | None = None,
     ) -> None:
         """Initialize translator with language maps and Python version.
 
@@ -71,7 +71,7 @@ class TokenTranslator:
             keyword_map: Dictionary mapping English keywords to target language
             builtin_map: Dictionary mapping English builtins to target language
             python_version: Python version string (default: "3.13")
-            reserved_word_map: Optional mapping of Python conventions like
+            implicit_param_map: Optional mapping of Python conventions like
                 ``self`` and ``cls`` to target language (CORE-710). Defaults
                 to empty so existing callers don't need to change.
 
@@ -82,11 +82,11 @@ class TokenTranslator:
             >>> translator = TokenTranslator(
             ...     keyword_map={"def": "definir", "return": "retornar"},
             ...     builtin_map={"print": "imprimir"},
-            ...     reserved_word_map={"self": "propio", "cls": "clase"},
+            ...     implicit_param_map={"self": "propio", "cls": "clase"},
             ...     python_version="3.13"
             ... )
         """
-        self.mapper = TokenMapper(keyword_map, builtin_map, reserved_word_map)
+        self.mapper = TokenMapper(keyword_map, builtin_map, implicit_param_map)
         self.python_version = python_version
 
     def __repr__(self) -> str:
@@ -95,13 +95,13 @@ class TokenTranslator:
         Example:
             >>> translator = TokenTranslator({"def": "definir"}, {"print": "imprimir"})
             >>> repr(translator)
-            "TokenTranslator(keywords=1, builtins=1, reserved_words=0, python_version='3.13')"
+            "TokenTranslator(keywords=1, builtins=1, implicit_params=0, python_version='3.13')"
         """
         return (
             f"TokenTranslator("
             f"keywords={len(self.mapper.keyword_map)}, "
             f"builtins={len(self.mapper.builtin_map)}, "
-            f"reserved_words={len(self.mapper.reserved_word_map)}, "
+            f"implicit_params={len(self.mapper.implicit_param_map)}, "
             f"python_version={self.python_version!r})"
         )
 
@@ -256,10 +256,10 @@ class TokenTranslator:
 
                     # Try to translate as reserved word (CORE-710: self, cls).
                     # Short-circuit when the map is empty — most callers (and
-                    # all pre-CORE-710 ones) don't pass reserved_word_map, and
+                    # all pre-CORE-710 ones) don't pass implicit_param_map, and
                     # the extra dict.get() costs ~6% on the hot path otherwise.
-                    if reserved_word_map := self.mapper.reserved_word_map:
-                        translated = reserved_word_map.get(lookup)
+                    if implicit_param_map := self.mapper.implicit_param_map:
+                        translated = implicit_param_map.get(lookup)
                         if translated and translated != tok.string:
                             new_tok = tokenize.TokenInfo(
                                 tok.type,
@@ -406,7 +406,7 @@ class TokenTranslator:
         # with no reserved-word map never reached the check, so genuinely
         # stale reserved values survived a re-anchor). Provenance answers
         # the question directly and is independent of both.
-        reserved_word_map = self.mapper.reserved_word_map
+        implicit_param_map = self.mapper.implicit_param_map
         for entry in register_map.entries.values():
             translation: str | None = None
             if entry.element_class == "keyword":
@@ -414,13 +414,13 @@ class TokenTranslator:
             elif entry.element_class == "builtin":
                 translation = self.mapper.get_builtin(entry.original_text)
             elif entry.element_class == "identifier":
-                # NOT short-circuited on `reserved_word_map` being
+                # NOT short-circuited on `implicit_param_map` being
                 # non-empty: an absent table means this translator mints
                 # nothing here, not that it may skip cleaning up after a
                 # previous one that did.
                 translation = (
-                    reserved_word_map.get(entry.original_text)
-                    if reserved_word_map
+                    implicit_param_map.get(entry.original_text)
+                    if implicit_param_map
                     else None
                 )
             else:
@@ -507,7 +507,7 @@ class TokenTranslator:
         return TokenTranslator(
             keyword_map=reversed_mapper.keyword_map,
             builtin_map=reversed_mapper.builtin_map,
-            reserved_word_map=reversed_mapper.reserved_word_map,
+            implicit_param_map=reversed_mapper.implicit_param_map,
             python_version=self.python_version,
         )
 
@@ -589,13 +589,13 @@ class TokenTranslator:
                 f"Merged {len(pack.exceptions)} exception translations into builtin map"
             )
 
-        # CORE-710: pull reserved_words from the pack if present (defaults to {})
-        reserved_word_map = getattr(pack, "reserved_words", {}) or {}
+        # CORE-710: pull implicit_params from the pack if present (defaults to {})
+        implicit_param_map = getattr(pack, "implicit_params", {}) or {}
 
         return cls(
             keyword_map=pack.keywords,
             builtin_map=builtin_map,
-            reserved_word_map=reserved_word_map,
+            implicit_param_map=implicit_param_map,
             python_version=python_version,
         )
 

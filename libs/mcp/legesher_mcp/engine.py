@@ -53,9 +53,9 @@ LANG_CODE_PATTERN = r"^[a-z]{2,3}(-[A-Za-z0-9]+)?$"
 _LANG_CODE_RE = re.compile(LANG_CODE_PATTERN)
 
 #: Construct categories in lookup-precedence order. ``keywords`` wins over
-#: ``reserved_words`` on conflict, matching the pack's own precedence
+#: ``implicit_params`` on conflict, matching the pack's own precedence
 #: (``LanguagePack.get_keyword_translation``).
-CATEGORIES: tuple[str, ...] = ("keywords", "builtins", "exceptions", "reserved_words")
+CATEGORIES: tuple[str, ...] = ("keywords", "builtins", "exceptions", "implicit_params")
 
 
 class EngineError(Exception):
@@ -259,7 +259,7 @@ class LocalEngine:
             "keywords": dict(pack.keywords),
             "builtins": dict(pack.builtins),
             "exceptions": merge_exception_translations({}, pack.exceptions),
-            "reserved_words": dict(pack.reserved_words),
+            "implicit_params": dict(pack.implicit_params),
         }
 
     # -- translation ------------------------------------------------------

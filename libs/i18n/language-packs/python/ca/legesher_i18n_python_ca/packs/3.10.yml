@@ -181,7 +181,7 @@ exceptions:
   valueerror: errorvalor
   warning: avis
   zerodivisionerror: errordivisiozero
-reserved_words:
+implicit_params:
   self: mateix
   cls: classemateixa
 metadata:

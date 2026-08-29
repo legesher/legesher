@@ -4,7 +4,7 @@ Reads English Python snippets from docs/snippets/*.py, translates each into
 all shipped pack languages, and categorizes every token so the site can emit
 highlighted HTML without any grammar. Mirrors the engine's context-free
 substitution: NAME tokens only, priority except*-compound > keyword >
-builtin (incl. exceptions) > reserved word > identifier glossary; everything
+builtin (incl. exceptions) > implicit param > identifier glossary; everything
 else passes through.
 
 Outputs under --out: snippet-langs.json and legesher-snippets.css (language
@@ -78,7 +78,7 @@ def load_packs(version: str = PACK_VERSION_DEFAULT) -> dict[str, dict]:
             "keywords": dict(pack.keywords),
             "builtins": dict(pack.builtins),
             "exceptions_pascal": _pascal_case_exceptions(dict(pack.exceptions)),
-            "reserved": dict(pack.reserved_words),
+            "reserved": dict(pack.implicit_params),
             "rtl": meta["rtl"],
             "native": meta["native"],
             "name": meta["name"],

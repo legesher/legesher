@@ -271,7 +271,7 @@
     {
       "term": "cls",
       "filename": "cls.md",
-      "category": "reserved_word",
+      "category": "implicit_param",
       "type": "noun (abbreviation of \"class\")",
       "difficulty": "HARD",
       "summary": "`cls` is NOT a Python keyword. It is the CONVENTIONAL name for the first parameter of classmethods (methods decorated with `@classmethod`), referring to the CLASS object itself rather than an instance. The abbreviation exists because `class` is a reserved keyword and literally cannot be used as a parameter name; PEP 8 codifies `cls` as its stand-in. Legesher translates it because it appears in every `@classmethod` a learner reads - and its translation must be visibly RELATED to the language's `class` translation, yet distinguishable from both it and the `self` translation."
@@ -1167,7 +1167,7 @@
     {
       "term": "self",
       "filename": "self.md",
-      "category": "reserved_word",
+      "category": "implicit_param",
       "type": "pronoun (reflexive)",
       "difficulty": "HARD",
       "summary": "`self` is NOT a Python keyword. It is the CONVENTIONAL name for the first parameter of instance methods, referring to the instance the method was called on - \"the object itself.\" The parser accepts any name; the convention is enforced by community practice (PEP 8), linters, and every tutorial ever written. Legesher translates it anyway because it appears in virtually every class body a learner reads: linguistically it is a reflexive pronoun, and most languages have strong native reflexive forms that beat any coined noun."

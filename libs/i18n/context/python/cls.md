@@ -1,6 +1,6 @@
 # Python Reserved Word: `cls` - Translation Brief (Tier 1)
 
-**Category:** reserved_word
+**Category:** implicit_param
 **Type:** noun (abbreviation of "class")
 **Python Version:** all (naming convention; codified in PEP 8, not enforced by the parser)
 **Difficulty:** HARD

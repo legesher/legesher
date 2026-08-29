@@ -130,6 +130,7 @@ from legesher_i18n.term_definitions import (  # noqa: E402
 from legesher_i18n.vocabulary_definitions import (  # noqa: E402
     VOCABULARY_SECTIONS,
     english_values,
+    inventory_for_section,
 )
 
 PACKS_DIR = _I18N_ROOT / "language-packs" / "python"
@@ -177,7 +178,7 @@ UNTAGGED = "(untagged)"
 #: Started at 0.1.0 rather than 1.0.0 because every locale is stamped
 #: ``experimental`` with no native-speaker sign-off, and the schema is still
 #: moving. A 0.x says usable-not-settled, which is what the card says in prose.
-DATASET_VERSION = "0.3.0"
+DATASET_VERSION = "0.4.0"
 
 #: Tag shape a published revision is expected to carry, e.g.
 #: ``language-packs-v0.1.0``. The one version string the Hub revision, the
@@ -273,7 +274,7 @@ LOCALE_COLUMNS: tuple[str, ...] = (
 #: source_term), carrying the set of the target's versions the term is valid
 #: for. No natural language appears in this config. ``subcategory`` is the
 #: finer semantic kind (``keyword`` / ``builtin_func`` / ``builtin_type`` /
-#: ``special_constant`` / ``exception`` / ``reserved_word``) from
+#: ``special_constant`` / ``exception`` / ``implicit_param``) from
 #: ``term_definitions.py`` for term rows, and the message cluster for
 #: ``messages`` rows. ``source_text`` is the English surface when the key is
 #: not itself the text: a symbol's English name, a message's template.
@@ -283,6 +284,7 @@ PL_TERMINOLOGY_COLUMNS: tuple[str, ...] = (
     "subcategory",
     "source_term",
     "source_text",
+    "glyph",
     "pl_versions",
 )
 
@@ -307,7 +309,7 @@ VERSIONS = ("3.10", "3.11", "3.12", "3.13", "3.14")
 #: absent: it is the MLCP partition for member-bearing targets such as
 #: JavaScript (CORE-1372) and is empty for every Python pack. Exporting an
 #: always-empty column would advertise a surface this artifact does not cover.
-SECTIONS = ("keywords", "builtins", "exceptions", "reserved_words")
+SECTIONS = ("keywords", "builtins", "exceptions", "implicit_params")
 
 #: Every category family ``pl_terminology`` publishes, in the order a reader
 #: meets them: the four translation sections, then the two vocabulary sections
@@ -346,7 +348,7 @@ CATEGORY_BLURBS: dict[str, str] = {
     # Two entries, `self` and `cls`. Neither is reserved by the Python
     # grammar, which the section name says and this line corrects; the name
     # itself is CORE-2060.
-    "reserved_words": (
+    "implicit_params": (
         "`self` and `cls`. Conventional parameter names that Legesher treats "
         "deterministically, not words the grammar reserves."
     ),
@@ -772,13 +774,23 @@ def build_pl_terminology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "subcategory": _subcategory_for(section, term, ordered[0]),
                 "source_term": term,
                 "source_text": None,
+                "glyph": None,
                 "pl_versions": ordered,
             }
         )
 
     # The vocabulary sections come through the inventory's own accessor, so a
     # section added there is exported here without a hand-written twin loop.
+    #
+    # Symbols also publish their glyph. It is target truth with one row each
+    # here, not the 51 copies of a constant that kept it out of the pack files,
+    # and without it nothing in this artifact says that `paren_open` means `(`.
+    # The card's own `_` example depended on a fact the data did not carry.
     for section in VOCABULARY_SECTIONS:
+        glyphs = {
+            entry.slug: getattr(entry, "glyph", None)
+            for entry in inventory_for_section(section)
+        }
         for slug, english in english_values(section).items():
             out.append(
                 {
@@ -787,6 +799,7 @@ def build_pl_terminology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "subcategory": None,
                     "source_term": slug,
                     "source_text": english,
+                    "glyph": glyphs.get(slug),
                     "pl_versions": list(VERSIONS),
                 }
             )
@@ -852,6 +865,7 @@ def build_pl_terminology(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 # traceback, ...), and unlike the seed's sparse `cluster`
                 # field it is total, so no reader meets a null bucket that
                 # means "uncurated" beside nulls that mean "not applicable".
+                "glyph": None,
                 "subcategory": key.split(".", 1)[0],
                 "source_term": key,
                 "source_text": current["template_en"],
@@ -1514,7 +1528,12 @@ this config.
   surface. `symbols` carry the name, so `paren_open` is *opening parenthesis*.
   `variable_conventions` carry the identifier, so `accumulator` is `total`.
   `messages` carry the template. Null on `keywords`, `builtins`, `exceptions`
-  and `reserved_words`, where `source_term` is the English
+  and `implicit_params`, where `source_term` is the English. A message with no
+  text carries `""`, which is a different fact from null: `AssertionError` on a
+  bare `assert` genuinely has no message
+* `glyph`: the character a symbol names, so `paren_open` is `(`. Null on every
+  other category, and null on the symbols with no printable form: indentation,
+  a line break, a space
 * `pl_versions`: the target versions the entry is valid for
 
 Availability lives here, once: `except*` carries `["3.11", ...]`, and a term

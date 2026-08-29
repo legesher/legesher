@@ -34,7 +34,7 @@ def _schema(language: str, **sections: dict[str, str]) -> LanguagePackSchema:
         keywords=sections.get("keywords", {}),
         builtins=sections.get("builtins", {}),
         exceptions=sections.get("exceptions", {}),
-        reserved_words=sections.get("reserved_words", {}),
+        implicit_params=sections.get("implicit_params", {}),
         operators=sections.get("operators", {}),
         standard_library=sections.get("standard_library", {}),
         cultural_notes=[],
@@ -90,7 +90,7 @@ class TestAuditGateSeam:
             keywords={},
             builtins={"len": f"लंबाई{DEVANAGARI_ONE}"},
             exceptions={},
-            reserved_words={},
+            implicit_params={},
             metadata=None,
         )
         loader = SimpleNamespace(load=lambda *args, **kwargs: pack)

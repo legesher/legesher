@@ -181,7 +181,7 @@ exceptions:
   valueerror: qiymat_xatosi
   warning: ogohlantirish
   zerodivisionerror: nolga_bolish_xatosi
-reserved_words:
+implicit_params:
   self: ozi
   cls: sinf_ozi
 metadata:

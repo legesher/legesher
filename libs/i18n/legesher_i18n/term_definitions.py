@@ -296,7 +296,7 @@ HELPER_TERMS = [
 # Translating these via the language pack (rather than the LLM) eliminates
 # drift across files and prevents collisions with pronoun/preposition
 # translations of real keywords (e.g., the Urdu ``in`` → ``میں`` collision).
-RESERVED_WORDS = [
+IMPLICIT_PARAMS = [
     "self",
     "cls",
 ]
@@ -308,7 +308,7 @@ TermCategory = Literal[
     "builtin_type",
     "exception",
     "special_constant",
-    "reserved_word",
+    "implicit_param",
     "helper",
     "unknown",
     # Target-neutral categories for non-python targets (CORE-1371): the JS
@@ -326,7 +326,7 @@ TERM_TYPE_YAML_SECTIONS: dict[str, str | None] = {
     "builtin_type": "builtins",
     "exception": "exceptions",
     "special_constant": "builtins",
-    "reserved_word": "reserved_words",
+    "implicit_param": "implicit_params",
     "helper": None,  # Excluded from YAML export
     "unknown": None,  # Excluded from YAML export
     # Target-neutral categories for non-python targets (CORE-1371):
@@ -351,7 +351,7 @@ YAML_SECTION_CATEGORIES: dict[str, list[str]] = {
     "keywords": ["keyword"],
     "builtins": ["builtin_func", "builtin_type", "special_constant"],
     "exceptions": ["exception"],
-    "reserved_words": ["reserved_word"],
+    "implicit_params": ["implicit_param"],
 }
 
 
@@ -414,7 +414,7 @@ def get_exceptions_for_version(version: str = "3.10") -> list[str]:
     return exceptions
 
 
-def get_reserved_words_for_version(version: str = "3.10") -> list[str]:
+def get_implicit_params_for_version(version: str = "3.10") -> list[str]:
     """Get all reserved words applicable to a specific Python version.
 
     Reserved words (``self``, ``cls``) are Python conventions that are stable
@@ -428,7 +428,7 @@ def get_reserved_words_for_version(version: str = "3.10") -> list[str]:
     Returns:
         List of reserved word strings
     """
-    return RESERVED_WORDS.copy()
+    return IMPLICIT_PARAMS.copy()
 
 
 def classify_term(term: str, python_version: str = "3.10") -> TermCategory:
@@ -440,7 +440,7 @@ def classify_term(term: str, python_version: str = "3.10") -> TermCategory:
 
     Returns:
         Category string: 'keyword', 'builtin_func', 'builtin_type',
-                        'exception', 'special_constant', 'reserved_word',
+                        'exception', 'special_constant', 'implicit_param',
                         'helper', or 'unknown'
     """
     term_lower = term.lower()
@@ -468,8 +468,8 @@ def classify_term(term: str, python_version: str = "3.10") -> TermCategory:
         return "special_constant"
 
     # Check reserved words (Legesher conventions: self, cls)
-    if term_lower in RESERVED_WORDS:
-        return "reserved_word"
+    if term_lower in IMPLICIT_PARAMS:
+        return "implicit_param"
 
     # Check helper terms
     if term in HELPER_TERMS or term_lower in [h.lower() for h in HELPER_TERMS]:
@@ -496,7 +496,7 @@ def get_all_terms_by_category(
         "builtin_type": BUILTIN_TYPES.copy(),
         "exception": get_exceptions_for_version(python_version),
         "special_constant": SPECIAL_CONSTANTS.copy(),
-        "reserved_word": RESERVED_WORDS.copy(),
+        "implicit_param": IMPLICIT_PARAMS.copy(),
         "helper": HELPER_TERMS.copy(),
     }
 
@@ -559,7 +559,7 @@ __all__ = [
     "EXCEPTIONS_3_11",
     "EXCEPTIONS_3_13",
     "SPECIAL_CONSTANTS",
-    "RESERVED_WORDS",
+    "IMPLICIT_PARAMS",
     "HELPER_TERMS",
     # Type system
     "TermCategory",
@@ -569,7 +569,7 @@ __all__ = [
     "get_keywords_for_version",
     "get_builtins_for_version",
     "get_exceptions_for_version",
-    "get_reserved_words_for_version",
+    "get_implicit_params_for_version",
     "classify_term",
     "get_all_terms_by_category",
     "is_python_term",

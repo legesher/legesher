@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: यूनिकोडचेतावनी
   byteswarning: बाइट्सचेतावनी
   resourcewarning: संसाधनचेतावनी
-reserved_words:
+implicit_params:
   self: स्वयं
   cls: स्वयंवर्ग
 metadata:

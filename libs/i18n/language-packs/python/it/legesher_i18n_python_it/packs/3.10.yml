@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: avvertimentounicode
   byteswarning: avviso_bytes
   resourcewarning: avvertimentodirisorsa
-reserved_words:
+implicit_params:
   self: sé
   cls: stessa_classe
 metadata:

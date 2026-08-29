@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: uwagaUnicode
   byteswarning: ostrzeżenieobajtach
   resourcewarning: ostrzeżenieozasobie
-reserved_words:
+implicit_params:
   self: siebie
   cls: własnaKlasa
 metadata:

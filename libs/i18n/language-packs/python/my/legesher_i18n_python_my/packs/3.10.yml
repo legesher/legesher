@@ -181,7 +181,7 @@ exceptions:
   valueerror: တန်ဖိုးအမှား
   warning: သတိပေးချက်
   zerodivisionerror: သုညစားအမှား
-reserved_words:
+implicit_params:
   self: ကိုယ်တိုင်
   cls: အတန်းကိုယ်တိုင်
 metadata:

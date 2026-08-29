@@ -181,7 +181,7 @@ exceptions:
   valueerror: mearachd_luach
   warning: rabhadh
   zerodivisionerror: mearachd_roinneadh_le_neoni
-reserved_words:
+implicit_params:
   self: fèin
   cls: fèin_chlas
 metadata:

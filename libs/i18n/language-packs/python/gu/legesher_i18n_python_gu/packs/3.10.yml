@@ -181,7 +181,7 @@ exceptions:
   valueerror: મૂલ્યભૂલ
   warning: સચેતવણી
   zerodivisionerror: શૂન્યભાગાકારભૂલ
-reserved_words:
+implicit_params:
   self: પોતે
   cls: સ્વવર્ગ
 metadata:

@@ -20,10 +20,10 @@ and multi-provider translation API.
 - **Schema Validation**: Pydantic-based with security checks
 - **CLI Tools**: validate, show, registry, export commands
 - **Reserved Words** (CORE-710): `self`/`cls` translated deterministically
-  per pack via the new `reserved_words:` YAML section. Distinct from
+  per pack via the new `implicit_params:` YAML section. Distinct from
   `keywords:` because they're Python conventions (not actual reserved
   words in the language). Eliminates LLM-driven self-reference drift
-  and keyword collisions (see `scripts/translate/prompts/reserved_words_prompt.md`).
+  and keyword collisions (see `scripts/translate/prompts/implicit_params_prompt.md`).
 - **Pack vocabulary** (CORE-1396): `symbols:` (what `_`, `:`, indentation are
   *called* in the language) and `variable_conventions:` (the idiomatic short
   names — loop `i`, index, `x`/`y`). Vocabulary, not rules, so it lives here
@@ -343,7 +343,7 @@ Extensible across programming languages. Python's `def` and a future TypeScript 
 | `id`                   | INTEGER PK    | Auto-increment                                                                                                   |
 | `name`                 | TEXT NOT NULL | e.g., `def`, `True`, `print`                                                                                     |
 | `programming_language` | TEXT NOT NULL | e.g., `python`                                                                                                   |
-| `category`             | TEXT NOT NULL | `keyword`, `builtin_func`, `builtin_type`, `special_constant`, `exception`, `reserved_word` (CORE-710: self/cls) |
+| `category`             | TEXT NOT NULL | `keyword`, `builtin_func`, `builtin_type`, `special_constant`, `exception`, `implicit_param` (CORE-710: self/cls) |
 | `subcategory`          | TEXT          | Keywords: `control_flow`, `iteration`, `structure`, etc. Exceptions: `base`, `arithmetic`, etc.                  |
 | `version_added`        | TEXT          | Python version when term was introduced                                                                          |
 | `description`          | TEXT          | Optional human-readable description                                                                              |

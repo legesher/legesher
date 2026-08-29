@@ -42,11 +42,11 @@ FIXTURE_PACK = {
         "# a comment key, not a slot": None,
     },
     "exceptions": {"valueerror": "errordevalor"},
-    "reserved_words": {"self": "propio"},
+    "implicit_params": {"self": "propio"},
     "metadata": {"generated_by": "test"},
 }
 
-# keywords (3) + builtins (4 real slots) + exceptions (1). ``reserved_words``
+# keywords (3) + builtins (4 real slots) + exceptions (1). ``implicit_params``
 # is outside the importer's section list, and the comment key is not a slot.
 EXPECTED_IMPORTED = 8
 

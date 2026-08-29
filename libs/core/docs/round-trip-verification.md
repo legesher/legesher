@@ -112,7 +112,7 @@ class Layer(str, Enum):
     KEYWORDS = "keywords"              # from YAML_SECTION_CATEGORIES
     BUILTINS = "builtins"
     EXCEPTIONS = "exceptions"
-    RESERVED_WORDS = "reserved_words"
+    IMPLICIT_PARAMS = "implicit_params"
     IDENTIFIERS = "identifiers"
     COMMENTS = "comments"
     STRINGS = "strings"
@@ -167,7 +167,7 @@ Why the classes matter — each maps to a different action:
 
 | Layer | What a divergence there means | What it changes |
 | --- | --- | --- |
-| keywords / builtins / exceptions / reserved_words | the deterministic layer failed: pack or engine defect | the pack, or the engine |
+| keywords / builtins / exceptions / implicit_params | the deterministic layer failed: pack or engine defect | the pack, or the engine |
 | collision | an identifier is spelled like a pack rendering | known class (CORE-1840); not a pack bug |
 | identifiers | expected today — canonical form retains native identifiers (CORE-1841) | nothing; disclosed, not failed |
 | comments / strings | the writer's fuzzy layer drifted | the writer's own output |

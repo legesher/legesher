@@ -969,7 +969,7 @@ def load_merged_pack(lang_code: str) -> dict:
         "keywords": {},
         "builtins": {},
         "exceptions": {},
-        "reserved_words": {},
+        "implicit_params": {},
     }
 
     for version_file in version_files:
@@ -987,9 +987,9 @@ def load_merged_pack(lang_code: str) -> dict:
         if "exceptions" in data and data["exceptions"]:
             merged["exceptions"].update(data["exceptions"])
 
-        # Merge reserved_words (CORE-710: self, cls)
-        if "reserved_words" in data and data["reserved_words"]:
-            merged["reserved_words"].update(data["reserved_words"])
+        # Merge implicit_params (CORE-710: self, cls)
+        if "implicit_params" in data and data["implicit_params"]:
+            merged["implicit_params"].update(data["implicit_params"])
 
     return merged
 
@@ -1062,12 +1062,12 @@ def generate_reference_md(
     keywords = pack_data.get("keywords", {})
     builtins = pack_data.get("builtins", {})
     exceptions = pack_data.get("exceptions", {})
-    reserved_words = pack_data.get("reserved_words", {})
+    implicit_params = pack_data.get("implicit_params", {})
 
     en_keywords = english_data.get("keywords", {})
     en_builtins = english_data.get("builtins", {})
     en_exceptions = english_data.get("exceptions", {})
-    en_reserved_words = english_data.get("reserved_words", {})
+    en_implicit_params = english_data.get("implicit_params", {})
 
     # Build keyword table (sorted alphabetically by English)
     keyword_rows = []
@@ -1087,11 +1087,11 @@ def generate_reference_md(
         trans = exceptions.get(eng_ex, eng_ex)
         exception_rows.append(f"| `{eng_ex}` | `{trans}` |")
 
-    # Build reserved-word table (CORE-710: self, cls). Sorted alphabetically.
-    reserved_word_rows = []
-    for eng_rw in sorted(en_reserved_words.keys(), key=str.lower):
-        trans = reserved_words.get(eng_rw, eng_rw)
-        reserved_word_rows.append(f"| `{eng_rw}` | `{trans}` |")
+    # Build implicit-param table (CORE-710: self, cls). Sorted alphabetically.
+    implicit_param_rows = []
+    for eng_rw in sorted(en_implicit_params.keys(), key=str.lower):
+        trans = implicit_params.get(eng_rw, eng_rw)
+        implicit_param_rows.append(f"| `{eng_rw}` | `{trans}` |")
 
     # Generate example code
     example = generate_example_code(lang_code, keywords, builtins, exceptions)
@@ -1175,15 +1175,15 @@ Exception classes for error handling.
 | ------- | ------ |
 {chr(10).join(exception_rows)}
 
-## Reserved Words ({len(reserved_word_rows)} terms)
+## Reserved Words ({len(implicit_param_rows)} terms)
 
 Python conventions like `self` and `cls` translated deterministically by the
 language pack rather than the LLM. Distinct from keywords because they aren't
-actual reserved words in the Python language. (CORE-710)
+actual keywords in the Python language. (CORE-710)
 
 | English | {name} |
 | ------- | ------ |
-{chr(10).join(reserved_word_rows)}
+{chr(10).join(implicit_param_rows)}
 
 ## Example Code
 

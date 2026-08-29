@@ -71,7 +71,7 @@ class Layer(str, Enum):
     KEYWORDS = "keywords"
     BUILTINS = "builtins"
     EXCEPTIONS = "exceptions"
-    RESERVED_WORDS = "reserved_words"
+    IMPLICIT_PARAMS = "implicit_params"
     IDENTIFIERS = "identifiers"
     COMMENTS = "comments"
     STRINGS = "strings"
@@ -277,7 +277,7 @@ def _pack_sections(pack: LanguagePack) -> tuple[tuple[Layer, dict[str, str]], ..
         (Layer.KEYWORDS, pack.keywords),
         (Layer.BUILTINS, pack.builtins),
         (Layer.EXCEPTIONS, merge_exception_translations({}, pack.exceptions)),
-        (Layer.RESERVED_WORDS, pack.reserved_words),
+        (Layer.IMPLICIT_PARAMS, pack.implicit_params),
     )
 
 
@@ -408,7 +408,7 @@ SCHEMA_VERSION = "1.0.0"
 SCOPE_TICKET = "CORE-1841"
 
 PACK_LAYERS: frozenset[Layer] = frozenset(
-    {Layer.KEYWORDS, Layer.BUILTINS, Layer.EXCEPTIONS, Layer.RESERVED_WORDS}
+    {Layer.KEYWORDS, Layer.BUILTINS, Layer.EXCEPTIONS, Layer.IMPLICIT_PARAMS}
 )
 
 

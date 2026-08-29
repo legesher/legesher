@@ -190,7 +190,7 @@ exceptions:
   valueerror: අගයදෝෂය
   warning: අවවාදය
   zerodivisionerror: ශුන්යබෙදීමේදෝෂය
-reserved_words:
+implicit_params:
   self: තමා
   cls: පන්තියමයම
 metadata:

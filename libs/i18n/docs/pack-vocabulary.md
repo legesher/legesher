@@ -166,7 +166,7 @@ override today.
 
 `scripts/export_packs.py` enumerates what the `legesher/language-packs`
 dataset publishes — `SECTIONS = ("keywords", "builtins", "exceptions",
-"reserved_words")` — and the vocabulary sections are deliberately absent.
+"implicit_params")` — and the vocabulary sections are deliberately absent.
 The exclusion is the conservative default and it stands: the partition is
 new, every shipped pack carries it empty, and generated values enter at the
 experimental tier ahead of native review. A public dataset should not gain a

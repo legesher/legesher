@@ -627,28 +627,28 @@ class TestTreeSitterVsTokenComparison:
 
 
 class TestTreeSitterReservedWordDispatch:
-    """Test reserved_word_map dispatch in TreeSitterTranslator (CORE-710).
+    """Test implicit_param_map dispatch in TreeSitterTranslator (CORE-710).
 
     Mirrors TestReservedWordTranslation in test_token_translator.py to
     confirm parity between the two backends. The Token + TreeSitter
     backends should yield identical output for any code that uses only
-    keywords + builtins + reserved_words.
+    keywords + builtins + implicit_params.
     """
 
-    def test_constructor_backward_compat_no_reserved_word_map(self):
-        """Existing constructor (no reserved_word_map kwarg) still works."""
+    def test_constructor_backward_compat_no_implicit_param_map(self):
+        """Existing constructor (no implicit_param_map kwarg) still works."""
         translator = TreeSitterTranslator(
             keyword_map={"def": "definir"},
             builtin_map={"print": "imprimir"},
         )
-        assert translator.mapper.reserved_word_map == {}
+        assert translator.mapper.implicit_param_map == {}
 
-    def test_self_translation_via_reserved_word_map(self):
+    def test_self_translation_via_implicit_param_map(self):
         """self in method signature + body translates to pack value."""
         translator = TreeSitterTranslator(
             keyword_map={"def": "definir", "return": "retornar", "class": "clase"},
             builtin_map={"print": "imprimir"},
-            reserved_word_map={"self": "propio"},
+            implicit_param_map={"self": "propio"},
         )
         code = "class Foo:\n    def bar(self):\n        return self.x\n"
         translated = translator.translate_code(code, "en", "es")
@@ -661,7 +661,7 @@ class TestTreeSitterReservedWordDispatch:
         translator = TreeSitterTranslator(
             keyword_map={"def": "definir", "return": "retornar", "class": "clase"},
             builtin_map={"print": "imprimir"},
-            reserved_word_map={"cls": "clase_ref"},
+            implicit_param_map={"cls": "clase_ref"},
         )
         code = "class Foo:\n    def make(cls):\n        return cls()\n"
         translated = translator.translate_code(code, "en", "es")
@@ -669,21 +669,21 @@ class TestTreeSitterReservedWordDispatch:
         assert translated.count("clase_ref") == 2
 
     def test_dispatch_order_keyword_wins_on_conflict(self):
-        """Synthetic conflict: keyword section wins over reserved_word section."""
+        """Synthetic conflict: keyword section wins over implicit_param section."""
         translator = TreeSitterTranslator(
             keyword_map={"self": "KEYWORD_WIN"},
             builtin_map={"print": "imprimir"},
-            reserved_word_map={"self": "RESERVED_LOSE"},
+            implicit_param_map={"self": "RESERVED_LOSE"},
         )
         translated = translator.translate_code("def foo(self): pass", "en", "es")
         assert "KEYWORD_WIN" in translated
         assert "RESERVED_LOSE" not in translated
 
     def test_unmapped_self_remains_untranslated(self):
-        """Without reserved_word_map, self stays as-is (backward compat).
+        """Without implicit_param_map, self stays as-is (backward compat).
 
         Pre-CORE-710 behavior: tree-sitter translates def → definir but
-        leaves self untouched since the pack doesn't ship reserved_words.
+        leaves self untouched since the pack doesn't ship implicit_params.
         """
         translator = TreeSitterTranslator(
             keyword_map={"def": "definir"},
@@ -698,7 +698,7 @@ class TestTreeSitterReservedWordDispatch:
         en_to_es = TreeSitterTranslator(
             keyword_map={"def": "definir", "return": "retornar"},
             builtin_map={"print": "imprimir"},
-            reserved_word_map={"self": "propio"},
+            implicit_param_map={"self": "propio"},
         )
         es_to_en = en_to_es.reverse()
         spanish = en_to_es.translate_code("def foo(self): return self.x", "en", "es")
@@ -706,20 +706,20 @@ class TestTreeSitterReservedWordDispatch:
         assert "self" in english
         assert "propio" not in english
 
-    def test_repr_includes_reserved_words_count(self):
-        """__repr__ surfaces reserved_words count for debug visibility."""
+    def test_repr_includes_implicit_params_count(self):
+        """__repr__ surfaces implicit_params count for debug visibility."""
         translator = TreeSitterTranslator(
             keyword_map={"def": "definir"},
             builtin_map={"print": "imprimir"},
-            reserved_word_map={"self": "propio", "cls": "clase"},
+            implicit_param_map={"self": "propio", "cls": "clase"},
         )
-        assert "reserved_words=2" in repr(translator)
+        assert "implicit_params=2" in repr(translator)
 
-    def test_token_and_tree_sitter_parity_for_reserved_words(self):
+    def test_token_and_tree_sitter_parity_for_implicit_params(self):
         """The two backends produce identical output for self/cls translation.
 
         Locks in feature parity at the substitution layer. If a future
-        change lands reserved_word_map handling on one backend but not
+        change lands implicit_param_map handling on one backend but not
         the other, this test will catch it.
         """
         from legesher_core.transformer import TokenTranslator
@@ -727,7 +727,7 @@ class TestTreeSitterReservedWordDispatch:
         kwargs = dict(
             keyword_map={"def": "definir", "return": "retornar", "class": "clase"},
             builtin_map={"print": "imprimir"},
-            reserved_word_map={"self": "propio", "cls": "clase_ref"},
+            implicit_param_map={"self": "propio", "cls": "clase_ref"},
         )
         token = TokenTranslator(**kwargs)
         tree_sitter = TreeSitterTranslator(**kwargs)

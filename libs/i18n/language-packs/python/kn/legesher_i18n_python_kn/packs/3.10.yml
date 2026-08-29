@@ -181,7 +181,7 @@ exceptions:
   valueerror: ಮೌಲ್ಯದೋಷ
   warning: ಎಚ್ಚರಿಕೆ
   zerodivisionerror: ಶೂನ್ಯಭಾಗಾಕಾರದೋಷ
-reserved_words:
+implicit_params:
   self: ತಾನೇ
   cls: ಸ್ವವರ್ಗ
 metadata:

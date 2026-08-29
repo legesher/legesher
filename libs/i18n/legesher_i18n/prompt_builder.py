@@ -332,7 +332,7 @@ class PromptBuilder:
                 MUST NOT propose for any identifier. Typically populated
                 by the caller from ``pack.keywords.values() +
                 pack.builtins.values() + pack.exceptions.values() +
-                pack.reserved_words.values()``. Passing these into the
+                pack.implicit_params.values()``. Passing these into the
                 prompt prevents collisions with reserved Python conventions
                 (e.g. ``self -> mismo``) that would silently break
                 round-trip translation. CORE-710 / CORE-950.

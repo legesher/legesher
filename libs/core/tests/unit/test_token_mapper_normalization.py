@@ -32,11 +32,11 @@ class TestNormalizationFallback:
         mapper = TokenMapper({"def": "definir"}, {"print": "imprimir"})
         assert mapper.get_keyword("nonexistent") is None
 
-    def test_reserved_word_normalized_lookup(self):
+    def test_implicit_param_normalized_lookup(self):
         mapper = TokenMapper(
-            {"def": "d"}, {"print": "p"}, reserved_word_map={"self": "propio"}
+            {"def": "d"}, {"print": "p"}, implicit_param_map={"self": "propio"}
         )
-        assert mapper.get_reserved_word("self") == "propio"
+        assert mapper.get_implicit_param("self") == "propio"
 
 
 class TestRealPackExactMatchUnaffected:

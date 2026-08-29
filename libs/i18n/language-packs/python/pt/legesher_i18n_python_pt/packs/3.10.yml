@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: avisodeunicode
   byteswarning: avisodebytes
   resourcewarning: avisoderecurso
-reserved_words:
+implicit_params:
   self: próprio
   cls: própria_classe
 metadata:

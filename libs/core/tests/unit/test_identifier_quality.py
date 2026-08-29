@@ -1,6 +1,6 @@
 """Identifier quality validation suite (CORE-710).
 
-Tests that translated reserved_words and identifiers in language packs meet
+Tests that translated implicit_params and identifiers in language packs meet
 the four AC categories from CORE-710:
 
 1. **Identifier validation** — valid Python identifiers, no whitespace, no
@@ -88,7 +88,7 @@ class TestReservedWordIdentifierValidity:
     ) -> None:
         """value.isidentifier() must hold (Unicode-aware per PEP 3131)."""
         pack = loader.load(lang, "python", "3.13")
-        value = pack.get_reserved_word_translation(term)
+        value = pack.get_implicit_param_translation(term)
         if value is None:
             pytest.skip(f"{lang}: no {term} translation in pack (yet)")
         assert value.isidentifier(), (
@@ -102,7 +102,7 @@ class TestReservedWordIdentifierValidity:
     ) -> None:
         """No whitespace anywhere — must be exactly one token."""
         pack = loader.load(lang, "python", "3.13")
-        value = pack.get_reserved_word_translation(term)
+        value = pack.get_implicit_param_translation(term)
         if value is None:
             pytest.skip(f"{lang}: no {term} translation in pack (yet)")
         assert len(value.split()) == 1, (
@@ -116,7 +116,7 @@ class TestReservedWordIdentifierValidity:
     ) -> None:
         """No chain-of-thought / reasoning leakage in the value."""
         pack = loader.load(lang, "python", "3.13")
-        value = pack.get_reserved_word_translation(term)
+        value = pack.get_implicit_param_translation(term)
         if value is None:
             pytest.skip(f"{lang}: no {term} translation in pack (yet)")
         for marker in TRACE_MARKERS:
@@ -136,7 +136,7 @@ class TestReservedWordIdentifierValidity:
         slipped past the single-word check or trace-marker pollution.
         """
         pack = loader.load(lang, "python", "3.13")
-        value = pack.get_reserved_word_translation(term)
+        value = pack.get_implicit_param_translation(term)
         if value is None:
             pytest.skip(f"{lang}: no {term} translation in pack (yet)")
         assert len(value) < 25, (
@@ -153,12 +153,12 @@ class TestForbiddenPunctuation:
     """No language-specific punctuation in code-position values across packs."""
 
     @pytest.mark.parametrize("lang", ALL_LANGS)
-    def test_no_forbidden_punctuation_in_reserved_words(
+    def test_no_forbidden_punctuation_in_implicit_params(
         self, loader: LanguagePackLoader, lang: str
     ) -> None:
         """Reserved-word translations must use only Unicode letters/digits/underscore."""
         pack = loader.load(lang, "python", "3.13")
-        for term, value in pack.reserved_words.items():
+        for term, value in pack.implicit_params.items():
             for char, char_name in FORBIDDEN_PUNCTUATION.items():
                 assert char not in value, (
                     f"{lang}: {term} -> {value!r} contains forbidden "
@@ -196,7 +196,7 @@ class TestStructuralInvariants:
         translator = TokenTranslator(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
-            reserved_word_map=pack.reserved_words,
+            implicit_param_map=pack.implicit_params,
         )
         code = 'if __name__ == "__main__":\n    pass\n'
         translated = translator.translate_code(code, "en", lang)
@@ -213,7 +213,7 @@ class TestStructuralInvariants:
         translator = TokenTranslator(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
-            reserved_word_map=pack.reserved_words,
+            implicit_param_map=pack.implicit_params,
         )
         code = (
             "class Foo:\n"
@@ -244,20 +244,20 @@ class TestConsistencyInvariants:
     """Same identifier always maps to same value; no pack-level duplicates."""
 
     @pytest.mark.parametrize("lang", ALL_LANGS)
-    def test_no_duplicate_values_within_reserved_words(
+    def test_no_duplicate_values_within_implicit_params(
         self, loader: LanguagePackLoader, lang: str
     ) -> None:
         """`self` and `cls` must map to DIFFERENT values within a pack."""
         pack = loader.load(lang, "python", "3.13")
-        if not pack.reserved_words:
-            pytest.skip(f"{lang}: no reserved_words section yet")
-        values = list(pack.reserved_words.values())
+        if not pack.implicit_params:
+            pytest.skip(f"{lang}: no implicit_params section yet")
+        values = list(pack.implicit_params.values())
         assert len(values) == len(set(values)), (
-            f"{lang}: duplicate values in reserved_words: {pack.reserved_words}"
+            f"{lang}: duplicate values in implicit_params: {pack.implicit_params}"
         )
 
     @pytest.mark.parametrize("lang", ALL_LANGS)
-    def test_reserved_word_does_not_collide_with_keyword(
+    def test_implicit_param_does_not_collide_with_keyword(
         self, loader: LanguagePackLoader, lang: str
     ) -> None:
         """A reserved-word translation must not match any keyword translation.
@@ -268,27 +268,27 @@ class TestConsistencyInvariants:
         tell which English term to map back to.
         """
         pack = loader.load(lang, "python", "3.13")
-        if not pack.reserved_words:
-            pytest.skip(f"{lang}: no reserved_words section yet")
+        if not pack.implicit_params:
+            pytest.skip(f"{lang}: no implicit_params section yet")
         keyword_values = set(pack.keywords.values())
-        for term, rw_value in pack.reserved_words.items():
+        for term, rw_value in pack.implicit_params.items():
             assert rw_value not in keyword_values or rw_value == term, (
-                f"{lang}: reserved_word {term} -> {rw_value!r} collides "
+                f"{lang}: implicit_param {term} -> {rw_value!r} collides "
                 f"with a keyword translation"
             )
 
     @pytest.mark.parametrize("lang", ALL_LANGS)
-    def test_reserved_word_does_not_collide_with_builtin_or_exception(
+    def test_implicit_param_does_not_collide_with_builtin_or_exception(
         self, loader: LanguagePackLoader, lang: str
     ) -> None:
         """Same check, broadened to builtins + exceptions."""
         pack = loader.load(lang, "python", "3.13")
-        if not pack.reserved_words:
-            pytest.skip(f"{lang}: no reserved_words section yet")
+        if not pack.implicit_params:
+            pytest.skip(f"{lang}: no implicit_params section yet")
         forbidden = set(pack.builtins.values()) | set(pack.exceptions.values())
-        for term, rw_value in pack.reserved_words.items():
+        for term, rw_value in pack.implicit_params.items():
             assert rw_value not in forbidden, (
-                f"{lang}: reserved_word {term} -> {rw_value!r} collides "
+                f"{lang}: implicit_param {term} -> {rw_value!r} collides "
                 f"with a builtin or exception translation"
             )
 
@@ -308,7 +308,7 @@ class TestUrduCollisionRegression:
 
     def test_urdu_self_is_not_in(self, loader: LanguagePackLoader) -> None:
         pack = loader.load("ur", "python", "3.13")
-        self_val = pack.get_reserved_word_translation("self")
+        self_val = pack.get_implicit_param_translation("self")
         assert self_val is not None, "Urdu pack missing self translation"
         in_val = pack.get_keyword_translation("in")
         assert self_val != in_val, (
@@ -327,7 +327,7 @@ class TestUrduCollisionRegression:
         accepts خود, خودی, آپ, نمونہ, or similar reflexive choices.
         """
         pack = loader.load("ur", "python", "3.13")
-        self_val = pack.get_reserved_word_translation("self")
+        self_val = pack.get_implicit_param_translation("self")
         assert self_val is not None
         # Negative checks — known wrong patterns
         forbidden = {"میں", "آنے", "اب", "یہاں"}  # in, this, now, here
@@ -346,7 +346,7 @@ class TestRoundTripPreservesSelfCls:
 
     These tests use the actual TokenTranslator + TreeSitterTranslator with
     pack data — no LLM calls needed because the substitution is purely
-    table-driven via reserved_word_map. The @slow marker is a hint for
+    table-driven via implicit_param_map. The @slow marker is a hint for
     CI prioritization, not because they're actually slow.
     """
 
@@ -363,11 +363,11 @@ class TestRoundTripPreservesSelfCls:
         translator = translator_cls(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
-            reserved_word_map=pack.reserved_words,
+            implicit_param_map=pack.implicit_params,
         )
         code = "def foo(self, x):\n    self.x = x\n    return self\n"
         translated = translator.translate_code(code, "en", lang)
-        self_val = pack.get_reserved_word_translation("self")
+        self_val = pack.get_implicit_param_translation("self")
         assert self_val is not None, f"{lang}: missing self translation"
         # All three `self` references should render to the same value
         assert translated.count(self_val) == 3, (
@@ -388,11 +388,11 @@ class TestRoundTripPreservesSelfCls:
         translator = translator_cls(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
-            reserved_word_map=pack.reserved_words,
+            implicit_param_map=pack.implicit_params,
         )
         code = "def make(cls):\n    return cls()\n"
         translated = translator.translate_code(code, "en", lang)
-        cls_val = pack.get_reserved_word_translation("cls")
+        cls_val = pack.get_implicit_param_translation("cls")
         assert cls_val is not None, f"{lang}: missing cls translation"
         assert translated.count(cls_val) == 2, (
             f"{lang}/{translator_cls.__name__}: expected 2 occurrences of "
@@ -408,7 +408,7 @@ class TestRoundTripPreservesSelfCls:
         en_to_target = TokenTranslator(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
-            reserved_word_map=pack.reserved_words,
+            implicit_param_map=pack.implicit_params,
         )
         target_to_en = en_to_target.reverse()
 
@@ -434,7 +434,7 @@ class TestRoundTripPreservesSelfCls:
         en_to_ur = TokenTranslator(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
-            reserved_word_map=pack.reserved_words,
+            implicit_param_map=pack.implicit_params,
         )
         ur_to_en = en_to_ur.reverse()
 

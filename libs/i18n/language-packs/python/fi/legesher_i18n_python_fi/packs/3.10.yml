@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: unicodevarnua
   byteswarning: bajtivardi
   resourcewarning: resurssivarnauha
-reserved_words:
+implicit_params:
   self: itse
   cls: luokkaitse
 metadata:

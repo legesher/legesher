@@ -48,7 +48,7 @@ def _run_validator(pack_yaml: Path) -> subprocess.CompletedProcess[str]:
 
 
 class TestCrossSectionCollisionGate:
-    def test_blocks_reserved_word_colliding_with_keyword(self, tmp_path: Path) -> None:
+    def test_blocks_implicit_param_colliding_with_keyword(self, tmp_path: Path) -> None:
         """Reserved-word ``self`` translation matching a keyword
         translation is the exact AYA-213 Cycle-4 Urdu failure mode --
         must be rejected.
@@ -66,7 +66,7 @@ class TestCrossSectionCollisionGate:
                   print: "چھاپ"
                 exceptions:
                   ValueError: "قدرغلطی"
-                reserved_words:
+                implicit_params:
                   self: "میں"
                   cls: "جماعت"
                 """).lstrip(),
@@ -101,7 +101,7 @@ class TestCrossSectionCollisionGate:
                   print: "چھاپ"
                 exceptions:
                   ValueError: "قدرغلطی"
-                reserved_words:
+                implicit_params:
                   self: "خود"
                   cls: "جماعتخود"
                 """).lstrip(),
@@ -113,7 +113,7 @@ class TestCrossSectionCollisionGate:
             f"Validator rejected a clean pack. stdout: {result.stdout}"
         )
 
-    def test_blocks_reserved_word_colliding_with_builtin(self, tmp_path: Path) -> None:
+    def test_blocks_implicit_param_colliding_with_builtin(self, tmp_path: Path) -> None:
         """A reserved-word value matching a builtin value is also a
         cross-section collision.
         """
@@ -129,7 +129,7 @@ class TestCrossSectionCollisionGate:
                   print: "چھاپ"
                 exceptions:
                   ValueError: "قدرغلطی"
-                reserved_words:
+                implicit_params:
                   self: "چھاپ"
                   cls: "جماعت"
                 """).lstrip(),
@@ -162,7 +162,7 @@ class TestCrossSectionCollisionGate:
                   print: "چھاپ"
                 exceptions:
                   ValueError: "قدرغلطی"
-                reserved_words:
+                implicit_params:
                   self: "چھاپ"
                   cls: "جماعت"
                 """).lstrip(),

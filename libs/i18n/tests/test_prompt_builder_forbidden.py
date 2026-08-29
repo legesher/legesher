@@ -1,6 +1,6 @@
 """Tests for the ``forbidden_values`` kwarg on ``build_identifier_prompt``.
 
-CORE-710 introduced ``reserved_words`` (e.g. Spanish ``self -> mismo``,
+CORE-710 introduced ``implicit_params`` (e.g. Spanish ``self -> mismo``,
 Urdu ``self -> خود``). When the LLM proposes an identifier translation
 that matches a reserved-word value, the result silently breaks round-trip
 translation -- the reverse mapper can't tell which source key the value
@@ -164,13 +164,13 @@ class TestForbiddenValuesFromRealPack:
         es_pack = loader.load("es", target="python", version="3.10")
         # Sanity: confirm the actual shipped value (corrected from
         # description's `propio` placeholder).
-        assert es_pack.get_reserved_word_translation("self") == "mismo"
+        assert es_pack.get_implicit_param_translation("self") == "mismo"
 
         forbidden = (
             list(es_pack.keywords.values())
             + list(es_pack.builtins.values())
             + list(es_pack.exceptions.values())
-            + list(es_pack.reserved_words.values())
+            + list(es_pack.implicit_params.values())
         )
         assert "mismo" in forbidden
 
@@ -191,9 +191,9 @@ class TestForbiddenValuesFromRealPack:
 
         loader = LanguagePackLoader()
         ur_pack = loader.load("ur", target="python", version="3.10")
-        assert ur_pack.get_reserved_word_translation("self") == "خود"
+        assert ur_pack.get_implicit_param_translation("self") == "خود"
 
-        forbidden = list(ur_pack.reserved_words.values())
+        forbidden = list(ur_pack.implicit_params.values())
         _, user = builder.build_identifier_prompt(
             identifiers=[{"text": "e", "role": "variable", "context": {}}],
             target_lang="ur",

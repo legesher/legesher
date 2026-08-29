@@ -181,7 +181,7 @@ exceptions:
   valueerror: errovalor
   warning: aviso
   zerodivisionerror: errodivisioncero
-reserved_words:
+implicit_params:
   self: si_mesmo
   cls: mesma_clase
 metadata:

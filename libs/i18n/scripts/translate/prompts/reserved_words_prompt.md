@@ -186,6 +186,6 @@ written to YAML packs.
 
 If reserved words ever expand beyond `self`/`cls` (e.g., adding
 language-specific conventions), use this same prompt template. Update
-the canonical `RESERVED_WORDS` list in
+the canonical `IMPLICIT_PARAMS` list in
 `libs/i18n/legesher_i18n/term_definitions.py` first, then run the agent
 batches with the expanded set.

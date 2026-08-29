@@ -114,7 +114,7 @@ SECTIONS = (
     "keywords",
     "builtins",
     "exceptions",
-    "reserved_words",
+    "implicit_params",
     "symbols",
     "variable_conventions",
 )

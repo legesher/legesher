@@ -1,6 +1,6 @@
 # Python Reserved Word: `self` - Translation Brief (Tier 1)
 
-**Category:** reserved_word
+**Category:** implicit_param
 **Type:** pronoun (reflexive)
 **Python Version:** all (naming convention; codified in PEP 8, not enforced by the parser)
 **Difficulty:** HARD

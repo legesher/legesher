@@ -654,7 +654,7 @@ def _pack_collision(candidate: str, pack: Any) -> str | None:
         ("keyword", pack.keywords),
         ("builtin", pack.builtins),
         ("exception", pack.exceptions),
-        ("reserved_word", pack.reserved_words),
+        ("implicit_param", pack.implicit_params),
         ("member", getattr(pack, "members", {}) or {}),
     ):
         for source_key, target_value in mapping.items():

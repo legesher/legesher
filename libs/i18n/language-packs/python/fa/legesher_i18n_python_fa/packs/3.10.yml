@@ -181,7 +181,7 @@ exceptions:
   valueerror: خطایمقدار
   warning: هشدار
   zerodivisionerror: خطایتقسیمبرصفر
-reserved_words:
+implicit_params:
   self: خود
   cls: خودکلاس
 metadata:

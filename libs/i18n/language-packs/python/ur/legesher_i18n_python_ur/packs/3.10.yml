@@ -181,7 +181,7 @@ exceptions:
   valueerror: قدرغلطی
   warning: انتباہ
   zerodivisionerror: صفرتقسیمغلطی
-reserved_words:
+implicit_params:
   self: خود
   cls: جماعتخود
 metadata:

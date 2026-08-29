@@ -324,7 +324,7 @@ class TestIdentifierMapPackCollisionDetection:
             keywords={"def": "definir", "in": "en"},
             builtins={"print": "imprimir", "len": "longitud"},
             exceptions={"ValueError": "ErrorDeValor"},
-            reserved_words={"self": "propio", "cls": "clase_ref"},
+            implicit_params={"self": "propio", "cls": "clase_ref"},
         )
 
     def test_validate_against_pack_returns_none_when_safe(self):
@@ -350,11 +350,11 @@ class TestIdentifierMapPackCollisionDetection:
             imap.validate_against_pack("ErrorDeValor", pack) == "exception:ValueError"
         )
 
-    def test_validate_against_pack_detects_reserved_word_collision(self):
+    def test_validate_against_pack_detects_implicit_param_collision(self):
         """Madison's test 6 motivating case: e → propio collides with self."""
         pack = self._make_pack()
         imap = IdentifierMap()
-        assert imap.validate_against_pack("propio", pack) == "reserved_word:self"
+        assert imap.validate_against_pack("propio", pack) == "implicit_param:self"
 
     def test_add_with_pack_at_construction_raises_on_collision(self):
         """Madison's test 6 skeleton: pack at construction, add raises on collide."""
@@ -390,7 +390,7 @@ class TestIdentifierMapPackCollisionDetection:
         imap = IdentifierMap(pack=pack)
         with pytest.raises(ValueError) as exc_info:
             imap.add("e", "es", "propio")
-        assert "reserved_word:self" in str(exc_info.value)
+        assert "implicit_param:self" in str(exc_info.value)
 
     def test_pack_attribute_is_stored_at_construction(self):
         """The pack reference is exposed for callers who want to introspect it."""
@@ -423,7 +423,7 @@ class TestIdentifierMapPackCollisionDetection:
         assert imap_with_pack.get("e", "es") == "propio"
 
     def test_validate_against_pack_handles_empty_pack_dicts(self):
-        """A pack with empty keyword/builtin/exception/reserved_word dicts.
+        """A pack with empty keyword/builtin/exception/implicit_param dicts.
 
         validate_against_pack should return None (no collisions possible
         when the pack is empty). Edge case for very-early-stage packs.
@@ -453,9 +453,9 @@ class TestIdentifierMapPackCollisionDetection:
     def test_validate_against_pack_section_priority_keyword_first(self):
         """When a translation matches multiple sections, keyword-section wins.
 
-        Pin the order: keyword → builtin → exception → reserved_word.
+        Pin the order: keyword → builtin → exception → implicit_param.
         Synthetic case: pack has 'shared' as the value in BOTH keyword
-        and reserved_word sections (impossible in real data due to
+        and implicit_param sections (impossible in real data due to
         check_duplicates, but defensive).
         """
         from legesher_i18n.pack_loader import LanguagePack
@@ -466,7 +466,7 @@ class TestIdentifierMapPackCollisionDetection:
             target="python",
             version="3.10",
             keywords={"def": "shared"},  # 'shared' matches keyword `def`
-            reserved_words={"self": "shared"},  # AND reserved_word `self`
+            implicit_params={"self": "shared"},  # AND implicit_param `self`
         )
         imap = IdentifierMap()
         # Keyword section is checked first → returns keyword:def

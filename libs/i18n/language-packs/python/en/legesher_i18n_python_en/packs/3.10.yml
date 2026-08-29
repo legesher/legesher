@@ -181,7 +181,7 @@ exceptions:
   valueerror: valueerror
   warning: warning
   zerodivisionerror: zerodivisionerror
-reserved_words:
+implicit_params:
   self: self
   cls: cls
 metadata:

@@ -937,10 +937,10 @@ class TestCheckCompletenessEnhanced:
 
 
 class TestReservedWordsField:
-    """Test reserved_words schema field (CORE-710)."""
+    """Test implicit_params schema field (CORE-710)."""
 
-    def test_reserved_words_optional_for_backward_compat(self):
-        """A pack without reserved_words: section validates and defaults to empty."""
+    def test_implicit_params_optional_for_backward_compat(self):
+        """A pack without implicit_params: section validates and defaults to empty."""
         pack_data = {
             "language": "es",
             "target": "python",
@@ -948,21 +948,21 @@ class TestReservedWordsField:
             "keywords": {"def": "definir"},
         }
         schema = LanguagePackSchema(**pack_data)
-        assert schema.reserved_words == {}
+        assert schema.implicit_params == {}
 
-    def test_reserved_words_accepts_valid_translations(self):
+    def test_implicit_params_accepts_valid_translations(self):
         """A pack with valid self/cls translations validates."""
         pack_data = {
             "language": "es",
             "target": "python",
             "version": "3.10",
-            "reserved_words": {"self": "propio", "cls": "clase"},
+            "implicit_params": {"self": "propio", "cls": "clase"},
         }
         schema = LanguagePackSchema(**pack_data)
-        assert schema.reserved_words == {"self": "propio", "cls": "clase"}
+        assert schema.implicit_params == {"self": "propio", "cls": "clase"}
 
-    def test_reserved_words_rejects_value_with_whitespace(self):
-        """validate_mappings rejects multi-word values for reserved_words."""
+    def test_implicit_params_rejects_value_with_whitespace(self):
+        """validate_mappings rejects multi-word values for implicit_params."""
         import pytest
         from pydantic import ValidationError
 
@@ -970,12 +970,12 @@ class TestReservedWordsField:
             "language": "es",
             "target": "python",
             "version": "3.10",
-            "reserved_words": {"self": "propio mismo"},  # space → invalid identifier
+            "implicit_params": {"self": "propio mismo"},  # space → invalid identifier
         }
         with pytest.raises(ValidationError):
             LanguagePackSchema(**pack_data)
 
-    def test_reserved_words_rejects_empty_value(self):
+    def test_implicit_params_rejects_empty_value(self):
         """Empty translations are rejected like any other category."""
         import pytest
         from pydantic import ValidationError
@@ -984,73 +984,73 @@ class TestReservedWordsField:
             "language": "es",
             "target": "python",
             "version": "3.10",
-            "reserved_words": {"self": ""},
+            "implicit_params": {"self": ""},
         }
         with pytest.raises(ValidationError):
             LanguagePackSchema(**pack_data)
 
-    def test_check_duplicates_detects_reserved_word_duplicates(self):
-        """Duplicate translations within reserved_words are surfaced."""
+    def test_check_duplicates_detects_implicit_param_duplicates(self):
+        """Duplicate translations within implicit_params are surfaced."""
         pack_data = {
             "language": "es",
             "target": "python",
             "version": "3.10",
-            "reserved_words": {"self": "propio", "cls": "propio"},
+            "implicit_params": {"self": "propio", "cls": "propio"},
         }
         schema = LanguagePackSchema(**pack_data)
         result = SchemaValidator.check_duplicates(schema)
         assert result["passed"] is False
-        assert len(result["reserved_word_duplicates"]) == 1
-        assert result["reserved_word_duplicates"][0]["translation"] == "propio"
-        assert set(result["reserved_word_duplicates"][0]["source_terms"]) == {
+        assert len(result["implicit_param_duplicates"]) == 1
+        assert result["implicit_param_duplicates"][0]["translation"] == "propio"
+        assert set(result["implicit_param_duplicates"][0]["source_terms"]) == {
             "cls",
             "self",
         }
         assert result["total_conflicts"] >= 1
 
-    def test_check_duplicates_clean_when_reserved_words_unique(self):
-        """No duplicates surfaced when reserved_word translations are unique."""
+    def test_check_duplicates_clean_when_implicit_params_unique(self):
+        """No duplicates surfaced when implicit_param translations are unique."""
         pack_data = {
             "language": "es",
             "target": "python",
             "version": "3.10",
-            "reserved_words": {"self": "propio", "cls": "clase"},
+            "implicit_params": {"self": "propio", "cls": "clase"},
         }
         schema = LanguagePackSchema(**pack_data)
         result = SchemaValidator.check_duplicates(schema)
         assert result["passed"] is True
-        assert result["reserved_word_duplicates"] == []
+        assert result["implicit_param_duplicates"] == []
 
-    def test_check_identifier_validity_includes_reserved_words(self):
-        """check_identifier_validity exposes invalid_reserved_words list."""
+    def test_check_identifier_validity_includes_implicit_params(self):
+        """check_identifier_validity exposes invalid_implicit_params list."""
         # Valid case: result includes the key with empty list
         pack_data = {
             "language": "es",
             "target": "python",
             "version": "3.10",
-            "reserved_words": {"self": "propio"},
+            "implicit_params": {"self": "propio"},
         }
         schema = LanguagePackSchema(**pack_data)
         result = SchemaValidator.check_identifier_validity(schema)
-        assert "invalid_reserved_words" in result
-        assert result["invalid_reserved_words"] == []
+        assert "invalid_implicit_params" in result
+        assert result["invalid_implicit_params"] == []
         assert result["passed"] is True
 
-    def test_get_validation_report_includes_reserved_words_count(self):
-        """The validation report exposes reserved_words_count for symmetry."""
+    def test_get_validation_report_includes_implicit_params_count(self):
+        """The validation report exposes implicit_params_count for symmetry."""
         pack_data = {
             "language": "es",
             "target": "python",
             "version": "3.10",
-            "reserved_words": {"self": "propio", "cls": "clase"},
+            "implicit_params": {"self": "propio", "cls": "clase"},
         }
         schema = LanguagePackSchema(**pack_data)
         report = SchemaValidator.get_validation_report(schema)
-        assert "reserved_words_count" in report
-        assert report["reserved_words_count"] == 2
+        assert "implicit_params_count" in report
+        assert report["implicit_params_count"] == 2
 
-    def test_get_validation_report_zero_reserved_words_when_absent(self):
-        """Backward-compat: reserved_words_count is 0 when section omitted."""
+    def test_get_validation_report_zero_implicit_params_when_absent(self):
+        """Backward-compat: implicit_params_count is 0 when section omitted."""
         pack_data = {
             "language": "es",
             "target": "python",
@@ -1059,7 +1059,7 @@ class TestReservedWordsField:
         }
         schema = LanguagePackSchema(**pack_data)
         report = SchemaValidator.get_validation_report(schema)
-        assert report["reserved_words_count"] == 0
+        assert report["implicit_params_count"] == 0
 
 
 class TestCrossSectionCollisions:
@@ -1067,7 +1067,7 @@ class TestCrossSectionCollisions:
 
     Pre-Copilot-review-fix: check_duplicates only detected duplicates
     WITHIN each section. The AYA-213 Cycle-4 Urdu failure mode (a
-    reserved_word value matching a keyword value in the same pack) would
+    implicit_param value matching a keyword value in the same pack) would
     pass validation silently. These tests pin the cross-section detection.
     """
 
@@ -1080,17 +1080,17 @@ class TestCrossSectionCollisions:
             "keywords": {"def": "definir", "class": "clase"},
             "builtins": {"print": "imprimir"},
             "exceptions": {"ValueError": "ErrorValor"},
-            "reserved_words": {"self": "propio", "cls": "claseref"},
+            "implicit_params": {"self": "propio", "cls": "claseref"},
         }
         schema = LanguagePackSchema(**pack_data)
         result = SchemaValidator.check_duplicates(schema)
         assert result["passed"] is True
         assert result["cross_section_collisions"] == []
 
-    def test_keyword_reserved_word_collision_detected(self):
+    def test_keyword_implicit_param_collision_detected(self):
         """The exact AYA-213 Cycle-4 Urdu failure mode.
 
-        keyword.in -> X and reserved_word.self -> X. At runtime the
+        keyword.in -> X and implicit_param.self -> X. At runtime the
         translator dispatches keyword first, so the reserved-word value
         silently round-trips to `in` instead of `self`. Pre-CORE-710 this
         was the SyntaxError-on-round-trip bug. The validator must catch it.
@@ -1100,7 +1100,7 @@ class TestCrossSectionCollisions:
             "target": "python",
             "version": "3.10",
             "keywords": {"in": "miyn"},  # Latin proxy for مین
-            "reserved_words": {"self": "miyn"},  # would collide
+            "implicit_params": {"self": "miyn"},  # would collide
         }
         schema = LanguagePackSchema(**pack_data)
         result = SchemaValidator.check_duplicates(schema)
@@ -1110,7 +1110,7 @@ class TestCrossSectionCollisions:
         assert col["translation"] == "miyn"
         assert col["count"] == 2
         sections = {loc["section"] for loc in col["locations"]}
-        assert sections == {"keyword", "reserved_word"}
+        assert sections == {"keyword", "implicit_param"}
 
     def test_keyword_builtin_collision_detected(self):
         """Same value across keyword + builtin also flagged."""
@@ -1155,12 +1155,12 @@ class TestCrossSectionCollisions:
             "target": "python",
             "version": "3.10",
             "keywords": {"in": "miyn", "def": "shared", "class": "shared"},
-            "reserved_words": {"self": "miyn"},
+            "implicit_params": {"self": "miyn"},
         }
         schema = LanguagePackSchema(**pack_data)
         result = SchemaValidator.check_duplicates(schema)
         # 1 intra-section keyword dup (def/class -> shared)
-        # 1 cross-section collision (miyn in keyword + reserved_word)
+        # 1 cross-section collision (miyn in keyword + implicit_param)
         assert result["total_conflicts"] == 2
 
     def test_three_way_cross_section_collision(self):

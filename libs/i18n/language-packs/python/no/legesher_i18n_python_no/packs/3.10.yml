@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: tegnvarning
   byteswarning: bytesvaring
   resourcewarning: resursadvars
-reserved_words:
+implicit_params:
   self: seg
   cls: egenklasse
 metadata:

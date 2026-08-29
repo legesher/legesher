@@ -294,7 +294,7 @@ def _term_rows() -> list[dict]:
         "keywords": ["keyword"],
         "builtins": ["builtin_func", "builtin_type", "special_constant"],
         "exceptions": ["exception"],
-        "reserved_words": ["reserved_word"],
+        "implicit_params": ["implicit_param"],
         "symbols": [None],
         "variable_conventions": [None],
         "messages": ["SyntaxError", "ValueError"],
@@ -594,6 +594,95 @@ def test_the_category_table_counts_the_rows_it_was_given() -> None:
 
     messages = next(ln for ln in table.splitlines() if ln.startswith("| `messages` |"))
     assert "message families" in messages, "twenty families would not fit in a cell"
+
+
+def test_every_symbol_publishes_the_character_it_names(exported: Path) -> None:
+    """A symbol row that cannot be resolved to a character names nothing.
+
+    The inventory has always carried the glyph; the export dropped it, on the
+    reasoning that shipping a language-invariant constant in 51 packs would be
+    51 copies of it. True of the pack files, false of `pl_terminology`, which
+    holds one row per symbol and exists for exactly the facts that do not vary
+    by language. Without it the dataset said `paren_open` is called *opening
+    parenthesis* in 51 languages and never said it means `(`.
+    """
+    import pyarrow.parquet as pq
+
+    rows = pq.read_table(exported / "data" / "pl_terminology.parquet").to_pylist()
+    symbols = [r for r in rows if r["category"] == "symbols"]
+    assert symbols, "no symbol rows; the guard would pass vacuously"
+
+    glyphless = {r["source_term"] for r in symbols if r["glyph"] is None}
+    # Null means "has no printable form", not "we forgot". Those three are the
+    # whole set, and naming them here makes a fourth appearing a failure.
+    assert glyphless == {"indentation", "newline", "space"}, (
+        f"unexpected glyphless symbols: {sorted(glyphless)}"
+    )
+
+    by_slug = {r["source_term"]: r["glyph"] for r in symbols}
+    assert by_slug["paren_open"] == "("
+    assert by_slug["underscore"] == "_"
+
+    # Every other category is glyphless by construction.
+    assert all(r["glyph"] is None for r in rows if r["category"] != "symbols")
+
+
+def test_source_text_distinguishes_absent_from_empty(exported: Path) -> None:
+    """Null and `""` are different facts, and the card says which is which.
+
+    Null means the row has no separate English surface, because `source_term`
+    already is it. `""` means the surface genuinely is the empty string: a bare
+    `assert` raises `AssertionError` with no message at all. A consumer
+    filtering `IS NOT NULL` and one filtering `!= ''` get different row sets,
+    so the distinction has to be deliberate rather than an artefact of which
+    branch built the row.
+    """
+    import pyarrow.parquet as pq
+
+    rows = pq.read_table(exported / "data" / "pl_terminology.parquet").to_pylist()
+
+    term_families = {"keywords", "builtins", "exceptions", "implicit_params"}
+    assert all(
+        r["source_text"] is None for r in rows if r["category"] in term_families
+    ), "a term row carries a source_text, but its source_term IS the English"
+
+    empty = {
+        r["source_term"]
+        for r in rows
+        if r["category"] == "messages" and r["source_text"] == ""
+    }
+    assert empty == {
+        "AssertionError.no_message",
+        "KeyboardInterrupt.interrupt",
+        "StopIteration.no_value",
+    }, f"the no-text messages changed: {sorted(empty)}"
+    assert all(
+        r["source_text"] is not None for r in rows if r["category"] == "messages"
+    ), 'a message row went null; empty text is `""`, never absent'
+
+
+def test_the_renamed_category_reaches_every_published_surface(
+    exported: Path,
+) -> None:
+    """`reserved_words` claimed the grammar reserved `self` and `cls`.
+
+    It does not. The name is now `implicit_params`, and this asserts the rename
+    landed everywhere a reader can see it rather than only where it was easy.
+    """
+    import pyarrow.parquet as pq
+
+    assert "implicit_params" in export_packs.SECTIONS
+    assert "reserved_words" not in export_packs.SECTIONS
+
+    for config in ("pl_terminology", "vocabulary"):
+        rows = pq.read_table(exported / "data" / f"{config}.parquet").to_pylist()
+        seen = {r["category"] for r in rows}
+        assert "implicit_params" in seen, f"{config} lost the category"
+        assert "reserved_words" not in seen, f"{config} still publishes the old name"
+
+    card = (exported / "README.md").read_text(encoding="utf-8")
+    assert "| `implicit_params` |" in card
+    assert "reserved_words" not in card
 
 
 def test_the_pack_ids_the_card_calls_out_really_do_differ_from_bcp47() -> None:

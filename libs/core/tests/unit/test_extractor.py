@@ -507,11 +507,11 @@ class TestExtractorSkipsReservedWords:
         )
         return TranslatableExtractor(mapper)
 
-    def test_reserved_words_constant_contains_self_and_cls(self):
+    def test_implicit_params_constant_contains_self_and_cls(self):
         """The module-level constant lists exactly the conventions we skip."""
-        from legesher_core.tree_sitter.extractor import RESERVED_WORDS
+        from legesher_core.tree_sitter.extractor import IMPLICIT_PARAMS
 
-        assert RESERVED_WORDS == frozenset({"self", "cls"})
+        assert IMPLICIT_PARAMS == frozenset({"self", "cls"})
 
     def test_self_in_method_signature_is_skipped(self):
         """def __init__(self, x): self.x = x — self should never reach LLM."""
@@ -538,7 +538,7 @@ class TestExtractorSkipsReservedWords:
     def test_self_in_attribute_access_is_skipped(self):
         """self.x references in method body should also be skipped (saves LLM tokens).
 
-        The translator's dispatch order (reserved_word_map before IdentifierMap)
+        The translator's dispatch order (implicit_param_map before IdentifierMap)
         ensures the substitution happens correctly at output time without
         the LLM needing to see self at all.
         """
@@ -581,10 +581,10 @@ class TestExtractorSkipsReservedWords:
         # `helper` is still a real identifier
         assert "helper" in identifier_texts
 
-    def test_keywords_still_take_precedence_over_reserved_word_skip(self):
+    def test_keywords_still_take_precedence_over_implicit_param_skip(self):
         """A literal Python keyword wins over reserved-word skip.
 
-        Defensive: if `def` were ever added to RESERVED_WORDS by mistake,
+        Defensive: if `def` were ever added to IMPLICIT_PARAMS by mistake,
         the keyword check (which runs first) would still prevent the
         keyword from being extracted as a user identifier.
         """

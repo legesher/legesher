@@ -181,7 +181,7 @@ exceptions:
   valueerror: মানত্রুটি
   warning: সতর্কতা
   zerodivisionerror: শূন্যভাগত্রুটি
-reserved_words:
+implicit_params:
   self: স্বয়ং
   cls: শ্রেণীস্বয়ং
 metadata:

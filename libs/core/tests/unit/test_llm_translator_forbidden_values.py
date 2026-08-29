@@ -2,7 +2,7 @@
 
 CORE-710 + CORE-950: when LLMTranslator is constructed from a language
 pack, it must compute the union of pack reserved values (keywords +
-builtins + exceptions + reserved_words) and inject that flat list into
+builtins + exceptions + implicit_params) and inject that flat list into
 every identifier translation request so the backend (provider) can pass
 it to PromptBuilder.
 

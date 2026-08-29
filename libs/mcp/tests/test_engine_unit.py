@@ -575,7 +575,7 @@ def test_categories_matches_the_canonical_section_vocabulary() -> None:
 
     Set equality on purpose, against a literal on purpose: CATEGORIES
     stays a hand-written tuple because its ORDER is a contract (lookup
-    precedence — ``keywords`` wins over ``reserved_words`` on conflict),
+    precedence — ``keywords`` wins over ``implicit_params`` on conflict),
     while ``YAML_SECTION_CATEGORIES``'s ordering is an accident of how the
     dict was authored. Deriving one from the other would launder that
     accident into a contract; this pins membership and nothing more.

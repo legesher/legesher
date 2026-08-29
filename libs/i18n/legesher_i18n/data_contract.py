@@ -67,7 +67,7 @@ ALLOWED_TOP_LEVEL_KEYS = frozenset(LanguagePackSchema.model_fields)
 # CORE-1582) keep partitions separate and check each on its own. The full
 # inventory is the schema's TRANSLATION_SECTIONS — one list, not a copy
 # (post-merge review finding, 2026-08-09).
-_FLAT_PARTITIONS = ("keywords", "builtins", "exceptions", "reserved_words")
+_FLAT_PARTITIONS = ("keywords", "builtins", "exceptions", "implicit_params")
 _ALL_PARTITIONS = TRANSLATION_SECTIONS
 
 # Python soft keywords whose keyword-role and builtin-role surfaces may

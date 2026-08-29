@@ -18,6 +18,7 @@ from __future__ import annotations
 import re
 import sqlite3
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
@@ -1081,3 +1082,46 @@ def test_upgraded_database_refuses_canon_on_a_quarantined_option(
             f" surface_form, source_file) VALUES (1,'ur','{OPT1}','ورنہ_اگر',"
             " 'libs/i18n/canon/ur.toml')"
         )
+
+
+def test_the_review_track_is_not_the_renamed_term_category() -> None:
+    """``reserved_words`` names two unrelated things. Only one was renamed.
+
+    CORE-2060 renamed the term category ``reserved_word`` and the pack section
+    ``reserved_words`` to ``implicit_param`` / ``implicit_params``, because the
+    section held ``self`` and ``cls`` while its name claimed the grammar
+    reserved them.
+
+    ``review_sessions.track`` uses the same spelling for something else
+    entirely: which body of work a reviewer sat for, as opposed to error
+    messages or the style profile. That is the BROAD sense of the phrase, it is
+    correct, and it stays.
+
+    This is not hypothetical. The rename sweep was line-scoped, and eight
+    review-session fixtures spell the track inside a multi-line INSERT whose
+    column list sits on an earlier line, so the sweep could not see the word
+    ``track`` and rewrote all eight. The CHECK constraint caught it. This test
+    is the cheaper alarm: it fails on a rename, not on a database write.
+    """
+    schema = (
+        Path(__file__).resolve().parents[1] / "legesher_i18n" / "db" / "schema_v2.sql"
+    ).read_text(encoding="utf-8")
+    bundle = (
+        Path(__file__).resolve().parents[1]
+        / "legesher_i18n"
+        / "intake"
+        / "bundle_schema.json"
+    ).read_text(encoding="utf-8")
+
+    assert "CHECK (track IN ('reserved_words', 'messages', 'style_profile'))" in schema
+    assert (
+        '"track": { "enum": ["reserved_words", "messages", "style_profile"] }' in bundle
+    )
+
+    # ...and the term category really did move, so this test cannot pass by
+    # nothing having happened.
+    from legesher_i18n.term_definitions import TERM_TYPE_YAML_SECTIONS
+
+    assert "implicit_param" in TERM_TYPE_YAML_SECTIONS
+    assert "reserved_word" not in TERM_TYPE_YAML_SECTIONS
+    assert TERM_TYPE_YAML_SECTIONS["implicit_param"] == "implicit_params"

@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: PeringatanUnikode
   byteswarning: PeringatanBait
   resourcewarning: PeringatanSumberdaya
-reserved_words:
+implicit_params:
   self: sorangan
   cls: kelas_sorangan
 metadata:

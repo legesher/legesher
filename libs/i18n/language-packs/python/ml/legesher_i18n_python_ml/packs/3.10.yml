@@ -181,7 +181,7 @@ exceptions:
   valueerror: മൂല്യപിശക്
   warning: മുന്നറിയിപ്പ്
   zerodivisionerror: പൂജ്യഹരണപിശക്
-reserved_words:
+implicit_params:
   self: സ്വയം
   cls: സ്വവർഗ്ഗം
 metadata:

@@ -181,7 +181,7 @@ exceptions:
   valueerror: chybahodnoty
   warning: varování
   zerodivisionerror: chybadělení_nulou
-reserved_words:
+implicit_params:
   self: sebe
   cls: třídasama
 metadata:

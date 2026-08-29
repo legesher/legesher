@@ -181,7 +181,7 @@ exceptions:
   valueerror: የእሴትስህተት
   warning: ማስጠንቀቂያ
   zerodivisionerror: በዜሮማካፈልስህተት
-reserved_words:
+implicit_params:
   self: ራስ
   cls: ክፍልራስ
 metadata:

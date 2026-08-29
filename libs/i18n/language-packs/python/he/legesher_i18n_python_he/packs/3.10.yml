@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: אזהרתיוניקוד
   byteswarning: אזהרת_בתים
   resourcewarning: אזהרתמשאב
-reserved_words:
+implicit_params:
   self: עצמי
   cls: מחלקהעצמה
 metadata:

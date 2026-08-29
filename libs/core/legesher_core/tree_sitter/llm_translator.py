@@ -64,7 +64,7 @@ class LLMTranslator:
         builtin_map: dict[str, str],
         backend: TextTranslationBackend,
         python_version: str = "3.13",
-        reserved_word_map: dict[str, str] | None = None,
+        implicit_param_map: dict[str, str] | None = None,
         identifier_map: IdentifierMap | None = None,
         scope: TranslationScope | None = None,
         translation_logger: TranslationLogger | None = None,
@@ -77,7 +77,7 @@ class LLMTranslator:
             builtin_map: Builtin translation mappings from language pack
             backend: LLM backend for translating identifiers/comments/strings
             python_version: Python version for version-aware packs
-            reserved_word_map: Optional mapping of Python conventions like
+            implicit_param_map: Optional mapping of Python conventions like
                 ``self`` and ``cls`` to target language (CORE-710). Threaded
                 through the inner ``TreeSitterTranslator`` and ``TokenMapper``
                 so the dispatch order substitutes self/cls deterministically
@@ -88,7 +88,7 @@ class LLMTranslator:
             forbidden_identifier_values: Optional flat list of translation
                 values the LLM must NOT propose as identifier translations.
                 Typically the union of pack ``keywords``, ``builtins``,
-                ``exceptions``, and ``reserved_words`` values. Threaded
+                ``exceptions``, and ``implicit_params`` values. Threaded
                 into every identifier batch's ``context.forbidden_values``
                 so the backend can pass them to ``PromptBuilder``. Text
                 items (comments/docstrings/strings) do not receive this
@@ -99,10 +99,10 @@ class LLMTranslator:
             keyword_map=keyword_map,
             builtin_map=builtin_map,
             python_version=python_version,
-            reserved_word_map=reserved_word_map,
+            implicit_param_map=implicit_param_map,
         )
         self.backend = backend
-        self.mapper = TokenMapper(keyword_map, builtin_map, reserved_word_map)
+        self.mapper = TokenMapper(keyword_map, builtin_map, implicit_param_map)
         # Use ``is None`` rather than ``or`` because IdentifierMap defines
         # __len__, so an empty (but caller-provided, possibly pack-aware)
         # map evaluates falsy and would silently get replaced by a fresh
@@ -258,7 +258,7 @@ class LLMTranslator:
                 # CORE-950 layer 2: when the IdentifierMap is pack-aware,
                 # ``.add()`` raises ValueError on collisions with reserved
                 # pack values (keywords / builtins / exceptions /
-                # reserved_words). Wrap in try/except and apply a numeric
+                # implicit_params). Wrap in try/except and apply a numeric
                 # suffix as a deterministic fallback so a single collision
                 # doesn't crash the whole batch. Layer 1 (forbidden_values
                 # in the prompt) makes this rare; the suffix is the
@@ -398,7 +398,7 @@ class LLMTranslator:
 
         The pack-aware ``IdentifierMap`` raises ``ValueError`` when a
         translation matches a reserved pack value. Reserved values are
-        translations of keywords / builtins / exceptions / reserved_words
+        translations of keywords / builtins / exceptions / implicit_params
         from the language pack -- they don't typically end in ``_2`` or
         similar, so a numeric suffix nearly always resolves the
         collision in one step. The loop is bounded; a deterministic
@@ -580,14 +580,14 @@ class LLMTranslator:
         """
         reversed_keyword = {v: k for k, v in self.mapper.keyword_map.items()}
         reversed_builtin = {v: k for k, v in self.mapper.builtin_map.items()}
-        # CORE-710: also reverse the reserved_word_map so round-trip restores self/cls.
-        reversed_reserved = {v: k for k, v in self.mapper.reserved_word_map.items()}
+        # CORE-710: also reverse the implicit_param_map so round-trip restores self/cls.
+        reversed_reserved = {v: k for k, v in self.mapper.implicit_param_map.items()}
         return LLMTranslator(
             keyword_map=reversed_keyword,
             builtin_map=reversed_builtin,
             backend=self.backend,
             python_version=self.python_version,
-            reserved_word_map=reversed_reserved,
+            implicit_param_map=reversed_reserved,
             identifier_map=self.identifier_map,
             scope=self.scope,
         )
@@ -628,13 +628,13 @@ class LLMTranslator:
         loader = LanguagePackLoader()
         pack = loader.load(language, target="python", version=python_version)
 
-        # CORE-710: pull reserved_words from the pack if present (defaults to {})
-        reserved_word_map = getattr(pack, "reserved_words", {}) or {}
+        # CORE-710: pull implicit_params from the pack if present (defaults to {})
+        implicit_param_map = getattr(pack, "implicit_params", {}) or {}
 
         # CORE-950 two-layer collision defense (CORE-710 deferred this).
         #
         # Layer 1 (prompt): aggregate every reserved value the LLM could
-        # collide with -- keywords, builtins, exceptions, reserved_words --
+        # collide with -- keywords, builtins, exceptions, implicit_params --
         # and pass them to the backend via per-item context.forbidden_values
         # so PromptBuilder lists them in the identifier prompt. Makes
         # collision proposals rare.
@@ -649,7 +649,7 @@ class LLMTranslator:
             pack.keywords,
             pack.builtins,
             getattr(pack, "exceptions", {}) or {},
-            reserved_word_map,
+            implicit_param_map,
         ):
             forbidden_identifier_values.extend(mapping.values())
 
@@ -660,7 +660,7 @@ class LLMTranslator:
             builtin_map=pack.builtins,
             backend=backend,
             python_version=python_version,
-            reserved_word_map=reserved_word_map,
+            implicit_param_map=implicit_param_map,
             forbidden_identifier_values=forbidden_identifier_values or None,
             identifier_map=identifier_map,
         )

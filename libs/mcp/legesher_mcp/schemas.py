@@ -133,7 +133,7 @@ class DivergenceModel(ToolResult):
     layer: str | None = Field(
         default=None,
         description=(
-            "keywords | builtins | exceptions | reserved_words | collision | "
+            "keywords | builtins | exceptions | implicit_params | collision | "
             "identifiers | comments | strings. Routes the fix: pack layers are "
             "engine/pack defects, collision is a known identifier class "
             "(CORE-1840), identifiers are expected residue, comments/strings "
@@ -202,7 +202,7 @@ class ConstructMapping(ToolResult):
             "entry — untranslated constructs render in English)."
         )
     )
-    category: str = Field(description="keywords | builtins | exceptions | reserved_words")
+    category: str = Field(description="keywords | builtins | exceptions | implicit_params")
 
 
 class ExplainMaterial(ToolResult):
@@ -225,7 +225,7 @@ class KeywordMappings(ToolResult):
     keywords: dict[str, str] = Field(default_factory=dict)
     builtins: dict[str, str] = Field(default_factory=dict)
     exceptions: dict[str, str] = Field(default_factory=dict)
-    reserved_words: dict[str, str] = Field(default_factory=dict)
+    implicit_params: dict[str, str] = Field(default_factory=dict)
 
 
 class LookupResult(ToolResult):

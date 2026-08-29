@@ -60,7 +60,7 @@ class LanguagePack:
         keywords: Merged keyword translations from pack + inheritance
         builtins: Merged builtin function translations
         exceptions: Merged exception type translations
-        reserved_words: Merged translations for Python conventions like
+        implicit_params: Merged translations for Python conventions like
             ``self`` and ``cls`` (CORE-710). Distinct from ``keywords``
             because they aren't Python reserved words; treated
             deterministically by the translator regardless.
@@ -86,7 +86,7 @@ class LanguagePack:
     keywords: dict[str, str] = field(default_factory=dict)
     builtins: dict[str, str] = field(default_factory=dict)
     exceptions: dict[str, str] = field(default_factory=dict)
-    reserved_words: dict[str, str] = field(default_factory=dict)
+    implicit_params: dict[str, str] = field(default_factory=dict)
     members: dict[str, str] = field(default_factory=dict)
     symbols: dict[str, str] = field(default_factory=dict)
     variable_conventions: dict[str, str] = field(default_factory=dict)
@@ -98,7 +98,7 @@ class LanguagePack:
         """Get translation for a specific keyword.
 
         Looks up the term in ``keywords`` first, then falls back to
-        ``reserved_words``. The keyword section always wins on conflict,
+        ``implicit_params``. The keyword section always wins on conflict,
         so any term that is both a true Python keyword and a Legesher
         reserved word is resolved as the keyword.
 
@@ -108,7 +108,7 @@ class LanguagePack:
         Returns:
             Translated keyword, or None if not found in either section
         """
-        return self.keywords.get(keyword) or self.reserved_words.get(keyword)
+        return self.keywords.get(keyword) or self.implicit_params.get(keyword)
 
     def get_builtin_translation(self, builtin: str) -> str | None:
         """Get translation for a specific builtin function.
@@ -133,7 +133,7 @@ class LanguagePack:
         # Try lowercase first (our internal convention), then original case
         return self.exceptions.get(exception.lower()) or self.exceptions.get(exception)
 
-    def get_reserved_word_translation(self, reserved_word: str) -> str | None:
+    def get_implicit_param_translation(self, implicit_param: str) -> str | None:
         """Get translation for a specific reserved word (CORE-710).
 
         Reserved words are Python conventions like ``self`` and ``cls`` that
@@ -143,12 +143,12 @@ class LanguagePack:
         a reserved word.
 
         Args:
-            reserved_word: English reserved word to translate (e.g., 'self')
+            implicit_param: English reserved word to translate (e.g., 'self')
 
         Returns:
             Translated reserved word, or None if not found
         """
-        return self.reserved_words.get(reserved_word)
+        return self.implicit_params.get(implicit_param)
 
     def has_keyword(self, keyword: str) -> bool:
         """Check if pack contains a keyword translation.
@@ -161,16 +161,16 @@ class LanguagePack:
         """
         return keyword in self.keywords
 
-    def has_reserved_word(self, reserved_word: str) -> bool:
+    def has_implicit_param(self, implicit_param: str) -> bool:
         """Check if pack contains a reserved word translation (CORE-710).
 
         Args:
-            reserved_word: Reserved word to check (e.g., 'self', 'cls')
+            implicit_param: Reserved word to check (e.g., 'self', 'cls')
 
         Returns:
-            True if reserved_word is in the pack's reserved_words section
+            True if implicit_param is in the pack's implicit_params section
         """
-        return reserved_word in self.reserved_words
+        return implicit_param in self.implicit_params
 
     def get_symbol_name(self, slug: str) -> str | None:
         """What this language calls the symbol identified by *slug*.
@@ -207,7 +207,7 @@ class LanguagePack:
             f"LanguagePack(language={self.language}, target={self.target}, "
             f"version={self.version}, keywords={len(self.keywords)}, "
             f"builtins={len(self.builtins)}, exceptions={len(self.exceptions)}, "
-            f"reserved_words={len(self.reserved_words)}, members={len(self.members)}, "
+            f"implicit_params={len(self.implicit_params)}, members={len(self.members)}, "
             f"symbols={len(self.symbols)}, "
             f"variable_conventions={len(self.variable_conventions)})"
         )
@@ -423,7 +423,7 @@ class LanguagePackLoader:
             keywords=dict(pack_schema.keywords),  # Copy to ensure immutability
             builtins=dict(pack_schema.builtins),
             exceptions=dict(pack_schema.exceptions),
-            reserved_words=dict(pack_schema.reserved_words),
+            implicit_params=dict(pack_schema.implicit_params),
             members=dict(pack_schema.members),
             symbols=dict(pack_schema.symbols),
             variable_conventions=dict(pack_schema.variable_conventions),
@@ -675,11 +675,11 @@ class LanguagePackLoader:
             override_exceptions = override.get("exceptions", {})
             merged["exceptions"] = {**base_exceptions, **override_exceptions}
 
-        # Merge reserved_words (override takes precedence)
-        if "reserved_words" in base or "reserved_words" in override:
-            base_reserved = base.get("reserved_words", {})
-            override_reserved = override.get("reserved_words", {})
-            merged["reserved_words"] = {**base_reserved, **override_reserved}
+        # Merge implicit_params (override takes precedence)
+        if "implicit_params" in base or "implicit_params" in override:
+            base_reserved = base.get("implicit_params", {})
+            override_reserved = override.get("implicit_params", {})
+            merged["implicit_params"] = {**base_reserved, **override_reserved}
 
         # Merge members (override takes precedence) — CORE-1582
         if "members" in base or "members" in override:

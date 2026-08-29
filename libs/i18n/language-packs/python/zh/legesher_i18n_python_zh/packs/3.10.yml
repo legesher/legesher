@@ -181,7 +181,7 @@ exceptions:
   valueerror: 值错误
   warning: 警告
   zerodivisionerror: 零除数错误
-reserved_words:
+implicit_params:
   self: 自身
   cls: 类自身
 metadata:

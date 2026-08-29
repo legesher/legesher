@@ -181,7 +181,7 @@ exceptions:
   unicodewarning: unicodevarning
   byteswarning: bytesvarnings
   resourcewarning: resursavvisning
-reserved_words:
+implicit_params:
   self: sig_själv
   cls: klass_själv
 metadata:

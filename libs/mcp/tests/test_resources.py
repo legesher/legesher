@@ -39,7 +39,7 @@ async def test_terms_dictionary_for_a_language(client: ClientSession) -> None:
     assert terms["keywords"] == expected["keywords"]
     assert terms["builtins"] == expected["builtins"]
     assert terms["exceptions"] == expected["exceptions"]
-    assert terms["reserved_words"] == expected["reserved_words"]
+    assert terms["implicit_params"] == expected["implicit_params"]
 
 
 async def test_terms_for_unknown_language_is_a_clean_error(
