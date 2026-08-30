@@ -34,7 +34,7 @@ Each cached segment is keyed by the triple
   see `docs/register-map-node-identity.md`). The key is node-scoped:
   identical prose under a different node is a fuzzy suggestion, never an
   exact hit.
-- **Source-content hash** — `node_identity.content_hash` of the source
+- **Source-content hash** — `text_identity.content_hash` of the source
   prose: `sha256(NFC(text))` truncated to 16 hex chars. The store-NFC /
   compare-NFC contract is shared with the register map, so canonically
   equivalent renderings of the same source hit the same segment.

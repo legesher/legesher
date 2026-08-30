@@ -70,6 +70,9 @@ Example:
     >>> manager = MetadataManager(Path(".legesher/metadata"))
     >>> tracker = TranslationTracker(manager)
     >>> tracker.track_clean(Path("src/main.py"), "es", "en")
+
+The artifact normalization/hash contract lives in
+``legesher_core.text_identity`` (imported by module path).
 """
 
 from typing import TYPE_CHECKING

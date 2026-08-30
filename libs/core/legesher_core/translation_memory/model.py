@@ -8,7 +8,7 @@ and docstrings (:data:`~legesher_core.translation_memory.replay.PROSE_CLASSES`)
 
 where node identity is the register map's minted ``node_id`` and the
 source hash is the NFC content hash of the source prose (the same
-``node_identity.content_hash`` the register map uses; store-NFC /
+``text_identity.content_hash`` the register map uses; store-NFC /
 compare-NFC contract).
 
 Design invariants:
@@ -49,7 +49,7 @@ from pathlib import Path
 from typing import Any, Collection, Mapping
 
 from ..artifact_io import atomic_write_text, parse_semver
-from ..register_map.node_identity import (
+from ..text_identity import (
     content_hash,
     legacy_nfc_hash,
     normalize_text,
@@ -186,7 +186,7 @@ class TMSegment:
 
     Attributes:
         node_id: Register-map node identity of the prose element.
-        source_hash: ``node_identity.content_hash`` of the source prose.
+        source_hash: ``text_identity.content_hash`` of the source prose.
         target_lang: Target language code (e.g. ``"es"``).
         source_text: The source prose segment, NFC-normalized. Stored so
             stale segments can serve as fuzzy-match history.
@@ -220,7 +220,7 @@ class TMSegment:
                 f"expected one of {sorted(SEGMENT_STATUSES)}"
             )
         # Storage contract, shared with the register map: LF, then NFC
-        # (``node_identity.normalize_text``). The LF half matters most
+        # (``text_identity.normalize_text``). The LF half matters most
         # here — prose segments are the multi-line class, so a CRLF
         # checkout would otherwise miss every docstring segment.
         raw_source = self.source_text

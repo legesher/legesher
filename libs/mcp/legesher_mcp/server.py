@@ -26,9 +26,9 @@ from collections.abc import Sequence
 from dataclasses import asdict
 from typing import Annotated, Any, Literal, cast, get_args
 
-from legesher_core.register_map.correction import compare_key
 from legesher_core.round_trip import Divergence
 from legesher_core.round_trip import verify_round_trip as core_verify_round_trip
+from legesher_core.text_identity import compare_key
 from legesher_core.tree_sitter.identifier_map import IdentifierMap
 from legesher_core.tree_sitter.identifier_validator import IdentifierValidator
 from legesher_core.unicode_guard import Issue, scan_identifier, scan_text
