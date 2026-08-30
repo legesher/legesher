@@ -75,46 +75,17 @@ extension. They are the primary community-contribution surface once packs open f
 
 ### Gaps
 
-The pack layer is gated; the **map layer is not**. Maps are the second data channel with render authority:
-`.legesher/register_map.json` (`libs/core/legesher_core/register_map/model.py`, node-keyed, schema 1.2.0) and the
-embedded identifier map (`libs/core/legesher_core/tree_sitter/identifier_map.py`). Unlike packs, map artifacts are
-authored per-repo and — under the shared-map design — **received from other people**. Today:
+The pack layer is gated; the **map layer** moved out of this repository entirely (CORE-2011, ratified
+2026-08-30): building, persisting, sharing, and verifying `.legesher/` map artifacts is the commercial map engine's
+capability, and the free engine here neither reads nor renders from them (`tests/test_map_family_absent.py` enforces
+the boundary). What remains in scope here is the embedded identifier map
+(`libs/core/legesher_core/tree_sitter/identifier_map.py`) and the shared identity/collision contract
+(`legesher_core.text_identity`: store-NFC, compare-NFKC+casefold) that any consumer of those artifacts must uphold.
 
-- `RegisterMapDocument.load` parses JSON and checks `schema_version` only. No Unicode scan of stored `original_text`
-  or rendered surfaces.
-- `libs/core/legesher_core/register_map/correction.py` runs `unicode_guard.scan_text` on **newly authored**
-  corrections (and `compare_key` for collision checks), but nothing re-validates entries already present in a loaded
-  artifact. An artifact edited out-of-band, or synced from a teammate, bypasses the guard entirely.
-- No render-vs-execute round-trip exists at the map layer: nothing proves that rendering a file through a received map
-  and mapping it back yields the identical canonical program.
-
-### Specification: map-layer render-vs-execute consistency check (extends CORE-1315 to maps)
-
-A loaded or merged map artifact passes three checks before any rendering uses it, mirroring what CORE-1315/CORE-1453
-already enforce for packs:
-
-1. **Surface scan.** Every stored text with render authority (`original_text`, identifier translations, correction
-   targets) passes `unicode_guard.scan_text` with the owning language's `script_policy` format-char allowlist. Fail
-   closed; never sanitize (stripping a bidi control hides the attack the scan exists to surface — same posture as the
-   JS guard).
-2. **Identity discipline.** Stored text is NFC (the store-NFC contract already documented in `register_map/model.py`);
-   collision detection over the map uses `compare_key` (NFKC + casefold) so no two entries can render visually
-   identical while executing as different identifiers. Reject any pair of entries whose rendered surfaces are
-   `compare_key`-equal but whose canonical targets differ.
-3. **Round-trip.** Render the canonical source through the map, map the rendering back, and require byte-identical
-   canonical output — `round_trip.verify_round_trip` extended over the map's identifier layer, the same "raw `==` is
-   correct here" rule as pack round-trip.
-
-Enforcement points: `RegisterMapDocument.load`, map merge (shared-map ingestion), and the CI gate for any map artifact
-committed to a repo. A locally minted, never-shared map may run the scan lazily; a **received** map artifact must pass
-all three before first use.
-
-### Verdict
-
-**Child-ticket proposal — "Shared/register map: render-vs-execute gate at load"**: apply the three-check specification
-above to `RegisterMapDocument.load`/merge and identifier-map ingestion, so a received map artifact clears the same bar
-as a shipped pack. (Pack-side enforcement is done — CORE-1453; this closes the map side before the shared-map OSS
-flip.)
+The map-poisoning threat class — an artifact edited out-of-band so code *reads* differently than it executes — rides
+with the map capability: its load-time verification gate is specified and tracked on the commercial side (CORE-2015,
+CORE-1452), not in this repository. If a future release opens a free-side map reader, this section regains a surface
+and the verification requirements return with it.
 
 ---
 

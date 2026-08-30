@@ -30,8 +30,8 @@ Each cached segment is keyed by the triple
 (node identity, source-content hash, target language)
 ```
 
-- **Node identity** — the register map's minted `node_id` (mint-and-store;
-  see `docs/register-map-node-identity.md`). The key is node-scoped:
+- **Node identity** — the map engine's minted `node_id` (mint-and-store;
+  the node-identity contract is documented with the commercial map engine). The key is node-scoped:
   identical prose under a different node is a fuzzy suggestion, never an
   exact hit.
 - **Source-content hash** — `text_identity.content_hash` of the source
@@ -143,8 +143,8 @@ equivalent, driven by the map engine's live-node set) fixes that.
   file is gone from the map, which is exactly when its store should
   collapse to bounded history.
 
-`keep_history=0` drops dead history entirely. Surfaced as
-`legesher map compact` (with `--keep-history` and `--dry-run`).
+`keep_history=0` drops dead history entirely. Surfaced through the
+commercial map engine's `compact` command.
 
 ## Serialization & artifact family
 
@@ -161,14 +161,12 @@ fsync, `os.replace`), so a crash mid-write leaves the previous valid
 artifact rather than a truncated one. Segment text obeys the family's
 storage normalization — **LF, then NFC** — which matters most here:
 prose is the multi-line class, so before that rule a CRLF checkout
-missed every docstring segment. See
-`docs/register-map-node-identity.md`.
+missed every docstring segment. The storage normalization contract lives
+in `legesher_core.text_identity`.
 
-Artifact-family note: this is the second member of the register-map
-artifact family. The document payload is self-describing and embeds
-losslessly under a single key of a future combined document — the same
-contract `RegisterMapDocument.embed_identifier_map` establishes for the
-identifier map. CORE-1435 (team map artifact) and CORE-1663 ride the same
-family.
+Artifact-family note: the document payload is self-describing and embeds
+losslessly under a single key of a future combined document — the
+artifact-family embed contract shared with the commercial map engine.
+CORE-1435 (team map artifact) and CORE-1663 ride the same family.
 
 Deferred (per CORE-411): TMX/TBX export and CAT-tool interop.

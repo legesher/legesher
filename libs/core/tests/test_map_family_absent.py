@@ -15,24 +15,30 @@ import sys
 import pytest
 
 import legesher_core
+import legesher_mcp
 
 MOVED_MODULES = [
-    "legesher_core.register_map",
-    "legesher_core.register_map.model",
-    "legesher_core.translation_memory.replay",
-    "legesher.cli.map_cmd",
+    ("legesher_core.register_map", "'legesher_core.register_map'"),
+    ("legesher_core.register_map.model", "'legesher_core.register_map'"),
+    (
+        "legesher_core.translation_memory.replay",
+        "'legesher_core.translation_memory.replay'",
+    ),
+    ("legesher.cli.map_cmd", "'legesher.cli.map_cmd'"),
 ]
 
 
-@pytest.mark.parametrize("module", MOVED_MODULES)
-def test_moved_modules_are_absent(module):
+@pytest.mark.parametrize(("module", "missing"), MOVED_MODULES)
+def test_moved_modules_are_absent(module, missing):
     result = subprocess.run(
         [sys.executable, "-c", f"import {module}"],
         capture_output=True,
         text=True,
     )
     assert result.returncode != 0, f"{module} is importable — the boundary regressed"
-    assert "ModuleNotFoundError" in result.stderr
+    # Pin the NAME, not just the error class: "No module named 'legesher'"
+    # (a broken venv) must fail this test, never satisfy it.
+    assert f"No module named {missing}" in result.stderr, result.stderr
 
 
 def test_translator_has_no_map_method():
@@ -44,11 +50,14 @@ def test_translator_has_no_map_method():
 def test_no_source_references_to_moved_surfaces():
     """Grep-level gate: free package sources never name the moved modules."""
     core_root = pathlib.Path(legesher_core.__file__).parent
-    roots = [core_root, core_root.parent.parent / "legesher" / "legesher"]
+    roots = [
+        core_root,
+        core_root.parent.parent / "legesher" / "legesher",
+        pathlib.Path(legesher_mcp.__file__).parent,
+    ]
     offenders = []
     for root in roots:
-        if not root.exists():
-            continue
+        assert root.exists(), f"gate root missing: {root}"
         for path in root.rglob("*.py"):
             text = path.read_text(encoding="utf-8")
             for needle in (

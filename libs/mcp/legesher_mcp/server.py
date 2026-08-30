@@ -639,8 +639,9 @@ def _identifier_issues(
 def _pack_collision(candidate: str, pack: Any) -> str | None:
     """The pack entry ``candidate`` takes, or None.
 
-    Mirrors ``register_map.correction._validate_pack`` so the MCP tool and
-    the CLI write path agree about what collides: the exact sweep first
+    Mirrors the map engine's pack-collision validation (both sides share
+    ``text_identity.compare_key``) so the MCP tool and the map write path
+    agree about what collides: the exact sweep first
     (CORE-710), then NFKC+casefold, which catches case variants and
     decomposed forms an equality check misses. ``members`` is in the domain
     because the MLCP members partition is an identifier class (CORE-1372) —

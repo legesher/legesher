@@ -30,8 +30,8 @@ Artifact family: this is a versioned JSON artifact under ``.legesher/``
 with the same discipline as the register map document (schema_version,
 artifact discriminator, sorted order-stable content). The document payload
 is self-describing and embeds losslessly under one key of a future
-combined artifact, mirroring how ``RegisterMapDocument`` embeds the
-IdentifierMap payload (CORE-1435 / CORE-1663 ride the same family). See
+combined artifact — the artifact-family embed contract (CORE-1435 /
+CORE-1663 ride the same family). See
 ``libs/core/docs/translation-memory.md``.
 """
 
@@ -547,9 +547,8 @@ class TranslationMemoryDocument:
     Lives at ``.legesher/translation_memory.json``, keyed by source file
     path like the register map document. The payload is self-describing
     (schema_version + artifact discriminator), so a future combined
-    artifact-family document embeds it losslessly under one key — the same
-    contract ``RegisterMapDocument.embed_identifier_map`` establishes for
-    the identifier map (CORE-1435 / CORE-1663).
+    artifact-family document embeds it losslessly under one key — the
+    artifact-family embed contract (CORE-1435 / CORE-1663).
     """
 
     source_lang: str = "en"
@@ -573,8 +572,8 @@ class TranslationMemoryDocument:
         """Prune every per-file store against the map's live node IDs.
 
         ``live_node_ids`` maps source-file path to the node IDs that
-        file's register map still holds — see
-        :func:`legesher_core.translation_memory.live_node_ids`. A file
+        file's map still holds — the caller (the map engine) supplies the
+        live-node set. A file
         **absent from the mapping** has every one of its segments treated
         as dead: the file itself is gone from the map (deleted or
         renamed), which is exactly when its TM store should collapse to

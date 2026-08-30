@@ -494,9 +494,8 @@ fails a test instead of reaching a user.
 Worked example: `validate_identifier_translations` in `libs/mcp` first
 re-derived its checks and accepted malformed identifiers, invisible
 codepoints, case variants of pack terms, and decomposed spellings — every
-one of which the identifier-rendering contract (now `text_identity.compare_key`
-
-- the pack validators) already rejected. Different artifact, same contract:
+one of which the identifier-rendering contract already rejected (now
+`text_identity.compare_key` plus the pack validators). Different artifact, same contract:
 what makes an identifier rendering legal in a language does not change
 with the file it lands in. The fix was deletion, not addition — reuse
 `IdentifierValidator`, `scan_text`, and `compare_key`.

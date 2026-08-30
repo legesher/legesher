@@ -25,9 +25,12 @@ dependencies = [
     # Sibling ranges ship in the wheel metadata; in-repo the workspace override
     # in [tool.uv.sources] applies. <1.0.0 because semantic-release
     # (major_on_zero = true) moves 0.x to 1.0 on a breaking change.
-    # >=0.23.0: legesher_core.register_map lands in 0.23.0, and server.py imports
-    # compare_key from it at module scope. The workspace override hides this
-    # locally, so the wheel metadata is the only thing enforcing it.
+    # FLOOR IS STALE post-carve: server.py imports compare_key from
+    # legesher_core.text_identity, which lands in the first release AFTER
+    # 0.23.0 — and the map removal is a breaking change that moves core past
+    # the <1.0.0 cap at release (major_on_zero). Restamp both bounds when
+    # semantic-release cuts that version (rides CORE-626 / CORE-1598). The
+    # workspace override hides this locally; wheel metadata is what enforces it.
     "legesher-core>=0.23.0,<1.0.0",  # Translation engine (token translator, pack-backed factory)
     "legesher-i18n>=0.22.0,<1.0.0",  # Language registry + language pack loader
 ]

@@ -1,6 +1,6 @@
 """Shared fixtures for translation memory tests (CORE-411).
 
-Mirrors tests/register_map/conftest.py: minimal hand-rolled
+Minimal hand-rolled (its register-map twin moved with the map family):
 keyword/builtin maps so the integration seam does not depend on any
 particular language pack's contents.
 """

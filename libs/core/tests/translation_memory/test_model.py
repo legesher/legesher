@@ -286,7 +286,7 @@ class TestArtifactFamilyEmbedding:
     def test_payload_embeds_losslessly_in_a_combined_document(self, tmp_path):
         """The document payload is self-describing and embeds losslessly
         under a single key of a future combined artifact — the same
-        discipline as RegisterMapDocument.embed_identifier_map."""
+        discipline as the artifact-family embed contract."""
         doc = TranslationMemoryDocument(source_lang="en")
         tm = doc.get_or_create("src/example.py")
         tm.add(
