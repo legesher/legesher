@@ -1,11 +1,11 @@
 # Legesher Licensing
 
-Legesher is a multi-license monorepo. The root [LICENSE](LICENSE) file contains the full text
-of the Apache License 2.0, which applies to most of the repository. However, **individual
-packages may be licensed differently** — the per-package LICENSE file always takes precedence
-for that directory.
+The root [LICENSE](LICENSE) file contains the full text of the Apache License 2.0. Every
+package in this repository is licensed under it; the per-package LICENSE file is authoritative
+for its directory.
 
-This document enumerates the license for each package and directory.
+This document enumerates the license for each package and directory, and states where the
+open/paid boundary runs.
 
 ## Open Source — Apache License 2.0
 
@@ -27,17 +27,16 @@ The 51 Python language packs inherit their license from [libs/i18n/LICENSE](libs
 Everything published from this repository is Apache-2.0. You may use, modify, and redistribute
 it — including commercially — subject to the license terms.
 
-## Paid Capabilities Live in the Hosted Service
+## The Open / Paid Boundary
 
-Legesher is open-core. The open half is this repository: the engine, the language data, the CLI,
-and the editor integrations, all Apache-2.0 and locally executable with no account and no network
-call. That matters beyond price — Legesher rewrites your source and installs a git filter, so you
-should be able to read exactly what it does to your code before you run it.
+Legesher is open-core. The open half is this repository — all of it Apache-2.0, locally
+executable with no account and no network call. That matters beyond price — Legesher rewrites
+your source and installs a git filter, so you should be able to read exactly what it does to
+your code before you run it.
 
-The commercial half is the hosted service (cloud translation API, and the collaboration and
-analytics capabilities built on it). It is a separate, closed-source codebase, and access is
-gated by account, API key, and subscription — not by the license on anything in this repository.
-Its customer terms live with that service.
+The commercial half lives in separate, closed-source codebases. Access is gated by account,
+API key, and subscription — not by the license on anything in this repository — and customer
+terms live with those services.
 
 Pricing and availability: [legesher.io/pricing](https://legesher.io/pricing).
 

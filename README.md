@@ -77,10 +77,9 @@ Use them, modify them, redistribute them — including commercially. Community c
 Legesher rewrites your source code and installs a git filter, so being able to read exactly what
 it does before you run it is the point, not a courtesy.
 
-Legesher is open-core: the paid capabilities are the **hosted service** (cloud translation API and
-what is built on it), a separate closed-source codebase where access is gated by account and API
-key rather than by a license here. Nothing in this repository requires an account or a network
-call to work.
+Legesher is open-core: the paid capabilities live in separate, closed-source codebases, where
+access is gated by account and API key rather than by a license here. Nothing in this
+repository requires an account or a network call to work.
 
 See [LICENSING.md](LICENSING.md) for the per-package breakdown, or the [LICENSE](LICENSE) file for
 the Apache 2.0 terms.
