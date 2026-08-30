@@ -85,27 +85,6 @@ class TestImportWithoutTreeSitter:
         )
         assert "definir" in result.stdout, result.stdout
 
-    def test_translate_code_with_map_raises_clear_error(self):
-        """CORE-1662 (f): plain translate_code works without the C
-        extensions; the opt-in translate_code_with_map raises the friendly
-        extra-naming ImportError instead of a raw ModuleNotFoundError."""
-        result = run_without_tree_sitter("""
-            from legesher_core import TokenTranslator
-
-            translator = TokenTranslator({"def": "definir"}, {"print": "imprimir"})
-            source = "def f():\\n    pass\\n"
-            assert "definir" in translator.translate_code(source, "en", "es")
-            try:
-                translator.translate_code_with_map(source, "en", "es")
-            except ImportError as exc:
-                assert "legesher-core[treesitter]" in str(exc), str(exc)
-                print("clear map error")
-            else:
-                raise SystemExit("expected ImportError from translate_code_with_map")
-            """)
-        assert result.returncode == 0, result.stderr
-        assert "clear map error" in result.stdout
-
     @pytest.mark.parametrize("export", ["TreeSitterTranslator", "LLMTranslator"])
     def test_tree_sitter_exports_raise_clear_error(self, export):
         """Accessing tree-sitter-backed exports raises an error naming the extra."""

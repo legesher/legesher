@@ -551,8 +551,7 @@ class TranslatableExtractor:
     def is_docstring(self, string_node) -> bool:
         """Check if a string node is a docstring (first expr in body).
 
-        Public API: the register-map builder
-        (``legesher_core.register_map.builder``) relies on this to split
+        Public API: downstream CST classifiers rely on this to split
         ``docstring`` from ``string`` in the element-class taxonomy.
         """
         parent = string_node.parent
@@ -590,8 +589,7 @@ class TranslatableExtractor:
     def determine_role(self, node) -> IdentifierRole:
         """Determine the identifier's role based on its position in the AST.
 
-        Public API: the register-map builder
-        (``legesher_core.register_map.builder``) uses this for identifiers
+        Public API: downstream CST classifiers use this for identifiers
         the extractor itself skips (dunders, implicit params, stdlib
         imports) so every entry still carries a role.
         """

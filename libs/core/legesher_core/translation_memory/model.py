@@ -1,8 +1,7 @@
 """Translation memory data model — the node-keyed prose cache (CORE-411).
 
 The translation memory (TM) caches translated *prose* segments — comments
-and docstrings (:data:`~legesher_core.translation_memory.replay.PROSE_CLASSES`)
-— keyed by
+and docstrings — keyed by
 
     (node identity, source-content hash, target language)
 
@@ -397,8 +396,8 @@ class TranslationMemory:
         actually bounds the artifact. Pass ``keep_history=0`` to drop
         dead history entirely.
 
-        **Live segments are never touched**, so replay for live nodes is
-        byte-identical before and after a prune.
+        **Live segments are never touched**, so rendered output for live
+        nodes is byte-identical before and after a prune.
         """
         live = set(live_node_ids)
         demoted = 0

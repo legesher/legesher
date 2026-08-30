@@ -24,8 +24,10 @@ class TestPinnedVectors:
         assert content_hash("a\r\nb") == content_hash("a\nb") == "7e18f737311b2dc3"
 
     def test_content_hash_nfc_stable(self):
-        composed = "café"
-        decomposed = "café"
+        composed = "caf\u00e9"
+        decomposed = (
+            "cafe\u0301"  # escape-spelled so no tool can silently re-compose it
+        )
         assert content_hash(composed) == content_hash(decomposed) == "850f7dc43910ff89"
 
     def test_legacy_hash_preserves_crlf(self):
@@ -61,23 +63,3 @@ class TestCompareKey:
 
     def test_case_folds(self):
         assert compare_key("Print") == compare_key("PRINT") == "print"
-
-
-class TestReExports:
-    # These two assertions leave with the map family (CORE-2027 removal
-    # phase); until then the register_map re-exports must be the same
-    # objects, never copies.
-    def test_node_identity_reexports_are_identical(self):
-        from legesher_core.register_map.node_identity import content_hash as via_map
-
-        assert via_map is content_hash
-
-    def test_node_identity_normalize_reexport_is_identical(self):
-        from legesher_core.register_map.node_identity import normalize_text as via_map
-
-        assert via_map is normalize_text
-
-    def test_correction_reexport_is_identical(self):
-        from legesher_core.register_map.correction import compare_key as via_map
-
-        assert via_map is compare_key

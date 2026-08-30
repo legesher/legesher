@@ -1,4 +1,7 @@
-"""suggest() prefilters (CORE-1709) and dead-node pruning (CORE-1708).
+"""suggest() prefilters (CORE-1709).
+
+The dead-node pruning half (CORE-1708) moved with the map family
+[CORE-2011][CORE-2027]: live-ness is defined by the register map.
 
 The prefilters must be *transparent*: they exist to skip work, never to
 change an answer. Every gate is an exact upper bound on the score, so
@@ -12,15 +15,12 @@ from difflib import SequenceMatcher
 import pytest
 
 from legesher_core.translation_memory import (
-    DEFAULT_STALE_HISTORY,
     LONG_SEGMENT_CHARS,
     SHORT_SEGMENT_CHARS,
     SHORT_SEGMENT_FLOOR,
     TranslationMemory,
-    TranslationMemoryDocument,
     effective_threshold,
     length_band,
-    live_node_ids,
 )
 from legesher_core.translation_memory.model import normalize_text
 
@@ -161,141 +161,3 @@ class TestPrefiltersAreTransparent:
         store.add("n000001", "# a comment here", "es", "# un", minted_by="model")
         store.suggest("# a comment here", "es")
         assert store.fuzzy_suggestions == 1
-
-
-class TestPrune:
-    def _store(self) -> TranslationMemory:
-        store = TranslationMemory(file="src/tax.py")
-        for index in range(1, 6):
-            store.add(
-                f"n{index:06d}",
-                f"# comment number {index} in the file",
-                "es",
-                f"# comentario {index}",
-                minted_by="model",
-                minted_at=f"2026-08-0{index}T00:00:00+00:00",
-            )
-        return store
-
-    def test_dead_node_segments_are_demoted(self):
-        store = self._store()
-        stats = store.prune({"n000001", "n000002"})
-        assert stats.demoted == 3
-        statuses = {
-            segment.node_id: segment.status for segment in store.segments.values()
-        }
-        assert statuses["n000001"] == "active"
-        assert statuses["n000005"] == "stale"
-
-    def test_live_segments_are_untouched(self):
-        store = self._store()
-        live = next(
-            segment
-            for segment in store.segments.values()
-            if segment.node_id == "n000001"
-        )
-        snapshot = live.to_dict()
-        store.prune({"n000001"})
-        assert live.to_dict() == snapshot
-
-    def test_replay_for_live_nodes_is_unchanged(self):
-        store = self._store()
-        live = {"n000001", "n000002"}
-        before = {
-            key: segment.to_dict()
-            for key, segment in store.segments.items()
-            if segment.node_id in live
-        }
-        store.prune(live)
-        after = {
-            key: segment.to_dict()
-            for key, segment in store.segments.items()
-            if segment.node_id in live
-        }
-        assert before == after
-
-    def test_dead_segments_stay_reachable_as_fuzzy_history(self):
-        """The retention decision: a deleted docstring often returns, and
-        its old translation is then the best candidate available."""
-        store = self._store()
-        store.prune({"n000001"})
-        assert store.suggest("# comment number 5 in the file", "es")
-
-    def test_dead_segments_never_hit_lookup(self):
-        store = self._store()
-        store.prune({"n000001"})
-        assert store.lookup("n000005", "# comment number 5 in the file", "es") is None
-
-    def test_history_is_capped(self):
-        store = self._store()
-        stats = store.prune(set(), keep_history=2)
-        assert stats.demoted == 5
-        assert stats.dropped == 3
-        assert stats.retained == 2
-        assert len(store.segments) == 2
-
-    def test_cap_keeps_the_most_recent(self):
-        store = self._store()
-        store.prune(set(), keep_history=2)
-        kept = sorted(segment.node_id for segment in store.segments.values())
-        assert kept == ["n000004", "n000005"]
-
-    def test_zero_history_drops_everything_dead(self):
-        store = self._store()
-        stats = store.prune({"n000001"}, keep_history=0)
-        assert len(store.segments) == 1
-        assert stats.dropped == 4
-
-    def test_artifact_shrinks(self):
-        document = TranslationMemoryDocument()
-        document.files["src/tax.py"] = self._store()
-        before = len(document.to_dict()["files"]["src/tax.py"]["segments"])
-        document.prune({"src/tax.py": {"n000001"}}, keep_history=1)
-        after = len(document.to_dict()["files"]["src/tax.py"]["segments"])
-        assert after < before
-
-    def test_prune_is_idempotent(self):
-        store = self._store()
-        store.prune({"n000001"}, keep_history=2)
-        snapshot = store.to_dict()
-        store.prune({"n000001"}, keep_history=2)
-        assert store.to_dict() == snapshot
-
-    def test_nothing_to_do_reports_zero(self):
-        store = self._store()
-        stats = store.prune({f"n{i:06d}" for i in range(1, 6)})
-        assert (stats.demoted, stats.dropped) == (0, 0)
-
-    def test_default_cap(self):
-        assert DEFAULT_STALE_HISTORY == 200
-
-
-class TestDocumentPrune:
-    def test_aggregates_across_files(self):
-        document = TranslationMemoryDocument()
-        for path in ("src/a.py", "src/b.py"):
-            store = document.get_or_create(path)
-            store.add("n000001", "# a comment here", "es", "# x", minted_by="model")
-            store.add("n000002", "# another comment", "es", "# y", minted_by="model")
-        stats = document.prune({"src/a.py": {"n000001"}, "src/b.py": {"n000001"}})
-        assert stats.demoted == 2
-
-    def test_a_file_absent_from_the_map_has_every_segment_dead(self):
-        """The file was deleted or renamed — its store should collapse to
-        bounded history rather than persist in full."""
-        document = TranslationMemoryDocument()
-        store = document.get_or_create("src/gone.py")
-        store.add("n000001", "# a comment here", "es", "# x", minted_by="model")
-        stats = document.prune({})
-        assert stats.demoted == 1
-
-    def test_live_node_ids_reads_the_register_map(self, mapper):
-        from legesher_core.register_map import RegisterMapDocument, build_register_map
-
-        document = RegisterMapDocument()
-        document.files["src/tax.py"] = build_register_map(
-            "def f():\n    # hi\n    return 1\n", mapper, file="src/tax.py"
-        )
-        live = live_node_ids(document)
-        assert set(live) == {"src/tax.py"}
-        assert live["src/tax.py"] == set(document.files["src/tax.py"].entries)

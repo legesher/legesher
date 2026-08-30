@@ -148,34 +148,6 @@ Your repository is now configured for multilingual development:
   Git filters: Active
 ```
 
-### `legesher map`
-
-Inspect and correct the Legesher map (the `.legesher/` artifacts). A bad
-coinage is fixed by editing the map — the code itself never changes.
-Requires a built register map (`.legesher/register_map.json`).
-
-```bash
-# Fix the Spanish rendering of an identifier everywhere
-legesher map edit calculate_tax --lang es --to calcular_impuesto
-
-# Fix one exact map entry
-legesher map edit --node-id n000042 --file src/tax.py --lang es --to calcular_impuesto
-
-# Skip language-pack collision validation
-legesher map edit calculate_tax --lang es --to calcular_impuesto --no-pack-check
-```
-
-**Subcommands:**
-
-- **`edit`**: Correct an identifier's rendering for one language. The new
-  value is re-validated first (valid Python identifier, language-pack
-  reserved terms, repo homonyms, Unicode contract). On accept: the map is
-  saved with per-language provenance, the old rendering stays resolvable
-  as an alias, a lineage event is appended to `.legesher/mapping_log.jsonl`,
-  stale translation-memory segments are invalidated entry-scoped, and any
-  occurrences of the identifier inside strings/docstrings/comments are
-  reported for manual review (never rewritten).
-
 ### `legesher config`
 
 Manage project and global configuration.

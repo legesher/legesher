@@ -10,7 +10,7 @@ import json
 
 import pytest
 
-from legesher_core.register_map.node_identity import content_hash
+from legesher_core.text_identity import content_hash
 from legesher_core.translation_memory.model import (
     ARTIFACT_KIND,
     DEFAULT_ARTIFACT_FILENAME,

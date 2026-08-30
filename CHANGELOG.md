@@ -9,6 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Moved
+
+- **core/cli**: the map family — the register map, mapping log, map-driven
+  prose replay, `translate_code_with_map`, and the `legesher map` CLI —
+  moved to the commercial map engine. Building, persisting, sharing, and
+  verifying the map is a paid capability; the authoring toolchain in this
+  repository is unchanged and never required the map. The artifact
+  normalization/hash contract stays open in `legesher_core.text_identity`.
+
 ### Added
 
 - **i18n**: localized error messages can now gain languages. The message

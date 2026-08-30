@@ -8,12 +8,12 @@
 > <!-- disposition: MAINTAINER (CORE-1724 audit, 2026-08-11) -->
 
 Status: shipped with CORE-411 (schema v1.0.0)
-Module: `legesher_core.translation_memory` (`model.py`, `replay.py`)
+Module: `legesher_core.translation_memory` (`model.py`; the map-driven
+replay renderer moved to the commercial map engine, CORE-2011/CORE-2027)
 Artifact: `.legesher/translation_memory.json`
 
 The translation memory (TM) is the prose cache of the Legesher map: it
-caches translated prose segments — comments and docstrings, the
-register-map classes in `replay.PROSE_CLASSES` — so a segment is
+caches translated prose segments — comments and docstrings — so a segment is
 translated by a model (or a human) once and replayed deterministically
 thereafter.
 
@@ -55,11 +55,10 @@ enhanced-mode/agent layers and are deliberately **not serialized** — cache
 runs must not dirty the committed artifact. Telemetry wiring is governed
 elsewhere (opt-out); this layer only counts.
 
-`replay.render_prose(map_doc, tm_doc, target_lang, translate=...)` is the
-minimal wire-in seam: comments/docstrings from the register map become TM
-segments, the `translate` model seam is reached only on a miss, and a
-fully warmed TM renders byte-identical output with zero model
-consultations (the REPLAY invariant). Per-file stores materialize in the
+The map engine's replay renderer (commercial, CORE-2027) is the wire-in
+seam: map prose entries become TM segments, the `translate` model seam is
+reached only on a miss, and a fully warmed TM renders byte-identical
+output with zero model consultations (the REPLAY invariant). Per-file stores materialize in the
 document only once a segment is actually cached, so prose-free files and
 model-less preview renders leave the artifact untouched.
 
@@ -128,7 +127,7 @@ forever: surfacing in `suggest`, inflating `stats`, and growing the
 committed artifact without bound over a file's life.
 
 `prune(live_node_ids, keep_history=200)` (and the document-level
-equivalent, driven by `replay.live_node_ids(map_doc)`) fixes that.
+equivalent, driven by the map engine's live-node set) fixes that.
 **Retention is demote-then-bound, not delete:**
 
 - Dead-node segments become `stale` — history, invisible to `lookup`,
@@ -138,7 +137,7 @@ equivalent, driven by `replay.live_node_ids(map_doc)`) fixes that.
 - The stale pool is then capped at `keep_history` most recent by
   `minted_at` (segment key as a deterministic tie-break). **That cap is
   what actually bounds the artifact** — demotion alone does not.
-- **Live segments are never touched**, so replay output for live nodes
+- **Live segments are never touched**, so rendered output for live nodes
   is byte-identical before and after a prune.
 - A file absent from the mapping has every segment treated as dead: the
   file is gone from the map, which is exactly when its store should

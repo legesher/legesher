@@ -16,32 +16,7 @@ from legesher_core.artifact_io import (
     parse_semver,
     replace_with_retry,
 )
-from legesher_core.register_map import (
-    RegisterMap,
-    RegisterMapDocument,
-    RegisterMapEntry,
-)
 from legesher_core.translation_memory import TranslationMemoryDocument
-
-
-def _entry(node_id: str = "n000001") -> RegisterMapEntry:
-    from legesher_core.register_map import content_hash
-
-    return RegisterMapEntry(
-        node_id=node_id,
-        element_class="identifier",
-        original_text="calculate_tax",
-        structural_path="module/function_definition[0]/identifier[0]",
-        content_hash=content_hash("calculate_tax"),
-    )
-
-
-def _register_document() -> RegisterMapDocument:
-    document = RegisterMapDocument()
-    register_map = RegisterMap(file="src/tax.py")
-    register_map.add(_entry())
-    document.files["src/tax.py"] = register_map
-    return document
 
 
 class TestAtomicWrite:
@@ -120,20 +95,6 @@ class TestAtomicWrite:
 class TestAtomicSaveAcrossTheFamily:
     """Every artifact writer routes through the atomic helper."""
 
-    def test_register_map_save_survives_a_killed_write(self, tmp_path, monkeypatch):
-        path = tmp_path / ".legesher" / "register_map.json"
-        _register_document().save(path)
-        before = path.read_text(encoding="utf-8")
-
-        def explode(*args, **kwargs):
-            raise OSError("killed mid-write")
-
-        monkeypatch.setattr(os, "fsync", explode)
-        with pytest.raises(OSError):
-            _register_document().save(path)
-        assert path.read_text(encoding="utf-8") == before
-        RegisterMapDocument.load(path)  # still parses
-
     def test_translation_memory_save_survives_a_killed_write(
         self, tmp_path, monkeypatch
     ):
@@ -170,12 +131,9 @@ class TestParseSemver:
 
     def test_is_the_only_parser(self):
         """One parser, both consumers — the duplication CORE-1710 removed."""
-        import legesher_core.register_map.model as register_model
         import legesher_core.translation_memory.model as tm_model
 
-        assert register_model.parse_semver is parse_semver
         assert tm_model.parse_semver is parse_semver
-        assert not hasattr(register_model, "_parse_semver")
         assert not hasattr(tm_model, "_parse_semver")
 
 
@@ -222,14 +180,6 @@ class TestFileMode:
         umask = os.umask(0)
         os.umask(umask)
         assert target.stat().st_mode & 0o777 == 0o666 & ~umask
-
-    @posix_modes_only
-    def test_register_map_save_does_not_tighten_permissions(self, tmp_path):
-        path = tmp_path / ".legesher" / "register_map.json"
-        _register_document().save(path)
-        os.chmod(path, 0o644)
-        _register_document().save(path)
-        assert path.stat().st_mode & 0o777 == 0o644
 
     def test_replacing_an_existing_artifact_works(self, tmp_path):
         """``os.replace`` over a destination that already exists.
