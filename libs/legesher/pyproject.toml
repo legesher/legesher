@@ -50,6 +50,12 @@ classifiers = [
 [project.scripts]
 legesher = "legesher.cli.main:cli"
 
+[tool.pdm.build]
+# Explicit include list: without it pdm-backend auto-discovers every
+# top-level package directory, which shipped a stray `scripts` package
+# onto site-packages (CORE-2036).
+includes = ["legesher"]
+
 [tool.uv.sources]
 legesher-core = { workspace = true }
 legesher-i18n = { workspace = true }
