@@ -21,7 +21,6 @@
 **Testing Infrastructure:**
 
 - ✅ Test cases ready (def → Spanish, True → Spanish)
-- ✅ Test script (test-prompts.py) with dry-run mode
 - ✅ Response templates for saving results
 
 **Language Packs:**
