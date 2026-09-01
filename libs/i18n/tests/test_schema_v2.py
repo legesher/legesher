@@ -117,7 +117,8 @@ def _add_option(
     )
     conn.execute(
         "INSERT INTO option_validations (option_uid, validator_version, identifier_valid, "
-        "nfkc_stable, script_consistent) VALUES (?, 'test-1', ?, ?, 1)",
+        "nfkc_stable, script_consistent, format_chars_clean) "
+        "VALUES (?, 'test-1', ?, ?, 1, 1)",
         (uid, int(valid), int(valid)),
     )
     return uid

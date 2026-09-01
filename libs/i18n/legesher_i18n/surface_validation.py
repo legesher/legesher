@@ -17,6 +17,9 @@ The checks are the ones the canon trigger gates on:
   SARA-AM allowance is canon POLICY, never a weakening of the fact.
 * ``script_consistent`` — per-character, locale-aware, default-deny.
 * ``collides_en_keyword`` — the rendering must not shadow an English keyword.
+* ``format_chars_clean`` — no forbidden format / Default_Ignorable character
+  outside the locale's ``allowed_format_chars`` policy (CORE-2029; the same
+  net the CORE-1591 pack gate runs).
 """
 
 from __future__ import annotations
@@ -27,7 +30,9 @@ from dataclasses import dataclass
 
 from legesher_i18n.script_policy import (
     ALWAYS_ALLOWED_SCRIPTS,
+    FORBIDDEN_FORMAT_CHARS,
     has_policy,
+    is_default_ignorable,
     nfkc_delta_class,
     policy_for,
     scripts_of,
@@ -37,7 +42,9 @@ __all__ = [
     "NON_PACK_SCRIPTS",
     "VALIDATOR_VERSION",
     "Validation",
+    "allowed_format_chars_for",
     "allowed_scripts_for",
+    "format_char_violations",
     "validate_surface",
 ]
 
@@ -45,8 +52,9 @@ __all__ = [
 #: version string, NOT the reserved 'migration-seed' -- the canon trigger rejects
 #: that value precisely so a stamped row can never pass for a checked one. Bumped
 #: to v2 for the CORE-1514 fixes: term-aware identifiers, the SARA-AM NFKC delta
-#: class, and real locale-aware script-consistency.
-VALIDATOR_VERSION = "py-identifier-v2"
+#: class, and real locale-aware script-consistency. Bumped to v3 for CORE-2029:
+#: the policy-aware format-char / Default_Ignorable net now runs here too.
+VALIDATOR_VERSION = "py-identifier-v3"
 
 
 @dataclass(frozen=True)
@@ -60,6 +68,12 @@ class Validation:
     nfkc_delta_class: str | None
     script_consistent: bool
     collides_en_keyword: bool
+    #: No forbidden format / Default_Ignorable character outside the locale's
+    #: ``allowed_format_chars`` policy (CORE-2029; the intake half of the
+    #: CORE-1591 pack gate). These characters render as nothing yet many are
+    #: ``.isidentifier()``-True, NFKC-stable, and script-Inherited, so every
+    #: OTHER check here passes them — which is exactly the payload class.
+    format_chars_clean: bool
 
 
 #: Base scripts for the DB languages that do NOT ship a pack yet, so the v2
@@ -95,6 +109,65 @@ def allowed_scripts_for(code: str) -> frozenset[str] | None:
     if has_policy(code):
         return policy_for(code).scripts
     return NON_PACK_SCRIPTS.get(code)
+
+
+def allowed_format_chars_for(code: str) -> frozenset[str]:
+    """The format characters a locale's identifiers may legitimately carry.
+
+    Resolves exactly as the CORE-1591 pack gate
+    (:meth:`legesher_i18n.schema_validator.SchemaValidator.check_format_chars`)
+    does: the language's ``allowed_format_chars`` policy entry when one is
+    registered (today the Sinhala ZWJ and the Persian/Urdu ZWNJ), and the
+    EMPTY set — deny every format char — for an un-policied code. The
+    :data:`NON_PACK_SCRIPTS` languages have no policy entry and therefore no
+    hole punched, which is correct: none of their orthographies requires one.
+
+    Args:
+        code: The language code (``ur``, ``si``, ``th``).
+
+    Returns:
+        The allow-listed format characters; empty means deny all.
+    """
+    return policy_for(code).allowed_format_chars if has_policy(code) else frozenset()
+
+
+def format_char_violations(
+    surface: str, allowed_format_chars: frozenset[str]
+) -> list[str]:
+    """The forbidden format / invisible characters present in *surface*.
+
+    The same net, with the same policy semantics, as the pack layer's
+    ``check_format_chars`` (CORE-1591): a character the locale explicitly
+    allow-lists passes; anything in
+    :data:`~legesher_i18n.script_policy.FORBIDDEN_FORMAT_CHARS` (bidi
+    controls, tatweel, BOM) or of Unicode category ``Cf``, plus the full
+    Default_Ignorable_Code_Point set
+    (:func:`~legesher_i18n.script_policy.is_default_ignorable` — U+034F, the
+    Hangul fillers, the variation selectors, …), is a violation. The
+    non-``Cf`` default-ignorables are the point: they are invisible,
+    ``.isidentifier()``-True, NFKC-stable, and script-Inherited, so no other
+    mechanical check sees them.
+
+    Args:
+        surface: The candidate rendering.
+        allowed_format_chars: The locale's policy allowlist
+            (:func:`allowed_format_chars_for`).
+
+    Returns:
+        The offending characters, deduplicated, in code-point order. Empty
+        means the surface is clean.
+    """
+    violations: list[str] = []
+    for ch in sorted(set(surface)):
+        if ch in allowed_format_chars:
+            continue
+        if (
+            ch in FORBIDDEN_FORMAT_CHARS
+            or unicodedata.category(ch) == "Cf"
+            or is_default_ignorable(ch)
+        ):
+            violations.append(ch)
+    return violations
 
 
 def _is_identifier_char(char: str) -> bool:
@@ -157,7 +230,10 @@ def _script_consistent(surface: str, allowed_scripts: frozenset[str] | None) -> 
 
 
 def validate_surface(
-    surface: str, term_name: str, allowed_scripts: frozenset[str] | None
+    surface: str,
+    term_name: str,
+    allowed_scripts: frozenset[str] | None,
+    allowed_format_chars: frozenset[str] = frozenset(),
 ) -> Validation:
     """Run the mechanical checks the canon trigger gates on.
 
@@ -178,11 +254,17 @@ def validate_surface(
             check can carry the term's structural affixes.
         allowed_scripts: The Unicode scripts legitimate for this locale (see
             :func:`allowed_scripts_for`), or ``None`` for an un-policied locale.
+        allowed_format_chars: The format characters the locale's policy
+            allow-lists (see :func:`allowed_format_chars_for`). Defaults to the
+            EMPTY set — deny every format char — so a caller that does not
+            resolve the policy gets the stricter verdict, never a silent pass.
 
     Returns:
         The verdict. ``identifier_valid`` is Python's own rule made term-aware;
-        ``nfkc_delta_class`` records why an unstable value is unstable; and
-        ``script_consistent`` is checked against the locale's real allowlist.
+        ``nfkc_delta_class`` records why an unstable value is unstable;
+        ``script_consistent`` is checked against the locale's real allowlist;
+        and ``format_chars_clean`` runs the CORE-1591 net with the locale's
+        policy (CORE-2029).
     """
     nfkc = unicodedata.normalize("NFKC", surface)
     return Validation(
@@ -191,4 +273,5 @@ def validate_surface(
         nfkc_delta_class=nfkc_delta_class(surface, nfkc=nfkc),
         script_consistent=_script_consistent(surface, allowed_scripts),
         collides_en_keyword=keyword.iskeyword(surface),
+        format_chars_clean=not format_char_violations(surface, allowed_format_chars),
     )

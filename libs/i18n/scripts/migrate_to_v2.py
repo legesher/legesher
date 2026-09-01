@@ -92,6 +92,7 @@ from legesher_i18n.db.schema_v2 import (  # noqa: E402
 from legesher_i18n.surface_validation import (  # noqa: E402
     VALIDATOR_VERSION,
     Validation,
+    allowed_format_chars_for,
     allowed_scripts_for,
     validate_surface,
 )
@@ -102,6 +103,7 @@ from legesher_i18n.surface_validation import (  # noqa: E402
 __all__ = [
     "VALIDATOR_VERSION",
     "Validation",
+    "allowed_format_chars_for",
     "allowed_scripts_for",
     "validate_surface",
 ]
@@ -1414,6 +1416,7 @@ def migrate(
     nfkc_unstable = 0
     sara_am_only = 0
     script_inconsistent = 0
+    format_char_dirty = 0
     #: uid -> verdict, so the canon pass (step 6) reuses the verdict computed
     #: here instead of re-running validate_surface on every selected option. One
     #: verdict per option; every selected uid is an option (checked in step 6).
@@ -1421,17 +1424,22 @@ def migrate(
     for uid, surface in options_seen.items():
         concept_id, code = option_meta[uid]
         verdict = validate_surface(
-            surface, term_name_of_concept[concept_id], allowed_scripts_for(code)
+            surface,
+            term_name_of_concept[concept_id],
+            allowed_scripts_for(code),
+            allowed_format_chars_for(code),
         )
         verdicts[uid] = verdict
         invalid_identifier += not verdict.identifier_valid
         nfkc_unstable += not verdict.nfkc_stable
         sara_am_only += verdict.nfkc_delta_class == "sara-am-only"
         script_inconsistent += not verdict.script_consistent
+        format_char_dirty += not verdict.format_chars_clean
         dst.execute(
             "INSERT INTO option_validations (option_uid, validator_version, identifier_valid, "
-            "nfkc_stable, nfkc_delta_class, script_consistent, collides_en_keyword) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "nfkc_stable, nfkc_delta_class, script_consistent, collides_en_keyword, "
+            "format_chars_clean) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 uid,
                 VALIDATOR_VERSION,
@@ -1440,6 +1448,7 @@ def migrate(
                 verdict.nfkc_delta_class,
                 int(verdict.script_consistent),
                 int(verdict.collides_en_keyword),
+                int(verdict.format_chars_clean),
             ),
         )
     ledger.record("options validated", len(options_seen))
@@ -1447,6 +1456,7 @@ def migrate(
     ledger.record("  NFKC-unstable", nfkc_unstable)
     ledger.record("    of which SARA-AM only", sara_am_only)
     ledger.record("  script-inconsistent", script_inconsistent)
+    ledger.record("  format-char dirty", format_char_dirty)
 
     # -- 6. Canon ------------------------------------------------------------
     # The gate is now real, so it bites: a v1 selection whose rendering fails
@@ -1473,17 +1483,24 @@ def migrate(
             )
 
         # The exact same rule the SQL trigger enforces (trg_canon_requires_valid_
-        # identifier): identifier-valid AND script-consistent AND (NFKC-stable OR
-        # SARA-AM only). Reported reason is the FIRST failing check, in that order.
-        # Reuse the verdict computed in step 5 (same option, same inputs) rather
-        # than re-running the validator.
+        # identifier): identifier-valid AND script-consistent AND format-char
+        # clean AND (NFKC-stable OR SARA-AM only). Reported reason is the FIRST
+        # failing check, in that order. Reuse the verdict computed in step 5
+        # (same option, same inputs) rather than re-running the validator.
         verdict = verdicts[uid]
         nfkc_ok = verdict.nfkc_stable or verdict.nfkc_delta_class == "sara-am-only"
-        if not (verdict.identifier_valid and verdict.script_consistent and nfkc_ok):
+        if not (
+            verdict.identifier_valid
+            and verdict.script_consistent
+            and verdict.format_chars_clean
+            and nfkc_ok
+        ):
             if not verdict.identifier_valid:
                 reason = "not a valid identifier"
             elif not verdict.script_consistent:
                 reason = "mixed / foreign script"
+            elif not verdict.format_chars_clean:
+                reason = "forbidden format/invisible character"
             else:
                 reason = "NFKC-unstable"
             rejected.append((locale, slug, surface, reason))

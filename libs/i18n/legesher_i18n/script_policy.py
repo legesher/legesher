@@ -40,7 +40,10 @@ How to add a new language (51 -> 103 expansion)
    (``Cf``) to form correct identifiers, add it to ``allowed_format_chars``.
    Today that is the Sinhala ZWJ (U+200D, virama+ZWJ+consonant ligatures) and
    the Persian/Urdu ZWNJ (U+200C). Do **not** add format chars speculatively;
-   every entry here is a hole punched in the bidi-control denylist.
+   every entry here is a hole punched in the bidi-control denylist — and the
+   :class:`ScriptPolicy` constructor refuses an entry that is in
+   :data:`FORBIDDEN_FORMAT_CHARS` or is not category ``Cf``, so the hole can
+   never reach a character the net exists to block.
 5. Add a coverage row to ``tests/test_script_policy_coverage.py`` (the test
    asserts every shipped pack code has a policy — a missing entry fails CI).
 
@@ -206,12 +209,40 @@ class ScriptPolicy:
             for the vast majority of languages.
         normalization: Unicode normalization form the validator enforces
             stability against. Always ``"NFKC"`` for Python-identifier safety.
+
+    Raises:
+        ValueError: if ``allowed_format_chars`` names a character in
+            :data:`FORBIDDEN_FORMAT_CHARS` or one that is not category ``Cf``.
+            Every consumer of the allowlist — the pack gate, the intake gates,
+            the canon backfill — checks it BEFORE the forbidden set, so an
+            entry here is an unconditional hole through the whole net. Bidi
+            controls, the BOM, and tatweel are never orthography: no policy
+            may ever allowlist one, and this constructor is where that stops
+            being a social rule (CORE-2029 review finding).
     """
 
     scripts: frozenset[str]
     direction: str = "ltr"
     allowed_format_chars: frozenset[str] = field(default_factory=frozenset)
     normalization: str = "NFKC"
+
+    def __post_init__(self) -> None:
+        forbidden = self.allowed_format_chars & FORBIDDEN_FORMAT_CHARS
+        if forbidden:
+            raise ValueError(
+                "allowed_format_chars may never include a forbidden format "
+                "character (bidi controls, BOM, tatweel): "
+                + ", ".join(f"U+{ord(ch):04X}" for ch in sorted(forbidden))
+            )
+        non_format = {
+            ch for ch in self.allowed_format_chars if unicodedata.category(ch) != "Cf"
+        }
+        if non_format:
+            raise ValueError(
+                "allowed_format_chars is a hole punched for format (Cf) "
+                "characters an orthography requires; these are not Cf: "
+                + ", ".join(f"U+{ord(ch):04X}" for ch in sorted(non_format))
+            )
 
 
 # ---------------------------------------------------------------------------

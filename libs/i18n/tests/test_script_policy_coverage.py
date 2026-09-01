@@ -284,3 +284,63 @@ def _pack_string_values(path) -> list[str]:
         elif isinstance(node, str):
             values.append(node)
     return values
+
+
+class TestFormatCharAllowlistGuard:
+    """No policy may punch a hole for a character the net exists to block.
+
+    Every consumer of ``allowed_format_chars`` — the pack gate
+    (``check_format_chars``), the intake gates, the carried-forward canon
+    backfill — checks the allowlist BEFORE the forbidden set, deliberately
+    (parity across layers). That ordering makes an allowlisted bidi control an
+    unconditional pass through every layer at once, so the guarantee belongs
+    in the type, not in review habits (CORE-2029 review finding).
+    """
+
+    def test_no_registered_policy_allowlists_a_forbidden_char(self) -> None:
+        import unicodedata
+
+        from legesher_i18n.script_policy import FORBIDDEN_FORMAT_CHARS
+
+        for code, policy in SCRIPT_POLICIES.items():
+            leaked = policy.allowed_format_chars & FORBIDDEN_FORMAT_CHARS
+            assert not leaked, f"{code}: allowlists forbidden {sorted(leaked)}"
+            non_cf = [
+                f"U+{ord(ch):04X}"
+                for ch in policy.allowed_format_chars
+                if unicodedata.category(ch) != "Cf"
+            ]
+            assert non_cf == [], f"{code}: non-Cf allowlist entries {non_cf}"
+
+    def test_the_constructor_refuses_a_bidi_control(self) -> None:
+        # Spelled as an escape so the dangerous character never appears
+        # literally in this file (the script_policy convention).
+        with pytest.raises(ValueError, match=r"U\+202B"):
+            ScriptPolicy(
+                scripts=frozenset({"Arabic"}),
+                allowed_format_chars=frozenset({"\u202b"}),
+            )
+
+    def test_the_constructor_refuses_tatweel_and_bom(self) -> None:
+        from legesher_i18n.script_policy import BOM, TATWEEL
+
+        for ch in (TATWEEL, BOM):
+            with pytest.raises(ValueError, match="forbidden"):
+                ScriptPolicy(
+                    scripts=frozenset({"Arabic"}),
+                    allowed_format_chars=frozenset({ch}),
+                )
+
+    def test_the_constructor_refuses_a_non_format_character(self) -> None:
+        # Inert-looking but wrong in kind: the allowlist is for Cf characters
+        # an orthography requires, and a letter here is a category error.
+        with pytest.raises(ValueError, match="not Cf"):
+            ScriptPolicy(
+                scripts=frozenset({"Latin"}),
+                allowed_format_chars=frozenset({"a"}),
+            )
+
+    def test_the_legitimate_holes_still_construct(self) -> None:
+        # The guard must not refuse the two real orthographic requirements.
+        assert policy_for("si").allowed_format_chars == frozenset({ZWJ})
+        assert policy_for("fa").allowed_format_chars == frozenset({ZWNJ})

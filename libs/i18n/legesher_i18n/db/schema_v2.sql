@@ -621,6 +621,17 @@ CREATE TABLE option_validations (
     script_consistent   INTEGER NOT NULL CHECK (script_consistent IN (0, 1)),
     collides_en_keyword INTEGER NOT NULL DEFAULT 0 CHECK (collides_en_keyword IN (0, 1)),
     min_interpreter_ok  INTEGER NOT NULL DEFAULT 1 CHECK (min_interpreter_ok IN (0, 1)),
+    -- The CORE-2029 format-char net: no forbidden format / Default_Ignorable
+    -- character outside the locale's allowed_format_chars policy — the intake
+    -- half of the CORE-1591 pack gate. U+034F, the Hangul fillers, variation
+    -- selectors and tatweel are invisible, `.isidentifier()`-True, NFKC-stable
+    -- and script-Inherited, so every OTHER column here reads clean on them.
+    -- Nullable ON PURPOSE, and nullable in a fresh build too (ALTER TABLE on a
+    -- carried-forward database cannot add NOT NULL, and the two shapes must
+    -- not diverge): NULL means "never scanned", and the canon gate refuses
+    -- NULL exactly like 0 — a default would be a stamp, and a stamped row must
+    -- never pass for a scanned one (the migration-seed lesson above).
+    format_chars_clean  INTEGER CHECK (format_chars_clean IN (0, 1)),
     checked_at          TEXT NOT NULL DEFAULT (datetime('now')),
     CHECK (validator_version <> '' AND validator_version = TRIM(validator_version))
 );
@@ -881,7 +892,7 @@ END;
 -- (CORE-1514): never ship an option that fails mechanical validation, but do not
 -- refuse a legitimate one either. Unvalidated is a reject — silence is not a
 -- pass — and a 'migration-seed' row is unvalidated: a stamp, not a verdict.
--- Three real checks gate the SELECTION:
+-- Four real checks gate the SELECTION:
 --   * identifier_valid  — term-aware (except* keeps its mirrored '*'), so a
 --                         faithful rendering is no longer refused for structure.
 --   * script_consistent — real per-character, locale-aware script classification,
@@ -893,6 +904,11 @@ END;
 --                         'sara-am-only' class is explicit policy, and it rides on
 --                         identifier_valid + script_consistent, so the accepted
 --                         NFKC form is itself an identifier-valid single script.
+--   * format_chars_clean — the CORE-2029 net. Requires = 1, so a NULL — a row
+--                         validated before the net existed, never scanned —
+--                         refuses too: an invisible-character payload the other
+--                         three checks cannot see must not ship on the
+--                         strength of predating the check.
 CREATE TRIGGER trg_canon_requires_valid_identifier
 BEFORE INSERT ON canon_selections
 WHEN NOT EXISTS (
@@ -901,10 +917,11 @@ WHEN NOT EXISTS (
       AND v.identifier_valid = 1
       AND v.script_consistent = 1
       AND (v.nfkc_stable = 1 OR v.nfkc_delta_class = 'sara-am-only')
+      AND v.format_chars_clean = 1
       AND v.validator_version <> 'migration-seed'
 )
 BEGIN
-    SELECT RAISE(ABORT, 'canon: option is unvalidated or fails identifier/NFKC/script validation');
+    SELECT RAISE(ABORT, 'canon: option is unvalidated or fails identifier/NFKC/script/format-char validation');
 END;
 
 -- The denormalized surface_form must match the option it claims to ratify.
@@ -1032,11 +1049,14 @@ SELECT
       WHERE f.option_uid = o.uid AND f.resolved_at IS NULL)  AS open_flags,
     COALESCE(v.identifier_valid, 0)  AS identifier_valid,
     COALESCE(v.nfkc_stable, 0)       AS nfkc_stable,
-    -- The other two predicates the canon gate (trg_canon_requires_valid_
+    -- The other predicates the canon gate (trg_canon_requires_valid_
     -- identifier) actually tests, so this view mirrors canon-eligibility rather
     -- than a stale subset: an identifier-valid, NFKC-stable option can still be
-    -- refused for a foreign script (CORE-1514).
+    -- refused for a foreign script (CORE-1514) or an invisible format
+    -- character (CORE-2029). A NULL format_chars_clean — never scanned —
+    -- reads 0 here for the same reason the trigger refuses it.
     COALESCE(v.script_consistent, 0) AS script_consistent,
+    COALESCE(v.format_chars_clean, 0) AS format_chars_clean,
     v.nfkc_delta_class,
     RANK() OVER (
         PARTITION BY o.concept_id, o.locale, o.pl_scope
@@ -1831,8 +1851,9 @@ WHERE session_recency = 1;
 -- Promotion check per option — a THIN layer over option_standings, adding
 -- exactly two things: the native-endorser threshold and canon-eligibility
 -- mirrored from trg_canon_requires_valid_identifier (identifier_valid AND
--- script_consistent AND (nfkc_stable OR sara-am-only)). Thresholds live
--- here, in one place (Q5 recommendation: >=2 native, zero open flags).
+-- script_consistent AND format_chars_clean AND (nfkc_stable OR
+-- sara-am-only)). Thresholds live here, in one place (Q5 recommendation:
+-- >=2 native, zero open flags).
 CREATE VIEW option_promotion_status AS
 SELECT
     s.concept_slug,
@@ -1847,6 +1868,7 @@ SELECT
     s.standing,
     (s.identifier_valid = 1
      AND s.script_consistent = 1
+     AND s.format_chars_clean = 1
      AND (s.nfkc_stable = 1 OR s.nfkc_delta_class = 'sara-am-only'))
                                         AS canon_eligible,
     (s.withdrawn_at IS NULL
@@ -1854,6 +1876,7 @@ SELECT
      AND s.open_flags = 0
      AND s.identifier_valid = 1
      AND s.script_consistent = 1
+     AND s.format_chars_clean = 1
      AND (s.nfkc_stable = 1 OR s.nfkc_delta_class = 'sara-am-only'))
                                         AS reviewed_eligible
 FROM option_standings s;

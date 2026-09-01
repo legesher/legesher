@@ -89,7 +89,8 @@ def canon_db(tmp_path: Path) -> Path:
     conn.executemany(
         "INSERT INTO option_validations (option_uid, validator_version, "
         "identifier_valid, nfkc_stable, script_consistent, collides_en_keyword, "
-        "min_interpreter_ok) VALUES (?, 'py-identifier-v1', 1, 1, 1, 0, 1)",
+        "min_interpreter_ok, format_chars_clean) "
+        "VALUES (?, 'py-identifier-v1', 1, 1, 1, 0, 1, 1)",
         [(OPT_ZH,), (OPT_UK,), (OPT_JS,)],
     )
     conn.executemany(

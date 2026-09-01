@@ -71,7 +71,9 @@ from legesher_i18n.schema_validator import SchemaValidator
 from legesher_i18n.script_policy import BIDI_EMBEDDINGS
 from legesher_i18n.surface_validation import (
     VALIDATOR_VERSION,
+    allowed_format_chars_for,
     allowed_scripts_for,
+    format_char_violations,
     validate_surface,
 )
 
@@ -966,6 +968,7 @@ class BundleImporter:
             "SELECT language_subtag FROM locales WHERE tag = ?", (locale,)
         ).fetchone()[0]
         allowed = allowed_scripts_for(subtag)
+        allowed_fmt = allowed_format_chars_for(subtag)
         details: list[str] = []
         status = "pass"
         # One scan of the locale, folded, instead of one per new surface: the
@@ -982,7 +985,9 @@ class BundleImporter:
         for uid, info in plan["options"].items():
             if not info["new"]:
                 continue
-            verdict = validate_surface(info["surface"], info["term_name"], allowed)
+            verdict = validate_surface(
+                info["surface"], info["term_name"], allowed, allowed_fmt
+            )
             min_ok = not any(
                 ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313
                 for ch in info["surface"]
@@ -998,6 +1003,7 @@ class BundleImporter:
                 and (verdict.nfkc_stable or verdict.nfkc_delta_class == "sara-am-only")
                 and verdict.script_consistent
                 and not verdict.collides_en_keyword
+                and verdict.format_chars_clean
                 and min_ok
             )
             if not verdict.identifier_valid:
@@ -1008,6 +1014,20 @@ class BundleImporter:
                 problems.append("script-inconsistent for this locale")
             if verdict.collides_en_keyword:
                 problems.append("collides with an English keyword")
+            if not verdict.format_chars_clean:
+                # The CORE-2029 net, policy-aware exactly like the CORE-1591
+                # pack gate: a format char the locale's policy allow-lists
+                # (Persian/Urdu ZWNJ, Sinhala ZWJ) never lands here. Reported
+                # by code point — the character renders as nothing, which is
+                # the attack.
+                offending = ", ".join(
+                    f"U+{ord(ch):04X}"
+                    for ch in format_char_violations(info["surface"], allowed_fmt)
+                )
+                problems.append(
+                    f"forbidden format/invisible character(s) {offending} "
+                    "for this locale"
+                )
             if not min_ok:
                 offending = ", ".join(
                     f"U+{ord(ch):04X}"
@@ -1289,8 +1309,9 @@ class BundleImporter:
                 conn.execute(
                     "INSERT INTO option_validations(option_uid, validator_version,"
                     " identifier_valid, nfkc_stable, nfkc_delta_class,"
-                    " script_consistent, collides_en_keyword, min_interpreter_ok)"
-                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    " script_consistent, collides_en_keyword, min_interpreter_ok,"
+                    " format_chars_clean)"
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         uid,
                         VALIDATOR_VERSION,
@@ -1300,6 +1321,7 @@ class BundleImporter:
                         int(verdict.script_consistent),
                         int(verdict.collides_en_keyword),
                         int(info["min_interpreter_ok"]),
+                        int(verdict.format_chars_clean),
                     ),
                 )
                 conn.execute(

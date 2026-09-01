@@ -77,8 +77,9 @@ def seeded(db: sqlite3.Connection) -> sqlite3.Connection:
             ('{OPT2}', 1, 'ur', NULL, 'وگرنہ'),
             ('{OPT3}', 2, 'ur', NULL, 'توڑو');
         INSERT INTO option_validations(option_uid, validator_version, identifier_valid,
-            nfkc_stable, script_consistent) VALUES
-            ('{OPT1}','audit-v1',1,1,1), ('{OPT2}','audit-v1',1,1,1), ('{OPT3}','audit-v1',1,1,1);
+            nfkc_stable, script_consistent, format_chars_clean) VALUES
+            ('{OPT1}','audit-v1',1,1,1,1), ('{OPT2}','audit-v1',1,1,1,1),
+            ('{OPT3}','audit-v1',1,1,1,1);
         INSERT INTO endorsements(uid, option_uid, contributor_id, method, rung_at_endorsement) VALUES
             ('end_{"1" * 24}','{OPT1}','{C_A}','portal','native_verified'),
             ('end_{"2" * 24}','{OPT2}','{C_A}','portal','native_verified'),
@@ -1125,3 +1126,220 @@ def test_the_review_track_is_not_the_renamed_term_category() -> None:
     assert "implicit_param" in TERM_TYPE_YAML_SECTIONS
     assert "reserved_word" not in TERM_TYPE_YAML_SECTIONS
     assert TERM_TYPE_YAML_SECTIONS["implicit_param"] == "implicit_params"
+
+
+# ---------------------------------------------------------------------------
+# The carried-forward database, before the CORE-2029 format-char net
+# ---------------------------------------------------------------------------
+#
+# Same doctrine as the CORE-1838 fixture above: the upgrade must be tested
+# against a database that is missing BOTH halves — the column AND the
+# format-aware consumer bodies — and the "old" bodies are derived from the
+# shipped DDL by deleting exactly the clauses CORE-2029 added, so the day the
+# spelling moves this fixture fails loudly instead of quietly testing nothing.
+
+#: The CORE-2029 clauses as the shipped objects spell them.
+_FORMAT_TRIGGER_CLAUSE = re.compile(r"\s*AND v\.format_chars_clean = 1")
+_FORMAT_STANDINGS_LINE = re.compile(
+    r"\s*COALESCE\(v\.format_chars_clean, 0\) AS format_chars_clean,"
+)
+_FORMAT_PROMOTION_CLAUSE = re.compile(r"\s*AND s\.format_chars_clean = 1")
+
+OPT4 = "opt_" + "4" * 24  # break candidate carrying a terminal tatweel
+#: `توڑو` + U+0640 — invisible elongation; identifier-valid, NFKC-stable,
+#: Arabic-script, so every pre-CORE-2029 verdict column reads clean.
+TATWEEL_SURFACE = "توڑوـ"
+
+
+def _rewind_format_net(conn: sqlite3.Connection) -> None:
+    """Rewind a current schema to its shape before the CORE-2029 net."""
+    rewinds = (
+        ("TRIGGER", "trg_canon_requires_valid_identifier", _FORMAT_TRIGGER_CLAUSE, 1),
+        ("VIEW", "option_standings", _FORMAT_STANDINGS_LINE, 1),
+        ("VIEW", "option_promotion_status", _FORMAT_PROMOTION_CLAUSE, 2),
+    )
+    for kind, name, pattern, expected in rewinds:
+        (sql,) = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE name = ?", (name,)
+        ).fetchone()
+        rewound, swaps = pattern.subn("", sql)
+        assert swaps == expected, f"format-net clause not found in {name}: {sql}"
+        conn.execute(f"DROP {kind} {name}")  # nosec B608 - fixed names
+        conn.execute(rewound)
+    conn.execute("ALTER TABLE option_validations DROP COLUMN format_chars_clean")
+
+
+@pytest.fixture()
+def pre_format_net(seeded: sqlite3.Connection) -> sqlite3.Connection:
+    """`seeded`, rewound to the schema as it stood before CORE-2029."""
+    _rewind_format_net(seeded)
+
+    # A payload option recorded UNDER the old regime: its validation row reads
+    # spotless because the old validator measured nothing the payload trips.
+    seeded.executescript(
+        f"""
+        INSERT INTO options(uid, concept_id, locale, programming_language, surface_form)
+            VALUES ('{OPT4}', 2, 'ur', NULL, '{TATWEEL_SURFACE}');
+        INSERT INTO option_validations(option_uid, validator_version, identifier_valid,
+            nfkc_stable, script_consistent) VALUES ('{OPT4}','audit-v1',1,1,1);
+        INSERT INTO canon_selections(concept_id, locale, option_uid, surface_form, source_file)
+            VALUES (1, 'ur', '{OPT1}', 'ورنہ_اگر', 'libs/i18n/canon/ur.toml');
+        """
+    )
+    seeded.commit()
+    return seeded
+
+
+def test_format_net_upgrade_backfills_by_running_the_scan(
+    pre_format_net: sqlite3.Connection,
+) -> None:
+    """The column arrives COMPUTED, never stamped — including under canon.
+
+    OPT1 is canon-selected, so the freeze triggers guard its validation row;
+    the upgrade must still record its honest verdict, and the triggers must
+    survive the upgrade intact.
+    """
+    from legesher_i18n.db.schema_v2 import ensure_format_char_net
+
+    for _ in range(2):  # idempotent: safe to call on every connection
+        ensure_format_char_net(pre_format_net)
+
+    verdicts = dict(
+        pre_format_net.execute(
+            "SELECT option_uid, format_chars_clean FROM option_validations"
+        )
+    )
+    assert verdicts == {OPT1: 1, OPT2: 1, OPT3: 1, OPT4: 0}
+    with pytest.raises(sqlite3.IntegrityError, match="canon-selected"):
+        pre_format_net.execute(
+            "UPDATE option_validations SET identifier_valid = 0 WHERE option_uid = ?",
+            (OPT1,),
+        )
+
+
+def test_upgraded_database_refuses_canon_on_a_format_char_payload(
+    pre_format_net: sqlite3.Connection,
+) -> None:
+    """The canon guard is format-aware after the upgrade, and only then."""
+    from legesher_i18n.db.schema_v2 import ensure_format_char_net
+
+    ensure_format_char_net(pre_format_net)
+    with pytest.raises(sqlite3.IntegrityError, match="format-char"):
+        pre_format_net.execute(
+            "INSERT INTO canon_selections(concept_id, locale, option_uid,"
+            f" surface_form, source_file) VALUES (2,'ur','{OPT4}',"
+            f" '{TATWEEL_SURFACE}', 'libs/i18n/canon/ur.toml')"
+        )
+    # A clean, freshly-backfilled option still ships.
+    pre_format_net.execute(
+        "INSERT INTO canon_selections(concept_id, locale, option_uid,"
+        f" surface_form, source_file) VALUES (2,'ur','{OPT3}','توڑو',"
+        " 'libs/i18n/canon/ur.toml')"
+    )
+
+
+def test_upgraded_promotion_status_reads_the_format_verdict(
+    pre_format_net: sqlite3.Connection,
+) -> None:
+    """The maintainer lens must stop calling a payload canon-eligible."""
+    from legesher_i18n.db.schema_v2 import ensure_format_char_net
+
+    ensure_format_char_net(pre_format_net)
+    eligible = dict(
+        pre_format_net.execute(
+            "SELECT option_uid, canon_eligible FROM option_promotion_status"
+        )
+    )
+    assert eligible[OPT4] == 0
+    assert eligible[OPT3] == 1
+
+
+def test_an_aborted_upgrade_leaves_the_carried_forward_file_intact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The upgrade is ONE transaction: a crash mid-backfill undoes all of it.
+
+    Before the fix, sqlite3's legacy autocommit committed the ALTER and the
+    two freeze-trigger DROPs on their own while the backfill UPDATEs sat in an
+    uncommitted transaction — so a crash mid-backfill left the FILE with the
+    column added, nothing filled, and BOTH validation-freeze triggers durably
+    absent: every canon-covered validation row freely mutable for any writer
+    that opens the database raw (correct_canon_review_rung.py does). The
+    surgery must be atomic: abort → the pre-upgrade state, whole.
+    """
+    from legesher_i18n import surface_validation
+    from legesher_i18n.db import schema_v2 as schema_mod
+
+    path = tmp_path / "carried.db"
+    conn = schema_mod.connect(path)
+    apply_schema_v2(conn)
+    conn.executescript(
+        f"""
+        INSERT INTO locales(tag, language_subtag, name, native_name, in_registry)
+            VALUES ('ur','ur','Urdu','اردو',1);
+        INSERT INTO concepts(slug, definition_en, category)
+            VALUES ('elif-compound','x','control_flow');
+        INSERT INTO options(uid, concept_id, locale, surface_form) VALUES
+            ('{OPT1}', 1, 'ur', 'ورنہ_اگر'), ('{OPT2}', 1, 'ur', 'وگرنہ');
+        """
+    )
+    _rewind_format_net(conn)
+    conn.executescript(
+        f"""
+        INSERT INTO option_validations(option_uid, validator_version, identifier_valid,
+            nfkc_stable, script_consistent) VALUES
+            ('{OPT1}','audit-v1',1,1,1), ('{OPT2}','audit-v1',1,1,1);
+        """
+    )
+    conn.commit()
+
+    calls = {"n": 0}
+    real_scan = surface_validation.format_char_violations
+
+    def crash_on_second_row(surface: str, allowed: frozenset[str]) -> list[str]:
+        calls["n"] += 1
+        if calls["n"] == 2:
+            raise RuntimeError("simulated crash mid-backfill")
+        return real_scan(surface, allowed)
+
+    monkeypatch.setattr(
+        surface_validation, "format_char_violations", crash_on_second_row
+    )
+    with pytest.raises(RuntimeError, match="mid-backfill"):
+        schema_mod.ensure_format_char_net(conn)
+    conn.close()  # what a killed process leaves behind: no commit
+
+    reopened = schema_mod.connect(path)
+    # The pre-upgrade state, whole: no column, no partial fill…
+    columns = {
+        row[1] for row in reopened.execute("PRAGMA table_info(option_validations)")
+    }
+    assert "format_chars_clean" not in columns
+    # …BOTH freeze triggers present…
+    triggers = {
+        row[0]
+        for row in reopened.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'trigger'"
+        )
+    }
+    assert {
+        "trg_validations_frozen_under_canon",
+        "trg_validations_no_delete_under_canon",
+    } <= triggers
+    # …and the canon guard still in its pre-upgrade body.
+    (canon_trigger,) = reopened.execute(
+        "SELECT sql FROM sqlite_master"
+        " WHERE name = 'trg_canon_requires_valid_identifier'"
+    ).fetchone()
+    assert "format_chars_clean" not in canon_trigger
+
+    # A clean re-run completes the upgrade from the intact base (the stub
+    # crashes only on its second-ever call; these are calls three and four).
+    schema_mod.ensure_format_char_net(reopened)
+    verdicts = dict(
+        reopened.execute(
+            "SELECT option_uid, format_chars_clean FROM option_validations"
+        )
+    )
+    assert verdicts == {OPT1: 1, OPT2: 1}
+    reopened.close()

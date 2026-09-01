@@ -11,6 +11,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **The intake gates now run the invisible-character net, and canon reads
+  the verdict.** The pack layer has refused forbidden format and
+  Default_Ignorable characters since CORE-1591; the contribution path now
+  applies the same policy-aware check — the same `script_policy` allowlist,
+  so Persian/Urdu ZWNJ and Sinhala ZWJ still pass where those orthographies
+  require them — to every new surface a review bundle submits. A payload
+  like U+034F, a Hangul filler, a variation selector or a tatweel is
+  invisible yet identifier-valid, NFKC-stable and script-consistent, so
+  every prior mechanical gate read it as clean. The verdict persists as
+  `option_validations.format_chars_clean`, mechanical cleanliness (and with
+  it the trusted-rung fast path) requires it, and canon selection refuses
+  any option that fails the scan — or was never scanned: a carried-forward
+  database is upgraded in place, with the verdict computed by running the
+  real check over every stored surface, never stamped. [CORE-2029]
+
 - **The language-packs dataset splits into four configs.** `pl_terminology`
   carries the programming language's own terminology — every term, symbol
   name, variable convention and error-message template, each with the set of

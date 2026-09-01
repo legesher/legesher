@@ -146,7 +146,8 @@ def v2_db(tmp_path: Path) -> Path:
     conn.executemany(
         "INSERT INTO option_validations (option_uid, validator_version, "
         "identifier_valid, nfkc_stable, script_consistent, collides_en_keyword, "
-        "min_interpreter_ok) VALUES (?, 'py-identifier-v1', 1, 1, 1, 0, 1)",
+        "min_interpreter_ok, format_chars_clean) "
+        "VALUES (?, 'py-identifier-v1', 1, 1, 1, 0, 1, 1)",
         [(OPT_TRUE_UR,), (OPT_TRUE_ZH,)],
     )
     # Provenance: same rendering attested by a model AND by a person -- and the

@@ -41,6 +41,7 @@ __all__ = [
     "CONCEPT_WIDE",
     "CONTRIBUTOR_TOKEN_LENGTH",
     "DEFAULT_CONTRIBUTOR_SALT",
+    "FORMAT_NET_COLUMN",
     "MESSAGE_PARTITION_TABLES",
     "MIN_PUBLISH_SALT_LENGTH",
     "SCHEMA_V2_PATH",
@@ -54,6 +55,7 @@ __all__ = [
     "connect",
     "contributor_id",
     "endorsement_uid",
+    "ensure_format_char_net",
     "ensure_intake_screening",
     "expansion_uid",
     "is_identity_translation",
@@ -274,6 +276,142 @@ def screening_objects() -> list[tuple[str, str, str]]:
     ]
 
 
+#: The ``option_validations`` column the CORE-2029 format-char net persists.
+#: Discovery mirrors :data:`SCREENING_ROOTS`: anything whose fresh DDL mentions
+#: the column consumes the verdict and belongs to the same upgrade.
+FORMAT_NET_COLUMN = "format_chars_clean"
+
+#: The validation-cache freeze triggers (``schema_v2.sql``). The backfill in
+#: :func:`ensure_format_char_net` must UPDATE rows they protect, so it drops
+#: them for the duration and recreates them from the shipped DDL.
+_VALIDATION_FREEZE_TRIGGERS = (
+    "trg_validations_frozen_under_canon",
+    "trg_validations_no_delete_under_canon",
+)
+
+
+def _fresh_schema_objects() -> list[tuple[str, str, str]]:
+    """``(type, name, sql)`` for every object of a freshly-applied v2 schema."""
+    scratch = sqlite3.connect(":memory:")
+    try:
+        apply_schema_v2(scratch)
+        rows = scratch.execute(
+            "SELECT type, name, sql FROM sqlite_master "
+            "WHERE sql IS NOT NULL ORDER BY rowid"
+        ).fetchall()
+    finally:
+        scratch.close()
+    return rows
+
+
+def ensure_format_char_net(conn: sqlite3.Connection) -> None:
+    """Install the CORE-2029 format-char verdict on a database that predates it.
+
+    The intake ritual carries the previous database copy forward (see
+    :func:`ensure_intake_screening`), so ``option_validations`` on the
+    operational file has no ``format_chars_clean`` column, and the canon gate
+    plus the eligibility views hold their old, format-blind bodies. Three
+    steps, each idempotent:
+
+    * the column is ADDed when missing — nullable, because ``ALTER TABLE``
+      cannot add ``NOT NULL`` and because NULL is the honest value for "never
+      scanned" (the canon gate refuses it exactly like 0);
+    * every NULL row is backfilled by RUNNING the real net
+      (:func:`legesher_i18n.surface_validation.format_char_violations` under
+      the locale's policy) — a computed verdict, never a stamp: the
+      ``migration-seed`` lesson says a stamped row must never pass for a
+      checked one. The freeze triggers guard these rows against verdict
+      *flipping* under a live canon row; filling a column that did not exist
+      when the canon row landed is not a flip, so they are dropped for the
+      UPDATE and recreated from the shipped DDL. A canon-selected option the
+      net now finds dirty keeps its honest 0 — the drift surfaces at the next
+      canon load instead of hiding behind an upgrade error;
+    * the trigger and views whose fresh DDL consumes the column
+      (``trg_canon_requires_valid_identifier``, ``option_standings``,
+      ``option_promotion_status``) are dropped and recreated, exactly the
+      :func:`ensure_intake_screening` convention: creating the column while
+      leaving the consumers format-blind would record verdicts nothing reads.
+
+    The WHOLE surgery is one transaction (``BEGIN IMMEDIATE``). SQLite DDL is
+    transactional, but under :mod:`sqlite3`'s legacy autocommit the ALTER and
+    the freeze-trigger DROPs would each commit on their own while the backfill
+    UPDATEs sat in an implicit, uncommitted transaction — so a crash
+    mid-backfill left the FILE with the column added, nothing filled, and BOTH
+    validation-freeze triggers durably absent: every canon-covered validation
+    row freely mutable until some entry point happened to re-run the upgrade.
+    Under the explicit transaction, an abort at any point rolls the file back
+    to its exact pre-upgrade state and a later re-run starts clean. When the
+    caller already holds a transaction, the surgery rides inside it and the
+    caller's commit/rollback decides — still one atomic unit.
+
+    Args:
+        conn: An open connection to the operational database.
+    """
+    fresh = _fresh_schema_objects()
+
+    started = not conn.in_transaction
+    if started:
+        conn.execute("BEGIN IMMEDIATE")
+    try:
+        columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(option_validations)")
+        }
+        if FORMAT_NET_COLUMN not in columns:
+            conn.execute(
+                "ALTER TABLE option_validations ADD COLUMN format_chars_clean "
+                "INTEGER CHECK (format_chars_clean IN (0, 1))"
+            )
+
+        pending = conn.execute(
+            "SELECT v.option_uid, o.surface_form, l.language_subtag"
+            " FROM option_validations v"
+            " JOIN options o ON o.uid = v.option_uid"
+            " JOIN locales l ON l.tag = o.locale"
+            " WHERE v.format_chars_clean IS NULL"
+        ).fetchall()
+        if pending:
+            # Deferred import: this module is the dependency floor of the
+            # package, and the scan lives beside the other mechanical checks
+            # on purpose — one net, shared with the importer and the migration.
+            from legesher_i18n.surface_validation import (
+                allowed_format_chars_for,
+                format_char_violations,
+            )
+
+            for name in _VALIDATION_FREEZE_TRIGGERS:
+                conn.execute(f"DROP TRIGGER IF EXISTS {name}")  # nosec B608
+            for uid, surface, subtag in pending:
+                clean = not format_char_violations(
+                    surface, allowed_format_chars_for(subtag)
+                )
+                conn.execute(
+                    "UPDATE option_validations SET format_chars_clean = ?"
+                    " WHERE option_uid = ?",
+                    (int(clean), uid),
+                )
+            # Recreated in the happy path only: on an abort, the enclosing
+            # ROLLBACK is what restores them (a `finally` re-CREATE inside a
+            # doomed transaction would be discarded with it anyway).
+            for kind, name, statement in fresh:
+                if kind == "trigger" and name in _VALIDATION_FREEZE_TRIGGERS:
+                    conn.execute(statement)
+
+        for kind, name, statement in fresh:
+            if (
+                kind in ("view", "trigger")
+                and name not in _VALIDATION_FREEZE_TRIGGERS
+                and FORMAT_NET_COLUMN in statement
+            ):
+                conn.execute(f"DROP {kind.upper()} IF EXISTS {name}")  # nosec B608
+                conn.execute(statement)
+    except BaseException:
+        if started:
+            conn.rollback()
+        raise
+    if started:
+        conn.commit()
+
+
 def ensure_intake_screening(conn: sqlite3.Connection) -> None:
     """Install the CORE-1828 screening objects on a database that predates them.
 
@@ -303,9 +441,17 @@ def ensure_intake_screening(conn: sqlite3.Connection) -> None:
     Idempotent: re-running it re-derives the same objects from the same DDL,
     and no row is touched, so it is safe to call on every connection.
 
+    The CORE-2029 format-char upgrade rides along, FIRST: the fresh
+    ``option_standings`` body this function installs reads
+    ``option_validations.format_chars_clean``, so the column (and its
+    backfill) must exist before the view does. One call keeps every intake
+    entry point — the importer and each CLI command — on the full upgrade
+    without a second ritual to forget.
+
     Args:
         conn: An open connection to the operational database.
     """
+    ensure_format_char_net(conn)
     for kind, name, statement in screening_objects():
         if kind in ("view", "trigger"):
             conn.execute(f"DROP {kind.upper()} IF EXISTS {name}")  # nosec B608

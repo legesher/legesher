@@ -1126,3 +1126,161 @@ def test_quality_suggests_the_cognate_annotation_on_an_identity_rendering(
     assert any("cognate_loanword" in str(d) for d in quality["details"])
     # A suggestion, never a mandate: the row still lands.
     assert result.status == "accepted"
+
+
+# ---------------------------------------------------------------------------
+# CORE-2029: the format-char net runs in the mechanical gates
+# ---------------------------------------------------------------------------
+#
+# The CORE-1591 payload classes, each riding an otherwise-plausible Urdu stem.
+# These characters render as nothing; several are `.isidentifier()`-True,
+# NFKC-stable, and script-Inherited, so before CORE-2029 the gates stage
+# reported "all new surfaces pass the mechanical gates" for them and a
+# maintainer clearing quarantine had no machine verdict saying otherwise.
+FORMAT_CHAR_PAYLOADS = [
+    pytest.param("ورنہ͏اگر", "U+034F", id="U+034F-combining-grapheme-joiner"),
+    pytest.param("ورنہᅟاگر", "U+115F", id="U+115F-hangul-choseong-filler"),
+    pytest.param("ورنہㅤاگر", "U+3164", id="U+3164-hangul-filler"),
+    pytest.param("ورنہﾠاگر", "U+FFA0", id="U+FFA0-halfwidth-hangul-filler"),
+    pytest.param("ورنہ️اگر", "U+FE0F", id="U+FE0F-variation-selector-16"),
+    pytest.param("ورنہـاگر", "U+0640", id="U+0640-tatweel"),
+]
+
+
+@pytest.mark.parametrize(("surface", "codepoint"), FORMAT_CHAR_PAYLOADS)
+def test_core_1591_payload_class_fails_the_format_char_gate(
+    db_path: Path, surface: str, codepoint: str
+) -> None:
+    result = importer(db_path).import_bundle(endorse_only(surface))
+    assert result.status == "accepted"  # evidence ingests; the ROW is blocked
+    uid = option_uid("elif-compound", "ur", surface)
+
+    # The verdict is PERSISTED where the canon gate reads it…
+    assert q(
+        db_path,
+        "SELECT format_chars_clean FROM option_validations WHERE option_uid=?",
+        uid,
+    ) == [(0,)]
+    # …the gates stage names the invisible character by code point…
+    gates = result.report["stages"][3]
+    assert gates["status"] == "warn"
+    assert any(
+        "forbidden format/invisible character" in str(d) and codepoint in str(d)
+        for d in gates["details"]
+    )
+    # …and the option is withheld, never released by the automated path.
+    assert result.option_verdicts[uid] != "cleared"
+    assert q(
+        db_path, "SELECT COUNT(*) FROM option_withheld WHERE option_uid=?", uid
+    ) == [(1,)]
+
+
+def test_a_pure_invisible_payload_fails_only_the_format_char_gate(
+    db_path: Path,
+) -> None:
+    """Tatweel in Urdu is THE audit case: every pre-CORE-2029 column reads clean.
+
+    U+0640 is Arabic-script (script-consistent for ur), category Lm
+    (identifier-valid), NFKC-stable, and no keyword — `validate_surface` v2
+    reported it fully clean, so "all mechanical gates pass" was exactly what a
+    maintainer clearing quarantine saw. Only the new column carries the truth.
+    """
+    surface = "ورنہـاگر"
+    importer(db_path).import_bundle(endorse_only(surface))
+    uid = option_uid("elif-compound", "ur", surface)
+    assert q(
+        db_path,
+        "SELECT identifier_valid, nfkc_stable, script_consistent,"
+        " collides_en_keyword, min_interpreter_ok, format_chars_clean"
+        " FROM option_validations WHERE option_uid=?",
+        uid,
+    ) == [(1, 1, 1, 0, 1, 0)]
+
+
+def test_a_format_char_payload_never_fast_paths_a_certified_contributor(
+    db_path: Path,
+) -> None:
+    # mechanical_clean now includes the net, so even a stored rung-4
+    # contributor cannot release an invisible-character payload (CORE-1797
+    # fast path requires EVERY mechanical gate).
+    conn = schema_v2.connect(db_path)
+    conn.execute(
+        "INSERT INTO contributors(id, current_rung) VALUES (?, 'certified')"
+        " ON CONFLICT(id) DO UPDATE SET current_rung = excluded.current_rung",
+        (REVIEWER_ID,),
+    )
+    conn.commit()
+    conn.close()
+    result = importer(db_path).import_bundle(endorse_only("ورنہ͏اگر"))
+    uid = option_uid("elif-compound", "ur", "ورنہ͏اگر")
+    assert result.option_verdicts[uid] != "cleared"
+
+
+def test_a_policy_allowed_format_char_passes_the_gate(db_path: Path) -> None:
+    """Urdu's policy allow-lists ZWNJ (script_policy) — the net honours it.
+
+    The policy is the pack gate's (CORE-1591), not a fresh allowlist: the same
+    character that legitimately joins Persian/Urdu words at the pack layer
+    must not quarantine the same word at intake.
+    """
+    surface = "ورنہ‌اگر"  # ZWNJ, required by Perso-Arabic orthography
+    result = importer(db_path).import_bundle(endorse_only(surface))
+    uid = option_uid("elif-compound", "ur", surface)
+    assert q(
+        db_path,
+        "SELECT format_chars_clean FROM option_validations WHERE option_uid=?",
+        uid,
+    ) == [(1,)]
+    gates = result.report["stages"][3]
+    assert not any(
+        "forbidden format/invisible character" in str(d) for d in gates["details"]
+    )
+
+
+def test_canon_refuses_a_cleared_format_char_payload(db_path: Path) -> None:
+    """The MEDIUM this closes: quarantine clearing is a human act, and the
+    payload used to look mechanically spotless. Even after a maintainer
+    clears it, the canon gate now reads the persisted scan and refuses."""
+    surface = "ورنہـاگر"
+    importer(db_path).import_bundle(endorse_only(surface))
+    uid = option_uid("elif-compound", "ur", surface)
+    conn = schema_v2.connect(db_path)
+    conn.execute(
+        "INSERT INTO option_screenings(option_uid, verdict, screened_by,"
+        " screen_version) VALUES (?, 'cleared', 'madi', 'manual-interim-v1')",
+        (uid,),
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="format-char"):
+        conn.execute(
+            "INSERT INTO canon_selections(concept_id, locale, option_uid,"
+            " surface_form, source_file) VALUES (1,'ur',?,?,"
+            " 'libs/i18n/canon/ur.toml')",
+            (uid, surface),
+        )
+    conn.close()
+
+
+def test_canon_refuses_a_validation_row_that_predates_the_scan(
+    db_path: Path,
+) -> None:
+    """Cleared-without-scan is a refusal, not a pass.
+
+    The pre-seeded model candidate's validation row was written before the
+    net existed (format_chars_clean IS NULL). NULL must read as "never
+    scanned", not "clean" — and the ensure upgrade closes it by RUNNING the
+    scan, never by stamping."""
+    conn = schema_v2.connect(db_path)
+    canon_insert = (
+        "INSERT INTO canon_selections(concept_id, locale, option_uid,"
+        f" surface_form, source_file) VALUES (1,'ur','{OPT_MODEL}','وگرنہ',"
+        " 'libs/i18n/canon/ur.toml')"
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="format-char"):
+        conn.execute(canon_insert)
+    schema_v2.ensure_format_char_net(conn)  # backfill runs the real scan
+    assert conn.execute(
+        "SELECT format_chars_clean FROM option_validations WHERE option_uid=?",
+        (OPT_MODEL,),
+    ).fetchone() == (1,)
+    conn.execute(canon_insert)  # a genuinely clean surface now ships
+    conn.close()

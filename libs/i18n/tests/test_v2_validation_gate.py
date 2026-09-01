@@ -166,6 +166,7 @@ def _add_validated(
     nfkc_stable: int,
     nfkc_delta_class: str | None,
     script_consistent: int,
+    format_chars_clean: int = 1,
 ) -> str:
     uid = option_uid(slug, "th", surface)
     conn.execute(
@@ -174,8 +175,16 @@ def _add_validated(
     )
     conn.execute(
         "INSERT INTO option_validations (option_uid, validator_version, identifier_valid, "
-        "nfkc_stable, nfkc_delta_class, script_consistent) VALUES (?, 'py-identifier-v2', ?, ?, ?, ?)",
-        (uid, identifier_valid, nfkc_stable, nfkc_delta_class, script_consistent),
+        "nfkc_stable, nfkc_delta_class, script_consistent, format_chars_clean) "
+        "VALUES (?, 'py-identifier-v2', ?, ?, ?, ?, ?)",
+        (
+            uid,
+            identifier_valid,
+            nfkc_stable,
+            nfkc_delta_class,
+            script_consistent,
+            format_chars_clean,
+        ),
     )
     return uid
 
@@ -240,3 +249,39 @@ def test_canon_refuses_a_script_inconsistent_selection(db: sqlite3.Connection) -
     db.commit()
     with pytest.raises(sqlite3.IntegrityError, match="identifier/NFKC"):
         _select(db, 2, uid, "บайтс")
+
+
+# ---------------------------------------------------------------------------
+# CORE-2029 -- format_chars_clean: policy-aware, mirroring the pack gate
+# ---------------------------------------------------------------------------
+
+
+def test_the_format_char_policy_is_the_pack_gates_policy() -> None:
+    """The allowlist comes from script_policy, never from a fresh table.
+
+    A Sinhala conjunct REQUIRES ZWJ (virama+ZWJ+consonant ligatures) and the
+    CORE-1591 pack gate admits it there; the very same character in a locale
+    whose policy punches no hole is a violation."""
+    from scripts.migrate_to_v2 import allowed_format_chars_for
+
+    conjunct = "ශ්‍රී"  # contains U+200D, legitimate Sinhala orthography
+    v_si = validate_surface(
+        conjunct, "x", allowed_scripts_for("si"), allowed_format_chars_for("si")
+    )
+    assert v_si.format_chars_clean is True
+
+    v_th = validate_surface(
+        conjunct, "x", allowed_scripts_for("th"), allowed_format_chars_for("th")
+    )
+    assert v_th.format_chars_clean is False
+
+    # An un-policied code resolves to the empty allowlist: default-deny.
+    assert allowed_format_chars_for("zz") == frozenset()
+
+
+def test_the_format_char_net_denies_by_default() -> None:
+    """A caller that resolves no policy gets the STRICTER verdict."""
+    v = validate_surface("ทำ͏เสมอ", "x", THAI)  # no allowlist passed
+    assert v.format_chars_clean is False
+    # ...and a clean surface stays clean under the default.
+    assert validate_surface(THAI_FINALLY, "finally", THAI).format_chars_clean is True
