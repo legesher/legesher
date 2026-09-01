@@ -143,9 +143,12 @@ surface, and the mitigations that hold each boundary — lives in
 ### VS Code Extension
 
 - **Permissions**: Extension requests minimal VS Code API permissions, scoped to Python files
-- **Telemetry**: Anonymous usage telemetry is disabled by default. It can be enabled in
-  settings (`legesher.telemetry.enabled`), sends data via Azure Application Insights, and
-  respects VS Code's global telemetry setting. No personally identifiable information (PII) is collected.
+- **Telemetry**: Usage telemetry is opt-in and disabled by default. When enabled in
+  settings (`legesher.telemetry.enabled`), it sends events via Azure Application Insights,
+  gated additionally by VS Code's global telemetry setting. The events we author contain
+  no code content, no file paths, and no identifiers; the bundled
+  `@vscode/extension-telemetry` library adds a pseudonymous machine id and session id
+  to each event.
 - **Local execution**: Code analysis happens locally — the language server runs as a local process with no network calls
 
 ## Security Contacts
@@ -172,7 +175,9 @@ No security advisories have been published yet. When we do publish them, they wi
 
 **Current:**
 
-- **GDPR compliant**: We comply with the EU General Data Protection Regulation.
+- **GDPR**: We operate a GDPR compliance program: a published privacy policy, a
+  data-processing inventory, a data-subject-rights runbook, and a breach-response
+  procedure. Appointment of an EU (Article 27) representative is pending.
   See our [Privacy Policy](https://legesher.io/privacy) for details on data collection,
   processing, and your rights.
 

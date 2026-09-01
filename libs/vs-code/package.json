@@ -357,7 +357,7 @@
             "telemetry",
             "usesOnlineServices"
           ],
-          "markdownDescription": "Enable anonymous usage telemetry to help improve Legesher. **No personal information or code content is collected.** This respects VS Code's global telemetry settings."
+          "markdownDescription": "Enable usage telemetry to help improve Legesher. Off by default; also gated by VS Code's global telemetry setting. Events contain **no code content, no file paths, and no identifiers we collect**; the bundled VS Code telemetry library adds a pseudonymous machine id."
         },
         "legesher.telemetry.contributeToMLTraining": {
           "type": "boolean",
