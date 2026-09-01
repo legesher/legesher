@@ -106,6 +106,22 @@ class TestCatalogShape:
     def test_translations_enter_at_machine_rung(self, translations):
         assert {tr["status"] for tr in translations} == {"machine"}
 
+    def test_every_translation_carries_provenance(self):
+        """CORE-1881: renderings do not sit unattributed.
+
+        Rows written since the provenance columns landed carry write-time
+        provenance; the pre-migration ar/es rows were backfilled
+        ``source='seed'`` by ``scripts/add_message_provenance.py``. A NULL
+        here means the working copy predates the migration — re-run it (see
+        libs/i18n/CLAUDE.md, messages formation ritual).
+        """
+        conn = sqlite3.connect(DB_PATH)
+        unattributed = conn.execute(
+            "SELECT COUNT(*) FROM message_translations WHERE source IS NULL"
+        ).fetchone()[0]
+        conn.close()
+        assert unattributed == 0
+
     def test_version_tiering_unboundlocalerror_rewording(self, rows):
         tiers = {
             r["version_added"]: r

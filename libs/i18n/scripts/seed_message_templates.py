@@ -56,6 +56,11 @@ sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from legesher_i18n.db.schema_v2 import connect  # noqa: E402
 
+try:  # imported as part of the `scripts` package (tests)
+    from .add_message_provenance import PROVENANCE_COLUMNS
+except ImportError:  # run as a script: the scripts dir itself is sys.path[0]
+    from add_message_provenance import PROVENANCE_COLUMNS  # noqa: E402
+
 DEFAULT_SEED = (
     Path(__file__).parent.parent
     / "legesher_i18n"
@@ -118,8 +123,10 @@ def probe_database(db_path: Path) -> bool:
     Raises:
         SystemExit: if the database is missing (checked first — a bare
             ``sqlite3.connect`` would CREATE an empty file as a side
-            effect), if the file is neither flavor, or if the messages
-            partition is not activated in it.
+            effect), if the file is neither flavor, if the messages
+            partition is not activated in it, or if the partition predates
+            the provenance columns (CORE-1881) — the write paths record
+            provenance and must not silently drop it.
     """
     if not db_path.exists():
         raise SystemExit(f"database not found: {db_path}")
@@ -135,6 +142,17 @@ def probe_database(db_path: Path) -> bool:
             raise SystemExit(
                 f"{db_path} does not carry the messages partition — run "
                 "activate_messages_partition.py first (v1) or rebuild the v2 artifact"
+            )
+        present = {
+            row[1] for row in probe.execute("PRAGMA table_info(message_translations)")
+        }
+        missing_columns = [name for name in PROVENANCE_COLUMNS if name not in present]
+        if missing_columns:
+            raise SystemExit(
+                f"message_translations in {db_path} predates the provenance "
+                f"columns (missing {missing_columns}) — run "
+                "scripts/add_message_provenance.py first; the write paths "
+                "record provenance and will not silently drop it"
             )
     finally:
         probe.close()
@@ -243,6 +261,16 @@ def validate_seed(seed: dict) -> list[str]:
             bad = bidi_controls(text)
             if bad:
                 problems.append(f"{t['key']}: {label} stores bidi controls {bad}")
+        for locale, tr in t.get("translations", {}).items():
+            if "source" in tr:
+                source = tr["source"]
+                # An explicit-but-empty source would store the NULL the
+                # provenance migration reserves for pre-migration rows.
+                if not isinstance(source, str) or not source.strip():
+                    problems.append(
+                        f"{t['key']}: translations[{locale}] 'source' must be "
+                        f"a non-empty string, got {source!r}"
+                    )
         problems.extend(validate_matcher(t))
     return problems
 
@@ -309,9 +337,22 @@ def seed_database(
             template_id = cursor.lastrowid
             for locale, tr in t.get("translations", {}).items():
                 connection.execute(
-                    "INSERT INTO message_translations (template_id, locale, template, status) "
-                    "VALUES (?, ?, ?, ?)",
-                    (template_id, locale, tr["template"], tr.get("status", "machine")),
+                    "INSERT INTO message_translations "
+                    "(template_id, locale, template, status, "
+                    " source, model_version, created_by) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        template_id,
+                        locale,
+                        tr["template"],
+                        tr.get("status", "machine"),
+                        # Provenance (CORE-1881): catalog seeds are curated
+                        # files, so the row's origin is the seed itself
+                        # unless the entry states otherwise.
+                        tr.get("source", "seed"),
+                        tr.get("model_version"),
+                        "seed_message_templates.py",
+                    ),
                 )
                 inserted_translations += 1
 

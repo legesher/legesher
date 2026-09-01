@@ -1276,6 +1276,15 @@ CREATE TABLE message_translations (
     template    TEXT NOT NULL,               -- localized, placeholders preserved
     status      TEXT NOT NULL DEFAULT 'machine'
                 CHECK (status IN ('machine', 'experimental', 'reviewed', 'official')),
+    -- Provenance (CORE-1881), mirroring the terms-side `translations` columns:
+    -- where a rendering came from ('seed', 'claude_agent', 'community', ...),
+    -- which model produced it, and which tool wrote it. NULL means "not
+    -- recorded" (rows predating the columns; see
+    -- scripts/add_message_provenance.py). Write paths record all applicable
+    -- fields and refuse a database missing the columns.
+    source      TEXT,
+    model_version TEXT,
+    created_by  TEXT,
     UNIQUE (template_id, locale)
 );
 

@@ -311,9 +311,23 @@ gated on content-addressed keys, CORE-1565). The write paths, in order:
    implementation's template rows, with the seeder's validation (placeholder
    parity, bidi hygiene, locale existence) and idempotent re-runs. This is
    the path for a third language — never invent a `version_added` for it and
-   never INSERT directly.
-4. **Finish with the durable-home push** (below) — the messages partition
+   never INSERT directly. Addition files carry provenance (`source` is
+   required; renderings do not enter unattributed).
+4. **Generate renderings for empty locales** (CORE-1881):
+   `python scripts/translate/generate_messages.py --db <db> --all-missing`
+   (or `--locales fr am`; `--dry-run` renders the prompts for free). One
+   call per locale; every suggestion is written through the step-3 gate, so
+   placeholder parity is a machine check per rendering, and rows carry
+   `source='claude_agent'` + model + script provenance at the `machine`
+   rung. Prompt spec: `scripts/translate/prompts/messages_prompt.md`.
+5. **Finish with the durable-home push** (below) — the messages partition
    rides the same untracked `translations.db`.
+
+Provenance columns (`source`, `model_version`, `created_by`) are CORE-1881:
+fresh activations include them; a database whose partition predates them is
+refused by every write path until `scripts/add_message_provenance.py` has
+run (on the operational file it ran with `--backfill-source seed`, labeling
+the pre-migration ar/es rows).
 
 ### Tables
 

@@ -20,6 +20,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: error-message renderings can now be generated, and every one
+  carries provenance. Messages are sentences with grammar and `{slot}`
+  placeholders, not identifiers, so the term-generation lane never applied
+  to them — the catalog's second data class could not take model
+  suggestions at all. `scripts/translate/generate_messages.py` is its lane:
+  one call per locale, a prompt that states the placeholder contract (slots
+  survive byte-for-byte and may move as the grammar requires — they are
+  substituted by name, so order is free), and every suggestion written
+  through the locale-addition gate, where placeholder preservation is a
+  mechanical check per rendering, not a review item. A locale with any
+  invalid rendering writes nothing. The run takes a cost ceiling and
+  refuses to enforce one it cannot measure. `message_translations` gains
+  `source` / `model_version` / `created_by`; fresh activations include
+  them, `scripts/add_message_provenance.py` retrofits existing databases,
+  and both write paths refuse an un-migrated database rather than silently
+  dropping provenance. [CORE-1881]
 - **i18n**: localized error messages can now gain languages. The message
   catalog's seeder is append-once by design — templates and their
   translations enter together, and revisions land as a new version — which

@@ -76,6 +76,7 @@ def fr_addition(**overrides) -> dict:
     base = {
         "implementation": "cpython",
         "locale": "fr",
+        "source": "community",
         "translations": [
             {
                 "key": "ZeroDivisionError.division_by_zero",
@@ -327,6 +328,7 @@ class TestVersionTiers:
             },
         )
         catch_up = fr_addition()
+        catch_up["source"] = "claude_agent"
         catch_up["translations"].append(
             {
                 "key": "ZeroDivisionError.division_by_zero",
@@ -336,11 +338,22 @@ class TestVersionTiers:
         )
         assert add_locale(v1_db, catch_up) == 1
         conn = sqlite3.connect(v1_db)
+        by_version = dict(
+            conn.execute(
+                "SELECT t.version_added, tr.source FROM message_translations tr "
+                "JOIN message_templates t ON t.id = tr.template_id "
+                "WHERE tr.locale = 'fr'"
+            )
+        )
         count = conn.execute(
             "SELECT COUNT(*) FROM message_translations WHERE locale = 'fr'"
         ).fetchone()[0]
         conn.close()
         assert count == 3
+        # mixed provenance per locale is the expected audit shape: kept rows
+        # keep their original provenance, the topped-up row carries the run's
+        assert by_version["3.10"] == "community"
+        assert by_version["3.12"] == "claude_agent"
 
     def test_catch_up_with_a_diverging_stored_row_is_refused(self, v1_db: Path):
         add_locale(v1_db, fr_addition())

@@ -44,12 +44,18 @@ Addition file format::
     {
       "implementation": "cpython",
       "locale": "fr",
+      "source": "claude_agent",            // provenance (CORE-1881), required
+      "model_version": "claude-...",       // optional
+      "created_by": "generate_messages.py",// optional
       "translations": [
         {"key": "ZeroDivisionError.division_by_zero", "version_added": "3.10",
          "template": "division par zéro", "status": "machine"},
         ...
       ]
     }
+
+Provenance is per addition, recorded on every inserted row; an addition
+without a ``source`` is refused — renderings do not enter unattributed.
 
 Usage:
     python add_message_locale.py --db path/to/translations.db \
@@ -112,9 +118,18 @@ def _validate_shape(addition: dict) -> list[str]:
     """Structural problems with the addition file; empty means well-formed."""
     problems = [
         f"addition file has no {field!r} field"
-        for field in ("implementation", "locale", "translations")
+        for field in ("implementation", "locale", "source", "translations")
         if field not in addition
     ]
+    if "source" in addition:
+        source = addition["source"]
+        # Presence is not attribution: a null/blank source would store the
+        # exact NULL the provenance migration reserves for pre-migration rows.
+        if not isinstance(source, str) or not source.strip():
+            problems.append(
+                f"'source' must be a non-empty string, got {source!r} — "
+                "renderings do not enter unattributed"
+            )
     for index, entry in enumerate(addition.get("translations") or []):
         for field in ("key", "template"):
             if not isinstance(entry.get(field), str):
@@ -280,8 +295,18 @@ def add_locale(db_path: Path, addition: dict, *, dry_run: bool = False) -> int:
         for identity, (template, status) in missing.items():
             connection.execute(
                 "INSERT INTO message_translations "
-                "(template_id, locale, template, status) VALUES (?, ?, ?, ?)",
-                (templates[identity]["id"], locale, template, status),
+                "(template_id, locale, template, status, "
+                " source, model_version, created_by) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    templates[identity]["id"],
+                    locale,
+                    template,
+                    status,
+                    addition["source"],
+                    addition.get("model_version"),
+                    addition.get("created_by"),
+                ),
             )
             inserted += 1
 
