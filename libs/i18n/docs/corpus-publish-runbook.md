@@ -51,12 +51,32 @@ itself, so provenance can be checked without any step handling the secret.
 Note the fingerprint is a key-check value only — it is not the contributor-id
 formula above, and it never leaves the private `build_meta` table.
 
-## 1. Build the publish-grade v2 database
+## 1. Build the publish-grade v2 database — the rebuild-integrity sequence
 
 The source database is an untracked working copy (CORE-1794) — if
 `legesher_i18n/db/translations.db` is absent (fresh clone, new machine), copy
 it in from the durable data home first:
 `cp "$LEGESHER_DATA_REPO/db/translations.db" legesher_i18n/db/`.
+
+A rebuild REPLACES a database that carries state the v1 source knows nothing
+about, and the migration reconstructs none of it (CORE-2052):
+
+- **the intake layer** — the community wrote it straight into v2: most
+  screened community options do not exist in v1 at all, and with them their
+  provenance, validations, endorsements, contributors, review sessions,
+  commentary and the `option_screenings` verdicts (CORE-1828). The
+  intake-moderation runbook's push step has always warned that a
+  from-scratch rebuild does not recover clearing decisions
+  ([intake-moderation-runbook.md](intake-moderation-runbook.md), step 6);
+  without the carry-forward below the rebuilt corpus is simply missing the
+  community's contributions — with no error anywhere;
+- **canon rung state** — a fresh build regresses every canon selection to
+  `machine`, erasing the CORE-1985 corrections.
+
+So a rebuild is the whole sequence below, in order — build, carry the
+intake layer forward, re-apply the rung corrections, verify counts against
+the durable copy — and none of it is optional. Section 2's dry export runs
+only after the verification agrees.
 
 ```bash
 cd libs/i18n
@@ -64,7 +84,17 @@ cd libs/i18n
 # ("refusing to overwrite build/translations_v2.db") and has no force flag —
 # it will not clobber a publish-grade artifact. Move the old one aside rather
 # than deleting it: until the new build is pushed, it is the only local copy
-# of what is currently live, and the two are worth diffing.
+# of what is currently live, and the two are worth diffing — the
+# verification at the end of this section leans on it as a third witness.
+# NEVER let a retry overwrite it: a failed migration leaves a PARTIAL
+# build/translations_v2.db behind, and looping back here with a bare `mv`
+# would replace the real superseded build with that fragment. Refuse instead:
+if [ -e build/translations_v2.superseded.db ]; then
+    echo "REFUSING: build/translations_v2.superseded.db already exists —" >&2
+    echo "a retry must not overwrite the previous build; inspect it and" >&2
+    echo "remove it yourself before rebuilding again." >&2
+    false   # stop here
+fi
 [ -f build/translations_v2.db ] && \
     mv build/translations_v2.db "build/translations_v2.superseded.db"
 # The private identity map lives in the durable data home, not in this tree
@@ -114,6 +144,92 @@ The migration is multi-target aware: concepts dedupe by slug across
 programming languages, terms stay per-PL, canon selections carry their
 term's PL scope, and `definition_en` seeds from the `context/python/`
 briefs (the ledger reports `definitions_seeded` / `definitions_todo`).
+
+Now carry the intake layer forward. The carry-forward's `--source` is never
+the durable file itself: take a scratch COPY and bring the copy up to the
+current screening schema first. The durable copy predates whatever schema
+upgrades landed since it was cut (as of CORE-2029 it does), a fresh build
+carries the new DDL, and the carry-forward refuses to move rows between the
+two versions. Upgrading the scratch copy closes that gap — and computes real
+verdicts for any column the upgrade backfills, so the carried rows arrive
+whole rather than defaulted:
+
+```bash
+cp "$LEGESHER_DATA_REPO/db/translations_v2.db" build/carry-source.db
+uv run python -c "
+from legesher_i18n.db.schema_v2 import connect, ensure_intake_screening
+ensure_intake_screening(connect('build/carry-source.db'))"
+uv run python scripts/carry_forward_screenings.py \
+    --source build/carry-source.db \
+    --target build/translations_v2.db
+```
+
+The durable original is never opened for writing by any of this, and the
+carry-forward opens its `--source` read-only besides. The carry moves the
+whole intake layer — the community options v1 has never held, with their
+provenance, validations, endorsements, contributors, sessions, commentary
+and the screening verdicts (verdict rows travel with their original ids,
+because the latest row per option IS the verdict). It is idempotent (a
+re-run reports "already carried forward" and writes nothing) and it refuses
+rather than papers over: a screening-schema version mismatch, a
+contributor-salt mismatch, a screened option absent from both the rebuild
+and the carried set, a target with a conflicting screening history, and a
+source table it has no carry policy for all stop the run. Every refusal
+means investigate the rebuild — a carry-forward that silently skips rows is
+the exact failure this step exists to close. Read the count report it
+prints; those are the numbers the verification below must reproduce.
+
+One refusal needs an operator decision rather than an investigation: once
+community options are canon-selected, replaying their quarantine history
+would trip the `trg_screenings_no_quarantine_while_canon` trigger, and the
+carry-forward refuses up front, naming the options. That is the trigger's
+doctrine working as designed — a shipped word is not demoted as a database
+side effect. Pull the named selections (DELETE is the sanctioned half of
+"replace wholesale"), re-run the carry-forward, then re-insert the
+selections so the INSERT triggers re-check them against the carried
+verdicts; `correct_canon_review_rung.py` below re-derives their rung
+either way.
+
+Then re-apply the canon rung corrections (CORE-1985). The fresh build has
+every canon selection back at `machine`; the script re-derives which rows a
+person actually reviewed from the endorsements and deciders already in the
+database, and is idempotent:
+
+```bash
+uv run python scripts/correct_canon_review_rung.py --db build/translations_v2.db
+```
+
+Last, verify the rebuilt file against the durable copy — BEFORE section 2:
+
+```bash
+for db in "$LEGESHER_DATA_REPO/db/translations_v2.db" build/translations_v2.db; do
+    echo "== $db"
+    sqlite3 "file:$db?mode=ro" \
+        "select 'screenings', verdict, count(*) from option_screenings group by 2
+         union all
+         select 'canon', status, count(*) from canon_selections group by 2;"
+done
+```
+
+The screening verdict counts must MATCH the durable copy exactly. The canon
+rung counts must match unless the v1 source gained or lost selections since
+the durable copy was cut — in which case say, out loud, why each difference
+exists before proceeding. The superseded build moved aside at the top of
+this section is the third witness: `sqlite3` the same query against
+`build/translations_v2.superseded.db` when the other two disagree. A
+difference nobody can explain is a stop, not a footnote — data-repo
+history already records one rebuild that silently reverted durable state
+(the CORE-1866 incident), and this verification is what makes that class of
+loss loud.
+
+If a crash left a `-journal` file beside any of these databases, even the
+read-only opens above will refuse until the journal is rolled back — and
+rolling it back requires a read-WRITE open. For the build files that is one
+harmless command (`sqlite3 build/translations_v2.db "PRAGMA
+integrity_check;"`), then re-run the check. For the durable file, never
+roll back in place: delete your local copy and re-pull it from the data
+repo, so the recovery is a fresh checkout rather than a write to the one
+copy everything else verifies against.
 
 ## 2. Dry export — review before anything leaves the machine
 

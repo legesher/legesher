@@ -195,13 +195,20 @@ cp libs/i18n/legesher_i18n/db/translations.db "$LEGESHER_DATA_REPO/db/"
 cd "$LEGESHER_DATA_REPO" && git add db/translations.db && git commit && git push
 ```
 
-The archived payloads are the rebuild source. `migrate_to_v2.py` rebuilds from
-scratch and knows nothing about sessions, so re-running the importer over the
-archived payloads is what re-derives the intake layer; re-import is idempotent,
-and the withdrawal rule stops a replay resurrecting an erased identity. One
-thing a from-scratch rebuild does NOT recover is your clearing decisions — they
-live in `option_screenings` inside the database itself, so carry the previous
-database copy forward or expect to re-screen.
+The pushed database copy is the rebuild source. `migrate_to_v2.py` rebuilds
+from v1 and knows nothing about the intake layer — not the sessions, not the
+community options (most exist in no v1 table), and not your clearing
+decisions, which live in `option_screenings` inside the database itself.
+What restores all of it after a rebuild is the intake-layer carry-forward
+from the durable copy — `scripts/carry_forward_screenings.py`, run as part
+of the rebuild-integrity sequence in
+[`corpus-publish-runbook.md`](corpus-publish-runbook.md) section 1
+(CORE-2052). That sequence is the one rebuild path: the `--sync` payload
+archive under `intake/<YYYY-MM>/` is a raw record for audits, not a rebuild
+mechanism, and the durable home currently holds no such archive — nothing
+may assume one exists. If this push step is skipped, the carry-forward has
+nothing to carry from, which is one more reason a ritual that ends on your
+laptop has not happened.
 
 Commit message names the date and what the run took in ("intake: 2026-08-18, 4
 issues, 31 options, 2 held"). That message is the run log.

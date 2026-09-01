@@ -26,6 +26,30 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   database is upgraded in place, with the verdict computed by running the
   real check over every stored surface, never stamped. [CORE-2029]
 
+- **A corpus rebuild can no longer silently lose the intake layer.** The
+  community writes straight into v2 — most screened community options exist
+  in no v1 table — so a rebuild from v1 used to drop their options,
+  provenance, validations, endorsements, contributors, sessions, commentary
+  and every `option_screenings` clearing decision, and regress every canon
+  selection to the `machine` rung, all with no error anywhere. New
+  `scripts/carry_forward_screenings.py` carries the whole intake layer from
+  the previous database into a fresh build: community options travel with
+  their full closure, concept ids are remapped through slugs (integer ids
+  renumber across rebuilds), and verdict rows keep their original ids
+  because the latest row per option IS the verdict. It refuses rather than
+  papers over — a screening-schema version mismatch (fingerprinted
+  transitively over the verdict-reading DDL), a contributor-salt mismatch, a
+  screened option absent from both the rebuild and the carried set, a
+  conflicting target history, a canon-selected option with quarantine
+  history to replay, and a source table with no carry policy all stop the
+  run — and a re-run is a reported no-op, with source-side verdict deltas
+  carried incrementally. The corpus publish runbook's build step is now the
+  full rebuild-integrity sequence: move the superseded build aside (and
+  refuse to overwrite it on a retry), rebuild from v1, upgrade a scratch
+  copy of the durable database and carry the intake layer from it, re-run
+  `correct_canon_review_rung.py`, and verify counts against the durable
+  copy before anything is exported.
+
 - **The language-packs dataset splits into four configs.** `pl_terminology`
   carries the programming language's own terminology — every term, symbol
   name, variable convention and error-message template, each with the set of
