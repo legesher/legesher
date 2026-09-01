@@ -525,6 +525,26 @@ class TestRefusals:
         message = str(refusal.value)
         assert "side_notes" in message and "no carry policy" in message
 
+    def test_table_anchored_on_second_level_intake_table_refuses(
+        self, source_db, target_db
+    ):
+        # The completeness guard anchors on EVERY carried table, not just the
+        # four roots: a table FK-ing concept_commentary (itself carried, but
+        # not a root) is intake layer just the same, and must refuse rather
+        # than fall out of the rebuild.
+        conn = connect(source_db)
+        conn.executescript(
+            "CREATE TABLE commentary_replies ("
+            " commentary_uid TEXT NOT NULL REFERENCES concept_commentary(uid),"
+            " body TEXT);"
+        )
+        conn.commit()
+        conn.close()
+        with pytest.raises(SystemExit) as refusal:
+            _run(source_db, target_db)
+        message = str(refusal.value)
+        assert "commentary_replies" in message and "no carry policy" in message
+
     def test_message_partition_endorsements_refuse(self, source_db, target_db):
         conn = connect(source_db)
         conn.executescript(

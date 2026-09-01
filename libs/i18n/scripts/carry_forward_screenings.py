@@ -28,7 +28,11 @@ write; only rows the rebuild did not reproduce travel:
 * ``options`` — screened uids absent from the target, gated: every one must
   carry exclusively ``community`` provenance in the source. A missing option
   with any other provenance came from v1 and its absence means the rebuild
-  DROPPED it — that refuses the run rather than being papered over.
+  DROPPED it — that refuses the run rather than being papered over. Column
+  divergence on options present on BOTH sides (e.g. ``withdrawn_at``) is
+  uncompared by design: withdrawal state is re-derived from the identity
+  map on every rebuild, so the rebuilt row, not the durable copy, is the
+  current truth for those columns.
 * ``option_provenance`` — rows for carried options, plus ``community`` rows
   on options that do exist (a community re-attestation of a v1 word lives
   only in v2). Content-diffed; the surrogate id is dropped on insert.
@@ -395,7 +399,11 @@ def _check_schema_fingerprints(
 def _check_completeness(source: sqlite3.Connection) -> None:
     """Refuse a source whose schema grew past this script's carry policies."""
     handled = set(CARRY_ORDER) | EXCLUDED_OPTION_CONSUMERS | set(REFUSE_IF_POPULATED)
-    anchors = {"options", "contributors", "review_sessions", "endorsements"}
+    # Anchored on EVERY carried table, not just the four roots: a new table
+    # FK-ing a second-level intake table (say, replies onto
+    # concept_commentary) is intake layer just the same, and anchoring only
+    # the roots would let its rows fall out of the rebuild unnoticed.
+    anchors = set(CARRY_ORDER)
     unknown = []
     for (table,) in source.execute(
         "SELECT name FROM sqlite_master WHERE type = 'table'"

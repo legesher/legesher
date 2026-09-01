@@ -88,14 +88,13 @@ cd libs/i18n
 # verification at the end of this section leans on it as a third witness.
 # NEVER let a retry overwrite it: a failed migration leaves a PARTIAL
 # build/translations_v2.db behind, and looping back here with a bare `mv`
-# would replace the real superseded build with that fragment. Refuse instead:
-if [ -e build/translations_v2.superseded.db ]; then
-    echo "REFUSING: build/translations_v2.superseded.db already exists —" >&2
-    echo "a retry must not overwrite the previous build; inspect it and" >&2
-    echo "remove it yourself before rebuilding again." >&2
-    false   # stop here
-fi
-[ -f build/translations_v2.db ] && \
+# would replace the real superseded build with that fragment. The guard is
+# one mechanical command — the mv happens ONLY when no superseded build
+# exists, so a whole-block paste on a retry moves nothing, leaves the
+# partial build in place, and the migration's own refusal to overwrite an
+# existing target stops the sequence right there. Inspect and remove the
+# superseded build yourself before rebuilding again.
+[ ! -e build/translations_v2.superseded.db ] && [ -f build/translations_v2.db ] && \
     mv build/translations_v2.db "build/translations_v2.superseded.db"
 # The private identity map lives in the durable data home, not in this tree
 # (CORE-1794). Point the build at your checkout of the private data repository
