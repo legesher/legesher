@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { randomBytes } from 'crypto';
 import { translateDocument } from './translator';
 // [Copilot Review Fix] Removed unused import getAvailableLanguages
@@ -163,7 +164,9 @@ export class TranslationPanelManager {
                     targetLanguage,
                     sourceLanguageName,
                     targetLanguageName,
-                    fileName: document.fileName,
+                    // Basename only: the full path would expose the OS username and
+                    // directory structure to the webview context (CORE-597).
+                    fileName: path.basename(document.fileName),
                     rtlLanguages,
                     translations,  // Pass translations for syntax highlighting
                     pythonKeywords,  // Pass keywords from source of truth

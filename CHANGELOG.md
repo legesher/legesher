@@ -95,6 +95,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   and points to `legesher git setup`, and the created-files list stops
   claiming `.gitattributes` and `.git/config` were updated when they were
   not. [CORE-1401]
+- **vs-code**: the translation panel sent the document's full filesystem path
+  to its webview, exposing the OS username and directory structure to the
+  webview context; the panel header only ever showed the filename. Only the
+  basename crosses the boundary now. [CORE-597]
 - **i18n**: the Japanese pack's `divmod` did not compile on the interpreters it
   claimed to support. Its rendering, `ディビジョン・モジュール`, separates the two
   halves of the compound with `U+30FB KATAKANA MIDDLE DOT` — ordinary Japanese
