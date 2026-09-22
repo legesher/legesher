@@ -503,7 +503,8 @@ def quarantine_queue(db_path: Path) -> None:
 def clear_option(
     option_uid: str, verdict: str, screened_by: str, note: str | None, db_path: Path
 ) -> None:
-    """Record a maintainer screening verdict for one option (CORE-1828)."""
+    """Record a maintainer screening verdict for one option."""
+    # CORE-1828: the maintainer screening lane of the intake queue.
     _require_db(db_path)
     conn = schema_v2.connect(db_path)
     try:

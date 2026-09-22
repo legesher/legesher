@@ -293,9 +293,10 @@ class LanguagePackMetadata(BaseModel):
     license: str | None = None
     review_status: Literal["experimental", "reviewed", "official"] = "experimental"
 
+    # CORE-1453: part of the "packs are data, not code" contract.
     @model_validator(mode="after")
     def validate_url_schemes(self) -> "LanguagePackMetadata":
-        """Only http(s) URLs may appear in metadata strings (CORE-1453)."""
+        """Only http(s) URLs may appear in metadata strings."""
         for field_name in type(self).model_fields:
             value = getattr(self, field_name)
             items = value if isinstance(value, list) else [value]

@@ -15,8 +15,9 @@ from .schema import get_schema
 logger = logging.getLogger(__name__)
 
 
+# CORE-601: the checkout/installed split below decides the default DB path.
 def _running_from_source_checkout(module_path: Path | None = None) -> bool:
-    """Detect whether this module runs from a source checkout (CORE-601).
+    """Detect whether this module runs from a source checkout.
 
     Installed environments place the package under a ``site-packages`` or
     ``dist-packages`` directory; a source checkout (including editable
@@ -38,8 +39,9 @@ def _running_from_source_checkout(module_path: Path | None = None) -> bool:
     return any((parent / "pyproject.toml").is_file() for parent in module_path.parents)
 
 
+# CORE-601: installed environments must never mutate the bundled database.
 def default_db_path() -> Path:
-    """Resolve the default database path (CORE-601).
+    """Resolve the default database path.
 
     Source checkouts and editable installs keep using the in-repo database
     next to this module (``legesher_i18n/db/translations.db``) — that file is
@@ -83,9 +85,9 @@ class TranslationDatabase:
     Default storage location: libs/i18n/legesher_i18n/db/translations.db in
     source checkouts / editable installs; ~/.legesher/translations.db in
     installed environments (site-packages/dist-packages). See
-    ``default_db_path`` (CORE-601).
+    ``default_db_path``.
 
-    Supports use as a context manager (CORE-610)::
+    Supports use as a context manager::
 
         with TranslationDatabase() as db:
             db.get_stats()
@@ -126,19 +128,20 @@ class TranslationDatabase:
         """Clean up connections on deletion."""
         self.close()
 
+    # CORE-610: context-manager support, riding the tracked-connection close().
     def __enter__(self) -> "TranslationDatabase":
-        """Enter context manager scope (CORE-610)."""
+        """Enter context manager scope."""
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
-        """Close all connections when leaving a ``with`` block (CORE-610)."""
+        """Close all connections when leaving a ``with`` block."""
         self.close()
 
     def close(self):
         """
         Close all database connections opened by this instance.
 
-        CORE-610: closes connections from every thread that used this
+        Closes connections from every thread that used this
         database, not just the calling thread. Important on Windows to
         prevent file locking issues. Should be called when the database is
         no longer needed; afterwards ``_get_connection`` raises
