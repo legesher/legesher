@@ -93,3 +93,47 @@ class TestTreeSitterExceptionLoading:
 
         for exc in ["ValueError", "TypeError", "KeyError", "IndexError"]:
             assert token.mapper.get_builtin(exc) == tree.mapper.get_builtin(exc)
+
+
+class TestIdentityExceptionValueCanonicalization:
+    """Lowercase identity exception VALUES must not reach the output (CORE-1570).
+
+    The en pack ships every exception entry as a lowercase identity mapping
+    (``typeerror: typeerror``). ``merge_exception_translations`` PascalCases
+    the keys, but a value passed through verbatim maps ``TypeError`` to
+    ``typeerror`` and the en-target translator emits broken except clauses.
+    The engine canonicalizes identity values so a pack with this quirk cannot
+    emit broken code.
+    """
+
+    def test_identity_value_is_pascal_cased(self):
+        from legesher_core.utils import merge_exception_translations
+
+        merged = merge_exception_translations({}, {"typeerror": "typeerror"})
+        assert merged == {"TypeError": "TypeError"}
+
+    def test_real_translation_value_is_untouched(self):
+        from legesher_core.utils import merge_exception_translations
+
+        merged = merge_exception_translations({}, {"typeerror": "errordetipo"})
+        assert merged == {"TypeError": "errordetipo"}
+
+    def test_unknown_exception_name_passes_through(self):
+        """A key that is not a Python builtin exception cannot be canonicalized."""
+        from legesher_core.utils import merge_exception_translations
+
+        merged = merge_exception_translations({}, {"notarealerror": "notarealerror"})
+        assert merged == {"notarealerror": "notarealerror"}
+
+    def test_en_pack_exception_values_are_pascal_case(self):
+        """The identity baseline must map every exception to its canonical name."""
+        translator = TokenTranslator.from_language_pack("en")
+        for exc in ["TypeError", "ValueError", "KeyError", "ZeroDivisionError"]:
+            assert translator.mapper.get_builtin(exc) == exc
+
+    def test_en_target_except_clause_round_trips_unchanged(self):
+        """Regression: en-target translate_code round-trips ``except TypeError:``."""
+        translator = TokenTranslator.from_language_pack("en")
+        code = "try:\n    pass\nexcept TypeError:\n    pass\n"
+        out = translator.translate_code(code, source_lang="en", target_lang="en")
+        assert out == code

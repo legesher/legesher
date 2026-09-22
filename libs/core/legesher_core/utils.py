@@ -147,6 +147,13 @@ def merge_exception_translations(
     uses PascalCase (``ValueError``).  This function remaps using Python's
     actual builtin exception names.
 
+    Identity VALUES are canonicalized the same way: a pack that ships
+    ``typeerror: typeerror`` (the en pack's identity baseline, CORE-1570)
+    would otherwise map ``TypeError`` to ``typeerror`` and the translator
+    would emit a broken except clause. A value equal to its lowercase key is
+    the pack saying "this name translates to itself", so the canonical
+    PascalCase name is the only correct rendering.
+
     Args:
         builtin_map: Existing builtin translations (will not be mutated).
         exceptions: Exception translations from the language pack (lowercase keys).
@@ -167,6 +174,10 @@ def merge_exception_translations(
 
     for lower_name, translation in exceptions.items():
         canonical = pascal_map.get(lower_name, lower_name)
+        if translation == lower_name:
+            # Identity mapping: render the canonical name, never the
+            # lowercase spelling the pack stored the key under.
+            translation = canonical
         merged[canonical] = translation
 
     return merged

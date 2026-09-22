@@ -104,6 +104,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   response is sent, so no input made this path serialize. Wire severities are
   now converted at the proxy boundary; absent or out-of-range values fall
   back to Error rather than crashing the response. [CORE-1977]
+- **core**: en-target translation no longer emits broken except clauses. The
+  en pack ships its exception entries as lowercase identity mappings
+  (`typeerror: typeerror`), and `merge_exception_translations` PascalCased
+  only the keys, so the en-target translator rendered `except TypeError:` as
+  `except typeerror:` — invalid Python through a public API. The engine now
+  canonicalizes identity values to the Python builtin exception name, so
+  `except TypeError:` round-trips unchanged and any future pack with the same
+  quirk cannot emit broken code. The pack data itself still ships the
+  lowercase values; correcting it rides the gated pack-correction path.
+  [CORE-1570]
 - **cli**: `legesher init` no longer prints an unqualified "✅ Legesher setup
   complete!" when its git step failed. Git integration is deliberately
   soft-fail — outside a git repository, or when the filters cannot be
