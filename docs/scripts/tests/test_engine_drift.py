@@ -9,9 +9,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "libs" / "core"))
 from generate_snippets import categorize_tokens, load_packs  # noqa: E402
 
-legesher_core = pytest.importorskip("legesher_core")  # needs tree-sitter until CORE-1555
+legesher_core = pytest.importorskip(
+    "legesher_core"
+)  # needs tree-sitter until CORE-1555
 
-SOURCE = Path(__file__).resolve().parents[2].joinpath("snippets", "hello-world.py").read_text()
+SOURCE = (
+    Path(__file__)
+    .resolve()
+    .parents[2]
+    .joinpath("snippets", "hello-world.py")
+    .read_text()
+)
 
 
 def token_stream(code):

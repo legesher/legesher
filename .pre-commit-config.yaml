@@ -33,13 +33,13 @@ repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.14.2
   hooks:
-      # Run the linter
+      # Run the linter (docs/scripts joined the scope in CORE-1583)
   - id: ruff
     args: [--fix, --exit-non-zero-on-fix]
-    files: ^libs/.*\.py$
+    files: ^(libs|docs/scripts)/.*\.py$
       # Run the formatter
   - id: ruff-format
-    files: ^libs/.*\.py$
+    files: ^(libs|docs/scripts)/.*\.py$
 
   # Type checking with mypy (optional - can be slow)
   # Uncomment to enable strict type checking on every commit

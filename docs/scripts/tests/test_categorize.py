@@ -5,7 +5,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from generate_snippets import categorize_tokens, load_packs  # noqa: E402
 
-SOURCE = Path(__file__).resolve().parents[2].joinpath("snippets", "hello-world.py").read_text()
+SOURCE = (
+    Path(__file__)
+    .resolve()
+    .parents[2]
+    .joinpath("snippets", "hello-world.py")
+    .read_text()
+)
 PACKS = load_packs("3.12")
 
 
@@ -16,8 +22,8 @@ def joined(spans):
 def test_spanish_keyword_and_builtin_categories():
     spans = categorize_tokens(SOURCE, PACKS["es"])
     cats = {t: c for t, c in spans}
-    assert cats.get("definir") == "keyword"        # def
-    assert cats.get("imprimir") == "builtin"       # print
+    assert cats.get("definir") == "keyword"  # def
+    assert cats.get("imprimir") == "builtin"  # print
     assert any(c == "exception" for _, c in spans)  # TypeError -> exception category
 
 
@@ -25,8 +31,8 @@ def test_output_reconstructs_full_source_shape():
     spans = categorize_tokens(SOURCE, PACKS["es"])
     out = joined(spans)
     assert out.count("\n") == SOURCE.count("\n")
-    assert '"Hello, "' in out                       # strings pass through byte-faithfully
-    assert "definir greet(name):" in out            # identifiers untouched
+    assert '"Hello, "' in out  # strings pass through byte-faithfully
+    assert "definir greet(name):" in out  # identifiers untouched
 
 
 def test_english_passthrough_is_identity():

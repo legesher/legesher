@@ -14,6 +14,7 @@ docs/snippets/identifiers/<lang>.yml), and highlight-terms/<lang>.json
 (per-language token sets driving the playground's localized syntax
 highlighting).
 """
+
 from __future__ import annotations
 
 import io
@@ -187,7 +188,9 @@ def _highlight_terms(bundles: dict[str, dict]) -> dict:
         builtins = {_nfc(v) for v in bundle["builtins"].values()} | {
             _nfc(v) for v in bundle["exceptions_pascal"].values()
         }
-        structure = {key: _nfc(keywords[key]) for key in ("def", "class") if key in keywords}
+        structure = {
+            key: _nfc(keywords[key]) for key in ("def", "class") if key in keywords
+        }
         terms[code] = {
             "k": sorted(kws),
             "a": sorted(atoms),
@@ -212,7 +215,9 @@ def _css(langs: list[str]) -> str:
     return "\n".join(rules) + "\n"
 
 
-def load_identifier_glossaries(snippets_dir: Path) -> dict[str, dict[str, dict[str, str]]]:
+def load_identifier_glossaries(
+    snippets_dir: Path,
+) -> dict[str, dict[str, dict[str, str]]]:
     """Read identifiers/<lang>.yml → {lang: {snippet: {english: localized}}}.
 
     A display/generation layer for sample identifiers (CORE-1696): canonical
@@ -234,7 +239,9 @@ def load_identifier_glossaries(snippets_dir: Path) -> dict[str, dict[str, dict[s
     return glossaries
 
 
-def _validate_glossary(lang: str, slug: str, mapping: dict[str, str], bundle: dict) -> None:
+def _validate_glossary(
+    lang: str, slug: str, mapping: dict[str, str], bundle: dict
+) -> None:
     """Refuse glossary words that collide with the language's pack tokens.
 
     A localized identifier equal to a localized keyword/builtin would be
@@ -269,14 +276,21 @@ def _validate_glossary(lang: str, slug: str, mapping: dict[str, str], bundle: di
         raise SystemExit(1)
 
 
-def emit_artifacts(snippets_dir: Path, out_dir: Path, version: str = PACK_VERSION_DEFAULT) -> None:
+def emit_artifacts(
+    snippets_dir: Path, out_dir: Path, version: str = PACK_VERSION_DEFAULT
+) -> None:
     bundles = load_packs(version)
     glossaries = load_identifier_glossaries(snippets_dir)
     (out_dir / "snippets").mkdir(parents=True, exist_ok=True)
 
     ordered = ["en"] + sorted(c for c in bundles if c != "en")
     langs_meta = [
-        {"code": c, "native": bundles[c]["native"], "name": bundles[c]["name"], "rtl": bundles[c]["rtl"]}
+        {
+            "code": c,
+            "native": bundles[c]["native"],
+            "name": bundles[c]["name"],
+            "rtl": bundles[c]["rtl"],
+        }
         for c in ordered
     ]
     (out_dir / "snippet-langs.json").write_text(
@@ -297,7 +311,10 @@ def emit_artifacts(snippets_dir: Path, out_dir: Path, version: str = PACK_VERSIO
         try:
             ast.parse(source)
         except SyntaxError as exc:
-            print(f"error: {src_file.name} is not valid English Python: {exc}", file=sys.stderr)
+            print(
+                f"error: {src_file.name} is not valid English Python: {exc}",
+                file=sys.stderr,
+            )
             raise SystemExit(1)
         slug = src_file.stem
         identifiers = {
