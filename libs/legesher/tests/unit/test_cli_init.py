@@ -160,7 +160,7 @@ class TestSetupGitIntegration:
 
         from legesher.cli.init import _setup_git_integration
 
-        _setup_git_integration()
+        assert _setup_git_integration() is True
 
         def git_config(key: str) -> str:
             result = subprocess.run(
@@ -182,6 +182,76 @@ class TestSetupGitIntegration:
 
         from legesher.cli.init import _setup_git_integration
 
-        _setup_git_integration()
+        assert _setup_git_integration() is False
 
         assert not (tmp_path / ".gitattributes").exists()
+
+
+@patch("legesher.cli.init.LanguagePackLoader")
+@patch("legesher.cli.init.AIContextGenerator")
+class TestInitGitFailureBanner:
+    """Regression tests for CORE-1401.
+
+    When the git step fails or is skipped, the final banner must say so
+    instead of printing an unqualified success right after the warning.
+    """
+
+    def test_outside_git_repo_qualifies_banner(
+        self, mock_ai_gen, mock_loader, tmp_path
+    ):
+        """`legesher init --git` outside a git repo qualifies the banner."""
+        runner = CliRunner()
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            Path("pyproject.toml").write_text(
+                '[project]\nrequires-python = ">=3.13"', encoding="utf-8"
+            )
+            result = runner.invoke(
+                cli,
+                ["init", "-l", "es", "--git", "--no-ai-context"],
+                input="",
+            )
+            assert result.exit_code == 0, result.output
+            assert "git integration skipped" in result.output
+            assert "legesher git setup" in result.output
+            assert ".gitattributes (updated)" not in result.output
+
+    def test_filter_config_failure_qualifies_banner(
+        self, mock_ai_gen, mock_loader, tmp_path
+    ):
+        """A failing `_configure_git_filters` qualifies the banner too."""
+        runner = CliRunner()
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            subprocess.run(["git", "init"], check=True, capture_output=True)
+            Path("pyproject.toml").write_text(
+                '[project]\nrequires-python = ">=3.13"', encoding="utf-8"
+            )
+            with patch("legesher.cli.git._configure_git_filters", return_value=False):
+                result = runner.invoke(
+                    cli,
+                    ["init", "-l", "es", "--git", "--no-ai-context"],
+                    input="",
+                )
+            assert result.exit_code == 0, result.output
+            assert "Could not configure git filters" in result.output
+            assert "git integration skipped" in result.output
+            assert ".gitattributes (updated)" not in result.output
+
+    def test_git_success_prints_unqualified_banner(
+        self, mock_ai_gen, mock_loader, tmp_path
+    ):
+        """A successful git step keeps the plain success banner."""
+        runner = CliRunner()
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            subprocess.run(["git", "init"], check=True, capture_output=True)
+            Path("pyproject.toml").write_text(
+                '[project]\nrequires-python = ">=3.13"', encoding="utf-8"
+            )
+            result = runner.invoke(
+                cli,
+                ["init", "-l", "es", "--git", "--no-ai-context"],
+                input="",
+            )
+            assert result.exit_code == 0, result.output
+            assert "Legesher setup complete!" in result.output
+            assert "git integration skipped" not in result.output
+            assert ".gitattributes (updated)" in result.output

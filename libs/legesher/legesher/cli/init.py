@@ -262,19 +262,27 @@ def init(
                 )
 
     # Setup git if enabled
-    if git_enabled:
-        _setup_git_integration()
+    git_configured = _setup_git_integration() if git_enabled else False
 
     # Success summary
     click.echo("\n" + "─" * 60 + "\n")
-    click.echo(click.style("✅ Legesher setup complete!\n", fg="green", bold=True))
+    if git_enabled and not git_configured:
+        click.echo(
+            click.style("✅ Legesher setup complete", fg="green", bold=True)
+            + click.style(
+                " — git integration skipped (see warnings above).", fg="yellow"
+            )
+        )
+        click.echo("   Set it up later with: legesher git setup\n")
+    else:
+        click.echo(click.style("✅ Legesher setup complete!\n", fg="green", bold=True))
 
     click.echo("📁 Created files:")
     click.echo(f"   • {config_path}")
     if generated_ai_contexts:
         for lang in generated_ai_contexts:
             click.echo(f"   • .legesher/AI-CONTEXT-{lang}.md")
-    if git_enabled:
+    if git_configured:
         click.echo("   • .gitattributes (updated)")
         click.echo("   • .git/config (updated)")
 
@@ -445,13 +453,17 @@ def _yaml_list(items: Sequence[str], indent: int = 0) -> str:
     return "\n".join(f"{prefix}- {item}" for item in items)
 
 
-def _setup_git_integration() -> None:
+def _setup_git_integration() -> bool:
     """Set up git filters and attributes for canonical English storage.
 
     Delegates to the shared helpers behind ``legesher git setup`` so both
     entry points configure identical filters: the ``legesher-filter``
     console script, ``filter.legesher.required=false``, and the same
     .gitattributes entry (CORE-1344).
+
+    Returns:
+        True if git integration was configured, False if it was skipped
+        (not inside a git repository, or the filters could not be set).
     """
     from legesher.cli.git import _configure_git_filters, _create_gitattributes
     from legesher.config import LegesherConfig
@@ -463,16 +475,17 @@ def _setup_git_integration() -> None:
             click.style(f"  ⚠ Could not set up git integration: {e}", fg="yellow")
         )
         click.echo("    Run 'legesher git setup' from within a git repository.")
-        return
+        return False
 
     if not _configure_git_filters():
         click.echo(click.style("  ⚠ Could not configure git filters", fg="yellow"))
         click.echo("    You can configure them later with: legesher git setup")
-        return
+        return False
     click.echo("✓ Configured git filters")
 
     _create_gitattributes(repo_root)
     click.echo("✓ Updated .gitattributes")
+    return True
 
 
 __all__ = ["init"]

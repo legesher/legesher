@@ -86,6 +86,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **cli**: `legesher init` no longer prints an unqualified "✅ Legesher setup
+  complete!" when its git step failed. Git integration is deliberately
+  soft-fail — outside a git repository, or when the filters cannot be
+  configured, init warns and continues — but the closing banner then
+  contradicted the warning the user had just read. The git step now reports
+  its outcome: on failure the banner notes that git integration was skipped
+  and points to `legesher git setup`, and the created-files list stops
+  claiming `.gitattributes` and `.git/config` were updated when they were
+  not. [CORE-1401]
 - **i18n**: the Japanese pack's `divmod` did not compile on the interpreters it
   claimed to support. Its rendering, `ディビジョン・モジュール`, separates the two
   halves of the compound with `U+30FB KATAKANA MIDDLE DOT` — ordinary Japanese
