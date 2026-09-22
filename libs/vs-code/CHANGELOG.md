@@ -45,6 +45,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- **Server command**: `legesher.serverCommand` is now `machine-overridable` scoped and is restricted
+  in untrusted workspaces. The setting names an executable the extension spawns on activation, and it
+  carried no scope restriction and no `capabilities.untrustedWorkspaces` declaration, so a cloned
+  repository's `.vscode/settings.json` could point the extension at an arbitrary binary once the
+  workspace was trusted with nothing in the manifest flagging the setting to VS Code's trust
+  machinery. A project can still pin its own server binary in a workspace you trust; in an untrusted
+  workspace only your user-level value or the bundled default is used (CORE-2030)
+
 - **Dependencies**: cleared all known npm audit advisories in the extension's dependency tree
   (13 advisories, 7 high) — lockfile-only bumps; the one bundled runtime package moved is
   `js-yaml` 4.2.0 → 4.3.1 (quadratic-CPU `!!omap` advisory), which ships in the packaged extension

@@ -47,6 +47,15 @@
     "onLanguage:python"
   ],
   "main": "./out/extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In an untrusted workspace, the legesher.serverCommand setting is not read from workspace settings: it names an executable the extension spawns, so only your user-level value (or the bundled default) is used until you trust the workspace.",
+      "restrictedConfigurations": [
+        "legesher.serverCommand"
+      ]
+    }
+  },
   "contributes": {
     "semanticTokenScopes": [
       {
@@ -333,6 +342,7 @@
         "legesher.serverCommand": {
           "type": "string",
           "default": "legesher-lsp",
+          "scope": "machine-overridable",
           "description": "Path to the Legesher language server executable"
         },
         "legesher.trace.server": {

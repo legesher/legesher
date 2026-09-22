@@ -191,6 +191,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   and could coexist with the reserved term as a visually interchangeable
   coinage, breaking round-trip translation. Such collisions are now
   correctly rejected. [CORE-1408]
+- **vs-code**: `legesher.serverCommand` is now `machine-overridable` scoped
+  and restricted in untrusted workspaces. The setting names an executable the
+  extension spawns on activation, and the manifest declared no scope and no
+  `capabilities.untrustedWorkspaces` support, so a cloned repository's
+  `.vscode/settings.json` could point the extension at an arbitrary binary
+  once the workspace was trusted. A project can still pin its own server
+  binary in a trusted workspace; in an untrusted one, only the user-level
+  value or the bundled default is used. [CORE-2030]
 - **core**: identifiers are now checked against a positive, script-aware
   allowlist, and the git clean filter rejects source that fails it.
   The guard's earlier layers reject characters by Unicode *property* — bidi
