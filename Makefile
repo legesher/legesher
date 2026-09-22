@@ -2,7 +2,7 @@
 # ===========================
 # Common commands for development, testing, and code generation.
 
-.PHONY: help install generate generate-languages check-generated test test-all test-i18n test-core test-legesher test-language-server test-mcp test-mcp-scheduled lint format typecheck clean vscode-compile vscode-package
+.PHONY: help install generate generate-languages generate-docs check-generated check-generated-languages check-generated-docs test test-all test-i18n test-core test-legesher test-language-server test-mcp test-mcp-scheduled lint format typecheck clean vscode-compile vscode-package
 
 # Default target
 help:
@@ -15,6 +15,7 @@ help:
 	@echo "Code Generation:"
 	@echo "  make generate             Generate all derived files"
 	@echo "  make generate-languages   Generate TypeScript from languages.json"
+	@echo "  make generate-docs        Generate docs snippet/highlight artifacts (docs/generated)"
 	@echo "  make check-generated      Verify generated files match source (for CI)"
 	@echo ""
 	@echo "Testing:"
@@ -50,7 +51,7 @@ install:
 # ============================================================================
 
 # Generate all derived files from source of truth
-generate: generate-languages
+generate: generate-languages generate-docs
 	@echo "All code generation complete!"
 
 # Generate TypeScript language definitions from languages.json
@@ -60,6 +61,14 @@ generate-languages:
 	@echo "Generating TypeScript from languages.json..."
 	uv run python libs/i18n/legesher_i18n/scripts/generate_languages.py
 	@echo "Done! Don't forget to rebuild the VS Code extension: make vscode-compile"
+
+# Generate the docs site's snippet/highlight artifacts
+# Source: docs/snippets/*.py + shipped packs + languages.json (no translations.db needed)
+# Output: docs/generated/
+generate-docs:
+	@echo "Generating docs snippet artifacts..."
+	uv run python docs/scripts/generate_snippets.py --snippets docs/snippets --out docs/generated
+	@echo "Done!"
 
 # ============================================================================
 # Testing
@@ -162,8 +171,20 @@ clean:
 	@echo "Clean complete!"
 
 # Verify generated files are up-to-date (for CI)
-# This regenerates from source and compares to committed version
-check-generated:
+# This regenerates from source and compares to committed version.
+# Two halves: the language-registry artifacts (needs the local
+# translations.db) and the docs/generated artifacts (DB-free).
+check-generated: check-generated-languages check-generated-docs
+
+# The control-plane DB is git-ignored (maintainer checkouts only), and the
+# generator refuses to run without it (CORE-1887) — so in a DB-less clone
+# this half skips cleanly instead of failing before the docs half runs.
+TRANSLATIONS_DB := libs/i18n/legesher_i18n/db/translations.db
+
+check-generated-languages:
+ifeq ($(wildcard $(TRANSLATIONS_DB)),)
+	@echo "SKIP: $(TRANSLATIONS_DB) not present (DB-less clone) — cannot regenerate the language registry (CORE-1887); skipping its drift check."
+else
 	@echo "Checking if generated files are up-to-date..."
 	@cp libs/vs-code/src/generated/languages.ts /tmp/languages.ts.committed
 	@$(MAKE) generate-languages > /dev/null 2>&1
@@ -177,5 +198,35 @@ check-generated:
 		echo ""; \
 		echo "Run 'make generate' and commit the changes."; \
 		cp /tmp/languages.ts.committed libs/vs-code/src/generated/languages.ts; \
+		exit 1; \
+	fi
+endif
+
+# Drift gate for docs/generated (CORE-2044): the docs site's snippet and
+# highlight artifacts are derived from docs/snippets/*.py plus the shipped
+# packs and languages.json, but nothing failed when the source moved and the
+# committed artifacts did not (the PR #151 highlight-terms drift was caught
+# by eye). Regenerates into a temp dir and diffs — read-only on the tree,
+# and DB-free (unlike the registry half above), so it runs in a fresh clone.
+check-generated-docs:
+	@echo "Checking if docs/generated is up-to-date..."
+	@tmp=$$(mktemp -d); \
+	if ! uv run python docs/scripts/generate_snippets.py --snippets docs/snippets --out "$$tmp/out" > "$$tmp/regen.log" 2>&1; then \
+		echo "ERROR: docs snippet regeneration failed:"; \
+		cat "$$tmp/regen.log"; \
+		rm -rf "$$tmp"; \
+		exit 1; \
+	fi; \
+	if diff -r "$$tmp/out" docs/generated > /dev/null 2>&1; then \
+		echo "docs/generated is up-to-date!"; \
+		rm -rf "$$tmp"; \
+	else \
+		echo "ERROR: docs/generated is out of date!"; \
+		echo "  Source: docs/snippets/ + shipped language packs + languages.json"; \
+		echo "  Generated: docs/generated/"; \
+		diff -r -q "$$tmp/out" docs/generated || true; \
+		echo ""; \
+		echo "Run 'make generate-docs' and commit the changes."; \
+		rm -rf "$$tmp"; \
 		exit 1; \
 	fi
