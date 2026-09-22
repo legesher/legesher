@@ -9,7 +9,7 @@ returns deterministic engine facts (constructs + validation), never prose.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from pydantic import (
     BaseModel,
@@ -112,7 +112,10 @@ class TranslationResult(ToolResult):
     ) -> dict[str, Any]:
         """Serialize with ``round_trip`` ABSENT — not null — when the flag
         was off: a null field is still tokens in every response."""
-        data = handler(self)
+        # The wrap handler is typed as returning Any; for a model this is
+        # the serialized mapping, and the isinstance guard keeps the cast
+        # honest for exotic serialization contexts.
+        data = cast("dict[str, Any]", handler(self))
         if isinstance(data, dict) and data.get("round_trip") is None:
             data.pop("round_trip", None)
         return data

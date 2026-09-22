@@ -1,15 +1,20 @@
 """Legesher MCP server — the engine's translation capability over MCP.
 
 This package exposes the Legesher translation engine as a Model Context
-Protocol (MCP) stdio server: five coarse, task-shaped tools
+Protocol (MCP) server: six coarse, task-shaped tools
 (``translate_to_native``, ``translate_to_source``, ``explain_in_language``,
-``lookup_keyword_mapping``, ``map_existing_codebase``), read-only
-``legesher://`` resources for the language catalog and per-language term
-dictionaries, and a small set of prompt templates.
+``lookup_keyword_mapping``, ``validate_identifier_translations``,
+``map_existing_codebase``), read-only ``legesher://`` resources for the
+language catalog and per-language term dictionaries, and a small set of
+prompt templates. It serves stdio by default; ``--transport
+streamable-http`` serves the same tools over HTTP on one interface,
+loopback by default.
 
-The server runs entirely against the locally installed engine
-(``legesher-core`` + ``legesher-i18n`` + language packs): no network calls,
-no account, no telemetry. Free forever, Apache-2.0.
+Using the MCP server is free forever (Apache-2.0). The local server runs
+entirely against the locally installed engine (``legesher-core`` +
+``legesher-i18n`` + language packs): it needs no account and sends no
+telemetry. Some capabilities require a Legesher account on the hosted
+instance.
 
 Run it:
 

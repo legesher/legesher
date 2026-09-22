@@ -11,6 +11,44 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Remote transport surface — the pieces a deployment composes into a
+  remote MCP server, with local stdio behavior unchanged [CORE-1420]:
+  - **Backend seam** (`legesher_mcp.backend`): everything a tool call or
+    resource read *does* now sits behind the `Backend` protocol — one
+    async method per tool plus the two resource reads, returning the
+    exact typed results the tools publish, with expected failures raised
+    as `EngineError`. `LocalBackend` carries the orchestration formerly
+    in the tool bodies, unchanged. The seam sits at the tool level, not
+    the engine level, so a remote implementation is one call per method
+    against a hosted API and the two deployments cannot drift.
+  - **Server factory**: `create_server(backend=..., gate=..., host=...,
+    port=...)` assembles the complete server — all six tools, both
+    resources plus the versioned terms template, all three prompts,
+    descriptions and annotations — from a backend and an entitlement
+    gate; `create_http_app(...)` returns it as an ASGI app for mounting
+    behind a deployment's own middleware. The module-level server and the
+    stdio entry point are now built through the factory with the
+    defaults (`LocalBackend`, no gate).
+  - **Entitlement gate** (`legesher_mcp.gate`): a default-open policy
+    seam. Gated tools stay *listed* for every caller — entitlement is
+    checked only at call time — and an unentitled call answers with an
+    actionable message (what the tool does, that it requires a Legesher
+    account on the hosted instance, and where to go), never an opaque
+    failure. Only `map_existing_codebase` is gateable at all, and only
+    where a deployment installs a gate; `validate_identifier_translations`
+    is permanently free by construction; the stdio entry and the
+    self-host HTTP entry never install one. Per-request context reaches
+    the gate through `request_context` (a contextvar an ASGI wrapper
+    sets), and the denial copy ships in this package.
+  - **Streamable HTTP entry**: `--transport streamable-http` on the
+    console script, with `--host` (default `127.0.0.1`; wildcard binds
+    are refused) and `--port` (default 8000). Stateless — every request
+    self-contained — with plain JSON responses, and the `Origin` header
+    validated against the bound interface when present (DNS-rebinding
+    defense; a mismatch is rejected with 403, clients that send no
+    Origin pass). Ships no authentication: it is the localhost /
+    single-user self-host entry; a multi-tenant deployment mounts
+    `create_http_app()` behind its own auth middleware instead.
 - `verify_round_trip` flag on both `translate_to_native` and
   `translate_to_source` — ask the engine to prove the translation
   round-trips instead of comparing two renderings by eye. The result gains
@@ -142,6 +180,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- Engine failures (and gate denials) now surface as their machine code
+  directly — `unsupported_language: ...` — instead of inside the SDK's
+  `Error executing tool <name>: ...` wrapper, so the code stays first,
+  which is what tool-calling models key on. [CORE-1420]
 - Pack availability is now refreshable instead of computed once per process:
   the scan expires after a TTL, and `LocalEngine.refresh_packs()` drops
   every pack-derived cache explicitly. A pack installed mid-session is

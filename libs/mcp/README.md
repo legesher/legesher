@@ -4,9 +4,10 @@ The Legesher [Model Context Protocol](https://modelcontextprotocol.io) server:
 the engine's translation capability inside every MCP-capable client — Claude,
 IDE assistants, agent frameworks — as six coarse, task-shaped tools.
 
-**Free forever. Apache-2.0. No telemetry.** This server runs entirely against
-the locally installed Legesher engine: it makes no network calls, requires no
-account, and emits nothing. What it does is defined by this open package and
+**Using the MCP server is free forever (Apache-2.0).** The local server runs
+entirely against the locally installed Legesher engine: it needs no account
+and sends no telemetry. Some capabilities require a Legesher account on the
+hosted instance. What the server does is defined by this open package and
 nothing else.
 
 ## Tools
@@ -135,6 +136,42 @@ claude mcp add legesher --env LEGESHER_MCP_LOG_LEVEL=DEBUG -- uvx legesher-mcp
 
 The `env` block is optional in every case — drop it to keep the quiet
 default.
+
+## Serving over HTTP (self-host / single-user)
+
+stdio is the default and what every client config above spawns. The same
+server also speaks the MCP streamable HTTP transport, for running it as a
+long-lived local service or on a machine you control:
+
+```bash
+legesher-mcp --transport streamable-http                # 127.0.0.1:8000/mcp
+legesher-mcp --transport streamable-http --port 9000
+legesher-mcp --transport streamable-http --host 192.0.2.7
+```
+
+The posture, deliberately:
+
+- **Loopback by default, never a wildcard.** `--host` defaults to
+  `127.0.0.1`, and wildcard binds (`0.0.0.0`, `::`) are refused: this
+  entry ships **no authentication**, so it binds exactly one interface
+  you name. To serve beyond a machine you trust end to end, put your own
+  auth in front (below).
+- **Stateless, plain JSON.** Every request is self-contained — no
+  server-held session — and responses are `application/json`, not SSE.
+- **`Origin` validated when present.** A browser page from another
+  origin (the DNS-rebinding vector) is rejected with 403; the allowlist
+  derives from the bound interface. MCP clients that send no `Origin`
+  header are unaffected.
+
+Embedding instead of running: `legesher_mcp.server.create_server()` builds
+the complete server from a `Backend` and an entitlement gate, and
+`create_http_app()` returns it as an ASGI app to mount behind your own
+middleware (TLS, auth, request context for the gate — see
+`legesher_mcp.gate.request_context`). The gate is **default-open**: no
+deployment code here installs one, gated tools always stay listed, and an
+unentitled call answers with an actionable message rather than an opaque
+failure. `validate_identifier_translations` is permanently free by
+construction.
 
 ## Making agent sessions stay localized
 
