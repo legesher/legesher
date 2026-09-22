@@ -508,3 +508,38 @@ class TestIdentifierMapPackCollisionDetection:
         result = imap.validate_against_pack("shared", pack)
         # Returns one of the two; insertion order says "def" first
         assert result == "keyword:def"
+
+    def test_validate_against_pack_detects_nfkc_equal_collision(self):
+        """CORE-1408: NFKC-equal renderings of a reserved term must collide.
+
+        The check used to compare raw strings, so a compatibility variant
+        of a pack value — here fullwidth 'ｄｅｆｉｎｉｒ', which is
+        NFKC-equal to the Spanish keyword rendering 'definir' — slipped
+        through as a distinct coinage. Comparison now goes through the
+        store-NFC / compare-NFKC+fold contract (text_identity.compare_key).
+        """
+        import unicodedata
+
+        pack = self._make_pack()
+        imap = IdentifierMap()
+
+        fullwidth = "ｄｅｆｉｎｉｒ"
+        # Sanity: raw-unequal but NFKC-equal to the pack's keyword value.
+        assert fullwidth != "definir"
+        assert unicodedata.normalize("NFKC", fullwidth) == "definir"
+
+        assert imap.validate_against_pack(fullwidth, pack) == "keyword:def"
+
+    def test_validate_against_pack_detects_casefold_equal_collision(self):
+        """CORE-1408: the compare key casefolds, so case variants collide."""
+        pack = self._make_pack()
+        imap = IdentifierMap()
+        assert imap.validate_against_pack("DEFINIR", pack) == "keyword:def"
+        assert imap.validate_against_pack("Imprimir", pack) == "builtin:print"
+
+    def test_add_raises_on_nfkc_equal_collision(self):
+        """CORE-1408: pack-aware add() rejects an NFKC-equal coinage."""
+        pack = self._make_pack()
+        imap = IdentifierMap(pack=pack)
+        with pytest.raises(ValueError, match="collision"):
+            imap.add("d", "es", "ｄｅｆｉｎｉｒ")

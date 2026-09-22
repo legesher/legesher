@@ -163,6 +163,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Security
 
+- **core**: the identifier-map collision check now compares under the
+  store-NFC / compare-NFKC+fold contract instead of raw strings. A proposed
+  identifier translation that was NFKC-equal to a pack's reserved rendering —
+  a fullwidth or ligature spelling of a keyword, builtin, exception, or
+  implicit-parameter value, or a mere case variant — slipped past the check
+  and could coexist with the reserved term as a visually interchangeable
+  coinage, breaking round-trip translation. Such collisions are now
+  correctly rejected. [CORE-1408]
 - **core**: identifiers are now checked against a positive, script-aware
   allowlist, and the git clean filter rejects source that fails it.
   The guard's earlier layers reject characters by Unicode *property* — bidi

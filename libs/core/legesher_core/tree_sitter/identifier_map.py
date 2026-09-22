@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ..artifact_io import atomic_write_text
+from ..text_identity import compare_key
 
 if TYPE_CHECKING:
     from legesher_i18n.pack_loader import LanguagePack
@@ -147,6 +148,10 @@ class IdentifierMap:
             >>> reason  # collides with the Spanish translation of `def`
             'keyword:def'
         """
+        # Compare under the store-NFC / compare-NFKC+fold contract
+        # (text_identity.compare_key): a raw string compare let NFKC-equal
+        # renderings of a reserved term slip through as distinct coinages.
+        translation_key = compare_key(translation)
         for section, mapping in (
             ("keyword", pack.keywords),
             ("builtin", pack.builtins),
@@ -154,7 +159,7 @@ class IdentifierMap:
             ("implicit_param", pack.implicit_params),
         ):
             for source_key, target_value in mapping.items():
-                if target_value == translation:
+                if compare_key(target_value) == translation_key:
                     return f"{section}:{source_key}"
         return None
 
