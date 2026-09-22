@@ -64,7 +64,7 @@ export class OnboardingManager {
         }
 
         const result = await vscode.window.showInformationMessage(
-            '🤝 Help improve Legesher translations? Share anonymous feedback when you correct suggestions. No code or personal info collected.',
+            '🤝 Help improve Legesher translations? Share feedback when you correct suggestions. No code or personal info collected; events carry a pseudonymous machine id.',
             'Learn More',
             'Yes, Help Improve',
             'No Thanks'

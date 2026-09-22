@@ -12,10 +12,12 @@ import type {
 /**
  * Telemetry module for Legesher VS Code extension
  *
- * Collects anonymous usage data to help improve the extension.
+ * Collects usage data to help improve the extension.
  * Respects VS Code's telemetry settings and user preferences.
  *
- * NO PII IS COLLECTED - no file paths, code content, or personal information.
+ * The events we author contain no code content, no file paths, and no
+ * identifiers; the bundled @vscode/extension-telemetry library adds a
+ * pseudonymous machine id and session id to each event.
  */
 
 // Azure Application Insights connection string
@@ -50,7 +52,7 @@ export type { LanguageTrigger, TransitionOutcome, ResolutionSource };
 export type WriteOutcome = 'applied' | 'shadowed' | 'failed';
 
 /**
- * Legesher Telemetry - tracks anonymous usage to improve the extension
+ * Legesher Telemetry - tracks usage to improve the extension
  */
 export class LegesherTelemetry {
     /**

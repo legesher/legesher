@@ -29,7 +29,7 @@ servers or any third-party services. All translation, git filters, and IntelliSe
 
 ### Basic telemetry (optional)
 
-When enabled, we collect anonymous usage statistics to help us improve the product:
+When enabled, we collect usage statistics to help us improve the product:
 
 - Extension activation events
 - Feature usage frequency (which commands you use)
@@ -52,6 +52,9 @@ When enabled, we collect anonymous usage statistics to help us improve the produ
 - ❌ Literal values from your code
 - ❌ Sensitive data of any kind
 
+The events we author contain no identifiers; the bundled `@vscode/extension-telemetry` library adds
+a pseudonymous machine id and session id to each event.
+
 **Control:** you can disable telemetry at any time in VS Code settings:
 
 ```json
@@ -62,8 +65,9 @@ When enabled, we collect anonymous usage statistics to help us improve the produ
 
 ### ML training data (opt-in only)
 
-You can optionally help improve Legesher's translation models by sharing anonymous feedback when you
-change our translation suggestions.
+You can optionally help improve Legesher's translation models by sharing feedback when you change
+our translation suggestions. Feedback events carry no code content and no file paths; the bundled
+`@vscode/extension-telemetry` library adds a pseudonymous machine id and session id to each event.
 
 #### What we collect
 
@@ -88,7 +92,7 @@ This data helps us:
 ### Telemetry storage
 
 - **Location:** Azure Application Insights (US region)
-- **Retention:** 90 days for telemetry; anonymized ML training data retained indefinitely
+- **Retention:** 90 days for telemetry; pseudonymous ML training data retained indefinitely
 - **Security:** industry-standard encryption (TLS 1.3 in transit, AES-256 at rest)
 
 ### VS Code's own telemetry
@@ -131,14 +135,14 @@ font services are used, so no data is shared with external providers when loadin
 ## GDPR & CCPA Compliance
 
 Your rights under GDPR, UK GDPR, CCPA/CPRA, and other regional privacy laws apply to both the
-anonymous telemetry and the opt-in ML training data described above. In particular, you may:
+usage telemetry and the opt-in ML training data described above. In particular, you may:
 
 - **Disable all telemetry** at any time via VS Code settings (see the _Control_ notes in each
   section above) — the fastest way to stop data collection entirely
 - **Request access, correction, or deletion** of any data we have collected, by emailing
   [privacy@legesher.com](mailto:privacy@legesher.com)
 - **Withdraw ML-training consent** by turning off `legesher.telemetry.contributeToMLTraining`;
-  future collection stops immediately, and you can request deletion of historical anonymous
+  future collection stops immediately, and you can request deletion of historical
   contributions by emailing us
 - **Lodge a complaint** with your local Data Protection Authority (EEA) or the
   [Information Commissioner's Office](https://ico.org.uk/make-a-complaint/) (UK) if you

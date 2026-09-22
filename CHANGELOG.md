@@ -18,6 +18,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   repository is unchanged and never required the map. The artifact
   normalization/hash contract stays open in `legesher_core.text_identity`.
 
+### Changed
+
+- **legesher-vscode**: the `legesher.telemetry.contributeToMLTraining` setting
+  description no longer calls the feedback "anonymous": events carry a
+  pseudonymous machine id added by the bundled VS Code telemetry library, and
+  the description now says so. The Marketplace README and the docs-site privacy
+  page state the same precise claim (no code content, no file paths, no
+  identifiers we collect) established for `legesher.telemetry.enabled`.
+  [CORE-2077]
+
 ### Added
 
 - **i18n**: error-message renderings can now be generated, and every one

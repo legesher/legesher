@@ -70,7 +70,7 @@ Access via Settings (`Cmd+,`) → search "Legesher":
 | `legesher.enabled`           | `true`         | Enable/disable the extension           |
 | `legesher.serverCommand`     | `legesher-lsp` | Path to language server                |
 | `legesher.trace.server`      | `off`          | Debug logging level                    |
-| `legesher.telemetry.enabled` | `false`        | Anonymous usage telemetry              |
+| `legesher.telemetry.enabled` | `false`        | Usage telemetry (see Privacy below)    |
 
 > **`legesher.targetLanguage` is deprecated.** It was one setting for two
 > different things — the language a file is written in, and the language you
@@ -133,7 +133,9 @@ vi (Vietnamese)  zh (Chinese)
 
 ## Privacy
 
-- **Telemetry**: Anonymous usage data (off by default, opt-in)
+- **Telemetry**: Usage data, off by default (opt-in). Events contain no code
+  content, no file paths, and no identifiers we collect; the bundled
+  `@vscode/extension-telemetry` library adds a pseudonymous machine id
 - **No code collection**: Your code never leaves your machine
 - Respects VS Code's global telemetry settings
 
