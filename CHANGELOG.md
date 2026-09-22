@@ -86,6 +86,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **language-server**: diagnostics forwarded from the Pyright backend crashed
+  at serialization time and put a red error notification on screen.
+  `forward_diagnostic` built each `Diagnostic` with the backend's raw integer
+  severity (and defaulted to the integer `1`), but `lsprotocol` wants the
+  `DiagnosticSeverity` enum — cattrs calls `.value` on the field when the
+  response is sent, so no input made this path serialize. Wire severities are
+  now converted at the proxy boundary; absent or out-of-range values fall
+  back to Error rather than crashing the response. [CORE-1977]
 - **cli**: `legesher init` no longer prints an unqualified "✅ Legesher setup
   complete!" when its git step failed. Git integration is deliberately
   soft-fail — outside a git repository, or when the filters cannot be

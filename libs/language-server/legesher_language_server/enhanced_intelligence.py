@@ -31,6 +31,7 @@ from typing import Any
 from legesher_i18n import LanguagePackLoader
 from lsprotocol.types import (
     Diagnostic,
+    DiagnosticSeverity,
     Hover,
     HoverParams,
     Position,
@@ -143,6 +144,27 @@ def _get_pack_loader() -> LanguagePackLoader:
     if _pack_loader is None:
         _pack_loader = LanguagePackLoader()
     return _pack_loader
+
+
+def wire_severity(value: object) -> DiagnosticSeverity:
+    """Convert a wire-format diagnostic severity into ``DiagnosticSeverity``.
+
+    LSP JSON carries severity as a plain integer (1=Error, 2=Warning,
+    3=Information, 4=Hint), but ``lsprotocol`` types want the enum: cattrs
+    calls ``.value`` on the field at serialization time, so a raw int makes
+    the whole ``textDocument/diagnostic`` response unserializable and puts a
+    red error toast on screen (CORE-1977).
+
+    Absent (``None``) and out-of-range values fall back to ``Error``,
+    matching the previous default of ``1`` and erring loud rather than
+    silently downgrading an unknown severity.
+    """
+    try:
+        return DiagnosticSeverity(value)
+    except (ValueError, TypeError):
+        if value is not None:
+            logger.warning(f"Unknown diagnostic severity {value!r}; treating as Error")
+        return DiagnosticSeverity.Error
 
 
 class EnhancedIntelligenceProxy:
@@ -843,7 +865,7 @@ class EnhancedIntelligenceProxy:
                 diagnostic = Diagnostic(
                     range=diag_range,
                     message=item.get("message", ""),
-                    severity=item.get("severity", 1),
+                    severity=wire_severity(item.get("severity")),
                     source="pyright",
                 )
 
