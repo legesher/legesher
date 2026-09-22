@@ -123,7 +123,6 @@ If there's a documentation index or table of contents, add entries:
 ### Core Documentation
 - [Main README](./README.md) - Package overview and quick start
 - [Translation API](./docs/translation-api.md) - Translation API guide
-- [Database Schema](./docs/database-schema.md) - Database documentation
 
 ### Translation Comparison System
 - [Translation Comparison](./TRANSLATION_COMPARISON.md) - Complete system documentation

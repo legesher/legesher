@@ -413,7 +413,6 @@ for conflict in high_conflicts:
 - Detailed docs: `TRANSLATION_COMPARISON.md`
 - Example reports: `examples/`
 - Translation API: `docs/translation-api.md`
-- Database schema: `docs/database-schema.md`
 - Issues: <https://github.com/legesher/legesher/issues>
 
 ---

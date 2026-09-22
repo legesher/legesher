@@ -156,5 +156,5 @@ The `legesher-translations` repository will be merged into this monorepo in anot
 
 For questions about the migration or data structure, see:
 
-- Database schema: `libs/i18n/docs/database-schema.md`
+- Database schema: `libs/i18n/legesher_i18n/db/schema.py`
 - Related issue: CORE-395

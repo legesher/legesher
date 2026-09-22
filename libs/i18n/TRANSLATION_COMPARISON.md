@@ -873,7 +873,6 @@ Customize report templates in `legesher_i18n/reports/templates/`:
 ## Resources
 
 - **Translation API Documentation**: [`docs/translation-api.md`](../docs/translation-api.md)
-- **Database Schema**: [`docs/database-schema.md`](../docs/database-schema.md)
 - **Linguistic Standards**: [`docs/linguistic-standards.md`](../docs/linguistic-standards.md)
 - **Example Reports**: [`examples/`](./examples/)
 

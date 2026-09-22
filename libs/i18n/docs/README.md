@@ -36,10 +36,6 @@ so a rebuild cannot undo the erasure. No published dataset changes.
 
 **Use this for:** Responding to a privacy or withdrawal request (CORE-1780)
 
-### [database-schema.md](./database-schema.md)
-
-Reference for the translations database schema (v1 operational layout).
-
 ### [linguistic-standards.md](./linguistic-standards.md)
 
 Establishes consistent linguistic conventions for translating Python terms:
