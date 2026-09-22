@@ -186,24 +186,6 @@ See [tree-sitter query documentation][query-docs] for more details.
 
 [query-docs]: https://tree-sitter.github.io/tree-sitter/using-parsers#pattern-matching-with-queries
 
-## Pre-defined Queries
-
-The module includes pre-defined queries for common Python patterns:
-
-```python
-from legesher_core.tree_sitter import queries
-
-# Available query patterns:
-# - queries.FUNCTION_DEFINITIONS
-# - queries.CLASS_DEFINITIONS
-# - queries.KEYWORDS_QUERY (for CORE-414 translation)
-# - queries.IMPORT_STATEMENTS
-# - queries.CONTROL_FLOW
-
-# Example usage:
-query = parser.query(queries.FUNCTION_DEFINITIONS)
-```
-
 ## Performance
 
 Tree-sitter provides significant performance improvements over token-based parsing:
