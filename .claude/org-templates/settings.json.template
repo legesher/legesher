@@ -12,7 +12,7 @@
           {
             "type": "command",
             "comment": "Format Python files to maintain consistent code style",
-            "command": "jq -r '.tool_input.file_path' | { read file_path; if echo \"$file_path\" | grep -q '\\.py$'; then uv run black \"$file_path\" 2>/dev/null && uv run ruff check --fix \"$file_path\" 2>/dev/null || true; fi; }"
+            "command": "jq -r '.tool_input.file_path' | { read file_path; if echo \"$file_path\" | grep -q '\\.py$'; then uv run ruff format \"$file_path\" 2>/dev/null && uv run ruff check --fix \"$file_path\" 2>/dev/null || true; fi; }"
           }
         ]
       },

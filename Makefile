@@ -28,7 +28,7 @@ help:
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make lint                 Run linters (ruff)"
-	@echo "  make format               Format code (black, ruff)"
+	@echo "  make format               Format code (ruff)"
 	@echo "  make typecheck            Run type checking (mypy)"
 	@echo ""
 	@echo "VS Code Extension:"
@@ -120,7 +120,7 @@ lint:
 format:
 	@echo "Formatting code..."
 	uv run ruff check --fix libs/
-	uv run black libs/
+	uv run ruff format libs/
 
 typecheck:
 	@echo "Running type checker..."

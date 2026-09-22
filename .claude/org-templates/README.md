@@ -76,7 +76,7 @@ All Legesher projects should include:
    - Claude co-authoring attribution
 
 2. **Code Quality**
-   - Auto-formatting (Black, Ruff for Python)
+   - Auto-formatting (Ruff for Python)
    - Test running on changes
    - Type checking (mypy)
 

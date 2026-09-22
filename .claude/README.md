@@ -361,10 +361,10 @@ Hooks automate common tasks. Configure in `settings.json` (project-wide) or `set
 
 #### PostToolUse: Auto-format Python
 
-Automatically runs Black and Ruff after editing Python files.
+Automatically runs Ruff after editing Python files.
 
 ```bash
-black file.py && ruff check --fix file.py
+ruff format file.py && ruff check --fix file.py
 ```
 
 #### PostToolUse: Auto-format Markdown

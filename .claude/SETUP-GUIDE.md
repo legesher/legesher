@@ -53,7 +53,7 @@ Contains hooks and configurations that apply to all contributors. Should be comm
 
 **Example use cases**:
 
-- Auto-format Python files with Black
+- Auto-format Python files with Ruff
 - Validate YAML syntax for language packs
 - Remind to update CHANGELOG.md
 - Log bash commands for debugging
@@ -126,7 +126,7 @@ Hooks automatically run commands when Claude uses certain tools.
 
 **Auto-formatting** (PostToolUse):
 
-- Python files → Black + Ruff
+- Python files → Ruff (format + lint)
 - Markdown files → Prettier
 - YAML files → Validation
 

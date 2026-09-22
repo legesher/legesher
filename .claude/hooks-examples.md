@@ -52,19 +52,19 @@ Hooks are configured in JSON files:
 
 Automatically format files after Claude edits them.
 
-**Python (Black + Ruff)**:
+**Python (Ruff)**:
 
 ```json
 {
   "hooks": {
     "PostToolUse": [
       {
-        "description": "Auto-format Python files with Black and Ruff",
+        "description": "Auto-format Python files with Ruff",
         "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.file_path' | { read file_path; if echo \"$file_path\" | grep -q '\\.py$'; then uv run black \"$file_path\" && uv run ruff check --fix \"$file_path\"; fi; }"
+            "command": "jq -r '.tool_input.file_path' | { read file_path; if echo \"$file_path\" | grep -q '\\.py$'; then uv run ruff format \"$file_path\" && uv run ruff check --fix \"$file_path\"; fi; }"
           }
         ]
       }
@@ -463,7 +463,7 @@ echo '{"tool_input": {"file_path": "test.py"}}' | jq -r '.tool_input.file_path'
 
 ```json
 {
-  "description": "Auto-format Python with Black (max line 88)"
+  "description": "Auto-format Python with Ruff (max line 88)"
   // Not just: "Format code"
 }
 ```
@@ -475,7 +475,7 @@ Add comments explaining why the hook exists:
 ```json
 {
   "// Purpose": "Automatically format code to maintain consistent style across team",
-  "description": "Auto-format Python files with Black",
+  "description": "Auto-format Python files with Ruff",
   ...
 }
 ```

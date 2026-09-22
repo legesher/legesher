@@ -160,7 +160,7 @@ uv run pre-commit install --hook-type commit-msg --hook-type pre-push
 
 **What gets checked automatically:**
 
-- ✅ Code formatting with Black
+- ✅ Code formatting with Ruff
 - ✅ Linting with Ruff (auto-fixes when possible)
 - ✅ Trailing whitespace and file endings
 - ✅ YAML/TOML/JSON syntax validation
