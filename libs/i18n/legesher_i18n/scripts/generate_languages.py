@@ -15,12 +15,18 @@ its fields and ``in_registry = 1`` — then run this script. Never hand-edit
 ``languages.json`` or ``languages.ts``; a drift test fails if they diverge from
 the DB.
 
+CORE-1887: the generator refuses to write an empty registry, or one that
+shrank drastically against the committed ``languages.json`` — the signature of
+regenerating from a stray empty/partial ``translations.db``, which would
+silently gut both artifacts. ``--force-shrink`` overrides the refusal.
+
 Usage:
     uv run python libs/i18n/legesher_i18n/scripts/generate_languages.py
     # or:
     python -m legesher_i18n.scripts.generate_languages
 """
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -36,7 +42,7 @@ VSCODE_GENERATED_DIR = REPO_ROOT / "libs" / "vs-code" / "src" / "generated"
 # (e.g. ``python .../scripts/generate_languages.py``) rather than ``-m``.
 sys.path.insert(0, str(I18N_DIR.parent))
 
-from legesher_i18n.db import TranslationDatabase  # noqa: E402
+from legesher_i18n.db import TranslationDatabase, default_db_path  # noqa: E402
 
 # The canonical language: the language Legesher's Python keywords are authored
 # in. translations.db has no canonical flag, so it is fixed here (this matches
@@ -65,6 +71,16 @@ def load_registry_from_db(db_path: str | Path | None = None) -> dict:
         db_path: Optional path to the SQLite database. Defaults to the canonical
             translations.db; overridable mainly for testing.
     """
+    # CORE-1887: opening a missing path would create a fresh empty DB (schema
+    # auto-init) and the run would then "succeed" with zero languages. Refuse
+    # up front instead.
+    resolved = Path(db_path) if db_path is not None else default_db_path()
+    if not resolved.exists():
+        raise FileNotFoundError(
+            f"translations.db not found at {resolved}. The registry can only be "
+            f"regenerated from the working database — copy it in first "
+            f"(libs/i18n/CLAUDE.md, 'Durable home & sync ritual')."
+        )
     db = TranslationDatabase(db_path)
     try:
         rows = db.get_languages(in_registry=True)
@@ -232,11 +248,83 @@ def generate_typescript(data: dict) -> str:
     return "\n".join(lines)
 
 
-def main() -> int:
+def _committed_language_count(path: Path) -> int | None:
+    """Entry count of the committed ``languages.json``, or None if unreadable."""
+    try:
+        committed = json.loads(path.read_text(encoding="utf-8"))
+        return len(committed["languages"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
+def check_registry_guard(data: dict, committed_json: Path) -> str | None:
+    """Return a refusal message if the freshly loaded registry looks gutted.
+
+    CORE-1887: a stray empty or partial ``translations.db`` (e.g. one created
+    as a side effect of a test run — the DB is untracked since CORE-1794)
+    yields zero or near-zero published rows, and writing that result silently
+    destroys the registry both artifacts are generated from. Refuse when the
+    load produced no languages, or drastically fewer (less than half) than the
+    committed ``languages.json`` it would replace. Returns None when the write
+    is safe.
+    """
+    count = len(data["languages"])
+    if count == 0:
+        return (
+            "Refusing to write an EMPTY language registry: translations.db "
+            "yielded zero in_registry = 1 rows. The source DB is most likely "
+            "empty or partial (e.g. a stray translations.db left behind by a "
+            "test run — the real working DB is untracked since CORE-1794). "
+            "Point the generator at the real database, or pass --force-shrink "
+            "to override (CORE-1887)."
+        )
+    committed = _committed_language_count(committed_json)
+    if committed is not None and count * 2 < committed:
+        return (
+            f"Refusing to shrink the language registry from {committed} to "
+            f"{count} languages. A drop this large is the signature of "
+            f"regenerating from a partial translations.db, not of an "
+            f"intentional edit. If the shrink is really intended, pass "
+            f"--force-shrink (CORE-1887)."
+        )
+    return None
+
+
+def main(argv: list[str] | None = None) -> int:
     """Regenerate languages.json and the VS Code languages.ts from the DB."""
+    parser = argparse.ArgumentParser(
+        description="Regenerate languages.json and the VS Code languages.ts "
+        "from translations.db (languages table, in_registry = 1)."
+    )
+    parser.add_argument(
+        "--db",
+        type=Path,
+        default=None,
+        help="Path to translations.db (defaults to the canonical working DB).",
+    )
+    parser.add_argument(
+        "--force-shrink",
+        action="store_true",
+        help="Write the registry even if it is empty or drastically smaller "
+        "than the committed languages.json (CORE-1887 guard override).",
+    )
+    args = parser.parse_args(argv)
+
     print("Loading published language registry from translations.db...")
-    data = load_registry_from_db()
+    try:
+        data = load_registry_from_db(args.db)
+    except FileNotFoundError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
     print(f"Found {len(data['languages'])} published languages (in_registry = 1)")
+
+    refusal = check_registry_guard(data, LANGUAGES_JSON)
+    if refusal is not None:
+        if not args.force_shrink:
+            print(f"ERROR: {refusal}", file=sys.stderr)
+            print("Nothing was written.", file=sys.stderr)
+            return 1
+        print(f"WARNING: --force-shrink override in effect: {refusal}")
 
     LANGUAGES_JSON.write_text(generate_json(data), encoding="utf-8")
     print(f"Generated {LANGUAGES_JSON}")
