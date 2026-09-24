@@ -291,6 +291,8 @@ Commands are invoked with `/command-name` in Claude Code.
 
 Agents are specialized subagents that focus on specific tasks. Invoke with the Task tool or they may be automatically called.
 
+`.claude/agents/` is the canonical location for these definitions. User-level copies in `~/.claude/agents/` should be symlinks to the tracked files, not edited copies, so the two cannot drift.
+
 ### Available Agents
 
 #### `codebase-explorer`

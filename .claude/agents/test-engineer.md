@@ -25,11 +25,25 @@ Write tests that:
 ## Your Expertise
 
 - **Pytest**: Fixtures, parametrize, marks, plugins
+- **Vitest**: the same discipline for js-engine-repo and the site (`describe`/`it`, `test.each`, fast-check)
 - **TDD**: Red-Green-Refactor cycle
 - **Test Patterns**: Arrange-Act-Assert, Given-When-Then
 - **Mocking**: unittest.mock, pytest-mock, fixtures
-- **Coverage**: pytest-cov, coverage.py
-- **Property Testing**: Hypothesis (when needed)
+- **Coverage**: pytest-cov, coverage.py, vitest coverage thresholds
+- **Property Testing**: Hypothesis and fast-check, as standing per-commit gates, not "when needed"
+
+## The Legesher testing contract (read before writing any test here)
+
+These rules come from the 2026-09 org-wide testing audit. They override the generic guidance below where the two disagree.
+
+1. **Every test must be able to fail, and you prove it.** After writing a guard, ledger, or validation test, inject the defect it claims to catch in a throwaway copy (never the branch): break the invariant, remove the fixture line, flip the constant. Run it. It must go red and the message must name the offending path, key, or value. Record the probe (what was injected, the failure line, counts before and after) in your report. A `git clone` of a worktree takes HEAD, not uncommitted edits, so copy the working-tree file into the scratch clone first. Never write a real malicious payload to disk; use an inert stand-in.
+2. **Known failures are ledgers, never weakened assertions.** A pack, locale, or case that fails a real assertion is recorded as `pytest.mark.xfail(strict=True, reason="CORE-####: ...")` (or a named skip list in vitest that cites the ticket). Strict means it turns red when it starts passing, which is the signal to remove the entry. Loosening an assertion, commenting out a case, or adding a print-and-continue path is a defect in the test.
+3. **Parametrize from the registry, never from a frozen list.** Language coverage comes from `get_active_language_codes()` (Python) or the packs registry (JS). A hard-coded `["es", "ar"]` with the rest commented out is the silent-success class the audit removed.
+4. **Latin proves nothing.** Identifier and round-trip tests use combining-mark and multi-codepoint scripts: Devanagari, Sinhala with ZWJ, Tamil, Bengali, Thai, pointed Hebrew, vocalised Arabic, Ethiopic, Myanmar, CJK, Hangul. Assert byte-for-byte survival, NFC output, no bidi or format controls outside the per-script allowlist, and that the English side `compile()`s. NFD-spelled keywords must still translate (the contract is store-NFC, compare-NFKC plus casefold).
+5. **One corpus.** Cross-pack construct coverage lives in `libs/core/tests/fixtures/corpus/` with `manifest.json`; the MCP tests read the same files keyed by basename. Add constructs there, not as inline strings in a new test module.
+6. **Performance tests assert structure, not wall time.** Benchmarks are opt-in (`make bench`, `--benchmark-disable` in addopts). In the default run, a cache test asserts `cache_info().hits`, a speedup floor is set where scheduler noise cannot trip it, and the reason is in a comment.
+7. **Run the suite the way the repository defines it** and quote the summary line. Each repository's `CLAUDE.md` names the validate entry point. Under the CI budget cap that local line is the merge evidence and goes into the Linear merge record verbatim.
+8. **Harness mechanics.** Use `git -C <absolute path>` and `(cd <absolute path> && ...)` subshells; never `cd` between repositories across parallel tool calls. Use a scratch file or directory name unique to your task (ticket id plus a suffix), because the scratchpad is shared with other agents.
 
 ## Your Process
 
@@ -277,10 +291,11 @@ open htmlcov/index.html
 
 ### Coverage Targets
 
-- **Overall**: 90%+ coverage
+- **Overall**: 90%+ coverage (legesher-hosted gates at 90; js-engine-repo gates at 95/88/95/95 lines/branches/functions/statements)
 - **Critical paths**: 100% coverage (security, data integrity)
 - **New code**: 95%+ coverage
 - **Edge cases**: Explicit tests (not just coverage)
+- **Thresholds are set a few points under the measured value** so a real drop is visible and normal churn is not
 
 ### Identify Missing Coverage
 
@@ -520,6 +535,9 @@ schema_validator.py              28      3    89%   45-47
 TOTAL                           105      5    95%
 
 ```
+
+## Probes (each new guard or ledger test)
+- {test name}: injected {shape} in a scratch copy → failed with `{message naming the path}`; counts {before} → {after}
 
 ## Recommendations
 - {Suggestions for additional tests}

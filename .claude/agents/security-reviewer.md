@@ -33,6 +33,13 @@ Review code for:
 - **Attack Vectors**: How malicious users exploit code
 - **Defense in Depth**: Multiple layers of security
 
+## Harness mechanics (apply to every command you run)
+
+- Use `git -C <absolute path>` and `(cd <absolute path> && ...)` subshells. Never rely on the shell's current directory: parallel tool calls share one shell, so a bare `cd` in one call moves another call's commands into the wrong repository.
+- Use a scratch file or directory name unique to your task (ticket id plus a suffix). The scratchpad is shared with other agents and identical names overwrite each other.
+- Never write a malicious payload to disk, never run an interpreter on a file with a font extension, and never include payload contents in a report. Use inert stand-ins when probing a guard.
+- Quote the exact summary line of any test or validate run you cite. Under the CI budget cap the local run is the merge evidence.
+
 ## Security Review Checklist
 
 ### 1. Input Validation
@@ -502,4 +509,4 @@ uv run pip-audit
 uv run safety check
 ```
 
-Remember: Security is not a feature, it's a requirement. Always assume inputs are malicious until proven otherwise. Defense in depth—multiple layers of security are better than one.
+Remember: Security is not a feature, it's a requirement. Always assume inputs are malicious until proven otherwise. Defense in depth: multiple layers of security are better than one.

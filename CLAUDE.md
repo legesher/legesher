@@ -112,20 +112,57 @@ cd libs/legesher && uv run python -m ...   # Run package-specific commands
 
 ### Testing
 
+The Makefile is the entry point. Every target below was run from the repo root on 2026-09-24.
+
 ```bash
-# Run tests for specific package
-cd libs/core && uv run pytest
-cd libs/i18n && uv run pytest -v
+make test                 # every package suite in sequence: test-i18n, test-core, test-legesher,
+                          # test-language-server, test-mcp, test-runtime
+make test-core            # one package; the other targets use the same names as the sequence above
+make test-mcp-scheduled   # release-tier MCP suites (all packs, wheel spawn); not part of make test
+make test-coverage        # pytest over libs/ with --benchmark-disable and --cov (terminal + html report)
+make bench                # the only way timing benchmarks run (see below)
+make lint                 # ruff check libs/
+make typecheck            # mypy over core, i18n, legesher, language-server, mcp
+make check-generated      # drift gate: language registry (skips in a DB-less clone) + docs/generated
 
-# Run all tests (when implemented)
-uv run pytest libs/
+# One package directly. uv workspace names: legesher-core, legesher-i18n, legesher,
+# legesher-language-server, legesher-mcp, legesher-runtime
+uv run --package legesher-core pytest libs/core/tests -q
+uv run --package legesher-mcp pytest libs/mcp/tests -q
 
-# Run with coverage
-uv run pytest --cov=legesher_core libs/core/
+# The repo-hygiene guard (scripts/tests/test_repo_hygiene.py) and the workflow
+# auditor's tests. ci.yml runs this on every PR.
+uv run pytest scripts/tests -q
 ```
 
-**Note**: All packages have comprehensive test suites with 100+ test files covering unit tests, integration tests,
-and performance benchmarks. Test coverage includes round-trip translations, git workflows, LSP features, and more.
+**Run per package, never several packages in one invocation.** Each package's tests live in a top-level `tests`
+package with its own `conftest.py`, so `uv run pytest libs/core/tests libs/mcp/tests` from the root fails at
+collection with `ImportPathMismatchError` (`tests.conftest` resolves to the first package's file). `make test`
+exists to sequence them.
+
+**Benchmarks are opt-in.** `libs/core/pyproject.toml` and `libs/legesher/pyproject.toml` carry
+`--benchmark-disable` in `addopts`, so the default run executes each benchmark once as a plain test with no
+timing. `make bench` turns timing on (`--benchmark-enable --benchmark-only --benchmark-autosave`), one invocation
+per package, and autosaves the results under each package's `.benchmarks/` (gitignored).
+
+**The every-pack sweep.** `libs/core/tests/integration/test_every_pack.py` runs in the default core suite
+(`2258 passed, 8 xfailed in 5.27s` on 2026-09-24). It translates, reverses and compiles the shared corpus through
+every pack in the registry. The corpus is `libs/core/tests/fixtures/corpus/`; `manifest.json` lists each file with
+the lowest grammar it parses under. `libs/mcp/tests/corpus.py` reads the same directory, so the engine sweep and
+the scheduled MCP sweep cannot drift on what "the corpus" is.
+
+**Suite sizes on 2026-09-24**, from `uv run --package <name> pytest libs/<dir>/tests -q`:
+
+- core: `6445 passed, 41 xfailed in 62.55s`
+- i18n: `2436 passed, 58 skipped, 6 warnings in 78.23s`
+- legesher: `283 passed, 1 skipped in 5.44s`
+- language-server: `499 passed, 1 xfailed in 29.12s`
+- mcp: `358 passed, 10 deselected, 1 xfailed in 11.88s` (the 10 deselected are the `scheduled` suites)
+- runtime: `54 passed in 2.33s`
+- scripts/tests: `47 passed, 1 skipped in 0.20s`
+
+**Known state of `make typecheck`**: as of 2026-09-24 it stops at `libs/core/tests/fixtures/sample_spanish.py`
+(a translated-Python fixture mypy cannot parse) before checking anything else, and `ci.yml` does not run mypy.
 
 ### Documentation Site
 
@@ -437,9 +474,39 @@ The `legesher-i18n` package includes:
 
 ### Testing Strategy
 
-- Each package should have its own test suite
-- Run tests from package directories or use `uv run pytest` with specific paths
-- Integration tests should consider cross-package functionality
+This is the testing contract from the 2026-09 org-wide testing audit. Where it and generic guidance elsewhere
+disagree, this wins.
+
+- **Known failures are strict xfail ledgers, never weakened assertions.** A pack, locale or case that fails a
+  real assertion is recorded as `pytest.mark.xfail(strict=True, reason="CORE-####: ...")`. Strict means a ledger
+  entry that starts passing fails the run on purpose (XPASS), which is the signal to remove the entry. Loosening
+  an assertion, commenting out a case or adding a print-and-continue path is a defect in the test.
+- **Ledgers in the tree today:** the CORE-1840 collision ledger (`KNOWN_ROUND_TRIP_FAILURES` in
+  `libs/core/tests/integration/test_every_pack.py`, same shape in `libs/mcp/tests/test_roundtrip_sweep.py`); the
+  interpreter-gap ledger in `libs/core/tests/interpreter_gaps.py` for the CPython 3.10/3.11 tokenizer and the
+  pre-Unicode-15.1 identifier rules (CORE-2192); and `STALE_VERSION_MAX` in
+  `libs/core/tests/integration/test_all_languages_parametrized.py` for base packs whose metadata still declares
+  `python_version_max: '3.13'`.
+- **Parametrize language coverage from `get_active_language_codes()`, never a frozen list.** A hard-coded
+  `["es", "ar"]` with the rest commented out is the silent-success class the audit removed.
+- **One corpus.** Cross-pack constructs go in `libs/core/tests/fixtures/corpus/` (registered in `manifest.json`),
+  not inline strings in a new test module. The MCP tests read the same files.
+- **Latin proves nothing.** Identifier and round-trip assertions use combining-mark and multi-codepoint scripts:
+  Devanagari, Sinhala with ZWJ, Tamil, Bengali, Thai, pointed Hebrew, vocalised Arabic, Ethiopic, Myanmar, CJK,
+  Hangul. Assert byte-for-byte survival, NFC output, no bidi or format controls outside the per-script allowlist,
+  and that the English side compiles. `libs/core/tests/unit/test_identifier_scripts.py` is the reference.
+- **The text-identity contract is store-NFC, compare-NFKC plus casefold.** An NFD-spelled native keyword must
+  still translate; test it that way.
+- **Performance assertions are structural; timing runs only under `make bench`.** In the default run a cache test
+  asserts `cache_info().hits`, and any speedup floor is set where scheduler noise cannot trip it, with the reason
+  in a comment (`libs/language-server/tests/benchmarks/test_cache_performance.py` is the model).
+- **Property suites are standing per-commit gates.** The Hypothesis suite in `libs/core/tests/property/` runs in
+  the default core suite, not on request.
+- **Every new guard or ledger test is proved able to fail before the PR is raised.** Inject the defect in a
+  throwaway copy (never the branch), confirm the failure names the offending path, key or value, and put the probe
+  (what was injected, the failure line, counts before and after) in the PR body.
+- **Merge evidence while CI is queued is the local run's summary line**, quoted verbatim in the PR body and in the
+  Linear merge record.
 - Releases can happen individually for each of the sub packages. For the main Legesher package, releases should
   pass integration tests with the updated versions of the sub packages before it can be released. Documentation
   should also be included for each of the changes.
@@ -644,13 +711,11 @@ LEGESHER_USE_TREE_SITTER=true
 **Performance Benchmarks**:
 
 ```bash
-# Run comprehensive benchmarks
-cd libs/core
-uv run pytest tests/benchmarks/ --benchmark-only
-
-# Compare implementations
-uv run pytest tests/benchmarks/ --benchmark-compare
+# Timing on, benchmarks only, core and legesher in turn
+make bench
 ```
+
+Results autosave under each package's `.benchmarks/` (gitignored) for `pytest-benchmark compare`.
 
 **Future Languages**: TypeScript support is planned (see CORE-421 and related issues in backlog). The abstraction
 provides clear extension points for new programming languages.
