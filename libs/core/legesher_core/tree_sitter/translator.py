@@ -7,6 +7,7 @@ while leveraging tree-sitter for better performance and error handling.
 
 import logging
 import sys
+import unicodedata
 from pathlib import Path
 
 from .parser import PythonParser, TreeSitterError
@@ -88,6 +89,19 @@ class TreeSitterTranslator:
         """
         self.mapper = TokenMapper(keyword_map, builtin_map, implicit_param_map)
         self.python_version = python_version
+
+        # Texts that could start a `<keyword>*` compound entry. Checking these
+        # before touching node.next_sibling keeps the compound lookup off the
+        # hot path: reading a sibling allocates a node through the FFI
+        # boundary, and every identifier in the file would otherwise pay it.
+        # The NFKC set mirrors TokenMapper's exact-then-normalized lookup, so
+        # gating here cannot reject a spelling the mapper would have resolved.
+        self._star_prefixes = {
+            key[:-1] for key in self.mapper.keyword_map if key.endswith("*")
+        }
+        self._star_prefixes_nfkc = {
+            unicodedata.normalize("NFKC", prefix) for prefix in self._star_prefixes
+        }
 
         # Initialize tree-sitter parser
         try:
@@ -245,8 +259,12 @@ class TreeSitterTranslator:
                 logger.debug(f"Skipping node with non-UTF-8 content: {node.type}")
                 return
 
-            # Try to translate as keyword first
-            translated = self.mapper.get_keyword(text)
+            # Try to translate as keyword first. A `*` sibling means this may
+            # be a native rendering of `except*` (PEP 654), which packs key as
+            # one compound entry — that lookup wins over the bare keyword.
+            translated = self._star_compound_keyword(
+                node, text
+            ) or self.mapper.get_keyword(text)
             if translated and translated != text:
                 replacements.append((node.start_byte, node.end_byte, translated))
                 logger.debug(f"Keyword match: '{text}' → '{translated}'")
@@ -307,13 +325,26 @@ class TreeSitterTranslator:
             "del",
             "match",
             "case",
-        ]:
+            # PEP 695 (3.12+) soft keyword. Only the ANONYMOUS `type` token —
+            # the one introducing a `type_alias_statement` — is the keyword;
+            # the grammar also emits *named* `type` nodes wrapping arbitrary
+            # type expressions (`list[float]`, the annotation in `x: int`),
+            # which must not be rewritten. The `is_named` test on this same
+            # condition excludes them; it stays on the condition rather than
+            # returning early, so their inner identifiers still translate.
+            "type",
+        ] and not (node.type == "type" and node.is_named):
             try:
                 text = node.text.decode("utf-8")
             except UnicodeDecodeError:
                 logger.debug(f"Skipping node with non-UTF-8 content: {node.type}")
                 return
-            translated = self.mapper.get_keyword(text)
+            # `except*` (PEP 654, 3.11+) reaches the grammar as an `except`
+            # token followed by a `*` token, but packs key it as one compound
+            # entry — so the compound lookup wins when a `*` sibling is there.
+            translated = self._star_compound_keyword(
+                node, text
+            ) or self.mapper.get_keyword(text)
             if translated and translated != text:
                 replacements.append((node.start_byte, node.end_byte, translated))
                 logger.debug(f"Keyword match: '{text}' → '{translated}'")
@@ -321,6 +352,43 @@ class TreeSitterTranslator:
         # Recursively search children
         for child in node.children:
             self._find_translations(child, replacements)
+
+    def _star_compound_keyword(self, node, text: str) -> str | None:
+        """Resolve a ``<keyword>*`` compound entry for ``node`` (PEP 654).
+
+        ``except*`` is one keyword, but the grammar splits it into an
+        ``except`` token and a ``*`` token, and a native rendering parses as
+        an identifier followed by ``*``. Language packs key the construct as a
+        single ``"except*"`` entry, so whenever ``node`` is immediately
+        followed by a ``*`` the compound entry is consulted first. The
+        trailing ``*`` is stripped from the translation because the ``*`` node
+        itself is left untouched — the same contract the token backend
+        implements via token lookahead, which is what keeps the two backends
+        byte-identical on ``except*`` (CORE-1345).
+
+        Args:
+            node: Tree-sitter node being translated
+            text: Already-decoded text of ``node``
+
+        Returns:
+            The compound translation without its trailing ``*``, or None when
+            there is no ``*`` sibling or the pack has no compound entry — in
+            which case the caller falls back to the plain keyword lookup.
+        """
+        if text not in self._star_prefixes:
+            # ASCII is NFKC-stable, so only a non-ASCII miss can still match
+            # through the mapper's normalized index.
+            if text.isascii():
+                return None
+            if unicodedata.normalize("NFKC", text) not in self._star_prefixes_nfkc:
+                return None
+        sibling = node.next_sibling
+        if sibling is None or sibling.type != "*":
+            return None
+        compound = self.mapper.get_keyword(f"{text}*")
+        if not compound:
+            return None
+        return compound[:-1] if compound.endswith("*") else compound
 
     @staticmethod
     def _build_byte_to_char_map(source_code: str) -> dict[int, int]:

@@ -5,6 +5,8 @@ and formatting preservation. This test suite mirrors test_token_translator.py
 to ensure API compatibility.
 """
 
+import sys
+
 import pytest
 
 from legesher_core.tree_sitter.translator import TreeSitterTranslator
@@ -751,3 +753,196 @@ class TestTreeSitterReservedWordDispatch:
         # Both should have the same count of reserved-word substitutions
         assert token_out.count("propio") == ts_out.count("propio")
         assert token_out.count("clase_ref") == ts_out.count("clase_ref")
+
+
+class TestVersionedKeywordParity:
+    """`except*` (PEP 654, 3.11+) and `type` (PEP 695, 3.12+) — CORE-1345.
+
+    Both constructs used to translate on the token backend but not on the
+    tree-sitter one, so the two backends silently disagreed on the same
+    source. Because Legesher's clean/smudge filters must be exact inverses,
+    a mixed-backend team could produce round-trip asymmetries.
+
+    Every test here asserts the two backends agree, not just that the
+    tree-sitter output looks right in isolation — that parity is the
+    property that keeps the two implementations pinned together.
+
+    Translation itself is host-version independent (``tokenize`` is a lexer
+    and the tree-sitter grammar carries its own Python rules), so the parity
+    assertions run on every supported interpreter. Only the assertions that
+    ``compile()`` the fixture are gated on the interpreter floor.
+    """
+
+    #: `except`/`except*` deliberately render differently, the shape that
+    #: exposes the bug. Packs where they coincide (e.g. es) mask it.
+    DIVERGENT_KEYWORDS = {
+        "try": "التجربة",
+        "except": "ماعدا",
+        "except*": "استثناء*",
+        "type": "النوع",
+        "pass": "مرور",
+    }
+    DIVERGENT_BUILTINS = {"print": "طَبْع", "type": "نوع", "list": "قائمة"}
+
+    EXCEPT_STAR = "try:\n    pass\nexcept* ValueError:\n    pass\n"
+    TYPE_ALIAS = "type Vec = list[float]\n"
+
+    @pytest.fixture
+    def backends(self):
+        """A (token, tree-sitter) pair sharing one divergent-rendering pack."""
+        from legesher_core.transformer import TokenTranslator
+
+        kwargs = dict(
+            keyword_map=dict(self.DIVERGENT_KEYWORDS),
+            builtin_map=dict(self.DIVERGENT_BUILTINS),
+        )
+        return TokenTranslator(**kwargs), TreeSitterTranslator(**kwargs)
+
+    # ---- except* (PEP 654) -------------------------------------------------
+
+    def test_except_star_uses_compound_mapping(self, backends):
+        """Tree-sitter must use the `except*` entry, not the bare `except`."""
+        _, tree_sitter = backends
+        translated = tree_sitter.translate_code(self.EXCEPT_STAR, "en", "ar")
+        assert "استثناء" in translated
+        assert "ماعدا" not in translated  # the bare `except` rendering
+        assert "*" in translated  # the `*` token is left in place
+
+    def test_plain_except_still_uses_base_mapping(self, backends):
+        """A `*`-less `except` must keep using the bare entry."""
+        _, tree_sitter = backends
+        code = "try:\n    pass\nexcept ValueError:\n    pass\n"
+        translated = tree_sitter.translate_code(code, "en", "ar")
+        assert "ماعدا" in translated
+        assert "استثناء" not in translated
+
+    def test_except_star_backend_parity(self, backends):
+        """Both backends emit byte-identical output for `except*`."""
+        token, tree_sitter = backends
+        assert token.translate_code(
+            self.EXCEPT_STAR, "en", "ar"
+        ) == tree_sitter.translate_code(self.EXCEPT_STAR, "en", "ar")
+
+    # ---- type (PEP 695) ----------------------------------------------------
+
+    def test_type_statement_translates(self, backends):
+        """Statement-position `type` must translate, not stay English."""
+        _, tree_sitter = backends
+        translated = tree_sitter.translate_code(self.TYPE_ALIAS, "en", "ar")
+        assert translated.startswith("النوع ")
+        assert "type" not in translated
+
+    def test_type_statement_backend_parity(self, backends):
+        """Both backends emit byte-identical output for a `type` statement."""
+        token, tree_sitter = backends
+        assert token.translate_code(
+            self.TYPE_ALIAS, "en", "ar"
+        ) == tree_sitter.translate_code(self.TYPE_ALIAS, "en", "ar")
+
+    def test_generic_type_alias_backend_parity(self, backends):
+        """A PEP 695 alias with type parameters also stays at parity."""
+        token, tree_sitter = backends
+        code = "type Alias[T] = list[T]\n"
+        assert token.translate_code(code, "en", "ar") == tree_sitter.translate_code(
+            code, "en", "ar"
+        )
+
+    @pytest.mark.parametrize(
+        "code",
+        [
+            "x: int = 3\n",
+            "def f(x: type) -> type:\n    return x\n",
+            "y = type(3)\n",
+        ],
+        ids=["annotated-assign", "type-annotation", "builtin-call"],
+    )
+    def test_named_type_nodes_are_not_rewritten(self, backends, code):
+        """Only the anonymous `type` token is the PEP 695 keyword.
+
+        The grammar also emits *named* `type` nodes wrapping arbitrary type
+        expressions. Translating those would both mangle annotations and
+        queue a replacement overlapping the one for the identifier inside
+        them, corrupting the output. Parity with the token backend — which
+        has no such node — is the check.
+        """
+        token, tree_sitter = backends
+        assert token.translate_code(code, "en", "ar") == tree_sitter.translate_code(
+            code, "en", "ar"
+        )
+
+    # ---- round-trip --------------------------------------------------------
+
+    @pytest.mark.parametrize(
+        "code",
+        [EXCEPT_STAR, TYPE_ALIAS],
+        ids=["except-star", "type-alias"],
+    )
+    def test_round_trip_through_tree_sitter(self, backends, code):
+        """en → native → en is the identity on the tree-sitter path.
+
+        The reverse leg matters as much as the forward one: a native
+        `except*` rendering reaches the grammar as an identifier followed by
+        `*`, so the compound entry has to win there too.
+        """
+        _, tree_sitter = backends
+        native = tree_sitter.translate_code(code, "en", "ar")
+        assert tree_sitter.reverse().translate_code(native, "ar", "en") == code
+
+    @pytest.mark.parametrize(
+        "code",
+        [EXCEPT_STAR, TYPE_ALIAS],
+        ids=["except-star", "type-alias"],
+    )
+    def test_cross_backend_round_trip(self, backends, code):
+        """Clean on one backend, smudge on the other, still the identity.
+
+        This is the asymmetry the bug could produce in a mixed-backend team:
+        a file cleaned by the token filter and smudged by the tree-sitter
+        one (or the reverse) has to come back unchanged.
+        """
+        token, tree_sitter = backends
+        assert (
+            tree_sitter.reverse().translate_code(
+                token.translate_code(code, "en", "ar"), "ar", "en"
+            )
+            == code
+        )
+        assert (
+            token.reverse().translate_code(
+                tree_sitter.translate_code(code, "en", "ar"), "ar", "en"
+            )
+            == code
+        )
+
+    # ---- real shipped packs ------------------------------------------------
+
+    @pytest.mark.parametrize("language", ["es", "ar"])
+    @pytest.mark.parametrize("python_version", ["3.12", "3.13", "3.14"])
+    def test_shipped_pack_parity(self, language, python_version):
+        """Parity on the real packs, across the versions that define both.
+
+        `except*` needs a 3.11+ pack and `type` a 3.12+ one; 3.12 is the
+        first version whose inherited pack carries both.
+        """
+        from legesher_core.transformer import TokenTranslator
+
+        token = TokenTranslator.from_language_pack(language, python_version)
+        tree_sitter = TreeSitterTranslator.from_language_pack(language, python_version)
+        code = self.EXCEPT_STAR + self.TYPE_ALIAS
+        native = token.translate_code(code, "en", language)
+        assert tree_sitter.translate_code(code, "en", language) == native
+        assert tree_sitter.reverse().translate_code(native, language, "en") == code
+
+    # ---- interpreter floor -------------------------------------------------
+
+    @pytest.mark.skipif(sys.version_info < (3, 11), reason="`except*` is 3.11+ syntax")
+    def test_except_star_fixture_is_valid_python(self):
+        """Guard the fixture itself on interpreters that can parse it."""
+        compile(self.EXCEPT_STAR, "<fixture>", "exec")
+
+    @pytest.mark.skipif(
+        sys.version_info < (3, 12), reason="`type` statements are 3.12+ syntax"
+    )
+    def test_type_alias_fixture_is_valid_python(self):
+        """Guard the fixture itself on interpreters that can parse it."""
+        compile(self.TYPE_ALIAS, "<fixture>", "exec")

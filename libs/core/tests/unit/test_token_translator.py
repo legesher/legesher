@@ -168,6 +168,52 @@ class TestCompoundKeywordLookahead:
         # The * operator should still be present
         assert "*" in translated
 
+    def test_except_star_reverses(self, compound_translator):
+        """The compound entry has to win on the way back too.
+
+        The reverse map keys the construct as `<native>*`, so a native
+        rendering only restores if the lookahead runs in that direction as
+        well. This is the leg the tree-sitter backend had to match
+        (CORE-1345).
+        """
+        code = "try:\n    pass\nexcept* ValueError:\n    pass\n"
+        native = compound_translator.translate_code(code)
+        assert compound_translator.reverse().translate_code(native) == code
+
+
+class TestPep695TypeStatement:
+    """PEP 695 `type` statements on the token backend (3.12+) — CORE-1345.
+
+    Pins the token-backend rendering that the tree-sitter backend is held
+    to; the cross-backend parity assertions live in
+    tests/tree_sitter/test_translator.py::TestVersionedKeywordParity.
+
+    Note: statement-position and usage-position `type` both resolve through
+    the keyword table here, so a pack whose keyword and builtin renderings
+    of `type` differ renders `type(x)` with the keyword form. That
+    position-blindness is a separate open defect (CORE-1764) and is
+    deliberately not asserted either way.
+    """
+
+    @pytest.fixture
+    def type_translator(self):
+        """Pack where the `type` keyword and `type` builtin diverge."""
+        return TokenTranslator(
+            keyword_map={"type": "النوع"},
+            builtin_map={"list": "قائمة", "type": "نوع"},
+        )
+
+    def test_type_statement_translates_as_keyword(self, type_translator):
+        """Statement-position `type` uses the keyword rendering."""
+        translated = type_translator.translate_code("type Vec = list[float]\n")
+        assert translated.startswith("النوع ")
+
+    def test_type_statement_round_trip(self, type_translator):
+        """en → native → en is the identity for a `type` statement."""
+        code = "type Vec = list[float]\n"
+        native = type_translator.translate_code(code)
+        assert type_translator.reverse().translate_code(native) == code
+
 
 class TestReservedWordTranslation:
     """Test self/cls translation via implicit_param_map (CORE-710)."""

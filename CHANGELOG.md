@@ -96,6 +96,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **core**: the tree-sitter backend now translates `except*` (PEP 654, Python
+  3.11+) and `type` statements (PEP 695, Python 3.12+). It previously left
+  both in English while translating everything around them, silently
+  under-translating the file. The token backend already handled them, so the
+  same source translated differently depending on which backend ran, and
+  because Legesher's clean and smudge filters must be exact inverses, a team
+  split across the two backends could produce round-trip asymmetries.
+  `except*` reaches the grammar as an `except` token followed by `*`, so the
+  backend now consults the pack's compound `except*` entry in both
+  directions instead of the bare `except` one, which matters for every pack
+  whose two renderings differ. The PEP 695 keyword is matched only on the
+  anonymous `type` token that introduces a type alias, so type annotations
+  and the `type()` builtin are untouched. The two backends are now
+  byte-identical on both constructs across all 51 shipped packs, on the
+  pack versions where each construct exists: 3.11+ for `except*`, 3.12+ for
+  the `type` statement.
+  [CORE-1345]
 - **language-server**: diagnostics forwarded from the Pyright backend crashed
   at serialization time and put a red error notification on screen.
   `forward_diagnostic` built each `Diagnostic` with the backend's raw integer
