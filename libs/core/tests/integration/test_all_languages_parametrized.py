@@ -1,7 +1,13 @@
-"""CORE-435: Parametrized tests for all 24 migrated languages.
+"""CORE-435: Parametrized tests across every shipped language pack.
 
 This module provides comprehensive parametrized tests that run across all
 languages to ensure consistent behavior and catch language-specific issues.
+
+The language list is derived from the registry (``get_active_language_codes``
+minus the pivot, ``en``), never maintained by hand, and a pack that fails to
+load fails the ``language_packs`` fixture outright rather than being printed
+and skipped. The list was frozen at es/ar during the CORE-354 migration;
+CORE-2128 widened it to the whole registry.
 
 Each test runs against every available language pack, making it easy to:
 - Spot translation inconsistencies
@@ -38,84 +44,66 @@ Performance Benchmarks:
 - Translation: <5ms for typical 50-line file
 - Round-trip: <10ms for typical file
 
+Interpreter gaps (``tests/interpreter_gaps.py``): on CPython 3.10 and 3.11
+the return hop is inert for packs whose renderings carry marks, so the
+round-trip test is a strict xfail there for exactly those packs.
+
 Related: CORE-435 (Validation), CORE-354 (Migration), CORE-343 (Transformer)
 """
 
 import pytest
 
 from legesher_core.transformer import TokenTranslator
+from legesher_i18n import get_active_language_codes, get_language_name
 from legesher_i18n.pack_loader import LanguagePackLoader
+from tests.interpreter_gaps import xfail_if_return_hop_is_inert
 
-
-# All expected languages from CORE-354
-# Currently only 'es' and 'ar' are available
+#: Every active pack except the pivot, with its English name. Derived from
+#: the registry so this list can never silently lag the shipped packs.
 EXPECTED_LANGUAGES = [
-    ("es", "Spanish"),
-    ("ar", "Arabic"),
-    # Future additions after CORE-354:
-    # ('fr', 'French'),
-    # ('de', 'German'),
-    # ('pt', 'Portuguese'),
-    # ('ru', 'Russian'),
-    # ('zh', 'Chinese'),
-    # ('ja', 'Japanese'),
-    # ('ko', 'Korean'),
-    # ('hi', 'Hindi'),
-    # ('tr', 'Turkish'),
-    # ('it', 'Italian'),
-    # ('pl', 'Polish'),
-    # ('nl', 'Dutch'),
-    # ('he', 'Hebrew'),
-    # ('vi', 'Vietnamese'),
-    # ('th', 'Thai'),
-    # ('id', 'Indonesian'),
-    # ('cs', 'Czech'),
-    # ('ro', 'Romanian'),
-    # ('el', 'Greek'),
-    # ('hu', 'Hungarian'),
-    # ('sv', 'Swedish'),
-    # ('da', 'Danish'),
+    (code, get_language_name(code))
+    for code in sorted(get_active_language_codes())
+    if code != "en"
 ]
+
+#: The base pack; its metadata declares the pack's whole version range.
+BASE_VERSION = "3.10"
+
+#: Every grammar version some pack ships, discovered rather than listed.
+SHIPPED_VERSIONS = tuple(LanguagePackLoader().list_available_versions("python"))
+LATEST_VERSION = SHIPPED_VERSIONS[-1]
+
+#: Base packs whose metadata still declares ``python_version_max: '3.13'``
+#: although every language ships a 3.14 pack file. Half the packs were
+#: bumped when 3.14 landed, half were not; the test asserts the shipped
+#: range, and these rows are strict xfails so the drift stays visible until
+#: the metadata is corrected (fixing one turns it into an XPASS failure
+#: that says "remove me").
+STALE_VERSION_MAX = frozenset(
+    {
+        "am", "ar", "bn", "bs", "ca", "cs", "cy", "es", "fa", "fr", "ga", "gd",
+        "gl", "gu", "hr", "kn", "lv", "mk", "ml", "mn", "my", "ro", "si", "sr",
+        "zh",
+    }
+)  # fmt: skip
+STALE_VERSION_MAX_REASON = (
+    "base pack metadata declares python_version_max 3.13 while a 3.14 pack "
+    "file ships (metadata not bumped with the 3.14 pack)"
+)
 
 
 @pytest.fixture(scope="module")
 def language_packs():
-    """Load all available language packs."""
+    """Load the base pack for every expected language.
+
+    No degrade path: a pack that stops loading fails here, for every test
+    in the module, instead of being printed and skipped.
+    """
     loader = LanguagePackLoader()
-    packs = {}
-
-    for lang_code, lang_name in EXPECTED_LANGUAGES:
-        try:
-            # Load base pack (3.10) which has metadata for full version range
-            pack = loader.load(lang_code, "python", "3.10")
-            packs[lang_code] = pack
-        except FileNotFoundError as e:
-            # Skip languages not yet migrated - provide detailed context
-            error_path = str(e)
-            if "keywords.yml" in error_path or "keywords" in error_path:
-                # Missing keywords file - primary language pack file
-                print(
-                    f"⊘ {lang_name} ({lang_code}): Keywords file missing - "
-                    f"awaiting CORE-354 migration"
-                )
-            elif "metadata" in error_path:
-                # Metadata structure issue
-                print(
-                    f"⊘ {lang_name} ({lang_code}): Metadata incomplete - "
-                    f"check pack structure"
-                )
-            elif "3.10" in error_path:
-                # Version-specific pack missing
-                print(
-                    f"⊘ {lang_name} ({lang_code}): Base pack (3.10) not found - "
-                    f"check version hierarchy"
-                )
-            else:
-                # Generic pack not available
-                print(f"⊘ {lang_name} ({lang_code}): Pack not available - {e}")
-            continue
-
-    return packs
+    return {
+        lang_code: loader.load(lang_code, "python", BASE_VERSION)
+        for lang_code, _ in EXPECTED_LANGUAGES
+    }
 
 
 @pytest.fixture(scope="module")
@@ -180,17 +168,12 @@ class TestAllLanguagesParametrized:
     @pytest.mark.parametrize("lang_code,lang_name", EXPECTED_LANGUAGES)
     def test_language_pack_loads(self, lang_code, lang_name, language_packs):
         """Verify each language pack loads successfully."""
-        if lang_code not in language_packs:
-            pytest.skip(
-                f"{lang_name} ({lang_code}) not yet available - waiting for CORE-354"
-            )
-
         pack = language_packs[lang_code]
 
         # Verify pack is valid
         assert pack.language == lang_code
         assert pack.target == "python"
-        assert pack.version == "3.10"  # Base pack version
+        assert pack.version == BASE_VERSION
         assert len(pack.keywords) > 0
         assert len(pack.builtins) > 0
 
@@ -217,9 +200,6 @@ class TestAllLanguagesParametrized:
         - Columns: Languages
         - Cells: Translation success/failure
         """
-        if lang_code not in language_packs:
-            pytest.skip(f"{lang_name} not available yet")
-
         pack = language_packs[lang_code]
         translator = translators[lang_code]
 
@@ -248,12 +228,15 @@ class TestAllLanguagesParametrized:
 
     @pytest.mark.parametrize("lang_code,lang_name", EXPECTED_LANGUAGES)
     def test_round_trip_lossless(
-        self, lang_code, lang_name, language_packs, translators, reverse_translators
+        self,
+        lang_code,
+        lang_name,
+        language_packs,
+        translators,
+        reverse_translators,
+        request,
     ):
         """Verify round-trip translation is lossless for all languages."""
-        if lang_code not in language_packs:
-            pytest.skip(f"{lang_name} not available yet")
-
         forward_translator = translators[lang_code]
         reverse_translator = reverse_translators[lang_code]
 
@@ -267,6 +250,7 @@ class TestAllLanguagesParametrized:
 
         # EN → Language → EN (using forward and reverse translators)
         translated = forward_translator.translate_code(original, "en", lang_code)
+        xfail_if_return_hop_is_inert(request, original, translated)
         back = reverse_translator.translate_code(translated, lang_code, "en")
 
         # Must be byte-for-byte identical
@@ -283,9 +267,6 @@ class TestAllLanguagesParametrized:
         self, lang_code, lang_name, language_packs, translators
     ):
         """Verify Unicode characters are preserved correctly."""
-        if lang_code not in language_packs:
-            pytest.skip(f"{lang_name} not available yet")
-
         translator = translators[lang_code]
 
         code = "def foo():\n    return True"
@@ -304,9 +285,6 @@ class TestAllLanguagesParametrized:
     @pytest.mark.parametrize("lang_code,lang_name", EXPECTED_LANGUAGES)
     def test_minimum_keyword_coverage(self, lang_code, lang_name, language_packs):
         """Verify each language has minimum required keyword translations."""
-        if lang_code not in language_packs:
-            pytest.skip(f"{lang_name} not available yet")
-
         pack = language_packs[lang_code]
 
         # Core keywords that MUST be present
@@ -349,9 +327,6 @@ class TestAllLanguagesParametrized:
     @pytest.mark.parametrize("lang_code,lang_name", EXPECTED_LANGUAGES)
     def test_minimum_builtin_coverage(self, lang_code, lang_name, language_packs):
         """Verify each language has minimum required builtin translations."""
-        if lang_code not in language_packs:
-            pytest.skip(f"{lang_name} not available yet")
-
         pack = language_packs[lang_code]
 
         # Core builtins that MUST be present
@@ -394,9 +369,6 @@ class TestLanguageComparison:
 
     def test_keyword_count_consistency(self, language_packs):
         """Compare keyword counts across all languages."""
-        if not language_packs:
-            pytest.skip("No language packs available")
-
         counts = {
             lang_code: len(pack.keywords) for lang_code, pack in language_packs.items()
         }
@@ -410,21 +382,17 @@ class TestLanguageComparison:
             print(f"{lang_code}: {count} keywords")
 
         # All languages should have similar keyword counts (within 10%)
-        if len(counts) > 1:
-            max_count = max(counts.values())
-            min_count = min(counts.values())
-            variation = (max_count - min_count) / max_count
+        max_count = max(counts.values())
+        min_count = min(counts.values())
+        variation = (max_count - min_count) / max_count
 
-            assert variation < 0.1, (
-                f"Keyword count variation too high: {variation:.1%} "
-                f"(max={max_count}, min={min_count})"
-            )
+        assert variation < 0.1, (
+            f"Keyword count variation too high: {variation:.1%} "
+            f"(max={max_count}, min={min_count})"
+        )
 
     def test_builtin_count_consistency(self, language_packs):
         """Compare builtin counts across all languages."""
-        if not language_packs:
-            pytest.skip("No language packs available")
-
         counts = {
             lang_code: len(pack.builtins) for lang_code, pack in language_packs.items()
         }
@@ -438,41 +406,39 @@ class TestLanguageComparison:
             print(f"{lang_code}: {count} builtins")
 
         # All languages should have similar builtin counts (within 20%)
-        if len(counts) > 1:
-            max_count = max(counts.values())
-            min_count = min(counts.values())
-            variation = (max_count - min_count) / max_count
+        max_count = max(counts.values())
+        min_count = min(counts.values())
+        variation = (max_count - min_count) / max_count
 
-            assert variation < 0.2, (
-                f"Builtin count variation too high: {variation:.1%} "
-                f"(max={max_count}, min={min_count})"
+        assert variation < 0.2, (
+            f"Builtin count variation too high: {variation:.1%} "
+            f"(max={max_count}, min={min_count})"
+        )
+
+    @pytest.mark.parametrize("lang_code,lang_name", EXPECTED_LANGUAGES)
+    def test_metadata_consistency(self, lang_code, lang_name, language_packs, request):
+        """Verify the base pack's metadata spans every shipped grammar version."""
+        if lang_code in STALE_VERSION_MAX:
+            request.applymarker(
+                pytest.mark.xfail(strict=True, reason=STALE_VERSION_MAX_REASON)
             )
 
-    def test_metadata_consistency(self, language_packs):
-        """Verify all languages have consistent metadata."""
-        if not language_packs:
-            pytest.skip("No language packs available")
+        pack = language_packs[lang_code]
+        assert pack.metadata, f"{lang_code}: Missing metadata"
 
-        print("\n" + "=" * 50)
-        print("METADATA COMPARISON")
-        print("=" * 50)
+        print(f"\n{lang_code}:")
+        print(
+            f"  Version Range: {pack.metadata.python_version_min} - {pack.metadata.python_version_max}"
+        )
+        print(f"  Author: {pack.metadata.author}")
+        print(f"  License: {pack.metadata.license}")
+        print(f"  Community Reviewed: {pack.metadata.community_reviewed}")
+        print(f"  Last Updated: {pack.metadata.last_updated}")
 
-        for lang_code, pack in language_packs.items():
-            if pack.metadata:
-                print(f"\n{lang_code}:")
-                print(
-                    f"  Version Range: {pack.metadata.python_version_min} - {pack.metadata.python_version_max}"
-                )
-                print(f"  Author: {pack.metadata.author}")
-                print(f"  License: {pack.metadata.license}")
-                print(f"  Community Reviewed: {pack.metadata.community_reviewed}")
-                print(f"  Last Updated: {pack.metadata.last_updated}")
-
-                # All should have same version range
-                assert pack.metadata.python_version_min == "3.10"
-                assert pack.metadata.python_version_max == "3.13"
-            else:
-                pytest.fail(f"{lang_code}: Missing metadata")
+        # All should declare the same range: the base grammar up to the
+        # latest one that ships.
+        assert pack.metadata.python_version_min == BASE_VERSION
+        assert pack.metadata.python_version_max == LATEST_VERSION
 
 
 class TestRTLLanguages:
@@ -486,9 +452,6 @@ class TestRTLLanguages:
     @pytest.mark.parametrize("lang_code,lang_name", RTL_LANGUAGES)
     def test_rtl_mixed_content(self, lang_code, lang_name, language_packs, translators):
         """Test RTL languages with mixed LTR/RTL content."""
-        if lang_code not in language_packs:
-            pytest.skip(f"{lang_name} not available yet")
-
         translator = translators[lang_code]
 
         # Code with English identifiers (LTR) and translated keywords (RTL)
@@ -519,12 +482,9 @@ class TestCJKLanguages:
 
     @pytest.mark.parametrize("lang_code,lang_name", CJK_LANGUAGES)
     def test_cjk_character_handling(
-        self, lang_code, lang_name, language_packs, translators
+        self, lang_code, lang_name, language_packs, translators, reverse_translators
     ):
         """Test CJK languages handle multi-byte characters correctly."""
-        if lang_code not in language_packs:
-            pytest.skip(f"{lang_name} not available yet")
-
         translator = translators[lang_code]
         pack = language_packs[lang_code]
 
@@ -538,8 +498,11 @@ class TestCJKLanguages:
             f"{lang_name}: CJK characters not multi-byte"
         )
 
-        # Verify round-trip
-        back = translator.translate_code(translated, lang_code, "en")
+        # Verify round-trip. The reverse map is the one that reads native
+        # text back; the forward map would leave it untouched.
+        back = reverse_translators[lang_code].translate_code(
+            translated, lang_code, "en"
+        )
         assert back == code
 
         print(f"✓ {lang_name}: CJK characters handled correctly")

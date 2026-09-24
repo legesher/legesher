@@ -1,22 +1,31 @@
-"""CORE-435: Comprehensive validation tests for migrated language packs.
+"""CORE-435: Comprehensive validation tests for the shipped language packs.
 
 This module validates that the token-based transformer works correctly with
-all migrated language packs from CORE-354, including:
+every shipped language pack, including:
 - Loading all language packs successfully
 - Translating keywords and builtins correctly
 - Preserving formatting and round-trip translation
 - Handling version-aware inheritance
 - Supporting RTL languages and special characters
 
+The language list is derived from the registry (``get_active_language_codes``
+minus the pivot, ``en``), never maintained by hand, and a pack that fails to
+load is a failure, not a skip. The list was frozen at es/ar during the
+CORE-354 migration; CORE-2128 widened it to the whole registry.
+
 Test Coverage:
-- Pack loading and validation (24 languages)
+- Pack loading and validation (every active pack)
 - Basic translation functionality per language
 - Round-trip translation (lossless)
-- Version-specific features (Python 3.10-3.13)
+- Version-specific features (Python 3.10 through the latest shipped grammar)
 - Edge cases (RTL, Unicode, incomplete code)
 - Performance benchmarks
 
-Story Points: 3
+Interpreter gaps (``tests/interpreter_gaps.py``) are strict xfails: the
+inert return hop on CPython 3.10/3.11 for packs whose renderings carry
+marks, and the si/ja 3.13 pack files that fail schema validation on
+interpreters whose Unicode tables predate 15.1.
+
 Dependencies: CORE-354 (Translation Migration), CORE-343 (Transformer), CORE-345 (Version-Aware Packs)
 """
 
@@ -24,8 +33,13 @@ import pytest
 import time
 
 from legesher_core.transformer import TokenTranslator
+from legesher_i18n import get_active_language_codes
 from legesher_i18n.pack_loader import LanguagePackLoader, LanguagePack
-from legesher_i18n.exceptions import PackNotFoundError
+from tests.interpreter_gaps import (
+    unloadable_here,
+    xfail_if_return_hop_is_inert,
+    xfail_if_unloadable_here,
+)
 
 
 # Sample code snippets for testing (varying complexity)
@@ -67,17 +81,17 @@ except* ValueError:
     pass"""
 
 
-# Languages expected from CORE-354 migration
-# Note: Currently only 'es' and 'ar' are implemented
-# This will expand to 24 languages after CORE-354 completes
+#: Every active pack except the pivot. Derived from the registry so this
+#: list can never silently lag the shipped packs.
 EXPECTED_LANGUAGES = [
-    "es",  # Spanish
-    "ar",  # Arabic
-    # Future languages from CORE-354:
-    # 'fr', 'de', 'pt', 'ru', 'zh', 'ja', 'ko', 'hi',
-    # 'tr', 'it', 'pl', 'nl', 'he', 'vi', 'th', 'id',
-    # 'cs', 'ro', 'el', 'hu', 'sv', 'da'
+    code for code in sorted(get_active_language_codes()) if code != "en"
 ]
+
+#: The pack version this module exercises.
+PACK_VERSION = "3.13"
+
+#: Every grammar version some pack ships, discovered rather than listed.
+SHIPPED_VERSIONS = tuple(LanguagePackLoader().list_available_versions("python"))
 
 
 @pytest.fixture(scope="module")
@@ -88,23 +102,21 @@ def pack_loader():
 
 @pytest.fixture(scope="module")
 def all_language_packs(pack_loader) -> dict[str, LanguagePack]:
-    """Load all available language packs for Python 3.13.
+    """Load every expected language pack for Python 3.13.
+
+    A pack that fails to load fails here. The only exception is a pack the
+    running interpreter cannot load at all (interpreter gap 2): it is left
+    out so the rest of the module still runs on every pack that does load,
+    and ``test_every_expected_pack_loads`` pins it as a strict xfail.
 
     Returns:
         Dict mapping language codes to LanguagePack objects
     """
-    packs = {}
-    for lang_code in EXPECTED_LANGUAGES:
-        try:
-            pack = pack_loader.load(lang_code, "python", "3.13")
-            packs[lang_code] = pack
-        except FileNotFoundError:
-            # Language pack not yet migrated - skip for now
-            pytest.skip(
-                f"Language pack '{lang_code}' not yet available (CORE-354 in progress)"
-            )
-
-    return packs
+    return {
+        lang_code: pack_loader.load(lang_code, "python", PACK_VERSION)
+        for lang_code in EXPECTED_LANGUAGES
+        if unloadable_here(lang_code, PACK_VERSION) is None
+    }
 
 
 @pytest.fixture
@@ -134,33 +146,14 @@ def translators(all_language_packs) -> dict[str, TokenTranslator]:
 
 
 class TestPackLoading:
-    """Test that all migrated language packs load correctly."""
+    """Test that all shipped language packs load correctly."""
 
-    def test_all_expected_packs_exist(self, pack_loader):
-        """Verify all 24 expected language packs are available.
-
-        Note: This will only pass fully after CORE-354 completes.
-        """
-        available_packs = []
-        missing_packs = []
-
-        for lang_code in EXPECTED_LANGUAGES:
-            try:
-                pack_loader.load(lang_code, "python", "3.13")
-                available_packs.append(lang_code)
-            except FileNotFoundError:
-                missing_packs.append(lang_code)
-
-        # Report current status
-        print(f"\n✓ Available packs: {len(available_packs)}/{len(EXPECTED_LANGUAGES)}")
-        print(f"  Languages: {', '.join(available_packs)}")
-
-        if missing_packs:
-            print(f"\n⚠ Missing packs (pending CORE-354): {', '.join(missing_packs)}")
-
-        # For now, just verify at least Spanish and Arabic work
-        assert "es" in available_packs, "Spanish pack must be available"
-        assert "ar" in available_packs, "Arabic pack must be available"
+    @pytest.mark.parametrize("lang_code", EXPECTED_LANGUAGES)
+    def test_every_expected_pack_loads(self, pack_loader, lang_code, request):
+        """Every registry language loads at PACK_VERSION, by name."""
+        xfail_if_unloadable_here(request, lang_code, PACK_VERSION)
+        pack = pack_loader.load(lang_code, "python", PACK_VERSION)
+        assert pack.language == lang_code
 
     def test_pack_has_required_fields(self, all_language_packs):
         """Verify each pack has all required fields."""
@@ -168,7 +161,9 @@ class TestPackLoading:
             # Required fields
             assert pack.language == lang_code, f"{lang_code}: language field mismatch"
             assert pack.target == "python", f"{lang_code}: target must be 'python'"
-            assert pack.version == "3.13", f"{lang_code}: version must be '3.13'"
+            assert pack.version == PACK_VERSION, (
+                f"{lang_code}: version must be '{PACK_VERSION}'"
+            )
 
             # Required mappings
             assert isinstance(pack.keywords, dict), (
@@ -208,19 +203,13 @@ class TestPackLoading:
             # Check required metadata fields
             metadata = pack.metadata
 
-            # Version min/max should be valid Python versions
-            assert metadata.python_version_min in [
-                "3.10",
-                "3.11",
-                "3.12",
-                "3.13",
-            ], f"{lang_code}: Invalid python_version_min: {metadata.python_version_min}"
-            assert metadata.python_version_max in [
-                "3.10",
-                "3.11",
-                "3.12",
-                "3.13",
-            ], f"{lang_code}: Invalid python_version_max: {metadata.python_version_max}"
+            # Version min/max should be shipped Python versions
+            assert metadata.python_version_min in SHIPPED_VERSIONS, (
+                f"{lang_code}: Invalid python_version_min: {metadata.python_version_min}"
+            )
+            assert metadata.python_version_max in SHIPPED_VERSIONS, (
+                f"{lang_code}: Invalid python_version_max: {metadata.python_version_max}"
+            )
 
             # Min should be <= max
             min_ver = float(metadata.python_version_min)
@@ -232,8 +221,6 @@ class TestPackLoading:
             assert metadata.author, f"{lang_code}: author field empty"
             assert metadata.license, f"{lang_code}: license field empty"
 
-            # After CORE-354, community_reviewed should be True
-            # For now, just check the field exists
             assert hasattr(metadata, "community_reviewed"), (
                 f"{lang_code}: community_reviewed field missing"
             )
@@ -336,200 +323,165 @@ class TestRoundTripTranslation:
             SAMPLE_COMPLEX,
         ],
     )
-    def test_round_trip_lossless(self, translators, sample_code):
+    @pytest.mark.parametrize("lang_code", EXPECTED_LANGUAGES)
+    def test_round_trip_lossless(self, translators, lang_code, sample_code, request):
         """Verify EN → Language → EN is byte-for-byte identical."""
-        for lang_code, translator in translators.items():
-            # Translate to target language
-            translated = translator.translate_code(sample_code, "en", lang_code)
+        xfail_if_unloadable_here(request, lang_code, PACK_VERSION)
+        translator = translators[lang_code]
 
-            # Translate back to English
-            back_to_english = translator.translate_code(translated, lang_code, "en")
+        # Translate to target language
+        translated = translator.translate_code(sample_code, "en", lang_code)
+        xfail_if_return_hop_is_inert(request, sample_code, translated)
 
-            # Must be identical
-            assert back_to_english == sample_code, (
-                f"{lang_code}: Round-trip translation not lossless\n"
-                f"Original:\n{sample_code}\n"
-                f"After round-trip:\n{back_to_english}"
-            )
+        # Translate back to English
+        back_to_english = translator.translate_code(translated, lang_code, "en")
 
-    def test_round_trip_preserves_formatting(self, translators):
+        # Must be identical
+        assert back_to_english == sample_code, (
+            f"{lang_code}: Round-trip translation not lossless\n"
+            f"Original:\n{sample_code}\n"
+            f"After round-trip:\n{back_to_english}"
+        )
+
+    @pytest.mark.parametrize("lang_code", EXPECTED_LANGUAGES)
+    def test_round_trip_preserves_formatting(self, translators, lang_code, request):
         """Verify whitespace, indentation, and comments are preserved."""
+        xfail_if_unloadable_here(request, lang_code, PACK_VERSION)
         code = """def calculate(x, y):
     # This is a comment
     result = x + y  # inline comment
     return result  # trailing comment"""
 
-        for lang_code, translator in translators.items():
-            translated = translator.translate_code(code, "en", lang_code)
-            back = translator.translate_code(translated, lang_code, "en")
+        translator = translators[lang_code]
+        translated = translator.translate_code(code, "en", lang_code)
+        xfail_if_return_hop_is_inert(request, code, translated)
+        back = translator.translate_code(translated, lang_code, "en")
 
-            # Check exact match
-            assert back == code, f"{lang_code}: Formatting not preserved in round-trip"
+        # Check exact match
+        assert back == code, f"{lang_code}: Formatting not preserved in round-trip"
 
-            # Verify comments are preserved
-            assert "# This is a comment" in translated
-            assert "# inline comment" in translated
-            assert "# trailing comment" in translated
+        # Verify comments are preserved
+        assert "# This is a comment" in translated
+        assert "# inline comment" in translated
+        assert "# trailing comment" in translated
 
 
 class TestVersionSpecificFeatures:
     """Test Python version-specific features and inheritance."""
 
-    def test_python_3_10_match_statement(self, pack_loader):
+    @pytest.mark.parametrize("lang_code", EXPECTED_LANGUAGES)
+    def test_python_3_10_match_statement(self, pack_loader, lang_code):
         """Test Python 3.10 match/case statements translate correctly."""
-        for lang_code in EXPECTED_LANGUAGES:
-            try:
-                pack = pack_loader.load(lang_code, "python", "3.10")
-            except FileNotFoundError:
-                continue
+        pack = pack_loader.load(lang_code, "python", "3.10")
 
-            # Check that match/case keywords exist
-            assert "match" in pack.keywords, (
-                f"{lang_code}: 'match' keyword missing in 3.10"
-            )
-            assert "case" in pack.keywords, (
-                f"{lang_code}: 'case' keyword missing in 3.10"
-            )
+        # Check that match/case keywords exist
+        assert "match" in pack.keywords, f"{lang_code}: 'match' keyword missing in 3.10"
+        assert "case" in pack.keywords, f"{lang_code}: 'case' keyword missing in 3.10"
 
-            # Test translation
+        # Test translation
+        translator = TokenTranslator(pack.keywords, pack.builtins)
+        translated = translator.translate_code(SAMPLE_MATCH_STATEMENT, "en", lang_code)
+
+        assert pack.keywords["match"] in translated
+        assert pack.keywords["case"] in translated
+
+    @pytest.mark.parametrize("lang_code", EXPECTED_LANGUAGES)
+    def test_python_3_11_exception_groups(self, pack_loader, lang_code):
+        """Test Python 3.11 except* (exception groups) translates correctly."""
+        pack = pack_loader.load(lang_code, "python", "3.11")
+
+        # Check that except* keyword exists (if defined)
+        if "except*" in pack.keywords:
             translator = TokenTranslator(pack.keywords, pack.builtins)
             translated = translator.translate_code(
-                SAMPLE_MATCH_STATEMENT, "en", lang_code
+                SAMPLE_EXCEPTION_GROUP, "en", lang_code
             )
 
-            assert pack.keywords["match"] in translated
-            assert pack.keywords["case"] in translated
+            assert pack.keywords["except*"] in translated, (
+                f"{lang_code}: 'except*' not translated in 3.11"
+            )
 
-    def test_python_3_11_exception_groups(self, pack_loader):
-        """Test Python 3.11 except* (exception groups) translates correctly."""
-        for lang_code in EXPECTED_LANGUAGES:
-            try:
-                pack = pack_loader.load(lang_code, "python", "3.11")
-            except FileNotFoundError:
-                continue
-
-            # Check that except* keyword exists (if defined)
-            if "except*" in pack.keywords:
-                translator = TokenTranslator(pack.keywords, pack.builtins)
-                translated = translator.translate_code(
-                    SAMPLE_EXCEPTION_GROUP, "en", lang_code
-                )
-
-                assert pack.keywords["except*"] in translated, (
-                    f"{lang_code}: 'except*' not translated in 3.11"
-                )
-
-    def test_version_inheritance_chain(self, pack_loader):
+    @pytest.mark.parametrize("lang_code", EXPECTED_LANGUAGES)
+    def test_version_inheritance_chain(self, pack_loader, lang_code, request):
         """Verify inheritance chains are correct for version-specific packs."""
-        for lang_code in EXPECTED_LANGUAGES:
-            try:
-                pack_313 = pack_loader.load(lang_code, "python", "3.13")
-            except FileNotFoundError:
-                continue
+        xfail_if_unloadable_here(request, lang_code, PACK_VERSION)
+        pack_313 = pack_loader.load(lang_code, "python", PACK_VERSION)
 
-            # Check inheritance chain exists and is non-empty
-            assert hasattr(pack_313, "inheritance_chain"), (
-                f"{lang_code}: Missing inheritance_chain attribute"
+        # Check inheritance chain exists and is non-empty
+        assert hasattr(pack_313, "inheritance_chain"), (
+            f"{lang_code}: Missing inheritance_chain attribute"
+        )
+
+        if pack_313.extends:
+            # If pack extends another, chain should have at least 2 entries
+            assert len(pack_313.inheritance_chain) >= 2, (
+                f"{lang_code}: Inheritance chain too short: {pack_313.inheritance_chain}"
             )
 
-            if pack_313.extends:
-                # If pack extends another, chain should have at least 2 entries
-                assert len(pack_313.inheritance_chain) >= 2, (
-                    f"{lang_code}: Inheritance chain too short: {pack_313.inheritance_chain}"
-                )
-
-                # Verify 3.10 is in the chain (base pack)
-                chain_str = " → ".join(pack_313.inheritance_chain)
-                assert "3.10" in chain_str, (
-                    f"{lang_code}: 3.10 base pack not in inheritance chain: {chain_str}"
-                )
+            # Verify 3.10 is in the chain (base pack)
+            chain_str = " → ".join(pack_313.inheritance_chain)
+            assert "3.10" in chain_str, (
+                f"{lang_code}: 3.10 base pack not in inheritance chain: {chain_str}"
+            )
 
 
 class TestEdgeCases:
     """Test edge cases and special handling."""
 
-    def test_rtl_languages_no_corruption(self, pack_loader):
+    @pytest.mark.parametrize("lang_code", ["ar", "he"])
+    def test_rtl_languages_no_corruption(self, pack_loader, lang_code):
         """Verify RTL languages (Arabic, Hebrew) don't corrupt Unicode."""
-        rtl_languages = ["ar", "he"]
+        pack = pack_loader.load(lang_code, "python", PACK_VERSION)
 
-        tested_count = 0
-        for lang_code in rtl_languages:
-            try:
-                pack = pack_loader.load(lang_code, "python", "3.13")
-            except (FileNotFoundError, PackNotFoundError):
-                print(f"⊘ {lang_code}: Pack not available yet (CORE-354 pending)")
-                continue
+        # Create bidirectional mapping for translator
+        keyword_map = {**pack.keywords, **{v: k for k, v in pack.keywords.items()}}
+        builtin_map = {**pack.builtins, **{v: k for k, v in pack.builtins.items()}}
 
-            tested_count += 1
+        translator = TokenTranslator(keyword_map, builtin_map)
+        translated = translator.translate_code(SAMPLE_SIMPLE_FUNCTION, "en", lang_code)
 
-            # Create bidirectional mapping for translator
-            keyword_map = {**pack.keywords, **{v: k for k, v in pack.keywords.items()}}
-            builtin_map = {**pack.builtins, **{v: k for k, v in pack.builtins.items()}}
+        # Verify we can encode/decode without errors
+        try:
+            encoded = translated.encode("utf-8")
+            decoded = encoded.decode("utf-8")
+            assert decoded == translated, f"{lang_code}: UTF-8 encode/decode failed"
+            print(f"✓ {lang_code}: RTL Unicode preserved")
+        except UnicodeError as e:
+            pytest.fail(f"{lang_code}: Unicode corruption detected: {e}")
 
-            translator = TokenTranslator(keyword_map, builtin_map)
-            translated = translator.translate_code(
-                SAMPLE_SIMPLE_FUNCTION, "en", lang_code
-            )
-
-            # Verify we can encode/decode without errors
-            try:
-                encoded = translated.encode("utf-8")
-                decoded = encoded.decode("utf-8")
-                assert decoded == translated, f"{lang_code}: UTF-8 encode/decode failed"
-                print(f"✓ {lang_code}: RTL Unicode preserved")
-            except UnicodeError as e:
-                pytest.fail(f"{lang_code}: Unicode corruption detected: {e}")
-
-        if tested_count == 0:
-            pytest.skip("No RTL languages available yet (CORE-354 pending)")
-
-    def test_special_characters_preserved(self, pack_loader):
+    @pytest.mark.parametrize(
+        "lang_code,lang_name",
+        [
+            ("zh", "Chinese"),
+            ("ja", "Japanese"),
+            ("ko", "Korean"),
+            ("vi", "Vietnamese"),
+            ("pt", "Portuguese"),
+            ("es", "Spanish"),  # Has diacritics
+        ],
+    )
+    def test_special_characters_preserved(
+        self, pack_loader, lang_code, lang_name, request
+    ):
         """Test languages with special characters (diacritics, CJK, etc.)."""
-        special_char_languages = {
-            "zh": "Chinese",
-            "ja": "Japanese",
-            "ko": "Korean",
-            "vi": "Vietnamese",
-            "pt": "Portuguese",
-            "es": "Spanish",  # Has diacritics
-        }
+        xfail_if_unloadable_here(request, lang_code, PACK_VERSION)
+        pack = pack_loader.load(lang_code, "python", PACK_VERSION)
 
-        tested_count = 0
-        for lang_code, lang_name in special_char_languages.items():
-            try:
-                pack = pack_loader.load(lang_code, "python", "3.13")
-            except (FileNotFoundError, PackNotFoundError):
-                print(
-                    f"⊘ {lang_code} ({lang_name}): Pack not available yet (CORE-354 pending)"
-                )
-                continue
+        # Create bidirectional mapping
+        keyword_map = {**pack.keywords, **{v: k for k, v in pack.keywords.items()}}
+        builtin_map = {**pack.builtins, **{v: k for k, v in pack.builtins.items()}}
 
-            tested_count += 1
+        translator = TokenTranslator(keyword_map, builtin_map)
 
-            # Create bidirectional mapping
-            keyword_map = {**pack.keywords, **{v: k for k, v in pack.keywords.items()}}
-            builtin_map = {**pack.builtins, **{v: k for k, v in pack.builtins.items()}}
+        # Test translation
+        translated = translator.translate_code(SAMPLE_SIMPLE_FUNCTION, "en", lang_code)
 
-            translator = TokenTranslator(keyword_map, builtin_map)
-
-            # Test translation
-            translated = translator.translate_code(
-                SAMPLE_SIMPLE_FUNCTION, "en", lang_code
-            )
-
-            # Verify UTF-8 handling
-            try:
-                translated.encode("utf-8").decode("utf-8")
-                print(f"✓ {lang_code} ({lang_name}): Special characters preserved")
-            except UnicodeError as e:
-                pytest.fail(
-                    f"{lang_code} ({lang_name}): Special character corruption: {e}"
-                )
-
-        if tested_count == 0:
-            pytest.skip(
-                "No special character languages available yet (CORE-354 pending)"
-            )
+        # Verify UTF-8 handling
+        try:
+            translated.encode("utf-8").decode("utf-8")
+            print(f"✓ {lang_code} ({lang_name}): Special characters preserved")
+        except UnicodeError as e:
+            pytest.fail(f"{lang_code} ({lang_name}): Special character corruption: {e}")
 
     def test_incomplete_code_handling(self, translators):
         """Verify incomplete code is handled gracefully."""
@@ -556,18 +508,20 @@ class TestPerformance:
 
     def test_pack_loading_performance(self, pack_loader):
         """Verify all packs can be loaded quickly (<1s total)."""
+        # Packs this interpreter cannot load are pinned elsewhere (gap 2);
+        # timing them would only measure the validator raising.
+        loadable = [
+            lang_code
+            for lang_code in EXPECTED_LANGUAGES
+            if unloadable_here(lang_code, PACK_VERSION) is None
+        ]
+
         start_time = time.time()
-
-        loaded_count = 0
-        for lang_code in EXPECTED_LANGUAGES:
-            try:
-                pack_loader.load(lang_code, "python", "3.13")
-                loaded_count += 1
-            except FileNotFoundError:
-                continue
-
+        for lang_code in loadable:
+            pack_loader.load(lang_code, "python", PACK_VERSION)
         elapsed = time.time() - start_time
 
+        loaded_count = len(loadable)
         print(f"\n⏱ Loaded {loaded_count} packs in {elapsed:.3f}s")
         print(f"  Average: {elapsed / loaded_count:.3f}s per pack")
 
@@ -615,14 +569,14 @@ class TestPerformance:
 
 
 class TestCommunityReview:
-    """Test community-reviewed translations (after CORE-354 completes)."""
+    """Test the community-review flag every pack carries."""
 
     def test_community_reviewed_flag(self, all_language_packs):
-        """Verify community_reviewed flag is set after CORE-354."""
+        """Verify the community_reviewed field exists on every pack."""
         for lang_code, pack in all_language_packs.items():
             if pack.metadata:
-                # After CORE-354, this should be True
-                # For now, just verify the field exists
+                # Packs are experimental until community review flips this;
+                # the field itself must be present.
                 assert hasattr(pack.metadata, "community_reviewed"), (
                     f"{lang_code}: community_reviewed field missing"
                 )

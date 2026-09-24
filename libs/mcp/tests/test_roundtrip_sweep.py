@@ -52,7 +52,7 @@ SAMPLE_PACKS = ("es", "ar", "hi")
 #:   back, so `except KeyError as e:` returns as `except KeyError as and:`.
 KNOWN_ROUND_TRIP_FAILURES: dict[tuple[str, str], str] = {
     **{
-        (language, "libs/core/tests/fixtures/sample_english.py"): (
+        (language, "sample_english.py"): (
             "CORE-1840: identifier `e` collides with the pack's word for `and`"
         )
         for language in ("gl", "it", "pt")

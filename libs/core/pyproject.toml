@@ -102,7 +102,15 @@ disallow_untyped_defs = false
 check_untyped_defs = false
 
 [tool.ruff]
-extend-exclude = ["tests/fixtures/sample_spanish.py"]
+extend-exclude = [
+    "tests/fixtures/sample_spanish.py",
+    # The round-trip corpus (CORE-2128) is test INPUT, not project code: one
+    # file per construct group, shared with the MCP sweep. It deliberately
+    # carries 3.11+ grammar (`except*`, `ExceptionGroup`) that ruff rejects
+    # under this package's 3.10 floor. Its manifest gates each file by the
+    # grammar it needs; ruff has no such gate.
+    "tests/fixtures/corpus/",
+]
 
 [tool.uv.sources]
 legesher-i18n = { workspace = true }
