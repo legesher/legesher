@@ -65,6 +65,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- **Error telemetry**: an error report can no longer carry your home directory off the machine. Every
+  event the extension authors is built from an enumerated vocabulary except one property, the text of
+  the error itself, and that was scrubbed by two patterns that recognised only `/`-rooted paths. A
+  Windows path (`C:\Users\jane\...`), a UNC share (`\\server\share\...`), an IP address, a URL and a
+  bare hostname such as `jane-macbook.local` all went through untouched. The scrubber now works the
+  other way round: the message is split into tokens and a token has to be recognised as safe to
+  survive. Words in any script, numbers, version numbers, the extension's own `legesher.*` setting
+  names and `key:value` pairs of safe halves are kept, so the report still says what went wrong;
+  anything else is replaced with `<path>`, `<email>`, `<url>`, `<ip>` or `<redacted>`. That now
+  includes a drive-relative path such as `C:jane`, a drive marker in the value half of a pair such as
+  `cwd:C:jsmith`, and a percent-encoded path such as `C%3A%5CUsers%5Cjane`; a path in quotes is
+  collapsed whole, so Node's `scandir 'C:\Users\Jane Smith'` reports as `scandir <path>`. Telemetry
+  remains off unless you turn it on, and VS Code's own telemetry setting still gates it (CORE-596)
+
+- **Error telemetry, what is still sent**: a path containing a space that is *not* in quotes keeps its
+  last segment, so `Unable to resolve workspace folder C:\Users\Jane Smith` is sent as
+  `... <path> Smith`. Nothing marks where such a path ends, so the scrubber cannot tell that segment
+  from the sentence that might follow it. Personal data written as an ordinary word is also kept on
+  purpose: a machine name such as `jane-macbook` or `JANE-PC`, a username in `user:jsmith`, a person's
+  name in prose, a phone number. Each has the same shape as the diagnostic text around it, so removing
+  it would mean removing the diagnosis. The full list is in the source and is pinned by the unit tests,
+  so it cannot change quietly (CORE-596)
+
 - **Server command**: `legesher.serverCommand` is now `machine-overridable` scoped and is restricted
   in untrusted workspaces. The setting names an executable the extension spawns on activation, and it
   carried no scope restriction and no `capabilities.untrustedWorkspaces` declaration, so a cloned

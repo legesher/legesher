@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { TelemetryReporter } from '@vscode/extension-telemetry';
 import { isPythonKeyword, getEnglishKeyword } from './keywords';
 import { Logger } from './logger';
+import { sanitizeErrorContext } from './telemetrySanitizer';
 import type { SettingScope } from './settingsScope';
 import type {
     LanguageTrigger,
@@ -300,16 +301,19 @@ export class LegesherTelemetry {
 
     /**
      * Track errors (non-PII)
+     *
+     * `context` is the only free text any event carries — everywhere else the
+     * vocabulary is enumerated — so it is the one property that can leak a
+     * username, a hostname or an address. It goes through the allowlist
+     * scrubber, which keeps only shapes it recognises as safe (CORE-596).
+     *
      * @param errorType - Type of error (restricted to known error types)
      * @param context - Additional context (sanitized to remove potential PII)
      */
     static trackError(errorType: TrackedErrorType, context?: string): void {
         if (!reporter) return;
 
-        // Strip potential PII: file paths and email addresses
-        const safeContext = context
-            ? context.replace(/\/[\w/.\\-]+/g, '<path>').replace(/[\w.-]+@[\w.-]+/g, '<email>')
-            : 'none';
+        const safeContext = sanitizeErrorContext(context);
 
         try {
             reporter.sendTelemetryErrorEvent('errorOccurred', {

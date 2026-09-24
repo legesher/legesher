@@ -230,8 +230,12 @@ records the evidence.
 ## Privacy
 
 - **Telemetry**: Usage data, off by default (opt-in). Events contain no code
-  content, no file paths, and no identifiers we collect; the bundled
-  `@vscode/extension-telemetry` library adds a pseudonymous machine id
+  content and no identifiers we collect; the bundled
+  `@vscode/extension-telemetry` library adds a pseudonymous machine id.
+  One property carries free text: the message of an error the extension did
+  not write. It is scrubbed of paths, emails, URLs and addresses before it is
+  sent, but the scrubber works on shapes, so a fragment of a path that looks
+  like an ordinary word can survive
 - **ML training**: A separate opt-in
   (`legesher.telemetry.contributeToMLTraining`, also off by default). Today this
   setting only records your answer: the extension sends no translation

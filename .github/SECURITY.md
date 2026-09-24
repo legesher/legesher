@@ -145,10 +145,15 @@ surface, and the mitigations that hold each boundary — lives in
 - **Permissions**: Extension requests minimal VS Code API permissions, scoped to Python files
 - **Telemetry**: Usage telemetry is opt-in and disabled by default. When enabled in
   settings (`legesher.telemetry.enabled`), it sends events via Azure Application Insights,
-  gated additionally by VS Code's global telemetry setting. The events we author contain
-  no code content, no file paths, and no identifiers; the bundled
-  `@vscode/extension-telemetry` library adds a pseudonymous machine id and session id
-  to each event.
+  gated additionally by VS Code's global telemetry setting. Every property we author is
+  drawn from an enumerated vocabulary (command names, language codes, outcomes) except
+  the context of an error event, which carries the message of an error the extension did
+  not write. That message is scrubbed before it is sent: paths, emails, URLs and IP
+  addresses are replaced with placeholders. The scrubber recognises shapes rather than
+  identities, so a path segment that is indistinguishable from an ordinary word, or a
+  machine name that is someone's name, can still reach us. No code content is sent. The
+  bundled `@vscode/extension-telemetry` library adds a pseudonymous machine id and
+  session id to each event.
 - **Local execution**: Code analysis happens locally — the language server runs as a local process with no network calls
 
 ## Security Contacts

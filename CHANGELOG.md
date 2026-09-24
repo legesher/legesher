@@ -342,6 +342,32 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   that are not identifiers at all are still reported as malformed and nothing
   else, so the new layer never buries the real problem. [CORE-1558]
 
+- **vs-code**: the error telemetry scrubber no longer forwards a home
+  directory. The `errorOccurred` event carries one free-text property, the error
+  message the extension did not write, and it was scrubbed by two regexes that
+  recognised only `/`-rooted paths. A Windows path (`C:\Users\jane\...`), a UNC
+  share, an IP address, a URL and a bare hostname all went through intact. The
+  scrubber is now an allowlist: the message is split into tokens and only shapes
+  recognised as safe survive, which are words in any script, numbers, version
+  numbers, our own `legesher.*` setting names, and `key:value` pairs whose
+  halves are themselves safe. Everything else is replaced with `<path>`,
+  `<email>`, `<url>`, `<ip>` or `<redacted>`. A drive-relative path (`C:jane`,
+  which is a real Windows path with no separator in it), a drive marker in the
+  value half of a `key:value` token (`cwd:C:jsmith`), and a percent-encoded path
+  (`C%3A%5CUsers%5Cjane`) are covered, and a *quoted* path containing spaces is
+  collapsed whole, which is the shape Node's errno messages use. The rule lives
+  in one exported function that the unit tests now call directly, rather than
+  being re-implemented inside the test that was meant to check it.
+
+  What it does not do: an **unquoted** path containing a space still loses only
+  its interior. `C:\Users\Jane Smith` becomes `<path> Smith`, because the last
+  segment carries no separator and there is no marker saying where the path
+  stops and the sentence resumes. Bare-word personal data (`jane-macbook`,
+  `JANE-PC`, `user:jsmith`, a person's name written as prose) is likewise kept
+  by design, since nothing in its shape distinguishes it from the diagnostic
+  text around it. Both are listed in the module's "Known residue" comment and
+  pinned to their exact output in the unit tests. [CORE-596]
+
 ## [0.23.0] - 2026-08-16
 
 > **On the version number.** This release carries breaking changes and is
