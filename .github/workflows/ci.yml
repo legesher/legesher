@@ -110,6 +110,12 @@ jobs:
       - name: Run pre-commit
         run: uv run pre-commit run --show-diff-on-failure --color=always --all-files
 
+      # scripts/tests holds the action-graph auditor's tests and the
+      # repo-hygiene guard (CORE-2214). workflow-lint.yml runs the directory
+      # only when a workflow file changes; the guard has to run on every PR.
+      - name: Test the repo scripts
+        run: uv run pytest scripts/tests -q
+
   test:
     name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
