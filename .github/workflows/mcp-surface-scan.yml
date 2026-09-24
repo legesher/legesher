@@ -1,0 +1,127 @@
+name: MCP Surface Scan
+
+# Tool-poisoning gate for the published MCP surface (CORE-1423).
+#
+# Why a scanner at all: enterprise MCP clients and registries scan a
+# server's tool descriptions before they will route to it, and a server that
+# does not pass is not merely untidy — it is unreachable. Passing that scan
+# is a distribution requirement, so it is checked here rather than
+# discovered downstream.
+#
+# Which scanner, and why not the one the ticket named: `mcp-scan`
+# (Invariant Labs) was acquired and is now a redirect stub on PyPI for
+# `snyk-agent-scan`, which needs a `SNYK_TOKEN` and sends the surface to
+# Snyk's API. That is an account and a network dependency, so it is not a
+# gate this repo can own. `cisco-ai-mcp-scanner`'s `static` subcommand is
+# the offline path: local YARA rules, no API key, no network at scan time,
+# reading a JSON dump of the surface rather than connecting to a server.
+#
+# Why the extra script: the scanner exits 0 whether or not it finds
+# anything — confirmed against a deliberately poisoned description it
+# flagged HIGH and still exited zero on. `scripts/gate_mcp_scan.py` is what
+# makes this a gate, and it also fails when the report says nothing was
+# actually analyzed, so a scanner that quietly stops working does not read
+# as a pass.
+#
+# This is the SECOND layer, not the only one. `libs/mcp/tests/
+# test_security_posture.py` pins the same property with no third party in
+# the loop: injection-shape patterns, invisible-character checks, and a
+# digest over every published description so a silent edit fails. If this
+# workflow ever has to be removed, that suite still holds the line.
+#
+# Cost: path-filtered to the MCP package and this file, so it runs only when
+# the surface can actually have changed.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+    branches:
+      - main
+    paths:
+      - 'libs/mcp/legesher_mcp/**'
+      - 'scripts/dump_mcp_surface.py'
+      - 'scripts/gate_mcp_scan.py'
+      - '.github/workflows/mcp-surface-scan.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'libs/mcp/legesher_mcp/**'
+      - 'scripts/dump_mcp_surface.py'
+      - 'scripts/gate_mcp_scan.py'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  surface-scan:
+    name: Tool-poisoning scan
+    runs-on: ubuntu-latest
+    # Same draft gate as the bandit scan: a draft PR skips, `ready_for_review`
+    # scans the final commit, and the `ci:run` label forces a run in draft.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.draft == false ||
+      contains(github.event.pull_request.labels.*.name, 'ci:run')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          # This job reads the package and runs a scanner. It never pushes,
+          # so leaving a credential in .git/config would be a gift to the
+          # third-party tool it installs.
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Dump the published MCP surface
+        run: uv run python scripts/dump_mcp_surface.py build/mcp-surface
+
+      # Isolated from the project environment on purpose: the scanner pulls
+      # ~50 packages of its own, and none of them belong in the environment
+      # the package is tested against.
+      - name: Install the offline MCP scanner
+        run: uv tool install --python 3.13 cisco-ai-mcp-scanner
+
+      # `yara` only: the other analyzers either need an API key (Cisco AI
+      # Defense, VirusTotal), an LLM provider, or source-tree access this
+      # job does not give them. Everything below runs from rules on disk.
+      - name: Scan the surface (offline analyzers)
+        run: |
+          uv tool run --from cisco-ai-mcp-scanner mcp-scanner \
+            --analyzers yara \
+            --format raw \
+            --log-level error \
+            static \
+              --tools build/mcp-surface/tools.json \
+              --prompts build/mcp-surface/prompts.json \
+              --resources build/mcp-surface/resources.json \
+            > build/mcp-surface/scan.json
+
+      - name: Gate on the findings
+        run: uv run python scripts/gate_mcp_scan.py build/mcp-surface/scan.json
+
+      - name: Upload the surface and the report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mcp-surface-scan
+          path: build/mcp-surface/
+          retention-days: 14

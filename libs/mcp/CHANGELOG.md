@@ -203,6 +203,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- The `legesher://languages/{lang}/terms` resources now check the language
+  code against the registry pattern *before* any backend sees it, matching
+  the guard the tool parameters have always had. A resource URI carries no
+  argument model, so whatever matched the URI template's `[^/]+` reached
+  the backend verbatim — harmless against the local backend, which
+  allowlists the code before it touches a pack, but a backend is free to
+  put that value in a request path, and a value carrying `?`, `#`, or an
+  encoded traversal could then move the request somewhere nobody chose. A
+  well-formed code the catalog does not list still reaches the backend and
+  is refused there, so registry membership stays the backend's call.
+  [CORE-1423]
+
 - `explain_in_language` and `map_existing_codebase` computed the English
   pivot twice per file when the input was not English — once to scan and
   validate, then again inside the X→Y translation. The second hop now

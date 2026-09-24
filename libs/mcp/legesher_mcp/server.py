@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from collections.abc import Sequence
 from dataclasses import asdict
 from typing import Annotated, Any, Literal, cast, get_args
@@ -250,6 +251,31 @@ _GATED_MAP_TOOL = "map_existing_codebase"
 #: these gets the SDK's own loopback allowlist (any loopback origin, any
 #: port), which is the right shape for the local default.
 _LOOPBACK_HOSTS = ("127.0.0.1", "localhost", "::1")
+
+#: The language-code guard for the RESOURCE surface. Tool parameters get it
+#: from ``_LangParam`` (pydantic validates before the body runs); a resource
+#: URI has no argument model, so the template's ``{lang}`` arrives as
+#: whatever matched ``[^/]+`` in the SDK's template regex. That value is
+#: handed to a backend, and a backend is free to put it in a filesystem
+#: lookup or an HTTP path — so it passes the same registry pattern here,
+#: before it reaches one. Length as well as charset: the pattern's optional
+#: subtag is otherwise unbounded.
+_LANG_CODE_RE = re.compile(LANG_CODE_PATTERN)
+
+
+def _checked_lang(lang: str) -> str:
+    """``lang`` if it is shaped like a registry code; otherwise refuse.
+
+    Raises:
+        ValueError: ``unsupported_language``, in the server's own voice and
+            quoting at most a short prefix of the rejected value.
+    """
+    if len(lang) <= LANG_CODE_MAX_LENGTH and _LANG_CODE_RE.fullmatch(lang):
+        return lang
+    raise ValueError(
+        f"unsupported_language: {lang[:24]!r} is not a language code. "
+        "Read the legesher://languages resource for the catalog."
+    )
 
 
 def _transport_security_for(host: str) -> TransportSecuritySettings | None:
@@ -535,6 +561,11 @@ def create_server(
 
     async def _terms_document(lang: str, python_version: str) -> str:
         """Render one language's full term dictionary for one Python version."""
+        # Gate before the backend, for the same reason the version is gated
+        # below: this value is joined into a pack filename by the local
+        # backend and into a request path by a proxying one, and a resource
+        # URI carries no argument model to have validated it already.
+        lang = _checked_lang(lang)
         if python_version not in SUPPORTED_PYTHON_VERSIONS:
             # Gate before the backend: the version is joined into a pack
             # filename downstream, and the loader's own ValueError is not in
