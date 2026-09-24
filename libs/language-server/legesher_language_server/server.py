@@ -11,6 +11,7 @@ from legesher_i18n import get_active_language_codes
 from lsprotocol.types import (
     INITIALIZE,
     INITIALIZED,
+    SET_TRACE,
     SHUTDOWN,
     TEXT_DOCUMENT_COMPLETION,
     TEXT_DOCUMENT_DIAGNOSTIC,
@@ -39,14 +40,17 @@ from lsprotocol.types import (
     SemanticTokensOptions,
     SemanticTokensParams,
     ServerCapabilities,
+    SetTraceParams,
     ShowMessageParams,
     TextDocumentSyncKind,
+    TraceValue,
 )
 from pygls.lsp.server import LanguageServer  # pygls 2.0 import path
 
 from .config import LanguageServerConfig
 from .document import DocumentManager
 from .enhanced_intelligence import INSTALL_HINT, EnhancedIntelligenceProxy
+from .logging_setup import apply_trace_value
 from .providers import (
     provide_completion,
     provide_diagnostics,
@@ -166,7 +170,10 @@ class LegesherLanguageServer(LanguageServer):
         self.config = config
         self.document_manager = DocumentManager()
 
-        logger.info(
+        # Debug, not info: the entry point has already said what the process
+        # started with, and this repeats it a line later with no way for a
+        # reader to tell which of the two won (CORE-1979).
+        logger.debug(
             f"Initializing Legesher Language Server "
             f"(source: {config.source_language}, target: {config.target_language})"
         )
@@ -272,6 +279,9 @@ class LegesherLanguageServer(LanguageServer):
         async def initialized_wrapper(params: InitializedParams) -> None:
             await self.on_initialized(params)
 
+        async def set_trace_wrapper(params: SetTraceParams) -> None:
+            await self.on_set_trace(params)
+
         async def shutdown_wrapper(*args, **kwargs) -> None:
             # pygls v2.0 may pass ls instance as first arg
             params = args[0] if args else kwargs.get("params", None)
@@ -310,6 +320,9 @@ class LegesherLanguageServer(LanguageServer):
         # for language switching
         self.feature(INITIALIZE)(initialize_wrapper)
         self.feature(INITIALIZED)(initialized_wrapper)
+        # pygls records the trace value itself and then calls this, which is
+        # what turns the extra logging on and off (CORE-1979).
+        self.feature(SET_TRACE)(set_trace_wrapper)
         self.feature(SHUTDOWN)(shutdown_wrapper)
         self.feature(TEXT_DOCUMENT_DID_OPEN)(did_open_wrapper)
         self.feature(TEXT_DOCUMENT_DID_CHANGE)(did_change_wrapper)
@@ -327,6 +340,43 @@ class LegesherLanguageServer(LanguageServer):
         # enhanced intelligence actually on?" without parsing server logs.
         self.feature(LEGESHER_STATUS)(status_wrapper)
 
+    def _apply_trace(self, params: InitializeParams) -> TraceValue:
+        """Set logging verbosity from whichever trace setting the client sent.
+
+        The setting arrives twice: `trace` on the initialize request itself,
+        which is where the protocol puts it, and a `trace` key inside our
+        initialization options, which is what the VS Code extension sends. The
+        options win when both are present, because that one is ours and a user
+        who sets it means it.
+
+        Args:
+            params: Initialize parameters from client
+
+        Returns:
+            The trace value that was applied.
+        """
+        trace: object = params.trace
+        init_opts = params.initialization_options
+        if isinstance(init_opts, dict) and init_opts.get("trace") is not None:
+            trace = init_opts["trace"]
+
+        value = apply_trace_value(trace)
+        if value is not TraceValue.Off:
+            logger.info(f"Trace level: {value.value}")
+        return value
+
+    async def on_set_trace(self, params: SetTraceParams) -> None:
+        """Handle a `$/setTrace` notification.
+
+        Trace is changeable mid-session, so a user who needs detail does not
+        have to restart the server to get it, nor keep paying for it after.
+
+        Args:
+            params: The trace value the client is switching to
+        """
+        value = apply_trace_value(params.value)
+        logger.info(f"Trace level changed to: {value.value}")
+
     async def on_initialize(self, params: InitializeParams) -> InitializeResult:
         """Handle initialize request from client.
 
@@ -337,43 +387,35 @@ class LegesherLanguageServer(LanguageServer):
             Server capabilities
         """
         logger.info(f"Client initializing from: {params.root_uri}")
-        logger.info(f"DEBUG: initialization_options = {params.initialization_options}")
-        logger.info(
-            f"DEBUG: config BEFORE - target: {self.config.target_language}, "
-            f"source: {self.config.source_language}"
-        )
+
+        # The client's trace setting decides how much of the rest of this
+        # session is logged, so it is read before anything else is (CORE-1979).
+        self._apply_trace(params)
 
         # Update config from initialization options (CORE-362)
         # Security: Validate all client inputs to prevent injection attacks
         if params.initialization_options:
-            logger.info("DEBUG: initialization_options exists, processing...")
             init_opts = params.initialization_options
-            logger.info(
-                f"DEBUG: init_opts type = {type(init_opts)}, "
-                f"isinstance dict = {isinstance(init_opts, dict)}"
-            )
+            logger.debug(f"Initialization options: {init_opts}")
             if isinstance(init_opts, dict):
-                logger.info(f"DEBUG: Keys in init_opts: {list(init_opts.keys())}")
                 try:
                     # The deprecated single slot first, so the named roles can
                     # override it. A client that predates the role split sends
                     # only targetLanguage, and that one value was always three
                     # things at once — so it seeds all three (CORE-1760).
                     if "targetLanguage" in init_opts:
-                        logger.info(f"DEBUG: Found targetLanguage = {init_opts['targetLanguage']}")
                         self.config.apply_legacy_target_language(
                             validate_language_code(init_opts["targetLanguage"], "targetLanguage")
                         )
-                        logger.info(
+                        logger.debug(
                             f"Updated target language from init options: "
                             f"{self.config.target_language}"
                         )
                     if "sourceLanguage" in init_opts:
-                        logger.info(f"DEBUG: Found sourceLanguage = {init_opts['sourceLanguage']}")
                         self.config.source_language = validate_language_code(
                             init_opts["sourceLanguage"], "sourceLanguage"
                         )
-                        logger.info(
+                        logger.debug(
                             f"Updated source language from init options: "
                             f"{self.config.source_language}"
                         )
@@ -382,22 +424,18 @@ class LegesherLanguageServer(LanguageServer):
                     # every provider written against the old slot parses the
                     # file with it, and that is the file-language role.
                     if "fileLanguage" in init_opts:
-                        logger.info(f"DEBUG: Found fileLanguage = {init_opts['fileLanguage']}")
                         self.config.file_language = validate_language_code(
                             init_opts["fileLanguage"], "fileLanguage"
                         )
                         self.config.target_language = self.config.file_language
-                        logger.info(
+                        logger.debug(
                             f"Updated file language from init options: {self.config.file_language}"
                         )
                     if "workingLanguage" in init_opts:
-                        logger.info(
-                            f"DEBUG: Found workingLanguage = {init_opts['workingLanguage']}"
-                        )
                         self.config.working_language = validate_language_code(
                             init_opts["workingLanguage"], "workingLanguage"
                         )
-                        logger.info(
+                        logger.debug(
                             f"Updated working language from init options: "
                             f"{self.config.working_language}"
                         )
@@ -407,11 +445,12 @@ class LegesherLanguageServer(LanguageServer):
                     )
                     # Continue with default config - fail securely
 
+        # One line, after the slots have settled, saying which languages are
+        # actually in effect. A log that reports a language more than once
+        # leaves the reader guessing which report won.
         logger.info(
-            f"DEBUG: config AFTER - target: {self.config.target_language}, "
-            f"source: {self.config.source_language}, "
-            f"file: {self.config.file_language}, "
-            f"working: {self.config.working_language}"
+            f"Languages resolved: source={self.config.source_language}, "
+            f"file={self.config.file_language}, working={self.config.working_language}"
         )
 
         return InitializeResult(
@@ -447,10 +486,6 @@ class LegesherLanguageServer(LanguageServer):
         Args:
             params: Initialized parameters
         """
-        logger.info(
-            f"Server initialized: target={self.config.target_language}, "
-            f"source={self.config.source_language}"
-        )
         logger.info("Server initialized successfully")
 
         # Initialize the enhanced-intelligence proxy now that config is finalized (CORE-360)

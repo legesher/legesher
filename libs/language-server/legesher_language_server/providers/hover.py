@@ -174,7 +174,9 @@ async def provide_hover(
 
     # Extract word at position
     word = _extract_word_at_position(doc.text, position)
-    logger.info(f"Hover request at {position.line}:{position.character}, extracted word: '{word}'")
+    # Debug, not info: the word under the cursor is text out of the user's
+    # file, and a default-level log is not a place to put it (CORE-1979).
+    logger.debug(f"Hover request at {position.line}:{position.character}, extracted word: '{word}'")
     if not word:
         return None
 
@@ -190,7 +192,7 @@ async def provide_hover(
     hover_content = await provider.get_hover_content(word, position)
 
     if hover_content:
-        logger.info(f"Returning hover content: {hover_content[:100]}...")
+        logger.debug(f"Returning hover content: {hover_content[:100]}...")
         return Hover(
             contents=MarkupContent(
                 kind=MarkupKind.Markdown,

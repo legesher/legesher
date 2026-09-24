@@ -314,8 +314,13 @@ class SemanticTokensProvider:
                     ):
                         state = _STATE_NORMAL
 
-        except tokenize.TokenError as e:
-            # Document has syntax errors - tokenize fails
+        except (tokenize.TokenError, SyntaxError) as e:
+            # Document has syntax errors - tokenize fails. IndentationError and
+            # TabError are SyntaxError subclasses rather than TokenError ones,
+            # and both carry the offending source line in their repr, so they
+            # belong here and not in the catch-all below: a half-edited file is
+            # an ordinary state, not a server fault worth logging a line of the
+            # user's code at error level.
             logger.debug(f"Tokenize error for {self.document_uri}: {e!r}")
             # Return partial tokens collected so far
             return tokens

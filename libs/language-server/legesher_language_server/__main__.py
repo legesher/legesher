@@ -5,22 +5,26 @@ import logging
 import sys
 
 from .config import LanguageServerConfig
+from .logging_setup import LspLogHandler, configure_logging
 from .server import create_server
 
 
-def setup_logging(log_level: str) -> None:
+def setup_logging(log_level: str) -> LspLogHandler:
     """Configure logging for the language server.
+
+    Logs go to the client through ``window/logMessage`` with the level they
+    were written at, and to stderr only when no connection can carry them.
+    Sending them to stdout is not an option, because under stdio transport
+    that is the JSON-RPC channel itself, and sending them all to stderr is what
+    made a healthy startup look like forty errors (CORE-1979).
 
     Args:
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
+
+    Returns:
+        The installed handler, which the server is bound to once it exists.
     """
-    logging.basicConfig(
-        level=getattr(logging, log_level.upper()),
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        handlers=[
-            logging.StreamHandler(sys.stderr)  # Log to stderr, LSP uses stdio
-        ],
-    )
+    return configure_logging(log_level)
 
 
 def main() -> None:
@@ -99,17 +103,29 @@ Environment Variables:
         sys.exit(1)
 
     # Setup logging
-    setup_logging(config.log_level)
+    handler = setup_logging(config.log_level)
 
-    logger = logging.getLogger(__name__)
+    # Named rather than ``__name__``: launched as ``python -m`` this module is
+    # ``__main__``, which sits outside the package logger the trace setting
+    # raises and lands in the output channel under a name that says nothing.
+    logger = logging.getLogger("legesher_language_server.__main__")
     logger.info("Starting Legesher Language Server v0.1.0")
-    logger.info(f"Source language: {config.source_language}")
-    logger.info(f"Target language: {config.target_language}")
-    logger.info(f"Python version: {config.detect_python_version()}")
+    # Labelled "startup" on purpose. These are the languages the process was
+    # launched with, and a client's initialize options can still replace them;
+    # the server then reports what it resolved. Two unlabelled reports are what
+    # left a log reader guessing which language was actually in effect.
+    logger.info(
+        f"Startup configuration: source={config.source_language}, "
+        f"target={config.target_language}, python={config.detect_python_version()}"
+    )
 
     # Create and start server
     try:
         server = create_server(config)
+        # Nothing logged up to here could have reached the client: the
+        # transport does not exist until start_io. Binding is what lets those
+        # held records be replayed with their real level once it does.
+        handler.bind(server)
         server.start_io()
     except KeyboardInterrupt:
         logger.info("Server interrupted by user")

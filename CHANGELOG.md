@@ -147,6 +147,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   pack versions where each construct exists: 3.11+ for `except*`, 3.12+ for
   the `type` statement.
   [CORE-1345]
+- **language-server**: the output channel is readable again. Every line the
+  server logged went to stderr, which an editor renders undifferentiated as
+  `[error]`, so a healthy startup produced roughly forty red lines and a
+  genuine crash sat among them unnoticed. Log records now travel over the
+  LSP's own `window/logMessage` notification carrying the level they were
+  written at, so information reads as information and an error stands out;
+  stderr is kept for what happens before a client connects, and what was held
+  waiting for a connection that never came is written there rather than
+  dropped. Ten lines of leftover `DEBUG:` instrumentation are gone from the
+  initialize path, and the languages in effect are reported once, after they
+  settle, rather than slot by slot. [CORE-1979]
+- **language-server**: JSON-RPC payloads are no longer dumped into the log by
+  default. pygls logs every message it sends and receives at INFO, including an
+  8KB client-capabilities blob and every hover and diagnostic response, which
+  put text from the file being edited into a log nobody asked to keep. Payload
+  logging now rides the client's trace setting (`legesher.trace.server` in VS
+  Code): `off` logs the server's own messages, `messages` adds its debug
+  detail, and only `verbose` includes payloads. No text out of the open file is
+  logged at `off`, though an error can still name the document's path; the
+  debug detail that `messages` unmutes does name identifiers read out of it.
+  The setting is honoured both at
+  initialize and through `$/setTrace`, so it can be turned on and back off
+  without restarting the server. [CORE-1979]
 - **language-server**: diagnostics forwarded from the Pyright backend crashed
   at serialization time and put a red error notification on screen.
   `forward_diagnostic` built each `Diagnostic` with the backend's raw integer

@@ -154,7 +154,7 @@ class DiagnosticProvider:
             for english, translated in pack.keywords.items():
                 keyword_map[translated] = english
 
-            logger.info(
+            logger.debug(
                 f"Loaded {len(keyword_map)} keyword translations for diagnostic provider "
                 f"(lang={self.target_lang})"
             )

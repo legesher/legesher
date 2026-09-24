@@ -9,7 +9,43 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- Log records now reach the client through the LSP `window/logMessage`
+  notification with the level they were written at, instead of going to stderr
+  where an editor renders everything as `[error]`. stdout is not an option:
+  under stdio transport it is the JSON-RPC stream itself. Records written
+  before the transport exists are held and replayed once it does, so the
+  startup lines arrive with a real level; errors are written to stderr
+  immediately, since a server that dies during startup has nothing else, and
+  the held records go out ahead of them. Nothing held is dropped if the
+  connection never arrives at all: the handler drains its buffer to stderr on
+  close, which is what `logging.shutdown` does at interpreter exit.
+  (CORE-1979)
+- pygls's logger is set to WARNING by default, which stops whole JSON-RPC
+  payloads (the 8KB `InitializeParams` blob, every response, every
+  semantic-token array) from being logged at INFO. Those payloads carry
+  document-derived content. (CORE-1979)
+- Removed the `DEBUG:`-prefixed instrumentation left in `on_initialize` by the
+  CORE-1754/CORE-1776 language-resolution work. What was worth keeping is now
+  `logger.debug`; the rest is gone, and the resolved languages are reported in
+  a single line after the slots settle. (CORE-1979)
+- Hover no longer logs the word under the cursor, or the rendered hover
+  content, at INFO. Both are text out of the user's file. (CORE-1979)
+
 ### Added
+
+- `logging_setup.LspLogHandler`, and `trace` support: the client's trace value
+  sets verbosity. It is read from `initializationOptions`, from the `trace`
+  field on the initialize request, or from a `$/setTrace` notification
+  mid-session. `messages` raises this package's own logging; only `verbose`
+  turns payload logging on. No text out of the open file is logged at `off`,
+  though an error can still name the document's path; at `messages` the
+  package's debug lines name the identifier under the cursor, the hover text
+  rendered for it, the path of each document opened, changed or closed, and
+  whatever the bundled Pyright backend writes to its own stderr. Anything
+  unrecognised is treated
+  as `off`, so a client's typo cannot silently enable it. (CORE-1979)
 
 - `file_language` and `working_language` configuration fields, read from
   `initializationOptions` as separate `fileLanguage` and `workingLanguage` slots

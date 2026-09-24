@@ -78,6 +78,32 @@ legesher-lsp
 legesher-lsp --help
 ```
 
+### Logging
+
+The server logs through the LSP's `window/logMessage` notification, so each
+line reaches your editor's output channel at the severity it was written at.
+stderr carries only what happens before a client connects, or what would
+otherwise be lost.
+
+Nothing verbose is logged by default, and no JSON-RPC payload is: those
+payloads carry text out of the file you are editing. Set the client's trace
+level to see more. In VS Code that is `legesher.trace.server`:
+
+- `off` (default): the server's own messages, warnings and errors. No text out
+  of your file is logged at this level, though an error can still name the
+  document's path and the position that failed.
+- `messages`: adds the server's debug detail, and some of that detail is read
+  out of your file, including the identifier under the cursor, the hover text
+  rendered for it, the source line of a syntax error, the path of every
+  document you open, change or close, and whatever the bundled Pyright backend
+  writes to its own stderr.
+- `verbose`: adds full LSP payloads on top, so whole documents and every
+  request and response body go into the log as well.
+
+`LEGESHER_LOG_LEVEL=DEBUG` raises verbosity from the first line, before a
+client has connected to ask for it. It reaches the same debug lines `messages`
+does, so it carries the same caveat.
+
 ## Architecture
 
 ```text
