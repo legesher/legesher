@@ -457,33 +457,41 @@ class TestEndToEndTranslation:
         assert arabic_keywords["True"] in translated
         assert "greet" in translated  # Identifier preserved
 
-    @pytest.mark.skip(reason="Hindi language pack not yet implemented")
-    def test_english_to_hindi_directory_translation(self, tmp_path: Path):
+    def test_english_to_hindi_directory_translation(
+        self, tmp_path: Path, hindi_keywords, hindi_builtins
+    ):
         """Test directory translation with Hindi language pack."""
         # Create source directory structure
         src_dir = tmp_path / "src"
         src_dir.mkdir()
 
         # Create multiple Python files
-        (src_dir / "main.py").write_text("""def main(, encoding="utf-8"):
+        (src_dir / "main.py").write_text(
+            """def main():
     print("Starting application")
     return 0
-""")
+""",
+            encoding="utf-8",
+        )
 
-        (src_dir / "utils.py").write_text("""def add(a, b, encoding="utf-8"):
+        (src_dir / "utils.py").write_text(
+            """def add(a, b):
     return a + b
 
 def multiply(a, b):
     return a * b
-""")
+""",
+            encoding="utf-8",
+        )
 
         subdir = src_dir / "helpers"
         subdir.mkdir()
-        (
-            subdir / "formatter.py"
-        ).write_text("""def format_output(value, encoding="utf-8"):
+        (subdir / "formatter.py").write_text(
+            """def format_output(value):
     return f"Result: {value}"
-""")
+""",
+            encoding="utf-8",
+        )
 
         # Translate directory
         output_dir = tmp_path / "hindi_src"
@@ -511,11 +519,11 @@ def multiply(a, b):
         assert (output_dir / "utils.py").exists()
         assert (output_dir / "helpers" / "formatter.py").exists()
 
-        # Verify Hindi keywords in translated files
+        # Verify Hindi keywords in translated files using real pack translations
         main_content = (output_dir / "main.py").read_text(encoding="utf-8")
-        assert "परिभाषित" in main_content  # def in Hindi
-        assert "छापना" in main_content  # print in Hindi
-        assert "लौटाना" in main_content  # return in Hindi
+        assert hindi_keywords["def"] in main_content
+        assert hindi_builtins["print"] in main_content
+        assert hindi_keywords["return"] in main_content
 
 
 @pytest.mark.integration
@@ -1130,8 +1138,9 @@ class Numbers:
             f"Expected multiple Arabic keywords, found {found_count}"
         )
 
-    @pytest.mark.skip(reason="Hindi language pack not yet implemented")
-    def test_all_hindi_keywords_work(self, tmp_path: Path):
+    def test_all_hindi_keywords_work(
+        self, tmp_path: Path, hindi_keywords, hindi_builtins
+    ):
         """Test all Hindi keywords from language pack translate correctly."""
         code = """def greet(name):
     print(f"Hello, {name}")
@@ -1168,11 +1177,16 @@ class Person:
 
         assert result.exit_code == 0
 
-        # Verify Hindi keywords present
+        # Verify Hindi keywords present using real pack translations
         translated = output_file.read_text(encoding="utf-8")
-        hindi_keywords = ["परिभाषित", "छापना", "लौटाना", "वर्ग"]
+        expected_keywords = [
+            hindi_keywords["def"],
+            hindi_builtins["print"],
+            hindi_keywords["return"],
+            hindi_keywords["class"],
+        ]
 
-        found_count = sum(1 for kw in hindi_keywords if kw in translated)
+        found_count = sum(1 for kw in expected_keywords if kw in translated)
         assert found_count >= 2, (
             f"Expected multiple Hindi keywords, found {found_count}"
         )

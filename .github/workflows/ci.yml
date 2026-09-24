@@ -233,8 +233,16 @@ jobs:
         if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         run: uv run pytest libs/mcp/tests/ -v --cov=legesher_mcp --cov-report=xml:coverage-mcp.xml
 
+      # Never ran here before CORE-2129: `make test` had a test-runtime
+      # target, this workflow did not. The suite builds its own message
+      # catalog (libs/runtime/tests/conftest.py), so it does not depend on
+      # the gitignored translations database a runner never has.
+      - name: Run runtime tests
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        run: uv run pytest libs/runtime/tests/ -v --cov=legesher_runtime --cov-report=xml:coverage-runtime.xml
+
       # Deliberately NOT given `!cancelled()` (CORE-1921). Every suite above
-      # now runs regardless, so all five XMLs exist even on a red job — but
+      # now runs regardless, so all six XMLs exist even on a red job — but
       # coverage from a run whose assertions failed is lines executed, not
       # behaviour verified, and publishing it as the project number would
       # overstate what is actually covered. Fix the build, then measure.
@@ -243,5 +251,5 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage-core.xml,coverage-i18n.xml,coverage-legesher.xml,coverage-ls.xml,coverage-mcp.xml
+          files: coverage-core.xml,coverage-i18n.xml,coverage-legesher.xml,coverage-ls.xml,coverage-mcp.xml,coverage-runtime.xml
           fail_ci_if_error: false

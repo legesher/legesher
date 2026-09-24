@@ -80,6 +80,8 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "-v",
+    # Benchmarks run once as plain tests here; `make bench` turns timing on.
+    "--benchmark-disable",
 ]
 markers = [
     "unit: Unit tests",

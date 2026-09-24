@@ -61,6 +61,7 @@ dev = [
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.23.0",
     "pytest-benchmark>=4.0.0",
+    "hypothesis>=6.168.0",
     "ruff>=0.1.0",
     "mypy>=1.8.0",
 ]
@@ -74,6 +75,8 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "-v",
+    # Benchmarks run once as plain tests here; `make bench` turns timing on.
+    "--benchmark-disable",
 ]
 markers = [
     "unit: Unit tests",

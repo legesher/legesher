@@ -48,3 +48,21 @@ def arabic_keywords(arabic_pack):
 def arabic_builtins(arabic_pack):
     """Arabic builtin translations from real language pack."""
     return arabic_pack.builtins
+
+
+@pytest.fixture(scope="session")
+def hindi_pack(language_pack_loader):
+    """Load the Hindi language pack for Python 3.10 (base)."""
+    return language_pack_loader.load("hi", target="python", version="3.10")
+
+
+@pytest.fixture(scope="session")
+def hindi_keywords(hindi_pack):
+    """Hindi keyword translations from real language pack."""
+    return hindi_pack.keywords
+
+
+@pytest.fixture(scope="session")
+def hindi_builtins(hindi_pack):
+    """Hindi builtin translations from real language pack."""
+    return hindi_pack.builtins

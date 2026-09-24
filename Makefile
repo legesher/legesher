@@ -2,7 +2,7 @@
 # ===========================
 # Common commands for development, testing, and code generation.
 
-.PHONY: help install generate generate-languages generate-docs check-generated check-generated-languages check-generated-docs test test-all test-i18n test-core test-legesher test-language-server test-mcp test-mcp-scheduled lint format typecheck clean vscode-compile vscode-package
+.PHONY: help install generate generate-languages generate-docs check-generated check-generated-languages check-generated-docs test test-all test-i18n test-core test-legesher test-language-server test-mcp test-mcp-scheduled test-runtime bench lint format typecheck clean vscode-compile vscode-package
 
 # Default target
 help:
@@ -26,6 +26,8 @@ help:
 	@echo "  make test-language-server Run language-server tests"
 	@echo "  make test-mcp             Run MCP server tests"
 	@echo "  make test-mcp-scheduled   Run release-tier MCP suites (all packs, wheel spawn)"
+	@echo "  make test-runtime         Run runtime package tests"
+	@echo "  make bench                Run the pytest-benchmark suites with timing on"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make lint                 Run linters (ruff)"
@@ -103,8 +105,9 @@ test-mcp:
 
 # Release-tier MCP suites: the all-packs round-trip sweep (CORE-1745) and the
 # clean-environment wheel spawn test (CORE-1746). Excluded from `test-mcp`
-# because they build wheels and sweep every pack. Run this green before
-# publishing legesher-mcp — no workflow enforces it yet (see CORE-626).
+# because they build wheels and sweep every pack. release-mcp.yml runs them
+# as the release gate (CORE-626); this target is the local equivalent, so run
+# it green before cutting a legesher-mcp release.
 test-mcp-scheduled:
 	@echo "Running scheduled (release-tier) MCP suites..."
 	cd libs/mcp && uv run pytest tests/ -v -m scheduled
@@ -116,7 +119,19 @@ test-runtime:
 # Test with coverage
 test-coverage:
 	@echo "Running tests with coverage..."
-	uv run pytest libs/ --cov --cov-report=term-missing --cov-report=html
+	uv run pytest libs/ --benchmark-disable --cov --cov-report=term-missing --cov-report=html
+
+# Benchmarks are opt-in (CORE-2129). `--benchmark-disable` in the core and
+# legesher pytest addopts runs each benchmark once as a plain test, so the
+# per-commit suites stay fast and assert behaviour rather than timing. This
+# target turns the timing back on, runs only the benchmarks, and autosaves
+# the results under .benchmarks/ (gitignored) for `pytest-benchmark compare`.
+# One invocation per package: both suites live in a `tests` package, and a
+# single pytest run would import the second `tests.benchmarks` as the first.
+bench:
+	@echo "Running benchmarks (timing on, autosave to .benchmarks/)..."
+	cd libs/core && uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-autosave
+	cd libs/legesher && uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-autosave
 
 # ============================================================================
 # Code Quality

@@ -3,6 +3,9 @@ source =
     legesher_core
     legesher_i18n
     legesher
+    legesher_language_server
+    legesher_mcp
+    legesher_runtime
 branch = true
 omit =
     */tests/*
