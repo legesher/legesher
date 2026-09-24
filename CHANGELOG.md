@@ -39,6 +39,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: the translations schema v2 has a generated reference,
+  `libs/i18n/docs/schema-v2-reference.md`, covering every table, column,
+  index, trigger and view. Structure is parsed from `schema_v2.sql` and the
+  descriptions live in `schema_v2.descriptions.yml`; the generator refuses
+  when the two disagree, and `make check-generated` now also fails when the
+  page is stale. Regenerate with `make generate-schema-reference`. [CORE-2232]
 - **legesher-vscode**: a translated file no longer opens covered in Unicode
   warnings. VS Code's ambiguous-character check reports Arabic Alef (U+0627)
   as a likely impersonation of Latin `l`, Cyrillic small a (U+0430) of `a`

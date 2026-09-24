@@ -7,12 +7,12 @@ absent from the operational v1 ``translations.db``. This migration creates the
 three tables (with their indexes and append-only triggers) in an existing
 database, so the messages track can go live ahead of the v2 cutover.
 
-Safety posture, in the order the schema comments establish it:
+Safety posture, in the order the schema reference establishes it:
 
 - The messages partition is explicitly EXCLUDED from the HF corpus one-way
   door: nothing here is publish-frozen. Publishing message translations stays
-  gated on ``message_translations`` gaining content-addressed keys (see the
-  ``message_endorsements`` comment in ``schema_v2.sql``).
+  gated on ``message_translations`` gaining content-addressed keys (see
+  ``message_endorsements`` in ``docs/schema-v2-reference.md``).
 - The DDL is never re-declared here: :func:`messages_partition_ddl` reads it
   back from ``schema_v2.sql`` via a throwaway in-memory build, so this script
   cannot drift from the schema.

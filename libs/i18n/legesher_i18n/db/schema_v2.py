@@ -23,8 +23,10 @@ Three layers live in the schema, and the boundary is load-bearing:
     ``canon_selections``. A loaded projection of ``libs/i18n/canon/<locale>.toml``;
     the text files are the source of truth and the DB table is rebuilt from them.
 
-The DDL in ``schema_v2.sql`` carries the per-table commentary; read it
-alongside this module for the constraints and triggers each layer relies on.
+``schema_v2.sql`` carries structure only. What each table, column, trigger and
+view is for lives in ``schema_v2.descriptions.yml``, and both are rendered into
+``libs/i18n/docs/schema-v2-reference.md`` (CORE-2232); read that alongside this
+module for the constraints and triggers each layer relies on.
 """
 
 from __future__ import annotations
@@ -95,7 +97,8 @@ _SEP = "\x1f"
 
 #: ``option_validations.validator_version`` values that mean "nobody actually
 #: ran a validator here". The canon trigger rejects them: a seeded row must
-#: never be mistaken for a validated one (see ``schema_v2.sql``).
+#: never be mistaken for a validated one (see ``option_validations`` in
+#: ``docs/schema-v2-reference.md``).
 SEEDED_VALIDATOR_VERSION = "migration-seed"
 
 #: Hex characters kept from the contributor-token digest. 16 hex = 64 bits: the

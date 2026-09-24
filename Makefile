@@ -2,7 +2,7 @@
 # ===========================
 # Common commands for development, testing, and code generation.
 
-.PHONY: help install generate generate-languages generate-docs check-generated check-generated-languages check-generated-docs test test-all test-i18n test-core test-legesher test-language-server test-mcp test-mcp-scheduled test-runtime bench lint format typecheck clean vscode-compile vscode-package
+.PHONY: help install generate generate-languages generate-docs generate-schema-reference check-generated check-generated-languages check-generated-docs check-generated-schema-reference test test-all test-i18n test-core test-legesher test-language-server test-mcp test-mcp-scheduled test-runtime bench lint format typecheck clean vscode-compile vscode-package
 
 # Default target
 help:
@@ -16,6 +16,7 @@ help:
 	@echo "  make generate             Generate all derived files"
 	@echo "  make generate-languages   Generate TypeScript from languages.json"
 	@echo "  make generate-docs        Generate docs snippet/highlight artifacts (docs/generated)"
+	@echo "  make generate-schema-reference  Generate the i18n schema v2 reference from the SQL"
 	@echo "  make check-generated      Verify generated files match source (for CI)"
 	@echo ""
 	@echo "Testing:"
@@ -53,7 +54,7 @@ install:
 # ============================================================================
 
 # Generate all derived files from source of truth
-generate: generate-languages generate-docs
+generate: generate-languages generate-docs generate-schema-reference
 	@echo "All code generation complete!"
 
 # Generate TypeScript language definitions from languages.json
@@ -70,6 +71,16 @@ generate-languages:
 generate-docs:
 	@echo "Generating docs snippet artifacts..."
 	uv run python docs/scripts/generate_snippets.py --snippets docs/snippets --out docs/generated
+	@echo "Done!"
+
+# Generate the translations schema v2 reference (CORE-2232)
+# Source: libs/i18n/legesher_i18n/db/schema_v2.sql (structure, parsed as text)
+#       + libs/i18n/legesher_i18n/db/schema_v2.descriptions.yml (prose)
+# Output: libs/i18n/docs/schema-v2-reference.md (no translations.db needed)
+# Refuses, naming the offender, when the SQL and the descriptions disagree.
+generate-schema-reference:
+	@echo "Generating the schema v2 reference..."
+	uv run python libs/i18n/scripts/generate_schema_reference.py
 	@echo "Done!"
 
 # ============================================================================
@@ -187,9 +198,10 @@ clean:
 
 # Verify generated files are up-to-date (for CI)
 # This regenerates from source and compares to committed version.
-# Two halves: the language-registry artifacts (needs the local
-# translations.db) and the docs/generated artifacts (DB-free).
-check-generated: check-generated-languages check-generated-docs
+# Three parts: the language-registry artifacts (needs the local
+# translations.db), the docs/generated artifacts (DB-free), and the schema
+# v2 reference (DB-free).
+check-generated: check-generated-languages check-generated-docs check-generated-schema-reference
 
 # The control-plane DB is git-ignored (maintainer checkouts only), and the
 # generator refuses to run without it (CORE-1887) — so in a DB-less clone
@@ -243,5 +255,35 @@ check-generated-docs:
 		echo ""; \
 		echo "Run 'make generate-docs' and commit the changes."; \
 		rm -rf "$$tmp"; \
+		exit 1; \
+	fi
+
+# Drift gate for the schema v2 reference (CORE-2232): the last hand-written
+# schema reference rotted because nothing failed when schema_v2.sql moved and
+# the prose did not. Regenerates into a temp dir and diffs, read-only on the
+# tree and DB-free (the SQL is parsed as text), so it runs in a fresh clone.
+# A regeneration failure is the other half of the gate: the generator refuses
+# when the SQL and its descriptions disagree, and names the offender. The
+# EXIT trap removes the temp dir on every path, including an interrupt.
+SCHEMA_REFERENCE := libs/i18n/docs/schema-v2-reference.md
+
+check-generated-schema-reference:
+	@echo "Checking if $(SCHEMA_REFERENCE) is up-to-date..."
+	@tmp=$$(mktemp -d); \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	if ! uv run python libs/i18n/scripts/generate_schema_reference.py --out "$$tmp" > "$$tmp/regen.log" 2>&1; then \
+		echo "ERROR: schema reference regeneration failed:"; \
+		cat "$$tmp/regen.log"; \
+		exit 1; \
+	fi; \
+	if diff -q "$$tmp/schema-v2-reference.md" $(SCHEMA_REFERENCE) > /dev/null 2>&1; then \
+		echo "$(SCHEMA_REFERENCE) is up-to-date!"; \
+	else \
+		echo "ERROR: $(SCHEMA_REFERENCE) is out of date!"; \
+		echo "  Source: libs/i18n/legesher_i18n/db/schema_v2.sql + schema_v2.descriptions.yml"; \
+		echo "  Generated: $(SCHEMA_REFERENCE)"; \
+		diff -u $(SCHEMA_REFERENCE) "$$tmp/schema-v2-reference.md" || true; \
+		echo ""; \
+		echo "Run 'make generate-schema-reference' and commit the changes."; \
 		exit 1; \
 	fi

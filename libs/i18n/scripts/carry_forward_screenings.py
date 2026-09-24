@@ -805,8 +805,8 @@ def carry_forward(
             "are canon-selected in the target — replaying them would trip "
             "trg_screenings_no_quarantine_while_canon. Pull them from the "
             "canon and reload first, so the demotion is a reviewed change "
-            "(see the trigger's doctrine in schema_v2.sql). Conflicted: "
-            + ", ".join(conflicted)
+            "(see the trigger in libs/i18n/docs/schema-v2-reference.md). "
+            "Conflicted: " + ", ".join(conflicted)
         )
 
     result = {

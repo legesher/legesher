@@ -124,8 +124,8 @@ BCP47_FALLBACK: dict[str, str] = {
 #:
 #: The v2 vocabulary is cut on ONE question -- **what do we owe for this row?**
 #: -- because `source` is the only provenance column the corpus publishes
-#: (`source_detail` is private). See the `option_provenance` comment block in
-#: schema_v2.sql for the full rationale, and CORE-1720 for why the previous
+#: (`source_detail` is private). See `option_provenance` in
+#: docs/schema-v2-reference.md for the full rationale, and CORE-1720 for why the previous
 #: pipeline-origin cut had to go: it hid two other projects' work inside a
 #: 13,650-row `import` bucket, and nothing in the *published* vocabulary said
 #: "someone else's licence applies here".

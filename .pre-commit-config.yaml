@@ -177,6 +177,16 @@ repos:
     name: Regenerate Reference Documentation
     pass_filenames: false
 
+  # Regenerate the schema v2 reference when the schema, its descriptions or
+  # the generator change (CORE-2232). Fails, naming the offender, when the
+  # SQL and the descriptions disagree.
+  - entry: uv run python libs/i18n/scripts/generate_schema_reference.py
+    files: ^libs/i18n/(legesher_i18n/db/schema_v2\.(sql|descriptions\.yml)|legesher_i18n/db/schema\.py|scripts/generate_schema_reference\.py|docs/schema-v2-reference\.md)$
+    id: regenerate-schema-reference
+    language: system
+    name: Regenerate Schema v2 Reference
+    pass_filenames: false
+
   # Keep pack README count lines in step with pack contents (CORE-1014) —
   # same trigger as REFERENCE regeneration; the script is idempotent.
   - entry: uv run python scripts/update_pack_readme_counts.py

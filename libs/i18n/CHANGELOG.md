@@ -11,6 +11,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **The translations schema v2 has a reference again, and it cannot go
+  stale.** `docs/schema-v2-reference.md` describes every table, column,
+  index, trigger and view in `schema_v2.sql`. It is generated: the structure
+  is parsed from the SQL (and checked against SQLite's own reading of it),
+  and every description comes from the new `schema_v2.descriptions.yml`.
+  The generator refuses, naming the offender, when the two disagree: a table,
+  column, view, trigger or enumerated value with no description, a
+  description of something the SQL no longer has, or prose comments in the
+  SQL. `make generate-schema-reference` regenerates the page, a pre-commit
+  hook runs it when the schema changes, and `make check-generated` fails
+  when the committed page is stale, without needing a database. The page
+  covers v2 only; the v1 pack database (`schema.py`) is out of its scope.
+  [CORE-2232]
+
 - **The intake gates now run the invisible-character net, and canon reads
   the verdict.** The pack layer has refused forbidden format and
   Default_Ignorable characters since CORE-1591; the contribution path now
@@ -201,6 +215,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   [CORE-1905]
 
 ### Changed
+
+- **`schema_v2.sql` is now structure only.** Its comments (794 in all: 719
+  on their own lines, 75 at the ends of code lines) moved into
+  `schema_v2.descriptions.yml`, leaving only a 12-line header and the section
+  banners, and the file shrank from 2001 to 1312 lines. The prose kept its wording apart from punctuation (dashes became
+  colons, commas and full stops) and a few deliberate rewrites: the header's
+  stale claim that v2 supersedes v1 is corrected, the `source` value table
+  became a described value list, and personal references were removed. The DDL is unchanged: every
+  object's comment-stripped definition is identical, and so is the
+  carry-forward screening fingerprint, so existing databases need nothing.
+  [CORE-2232]
 
 - **Full-code translation stopped leaking model calls.** The batch
   identifier path is restored end-to-end: context-carrying batches now go

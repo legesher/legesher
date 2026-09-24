@@ -11,6 +11,17 @@ This directory contains the foundation documents for creating high-quality Pytho
 
 ## Contents
 
+### [schema-v2-reference.md](./schema-v2-reference.md)
+
+Every table, column, index, trigger and view in the translations schema v2
+(`schema_v2.sql`), with what each is for. Generated: the structure is parsed
+from the SQL and the descriptions come from `schema_v2.descriptions.yml`, so
+edit those and run `make generate-schema-reference`. `make check-generated`
+fails when the page is stale or when the SQL and the descriptions disagree.
+Covers v2 only; the v1 pack database (`schema.py`) is not described there.
+
+**Use this for:** Looking up what a v2 table or column means before querying or changing it (CORE-2232)
+
 ### [corpus-publish-runbook.md](./corpus-publish-runbook.md)
 
 The operator sequence from the working database to the published corpus dataset:
