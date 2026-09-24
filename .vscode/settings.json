@@ -1,0 +1,112 @@
+{
+  // Unicode highlighting, narrowed to the scripts this repository is written in.
+  //
+  // VS Code flags characters that could be confused with an ASCII character:
+  // the Trojan Source defence (CVE-2021-42574). Its table includes the letters
+  // Legesher's language packs are made of, so opening a non-Latin pack or a
+  // translated sample paints warning boxes over most of the content. Arabic
+  // Alef (U+0627) is reported as an impersonation of Latin "l", Cyrillic small
+  // a (U+0430) of "a", Turkish dotless i (U+0131) of "i".
+  //
+  // The check is not wrong; its default is wrong for a repository whose subject
+  // matter is non-English source code. The list below is the exact set of
+  // characters this repository's 51 language packs use that VS Code would
+  // otherwise flag. It is derived from the packs, not hand-picked, and written
+  // as \u escapes so the file reads left to right in review.
+  //
+  // editor.unicodeHighlight.allowedLocales is not usable here. VS Code's locale
+  // table holds only its own display languages plus a pseudo-locale (cs, de,
+  // es, fr, it, ja, ko, pl, pt-BR, qps-ploc, ru, tr, zh-hans, zh-hant), so
+  // {"ar": true} is silently discarded, and the per-locale maps cannot reach
+  // the _common entries that hold Arabic Alef in any case.
+  // libs/vs-code/src/unicodeHighlight.ts carries the evidence. [CORE-1978]
+  //
+  // What stays on, deliberately:
+  //   - editor.unicodeHighlight.invisibleCharacters (not set here, default
+  //     true): zero-width and bidi-control detection, the half of the Trojan
+  //     Source defence that hides code rather than renaming it.
+  //   - editor.unicodeHighlight.ambiguousCharacters (not set here, default
+  //     true): every confusable other than the ones listed below. A Cyrillic
+  //     small a smuggled into an Arabic file is still flagged.
+  //   - The git clean filter, on commit: unicode_guard.scan_text rejects bidi
+  //     controls, category-Cf and Default_Ignorable invisibles, tatweel and a
+  //     BOM, and unicode_guard.scan_identifier requires every identifier
+  //     character to belong to a script a shipped pack uses.
+  //
+  // What does NOT stay on, stated plainly: nothing at the Legesher layer is a
+  // confusable check. unicode_guard has no homoglyph table, and the mixed-script
+  // check in libs/core/legesher_core/tree_sitter/identifier_validator.py is
+  // reachable only through validate()/script_report(), which the language server
+  // does not call. For the characters listed below, this file is the only thing
+  // standing between them and a confusable warning, and that is deliberate:
+  // they are the letters this repository's own packs are written in.
+  "editor.unicodeHighlight.allowedCharacters": {
+    // Latin (tr)
+    "\u0131": true,  // U+0131 LATIN SMALL LETTER DOTLESS I
+    // Greek (el)
+    "\u0391": true,  // U+0391 GREEK CAPITAL LETTER ALPHA
+    "\u0395": true,  // U+0395 GREEK CAPITAL LETTER EPSILON
+    "\u039a": true,  // U+039A GREEK CAPITAL LETTER KAPPA
+    "\u03a5": true,  // U+03A5 GREEK CAPITAL LETTER UPSILON
+    "\u03a7": true,  // U+03A7 GREEK CAPITAL LETTER CHI
+    "\u03b1": true,  // U+03B1 GREEK SMALL LETTER ALPHA
+    "\u03b3": true,  // U+03B3 GREEK SMALL LETTER GAMMA
+    "\u03b9": true,  // U+03B9 GREEK SMALL LETTER IOTA
+    "\u03bd": true,  // U+03BD GREEK SMALL LETTER NU
+    "\u03bf": true,  // U+03BF GREEK SMALL LETTER OMICRON
+    "\u03c1": true,  // U+03C1 GREEK SMALL LETTER RHO
+    "\u03c3": true,  // U+03C3 GREEK SMALL LETTER SIGMA
+    "\u03c5": true,  // U+03C5 GREEK SMALL LETTER UPSILON
+    // Cyrillic (mk, mn, ru, sr)
+    "\u0408": true,  // U+0408 CYRILLIC CAPITAL LETTER JE
+    "\u0410": true,  // U+0410 CYRILLIC CAPITAL LETTER A
+    "\u0412": true,  // U+0412 CYRILLIC CAPITAL LETTER VE
+    "\u0417": true,  // U+0417 CYRILLIC CAPITAL LETTER ZE
+    "\u041a": true,  // U+041A CYRILLIC CAPITAL LETTER KA
+    "\u041c": true,  // U+041C CYRILLIC CAPITAL LETTER EM
+    "\u041d": true,  // U+041D CYRILLIC CAPITAL LETTER EN
+    "\u041e": true,  // U+041E CYRILLIC CAPITAL LETTER O
+    "\u0420": true,  // U+0420 CYRILLIC CAPITAL LETTER ER
+    "\u0421": true,  // U+0421 CYRILLIC CAPITAL LETTER ES
+    "\u0422": true,  // U+0422 CYRILLIC CAPITAL LETTER TE
+    "\u0423": true,  // U+0423 CYRILLIC CAPITAL LETTER U
+    "\u0425": true,  // U+0425 CYRILLIC CAPITAL LETTER HA
+    "\u0430": true,  // U+0430 CYRILLIC SMALL LETTER A
+    "\u0431": true,  // U+0431 CYRILLIC SMALL LETTER BE
+    "\u0433": true,  // U+0433 CYRILLIC SMALL LETTER GHE
+    "\u0435": true,  // U+0435 CYRILLIC SMALL LETTER IE
+    "\u043e": true,  // U+043E CYRILLIC SMALL LETTER O
+    "\u0440": true,  // U+0440 CYRILLIC SMALL LETTER ER
+    "\u0441": true,  // U+0441 CYRILLIC SMALL LETTER ES
+    "\u0443": true,  // U+0443 CYRILLIC SMALL LETTER U
+    "\u0445": true,  // U+0445 CYRILLIC SMALL LETTER HA
+    "\u0458": true,  // U+0458 CYRILLIC SMALL LETTER JE
+    "\u04ae": true,  // U+04AE CYRILLIC CAPITAL LETTER STRAIGHT U
+    "\u04af": true,  // U+04AF CYRILLIC SMALL LETTER STRAIGHT U
+    // Hebrew (he)
+    "\u05d5": true,  // U+05D5 HEBREW LETTER VAV
+    "\u05d8": true,  // U+05D8 HEBREW LETTER TET
+    "\u05d9": true,  // U+05D9 HEBREW LETTER YOD
+    "\u05df": true,  // U+05DF HEBREW LETTER FINAL NUN
+    "\u05e1": true,  // U+05E1 HEBREW LETTER SAMEKH
+    // Arabic (ar, fa, ur)
+    "\u0627": true,  // U+0627 ARABIC LETTER ALEF
+    "\u0647": true,  // U+0647 ARABIC LETTER HEH
+    "\u06be": true,  // U+06BE ARABIC LETTER HEH DOACHASHMEE
+    "\u06c1": true,  // U+06C1 ARABIC LETTER HEH GOAL
+    // Telugu (te)
+    "\u0c02": true,  // U+0C02 TELUGU SIGN ANUSVARA
+    // Kannada (kn)
+    "\u0c82": true,  // U+0C82 KANNADA SIGN ANUSVARA
+    // Malayalam (ml)
+    "\u0d02": true,  // U+0D02 MALAYALAM SIGN ANUSVARA
+    // Sinhala (si)
+    "\u0d82": true,  // U+0D82 SINHALA SIGN ANUSVARAYA
+    // Myanmar (my)
+    "\u101d": true,  // U+101D MYANMAR LETTER WA
+    // Ethiopic (am)
+    "\u1200": true,  // U+1200 ETHIOPIC SYLLABLE HA
+    // Katakana (ja)
+    "\u30ce": true  // U+30CE KATAKANA LETTER NO
+  }
+}

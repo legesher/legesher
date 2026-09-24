@@ -11,6 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Unicode highlighting**: a translated file no longer opens covered in warnings. VS Code's
+  ambiguous-character check reports Arabic Alef (U+0627) as a likely impersonation of Latin `l`,
+  Cyrillic small a (U+0430) of `a` and Turkish dotless i (U+0131) of `i`, so it fired on nearly every
+  identifier in a Legesher file. When such a file is on screen the extension now offers, once, to add
+  `editor.unicodeHighlight.allowedCharacters` to **that workspace's** settings — carrying only the
+  characters that file's own language pack uses that VS Code would otherwise flag, which is two for
+  Arabic, one for Amharic, twelve for Russian. `Don't Ask Again` suppresses the offer everywhere,
+  `Not Now` defers it to the next session. Nothing is read from or written to your own settings and
+  no `configurationDefaults` ship, so the check is untouched on every other repository you open:
+  invisible- and bidi-character detection stays on and every *other* script's confusables stay
+  flagged. The offer is gated on workspace trust — VS Code registers the setting `restricted: true`,
+  so an untrusted repository's allowance is ignored outright, and Legesher neither prompts nor
+  writes in one. Legesher's own guards are narrower than the check being relaxed and do not replace
+  it: the git clean filter rejects bidi controls, `Cf` and `Default_Ignorable` invisibles, tatweel
+  and unsupported-script identifier characters on commit, but nothing at the Legesher layer looks
+  for confusables — see the README's "What does not" section.
+  `editor.unicodeHighlight.allowedLocales`, the setting this looks like it should use, cannot do the
+  job: VS Code's locale table holds only its own display languages, so `{"ar": true}` is discarded
+  silently, and its per-locale maps cannot reach the shared table that holds Arabic Alef in any case
+  (CORE-1978)
 - **Language profile**: the language roles are named — canonical / file / working / known — so one
   setting no longer has to mean both the language a file is written in and the language you want to
   read it in. `legesher.workingLanguage` is the language you read and write in;

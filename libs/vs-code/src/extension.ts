@@ -36,6 +36,10 @@ import { OnboardingManager } from './onboarding';
 import { loadAllTranslations } from './languagePackLoader';
 import { buildVocabularies, detectLanguage, PackVocabulary } from './languageDetection';
 import { DetectionCache } from './detectionCache';
+import {
+    forgetUnicodeHighlightPresence,
+    maybeOfferUnicodeHighlightAllowance,
+} from './unicodeHighlightOffer';
 
 let client: LanguageClient | undefined;
 let statusBarItem: vscode.StatusBarItem;
@@ -315,6 +319,25 @@ async function syncActiveLanguage(
         source: resolved.source,
     });
     updateLanguageStatusBar(resolved);
+
+    // Offer to stop VS Code flagging this file's own script as confusable
+    // (CORE-1978). Deliberately not awaited: the prompt sits on screen until a
+    // human answers, and this function is awaited by activation and by the
+    // configuration listener — holding either open behind a notification would
+    // stall the very language change the prompt is about.
+    //
+    // The source travels with the language because the prompt has to say where
+    // the language came from: a reader's own setting and a project's own
+    // declaration are different claims, and the offer relaxes a security
+    // default in the project either way.
+    if (pythonDocument) {
+        void maybeOfferUnicodeHighlightAllowance(
+            context,
+            pythonDocument,
+            resolved.language,
+            resolved.source
+        );
+    }
 }
 
 /**
@@ -543,13 +566,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<Legesh
         })
     );
 
-    // Forget a closed document's detection result. Version numbers restart at 1
+    // Forget a closed document's memoized results. Version numbers restart at 1
     // when a document is reopened, so a surviving entry could be matched by a
     // revision it was never computed from — a file edited on disk while closed
-    // would resolve to the language its *previous* contents implied.
+    // would resolve to the language its *previous* contents implied. The same
+    // hazard applies to the Unicode-highlight presence memo, which is keyed the
+    // same way (CORE-1978).
     context.subscriptions.push(
         vscode.workspace.onDidCloseTextDocument(document => {
             detectionCache.forget(document.uri.toString());
+            forgetUnicodeHighlightPresence(document.uri.toString());
         })
     );
 

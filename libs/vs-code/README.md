@@ -131,6 +131,83 @@ vi (Vietnamese)  zh (Chinese)
 └──────────────────────────────┘
 ```
 
+## Unicode Highlighting
+
+VS Code marks characters that could be confused with an ASCII character. It is a
+defence against Trojan Source (CVE-2021-42574), and on an ASCII codebase it is a
+good one. On a Legesher file it fires on almost every identifier: Arabic Alef
+(U+0627) is reported as a likely impersonation of Latin `l`, Cyrillic small a
+(U+0430) of `a`, Turkish dotless i (U+0131) of `i`.
+
+When you open a translated file in a script that this happens to, Legesher offers
+once to fix it. Accepting writes `editor.unicodeHighlight.allowedCharacters` into
+**this workspace's** settings, listing only the characters the language pack for
+that file uses that VS Code would otherwise flag. That is typically a handful
+(two for Arabic, one for Amharic, twelve for Russian). `Don't Ask Again` suppresses
+the offer everywhere; `Not Now` defers it to your next session.
+
+The extension never changes this setting globally and ships no
+`configurationDefaults`, so the check keeps working exactly as before on every
+other repository you open. Only the derived characters are written: VS Code
+merges object-valued settings across scopes, so characters you have allowed for
+yourself keep working here without being copied into a file your teammates pull.
+
+### Workspace trust is the outer gate
+
+`editor.unicodeHighlight.allowedCharacters` is registered by VS Code with
+`restricted: true`. A workspace value for it is **ignored** until you grant the
+workspace trust, so a repository you have not trusted cannot use this setting to
+switch off its own confusable warnings, whether it ships the setting itself or
+gets Legesher to write it. The offer is therefore gated on
+`workspace.isTrusted` as well: Legesher does not prompt, and does not write, in
+a repository you have declined to trust. This is the strongest protection in the
+design, and it is VS Code's, not ours.
+
+### What stays switched on
+
+Accepting the offer relaxes one specific check for a handful of characters. What
+still runs, and where:
+
+| Protection | Where it runs | What it covers |
+| --- | --- | --- |
+| `editor.unicodeHighlight.invisibleCharacters` | VS Code, never touched by this extension | Zero-width and bidi-control characters, in the editor |
+| `editor.unicodeHighlight.ambiguousCharacters` | VS Code, still on | Confusables from every *other* script: a Cyrillic small a in an Arabic file is still flagged |
+| `unicode_guard.scan_text` | Legesher git clean filter (`libs/core/legesher_core/git_filter.py`), on commit | Bidi reordering controls, category-`Cf` invisibles, the full `Default_Ignorable` set, Arabic tatweel, and a byte-order mark |
+| `unicode_guard.scan_identifier` | Same filter, on commit | Every identifier character must belong to a script some shipped language pack uses |
+| Store-NFC / compare-NFKC+fold identity | Legesher engine (`libs/core/legesher_core/text_identity.py`) | Canonically equivalent spellings hash and compare alike, in the pack and corpus pipeline |
+
+### What does not
+
+Be precise about the gap this opens, because the table above is easy to read as
+more than it is:
+
+- **Nothing at the Legesher layer replaces the confusable check for the
+  characters being allowed.** `unicode_guard` has no confusable or homoglyph
+  table at all; it is an invisible-character and script-membership guard. Once
+  Arabic Alef is allowed in a workspace, no Legesher check will tell you that an
+  identifier using it could be read as a Latin `l`.
+- **Mixed-script identifiers produce no editor diagnostic.**
+  `IdentifierValidator.is_mixed_script`
+  (`libs/core/legesher_core/tree_sitter/identifier_validator.py`) is a real
+  mixed-script check, but it is reachable only through that class's `validate()`
+  and `script_report()`, and the language server calls neither. No diagnostic
+  reaches a file you have open.
+- The clean-filter guards above run **on commit**, not as you type, so they
+  catch a bad character on the way into git rather than on screen.
+
+The characters being allowed are the ones the project's own packs are written
+in, and the allowance is per workspace, per character, and only after you grant
+trust. That is the trade, stated plainly rather than implied by a list of
+guards that cover something else.
+
+### Why not `allowedLocales`
+
+`editor.unicodeHighlight.allowedLocales` looks like the right instrument and is
+not: VS Code's locale table covers only its own display languages, so an entry
+like `{"ar": true}` is discarded silently, and its per-locale maps cannot reach
+the shared table that holds Arabic Alef. `libs/vs-code/src/unicodeHighlight.ts`
+records the evidence.
+
 ## Privacy
 
 - **Telemetry**: Usage data, off by default (opt-in). Events contain no code

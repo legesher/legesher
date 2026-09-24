@@ -20,7 +20,11 @@ repos:
     # the exclusion the only way to land one is `--no-verify`, which is how the
     # commented tsconfig already in the tree got there, and which skips every
     # other hook on the way past.
-    exclude: '(^|/)(ts|js)config[^/]*\.json$'
+    #
+    # `.vscode/*.json` is the same case: VS Code documents its settings, launch
+    # and tasks files as JSONC, and a settings file that cannot carry a comment
+    # cannot say why it is relaxing a security default (CORE-1978).
+    exclude: '(^|/)((ts|js)config[^/]*|\.vscode/[^/]+)\.json$'
   - id: check-added-large-files
     args: [--maxkb=1000]
   - id: check-merge-conflict

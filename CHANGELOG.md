@@ -30,6 +30,31 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **legesher-vscode**: a translated file no longer opens covered in Unicode
+  warnings. VS Code's ambiguous-character check reports Arabic Alef (U+0627)
+  as a likely impersonation of Latin `l`, Cyrillic small a (U+0430) of `a`
+  and Turkish dotless i (U+0131) of `i`, so it fired on nearly every
+  identifier in a Legesher file. When such a file is on screen the extension
+  now offers, once, to add `editor.unicodeHighlight.allowedCharacters` to
+  that workspace's settings, carrying only the characters that file's own
+  language pack uses that VS Code would otherwise flag: two for Arabic, one
+  for Amharic, twelve for Russian. Nothing is read from or written to the
+  user's own settings and no `configurationDefaults` ship, so the check is
+  untouched on every other repository. Invisible- and bidi-character
+  detection stays on and every other script's confusables stay flagged. The
+  offer is gated on workspace trust: VS Code registers the setting
+  `restricted: true`, so an untrusted repository's allowance is ignored
+  outright, and Legesher neither prompts nor writes in one. Legesher's own
+  guards are narrower than the check being relaxed and do not replace it: the
+  git clean filter rejects bidi controls, `Cf` and `Default_Ignorable`
+  invisibles, tatweel and unsupported-script identifier characters on commit,
+  but nothing at the Legesher layer looks for confusables.
+  `editor.unicodeHighlight.allowedLocales` cannot do this job: VS
+  Code's locale table holds only its own display languages, so `{"ar": true}`
+  is discarded silently, and its per-locale maps cannot reach the shared
+  table that holds Arabic Alef in any case. This repository's own
+  `.vscode/settings.json` now carries the same allowance, derived from all 51
+  packs, so the language-pack files read cleanly on checkout. [CORE-1978]
 - **i18n**: error-message renderings can now be generated, and every one
   carries provenance. Messages are sentences with grammar and `{slot}`
   placeholders, not identifiers, so the term-generation lane never applied
