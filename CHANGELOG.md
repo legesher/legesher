@@ -114,6 +114,35 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   quirk cannot emit broken code. The pack data itself still ships the
   lowercase values; correcting it rides the gated pack-correction path.
   [CORE-1570]
+- **legesher/runtime**: the import hook broke dotted stdlib imports —
+  `import http.client` raised `ModuleNotFoundError` whenever the hook was
+  installed. The finder claimed packages such as `http` with an empty
+  submodule search path, so no finder could locate their submodules, and it
+  resolved a dotted name by joining the full dotted path onto the parent
+  package's search entries, so submodules of translated packages were never
+  found either. Package specs now carry the package directory as their
+  submodule search path and submodule lookups resolve only the final name
+  component, so stdlib imports delegate to the normal import machinery and
+  translated submodules load through the hook. The hook also now actually
+  translates: its native-source detection probed an attribute the translator
+  never had, so every native-language module previously reached the Python
+  compiler untranslated and failed with `SyntaxError`. Detection is now
+  parse-first: source that already parses as valid Python imports as-is,
+  and only source that fails `ast.parse` (native keywords in keyword
+  position) is translated, so plain-English modules that merely share a
+  word with the pack's native vocabulary are left untouched. Source that
+  fails to parse can also be plain English with a genuine syntax error, and
+  translating it rewrites unrelated identifiers and usually plants an
+  earlier error, so a translation that does not itself parse is now
+  discarded: the compiler reports the user's own error on the user's own
+  line. A leading UTF-8 BOM is stripped once when the source is read, ahead
+  of both the parse probe and the translator, so a UTF-8-with-BOM native
+  module no longer keeps its first keyword untranslated and fails to
+  import. A native-language module that happens to parse as valid Python is
+  still imported untranslated, as before this fix; header-driven detection
+  (CORE-1539) is the durable answer. Modules loaded through the hook also
+  now get `__file__`: their specs never declared a location, so the import
+  system left it unset. [CORE-1209]
 - **cli**: `legesher init` no longer prints an unqualified "✅ Legesher setup
   complete!" when its git step failed. Git integration is deliberately
   soft-fail — outside a git repository, or when the filters cannot be

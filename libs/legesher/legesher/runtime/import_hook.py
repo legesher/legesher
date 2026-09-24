@@ -36,6 +36,7 @@ Example:
 """
 
 import os
+import ast
 import sys
 import logging
 import threading
@@ -193,13 +194,29 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         if not all(part.isidentifier() for part in fullname.split(".")):
             return None  # Invalid module name
 
+        # The normal import machinery always passes the parent package's
+        # __path__ for a submodule, so a dotted fullname with path=None
+        # never comes from it. Resolving the tail against all of sys.path
+        # here would claim an unrelated top-level module (e.g. a stray
+        # client.py as `http.client`), so decline instead.
+        if path is None and "." in fullname:
+            return None
+
         # Search for .py files in the import path
         if path is None:
             path = sys.path
 
+        # For a submodule import (dotted name), the import machinery hands us
+        # the parent package's __path__ entries, which already point INSIDE
+        # the parent package. Only the final name component is resolved
+        # against them — joining the full dotted path would look for
+        # e.g. <stdlib>/http/http/client.py and never match, so dotted
+        # imports either broke or silently bypassed translation.
+        tail = fullname.rpartition(".")[2]
+
         for search_path in path:
             search_path = Path(search_path)
-            module_path = search_path / fullname.replace(".", "/")
+            module_path = search_path / tail
 
             # Security: Ensure resolved path is within search_path (prevent path traversal)
             try:
@@ -231,12 +248,26 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         Returns:
             ModuleSpec configured with LegesherLoader
         """
-        return importlib.machinery.ModuleSpec(
+        spec = importlib.machinery.ModuleSpec(
             name=fullname,
             loader=LegesherLoader(fullname, str(origin), self),
             origin=str(origin),
             is_package=is_package,
         )
+        # A bare ModuleSpec defaults has_location to False, and the import
+        # system only sets __file__ (and __cached__) for specs that have a
+        # location, so every module this finder loaded had no __file__,
+        # breaking code that locates resources relative to its own file.
+        spec.has_location = True
+        if is_package:
+            # ModuleSpec(is_package=True) initializes submodule_search_locations
+            # to an EMPTY list, so submodules of any package this finder claims
+            # (including stdlib packages like `http`) became unimportable:
+            # every finder searched an empty path and raised ModuleNotFoundError.
+            # Point it at the package directory so submodule imports resolve
+            # through us or delegate to the normal import machinery.
+            spec.submodule_search_locations = [str(Path(origin).parent)]
+        return spec
 
     def invalidate_caches(self):
         """Clear the translation cache.
@@ -294,8 +325,17 @@ class LegesherLoader(importlib.abc.SourceLoader):
         if cached_result is not None:
             return cached_result
 
-        # Read native language source
+        # Read native language source. read_text(encoding="utf-8") keeps a
+        # leading BOM as U+FEFF, and UTF-8-with-BOM is a common editor default,
+        # so strip it once here, ahead of both the parse probe and the
+        # translator. Left in place it fuses onto the first token, so the
+        # translator does not recognise the module's opening keyword and leaves
+        # it native while translating the rest. The import machinery's own
+        # decode step (utf-8-sig) drops the BOM anyway, so removing it costs
+        # nothing for modules that pass through untranslated.
         native_source = file_path.read_text(encoding="utf-8")
+        if native_source.startswith("\ufeff"):
+            native_source = native_source[1:]
 
         # Detect if file needs translation
         if self._needs_translation(native_source):
@@ -305,13 +345,26 @@ class LegesherLoader(importlib.abc.SourceLoader):
                 native_source
             )
 
-            # Register source mapping for error reporting
-            source_mapper = get_source_mapper()
-            source_mapper.register_mapping(
-                filename=str(file_path),
-                native_source=native_source,
-                english_source=english_source,
-            )
+            # A failed probe only says the source is not valid Python: it is
+            # either native-language or genuinely broken English. Translating
+            # broken English rewrites unrelated identifiers and usually plants
+            # an EARLIER error, so the compiler would blame a line the user
+            # wrote correctly (under the es pack a valid `con = 5` becomes
+            # `with = 5`). If the translation does not parse either it was not
+            # helping, so discard it and hand back the original, letting the
+            # compiler report the user's own error on the user's own line.
+            try:
+                ast.parse(english_source)
+            except (SyntaxError, ValueError):
+                english_source = native_source
+            else:
+                # Register source mapping for error reporting
+                source_mapper = get_source_mapper()
+                source_mapper.register_mapping(
+                    filename=str(file_path),
+                    native_source=native_source,
+                    english_source=english_source,
+                )
         else:
             # Already English - pass through
             english_source = native_source
@@ -322,26 +375,39 @@ class LegesherLoader(importlib.abc.SourceLoader):
         return translated_bytes
 
     def _needs_translation(self, source):
-        """Detect if source contains native language keywords.
+        """Detect whether the source must be translated to run as Python.
+
+        Parse-first rule: source that already parses as valid Python is
+        imported as-is. Native-language modules use native keywords in
+        keyword position, which makes ``ast.parse`` fail, and that failure
+        is the translation signal. A word-scan heuristic is not safe
+        here: the finder claims every ``.py`` file on the search path, so
+        flagging any module that merely shares a word with the pack's
+        native vocabulary would corrupt plain-English modules (under the
+        es pack, ``con = ...`` would become a ``SyntaxError`` because
+        ``con`` renders ``with``, and an ``ErrorDeOS`` attribute would be
+        silently renamed to ``OSError``).
+
+        Accepted limitation: a native-language module that happens to
+        parse as valid Python (e.g. it uses only translated builtins and
+        no native keywords) is not translated. That matches the pre-fix
+        behavior, where detection was permanently False: the old body
+        guarded on a translator attribute that never existed, so the
+        word-scan branch it guarded never ran. The durable fix is
+        header-driven language detection.
 
         Args:
-            source: Source code string
+            source: Source code string, decoded and BOM-stripped by get_data
 
         Returns:
             True if translation needed, False otherwise
         """
-        # Check for translated keywords (simple heuristic)
-        # Get all translated keywords from the language pack
-        translator = self.finder.translator
-        if hasattr(translator, "translation_pack"):
-            translated_keywords = []
-            for version_data in translator.translation_pack.versions.values():
-                if hasattr(version_data, "keywords"):
-                    translated_keywords.extend(version_data.keywords.values())
-
-            # Check if any translated keyword appears in source
-            return any(keyword in source for keyword in translated_keywords if keyword)
-
+        # CORE-1539 tracks header-driven language detection, the durable fix.
+        try:
+            ast.parse(source)
+        except (SyntaxError, ValueError):
+            # ValueError covers null bytes on older interpreters.
+            return True
         return False
 
 

@@ -2,6 +2,7 @@
 
 import os
 import sys
+import importlib
 import threading
 import pytest
 from unittest.mock import patch, MagicMock
@@ -90,11 +91,8 @@ class TestLegesherLoader:
         with pytest.raises(FileNotFoundError):
             loader.get_data("/nonexistent/file.py")
 
-    @pytest.mark.skip(
-        reason="Internal implementation detail - keyword detection depends on translation_pack structure"
-    )
     def test_needs_translation_detects_spanish_keywords(self):
-        """Test that _needs_translation detects Spanish keywords."""
+        """Native keywords in keyword position fail ast.parse, so True."""
         finder = LegesherMetaPathFinder(language="es")
         loader = LegesherLoader("test", "test.py", finder)
 
@@ -110,6 +108,325 @@ class TestLegesherLoader:
         english_code = "def greet():\n    return 42"
         needs_translation = loader._needs_translation(english_code)
         assert needs_translation is False
+
+
+class TestDottedImports:
+    """Regression tests for CORE-1209: dotted imports under the hook.
+
+    The finder used to break dotted stdlib imports two ways: it joined the
+    full dotted name onto parent __path__ entries (looking for
+    <stdlib>/http/http/client.py), and it claimed packages with the
+    ModuleSpec default of an EMPTY submodule_search_locations list, so
+    `import http.client` raised ModuleNotFoundError under the hook.
+    """
+
+    def setup_method(self):
+        """Ensure import hook is not installed before each test."""
+        uninstall_import_hook()
+
+    def teardown_method(self):
+        """Clean up import hook after each test."""
+        uninstall_import_hook()
+
+    def test_package_spec_has_submodule_search_locations(self, tmp_path):
+        """A claimed package spec must point at the package directory."""
+        finder = LegesherMetaPathFinder(language="es")
+        pkg_dir = tmp_path / "mypkg"
+        pkg_dir.mkdir()
+        (pkg_dir / "__init__.py").write_text("")
+
+        with patch.object(sys, "path", [str(tmp_path)]):
+            spec = finder.find_spec("mypkg", None)
+
+        assert spec is not None
+        assert spec.submodule_search_locations == [str(pkg_dir)]
+
+    def test_claimed_modules_get_file_attribute(self, tmp_path):
+        """Modules loaded through the hook get __file__ like any source module.
+
+        A bare ModuleSpec defaults has_location to False, and the import
+        system only sets __file__ for specs with a location, so every
+        hook-loaded module used to have no __file__.
+        """
+        module_path = tmp_path / "located_mod.py"
+        module_path.write_text("VALUE = 1\n")
+
+        with patch.object(sys, "path", [str(tmp_path)] + sys.path):
+            install_import_hook("es")
+            try:
+                import located_mod
+            finally:
+                uninstall_import_hook()
+                sys.modules.pop("located_mod", None)
+
+        assert located_mod.__spec__.has_location
+        assert located_mod.__file__ == str(module_path)
+
+    def test_find_spec_resolves_tail_against_parent_path(self, tmp_path):
+        """A dotted name searches only its tail inside the parent __path__."""
+        finder = LegesherMetaPathFinder(language="es")
+        pkg_dir = tmp_path / "mypkg"
+        pkg_dir.mkdir()
+        (pkg_dir / "__init__.py").write_text("")
+        (pkg_dir / "child.py").write_text("VALUE = 1")
+
+        # The import machinery passes the parent package's __path__ entries.
+        spec = finder.find_spec("mypkg.child", [str(pkg_dir)])
+        assert spec is not None
+        assert spec.origin == str(pkg_dir / "child.py")
+
+    def test_find_spec_declines_dotted_name_without_path(self, tmp_path):
+        """A dotted fullname with path=None must not resolve from sys.path.
+
+        The normal import machinery always passes the parent package's
+        __path__ for a submodule, so this call shape never comes from it.
+        Resolving the tail against sys.path would claim an unrelated
+        top-level module (a stray client.py as `http.client`).
+        """
+        finder = LegesherMetaPathFinder(language="es")
+        (tmp_path / "client.py").write_text("x = 1\n")
+
+        with patch.object(sys, "path", [str(tmp_path)]):
+            assert finder.find_spec("http.client", None) is None
+
+    def test_import_http_client_works_despite_decoy_toplevel_client(self, tmp_path):
+        """`import http.client` resolves the stdlib module, not a decoy client.py."""
+        (tmp_path / "client.py").write_text("x = 1\n")
+        saved = {
+            name: sys.modules.pop(name)
+            for name in list(sys.modules)
+            if name == "http" or name.startswith("http.")
+        }
+        sys.path.insert(0, str(tmp_path))
+        try:
+            install_import_hook(language="es")
+            import http.client
+
+            assert hasattr(http.client, "HTTPConnection")
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(tmp_path))
+            for name in list(sys.modules):
+                if name == "http" or name.startswith("http."):
+                    del sys.modules[name]
+            sys.modules.update(saved)
+
+    def test_import_http_client_under_hook(self):
+        """`import http.client` must work with the hook installed."""
+        saved = {
+            name: sys.modules.pop(name)
+            for name in list(sys.modules)
+            if name == "http" or name.startswith("http.")
+        }
+        try:
+            install_import_hook(language="es")
+            import http.client
+
+            assert hasattr(http.client, "HTTPConnection")
+        finally:
+            uninstall_import_hook()
+            for name in list(sys.modules):
+                if name == "http" or name.startswith("http."):
+                    del sys.modules[name]
+            sys.modules.update(saved)
+
+    def test_import_os_path_under_hook(self):
+        """`import os.path` must work with the hook installed."""
+        install_import_hook(language="es")
+        import os.path
+
+        assert callable(os.path.join)
+
+    def test_dotted_import_of_translated_submodule(self, tmp_path):
+        """A translated submodule of a translated package imports and runs."""
+        finder_probe = LegesherMetaPathFinder(language="es")
+        native_source = finder_probe.translator.translate_code(
+            "def get_value():\n    if True:\n        return 42\n    return 0\n"
+        )
+        # Sanity: the fixture really is native-language source.
+        assert native_source != (
+            "def get_value():\n    if True:\n        return 42\n    return 0\n"
+        )
+
+        pkg_dir = tmp_path / "paquete_es"
+        pkg_dir.mkdir()
+        (pkg_dir / "__init__.py").write_text("")
+        (pkg_dir / "modulo.py").write_text(native_source, encoding="utf-8")
+
+        sys.path.insert(0, str(tmp_path))
+        try:
+            install_import_hook(language="es")
+            import paquete_es.modulo
+
+            assert paquete_es.modulo.get_value() == 42
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(tmp_path))
+            for name in ("paquete_es", "paquete_es.modulo"):
+                sys.modules.pop(name, None)
+
+
+class TestParseFirstTranslationDetection:
+    """Regression tests for CORE-1209: parse-first translation detection.
+
+    Pre-fix detection was permanently False: the old body guarded on a
+    translator attribute that never existed, so the word-scan branch it
+    guarded never ran and nothing was ever translated. Restoring
+    detection with that word-scan would flag any module sharing a single
+    word with the active pack's native vocabulary, and the finder claims
+    every .py on the search path, so plain-English modules would be
+    "translated" and corrupted: under the es pack `con = ...` would fail
+    to import with a SyntaxError (`con` renders `with`), and an
+    `ErrorDeOS` attribute would be silently renamed to `OSError`.
+    Detection instead translates only source that fails ast.parse, and a
+    translation that does not itself parse is discarded.
+    """
+
+    def setup_method(self):
+        """Ensure import hook is not installed before each test."""
+        uninstall_import_hook()
+
+    def teardown_method(self):
+        """Clean up import hook after each test."""
+        uninstall_import_hook()
+
+    def test_english_module_with_native_vocab_word_imports_unchanged(self, tmp_path):
+        """`con = sqlite3.connect(...)` imports as-is under the es pack."""
+        (tmp_path / "english_con_module.py").write_text(
+            'import sqlite3\ncon = sqlite3.connect(":memory:")\n'
+        )
+        sys.path.insert(0, str(tmp_path))
+        try:
+            install_import_hook(language="es")
+            import english_con_module
+
+            assert hasattr(english_con_module, "con")
+            english_con_module.con.close()
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(tmp_path))
+            sys.modules.pop("english_con_module", None)
+
+    def test_english_module_attribute_is_not_renamed(self, tmp_path):
+        """An `ErrorDeOS` attribute stays; no silent rename to OSError."""
+        (tmp_path / "english_attr_module.py").write_text("ErrorDeOS = 41\n")
+        sys.path.insert(0, str(tmp_path))
+        try:
+            install_import_hook(language="es")
+            import english_attr_module
+
+            assert english_attr_module.ErrorDeOS == 41
+            assert "OSError" not in vars(english_attr_module)
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(tmp_path))
+            sys.modules.pop("english_attr_module", None)
+
+    def test_genuine_syntax_error_reports_the_users_own_line(self, tmp_path):
+        """A broken English module reports ITS error, not a relocated one.
+
+        The parse probe fails for broken English just as it does for
+        native source, so the module went down the translation path;
+        translation rewrote an unrelated `con` into the keyword `with`
+        and the compiler reported that earlier line instead of the
+        missing colon the user actually wrote.
+        """
+        source = (
+            "import os\n"
+            "\n"
+            "con = 5\n"  # `con` renders `with` under the es pack
+            "\n"
+            "def go(x)\n"  # the real bug, line 5
+            "    return x\n"
+        )
+        (tmp_path / "broken_without_hook.py").write_text(source, encoding="utf-8")
+        (tmp_path / "broken_under_hook.py").write_text(source, encoding="utf-8")
+
+        sys.path.insert(0, str(tmp_path))
+        try:
+            with pytest.raises(SyntaxError) as without_hook:
+                importlib.import_module("broken_without_hook")
+
+            install_import_hook(language="es")
+            with pytest.raises(SyntaxError) as under_hook:
+                importlib.import_module("broken_under_hook")
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(tmp_path))
+            for name in ("broken_without_hook", "broken_under_hook"):
+                sys.modules.pop(name, None)
+
+        assert without_hook.value.lineno == 5
+        assert under_hook.value.lineno == without_hook.value.lineno
+        assert under_hook.value.msg == without_hook.value.msg
+        assert (under_hook.value.text or "").strip() == "def go(x)"
+
+
+class TestBomIsStrippedBeforeTranslation:
+    """Regression tests for CORE-1209: a leading BOM never reaches the translator.
+
+    get_data reads with encoding="utf-8", which keeps a BOM as U+FEFF.
+    Stripping it only inside the parse probe left the translator with a
+    BOM-fused first token it could not recognise, so a UTF-8-with-BOM
+    native module kept its opening keyword native while the rest
+    translated, and failed exactly as if the hook were not installed.
+    """
+
+    def setup_method(self):
+        """Ensure import hook is not installed before each test."""
+        uninstall_import_hook()
+
+    def teardown_method(self):
+        """Clean up import hook after each test."""
+        uninstall_import_hook()
+
+    def test_utf8_bom_native_module_imports_and_runs(self, tmp_path):
+        """A UTF-8-with-BOM Spanish module translates whole and runs."""
+        english_source = (
+            "def get_value():\n    if True:\n        return 42\n    return 0\n"
+        )
+        finder_probe = LegesherMetaPathFinder(language="es")
+        native_source = finder_probe.translator.translate_code(english_source)
+        # Sanity: the fixture really is native-language source.
+        assert native_source != english_source
+
+        # U+FEFF encodes to the three UTF-8 BOM bytes.
+        module_path = tmp_path / "bom_native_es.py"
+        module_path.write_text("\ufeff" + native_source, encoding="utf-8")
+        assert module_path.read_bytes().startswith(b"\xef\xbb\xbf")
+
+        sys.path.insert(0, str(tmp_path))
+        try:
+            install_import_hook(language="es")
+            import bom_native_es
+
+            assert bom_native_es.get_value() == 42
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(tmp_path))
+            sys.modules.pop("bom_native_es", None)
+
+    def test_utf8_bom_english_module_imports_untranslated(self, tmp_path):
+        """A UTF-8-with-BOM English module still imports as-is."""
+        module_path = tmp_path / "bom_english_module.py"
+        module_path.write_text(
+            '\ufeffimport sqlite3\ncon = sqlite3.connect(":memory:")\nErrorDeOS = 41\n',
+            encoding="utf-8",
+        )
+        assert module_path.read_bytes().startswith(b"\xef\xbb\xbf")
+
+        sys.path.insert(0, str(tmp_path))
+        try:
+            install_import_hook(language="es")
+            import bom_english_module
+
+            assert bom_english_module.ErrorDeOS == 41
+            assert "OSError" not in vars(bom_english_module)
+            bom_english_module.con.close()
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(tmp_path))
+            sys.modules.pop("bom_english_module", None)
 
 
 class TestImportHookInstallation:
