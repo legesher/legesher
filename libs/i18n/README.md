@@ -3,7 +3,7 @@
 Industrial-strength internationalization infrastructure with 51 language packs, version-aware inheritance,
 and multi-provider translation API for multilingual programming.
 
-**Status**: Production-Ready (Pre-Beta) | **Version**: 0.2.x | **Python**: 3.10-3.14
+**Status**: Pre-Beta | **Python**: 3.10-3.14 | **Version**: see `pyproject.toml`
 
 ## Overview
 
@@ -24,7 +24,7 @@ enabling developers to code in their native language. It includes:
 
 ```bash
 # From monorepo root
-uv install
+uv sync --all-extras
 
 # Or install package directly
 uv add legesher-i18n
@@ -65,63 +65,28 @@ Language packs automatically adapt to different Python versions:
 - **Python 3.10+**: Includes `match`/`case` (pattern matching)
 - **Python 3.11+**: Adds `except*` (exception groups)
 - **Python 3.12+**: Adds `type` (type parameter syntax)
-- **Python 3.13**: No new keywords (inherits from 3.12)
+- **Python 3.13**: No new keywords (inherits from 3.12), one new exception
+- **Python 3.14**: No new terms yet (inherits from 3.13)
 
 ### Supported Languages
 
-**51 complete language packs** - All support Python 3.10-3.14 with version inheritance:
+**51 complete language packs** - All support Python 3.10-3.14 with version inheritance, and all carry the same
+term coverage:
 
-- **Amharic (am)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Arabic (ar)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Bengali (bn)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Bosnian (bs)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Catalan (ca)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Czech (cs)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Welsh (cy)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Danish (da)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **German (de)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Greek (el)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **English (en)**: 37 keywords, 72 builtins, 66 exceptions - Canonical reference
-- **Spanish (es)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Persian (fa)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Finnish (fi)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **French (fr)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Irish (ga)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Scottish Gaelic (gd)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Galician (gl)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Gujarati (gu)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Hebrew (he)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Hindi (hi)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Croatian (hr)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Hungarian (hu)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Indonesian (id)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Italian (it)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Japanese (ja)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Kannada (kn)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Korean (ko)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Latvian (lv)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Macedonian (mk)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Malayalam (ml)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Mongolian (mn)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Malay (ms)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Burmese (my)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Dutch (nl)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Norwegian (no)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Polish (pl)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Portuguese (pt)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Romanian (ro)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Russian (ru)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Sinhala (si)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Serbian (sr)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Sundanese (su)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Swedish (sv)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Telugu (te)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Thai (th)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Turkish (tr)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Urdu (ur)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Uzbek (uz)**: 37 keywords, 72 builtins, 66 exceptions - Tiny Aya Model translations
-- **Vietnamese (vi)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
-- **Chinese Simplified (zh)**: 37 keywords, 72 builtins, 66 exceptions - Aya AI Model translations
+- **Keywords**: 39 (the 3.10 set plus `except*` in 3.11 and `type` in 3.12)
+- **Built-ins**: 73 built-in functions, types, and constants
+- **Exceptions**: 70 exception classes
+
+Those are the pack's own categories. `legesher-core` merges exception names into the built-in map when
+it loads a pack, so anything reporting `get_pack_info()` — `legesher git setup`, for one — says
+`143 builtins`, which is these 73 plus these 70, not a disagreement with the numbers above.
+
+Codes: am, ar, bn, bs, ca, cs, cy, da, de, el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it, ja, kn,
+ko, lv, mk, ml, mn, ms, my, nl, no, pl, pt, ro, ru, si, sr, su, sv, te, th, tr, ur, uz, vi, zh
+
+`en` is the canonical reference. Every other pack is machine-generated and awaiting native-speaker review; which
+model produced a given pack is recorded in that pack's `metadata.author` field, and each pack ships its own README
+at `libs/i18n/language-packs/python/{lang}/README.md` with its counts and Python version coverage.
 
 Each language pack is independently versioned at `libs/i18n/language-packs/python/{lang}/`
 
@@ -203,7 +168,9 @@ print(result.text)  # "¡Hola, mundo!"
 
 **Features:**
 
-- Multi-provider support (DeepL, Google Translate, LibreTranslate)
+- Multi-provider support (Anthropic, Cohere Aya, DeepL, Google Translate, LibreTranslate, and any
+  OpenAI-compatible endpoint). The `api` extra installs the DeepL and Google clients plus `httpx`; the Anthropic
+  provider additionally needs the `anthropic` SDK
 - Automatic quality-based fallback
 - Usage tracking and cost monitoring
 - SQLite and Redis caching
@@ -250,17 +217,19 @@ Validate language pack files with schema validation, completeness checks, and in
 
 ```bash
 # Validate a single pack
-legesher-i18n validate libs/i18n/programming_languages/python/3.13/es.yml
+legesher-i18n validate libs/i18n/language-packs/python/es/legesher_i18n_python_es/packs/3.13.yml
 
-# Strict mode (fail on warnings)
-legesher-i18n validate libs/i18n/programming_languages/python/3.13/es.yml --strict
+# Strict mode (fail on warnings). Point it at the base pack: a leaf version file
+# warns that it defines no keywords of its own, which --strict turns into a failure
+legesher-i18n validate libs/i18n/language-packs/python/es/legesher_i18n_python_es/packs/3.10.yml --strict
 ```
 
 **Example Output:**
 
 ```text
-Validating: libs/i18n/programming_languages/python/3.13/es.yml
+Validating: libs/i18n/language-packs/python/es/legesher_i18n_python_es/packs/3.13.yml
 ✅ Schema validation passed
+⚠️  Warning: No keywords defined in pack
 
 Loading pack with inheritance...
 ✅ Pack loaded successfully
@@ -269,12 +238,18 @@ Pack Information:
    Language: es
    Target: python
    Version: 3.13
-   Keywords: 37
-   Builtins: 34
-   Inheritance: 3.10 → 3.11 → 3.12 → 3.13
+   Keywords: 39
+   Builtins: 73
+   Inheritance: <abs path>/packs/3.10.yml → <abs path>/packs/3.11.yml → <abs path>/packs/3.12.yml → <abs path>/packs/3.13.yml
 
-✅ Validation complete! (0 warnings)
+✅ Validation complete! (1 warning)
 ```
+
+Two things in that output are expected and not defects in the pack. The "No keywords defined in pack"
+warning is about the 3.13 file on its own: 3.13 adds no keywords of its own and inherits all 39 from
+3.12, which is why the resolved count below it is still 39. `--strict` turns that warning into a
+failure, so do not point `--strict` at a leaf version file. And `Inheritance:` prints the four absolute
+file paths, not the short `3.10 → 3.11 → …` form; they are elided above for width.
 
 **Validation Checks:**
 
@@ -283,52 +258,45 @@ Pack Information:
 - Inheritance chain verification
 - Path traversal security checks
 
-#### `show` - Display Version Information
+#### `registry list` - List the Shipped Packs
 
-Show all available versions for a language with keyword counts and inheritance chains.
+List every pack in the registry with its term counts and completeness.
 
 ```bash
-# Show all versions for Spanish
-legesher-i18n show es
+legesher-i18n registry list
 
-# Show versions for specific target
-legesher-i18n show ar --target python
+# For a specific target and Python version
+legesher-i18n registry list --target python --version 3.13
 ```
 
 **Example Output:**
 
 ```text
-       ES Language Packs for Python
-┏━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
-┃ Version ┃ Keywords ┃ Builtins ┃ Extends ┃
-┡━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━┩
-│ 3.10    │       37 │       34 │ —       │
-│ 3.11    │        1 │        0 │ → 3.10  │
-│ 3.12    │        1 │        0 │ → 3.11  │
-│ 3.13    │        0 │        0 │ → 3.12  │
-└─────────┴──────────┴──────────┴─────────┘
-
-Found 4 version(s) for es
+│ es   │ ES       │       39 │       73 │ ✓ complete │
+│ fr   │ FR       │       39 │       73 │ ✓ complete │
+...
+Found 51 language pack(s)
 ```
 
-### Compatibility Matrix Generator
+#### `export` - Export Pack Contents
 
-Generate comprehensive Markdown tables showing keyword availability across Python versions:
+`export json`, `export csv`, and `export all` write a pack's terms out for tooling or review.
 
-```bash
-# Generate matrix for Spanish
-python libs/i18n/scripts/generate_compatibility_matrix.py es
+### Compatibility Matrix Generator (currently broken)
 
-# Save to file
-python libs/i18n/scripts/generate_compatibility_matrix.py es \
-  --output docs/compatibility/es-keywords.md
+`scripts/generate_compatibility_matrix.py` was written to emit a Markdown table of keyword availability
+per Python version. **It does not run today.** It still reads packs from a `libs/i18n/languages/`
+directory that no longer exists, so every invocation exits 1:
+
+```text
+$ python libs/i18n/scripts/generate_compatibility_matrix.py es
+Generating compatibility matrix for es...
+Error: Languages directory not found: .../libs/i18n/languages
 ```
 
-**Generated Output:**
-
-The script creates a Markdown table showing which keywords are available in each
-Python version, with version-specific keywords clearly marked (e.g., `except*`
-only appears in Python 3.11+).
+Porting it to the `language-packs/python/{lang}/` layout is open work. Until then, use
+`legesher-i18n registry list` for per-pack counts, and each pack's own README for its Python version
+coverage.
 
 ### Integration Examples
 
@@ -345,7 +313,7 @@ repos:
         name: Validate language packs
         entry: uv run legesher-i18n validate
         language: system
-        files: 'libs/i18n/languages/.*\.yml$'
+        files: '^libs/i18n/language-packs/.*/packs/.*\.yml$'
         pass_filenames: true
 ```
 
@@ -356,20 +324,19 @@ pip install pre-commit
 pre-commit install
 ```
 
-See [Pre-commit Integration Guide](../../docs/development/pre-commit-language-packs.md) for details.
+This repository's own `.pre-commit-config.yaml` already wires up the pack hooks.
 
 #### CI/CD Validation
 
 Validate language packs in GitHub Actions:
 
 ```yaml
-# .github/workflows/validate-packs.yml
 name: Validate Language Packs
 
 on:
   pull_request:
     paths:
-      - "libs/i18n/languages/**/*.yml"
+      - "libs/i18n/language-packs/**/*.yml"
 
 jobs:
   validate:
@@ -377,13 +344,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
-      - run: |
-          cd libs/i18n
-          uv sync
-          uv run legesher-i18n validate languages/**/*.yml --strict
+      - run: uv run python -m legesher_i18n.scripts.audit_packs
 ```
 
-See [CI Integration Guide](../../docs/development/ci-language-pack-validation.md) for more strategies.
+This repository runs that audit in `.github/workflows/validate-packs.yml`.
 
 ## Development
 
@@ -402,8 +366,9 @@ uv run pytest tests/test_cli.py -v
 
 ### Creating Language Packs
 
-See the [Language Pack Creation Guide](../../docs/guides/creating-language-packs.md)
-for instructions on creating new language packs.
+The "how to add a new language" walkthrough lives in the module docstring of
+`legesher_i18n/script_policy.py`, and the checklist it encodes is a golden test in
+`tests/test_new_language_onboarding.py`.
 
 ### Project Structure
 
@@ -414,20 +379,17 @@ libs/i18n/
 │   ├── cli.py               # CLI commands
 │   ├── pack_loader.py       # Pack loading with inheritance
 │   ├── schema_validator.py  # Validation logic
+│   ├── script_policy.py     # Per-language Unicode/script policy
+│   ├── term_definitions.py  # The canonical term inventory
 │   ├── version_detector.py  # Python version detection
 │   └── version_index.py     # Version index management
-├── languages/
+├── language-packs/
 │   └── python/
-│       ├── 3.10/            # Python 3.10 packs
-│       ├── 3.11/            # Python 3.11 packs
-│       ├── 3.12/            # Python 3.12 packs
-│       └── 3.13/            # Python 3.13 packs
+│       └── {lang}/          # One independently versioned package per language
+│           └── legesher_i18n_python_{lang}/packs/{3.10..3.14}.yml
 ├── scripts/
 │   └── generate_compatibility_matrix.py
 └── tests/
-    ├── test_cli.py          # CLI command tests
-    ├── test_pack_loader.py  # Pack loading tests
-    └── test_schema_validator.py
 ```
 
 ## License
@@ -437,6 +399,6 @@ Apache License 2.0 - see [LICENSE](LICENSE) file
 ## Links
 
 - [Legesher Monorepo](../../README.md)
-- [Implementation Roadmap](../../docs/src/content/docs/architecture/implementation-roadmap.md)
-- [Pre-commit Integration](../../docs/development/pre-commit-language-packs.md)
-- [CI/CD Integration](../../docs/development/ci-language-pack-validation.md)
+- [Translation API](docs/translation-api.md)
+- [Validation](docs/VALIDATION.md)
+- [Quality gates](docs/quality-gates.md)

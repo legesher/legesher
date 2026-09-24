@@ -2,7 +2,9 @@
 
 Write Python code in your native language with real-time translation and IDE support.
 
-**Version**: 0.1.2 | **Languages**: 51 | **VS Code**: 1.85.0+ | **Status**: Preview
+**Languages**: 51 | **VS Code**: 1.110.0+ | **Status**: Preview
+
+The version this README ships with is the `version` field in `package.json`.
 
 ## What This Extension Does
 
@@ -19,26 +21,36 @@ The Legesher VS Code extension provides the UI and editor integration for coding
 
 ## Supported Languages
 
-Arabic, Chinese, Danish, Dutch, English, Finnish, French, German, Greek, Hebrew, Hindi, Hungarian,
-Indonesian, Italian, Japanese, Korean, Malay, Norwegian, Polish, Portuguese, Russian, Spanish,
-Swedish, Thai, Turkish, Vietnamese
+Amharic, Arabic, Bengali, Bosnian, Burmese, Catalan, Chinese, Croatian, Czech, Danish, Dutch, English,
+Finnish, French, Galician, German, Greek, Gujarati, Hebrew, Hindi, Hungarian, Indonesian, Irish, Italian,
+Japanese, Kannada, Korean, Latvian, Macedonian, Malay, Malayalam, Mongolian, Norwegian, Persian, Polish,
+Portuguese, Romanian, Russian, Scottish Gaelic, Serbian, Sinhala, Spanish, Sundanese, Swedish, Telugu, Thai,
+Turkish, Urdu, Uzbek, Vietnamese, Welsh
 
 All languages are currently in **experimental** status, awaiting community validation.
+
+### Right-to-left languages
+
+Arabic, Hebrew, Persian, and Urdu are right-to-left languages. Legesher translates their keywords the
+same way it translates any other language's, and the translation panel applies right-to-left direction
+and alignment when one of them is active. The VS Code editor itself is unchanged: it renders
+right-to-left code with the plain bidirectional algorithm, which VS Code does not yet let an extension
+influence.
 
 ## Installation
 
 For complete installation instructions (VS Code extension + Python packages), see:
 
-**[Installation Guide](https://github.com/legesher/preview-repo/blob/main/docs/INSTALLATION.md)**
+**[Getting Started](https://docs.legesher.io/getting-started/)**
 
 ### Quick Install (Extension Only)
 
-1. Download the latest `.vsix` file from [releases](https://github.com/legesher/preview-repo/releases)
+1. Download the latest `.vsix` file from [releases](https://github.com/legesher/legesher/releases)
 2. In VS Code: Extensions (`Cmd+Shift+X`) → `...` menu → "Install from VSIX..."
 3. Select the downloaded file
 
 > **Note**: Full features (hover docs, auto-completion, diagnostics) require the complete Legesher package suite.
-> See the [Installation Guide](https://github.com/legesher/preview-repo/blob/main/docs/INSTALLATION.md) for details.
+> See [Getting Started](https://docs.legesher.io/getting-started/) for details.
 
 ## Quick Start
 
@@ -61,16 +73,17 @@ For complete installation instructions (VS Code extension + Python packages), se
 
 Access via Settings (`Cmd+,`) → search "Legesher":
 
-| Setting                      | Default        | Description                            |
-| ---------------------------- | -------------- | -------------------------------------- |
-| `legesher.workingLanguage`   | `en`           | The language you read and write in     |
-| `legesher.knownLanguages`    | `[]`           | The languages you read comfortably     |
-| `legesher.sourceLanguage`    | `en`           | The language the project is stored in  |
-| `legesher.languageDetection` | `auto`         | Infer each file's language from it     |
-| `legesher.enabled`           | `true`         | Enable/disable the extension           |
-| `legesher.serverCommand`     | `legesher-lsp` | Path to language server                |
-| `legesher.trace.server`      | `off`          | Debug logging level                    |
-| `legesher.telemetry.enabled` | `false`        | Usage telemetry (see Privacy below)    |
+| Setting                                     | Default        | Description                                 |
+| ------------------------------------------- | -------------- | ------------------------------------------- |
+| `legesher.workingLanguage`                  | `en`           | The language you read and write in          |
+| `legesher.knownLanguages`                   | `[]`           | The languages you read comfortably          |
+| `legesher.sourceLanguage`                   | `en`           | The language the project is stored in       |
+| `legesher.languageDetection`                | `auto`         | Infer each file's language from it          |
+| `legesher.enabled`                          | `true`         | Enable/disable the extension                |
+| `legesher.serverCommand`                    | `legesher-lsp` | Path to language server                     |
+| `legesher.trace.server`                     | `off`          | Debug logging level                         |
+| `legesher.telemetry.enabled`                | `false`        | Usage telemetry (see Privacy below)         |
+| `legesher.telemetry.contributeToMLTraining` | `false`        | Record consent for ML training (see below)  |
 
 > **`legesher.targetLanguage` is deprecated.** It was one setting for two
 > different things — the language a file is written in, and the language you
@@ -99,13 +112,19 @@ right thing:
 ### Language Codes
 
 ```text
-ar (Arabic)      da (Danish)      de (German)      el (Greek)
-en (English)     es (Spanish)     fi (Finnish)     fr (French)
-he (Hebrew)      hi (Hindi)       hu (Hungarian)   id (Indonesian)
-it (Italian)     ja (Japanese)    ko (Korean)      ms (Malay)
-nl (Dutch)       no (Norwegian)   pl (Polish)      pt (Portuguese)
-ru (Russian)     sv (Swedish)     th (Thai)        tr (Turkish)
-vi (Vietnamese)  zh (Chinese)
+am (Amharic)          ar (Arabic)           bn (Bengali)          bs (Bosnian)
+ca (Catalan)          cs (Czech)            cy (Welsh)            da (Danish)
+de (German)           el (Greek)            en (English)          es (Spanish)
+fa (Persian)          fi (Finnish)          fr (French)           ga (Irish)
+gd (Scottish Gaelic)  gl (Galician)         gu (Gujarati)         he (Hebrew)
+hi (Hindi)            hr (Croatian)         hu (Hungarian)        id (Indonesian)
+it (Italian)          ja (Japanese)         kn (Kannada)          ko (Korean)
+lv (Latvian)          mk (Macedonian)       ml (Malayalam)        mn (Mongolian)
+ms (Malay)            my (Burmese)          nl (Dutch)            no (Norwegian)
+pl (Polish)           pt (Portuguese)       ro (Romanian)         ru (Russian)
+si (Sinhala)          sr (Serbian)          su (Sundanese)        sv (Swedish)
+te (Telugu)           th (Thai)             tr (Turkish)          ur (Urdu)
+uz (Uzbek)            vi (Vietnamese)       zh (Chinese)
 ```
 
 ## Status Bar Indicators
@@ -213,6 +232,13 @@ records the evidence.
 - **Telemetry**: Usage data, off by default (opt-in). Events contain no code
   content, no file paths, and no identifiers we collect; the bundled
   `@vscode/extension-telemetry` library adds a pseudonymous machine id
+- **ML training**: A separate opt-in
+  (`legesher.telemetry.contributeToMLTraining`, also off by default). Today this
+  setting only records your answer: the extension sends no translation
+  corrections, and no telemetry event is gated on it. It is here so the consent
+  is on record before any such event exists. If that changes, it will be in the
+  changelog and here first. See
+  [privacy](https://docs.legesher.io/privacy#ml-training)
 - **No code collection**: Your code never leaves your machine
 - Respects VS Code's global telemetry settings
 

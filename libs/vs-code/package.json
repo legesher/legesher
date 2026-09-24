@@ -376,7 +376,7 @@
             "telemetry",
             "usesOnlineServices"
           ],
-          "markdownDescription": "Help improve Legesher translations by sharing feedback when you change translation suggestions.\n\n**What we collect:**\n- Translation corrections (e.g., media → promedio)\n- Code context (function, variable, class)\n\n**What we DON'T collect:**\n- Your code or file paths\n- Personal information\n\nThe bundled VS Code telemetry library adds a pseudonymous machine id to each event. You can change this anytime. [Learn more about our privacy practices](https://docs.legesher.io/privacy#ml-training)"
+          "markdownDescription": "Consent to contribute translation feedback towards improving Legesher's translations.\n\n**This setting records your answer only.** Legesher does not currently send translation corrections, and no telemetry event is gated on this setting. It exists so your consent is on record before any such event ships; if that changes it will be announced in the changelog and in the extension README first.\n\nLegesher never collects your code, file paths, or personal information. You can change this anytime. [Learn more about our privacy practices](https://docs.legesher.io/privacy#ml-training)"
         }
       }
     },

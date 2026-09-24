@@ -1416,7 +1416,6 @@ Similar principle - **NO niqqud in keywords**
 #### Required Tests
 
 1. **VS Code**
-   - Install: "Arabic Support" or "RTL Support" extension
    - Test: Syntax highlighting works
    - Test: Cursor movement (arrow keys)
    - Test: Text selection (click and drag)
@@ -1443,18 +1442,32 @@ If any IDE has problems:
 - **Provide workaround** (e.g., "Install X extension")
 - **Note limitations** (e.g., "Terminal X doesn't support RTL well")
 
-### Example Workarounds
+### Known issue: RTL rendering in VS Code
 
-**VS Code users:**
+VS Code renders right-to-left code with the browser's plain bidirectional algorithm and applies no
+isolation of its own. A line that mixes RTL keywords with LTR runs (identifiers, numbers, ASCII
+punctuation) can therefore display in an order that does not match the order the characters are stored
+in, and the editor offers no setting to change that.
 
-```markdown
-## Arabic Python Setup (VS Code)
+There is **no `editor.bidiTextRendering` setting**; earlier revisions of this document recommended one,
+and it has never existed. Do not put it in a pack README.
 
-1. Install "Arabic Support" extension
-2. Enable bidirectional text:
-   - Settings → "editor.bidiTextRendering": "on"
-3. Recommended font: "Arial" or "Tahoma" (good Arabic rendering)
-```
+What you can actually do today:
+
+- Choose a font with good coverage for the script (for Arabic: Arial, Tahoma, or Noto Sans Arabic).
+- Expect logical order, not visual order: Legesher stores and emits values with no bidi control
+  characters, so display order belongs to whatever is rendering the text.
+- Record what you saw. If an editor mangles a specific construct, document it in the pack README so the
+  next reader is not surprised.
+
+Upstream tracking:
+[microsoft/vscode#86667](https://github.com/microsoft/vscode/issues/86667) (RTL language support) and
+[microsoft/vscode#4994](https://github.com/microsoft/vscode/issues/4994) (right-to-left editing), both
+still open.
+
+The Legesher VS Code extension's translation panel is a webview, so it *can* and does apply RTL
+direction, alignment, and `unicode-bidi: isolate`. That is the panel only: the code editor itself is
+unaffected.
 
 ### Unicode Compatibility
 

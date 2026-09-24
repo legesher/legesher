@@ -331,8 +331,10 @@ libs/i18n/language-packs/{programming-language}/{natural-language}/
 | vi   | Vietnamese      | Tiếng Việt       | No  | Experimental |
 | zh   | Chinese         | 中文             | No  | Experimental |
 
-All packs have 37 keywords, 72 builtins, and 67 exceptions (at the 3.10 base).
-Translations generated via Aya AI Model (except English reference).
+All packs have 37 keywords, 73 builtins, and 67 exceptions at the 3.10 base, rising to
+39/73/70 once 3.11-3.14 inheritance is applied. Translations are machine-generated
+(except the English reference); the model used is recorded per pack in
+`metadata.author`.
 
 ### Independent Releases
 

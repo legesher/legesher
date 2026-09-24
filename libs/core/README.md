@@ -2,21 +2,23 @@
 
 Production-ready translation engine for multilingual Python with two complete translator backends.
 
-**Status**: Production-Ready (Pre-Beta) | **Version**: 0.0.x | **Python**: 3.10-3.14
+**Status**: Pre-Beta | **Python**: 3.10-3.14 | **Version**: see `pyproject.toml`
 
 ## Features
 
 - **Two Translator Backends**: Choose between token-based or tree-sitter AST-based translation
-- **Complete Keyword Translation**: All 37 Python keywords (3.10-3.14)
+- **Complete Keyword Translation**: All 39 Python keywords across 3.10-3.14
 - **51 Languages Supported**: Via independent language pack system
 - **Perfect Formatting**: Preserves indentation, comments, docstrings
-- **Lossless Round-Trip**: EN→ES→EN translation is byte-identical
-- **RTL Language Support**: Arabic, Hebrew, Persian, Urdu with UTF-8 encoding
-- **Blazing Fast**: ~140-160μs for medium files
+- **Round-Trip**: EN→ES→EN is byte-identical for the corpus the sweep covers; the known exceptions are listed as
+  strict xfails in `libs/mcp/tests/test_roundtrip_sweep.py`
+- **RTL Languages**: Arabic, Hebrew, Persian, and Urdu translate like any other language. Values are stored in
+  logical order with no bidi control characters, so display order is the terminal's or editor's to decide
+- **Fast**: both backends translate a small module in well under a millisecond; run
+  `pytest libs/core/tests/benchmarks` to measure on your own hardware
 - **Graceful Degradation**: Handles incomplete code and syntax errors
 - **Git Integration**: Complete clean/smudge filter implementation with metadata tracking
 - **Cultural Comments**: MLCP protocol support for contextual annotations
-- **Comprehensive Testing**: 255+ tests with extensive coverage
 
 ## Quick Start
 
@@ -39,7 +41,7 @@ back_to_english = es_to_en.translate_code(spanish)
 
 # List available languages
 languages = TokenTranslator.list_available_languages()
-# [('am', 'Amharic'), ('ar', 'Arabic'), ('bn', 'Bengali'), ... (51 languages)]
+# [('am', 'AM'), ('ar', 'AR'), ('bn', 'BN'), ... (51 languages)]
 ```
 
 ### Choosing a Translator Backend
@@ -49,7 +51,7 @@ Legesher Core provides **two complete translator implementations**:
 #### TokenTranslator (Default)
 
 - Token-based translation
-- Fast and simple (~140μs for medium files)
+- Fast and simple, and the quicker of the two on the bundled benchmark
 - Pure standard library — no C extensions required
 - Perfect for most use cases
 - Best compatibility with incomplete code
@@ -63,7 +65,6 @@ translator = TokenTranslator.from_language_pack("es")
 #### TreeSitterTranslator (AST-based)
 
 - Tree-sitter AST-based translation
-- Slightly faster (~160μs for medium files)
 - Better error handling for syntax edge cases
 - Supports incremental parsing
 - Requires the optional `treesitter` extra (tree-sitter C extensions):
@@ -89,8 +90,8 @@ os.environ["LEGESHER_USE_TREE_SITTER"] = "true"
 translator = create_translator("python", keyword_map, builtin_map)
 ```
 
-Both translators provide identical APIs and produce identical output. Choose based on your performance needs and
-preferences.
+Both translators provide identical APIs and produce identical output. The benchmark suite in
+`tests/benchmarks/` compares them if you want numbers for your own hardware.
 
 ### Using Custom Maps (Legacy)
 
@@ -139,8 +140,6 @@ If you encounter "No module named pytest":
 1. Ensure you're in the package directory (`libs/core`)
 2. Run `uv sync` to install dependencies
 3. Use `uv run python -m pytest` (not just `pytest`)
-
-**Current Results**: 255+ tests passing across unit, integration, and benchmark suites
 
 **Test Categories:**
 

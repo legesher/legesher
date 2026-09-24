@@ -21,6 +21,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - **legesher-vscode**: the `legesher.telemetry.contributeToMLTraining` setting
+  no longer describes data collection that does not happen. The setting's
+  `markdownDescription` and the Marketplace README both said that turning it on
+  sends translation corrections and their code context; no telemetry event is
+  gated on the setting, `telemetry.ts` has no correction event, and
+  `promptMLConsentOnFirstCorrection` is never called. Both now say what is true
+  today: the setting records consent, and no correction events are sent. The
+  docs-site privacy page still states the old claim and is corrected
+  separately. [CORE-1347]
+- **legesher-vscode**: the `legesher.telemetry.contributeToMLTraining` setting
   description no longer calls the feedback "anonymous": events carry a
   pseudonymous machine id added by the bundled VS Code telemetry library, and
   the description now says so. The Marketplace README and the docs-site privacy

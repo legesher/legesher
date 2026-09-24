@@ -2,7 +2,7 @@
 
 > Language Server Protocol implementation for multilingual Python programming
 
-**Status**: Production-Ready (Pre-Beta) | **Version**: 0.0.x | **Python**: 3.10-3.14 | **Languages**: 27+
+**Status**: Pre-Beta | **Python**: 3.10-3.14 | **Languages**: 51 | **Version**: see `pyproject.toml`
 
 ## Overview
 
@@ -95,8 +95,8 @@ legesher-lsp --help
 └──────────┬──────────┘
            │
 ┌──────────▼──────────┐
-│  legesher-core      │
 │  legesher-i18n      │
+│  (language packs)   │
 └─────────────────────┘
 ```
 
@@ -134,32 +134,33 @@ Provides localized code completion suggestions.
 
 Translates Python error messages while preserving code identifiers.
 
-**Status:** 🔄 In Progress (Error templates complete, provider integration pending)
+**Status:** ✅ Complete. The provider is registered on `textDocument/diagnostic` and parses the document for
+syntax errors before translating the message.
 
-**Completed:**
+**Features:**
 
 - 41 error message templates covering 17 Python error types
-- Multi-language support (English, Spanish, Arabic)
+- Translated messages for English, Spanish, and Arabic. Other languages get the untranslated CPython message
 - Variable name preservation
 - Template-based translation with caching
 
-**Pending:**
+**Error Types With Templates:**
 
-- Integration with diagnostic provider
-- AST-based error detection
-- LSP diagnostic object creation
-
-**Supported Error Types:**
-
-- SyntaxError, IndentationError, NameError
-- TypeError, AttributeError, ImportError
-- ValueError, KeyError, IndexError, ZeroDivisionError
+- AssertionError, AttributeError, FileNotFoundError, ImportError, IndentationError
+- IndexError, KeyError, KeyboardInterrupt, ModuleNotFoundError, NameError
+- RecursionError, RuntimeError, StopIteration, SyntaxError, TypeError
+- ValueError, ZeroDivisionError
 
 **Example Translation:**
 
-English: `SyntaxError: expected ':'`
-Spanish: `ErrorDeSintaxis: se esperaba ':'`
-Arabic: `خطأ في بناء الجملة: متوقع ':'`
+The diagnostic carries the message body only; the exception type name is not prefixed.
+
+English: `expected ':'`
+Spanish: `se esperaba ':'`
+Arabic: `متوقع ':'`
+
+A message with no matching template is passed through in English rather than half-translated. For the
+localized *type* names, see the language packs, which `legesher-runtime` uses when rendering tracebacks.
 
 ## Migration Notes
 
@@ -186,12 +187,6 @@ compatibility issues and enabling full integration testing.
 ✅ Diagnostic provider with translated error messages
 ✅ Python 3.13 compatibility verified
 
-**Test Results (306 tests passing):**
-
-- All server integration tests passing
-- All provider tests passing
-- Some test fixtures need updating for new provider behavior (tests expected stubs, got working providers)
-
 **Breaking Changes:**
 
 None for users. This is an internal dependency upgrade with no API changes.
@@ -217,18 +212,13 @@ pytest tests/ -v -s --log-cli-level=DEBUG
 
 ### Test Coverage
 
-**Complete:**
+Most modules have a matching test module under `tests/`. Two do not: `incremental_translator.py` is
+exercised only indirectly, through the `enhanced_intelligence` tests, and `__main__.py` has no test at all.
+Run the suite with coverage to see the current numbers rather than trusting a figure written down here:
 
-- ✅ `config.py`: 100% coverage (CORE-356)
-- ✅ `document.py`: 100% coverage (CORE-356)
-- ✅ `providers/hover.py`: 581 test lines, comprehensive coverage (CORE-357)
-- ✅ `providers/completion.py`: 786 test lines, comprehensive coverage (CORE-358)
-- ✅ `utils/error_templates.py`: 641 test lines, 95% coverage (CORE-359 utility)
-
-**In Progress:**
-
-- 🔄 `providers/diagnostic.py`: Stub, needs integration with error_templates (CORE-359)
-- 🔄 `server.py`: Integration testing (CORE-360)
+```bash
+pytest tests/ --cov=legesher_language_server --cov-report=term-missing
+```
 
 ### Code Quality
 
@@ -255,11 +245,12 @@ ruff format legesher_language_server/
 | `textDocument/didClose` | ✅ Implemented | CORE-356 |
 | `textDocument/hover` | ✅ Implemented | CORE-357 |
 | `textDocument/completion` | ✅ Implemented | CORE-358 |
-| `textDocument/diagnostic` | 🔄 Stub (templates ready) | CORE-359 |
+| `textDocument/diagnostic` | ✅ Implemented | CORE-359 |
+| `textDocument/semanticTokens/full` | ✅ Implemented | CORE-450 |
 
 ## For VS Code Extension Developers
 
-The VS Code extension (Cycle 8) will:
+The [Legesher VS Code extension](../vs-code/README.md) does this, and any other LSP client would do the same:
 
 1. Start `legesher-lsp` as a child process
 2. Connect via stdio transport
@@ -301,47 +292,13 @@ This package is part of the Legesher monorepo. See the [main README](../../READM
 
 ## License
 
-Multiple licenses apply - see LICENSE files in the monorepo root.
+Apache License 2.0 - see [LICENSE](LICENSE).
 
 ## Related Documentation
 
 - [Architecture Documentation](ARCHITECTURE.md)
-- [Complete Architecture Guide](../../../planning/architecture/complete-architecture-guide.md)
-- [Implementation Roadmap](../../../planning/architecture/implementation-roadmap.md)
-- [MLCP Specification](../../../planning/architecture/mlcp-v1.md)
-
-## Roadmap
-
-### Completed
-
-**Phase 1: Foundation (CORE-356)** ✅
-
-- LSP server infrastructure
-- Document management
-- Configuration system
-
-**Phase 2A: Python Language Server - Core Providers** ✅
-
-- ✅ CORE-357: Hover provider (translated docstrings)
-- ✅ CORE-358: Completion provider (localized keywords & symbols)
-
-### In Progress
-
-**Phase 2A: Diagnostic Provider (CORE-359)**
-
-- ✅ Error message templates (41 templates, 17 error types)
-- 🔄 Diagnostic provider integration (AST parsing, error detection)
-
-**Phase 2A: Python Language Server - Integration (CORE-360)**
-
-- 🔄 CORE-360: enhanced Python intelligence
-
-### Upcoming
-
-**Cycle 8: VS Code Extension**
-
-- Custom UI components
-- End-to-end integration testing
+- [Test Quick Reference](TEST_QUICK_REFERENCE.md)
+- [Monorepo README](../../README.md)
 
 ---
 

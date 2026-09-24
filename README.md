@@ -6,21 +6,17 @@
 [![CI](https://github.com/legesher/legesher/actions/workflows/ci.yml/badge.svg)](https://github.com/legesher/legesher/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/legesher/legesher/branch/main/graph/badge.svg)](https://codecov.io/gh/legesher/legesher)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue.svg)](https://www.python.org/downloads/)
-[![License: Multi](https://img.shields.io/badge/license-Multi-blue.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![PyPI](https://img.shields.io/badge/PyPI-coming%20soon-orange.svg)](https://pypi.org/)
 
-**Package Licenses:**
-
-[![Core: Apache 2.0](https://img.shields.io/badge/core-Apache%202.0-green.svg)](libs/core/LICENSE)
-[![i18n: Apache 2.0](https://img.shields.io/badge/i18n-Apache%202.0-green.svg)](libs/i18n/LICENSE)
-[![VS Code: Apache 2.0](https://img.shields.io/badge/vscode-Apache%202.0-green.svg)](libs/vs-code/LICENSE)
-[![Legesher: Apache 2.0](https://img.shields.io/badge/legesher-Apache%202.0-green.svg)](libs/legesher/LICENSE)
+Every package in this repository is Apache-2.0; see [Licensing](#licensing).
 
 ## About Legesher
 
 **Legesher** (pronounced "le-GESH-er") enables developers to write code in their native language instead of English.
-Imagine writing Python using Spanish keywords like `definir` instead of `def`, or Arabic keywords with full
-right-to-left support - all while collaborating seamlessly with developers who code in English.
+Imagine writing Python using Spanish keywords like `definir` instead of `def`, or Arabic keywords translated the
+same way any other language is, with the VS Code translation panel applying right-to-left text direction and
+alignment - all while collaborating seamlessly with developers who code in English.
 
 ### Why Legesher?
 
@@ -38,14 +34,18 @@ population who don't speak English as their first language. Developers must lear
 
 - **Language-Agnostic Git:** Store canonical English in your repository, but each developer sees their preferred
   language. No merge conflicts from keyword differences.
-- **Real-Time Translation:** Lossless bidirectional translation preserves all formatting, comments, and structure.
-- **IDE Integration:** Language Server Protocol support means it works with VS Code, PyCharm, Zed, and more.
-- **Local-First:** All translation happens locally by default - no cloud required, no data collection.
+- **Real-Time Translation:** Bidirectional translation preserves all formatting, comments, and structure.
+- **IDE Integration:** A VS Code extension ships today. It talks to a standard Language Server Protocol server, so
+  other LSP-capable editors can drive the same server, though we ship no integration for them yet.
+- **Local-First:** Keyword translation happens locally - no cloud required, no data collection. Only the opt-in
+  `--full` LLM translation calls a model, and it can point at one you host yourself.
 - **Version-Aware:** Language packs adapt automatically to Python 3.10, 3.11, 3.12, 3.13, and 3.14.
 
 ### Current Status
 
-**v0.4.x - Pre-Beta Release** (2026-02)
+**Pre-beta.** Every package here is pre-1.0. For the version a package is on right now, read its
+`pyproject.toml` (or `package.json` for the VS Code extension); for what changed last, read
+[CHANGELOG.md](CHANGELOG.md).
 
 - **Languages:** 51 supported languages (all experimental, awaiting community validation):
   - Amharic, Arabic, Bengali, Bosnian, Burmese, Catalan, Chinese, Croatian, Czech, Danish, Dutch, English, Finnish,
@@ -54,11 +54,12 @@ population who don't speak English as their first language. Developers must lear
     Romanian, Russian, Scottish Gaelic, Serbian, Sinhala, Spanish, Sundanese, Swedish, Telugu, Thai, Turkish, Urdu,
     Uzbek, Vietnamese, Welsh
 - **Target:** Python 3.10-3.14
-- **Translation:** Two backends - Token-based (~140μs) and Tree-sitter AST-based (~160μs)
+- **Translation:** Two backends - a pure-stdlib token translator and a Tree-sitter AST translator behind the
+  optional `treesitter` extra. Both produce identical output
 - **Git:** Clean/smudge filters for multilingual workflows
-- **IDE:** Full LSP server with hover, completion, diagnostics, semantic tokens
-- **VS Code:** Production-ready extension (v0.1.2) with 51 language support
-- **Tests:** 100+ test files across core, i18n, legesher, and language-server packages
+- **IDE:** LSP server with hover, completion, diagnostics, and semantic tokens
+- **VS Code:** Extension covering all 51 languages, installed from VSIX
+- **Tests:** 200+ test files across the core, i18n, legesher, language-server, mcp, and runtime packages
 
 ## Licensing
 
@@ -70,7 +71,8 @@ language data, the language server, the MCP server, and the editor integrations:
 - **[legesher-i18n](libs/i18n/)** - Language data and dictionaries
 - **[legesher-language-server](libs/language-server/)** - LSP implementation
 - **[legesher-mcp](libs/mcp/)** - MCP server
-- **[legesher-vs-code](libs/vs-code/)** - VS Code extension
+- **[legesher-runtime](libs/runtime/)** - Localized tracebacks
+- **[legesher-vscode](libs/vs-code/)** - VS Code extension
 
 Use them, modify them, redistribute them — including commercially. Community contributions welcome!
 
@@ -99,7 +101,7 @@ git clone https://github.com/legesher/legesher.git
 cd legesher
 
 # Install dependencies with uv (recommended)
-uv install
+uv sync --all-extras
 
 # Or with pip
 pip install -e libs/core -e libs/i18n -e libs/legesher
@@ -114,8 +116,8 @@ echo 'definir saludar():
 
 saludar()' > hola.py
 
-# Translate to English
-uv run legesher translate hola.py --to en --output hello.py
+# Translate to English. --from defaults to en, so name the source language
+uv run legesher translate hola.py --from es --to en --output hello.py
 
 # Check the result
 cat hello.py
@@ -125,6 +127,9 @@ cat hello.py
 #
 # saludar()
 ```
+
+Keyword translation renames keywords and builtins only. Your own identifiers, such as `saludar`, stay exactly as
+you wrote them. Use `--full` for LLM-powered translation of identifiers, comments, and strings.
 
 ### Set Up Git Integration (Optional)
 
@@ -139,7 +144,7 @@ uv run legesher git setup --language es
 
 ### IDE Setup (VS Code)
 
-The Legesher VS Code extension is available and production-ready (pre-beta):
+The Legesher VS Code extension is available in pre-beta:
 
 1. **Install from VSIX** (current method):
    - Download the latest `.vsix` from releases
@@ -163,25 +168,28 @@ See [libs/vs-code/README.md](libs/vs-code/README.md) for full documentation.
 
 ### Core Translation Engine
 
-- **37 Python Keywords:** Complete coverage of Python 3.10-3.14 keywords
-- **72 Built-in Functions:** Translated standard library functions
-- **66 Exception Classes:** Translated exception hierarchy
-- **Two Translation Backends:** Token-based (simple, stable) and Tree-sitter (AST-based, production-ready)
-- **Lossless Round-Trip:** EN→ES→EN produces byte-identical output
+- **39 Python Keywords:** Complete coverage of Python 3.10-3.14 keywords, including `match`/`case`, `except*`,
+  and `type`
+- **73 Built-ins:** Built-in functions, types, and constants
+- **70 Exception Classes:** Translated exception hierarchy
+- **Two Translation Backends:** Token-based (pure stdlib, the default) and Tree-sitter (AST-based, behind the
+  optional `treesitter` extra)
+- **Round-Trip:** EN→ES→EN is byte-identical for the corpus the sweep covers. The known exceptions are listed as
+  strict xfails in `libs/mcp/tests/test_roundtrip_sweep.py`, so a fix announces itself
 - **Format Preservation:** Maintains all indentation, blank lines, comments, docstrings
-- **Performance:** ~140-160μs per file, 100% round-trip fidelity
 - **Graceful Degradation:** Handles incomplete code and syntax errors
 
 See [legesher-core](libs/core/README.md) for details.
 
 ### Language Pack System
 
-- **51 Languages:** All major world languages supported (experimental status)
+- **51 Languages:** Every language listed under Current Status, all at experimental status
 - **Version-Aware:** Automatically adapts to Python 3.10, 3.11, 3.12, 3.13, 3.14
 - **Pack Inheritance:** Version files inherit from previous versions, minimizing duplication
-- **Translation API:** Optional multi-provider translation (Anthropic, DeepL, Google, LibreTranslate)
-- **Validation:** Pydantic-based schema validation with security checks
-- **CLI Tools:** Validate packs, show versions, export to JSON/CSV
+- **Translation API:** Optional multi-provider translation (Anthropic, Cohere Aya, DeepL, Google, LibreTranslate,
+  and any OpenAI-compatible endpoint)
+- **Validation:** Pydantic-based schema validation with Unicode and script-policy checks
+- **CLI Tools:** Validate packs, list the registry, export to JSON/CSV
 - **Caching:** Thread-safe LRU caching for fast pack loading
 
 See [legesher-i18n](libs/i18n/README.md) for details.
@@ -197,14 +205,14 @@ See [legesher-i18n](libs/i18n/README.md) for details.
 
 See [legesher-core](libs/core/README.md) for git filter documentation.
 
-### IDE Support (Production-Ready)
+### IDE Support
 
-- **Language Server Protocol:** Full LSP implementation with pygls 2.0
+- **Language Server Protocol:** LSP implementation built on pygls 2.0
 - **Hover Documentation:** Translated keyword info and docstrings
 - **Auto-Completion:** Localized keyword and builtin completion
-- **Diagnostics:** Real-time syntax error reporting
+- **Diagnostics:** Syntax error reporting with translated messages for English, Spanish, and Arabic
 - **Semantic Tokens:** Proper syntax highlighting for translated keywords
-- **VS Code Extension:** Production-ready with onboarding, translation panel, telemetry
+- **VS Code Extension:** Onboarding, translation panel, and opt-in telemetry
 
 See [legesher-language-server](libs/language-server/README.md) for LSP documentation.
 
@@ -213,12 +221,13 @@ See [legesher-language-server](libs/language-server/README.md) for LSP documenta
 - **`legesher init`:** Initialize Legesher in a project
 - **`legesher translate`:** Translate files or directories (keywords only, or `--full` for LLM-powered full translation)
 - **`legesher run`:** Run translated Python files directly
-- **`legesher git setup`:** Initialize git integration
+- **`legesher git setup` / `legesher git status`:** Configure git integration and inspect it
 - **`legesher-filter`:** Git filter script (`--clean`/`--smudge`), invoked automatically by git — not run directly
-- **`legesher metadata`:** View translation history
-- **`legesher-i18n validate`:** Validate language packs
-- **`legesher-i18n show`:** Display pack versions
-- **`legesher-i18n export`:** Export packs to JSON/CSV
+- **`legesher metadata`:** View translation history (`show`, `history`, `list`, `raw`, `validate`)
+- **`legesher config`:** Read and write project or user configuration (`list`, `get`, `set`)
+- **`legesher-i18n validate`:** Validate a language pack file
+- **`legesher-i18n registry list`:** List the shipped packs with their term counts
+- **`legesher-i18n export`:** Export packs to JSON or CSV (`json`, `csv`, `all`)
 
 See [legesher](libs/legesher/README.md) for CLI documentation.
 
@@ -234,40 +243,43 @@ These packages are released together with the same version:
 - `legesher-i18n` - Language pack infrastructure
 - `legesher` - Main CLI package
 
-**Current version:** All at v0.4.0
+They share one version number, set in each package's `pyproject.toml` and bumped together by
+`release-foundation.yml`.
 
 ### Application Packages (Independent)
 
-These packages can release independently:
+These packages each carry their own version number, independent of the foundation suite. Two of them
+have a release workflow; the other two are versioned by hand and have no automated release yet:
 
-- `legesher-vs-code` v0.1.2 - VS Code extension (production-ready)
-- `legesher-language-server` v0.1.0 - LSP server
+- `legesher-vscode` - VS Code extension (`libs/vs-code/package.json`), released by `release-apps.yml`
+- `legesher-mcp` - MCP server, tagged `mcp-v{version}` by `release-mcp.yml`
+- `legesher-language-server` - LSP server. No release workflow; `publish-pypi.yml` does not accept it
+  as a target
+- `legesher-runtime` - Localized tracebacks. Same: no release workflow, not a `publish-pypi.yml` target
 
-This allows rapid iteration on apps while maintaining foundation stability.
+This lets the apps iterate without waiting on the foundation.
 
 ### Language Packs (Independent)
 
 51 language packs are released independently, allowing each language community to iterate at their own pace:
 
-- `legesher-i18n-python-{lang}` v0.0.1-0.0.3 - Translations for Python
+- `legesher-i18n-python-{lang}` v0.0.x - Translations for Python
 - Supported: am, ar, bn, bs, ca, cs, cy, da, de, el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it,
   ja, kn, ko, lv, mk, ml, mn, ms, my, nl, no, pl, pt, ro, ru, si, sr, su, sv, te, th, tr, ur, uz, vi, zh
 
 Each pack supports Python 3.10-3.14 with version-aware inheritance. All packs currently have **experimental** status,
 awaiting community validation before being marked as **accepted**.
 
-**For release documentation**, see [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md).
+**For release documentation**, see [.github/RELEASE_CHECKLIST.md](.github/RELEASE_CHECKLIST.md).
 
 ## Contributing
 
-We welcome contributions to our open source packages! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+We welcome contributions! Every package in this repository is Apache-2.0 and accepts them. Please see
+[CONTRIBUTING.md](CONTRIBUTING.md) for:
 
-- Which packages accept contributions
 - Development setup
 - Code of Conduct
 - Contributor License Agreement
-
-**Note**: Only open source packages (`core`, `i18n`, `vs-code`) accept external contributions at this time.
 
 ## Contributors
 

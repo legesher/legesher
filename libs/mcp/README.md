@@ -37,7 +37,8 @@ Notes on shape, straight from the design:
 | URI | Contents |
 | --- | --- |
 | `legesher://languages` | The language catalog with pack availability. |
-| `legesher://languages/{lang}/terms` | The full term dictionary (keywords, builtins, exceptions, reserved words) for one language. |
+| `legesher://languages/{lang}/terms` | The full term dictionary (keywords, builtins, exceptions, reserved words) for one language, at the default Python version. |
+| `legesher://languages/{lang}/terms/{python_version}` | The same dictionary pinned to a Python version, for callers on a grammar other than the default. |
 
 ## Prompts
 
