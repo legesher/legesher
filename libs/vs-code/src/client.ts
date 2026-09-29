@@ -6,6 +6,7 @@ import {
     Executable,
 } from 'vscode-languageclient/node';
 import { type ResolvedLanguages } from './config';
+import { connectionErrorHandler } from './connectionErrorHandler';
 import { DOCUMENT_LANGUAGE_NOTIFICATION, DocumentLanguageSync } from './documentLanguage';
 import { Logger } from './logger';
 import { LegesherTelemetry } from './telemetry';
@@ -209,22 +210,18 @@ export function createLanguageClient(
             trace: traceLevel,
         },
 
-        // Error handler
-        errorHandler: {
+        // A closed connection stays closed: only the extension's state
+        // machine starts servers (CORE-2316).
+        errorHandler: connectionErrorHandler({
             error: (error, message, count) => {
                 Logger.error('Language server error', { error, message, count });
                 LegesherTelemetry.trackError('serverError', String(message));
-                // Return ErrorAction.Continue to keep trying
-                return { action: 1 }; // ErrorAction.Continue = 1
             },
             closed: () => {
                 Logger.warn('Language server connection closed');
                 LegesherTelemetry.trackError('serverConnectionClosed');
-                // Don't auto-restart - let manual restart handle it
-                // This prevents conflicts when changing languages
-                return { action: 2 }; // CloseAction.DoNotRestart = 2
-            }
-        }
+            },
+        }),
     };
 
     // Create and return the language client

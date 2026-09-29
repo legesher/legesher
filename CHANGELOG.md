@@ -306,6 +306,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   server each file's language as the file opens and whenever that changes,
   and restarts the server only when the configured languages change.
   [CORE-1976]
+- **legesher-vscode**: a language server that stops unexpectedly is no
+  longer started again by the language client, outside the extension's
+  control. The client's close handler returned vscode-languageclient's value
+  for "restart" while its comment said "do not restart", so a server binary
+  that died during startup, such as a broken install, was relaunched in a
+  tight loop for as long as the window stayed open. A closed connection now
+  stays closed, and only the extension starts the server: once for each
+  change to the configured languages, each
+  `Legesher: Restart Language Server` or Retry on a failure notice, and,
+  after a failed start, the next switch to a Python file or edit to a
+  Legesher language setting. A server that crashes after it has started
+  stays stopped until the user restarts it or changes the configured
+  languages. vscode-languageclient says so in a notice, but the status bar
+  does not show the stop yet (CORE-2322). [CORE-2316]
 - **core**: en-target translation no longer emits broken except clauses. The
   en pack ships its exception entries as lowercase identity mappings
   (`typeerror: typeerror`), and `merge_exception_translations` PascalCased

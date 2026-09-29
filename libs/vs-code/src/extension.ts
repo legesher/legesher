@@ -703,8 +703,21 @@ async function startServer(
             Logger.debug('Language server state changed', event);
         });
 
-        // Start the client (this also launches the server)
-        await languageClient.client.start();
+        // Start the client (this also launches the server). Held in a local,
+        // because deactivate() can clear `languageClient` while start() is
+        // still pending.
+        const { client } = languageClient;
+        await client.start();
+
+        // A server that exits during the handshake leaves start() resolved,
+        // not rejected: the client handles the closed connection first, stops
+        // without restarting (see connectionErrorHandler.ts), and start() then
+        // returns nothing, while the failure reaches the user only through the
+        // library's own notices. Taken at its word, that recorded a server
+        // that never ran as started (CORE-2316).
+        if (!client.isRunning()) {
+            throw new Error('the language server stopped before it finished starting');
+        }
 
         // Track successful connection
         const durationMs = Date.now() - startTime;

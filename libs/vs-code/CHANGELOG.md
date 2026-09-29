@@ -73,6 +73,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Content detection now runs when a Python file opens, not only when its editor is focused. A file
   whose language has no language pack now raises a one-time warning naming that language instead of
   quietly getting nothing (CORE-1976)
+- **Language server restarts**: a language server that stops unexpectedly is no longer started again
+  by the language client, outside the extension's control. The client's close handler returned
+  vscode-languageclient's value for "restart" while its comment said "do not restart", so every
+  unexpected close launched the server again: a server binary that died during startup, such as a
+  broken install, was relaunched in a tight loop for as long as the window stayed open. A closed
+  connection now stays closed, and only the extension starts the server: when the configured languages
+  change, when you run `Legesher: Restart Language Server` or choose Retry on a failure notice, and,
+  after a start that failed, the next time you switch to a Python file or edit a Legesher language
+  setting. Each of those launches the server once. A server that crashes after it
+  has started stays stopped until you run that command or change the configured languages;
+  vscode-languageclient says so in a notice, but the status bar does not show it yet, which CORE-2322
+  tracks (CORE-2316)
 
 ### Security
 
