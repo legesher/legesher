@@ -53,7 +53,7 @@ from functools import lru_cache
 
 ENGLISH = "en"
 HARD_KEYWORDS: frozenset[str] = frozenset(keyword.kwlist)
-_BOM = "﻿"
+_BOM = "\ufeff"
 
 
 def _nfc(text: str) -> str:

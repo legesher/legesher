@@ -79,6 +79,20 @@ def _get_path_lock(path: Path) -> threading.Lock:
         return lock
 
 
+#: Fields every metadata file carries; ``validate_metadata`` and the guard
+#: (CORE-1323) check for them.
+REQUIRED_METADATA_FIELDS: tuple[str, ...] = (
+    "file",
+    "original_language",
+    "canonical_language",
+    "python_version",
+    "created_at",
+    "updated_at",
+    "translations",
+    "history",
+)
+
+
 class MetadataManager:
     """Manages translation metadata files in .legesher/metadata/ directory.
 
@@ -385,19 +399,7 @@ class MetadataManager:
         if metadata is None:
             return False
 
-        # Check required fields
-        required_fields = [
-            "file",
-            "original_language",
-            "canonical_language",
-            "python_version",
-            "created_at",
-            "updated_at",
-            "translations",
-            "history",
-        ]
-
-        for field in required_fields:
+        for field in REQUIRED_METADATA_FIELDS:
             if field not in metadata:
                 logger.warning(
                     f"Metadata for {file_path} missing required field: {field}"

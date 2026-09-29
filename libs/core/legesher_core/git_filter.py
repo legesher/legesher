@@ -16,7 +16,7 @@ back exactly what git stores.
 The filter never refuses. Git treats a filter that fails as a passthrough and
 stores the file unchanged, so refusal lives in ``legesher guard``
 (:mod:`legesher_core.guard`), run by the pre-commit hook. The pull-request
-check (CORE-1323) is to run the same checks on every commit.
+check (CORE-1323) runs the same checks, as ``legesher guard --diff``.
 """
 
 import logging

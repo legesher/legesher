@@ -240,9 +240,13 @@ reporting, so `143` is the pack's 73 built-ins plus its 70 exceptions. The per-c
 
 ### `legesher guard`
 
-Refuses what must not be committed. The pre-commit hook runs `legesher guard --staged`; without paths it checks
-the staged files, and with paths it checks those files on disk. When staged, a file is checked if `.gitattributes`,
-staged or in the working tree, gives it the `legesher` filter.
+Refuses what must not be committed. The pre-commit hook runs `legesher guard --staged`; without paths it checks the
+staged files, and with paths it checks those files on disk. `--diff BASE` checks only what changed from `BASE` to
+`HEAD`, read from `HEAD` and judged against each file's version at `BASE`: the command a pull-request check runs. It
+compares the two trees, so with a pull request's merge commit checked out it covers exactly the pull request, and a
+shallow clone only needs the base commit itself. `--format github` prints each finding as a GitHub Actions annotation.
+A file is checked if `.gitattributes` gives it the `legesher` filter (staged or in the working tree for `--staged`; at
+the base or the head for `--diff`); files under `.legesher/` are always checked.
 
 ```bash
 $ legesher guard --staged
@@ -257,14 +261,32 @@ legesher guard: 2 finding(s) in 1 file(s).
 - **`unicode`**: bidi reordering controls, invisible characters outside string and comment prose, Arabic tatweel,
   and identifier characters outside every supported script. There is no override.
 - **`keyword`**: a keyword not in its block's stored form. The clean filter normalizes these, so a finding means
-  the file was staged without it; run `legesher git setup`, then `git add --renormalize <path>`.
+  the file skipped it; run `legesher git setup`, then `git add --renormalize <path>`.
+- **`artifact`**: a symlink marked for Legesher (the guard cannot check what it points to; replace it with the
+  file), or a file under `.legesher/` that is a symlink or a submodule, that does not match its format
+  (`config.yml`, `metadata/*.yml`, `translation_memory.json`, `identifier_map.json`), or that records a path
+  outside the repository; `metadata.directory` must stay under `.legesher/`, with no `..`. The directory's name is
+  matched in any letter case. Other files there are never loaded.
 
 Exit status is 0 with no findings, 1 with findings, and 2 when the guard cannot run (outside a repository, or an
 unknown language).
 
 The hook is a client-side check: `git commit --no-verify`, merges and rebases skip it, and it lets a commit through
-with a notice when it cannot find `legesher`. The pull-request check (CORE-1323) is the layer meant to see every
-commit.
+with a notice when it cannot find `legesher`. A pull-request check running `legesher guard --diff` sees changes
+made anywhere, edits on github.com included, but it checks a pull request's net change against its base: the
+commits inside it land as they are under a merge commit or a rebase merge, and a push that skips pull requests is
+not checked unless branch protection requires one.
+
+In diff mode a file counts as Legesher's when the base's or the head's `.gitattributes` marks it, and the language
+comes from the base's `.legesher/config.yml` (English when the base names none; the pull request's own configuration
+is never read), so nothing a pull request changes in its tree relaxes what it is judged by. Diff mode also refuses
+every marked symlink in the tree, and every symlink or submodule under `.legesher/`, not only the changed ones, since
+a change elsewhere can use a link already there. A repository that already holds a marked symlink fails every pull
+request until the link is replaced with the file it points to.
+
+The check's own workflow file is outside what the guard reads: on `pull_request`, GitHub runs the workflow as the pull
+request left it, so a pull request could change the step's inputs or remove it while the check keeps its name.
+Protect `.github/workflows/` as well, for example with a code owner and required code-owner review.
 
 ### `legesher config`
 

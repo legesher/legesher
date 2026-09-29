@@ -11,6 +11,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- `legesher guard --diff BASE` for a pull-request check, `--format github`
+  for workflow annotations, and the `.legesher/` artifact check in both the
+  staged and diff modes. A symlink marked for Legesher is refused (in diff
+  mode every one in the tree, with any symlink or submodule under
+  `.legesher/`), and a custom `metadata.directory` outside `.legesher/` is a
+  finding. [CORE-1323]
 - `legesher guard`, and the pre-commit hook that `legesher git setup` and
   `legesher init` install to run it (`--no-hook` to skip). An existing
   pre-commit hook is never overwritten. [CORE-1841]

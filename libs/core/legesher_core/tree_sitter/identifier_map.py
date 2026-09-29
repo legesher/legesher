@@ -270,6 +270,26 @@ class IdentifierMap:
         logger.info("Saved identifier map: %d identifiers to %s", len(self._map), path)
 
     @classmethod
+    def from_dict(cls, data: object) -> "IdentifierMap":
+        """Build an identifier map from its JSON document.
+
+        Raises:
+            ValueError: If the document does not have the identifier map's shape.
+        """
+        if not isinstance(data, dict):
+            raise ValueError("Invalid identifier map: the document must be an object")
+        identifiers = data.get("identifiers", {})
+        if not isinstance(identifiers, dict):
+            raise ValueError("Invalid identifier map: 'identifiers' must be a dict")
+        for key, translations in identifiers.items():
+            if not isinstance(key, str) or not isinstance(translations, dict):
+                raise ValueError(f"Invalid entry in identifier map: {key!r}")
+
+        instance = cls(source_lang=data.get("source_lang", "en"))
+        instance._map = identifiers
+        return instance
+
+    @classmethod
     def load(cls, path: Path) -> "IdentifierMap":
         """Load an identifier map from a JSON file.
 
@@ -284,18 +304,7 @@ class IdentifierMap:
             json.JSONDecodeError: If the file is not valid JSON
         """
         text = path.read_text(encoding="utf-8")
-        data = json.loads(text)
-
-        identifiers = data.get("identifiers", {})
-        if not isinstance(identifiers, dict):
-            raise ValueError("Invalid identifier map: 'identifiers' must be a dict")
-        for key, translations in identifiers.items():
-            if not isinstance(key, str) or not isinstance(translations, dict):
-                raise ValueError(f"Invalid entry in identifier map: {key!r}")
-
-        source_lang = data.get("source_lang", "en")
-        instance = cls(source_lang=source_lang)
-        instance._map = identifiers
+        instance = cls.from_dict(json.loads(text))
 
         logger.info(
             "Loaded identifier map: %d identifiers from %s",

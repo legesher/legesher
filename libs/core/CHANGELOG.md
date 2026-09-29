@@ -43,6 +43,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   tokenized is scanned whole.
   `check_source` adds the stored-form keyword check and `check_blob` the
   encoding check; each finding has a line and column. [CORE-1841]
+- `legesher_core.guard.check_artifact`: the `.legesher/` check behind
+  `legesher guard` (regular files only; the toolchain's own formats parse and
+  record no path outside the repository, with `metadata.directory` kept under
+  `.legesher/` and no `..` in it; any other file is never loaded, and a
+  nesting or size limit is a finding rather than a crash).
+  `legesher_core.metadata.REQUIRED_METADATA_FIELDS` and
+  `IdentifierMap.from_dict` expose the rules it reuses. [CORE-1323]
 - `legesher_core.stored_form`: `clean_text`, `smudge_text`, `find_strays`
   and `block_language`, the keyword normalizer shared by the clean filter
   and the guard. [CORE-1841]

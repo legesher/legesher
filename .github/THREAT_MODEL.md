@@ -122,8 +122,19 @@ localizes tracebacks on the way out.
   cannot refuse: git stores a file unchanged when its filter fails.
 - The hook is client-side and advisory, not a trust boundary: `git commit --no-verify`, merges, rebases and
   cherry-picks skip it, edits on github.com and commits through the API never run it, and it lets a commit
-  through with a notice when it cannot find `legesher`. The pull-request check (CORE-1323) is the layer meant to
-  see every commit.
+  through with a notice when it cannot find `legesher`. A pull-request check running `legesher guard --diff` is
+  the layer that sees changes made anywhere, github.com and the API included, but it checks a pull request's net
+  change against its base: the commits inside a pull request still land as they are under a merge commit or a
+  rebase merge, and a push that skips pull requests is never checked unless branch protection requires one.
+  In diff mode a file counts as Legesher's when the base's or the head's `.gitattributes` marks it, and the
+  language comes from the base's `.legesher/config.yml` (English when the base names none, never the pull
+  request's own), so nothing a pull request changes in its tree relaxes what it is judged by. A symlink marked for
+  Legesher is refused, and diff mode refuses every such symlink, and every symlink or submodule under `.legesher/`,
+  in the tree, changed or not, since the guard cannot check what a link points to and a change elsewhere can use a
+  link already there. The check's own workflow file is outside that boundary: on `pull_request` GitHub runs it as
+  the pull request left it, so a pull request can change the step's inputs or remove it while the required check
+  keeps its name. The workflow directory needs its own protection, such as a code owner with required code-owner
+  review.
 
 A framing note: the import hook grants no *new* execution authority. `import mi_modulo` executes code with the user's
 privileges with or without Legesher — Python's baseline. The obligation specific to this layer is narrower:

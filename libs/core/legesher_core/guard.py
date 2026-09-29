@@ -4,9 +4,11 @@ The git clean filter cannot refuse anything. Git treats a filter that is
 missing or exits non-zero as a passthrough and stores the file unchanged, and
 clean also runs during ``git status`` and ``git diff``, so a filter marked
 ``required`` would break those commands too. Refusal therefore lives here,
-behind ``legesher guard``, which the pre-commit hook runs on staged files. The
-pull-request check (CORE-1323) is to run the same checks on every commit;
-the hook is a client-side check that ``--no-verify``, merges and rebases skip.
+behind ``legesher guard``, which the pre-commit hook runs on staged files and
+a pull-request check runs, as ``legesher guard --diff``, on a pull request's
+changes (CORE-1323). The hook is a client-side check that ``--no-verify``,
+merges and rebases skip; the pull-request check sees changes made anywhere,
+though it checks a pull request's net change rather than each commit in it.
 
 Checks, each reported as a :class:`Finding` with a line and column:
 
@@ -21,6 +23,9 @@ Checks, each reported as a :class:`Finding` with a line and column:
 - ``keyword``: a keyword that is not in its block's stored form, which is
   exactly what the clean filter would rewrite. It fires when a file reached
   the index without the filter, from a machine without Legesher.
+- ``artifact``: a file under ``.legesher/`` that is not a regular file, does
+  not match its own format, or records a path outside the repository
+  (:func:`check_artifact`).
 """
 
 from __future__ import annotations
@@ -29,9 +34,11 @@ import codecs
 import dataclasses
 import io
 import logging
+import re
 import tokenize
 import unicodedata
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from . import unicode_guard
@@ -59,7 +66,7 @@ class Finding:
         path: Repository-relative path, as the caller named it.
         line: 1-based line.
         column: 1-based column, counted in characters.
-        check: ``"encoding"``, ``"unicode"`` or ``"keyword"``.
+        check: ``"encoding"``, ``"unicode"``, ``"keyword"`` or ``"artifact"``.
         message: What was found and what it should be.
     """
 
@@ -70,8 +77,29 @@ class Finding:
     message: str
 
     def format(self) -> str:
-        """``path:line:column: check: message``, the shape editors link."""
-        return f"{self.path}:{self.line}:{self.column}: {self.check}: {self.message}"
+        """``path:line:column: check: message``, the shape editors link.
+
+        A path with a control character is quoted the way git quotes it, so a
+        file name can never start a new line of output (a CI log reads a line
+        beginning ``::`` as a workflow command).
+        """
+        return (
+            f"{display_path(self.path)}:{self.line}:{self.column}: "
+            f"{self.check}: {self.message}"
+        )
+
+
+def display_path(path: str) -> str:
+    """``path`` as-is, or C-quoted when it holds a control character."""
+    if not any(ord(ch) < 0x20 or ord(ch) == 0x7F for ch in path):
+        return path
+    escapes = {"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r", "\t": "\\t"}
+    quoted = "".join(
+        escapes.get(ch)
+        or (f"\\{ord(ch):03o}" if ord(ch) < 0x20 or ord(ch) == 0x7F else ch)
+        for ch in path
+    )
+    return f'"{quoted}"'
 
 
 def _position(text: str, offset: int) -> tuple[int, int]:
@@ -275,6 +303,194 @@ def _declaration_is_utf8(declared: str, data: bytes) -> bool:
     return name in _UTF8 or (name == "ascii" and data.isascii())
 
 
+#: Index modes that are not a regular file's content.
+_SYMLINK_MODE = "120000"
+_GITLINK_MODE = "160000"
+
+
+def _leaves_repository(value: object) -> bool:
+    """Whether a repository-relative path setting points outside the repo."""
+    if not isinstance(value, str):
+        return False
+    if value.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", value):
+        return True
+    depth = 0
+    for part in re.split(r"[\\/]+", value):
+        if part == "..":
+            depth -= 1
+            if depth < 0:
+                return True
+        elif part not in ("", "."):
+            depth += 1
+    return False
+
+
+def _artifact(path: str, message: str) -> Finding:
+    return Finding(path, 1, 1, "artifact", message)
+
+
+#: The largest file under .legesher/ the guard parses; the toolchain's own
+#: artifacts are far smaller, and anything larger is a finding, not a load.
+MAX_ARTIFACT_BYTES = 5 * 1024 * 1024
+
+#: The formats the open toolchain owns, by lower-cased name under .legesher/.
+KNOWN_ARTIFACTS = ("config.yml", "translation_memory.json", "identifier_map.json")
+
+
+def is_legesher_path(path: str) -> bool:
+    """Whether ``path`` is ``.legesher`` or under it, in any letter case.
+
+    Case matters because a case-insensitive file system opens
+    ``.LEGESHER/config.yml`` as the configuration.
+    """
+    return path.split("/", 1)[0].casefold() == ".legesher"
+
+
+def is_known_artifact(path: str) -> bool:
+    """Whether the guard parses ``path`` (callers never load the others)."""
+    if not is_legesher_path(path) or "/" not in path:
+        return False
+    name = path.split("/", 1)[1].casefold()
+    return name in KNOWN_ARTIFACTS or (
+        name.startswith("metadata/") and name.endswith(".yml")
+    )
+
+
+def check_artifact(path: str, data: bytes, *, mode: str = "100644") -> list[Finding]:
+    """Findings for ``.legesher`` itself or one file under it (CORE-1323).
+
+    Every entry must be a regular file: a symlink could point anywhere. The
+    formats this toolchain owns must parse and match their own rules, and a
+    path they record must stay inside the repository. Any other file, the
+    map engine's included, is opaque: callers do not even load it, and its
+    format is never described here. The directory is matched in any letter
+    case.
+    """
+    if mode == _SYMLINK_MODE:
+        return [
+            _artifact(
+                path, "a symlink under .legesher/ can point outside the repository"
+            )
+        ]
+    if mode == _GITLINK_MODE:
+        return [_artifact(path, "a submodule under .legesher/ is not a Legesher file")]
+    if not is_known_artifact(path):
+        return []
+    if len(data) > MAX_ARTIFACT_BYTES:
+        return [_artifact(path, f"too large to check ({len(data)} bytes)")]
+    name = path.split("/", 1)[1].casefold()
+    try:
+        if name == "config.yml":
+            return _check_config(path, data)
+        if name.startswith("metadata/"):
+            return _check_metadata(path, data)
+        if name == "translation_memory.json":
+            return _check_json(path, data, _translation_memory_problem)
+        return _check_json(path, data, _identifier_map_problem)
+    except (RecursionError, MemoryError):
+        return [_artifact(path, "nested too deeply to check")]
+
+
+def _load_yaml(path: str, data: bytes) -> tuple[object, list[Finding]]:
+    import yaml
+
+    try:
+        return yaml.safe_load(data.decode("utf-8")), []
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:
+        reason = str(exc).splitlines()[0]
+        return None, [_artifact(path, f"not valid YAML: {reason}")]
+
+
+def _check_config(path: str, data: bytes) -> list[Finding]:
+    config, problems = _load_yaml(path, data)
+    if problems:
+        return problems
+    if config is None:
+        return []
+    if not isinstance(config, dict):
+        return [_artifact(path, "the configuration must be a mapping")]
+    metadata = config.get("metadata")
+    directory = metadata.get("directory") if isinstance(metadata, dict) else None
+    if directory is None:
+        return []
+    # Under .legesher/ every entry is itself checked (no symlinks), so the
+    # directory cannot reach outside the repository through the tree; a `..`
+    # anywhere could step back out before that check applies.
+    parts = [
+        part for part in re.split(r"[\\/]+", str(directory)) if part not in ("", ".")
+    ]
+    if (
+        _leaves_repository(directory)
+        or ".." in parts
+        or not parts
+        or not is_legesher_path("/".join(parts))
+    ):
+        return [
+            _artifact(
+                path,
+                f"metadata.directory {directory!r} must stay under .legesher/ "
+                "(it leaves the repository or can through a symlink)",
+            )
+        ]
+    return []
+
+
+def _check_metadata(path: str, data: bytes) -> list[Finding]:
+    from .metadata import REQUIRED_METADATA_FIELDS
+
+    metadata, problems = _load_yaml(path, data)
+    if problems:
+        return problems
+    if not isinstance(metadata, dict):
+        return [_artifact(path, "metadata must be a mapping")]
+    findings = []
+    missing = [field for field in REQUIRED_METADATA_FIELDS if field not in metadata]
+    if missing:
+        findings.append(_artifact(path, f"metadata is missing {', '.join(missing)}"))
+    if _leaves_repository(metadata.get("file")):
+        findings.append(
+            _artifact(
+                path, f"metadata `file` {metadata['file']!r} leaves the repository"
+            )
+        )
+    return findings
+
+
+def _check_json(
+    path: str, data: bytes, problem: Callable[[object], str | None]
+) -> list[Finding]:
+    import json
+
+    try:
+        document = json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+        return [_artifact(path, f"not valid JSON: {exc}")]
+    reason = problem(document)
+    return [_artifact(path, reason)] if reason else []
+
+
+def _translation_memory_problem(document: object) -> str | None:
+    from .translation_memory.model import TranslationMemoryDocument
+
+    if not isinstance(document, dict):
+        return "a translation memory must be an object"
+    try:
+        TranslationMemoryDocument.from_dict(document)
+    except (ValueError, TypeError, KeyError) as exc:
+        return f"not a valid translation memory: {exc}"
+    return None
+
+
+def _identifier_map_problem(document: object) -> str | None:
+    from .tree_sitter.identifier_map import IdentifierMap
+
+    try:
+        IdentifierMap.from_dict(document)
+    except ValueError as exc:
+        return str(exc)
+    return None
+
+
 def check_blob(
     data: bytes, *, path: str, local: KeywordTable, stored: str | None = None
 ) -> list[Finding]:
@@ -342,6 +558,7 @@ def check_source(
 __all__ = [
     "BLOCKING_KINDS",
     "Finding",
+    "check_artifact",
     "check_blob",
     "check_source",
     "identifier_format_allowlist",

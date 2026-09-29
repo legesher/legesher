@@ -108,6 +108,30 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `core.hooksPath` and naming the `legesher` that installed it; an existing
   pre-commit hook is never overwritten, and `--no-hook` skips or removes
   it. [CORE-1841]
+- **cli**: `legesher guard --diff BASE` checks only what changed from `BASE`
+  to `HEAD`, read at `HEAD` and judged against each file's version at `BASE`,
+  for a pull-request check; it compares the two trees, so a shallow clone
+  needs only the base commit. A file counts as Legesher's when the base's or
+  the head's `.gitattributes` marks it, and the language comes from the
+  base's `.legesher/config.yml` (English when the base names none, never
+  the pull request's own), so nothing a pull request changes in its tree
+  relaxes what it is judged by. The workflow that runs the check is another
+  matter: on `pull_request` it is read from the pull request itself, so
+  `.github/workflows/` needs its own protection. A symlink marked for
+  Legesher is refused in both modes, since the guard cannot check what it
+  points to. Diff mode refuses every such symlink in the tree, and every
+  symlink or submodule under `.legesher/`, changed or not, since a change
+  elsewhere can use a link already there. `--format github` prints each
+  finding as a GitHub Actions annotation. Both modes also check `.legesher`
+  and everything under it, in any letter case: no symlinks or submodules;
+  `config.yml`, `metadata/*.yml`, `translation_memory.json` and
+  `identifier_map.json` parse and match their rules, with
+  `metadata.directory` kept under `.legesher/` (no `..`) and no recorded
+  path leaving the repository. Any other file there is never loaded. Text
+  output quotes a path holding a control character. Upgrading: a custom
+  `metadata.directory` outside `.legesher/` is now a finding, and a
+  repository that already holds a marked symlink fails every pull request
+  until the link is replaced with the file it points to. [CORE-1323]
 - **i18n**: the translations schema v2 has a generated reference,
   `libs/i18n/docs/schema-v2-reference.md`, covering every table, column,
   index, trigger and view. Structure is parsed from `schema_v2.sql` and the
@@ -435,7 +459,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `legesher guard`, run by the pre-commit hook, and the clean filter no
   longer refuses anything. The hook is a client-side check that
   `git commit --no-verify`, merges and rebases skip; the pull-request check
-  (CORE-1323) is the layer meant to see every commit. The guard also refuses
+  (CORE-1323) is the layer that sees changes made anywhere. The guard also refuses
   a file that is not UTF-8 or declares another encoding, which Python would
   honor (a pure-ASCII file declared `utf-7` runs code that reads as a
   string). [CORE-1841]

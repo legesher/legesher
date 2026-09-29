@@ -14,6 +14,7 @@ import pytest
 
 from legesher_core import unicode_guard
 from legesher_core.guard import (
+    Finding,
     check_blob,
     check_source,
     identifier_script_issues,
@@ -321,3 +322,146 @@ class TestCheckBlob:
 
     def test_a_utf8_bom_is_fine(self):
         assert check_blob(b"\xef\xbb\xbfx = 1\n", path="a.py", local=ES) == []
+
+
+class TestLegesherArtifacts:
+    """CORE-1323: files under `.legesher/` parse, match their own format, and
+    never point outside the repository. Map-engine artifacts are opaque here:
+    their format is never described or checked."""
+
+    def check(self, path, data, mode="100644"):
+        from legesher_core.guard import check_artifact
+
+        return check_artifact(path, data, mode=mode)
+
+    def test_a_symlink_under_legesher_is_a_finding(self):
+        (finding,) = self.check(".legesher/config.yml", b"/etc/passwd", mode="120000")
+        assert (finding.check, finding.path) == ("artifact", ".legesher/config.yml")
+        assert "symlink" in finding.message
+
+    def test_a_valid_config(self):
+        data = b"language: es\ngit:\n  enabled: true\nmetadata:\n  directory: .legesher/metadata\n"
+        assert self.check(".legesher/config.yml", data) == []
+
+    def test_config_that_is_not_yaml(self):
+        (finding,) = self.check(".legesher/config.yml", b"language: [es\n")
+        assert "YAML" in finding.message
+
+    @pytest.mark.parametrize("directory", ["../outside", "/etc/legesher", "a/../../b"])
+    def test_a_config_path_that_leaves_the_repository(self, directory):
+        data = f"metadata:\n  directory: {directory}\n".encode()
+        (finding,) = self.check(".legesher/config.yml", data)
+        assert "metadata.directory" in finding.message
+
+    def test_metadata_missing_required_fields(self):
+        (finding,) = self.check(".legesher/metadata/src/a.py.yml", b"file: src/a.py\n")
+        assert "original_language" in finding.message
+
+    def test_metadata_whose_file_leaves_the_repository(self):
+        data = (
+            b"file: ../../etc/passwd\noriginal_language: es\ncanonical_language: es\n"
+            b"python_version: '3.13'\ncreated_at: x\nupdated_at: x\ntranslations: {}\n"
+            b"history: []\n"
+        )
+        (finding,) = self.check(".legesher/metadata/src/a.py.yml", data)
+        assert "`file`" in finding.message
+
+    def test_a_valid_translation_memory(self):
+        import json
+
+        from legesher_core.translation_memory.model import TranslationMemoryDocument
+
+        data = json.dumps(TranslationMemoryDocument().to_dict()).encode()
+        assert self.check(".legesher/translation_memory.json", data) == []
+
+    def test_a_translation_memory_of_another_kind(self):
+        (finding,) = self.check(
+            ".legesher/translation_memory.json",
+            b'{"artifact": "other", "schema_version": "1.0.0"}',
+        )
+        assert finding.check == "artifact"
+
+    def test_json_that_does_not_parse(self):
+        (finding,) = self.check(".legesher/identifier_map.json", b"{not json")
+        assert "JSON" in finding.message
+
+    def test_an_identifier_map_of_the_wrong_shape(self):
+        (finding,) = self.check(".legesher/identifier_map.json", b'{"identifiers": []}')
+        assert finding.check == "artifact"
+
+    def test_a_valid_identifier_map(self):
+        data = b'{"version": 1, "source_lang": "en", "identifiers": {"total": {"es": "total"}}}'
+        assert self.check(".legesher/identifier_map.json", data) == []
+
+    def test_other_files_are_opaque(self):
+        # Formats this toolchain does not own (the map engine's files, for
+        # one) are never parsed, so nothing about them is described here.
+        assert self.check(".legesher/register_map.json", b"\x00 anything") == []
+        assert self.check(".legesher/whatever/x.bin", b"{not json") == []
+
+
+class TestArtifactReviewRegressions:
+    """From the review of CORE-1323."""
+
+    def check(self, path, data, mode="100644"):
+        from legesher_core.guard import check_artifact
+
+        return check_artifact(path, data, mode=mode)
+
+    def test_legesher_itself_as_a_symlink(self):
+        (finding,) = self.check(".legesher", b"../outside", mode="120000")
+        assert "symlink" in finding.message
+
+    def test_a_case_variant_of_the_directory_is_checked(self):
+        data = b"metadata:\n  directory: ../../outside\n"
+        (finding,) = self.check(".LEGESHER/Config.yml", data)
+        assert "metadata.directory" in finding.message
+
+    @pytest.mark.parametrize(
+        "directory",
+        [
+            "meta/sub",
+            "docs/metadata",
+            ".",
+            ".legesher/../meta/sub",
+            ".legesher/metadata/../../meta",
+            ".legesher\\..\\meta",
+        ],
+    )
+    def test_the_metadata_directory_stays_under_legesher(self, directory):
+        # A directory elsewhere could reach outside through a symlink in the
+        # tree; under .legesher/ every entry is itself checked.
+        data = f"metadata:\n  directory: {directory}\n".encode()
+        (finding,) = self.check(".legesher/config.yml", data)
+        assert "metadata.directory" in finding.message
+
+    @pytest.mark.parametrize(
+        ("path", "data"),
+        [
+            (".legesher/identifier_map.json", b"[" * 100_000 + b"]" * 100_000),
+            (".legesher/translation_memory.json", b"[" * 100_000 + b"]" * 100_000),
+            (".legesher/config.yml", b"a: " + b"[" * 20_000 + b"]" * 20_000 + b"\n"),
+        ],
+        ids=["identifier-map", "translation-memory", "config"],
+    )
+    def test_deep_nesting_is_a_finding_not_a_crash(self, path, data):
+        (finding,) = self.check(path, data)
+        assert finding.check == "artifact"
+
+    def test_an_oversized_artifact_is_a_finding(self):
+        (finding,) = self.check(
+            ".legesher/config.yml", b"a: 1\n" + b"#" * (6 * 1024 * 1024)
+        )
+        assert "too large" in finding.message
+
+
+class TestFindingPaths:
+    def test_a_path_with_a_control_character_is_quoted(self):
+        finding = Finding("a\n::stop-commands::x\n.py", 1, 2, "unicode", "m")
+        assert finding.format() == '"a\\n::stop-commands::x\\n.py":1:2: unicode: m'
+
+    def test_an_ordinary_path_is_left_as_is(self):
+        assert (
+            Finding("src/ñ.py", 1, 2, "unicode", "m").format()
+            == "src/ñ.py:1:2: unicode: m"
+        )
