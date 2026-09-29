@@ -116,8 +116,14 @@ localizes tracebacks on the way out.
   modification — there is no on-disk cache an attacker could pre-seed.
 - Traceback hooks never raise and fall back to CPython's own hooks (`libs/runtime/legesher_runtime/hooks.py`), so the
   error path cannot be used to suppress or forge diagnostics.
-- The git clean filter scans source with `unicode_guard.scan_text` before translating
-  (`libs/core/legesher_core/git_filter.py`).
+- The guard scans staged source with `unicode_guard.scan_text` and the identifier-script check, and refuses
+  content that is not UTF-8 or declares another encoding (`libs/core/legesher_core/guard.py`), run as
+  `legesher guard --staged` by the pre-commit hook that `legesher git setup` installs. The clean filter itself
+  cannot refuse: git stores a file unchanged when its filter fails.
+- The hook is client-side and advisory, not a trust boundary: `git commit --no-verify`, merges, rebases and
+  cherry-picks skip it, edits on github.com and commits through the API never run it, and it lets a commit
+  through with a notice when it cannot find `legesher`. The pull-request check (CORE-1323) is the layer meant to
+  see every commit.
 
 A framing note: the import hook grants no *new* execution authority. `import mi_modulo` executes code with the user's
 privileges with or without Legesher — Python's baseline. The obligation specific to this layer is narrower:

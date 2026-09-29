@@ -191,8 +191,8 @@ still runs, and where:
 | --- | --- | --- |
 | `editor.unicodeHighlight.invisibleCharacters` | VS Code, never touched by this extension | Zero-width and bidi-control characters, in the editor |
 | `editor.unicodeHighlight.ambiguousCharacters` | VS Code, still on | Confusables from every *other* script: a Cyrillic small a in an Arabic file is still flagged |
-| `unicode_guard.scan_text` | Legesher git clean filter (`libs/core/legesher_core/git_filter.py`), on commit | Bidi reordering controls, category-`Cf` invisibles, the full `Default_Ignorable` set, Arabic tatweel, and a byte-order mark |
-| `unicode_guard.scan_identifier` | Same filter, on commit | Every identifier character must belong to a script some shipped language pack uses |
+| `unicode_guard.scan_text` | `legesher guard` (`libs/core/legesher_core/guard.py`), run by the pre-commit hook on commit where it is installed (a client-side check `--no-verify` skips) | Bidi reordering controls, category-`Cf` invisibles, the full `Default_Ignorable` set, Arabic tatweel, and an interior byte-order mark |
+| `unicode_guard.scan_identifier` | Same guard, on commit | Every identifier character must belong to a script some shipped language pack uses |
 | Store-NFC / compare-NFKC+fold identity | Legesher engine (`libs/core/legesher_core/text_identity.py`) | Canonically equivalent spellings hash and compare alike, in the pack and corpus pipeline |
 
 ### What does not

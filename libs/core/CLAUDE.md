@@ -23,7 +23,7 @@ between natural languages.
 - **51 Languages**: Via language pack system
 - **Perfect Round-Trip**: EN→ES→EN translation is byte-identical
 - **RTL Support**: Arabic, Hebrew, Persian, Urdu with UTF-8 encoding
-- **Git Integration**: Clean/smudge filters with metadata tracking
+- **Git Integration**: A clean filter that keeps each block's keywords in its stored form, and the guard
 - **Cultural Comments**: MLCP protocol support
 
 ## Directory Structure
@@ -35,7 +35,9 @@ libs/core/
 │   ├── transformer.py        # TokenTranslator implementation
 │   ├── tree_sitter/          # TreeSitterTranslator implementation
 │   ├── language_interface.py # create_translator() factory and Protocol
-│   ├── git_filter.py         # Git clean/smudge filters
+│   ├── git_filter.py         # Git clean filter (and the opt-in keyword-only smudge)
+│   ├── stored_form.py        # Keyword normalization to each block's stored form
+│   ├── guard.py              # The checks behind `legesher guard`
 │   ├── round_trip.py         # Round-trip verification (comparator/classifier/report)
 │   ├── metadata.py           # MetadataManager for tracking
 │   ├── types.py              # Type definitions

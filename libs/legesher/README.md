@@ -145,23 +145,43 @@ Python raises `SyntaxError`. Pass `--lang`, or write the config with `legesher g
 
 ### `legesher git`
 
-Manage git filter integration for multilingual repositories.
+Git stores each file in its author's language. `legesher git setup` configures the clean filter and the
+guard hook for a repository.
 
 ```bash
-# Set up git filters for current repository
+# Set up for the current repository
 legesher git setup
 
-# Set up with specific language
+# Set up with a specific language
 legesher git setup --language es
 
-# Check git filter status
+# Opt in to the keyword-only smudge (terminal editors)
+legesher git setup --language es --keyword-smudge
+
+# Check the configuration
 legesher git status
 ```
 
 **Subcommands:**
 
-- **`setup`**: Configure git clean/smudge filters to store code in canonical English while working in your native language
-- **`status`**: Display current git filter configuration and language settings
+- **`setup`**: Configure the clean filter, which only normalizes: a stray keyword, such as an English `if` typed
+  into a Spanish file, is stored in its block's language. It never refuses a file, because git stores a file
+  unchanged when its filter fails, so setup also installs a pre-commit hook that runs `legesher guard`. An
+  existing pre-commit hook is never overwritten; setup prints the line to add to it instead. `--no-hook` skips
+  the hook, and removes it if setup installed it.
+- **`status`**: Display the filter, smudge and hook configuration and the language settings
+
+Smudge is off by default: a reader's rendering is never written into a file, so views render in the editor and
+on GitHub. `--keyword-smudge` is the opt-in for terminal editors. It renders an English file's keywords in your
+language on checkout, from the open language pack only (never builtins or library names), and only when the
+clean filter can store the result back exactly. Running `setup` again without the flag turns it off in that
+scope, and setup says so when a smudge is still configured in another, such as the global git config.
+
+Until in-file region markers land, a file is one block. Its language is read from its committed version or, for a
+new file, from the file itself, among English and your configured language. A reading counts only when the file
+parses under it, and the language with the most keywords wins, so one slip never converts a file; with no reading
+that parses, or a tie, the file is stored as written. A file in a third language is left as written unless every
+keyword it uses is spelled the same in your language, which closely related languages can do.
 
 **Example Output:**
 
@@ -176,6 +196,7 @@ Creating configuration...
 ✓ Saved project config to: /path/to/repo/.legesher/config.yml
 
 Configuring git filters...
+✓ Clean filter: legesher-filter --clean --path %f
 
 Configuring .gitattributes...
 ✓ Updated .gitattributes
@@ -184,6 +205,9 @@ Initializing metadata system...
 ✓ Created metadata directory: /path/to/repo/.legesher/metadata
 ✓ Metadata will be tracked in git
 ✓ Metadata system initialized successfully
+
+Configuring the guard hook...
+✓ Installed the guard hook (pre-commit: legesher guard --staged)
 
 Verifying setup...
 ✓ Git filter setup verified
@@ -194,13 +218,41 @@ Verifying setup...
 
 Your repository is now configured for multilingual code.
 Language: es
-Storage: English (canonical)
+Storage: each file in its author's language
 ```
 
 The trailing "Next steps" list is omitted above. The `143 builtins` in that output is not the pack's
 built-in count: the translator merges the pack's 70 exception names into its built-in map before
 reporting, so `143` is the pack's 73 built-ins plus its 70 exceptions. The per-category counts are in
 [legesher-i18n](../i18n/README.md#supported-languages).
+
+### `legesher guard`
+
+Refuses what must not be committed. The pre-commit hook runs `legesher guard --staged`; without paths it checks
+the staged files, and with paths it checks those files on disk. When staged, a file is checked if `.gitattributes`,
+staged or in the working tree, gives it the `legesher` filter.
+
+```bash
+$ legesher guard --staged
+src/app.py:2:11: unicode: U+202E RIGHT-TO-LEFT OVERRIDE: Trojan Source bidi reordering control (CVE-2021-42574)
+src/app.py:3:5: keyword: `if` in a block stored in es; its stored form is `si`
+
+legesher guard: 2 finding(s) in 1 file(s).
+```
+
+- **`encoding`**: content that is not UTF-8, or a coding declaration other than UTF-8. Python honors the
+  declaration, so a pure-ASCII file declared `utf-7` can run code that reads as a string.
+- **`unicode`**: bidi reordering controls, invisible characters outside string and comment prose, Arabic tatweel,
+  and identifier characters outside every supported script. There is no override.
+- **`keyword`**: a keyword not in its block's stored form. The clean filter normalizes these, so a finding means
+  the file was staged without it; run `legesher git setup`, then `git add --renormalize <path>`.
+
+Exit status is 0 with no findings, 1 with findings, and 2 when the guard cannot run (outside a repository, or an
+unknown language).
+
+The hook is a client-side check: `git commit --no-verify`, merges and rebases skip it, and it lets a commit through
+with a notice when it cannot find `legesher`. The pull-request check (CORE-1323) is the layer meant to see every
+commit.
 
 ### `legesher config`
 
@@ -286,8 +338,8 @@ in a project, `~/.legesher/config.yml` for user-wide defaults.
 > `git setup` writes the shape the runtime reads. `init` writes its own shape, which the runtime does
 > not understand, so after `legesher init --language es` the working language silently falls back to
 > `en`: `legesher git status` reports `Language: en`, `legesher run` without `--lang` fails to compile
-> the file, `config get language` exits 1, and the git clean filter stores your file unchanged instead
-> of translating it to English. Reconciling the two is tracked as its own issue. Until it lands, run
+> the file, `config get language` exits 1, and the git clean filter cannot recognize your language, so it
+> leaves stray keywords as typed. Reconciling the two is tracked as its own issue. Until it lands, run
 > `legesher git setup --language <code>` after `legesher init` (it rewrites `config.yml` in the shape
 > everything else reads, and leaves the generated AI context files alone).
 

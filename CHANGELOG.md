@@ -20,6 +20,27 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **core/cli**: git stores each file in its author's language. The clean
+  filter no longer translates to English. It rewrites a stray keyword to the
+  language its block is stored in and changes nothing else: an English hard
+  keyword such as `if` typed into a Spanish file is stored as `si`, and your
+  own language's keyword typed into a file stored in another language is
+  rewritten only when a parse confirms it is a keyword. Names, builtins,
+  strings, comments, whitespace and line endings are returned byte for byte,
+  and the filter never fails. A file's language is read from its committed
+  version, or from a new file's own text, among English and your configured
+  language: a reading counts only when the file parses under it, and the
+  language with the most keywords wins, so one slip never converts a file. A
+  file in a third language is left as written unless every keyword it uses is
+  spelled the same in your language, which closely related languages can do;
+  in-file region markers will make each block's language explicit.
+  `legesher git setup` configures the clean filter only
+  (`legesher-filter --clean --path %f`). Smudge is off by default;
+  `--keyword-smudge` opts in to rendering an English file's hard keywords in
+  your language on checkout, and only when the clean filter can store the
+  rendering back exactly. Running setup again without the flag removes a
+  smudge configured earlier in the same scope, and says so when one is still
+  active in another, such as the global config. [CORE-1841]
 - **cli**: the runtime import hook claims only files it will translate.
   It claimed every `.py` on the path, the standard library and installed
   packages included, and recompiled each from source with no bytecode
@@ -62,6 +83,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **cli**: `legesher guard` refuses what must not be committed: bidi
+  reordering controls, invisible characters outside string and comment
+  prose, Arabic tatweel, identifier characters outside every supported
+  script, content that is not UTF-8 or declares another encoding, and
+  keywords out of their block's stored form. `--staged` checks
+  the staged Legesher files; paths check files on disk. Findings print as
+  `path:line:column: check: message`, and the exit status is 0, 1 with
+  findings, or 2 when the guard cannot run. `legesher git setup` and
+  `legesher init` install a pre-commit hook that runs it, honoring
+  `core.hooksPath` and naming the `legesher` that installed it; an existing
+  pre-commit hook is never overwritten, and `--no-hook` skips or removes
+  it. [CORE-1841]
 - **i18n**: the translations schema v2 has a generated reference,
   `libs/i18n/docs/schema-v2-reference.md`, covering every table, column,
   index, trigger and view. Structure is parsed from `schema_v2.sql` and the
@@ -348,6 +381,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Security
 
+- **core/cli**: Trojan Source and invisible-character refusals now block a
+  commit where the pre-commit hook is installed. The clean filter refused
+  such a file by exiting non-zero, which git treats as a passthrough, so the
+  file was committed unchanged (CORE-2109). The refusal moved to
+  `legesher guard`, run by the pre-commit hook, and the clean filter no
+  longer refuses anything. The hook is a client-side check that
+  `git commit --no-verify`, merges and rebases skip; the pull-request check
+  (CORE-1323) is the layer meant to see every commit. The guard also refuses
+  a file that is not UTF-8 or declares another encoding, which Python would
+  honor (a pure-ASCII file declared `utf-7` runs code that reads as a
+  string). [CORE-1841]
 - **core**: the identifier-map collision check now compares under the
   store-NFC / compare-NFKC+fold contract instead of raw strings. A proposed
   identifier translation that was NFKC-equal to a pack's reserved rendering —

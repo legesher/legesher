@@ -1,14 +1,19 @@
-"""CLI entry point for legesher-filter command.
+"""CLI entry point for the ``legesher-filter`` command.
 
-This module provides the legesher-filter command that git calls during
-clean and smudge filter operations. This is a separate entry point from
-the main 'legesher' CLI to keep git filter operations lightweight.
+Git runs this command as the clean filter (and, when the keyword-only smudge
+is opted into, as the smudge filter). A separate entry point from the main
+``legesher`` CLI keeps filter start-up light.
 
-Git calls this command like:
-    cat file.py | legesher-filter --clean > .git/objects/...
-    cat .git/objects/... | legesher-filter --smudge > file.py
+``legesher git setup`` configures:
 
-The filter reads from stdin and writes to stdout, following git's filter protocol.
+    [filter "legesher"]
+        clean = legesher-filter --clean --path %f
+        required = false
+
+The filter reads bytes on stdin and writes bytes on stdout. Content that is
+not UTF-8 is passed through unchanged, and the exit status is always 0: git
+treats a failing filter as a passthrough anyway, and refusal is the job of
+``legesher guard``.
 """
 
 import logging
@@ -18,14 +23,10 @@ import click
 
 from legesher_core.git_filter import GitFilter
 
-# Configure logger
 logging.basicConfig(
-    level=logging.WARNING,  # Only show warnings/errors by default
+    level=logging.WARNING,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        # Log to .legesher/filter.log if it exists, otherwise stderr
-        logging.StreamHandler(sys.stderr)
-    ],
+    handlers=[logging.StreamHandler(sys.stderr)],
 )
 logger = logging.getLogger(__name__)
 
@@ -35,13 +36,19 @@ logger = logging.getLogger(__name__)
     "--clean",
     "mode",
     flag_value="clean",
-    help="Clean filter: translate local language → canonical English (for git add)",
+    help="Clean filter: normalize stray keywords to each block's stored form",
 )
 @click.option(
     "--smudge",
     "mode",
     flag_value="smudge",
-    help="Smudge filter: translate canonical English → local language (for git checkout)",
+    help="Keyword-only smudge: render an English block's keywords (opt-in)",
+)
+@click.option(
+    "--path",
+    "path",
+    default=None,
+    help="Path of the file being filtered, relative to the repository (git's %f)",
 )
 @click.option(
     "--language",
@@ -60,102 +67,66 @@ logger = logging.getLogger(__name__)
 )
 def main(
     mode: str,
+    path: str | None,
     language: str | None,
     python_version: str | None,
     verbose: bool,
 ):
-    """Legesher git filter for multilingual code translation.
-
-    This command is called by git during clean (add) and smudge (checkout)
-    operations to transparently translate code between languages.
-
-    \b
-    Git configuration:
-        [filter "legesher"]
-            clean = legesher-filter --clean
-            smudge = legesher-filter --smudge
+    """Legesher git filter: keep each block's keywords in its stored form.
 
     \b
     Examples:
-        # Clean filter (called by git add)
-        $ cat file.py | legesher-filter --clean
-
-        # Smudge filter (called by git checkout)
-        $ cat file.py | legesher-filter --smudge
-
-        # Override language
+        $ cat file.py | legesher-filter --clean --path file.py
         $ cat file.py | legesher-filter --clean --language es
     """
-    # Enable verbose logging if requested
     if verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    # Validate mode is specified
     if not mode:
-        click.echo(
-            "Error: Must specify either --clean or --smudge mode",
-            err=True,
-        )
+        click.echo("Error: Must specify either --clean or --smudge mode", err=True)
         sys.exit(1)
 
+    data = sys.stdin.buffer.read()
+    sys.stdout.buffer.write(_filter(data, mode, path, language, python_version))
+    sys.stdout.buffer.flush()
+    sys.exit(0)
+
+
+def _filter(
+    data: bytes,
+    mode: str,
+    path: str | None,
+    language: str | None,
+    python_version: str | None,
+) -> bytes:
+    """Filter one blob; any failure returns ``data`` unchanged."""
     try:
-        # Get language from config if not specified
-        if language is None:
-            language = _get_language_from_config()
-
-        logger.debug(f"Filter mode: {mode}, language: {language}")
-
-        # Create git filter
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        return data
+    try:
         git_filter = GitFilter(
-            language=language,
+            language=language or _get_language_from_config(),
             python_version=python_version,
         )
-
-        # Run appropriate filter
-        if mode == "clean":
-            exit_code = git_filter.clean(sys.stdin, sys.stdout)
-        elif mode == "smudge":
-            exit_code = git_filter.smudge(sys.stdin, sys.stdout)
-        else:
-            click.echo(f"Error: Unknown mode '{mode}'", err=True)
-            sys.exit(1)
-
-        sys.exit(exit_code)
-
     except Exception as e:
-        # Log error but don't break git - pass through unchanged
-        logger.error(f"Filter error: {e}", exc_info=True)
-
-        # Pass through input unchanged
-        try:
-            content = sys.stdin.read()
-            sys.stdout.write(content)
-        except Exception:
-            pass
-
-        # Always return success to not break git
-        sys.exit(0)
+        logger.error(f"Filter error: {e}")
+        return data
+    if mode == "clean":
+        result = git_filter.clean_text(text, path)
+    else:
+        result = git_filter.smudge_text(text)
+    return result.encode("utf-8")
 
 
 def _get_language_from_config() -> str:
-    """Get language setting from configuration.
-
-    Returns:
-        Language code from config
-
-    Raises:
-        ValueError: If no configuration found
-    """
+    """The configured language, or English when there is no configuration."""
     try:
-        # Import here to avoid circular dependency
         from legesher.config import LegesherConfig
 
-        config = LegesherConfig.load()
-        return config.language
-
+        return LegesherConfig.load().language
     except Exception as e:
         logger.error(f"Could not load config: {e}")
-        # Default to English if no config found
         logger.warning("Defaulting to English (en)")
         return "en"
 

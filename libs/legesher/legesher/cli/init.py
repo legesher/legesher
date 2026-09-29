@@ -81,7 +81,7 @@ def init(
     \b
     1. Detect your Python version from pyproject.toml
     2. Let you choose which languages to support
-    3. Optionally set up git filters for canonical English storage
+    3. Optionally set up the git clean filter and the guard hook
     4. Generate AI assistant context files
     5. Create .legesher/config.yml with your preferences
 
@@ -170,7 +170,7 @@ def init(
     if git is None:
         if sys.stdin.isatty():
             git_enabled = questionary.confirm(
-                "Set up git filters for canonical English storage?",
+                "Set up the git clean filter and the guard hook?",
                 default=True,
             ).ask()
             if git_enabled is None:
@@ -399,7 +399,7 @@ languages:
 # Python version for language pack compatibility
 python_version: "{python_version}"
 
-# Git integration (canonical English storage)
+# Git integration (each file is stored in its author's language)
 git:
   enabled: {str(git_enabled).lower()}
   canonical_language: "en"
@@ -454,18 +454,23 @@ def _yaml_list(items: Sequence[str], indent: int = 0) -> str:
 
 
 def _setup_git_integration() -> bool:
-    """Set up git filters and attributes for canonical English storage.
+    """Set up the clean filter, attributes and guard hook.
 
     Delegates to the shared helpers behind ``legesher git setup`` so both
-    entry points configure identical filters: the ``legesher-filter``
-    console script, ``filter.legesher.required=false``, and the same
-    .gitattributes entry (CORE-1344).
+    entry points configure identical git integration: the ``legesher-filter``
+    clean command, ``filter.legesher.required=false``, the same
+    .gitattributes entry (CORE-1344), and the pre-commit hook that runs
+    ``legesher guard`` (CORE-1841).
 
     Returns:
         True if git integration was configured, False if it was skipped
         (not inside a git repository, or the filters could not be set).
     """
-    from legesher.cli.git import _configure_git_filters, _create_gitattributes
+    from legesher.cli.git import (
+        _configure_git_filters,
+        _create_gitattributes,
+        _report_hook,
+    )
     from legesher.config import LegesherConfig
 
     try:
@@ -485,6 +490,7 @@ def _setup_git_integration() -> bool:
 
     _create_gitattributes(repo_root)
     click.echo("✓ Updated .gitattributes")
+    _report_hook(repo_root, install=True)
     return True
 
 

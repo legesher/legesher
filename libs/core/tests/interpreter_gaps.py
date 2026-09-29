@@ -11,7 +11,7 @@ CPython floor bump, reports as XPASS and never as a silent pass.
    (Mn, Mc) and every format character (Cf). A name carrying a vowel
    sign, a virama, a haraka or a joiner lexes as NAME / ERRORTOKEN / NAME
    fragments, while the C tokenizer behind ``tokenize`` from 3.12 on reads
-   it as one NAME. ``git_filter._scan_identifier_scripts`` works around
+   it as one NAME. ``guard.identifier_script_issues`` works around
    this for the guard; the token translator does not, so its return hop
    (native -> canonical) never matches a rendering that fragments, and 12
    shipped packs carry such vocabulary in the files these interpreters

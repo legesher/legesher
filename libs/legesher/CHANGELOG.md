@@ -9,8 +9,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `legesher guard`, and the pre-commit hook that `legesher git setup` and
+  `legesher init` install to run it (`--no-hook` to skip). An existing
+  pre-commit hook is never overwritten. [CORE-1841]
+
 ### Changed
 
+- `legesher git setup` configures the clean filter only, as
+  `legesher-filter --clean --path %f`; smudge is off by default, and
+  `--keyword-smudge` opts in to the keyword-only smudge. Running setup again
+  without the flag removes a smudge configured earlier in the same scope, and
+  says so when one is still active in another. `legesher git status`
+  reports the smudge as off and shows the guard hook. [CORE-1841]
 - The runtime import hook claims only files it will translate.
   It claimed every `.py` on the path, the standard library and installed
   packages included, and recompiled each from source with no bytecode

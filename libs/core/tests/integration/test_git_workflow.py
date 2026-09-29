@@ -1,453 +1,200 @@
-"""Integration tests for complete git filter workflow.
+"""The clean filter under real git (CORE-1841).
 
-Tests the full end-to-end flow:
-1. Setup git repository
-2. Configure git filters
-3. Add file in local language
-4. Git clean filter (local → English)
-5. Git commit
-6. Git checkout
-7. Git smudge filter (English → local)
+Git runs the filter exactly as ``legesher git setup`` wires it, pointed at
+this interpreter (``python -m legesher_core``) so the test never depends on
+what is on PATH. What is asserted is what git stores (``git cat-file``) and
+what ``git status`` reports, never the filter called directly.
 """
 
-import io
+import os
+import shlex
 import subprocess
+import sys
 
 import pytest
 
-from legesher_core.git_filter import GitFilter
+FILTER = f"{shlex.quote(sys.executable)} -m legesher_core"
 
 
-@pytest.fixture
-def temp_git_repo(tmp_path):
-    """Create a temporary git repository with initial commit."""
-    repo = tmp_path / "test_repo"
+def git(repo, *args, stdin=None):
+    return subprocess.run(
+        ["git", *args],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        input=stdin,
+    ).stdout
+
+
+def stored(repo, path):
+    return git(repo, "cat-file", "blob", f":0:{path}").decode()
+
+
+def status(repo):
+    return git(repo, "status", "--porcelain").decode()
+
+
+def make_repo(tmp_path, language, smudge=False):
+    repo = tmp_path / "repo"
     repo.mkdir()
-
-    # Initialize git
-    subprocess.run(
-        ["git", "init"],
-        cwd=repo,
-        check=True,
-        capture_output=True,
-    )
-
-    # Configure git user
-    subprocess.run(
-        ["git", "config", "user.name", "Test User"],
-        cwd=repo,
-        check=True,
-        capture_output=True,
-    )
-    subprocess.run(
-        ["git", "config", "user.email", "test@example.com"],
-        cwd=repo,
-        check=True,
-        capture_output=True,
-    )
-
-    # Create initial commit
-    readme = repo / "README.md"
-    readme.write_text("# Test Repository\n")
-    subprocess.run(
-        ["git", "add", "README.md"], cwd=repo, check=True, capture_output=True
-    )
-    subprocess.run(
-        ["git", "commit", "-m", "Initial commit"],
-        cwd=repo,
-        check=True,
-        capture_output=True,
-    )
-
+    git(repo, "init", "-q")
+    git(repo, "config", "user.email", "test@example.com")
+    git(repo, "config", "user.name", "Test")
+    git(repo, "config", "core.autocrlf", "false")
+    for mode in ("clean", "smudge") if smudge else ("clean",):
+        git(
+            repo,
+            "config",
+            f"filter.legesher.{mode}",
+            f"{FILTER} --{mode} --language {language} --path %f",
+        )
+    git(repo, "config", "filter.legesher.required", "false")
+    (repo / ".gitattributes").write_text("*.py filter=legesher\n")
+    git(repo, "add", ".gitattributes")
+    git(repo, "commit", "-q", "-m", "attributes")
     return repo
 
 
 @pytest.fixture
-def spanish_filter():
-    """Create a GitFilter for Spanish."""
-    return GitFilter(language="es", python_version="3.13")
+def spanish_repo(tmp_path):
+    return make_repo(tmp_path, "es")
 
 
-@pytest.fixture
-def arabic_filter():
-    """Create a GitFilter for Arabic."""
-    return GitFilter(language="ar", python_version="3.13")
+def commit(repo, name, text, message="c"):
+    (repo / name).write_bytes(text.encode())
+    git(repo, "add", name)
+    git(repo, "commit", "-q", "-m", message)
 
 
-class TestGitFilterWorkflow:
-    """Test complete git filter workflow."""
+class TestCleanUnderGit:
+    def test_git_add_stores_english_strays_in_the_blocks_language(self, spanish_repo):
+        text = "definir f(x):\n    if x:\n        devolver 1\n"
+        (spanish_repo / "m.py").write_text(text)
+        git(spanish_repo, "add", "m.py")
+        assert stored(spanish_repo, "m.py") == (
+            "definir f(x):\n    si x:\n        devolver 1\n"
+        )
+        # The working tree is the author's; the filter never writes it.
+        assert (spanish_repo / "m.py").read_text() == text
 
-    def test_spanish_clean_filter(self, spanish_filter, spanish_keywords):
-        """Test clean filter translates Spanish to English."""
-        spanish_code = (
-            f"{spanish_keywords['def']} calcular_suma(a, b):\n"
-            f"    resultado = a + b\n"
-            f"    {spanish_keywords['return']} resultado\n"
+    def test_the_committed_version_decides_the_block(self, spanish_repo):
+        commit(spanish_repo, "e.py", "def f(x):\n    return x\n")
+        (spanish_repo / "e.py").write_text("def f(x):\n    si x:\n        return x\n")
+        git(spanish_repo, "add", "e.py")
+        assert stored(spanish_repo, "e.py") == (
+            "def f(x):\n    if x:\n        return x\n"
         )
 
-        input_stream = io.StringIO(spanish_code)
-        output_stream = io.StringIO()
+    def test_an_english_file_is_stored_as_written(self, spanish_repo):
+        text = "def f(x, y):\n    return y\n"
+        commit(spanish_repo, "e.py", text)
+        assert stored(spanish_repo, "e.py") == text
 
-        exit_code = spanish_filter.clean(input_stream, output_stream)
+    def test_status_stays_clean_after_a_touch(self, spanish_repo):
+        commit(spanish_repo, "m.py", "definir f(x):\n    if x:\n        devolver 1\n")
+        os.utime(spanish_repo / "m.py", (1, 1))
+        # Git re-runs clean on a stat-dirty file; a stable filter reports
+        # nothing to commit.
+        assert status(spanish_repo) == ""
 
-        assert exit_code == 0
-        english_code = output_stream.getvalue()
-
-        # Verify English keywords
-        assert "def" in english_code
-        assert "return" in english_code
-
-        # Verify identifiers preserved
-        assert "calcular_suma" in english_code
-        assert "resultado" in english_code
-
-    def test_spanish_smudge_filter(self, spanish_filter, spanish_keywords):
-        """Test smudge filter translates English to Spanish."""
-        english_code = (
-            "def calculate_sum(a, b):\n    result = a + b\n    return result\n"
+    def test_crlf_is_stored_as_written(self, spanish_repo):
+        commit(
+            spanish_repo, "m.py", "definir f(x):\r\n    si x:\r\n        return 1\r\n"
+        )
+        assert stored(spanish_repo, "m.py") == (
+            "definir f(x):\r\n    si x:\r\n        devolver 1\r\n"
         )
 
-        input_stream = io.StringIO(english_code)
-        output_stream = io.StringIO()
+    def test_the_filter_does_not_refuse_the_guard_does(self, spanish_repo):
+        text = 'x = "user\u202e"\n'
+        commit(spanish_repo, "t.py", text)
+        assert stored(spanish_repo, "t.py") == text
 
-        exit_code = spanish_filter.smudge(input_stream, output_stream)
+    def test_a_file_in_a_third_language_is_left_alone(self, spanish_repo):
+        text = "défini f(x):\n    return x\n"  # French keywords, Spanish repo
+        commit(spanish_repo, "fr.py", text)
+        assert stored(spanish_repo, "fr.py") == text
 
-        assert exit_code == 0
-        spanish_code = output_stream.getvalue()
+    def test_arabic(self, tmp_path):
+        repo = make_repo(tmp_path, "ar")
+        commit(repo, "m.py", "تعريف f(x):\n    إذا x:\n        return x\n")
+        assert stored(repo, "m.py") == "تعريف f(x):\n    إذا x:\n        إرجاع x\n"
 
-        # Verify Spanish keywords
-        assert spanish_keywords["def"] in spanish_code
-        assert spanish_keywords["return"] in spanish_code
 
-        # Verify identifiers preserved
-        assert "calculate_sum" in spanish_code
-        assert "result" in spanish_code
+class TestReviewRegressions:
+    """Reproductions from the review of CORE-1841, under real git."""
 
-    def test_round_trip_spanish(self, spanish_filter, spanish_keywords):
-        """Test Spanish → English → Spanish preserves semantics."""
-        original = (
-            f"{spanish_keywords['def']} fibonacci(n):\n"
-            f"    {spanish_keywords['if']} n <= 1:\n"
-            f"        {spanish_keywords['return']} n\n"
-            f"    {spanish_keywords['return']} fibonacci(n - 1) + fibonacci(n - 2)\n"
+    ENGLISH = (
+        "import os\n\n"
+        "def main():\n"
+        "    for name in os.listdir('.'):\n"
+        "        if name.endswith('.py'):\n"
+        "            print(name)\n"
+        "    return None\n"
+    )
+    SLIP = ENGLISH.replace("if name", "si name")
+
+    def test_a_staged_wip_slip_does_not_spread_to_the_whole_file(self, spanish_repo):
+        commit(spanish_repo, "app.py", self.ENGLISH)
+        broken = self.SLIP.replace(
+            "    return None", "    total = 1 +\n    return None"
+        )
+        (spanish_repo / "app.py").write_text(broken)
+        git(spanish_repo, "add", "app.py")
+        (spanish_repo / "app.py").write_text(broken.replace("1 +", "1 + 2"))
+        git(spanish_repo, "add", "app.py")
+        assert stored(spanish_repo, "app.py") == self.ENGLISH.replace(
+            "    return None", "    total = 1 + 2\n    return None"
         )
 
-        # Clean: Spanish → English
-        input1 = io.StringIO(original)
-        output1 = io.StringIO()
-        spanish_filter.clean(input1, output1)
-        english = output1.getvalue()
-
-        # Verify English
-        assert "def" in english
-        assert "if" in english
-        assert "return" in english
-
-        # Smudge: English → Spanish
-        input2 = io.StringIO(english)
-        output2 = io.StringIO()
-        spanish_filter.smudge(input2, output2)
-        result = output2.getvalue()
-
-        # Verify Spanish keywords restored
-        assert spanish_keywords["def"] in result
-        assert spanish_keywords["if"] in result
-        assert spanish_keywords["return"] in result
-
-        # Verify identifier preserved
-        assert "fibonacci" in result
-
-    def test_round_trip_arabic(self, arabic_filter, arabic_keywords, arabic_builtins):
-        """Test Arabic → English → Arabic preserves semantics."""
-        original = f"{arabic_keywords['def']} مرحبا(اسم):\n    {arabic_builtins['print']}(اسم)\n    {arabic_keywords['return']} {arabic_keywords['True']}\n"
-
-        # Clean: Arabic → English
-        input1 = io.StringIO(original)
-        output1 = io.StringIO()
-        arabic_filter.clean(input1, output1)
-        english = output1.getvalue()
-
-        # Verify English
-        assert "def" in english
-        assert "return" in english
-        assert "True" in english
-
-        # Smudge: English → Arabic
-        input2 = io.StringIO(english)
-        output2 = io.StringIO()
-        arabic_filter.smudge(input2, output2)
-        result = output2.getvalue()
-
-        # Verify Arabic keywords restored
-        assert arabic_keywords["def"] in result
-        assert arabic_keywords["return"] in result
-
-    def test_multiple_functions(self, spanish_filter, spanish_keywords):
-        """Test translating file with multiple functions."""
-        d = spanish_keywords["def"]
-        r = spanish_keywords["return"]
-        spanish_code = f"""
-{d} suma(a, b):
-    {r} a + b
-
-{d} resta(a, b):
-    {r} a - b
-
-{d} multiplicar(a, b):
-    {r} a * b
-
-# Función principal
-{d} principal():
-    x = suma(5, 3)
-    y = resta(10, 4)
-    z = multiplicar(x, y)
-    {r} z
-"""
-
-        # Clean
-        input_stream = io.StringIO(spanish_code)
-        output_stream = io.StringIO()
-        spanish_filter.clean(input_stream, output_stream)
-        english_code = output_stream.getvalue()
-
-        # Verify all functions translated
-        assert english_code.count("def") >= 4
-        assert english_code.count("return") >= 4
-
-        # Smudge back
-        input_stream2 = io.StringIO(english_code)
-        output_stream2 = io.StringIO()
-        spanish_filter.smudge(input_stream2, output_stream2)
-        result = output_stream2.getvalue()
-
-        # Verify Spanish restored
-        assert result.count(d) >= 4
-        assert result.count(r) >= 4
-
-    def test_preserves_docstrings(self, spanish_filter, spanish_keywords):
-        """Test that docstrings are preserved."""
-        d = spanish_keywords["def"]
-        r = spanish_keywords["return"]
-        spanish_code = f'''
-{d} saludar(nombre):
-    """
-    Saluda a una persona por su nombre.
-
-    Args:
-        nombre: El nombre de la persona
-
-    Returns:
-        Un mensaje de saludo
-    """
-    {r} f"Hola, {{nombre}}!"
-'''
-
-        # Clean then smudge
-        input1 = io.StringIO(spanish_code)
-        output1 = io.StringIO()
-        spanish_filter.clean(input1, output1)
-
-        input2 = io.StringIO(output1.getvalue())
-        output2 = io.StringIO()
-        spanish_filter.smudge(input2, output2)
-        result = output2.getvalue()
-
-        # Docstring should be preserved
-        assert "Saluda a una persona" in result or '"""' in result
-
-    def test_preserves_class_definitions(self, spanish_filter, spanish_keywords):
-        """Test that class definitions are translated correctly."""
-        c = spanish_keywords["class"]
-        d = spanish_keywords["def"]
-        r = spanish_keywords["return"]
-        spanish_code = f"""
-{c} Persona:
-    {d} __init__(self, nombre):
-        self.nombre = nombre
-
-    {d} saludar(self):
-        {r} f"Hola, soy {{self.nombre}}"
-"""
-
-        # Clean
-        input_stream = io.StringIO(spanish_code)
-        output_stream = io.StringIO()
-        spanish_filter.clean(input_stream, output_stream)
-        english_code = output_stream.getvalue()
-
-        # Verify class and def translated
-        assert "class" in english_code
-        assert "def" in english_code
-
-        # Smudge back
-        input_stream2 = io.StringIO(english_code)
-        output_stream2 = io.StringIO()
-        spanish_filter.smudge(input_stream2, output_stream2)
-        result = output_stream2.getvalue()
-
-        # Verify Spanish restored
-        assert c in result
-        assert d in result
-
-    def test_handles_complex_control_flow(self, spanish_filter, spanish_keywords):
-        """Test complex control flow structures."""
-        d = spanish_keywords["def"]
-        r = spanish_keywords["return"]
-        f_ = spanish_keywords["for"]
-        in_ = spanish_keywords["in"]
-        if_ = spanish_keywords["if"]
-        elif_ = spanish_keywords["elif"]
-        else_ = spanish_keywords["else"]
-        spanish_code = f"""
-{d} procesar_numeros(numeros):
-    resultado = []
-    {f_} num {in_} numeros:
-        {if_} num > 0:
-            resultado.agregar(num * 2)
-        {elif_} num < 0:
-            resultado.agregar(num * -1)
-        {else_}:
-            resultado.agregar(0)
-    {r} resultado
-"""
-
-        # Clean then smudge
-        input1 = io.StringIO(spanish_code)
-        output1 = io.StringIO()
-        spanish_filter.clean(input1, output1)
-        english = output1.getvalue()
-
-        # Verify English control flow
-        assert "for" in english
-        assert "if" in english
-        assert "elif" in english or "else" in english
-
-        input2 = io.StringIO(english)
-        output2 = io.StringIO()
-        spanish_filter.smudge(input2, output2)
-        result = output2.getvalue()
-
-        # Verify Spanish control flow restored
-        assert f_ in result
-        assert if_ in result
-
-    def test_empty_file(self, spanish_filter):
-        """Test handling of empty file."""
-        empty_code = ""
-
-        input_stream = io.StringIO(empty_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        assert output_stream.getvalue() == ""
-
-    def test_file_with_only_comments(self, spanish_filter):
-        """Test handling of file with only comments."""
-        comments_only = "# Este es un comentario\n# Otro comentario\n"
-
-        input_stream = io.StringIO(comments_only)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        assert "#" in result  # Comments preserved
-
-    def test_mixed_language_identifiers(self, spanish_filter, spanish_keywords):
-        """Test handling of mixed language identifiers."""
-        # Code with Spanish keywords but English identifiers
-        mixed_code = f"""
-{spanish_keywords["def"]} calculate_total(price, quantity):
-    total = price * quantity
-    {spanish_keywords["return"]} total
-"""
-
-        # Clean
-        input_stream = io.StringIO(mixed_code)
-        output_stream = io.StringIO()
-        spanish_filter.clean(input_stream, output_stream)
-        english_code = output_stream.getvalue()
-
-        # Should translate keywords but preserve identifiers
-        assert "def" in english_code
-        assert "return" in english_code
-        assert "calculate_total" in english_code
-        assert "price" in english_code
-        assert "quantity" in english_code
-
-
-class TestErrorRecovery:
-    """Test error recovery and robustness."""
-
-    def test_invalid_syntax_passes_through(self, spanish_filter):
-        """Test that invalid syntax doesn't break the filter."""
-        invalid_code = "esto no es código válido python @#$%"
-
-        input_stream = io.StringIO(invalid_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        # Should succeed (not break git)
-        assert exit_code == 0
-
-        # Should pass through something (may be translated or original)
-        result = output_stream.getvalue()
-        assert len(result) > 0
-
-    def test_incomplete_code(self, spanish_filter, spanish_keywords):
-        """Test handling of incomplete code."""
-        incomplete = f"{spanish_keywords['def']} test():\n    ret"
-
-        input_stream = io.StringIO(incomplete)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        # Should succeed
-        assert exit_code == 0
-
-    def test_very_large_file(self, spanish_filter, spanish_keywords):
-        """Test handling of large file."""
-        # Generate a large file (1000 functions)
-        d = spanish_keywords["def"]
-        r = spanish_keywords["return"]
-        large_code = ""
-        for i in range(1000):
-            large_code += f"{d} func_{i}():\n    {r} {i}\n\n"
-
-        input_stream = io.StringIO(large_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        assert len(result) > 0
-        assert "def" in result
-
-    def test_unicode_in_strings(self, spanish_filter, spanish_keywords):
-        """Test handling of Unicode characters in strings."""
-        d = spanish_keywords["def"]
-        r = spanish_keywords["return"]
-        unicode_code = f"""
-{d} test():
-    mensaje = "Hola! ¿Cómo estás? 你好 مرحبا"
-    {r} mensaje
-"""
-
-        # Clean then smudge
-        input1 = io.StringIO(unicode_code)
-        output1 = io.StringIO()
-        spanish_filter.clean(input1, output1)
-
-        input2 = io.StringIO(output1.getvalue())
-        output2 = io.StringIO()
-        spanish_filter.smudge(input2, output2)
-
-        result = output2.getvalue()
-        # Unicode should be preserved
-        assert "你好" in result or "مرحبا" in result or "mensaje" in result
+    def test_renormalizing_a_file_staged_without_the_filter(self, spanish_repo):
+        commit(spanish_repo, "app.py", self.ENGLISH)
+        blob = (
+            git(
+                spanish_repo,
+                "hash-object",
+                "-w",
+                "--no-filters",
+                "--stdin",
+                stdin=self.SLIP.encode(),
+            )
+            .decode()
+            .strip()
+        )
+        git(spanish_repo, "update-index", "--cacheinfo", f"100644,{blob},app.py")
+        (spanish_repo / "app.py").write_text(self.SLIP)
+        git(spanish_repo, "add", "--renormalize", "app.py")
+        assert stored(spanish_repo, "app.py") == self.ENGLISH
+
+    def test_status_stays_clean_after_staging_a_broken_edit(self, spanish_repo):
+        commit(spanish_repo, "m.py", "definir f(x):\n    si x:\n        devolver 1\n")
+        (spanish_repo / "m.py").write_text(
+            "definir f(x):\n    if x:\n        devolver 2 +\n"
+        )
+        git(spanish_repo, "add", "m.py")
+        os.utime(spanish_repo / "m.py", (1, 1))
+        assert status(spanish_repo) == "M  m.py\n"
+
+
+class TestKeywordOnlySmudgeUnderGit:
+    def test_checkout_renders_keywords_and_status_stays_clean(self, tmp_path):
+        repo = make_repo(tmp_path, "es", smudge=True)
+        english = "def f(x):\n    for i in x:\n        print(i)\n    return None\n"
+        commit(repo, "e.py", english)
+        (repo / "e.py").unlink()
+        git(repo, "checkout", "--", "e.py")
+        assert (repo / "e.py").read_text() == (
+            "definir f(x):\n    por i en x:\n        print(i)\n    devolver nulo\n"
+        )
+        assert stored(repo, "e.py") == english
+        os.utime(repo / "e.py", (1, 1))
+        assert status(repo) == ""
+
+    def test_an_edit_in_the_rendering_is_stored_in_english(self, tmp_path):
+        repo = make_repo(tmp_path, "es", smudge=True)
+        commit(repo, "e.py", "def f(x):\n    return x\n")
+        (repo / "e.py").unlink()
+        git(repo, "checkout", "--", "e.py")
+        (repo / "e.py").write_text("definir f(x):\n    si x:\n        devolver x\n")
+        git(repo, "add", "e.py")
+        assert stored(repo, "e.py") == "def f(x):\n    if x:\n        return x\n"

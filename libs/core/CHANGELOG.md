@@ -9,8 +9,34 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- The git clean filter normalizes instead of translating to English: a stray
+  keyword is rewritten to the language its block is stored in
+  (`legesher_core.stored_form`), nothing else changes, and the filter never
+  fails or refuses. The smudge is keyword-only and renders only what the
+  clean filter can store back exactly. `legesher-filter` reads and writes
+  bytes, so content that is not UTF-8 and CRLF line endings pass through
+  unchanged, and it takes `--path` (git's `%f`) to read the committed
+  version. `GitFilter` drops the `canonical_language`, `use_tree_sitter` and
+  `translator_factory` parameters and the `translator_to_en` /
+  `translator_from_en` attributes, and gains `stored_reader`,
+  `clean_text()` and `smudge_text()`. [CORE-1841]
+
 ### Added
 
+- `legesher_core.guard`: the checks behind `legesher guard`, moved out of the
+  clean filter, where a refusal was a silent passthrough (CORE-2109). The
+  Unicode checks are unchanged except around a lone CR, which Python reads as
+  a line break: the scan now reads the text the same way, so a CR can no
+  longer shift the string and comment spans or make tokenize fail and skip
+  the identifier-script check, and source that compiles but still cannot be
+  tokenized is scanned whole.
+  `check_source` adds the stored-form keyword check and `check_blob` the
+  encoding check; each finding has a line and column. [CORE-1841]
+- `legesher_core.stored_form`: `clean_text`, `smudge_text`, `find_strays`
+  and `block_language`, the keyword normalizer shared by the clean filter
+  and the guard. [CORE-1841]
 - Round-trip verification owns one implementation (`legesher_core.round_trip`):
   `first_divergence`/`all_divergences` locate where two renderings stop
   matching (line, column, terminator-exact), `classify_divergence` names the

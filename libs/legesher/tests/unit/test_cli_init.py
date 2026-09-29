@@ -171,10 +171,15 @@ class TestSetupGitIntegration:
             )
             return result.stdout.strip()
 
-        assert git_config("filter.legesher.clean") == "legesher-filter --clean"
-        assert git_config("filter.legesher.smudge") == "legesher-filter --smudge"
+        # Clean only, and the guard hook on by default (CORE-1841).
+        assert (
+            git_config("filter.legesher.clean") == "legesher-filter --clean --path %f"
+        )
+        assert git_config("filter.legesher.smudge") == ""
         assert git_config("filter.legesher.required") == "false"
         assert "*.py filter=legesher" in (tmp_path / ".gitattributes").read_text()
+        hook = tmp_path / ".git" / "hooks" / "pre-commit"
+        assert "legesher guard --staged" in hook.read_text()
 
     def test_outside_git_repo_warns_without_raising(self, tmp_path, monkeypatch):
         """Outside a git repo the step degrades gracefully."""

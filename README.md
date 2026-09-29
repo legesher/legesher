@@ -56,7 +56,7 @@ population who don't speak English as their first language. Developers must lear
 - **Target:** Python 3.10-3.14
 - **Translation:** Two backends - a pure-stdlib token translator and a Tree-sitter AST translator behind the
   optional `treesitter` extra. Both produce identical output
-- **Git:** Clean/smudge filters for multilingual workflows
+- **Git:** A clean filter that stores each file in its author's language, and a pre-commit guard
 - **IDE:** LSP server with hover, completion, diagnostics, and semantic tokens
 - **VS Code:** Extension covering all 51 languages, installed from VSIX
 - **Tests:** 200+ test files across the core, i18n, legesher, language-server, mcp, and runtime packages
@@ -137,9 +137,9 @@ you wrote them. Use `--full` for LLM-powered translation of identifiers, comment
 # Initialize Legesher in your repo
 uv run legesher git setup --language es
 
-# Now all git operations auto-translate:
-# - Checkout: English (repo) → Spanish (your working directory)
-# - Commit: Spanish (your changes) → English (stored in repo)
+# Git stores each file in its author's language:
+# - git add: an English keyword typed into your Spanish file is stored in Spanish
+# - git commit: the pre-commit hook runs `legesher guard` on what you staged
 ```
 
 ### IDE Setup (VS Code)
@@ -222,7 +222,8 @@ See [legesher-language-server](libs/language-server/README.md) for LSP documenta
 - **`legesher translate`:** Translate files or directories (keywords only, or `--full` for LLM-powered full translation)
 - **`legesher run`:** Run translated Python files directly
 - **`legesher git setup` / `legesher git status`:** Configure git integration and inspect it
-- **`legesher-filter`:** Git filter script (`--clean`/`--smudge`), invoked automatically by git — not run directly
+- **`legesher guard`:** Refuse Trojan Source characters and keywords out of their stored form (runs on commit)
+- **`legesher-filter`:** Git filter script (`--clean`, and the opt-in `--smudge`), run by git, not by hand
 - **`legesher metadata`:** View translation history (`show`, `history`, `list`, `raw`, `validate`)
 - **`legesher config`:** Read and write project or user configuration (`list`, `get`, `set`)
 - **`legesher-i18n validate`:** Validate a language pack file

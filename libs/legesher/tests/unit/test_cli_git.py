@@ -1,437 +1,273 @@
-"""Unit tests for CLI git commands.
+"""``legesher git setup`` and ``legesher git status`` (CORE-1841).
 
-Tests the legesher git-setup and git-status commands.
+Setup configures the clean filter only; the keyword-only smudge is an
+opt-in; and the guard's pre-commit hook is on by default. Real git
+repositories throughout, with the global and system git config isolated so
+no test can touch the developer's own.
 """
 
+import os
+import stat
 import subprocess
-from unittest.mock import Mock, patch
+import sys
 
 import pytest
 import yaml
 from click.testing import CliRunner
 
-from legesher.cli.git import (
-    _configure_git_filters,
-    _create_gitattributes,
-    _verify_git_setup,
-    git_setup,
-    git_status,
-)
-from legesher.config import LegesherConfig
+from legesher.cli.git import _create_gitattributes, git_setup, git_status
+
+CLEAN = "legesher-filter --clean --path %f"
+SMUDGE = "legesher-filter --smudge --path %f"
+
+
+@pytest.fixture(autouse=True)
+def isolated_git_config(tmp_path_factory, monkeypatch):
+    home = tmp_path_factory.mktemp("home")
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(home / "gitconfig"))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    return home
+
+
+def git(repo, *args, check=True):
+    return subprocess.run(
+        ["git", *args], cwd=repo, capture_output=True, text=True, check=check
+    )
 
 
 @pytest.fixture
-def temp_git_repo(tmp_path):
-    """Create a temporary git repository."""
-    repo = tmp_path / "test_repo"
-    repo.mkdir()
-    git_dir = repo / ".git"
-    git_dir.mkdir()
-    return repo
+def repo(tmp_path, monkeypatch):
+    git(tmp_path, "init", "-q")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    git(tmp_path, "config", "user.name", "Test")
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
 
 
-@pytest.fixture
-def cli_runner():
-    """Create a Click CLI runner."""
-    return CliRunner()
+def config(repo, key, scope="--local"):
+    result = git(repo, "config", scope, "--get", key, check=False)
+    return result.stdout.strip() if result.returncode == 0 else None
 
 
-@pytest.fixture
-def mock_find_repo_root(temp_git_repo):
-    """Mock LegesherConfig._find_repo_root to return temp repo."""
-    with patch.object(
-        LegesherConfig, "_find_repo_root", return_value=temp_git_repo
-    ) as mock:
-        yield mock
+def hook(repo):
+    return repo / ".git" / "hooks" / "pre-commit"
 
 
-@pytest.fixture
-def mock_translator():
-    """Mock TokenTranslator for testing."""
-    with patch("legesher.cli.git.TokenTranslator") as mock:
-        # Mock list_available_languages
-        mock.list_available_languages.return_value = [
-            ("es", "Spanish"),
-            ("ar", "Arabic"),
-            ("en", "English"),
-        ]
-
-        # Mock from_language_pack
-        mock_instance = Mock()
-        mock_instance.get_pack_info.return_value = {
-            "keyword_count": 35,
-            "builtin_count": 69,
-        }
-        mock.from_language_pack.return_value = mock_instance
-
-        yield mock
+def setup(*args, **kwargs):
+    return CliRunner().invoke(git_setup, list(args), catch_exceptions=False, **kwargs)
 
 
-class TestGitSetupCommand:
-    """Test legesher git-setup command."""
+class TestSetup:
+    def test_configures_the_clean_filter_only(self, repo):
+        result = setup("--language", "es")
+        assert result.exit_code == 0, result.output
+        assert config(repo, "filter.legesher.clean") == CLEAN
+        assert config(repo, "filter.legesher.smudge") is None
+        assert config(repo, "filter.legesher.required") == "false"
+        assert "*.py filter=legesher" in (repo / ".gitattributes").read_text()
+        saved = yaml.safe_load((repo / ".legesher" / "config.yml").read_text())
+        assert saved["language"] == "es"
 
-    def test_git_setup_basic(
-        self, cli_runner, temp_git_repo, mock_find_repo_root, mock_translator
-    ):
-        """Test basic git setup with valid language."""
-        # Mock subprocess calls for git config
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
+    def test_saves_the_python_version(self, repo):
+        assert setup("--language", "es", "--python-version", "3.13").exit_code == 0
+        saved = yaml.safe_load((repo / ".legesher" / "config.yml").read_text())
+        assert saved["python_version"] == "3.13"
 
-            result = cli_runner.invoke(
-                git_setup,
-                ["--language", "es"],
-                catch_exceptions=False,
-            )
+    def test_the_keyword_smudge_is_an_opt_in(self, repo):
+        assert setup("--language", "es", "--keyword-smudge").exit_code == 0
+        assert config(repo, "filter.legesher.smudge") == SMUDGE
 
-            assert result.exit_code == 0
-            assert "✓ Found git repository" in result.output
-            assert "✓ Loaded language pack: es" in result.output
-            assert "✓ Saved project config" in result.output
-            assert "✓ Git filter setup complete!" in result.output
+    def test_a_plain_rerun_turns_the_smudge_off(self, repo):
+        setup("--language", "es", "--keyword-smudge")
+        result = setup("--language", "es")
+        assert config(repo, "filter.legesher.smudge") is None
+        assert "smudge" in result.output.lower()
 
-            # Verify config file was created
-            config_path = temp_git_repo / ".legesher" / "config.yml"
-            assert config_path.exists()
+    def test_installs_the_guard_hook(self, repo):
+        setup("--language", "es")
+        script = hook(repo).read_text()
+        assert "legesher guard --staged" in script
+        assert os.stat(hook(repo)).st_mode & stat.S_IXUSR
 
-            # Verify .gitattributes was created
-            gitattributes = temp_git_repo / ".gitattributes"
-            assert gitattributes.exists()
-            assert "*.py filter=legesher" in gitattributes.read_text()
+    def test_a_rerun_leaves_the_hook_as_it_was(self, repo):
+        setup("--language", "es")
+        first = hook(repo).read_text()
+        setup("--language", "es")
+        assert hook(repo).read_text() == first
 
-    def test_git_setup_with_python_version(
-        self, cli_runner, temp_git_repo, mock_find_repo_root, mock_translator
-    ):
-        """Test git setup with explicit Python version."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
+    def test_an_existing_pre_commit_hook_is_never_overwritten(self, repo):
+        hook(repo).parent.mkdir(parents=True, exist_ok=True)
+        hook(repo).write_text("#!/bin/sh\necho mine\n")
+        result = setup("--language", "es")
+        assert result.exit_code == 0
+        assert hook(repo).read_text() == "#!/bin/sh\necho mine\n"
+        assert "legesher guard --staged" in result.output
 
-            result = cli_runner.invoke(
-                git_setup,
-                ["--language", "es", "--python-version", "3.13"],
-                catch_exceptions=False,
-            )
+    def test_no_hook_removes_the_guard_hook(self, repo):
+        setup("--language", "es")
+        setup("--language", "es", "--no-hook")
+        assert not hook(repo).exists()
 
-            assert result.exit_code == 0
+    def test_a_hook_that_only_mentions_the_marker_is_not_ours(self, repo):
+        # Security review of CORE-1841: a substring match took over a team
+        # hook that merely quoted the marker.
+        team = (
+            "#!/bin/sh\n"
+            "# legesher-guard-hook: installed by `legesher git setup`.\n"
+            "echo team\n"
+        )
+        hook(repo).parent.mkdir(parents=True, exist_ok=True)
+        hook(repo).write_text(team)
+        setup("--language", "es")
+        assert hook(repo).read_text() == team
+        setup("--language", "es", "--no-hook")
+        assert hook(repo).read_text() == team
 
-            # Verify config has correct Python version
-            config_path = temp_git_repo / ".legesher" / "config.yml"
-            with open(config_path) as f:
-                config_data = yaml.safe_load(f)
-            assert config_data["python_version"] == "3.13"
+    def test_a_symlinked_hook_is_never_written_through(self, repo, tmp_path):
+        target = tmp_path / "outside" / "pre-commit"
+        target.parent.mkdir()
+        hook(repo).parent.mkdir(parents=True, exist_ok=True)
+        hook(repo).symlink_to(target)
+        result = setup("--language", "es")
+        assert result.exit_code == 0, result.output
+        assert hook(repo).is_symlink()
+        assert not target.exists()
 
-    def test_git_setup_invalid_language(
-        self, cli_runner, temp_git_repo, mock_find_repo_root, mock_translator
-    ):
-        """Test git setup with invalid language."""
-        result = cli_runner.invoke(
-            git_setup,
-            ["--language", "invalid-lang"],
-            catch_exceptions=False,
+    def test_a_global_smudge_is_reported_not_claimed_off(self, repo):
+        git(
+            repo,
+            "config",
+            "--global",
+            "filter.legesher.smudge",
+            "legesher-filter --smudge",
+        )
+        result = setup("--language", "es")
+        assert "global" in result.output
+        assert "Smudge filter turned off" not in result.output
+
+    def test_no_hook_leaves_someone_elses_hook(self, repo):
+        hook(repo).parent.mkdir(parents=True, exist_ok=True)
+        hook(repo).write_text("#!/bin/sh\necho mine\n")
+        setup("--language", "es", "--no-hook")
+        assert hook(repo).read_text() == "#!/bin/sh\necho mine\n"
+
+    def test_core_hooks_path_is_respected(self, repo):
+        git(repo, "config", "core.hooksPath", ".githooks")
+        setup("--language", "es")
+        assert (
+            "legesher guard --staged" in (repo / ".githooks" / "pre-commit").read_text()
+        )
+        assert not hook(repo).exists()
+
+    def test_global_writes_global_config_and_no_hook(self, repo):
+        result = setup("--language", "es", "--global")
+        assert result.exit_code == 0, result.output
+        assert config(repo, "filter.legesher.clean", "--global") == CLEAN
+        assert config(repo, "filter.legesher.clean") is None
+        assert not hook(repo).exists()
+
+    def test_an_unknown_language(self, repo):
+        result = setup("--language", "xx-nope")
+        assert result.exit_code == 1
+        assert "Language 'xx-nope' not found" in result.output
+
+    def test_outside_a_repository(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        result = setup("--language", "es")
+        assert result.exit_code == 1
+        assert "Run this command from within a git repository" in result.output
+
+    def test_prompts_for_the_language(self, repo):
+        result = setup(input="es\n")
+        assert result.exit_code == 0
+        assert "Default language:" in result.output
+
+
+class TestTheHookRefusesACommit:
+    """The whole path: setup, the real filter, the real hook, the real guard."""
+
+    @pytest.fixture
+    def on_path(self, monkeypatch):
+        bin_dir = os.path.dirname(sys.executable)
+        monkeypatch.setenv("PATH", bin_dir + os.pathsep + os.environ.get("PATH", ""))
+
+    def test_a_trojan_source_commit_is_refused(self, repo, on_path):
+        assert setup("--language", "es").exit_code == 0
+        (repo / "t.py").write_text('definir f():\n    x = "user\u202e"\n')
+        git(repo, "add", "t.py", ".gitattributes")
+        result = git(repo, "commit", "-m", "trojan", check=False)
+        assert result.returncode != 0
+        assert "t.py:2:14: unicode: U+202E" in result.stdout + result.stderr
+        assert git(repo, "rev-parse", "--verify", "HEAD", check=False).returncode != 0
+
+    def test_the_hook_runs_without_legesher_on_path(self, repo, monkeypatch):
+        # The hook names the legesher that installed it, so a commit from a
+        # shell where the project environment is not active is still checked.
+        assert setup("--language", "es").exit_code == 0
+        (repo / "t.py").write_text('x = "user\u202e"\n')
+        git(repo, "add", "t.py", ".gitattributes")
+        monkeypatch.setenv("PATH", "/usr/bin:/bin")
+        result = git(repo, "commit", "-m", "trojan", check=False)
+        assert result.returncode != 0, result.stdout + result.stderr
+        assert "t.py:1:10: unicode: U+202E" in result.stdout + result.stderr
+
+    def test_a_clean_commit_goes_through_with_strays_normalized(self, repo, on_path):
+        assert setup("--language", "es").exit_code == 0
+        (repo / "m.py").write_text("definir f(x):\n    if x:\n        devolver 1\n")
+        git(repo, "add", "m.py", ".gitattributes", ".legesher")
+        assert git(repo, "commit", "-q", "-m", "ok", check=False).returncode == 0
+        assert git(repo, "show", "HEAD:m.py").stdout == (
+            "definir f(x):\n    si x:\n        devolver 1\n"
         )
 
-        assert result.exit_code == 1
-        assert "✗ Language 'invalid-lang' not found" in result.output
-        assert "Available languages:" in result.output
-        assert "es: Spanish" in result.output
 
-    def test_git_setup_not_in_repo(self, cli_runner, tmp_path):
-        """Test git setup when not in a git repository."""
-        with patch.object(
-            LegesherConfig,
-            "_find_repo_root",
-            side_effect=ValueError("Not in a git repository"),
-        ):
-            result = cli_runner.invoke(
-                git_setup,
-                ["--language", "es"],
-                catch_exceptions=False,
-            )
+class TestStatus:
+    def status(self):
+        return CliRunner().invoke(git_status, catch_exceptions=False)
 
-            assert result.exit_code == 1
-            assert "✗ Error: Not in a git repository" in result.output
-            assert (
-                "Hint: Run this command from within a git repository" in result.output
-            )
+    def test_after_setup(self, repo):
+        setup("--language", "es")
+        result = self.status()
+        assert result.exit_code == 0
+        assert "Language: es" in result.output
+        assert f"✓ Clean filter: {CLEAN}" in result.output
+        assert "Smudge filter: off" in result.output
+        assert "✓ Guard hook: installed" in result.output
+        assert "✓ .gitattributes configured" in result.output
 
-    def test_git_setup_global(self, cli_runner, mock_translator, tmp_path):
-        """Test git setup with --global flag."""
-        # Create a temp home directory
-        test_home = tmp_path / "home"
-        test_home.mkdir()
+    def test_with_the_keyword_smudge(self, repo):
+        setup("--language", "es", "--keyword-smudge")
+        assert f"Keyword-only smudge: {SMUDGE}" in self.status().output
 
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
+    def test_without_setup(self, repo):
+        result = self.status()
+        assert "✗ Clean filter: Not configured" in result.output
+        assert "✗ Guard hook: not installed" in result.output
+        assert "✗ .gitattributes not found" in result.output
 
-            with patch("pathlib.Path.home") as mock_home:
-                mock_home.return_value = test_home
-
-                result = cli_runner.invoke(
-                    git_setup,
-                    ["--language", "es", "--global"],
-                    catch_exceptions=False,
-                )
-
-                assert result.exit_code == 0
-                assert "✓ Saved global config" in result.output
-                assert "Git filters configured globally" in result.output
-
-                # Verify --global flag was passed to git config
-                git_config_calls = [
-                    call for call in mock_run.call_args_list if call[0][0][0] == "git"
-                ]
-                assert any("--global" in call[0][0] for call in git_config_calls), (
-                    "Expected --global flag in git config calls"
-                )
-
-    def test_git_setup_prompt_for_language(
-        self, cli_runner, temp_git_repo, mock_find_repo_root, mock_translator
-    ):
-        """Test git setup prompts for language if not provided."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
-
-            result = cli_runner.invoke(
-                git_setup,
-                input="es\n",  # Provide language via stdin
-                catch_exceptions=False,
-            )
-
-            assert result.exit_code == 0
-            assert "Default language:" in result.output
-
-
-class TestGitStatusCommand:
-    """Test legesher git-status command."""
-
-    def test_git_status_with_config(
-        self, cli_runner, temp_git_repo, mock_find_repo_root
-    ):
-        """Test git status when configuration exists."""
-        # Create config file
-        config = LegesherConfig(language="es", python_version="3.13")
-        config.save_project_config(temp_git_repo)
-
-        # Mock git config commands
-        with patch("subprocess.run") as mock_run:
-
-            def git_config_side_effect(args, **kwargs):
-                if "filter.legesher.clean" in args:
-                    return Mock(
-                        returncode=0, stdout="legesher-filter --clean\n", stderr=""
-                    )
-                elif "filter.legesher.smudge" in args:
-                    return Mock(
-                        returncode=0, stdout="legesher-filter --smudge\n", stderr=""
-                    )
-                return Mock(returncode=1, stdout="", stderr="")
-
-            mock_run.side_effect = git_config_side_effect
-
-            # Create .gitattributes
-            gitattributes = temp_git_repo / ".gitattributes"
-            gitattributes.write_text("*.py filter=legesher\n")
-
-            result = cli_runner.invoke(git_status, catch_exceptions=False)
-
-            assert result.exit_code == 0
-            assert f"Repository: {temp_git_repo}" in result.output
-            assert "Language: es" in result.output
-            assert "Python version: 3.13" in result.output
-            assert "✓ Clean filter:" in result.output
-            assert "✓ Smudge filter:" in result.output
-            assert "✓ .gitattributes configured" in result.output
-
-    def test_git_status_no_config(self, cli_runner, temp_git_repo, mock_find_repo_root):
-        """Test git status when no configuration exists."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=1, stdout="", stderr="")
-
-            result = cli_runner.invoke(git_status, catch_exceptions=False)
-
-            assert result.exit_code == 0
-            # When no config file exists, LegesherConfig.load() returns defaults
-            # So we should see default values, not an error message
-            assert "Language: en" in result.output  # Default language
-            assert "✗ Clean filter: Not configured" in result.output
-            assert "✗ Smudge filter: Not configured" in result.output
-            assert "✗ .gitattributes not found" in result.output
-
-    def test_git_status_not_in_repo(self, cli_runner):
-        """Test git status when not in a git repository."""
-        with patch.object(
-            LegesherConfig,
-            "_find_repo_root",
-            side_effect=ValueError("Not in a git repository"),
-        ):
-            with patch("subprocess.run") as mock_run:
-                mock_run.return_value = Mock(returncode=1, stdout="", stderr="")
-
-                result = cli_runner.invoke(git_status, catch_exceptions=False)
-
-                assert result.exit_code == 0
-                assert "Not in a git repository" in result.output
-
-
-class TestConfigureGitFilters:
-    """Test _configure_git_filters helper function."""
-
-    def test_configure_git_filters_local(self):
-        """Test configuring git filters for local repository."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
-
-            result = _configure_git_filters(use_global=False)
-
-            assert result is True
-
-            # Verify correct commands were called
-            calls = mock_run.call_args_list
-            assert len(calls) == 3  # clean, smudge, required
-
-            # Check clean filter
-            assert any(
-                "filter.legesher.clean" in call[0][0] and "--local" in call[0][0]
-                for call in calls
-            )
-
-            # Check smudge filter
-            assert any(
-                "filter.legesher.smudge" in call[0][0] and "--local" in call[0][0]
-                for call in calls
-            )
-
-            # Check required flag
-            assert any(
-                "filter.legesher.required" in call[0][0] and "--local" in call[0][0]
-                for call in calls
-            )
-
-    def test_configure_git_filters_global(self):
-        """Test configuring git filters globally."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
-
-            result = _configure_git_filters(use_global=True)
-
-            assert result is True
-
-            # Verify --global flag was used
-            calls = mock_run.call_args_list
-            assert all("--global" in call[0][0] for call in calls)
-
-    def test_configure_git_filters_failure(self):
-        """Test handling of git config failure."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.side_effect = subprocess.CalledProcessError(1, "git config")
-
-            result = _configure_git_filters(use_global=False)
-
-            assert result is False
+    def test_outside_a_repository(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        result = self.status()
+        assert result.exit_code == 0
+        assert "Not in a git repository" in result.output
 
 
 class TestCreateGitattributes:
-    """Test _create_gitattributes helper function."""
-
-    def test_create_gitattributes_new_file(self, temp_git_repo):
-        """Test creating new .gitattributes file."""
-        _create_gitattributes(temp_git_repo)
-
-        gitattributes = temp_git_repo / ".gitattributes"
-        assert gitattributes.exists()
-
-        content = gitattributes.read_text()
-        assert "# Legesher multilingual code translation" in content
+    def test_new_file(self, tmp_path):
+        _create_gitattributes(tmp_path)
+        content = (tmp_path / ".gitattributes").read_text()
         assert "*.py filter=legesher" in content
 
-    def test_create_gitattributes_existing_file(self, temp_git_repo):
-        """Test updating existing .gitattributes file."""
-        gitattributes = temp_git_repo / ".gitattributes"
-        gitattributes.write_text("*.txt text\n")
+    def test_existing_file_is_kept(self, tmp_path):
+        (tmp_path / ".gitattributes").write_text("*.txt text\n")
+        _create_gitattributes(tmp_path)
+        content = (tmp_path / ".gitattributes").read_text()
+        assert "*.txt text" in content and "*.py filter=legesher" in content
 
-        _create_gitattributes(temp_git_repo)
-
-        content = gitattributes.read_text()
-        assert "*.txt text" in content  # Preserved existing content
-        assert "*.py filter=legesher" in content
-
-    def test_create_gitattributes_already_configured(self, temp_git_repo):
-        """Test when .gitattributes already has legesher filter."""
-        gitattributes = temp_git_repo / ".gitattributes"
-        gitattributes.write_text("*.py filter=legesher\n")
-
-        _create_gitattributes(temp_git_repo)
-
-        content = gitattributes.read_text()
-        # Should not duplicate the entry
-        assert content.count("*.py filter=legesher") == 1
-
-
-class TestVerifyGitSetup:
-    """Test _verify_git_setup helper function."""
-
-    def test_verify_git_setup_success(self):
-        """Test successful verification."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
-
-            result = _verify_git_setup(use_global=False)
-
-            assert result is True
-
-    def test_verify_git_setup_failure(self):
-        """Test failed verification."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=1)
-
-            result = _verify_git_setup(use_global=False)
-
-            assert result is False
-
-    def test_verify_git_setup_exception(self):
-        """Test exception handling during verification."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.side_effect = Exception("Git command failed")
-
-            result = _verify_git_setup(use_global=False)
-
-            assert result is False
-
-
-class TestCLIIntegration:
-    """Test CLI command integration scenarios."""
-
-    def test_setup_then_status(
-        self, cli_runner, temp_git_repo, mock_find_repo_root, mock_translator
-    ):
-        """Test running setup followed by status."""
-        # Run setup
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
-
-            setup_result = cli_runner.invoke(
-                git_setup,
-                ["--language", "es"],
-                catch_exceptions=False,
-            )
-
-            assert setup_result.exit_code == 0
-
-        # Run status
-        with patch("subprocess.run") as mock_run:
-
-            def git_config_side_effect(args, **kwargs):
-                if "filter.legesher.clean" in args:
-                    return Mock(returncode=0, stdout="legesher-filter --clean\n")
-                elif "filter.legesher.smudge" in args:
-                    return Mock(returncode=0, stdout="legesher-filter --smudge\n")
-                return Mock(returncode=1)
-
-            mock_run.side_effect = git_config_side_effect
-
-            status_result = cli_runner.invoke(git_status, catch_exceptions=False)
-
-            assert status_result.exit_code == 0
-            assert "Language: es" in status_result.output
-            assert "✓ Clean filter:" in status_result.output
-            assert "✓ Smudge filter:" in status_result.output
+    def test_not_duplicated(self, tmp_path):
+        (tmp_path / ".gitattributes").write_text("*.py filter=legesher\n")
+        _create_gitattributes(tmp_path)
+        assert (tmp_path / ".gitattributes").read_text().count(
+            "*.py filter=legesher"
+        ) == 1

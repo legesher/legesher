@@ -1,481 +1,192 @@
-"""Unit tests for GitFilter class.
+"""The git clean filter normalizes and never refuses (CORE-1841).
 
-Tests the git clean/smudge filter implementation for multilingual code translation.
+The normalizer's own behavior is covered in ``test_stored_form.py``; these
+tests cover what the filter adds around it: streams, the stored-version
+lookup by path, the keyword-only smudge, and never failing git.
 """
 
 import io
-import sys
-from unittest.mock import Mock, patch
+import subprocess
+from unittest.mock import patch
 
 import pytest
 
-from legesher_core.git_filter import GitFilter, clean_filter, smudge_filter
-from legesher_core.round_trip import first_divergence
+from legesher_core.git_filter import (
+    GitFilter,
+    clean_filter,
+    read_stored_blob,
+    smudge_filter,
+)
+
+
+def no_stored(path):
+    return None
 
 
 @pytest.fixture
 def spanish_filter():
-    """Create a GitFilter instance for Spanish."""
-    return GitFilter(language="es", python_version="3.13")
+    return GitFilter(language="es", python_version="3.13", stored_reader=no_stored)
 
 
-@pytest.fixture
-def arabic_filter():
-    """Create a GitFilter instance for Arabic."""
-    return GitFilter(language="ar", python_version="3.13")
+def run_clean(git_filter, text, path=None):
+    out = io.StringIO()
+    code = git_filter.clean(io.StringIO(text), out, path=path)
+    return code, out.getvalue()
 
 
-class TestGitFilterInit:
-    """Test GitFilter initialization."""
+def run_smudge(git_filter, text, path=None):
+    out = io.StringIO()
+    code = git_filter.smudge(io.StringIO(text), out, path=path)
+    return code, out.getvalue()
 
-    def test_init_with_language(self):
-        """Test initialization with explicit language."""
-        filter = GitFilter(language="es")
-        assert filter.language == "es"
-        assert filter.canonical_language == "en"
-        assert filter.python_version is not None  # Auto-detected
 
-    def test_init_with_python_version(self):
-        """Test initialization with explicit Python version."""
-        filter = GitFilter(language="es", python_version="3.10")
-        assert filter.python_version == "3.10"
+class TestInit:
+    def test_language_and_version(self):
+        git_filter = GitFilter(language="es", python_version="3.10")
+        assert (git_filter.language, git_filter.python_version) == ("es", "3.10")
 
-    def test_init_with_custom_canonical_language(self):
-        """Test initialization with custom canonical language."""
-        filter = GitFilter(language="es", canonical_language="en")
-        assert filter.canonical_language == "en"
-
-    def test_init_creates_translators(self, spanish_filter):
-        """Test that initialization creates bidirectional translators."""
-        assert spanish_filter.translator_to_en is not None
-        assert spanish_filter.translator_from_en is not None
-
-    def test_init_invalid_language(self):
-        """Test initialization with invalid language raises error."""
+    def test_an_unknown_language_is_a_value_error(self):
         with pytest.raises(ValueError, match="Could not load language pack"):
             GitFilter(language="invalid-lang")
 
 
-class TestCleanFilter:
-    """Test clean filter (local language → English)."""
-
-    def test_clean_spanish_to_english(self, spanish_filter, spanish_keywords):
-        """Test clean filter translates Spanish code to English."""
-        spanish_code = f"{spanish_keywords['def']} saludar():\n    {spanish_keywords['return']} 42\n"
-        input_stream = io.StringIO(spanish_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        assert "def" in result
-        assert "return" in result
-        assert "saludar" in result  # Function name preserved
-
-    def test_clean_arabic_to_english(self, arabic_filter, arabic_keywords):
-        """Test clean filter translates Arabic code to English."""
-        arabic_code = (
-            f"{arabic_keywords['def']} مرحبا():\n    {arabic_keywords['return']} 42\n"
+class TestClean:
+    def test_an_english_stray_joins_its_spanish_block(self, spanish_filter):
+        code, out = run_clean(
+            spanish_filter, "definir f(x):\n    if x:\n        devolver 1\n"
         )
-        input_stream = io.StringIO(arabic_code)
-        output_stream = io.StringIO()
+        assert code == 0
+        assert out == "definir f(x):\n    si x:\n        devolver 1\n"
 
-        exit_code = arabic_filter.clean(input_stream, output_stream)
+    def test_an_english_file_is_stored_as_written(self, spanish_filter):
+        text = "def f(x, y):\n    return y\n"
+        assert run_clean(spanish_filter, text) == (0, text)
 
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        assert "def" in result
-        assert "return" in result
+    def test_the_stored_version_at_the_path_decides_the_block(self):
+        seen = []
 
-    def test_clean_empty_input(self, spanish_filter):
-        """Test clean filter with empty input."""
-        input_stream = io.StringIO("")
-        output_stream = io.StringIO()
+        def reader(path):
+            seen.append(path)
+            return "def f(x):\n    return x\n"
 
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        assert output_stream.getvalue() == ""
-
-    def test_clean_whitespace_only(self, spanish_filter):
-        """Test clean filter with whitespace-only input."""
-        input_stream = io.StringIO("   \n\n   ")
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        assert output_stream.getvalue() == "   \n\n   "
-
-    def test_clean_already_english(self, spanish_filter):
-        """Test clean filter with already-English code (pass through)."""
-        english_code = "def greet():\n    return 42\n"
-        input_stream = io.StringIO(english_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        assert "def" in result
-        assert "return" in result
-
-    def test_clean_preserves_comments(self, spanish_filter, spanish_keywords):
-        """Test clean filter preserves comments."""
-        spanish_code = f"# Este es un comentario\n{spanish_keywords['def']} prueba():\n    {spanish_keywords['return']} 1\n"
-        input_stream = io.StringIO(spanish_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        assert "# Este es un comentario" in result or "#" in result
-
-    def test_clean_preserves_strings(self, spanish_filter, spanish_keywords):
-        """Test clean filter preserves string literals."""
-        spanish_code = f'{spanish_keywords["def"]} test():\n    {spanish_keywords["return"]} "Hola Mundo"\n'
-        input_stream = io.StringIO(spanish_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        assert '"Hola Mundo"' in result
-
-    def test_clean_invalid_code_passes_through(self, spanish_filter):
-        """Test clean filter passes through invalid code without error."""
-        invalid_code = "this is not valid python code!@#$"
-        input_stream = io.StringIO(invalid_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        # Should not break git - return success
-        assert exit_code == 0
-        # Should pass through unchanged
-        assert output_stream.getvalue() == invalid_code
-
-    def test_clean_incomplete_code(self, spanish_filter, spanish_keywords):
-        """Test clean filter with incomplete code (e.g., during editing)."""
-        incomplete_code = f"{spanish_keywords['def']} test():\n    ret"
-        input_stream = io.StringIO(incomplete_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        # Should handle gracefully
-
-
-class TestSmudgeFilter:
-    """Test smudge filter (English → local language)."""
-
-    def test_smudge_english_to_spanish(self, spanish_filter, spanish_keywords):
-        """Test smudge filter translates English code to Spanish."""
-        english_code = "def greet():\n    return 42\n"
-        input_stream = io.StringIO(english_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.smudge(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        assert spanish_keywords["def"] in result
-        assert spanish_keywords["return"] in result
-        assert "greet" in result  # Function name preserved
-
-    def test_smudge_english_to_arabic(self, arabic_filter, arabic_keywords):
-        """Test smudge filter translates English code to Arabic."""
-        english_code = "def hello():\n    return 42\n"
-        input_stream = io.StringIO(english_code)
-        output_stream = io.StringIO()
-
-        exit_code = arabic_filter.smudge(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        assert arabic_keywords["def"] in result
-        assert arabic_keywords["return"] in result
-
-    def test_smudge_empty_input(self, spanish_filter):
-        """Test smudge filter with empty input."""
-        input_stream = io.StringIO("")
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.smudge(input_stream, output_stream)
-
-        assert exit_code == 0
-        assert output_stream.getvalue() == ""
-
-    def test_smudge_already_target_language(self, spanish_filter, spanish_keywords):
-        """Test smudge filter with already-translated code (pass through)."""
-        spanish_code = f"{spanish_keywords['def']} saludar():\n    {spanish_keywords['return']} 42\n"
-        input_stream = io.StringIO(spanish_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.smudge(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        # Should pass through since it's already in target language
-        assert spanish_keywords["def"] in result or "def" in result
-
-    def test_smudge_preserves_formatting(self, spanish_filter):
-        """Test smudge filter preserves code formatting."""
-        english_code = "def test():\n    # Comment\n    return 1\n"
-        input_stream = io.StringIO(english_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.smudge(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        # Check indentation is preserved
-        assert "    " in result
-
-    def test_smudge_invalid_code_passes_through(self, spanish_filter):
-        """Test smudge filter passes through invalid code without error."""
-        invalid_code = "not valid python!@#$"
-        input_stream = io.StringIO(invalid_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.smudge(input_stream, output_stream)
-
-        # Should not break git
-        assert exit_code == 0
-        # Output may have "not" translated to "no" since "not" is a Python keyword
-        result = output_stream.getvalue()
-        assert "valid python!@#$" in result
-        assert "not" in result or "no" in result
-
-
-class TestRoundTripTranslation:
-    """Test round-trip translation (clean then smudge)."""
-
-    def test_roundtrip_spanish(
-        self, spanish_filter, spanish_keywords, spanish_builtins
-    ):
-        """Test Spanish → English → Spanish round trip."""
-        original = f"{spanish_keywords['def']} saludar(nombre):\n    {spanish_builtins['print']}(nombre)\n    {spanish_keywords['return']} 42\n"
-
-        # Clean: Spanish → English
-        input1 = io.StringIO(original)
-        output1 = io.StringIO()
-        spanish_filter.clean(input1, output1)
-        english = output1.getvalue()
-
-        # Smudge: English → Spanish
-        input2 = io.StringIO(english)
-        output2 = io.StringIO()
-        spanish_filter.smudge(input2, output2)
-        result = output2.getvalue()
-
-        # Check keywords are translated correctly
-        assert spanish_keywords["def"] in result
-        assert spanish_builtins["print"] in result
-        assert spanish_keywords["return"] in result
-        # Check identifiers preserved
-        assert "nombre" in result
-        # The actual guarantee: clean then smudge is byte-identical. The
-        # containment checks above pass on any translation that mentions the
-        # right words; only this pins the round trip itself (CORE-1813).
-        assert first_divergence(original, result) is None
-
-    def test_roundtrip_preserves_semantics(self, spanish_filter, spanish_keywords):
-        """Test round trip preserves semantic meaning."""
-        original = f"{spanish_keywords['def']} prueba():\n    {spanish_keywords['return']} {spanish_keywords['True']}\n"
-
-        # Clean then smudge
-        input1 = io.StringIO(original)
-        output1 = io.StringIO()
-        spanish_filter.clean(input1, output1)
-
-        input2 = io.StringIO(output1.getvalue())
-        output2 = io.StringIO()
-        spanish_filter.smudge(input2, output2)
-
-        result = output2.getvalue()
-        # Semantic meaning preserved
-        assert spanish_keywords["def"] in result or "def" in result
-        assert spanish_keywords["return"] in result or "return" in result
-        # The or-clauses above pass even on a completely untranslated
-        # result. The byte-identity assertion is the one that means
-        # something (CORE-1813).
-        assert first_divergence(original, result) is None
-
-
-class TestLanguageDetection:
-    """Test language detection helpers."""
-
-    def test_is_canonical_language_english(self, spanish_filter):
-        """Test detection of English code."""
-        english_code = "def test():\n    return 42"
-        result = spanish_filter._is_canonical_language(english_code)
-        # Should detect English keywords
-        assert isinstance(result, bool)
-        assert result is True, "English code should be detected as canonical language"
-
-    def test_is_canonical_language_spanish(self, spanish_filter, spanish_keywords):
-        """Test detection of Spanish code."""
-        spanish_code = (
-            f"{spanish_keywords['def']} prueba():\n    {spanish_keywords['return']} 42"
+        git_filter = GitFilter(language="es", stored_reader=reader)
+        code, out = run_clean(
+            git_filter, "def f(x):\n    si x:\n        return x\n", path="pkg/m.py"
         )
-        result = spanish_filter._is_canonical_language(spanish_code)
-        # Should not detect as English (no English keywords)
-        assert isinstance(result, bool)
-        assert result is False, (
-            "Spanish code should not be detected as canonical language"
+        assert (code, out) == (0, "def f(x):\n    if x:\n        return x\n")
+        assert seen == ["pkg/m.py"]
+
+    def test_without_a_path_the_text_decides(self):
+        def reader(path):
+            raise AssertionError("no path, so nothing to look up")
+
+        git_filter = GitFilter(language="es", stored_reader=reader)
+        assert run_clean(
+            git_filter, "definir f(x):\n    si x:\n        return 1\n"
+        ) == (
+            0,
+            "definir f(x):\n    si x:\n        devolver 1\n",
         )
 
-    def test_is_canonical_language_empty(self, spanish_filter):
-        """Test detection with empty code."""
-        assert spanish_filter._is_canonical_language("") is False
+    @pytest.mark.parametrize(
+        "text",
+        [
+            'x = "user\u202e"\nprint(x)\n',
+            "ad\u200bmin = True\n",
+            f"to{chr(0x2D7F)}tal = 1\n",
+        ],
+        ids=["bidi", "zero-width", "tifinagh-joiner"],
+    )
+    def test_never_refuses_the_guard_does(self, spanish_filter, text):
+        # A refusing clean filter is a silent passthrough in git, so the
+        # filter does not pretend to refuse; `legesher guard` does.
+        assert run_clean(spanish_filter, text) == (0, text)
 
-    def test_is_canonical_language_mixed(self, spanish_filter):
-        """Test detection with mixed language code."""
-        # Has English keywords, should detect as English
-        mixed_code = "def test():\n    definir otro():\n        pass"
-        assert spanish_filter._is_canonical_language(mixed_code) is True
+    def test_an_internal_error_passes_the_text_through(self, spanish_filter):
+        text = "definir f():\n    return 1\n"
+        with patch("legesher_core.git_filter.clean_text", side_effect=RuntimeError):
+            assert run_clean(spanish_filter, text) == (0, text)
 
+    def test_a_failing_stored_lookup_falls_back_to_the_text(self):
+        def reader(path):
+            raise OSError("git is gone")
 
-class TestPythonVersionDetection:
-    """Test Python version detection."""
-
-    def test_detect_python_version(self, spanish_filter):
-        """Test Python version detection."""
-        version = spanish_filter._detect_python_version()
-        assert version == f"{sys.version_info.major}.{sys.version_info.minor}"
-
-
-class TestErrorHandling:
-    """Test error handling and robustness."""
-
-    def test_clean_with_translator_error(self, spanish_filter, monkeypatch):
-        """Test clean filter handles translator errors gracefully."""
-
-        # Mock translator to raise an error
-        def mock_translate(*args, **kwargs):
-            raise Exception("Translation failed")
-
-        monkeypatch.setattr(
-            spanish_filter.translator_to_en, "translate_code", mock_translate
+        git_filter = GitFilter(language="es", stored_reader=reader)
+        text = "definir f(x):\n    si x:\n        return 1\n"
+        assert run_clean(git_filter, text, path="a.py") == (
+            0,
+            "definir f(x):\n    si x:\n        devolver 1\n",
         )
 
-        input_stream = io.StringIO("def test(): return 1")
-        output_stream = io.StringIO()
+    def test_is_idempotent(self, spanish_filter):
+        _, once = run_clean(spanish_filter, "definir f(x):\n    if x:\n        pass\n")
+        assert run_clean(spanish_filter, once) == (0, once)
 
-        exit_code = spanish_filter.clean(input_stream, output_stream)
 
-        # Should not fail - return success
-        assert exit_code == 0
-        # Should pass through something (original or empty)
-        assert len(output_stream.getvalue()) >= 0
-
-    def test_smudge_with_translator_error(self, spanish_filter, monkeypatch):
-        """Test smudge filter handles translator errors gracefully."""
-
-        # Mock translator to raise an error
-        def mock_translate(*args, **kwargs):
-            raise Exception("Translation failed")
-
-        monkeypatch.setattr(
-            spanish_filter.translator_from_en, "translate_code", mock_translate
+class TestKeywordOnlySmudge:
+    def test_renders_keywords_and_leaves_builtins(self, spanish_filter):
+        assert run_smudge(spanish_filter, "def f(x):\n    return len(x)\n") == (
+            0,
+            "definir f(x):\n    devolver len(x)\n",
         )
 
-        input_stream = io.StringIO("def test(): return 1")
-        output_stream = io.StringIO()
+    def test_a_render_it_cannot_clean_back_is_not_written(self, spanish_filter):
+        text = "def f(y):\n    return y\n"
+        assert run_smudge(spanish_filter, text) == (0, text)
 
-        exit_code = spanish_filter.smudge(input_stream, output_stream)
+    def test_an_internal_error_passes_the_text_through(self, spanish_filter):
+        text = "def f():\n    return 1\n"
+        with patch("legesher_core.git_filter.smudge_text", side_effect=RuntimeError):
+            assert run_smudge(spanish_filter, text) == (0, text)
 
-        # Should not fail
-        assert exit_code == 0
+
+def git(repo, *args, stdin=None):
+    return subprocess.run(
+        ["git", *args], cwd=repo, check=True, capture_output=True, input=stdin
+    )
+
+
+@pytest.fixture
+def repo(tmp_path):
+    git(tmp_path, "init", "-q")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    git(tmp_path, "config", "user.name", "Test")
+    return tmp_path
+
+
+class TestReadStoredBlob:
+    def test_head_wins_over_a_staged_version(self, repo):
+        # A staged blob can be a half-edited, mixed version; the committed
+        # one is the stable reference (review of CORE-1841).
+        (repo / "m.py").write_text("committed\n")
+        git(repo, "add", "m.py")
+        git(repo, "commit", "-q", "-m", "c")
+        (repo / "m.py").write_text("staged\n")
+        git(repo, "add", "m.py")
+        assert read_stored_blob("m.py", cwd=repo) == "committed\n"
+
+    def test_the_index_when_the_path_was_never_committed(self, repo):
+        (repo / "m.py").write_text("staged\n")
+        git(repo, "add", "m.py")
+        assert read_stored_blob("m.py", cwd=repo) == "staged\n"
+
+    def test_an_untracked_path_has_no_stored_version(self, repo):
+        (repo / "new.py").write_text("x = 1\n")
+        assert read_stored_blob("new.py", cwd=repo) is None
+
+    def test_outside_a_repository_there_is_none(self, tmp_path):
+        assert read_stored_blob("m.py", cwd=tmp_path) is None
 
 
 class TestConvenienceFunctions:
-    """Test module-level convenience functions."""
+    @patch("legesher_core.git_filter.GitFilter")
+    def test_clean_filter(self, filter_class):
+        filter_class.return_value.clean.return_value = 0
+        assert clean_filter(language="es") == 0
+        filter_class.assert_called_once_with(language="es", python_version=None)
 
     @patch("legesher_core.git_filter.GitFilter")
-    def test_clean_filter_function(self, mock_filter_class):
-        """Test clean_filter convenience function."""
-        mock_instance = Mock()
-        mock_instance.clean.return_value = 0
-        mock_filter_class.return_value = mock_instance
-
-        exit_code = clean_filter(language="es")
-
-        assert exit_code == 0
-        mock_filter_class.assert_called_once_with(language="es", python_version=None)
-        mock_instance.clean.assert_called_once()
-
-    @patch("legesher_core.git_filter.GitFilter")
-    def test_smudge_filter_function(self, mock_filter_class):
-        """Test smudge_filter convenience function."""
-        mock_instance = Mock()
-        mock_instance.smudge.return_value = 0
-        mock_filter_class.return_value = mock_instance
-
-        exit_code = smudge_filter(language="ar", python_version="3.13")
-
-        assert exit_code == 0
-        mock_filter_class.assert_called_once_with(language="ar", python_version="3.13")
-        mock_instance.smudge.assert_called_once()
-
-
-class TestEdgeCases:
-    """Test edge cases and boundary conditions."""
-
-    def test_clean_with_unicode(self, spanish_filter, spanish_keywords):
-        """Test clean filter with Unicode characters."""
-        code = f"{spanish_keywords['def']} prueba():\n    {spanish_keywords['return']} 'Hola ñ á é í ó ú'\n"
-        input_stream = io.StringIO(code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        # Unicode should be preserved
-        assert "ñ" in result or "'" in result
-
-    def test_clean_with_very_long_file(self, spanish_filter, spanish_keywords):
-        """Test clean filter with large file."""
-        # Create a large file (1000 lines)
-        large_code = (
-            f"{spanish_keywords['def']} func_1():\n    {spanish_keywords['return']} 1\n"
-            * 1000
-        )
-        input_stream = io.StringIO(large_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        assert len(result) > 0
-
-    def test_clean_with_mixed_line_endings(self, spanish_filter, spanish_keywords):
-        """Test clean filter with mixed line endings."""
-        code = f"{spanish_keywords['def']} test():\r\n    {spanish_keywords['return']} 42\n"
-        input_stream = io.StringIO(code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.clean(input_stream, output_stream)
-
-        assert exit_code == 0
-
-    def test_smudge_with_builtins(self, spanish_filter, spanish_builtins):
-        """Test smudge filter translates built-in functions."""
-        english_code = "def test():\n    print('hello')\n    return len('test')\n"
-        input_stream = io.StringIO(english_code)
-        output_stream = io.StringIO()
-
-        exit_code = spanish_filter.smudge(input_stream, output_stream)
-
-        assert exit_code == 0
-        result = output_stream.getvalue()
-        # Check builtins are translated
-        assert spanish_builtins["print"] in result or "print" in result
-        assert spanish_builtins["len"] in result or "len" in result
+    def test_smudge_filter(self, filter_class):
+        filter_class.return_value.smudge.return_value = 0
+        assert smudge_filter(language="ar", python_version="3.13") == 0
+        filter_class.assert_called_once_with(language="ar", python_version="3.13")
