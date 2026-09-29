@@ -10,8 +10,11 @@ Each module answers one LSP request against the user's language pack:
 - ``semantic_tokens``: token classification so translated keywords highlight
   like their English counterparts
 
-In ``hover`` and ``semantic_tokens``, which word a keyword or builtin maps to
-comes from the user's language pack, so that part follows all shipped packs;
+Each provider answers in the language of the document it is asked about, which
+the client names per document; a document it has not named is read in the
+configured file language (CORE-1976). In ``hover`` and ``semantic_tokens``,
+which word a keyword or builtin maps to comes from that language's pack, so
+that part follows all shipped packs;
 ``completion`` reads the pack for keywords only and offers builtins under
 their English names. The prose attached to a word — the documentation
 ``hover`` shows and the message text ``diagnostic`` renders — is written out

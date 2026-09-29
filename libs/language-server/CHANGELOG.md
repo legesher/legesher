@@ -32,6 +32,30 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   a single line after the slots settle. (CORE-1979)
 - Hover no longer logs the word under the cursor, or the rendered hover
   content, at INFO. Both are text out of the user's file. (CORE-1979)
+- Every request is answered in the language of the document it is about,
+  not in the one language the server was started with. Started in Amharic,
+  the server highlighted Amharic and English files and returned an empty
+  token set for a French or Arabic file open beside them; hover, completion
+  and diagnostics were in the same state, and diagnostics reported the
+  untranslated keywords as syntax errors. The client now names each
+  document's language with a `legesher/documentLanguage` notification, sent
+  as the document opens (normally just ahead of its `didOpen`) and again
+  whenever the language it resolves for that document changes. The server
+  keeps the language per document, forgets it on `didClose`, and falls back
+  to the configured file language for a document it has not been told
+  about, so a client that never sends the notification is served as before.
+  The enhanced-intelligence proxy translates each document with its own
+  language's keywords, keeping one translation cache per language. When an
+  open document's language changes, including a name that arrives after its
+  `didOpen`, the server asks the client to refresh its semantic tokens and
+  diagnostics. (CORE-1976)
+- A document in a language no pack can serve, because no pack exists for
+  that code or its pack fails to load, is no longer answered as an ordinary
+  file with nothing in it. Semantic tokens and hover return no result,
+  completion and diagnostics return empty lists rather than answers read in
+  the wrong language, the user is warned once per language through
+  `window/showMessage` when such a document opens, and `legesher/status`
+  names the document and the reason. (CORE-1976)
 
 ### Added
 
@@ -54,6 +78,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   keep parsing files correctly, and a client that sends only the deprecated
   `targetLanguage` seeds all three roles — older clients keep working
   unchanged. (CORE-1760)
+
+- `legesher/documentLanguage`, a client-to-server notification carrying
+  `{uri, language}`: the language one document is written in. The server does
+  no detection of its own; a client that does not send it has every document
+  served in the configured file language. (CORE-1976)
+
+- `legesher/status` now also lists each document the server has open or has
+  been told about, as `documents`: its `uri`, the `language` it is served in,
+  whether that came from the `client` or is the `configured` fallback
+  (`source`), whether a pack can serve it (`served`), and why not (`detail`).
+  The enhanced-intelligence fields are unchanged. (CORE-1976)
+
+### Changed
+
+- A `LanguageServerConfig` built with only `target_language` now sets
+  `file_language` to match, and one built with only `file_language` sets
+  `target_language`, so the lockstep the deprecated slot documents holds from
+  construction and not only through the entry points. Providers now fall back
+  to `file_language`, so without this a configuration written the old way
+  would have been served in English. (CORE-1976)
 
 ## [0.1.3] - 2026-04-29
 

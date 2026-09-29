@@ -160,16 +160,23 @@ async def provide_hover(
     Returns:
         Hover information with translated documentation or None
 
-    Resolves the word under the cursor through the target language pack, then
-    returns whichever of keyword documentation, builtin documentation, the
-    user's own docstring, or a cultural comment that word matches. Returns
-    None when the document is not open, when the word matches nothing, or
-    when no documentation exists for the target language — see the module
-    docstring for which languages carry it.
+    Resolves the word under the cursor through the pack for the document's
+    own language (CORE-1976), then returns whichever of keyword
+    documentation, builtin documentation, the user's own docstring, or a
+    cultural comment that word matches. Returns None when the document is not
+    open, when no pack can serve its language, when the word matches nothing,
+    or when no documentation exists for that language. The module docstring
+    says which languages carry it.
     """
     # Get document
     doc = server.document_manager.get_document(uri)
     if not doc:
+        return None
+
+    # The document's own language, not the session's. None when no pack can
+    # serve it, which the server has already reported.
+    language = server.language_to_serve(uri)
+    if language is None:
         return None
 
     # Extract word at position
@@ -183,7 +190,7 @@ async def provide_hover(
     # Create hover provider
     provider = HoverProvider(
         source_lang=server.config.source_language,
-        target_lang=server.config.target_language,
+        target_lang=language,
         document_text=doc.text,
         document_uri=uri,
     )

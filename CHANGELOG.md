@@ -273,6 +273,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   response is sent, so no input made this path serialize. Wire severities are
   now converted at the proxy boundary; absent or out-of-range values fall
   back to Error rather than crashing the response. [CORE-1977]
+- **language-server**: every request is answered in the language of the
+  document it is about. The server read one language at initialize, so with
+  files in several languages open, only files in that language (and English)
+  were highlighted, explained on hover, completed or checked; the rest came
+  back as successful, empty answers, and diagnostics reported their keywords
+  as syntax errors. Clients now name each document's language with a
+  `legesher/documentLanguage` notification (`{uri, language}`); a document
+  the client has not named is served in the configured file language, as
+  before. A document whose language has no loadable pack is reported rather
+  than answered as an ordinary file: a one-time warning names the language,
+  `legesher/status` lists the document, semantic tokens and hover return no
+  result, and completion and diagnostics return empty lists instead of
+  answers read in the wrong language. [CORE-1976]
+- **legesher-vscode**: files written in different languages work side by
+  side in one window. The extension restarted the language server whenever
+  focus moved to a file detected in another language, and a file the server
+  had not been restarted for got no highlighting or hover. It now tells the
+  server each file's language as the file opens and whenever that changes,
+  and restarts the server only when the configured languages change.
+  [CORE-1976]
 - **core**: en-target translation no longer emits broken except clauses. The
   en pack ships its exception entries as lowercase identity mappings
   (`typeerror: typeerror`), and `merge_exception_translations` PascalCased

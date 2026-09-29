@@ -53,7 +53,8 @@ def provide_semantic_tokens(server: "LegesherLanguageServer", uri: str) -> Seman
         uri: Document URI
 
     Returns:
-        Semantic tokens encoded in LSP delta format, or None if document not found
+        Semantic tokens encoded in LSP delta format, or None if the document is
+        not open or no pack can serve its language
 
     Classifies translated keywords, builtins, exceptions, class and function
     names, and first parameters, so an editor colors them the same way it
@@ -64,10 +65,17 @@ def provide_semantic_tokens(server: "LegesherLanguageServer", uri: str) -> Seman
     if not doc:
         return None
 
+    # The document's own language, not the session's (CORE-1976). None when no
+    # pack can serve it, which the server has already reported: an empty token
+    # set would claim a working file with nothing in it to highlight.
+    language = server.language_to_serve(uri)
+    if language is None:
+        return None
+
     # Create semantic tokens provider
     provider = SemanticTokensProvider(
         source_lang=server.config.source_language,
-        target_lang=server.config.target_language,
+        target_lang=language,
         document_text=doc.text,
         document_uri=uri,
     )

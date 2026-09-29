@@ -99,7 +99,9 @@ right thing:
 - **Working language** (`legesher.workingLanguage`) — what you read and write
   in. Change it from the status bar or `Legesher: Select Language`.
 - **File language** — what a given file is actually written in, detected from
-  its contents (`legesher.languageDetection`).
+  its contents (`legesher.languageDetection`). Each open file is served in its
+  own file language, so files in different languages work side by side in one
+  window.
 - **Known languages** (`legesher.knownLanguages`) — the languages you read
   comfortably. Legesher lists these first in the language picker and stays
   quiet about files already written in one of them, instead of flagging every

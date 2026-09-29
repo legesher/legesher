@@ -65,6 +65,31 @@ export function buildResolvedLanguages(
     };
 }
 
+/**
+ * The languages a server is started with: the configured ones only (CORE-1976).
+ *
+ * A file language resolved for one document, typically by detection, is not
+ * part of the session. It travels per document, in a `legesher/documentLanguage`
+ * notification, so files detected in different languages no longer change what
+ * the server was started with, and switching between them no longer restarts
+ * it. What remains is what the server still reads only at initialize: the
+ * canonical language, the working language, and the file language to assume
+ * for any document the client has not named, which is the working language.
+ *
+ * Takes the configuration rather than a resolution on purpose: a detected
+ * language has nowhere to go here.
+ */
+export function sessionLanguagesOf(config: {
+    sourceLanguage: string;
+    workingLanguage: string;
+}): ResolvedLanguages {
+    return buildResolvedLanguages(
+        config.sourceLanguage,
+        config.workingLanguage,
+        config.workingLanguage
+    );
+}
+
 /** The scopes a value can be explicitly set at, narrowest first. */
 const SCOPE_ORDER: ReadonlyArray<[keyof InspectedSetting<string>, SettingScope]> = [
     ['workspaceFolderValue', 'folder'],
@@ -185,7 +210,9 @@ export function partitionByKnown<T extends { code: string }>(
  * *any* of them requires a restart — keying on fewer slots than the server
  * consumes is how a change silently did nothing (CORE-1754). The working
  * language appears only when it differs from the file language, which keeps
- * the identity `source->file` for the common own-files case.
+ * the identity `source->file` for the common own-files case. The extension
+ * keys the running server on `sessionLanguagesOf`, where the two are the same,
+ * because a document's own language is sent per document (CORE-1976).
  */
 export function serverIdentityOf(languages: ResolvedLanguages): string {
     const base = `${languages.sourceLanguage}->${languages.fileLanguage}`;

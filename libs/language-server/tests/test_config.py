@@ -208,6 +208,30 @@ def test_legacy_target_language_seeds_roles_from_env(monkeypatch):
     assert config.working_language == "ja"
 
 
+def test_target_language_alone_seeds_the_file_language():
+    """A config built through the deprecated slot is served in that language (CORE-1976).
+
+    Providers now read each document's language and fall back to
+    file_language, so a model constructed the old way, with target_language
+    only, would otherwise be served in English with nothing to say so.
+    """
+    config = LanguageServerConfig(target_language="es")
+
+    assert config.file_language == "es"
+
+
+def test_file_language_alone_seeds_the_deprecated_slot():
+    config = LanguageServerConfig(file_language="fa")
+
+    assert config.target_language == "fa"
+
+
+def test_both_language_slots_given_are_kept_as_given():
+    config = LanguageServerConfig(target_language="es", file_language="fr")
+
+    assert (config.target_language, config.file_language) == ("es", "fr")
+
+
 def test_apply_legacy_target_language_keeps_roles_in_lockstep():
     """The shared helper every old-vocabulary entry point routes through."""
     config = LanguageServerConfig()

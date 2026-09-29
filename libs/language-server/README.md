@@ -273,6 +273,15 @@ ruff format legesher_language_server/
 | `textDocument/completion` | ✅ Implemented | CORE-358 |
 | `textDocument/diagnostic` | ✅ Implemented | CORE-359 |
 | `textDocument/semanticTokens/full` | ✅ Implemented | CORE-450 |
+| `legesher/status` (request) | ✅ Implemented | CORE-1886, CORE-1976 |
+| `legesher/documentLanguage` (notification) | ✅ Implemented | CORE-1976 |
+
+`legesher/documentLanguage` carries `{uri, language}`: the language one document
+is written in. The server answers every request about that document in its
+language, and falls back to the configured file language for a document it has
+not been told about. `legesher/status` reports whether enhanced intelligence is
+running and, under `documents`, the language each open document is served in,
+with the reason when no pack can serve it.
 
 ## For VS Code Extension Developers
 
@@ -280,9 +289,11 @@ The [Legesher VS Code extension](../vs-code/README.md) does this, and any other 
 
 1. Start `legesher-lsp` as a child process
 2. Connect via stdio transport
-3. Configure source/target languages via initialization params
-4. Handle LSP requests/responses
-5. Render translated content in custom UI
+3. Configure the source, file and working languages via initialization params
+4. Send `legesher/documentLanguage` for each document just before its `didOpen`,
+   and again when the language you resolve for it changes
+5. Handle LSP requests/responses
+6. Render translated content in custom UI
 
 Example VS Code client configuration:
 

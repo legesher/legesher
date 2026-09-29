@@ -9,7 +9,7 @@ import os
 import re
 import sys
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +32,12 @@ class LanguageServerConfig(BaseModel):
         source_language: Canonical language the project's code is stored in
             (default: 'en' for English)
         target_language: Deprecated single slot for "the other language"; kept
-            in lockstep with file_language so providers written against it
-            keep working (CORE-1760)
-        file_language: Language the current file is written in — what the
-            server parses and maps keywords by
+            in lockstep with file_language so code written against it keeps
+            working (CORE-1760)
+        file_language: Language a file is written in unless the client says
+            otherwise. Each document's own language arrives in a
+            ``legesher/documentLanguage`` notification; this is the fallback
+            for any document the client has not named (CORE-1976)
         working_language: Language the user reads and writes in right now —
             what hover and other render surfaces should target
         python_version: Python version for language pack selection (auto-detected if None)
@@ -55,7 +57,8 @@ class LanguageServerConfig(BaseModel):
         description="Deprecated alias kept in lockstep with file_language (ISO 639-1 code)",
     )
     file_language: str = Field(
-        default="en", description="Language the current file is written in (ISO 639-1 code)"
+        default="en",
+        description="Language of any document the client has not named (ISO 639-1 code)",
     )
     working_language: str = Field(
         default="en",
@@ -113,6 +116,25 @@ class LanguageServerConfig(BaseModel):
 
         # Convert to lowercase for consistency
         return v.lower()
+
+    @model_validator(mode="after")
+    def keep_file_language_in_lockstep(self) -> "LanguageServerConfig":
+        """Hold the deprecated slot and the file-language role together from construction.
+
+        The entry points keep them in lockstep, but a model built directly with
+        only ``target_language`` left ``file_language`` at "en". That was
+        harmless while providers read the deprecated slot. They now serve each
+        document in its own language and fall back to ``file_language``
+        (CORE-1976), so a configuration written the old way would be served in
+        English with nothing to say so. Whichever of the two is given seeds
+        the other; when both are given, both are kept as given.
+        """
+        given = self.model_fields_set
+        if "target_language" in given and "file_language" not in given:
+            self.file_language = self.target_language
+        elif "file_language" in given and "target_language" not in given:
+            self.target_language = self.file_language
+        return self
 
     @field_validator("python_version")
     @classmethod

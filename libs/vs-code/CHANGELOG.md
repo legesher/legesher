@@ -62,6 +62,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Language server**: a folder- or workspace-scoped `legesher.sourceLanguage` now reaches the server.
   The client re-read the configuration without the document's URI, so it started the server with a
   different pair than the one the extension recorded (CORE-1776)
+- **Mixed-language projects**: files written in different languages now work side by side in one
+  window. The language server answered in one language at a time, so a file in any other language got
+  no highlighting, hover or completion, which looked like the extension had stopped working, and
+  switching to it restarted the server. The extension now tells the server each file's language as the
+  file opens, and again whenever the language it resolves for that file changes, and the server answers
+  each file in its own language. Apart from `Legesher: Restart Language Server`, the server restarts only
+  when the configured languages change: a pick from the language selector, or an edit to
+  `legesher.workingLanguage` or `legesher.sourceLanguage`.
+  Content detection now runs when a Python file opens, not only when its editor is focused. A file
+  whose language has no language pack now raises a one-time warning naming that language instead of
+  quietly getting nothing (CORE-1976)
 
 ### Security
 
@@ -129,6 +140,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   never applies a per-folder value, so the distinction named something that cannot differ (CORE-1847)
 - **Performance**: content-based language detection is memoized per document and version, instead of
   re-tokenizing the whole file on every editor switch (CORE-1776)
+- **Telemetry**: a language transition now describes the language server's configured languages only.
+  Switching between files detected in different languages no longer starts the server again, so it no
+  longer records a transition; detection's own events still record what each file resolved to
+  (CORE-1976)
 
 ## 0.1.5 (2026-03-01)
 

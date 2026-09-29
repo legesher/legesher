@@ -49,7 +49,7 @@ from pygls.lsp.server import LanguageServer  # pygls 2.0 import path
 
 from .config import LanguageServerConfig
 from .document import DocumentManager
-from .enhanced_intelligence import INSTALL_HINT, EnhancedIntelligenceProxy
+from .enhanced_intelligence import INSTALL_HINT, EnhancedIntelligenceProxy, _get_pack_loader
 from .logging_setup import apply_trace_value
 from .providers import (
     provide_completion,
@@ -119,8 +119,41 @@ def _deduplicate_diagnostics(diagnostics: list[Diagnostic]) -> list[Diagnostic]:
 
 
 # Custom LSP request. Namespaced so it cannot collide with a standard method
-# or with another extension's additions to the same session.
+# or with another extension's additions to the same session. Answers whether
+# enhanced intelligence is running, and which language each document is being
+# served in (CORE-1976).
 LEGESHER_STATUS = "legesher/status"
+
+# Custom LSP notification, client to server: `{uri, language}`, the language one
+# document is written in (CORE-1976). The client resolves it (settings and
+# content detection live there) and sends it as the document opens, normally
+# just ahead of its didOpen, and whenever the answer changes. The server does
+# no detection of its own.
+LEGESHER_DOCUMENT_LANGUAGE = "legesher/documentLanguage"
+
+# The pack version every provider loads, so a pack that loads here is one the
+# providers can use.
+_PROVIDER_PACK_VERSION = "3.10"
+
+
+def _param(params: object, name: str) -> object:
+    """Read one field of a custom message's params, in whatever shape pygls gave them.
+
+    For a method it has no type for, pygls turns the params object into a
+    namedtuple as it decodes the message, so a client's notification arrives
+    with attributes, not keys. A direct call, or a pygls that stops doing
+    that, hands over the plain dict instead, so both are read.
+    """
+    if isinstance(params, dict):
+        return params.get(name)
+    return getattr(params, name, None)
+
+
+def _shown_language(language: str) -> str:
+    """Quote a reported language for a message, bounded, since it came off the wire."""
+    if len(language) > 16:
+        return f"{language[:16]!r}..."
+    return repr(language)
 
 
 @dataclass(frozen=True)
@@ -158,6 +191,10 @@ class LegesherLanguageServer(LanguageServer):
     - Code completion
     - Diagnostics
     - Semantic token highlighting
+
+    Every request is answered in the language of the document it is about,
+    which the client names per document (CORE-1976), so one session serves
+    files in any number of languages.
     """
 
     def __init__(self, config: LanguageServerConfig):
@@ -203,9 +240,21 @@ class LegesherLanguageServer(LanguageServer):
         # initialization_options are processed first (fixes language switching bug)
         self.intelligence_proxy: EnhancedIntelligenceProxy | None = None
 
-        # One notice per session is information; repeating it is noise the user
-        # learns to dismiss (CORE-1886).
-        self._degradation_notified = False
+        # One notice per problem is information; repeating it is noise the user
+        # learns to dismiss (CORE-1886). Keyed, so two different problems, say
+        # enhanced intelligence and a language with no pack, each get theirs.
+        self._degradation_notified: set[str] = set()
+
+        # The language each document is written in, as the client last named
+        # it (CORE-1976). A document it has not named falls back to
+        # `config.file_language`, which is what every document was served in
+        # before the server could tell them apart.
+        self._document_languages: dict[str, str] = {}
+
+        # Why documents in a language cannot be served, or None when they can.
+        # Decided once per language: it does not change mid-session, and every
+        # request about such a document asks again.
+        self._language_problems: dict[str, str | None] = {}
 
         # Serialises proxy startup. Checking `is_running()` is not enough on its
         # own: the check and the spawn are separated by an await, and
@@ -253,19 +302,130 @@ class LegesherLanguageServer(LanguageServer):
             detail=detail,
         )
 
-    def _notify_degraded_once(self, detail: str) -> None:
-        """Tell the user, once, that a defaulted-on feature is not running.
+    def _notify_degraded_once(self, detail: str, key: str = "enhanced-intelligence") -> None:
+        """Tell the user, once per problem, that something they expect is not running.
 
         `logger.warning` is not a user-visible surface — it lands in a log
         nobody opens. Silently serving a thinner experience than advertised is
         the failure this ticket exists to stop, so the notice goes to the client
         where a person will actually see it.
+
+        ``key`` names the problem. A language that cannot be served passes its
+        own, so its notice neither repeats per document nor is swallowed by an
+        earlier notice about something else (CORE-1976).
         """
-        if self._degradation_notified:
+        if key in self._degradation_notified:
             return
 
-        self._degradation_notified = True
+        self._degradation_notified.add(key)
         self.window_show_message(ShowMessageParams(type=MessageType.Warning, message=detail))
+
+    def document_language(self, uri: str) -> str:
+        """The language the document at ``uri`` is written in, as far as the server knows.
+
+        What the client last named for it, or the configured file language for
+        a document it has not named. Read at call time, so the fallback follows
+        whatever ``initialize`` settled on.
+        """
+        return self._document_languages.get(uri, self.config.file_language)
+
+    def language_to_serve(self, uri: str) -> str | None:
+        """The language to answer requests about ``uri`` in, or None if there is none.
+
+        None means no pack can serve the document's language. The user is told
+        once per language and `legesher/status` names every such document, so
+        a provider answering nothing for it is never mistaken for a working
+        file with nothing in it, which is how a file in the wrong language used
+        to look (CORE-1976).
+        """
+        language = self.document_language(uri)
+        problem = self._language_problem(language)
+        if problem is None:
+            return language
+
+        self._notify_degraded_once(problem, key=f"language:{language}")
+        return None
+
+    def _language_problem(self, language: str) -> str | None:
+        """Why documents in ``language`` cannot be served, or None when they can."""
+        if language in self._language_problems:
+            return self._language_problems[language]
+
+        problem: str | None = None
+        features = "Legesher highlighting, hover, completion or diagnostics"
+        if not language:
+            problem = f"A document's language arrived without a value, so it gets no {features}."
+        else:
+            shown = _shown_language(language)
+            try:
+                validate_language_code(language, "language")
+            except ValueError:
+                problem = (
+                    f"Legesher has no language pack for {shown}, so documents in that "
+                    f"language get no {features}."
+                )
+            else:
+                try:
+                    # The shared loader, whose cache (CORE-446) makes this cheap
+                    # after the first document in each language.
+                    _get_pack_loader().load(
+                        language=language, target="python", version=_PROVIDER_PACK_VERSION
+                    )
+                except Exception as error:
+                    problem = (
+                        f"The Legesher language pack for {shown} could not be loaded "
+                        f"({type(error).__name__}), so documents in that language get "
+                        f"no {features}."
+                    )
+
+        if problem is not None:
+            logger.warning(problem)
+        self._language_problems[language] = problem
+        return problem
+
+    def _request_refresh(self) -> None:
+        """Ask the client to re-request what it already holds for open documents.
+
+        An editor keeps semantic tokens and pulled diagnostics until told they
+        are stale; hover and completion are asked for fresh each time and need
+        nothing. Sent only when the client declared it accepts the request.
+        """
+        capabilities = getattr(self.protocol, "client_capabilities", None)
+        workspace = capabilities.workspace if capabilities else None
+        if workspace is None:
+            return
+        if workspace.semantic_tokens and workspace.semantic_tokens.refresh_support:
+            self.workspace_semantic_tokens_refresh(None)
+        if workspace.diagnostics and workspace.diagnostics.refresh_support:
+            self.workspace_diagnostic_refresh(None)
+
+    def server_status(self) -> dict[str, object]:
+        """The `legesher/status` payload.
+
+        Whether enhanced intelligence is running, as before, plus one entry per
+        document the server has open or has been told about: the language it
+        is served in, whether that came from the client or the configuration,
+        and, when it cannot be served, why (CORE-1976).
+        """
+        payload = self.enhanced_intelligence_status().to_dict()
+        uris = set(self._document_languages) | {
+            document.uri for document in self.document_manager.get_all_documents()
+        }
+        documents = []
+        for uri in sorted(uris):
+            language = self.document_language(uri)
+            problem = self._language_problem(language)
+            documents.append(
+                {
+                    "uri": uri,
+                    "language": language,
+                    "source": "client" if uri in self._document_languages else "configured",
+                    "served": problem is None,
+                    "detail": problem,
+                }
+            )
+        payload["documents"] = documents
+        return payload
 
     def _register_handlers(self) -> None:
         """Register all LSP method handlers using decorators."""
@@ -313,7 +473,14 @@ class LegesherLanguageServer(LanguageServer):
         async def status_wrapper(*args, **kwargs) -> dict[str, object]:
             # Takes no meaningful parameters; accepts whatever the client sends
             # so a stray argument cannot turn a status query into an error.
-            return self.enhanced_intelligence_status().to_dict()
+            return self.server_status()
+
+        # Annotated with the wire shape on purpose: pygls passes the server in
+        # as an extra first argument when that parameter's annotation is a
+        # supertype of the server class, which `object` would be and a
+        # parameterized `dict` is not.
+        async def document_language_wrapper(params: dict[str, object] | None) -> None:
+            await self.on_document_language(params)
 
         # Register the wrappers
         # CRITICAL: Must register initialize to process initialization_options
@@ -339,6 +506,9 @@ class LegesherLanguageServer(LanguageServer):
         # Custom request so a client can render an indicator answering "is
         # enhanced intelligence actually on?" without parsing server logs.
         self.feature(LEGESHER_STATUS)(status_wrapper)
+
+        # Custom notification naming each document's language (CORE-1976).
+        self.feature(LEGESHER_DOCUMENT_LANGUAGE)(document_language_wrapper)
 
     def _apply_trace(self, params: InitializeParams) -> TraceValue:
         """Set logging verbosity from whichever trace setting the client sent.
@@ -543,10 +713,16 @@ class LegesherLanguageServer(LanguageServer):
         )
         logger.debug(f"Document opened: {doc.uri}")
 
-        # Translate document for the language server if enabled (CORE-360)
-        if self.intelligence_proxy and self.intelligence_proxy.is_running():
+        # Translate document for the language server if enabled (CORE-360), with
+        # its own language's keywords (CORE-1976). A document no pack can serve
+        # is not sent: untranslated keywords read as undefined names to the
+        # type checker, which answers with a screen of false errors.
+        language = self.language_to_serve(doc.uri)
+        if language and self.intelligence_proxy and self.intelligence_proxy.is_running():
             try:
-                await self.intelligence_proxy.translate_document_for_server(doc.uri, doc.text)
+                await self.intelligence_proxy.translate_document_for_server(
+                    doc.uri, doc.text, language
+                )
             except (TimeoutError, RuntimeError, ValueError) as e:
                 logger.warning(f"Failed to translate document for the language server: {e!r}")
             except Exception as e:
@@ -570,10 +746,14 @@ class LegesherLanguageServer(LanguageServer):
             logger.debug(f"Document changed: {params.text_document.uri}")
 
             # Update translation for the language server if enabled (CORE-360)
-            if self.intelligence_proxy and self.intelligence_proxy.is_running():
+            uri = params.text_document.uri
+            language = (
+                self.language_to_serve(uri) if self.document_manager.has_document(uri) else None
+            )
+            if language and self.intelligence_proxy and self.intelligence_proxy.is_running():
                 try:
                     await self.intelligence_proxy.translate_document_for_server(
-                        params.text_document.uri, params.content_changes[0].text
+                        params.text_document.uri, params.content_changes[0].text, language
                     )
                 except (TimeoutError, RuntimeError, ValueError) as e:
                     logger.warning(f"Failed to update translation for the language server: {e!r}")
@@ -590,7 +770,65 @@ class LegesherLanguageServer(LanguageServer):
             params: Document close parameters
         """
         self.document_manager.close_document(params.text_document.uri)
+        # Forget its language too. A reopened document is named again before
+        # its didOpen; a stale entry would outrank the fallback for a client
+        # that never names documents at all.
+        self._document_languages.pop(params.text_document.uri, None)
         logger.debug(f"Document closed: {params.text_document.uri}")
+
+    async def on_document_language(self, params: object) -> None:
+        """Handle `legesher/documentLanguage`: the language one document is written in.
+
+        The client sends it as the document opens, normally just ahead of its
+        didOpen, and again whenever the language it resolves for that document
+        changes; the server takes the client's word and does no detection of
+        its own (CORE-1976). Arriving after the didOpen is handled like any
+        other change: the client is asked to refresh what it already holds.
+
+        A language no pack can serve is recorded anyway, and reported. Falling
+        back to the configured language instead would answer for the document
+        in a language it is not written in, which is the defect this replaces.
+
+        Args:
+            params: ``{"uri": str, "language": str}``
+        """
+        uri = _param(params, "uri")
+        if not isinstance(uri, str) or not uri:
+            logger.warning(f"Ignoring {LEGESHER_DOCUMENT_LANGUAGE} with no document URI")
+            return
+        reported = _param(params, "language")
+        language = reported if isinstance(reported, str) else ""
+
+        previous = self.document_language(uri)
+        self._document_languages[uri] = language
+        logger.debug(f"Document language: {uri} -> {_shown_language(language)}")
+
+        document = self.document_manager.get_document(uri)
+        if document is None:
+            # Named ahead of its didOpen, which is the usual order: nothing has
+            # been answered for it yet, so nothing is stale. If its language
+            # cannot be served, the user is told when it opens.
+            return
+
+        # Tells the user now, once, if this language cannot be served.
+        served = self.language_to_serve(uri)
+        if language == previous:
+            return
+
+        if served and self.intelligence_proxy and self.intelligence_proxy.is_running():
+            try:
+                await self.intelligence_proxy.translate_document_for_server(
+                    uri, document.text, served
+                )
+            except (TimeoutError, RuntimeError, ValueError) as e:
+                logger.warning(f"Failed to retranslate document for the language server: {e!r}")
+            except Exception as e:
+                logger.error(
+                    f"Unexpected error retranslating document for the language server: {e!r}",
+                    exc_info=True,
+                )
+
+        self._request_refresh()
 
     # LSP request handlers. Each delegates to the matching module in
     # `providers/`, and the two that an external type-aware server can improve
@@ -609,8 +847,13 @@ class LegesherLanguageServer(LanguageServer):
         falls back to the built-in provider if it is absent, times out, or
         returns nothing.
         """
-        # Try the language server first for advanced type information (CORE-360)
-        if self.intelligence_proxy and self.intelligence_proxy.is_running():
+        # Try the language server first for advanced type information (CORE-360).
+        # Not for a document no pack can serve (CORE-1976): whatever the proxy
+        # holds for it was translated in a language it is not written in. Nor
+        # for one that is not open, which has nothing to ask about.
+        uri = params.text_document.uri
+        language = self.language_to_serve(uri) if self.document_manager.has_document(uri) else None
+        if language and self.intelligence_proxy and self.intelligence_proxy.is_running():
             try:
                 enhanced_hover = await self.intelligence_proxy.forward_hover(params)
                 if enhanced_hover:
@@ -656,14 +899,16 @@ class LegesherLanguageServer(LanguageServer):
         # Get basic diagnostics
         basic_diagnostics = await provide_diagnostics(self, params.text_document.uri)
 
-        # Try to get language-server diagnostics if available (CORE-360)
+        # Try to get language-server diagnostics if available (CORE-360), for a
+        # document translated with its own language's keywords (CORE-1976).
         enhanced_diagnostics: list[Diagnostic] = []
         if self.intelligence_proxy and self.intelligence_proxy.is_running():
             doc = self.document_manager.get_document(params.text_document.uri)
-            if doc:
+            language = self.language_to_serve(params.text_document.uri) if doc else None
+            if doc and language:
                 try:
                     enhanced_diagnostics = await self.intelligence_proxy.forward_diagnostic(
-                        params.text_document.uri, doc.text
+                        params.text_document.uri, doc.text, language
                     )
                 except (TimeoutError, RuntimeError, ValueError) as e:
                     logger.warning(f"Enhanced-intelligence diagnostic request failed: {e!r}")

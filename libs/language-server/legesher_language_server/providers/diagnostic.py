@@ -77,21 +77,29 @@ async def provide_diagnostics(server: "LegesherLanguageServer", uri: str) -> lis
     Returns:
         List of translated diagnostics
 
-    Reports what parsing the document detects — SyntaxError and its kin — with
-    the message rendered from a template in the configured target language
-    where one exists, and left in English otherwise. Variable names and code
-    structure are never rewritten. Returns an empty list when the document is
-    not open or parses cleanly.
+    Parses the document with its own language's keywords (CORE-1976) and
+    reports what that detects, SyntaxError and its kin, with the message
+    rendered from a template in that language where one exists and left in
+    English otherwise. Variable names and code structure are never rewritten.
+    Returns an empty list when the document is not open, parses cleanly, or is
+    in a language no pack can serve: parsing its keywords untranslated would
+    report a syntax error on every line.
     """
     # Get document
     doc = server.document_manager.get_document(uri)
     if not doc:
         return []
 
+    # The document's own language, not the session's. None when no pack can
+    # serve it, which the server has already reported.
+    language = server.language_to_serve(uri)
+    if language is None:
+        return []
+
     # Create provider instance
     provider = DiagnosticProvider(
         source_lang=server.config.source_language,
-        target_lang=server.config.target_language,
+        target_lang=language,
         document_text=doc.text,
         document_uri=uri,
     )

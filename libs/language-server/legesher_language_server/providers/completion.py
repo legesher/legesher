@@ -90,21 +90,28 @@ async def provide_completion(
     Returns:
         List of completion items (keywords, builtins, user symbols)
 
-    Offers the target language's keywords, Python's builtins, and symbols
-    declared earlier in the current document. When the cursor sits on a partial
-    word, candidates are narrowed to those whose label starts with it — a
-    case-insensitive prefix match, not a typo-tolerant one. Returns an empty
-    list when the document is not open.
+    Offers the keywords of the document's own language (CORE-1976), Python's
+    builtins, and symbols declared earlier in the current document. When the
+    cursor sits on a partial word, candidates are narrowed to those whose label
+    starts with it: a case-insensitive prefix match, not a typo-tolerant one.
+    Returns an empty list when the document is not open or is in a language
+    no pack can serve.
     """
     # Get document
     doc = server.document_manager.get_document(uri)
     if not doc:
         return []
 
+    # The document's own language, not the session's. None when no pack can
+    # serve it, which the server has already reported.
+    language = server.language_to_serve(uri)
+    if language is None:
+        return []
+
     # Create completion provider
     provider = CompletionProvider(
         source_lang=server.config.source_language,
-        target_lang=server.config.target_language,
+        target_lang=language,
         document_text=doc.text,
         document_uri=uri,
         document_version=doc.version,

@@ -196,16 +196,11 @@ class EnhancedIntelligenceProxy:
         self.process: asyncio.subprocess.Process | None = None
         self.server_path: str | None = None
 
-        # Translation engine. Keywords come from the language pack via
-        # `_get_keyword_map`; builtins are left untranslated here because the
-        # proxy only needs the source to parse as canonical Python, and
-        # builtin names already do.
-        self.translator = IncrementalTranslator(
-            source_lang=config.source_language,
-            target_lang=config.target_language,
-            keyword_map=self._get_keyword_map(config.target_language),
-            builtin_map={},  # Optional: translate builtins
-        )
+        # Translation engine for the configured file language. Documents in
+        # other languages get their own, from `translator_for` (CORE-1976).
+        self._default_language = config.file_language
+        self.translator = self._build_translator(config.file_language)
+        self._translators: dict[str, IncrementalTranslator] = {}
 
         # Document cache: uri -> (translated_content, source_map)
         self._document_cache: dict[str, Any] = {}
@@ -225,6 +220,36 @@ class EnhancedIntelligenceProxy:
         # Performance tracking
         self._request_count = 0
         self._total_latency = 0.0
+
+    def _build_translator(self, language: str) -> IncrementalTranslator:
+        """A translator for documents written in ``language``.
+
+        Keywords come from the language pack via `_get_keyword_map`; builtins
+        are left untranslated because the proxy only needs the source to parse
+        as canonical Python, and builtin names already do.
+        """
+        return IncrementalTranslator(
+            source_lang=self.config.source_language,
+            target_lang=language,
+            keyword_map=self._get_keyword_map(language),
+            builtin_map={},  # Optional: translate builtins
+        )
+
+    def translator_for(self, language: str | None) -> IncrementalTranslator:
+        """The translator for documents written in ``language``.
+
+        One per language, because each translator caches by content alone:
+        shared across languages, the same text named as two languages would be
+        answered from whichever was translated first. ``None`` is the
+        configured file language (CORE-1976).
+        """
+        if language is None or language == self._default_language:
+            return self.translator
+        translator = self._translators.get(language)
+        if translator is None:
+            translator = self._build_translator(language)
+            self._translators[language] = translator
+        return translator
 
     def _get_keyword_map(self, lang: str) -> dict[str, str]:
         """Get keyword translation map for language.
@@ -786,12 +811,16 @@ class EnhancedIntelligenceProxy:
             logger.error(f"Hover forward failed: {e}")
             return None
 
-    async def forward_diagnostic(self, uri: str, content: str) -> list[Diagnostic]:
+    async def forward_diagnostic(
+        self, uri: str, content: str, language: str | None = None
+    ) -> list[Diagnostic]:
         """Forward diagnostic request to the language server with translation.
 
         Args:
             uri: Document URI
             content: Document content in localized language
+            language: The language the document is written in; None for the
+                configured file language
 
         Returns:
             List of diagnostics with translated messages
@@ -801,7 +830,7 @@ class EnhancedIntelligenceProxy:
 
         try:
             # Translate document to English
-            result = await self.translator.translate_to_english(content)
+            result = await self.translator_for(language).translate_to_english(content)
 
             # Cache translation
             self._document_cache[uri] = {
@@ -877,18 +906,22 @@ class EnhancedIntelligenceProxy:
             logger.error(f"Diagnostic forward failed: {e}")
             return []
 
-    async def translate_document_for_server(self, uri: str, content: str) -> str | None:
+    async def translate_document_for_server(
+        self, uri: str, content: str, language: str | None = None
+    ) -> str | None:
         """Translate document content for the language server.
 
         Args:
             uri: Document URI
             content: Original content in localized language
+            language: The language the document is written in; None for the
+                configured file language
 
         Returns:
             Translated content in English or None on error
         """
         try:
-            result = await self.translator.translate_to_english(content)
+            result = await self.translator_for(language).translate_to_english(content)
 
             # Cache for future position mappings
             self._document_cache[uri] = {
@@ -916,14 +949,21 @@ class EnhancedIntelligenceProxy:
             "total_latency_ms": self._total_latency * 1000,
             "average_latency_ms": avg_latency * 1000,
             "cache_size": len(self._document_cache),
-            "translation_cache_size": self.translator.get_cache_size(),
+            "translation_cache_size": sum(
+                translator.get_cache_size() for translator in self._all_translators()
+            ),
             "initialized": self.initialized,
         }
+
+    def _all_translators(self) -> list[IncrementalTranslator]:
+        """The configured language's translator and every per-language one built since."""
+        return [self.translator, *self._translators.values()]
 
     def clear_caches(self) -> None:
         """Clear all caches."""
         self._document_cache.clear()
-        self.translator.clear_cache()
+        for translator in self._all_translators():
+            translator.clear_cache()
         logger.debug("Caches cleared")
 
     def __repr__(self) -> str:

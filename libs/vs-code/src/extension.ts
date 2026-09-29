@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import { LanguageClient } from 'vscode-languageclient/node';
-import { createLanguageClient } from './client';
+import { createLanguageClient, type LegesherClient } from './client';
 import { isServerAvailable } from './utils';
 import {
     getLanguageConfig,
@@ -17,6 +16,7 @@ import {
     isUnfamiliarFileLanguage,
     partitionByKnown,
     serverIdentityOf,
+    sessionLanguagesOf,
 } from './languageProfile';
 import { TranslationPanelManager } from './webview/panel';
 import { Logger } from './logger';
@@ -41,7 +41,12 @@ import {
     maybeOfferUnicodeHighlightAllowance,
 } from './unicodeHighlightOffer';
 
-let client: LanguageClient | undefined;
+/**
+ * The language client, together with the channel that names each document's
+ * language to its server (CORE-1976). One variable rather than two, so the
+ * channel cannot outlive the client it sends through.
+ */
+let languageClient: LegesherClient | undefined;
 let statusBarItem: vscode.StatusBarItem;
 let languageStatusBarItem: vscode.StatusBarItem;
 /**
@@ -224,7 +229,8 @@ function ensureServerLanguage(
     // didChangeConfiguration handler — so its identity is everything it read,
     // not the target alone. Keying on fewer slots than the server consumes is
     // how a sourceLanguage change fired the listener, matched the cached
-    // value, and silently did nothing (CORE-1754).
+    // value, and silently did nothing (CORE-1754). A document's own language
+    // is not among them: it is sent per document (CORE-1976).
     const identity = serverIdentityOf(languages);
 
     // The bookkeeping this used to do inline — serialising, deciding what
@@ -283,10 +289,13 @@ function announceTransitionFailure(
 /**
  * Re-resolve the language for the active editor and apply it everywhere.
  *
+ * The server is brought in line with the configured languages, which restarts
+ * it only when they changed, and is told the focused document's own language,
+ * which never does (CORE-1976).
+ *
  * Non-Python editors are ignored rather than treated as "no document". Focusing
  * a settings file or a README would otherwise resolve back to the configured
- * language and restart the server, then restart it again on the way back — a
- * restart per editor switch, for files Legesher does not act on anyway.
+ * language and repaint the status bar for a file Legesher does not act on.
  */
 async function syncActiveLanguage(
     context: vscode.ExtensionContext,
@@ -310,14 +319,23 @@ async function syncActiveLanguage(
     // only the first is how the bar came to advertise a language the server had
     // failed to load — intent rendered as fact (CORE-1776).
     updateLanguageStatusBar(resolved);
-    await ensureServerLanguage(context, languagesOf(resolved), {
+    // The server is started with the configured languages only. What this
+    // document resolved to, detected or not, is sent for this document alone,
+    // so switching between files written in different languages no longer
+    // restarts the server; a change to the configuration still does.
+    await ensureServerLanguage(context, sessionLanguagesOf(resolved.config), {
         resource: pythonDocument?.uri,
         // An action in flight outranks the caller's own label: the listener that
         // a picker write woke up would otherwise report itself as a settings
         // edit, hiding the picker behind its own side effect.
         trigger: pendingTrigger ?? options.trigger ?? 'editor',
-        source: resolved.source,
+        // Where the session's languages came from: the settings, whatever
+        // this one document resolved to.
+        source: resolved.config.scope,
     });
+    if (pythonDocument) {
+        await languageClient?.reportDocumentLanguage(pythonDocument);
+    }
     updateLanguageStatusBar(resolved);
 
     // Offer to stop VS Code flagging this file's own script as confusable
@@ -337,6 +355,23 @@ async function syncActiveLanguage(
             resolved.language,
             resolved.source
         );
+    }
+}
+
+/**
+ * Send the language of every open document whose resolution changed.
+ *
+ * Each document is resolved the same way the focused one is; the ones whose
+ * answer the server already has cost nothing, and the ones the server does not
+ * see are skipped (CORE-1976).
+ */
+async function reportOpenDocumentLanguages(): Promise<void> {
+    const current = languageClient;
+    if (!current) {
+        return;
+    }
+    for (const document of vscode.workspace.textDocuments) {
+        await current.reportDocumentLanguage(document);
     }
 }
 
@@ -365,6 +400,14 @@ export interface LegesherApi {
      * silent bugs (CORE-1776).
      */
     getLastTransition(): LanguageTransition | undefined;
+
+    /**
+     * The language the running server was last told the document at `uri` is
+     * written in, or undefined if it has been told nothing about that document
+     * (CORE-1976). The server answers for such a document in its configured
+     * language, which `getServerLanguage` names.
+     */
+    getDocumentLanguage(uri: vscode.Uri): string | undefined;
 }
 
 /**
@@ -383,6 +426,7 @@ const extensionApi: LegesherApi = {
     // running server is precisely the confusion this API exists to detect.
     getServerLanguage: () => server.activeIdentity,
     getLastTransition: () => server.lastTransition,
+    getDocumentLanguage: uri => languageClient?.sentLanguageOf(uri),
 };
 
 /**
@@ -554,12 +598,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<Legesh
                 await syncActiveLanguage(context, {
                     requirePythonEditor: false, trigger: 'settings'
                 });
+                // A settings edit can move every open file, not just the
+                // focused one: turning detection off, or pinning a language
+                // for the project, re-resolves them all (CORE-1976).
+                await reportOpenDocumentLanguages();
             }
         })
     );
 
     // Re-resolve when the user switches files: a different file may be written
-    // in a different language (CORE-1729).
+    // in a different language (CORE-1729), which the server is now told for
+    // that file alone, without a restart (CORE-1976).
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(async () => {
             await syncActiveLanguage(context);
@@ -632,21 +681,30 @@ async function startServer(
             return 'unavailable';
         }
 
-        // Start with the pair the caller resolved: the target may be detected
-        // from the document's contents rather than configured (CORE-1729), and
-        // the source may come from a folder-scoped setting the client could not
-        // see when it read the configuration itself (CORE-1776).
+        // Start with the languages the caller resolved: the source may come
+        // from a folder-scoped setting the client could not see when it read
+        // the configuration itself (CORE-1776). A language detected from a
+        // document's contents is not among them; the client names it for that
+        // document as it opens (CORE-1976).
         Logger.info(`Starting language server with languages: ${serverIdentityOf(languages)}`);
 
-        client = createLanguageClient(context, outputChannel, languages, resource);
+        languageClient = createLanguageClient(
+            context,
+            outputChannel,
+            languages,
+            resource,
+            // Each document resolved exactly as the status bar and the
+            // translation panel resolve it.
+            document => resolveLanguage(context, document).language
+        );
 
         // Handle client state changes
-        client.onDidChangeState((event) => {
+        languageClient.client.onDidChangeState((event) => {
             Logger.debug('Language server state changed', event);
         });
 
         // Start the client (this also launches the server)
-        await client.start();
+        await languageClient.client.start();
 
         // Track successful connection
         const durationMs = Date.now() - startTime;
@@ -663,7 +721,7 @@ async function startServer(
         // outright in the startFailed state, which is what the *next* restart
         // would call it in. Left in place, one failed start wedged every
         // subsequent language change behind an un-stoppable client (CORE-1776).
-        client = undefined;
+        languageClient = undefined;
 
         // Track failed connection
         const durationMs = Date.now() - startTime;
@@ -708,13 +766,13 @@ async function restartServer(
 ): Promise<StartResult> {
     Logger.info('Restarting Legesher language server...');
 
-    if (client) {
+    if (languageClient) {
         try {
-            await client.stop();
+            await languageClient.client.stop();
         } catch (error) {
             Logger.error('Error stopping language server', error);
         } finally {
-            client = undefined;
+            languageClient = undefined;
         }
     }
 
@@ -1304,17 +1362,17 @@ finally:
 export async function deactivate(): Promise<void> {
     Logger.info('Legesher extension deactivating...');
 
-    if (client) {
+    if (languageClient) {
         // Guarded like the stop in restartServer: a client that never reached
         // Running rejects stop(), and letting that propagate would skip every
         // disposal below and leave the state claiming a server is running.
         try {
-            await client.stop();
+            await languageClient.client.stop();
             Logger.info('Legesher language server stopped');
         } catch (error) {
             Logger.error('Error stopping language server', error);
         } finally {
-            client = undefined;
+            languageClient = undefined;
         }
     }
 
