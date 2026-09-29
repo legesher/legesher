@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- The clean filter serves git's long-running filter protocol:
+  `legesher-filter --process [--keyword-smudge]` answers the version 2
+  handshake with `clean` (and `smudge` only with the opt-in), filters every
+  file of a git command in one process, answers `status=error` for a file
+  that fails while it keeps serving, and `status=abort` when its language
+  pack cannot load. `--handshake-done` starts it after the setup launcher has
+  answered git's handshake, so a filter that cannot start fails only the
+  file in hand. The committed version of each path is read through one
+  `git cat-file --batch`. `GitFilter.stored_version()` is public. [CORE-2297]
 - The git clean filter normalizes instead of translating to English: a stray
   keyword is rewritten to the language its block is stored in
   (`legesher_core.stored_form`), nothing else changes, and the filter never

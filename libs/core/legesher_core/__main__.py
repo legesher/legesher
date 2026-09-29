@@ -4,9 +4,11 @@ Git runs this command as the clean filter (and, when the keyword-only smudge
 is opted into, as the smudge filter). A separate entry point from the main
 ``legesher`` CLI keeps filter start-up light.
 
-``legesher git setup`` configures:
+``legesher git setup`` configures the long-running process, which git
+prefers, and the single-file command as the fallback for git before 2.11:
 
     [filter "legesher"]
+        process = sh <git dir>/legesher/filter-process
         clean = legesher-filter --clean --path %f
         required = false
 
@@ -45,6 +47,23 @@ logger = logging.getLogger(__name__)
     help="Keyword-only smudge: render an English block's keywords (opt-in)",
 )
 @click.option(
+    "--process",
+    "mode",
+    flag_value="process",
+    help="Serve git's long-running filter protocol for a whole git command",
+)
+@click.option(
+    "--handshake-done",
+    is_flag=True,
+    hidden=True,
+    help="With --process: the launcher has already answered git's handshake",
+)
+@click.option(
+    "--keyword-smudge",
+    is_flag=True,
+    help="With --process: also offer the keyword-only smudge (the setup opt-in)",
+)
+@click.option(
     "--path",
     "path",
     default=None,
@@ -67,6 +86,8 @@ logger = logging.getLogger(__name__)
 )
 def main(
     mode: str,
+    handshake_done: bool,
+    keyword_smudge: bool,
     path: str | None,
     language: str | None,
     python_version: str | None,
@@ -83,8 +104,13 @@ def main(
         logging.getLogger().setLevel(logging.DEBUG)
 
     if not mode:
-        click.echo("Error: Must specify either --clean or --smudge mode", err=True)
+        click.echo("Error: Must specify --clean, --smudge or --process", err=True)
         sys.exit(1)
+
+    if mode == "process":
+        sys.exit(
+            _serve_process(language, python_version, keyword_smudge, not handshake_done)
+        )
 
     data = sys.stdin.buffer.read()
     sys.stdout.buffer.write(_filter(data, mode, path, language, python_version))
@@ -117,6 +143,42 @@ def _filter(
     else:
         result = git_filter.smudge_text(text)
     return result.encode("utf-8")
+
+
+def _serve_process(
+    language: str | None,
+    python_version: str | None,
+    keyword_smudge: bool,
+    handshake: bool = True,
+) -> int:
+    """Serve git's long-running filter protocol until git closes stdin."""
+    from legesher_core.filter_process import (
+        BatchStoredReader,
+        FilterProcess,
+        ProtocolError,
+    )
+
+    reader = BatchStoredReader()
+    git_filter = None
+    try:
+        git_filter = GitFilter(
+            language=language or _get_language_from_config(),
+            python_version=python_version,
+            stored_reader=reader,
+        )
+    except Exception as e:
+        # The process still answers git, with an abort, so git keeps every
+        # file unchanged instead of failing the command.
+        logger.error(f"Filter error: {e}")
+    try:
+        return FilterProcess(git_filter, smudge=keyword_smudge).serve(
+            sys.stdin.buffer, sys.stdout.buffer, handshake=handshake
+        )
+    except ProtocolError as e:
+        logger.error(f"Filter protocol error: {e}")
+        return 1
+    finally:
+        reader.close()
 
 
 def _get_language_from_config() -> str:

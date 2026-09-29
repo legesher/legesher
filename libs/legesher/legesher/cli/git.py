@@ -14,6 +14,7 @@ Commands:
 """
 
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -32,6 +33,50 @@ logger = logging.getLogger(__name__)
 #: the committed version of it.
 CLEAN_COMMAND = "legesher-filter --clean --path %f"
 SMUDGE_COMMAND = "legesher-filter --smudge --path %f"
+
+#: The long-running filter process (CORE-2297) runs through this launcher. Git
+#: fails a whole command when a filter process ends before its handshake, even
+#: with ``filter.legesher.required=false`` (a missing single-file command is
+#: only a passthrough), so the launcher answers the handshake itself and only
+#: then starts the filter: a filter that is missing, broken or too old costs
+#: that file's filtering, and git stores it as written.
+LAUNCHER_NAME = "filter-process"
+_LAUNCHER_TEMPLATE = """#!/bin/sh
+# legesher-filter-process: written by `legesher git setup`.
+# Runs the Legesher clean filter as git's long-running filter process. This
+# script answers git's handshake itself and only then starts the filter: git
+# fails a whole command when a filter process ends before the handshake, but
+# treats one that ends afterwards as an error for that file and stores it as
+# written. When no filter can be found, the script keeps answering git itself
+# and asks it to leave every file as written.
+FILTER={executable}
+ARGS='{args}'
+# pkt-lines: four hex digits of total length, then the payload; 0000 flushes.
+skip_list() {{
+    while :; do
+        header=$(dd bs=1 count=4 2>/dev/null)
+        [ -n "$header" ] || exit 0
+        [ "$header" = 0000 ] && return 0
+        dd bs=1 count=$((0x$header - 4)) of=/dev/null 2>/dev/null
+    done
+}}
+skip_list
+printf '0016git-filter-server\\n000eversion=2\\n0000'
+skip_list
+printf '{capabilities}0000'
+if [ -n "$FILTER" ] && [ -x "$FILTER" ]; then
+    exec "$FILTER" $ARGS --handshake-done
+fi
+if command -v legesher-filter >/dev/null 2>&1; then
+    exec legesher-filter $ARGS --handshake-done
+fi
+echo "legesher: the legesher-filter command was not found; files are stored as written" >&2
+while :; do
+    skip_list
+    skip_list
+    printf '0011status=abort\\n0000'
+done
+"""
 
 #: The hook's second line. A hook is ours to update or remove only when the
 #: whole file matches the template below, not when it merely mentions this.
@@ -75,6 +120,52 @@ def _legesher_executable() -> str:
         if candidate.is_file():
             return str(candidate)
     return shutil.which("legesher") or ""
+
+
+def _legesher_filter_executable() -> str:
+    """The ``legesher-filter`` beside the running interpreter, or on PATH."""
+    bin_dir = Path(sys.executable).parent
+    for name in ("legesher-filter", "legesher-filter.exe"):
+        candidate = bin_dir / name
+        if candidate.is_file():
+            return str(candidate)
+    return shutil.which("legesher-filter") or ""
+
+
+def launcher_script(executable: str, keyword_smudge: bool) -> str:
+    """The filter-process launcher, naming ``executable`` (may be empty)."""
+    args = "--process --keyword-smudge" if keyword_smudge else "--process"
+    capabilities = "0015capability=clean\\n"
+    if keyword_smudge:
+        capabilities += "0016capability=smudge\\n"
+    return _LAUNCHER_TEMPLATE.format(
+        executable=_sh_quote(executable), args=args, capabilities=capabilities
+    )
+
+
+def _launcher_path(use_global: bool) -> Path:
+    """Where the launcher lives: the user's ~/.legesher, or the git common dir."""
+    if use_global:
+        return Path.home() / ".legesher" / LAUNCHER_NAME
+    # `rev-parse --path-format=absolute` is git 2.31+; older git echoes the
+    # option back, so the relative answer is made absolute here instead.
+    result = subprocess.run(
+        ["git", "rev-parse", "--git-common-dir"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    common = Path(os.path.abspath(result.stdout.strip()))
+    return common / "legesher" / LAUNCHER_NAME
+
+
+def _write_launcher(use_global: bool, keyword_smudge: bool) -> str:
+    """Write the launcher and return the ``filter.legesher.process`` command."""
+    path = _launcher_path(use_global)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(launcher_script(_legesher_filter_executable(), keyword_smudge))
+    path.chmod(path.stat().st_mode | 0o111)
+    return f"sh {_sh_quote(str(path))}"
 
 
 def hook_script(executable: str) -> str:
@@ -235,21 +326,26 @@ def git_setup(
         if not success:
             click.echo("✗ Failed to configure git filters", err=True)
             sys.exit(1)
-        click.echo(f"✓ Clean filter: {CLEAN_COMMAND}")
-        still_on = None if keyword_smudge else _filter_config("smudge")
+        process = _filter_config("process", scope)
+        click.echo(f"✓ Filter process: {process}")
+        click.echo(f"✓ Clean filter (git before 2.11): {CLEAN_COMMAND}")
+        # Git ignores every single-file smudge command once a filter process
+        # is configured, so the process just written decides whether
+        # checkouts render, whatever another config file says.
+        effective = _filter_config("process")
+        still_renders = (
+            not keyword_smudge
+            and effective is not None
+            and effective != process
+            and _launcher_offers_smudge(effective) is True
+        )
         if keyword_smudge:
             click.echo(f"✓ Keyword-only smudge: {SMUDGE_COMMAND}")
-        elif still_on is not None:
-            where = (
-                "your global git config"
-                if _filter_config("smudge", "--global") is not None
-                else "another git config file"
-            )
+        elif still_renders:
             click.echo(
-                f"⚠ A smudge filter is still configured in {where} ({still_on}), "
-                "so checkouts still render. Run `legesher git setup --global` to "
-                "turn it off there, or see `git config --show-origin --get "
-                "filter.legesher.smudge`."
+                f"⚠ The filter process git uses here ({effective}) still offers the "
+                "keyword-only smudge, and it takes precedence over this one. Run "
+                "`legesher git setup` without --global in this repository to turn it off."
             )
         elif had_smudge:
             click.echo(
@@ -348,15 +444,26 @@ def git_status():
         # Check git filter configuration
         click.echo("Git filter status:")
 
+        process = _filter_config("process")
+        if process is not None:
+            click.echo(f"  ✓ Filter process: {process}")
+        else:
+            click.echo(
+                "  ✗ Filter process: Not configured (git starts the filter per file)"
+            )
+
         clean = _filter_config("clean")
         if clean is not None:
             click.echo(f"  ✓ Clean filter: {clean}")
         else:
             click.echo("  ✗ Clean filter: Not configured")
 
+        # With a process configured, git ignores single-file smudge commands
+        # and the process's launcher decides.
         smudge = _filter_config("smudge")
-        if smudge is not None:
-            click.echo(f"  ✓ Keyword-only smudge: {smudge}")
+        offers = _launcher_offers_smudge(process) if process is not None else None
+        if offers is True or (offers is None and smudge is not None):
+            click.echo(f"  ✓ Keyword-only smudge: on ({process or smudge})")
         else:
             click.echo("  Smudge filter: off (the default)")
 
@@ -420,12 +527,15 @@ def _filter_config(mode: str, scope: str | None = None) -> str | None:
 def _configure_git_filters(
     use_global: bool = False, keyword_smudge: bool = False
 ) -> bool:
-    """Configure the clean filter, and the keyword-only smudge when opted in.
+    """Configure the filter process, the clean fallback, and the opt-in smudge.
 
-    Without the opt-in an existing smudge command is removed, so re-running
-    setup turns a smudge off. ``required`` stays false: git's manual expects
-    a project to stay usable when a machine lacks the filter, and a required
-    clean filter would turn a failure into an error in ``git status`` too.
+    Git runs ``filter.legesher.process`` when it knows the long-running
+    protocol (2.11 and later) and the single-file ``clean`` (and ``smudge``)
+    commands otherwise. Without the opt-in an existing smudge command is
+    removed, so re-running setup turns a smudge off. ``required`` stays
+    false: git's manual expects a project to stay usable when a machine lacks
+    the filter, and a required clean filter would turn a failure into an
+    error in ``git status`` too.
 
     Returns:
         True if successful, False otherwise
@@ -433,6 +543,12 @@ def _configure_git_filters(
     scope_flag = "--global" if use_global else "--local"
 
     try:
+        process_command = _write_launcher(use_global, keyword_smudge)
+        subprocess.run(
+            ["git", "config", scope_flag, "filter.legesher.process", process_command],
+            check=True,
+            capture_output=True,
+        )
         subprocess.run(
             ["git", "config", scope_flag, "filter.legesher.clean", CLEAN_COMMAND],
             check=True,
@@ -468,7 +584,7 @@ def _configure_git_filters(
 
         return True
 
-    except subprocess.CalledProcessError as e:
+    except (subprocess.CalledProcessError, OSError) as e:
         logger.error(f"Failed to configure git filters: {e}")
         return False
 
@@ -567,8 +683,28 @@ def _initialize_metadata(repo_root: Path, track_metadata: bool) -> None:
         click.echo("  Git filters will still work without metadata", err=True)
 
 
+def _launcher_file(process: str) -> Path | None:
+    """The launcher a ``filter.legesher.process`` command runs, if it is ours."""
+    match = re.fullmatch(r"sh (" + _SH_QUOTED + r")", process)
+    if match is None:
+        return None
+    return Path(match.group(1)[1:-1].replace("'\\''", "'"))
+
+
+def _launcher_offers_smudge(process: str) -> bool | None:
+    """Whether our launcher offers smudge; ``None`` when it cannot be read."""
+    path = _launcher_file(process)
+    try:
+        text = path.read_text() if path is not None else None
+    except OSError:
+        return None
+    if text is None:
+        return None
+    return "ARGS='--process --keyword-smudge'" in text
+
+
 def _verify_git_setup(use_global: bool = False, keyword_smudge: bool = False) -> bool:
-    """Check that the clean filter is set, and the smudge only if opted in.
+    """Check the process, its launcher, the clean fallback and the opt-in smudge.
 
     Returns:
         True if setup verified, False otherwise
@@ -577,14 +713,17 @@ def _verify_git_setup(use_global: bool = False, keyword_smudge: bool = False) ->
 
     try:
         values = {}
-        for mode in ("clean", "smudge"):
+        for mode in ("process", "clean", "smudge"):
             result = subprocess.run(
                 ["git", "config", scope_flag, "--get", f"filter.legesher.{mode}"],
                 capture_output=True,
                 text=True,
             )
             values[mode] = result.stdout.strip() if result.returncode == 0 else None
-        if values["clean"] != CLEAN_COMMAND:
+        if values["clean"] != CLEAN_COMMAND or values["process"] is None:
+            return False
+        # None when the process is not our launcher or the launcher is gone.
+        if _launcher_offers_smudge(values["process"]) is not keyword_smudge:
             return False
         return (values["smudge"] == SMUDGE_COMMAND) == keyword_smudge
 

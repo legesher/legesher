@@ -116,7 +116,8 @@ class GitFilter:
             logger.error(f"Failed to initialize GitFilter: {e}")
             raise ValueError(f"Could not load language pack for '{language}': {e}")
 
-    def _stored(self, path: str | None) -> str | None:
+    def stored_version(self, path: str | None) -> str | None:
+        """The committed version of ``path``, or ``None``; never raises."""
         if path is None:
             return None
         try:
@@ -128,7 +129,9 @@ class GitFilter:
     def clean_text(self, text: str, path: str | None = None) -> str:
         """Normalize stray keywords; return ``text`` unchanged on any error."""
         try:
-            return clean_text(text, local=self.keywords, stored=self._stored(path))
+            return clean_text(
+                text, local=self.keywords, stored=self.stored_version(path)
+            )
         except Exception as exc:
             logger.error(f"Clean filter: passing through: {exc}", exc_info=True)
             return text

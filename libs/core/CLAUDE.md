@@ -36,6 +36,7 @@ libs/core/
 │   ├── tree_sitter/          # TreeSitterTranslator implementation
 │   ├── language_interface.py # create_translator() factory and Protocol
 │   ├── git_filter.py         # Git clean filter (and the opt-in keyword-only smudge)
+│   ├── filter_process.py     # Git's long-running filter process protocol
 │   ├── stored_form.py        # Keyword normalization to each block's stored form
 │   ├── guard.py              # The checks behind `legesher guard`
 │   ├── round_trip.py         # Round-trip verification (comparator/classifier/report)

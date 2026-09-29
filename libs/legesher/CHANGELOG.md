@@ -17,6 +17,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- `legesher git setup` and `legesher init` configure the filter as one
+  long-running process per git command (`filter.legesher.process`, through
+  a launcher in `.git/legesher/filter-process`, or `~/.legesher/` with
+  `--global`), keeping the single-file `clean` command for git before 2.11;
+  `legesher git status` shows it. [CORE-2297]
 - `legesher git setup` configures the clean filter only, as
   `legesher-filter --clean --path %f`; smudge is off by default, and
   `--keyword-smudge` opts in to the keyword-only smudge. Running setup again

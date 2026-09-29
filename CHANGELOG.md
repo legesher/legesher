@@ -20,6 +20,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **core/cli**: the clean filter runs as git's long-running filter process,
+  so a git command starts it once instead of once per file. `git status`
+  over a Django checkout with all 2,932 `.py` files stat-dirty took 1,548.7 s
+  with a Python start per file and takes 12.2 to 13.6 s through the process
+  (17.8 to 22.6 s on the same machine under heavy load).
+  `legesher git setup` configures `filter.legesher.process` and keeps the
+  single-file `clean` command for git older than 2.11. Git fails a whole
+  command when a filter process ends before its handshake (a missing
+  single-file command is only a passthrough), so the process runs through a
+  launcher in `.git/legesher/filter-process` that answers the handshake
+  itself and only then starts the `legesher-filter` which ran setup, or the
+  one on `PATH`. A filter that is missing, broken or too old then costs only
+  that file's filtering, and git stores it as written. [CORE-2297]
 - **core/cli**: git stores each file in its author's language. The clean
   filter no longer translates to English. It rewrites a stray keyword to the
   language its block is stored in and changes nothing else: an English hard

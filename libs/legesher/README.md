@@ -145,8 +145,8 @@ Python raises `SyntaxError`. Pass `--lang`, or write the config with `legesher g
 
 ### `legesher git`
 
-Git stores each file in its author's language. `legesher git setup` configures the clean filter and the
-guard hook for a repository.
+Git stores each file in its author's language. `legesher git setup` configures the clean filter, as one
+long-running process per git command, and the guard hook for a repository.
 
 ```bash
 # Set up for the current repository
@@ -183,6 +183,17 @@ parses under it, and the language with the most keywords wins, so one slip never
 that parses, or a tie, the file is stored as written. A file in a third language is left as written unless every
 keyword it uses is spelled the same in your language, which closely related languages can do.
 
+**One process per git command.** Setup configures git's long-running filter process
+(`filter.legesher.process`), so a git command starts the filter once instead of once per file; the single-file
+`clean` command stays configured for git older than 2.11. The process runs through a small launcher,
+`.git/legesher/filter-process` (`~/.legesher/filter-process` with `--global`), which names the `legesher-filter`
+that ran setup and falls back to `PATH`. Git fails a whole command when a filter process ends before its handshake,
+so the launcher answers the handshake itself and only then starts the filter: a filter that is missing, broken or
+too old costs only that file's filtering, and git stores it as written, as it does for a missing single-file
+filter. A single-file `smudge` command in any git config is ignored once a process is configured; the process
+offers the smudge only when setup ran with `--keyword-smudge`. To take Legesher's filter out of a repository, run
+`git config --remove-section filter.legesher`.
+
 **Example Output:**
 
 ```bash
@@ -196,7 +207,8 @@ Creating configuration...
 ✓ Saved project config to: /path/to/repo/.legesher/config.yml
 
 Configuring git filters...
-✓ Clean filter: legesher-filter --clean --path %f
+✓ Filter process: sh '/path/to/repo/.git/legesher/filter-process'
+✓ Clean filter (git before 2.11): legesher-filter --clean --path %f
 
 Configuring .gitattributes...
 ✓ Updated .gitattributes

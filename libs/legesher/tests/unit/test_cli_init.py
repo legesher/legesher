@@ -176,6 +176,8 @@ class TestSetupGitIntegration:
             git_config("filter.legesher.clean") == "legesher-filter --clean --path %f"
         )
         assert git_config("filter.legesher.smudge") == ""
+        launcher = tmp_path / ".git" / "legesher" / "filter-process"
+        assert git_config("filter.legesher.process") == f"sh '{launcher}'"
         assert git_config("filter.legesher.required") == "false"
         assert "*.py filter=legesher" in (tmp_path / ".gitattributes").read_text()
         hook = tmp_path / ".git" / "hooks" / "pre-commit"

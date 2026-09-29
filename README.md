@@ -223,7 +223,7 @@ See [legesher-language-server](libs/language-server/README.md) for LSP documenta
 - **`legesher run`:** Run translated Python files directly
 - **`legesher git setup` / `legesher git status`:** Configure git integration and inspect it
 - **`legesher guard`:** Refuse Trojan Source characters and keywords out of their stored form (runs on commit)
-- **`legesher-filter`:** Git filter script (`--clean`, and the opt-in `--smudge`), run by git, not by hand
+- **`legesher-filter`:** Git filter (`--process`, `--clean`, and the opt-in `--smudge`), run by git, not by hand
 - **`legesher metadata`:** View translation history (`show`, `history`, `list`, `raw`, `validate`)
 - **`legesher config`:** Read and write project or user configuration (`list`, `get`, `set`)
 - **`legesher-i18n validate`:** Validate a language pack file
