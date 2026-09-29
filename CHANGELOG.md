@@ -20,6 +20,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **cli**: the runtime import hook claims only files it will translate.
+  It claimed every `.py` on the path, the standard library and installed
+  packages included, and recompiled each from source with no bytecode
+  cache, so a standard-library-heavy import cost 7 to 18 times its stock
+  cost. Modules in the standard library and installed-package directories
+  (including any site-packages or dist-packages directory) now load through
+  the stock machinery, and a project file is claimed only when its first 16 KiB
+  contain one of the pack's native keywords as a whole word; nothing is
+  parsed to decide. Measured with a fresh process per sample, the
+  standard-library imports from the ticket now cost 1.05 to 1.21 times
+  the unhooked import. A native file whose first native keyword sits past
+  that bound is not claimed; per-file language headers (CORE-1539) will
+  remove the bound. Files the hook does translate are no longer recompiled
+  on every run: their compiled code is cached in `__pycache__` under a
+  Legesher-specific name (`<module>.<tag>.legesher-<lang>.pyc`, with the
+  usual `.opt-N` tag under `-O`) that the stock loader never opens. The
+  cache is keyed by a hash of the source bytes, the pack's language,
+  versions and vocabulary, the engine's own code and version, the CLI
+  version, the optimization level and the interpreter's bytecode magic
+  number, never by modification time. It is written atomically with the
+  source file's permissions, skipped under `PYTHONDONTWRITEBYTECODE`, and
+  never replaces or removes a stock `.pyc`. `get_bytecode_cache_stats()`
+  reports its hits, misses, writes and write errors. [CORE-2205]
 - **legesher-vscode**: the `legesher.telemetry.contributeToMLTraining` setting
   no longer describes data collection that does not happen. The setting's
   `markdownDescription` and the Marketplace README both said that turning it on

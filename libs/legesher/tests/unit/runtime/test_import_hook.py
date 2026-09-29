@@ -4,6 +4,7 @@ import os
 import sys
 import importlib
 import importlib.machinery
+import importlib.metadata
 import importlib.util
 import threading
 import pytest
@@ -47,7 +48,7 @@ class TestLegesherMetaPathFinder:
         """Test that find_spec finds a simple .py module."""
         finder = LegesherMetaPathFinder(language="es")
         module_file = tmp_path / "test_module.py"
-        module_file.write_text("# Test module")
+        module_file.write_text("# Test module\ndefinir f():\n    retornar 1\n")
 
         with patch.object(sys, "path", [str(tmp_path)]):
             spec = finder.find_spec("test_module", None)
@@ -135,7 +136,7 @@ class TestDottedImports:
         finder = LegesherMetaPathFinder(language="es")
         pkg_dir = tmp_path / "mypkg"
         pkg_dir.mkdir()
-        (pkg_dir / "__init__.py").write_text("")
+        (pkg_dir / "__init__.py").write_text("definir f():\n    retornar 1\n")
 
         with patch.object(sys, "path", [str(tmp_path)]):
             spec = finder.find_spec("mypkg", None)
@@ -170,7 +171,7 @@ class TestDottedImports:
         pkg_dir = tmp_path / "mypkg"
         pkg_dir.mkdir()
         (pkg_dir / "__init__.py").write_text("")
-        (pkg_dir / "child.py").write_text("VALUE = 1")
+        (pkg_dir / "child.py").write_text("definir f():\n    retornar 1\n")
 
         # The import machinery passes the parent package's __path__ entries.
         spec = finder.find_spec("mypkg.child", [str(pkg_dir)])
@@ -438,8 +439,13 @@ _AUDIT_STATE: dict = {"on": False, "events": []}
 
 
 def _record_file_events(event, args):
+    # os.fdopen raises an "open" event whose first argument is a file
+    # descriptor; only path arguments are recorded. An exception here would
+    # propagate into the audited call, so nothing else is attempted.
     if _AUDIT_STATE["on"] and event in ("open", "os.mkdir") and args:
-        _AUDIT_STATE["events"].append((event, os.fsdecode(args[0])))
+        target = args[0]
+        if isinstance(target, (str, bytes, os.PathLike)):
+            _AUDIT_STATE["events"].append((event, os.fsdecode(target)))
 
 
 sys.addaudithook(_record_file_events)
@@ -643,8 +649,15 @@ class TestPackageDataUnderHook:
         finally:
             self._cleanup(tmp_path, "datapkg_pkgutil")
 
-    def test_claimed_package_touches_no_pycache(self, tmp_path, monkeypatch):
-        """Importing and reading a claimed package opens nothing in __pycache__."""
+    def test_claimed_package_never_touches_stock_bytecode(self, tmp_path, monkeypatch):
+        """A claimed package reads and writes only its Legesher-tagged cache.
+
+        Until CORE-2205 the hook touched no __pycache__ at all. It now caches
+        compiled code under a Legesher-specific name, so the invariant is
+        stated directly: the stock .pyc path is never opened, and the only
+        __pycache__ paths touched are the tagged record, its own temporary
+        file, and the directory itself.
+        """
         import importlib.resources
         import importlib.util
 
@@ -652,8 +665,11 @@ class TestPackageDataUnderHook:
         # component, so pin the default layout and also check the exact
         # path the stock loader would use.
         monkeypatch.setattr(sys, "pycache_prefix", None)
+        monkeypatch.setattr(sys, "dont_write_bytecode", False)
         pkg_dir = self._make_package(tmp_path, "datapkg_nocache")
         stock_pyc = importlib.util.cache_from_source(str(pkg_dir / "__init__.py"))
+        tagged = stock_pyc[: -len(".pyc")] + ".legesher-es.pyc"
+        pycache = os.path.dirname(stock_pyc)
         try:
             _AUDIT_STATE["events"].clear()
             _AUDIT_STATE["on"] = True
@@ -663,19 +679,20 @@ class TestPackageDataUnderHook:
             )
             _AUDIT_STATE["on"] = False
 
-            touched = [
-                (event, path)
-                for event, path in _AUDIT_STATE["events"]
-                if "__pycache__" in path or path == stock_pyc
-            ]
-            opened_source = [
-                path
-                for event, path in _AUDIT_STATE["events"]
-                if path == str(pkg_dir / "__init__.py")
-            ]
+            events = list(_AUDIT_STATE["events"])
+            opened_source = [p for _, p in events if p == str(pkg_dir / "__init__.py")]
             assert opened_source, "audit hook saw no open of the package source"
-            assert touched == [], touched
-            assert not (pkg_dir / "__pycache__").exists(), pkg_dir
+            assert stock_pyc not in [p for _, p in events], stock_pyc
+            unexpected = [
+                (event, path)
+                for event, path in events
+                if "__pycache__" in path
+                and path != tagged
+                and not path.startswith(tagged + ".")
+                and path != pycache
+            ]
+            assert unexpected == [], unexpected
+            assert sorted(os.listdir(pycache)) == [os.path.basename(tagged)], pycache
         finally:
             _AUDIT_STATE["on"] = False
             self._cleanup(tmp_path, "datapkg_nocache")
@@ -703,7 +720,12 @@ class TestPackageDataUnderHook:
             _purge_modules("datapkg_relative")
 
     def test_import_requests_under_hook(self, tmp_path):
-        """`import requests` works under the hook, certifi's data included."""
+        """`import requests` works under the hook, certifi's data included.
+
+        Installed packages load through the stock machinery (CORE-2205), so
+        requests and certifi must work and must not be claimed. The resource
+        reader itself is covered by the claimed packages in this class.
+        """
         import subprocess
 
         pytest.importorskip(
@@ -718,7 +740,7 @@ class TestPackageDataUnderHook:
             "import requests, requests.utils, certifi\n"
             "for mod in (requests.utils, certifi):\n"
             "    loader = mod.__spec__.loader\n"
-            "    assert isinstance(loader, LegesherLoader), (mod.__name__, loader)\n"
+            "    assert not isinstance(loader, LegesherLoader), (mod.__name__, loader)\n"
             "print(requests.certs.where())\n"
         )
         result = subprocess.run(
@@ -764,7 +786,9 @@ class TestSourceEncoding:
 
     def test_latin1_english_module_keeps_its_text(self, tmp_path):
         """An English latin-1 module imports with its non-ASCII text intact."""
-        source = self.COOKIE + "GREETING = 'café'\n"
+        # `con` renders `with` under es: English sharing a word with the
+        # pack, so the hook claims it and must leave it untranslated.
+        source = self.COOKIE + "GREETING = 'café'\ncon = 1\n"
         module_path = tmp_path / "latin1_english.py"
         module_path.write_bytes(source.encode("latin-1"))
         assert b"\xe9" in module_path.read_bytes()
@@ -840,26 +864,28 @@ class TestSourceEncoding:
         [
             # Invalid UTF-8 in a comment: tokenize rejects it, while the
             # compiler accepts it on 3.10 to 3.13 and rejects it on 3.14.
-            ("comment_line1", b"VALUE = 1  # \xff\xfe\n"),
-            ("comment_line3", b"import os\n\nVALUE = 1  # caf\xe9\n"),
+            ("comment_line1", b"VALUE = 1  # \xff\xfe\ncon = 2\n"),
+            ("comment_line3", b"import os\n\nVALUE = 1  # caf\xe9\ncon = 2\n"),
             # A latin-1 comment ahead of a line-2 cookie.
             (
                 "cookie_line2",
-                b"# Auteur: Fr\xe9d\xe9ric\n# -*- coding: latin-1 -*-\nVALUE = 1\n",
+                b"# Auteur: Fr\xe9d\xe9ric\n# -*- coding: latin-1 -*-\nVALUE = 1\ncon = 2\n",
             ),
             # A cookie naming a codec that does not produce text.
-            ("rot13_cookie", b"# -*- coding: rot13 -*-\nVALUE = 1\n"),
+            ("rot13_cookie", b"# -*- coding: rot13 -*-\nVALUE = 1\ncon = 2\n"),
             # Two BOMs: the second is a stray U+FEFF character.
-            ("double_bom", b"\xef\xbb\xbf\xef\xbb\xbfVALUE = 1\n"),
+            ("double_bom", b"\xef\xbb\xbf\xef\xbb\xbfVALUE = 1\ncon = 2\n"),
             # An unknown codec.
-            ("unknown_codec", b"# -*- coding: no-such-codec -*-\nVALUE = 1\n"),
+            ("unknown_codec", b"# -*- coding: no-such-codec -*-\nVALUE = 1\ncon = 2\n"),
         ],
     )
     def test_edge_encodings_match_stock_python(self, tmp_path, case, raw):
         """Whatever stock Python does with these bytes, the hook does too.
 
         Imported or refused, and when refused, the same message naming the
-        module's own file, on every supported interpreter.
+        module's own file, on every supported interpreter. Each file ends
+        with `con = 2` (`con` renders `with` under es), so the hook claims
+        it and the comparison exercises the hook's own decoding.
         """
         stock_dir, hook_dir = tmp_path / "stock", tmp_path / "hook"
         stock_dir.mkdir()
@@ -867,6 +893,13 @@ class TestSourceEncoding:
         name = f"edge_{case}"
         (stock_dir / f"{name}.py").write_bytes(raw)
         (hook_dir / f"{name}.py").write_bytes(raw)
+
+        # The hook must claim every case, refused ones included, or a refusal
+        # would only be stock Python agreeing with itself.
+        with patch.object(sys, "path", [str(hook_dir)]):
+            importlib.invalidate_caches()
+            spec = LegesherMetaPathFinder(language="es").find_spec(name, None)
+        assert spec is not None, hook_dir / f"{name}.py"
 
         sys.path.insert(0, str(stock_dir))
         importlib.invalidate_caches()
@@ -1042,6 +1075,620 @@ class TestNonSourceEntriesStayStock:
         with patch.object(sys, "path", [str(archive)]):
             importlib.invalidate_caches()
             assert finder.find_spec("zipped_mod", None) is None, archive
+
+
+class TestClaimNarrowing:
+    """Regression tests for CORE-2205: the hook claims only what it translates.
+
+    The finder claimed every .py on sys.path, the standard library and
+    site-packages included, so every such module recompiled from source
+    with no bytecode cache: 7 to 20 times the stock import cost. It now
+    leaves stock roots to the stock machinery and claims a project file
+    only when its first bytes contain one of the pack's native keywords.
+    """
+
+    BENCH_TARGETS = (
+        "asyncio",
+        "unittest",
+        "logging.config",
+        "email.parser",
+        "concurrent.futures",
+    )
+
+    def setup_method(self):
+        uninstall_import_hook()
+
+    def teardown_method(self):
+        uninstall_import_hook()
+
+    @staticmethod
+    def _native(language, english="def f():\n    if True:\n        return 1\n"):
+        finder = LegesherMetaPathFinder(language=language)
+        native = finder.translator.translate_code(english)
+        assert native != english, language
+        return finder, native
+
+    def test_stdlib_modules_are_not_claimed(self):
+        finder = LegesherMetaPathFinder(language="es")
+        assert finder.find_spec("json", None) is None
+        email_path = importlib.util.find_spec("email").submodule_search_locations
+        assert finder.find_spec("email.parser", email_path) is None
+        concurrent_path = importlib.util.find_spec(
+            "concurrent"
+        ).submodule_search_locations
+        assert finder.find_spec("concurrent.futures", concurrent_path) is None
+
+    def test_benchmark_targets_load_entirely_through_stock(self):
+        """After the CORE-2205 benchmark imports, no module is the hook's."""
+        import subprocess
+
+        script = (
+            "import importlib, sys\n"
+            "from legesher.runtime import install_import_hook\n"
+            "from legesher.runtime.import_hook import LegesherLoader\n"
+            "install_import_hook('es')\n"
+            f"for target in {self.BENCH_TARGETS!r}:\n"
+            "    top = target.partition('.')[0]\n"
+            "    for name in list(sys.modules):\n"
+            "        if name == top or name.startswith(top + '.'):\n"
+            "            del sys.modules[name]\n"
+            "    importlib.import_module(target)\n"
+            "claimed = sorted(n for n, m in list(sys.modules.items())\n"
+            "    if isinstance(getattr(getattr(m, '__spec__', None), 'loader', None),\n"
+            "                  LegesherLoader))\n"
+            "assert claimed == [], claimed\n"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", script], capture_output=True, text=True, timeout=120
+        )
+        assert result.returncode == 0, result.stderr
+
+    def test_stdlib_submodule_lookup_skips_the_path_finder(self):
+        """A lookup confined to the standard library costs no filesystem work."""
+        finder = LegesherMetaPathFinder(language="es")
+        asyncio_path = importlib.util.find_spec("asyncio").submodule_search_locations
+        with patch.object(
+            importlib.machinery.PathFinder,
+            "find_spec",
+            side_effect=AssertionError("PathFinder consulted for a stdlib path"),
+        ):
+            assert finder.find_spec("asyncio.events", asyncio_path) is None
+
+    @pytest.mark.parametrize("install_dir", ["site-packages", "dist-packages"])
+    def test_native_source_in_site_packages_is_not_claimed(self, tmp_path, install_dir):
+        """Installed packages ship plain Python and always load through stock."""
+        _, native = self._native("es")
+        site_dir = tmp_path / "lib" / "python3" / install_dir
+        site_dir.mkdir(parents=True)
+        (site_dir / "installed_native.py").write_text(native, encoding="utf-8")
+        finder = LegesherMetaPathFinder(language="es")
+        with patch.object(sys, "path", [str(site_dir)]):
+            importlib.invalidate_caches()
+            assert finder.find_spec("installed_native", None) is None, site_dir
+
+    def test_native_source_under_a_stock_root_is_not_claimed(self, tmp_path):
+        """Anything under the interpreter's prefixes is the stock machinery's."""
+        _, native = self._native("es")
+        (tmp_path / "under_prefix.py").write_text(native, encoding="utf-8")
+        finder = LegesherMetaPathFinder(language="es")
+        finder._stock_roots = (os.path.realpath(tmp_path),)
+        finder.invalidate_caches()
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            assert finder.find_spec("under_prefix", None) is None, tmp_path
+
+    def test_stock_roots_cover_the_library(self):
+        from legesher.runtime.import_hook import _stock_roots
+
+        import sysconfig
+
+        roots = _stock_roots()
+        for key in ("stdlib", "platstdlib", "purelib", "platlib"):
+            real = os.path.realpath(sysconfig.get_paths()[key])
+            assert any(real == r or real.startswith(r + os.sep) for r in roots), key
+
+    @pytest.mark.parametrize("layout", ["venv_in_project", "system_prefix"])
+    def test_project_under_an_interpreter_prefix_is_claimed(
+        self, tmp_path, monkeypatch, layout
+    ):
+        """A prefix is not a stock root; only its library directories are.
+
+        `python -m venv .` makes the project root the prefix, and a system
+        interpreter at /usr puts an application at /usr/src/app under it.
+        Native files there must still be translated, while the prefix's
+        own `lib` directory stays stock.
+        """
+        _, native = self._native("es")
+        prefix = tmp_path / "prefix"
+        project = prefix if layout == "venv_in_project" else prefix / "src" / "app"
+        library = prefix / "lib" / "python3" / "vendored"
+        project.mkdir(parents=True, exist_ok=True)
+        library.mkdir(parents=True)
+        (project / "under_prefix_app.py").write_text(native, encoding="utf-8")
+        (library / "under_prefix_lib.py").write_text(native, encoding="utf-8")
+        for name in ("prefix", "base_prefix", "exec_prefix", "base_exec_prefix"):
+            monkeypatch.setattr(sys, name, str(prefix))
+        finder = LegesherMetaPathFinder(language="es")
+
+        with patch.object(sys, "path", [str(project), str(library)]):
+            importlib.invalidate_caches()
+            claimed = finder.find_spec("under_prefix_app", None)
+            vendored = finder.find_spec("under_prefix_lib", None)
+        assert claimed is not None, project / "under_prefix_app.py"
+        assert vendored is None, library / "under_prefix_lib.py"
+
+    def test_english_project_module_is_not_claimed(self, tmp_path):
+        """No native keyword as a whole word: the file loads through stock.
+
+        `sitio` and `foo` contain the es forms `si` and `o`, but not as words.
+        """
+        (tmp_path / "plain_english.py").write_text(
+            "import os\n\nsitio = os.getcwd()\nfoo = [sitio]\n"
+        )
+        finder = LegesherMetaPathFinder(language="es")
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            assert finder.find_spec("plain_english", None) is None, tmp_path
+
+    def test_english_pack_claims_nothing(self, tmp_path):
+        """Under `en` every keyword form is the English keyword itself."""
+        (tmp_path / "en_module.py").write_text("def f():\n    return 1\n")
+        finder = LegesherMetaPathFinder(language="en")
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            assert finder.find_spec("en_module", None) is None, tmp_path
+
+    @pytest.mark.parametrize("language", ["es", "ar", "hi", "th", "si"])
+    def test_native_project_module_is_claimed(self, tmp_path, language):
+        """Scripts with combining marks and joiners match as whole words."""
+        _, native = self._native(language)
+        name = f"native_claim_{language}"
+        (tmp_path / f"{name}.py").write_text(native, encoding="utf-8")
+        finder = LegesherMetaPathFinder(language=language)
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            spec = finder.find_spec(name, None)
+        assert spec is not None, tmp_path / f"{name}.py"
+        assert isinstance(spec.loader, LegesherLoader)
+
+    def test_claim_scan_decodes_by_the_coding_declaration(self, tmp_path):
+        """A cp1251 Russian module is claimed: its keywords are not UTF-8 bytes."""
+        finder, native = self._native("ru")
+        source = "# -*- coding: cp1251 -*-\n" + native
+        module_path = tmp_path / "cp1251_native.py"
+        module_path.write_bytes(source.encode("cp1251"))
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            spec = finder.find_spec("cp1251_native", None)
+        assert spec is not None, module_path
+
+    def test_mixed_stock_and_project_search_path_is_still_searched(self, tmp_path):
+        """A namespace package with one installed and one project portion."""
+        _, native = self._native("es")
+        stock_portion = tmp_path / "lib" / "site-packages" / "nsx"
+        project_portion = tmp_path / "project" / "nsx"
+        stock_portion.mkdir(parents=True)
+        project_portion.mkdir(parents=True)
+        (project_portion / "native_child.py").write_text(native, encoding="utf-8")
+        finder = LegesherMetaPathFinder(language="es")
+        importlib.invalidate_caches()
+        spec = finder.find_spec(
+            "nsx.native_child", [str(stock_portion), str(project_portion)]
+        )
+        assert spec is not None, project_portion / "native_child.py"
+
+    def test_invalidate_caches_clears_the_location_memo(self, tmp_path):
+        """A path entry's stock verdict is recomputed after invalidate_caches."""
+        _, native = self._native("es")
+        pkg = tmp_path / "memo_pkg"
+        pkg.mkdir()
+        (pkg / "child.py").write_text(native, encoding="utf-8")
+        finder = LegesherMetaPathFinder(language="es")
+        finder._stock_roots = ()
+        importlib.invalidate_caches()
+        assert finder.find_spec("memo_pkg.child", [str(pkg)]) is not None
+
+        finder._stock_roots = (os.path.realpath(tmp_path),)
+        finder.invalidate_caches()
+        # With the memo cleared the entry is now stock, so the lookup ends
+        # before the path finder is consulted.
+        with patch.object(
+            importlib.machinery.PathFinder,
+            "find_spec",
+            side_effect=AssertionError("stale location memo: PathFinder consulted"),
+        ):
+            assert finder.find_spec("memo_pkg.child", [str(pkg)]) is None, pkg
+
+    def test_keyword_followed_by_a_combining_mark_is_not_a_match(self, tmp_path):
+        """`यां` is one identifier: `या` (hi `or`) plus an anusvara.
+
+        The anusvara is a combining mark, which a `\\w` word boundary treats
+        as the end of a word; Python treats it as part of the identifier.
+        """
+        (tmp_path / "hi_identifier.py").write_text("यां = 1\n", encoding="utf-8")
+        finder = LegesherMetaPathFinder(language="hi")
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            assert finder.find_spec("hi_identifier", None) is None, tmp_path
+
+    def test_keyword_form_that_changes_under_nfkc_is_matched(self, tmp_path):
+        """Thai `return` contains SARA AM, which NFKC decomposes.
+
+        The file keeps the pack's own spelling, so the scan must normalize
+        the text the same way it normalizes the keyword forms.
+        """
+        import unicodedata
+
+        finder = LegesherMetaPathFinder(language="th")
+        forms = [
+            native
+            for native, english in finder.reverse_translator.mapper.keyword_map.items()
+            if english == "return"
+        ]
+        assert forms and unicodedata.normalize("NFKC", forms[0]) != forms[0]
+        (tmp_path / "th_return.py").write_text(
+            f"x = 1\n{forms[0]} x\n", encoding="utf-8"
+        )
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            assert finder.find_spec("th_return", None) is not None, tmp_path
+
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "CORE-1539: the claim scan reads a bounded prefix, so a native "
+            "file whose first native keyword sits past it loads through "
+            "stock untranslated. A per-file language header removes the bound."
+        ),
+    )
+    def test_native_keyword_beyond_the_prefix_bound_is_claimed(self, tmp_path):
+        from legesher.runtime.import_hook import _CLAIM_PREFIX_BYTES
+
+        _, native = self._native("es")
+        padding = ("#" * 79 + "\n") * (_CLAIM_PREFIX_BYTES // 80 + 1)
+        module_path = tmp_path / "late_native.py"
+        module_path.write_text(padding + native, encoding="utf-8")
+        finder = LegesherMetaPathFinder(language="es")
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            assert finder.find_spec("late_native", None) is not None, module_path
+
+
+class TestBytecodeCache:
+    """Regression tests for CORE-2205: files the hook translates are cached.
+
+    Every claimed file recompiled from source on every run. The loader now
+    caches compiled code under __pycache__ with a Legesher-specific name,
+    keyed by a hash of the native source bytes and everything that decides
+    the translation, never by modification time alone.
+    """
+
+    ENGLISH = "def value():\n    if True:\n        return 41\n    return 0\n"
+
+    @pytest.fixture(autouse=True)
+    def _isolated(self, monkeypatch):
+        uninstall_import_hook()
+        monkeypatch.setattr(sys, "dont_write_bytecode", False)
+        monkeypatch.setattr(sys, "pycache_prefix", None)
+        yield
+        uninstall_import_hook()
+
+    def _write(self, tmp_path, name, english=None):
+        finder = LegesherMetaPathFinder(language="es")
+        native = finder.translator.translate_code(english or self.ENGLISH)
+        assert native.startswith("definir"), native
+        path = tmp_path / f"{name}.py"
+        path.write_text(native, encoding="utf-8")
+        return path
+
+    @staticmethod
+    def _paths(module_path, language="es"):
+        stock = importlib.util.cache_from_source(str(module_path))
+        return stock, stock[: -len(".pyc")] + f".legesher-{language}.pyc"
+
+    @staticmethod
+    def _import(tmp_path, name, language="es"):
+        """Import under a freshly installed hook; return (module, stats)."""
+        from legesher.runtime.import_hook import get_bytecode_cache_stats
+
+        sys.path.insert(0, str(tmp_path))
+        importlib.invalidate_caches()
+        try:
+            install_import_hook(language=language)
+            module = importlib.import_module(name)
+            assert isinstance(module.__spec__.loader, LegesherLoader), module
+            return module, get_bytecode_cache_stats()
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(tmp_path))
+            sys.modules.pop(name, None)
+
+    def test_first_import_writes_only_the_tagged_file(self, tmp_path):
+        module_path = self._write(tmp_path, "cache_first")
+        stock, tagged = self._paths(module_path)
+
+        module, stats = self._import(tmp_path, "cache_first")
+        assert module.value() == 41
+        assert module.__cached__ == tagged, module.__cached__
+        assert stats == {"hits": 0, "misses": 1, "writes": 1, "write_errors": 0}
+        assert os.listdir(os.path.dirname(tagged)) == [os.path.basename(tagged)]
+        assert not os.path.exists(stock), stock
+
+    def test_second_import_hits_without_translating(self, tmp_path):
+        from legesher_core import TokenTranslator
+
+        self._write(tmp_path, "cache_hit")
+        self._import(tmp_path, "cache_hit")
+
+        with patch.object(
+            TokenTranslator,
+            "translate_code",
+            side_effect=AssertionError("translated on a cache hit"),
+        ):
+            module, stats = self._import(tmp_path, "cache_hit")
+        assert module.value() == 41
+        assert stats == {"hits": 1, "misses": 0, "writes": 0, "write_errors": 0}
+
+    def test_hit_registers_the_source_mapping(self, tmp_path):
+        """Localized tracebacks still map lines for a module loaded from cache."""
+        module_path = self._write(tmp_path, "cache_mapping")
+        self._import(tmp_path, "cache_mapping")
+
+        mapper = MagicMock()
+        with patch(
+            "legesher.runtime.import_hook.get_source_mapper", return_value=mapper
+        ):
+            _, stats = self._import(tmp_path, "cache_mapping")
+        assert stats["hits"] == 1
+        mapper.register_mapping.assert_called_once()
+        kwargs = mapper.register_mapping.call_args.kwargs
+        assert kwargs["filename"] == str(module_path)
+        assert kwargs["english_source"] == self.ENGLISH
+        assert kwargs["native_source"] == module_path.read_text(encoding="utf-8")
+
+    def test_hit_on_a_claimed_english_file_registers_nothing(self, tmp_path):
+        """English sharing a pack word is claimed, cached, and never mapped."""
+        (tmp_path / "cache_english.py").write_text("con = 1\n")
+        module, first = self._import(tmp_path, "cache_english")
+        assert module.con == 1 and first["writes"] == 1, first
+
+        mapper = MagicMock()
+        with patch(
+            "legesher.runtime.import_hook.get_source_mapper", return_value=mapper
+        ):
+            module, second = self._import(tmp_path, "cache_english")
+        assert module.con == 1
+        assert second["hits"] == 1, second
+        mapper.register_mapping.assert_not_called()
+
+    def test_record_honours_pycache_prefix(self, tmp_path, monkeypatch):
+        """With sys.pycache_prefix set, the record lives under the prefix."""
+        prefix = tmp_path / "pyc_prefix"
+        project = tmp_path / "project"
+        project.mkdir()
+        module_path = self._write(project, "cache_prefixed")
+        monkeypatch.setattr(sys, "pycache_prefix", str(prefix))
+        stock, tagged = self._paths(module_path)
+        assert tagged.startswith(str(prefix)), tagged
+
+        module, stats = self._import(project, "cache_prefixed")
+        assert module.value() == 41 and stats["writes"] == 1, stats
+        assert os.path.exists(tagged), tagged
+        assert not os.path.exists(stock), stock
+        assert not (project / "__pycache__").exists(), project
+
+    def test_record_is_no_more_readable_than_its_source(self, tmp_path, monkeypatch):
+        """The record holds the translated source, so it keeps the source's mode."""
+        if os.name != "posix":
+            pytest.skip("POSIX permission bits")
+        module_path = self._write(tmp_path, "cache_private")
+        os.chmod(module_path, 0o600)
+        old_umask = os.umask(0o022)
+        try:
+            self._import(tmp_path, "cache_private")
+        finally:
+            os.umask(old_umask)
+        _, tagged = self._paths(module_path)
+        assert os.stat(tagged).st_mode & 0o777 == 0o600, oct(os.stat(tagged).st_mode)
+
+    @pytest.mark.parametrize(
+        "part",
+        ["language", "maps", "python_version", "optimize", "magic", "engine"],
+    )
+    def test_every_salt_part_changes_the_key(self, monkeypatch, part):
+        """Each input that decides the compiled code is part of the key."""
+        import types as pytypes
+
+        from legesher.runtime import import_hook
+
+        raw = b"definir f():\n    retornar 1\n"
+        # Hold the pack distribution version fixed, so a changed language
+        # cannot differ only through the version lookup it drives.
+        monkeypatch.setattr(importlib.metadata, "version", lambda dist: "1.0.0")
+        baseline = LegesherMetaPathFinder(language="es")
+        changed = LegesherMetaPathFinder(language="es")
+        if part == "language":
+            changed.language = "xx"
+        elif part == "maps":
+            mapper = changed.reverse_translator.mapper
+            mapper.keyword_map = dict(mapper.keyword_map, extra_word="pass")
+        elif part == "python_version":
+            changed.reverse_translator.python_version = "3.0"
+        elif part == "optimize":
+            monkeypatch.setattr(sys, "flags", pytypes.SimpleNamespace(optimize=2))
+        elif part == "magic":
+            monkeypatch.setattr(importlib.util, "MAGIC_NUMBER", b"\x00\x00\r\n")
+        else:
+            monkeypatch.setattr(import_hook, "_ENGINE_DIGEST", "changed-engine")
+        changed._bytecode_salt = changed._compute_bytecode_salt()
+        assert changed._bytecode_key(raw) != baseline._bytecode_key(raw), part
+
+    def test_same_size_and_mtime_with_new_bytes_misses(self, tmp_path):
+        """The key is the source content, never the modification time."""
+        module_path = self._write(tmp_path, "cache_mtime")
+        self._import(tmp_path, "cache_mtime")
+        mtime_ns = module_path.stat().st_mtime_ns
+
+        changed = module_path.read_text(encoding="utf-8").replace("41", "42")
+        module_path.write_text(changed, encoding="utf-8")
+        os.utime(module_path, ns=(mtime_ns, mtime_ns))
+
+        module, stats = self._import(tmp_path, "cache_mtime")
+        assert module.value() == 42, module_path
+        assert stats["hits"] == 0 and stats["misses"] == 1
+
+    @pytest.mark.parametrize("change", ["engine", "cli", "pack"])
+    def test_version_change_misses(self, tmp_path, monkeypatch, change):
+        import legesher
+        import legesher_core
+
+        self._write(tmp_path, f"cache_version_{change}")
+        self._import(tmp_path, f"cache_version_{change}")
+
+        if change == "engine":
+            monkeypatch.setattr(legesher_core, "__version__", "999.0.0")
+        elif change == "cli":
+            monkeypatch.setattr(legesher, "__version__", "999.0.0")
+        else:
+            real_version = importlib.metadata.version
+            monkeypatch.setattr(
+                importlib.metadata,
+                "version",
+                lambda dist: (
+                    "999.0.0"
+                    if dist == "legesher-i18n-python-es"
+                    else real_version(dist)
+                ),
+            )
+        _, stats = self._import(tmp_path, f"cache_version_{change}")
+        assert stats["hits"] == 0 and stats["misses"] == 1, change
+
+    def test_record_for_another_language_is_rejected(self, tmp_path):
+        """The language is part of the key, not only of the file name."""
+        module_path = self._write(tmp_path, "cache_language")
+        self._import(tmp_path, "cache_language")
+        _, es_record = self._paths(module_path, "es")
+        _, ar_record = self._paths(module_path, "ar")
+        with open(es_record, "rb") as src, open(ar_record, "wb") as dst:
+            dst.write(src.read())
+
+        finder = LegesherMetaPathFinder(language="ar")
+        loader = LegesherLoader("cache_language", str(module_path), finder)
+        key = finder._bytecode_key(module_path.read_bytes())
+        assert loader._read_bytecode(ar_record, key) is None, ar_record
+
+    @pytest.mark.parametrize(
+        "damage", ["truncated", "garbage", "foreign_key", "not_code"]
+    )
+    def test_damaged_record_is_ignored_and_rewritten(self, tmp_path, damage):
+        module_path = self._write(tmp_path, f"cache_damage_{damage}")
+        self._import(tmp_path, f"cache_damage_{damage}")
+        _, tagged = self._paths(module_path)
+        data = open(tagged, "rb").read()
+        if damage == "truncated":
+            data = data[: len(data) // 2]
+        elif damage == "garbage":
+            data = data[:37] + b"\x00not marshal data"
+        elif damage == "foreign_key":
+            data = data[:5] + bytes(32) + data[37:]
+        else:
+            import marshal
+
+            data = data[:37] + marshal.dumps((None, 42))
+        with open(tagged, "wb") as record:
+            record.write(data)
+
+        module, stats = self._import(tmp_path, f"cache_damage_{damage}")
+        assert module.value() == 41, tagged
+        assert stats["hits"] == 0 and stats["writes"] == 1, stats
+
+    def test_unwritable_pycache_still_imports(self, tmp_path):
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            pytest.skip("root ignores directory permissions")
+        module_path = self._write(tmp_path, "cache_readonly")
+        stock, _ = self._paths(module_path)
+        pycache = os.path.dirname(stock)
+        os.mkdir(pycache)
+        os.chmod(pycache, 0o555)
+        try:
+            module, stats = self._import(tmp_path, "cache_readonly")
+        finally:
+            os.chmod(pycache, 0o755)
+        assert module.value() == 41
+        assert stats["writes"] == 0 and stats["write_errors"] == 1, stats
+        assert os.listdir(pycache) == [], pycache
+
+    def test_dont_write_bytecode_writes_nothing(self, tmp_path, monkeypatch):
+        module_path = self._write(tmp_path, "cache_nowrite")
+        monkeypatch.setattr(sys, "dont_write_bytecode", True)
+        module, stats = self._import(tmp_path, "cache_nowrite")
+        assert module.value() == 41
+        assert stats["writes"] == 0
+        assert not (tmp_path / "__pycache__").exists(), module_path
+
+    def test_failed_replace_leaves_no_temp_and_stock_bytecode_alone(
+        self, tmp_path, monkeypatch
+    ):
+        """Only the hook's own temporary file is ever removed."""
+        import py_compile
+
+        module_path = self._write(tmp_path, "cache_replace")
+        stock, tagged = self._paths(module_path)
+        # A stock .pyc from some earlier stock compile of this path.
+        other = tmp_path / "stock_source.py"
+        other.write_text("VALUE = 1\n")
+        py_compile.compile(str(other), cfile=stock, doraise=True)
+        stock_bytes = open(stock, "rb").read()
+
+        def failing_replace(src, dst):
+            raise OSError("simulated replace failure")
+
+        monkeypatch.setattr(os, "replace", failing_replace)
+        module, stats = self._import(tmp_path, "cache_replace")
+        assert module.value() == 41
+        assert stats["write_errors"] == 1, stats
+        pycache = os.path.dirname(stock)
+        assert sorted(os.listdir(pycache)) == [os.path.basename(stock)], pycache
+        assert open(stock, "rb").read() == stock_bytes, stock
+        assert not os.path.exists(tagged), tagged
+
+    def test_stock_python_ignores_the_cached_record(self, tmp_path):
+        """Stock Python never runs bytecode compiled from translated source.
+
+        With the Legesher record in place, a fresh interpreter without the
+        hook still compiles the native source itself, and fails on it.
+        """
+        import subprocess
+
+        module_path = self._write(tmp_path, "cache_stock_blind")
+        self._import(tmp_path, "cache_stock_blind")
+        _, tagged = self._paths(module_path)
+        assert os.path.exists(tagged), tagged
+
+        result = subprocess.run(
+            [sys.executable, "-c", "import cache_stock_blind"],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert result.returncode != 0, result.stdout
+        assert "SyntaxError" in result.stderr, result.stderr
+
+    def test_moved_project_reports_the_new_filename(self, tmp_path):
+        """A record copied with its project reports where the code now lives."""
+        import shutil
+
+        first = tmp_path / "first"
+        first.mkdir()
+        self._write(first, "cache_moved")
+        self._import(first, "cache_moved")
+        moved = tmp_path / "moved"
+        shutil.copytree(first, moved)
+
+        module, stats = self._import(moved, "cache_moved")
+        assert stats["hits"] == 1, stats
+        assert module.value.__code__.co_filename == str(moved / "cache_moved.py")
 
 
 class TestSymlinkedPackage:

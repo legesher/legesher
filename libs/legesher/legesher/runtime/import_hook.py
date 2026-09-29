@@ -35,11 +35,24 @@ Example:
     >>> import mi_modulo  # Works seamlessly with Spanish code!
 """
 
+import io
 import os
+import re
 import ast
 import sys
+import json
+import site
+import types
+import marshal
+import hashlib
+import secrets
 import logging
+import sysconfig
 import threading
+import tokenize
+import unicodedata
+import importlib.metadata
+import _imp
 import importlib.abc
 import importlib.machinery
 import importlib.util
@@ -58,6 +71,103 @@ from legesher.runtime.source_mapper import get_source_mapper
 
 # Configure logger
 logger = logging.getLogger(__name__)
+
+# How much of a file the finder reads when deciding whether to claim it. A
+# native-language module uses native keywords from its first lines, so a
+# bounded prefix answers the question without reading or parsing the file.
+_CLAIM_PREFIX_BYTES = 16384
+
+# Bytecode the hook compiles is cached beside stock bytecode, under a name
+# the stock loader never opens: <module>.<cache tag>.legesher-<lang>.pyc.
+# A record is _BYTECODE_HEADER, the 32-byte key, then the marshalled pair
+# (English source or None, code object).
+_BYTECODE_HEADER = b"LGSH\x01"
+_BYTECODE_KEY_SIZE = 32
+
+
+def _continues_identifier(char: str) -> bool:
+    """Whether ``char`` can sit inside an identifier.
+
+    Python's identifier rules, not ``\\w``: combining marks (a Devanagari
+    anusvara, a Thai vowel sign) and zero-width joiners continue a word.
+    """
+    return ("a" + char).isidentifier()
+
+
+def _stock_roots() -> tuple[str, ...]:
+    """Directories whose modules always load through the stock machinery.
+
+    The standard library and installed-package directories: sysconfig's
+    stdlib, platstdlib, purelib and platlib, every site-packages directory,
+    and the `lib` (or `Lib`, `DLLs`) directory of each interpreter prefix.
+    A prefix itself is not a root: a virtual environment created in the
+    project root (`python -m venv .`) or a system interpreter at /usr with
+    an application under /usr/src would otherwise make every project file
+    count as stock. Installed packages ship plain Python, so nothing under
+    these roots is ever the hook's to translate.
+    """
+    candidates: set[str] = set()
+    paths = sysconfig.get_paths()
+    for key in ("stdlib", "platstdlib", "purelib", "platlib"):
+        if paths.get(key):
+            candidates.add(paths[key])
+    for prefix in {sys.prefix, sys.base_prefix, sys.exec_prefix, sys.base_exec_prefix}:
+        for name in ("lib", "Lib", "lib64", "DLLs"):
+            candidates.add(os.path.join(prefix, name))
+    try:
+        candidates.update(site.getsitepackages())
+    except AttributeError:  # some virtualenv builds drop it
+        pass
+    candidates.add(site.getusersitepackages())
+    return tuple(
+        sorted({os.path.realpath(c) for c in candidates if c}, key=len, reverse=True)
+    )
+
+
+_INSTALL_DIR_NAMES = frozenset({"site-packages", "dist-packages"})
+
+
+_ENGINE_DIGEST: str | None = None
+
+
+def _engine_digest() -> str:
+    """Digest of the code that decides what a translated file compiles to.
+
+    Every source file of legesher_core plus this module. Versions alone do
+    not change between commits of an editable install, so a translator fix
+    would otherwise keep hitting bytecode built by the old code. Computed
+    once per process.
+    """
+    global _ENGINE_DIGEST
+    if _ENGINE_DIGEST is None:
+        import legesher_core
+
+        digest = hashlib.sha256()
+        core_root = Path(legesher_core.__file__).parent
+        sources = [
+            (p.relative_to(core_root).as_posix(), p) for p in core_root.rglob("*.py")
+        ]
+        sources.append(("legesher/runtime/import_hook.py", Path(__file__)))
+        for name, path in sorted(sources):
+            try:
+                content = path.read_bytes()
+            except OSError:
+                content = b""
+            digest.update(name.encode("utf-8") + b"\0" + content + b"\0")
+        _ENGINE_DIGEST = digest.hexdigest()
+    return _ENGINE_DIGEST
+
+
+def _is_stock_location(path: str, roots: tuple[str, ...]) -> bool:
+    """Whether a resolved path belongs to the stock machinery.
+
+    It does when it sits under one of ``roots``, or inside any
+    site-packages or dist-packages directory (another environment's
+    installed packages on sys.path included).
+    """
+    if any(path == root or path.startswith(root + os.sep) for root in roots):
+        return True
+    return not _INSTALL_DIR_NAMES.isdisjoint(path.split(os.sep))
 
 
 class _TranslationCache:
@@ -184,6 +294,72 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         self.reverse_translator = self.translator.reverse()
         # LRU cache with configurable size
         self.cache = _TranslationCache(max_size=cache_size)
+        # Where the stock machinery always wins, resolved once.
+        self._stock_roots = _stock_roots()
+        # Per search-path entry: is it inside a stock root? Cleared by
+        # invalidate_caches.
+        self._entry_is_stock: dict[str, bool] = {}
+        # The pack's native keyword forms, NFKC-normalized, longest first.
+        # A form identical to its English keyword (the `en` pack) says
+        # nothing about the file, so it is left out.
+        forms = set()
+        for native, english in self.reverse_translator.mapper.keyword_map.items():
+            form = unicodedata.normalize("NFKC", native).rstrip("*")
+            if form and form != unicodedata.normalize("NFKC", english).rstrip("*"):
+                forms.add(form)
+        self._keyword_pattern = (
+            re.compile("|".join(map(re.escape, sorted(forms, key=len, reverse=True))))
+            if forms
+            else None
+        )
+        # Everything but the source bytes that decides what a translated
+        # file compiles to. Library names stay canonical in compiled code,
+        # so no vocabulary revision belongs here.
+        self._bytecode_salt = self._compute_bytecode_salt()
+        self._bytecode_lock = threading.Lock()
+        self._bytecode_stats = {"hits": 0, "misses": 0, "writes": 0, "write_errors": 0}
+
+    def _compute_bytecode_salt(self) -> bytes:
+        import legesher
+        import legesher_core
+
+        try:
+            pack_version = importlib.metadata.version(
+                f"legesher-i18n-python-{self.language}"
+            )
+        except importlib.metadata.PackageNotFoundError:
+            pack_version = "unknown"
+        mapper = self.reverse_translator.mapper
+        maps = json.dumps(
+            [mapper.keyword_map, mapper.builtin_map, mapper.implicit_param_map],
+            sort_keys=True,
+            ensure_ascii=False,
+        )
+        parts = [
+            _BYTECODE_HEADER.decode("ascii"),
+            importlib.util.MAGIC_NUMBER.hex(),
+            str(sys.flags.optimize),
+            self.language,
+            str(self.reverse_translator.python_version),
+            pack_version,
+            hashlib.sha256(maps.encode("utf-8")).hexdigest(),
+            str(getattr(legesher_core, "__version__", "unknown")),
+            str(getattr(legesher, "__version__", "unknown")),
+            _engine_digest(),
+        ]
+        return "\0".join(parts).encode("utf-8") + b"\0"
+
+    def _bytecode_key(self, raw_source: bytes) -> bytes:
+        return hashlib.sha256(self._bytecode_salt + raw_source).digest()
+
+    def _count(self, stat: str) -> None:
+        with self._bytecode_lock:
+            self._bytecode_stats[stat] += 1
+
+    def get_bytecode_cache_stats(self) -> dict[str, int]:
+        """Hits, misses, writes and write errors of the bytecode cache."""
+        with self._bytecode_lock:
+            return dict(self._bytecode_stats)
 
     def find_spec(self, fullname, path, target=None):
         """Find module spec for native language files.
@@ -221,6 +397,15 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         if importlib.machinery.FrozenImporter.find_spec(fullname) is not None:
             return None
 
+        # A lookup confined to stock roots (a stdlib or installed package's
+        # submodules) is never the hook's: skip it before any filesystem work.
+        if (
+            path is not None
+            and path
+            and all(self._is_stock_entry(entry) for entry in path)
+        ):
+            return None
+
         # Ask the stock path finder which file stock Python would load, and
         # claim it only when that is a source file. This keeps FileFinder
         # precedence exactly: a compiled extension beats a same-named .py,
@@ -232,12 +417,75 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
             return None
         if type(stock_spec.loader) is not importlib.machinery.SourceFileLoader:
             return None
+        if not self._should_claim(stock_spec.origin):
+            return None
 
         return self._create_spec(
             fullname,
             stock_spec.origin,
             is_package=stock_spec.submodule_search_locations is not None,
         )
+
+    def _is_stock_entry(self, entry) -> bool:
+        if not isinstance(entry, str):
+            return False
+        cached = self._entry_is_stock.get(entry)
+        if cached is None:
+            cached = _is_stock_location(
+                os.path.realpath(entry or "."), self._stock_roots
+            )
+            self._entry_is_stock[entry] = cached
+        return cached
+
+    def _should_claim(self, origin: str) -> bool:
+        """Decide whether the hook loads this source file.
+
+        This is the single claim decision. Everything the hook does not
+        claim loads through the stock machinery, with its bytecode cache.
+        Header-driven detection (CORE-1539) belongs first in this function:
+        a file that declares its language needs no scan.
+
+        1. Nothing under a stock root (the interpreter's prefixes, the
+           standard library, this environment's site-packages) and nothing
+           inside any site-packages or dist-packages directory.
+        2. Otherwise, claim only a file whose first _CLAIM_PREFIX_BYTES
+           contain one of the pack's native keyword forms as a whole word.
+           No parse happens here. Claiming an English file that merely
+           shares a word with the pack is safe (the loader's parse-first
+           rule leaves it untranslated); missing a native file is not.
+
+        Args:
+            origin: Path of the source file the stock finder resolved
+
+        Returns:
+            True if the hook should load the file, False to leave it stock
+        """
+        if _is_stock_location(os.path.realpath(origin), self._stock_roots):
+            return False
+        if self._keyword_pattern is None:
+            return False
+        try:
+            with open(origin, "rb") as source_file:
+                prefix = source_file.read(_CLAIM_PREFIX_BYTES)
+        except OSError:
+            return False
+        try:
+            encoding, _ = tokenize.detect_encoding(io.BytesIO(prefix).readline)
+        except (SyntaxError, LookupError):  # 3.14 raises LookupError for rot13
+            encoding = "utf-8"
+        try:
+            text = prefix.decode(encoding, errors="replace")
+        except LookupError:
+            text = prefix.decode("utf-8", errors="replace")
+        text = unicodedata.normalize("NFKC", text)
+        for match in self._keyword_pattern.finditer(text):
+            start, end = match.span()
+            if start > 0 and _continues_identifier(text[start - 1]):
+                continue
+            if end < len(text) and _continues_identifier(text[end]):
+                continue
+            return True
+        return False
 
     def _create_spec(self, fullname, origin, is_package):
         """Create module spec with LegesherLoader.
@@ -266,6 +514,9 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         # location, so every module this finder loaded had no __file__,
         # breaking code that locates resources relative to its own file.
         spec.has_location = True
+        # __cached__ names the file this loader actually caches to, never the
+        # stock .pyc path, which the loader neither reads nor writes.
+        spec.cached = spec.loader._bytecode_path()  # type: ignore[union-attr]
         if is_package:
             # ModuleSpec(is_package=True) initializes submodule_search_locations
             # to an EMPTY list, so submodules of any package this finder claims
@@ -277,11 +528,12 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         return spec
 
     def invalidate_caches(self):
-        """Clear the translation cache.
+        """Clear the translation cache and the per-entry location memo.
 
         This is called by importlib when caches should be invalidated.
         """
         self.cache.clear()
+        self._entry_is_stock.clear()
 
 
 class LegesherLoader(importlib.abc.SourceLoader):
@@ -378,10 +630,20 @@ class LegesherLoader(importlib.abc.SourceLoader):
         if cached_result is not None:
             return cached_result.decode("utf-8")
 
+        return self._source_from_bytes(file_path.read_bytes(), cache_key)[0]
+
+    def _source_from_bytes(
+        self, raw_source: bytes, cache_key: tuple[str, int]
+    ) -> tuple[str | bytes, bool]:
+        """Decode and, when native, translate one file's bytes.
+
+        Returns:
+            (what to compile, whether it was translated)
+        """
+        file_path = Path(self.path)
         # Decode the way the stock loader does: the PEP 263 coding
         # declaration (or a BOM, which utf-8-sig drops) picks the encoding,
         # UTF-8 otherwise, with universal newlines.
-        raw_source = file_path.read_bytes()
         try:
             native_source = importlib.util.decode_source(raw_source)
         except (SyntaxError, UnicodeDecodeError, LookupError):
@@ -390,8 +652,9 @@ class LegesherLoader(importlib.abc.SourceLoader):
             # Python does: it raises the stock SyntaxError naming the file,
             # or accepts them, and then they are compiled untranslated.
             compile(raw_source, str(file_path), "exec", dont_inherit=True)
-            return raw_source
+            return raw_source, False
 
+        translated = False
         # Detect if file needs translation
         if self._needs_translation(native_source):
             # Translate to English for Python runtime
@@ -414,6 +677,7 @@ class LegesherLoader(importlib.abc.SourceLoader):
             except (SyntaxError, ValueError):
                 english_source = native_source
             else:
+                translated = True
                 # Register source mapping for error reporting
                 source_mapper = get_source_mapper()
                 source_mapper.register_mapping(
@@ -426,7 +690,7 @@ class LegesherLoader(importlib.abc.SourceLoader):
             english_source = native_source
 
         self.finder.cache.set(cache_key, english_source.encode("utf-8"))
-        return english_source
+        return english_source, translated
 
     def get_source(self, fullname):
         """Return the source Python runs for this module, as text.
@@ -451,13 +715,19 @@ class LegesherLoader(importlib.abc.SourceLoader):
         return source
 
     def get_code(self, fullname):
-        """Compile the module from text, never from bytes.
+        """Return the module's code, from the Legesher bytecode cache if valid.
 
-        Compiled from bytes, a surviving coding declaration such as
-        latin-1 would re-decode the UTF-8 bytes get_data returns. Text is
-        compiled as is; only a file tokenize cannot decode but the stock
-        compiler accepts is compiled from its own bytes. This also keeps the
-        loader away from bytecode caches: it reads and writes no .pyc.
+        The cache record sits at _bytecode_path(), a name the stock loader
+        never opens, and is keyed by a hash of the native source bytes plus
+        everything that decides the translation (see _compute_bytecode_salt),
+        never by modification time. The stock .pyc path is neither read nor
+        written, so stock Python never runs bytecode compiled from translated
+        source and this loader never runs stock bytecode.
+
+        On a miss the module is compiled from text: compiled from bytes, a
+        surviving coding declaration such as latin-1 would re-decode the
+        UTF-8 source. Only a file tokenize cannot decode but the stock
+        compiler accepts is compiled from its own bytes.
 
         Args:
             fullname: Fully qualified module name
@@ -465,7 +735,114 @@ class LegesherLoader(importlib.abc.SourceLoader):
         Returns:
             Code object for the module
         """
-        return compile(self._module_source(), self.path, "exec", dont_inherit=True)
+        file_path = Path(self.path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"No such file: {self.path}")
+        # Stat before reading, so an edit racing the import can only make
+        # the in-memory entry older than the file, never newer.
+        source_stat = file_path.stat()
+        raw_source = file_path.read_bytes()
+        cache_path = self._bytecode_path()
+        key = self.finder._bytecode_key(raw_source)
+
+        if cache_path is not None:
+            cached = self._read_bytecode(cache_path, key)
+            if cached is not None:
+                english_source, code = cached
+                if english_source is not None:
+                    get_source_mapper().register_mapping(
+                        filename=self.path,
+                        native_source=importlib.util.decode_source(raw_source),
+                        english_source=english_source,
+                    )
+                self.finder._count("hits")
+                return code
+            self.finder._count("misses")
+
+        cache_key = (str(file_path), source_stat.st_mtime_ns)
+        source, translated = self._source_from_bytes(raw_source, cache_key)
+        code = compile(source, self.path, "exec", dont_inherit=True)
+        if cache_path is not None and not sys.dont_write_bytecode:
+            stored = source if translated and isinstance(source, str) else None
+            self._write_bytecode(cache_path, key, stored, code, source_stat.st_mode)
+        return code
+
+    def _bytecode_path(self) -> str | None:
+        """Where this module's compiled code is cached, or None if nowhere.
+
+        The stock cache path with its `.pyc` suffix replaced by
+        `.legesher-<lang>.pyc`, so it honours sys.pycache_prefix and the
+        optimization tag while never colliding with the stock file.
+        """
+        try:
+            stock_path = importlib.util.cache_from_source(self.path)
+        except NotImplementedError:  # sys.implementation.cache_tag is None
+            return None
+        root, suffix = os.path.splitext(stock_path)
+        return f"{root}.legesher-{self.finder.language}{suffix}"
+
+    def _read_bytecode(
+        self, cache_path: str, key: bytes
+    ) -> tuple[str | None, types.CodeType] | None:
+        try:
+            with open(cache_path, "rb") as cache_file:
+                data = cache_file.read()
+        except OSError:
+            return None
+        start = len(_BYTECODE_HEADER)
+        if (
+            not data.startswith(_BYTECODE_HEADER)
+            or data[start : start + _BYTECODE_KEY_SIZE] != key
+        ):
+            return None
+        try:
+            english_source, code = marshal.loads(data[start + _BYTECODE_KEY_SIZE :])
+        except (EOFError, ValueError, TypeError):
+            return None
+        if not isinstance(code, types.CodeType):
+            return None
+        if english_source is not None and not isinstance(english_source, str):
+            return None
+        # A moved project leaves the recorded filename stale; the stock
+        # loader repairs it the same way.
+        fix_co_filename = getattr(_imp, "_fix_co_filename", None)
+        if fix_co_filename is not None:
+            fix_co_filename(code, self.path)
+        return english_source, code
+
+    def _write_bytecode(
+        self,
+        cache_path: str,
+        key: bytes,
+        english_source: str | None,
+        code: types.CodeType,
+        source_mode: int,
+    ) -> None:
+        data = _BYTECODE_HEADER + key + marshal.dumps((english_source, code))
+        # The record holds the translated source, so it is no more readable
+        # than the source itself: the stock loader's rule, source mode plus
+        # owner-write.
+        mode = (source_mode & 0o777) | 0o200
+        temp_path = f"{cache_path}.{os.getpid()}.{secrets.token_hex(4)}.tmp"
+        created = False
+        try:
+            os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+            # O_EXCL: the temporary file is ours alone, so a failure below
+            # removes only a file this call created.
+            fd = os.open(temp_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
+            created = True
+            with os.fdopen(fd, "wb") as temp_file:
+                temp_file.write(data)
+            os.replace(temp_path, cache_path)
+        except OSError:
+            self.finder._count("write_errors")
+            if created:
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    pass
+            return
+        self.finder._count("writes")
 
     def _needs_translation(self, source):
         """Detect whether the source must be translated to run as Python.
@@ -474,12 +851,13 @@ class LegesherLoader(importlib.abc.SourceLoader):
         imported as-is. Native-language modules use native keywords in
         keyword position, which makes ``ast.parse`` fail, and that failure
         is the translation signal. A word-scan heuristic is not safe
-        here: the finder claims every ``.py`` file on the search path, so
-        flagging any module that merely shares a word with the pack's
-        native vocabulary would corrupt plain-English modules (under the
-        es pack, ``con = ...`` would become a ``SyntaxError`` because
-        ``con`` renders ``with``, and an ``ErrorDeOS`` attribute would be
-        silently renamed to ``OSError``).
+        here: the finder claims any project file whose opening bytes
+        contain a native keyword as a whole word, so a claimed file may be
+        plain English that merely shares a word with the pack, and
+        translating it would corrupt it (under the es pack, ``con = ...``
+        would become a ``SyntaxError`` because ``con`` renders ``with``,
+        and an ``ErrorDeOS`` attribute would be silently renamed to
+        ``OSError``).
 
         Accepted limitation: a native-language module that happens to
         parse as valid Python (e.g. it uses only translated builtins and
@@ -490,7 +868,7 @@ class LegesherLoader(importlib.abc.SourceLoader):
         header-driven language detection.
 
         Args:
-            source: Source code string, decoded and BOM-stripped by get_data
+            source: Source code string, decoded as the stock loader decodes it
 
         Returns:
             True if translation needed, False otherwise
@@ -639,6 +1017,19 @@ def get_cache_stats() -> dict[str, Any] | None:
     for finder in sys.meta_path:
         if isinstance(finder, LegesherMetaPathFinder):
             return finder.cache.get_stats()
+    return None
+
+
+def get_bytecode_cache_stats() -> dict[str, int] | None:
+    """Get bytecode cache statistics from the installed import hook.
+
+    Returns:
+        Dictionary with hits, misses, writes and write_errors if the hook
+        is installed, None otherwise
+    """
+    for finder in sys.meta_path:
+        if isinstance(finder, LegesherMetaPathFinder):
+            return finder.get_bytecode_cache_stats()
     return None
 
 
