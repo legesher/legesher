@@ -42,8 +42,9 @@ import logging
 import threading
 import importlib.abc
 import importlib.machinery
+import importlib.util
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from collections import OrderedDict
 
 try:
@@ -195,9 +196,14 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         Returns:
             ModuleSpec if found, None otherwise
         """
-        # Validate module name to prevent path traversal
+        # Every dotted component must be an identifier. That rejects every
+        # traversal shape (a separator, "..", NUL, an empty component)
+        # before any lookup, so no path check is needed after it. The old
+        # check resolved <entry>/<name> and required it to stay inside the
+        # entry, which never inspected the file actually loaded and made a
+        # symlinked package directory silently skip translation.
         if not all(part.isidentifier() for part in fullname.split(".")):
-            return None  # Invalid module name
+            return None
 
         # The normal import machinery always passes the parent package's
         # __path__ for a submodule, so a dotted fullname with path=None
@@ -207,40 +213,31 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         if path is None and "." in fullname:
             return None
 
-        # Search for .py files in the import path
-        if path is None:
-            path = sys.path
+        # The hook sits at the front of sys.meta_path, ahead of the builtin
+        # and frozen importers. Stock Python never consults sys.path for a
+        # name they own, so a user's math.py must not shadow the built-in.
+        if importlib.machinery.BuiltinImporter.find_spec(fullname) is not None:
+            return None
+        if importlib.machinery.FrozenImporter.find_spec(fullname) is not None:
+            return None
 
-        # For a submodule import (dotted name), the import machinery hands us
-        # the parent package's __path__ entries, which already point INSIDE
-        # the parent package. Only the final name component is resolved
-        # against them — joining the full dotted path would look for
-        # e.g. <stdlib>/http/http/client.py and never match, so dotted
-        # imports either broke or silently bypassed translation.
-        tail = fullname.rpartition(".")[2]
+        # Ask the stock path finder which file stock Python would load, and
+        # claim it only when that is a source file. This keeps FileFinder
+        # precedence exactly: a compiled extension beats a same-named .py,
+        # an earlier path entry beats a later one, and sourceless .pyc
+        # files, zip entries, namespace portions and case-sensitive name
+        # matching all behave as they do without the hook.
+        stock_spec = importlib.machinery.PathFinder.find_spec(fullname, path)
+        if stock_spec is None or not stock_spec.origin:
+            return None
+        if type(stock_spec.loader) is not importlib.machinery.SourceFileLoader:
+            return None
 
-        for search_path in path:
-            search_path = Path(search_path)
-            module_path = search_path / tail
-
-            # Security: Ensure resolved path is within search_path (prevent path traversal)
-            try:
-                module_path.resolve().relative_to(search_path.resolve())
-            except ValueError:
-                # Path traversal attempt detected
-                continue
-
-            # Check for package (__init__.py)
-            init_file = module_path / "__init__.py"
-            if init_file.exists():
-                return self._create_spec(fullname, init_file, is_package=True)
-
-            # Check for module (.py)
-            module_file = module_path.with_suffix(".py")
-            if module_file.exists():
-                return self._create_spec(fullname, module_file, is_package=False)
-
-        return None  # Not found - let other finders try
+        return self._create_spec(
+            fullname,
+            stock_spec.origin,
+            is_package=stock_spec.submodule_search_locations is not None,
+        )
 
     def _create_spec(self, fullname, origin, is_package):
         """Create module spec with LegesherLoader.
@@ -353,34 +350,55 @@ class LegesherLoader(importlib.abc.SourceLoader):
             with open(path, "rb") as data_file:
                 return data_file.read()
 
-        file_path = Path(path)
+        source = self._module_source()
+        return source.encode("utf-8") if isinstance(source, str) else source
+
+    def _module_source(self) -> str | bytes:
+        """Return what gets compiled for this module.
+
+        Usually the decoded source, translated to English when it is
+        native-language. Raw bytes come back only for a file the stock
+        compiler accepts but tokenize cannot decode (on 3.10 to 3.13, for
+        instance, invalid UTF-8 inside a comment): such a file cannot be
+        translated, so it is compiled from its bytes, untranslated, exactly
+        as stock Python compiles it.
+
+        Raises:
+            FileNotFoundError: If the source file doesn't exist
+            SyntaxError: If the bytes are invalid in the declared encoding,
+                exactly as stock Python raises it, naming the file
+        """
+        file_path = Path(self.path)
         if not file_path.exists():
-            raise FileNotFoundError(f"No such file: {path}")
+            raise FileNotFoundError(f"No such file: {self.path}")
 
         # Check cache first (use nanosecond precision for reliable invalidation)
         cache_key = (str(file_path), file_path.stat().st_mtime_ns)
         cached_result = self.finder.cache.get(cache_key)
         if cached_result is not None:
-            return cached_result
+            return cached_result.decode("utf-8")
 
-        # Read native language source. read_text(encoding="utf-8") keeps a
-        # leading BOM as U+FEFF, and UTF-8-with-BOM is a common editor default,
-        # so strip it once here, ahead of both the parse probe and the
-        # translator. Left in place it fuses onto the first token, so the
-        # translator does not recognise the module's opening keyword and leaves
-        # it native while translating the rest. The import machinery's own
-        # decode step (utf-8-sig) drops the BOM anyway, so removing it costs
-        # nothing for modules that pass through untranslated.
-        native_source = file_path.read_text(encoding="utf-8")
-        if native_source.startswith("\ufeff"):
-            native_source = native_source[1:]
+        # Decode the way the stock loader does: the PEP 263 coding
+        # declaration (or a BOM, which utf-8-sig drops) picks the encoding,
+        # UTF-8 otherwise, with universal newlines.
+        raw_source = file_path.read_bytes()
+        try:
+            native_source = importlib.util.decode_source(raw_source)
+        except (SyntaxError, UnicodeDecodeError, LookupError):
+            # tokenize's errors name no file, and it rejects some bytes the
+            # compiler accepts. Let the compiler judge the raw bytes as stock
+            # Python does: it raises the stock SyntaxError naming the file,
+            # or accepts them, and then they are compiled untranslated.
+            compile(raw_source, str(file_path), "exec", dont_inherit=True)
+            return raw_source
 
         # Detect if file needs translation
         if self._needs_translation(native_source):
             # Translate to English for Python runtime
             # Use reverse_translator (native->EN) to convert native code to English
-            english_source = self.finder.reverse_translator.translate_code(
-                native_source
+            # Without return_metadata, translate_code returns text only.
+            english_source = cast(
+                str, self.finder.reverse_translator.translate_code(native_source)
             )
 
             # A failed probe only says the source is not valid Python: it is
@@ -407,10 +425,47 @@ class LegesherLoader(importlib.abc.SourceLoader):
             # Already English - pass through
             english_source = native_source
 
-        # Cache result
-        translated_bytes = english_source.encode("utf-8")
-        self.finder.cache.set(cache_key, translated_bytes)
-        return translated_bytes
+        self.finder.cache.set(cache_key, english_source.encode("utf-8"))
+        return english_source
+
+    def get_source(self, fullname):
+        """Return the source Python runs for this module, as text.
+
+        get_data returns that source as UTF-8 bytes, while a coding
+        declaration in it may name another encoding, so decoding by the
+        declaration (as SourceLoader.get_source does) would garble it.
+        Callers of the loader API (pdb, doctest) get the text that ran.
+
+        Args:
+            fullname: Fully qualified module name
+
+        Returns:
+            The source compiled for this module (translated to English
+            when the module is native-language)
+        """
+        source = self._module_source()
+        if isinstance(source, bytes):
+            # Compiled from bytes by the stock rules, and not decodable
+            # here: SourceLoader.get_source reports this case the same way.
+            raise ImportError("source not available through get_data()", name=fullname)
+        return source
+
+    def get_code(self, fullname):
+        """Compile the module from text, never from bytes.
+
+        Compiled from bytes, a surviving coding declaration such as
+        latin-1 would re-decode the UTF-8 bytes get_data returns. Text is
+        compiled as is; only a file tokenize cannot decode but the stock
+        compiler accepts is compiled from its own bytes. This also keeps the
+        loader away from bytecode caches: it reads and writes no .pyc.
+
+        Args:
+            fullname: Fully qualified module name
+
+        Returns:
+            Code object for the module
+        """
+        return compile(self._module_source(), self.path, "exec", dont_inherit=True)
 
     def _needs_translation(self, source):
         """Detect whether the source must be translated to run as Python.

@@ -3,6 +3,8 @@
 import os
 import sys
 import importlib
+import importlib.machinery
+import importlib.util
 import threading
 import pytest
 from unittest.mock import patch, MagicMock
@@ -365,11 +367,11 @@ class TestParseFirstTranslationDetection:
 class TestBomIsStrippedBeforeTranslation:
     """Regression tests for CORE-1209: a leading BOM never reaches the translator.
 
-    get_data reads with encoding="utf-8", which keeps a BOM as U+FEFF.
-    Stripping it only inside the parse probe left the translator with a
-    BOM-fused first token it could not recognise, so a UTF-8-with-BOM
-    native module kept its opening keyword native while the rest
-    translated, and failed exactly as if the hook were not installed.
+    get_data once read with encoding="utf-8", which keeps a BOM as U+FEFF,
+    and the translator then saw a BOM-fused first token it could not
+    recognise, so a UTF-8-with-BOM native module kept its opening keyword
+    native and failed to import. Source is now decoded as the stock loader
+    decodes it, where the BOM selects utf-8-sig and is dropped (CORE-2206).
     """
 
     def setup_method(self):
@@ -729,6 +731,387 @@ class TestPackageDataUnderHook:
         assert result.returncode == 0, result.stderr
         bundle = result.stdout.strip().splitlines()[-1]
         assert os.path.isfile(bundle), bundle
+
+
+class TestSourceEncoding:
+    """Regression tests for CORE-2206: PEP 263 coding declarations.
+
+    get_data read every module as UTF-8, so a module declaring
+    `# -*- coding: latin-1 -*-` with real latin-1 bytes imported without
+    the hook and raised UnicodeDecodeError from hook internals with it.
+    """
+
+    COOKIE = "# -*- coding: latin-1 -*-\n"
+
+    def setup_method(self):
+        uninstall_import_hook()
+
+    def teardown_method(self):
+        uninstall_import_hook()
+
+    def _import_under_hook(self, tmp_path, name):
+        sys.path.insert(0, str(tmp_path))
+        importlib.invalidate_caches()
+        try:
+            install_import_hook(language="es")
+            module = importlib.import_module(name)
+            assert isinstance(module.__spec__.loader, LegesherLoader), module
+            return module
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(tmp_path))
+            sys.modules.pop(name, None)
+
+    def test_latin1_english_module_keeps_its_text(self, tmp_path):
+        """An English latin-1 module imports with its non-ASCII text intact."""
+        source = self.COOKIE + "GREETING = 'café'\n"
+        module_path = tmp_path / "latin1_english.py"
+        module_path.write_bytes(source.encode("latin-1"))
+        assert b"\xe9" in module_path.read_bytes()
+
+        module = self._import_under_hook(tmp_path, "latin1_english")
+        assert module.GREETING == "café", module_path
+
+    def test_latin1_native_module_translates_and_keeps_its_text(self, tmp_path):
+        """A native latin-1 module is translated and its strings survive.
+
+        The translated source must be compiled from text: compiled from
+        UTF-8 bytes, the surviving latin-1 cookie would re-decode `é` as
+        two characters.
+        """
+        finder = LegesherMetaPathFinder(language="es")
+        native = finder.translator.translate_code(
+            "def greeting():\n    if True:\n        return 'café'\n    return None\n"
+        )
+        assert native.startswith("definir"), native
+        module_path = tmp_path / "latin1_native.py"
+        module_path.write_bytes((self.COOKIE + native).encode("latin-1"))
+
+        module = self._import_under_hook(tmp_path, "latin1_native")
+        assert module.greeting() == "café", module_path
+
+    def test_undecodable_module_raises_syntax_error_naming_the_file(self, tmp_path):
+        """Bytes invalid in the declared encoding fail as stock Python fails."""
+        module_path = tmp_path / "undecodable_mod.py"
+        module_path.write_bytes(b"VALUE = '\xff\xfe'\n")
+
+        sys.path.insert(0, str(tmp_path))
+        importlib.invalidate_caches()
+        try:
+            with pytest.raises(SyntaxError) as stock:
+                importlib.import_module("undecodable_mod")
+            sys.modules.pop("undecodable_mod", None)
+
+            install_import_hook(language="es")
+            with pytest.raises(SyntaxError) as hooked:
+                importlib.import_module("undecodable_mod")
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(tmp_path))
+            sys.modules.pop("undecodable_mod", None)
+
+        assert hooked.value.filename == str(module_path), hooked.value
+        assert hooked.value.msg == stock.value.msg
+
+    def test_get_source_decodes_by_the_declared_encoding(self, tmp_path):
+        """Callers of loader.get_source (pdb, doctest) get the text that ran.
+
+        Decoding the returned UTF-8 source by its surviving latin-1
+        declaration, as SourceLoader.get_source does, would garble it.
+        """
+        source = self.COOKIE + "GREETING = 'café'\n"
+        module_path = tmp_path / "latin1_source.py"
+        module_path.write_bytes(source.encode("latin-1"))
+        finder = LegesherMetaPathFinder(language="es")
+        loader = LegesherLoader("latin1_source", str(module_path), finder)
+
+        assert "'café'" in loader.get_source("latin1_source"), module_path
+
+    @staticmethod
+    def _outcome(module_name):
+        try:
+            module = importlib.import_module(module_name)
+        except SyntaxError as exc:
+            return ("SyntaxError", exc.msg, os.path.basename(exc.filename or ""))
+        return ("imported", module.VALUE, None)
+
+    @pytest.mark.parametrize(
+        "case, raw",
+        [
+            # Invalid UTF-8 in a comment: tokenize rejects it, while the
+            # compiler accepts it on 3.10 to 3.13 and rejects it on 3.14.
+            ("comment_line1", b"VALUE = 1  # \xff\xfe\n"),
+            ("comment_line3", b"import os\n\nVALUE = 1  # caf\xe9\n"),
+            # A latin-1 comment ahead of a line-2 cookie.
+            (
+                "cookie_line2",
+                b"# Auteur: Fr\xe9d\xe9ric\n# -*- coding: latin-1 -*-\nVALUE = 1\n",
+            ),
+            # A cookie naming a codec that does not produce text.
+            ("rot13_cookie", b"# -*- coding: rot13 -*-\nVALUE = 1\n"),
+            # Two BOMs: the second is a stray U+FEFF character.
+            ("double_bom", b"\xef\xbb\xbf\xef\xbb\xbfVALUE = 1\n"),
+            # An unknown codec.
+            ("unknown_codec", b"# -*- coding: no-such-codec -*-\nVALUE = 1\n"),
+        ],
+    )
+    def test_edge_encodings_match_stock_python(self, tmp_path, case, raw):
+        """Whatever stock Python does with these bytes, the hook does too.
+
+        Imported or refused, and when refused, the same message naming the
+        module's own file, on every supported interpreter.
+        """
+        stock_dir, hook_dir = tmp_path / "stock", tmp_path / "hook"
+        stock_dir.mkdir()
+        hook_dir.mkdir()
+        name = f"edge_{case}"
+        (stock_dir / f"{name}.py").write_bytes(raw)
+        (hook_dir / f"{name}.py").write_bytes(raw)
+
+        sys.path.insert(0, str(stock_dir))
+        importlib.invalidate_caches()
+        try:
+            stock = self._outcome(name)
+        finally:
+            sys.path.remove(str(stock_dir))
+            sys.modules.pop(name, None)
+
+        sys.path.insert(0, str(hook_dir))
+        importlib.invalidate_caches()
+        try:
+            install_import_hook(language="es")
+            hooked = self._outcome(name)
+            if hooked[0] == "imported":
+                loader = sys.modules[name].__spec__.loader
+                assert isinstance(loader, LegesherLoader), hook_dir / f"{name}.py"
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(hook_dir))
+            sys.modules.pop(name, None)
+
+        assert hooked == stock, (hook_dir / f"{name}.py", stock, hooked)
+
+
+class TestStockPrecedence:
+    """Regression tests for CORE-2206: which file a module name resolves to.
+
+    The finder walked each path entry for `__init__.py` and `.py` only, so
+    a compiled extension lost to a same-named `.py` file (452 such pairs in
+    one venv, including mypyc.options). The finder now asks the stock
+    PathFinder which file stock Python would load, and claims only a
+    source file, so FileFinder precedence holds exactly.
+    """
+
+    EXT = importlib.machinery.EXTENSION_SUFFIXES[0]
+
+    def setup_method(self):
+        uninstall_import_hook()
+
+    def teardown_method(self):
+        uninstall_import_hook()
+
+    def test_extension_beats_same_named_py(self, tmp_path):
+        """A `twin<ext>` beside `twin.py` is left to the extension loader."""
+        (tmp_path / "twin.py").write_text("definir f():\n    retornar 1\n")
+        finder = LegesherMetaPathFinder(language="es")
+
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            control = finder.find_spec("twin", None)
+            assert control is not None, "control: twin.py alone must be claimed"
+
+            (tmp_path / f"twin{self.EXT}").write_bytes(b"not a real extension")
+            importlib.invalidate_caches()
+            assert finder.find_spec("twin", None) is None, tmp_path / "twin.py"
+
+    def test_extension_in_earlier_entry_beats_py_in_later_entry(self, tmp_path):
+        """Path-entry order decides across directories, as stock does."""
+        first, second = tmp_path / "first", tmp_path / "second"
+        first.mkdir()
+        second.mkdir()
+        (first / f"cross{self.EXT}").write_bytes(b"not a real extension")
+        (second / "cross.py").write_text("definir f():\n    retornar 1\n")
+        finder = LegesherMetaPathFinder(language="es")
+
+        with patch.object(sys, "path", [str(first), str(second)]):
+            importlib.invalidate_caches()
+            assert finder.find_spec("cross", None) is None, second / "cross.py"
+
+    def test_real_extension_twin_is_not_claimed(self):
+        """mypyc.options ships as both options.py and a compiled extension."""
+        parent = importlib.util.find_spec("mypyc")
+        if parent is None:
+            pytest.skip("mypyc is not installed in this environment")
+        stock = importlib.machinery.PathFinder.find_spec(
+            "mypyc.options", parent.submodule_search_locations
+        )
+        if not isinstance(stock.loader, importlib.machinery.ExtensionFileLoader):
+            pytest.skip("mypyc.options is not compiled in this environment")
+
+        finder = LegesherMetaPathFinder(language="es")
+        spec = finder.find_spec("mypyc.options", parent.submodule_search_locations)
+        assert spec is None, stock.origin
+
+    def test_sourceless_bytecode_is_not_claimed(self, tmp_path):
+        """A lone .pyc in a path entry is stock's to load, never the hook's."""
+        import py_compile
+
+        source = tmp_path / "src_only.py"
+        source.write_text("VALUE = 1\n")
+        py_compile.compile(
+            str(source), cfile=str(tmp_path / "sourceless_mod.pyc"), doraise=True
+        )
+        source.unlink()
+        finder = LegesherMetaPathFinder(language="es")
+
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            assert finder.find_spec("sourceless_mod", None) is None
+
+    def test_name_matching_differs_only_in_case_is_not_claimed(self, tmp_path):
+        """`import casemod` never loads CaseMod.py, on any filesystem."""
+        (tmp_path / "CaseMod.py").write_text("VALUE = 1\n")
+        finder = LegesherMetaPathFinder(language="es")
+
+        with patch.dict(os.environ), patch.object(sys, "path", [str(tmp_path)]):
+            os.environ.pop("PYTHONCASEOK", None)
+            importlib.invalidate_caches()
+            assert finder.find_spec("casemod", None) is None, tmp_path / "CaseMod.py"
+
+
+class TestStockImportersOwnTheirNames:
+    """Regression tests for CORE-2206 review: built-in and frozen names.
+
+    The hook sits at the front of sys.meta_path, ahead of the builtin and
+    frozen importers. Stock Python never looks on sys.path for a name they
+    own, so a user's file with that name must not replace the real module.
+    """
+
+    def setup_method(self):
+        uninstall_import_hook()
+
+    def teardown_method(self):
+        uninstall_import_hook()
+
+    @staticmethod
+    def _shadow(tmp_path, name):
+        (tmp_path / f"{name}.py").write_text("definir f():\n    retornar 1\n")
+        finder = LegesherMetaPathFinder(language="es")
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            return finder.find_spec(name, None)
+
+    def test_builtin_module_name_is_not_claimed(self, tmp_path):
+        name = next(
+            (n for n in sorted(sys.builtin_module_names) if not n.startswith("_")),
+            None,
+        )
+        if name is None:
+            pytest.skip("this interpreter has no public built-in modules")
+        assert self._shadow(tmp_path, name) is None, tmp_path / f"{name}.py"
+        # Control: the same file under an ordinary name is claimed.
+        assert self._shadow(tmp_path, "ordinary_shadow_control") is not None
+
+    def test_frozen_module_name_is_not_claimed(self, tmp_path):
+        name = "__hello__"
+        if importlib.machinery.FrozenImporter.find_spec(name) is None:
+            pytest.skip("__hello__ is not frozen in this interpreter")
+        assert self._shadow(tmp_path, name) is None, tmp_path / f"{name}.py"
+
+
+class TestNonSourceEntriesStayStock:
+    """Namespace portions and zip entries are the stock loaders' to load."""
+
+    def test_namespace_package_is_not_claimed(self, tmp_path):
+        (tmp_path / "ns_portion").mkdir()
+        (tmp_path / "ns_portion" / "child.py").write_text("VALUE = 1\n")
+        finder = LegesherMetaPathFinder(language="es")
+        with patch.object(sys, "path", [str(tmp_path)]):
+            importlib.invalidate_caches()
+            assert finder.find_spec("ns_portion", None) is None, tmp_path
+
+    def test_zip_entry_is_not_claimed(self, tmp_path):
+        import zipfile
+
+        # Plain source: zipimporter compiles an entry while finding it, so
+        # native source in a zip fails there, with or without the hook.
+        archive = tmp_path / "bundle.zip"
+        with zipfile.ZipFile(archive, "w") as zf:
+            zf.writestr("zipped_mod.py", "VALUE = 1\n")
+        finder = LegesherMetaPathFinder(language="es")
+        with patch.object(sys, "path", [str(archive)]):
+            importlib.invalidate_caches()
+            assert finder.find_spec("zipped_mod", None) is None, archive
+
+
+class TestSymlinkedPackage:
+    """Regression test for CORE-2206: the traversal guard is gone.
+
+    The guard resolved `<entry>/<name>` and required it to stay inside the
+    entry, so a symlinked package directory was silently skipped and its
+    native source reached the stock loader untranslated. Module names are
+    gated by isidentifier() on every dotted component, which already
+    rejects every traversal shape.
+    """
+
+    def setup_method(self):
+        uninstall_import_hook()
+
+    def teardown_method(self):
+        uninstall_import_hook()
+
+    def test_symlinked_native_package_is_claimed_and_translated(self, tmp_path):
+        finder = LegesherMetaPathFinder(language="es")
+        native = finder.translator.translate_code(
+            "def value():\n    if True:\n        return 7\n    return 0\n"
+        )
+        real_pkg = tmp_path / "elsewhere" / "real_pkg"
+        real_pkg.mkdir(parents=True)
+        (real_pkg / "__init__.py").write_text(native, encoding="utf-8")
+        entry = tmp_path / "entry"
+        entry.mkdir()
+        (entry / "linked_pkg").symlink_to(real_pkg, target_is_directory=True)
+
+        sys.path.insert(0, str(entry))
+        importlib.invalidate_caches()
+        try:
+            install_import_hook(language="es")
+            pkg = importlib.import_module("linked_pkg")
+            assert isinstance(pkg.__spec__.loader, LegesherLoader), entry / "linked_pkg"
+            assert pkg.value() == 7
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(entry))
+            sys.modules.pop("linked_pkg", None)
+
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "../malicious",
+            "evil..module",
+            "hack/../../etc/passwd",
+            "nul\x00byte",
+            f"sep{os.sep}name",
+            "trailing.",
+            ".leading",
+            "",
+        ],
+    )
+    def test_traversal_shaped_names_are_rejected(self, tmp_path, name):
+        """Every traversal shape fails the identifier gate before any lookup.
+
+        With a parent path supplied, the dotted-name-without-path decline
+        does not apply, so the identifier gate is the only thing standing
+        between the name and a filesystem lookup.
+        """
+        finder = LegesherMetaPathFinder(language="es")
+        with patch.object(
+            importlib.machinery.PathFinder,
+            "find_spec",
+            side_effect=AssertionError(f"lookup reached for {name!r}"),
+        ):
+            assert finder.find_spec(name, None) is None
+            assert finder.find_spec(name, [str(tmp_path)]) is None
 
 
 class TestImportHookInstallation:

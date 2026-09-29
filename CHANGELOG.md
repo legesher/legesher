@@ -149,6 +149,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   reads and writes no bytecode
   cache, so it never runs a stock `.pyc` in place of the source it
   translates. [CORE-2204]
+- **cli**: The runtime import hook now honors PEP 263 coding
+  declarations. It read every module as UTF-8, so a module declaring
+  `# -*- coding: latin-1 -*-` with non-ASCII latin-1 bytes imported without
+  the hook and raised `UnicodeDecodeError` from inside it. Source is now
+  decoded the way the stock loader decodes it, and bytes that are invalid
+  in the declared encoding raise the same `SyntaxError` stock Python
+  raises, naming the file; a file the stock compiler accepts but cannot be
+  decoded as text (possible on Python 3.10 to 3.13) is imported untranslated,
+  as stock Python imports it. The hook also now resolves module names
+  exactly as stock Python does. It leaves names owned by built-in and frozen
+  modules alone, so a user's `math.py` no longer replaces the built-in
+  `math`, and for everything else it asks the standard path finder which
+  file would load and claims only a source file. A compiled extension therefore wins
+  over a same-named `.py` file again (mypyc and aiohttp ship such pairs),
+  an earlier `sys.path` entry wins over a later one, a lone `.pyc` is left
+  to the stock loader, and on a case-insensitive filesystem a name that
+  differs only in case no longer loads the wrong file. The path check that
+  claimed to prevent traversal is removed: module names are already
+  limited to identifiers, which rules out every traversal shape, and the
+  check made a symlinked package directory skip translation. [CORE-2206]
 - **core**: the tree-sitter backend now translates `except*` (PEP 654, Python
   3.11+) and `type` statements (PEP 695, Python 3.12+). It previously left
   both in English while translating everything around them, silently
