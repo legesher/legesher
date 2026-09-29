@@ -46,6 +46,11 @@ from pathlib import Path
 from typing import Any
 from collections import OrderedDict
 
+try:
+    from importlib.resources.readers import FileReader
+except ImportError:  # Python 3.10: importlib.resources is a single module
+    from importlib.readers import FileReader  # type: ignore[no-redef]
+
 from legesher_core import TokenTranslator
 from legesher.config import LegesherConfig
 from legesher.runtime.source_mapper import get_source_mapper
@@ -248,6 +253,11 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         Returns:
             ModuleSpec configured with LegesherLoader
         """
+        # A relative sys.path entry ('' under `python -c` or the REPL) would
+        # otherwise leave __file__ and the resource reader's root relative,
+        # so package data stopped resolving after os.chdir. The stock
+        # FileFinder always stores absolute paths.
+        origin = os.path.abspath(origin)
         spec = importlib.machinery.ModuleSpec(
             name=fullname,
             loader=LegesherLoader(fullname, str(origin), self),
@@ -303,18 +313,46 @@ class LegesherLoader(importlib.abc.SourceLoader):
         """
         return self.path
 
-    def get_data(self, path):
-        """Return the source code (translated to English if needed).
+    def get_resource_reader(self, module):
+        """Return a reader for the package's data files (importlib.resources).
+
+        The stock SourceFileLoader inherits this from FileLoader. Without
+        it, importlib.resources cannot open a data file in any package this
+        loader claims ("Can't open orphan path"), which broke `requests`
+        through certifi. The base class stays SourceLoader rather than
+        SourceFileLoader, whose path_stats would re-enable stock .pyc
+        caching for translated source.
 
         Args:
-            path: Path to source file
+            module: Name of the module the reader is for
 
         Returns:
-            Source code as bytes (translated to English)
+            A FileReader serving files from this module's directory
+        """
+        return FileReader(self)
+
+    def get_data(self, path):
+        """Return the module source translated to English, or a file's bytes.
+
+        Only this loader's own source file is translated. Any other path is
+        a data file (pkgutil.get_data reads package data through the
+        loader's get_data) and is returned exactly as stored, as
+        FileLoader.get_data does.
+
+        Args:
+            path: Path to the source file or a data file
+
+        Returns:
+            Source code as bytes (translated to English), or the raw bytes
+            of any other file
 
         Raises:
-            FileNotFoundError: If the source file doesn't exist
+            FileNotFoundError: If the file doesn't exist
         """
+        if os.path.abspath(path) != os.path.abspath(self.path):
+            with open(path, "rb") as data_file:
+                return data_file.read()
+
         file_path = Path(path)
         if not file_path.exists():
             raise FileNotFoundError(f"No such file: {path}")

@@ -429,6 +429,308 @@ class TestBomIsStrippedBeforeTranslation:
             sys.modules.pop("bom_english_module", None)
 
 
+# Paths the interpreter opens or creates while _AUDIT_STATE["on"] is set.
+# Audit hooks cannot be removed once added, so one hook is registered for
+# the whole session and records nothing until a test switches it on.
+_AUDIT_STATE: dict = {"on": False, "events": []}
+
+
+def _record_file_events(event, args):
+    if _AUDIT_STATE["on"] and event in ("open", "os.mkdir") and args:
+        _AUDIT_STATE["events"].append((event, os.fsdecode(args[0])))
+
+
+sys.addaudithook(_record_file_events)
+
+
+def _purge_modules(*prefixes):
+    for name in list(sys.modules):
+        if any(name == p or name.startswith(p + ".") for p in prefixes):
+            del sys.modules[name]
+
+
+class TestBytecodeIsolation:
+    """The hook never loads a stock .pyc for a file it claims.
+
+    A stock .pyc is validated only by the source's mtime and size. If the
+    hook trusted one, bytecode compiled from different source could run
+    in place of what the user wrote, and a translated file could end up
+    keyed to its native source. Each test plants a poisoned .pyc whose
+    header matches the real source exactly, proves the stock loader
+    would run it, then proves the hook does not.
+    """
+
+    def setup_method(self):
+        uninstall_import_hook()
+
+    def teardown_method(self):
+        uninstall_import_hook()
+
+    @staticmethod
+    def _plant_poisoned_pyc(module_path, real_source, poisoned_source):
+        import py_compile
+
+        real_bytes = real_source.encode("utf-8")
+        poisoned_bytes = poisoned_source.encode("utf-8")
+        # Pad with a trailing comment so both sources have the same size,
+        # which the .pyc header records alongside the mtime.
+        assert len(poisoned_bytes) < len(real_bytes)
+        padding = len(real_bytes) - len(poisoned_bytes)
+        poisoned_bytes += b"#" * (padding - 1) + b"\n"
+        assert len(poisoned_bytes) == len(real_bytes)
+
+        module_path.write_bytes(poisoned_bytes)
+        mtime_ns = module_path.stat().st_mtime_ns
+        py_compile.compile(
+            str(module_path),
+            doraise=True,
+            invalidation_mode=py_compile.PycInvalidationMode.TIMESTAMP,
+        )
+        module_path.write_bytes(real_bytes)
+        os.utime(module_path, ns=(mtime_ns, mtime_ns))
+        importlib.invalidate_caches()
+
+    def _assert_hook_ignores_poison(self, tmp_path, name, real_source, poisoned):
+        module_path = tmp_path / f"{name}.py"
+        self._plant_poisoned_pyc(module_path, real_source, poisoned)
+
+        sys.path.insert(0, str(tmp_path))
+        try:
+            # Sanity: the poison is live. The stock loader trusts the
+            # matching header and runs the poisoned bytecode.
+            stock = importlib.import_module(name)
+            assert stock.which() == "POISON", module_path
+            sys.modules.pop(name, None)
+
+            install_import_hook(language="es")
+            hooked = importlib.import_module(name)
+            assert isinstance(hooked.__spec__.loader, LegesherLoader), module_path
+            assert hooked.which() == "real", module_path
+        finally:
+            uninstall_import_hook()
+            sys.path.remove(str(tmp_path))
+            sys.modules.pop(name, None)
+
+    def test_translated_module_ignores_mtime_matching_stock_pyc(self, tmp_path):
+        """A native module runs its own translation, never the stock .pyc."""
+        finder = LegesherMetaPathFinder(language="es")
+        real = finder.translator.translate_code(
+            "def which():\n    if True:\n        return 'real'\n    return None\n"
+        )
+        assert real.startswith("definir"), real
+        self._assert_hook_ignores_poison(
+            tmp_path,
+            "poisoned_native_es",
+            real,
+            "def which():\n    return 'POISON'\n",
+        )
+
+    def test_claimed_english_module_ignores_mtime_matching_stock_pyc(self, tmp_path):
+        """An English module the hook claims runs its source, not the .pyc."""
+        # `con` renders `with` under the es pack: plain English that shares
+        # a word with the native vocabulary.
+        real = "con = 'real'\n\ndef which():\n    return con\n"
+        self._assert_hook_ignores_poison(
+            tmp_path,
+            "poisoned_english_es",
+            real,
+            "def which():\n    return 'POISON'\n",
+        )
+
+
+class TestPackageDataUnderHook:
+    """Regression tests for CORE-2204: packages that ship data files.
+
+    LegesherLoader had no get_resource_reader, which the stock
+    SourceFileLoader inherits from FileLoader, so importlib.resources
+    raised "Can't open orphan path" for every package the hook claimed
+    (`import requests` failed in certifi's where()). get_data also
+    translated any path it was handed, so pkgutil.get_data returned a
+    rewritten text file and raised on a binary one.
+    """
+
+    DATA_BINARY = bytes(range(256))
+
+    @classmethod
+    def setup_class(cls):
+        # Native source whose translation parses: the old get_data returned
+        # it rewritten as `if True: pass`, so comparing bytes catches any
+        # data file that still goes down the translation path.
+        finder = LegesherMetaPathFinder(language="es")
+        english = "if True:\n    pass\n"
+        cls.DATA_TEXT = finder.translator.translate_code(english)
+        assert cls.DATA_TEXT != english
+        assert finder.reverse_translator.translate_code(cls.DATA_TEXT) == english
+
+    def setup_method(self):
+        uninstall_import_hook()
+
+    def teardown_method(self):
+        uninstall_import_hook()
+        _AUDIT_STATE["on"] = False
+        _AUDIT_STATE["events"].clear()
+
+    def _make_package(self, tmp_path, name):
+        finder = LegesherMetaPathFinder(language="es")
+        init_source = finder.translator.translate_code(
+            "from importlib.resources import files\n\n"
+            "def read_data():\n"
+            "    return files(__name__).joinpath('data.txt').read_text("
+            "encoding='utf-8')\n"
+        )
+        assert init_source.startswith("desde"), init_source
+        pkg_dir = tmp_path / name
+        pkg_dir.mkdir()
+        (pkg_dir / "__init__.py").write_text(init_source, encoding="utf-8")
+        (pkg_dir / "data.txt").write_text(self.DATA_TEXT, encoding="utf-8")
+        (pkg_dir / "blob.bin").write_bytes(self.DATA_BINARY)
+        importlib.invalidate_caches()
+        return pkg_dir
+
+    def _import_under_hook(self, tmp_path, name):
+        sys.path.insert(0, str(tmp_path))
+        install_import_hook(language="es")
+        module = importlib.import_module(name)
+        assert isinstance(module.__spec__.loader, LegesherLoader), module.__file__
+        return module
+
+    def _cleanup(self, tmp_path, name):
+        uninstall_import_hook()
+        sys.path.remove(str(tmp_path))
+        _purge_modules(name)
+
+    def test_importlib_resources_reads_package_data(self, tmp_path):
+        """files(pkg).joinpath(...).read_text() works for a claimed package."""
+        import importlib.resources
+
+        pkg_dir = self._make_package(tmp_path, "datapkg_resources")
+        try:
+            pkg = self._import_under_hook(tmp_path, "datapkg_resources")
+            data = importlib.resources.files(pkg).joinpath("data.txt")
+            assert data.read_text(encoding="utf-8") == self.DATA_TEXT, pkg_dir
+            assert pkg.read_data() == self.DATA_TEXT, pkg_dir
+            blob = importlib.resources.files(pkg).joinpath("blob.bin")
+            assert blob.read_bytes() == self.DATA_BINARY, pkg_dir
+        finally:
+            self._cleanup(tmp_path, "datapkg_resources")
+
+    def test_resource_reader_is_the_file_reader(self, tmp_path):
+        """The reader serves files from the package directory."""
+        pkg_dir = self._make_package(tmp_path, "datapkg_reader")
+        try:
+            pkg = self._import_under_hook(tmp_path, "datapkg_reader")
+            reader = pkg.__spec__.loader.get_resource_reader(pkg.__name__)
+            assert reader is not None, pkg_dir
+            assert reader.resource_path("data.txt") == str(pkg_dir / "data.txt")
+            assert reader.is_resource("data.txt")
+            assert not reader.is_resource("missing.txt")
+        finally:
+            self._cleanup(tmp_path, "datapkg_reader")
+
+    def test_pkgutil_get_data_returns_bytes_untouched(self, tmp_path):
+        """pkgutil.get_data returns data files as stored, text or binary."""
+        import pkgutil
+
+        pkg_dir = self._make_package(tmp_path, "datapkg_pkgutil")
+        try:
+            self._import_under_hook(tmp_path, "datapkg_pkgutil")
+            text = pkgutil.get_data("datapkg_pkgutil", "data.txt")
+            assert text == self.DATA_TEXT.encode("utf-8"), pkg_dir / "data.txt"
+            blob = pkgutil.get_data("datapkg_pkgutil", "blob.bin")
+            assert blob == self.DATA_BINARY, pkg_dir / "blob.bin"
+        finally:
+            self._cleanup(tmp_path, "datapkg_pkgutil")
+
+    def test_claimed_package_touches_no_pycache(self, tmp_path, monkeypatch):
+        """Importing and reading a claimed package opens nothing in __pycache__."""
+        import importlib.resources
+        import importlib.util
+
+        # With a pycache prefix the stock cache path has no __pycache__
+        # component, so pin the default layout and also check the exact
+        # path the stock loader would use.
+        monkeypatch.setattr(sys, "pycache_prefix", None)
+        pkg_dir = self._make_package(tmp_path, "datapkg_nocache")
+        stock_pyc = importlib.util.cache_from_source(str(pkg_dir / "__init__.py"))
+        try:
+            _AUDIT_STATE["events"].clear()
+            _AUDIT_STATE["on"] = True
+            pkg = self._import_under_hook(tmp_path, "datapkg_nocache")
+            importlib.resources.files(pkg).joinpath("data.txt").read_text(
+                encoding="utf-8"
+            )
+            _AUDIT_STATE["on"] = False
+
+            touched = [
+                (event, path)
+                for event, path in _AUDIT_STATE["events"]
+                if "__pycache__" in path or path == stock_pyc
+            ]
+            opened_source = [
+                path
+                for event, path in _AUDIT_STATE["events"]
+                if path == str(pkg_dir / "__init__.py")
+            ]
+            assert opened_source, "audit hook saw no open of the package source"
+            assert touched == [], touched
+            assert not (pkg_dir / "__pycache__").exists(), pkg_dir
+        finally:
+            _AUDIT_STATE["on"] = False
+            self._cleanup(tmp_path, "datapkg_nocache")
+
+    def test_package_data_resolves_after_chdir(self, tmp_path, monkeypatch):
+        """A package found via a relative sys.path entry keeps working after chdir."""
+        import importlib.resources
+
+        pkg_dir = self._make_package(tmp_path, "datapkg_relative")
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        monkeypatch.chdir(tmp_path)
+        sys.path.insert(0, "")  # what `python -c` and the REPL put first
+        try:
+            install_import_hook(language="es")
+            pkg = importlib.import_module("datapkg_relative")
+            assert isinstance(pkg.__spec__.loader, LegesherLoader), pkg.__file__
+            assert pkg.__file__ == str(pkg_dir / "__init__.py"), pkg.__file__
+            os.chdir(elsewhere)
+            data = importlib.resources.files(pkg).joinpath("data.txt")
+            assert data.read_text(encoding="utf-8") == self.DATA_TEXT, pkg_dir
+        finally:
+            uninstall_import_hook()
+            sys.path.remove("")
+            _purge_modules("datapkg_relative")
+
+    def test_import_requests_under_hook(self, tmp_path):
+        """`import requests` works under the hook, certifi's data included."""
+        import subprocess
+
+        pytest.importorskip(
+            "requests", reason="requests is not installed in this environment"
+        )
+        script = (
+            "import sys\n"
+            "from legesher.runtime import install_import_hook\n"
+            "from legesher.runtime.import_hook import LegesherLoader\n"
+            "install_import_hook('es')\n"
+            "assert 'certifi' not in sys.modules, 'certifi loaded before the hook'\n"
+            "import requests, requests.utils, certifi\n"
+            "for mod in (requests.utils, certifi):\n"
+            "    loader = mod.__spec__.loader\n"
+            "    assert isinstance(loader, LegesherLoader), (mod.__name__, loader)\n"
+            "print(requests.certs.where())\n"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+            timeout=120,
+        )
+        assert result.returncode == 0, result.stderr
+        bundle = result.stdout.strip().splitlines()[-1]
+        assert os.path.isfile(bundle), bundle
+
+
 class TestImportHookInstallation:
     """Test import hook installation and management."""
 

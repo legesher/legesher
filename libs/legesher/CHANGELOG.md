@@ -9,6 +9,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- Packages that ship data files now work under the runtime import
+  hook. The hook's loader had no resource reader, so `importlib.resources`
+  raised "Can't open orphan path" for any package it claimed, and
+  `import requests` failed inside certifi. The loader now returns the same
+  file reader the stock loader uses. Its `get_data` also translated every
+  path it was handed, so `pkgutil.get_data` returned a rewritten text file
+  and raised on a binary one; files other than the module's own source now
+  come back byte for byte. Module paths are now absolute, as the stock
+  finder makes them, so package data found through a relative `sys.path`
+  entry still resolves after the working directory changes. The hook still
+  reads and writes no bytecode
+  cache, so it never runs a stock `.pyc` in place of the source it
+  translates. [CORE-2204]
+
 ## [0.23.0] - 2026-08-16
 
 ### Added
