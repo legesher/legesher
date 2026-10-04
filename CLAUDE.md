@@ -217,7 +217,13 @@ Located in `.github/workflows/`:
   - This workflow is the only release path for packs. There is deliberately no
     local release script — one existed, rotted after the packs moved under
     `libs/i18n/language-packs/`, and was removed rather than repaired
-- **`publish-pypi.yml`**: PyPI publishing pipeline
+- **`release-language-server.yml`**: Independent release train for `legesher-language-server`
+  - Triggers on push to main affecting `libs/language-server/`; tag format `language-server-v{version}`
+  - Gated on `make test-language-server-scheduled` (clean-environment wheel install)
+  - Refuses to run unless the last reachable `language-server-v*` tag matches `project.version`
+    (the baseline tag is `language-server-v0.1.3`)
+- **`publish-pypi.yml`**: PyPI publishing pipeline (manual dispatch; targets include
+  `foundation` and `language-server`)
 - **`monitor-python-releases.yml`**: Monitors Python.org for new releases to update packs
 
 ### Pre-commit Hooks

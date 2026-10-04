@@ -35,4 +35,16 @@ Example:
     for Python.
 """
 
-__version__ = "0.1.2"
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _distribution_version
+
+try:
+    #: Read from the installed distribution's metadata rather than hand-kept
+    #: here, so `--version`, the `initialize` handshake and the release train
+    #: all report the version in `pyproject.toml`, which is the wheel's own.
+    #: Three literals used to disagree (0.1.0, 0.1.2 and 0.1.3) (CORE-2203).
+    __version__ = _distribution_version("legesher-language-server")
+except PackageNotFoundError:  # pragma: no cover (running from an uninstalled tree)
+    __version__ = "0.0.0.dev0"
+
+__all__ = ["__version__"]

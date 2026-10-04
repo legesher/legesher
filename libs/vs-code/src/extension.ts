@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { createLanguageClient, type LegesherClient } from './client';
 import { isServerAvailable } from './utils';
+import { serverNotFoundMessage } from './serverInstall';
 import {
     getLanguageConfig,
     getActiveLanguages,
@@ -670,14 +671,15 @@ async function startServer(
         const serverAvailable = await isServerAvailable(serverCommand);
 
         if (!serverAvailable) {
-            // Server not available - this is expected in early development
+            // The server is a separate install, so name the package and the
+            // setting rather than only saying something is missing (CORE-2203).
             const durationMs = Date.now() - startTime;
             LegesherTelemetry.trackServerConnection(false, durationMs);
             LegesherTelemetry.trackError('serverNotInstalled');
+            const message = serverNotFoundMessage(serverCommand);
             statusBarItem.text = "$(warning) Legesher";
-            statusBarItem.tooltip = "Legesher: Language server not installed (extension features limited)";
-            Logger.warn(`Language server '${serverCommand}' not found. Extension will run with limited functionality.`);
-            Logger.warn('This is expected during early development. The language server package is planned for future implementation.');
+            statusBarItem.tooltip = `Legesher: ${message}`;
+            Logger.warn(message);
             return 'unavailable';
         }
 

@@ -38,6 +38,11 @@ on:
           - i18n-python-tr
           - i18n-python-vi
           - i18n-python-zh
+          # legesher-lsp, the server the VS Code extension starts by default and
+          # that every other editor installs itself (CORE-2203). It requires
+          # legesher-i18n, so publish `foundation` to the same index first:
+          # PyPI does not check dependencies at upload, only at install.
+          - language-server
           - vs-code
       environment:
         description: 'Target environment'
@@ -149,6 +154,15 @@ jobs:
             echo "📦 Building $PACKAGE..."
             uv build "libs/i18n/language-packs/python/$LANG_CODE"
             cp "libs/i18n/language-packs/python/$LANG_CODE/dist/"* dist/
+
+          elif [ "$PACKAGE" = "language-server" ]; then
+            # --package plus an explicit --out-dir: uv builds a workspace
+            # member into the WORKSPACE ROOT's dist/, not the member's own,
+            # so the build-then-copy shape the other branches use finds
+            # nothing to copy under current uv (CORE-2203; the other
+            # branches are CORE-2313).
+            echo "📦 Building legesher-language-server..."
+            uv build --package legesher-language-server --out-dir dist/
 
           else
             # Only allow known non-language-pack packages

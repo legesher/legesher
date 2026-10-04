@@ -4,7 +4,7 @@ This file provides guidance for working with the `legesher-language-server` pack
 
 ## Package Overview
 
-**Version**: 0.1.0
+**Version**: see `pyproject.toml` (the only place it is written; `__version__` reads the installed metadata)
 **Status**: Production-Ready (Pre-Beta)
 **Python**: >=3.10,<4.0
 **CLI Entry Point**: `legesher-lsp`
@@ -102,6 +102,32 @@ uv run pytest tests/ --cov=legesher_language_server --cov-report=html
 ```
 
 **Test coverage**: ~70% (improved from 21% after pygls 2.0 migration)
+
+The clean-environment suite (`tests/test_clean_environment.py`) is marked
+`scheduled` and deselected by default. It builds the wheels, installs them into
+an empty virtualenv and drives an LSP session through the installed
+`legesher-lsp`. Run it with `make test-language-server-scheduled` from the repo
+root before any release.
+
+## Releases
+
+This package has its own release train, the same model as `legesher-mcp`
+(CORE-2203):
+
+- `.github/workflows/release-language-server.yml` runs on a push to `main` that
+  touches `libs/language-server/`. It checks the last release tag, runs the
+  clean-environment suite, then semantic-release bumps `project.version` and
+  tags `language-server-vX.Y.Z`. The config is `[tool.semantic_release]` in
+  this package's `pyproject.toml`.
+- The next version is computed from every commit in the repository since the
+  last `language-server-v*` tag, not only commits under `libs/language-server/`:
+  semantic-release scopes by tag, not by path (CORE-1852).
+- Do not hand-edit `project.version`. The train refuses to run unless the last
+  reachable `language-server-v*` tag matches it; the baseline tag is
+  `language-server-v0.1.3`.
+- Uploading to PyPI is a separate, manual `publish-pypi.yml` run with the
+  `language-server` target, after `legesher-i18n` is on the same index. A PyPI
+  upload is public and permanent (CORE-626).
 
 ## Dependencies
 

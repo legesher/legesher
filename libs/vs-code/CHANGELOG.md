@@ -86,6 +86,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   vscode-languageclient says so in a notice, but the status bar does not show it yet, which CORE-2322
   tracks (CORE-2316)
 
+- **Language server not found**: the status bar tooltip and the output log now name the
+  `legesher-language-server` Python package, which provides the default `legesher-lsp` command, and
+  the `legesher.serverCommand` setting, say which features need the server, and point to "The
+  language server" in this README. They give no install command, because the package is not on PyPI
+  yet and the README is what changes when it is. The log used to say the server package was
+  planned for a future release. (CORE-2203)
+
 ### Security
 
 - **Error telemetry**: an error report can no longer carry your home directory off the machine. Every

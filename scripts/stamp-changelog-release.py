@@ -24,9 +24,9 @@ from pathlib import Path
 
 # Foundation changelogs to stamp
 # Default target: the foundation suite, which shares one version.
-# Independently-versioned packages (legesher-mcp, the language packs) pass
-# their own changelog with --changelogs so an unrelated version never gets
-# stamped onto them.
+# Independently-versioned packages (legesher-mcp, legesher-language-server,
+# the language packs) pass their own changelog with --changelogs so an
+# unrelated version never gets stamped onto them.
 CHANGELOGS = [
     Path("CHANGELOG.md"),
     Path("libs/core/CHANGELOG.md"),

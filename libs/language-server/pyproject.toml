@@ -63,10 +63,68 @@ dev = [
     "ruff>=0.1.0",
 ]
 
+# legesher-language-server releases on its OWN train, the same model as
+# legesher-mcp (CORE-1851), not with the foundation suite. Editors other than
+# VS Code install it themselves (CORE-2294), so it ships to PyPI on its own
+# version rather than riding the foundation's (CORE-2203).
+[tool.semantic_release]
+# The single version source. `legesher_language_server.__version__` reads
+# importlib.metadata at import, so there is no literal to rewrite here.
+#
+# Paths are relative to the GIT ROOT, not to this file: semantic-release
+# resolves every configured path against the repository root, so a bare
+# "pyproject.toml" would read and rewrite the ROOT pyproject (CORE-1852).
+version_toml = ["libs/language-server/pyproject.toml:project.version"]
+commit_parser = "angular"
+# false, like the foundation and mcp: a breaking change takes 0.1.x to 0.2.0
+# and the package stays sub-1.0 until 1.0 is declared deliberately.
+major_on_zero = false
+allow_zero_version = true
+branch = "main"
+tag_format = "language-server-v{version}"
+# semantic-release's default author is a bare word with no `@`, which
+# downstream author-validating tooling rejects. Same override as the root.
+commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "feat", "fix", "docs", "style", "refactor",
+    "perf", "test", "build", "ci", "chore", "revert"
+]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
+
+# semantic-release 10 reads these two from this table and ignores the
+# top-level spellings. It never uploads to PyPI: publish-pypi.yml owns that
+# (CORE-626). The glob is where release-language-server.yml builds the wheel;
+# the default, "dist/*", would attach nothing to the GitHub release.
+[tool.semantic_release.publish]
+upload_to_vcs_release = true
+dist_glob_patterns = ["libs/language-server/dist/*"]
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    "^chore\\(release\\):",
+    "^Merge",
+]
+
+# The workflow passes --no-changelog: changelogs here are hand-written and
+# stamped by scripts/stamp-changelog-release.py. This is the guard for a
+# manual run that forgets the flag, which would otherwise rewrite the
+# repo-root CHANGELOG.md during a language-server release.
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "libs/language-server/CHANGELOG.md"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = "-v --cov=legesher_language_server --cov-report=term-missing"
+# `scheduled` is deselected by default: the clean-environment suite builds
+# wheels into a fresh virtualenv, far too slow for a per-commit run. Run it
+# with `-m scheduled`, or `make test-language-server-scheduled`.
+addopts = "-v --cov=legesher_language_server --cov-report=term-missing -m 'not scheduled'"
+markers = [
+    "scheduled: slow, release-tier suites, excluded from the per-commit run",
+]
 
 [tool.mypy]
 python_version = "3.10"

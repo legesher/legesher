@@ -61,6 +61,13 @@ export LEGESHER_TARGET_LANG=es
 legesher-lsp
 ```
 
+### In an editor
+
+The server speaks LSP over stdio, so any LSP client can start `legesher-lsp`.
+The Legesher VS Code extension runs it by default: its `legesher.serverCommand`
+setting is `legesher-lsp`, so the command has to be on the `PATH` VS Code sees,
+or the setting has to hold its full path.
+
 ### Configuration
 
 **Environment Variables:**

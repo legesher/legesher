@@ -249,14 +249,14 @@ They share one version number, set in each package's `pyproject.toml` and bumped
 
 ### Application Packages (Independent)
 
-These packages each carry their own version number, independent of the foundation suite. Two of them
-have a release workflow; the other two are versioned by hand and have no automated release yet:
+These packages each carry their own version number, independent of the foundation suite. Three of
+them have a release workflow; the fourth is versioned by hand and has no automated release yet:
 
 - `legesher-vscode` - VS Code extension (`libs/vs-code/package.json`), released by `release-apps.yml`
 - `legesher-mcp` - MCP server, tagged `mcp-v{version}` by `release-mcp.yml`
-- `legesher-language-server` - LSP server. No release workflow; `publish-pypi.yml` does not accept it
-  as a target
-- `legesher-runtime` - Localized tracebacks. Same: no release workflow, not a `publish-pypi.yml` target
+- `legesher-language-server` - LSP server, tagged `language-server-v{version}` by
+  `release-language-server.yml`, and a `publish-pypi.yml` target
+- `legesher-runtime` - Localized tracebacks. No release workflow, not a `publish-pypi.yml` target
 
 This lets the apps iterate without waiting on the foundation.
 

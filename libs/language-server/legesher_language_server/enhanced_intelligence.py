@@ -38,6 +38,7 @@ from lsprotocol.types import (
     Range,
 )
 
+from . import __version__
 from .config import LanguageServerConfig
 from .incremental_translator import IncrementalTranslator
 
@@ -403,7 +404,7 @@ class EnhancedIntelligenceProxy:
             # Send initialize request
             init_params = {
                 "processId": os.getpid(),
-                "clientInfo": {"name": "legesher", "version": "0.1.0"},
+                "clientInfo": {"name": "legesher", "version": __version__},
                 "rootUri": None,
                 "capabilities": {
                     "textDocument": {

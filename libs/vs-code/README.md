@@ -16,8 +16,9 @@ The Legesher VS Code extension provides the UI and editor integration for coding
 - **Status Indicators**: Visual feedback for connection status and current language
 - **Syntax Highlighting**: Color-coded keywords in translated code view
 
-> **Note**: Full translation capabilities (hover docs, auto-completion, diagnostics) require the
-> [Legesher Language Server](../language-server/README.md) to be installed and running.
+> **Note**: Hover, completion, diagnostics and keyword highlighting come from the
+> [Legesher language server](../language-server/README.md), a separate Python package. See
+> [The language server](#the-language-server) below.
 
 ## Supported Languages
 
@@ -49,8 +50,18 @@ For complete installation instructions (VS Code extension + Python packages), se
 2. In VS Code: Extensions (`Cmd+Shift+X`) → `...` menu → "Install from VSIX..."
 3. Select the downloaded file
 
-> **Note**: Full features (hover docs, auto-completion, diagnostics) require the complete Legesher package suite.
-> See [Getting Started](https://docs.legesher.io/getting-started/) for details.
+### The language server
+
+The extension does not bundle its language server. It runs the command in
+`legesher.serverCommand`, which defaults to `legesher-lsp`. That command comes
+from the `legesher-language-server` Python package, which is not on PyPI yet.
+When it is installed, it has to be on the `PATH` VS Code sees, or
+`legesher.serverCommand` has to hold its full path.
+
+Hover, completion, diagnostics and keyword highlighting all come from the
+server. Without it the extension still starts: the language picker and the
+translation panel work, and the status bar item shows a warning whose tooltip
+names the package it needs.
 
 ## Quick Start
 
@@ -80,7 +91,7 @@ Access via Settings (`Cmd+,`) → search "Legesher":
 | `legesher.sourceLanguage`                   | `en`           | The language the project is stored in       |
 | `legesher.languageDetection`                | `auto`         | Infer each file's language from it          |
 | `legesher.enabled`                          | `true`         | Enable/disable the extension                |
-| `legesher.serverCommand`                    | `legesher-lsp` | Path to language server                     |
+| `legesher.serverCommand`                    | `legesher-lsp` | Command that starts the language server     |
 | `legesher.trace.server`                     | `off`          | Debug logging level                         |
 | `legesher.telemetry.enabled`                | `false`        | Usage telemetry (see Privacy below)         |
 | `legesher.telemetry.contributeToMLTraining` | `false`        | Record consent for ML training (see below)  |

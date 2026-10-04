@@ -1,0 +1,187 @@
+name: Release Language Server
+
+# legesher-language-server releases independently of the foundation suite, on
+# the same model as legesher-mcp (release-mcp.yml, CORE-1851): its own version
+# and its own tag. semantic-release scopes by tag, not by path, so every feat
+# or fix commit in the repository since the last language-server-v* tag counts
+# toward the next bump; the paths filter below decides when the train runs,
+# not what it counts (CORE-1852).
+#
+# The VS Code extension starts it as `legesher-lsp` by default, and every
+# other editor (Neovim, Helix, Zed, JetBrains) needs it installed from PyPI
+# (CORE-2203, CORE-2294). This workflow is the release pipeline only: gate,
+# version bump, tag, GitHub release, wheel. Uploading to PyPI is a separate,
+# manual step in publish-pypi.yml (target `language-server`), because a PyPI
+# upload is public and permanent the moment it lands (CORE-626).
+#
+# Lint + tests for PRs live in ci.yml.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'libs/language-server/**'
+      - '.github/workflows/release-language-server.yml'
+  workflow_dispatch:  # Allow manual triggers
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  release:
+    name: Release legesher-language-server
+    runs-on: ubuntu-latest
+    if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock') && !contains(github.event.head_commit.message, 'docs(changelog): stamp release'))"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0  # Fetch all history for semantic-release
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+
+      # semantic-release computes the next version from the last tag matching
+      # tag_format. With none it starts from 0.0.0 and cuts 0.1.0, which is
+      # BELOW the 0.1.3 already in pyproject.toml (verified with --noop,
+      # CORE-2203). The baseline is `language-server-v0.1.3` on the commit that
+      # set that version, tagged by hand once, the way `mcp-v0.1.0` seeded the
+      # legesher-mcp train.
+      #
+      # After every release the last tag and project.version agree, because
+      # the train writes both. So they must agree here too: a missing or
+      # unreachable tag, a wrong baseline, or a hand edit of project.version
+      # would each make the train compute from the wrong place.
+      - name: Require the last release tag to match project.version
+        run: |
+          LAST_TAG=$(git tag --merged HEAD -l 'language-server-v*' --sort=-v:refname | head -1)
+          if [ -z "$LAST_TAG" ]; then
+            echo "::error::No language-server-v* tag is reachable from HEAD. Push the baseline tag language-server-v0.1.3 before this train can run (CORE-2203)."
+            exit 1
+          fi
+          PROJECT_VERSION=$(python3 -c "import tomllib,pathlib; print(tomllib.loads(pathlib.Path('libs/language-server/pyproject.toml').read_text())['project']['version'])")
+          if [ "$LAST_TAG" != "language-server-v${PROJECT_VERSION}" ]; then
+            echo "::error::The last release tag is ${LAST_TAG}, but libs/language-server/pyproject.toml says ${PROJECT_VERSION}. The train writes project.version itself; do not edit it by hand (CORE-2203)."
+            exit 1
+          fi
+          echo "Last release: ${LAST_TAG}"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system python-semantic-release
+          uv sync  # Set up workspace for building
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # The publish gate. The clean-environment suite builds the wheels,
+      # installs them into a fresh virtualenv in an empty directory, and drives
+      # an LSP session through the installed `legesher-lsp` with a stripped
+      # environment: the only check that exercises the artifact the way an
+      # editor starts it, rather than from inside this workspace.
+      #
+      # Placed BEFORE the version step on purpose: a failure here leaves
+      # nothing bumped, tagged, released, or built.
+      - name: Release-tier suite (publish gate)
+        run: make test-language-server-scheduled
+
+      # Run from the REPO ROOT with an explicit -c, never from
+      # libs/language-server. semantic-release resolves every configured path
+      # against the git root, so root + explicit -c is unambiguous (CORE-1852).
+      #
+      # --no-changelog: this repo's changelogs are hand-written and stamped by
+      # scripts/stamp-changelog-release.py (next step), not generated.
+      - name: Run Semantic Release
+        id: semantic-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📦 Running semantic-release for legesher-language-server..."
+
+          HEAD_BEFORE=$(git rev-parse HEAD)
+
+          # Returns exit 0 whether or not a release is made
+          uv run semantic-release -c libs/language-server/pyproject.toml version --no-changelog
+
+          HEAD_AFTER=$(git rev-parse HEAD)
+
+          if [ "$HEAD_BEFORE" != "$HEAD_AFTER" ]; then
+            NEW_VERSION=$(python3 -c "import tomllib,pathlib; print(tomllib.loads(pathlib.Path('libs/language-server/pyproject.toml').read_text())['project']['version'])")
+            echo "✅ Release created: legesher-language-server v${NEW_VERSION} (commit: ${HEAD_AFTER:0:7})"
+            echo "release_created=true" >> "$GITHUB_OUTPUT"
+            echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ℹ️ No release needed (HEAD unchanged)"
+            echo "release_created=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync uv.lock
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: |
+          echo "🔒 Syncing uv.lock..."
+          uv sync
+
+          if [ -n "$(git status --porcelain uv.lock)" ]; then
+            git add uv.lock
+            git commit -m "chore: update uv.lock after version bump"
+          fi
+
+      - name: Stamp changelog
+        if: steps.semantic-release.outputs.release_created == 'true'
+        env:
+          VERSION: ${{ steps.semantic-release.outputs.version }}
+        run: |
+          # Only libs/language-server's changelog is stamped with this version:
+          # the root [Unreleased] belongs to the foundation train. The script
+          # still refreshes the root Package Versions table, which reads every
+          # package's pyproject and so picks up the new language-server version.
+          python scripts/stamp-changelog-release.py \
+            --version "$VERSION" \
+            --changelogs libs/language-server/CHANGELOG.md
+          git add CHANGELOG.md libs/language-server/CHANGELOG.md
+          if [ -n "$(git diff --cached --name-only)" ]; then
+            git commit -m "docs(changelog): stamp release [CORE-608]"
+          fi
+
+      - name: Push release commits
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: git push origin main
+
+      - name: Build wheel
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: |
+          echo "📦 Building legesher-language-server..."
+          uv build --package legesher-language-server --out-dir libs/language-server/dist/
+
+      - name: Create GitHub Release
+        if: steps.semantic-release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.semantic-release.outputs.version }}
+        run: |
+          echo "Creating GitHub Release for language-server-v${VERSION}..."
+          uv run semantic-release -c libs/language-server/pyproject.toml publish
+
+      - name: Upload build artifacts
+        if: steps.semantic-release.outputs.release_created == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: legesher-language-server-dist-${{ github.sha }}
+          path: libs/language-server/dist/
+          retention-days: 30

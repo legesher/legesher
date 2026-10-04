@@ -343,7 +343,7 @@
           "type": "string",
           "default": "legesher-lsp",
           "scope": "machine-overridable",
-          "description": "Path to the Legesher language server executable"
+          "description": "Command that starts the Legesher language server. The default, legesher-lsp, is installed by the legesher-language-server Python package. Hover, completion, diagnostics and keyword highlighting need it."
         },
         "legesher.trace.server": {
           "type": "string",

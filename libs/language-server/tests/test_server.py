@@ -30,6 +30,7 @@ from lsprotocol.types import (
     VersionedTextDocumentIdentifier,
 )
 
+from legesher_language_server import __version__
 from legesher_language_server.config import LanguageServerConfig
 from legesher_language_server.server import LegesherLanguageServer, create_server
 
@@ -63,7 +64,7 @@ async def test_server_initialization(server):
     assert result.capabilities.completion_provider is not None
     assert result.capabilities.diagnostic_provider is not None
     assert result.server_info["name"] == "legesher-lsp"
-    assert result.server_info["version"] == "0.1.0"
+    assert result.server_info["version"] == __version__
 
 
 @pytest.mark.asyncio

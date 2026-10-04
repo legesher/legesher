@@ -4,6 +4,7 @@ import argparse
 import logging
 import sys
 
+from . import __version__
 from .config import LanguageServerConfig
 from .logging_setup import LspLogHandler, configure_logging
 from .server import create_server
@@ -73,7 +74,7 @@ Environment Variables:
         action="store_true",
         help="Use stdio for LSP communication (default mode for IDE integration)",
     )
-    parser.add_argument("--version", action="version", version="legesher-lsp 0.1.0")
+    parser.add_argument("--version", action="version", version=f"legesher-lsp {__version__}")
 
     args = parser.parse_args()
 
@@ -109,7 +110,7 @@ Environment Variables:
     # ``__main__``, which sits outside the package logger the trace setting
     # raises and lands in the output channel under a name that says nothing.
     logger = logging.getLogger("legesher_language_server.__main__")
-    logger.info("Starting Legesher Language Server v0.1.0")
+    logger.info(f"Starting Legesher Language Server v{__version__}")
     # Labelled "startup" on purpose. These are the languages the process was
     # launched with, and a client's initialize options can still replace them;
     # the server then reports what it resolved. Two unlabelled reports are what

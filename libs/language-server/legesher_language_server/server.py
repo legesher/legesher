@@ -47,6 +47,7 @@ from lsprotocol.types import (
 )
 from pygls.lsp.server import LanguageServer  # pygls 2.0 import path
 
+from . import __version__
 from .config import LanguageServerConfig
 from .document import DocumentManager
 from .enhanced_intelligence import INSTALL_HINT, EnhancedIntelligenceProxy, _get_pack_loader
@@ -203,7 +204,7 @@ class LegesherLanguageServer(LanguageServer):
         Args:
             config: Server configuration
         """
-        super().__init__("legesher-lsp", "v0.1.0")
+        super().__init__("legesher-lsp", __version__)
         self.config = config
         self.document_manager = DocumentManager()
 
@@ -643,7 +644,7 @@ class LegesherLanguageServer(LanguageServer):
             ),
             server_info={
                 "name": "legesher-lsp",
-                "version": "0.1.0",
+                "version": __version__,
             },
         )
 

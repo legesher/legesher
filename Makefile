@@ -2,7 +2,7 @@
 # ===========================
 # Common commands for development, testing, and code generation.
 
-.PHONY: help install generate generate-languages generate-docs generate-schema-reference check-generated check-generated-languages check-generated-docs check-generated-schema-reference test test-all test-i18n test-core test-legesher test-language-server test-mcp test-mcp-scheduled test-runtime bench lint format typecheck clean vscode-compile vscode-package
+.PHONY: help install generate generate-languages generate-docs generate-schema-reference check-generated check-generated-languages check-generated-docs check-generated-schema-reference test test-all test-i18n test-core test-legesher test-language-server test-language-server-scheduled test-mcp test-mcp-scheduled test-runtime bench lint format typecheck clean vscode-compile vscode-package
 
 # Default target
 help:
@@ -25,6 +25,7 @@ help:
 	@echo "  make test-core            Run core package tests"
 	@echo "  make test-legesher        Run legesher package tests"
 	@echo "  make test-language-server Run language-server tests"
+	@echo "  make test-language-server-scheduled  Release-tier language-server suite (wheel install)"
 	@echo "  make test-mcp             Run MCP server tests"
 	@echo "  make test-mcp-scheduled   Run release-tier MCP suites (all packs, wheel spawn)"
 	@echo "  make test-runtime         Run runtime package tests"
@@ -109,6 +110,16 @@ test-legesher:
 test-language-server:
 	@echo "Running language-server tests..."
 	cd libs/language-server && uv run pytest tests/ -v
+
+# Release-tier language-server suite: the clean-environment wheel install
+# (CORE-2203). Builds the wheels, installs them into an empty venv and drives
+# an LSP session through the installed `legesher-lsp`. Excluded from
+# `test-language-server` because it builds wheels. release-language-server.yml
+# runs it as the release gate; run it green before publishing the package.
+# --no-cov: the session runs in a subprocess, so in-process coverage is empty.
+test-language-server-scheduled:
+	@echo "Running scheduled (release-tier) language-server suite..."
+	cd libs/language-server && uv run pytest tests/ -v -m scheduled --no-cov
 
 test-mcp:
 	@echo "Running MCP server tests..."

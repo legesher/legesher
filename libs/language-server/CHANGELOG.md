@@ -57,6 +57,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `window/showMessage` when such a document opens, and `legesher/status`
   names the document and the reason. (CORE-1976)
 
+- `legesher-lsp --version`, the `serverInfo` in the `initialize` response and
+  the `clientInfo` the server sends to its type-checking backend now report the
+  package's real version, read from its installed metadata. They said 0.1.0
+  while `__version__` said 0.1.2 and `pyproject.toml` said 0.1.3. `pyproject.toml`
+  is now the only place the version is written. (CORE-2203)
+
 ### Added
 
 - `logging_setup.LspLogHandler`, and `trace` support: the client's trace value
@@ -89,6 +95,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   whether that came from the `client` or is the `configured` fallback
   (`source`), whether a pack can serve it (`served`), and why not (`detail`).
   The enhanced-intelligence fields are unchanged. (CORE-1976)
+
+- A release train of its own, the model `legesher-mcp` uses: semantic-release
+  tags `language-server-vX.Y.Z`, and the manual PyPI publish workflow has a
+  `language-server` target, so editors other than VS Code can install the
+  server by name once it is published. Each release is gated on a
+  clean-environment suite that installs the built wheels into an empty
+  virtualenv and runs an LSP session through the installed `legesher-lsp` in
+  Spanish, Amharic and Arabic. (CORE-2203)
 
 ### Changed
 

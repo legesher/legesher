@@ -227,6 +227,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Contributor identities are never published: where a native speaker made a
   selection, the artifact records the role and not the person. [CORE-1985]
 
+- **language-server**: releases on its own version and tag
+  (`language-server-vX.Y.Z`), the model `legesher-mcp` uses, and the manual
+  PyPI publish workflow has a `language-server` target, so editors other than
+  VS Code can install the server by name once it is published. [CORE-2203]
+
 ### Fixed
 
 - **cli**: packages that ship data files now work under the runtime import
@@ -449,6 +454,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   with `errors="replace"`, so a console that genuinely cannot render a glyph
   degrades to `?` rather than aborting: no output statement should ever be the
   thing that kills the process. [CORE-1927]
+
+- **language-server**: `legesher-lsp --version`, the `serverInfo` in the
+  `initialize` response and the `clientInfo` sent to the type-checking backend
+  report the package's real version. They said 0.1.0 while the package was
+  0.1.3. [CORE-2203]
+- **legesher-vscode**: when `legesher-lsp` cannot be found, the status bar
+  tooltip and the output log name the `legesher-language-server` Python
+  package and the `legesher.serverCommand` setting, and point to the
+  language-server section of the extension README, instead of saying the
+  server package was planned. [CORE-2203]
 
 ### Security
 

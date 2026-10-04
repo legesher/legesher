@@ -26,6 +26,13 @@ code --install-extension legesher.legesher-vscode
 
 {/* VISUAL: Screenshot of VS Code marketplace showing the Legesher extension */}
 
+Hover, completion, diagnostics and keyword highlighting come from a separate
+language server: the `legesher-lsp` command, from the `legesher-language-server`
+Python package, which is not on PyPI yet. The extension starts without it, and
+the Legesher item in the status bar then shows a warning that names the
+package. When `legesher-lsp` is installed, it has to be on your `PATH`, or the
+`legesher.serverCommand` setting has to hold its full path.
+
 ### 2. Select Your Language
 
 After installation, you'll see a welcome dialog. Click **"Choose Your Language"** to select your preferred coding language.
@@ -168,9 +175,11 @@ Change your coding language anytime:
 
 ### Translations not showing?
 
-1. Verify language selection: Check status bar
-2. Restart language server: Command Palette > "Legesher: Restart Language Server"
-3. Check for errors in Output panel
+1. Hover over the Legesher item in the status bar. If it shows a warning, the
+   language server was not found, and the tooltip names the package it needs
+2. Verify language selection: Check status bar
+3. Restart language server: Command Palette > "Legesher: Restart Language Server"
+4. Check for errors in Output panel
 
 {/* VISUAL: [Demo 13] Screenshot of status bar showing connection indicator states */}
 
