@@ -45,6 +45,8 @@ interface LegesherApi {
 
 const EXTENSION_ID = 'legesher.legesher-vscode';
 const ENGLISH_FIXTURE = 'sample.py';
+/** A second file to switch to: re-opening the active editor fires no editor change. */
+const GERMAN_FIXTURE = 'sample_de.py';
 
 function findLanguageServer(): string | undefined {
     let dir = __dirname;
@@ -98,13 +100,39 @@ async function hoverTextAt(document: vscode.TextDocument, token: string): Promis
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-/** Long enough for a server process to stop, respawn and complete a handshake. */
-const settle = () => sleep(6_000);
+
+/**
+ * How long a test gives a no-op re-sync to misbehave.
+ *
+ * One of two waits here that cannot poll; the other is the picker's render wait
+ * in `pickLanguageAt`. A re-sync that resolves to the language already running
+ * records no transition and changes no state, by design, so "nothing happened"
+ * has no observable end. Everything else waits on what it needs to see instead
+ * (CORE-2323): a fixed sleep raced the restart queue, and failed in 3 of 5 full
+ * runs.
+ */
+const QUIET_MS = 6_000;
+
+/**
+ * How long a test waits for a restart it asked for.
+ *
+ * Only a failing run pays it: every wait returns as soon as its condition
+ * holds. At a load average near 200 a restart took about 25 s, and the longest
+ * wait here spans two of them.
+ */
+const RESTART_WAIT_MS = 90_000;
+
+/** The extension's view of the server, for failure messages. */
+function serverState(): string {
+    const transition = api().getLastTransition();
+    return `server ${api().getServerLanguage() ?? 'none'}, last transition `
+        + (transition ? `${transition.from} -> ${transition.to} (${transition.outcome})` : 'none');
+}
 
 /**
  * Wait until `condition` holds, or fail saying what was still true instead.
  *
- * Preferred over a fixed `settle()` wherever the thing being waited for is
+ * Preferred over a fixed sleep wherever the thing being waited for is
  * observable. A fixed sleep is a bet that the machine is not busy: too short and
  * it flakes, too long and every test pays for the worst case. Polling an actual
  * condition removes both, and a timeout here reports the state it gave up on
@@ -113,7 +141,7 @@ const settle = () => sleep(6_000);
 async function waitUntil(
     describe: string,
     condition: () => boolean,
-    timeoutMs = 15_000
+    timeoutMs = RESTART_WAIT_MS
 ): Promise<void> {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
@@ -122,7 +150,92 @@ async function waitUntil(
         }
         await sleep(250);
     }
-    assert.fail(`timed out after ${timeoutMs}ms waiting for ${describe}`);
+    assert.fail(`timed out after ${timeoutMs}ms waiting for ${describe}; ${serverState()}`);
+}
+
+/** Wait until the extension reports a running server at `identity`. */
+async function serverRunningAt(identity: string): Promise<void> {
+    await waitUntil(
+        `the server to be running at ${identity}`,
+        () => api().getServerLanguage() === identity
+    );
+}
+
+/**
+ * Wait for a transition to `to` recorded after `before`, and return it.
+ *
+ * A record is written when a transition finishes, as a new object each time, so
+ * comparing with the record read before a settings write cannot match one an
+ * earlier test left behind with the same target.
+ */
+async function transitionAfter(
+    before: LanguageTransition | undefined,
+    to: string
+): Promise<LanguageTransition> {
+    await waitUntil(`a transition to ${to} to be recorded`, () => {
+        const transition = api().getLastTransition();
+        return transition !== before && transition?.to === to;
+    });
+    return api().getLastTransition()!;
+}
+
+/**
+ * Hover at `token` until `accept` holds, and return the text.
+ *
+ * For the tests that read a hover, the hover is the end of the restart: the
+ * server answers once it is up, and an empty answer before that is what the
+ * fixed sleeps lost to. A timeout reports the last text seen.
+ */
+async function hoverWhen(
+    document: vscode.TextDocument,
+    token: string,
+    describe: string,
+    accept: (text: string) => boolean,
+    timeoutMs = RESTART_WAIT_MS
+): Promise<string> {
+    const deadline = Date.now() + timeoutMs;
+    let text = '';
+    while (Date.now() < deadline) {
+        text = await hoverTextAt(document, token);
+        if (accept(text)) {
+            return text;
+        }
+        await sleep(250);
+    }
+    assert.fail(
+        `timed out after ${timeoutMs}ms waiting for ${describe}; `
+        + `last hover: ${text.slice(0, 200) || '(empty)'}; ${serverState()}`
+    );
+}
+
+/** What `cleanupSettled` gave up on, for the suite's `after` to report. */
+const cleanupMisses: string[] = [];
+
+/**
+ * Wait for the restarts a test's cleanup asked for, so the next test's own
+ * restarts do not queue behind them.
+ *
+ * Restarts run one at a time, and a test that leaves some queued hands them to
+ * the next test, whose waits then pay for both. Under load, one slow test
+ * failed the three after it that way (CORE-2323). The server's identity
+ * follows only the source and working languages, and cleanup only returns
+ * settings to their defaults, so the queue is done once it runs at en->en.
+ *
+ * A miss is collected rather than asserted here, because failing an
+ * `afterEach` skips every test after it. `after` fails the suite on it once
+ * every test has run.
+ */
+async function cleanupSettled(): Promise<void> {
+    const deadline = Date.now() + RESTART_WAIT_MS;
+    while (Date.now() < deadline) {
+        if (api().getServerLanguage() === 'en->en') {
+            return;
+        }
+        await sleep(250);
+    }
+    const miss = `cleanup did not reach en->en within ${RESTART_WAIT_MS}ms; ${serverState()}`;
+    console.warn(miss);
+    cleanupMisses.push(miss);
 }
 
 function api(): LegesherApi {
@@ -164,7 +277,10 @@ async function pickLanguageAt(offset: number): Promise<string> {
     const expected = languages[offset].code;
 
     const picked = vscode.commands.executeCommand('legesher.selectLanguage');
-    await sleep(3_000); // let the widget render before sending keys
+    // Let the widget render before sending keys. Not polled: no extension API
+    // reports that a quick pick is open. A miss is caught below, where the
+    // pick's result is polled for (CORE-1847).
+    await sleep(3_000);
 
     for (let i = 0; i <= offset; i++) { // +1 to step past the leading "Auto" item
         await vscode.commands.executeCommand('workbench.action.quickOpenSelectNext');
@@ -194,7 +310,9 @@ function nearbyLanguageOffset(avoid: string): number {
 }
 
 describe('Language-resolution scopes (CORE-1776)', function () {
-    this.timeout(120_000);
+    // Long enough for every wait in the slowest test to reach its own deadline,
+    // so a failure reports the poll's message rather than a bare mocha timeout.
+    this.timeout(360_000);
 
     let serverPath: string;
 
@@ -238,10 +356,15 @@ describe('Language-resolution scopes (CORE-1776)', function () {
                 await legesherConfig().update(key, undefined, vscode.ConfigurationTarget.Global);
             }
         }
+
+        await cleanupSettled();
     });
 
     after(async () => {
         await legesherConfig().update('serverCommand', undefined, vscode.ConfigurationTarget.Global);
+        assert.deepStrictEqual(
+            cleanupMisses, [], 'every cleanup should bring the server back to en->en'
+        );
     });
 
     it('applies a pick when a workspace setting supplies the language', async () => {
@@ -253,9 +376,9 @@ describe('Language-resolution scopes (CORE-1776)', function () {
         await config.update('languageDetection', 'off', vscode.ConfigurationTarget.Workspace);
 
         const document = await openFixture(ENGLISH_FIXTURE);
-        await settle();
-
-        const before = await hoverTextAt(document, 'print');
+        const before = await hoverWhen(
+            document, 'print', 'a German hover before the pick', text => text.includes('drucken')
+        );
         assert.ok(
             before.includes('drucken'),
             `expected German before the pick, got: ${before.slice(0, 200)}`
@@ -279,16 +402,19 @@ describe('Language-resolution scopes (CORE-1776)', function () {
             'the effective setting should be the picked language'
         );
 
-        await settle();
-
         // And it has to reach the server, not just the settings file.
+        await serverRunningAt(`en->${chosen}`);
         assert.strictEqual(
             api().getServerLanguage(),
             `en->${chosen}`,
             'the running server should have been restarted at the picked language'
         );
 
-        const after = await hoverTextAt(document, 'print');
+        // A non-empty hover is the restarted server answering; an empty one
+        // would pass the check below without testing anything.
+        const after = await hoverWhen(
+            document, 'print', `a hover from the server at ${chosen}`, text => text.length > 0
+        );
         assert.ok(
             !after.includes('drucken'),
             `hover should no longer answer in German after the pick, got: ${after.slice(0, 200)}`
@@ -302,7 +428,7 @@ describe('Language-resolution scopes (CORE-1776)', function () {
         await legesherConfig().update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
 
         await openFixture(ENGLISH_FIXTURE);
-        await settle();
+        await serverRunningAt('en->de');
 
         const chosen = await pickLanguageAt(nearbyLanguageOffset('de'));
 
@@ -325,7 +451,9 @@ describe('Language-resolution scopes (CORE-1776)', function () {
         await config.update('languageDetection', 'off', vscode.ConfigurationTarget.Workspace);
 
         await openFixture(ENGLISH_FIXTURE);
-        await settle();
+        // Polled, not slept (CORE-2323): a fixed wait read the identity
+        // mid-restart, when it is undefined.
+        await serverRunningAt('es->de');
 
         assert.strictEqual(
             api().getServerLanguage(),
@@ -343,14 +471,12 @@ describe('Language-resolution scopes (CORE-1776)', function () {
         await config.update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
 
         await openFixture(ENGLISH_FIXTURE);
-        // Polled rather than slept: transitions queued by earlier tests'
-        // cleanup all run through the same serialised queue, and a fixed
-        // settle() is a bet on how long that backlog takes — a bet this test
-        // lost once the picker tests before it started completing real picks.
+        // Polled rather than slept: a fixed sleep is a bet on how long the
+        // restarts ahead of this one take, a bet this test lost once the
+        // picker tests before it started completing real picks.
         await waitUntil(
             'the server to be running at en->de',
-            () => api().getServerLanguage() === 'en->de',
-            45_000
+            () => api().getServerLanguage() === 'en->de'
         );
 
         // A binary that answers --version but dies on the LSP handshake, which
@@ -363,8 +489,7 @@ describe('Language-resolution scopes (CORE-1776)', function () {
         await waitUntil(
             'the change to fr to be recorded as failed',
             () => api().getLastTransition()?.to === 'en->fr'
-                && api().getLastTransition()?.outcome === 'failed',
-            45_000
+                && api().getLastTransition()?.outcome === 'failed'
         );
 
         assert.strictEqual(
@@ -379,8 +504,7 @@ describe('Language-resolution scopes (CORE-1776)', function () {
         await config.update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
         await waitUntil(
             'the server to be running at en->de again',
-            () => api().getServerLanguage() === 'en->de',
-            45_000
+            () => api().getServerLanguage() === 'en->de'
         );
 
         assert.strictEqual(
@@ -399,12 +523,11 @@ describe('Language-resolution scopes (CORE-1776)', function () {
             await legesherConfig().update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
             await legesherConfig().update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
             await openFixture(ENGLISH_FIXTURE);
-            await settle();
+            await serverRunningAt('en->de');
 
+            const beforePick = api().getLastTransition();
             const chosen = await pickLanguageAt(nearbyLanguageOffset('de'));
-            await settle();
-
-            const transition = api().getLastTransition();
+            const transition = await transitionAfter(beforePick, `en->${chosen}`);
             assert.ok(transition, 'a transition should have been recorded');
             assert.strictEqual(transition!.outcome, 'applied');
             assert.strictEqual(transition!.to, `en->${chosen}`);
@@ -416,13 +539,13 @@ describe('Language-resolution scopes (CORE-1776)', function () {
             await config.update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
             await config.update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
             await openFixture(ENGLISH_FIXTURE);
-            await settle();
+            await serverRunningAt('en->de');
 
+            const beforeChange = api().getLastTransition();
             await config.update('serverCommand', brokenServerPath(), vscode.ConfigurationTarget.Global);
             await config.update('targetLanguage', 'fr', vscode.ConfigurationTarget.Global);
-            await settle();
 
-            const transition = api().getLastTransition();
+            const transition = await transitionAfter(beforeChange, 'en->fr');
             assert.ok(transition, 'a failed transition should still be recorded');
             assert.strictEqual(
                 transition!.outcome,
@@ -440,13 +563,14 @@ describe('Language-resolution scopes (CORE-1776)', function () {
             // anything painting from that outcome put the healthy badge back
             // over the warning, which is the signal it was covering up.
             const config = legesherConfig();
+            const beforeChange = api().getLastTransition();
             await config.update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
             await config.update(
                 'serverCommand', '/nonexistent/legesher-lsp', vscode.ConfigurationTarget.Global
             );
             await config.update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
             await openFixture(ENGLISH_FIXTURE);
-            await settle();
+            await transitionAfter(beforeChange, 'en->de');
 
             assert.strictEqual(
                 api().getLastTransition()!.outcome,
@@ -456,9 +580,14 @@ describe('Language-resolution scopes (CORE-1776)', function () {
             assert.strictEqual(api().getServerLanguage(), undefined, 'no server should be running');
 
             // A re-sync that resolves to the same language, which is the no-op
-            // that used to erase the signal.
+            // that used to erase the signal. Re-opening the active editor fires
+            // no editor change, so switch to another file and back: with
+            // detection off, both resolve to the language already asked for.
+            // They change nothing when correct, so there is nothing to poll
+            // for: give them QUIET_MS to misbehave.
+            await openFixture(GERMAN_FIXTURE);
             await openFixture(ENGLISH_FIXTURE);
-            await settle();
+            await sleep(QUIET_MS);
 
             assert.strictEqual(
                 api().getServerLanguage(),
@@ -479,20 +608,23 @@ describe('Language-resolution scopes (CORE-1776)', function () {
             // change as a no-op — and every editor switch, which re-resolves to
             // the language already running, would emit one too.
             const config = legesherConfig();
+            const beforeChange = api().getLastTransition();
             await config.update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
             await config.update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
             await openFixture(ENGLISH_FIXTURE);
-            await settle();
 
-            const applied = api().getLastTransition();
+            const applied = await transitionAfter(beforeChange, 'en->de');
             assert.ok(applied, 'the change to de should have been recorded');
             assert.strictEqual(applied!.outcome, 'applied');
             assert.strictEqual(applied!.to, 'en->de');
 
-            // Re-open the same file: a full re-sync that resolves to the same
-            // language and must leave the record alone.
+            // Switch to another file and back: full re-syncs that resolve to
+            // the same language and must leave the record alone. Re-opening the
+            // active editor alone would fire no editor change. Nothing to poll
+            // for, as above: give them QUIET_MS to misbehave.
+            await openFixture(GERMAN_FIXTURE);
             await openFixture(ENGLISH_FIXTURE);
-            await settle();
+            await sleep(QUIET_MS);
 
             const after = api().getLastTransition();
             assert.strictEqual(

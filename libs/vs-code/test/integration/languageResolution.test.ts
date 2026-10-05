@@ -12,6 +12,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
+/** The part of the extension's diagnostic API these tests read (see languageScopes.test.ts). */
+interface LegesherApi {
+    getServerLanguage(): string | undefined;
+    getDocumentLanguage(uri: vscode.Uri): string | undefined;
+}
+
 const EXTENSION_ID = 'legesher.legesher-vscode';
 const GERMAN_FIXTURE = 'sample_de.py';
 const ENGLISH_FIXTURE = 'sample.py';
@@ -59,10 +65,115 @@ async function hoverTextAt(document: vscode.TextDocument, token: string): Promis
         .join('\n');
 }
 
-const settle = () => new Promise(resolve => setTimeout(resolve, 5_000));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * How long a test waits for a restart it asked for. Only a failing run pays it:
+ * every wait returns as soon as its condition holds. At a load average near 200
+ * a restart took about 25 s.
+ */
+const RESTART_WAIT_MS = 90_000;
+
+function api(): LegesherApi {
+    const extension = vscode.extensions.getExtension<LegesherApi>(EXTENSION_ID);
+    assert.ok(extension?.exports, `${EXTENSION_ID} should export its diagnostic API`);
+    return extension!.exports;
+}
+
+/**
+ * Wait until the extension reports a running server at `identity`.
+ *
+ * Polled rather than slept (CORE-2323). A settings write restarts the server,
+ * so a fixed 5 s wait sometimes hovered before the server was answering and
+ * read an empty hover.
+ */
+async function serverRunningAt(identity: string): Promise<void> {
+    await waitUntil(
+        `the server to be running at ${identity}`,
+        () => api().getServerLanguage() === identity
+    );
+}
+
+/** What `cleanupSettled` gave up on, for the suite's `after` to report. */
+const cleanupMisses: string[] = [];
+
+/**
+ * Wait for the restarts a test's cleanup asked for, so the next test's own
+ * restarts do not queue behind them (CORE-2323). The server's identity
+ * follows only the source and working languages, not the open document, and
+ * cleanup only returns settings to their defaults, so the queue is done once
+ * it runs at en->en.
+ *
+ * A miss is collected rather than asserted here, because failing an
+ * `afterEach` skips every test after it. `after` fails the suite on it once
+ * every test has run.
+ */
+async function cleanupSettled(): Promise<void> {
+    const deadline = Date.now() + RESTART_WAIT_MS;
+    while (Date.now() < deadline) {
+        if (api().getServerLanguage() === 'en->en') {
+            return;
+        }
+        await sleep(250);
+    }
+    const miss = `cleanup did not reach en->en within ${RESTART_WAIT_MS}ms; `
+        + `server at ${api().getServerLanguage() ?? 'none'}`;
+    console.warn(miss);
+    cleanupMisses.push(miss);
+}
+
+/** Wait until `condition` holds, or fail naming it and the server's state. */
+async function waitUntil(
+    describe: string,
+    condition: () => boolean,
+    timeoutMs = RESTART_WAIT_MS
+): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        if (condition()) {
+            return;
+        }
+        await sleep(250);
+    }
+    assert.fail(
+        `timed out after ${timeoutMs}ms waiting for ${describe}; `
+        + `server at ${api().getServerLanguage() ?? 'none'}`
+    );
+}
+
+/**
+ * Hover at `token` until `accept` holds, and return the text.
+ *
+ * The hover is the end of the restart these tests wait for: the server answers
+ * once it is up. A timeout reports the last text seen.
+ */
+async function hoverWhen(
+    document: vscode.TextDocument,
+    token: string,
+    describe: string,
+    accept: (text: string) => boolean,
+    timeoutMs = RESTART_WAIT_MS
+): Promise<string> {
+    const deadline = Date.now() + timeoutMs;
+    let text = '';
+    while (Date.now() < deadline) {
+        text = await hoverTextAt(document, token);
+        if (accept(text)) {
+            return text;
+        }
+        await sleep(250);
+    }
+    assert.fail(
+        `timed out after ${timeoutMs}ms waiting for ${describe}; `
+        + `last hover: ${text.slice(0, 200) || '(empty)'}; `
+        + `server at ${api().getServerLanguage() ?? 'none'}`
+    );
+}
 
 describe('Language resolution (CORE-1754)', function () {
-    this.timeout(90_000);
+    // Two full waits fit in one test, so a failure reports the poll's message
+    // rather than a bare mocha timeout.
+    this.timeout(240_000);
 
     before(async () => {
         const serverPath = findLanguageServer();
@@ -84,11 +195,15 @@ describe('Language resolution (CORE-1754)', function () {
         await config.update('workingLanguage', undefined, vscode.ConfigurationTarget.Global);
         await config.update('knownLanguages', undefined, vscode.ConfigurationTarget.Global);
         await config.update('languageDetection', undefined, vscode.ConfigurationTarget.Global);
+        await cleanupSettled();
     });
 
     after(async () => {
         await vscode.workspace.getConfiguration('legesher')
             .update('serverCommand', undefined, vscode.ConfigurationTarget.Global);
+        assert.deepStrictEqual(
+            cleanupMisses, [], 'every cleanup should bring the server back to en->en'
+        );
     });
 
     it('detects the file language over a conflicting user setting', async () => {
@@ -99,9 +214,10 @@ describe('Language resolution (CORE-1754)', function () {
             .update('targetLanguage', 'pt', vscode.ConfigurationTarget.Global);
 
         const document = await openFixture(GERMAN_FIXTURE);
-        await settle();
-
-        const text = await hoverTextAt(document, 'drucken');
+        const text = await hoverWhen(
+            document, 'drucken', 'a German hover despite a Portuguese setting',
+            hover => hover.includes('drucken') && hover.includes('print')
+        );
 
         assert.ok(
             text.includes('drucken') && text.includes('print'),
@@ -117,7 +233,16 @@ describe('Language resolution (CORE-1754)', function () {
         await config.update('languageDetection', 'off', vscode.ConfigurationTarget.Global);
 
         const document = await openFixture(GERMAN_FIXTURE);
-        await settle();
+        // Wait until the server runs at the pinned language and the document
+        // is named Spanish before reading the hover. The hover is then empty or
+        // Spanish, and the check below passes either way; what the waits rule
+        // out is reading it while the document is still named German, which is
+        // how German leaked through.
+        await serverRunningAt('en->es');
+        await waitUntil(
+            'the document to be named es',
+            () => api().getDocumentLanguage(document.uri) === 'es'
+        );
 
         const text = await hoverTextAt(document, 'drucken');
 
@@ -135,18 +260,20 @@ describe('Language resolution (CORE-1754)', function () {
         await config.update('targetLanguage', 'de', vscode.ConfigurationTarget.Global);
 
         const document = await openFixture(ENGLISH_FIXTURE);
-        await settle();
-
-        const before = await hoverTextAt(document, 'print');
+        const before = await hoverWhen(
+            document, 'print', 'the German equivalent while set to de',
+            hover => hover.includes('drucken')
+        );
         assert.ok(
             before.includes('drucken'),
             `expected the German equivalent while set to de, got: ${before.slice(0, 200)}`
         );
 
         await config.update('targetLanguage', 'es', vscode.ConfigurationTarget.Global);
-        await settle();
-
-        const after = await hoverTextAt(document, 'print');
+        const after = await hoverWhen(
+            document, 'print', 'the Spanish equivalent after the change',
+            hover => hover.includes('imprimir')
+        );
         assert.ok(
             after.includes('imprimir'),
             `expected the Spanish equivalent after the change, got: ${after.slice(0, 200)}`

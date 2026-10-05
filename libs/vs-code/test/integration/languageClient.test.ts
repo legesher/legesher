@@ -95,14 +95,22 @@ describe('Language client (CORE-1733)', function () {
         const document = await openFixture(GERMAN_FIXTURE);
         const position = positionOf(document, 'drucken');
 
-        // Give the client time to start and synchronise the document.
-        await new Promise(resolve => setTimeout(resolve, 5_000));
-
-        const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
-            'vscode.executeHoverProvider',
-            document.uri,
-            position
-        );
+        // Poll until the client has started and synchronised the document,
+        // rather than sleeping a fixed 5 s (CORE-2323). The regression this
+        // guards produces no hover at all, so it still fails, at the deadline.
+        const deadline = Date.now() + 45_000;
+        let hovers: vscode.Hover[] | undefined;
+        do {
+            hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
+                'vscode.executeHoverProvider',
+                document.uri,
+                position
+            );
+            if (hovers && hovers.length > 0) {
+                break;
+            }
+            await new Promise(resolve => setTimeout(resolve, 250));
+        } while (Date.now() < deadline);
 
         assert.ok(hovers && hovers.length > 0, 'expected at least one hover result');
 
