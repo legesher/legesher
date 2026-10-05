@@ -253,7 +253,8 @@ These packages each carry their own version number, independent of the foundatio
 them have a release workflow; the fourth is versioned by hand and has no automated release yet:
 
 - `legesher-vscode` - VS Code extension (`libs/vs-code/package.json`), released by `release-apps.yml`
-- `legesher-mcp` - MCP server, tagged `mcp-v{version}` by `release-mcp.yml`
+- `legesher-mcp` - MCP server, tagged `mcp-v{version}` by `release-mcp.yml`, and a
+  `publish-pypi.yml` target
 - `legesher-language-server` - LSP server, tagged `language-server-v{version}` by
   `release-language-server.yml`, and a `publish-pypi.yml` target
 - `legesher-runtime` - Localized tracebacks. No release workflow, not a `publish-pypi.yml` target

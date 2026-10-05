@@ -251,8 +251,9 @@ run before a release:
   `make test-mcp-scheduled` before you expect a release to go out.
 
   Scope, so the guarantee isn't overread: it gates *cutting a version*. The
-  push to a package index is `publish-pypi.yml`, which is dispatch-only and
-  does not yet list `legesher-mcp` — that belongs with CORE-626.
+  push to a package index is the `mcp` target of `publish-pypi.yml`, which is
+  dispatch-only and runs after `foundation` has reached the same index
+  (CORE-626).
 
 ## Versioning
 

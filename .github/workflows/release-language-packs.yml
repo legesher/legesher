@@ -193,8 +193,11 @@ jobs:
       # `semantic_release version` had already pushed the tag and cut the
       # GitHub Release, so a release could ship with no dists and a red job.
       # And `--no-build-isolation` cannot work here regardless: the packs
-      # build with `pdm-backend`, which this job never installs. Matches the
-      # form `publish-pypi.yml` already uses.
+      # build with `pdm-backend`, which this job never installs. A path build
+      # of a pack lands in that pack's own dist/: uv sets the root workspace
+      # aside because libs/i18n, a project but not a workspace root, sits
+      # between them. publish-pypi.yml names the distribution with --package
+      # instead (CORE-2313).
       - name: Build package
         if: steps.version.outputs.released == 'true'
         env:
@@ -278,8 +281,11 @@ jobs:
       # `semantic_release version` had already pushed the tag and cut the
       # GitHub Release, so a release could ship with no dists and a red job.
       # And `--no-build-isolation` cannot work here regardless: the packs
-      # build with `pdm-backend`, which this job never installs. Matches the
-      # form `publish-pypi.yml` already uses.
+      # build with `pdm-backend`, which this job never installs. A path build
+      # of a pack lands in that pack's own dist/: uv sets the root workspace
+      # aside because libs/i18n, a project but not a workspace root, sits
+      # between them. publish-pypi.yml names the distribution with --package
+      # instead (CORE-2313).
       - name: Build package
         if: steps.version.outputs.released == 'true'
         env:
