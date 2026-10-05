@@ -151,6 +151,13 @@ jobs:
           - os: windows-latest
             python-version: '3.10'
 
+    # uv follows the repository's .python-version (3.13) over the interpreter
+    # setup-python puts on PATH, so without this the 3.10 leg built its
+    # environment with 3.13 and tested nothing on 3.10 (CORE-2334). The
+    # "Install dependencies" step checks the result.
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -168,9 +175,25 @@ jobs:
           version: "latest"
           enable-cache: true
 
+      # The interpreter check is part of this step so that a mismatch fails
+      # `deps`, and every suite below, gated on it, skips rather than testing
+      # the wrong interpreter under the matrix's name.
       - name: Install dependencies
         id: deps
-        run: uv sync
+        shell: bash
+        env:
+          WANT: ${{ matrix.python-version }}
+        run: |
+          uv sync
+          uv run python - <<'EOF'
+          import os
+          import sys
+
+          got = "%d.%d" % sys.version_info[:2]
+          if got != os.environ["WANT"]:
+              sys.exit(f"the matrix asks for Python {os.environ['WANT']}, the environment runs {got}")
+          print(f"the environment runs Python {got}, as the matrix asks")
+          EOF
 
       # Every suite below runs even when an earlier SUITE fails (CORE-1921).
       # GitHub stops a job at the first failing step, so a red `libs/core`

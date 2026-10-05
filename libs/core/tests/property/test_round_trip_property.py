@@ -27,10 +27,13 @@ What the generator deliberately leaves out, and why:
 * Python keywords (the source would not compile) and CRLF line endings (the
   tokenizer path normalises them to LF; a formatting question, not a
   vocabulary one).
+* combining marks inside identifiers, below CPython 3.12 only (see
+  :data:`MARKS`).
 """
 
 from __future__ import annotations
 
+import functools
 import io
 import keyword
 import sys
@@ -47,6 +50,7 @@ from hypothesis import strategies as st
 from legesher_core import create_translator_from_language_pack
 from legesher_core.round_trip import first_divergence
 from legesher_i18n import LanguagePackLoader
+from tests.interpreter_gaps import PURE_PYTHON_TOKENIZER, fragmenting_renderings
 
 PACKS = ("es", "ar", "hi", "zh", "th", "si")
 
@@ -146,16 +150,22 @@ START_CHARS = (
     + CJK_LETTERS
     + HANGUL_SYLLABLES
 )
-CONTINUE_CHARS = (
-    START_CHARS
-    + LATIN_CONTINUE
-    + ARABIC_MARKS
+#: Only the C tokenizer (CPython 3.12+) keeps a combining mark inside a NAME.
+#: The pure-Python one splits the identifier at the mark, and the return hop
+#: can then translate a fragment that spells a native word (interpreter_gaps.py
+#: gap 1, CORE-2192). Whether an example draws such an identifier is up to
+#: Hypothesis, so a strict xfail would flake: below 3.12 the marks are left
+#: out, and test_an_identifier_split_at_a_mark_round_trips pins the defect.
+MARKS = (
+    ARABIC_MARKS
     + DEVANAGARI_MARKS
     + SINHALA_MARKS
     + BENGALI_MARKS
     + TAMIL_MARKS
     + THAI_MARKS
 )
+
+CONTINUE_CHARS = START_CHARS + LATIN_CONTINUE + ("" if PURE_PYTHON_TOKENIZER else MARKS)
 
 
 def _fold(text: str) -> str:
@@ -336,6 +346,19 @@ class Engines:
         return f"<Engines packs={sorted(self._built)}>"
 
 
+@functools.cache
+def _renderings(code: str) -> tuple[str, ...]:
+    """Every native rendering the translator can emit for ``code`` here."""
+    version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    pack = LanguagePackLoader().load(code, target="python", version=version)
+    return (
+        *pack.keywords.values(),
+        *pack.builtins.values(),
+        *pack.exceptions.values(),
+        *pack.implicit_params.values(),
+    )
+
+
 @pytest.fixture(scope="session")
 def engines() -> Engines:
     """Build :class:`Engines` for every pack under test.
@@ -376,6 +399,20 @@ def engines() -> Engines:
 def test_round_trip_properties(engines, code, data):
     """EN -> native -> EN is lossless, NFC, identifier-preserving, compilable."""
     forward, reverse, forbidden = engines[code]
+    # On CPython 3.10/3.11 the pure-Python tokenizer reads a rendering that
+    # carries a mark or a joiner as fragments, so the return hop cannot match
+    # it (interpreter_gaps.py gap 1, CORE-2192). Whether a drawn program
+    # contains one is up to Hypothesis, so a strict xfail here would flake;
+    # the defect is pinned strictly, per corpus file, by
+    # tests/integration/test_every_pack.py, and this skips before any example.
+    fragments = fragmenting_renderings(_renderings(code))
+    if fragments:
+        pytest.skip(
+            f"{code}: CPython {sys.version_info.major}.{sys.version_info.minor}'s "
+            f"pure-Python tokenize reads {len(fragments)} of this pack's renderings "
+            "as fragments; the return hop is inert for them (interpreter_gaps.py "
+            "gap 1, CORE-2192), pinned strictly by tests/integration/test_every_pack.py"
+        )
     source, names = data.draw(programs(identifiers(forbidden)), label="program")
     compile(source, "<generated>", "exec")  # the generator must emit valid Python
 
@@ -393,3 +430,22 @@ def test_round_trip_properties(engines, code, data):
             f"identifier {name!r} did not survive translation to {code}: {native!r}"
         )
     compile(back, "<reversed>", "exec")
+
+
+@pytest.mark.xfail(
+    PURE_PYTHON_TOKENIZER,
+    strict=True,
+    reason=(
+        "CORE-2192: pure-Python tokenize splits the identifier at the mark, and the "
+        "return hop reads the fragment o as the es word for or (interpreter_gaps.py gap 1)"
+    ),
+)
+def test_an_identifier_split_at_a_mark_round_trips(engines):
+    """The case the alphabet leaves out below 3.12, pinned on every interpreter."""
+    source = f"a = a{chr(0x09BE)}o\n"  # BENGALI VOWEL SIGN AA inside the name
+    forward, reverse, _ = engines["es"]
+    back = reverse.translate_code(
+        forward.translate_code(source, "en", "es"), "es", "en"
+    )
+    divergence = first_divergence(source, back)
+    assert divergence is None, f"EN -> es -> EN diverged: {divergence}"

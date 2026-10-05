@@ -1334,7 +1334,11 @@ def test_the_database_never_ships_in_built_artifacts() -> None:
     backend reads files from disk, not from git, so untracking alone does not
     keep a locally-present database out of an artifact -- the exclude does.
     """
-    import tomllib
+    # tomllib is 3.11+; legesher-i18n declares tomli for older interpreters.
+    try:
+        import tomllib
+    except ModuleNotFoundError:
+        import tomli as tomllib  # type: ignore[import-not-found, no-redef]
 
     pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
     with pyproject.open("rb") as fh:

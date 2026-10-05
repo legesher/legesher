@@ -32,7 +32,7 @@ from legesher_core.stored_form import (
     smudge_text,
 )
 from legesher_i18n import get_active_language_codes
-from tests.corpus import CorpusFile, corpus_for
+from tests.corpus import CORPUS, CorpusFile, corpus_for
 from tests.interpreter_gaps import PURE_PYTHON_TOKENIZER
 
 RUNNING_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
@@ -119,7 +119,19 @@ def _apply_ledgers(
 
 def test_sweep_is_not_vacuous():
     assert len(LANGUAGES) >= 50, LANGUAGES
-    assert len(WITH_KEYWORDS) >= 8, [entry.name for entry in WITH_KEYWORDS]
+    # Eight of the keyword-bearing corpus files, one of slack, less the
+    # keyword-bearing files whose grammar this interpreter cannot express
+    # (``exception_groups.py`` needs 3.11, ``type_params.py`` 3.12), which
+    # corpus_for() rightly leaves out. The slack is the same on every
+    # interpreter (CORE-2334).
+    beyond_this_interpreter = [
+        entry.name
+        for entry in CORPUS
+        if entry not in ENTRIES and HARD_KEYWORDS & set(_names(entry.source))
+    ]
+    assert len(WITH_KEYWORDS) >= 8 - len(beyond_this_interpreter), [
+        entry.name for entry in WITH_KEYWORDS
+    ]
 
 
 def test_ledger_entries_are_reachable():

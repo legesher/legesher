@@ -31,6 +31,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import sys
 from typing import Any
 
 import pytest
@@ -190,6 +191,12 @@ def _surface_digest(tools: Any, prompts: Any, instructions: str | None) -> str:
     return hashlib.sha256(blob).hexdigest()
 
 
+@pytest.mark.xfail(
+    sys.version_info < (3, 13),
+    strict=True,
+    reason="CORE-2349: before CPython 3.13 the tool descriptions keep their docstring "
+    "indentation, so the published surface, and its digest, differ",
+)
 async def test_the_published_surface_digest_is_unchanged(client: ClientSession) -> None:
     """A silent edit to a published description fails here.
 

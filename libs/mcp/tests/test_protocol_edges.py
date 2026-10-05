@@ -24,6 +24,7 @@ from pydantic import AnyUrl
 from legesher_mcp import server as server_module
 from legesher_mcp.schemas import SOURCE_MAX_CHARS, SourceFile
 from tests.conftest import assert_sanitized, call_err, call_ok
+from tests.interpreter_gaps import IDENTIFIER_RULES_ARE_UNICODE_15_1
 
 pytestmark = pytest.mark.anyio
 
@@ -525,9 +526,23 @@ async def test_unknown_prompt_fails_cleanly(client: ClientSession) -> None:
 # -- protocol behavior -----------------------------------------------------
 
 
+@pytest.mark.xfail(
+    not IDENTIFIER_RULES_ARE_UNICODE_15_1,
+    strict=True,
+    reason="CORE-2349: before Unicode 15.1 (CPython 3.13) the server cannot load the ja "
+    "pack at the default 3.13 target, and reports it as not found",
+)
+async def test_ja_translates_at_the_default_target(client: ClientSession) -> None:
+    source = "def ok():\n    return True\n"
+    result = await call_ok(client, "translate_to_native", {"source": source, "target_lang": "ja"})
+    assert result["translated_source"] != source
+
+
 async def test_concurrent_tool_calls_on_one_session(client: ClientSession) -> None:
     """One session, many in-flight calls: no interleaving, no lost replies."""
-    languages = ["es", "ar", "fr", "de", "hi", "ja", "pt", "ru"]
+    # Every pack here loads at the default target on every supported
+    # interpreter; ja's does not before 3.13 (CORE-2349, pinned above).
+    languages = ["es", "ar", "fr", "de", "hi", "ko", "pt", "ru"]
     results: dict[str, str] = {}
 
     async def translate(language: str) -> None:

@@ -21,6 +21,8 @@ translators with fixed maps) so they don't require an external API.
 
 from __future__ import annotations
 
+import sys
+
 import pytest
 
 from legesher_core.transformer import TokenTranslator
@@ -32,6 +34,12 @@ from legesher_i18n.pack_loader import LanguagePackLoader
 # accessor (available + experimental) since all current packs are
 # experimental status until community validation lands them as available.
 ALL_LANGS = sorted(get_active_language_codes())
+
+# The tier this interpreter is served, as the CLI and the import hook pick it.
+# A fixed "3.13" made the 3.10 leg load the ja and si files whose renderings
+# are identifiers only under Unicode 15.1, and left the 3.10 compat forms,
+# the ones 3.10 users get, unchecked (CORE-2334).
+RUNNING_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 
 # Subset of priority languages used for round-trip integration tests
 # (matches the AYA-213 Cycle-4 pilot subset + a Latin-script anchor)
@@ -87,7 +95,7 @@ class TestReservedWordIdentifierValidity:
         self, loader: LanguagePackLoader, lang: str, term: str
     ) -> None:
         """value.isidentifier() must hold (Unicode-aware per PEP 3131)."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         value = pack.get_implicit_param_translation(term)
         if value is None:
             pytest.skip(f"{lang}: no {term} translation in pack (yet)")
@@ -101,7 +109,7 @@ class TestReservedWordIdentifierValidity:
         self, loader: LanguagePackLoader, lang: str, term: str
     ) -> None:
         """No whitespace anywhere — must be exactly one token."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         value = pack.get_implicit_param_translation(term)
         if value is None:
             pytest.skip(f"{lang}: no {term} translation in pack (yet)")
@@ -115,7 +123,7 @@ class TestReservedWordIdentifierValidity:
         self, loader: LanguagePackLoader, lang: str, term: str
     ) -> None:
         """No chain-of-thought / reasoning leakage in the value."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         value = pack.get_implicit_param_translation(term)
         if value is None:
             pytest.skip(f"{lang}: no {term} translation in pack (yet)")
@@ -135,7 +143,7 @@ class TestReservedWordIdentifierValidity:
         than 25 characters likely indicates a multi-word phrase that
         slipped past the single-word check or trace-marker pollution.
         """
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         value = pack.get_implicit_param_translation(term)
         if value is None:
             pytest.skip(f"{lang}: no {term} translation in pack (yet)")
@@ -157,7 +165,7 @@ class TestForbiddenPunctuation:
         self, loader: LanguagePackLoader, lang: str
     ) -> None:
         """Reserved-word translations must use only Unicode letters/digits/underscore."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         for term, value in pack.implicit_params.items():
             for char, char_name in FORBIDDEN_PUNCTUATION.items():
                 assert char not in value, (
@@ -170,7 +178,7 @@ class TestForbiddenPunctuation:
         self, loader: LanguagePackLoader, lang: str
     ) -> None:
         """Sanity: also check existing keyword translations for the same issue."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         for keyword, value in pack.keywords.items():
             for char, char_name in FORBIDDEN_PUNCTUATION.items():
                 assert char not in value, (
@@ -192,7 +200,7 @@ class TestStructuralInvariants:
         self, loader: LanguagePackLoader, lang: str
     ) -> None:
         """`__main__` must survive translation untouched (dunder pattern)."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         translator = TokenTranslator(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
@@ -209,7 +217,7 @@ class TestStructuralInvariants:
         self, loader: LanguagePackLoader, lang: str
     ) -> None:
         """Translation must preserve the number of `def`/`class` declarations."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         translator = TokenTranslator(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
@@ -248,7 +256,7 @@ class TestConsistencyInvariants:
         self, loader: LanguagePackLoader, lang: str
     ) -> None:
         """`self` and `cls` must map to DIFFERENT values within a pack."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         if not pack.implicit_params:
             pytest.skip(f"{lang}: no implicit_params section yet")
         values = list(pack.implicit_params.values())
@@ -267,7 +275,7 @@ class TestConsistencyInvariants:
         round-trip translation breaks because the reverse mapper can't
         tell which English term to map back to.
         """
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         if not pack.implicit_params:
             pytest.skip(f"{lang}: no implicit_params section yet")
         keyword_values = set(pack.keywords.values())
@@ -282,7 +290,7 @@ class TestConsistencyInvariants:
         self, loader: LanguagePackLoader, lang: str
     ) -> None:
         """Same check, broadened to builtins + exceptions."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         if not pack.implicit_params:
             pytest.skip(f"{lang}: no implicit_params section yet")
         forbidden = set(pack.builtins.values()) | set(pack.exceptions.values())
@@ -307,7 +315,7 @@ class TestUrduCollisionRegression:
     """
 
     def test_urdu_self_is_not_in(self, loader: LanguagePackLoader) -> None:
-        pack = loader.load("ur", "python", "3.13")
+        pack = loader.load("ur", "python", RUNNING_VERSION)
         self_val = pack.get_implicit_param_translation("self")
         assert self_val is not None, "Urdu pack missing self translation"
         in_val = pack.get_keyword_translation("in")
@@ -326,7 +334,7 @@ class TestUrduCollisionRegression:
         or demonstrative pronoun. This is a soft quality check that
         accepts خود, خودی, آپ, نمونہ, or similar reflexive choices.
         """
-        pack = loader.load("ur", "python", "3.13")
+        pack = loader.load("ur", "python", RUNNING_VERSION)
         self_val = pack.get_implicit_param_translation("self")
         assert self_val is not None
         # Negative checks — known wrong patterns
@@ -359,7 +367,7 @@ class TestRoundTripPreservesSelfCls:
         translator_cls: type,
     ) -> None:
         """`def foo(self): self.x = x` → all three `self` substitute to same value."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         translator = translator_cls(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
@@ -384,7 +392,7 @@ class TestRoundTripPreservesSelfCls:
         translator_cls: type,
     ) -> None:
         """`def make(cls): return cls()` → both `cls` references match."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         translator = translator_cls(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
@@ -404,7 +412,7 @@ class TestRoundTripPreservesSelfCls:
         self, loader: LanguagePackLoader, lang: str
     ) -> None:
         """en → target → en restores `self` via `reverse()` mapper."""
-        pack = loader.load(lang, "python", "3.13")
+        pack = loader.load(lang, "python", RUNNING_VERSION)
         en_to_target = TokenTranslator(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,
@@ -430,7 +438,7 @@ class TestRoundTripPreservesSelfCls:
         With CORE-710, self translates to خود (not میں), so the round-trip
         is correct.
         """
-        pack = loader.load("ur", "python", "3.13")
+        pack = loader.load("ur", "python", RUNNING_VERSION)
         en_to_ur = TokenTranslator(
             keyword_map=pack.keywords,
             builtin_map=pack.builtins,

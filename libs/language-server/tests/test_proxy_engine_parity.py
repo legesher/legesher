@@ -13,6 +13,7 @@ They need legesher-core, which the monorepo workspace installs; an install
 of this package on its own skips them.
 """
 
+import sys
 import unicodedata
 
 import pytest
@@ -54,6 +55,11 @@ SPANISH = {
     "a builtin shadowed by an import": "desde os importar abrir\nfd = abrir('p', 0)\n",
 }
 
+# CPython 3.10 and 3.11 tokenize in pure Python, which splits a word at a
+# combining mark (CORE-2192), so there the engine never sees an NFD-typed
+# word whole and, like the proxy, leaves it alone.
+ENGINE_READS_AN_NFD_WORD_WHOLE = sys.version_info >= (3, 12)
+
 # Localized by the engine from English, for a spread of scripts and packs.
 ENGLISH = (
     "class Reader:\n"
@@ -79,6 +85,7 @@ KNOWN_DIFFERENCES = {
         "es",
         unicodedata.normalize("NFD", "@métododeclase\ndefinir f(misma_clase):\n    pasar\n"),
         marks=pytest.mark.xfail(
+            ENGINE_READS_AN_NFD_WORD_WHOLE,
             strict=True,
             reason="CORE-2352: the proxy matches words only as typed; the engine also NFC/NFKC",
         ),

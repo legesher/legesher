@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 import traceback
 
 import pytest
@@ -345,6 +346,10 @@ class TestEmptyCatalogDiagnostic:
         assert str(db) in caplog.text
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 11),
+    reason="PEP 657 caret and anchor lines arrived in Python 3.11; 3.10 prints none",
+)
 class TestPep657Preservation:
     def test_caret_and_anchor_lines_are_byte_identical(self, raise_from_script):
         cap = raise_from_script("def sumar(a, b):\n    return a + b\n\nsumar('x', 1)\n")

@@ -8,6 +8,7 @@ import yaml
 from pathlib import Path
 
 from legesher_i18n.pack_loader import LanguagePackLoader
+from tests.interpreter_gaps import NEEDS_UNICODE_15_1
 from legesher_i18n.schema_validator import SchemaValidator
 from legesher_i18n.exceptions import (
     CircularInheritanceError,
@@ -707,6 +708,7 @@ class TestMinInterpreterEnforcement:
         loader = LanguagePackLoader()
         loader._enforce_min_interpreter(self._schema(None), "3.10", "xx")
 
+    @NEEDS_UNICODE_15_1
     def test_tooling_bypass_loads_a_high_floor_pack(self):
         # The auditor/exporter path inspects a raw pack without executing it, so
         # it bypasses the floor. si/3.13.yml declares a 3.13 floor; loading it
@@ -751,6 +753,7 @@ class TestSinhalaInterpreterTiers:
             offenders = [v for v in self._values(pack).values() if self.ZWJ in v]
             assert offenders == [], f"si {version} still carries ZWJ: {offenders}"
 
+    @NEEDS_UNICODE_15_1
     def test_313_plus_restores_the_conjuncts(self):
         loader = LanguagePackLoader()
         for version in ("3.13", "3.14"):
@@ -762,6 +765,7 @@ class TestSinhalaInterpreterTiers:
             # (guards against a conjunct dropped from or missing in 3.13.yml).
             assert sum(self.ZWJ in v for v in values.values()) == 17
 
+    @NEEDS_UNICODE_15_1
     def test_tiers_are_the_same_word_minus_the_joiner(self):
         loader = LanguagePackLoader()
         low = self._values(loader.load("si", "python", "3.10"))
@@ -797,6 +801,7 @@ class TestJapaneseInterpreterTiers:
             assert pack.builtins["divmod"] == self.DOT_FREE
             assert self.MIDDLE_DOT not in pack.builtins["divmod"]
 
+    @NEEDS_UNICODE_15_1
     def test_313_plus_restores_the_canonical_spelling(self):
         loader = LanguagePackLoader()
         for version in ("3.13", "3.14"):

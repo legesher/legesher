@@ -22,12 +22,14 @@ The exporter's safety contract:
 """
 
 import tempfile
+import unicodedata
 from pathlib import Path
 
 import pytest
 import yaml
 
 from legesher_i18n.db import TranslationDatabase
+from tests.interpreter_gaps import NEEDS_UNICODE_15_1
 from legesher_i18n.term_definitions import (
     BUILTIN_FUNCTIONS,
     BUILTIN_TYPES,
@@ -66,6 +68,19 @@ MIDDLE_DOT = "・"
 # the word rather than its rendering, so tiering must refuse instead of silently
 # publishing something else.
 TELUGU_NUKTA = "఼"
+
+#: Strict, so the tests report XPASS once this interpreter assigns the nukta.
+#: U+0C3C is new in Unicode 14.0 (CPython 3.11). Before that it is no
+#: identifier character at all, so the database refuses to select the value
+#: and the exporter never sees it.
+NEEDS_TELUGU_NUKTA = pytest.mark.xfail(
+    unicodedata.category(TELUGU_NUKTA) == "Cn",
+    strict=True,
+    reason=(
+        "U+0C3C TELUGU SIGN NUKTA is unassigned in this interpreter's Unicode "
+        f"tables ({unicodedata.unidata_version}; assigned from 14.0, CPython 3.11)"
+    ),
+)
 
 _CATEGORY_TERMS = [
     (
@@ -702,6 +717,7 @@ class TestInterpreterFloorTiering:
         _reselect(db, ids, lang, "implicit_param", "self", f"t_se{ZWJ}lf")
         return ids
 
+    @NEEDS_UNICODE_15_1
     def test_310_carries_the_stripped_form(self, exporter, temp_db, temp_output_dir):
         self._populate_zwj(temp_db)
         exporter.export_language("si", overwrite=True)
@@ -717,6 +733,7 @@ class TestInterpreterFloorTiering:
         # Untouched values are untouched.
         assert d310["keywords"]["def"] == "t_def"
 
+    @NEEDS_UNICODE_15_1
     def test_313_overlay_restores_the_canonical_form(
         self, exporter, temp_db, temp_output_dir
     ):
@@ -738,6 +755,7 @@ class TestInterpreterFloorTiering:
         assert set(d313["builtins"]) == {"print"}
         assert set(d313["implicit_params"]) == {"self"}
 
+    @NEEDS_UNICODE_15_1
     def test_311_keyword_is_tiered_in_its_own_file(
         self, exporter, temp_db, temp_output_dir
     ):
@@ -758,6 +776,7 @@ class TestInterpreterFloorTiering:
         exporter.export_language("es", overwrite=True)
         assert "implicit_params" not in _load(_pack_file(temp_output_dir, "es", "3.13"))
 
+    @NEEDS_UNICODE_15_1
     def test_tiering_is_idempotent(self, exporter, temp_db, temp_output_dir):
         """Re-export must not re-strip, re-tier, or churn last_updated."""
         self._populate_zwj(temp_db)
@@ -773,6 +792,7 @@ class TestInterpreterFloorTiering:
         assert d310["keywords"]["while"] == "t_while"
         assert d313["keywords"]["while"] == f"t_whi{ZWJ}le"
 
+    @NEEDS_UNICODE_15_1
     def test_build_version_sections_tiers_without_touching_disk(
         self, exporter, temp_db, temp_output_dir
     ):
@@ -810,6 +830,7 @@ class TestInterpreterFloorTiering:
         assert sections == {}
         assert missing
 
+    @NEEDS_UNICODE_15_1
     def test_strip_collision_within_a_section_raises(
         self, exporter, temp_db, temp_output_dir
     ):
@@ -831,6 +852,7 @@ class TestInterpreterFloorTiering:
         # Nothing was written — the guard runs before any file is opened.
         assert not (temp_output_dir / "si").exists()
 
+    @NEEDS_UNICODE_15_1
     def test_strip_collision_across_sections_raises(self, exporter, temp_db):
         """Cross-section too: sections share one token namespace."""
         ids = _populate_full_language(temp_db, "si")
@@ -840,6 +862,7 @@ class TestInterpreterFloorTiering:
         with pytest.raises(InterpreterFloorCollisionError, match="builtins.print"):
             exporter.export_language("si", overwrite=True)
 
+    @NEEDS_UNICODE_15_1
     def test_strip_collision_across_version_files_raises(self, exporter, temp_db):
         """The pre-3.13 packs chain by ``extends``, so a 3.10 keyword and
         a 3.12 keyword collide just as fatally.
@@ -855,6 +878,7 @@ class TestInterpreterFloorTiering:
         with pytest.raises(InterpreterFloorCollisionError, match="keywords.type"):
             exporter.export_language("si", overwrite=True)
 
+    @NEEDS_UNICODE_15_1
     def test_bulk_export_does_not_swallow_a_strip_collision(self, exporter, temp_db):
         ids = _populate_full_language(temp_db, "si")
         _reselect(temp_db, ids, "si", "keyword", "while", f"t_gg{ZWJ}hh")
@@ -864,6 +888,7 @@ class TestInterpreterFloorTiering:
             exporter.export_all_languages(overwrite=True)
         assert isinstance(excinfo.value.failures["si"], InterpreterFloorCollisionError)
 
+    @NEEDS_UNICODE_15_1
     def test_dual_slot_type_may_differ_by_a_conjunct(
         self, exporter, temp_db, temp_output_dir
     ):
@@ -892,6 +917,7 @@ class TestInterpreterFloorTiering:
             f"t_ty{ZWJ}pe"
         )
 
+    @NEEDS_UNICODE_15_1
     def test_a_different_term_still_collides_with_a_type_slot(
         self, exporter, temp_db, temp_output_dir
     ):
@@ -930,6 +956,7 @@ class TestInterpreterFloorTiering:
         )
 
 
+@NEEDS_UNICODE_15_1
 class TestKatakanaMiddleDotTiering:
     """CORE-1905: the tiering mechanism is not ZWJ-specific.
 
@@ -984,6 +1011,7 @@ class TestKatakanaMiddleDotTiering:
             exporter.export_language("ja", overwrite=True)
 
 
+@NEEDS_TELUGU_NUKTA
 class TestUnstrippableXIDCharacters:
     """Tiering deletes a character, so it may only delete meaningless ones.
 

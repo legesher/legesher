@@ -9,6 +9,7 @@ import pytest
 
 from legesher_core.round_trip import first_divergence
 from legesher_core.transformer import TokenTranslator
+from tests.interpreter_gaps import xfail_if_return_hop_is_inert
 
 
 class TestRoundTripTranslation:
@@ -99,7 +100,12 @@ class TestRoundTripTranslation:
         assert "# This is a comment" in spanish  # Comment unchanged
 
     def test_simple_function_round_trip_arabic(
-        self, en_to_ar_translator, ar_to_en_translator, arabic_keywords, arabic_builtins
+        self,
+        request,
+        en_to_ar_translator,
+        ar_to_en_translator,
+        arabic_keywords,
+        arabic_builtins,
     ):
         """Test EN → AR → EN for simple function (RTL)."""
         original = "def greet():\n    print('Hello')"
@@ -108,6 +114,9 @@ class TestRoundTripTranslation:
         arabic = en_to_ar_translator.translate_code(original, "en", "ar")
         assert arabic_keywords["def"] in arabic
         assert arabic_builtins["print"] in arabic
+        # `print` renders with harakat, which CPython 3.10/3.11's tokenizer
+        # reads as fragments (interpreter_gaps.py gap 1, CORE-2192).
+        xfail_if_return_hop_is_inert(request, original, arabic)
 
         # Translate back to English
         back_to_english = ar_to_en_translator.translate_code(arabic, "ar", "en")

@@ -49,6 +49,7 @@ import sys
 import tokenize
 import unicodedata
 from collections import Counter
+from collections.abc import Iterable
 
 import pytest
 
@@ -88,8 +89,21 @@ def _tokenizer_gap_reason(fragments: list[str]) -> str:
         f"{sys.version_info.minor}) spells NAME as \\w+, which excludes marks "
         f"and format characters; the return hop reads {shown} as ERRORTOKEN "
         "fragments and never matches the rendering they belong to "
-        "(tests/interpreter_gaps.py, gap 1)"
+        "(tests/interpreter_gaps.py, gap 1; CORE-2192)"
     )
+
+
+def fragmenting_renderings(renderings: Iterable[str]) -> list[str]:
+    """The renderings the running tokenizer cannot read as one NAME (gap 1).
+
+    Empty with the C tokenizer. For a test whose inputs are drawn at random
+    (Hypothesis), so that whether a given example contains such a rendering is
+    not known in advance, this is the vocabulary-level form of
+    :func:`translated_fragments`.
+    """
+    if not PURE_PYTHON_TOKENIZER:
+        return []
+    return sorted({value for value in renderings if error_tokens(value)})
 
 
 def xfail_if_return_hop_is_inert(

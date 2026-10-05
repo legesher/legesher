@@ -36,6 +36,7 @@ from pydantic import ValidationError
 from legesher_i18n.db import TranslationDatabase
 from legesher_i18n.pack_loader import LanguagePack, LanguagePackLoader
 from legesher_i18n.schema_validator import LanguagePackSchema, SchemaValidator
+from tests.interpreter_gaps import IDENTIFIER_RULES_ARE_UNICODE_15_1
 from legesher_i18n.selection import (
     MAX_SYMBOL_NAME_LENGTH,
     vocabulary_value_error,
@@ -147,10 +148,17 @@ class TestPublishGate:
     def test_variable_convention_rejects_a_313_only_character(self) -> None:
         # ZWJ is XID_Continue from CPython 3.13. A pack translation can be
         # tiered into a 3.13 overlay; advice has no overlay to live in.
+        # Before Unicode 15.1 the value is no identifier at all, and the
+        # rejection says so instead.
         error = vocabulary_value_error(
             "variable_conventions", "loop_index", "a" + chr(0x200D) + "b"
         )
-        assert error is not None and "3.13" in error
+        reason = (
+            "3.13"
+            if IDENTIFIER_RULES_ARE_UNICODE_15_1
+            else "not a valid Python identifier"
+        )
+        assert error is not None and reason in error
 
     def test_unknown_section_is_reported_not_silently_passed(self) -> None:
         assert vocabulary_value_error("cultural_notes", "x", "y") is not None

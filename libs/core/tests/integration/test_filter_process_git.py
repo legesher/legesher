@@ -18,6 +18,7 @@ from legesher_core.filter_process import BatchStoredReader
 from legesher_core.git_filter import GitFilter
 from legesher_core.stored_form import keyword_table, smudge_text
 from tests.corpus import corpus_for
+from tests.interpreter_gaps import PURE_PYTHON_TOKENIZER
 
 FILTER = f"{shlex.quote(sys.executable)} -m legesher_core"
 RUNNING = f"{sys.version_info.major}.{sys.version_info.minor}"
@@ -112,7 +113,24 @@ class TestUnderGit:
         )
 
 
-LANGUAGES = ("es", "ar", "hi", "zh", "am")
+#: On CPython 3.10/3.11 the pure-Python tokenizer reads a Hindi keyword (a
+#: virama or vowel sign) as fragments, so no block is identified and both
+#: filters store every file unchanged: equal, and vacuous (interpreter_gaps.py
+#: gap 1). The ``nothing was normalized`` checks below catch exactly that.
+HINDI_KEYWORDS_FRAGMENT = pytest.mark.xfail(
+    PURE_PYTHON_TOKENIZER,
+    strict=True,
+    reason="CORE-2192: pure-Python tokenize fragments Hindi keywords, so the "
+    "filter normalizes nothing (interpreter_gaps.py gap 1)",
+)
+
+LANGUAGES = (
+    "es",
+    "ar",
+    pytest.param("hi", marks=HINDI_KEYWORDS_FRAGMENT),
+    "zh",
+    "am",
+)
 
 
 def corpus_with_strays(language: str) -> dict[str, bytes]:
@@ -150,6 +168,7 @@ def test_the_process_stores_what_the_single_file_filter_computes(tmp_path, langu
     assert any(stored[name] != texts[name] for name in texts), "nothing was normalized"
 
 
+@HINDI_KEYWORDS_FRAGMENT
 def test_byte_identical_to_the_single_file_command_under_git(tmp_path):
     """Both filters driven by git, Devanagari (combining marks) end to end."""
     texts = corpus_with_strays("hi")

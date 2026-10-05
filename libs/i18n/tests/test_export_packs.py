@@ -10,12 +10,14 @@ from __future__ import annotations
 
 import json
 import importlib.util
+import inspect
 import re
 import sys
 from pathlib import Path
 from unittest import mock
 
 import pytest
+from tests.interpreter_gaps import NEEDS_UNICODE_15_1
 
 _I18N_ROOT = Path(__file__).resolve().parents[1]
 _SCRIPT = _I18N_ROOT / "scripts" / "export_packs.py"
@@ -1268,6 +1270,7 @@ def test_package_version_matches_each_pack_pyproject(exported: Path) -> None:
         assert row["target"] == "python"
 
 
+@NEEDS_UNICODE_15_1
 def test_main_wires_every_push_gate_and_pushes_last(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1756,3 +1759,23 @@ def test_null_version_added_ranks_by_the_shared_resolution(
     row = next(r for r in terminology if r["source_term"] == "X.reworded")
     assert row["source_text"] == "current wording"
     assert row["pl_versions"] == list(export_packs.VERSIONS)
+
+
+# Every test built on the every-tier export needs the identifier rules of the
+# ja and si 3.13+ tiers (tests/interpreter_gaps.py). One rule, applied here to
+# each test, module-level or in a class, that takes one of the fixtures that
+# run the export, rather than a marker on each test.
+_EVERY_TIER_FIXTURES = frozenset({"rows", "exported", "terminology"})
+
+
+def _runs_the_export(test: object) -> bool:
+    return bool(_EVERY_TIER_FIXTURES & set(inspect.signature(test).parameters))
+
+
+for _name, _obj in list(globals().items()):
+    if _name.startswith("test_") and _runs_the_export(_obj):
+        globals()[_name] = NEEDS_UNICODE_15_1(_obj)
+    elif _name.startswith("Test") and isinstance(_obj, type):
+        for _method_name, _method in list(vars(_obj).items()):
+            if _method_name.startswith("test_") and _runs_the_export(_method):
+                setattr(_obj, _method_name, NEEDS_UNICODE_15_1(_method))

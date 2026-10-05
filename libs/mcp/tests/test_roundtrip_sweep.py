@@ -19,7 +19,10 @@ A failure names the language, the file, and the first line that diverged.
 
 from __future__ import annotations
 
+import functools
+
 import pytest
+from legesher_core import create_translator_from_language_pack
 from legesher_core.round_trip import first_divergence
 from mcp import ClientSession
 from mcp.shared.memory import create_connected_server_and_client_session
@@ -29,8 +32,18 @@ from legesher_mcp.schemas import DEFAULT_PYTHON_VERSION
 from legesher_mcp.server import mcp as server
 from tests.conftest import call_ok
 from tests.corpus import CorpusFile, corpus_for
+from tests.interpreter_gaps import (
+    grammar_this_interpreter_can_compile,
+    xfail_if_return_hop_is_inert,
+)
 
 pytestmark = pytest.mark.anyio
+
+#: The corpus files this sweep can cover. The server translates for
+#: ``DEFAULT_PYTHON_VERSION``, but it compiles and tokenizes with the
+#: interpreter it runs on, so on an older interpreter the files that need a
+#: newer grammar (``except*``, PEP 695) cannot be checked (CORE-2334).
+SWEEP_GRAMMAR = grammar_this_interpreter_can_compile(DEFAULT_PYTHON_VERSION)
 
 #: The per-commit sample: three packs chosen for script and direction spread
 #: rather than at random, so a failure is reproducible from the name alone.
@@ -61,6 +74,12 @@ KNOWN_ROUND_TRIP_FAILURES: dict[tuple[str, str], str] = {
         "CORE-1840: identifier `y` collides with the pack's word for `and`"
     ),
 }
+
+
+@functools.cache
+def _forward(language: str):
+    """The engine's EN -> native translator, as the server builds it."""
+    return create_translator_from_language_pack("python", language, DEFAULT_PYTHON_VERSION)
 
 
 def all_pack_languages() -> list[str]:
@@ -157,7 +176,7 @@ async def assert_round_trips(
 
 
 @pytest.mark.parametrize("language", SAMPLE_PACKS)
-@pytest.mark.parametrize("entry", corpus_for(DEFAULT_PYTHON_VERSION), ids=lambda e: e.name)
+@pytest.mark.parametrize("entry", corpus_for(SWEEP_GRAMMAR), ids=lambda e: e.name)
 async def test_round_trip_sample(
     client: ClientSession, language: str, entry: CorpusFile, request: pytest.FixtureRequest
 ) -> None:
@@ -165,6 +184,9 @@ async def test_round_trip_sample(
     known = KNOWN_ROUND_TRIP_FAILURES.get((language, entry.name))
     if known:
         request.applymarker(pytest.mark.xfail(strict=True, reason=known))
+    else:
+        native = _forward(language).translate_code(entry.source, "en", language)
+        xfail_if_return_hop_is_inert(request, entry.source, native)
     await assert_round_trips(client, language, entry, DEFAULT_PYTHON_VERSION)
 
 
@@ -177,14 +199,14 @@ async def test_sample_packs_are_actually_installed() -> None:
 
 async def test_corpus_is_not_silently_empty() -> None:
     """Guards the version gate: a bad comparison could filter everything out."""
-    entries = corpus_for(DEFAULT_PYTHON_VERSION)
+    entries = corpus_for(SWEEP_GRAMMAR)
     assert len(entries) >= len(SAMPLE_PACKS)
     assert all(entry.source.strip() for entry in entries)
 
 
 def test_corpus_is_valid_python() -> None:
     """The corpus has to compile, or the sweep is testing broken input."""
-    for entry in corpus_for(DEFAULT_PYTHON_VERSION):
+    for entry in corpus_for(SWEEP_GRAMMAR):
         compile(entry.source, entry.name, "exec", dont_inherit=True)
 
 
@@ -201,7 +223,7 @@ async def test_round_trip_every_pack() -> None:
     """
     languages = all_pack_languages()
     assert languages, "no packs discovered — the sweep would pass vacuously"
-    entries = corpus_for(DEFAULT_PYTHON_VERSION)
+    entries = corpus_for(SWEEP_GRAMMAR)
 
     failures: list[str] = []
     fixed: list[str] = []

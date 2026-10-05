@@ -15,6 +15,7 @@ from mcp import ClientSession
 
 from legesher_mcp.engine import get_engine
 from tests.conftest import assert_sanitized, call_err, call_ok
+from tests.interpreter_gaps import NEEDS_UNICODE_15_1
 
 pytestmark = pytest.mark.anyio
 
@@ -430,6 +431,7 @@ async def test_unknown_language_is_a_clean_error(client: ClientSession) -> None:
     assert_sanitized(message)
 
 
+@NEEDS_UNICODE_15_1
 async def test_sinhala_conjunct_zwj_is_accepted(client: ClientSession) -> None:
     """Sinhala forms conjuncts with virama+ZWJ, so U+200D is orthography here.
 

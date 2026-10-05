@@ -24,6 +24,7 @@ from legesher_i18n.script_policy import (
     supported_scripts,
 )
 from tests import language_packs_root
+from tests.interpreter_gaps import NEEDS_UNICODE_15_1
 
 # Shipped packs live at libs/i18n/language-packs/<target>; the target segment
 # comes from the shared helper (default python).
@@ -207,6 +208,7 @@ class TestIdentifierAllowlist:
         # A block-only table calls it Unknown and rejects a value we ship.
         assert identifier_script_of("・") == "Katakana"
 
+    @NEEDS_UNICODE_15_1
     def test_the_shipped_japanese_divmod_rendering_is_writable(self) -> None:
         value = "ディビジョン・モジュール"
         assert value.isidentifier()

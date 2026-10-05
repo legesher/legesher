@@ -18,6 +18,7 @@ from legesher_core.tree_sitter.extractor import TranslatableExtractor
 from legesher_core.tree_sitter.identifier_map import IdentifierMap
 from legesher_core.tree_sitter.identifier_validator import IdentifierValidator
 from legesher_core.tree_sitter.llm_translator import LLMTranslator
+from tests.interpreter_gaps import IDENTIFIER_RULES_ARE_UNICODE_15_1
 
 # ---------------------------------------------------------------------------
 # Mock backend — returns ORIGINAL text for unknown keys
@@ -345,13 +346,15 @@ class TestIdentifierValidatorUnicode:
         assert validator.is_valid("\u0915\u0930_\u0917\u0923\u0928\u093e")
 
     def test_zero_width_chars_in_identifier(self, validator):
-        """Identifier with zero-width joiner — Python considers it valid."""
+        """A zero-width joiner is valid exactly where the interpreter says so."""
         ident = "foo\u200dbar"
-        # Python's str.isidentifier() accepts ZWJ (it is category Cf,
-        # which is valid in identifier_continue).  This is a known
+        # ZWJ joined Other_ID_Continue in Unicode 15.1, so CPython 3.13+
+        # accepts it in an identifier and 3.10 to 3.12 reject it
+        # (tests/interpreter_gaps.py, gap 2). The validator must agree with the
+        # running interpreter either way. On 3.13+ it is a known
         # confusable-character issue but not a syntax error.
         result = validator.is_valid(ident)
-        assert result is True
+        assert result is IDENTIFIER_RULES_ARE_UNICODE_15_1
 
     def test_bidi_override_in_identifier(self, validator):
         """Identifier with RTL override character should be invalid or sanitized."""

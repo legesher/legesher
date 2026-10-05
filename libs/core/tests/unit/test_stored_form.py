@@ -4,6 +4,7 @@ Expected values are pack literals checked by hand against the ``3.10.yml``
 base packs, never computed by the code under test.
 """
 
+import sys
 import unicodedata
 
 import pytest
@@ -13,6 +14,17 @@ from legesher_core.stored_form import (
     clean_text,
     keyword_table,
     smudge_text,
+)
+from tests.interpreter_gaps import PURE_PYTHON_TOKENIZER
+
+#: CPython 3.10/3.11 read a keyword that carries a combining mark as
+#: NAME/ERRORTOKEN fragments, so the block it belongs to is never identified
+#: and the stray is left as typed (interpreter_gaps.py gap 1).
+MARKS_FRAGMENT = pytest.mark.xfail(
+    PURE_PYTHON_TOKENIZER,
+    strict=True,
+    reason="CORE-2192: pure-Python tokenize fragments keywords with marks; "
+    "the block is not identified (interpreter_gaps.py gap 1)",
 )
 
 ES = keyword_table("es")
@@ -43,12 +55,17 @@ class TestEnglishStraysJoinTheirBlock:
             "ግለጽ f(x):\n    ከሆነ x:\n        አልፍ\n    መልስ ምንም\n"
         )
 
+    @MARKS_FRAGMENT
     def test_an_english_keyword_in_a_hindi_file_becomes_hindi(self):
         text = "परिभाषितकरना f(x):\n    जबतककि x:\n        pass\n"
         assert clean_text(text, local=HI) == (
             "परिभाषितकरना f(x):\n    जबतककि x:\n        कोईकार्रवाईनहीं\n"
         )
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 11),
+        reason="`except*` is 3.11+ syntax; the 3.10 pack has no `excepto*` to store",
+    )
     def test_the_compound_except_star_keeps_its_star(self):
         text = "probar:\n    pasar\nexcept* ValueError:\n    pasar\n"
         assert clean_text(text, local=ES) == (
@@ -98,12 +115,20 @@ class TestNothingElseMoves:
     def test_empty_input_is_returned_as_is(self, text):
         assert clean_text(text, local=ES) == text
 
+    @pytest.mark.xfail(
+        PURE_PYTHON_TOKENIZER,
+        strict=True,
+        reason="CORE-2356: pure-Python tokenize reads an unterminated string's quote "
+        "as an ERRORTOKEN and tokenizes on, so the filter rewrites the source as if "
+        "it were valid (here the stray return before the quote)",
+    )
     def test_source_that_cannot_be_tokenized_is_returned_as_is(self):
         # The `return` would be a stray, but without tokens there are no
         # safe offsets to rewrite at.
         text = 'definir f():\n    return "unterminated\n'
         assert clean_text(text, local=ES, stored="definir f():\n    pasar\n") == text
 
+    @MARKS_FRAGMENT
     def test_an_nfd_spelled_keyword_still_identifies_the_block(self):
         nfd_def = unicodedata.normalize("NFD", "défini")
         assert nfd_def != "défini"
