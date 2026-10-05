@@ -12,6 +12,8 @@ Tests cover:
 
 import time
 
+import pytest
+
 from legesher_language_server.config import LanguageServerConfig
 from legesher_language_server.providers.semantic_tokens import (
     TOKEN_TYPE_CLASS,
@@ -22,6 +24,7 @@ from legesher_language_server.providers.semantic_tokens import (
     provide_semantic_tokens,
 )
 from legesher_language_server.server import LegesherLanguageServer
+from tests.timing import assert_within
 
 
 class TestSemanticTokensProvider:
@@ -294,8 +297,9 @@ sino:
         # Should return empty list (no keywords loaded)
         assert len(tokens) == 0
 
+    @pytest.mark.timing
     def test_performance_large_file(self):
-        """Test performance requirement: <100ms for 1000 lines."""
+        """Test performance requirement: <100ms for 1000 lines, under make bench (CORE-2321)."""
         # Generate 1000-line file with keywords
         lines = []
         for i in range(250):  # 250 functions × 4 lines = 1000 lines
@@ -333,8 +337,8 @@ sino:
         # 250 functions × (definir, func_N, si, verdadero, devolver) = 1250 tokens
         assert len(tokens) == 1250
 
-        # Performance requirement: <100ms
-        assert elapsed_ms < 100, f"Performance requirement failed: {elapsed_ms:.2f}ms"
+        # Performance requirement: <100ms, enforced only under make bench
+        assert_within(elapsed_ms, 100, "Semantic tokens for 1000 lines")
 
         print(f"✓ Performance test passed: {elapsed_ms:.2f}ms for 1000 lines")
 

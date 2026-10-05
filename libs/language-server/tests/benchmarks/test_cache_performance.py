@@ -1,12 +1,21 @@
 """Performance benchmarks for CORE-446 cache improvements.
 
 This validates that refactored code meets performance targets:
-- Cold cache pack load: <500ms (relaxed for CI; local dev typically <50ms)
+- Cold cache pack load: an lru_cache miss that returns the parsed pack;
+  <500ms under ``make bench`` (local dev typically <50ms)
 - Warm cache pack load: served from the lru_cache (asserted by its hit
   count), at least WARM_SPEEDUP_FLOOR times faster than the cold load
-  measured in the same test, and under WARM_CEILING_MS
+  measured in the same test; under WARM_CEILING_MS under ``make bench``
 - Cache hit rate: >95% after warmup
-- Completion latency with warm cache: <50ms
+- Completion latency with warm cache: every request a cache hit; slowest
+  request <50ms under ``make bench``
+
+The absolute bounds (500ms cold, 50ms slowest request, and the
+WARM_CEILING_MS backstop) go through :func:`tests.timing.assert_within`,
+which enforces them only under ``make bench`` (CORE-2321). The default run
+asserts the state those bounds stood in for: the cold load is a miss, the
+warm requests are hits, and each warm read beats its cold reference by the
+documented ratio.
 
 Warm-path assertions are by state first, timing second (CORE-2129). A
 cached load is a dict hit that takes microseconds, so the former sub-10ms
@@ -17,11 +26,14 @@ the warm timing with a cold load taken in the same test on the same machine,
 so the bound scales with the runner, plus an absolute ceiling as a backstop.
 
 Run with: uv run pytest tests/benchmarks/test_cache_performance.py -v -s
+Bounds on: uv run pytest tests/benchmarks/test_cache_performance.py -m timing --timing --no-cov -s
 """
 
 import time
 
 import pytest
+
+from tests.timing import assert_within
 
 #: Backstop only. The proof that a warm load took the cache path is the
 #: lru_cache hit count (:func:`cache_hits`), asserted by state in every warm
@@ -37,20 +49,20 @@ import pytest
 WARM_SPEEDUP_FLOOR = 2
 
 #: Backstop for the relative bound: however slow the cold load was, a cache
-#: hit that takes longer than this is broken regardless of the ratio.
+#: hit that takes longer than this is broken regardless of the ratio. It is an
+#: absolute bound, so it is enforced only under ``make bench`` (CORE-2321);
+#: the hit count and the ratio carry the default run.
 WARM_CEILING_MS = 100
 
 
 def assert_warm(warm_ms: float, cold_ms: float, what: str) -> None:
-    """Assert a warm timing against its cold reference and the ceiling."""
+    """Assert a warm timing against its cold reference, and the ceiling under make bench."""
     bound_ms = cold_ms / WARM_SPEEDUP_FLOOR
     assert warm_ms < bound_ms, (
         f"{what} took {warm_ms:.3f}ms warm vs {cold_ms:.2f}ms cold; "
         f"expected at least {WARM_SPEEDUP_FLOOR}x faster (<{bound_ms:.2f}ms)"
     )
-    assert warm_ms < WARM_CEILING_MS, (
-        f"{what} took {warm_ms:.3f}ms warm, expected <{WARM_CEILING_MS}ms"
-    )
+    assert_within(warm_ms, WARM_CEILING_MS, f"{what} (warm)")
 
 
 def cache_hits() -> int:
@@ -80,24 +92,31 @@ def assert_cache_hit(hits_before: int, what: str, expected: int = 1) -> None:
 class TestLanguagePackLoaderCache:
     """Test LanguagePackLoader LRU cache performance (CORE-446)."""
 
+    @pytest.mark.timing
     def test_cold_cache_pack_load(self):
         """Test first load of language pack (cold cache).
 
         Success Criteria:
-            - First load completes in <500ms (relaxed for Windows CI)
+            - The load after clear_cache() is an lru_cache miss, not a hit
             - Pack is successfully loaded
+            - Under ``make bench``, it completes in <500ms
         """
         from legesher_i18n import LanguagePackLoader
 
         loader = LanguagePackLoader()
 
-        # Clear cache to ensure cold start
+        # Load first, then clear: the measured load reuses this loader, so it
+        # is a miss only if clear_cache() really emptied the cache. A fresh
+        # loader would miss either way, since the instance is part of the key.
+        loader.load(language="es", target="python", version="3.10")
         loader.clear_cache()
+        before = loader.get_cache_stats()
 
         # Measure cold load
         start = time.perf_counter()
         pack = loader.load(language="es", target="python", version="3.10")
         elapsed_ms = (time.perf_counter() - start) * 1000
+        after = loader.get_cache_stats()
 
         print(f"\n{'=' * 60}")
         print("CORE-446: Cold cache pack load")
@@ -108,16 +127,23 @@ class TestLanguagePackLoaderCache:
         print(f"Keywords loaded: {len(pack.keywords)}")
         print(f"{'=' * 60}\n")
 
+        # The cold path by state (CORE-2321): one miss, no hit, one new entry.
+        assert after["misses"] - before["misses"] == 1, "the cold load was not an lru_cache miss"
+        assert after["hits"] == before["hits"], "the cold load was served from the lru_cache"
+        assert after["size"] - before["size"] == 1, "the cold load was not stored in the lru_cache"
         assert pack is not None
         assert len(pack.keywords) > 30
-        assert elapsed_ms < 500, f"Cold load took {elapsed_ms:.2f}ms, expected <500ms"
+        assert pack.keywords["def"] == "definir"
+        assert_within(elapsed_ms, 500, "Cold load")
 
+    @pytest.mark.timing
     def test_warm_cache_pack_load(self):
         """Test cached load of language pack (warm cache).
 
         Success Criteria:
             - Cached load is at least WARM_SPEEDUP_FLOOR times faster than the
-              cold load measured here, and under WARM_CEILING_MS
+              cold load measured here, and under WARM_CEILING_MS under
+              ``make bench``
             - Pack is identical to first load
         """
         from legesher_i18n import LanguagePackLoader
@@ -202,6 +228,7 @@ class TestLanguagePackLoaderCache:
 
         assert hit_rate > 95, f"Cache hit rate {hit_rate:.1f}%, expected >95%"
 
+    @pytest.mark.timing
     def test_multi_language_caching(self):
         """Test that multiple languages cache independently.
 
@@ -261,13 +288,14 @@ class TestLanguagePackLoaderCache:
 class TestKeywordDocsCache:
     """Test keyword_docs.py cache performance after refactoring."""
 
+    @pytest.mark.timing
     def test_keyword_translation_with_cache(self):
         """Test keyword translation performance with LanguagePackLoader cache.
 
         Success Criteria:
             - Repeated lookups use cache
             - Second lookup at least WARM_SPEEDUP_FLOOR times faster than the
-              first, and under WARM_CEILING_MS
+              first, and under WARM_CEILING_MS under ``make bench``
         """
         from legesher_language_server.utils.keyword_docs import (
             KeywordDocumentation,
@@ -312,12 +340,13 @@ class TestKeywordDocsCache:
 class TestEnhancedIntelligenceProxyCache:
     """Test enhanced_intelligence.py cache performance after refactoring."""
 
+    @pytest.mark.timing
     def test_keyword_map_initialization_with_cache(self):
         """Test EnhancedIntelligenceProxy initialization uses cached language pack.
 
         Success Criteria:
             - Second initialization at least WARM_SPEEDUP_FLOOR times faster
-              than the first, and under WARM_CEILING_MS
+              than the first, and under WARM_CEILING_MS under ``make bench``
             - Keyword maps are identical
         """
         from legesher_language_server.config import LanguageServerConfig
@@ -365,13 +394,15 @@ class TestEnhancedIntelligenceProxyCache:
 class TestCompletionLatency:
     """Test end-to-end completion latency (CORE-446 primary goal)."""
 
+    @pytest.mark.timing
     def test_completion_latency_warm_cache(self):
         """Test completion latency with warm cache.
 
         Success Criteria:
-            - Completion latency <50ms with warm cache
+            - Every request is an lru_cache hit
             - Average latency at least WARM_SPEEDUP_FLOOR times faster than
               the cold lookup measured here
+            - Under ``make bench``, the slowest request is <50ms
             - This is the primary CORE-446 performance target
         """
         from legesher_language_server.utils.keyword_docs import (
@@ -430,10 +461,12 @@ class TestCompletionLatency:
         print(f"Status: {'✓ PASS' if max_latency < 50 else '✗ FAIL'}")
         print(f"{'=' * 60}\n")
 
-        assert max_latency < 50, f"Max latency {max_latency:.2f}ms, expected <50ms"
         # One load per request, so every request must have been a hit
         assert_cache_hit(hits_before, "Completion requests", expected=len(keywords))
         assert_warm(avg_latency, cold_ms, "Average completion latency")
+        # The slowest single timer read measures the scheduler as much as the
+        # cache, so it is enforced only under make bench (CORE-2321).
+        assert_within(max_latency, 50, "Slowest completion request")
 
 
 if __name__ == "__main__":

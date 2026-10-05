@@ -20,6 +20,7 @@ import logging
 import pytest
 
 from legesher_language_server.utils.keyword_docs import KeywordDocumentation
+from tests.timing import assert_within
 
 
 class TestKeywordDocsErrorHandling:
@@ -58,27 +59,34 @@ class TestKeywordDocsErrorHandling:
         result = keyword_docs.get_keyword_translation("nonexistent_keyword_xyz", "es")
         assert result is None
 
+    @pytest.mark.timing
     def test_caching_behavior(self, keyword_docs):
         """Test that repeated calls use cached language pack.
 
-        This indirectly tests CORE-446 cache implementation.
-        Repeated calls should be fast (using cache) not slow (reloading YAML).
+        This indirectly tests CORE-446 cache implementation. The proof is the
+        lru_cache hit count (CORE-2321): a repeated call must not reload the
+        YAML. Its time is checked only under ``make bench``.
         """
         import time
+
+        from legesher_i18n import LanguagePackLoader
 
         # First call - loads from cache or disk
         result1 = keyword_docs.get_keyword_translation("def", "es")
 
         # Second call - should use cache
+        hits_before = LanguagePackLoader.load.cache_info().hits
         start = time.perf_counter()
         result2 = keyword_docs.get_keyword_translation("class", "es")
         second_time = (time.perf_counter() - start) * 1000
+        hits = LanguagePackLoader.load.cache_info().hits - hits_before
 
         assert result1 == "definir"
         assert result2 == "clase"
 
-        # Second call should be fast (using cache) - validates CORE-446 cache is working
-        assert second_time < 5, f"Cached call took {second_time:.2f}ms, expected <5ms"
+        # The CORE-446 cache path, proved by its hit count
+        assert hits == 1, f"the repeated call produced {hits} lru_cache hit(s), expected 1"
+        assert_within(second_time, 5, "Cached call")
 
 
 if __name__ == "__main__":

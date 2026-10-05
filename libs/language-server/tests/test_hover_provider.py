@@ -20,6 +20,7 @@ from legesher_language_server.providers.hover import (
     provide_hover,
 )
 from legesher_language_server.server import LegesherLanguageServer
+from tests.timing import assert_within
 
 
 class TestExtractWordAtPosition:
@@ -491,6 +492,7 @@ greet("World")
         assert hover is None
 
 
+@pytest.mark.timing
 class TestHoverProviderPerformance:
     """Performance tests for hover provider."""
 
@@ -539,7 +541,7 @@ class TaxCalculator:
         duration = (time.perf_counter() - start) * 1000  # Convert to ms
 
         assert content is not None
-        assert duration < 50, f"Keyword hover took {duration:.2f}ms (target: <50ms)"
+        assert_within(duration, 50, "Keyword hover")
 
     @pytest.mark.asyncio
     async def test_builtin_hover_performance(self, provider):
@@ -549,7 +551,7 @@ class TaxCalculator:
         duration = (time.perf_counter() - start) * 1000
 
         assert content is not None
-        assert duration < 100, f"Builtin hover took {duration:.2f}ms (target: <100ms)"
+        assert_within(duration, 100, "Builtin hover")
 
     def test_user_function_hover_performance(self, provider):
         """Test user function hover completes in <200ms."""
@@ -558,7 +560,7 @@ class TaxCalculator:
         duration = (time.perf_counter() - start) * 1000
 
         assert content is not None
-        assert duration < 200, f"User function hover took {duration:.2f}ms (target: <200ms)"
+        assert_within(duration, 200, "User function hover")
 
     @pytest.mark.asyncio
     async def test_overall_hover_performance(self, provider):
@@ -577,4 +579,4 @@ class TaxCalculator:
         durations.sort()
         p90_duration = durations[89]  # 90th percentile
 
-        assert p90_duration < 100, f"90th percentile: {p90_duration:.2f}ms (target: <100ms)"
+        assert_within(p90_duration, 100, "Hover at the 90th percentile")

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from tests import timing
 from tests.fixtures.mock_output_channel import MockOutputChannel
 
 # ============================================================================
@@ -210,8 +211,26 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     )
 
 
+def pytest_addoption(parser):
+    """``--timing`` turns on the wall-clock bounds in ``tests/timing.py``."""
+    parser.addoption(
+        "--timing",
+        action="store_true",
+        default=False,
+        help="enforce wall-clock bounds (make bench passes this with -m timing)",
+    )
+
+
+def pytest_report_header(config):
+    """Say whether this run enforces wall-clock bounds, so their absence is not silent."""
+    if config.getoption("--timing"):
+        return "timing: assert_within bounds enforced"
+    return "timing: assert_within bounds not enforced (make bench enforces them)"
+
+
 def pytest_configure(config):
-    """Register custom pytest markers."""
+    """Register custom pytest markers, and set the timing mode."""
+    timing.ENFORCED = config.getoption("--timing")
     config.addinivalue_line(
         "markers",
         "langserver_drift: verifies the stub language server still matches a real one",

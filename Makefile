@@ -29,7 +29,7 @@ help:
 	@echo "  make test-mcp             Run MCP server tests"
 	@echo "  make test-mcp-scheduled   Run release-tier MCP suites (all packs, wheel spawn)"
 	@echo "  make test-runtime         Run runtime package tests"
-	@echo "  make bench                Run the pytest-benchmark suites with timing on"
+	@echo "  make bench                Run the benchmark and timing suites with timing on"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make lint                 Run linters (ruff)"
@@ -150,10 +150,15 @@ test-coverage:
 # the results under .benchmarks/ (gitignored) for `pytest-benchmark compare`.
 # One invocation per package: both suites live in a `tests` package, and a
 # single pytest run would import the second `tests.benchmarks` as the first.
+# The language server's timing tests are plain tests, not benchmark fixtures:
+# they run in its default suite with their wall-clock bounds off, and
+# `--timing` turns the bounds on (CORE-2321). `-m timing` selects them, and
+# --no-cov because that subset is not a coverage run.
 bench:
 	@echo "Running benchmarks (timing on, autosave to .benchmarks/)..."
 	cd libs/core && uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-autosave
 	cd libs/legesher && uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-autosave
+	cd libs/language-server && uv run pytest tests/ -m timing --timing --no-cov
 
 # ============================================================================
 # Code Quality

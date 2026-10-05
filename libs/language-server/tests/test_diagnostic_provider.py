@@ -27,6 +27,7 @@ from legesher_language_server.providers.diagnostic import (
     provide_diagnostics,
 )
 from legesher_language_server.server import LegesherLanguageServer
+from tests.timing import assert_within
 
 
 class TestDiagnosticProviderInit:
@@ -561,8 +562,13 @@ class TestDiagnosticProviderCaching:
         assert diagnostics_es[0].message != diagnostics_ar[0].message
 
 
+@pytest.mark.timing
 class TestDiagnosticProviderPerformance:
-    """Test performance requirements."""
+    """Test performance requirements.
+
+    The bounds are enforced only under ``make bench`` (CORE-2321); the
+    functional assertions run in every run.
+    """
 
     @pytest.mark.asyncio
     async def test_diagnostic_response_time_small_file(self):
@@ -578,8 +584,8 @@ class TestDiagnosticProviderPerformance:
         diagnostics = await provider.get_diagnostics()
         elapsed_ms = (time.perf_counter() - start) * 1000
 
-        assert elapsed_ms < 500, f"Took {elapsed_ms:.2f}ms (target: <500ms)"
         assert len(diagnostics) == 1
+        assert_within(elapsed_ms, 500, "Diagnostics for a small file")
 
     @pytest.mark.asyncio
     async def test_diagnostic_response_time_large_file(self):
@@ -598,8 +604,8 @@ class TestDiagnosticProviderPerformance:
         diagnostics = await provider.get_diagnostics()
         elapsed_ms = (time.perf_counter() - start) * 1000
 
-        assert elapsed_ms < 500, f"Took {elapsed_ms:.2f}ms (target: <500ms)"
         assert len(diagnostics) == 1
+        assert_within(elapsed_ms, 500, "Diagnostics for a 500-line file")
 
     @pytest.mark.asyncio
     async def test_diagnostic_valid_code_fast(self):
@@ -632,13 +638,27 @@ result = calculate_tax(val1, val2)
         diagnostics = await provider.get_diagnostics()
         elapsed_ms = (time.perf_counter() - start) * 1000
 
-        assert elapsed_ms < 500, f"Took {elapsed_ms:.2f}ms (target: <500ms)"
         assert len(diagnostics) == 0  # No errors in valid code
+        assert_within(elapsed_ms, 500, "Diagnostics for valid code")
 
     @pytest.mark.asyncio
-    async def test_caching_improves_performance(self):
-        """Test that caching improves performance."""
+    async def test_caching_improves_performance(self, monkeypatch):
+        """Test that caching improves performance.
+
+        The proof is that the second call never builds a translation
+        (CORE-2321): ``_get_translation_template`` runs only on a cache miss.
+        The timing comparison is checked only under ``make bench``.
+        """
         _error_message_cache.clear()
+
+        built = []
+        real_template = DiagnosticProvider._get_translation_template
+
+        def counting_template(self, error_type, variables):
+            built.append(error_type)
+            return real_template(self, error_type, variables)
+
+        monkeypatch.setattr(DiagnosticProvider, "_get_translation_template", counting_template)
 
         provider = DiagnosticProvider(
             source_lang="en",
@@ -651,6 +671,7 @@ result = calculate_tax(val1, val2)
         start1 = time.perf_counter()
         await provider.get_diagnostics()
         duration1 = (time.perf_counter() - start1) * 1000
+        built_by_first_call = list(built)
 
         # Second call (cache hit)
         provider2 = DiagnosticProvider(
@@ -663,10 +684,11 @@ result = calculate_tax(val1, val2)
         await provider2.get_diagnostics()
         duration2 = (time.perf_counter() - start2) * 1000
 
-        # Second call should be same or faster (cache hit)
-        # Both calls are sub-millisecond, so allow generous tolerance
-        # for CI/OS scheduling jitter
-        assert duration2 <= max(duration1 * 5.0, 1.0)
+        # Both calls are sub-millisecond, so only the build count runs in
+        # every run.
+        assert len(built_by_first_call) == 1, "the first call did not build its translation"
+        assert built == built_by_first_call, "the second call rebuilt a cached translation"
+        assert_within(duration2, max(duration1 * 5.0, 1.0), "Diagnostics with a cached translation")
 
 
 class TestDiagnosticProviderEdgeCases:

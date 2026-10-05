@@ -124,6 +124,7 @@ asyncio_mode = "auto"
 addopts = "-v --cov=legesher_language_server --cov-report=term-missing -m 'not scheduled'"
 markers = [
     "scheduled: slow, release-tier suites, excluded from the per-commit run",
+    "timing: measures wall-clock time; bounds enforced only with --timing (make bench)",
 ]
 
 [tool.mypy]

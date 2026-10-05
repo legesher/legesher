@@ -143,7 +143,11 @@ exists to sequence them.
 **Benchmarks are opt-in.** `libs/core/pyproject.toml` and `libs/legesher/pyproject.toml` carry
 `--benchmark-disable` in `addopts`, so the default run executes each benchmark once as a plain test with no
 timing. `make bench` turns timing on (`--benchmark-enable --benchmark-only --benchmark-autosave`), one invocation
-per package, and autosaves the results under each package's `.benchmarks/` (gitignored).
+per package, and autosaves the results under each package's `.benchmarks/` (gitignored). The language server's
+timing tests are plain tests rather than benchmark fixtures: they carry the `timing` marker and pass their
+measurements to `tests/timing.py`'s `assert_within`, which enforces a wall-clock bound only under `--timing`.
+The default run therefore checks their behaviour with the bounds off, and `make bench` runs them with
+`-m timing --timing`.
 
 **The every-pack sweep.** `libs/core/tests/integration/test_every_pack.py` runs in the default core suite
 (`2258 passed, 8 xfailed in 5.27s` on 2026-09-24). It translates, reverses and compiles the shared corpus through
@@ -505,7 +509,8 @@ disagree, this wins.
   still translate; test it that way.
 - **Performance assertions are structural; timing runs only under `make bench`.** In the default run a cache test
   asserts `cache_info().hits`, and any speedup floor is set where scheduler noise cannot trip it, with the reason
-  in a comment (`libs/language-server/tests/benchmarks/test_cache_performance.py` is the model).
+  in a comment (`libs/language-server/tests/benchmarks/test_cache_performance.py` is the model: hit counts and a
+  documented floor in every run, absolute bounds only through `tests/timing.py` under `make bench`).
 - **Property suites are standing per-commit gates.** The Hypothesis suite in `libs/core/tests/property/` runs in
   the default core suite, not on request.
 - **Every new guard or ledger test is proved able to fail before the PR is raised.** Inject the defect in a
@@ -717,7 +722,7 @@ LEGESHER_USE_TREE_SITTER=true
 **Performance Benchmarks**:
 
 ```bash
-# Timing on, benchmarks only, core and legesher in turn
+# Timing on: core and legesher benchmarks, then the language server's timing tests
 make bench
 ```
 

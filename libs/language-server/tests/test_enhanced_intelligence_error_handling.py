@@ -21,6 +21,7 @@ import pytest
 
 from legesher_language_server.config import LanguageServerConfig
 from legesher_language_server.enhanced_intelligence import EnhancedIntelligenceProxy
+from tests.timing import assert_within
 
 
 class TestEnhancedIntelligenceProxyErrorHandling:
@@ -68,28 +69,35 @@ class TestEnhancedIntelligenceProxyErrorHandling:
         assert result.get("الصف") == "class"
         assert len(result) > 30  # Should have all Python keywords
 
+    @pytest.mark.timing
     def test_caching_behavior(self, proxy):
         """Test that repeated calls use cached language pack.
 
-        This indirectly tests CORE-446 cache implementation.
-        Repeated calls should be fast (using cache) not slow (reloading YAML).
+        This indirectly tests CORE-446 cache implementation. The proof is the
+        lru_cache hit count (CORE-2321): a repeated call must not reload the
+        YAML. Its time is checked only under ``make bench``.
         """
         import time
+
+        from legesher_i18n import LanguagePackLoader
 
         # First call - loads from cache or disk
         result1 = proxy._get_keyword_map("es")
 
         # Second call - should use cache
+        hits_before = LanguagePackLoader.load.cache_info().hits
         start = time.perf_counter()
         result2 = proxy._get_keyword_map("es")
         second_time = (time.perf_counter() - start) * 1000
+        hits = LanguagePackLoader.load.cache_info().hits - hits_before
 
         # Verify results are consistent
         assert result1 == result2
         assert len(result1) > 30
 
-        # Second call should be fast (using cache) - validates CORE-446 cache is working
-        assert second_time < 5, f"Cached call took {second_time:.2f}ms, expected <5ms"
+        # The CORE-446 cache path, proved by its hit count
+        assert hits == 1, f"the repeated call produced {hits} lru_cache hit(s), expected 1"
+        assert_within(second_time, 5, "Cached call")
 
     def test_proxy_initialization_loads_target_language(self, config, caplog):
         """Test that EnhancedIntelligenceProxy initialization loads the target language pack."""

@@ -6,6 +6,7 @@ from legesher_language_server.utils.keyword_docs import (
     ParameterTranslation,
     get_param_translator,
 )
+from tests.timing import assert_within
 
 
 class TestParameterTranslation:
@@ -206,25 +207,41 @@ class TestEdgeCases:
 class TestPerformance:
     """Test performance characteristics."""
 
-    def test_lazy_loading_is_fast_second_time(self):
-        """Test that cached lookups are faster than first load."""
+    @pytest.mark.timing
+    def test_lazy_loading_is_fast_second_time(self, monkeypatch):
+        """The pack is loaded once per language; later signatures reuse it.
+
+        The proof is a load count, not a duration (CORE-2321). Both calls take
+        a few milliseconds, so one scheduler hiccup on the second flipped the
+        old ratio. The ratio is still checked under ``make bench``.
+        """
         import time
 
+        from legesher_language_server.utils import keyword_docs
+
+        shared = keyword_docs._get_pack_loader()
+        loads = []
+
+        class CountingLoader:
+            def load(self, **kwargs):
+                loads.append(kwargs["language"])
+                return shared.load(**kwargs)
+
+        monkeypatch.setattr(keyword_docs, "_get_pack_loader", CountingLoader)
         trans = ParameterTranslation()
 
         # First call - loads pack
-        start = time.time()
+        start = time.perf_counter()
         trans.translate_signature("(file=None, sep=',')", "es")
-        first_duration = time.time() - start
+        first_ms = (time.perf_counter() - start) * 1000
 
         # Second call - uses cache
-        start = time.time()
+        start = time.perf_counter()
         trans.translate_signature("(end='\\n', flush=False)", "es")
-        second_duration = time.time() - start
+        second_ms = (time.perf_counter() - start) * 1000
 
-        # Second should be significantly faster (or at least not slower)
-        # Allow some margin for timing variance
-        assert second_duration <= first_duration * 1.5
+        assert loads == ["es"], f"expected one pack load for two signatures, got {loads}"
+        assert_within(second_ms, first_ms * 1.5, "Second signature translation")
 
     def test_memory_efficient_single_language(self):
         """Test that we don't load all 11 languages when only using 1."""

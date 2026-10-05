@@ -24,6 +24,7 @@ from legesher_language_server.providers.completion import (
     provide_completion,
 )
 from legesher_language_server.server import LegesherLanguageServer
+from tests.timing import assert_within
 
 
 @pytest.fixture(autouse=True)
@@ -607,8 +608,13 @@ class Calculator:
         assert len(symbol_items) > 0
 
 
+@pytest.mark.timing
 class TestCompletionProviderPerformance:
-    """Test performance requirements (<50ms)."""
+    """Test performance requirements (<50ms).
+
+    The bounds are enforced only under ``make bench`` (CORE-2321); the
+    functional assertions run in every run.
+    """
 
     @pytest.fixture
     def large_document(self):
@@ -641,8 +647,8 @@ x = 10
         items = provider.get_completions(Position(line=5, character=0))
         duration = (time.perf_counter() - start) * 1000  # Convert to ms
 
-        assert duration < 50, f"Completion took {duration:.2f}ms (target: <50ms)"
         assert len(items) > 0
+        assert_within(duration, 50, "Completion on a small file")
 
     def test_completion_performance_large_file(self, large_document):
         """Test completion time for large file (<50ms)."""
@@ -658,8 +664,8 @@ x = 10
         items = provider.get_completions(Position(line=400, character=0))
         duration = (time.perf_counter() - start) * 1000
 
-        assert duration < 50, f"Completion took {duration:.2f}ms (target: <50ms)"
         assert len(items) > 0
+        assert_within(duration, 50, "Completion on a large file")
 
     def test_symbol_extraction_performance(self, large_document):
         """Test symbol extraction performance."""
@@ -674,8 +680,8 @@ x = 10
         duration = (time.perf_counter() - start) * 1000
 
         # Symbol extraction (AST parsing) should be <30ms for 1000-line file
-        assert duration < 30, f"Symbol extraction took {duration:.2f}ms (target: <30ms)"
         assert len(provider.symbols) > 0
+        assert_within(duration, 30, "Symbol extraction")
 
     def test_completion_caching_performance(self):
         """Test that caching improves performance."""
@@ -705,12 +711,17 @@ x = 10
         provider2.get_completions(Position(line=1, character=0))
         duration2 = (time.perf_counter() - start2) * 1000
 
-        # Second call should be faster (uses cached keyword/builtin items).
-        # Thresholds are loose because both durations are in the microsecond
-        # range on fast hardware — perf_counter() resolution and GC jitter
-        # dominate on shared CI runners. 2.0x captures the real intent
-        # ("caching does not make things slower") while tolerating noise.
-        assert duration2 <= duration1 * 2.0
+        # The second provider reuses the first one's items: the cache, by
+        # identity (CORE-2321). Both durations are in the microsecond range, so
+        # the ratio, "caching does not make things slower", is checked only
+        # under make bench.
+        assert provider2.keyword_items is provider1.keyword_items, (
+            "the second provider rebuilt its keyword items instead of reusing the cache"
+        )
+        assert provider2.builtin_items is provider1.builtin_items, (
+            "the second provider rebuilt its builtin items instead of reusing the cache"
+        )
+        assert_within(duration2, duration1 * 2.0, "Completion with cached items")
 
 
 @pytest.mark.asyncio
