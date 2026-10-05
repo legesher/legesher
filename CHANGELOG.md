@@ -322,12 +322,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   in the output channel, and fell back to Legesher's own answer, because the
   proxy handed its source map a position type that cannot be compared.
   Positions are now converted where they enter the map. Gaps the error hid
-  now show on localized files until their own fixes land: localized builtins
-  and type names are reported as undefined (CORE-2342, CORE-2158); the
-  backend's `Unknown` hover for a localized builtin takes precedence over the
-  localized one (CORE-2179); and a hover between an edit and the next
-  diagnostics request is answered from the text before the edit (CORE-2160).
-  [CORE-2227]
+  now show on localized files until their own fixes land: the backend's
+  hover for a localized builtin takes precedence over the localized one
+  (CORE-2179); and a hover between an edit and the next diagnostics request
+  is answered from the text before the edit (CORE-2160). [CORE-2227]
 - **language-server**: hover and diagnostic ranges from the Pyright backend
   land on the right characters of a localized file when a translated keyword
   follows other code on its line, starts any line of an indented block but
@@ -337,6 +335,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   on the wrong characters. Each translated word is now mapped at its own
   line, shifted by the width change of the words translated before it on
   that line. [CORE-2343]
+- **language-server**: the Pyright backend no longer reports localized
+  builtins, exceptions or annotation types (`imprimir`, `errordevalor`,
+  `entero`) as undefined, or a localized `self` as a misnamed parameter. The
+  proxy now translates them with the keywords, the way `legesher run` does,
+  so Pyright checks the program that runs; like the engine, it also renames a
+  user's variable spelled like a builtin (CORE-1107). Two differences from
+  the run remain: a word typed in another Unicode form than the pack's is not
+  matched (CORE-2352), and `NotImplemented` and `Ellipsis` keep Python's
+  spelling, which the engine does not yet (CORE-2219). Hovering a localized
+  builtin now shows Pyright's English description of it in place of
+  `Unknown`, still ahead of the localized hover (CORE-2179). [CORE-2342]
 - **language-server**: every request is answered in the language of the
   document it is about. The server read one language at initialize, so with
   files in several languages open, only files in that language (and English)

@@ -69,11 +69,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   forward logged that at ERROR, returned nothing, and the request fell back to
   the built-in answer. Positions now enter the source map as its own type and
   become `lsprotocol` positions only in the reply. With forwarding working,
-  gaps the error hid now show on those documents: localized builtins and type
-  names are reported as undefined (CORE-2342, CORE-2158); the backend's
-  `Unknown` hover for a localized builtin takes precedence over the localized
-  one (CORE-2179); and a hover between an edit and the next diagnostics
-  request is answered from the text before the edit (CORE-2160). (CORE-2227)
+  gaps the error hid now show on those documents: the backend's hover for a
+  localized builtin takes precedence over the localized one (CORE-2179); and
+  a hover between an edit and the next diagnostics request is answered from
+  the text before the edit (CORE-2160). (CORE-2227)
 - Forwarded hover and diagnostic ranges land on the right characters when a
   translated keyword follows other code on its line, starts any line of an
   indented block but the first, or sits below a multi-line string or a
@@ -86,6 +85,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   diagnostic for `indefinido`, after `sino` on its line, covered `o indefini`.
   Each translated word is now mapped at its own line, shifted by the width
   change of the words translated before it on that line. (CORE-2343)
+- The text forwarded to the type-checking backend is translated the way
+  `legesher run` translates a file: localized builtins, exceptions and
+  implicit parameters along with the keywords. The proxy translated keywords
+  only, so Pyright reported every localized builtin (`imprimir`), exception
+  (`errordevalor`) and type in an annotation (`entero`) as undefined, and a
+  localized `self` (`mismo`) as a misnamed parameter. Like the engine, the
+  proxy renames every name spelled like one of these, a user's own variable
+  or attribute included (CORE-1107), so the backend sees the same shadowing
+  the run does. Two differences from the run remain: the proxy matches a
+  word only as typed, where the engine also matches its other Unicode forms
+  (CORE-2352), and it spells `NotImplemented` and `Ellipsis` as Python does,
+  where the engine does not yet (CORE-2219). Hovering a localized builtin
+  now shows the backend's English description of the Python builtin in place
+  of `Unknown`, still ahead of the localized hover (CORE-2179). (CORE-2342)
 
 ### Added
 

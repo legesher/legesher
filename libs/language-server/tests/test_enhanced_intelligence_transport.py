@@ -765,6 +765,64 @@ class TestAgainstRealLangserver:
         assert "nombre" in contents
         assert covered(hover_range) == "nombre"
 
+    @pytest.mark.langserver_drift
+    @requires_langserver
+    def test_localized_builtins_against_real_pyright_langserver(self, config, tmp_path, caplog):
+        """Localized builtins and `self` draw nothing; a real error still does (CORE-2342).
+
+        The proxy translated keywords only, so Pyright reported every localized
+        builtin, exception and annotation type as undefined, and a localized
+        `self` as a misnamed parameter.
+        """
+        if LANGSERVER is None:
+            pytest.fail(
+                "LEGESHER_REQUIRE_LANGSERVER=1 but pyright-langserver is not installed, "
+                "so the drift check did not run. Install it with: npm install -g pyright"
+            )
+
+        config.language_server_path = LANGSERVER
+        proxy = EnhancedIntelligenceProxy(config)
+        uri = (tmp_path / "media.py").as_uri()
+
+        try:
+            with caplog.at_level(logging.DEBUG):
+                result = _run_off_loop(
+                    _forward_a_spanish_document(
+                        proxy,
+                        uri,
+                        SPANISH_WITH_BUILTINS,
+                        # Inside `imprimir` on the last line of the six.
+                        hover_at=Position(line=5, character=7),
+                    ),
+                    proxy,
+                )
+        finally:
+            _force_kill(proxy)
+
+        errors = [
+            r.getMessage()
+            for r in caplog.records
+            if r.name.startswith("legesher_language_server") and r.levelno >= logging.ERROR
+        ]
+        assert errors == []
+        assert result["started"] is True, "handshake failed against a real pyright-langserver"
+
+        lines = SPANISH_WITH_BUILTINS.split("\n")
+
+        def covered(span):
+            (start_line, start_char), (end_line, end_char) = span
+            assert start_line == end_line, span
+            return lines[start_line][start_char:end_char]
+
+        assert [(message, covered(span)) for message, span in result["diagnostics"]] == [
+            ('"indefinido" is not defined', "indefinido")
+        ]
+
+        assert result["hover"] is not None, "the hover forward returned nothing"
+        contents, hover_range = result["hover"]
+        assert "print" in contents
+        assert covered(hover_range) == "imprimir"
+
 
 SPANISH_WITH_A_DEFECT = "definir saludo(nombre):\n    devolver nombre + indefinido\n"
 
@@ -778,6 +836,31 @@ SPANISH_BELOW_A_DOCSTRING = (
     "    Devuelve el nombre.\n"
     '    """\n'
     "    devolver nombre si nombre sino indefinido\n"
+)
+
+# The six lines from CORE-2342, with the pack's `sumar`, then a class with an
+# exception, implicit parameters, localized types and a decorator. The only
+# real error is `indefinido`, after two builtins that change length.
+SPANISH_WITH_BUILTINS = (
+    "definir media(numeros):\n"
+    "    total = sumar(numeros)\n"
+    "    devolver total / longitud(numeros)\n"
+    "\n"
+    "por i en rango(3):\n"
+    "    imprimir(media([1, 2, i]))\n"
+    "\n"
+    "\n"
+    "clase Lector:\n"
+    "    definir leer(mismo, texto: cadena) -> entero:\n"
+    "        probar:\n"
+    "            devolver entero(texto)\n"
+    "        excepto errordevalor:\n"
+    "            imprimir(longitud(texto) + indefinido)\n"
+    "            devolver 0\n"
+    "\n"
+    "    @métododeclase\n"
+    "    definir crear(misma_clase):\n"
+    "        devolver misma_clase()\n"
 )
 
 

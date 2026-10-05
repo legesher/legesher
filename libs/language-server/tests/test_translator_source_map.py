@@ -75,6 +75,10 @@ CASES = {
         "x = [\n    a si verdadero sino b,\n        nulo]\n",
         ["si", "verdadero", "sino", "nulo"],
     ),
+    "localized builtins, exceptions and implicit parameters (CORE-2342)": (
+        "x = longitud(mismo) si verdadero sino errordevalor\n",
+        ["longitud", "mismo", "si", "verdadero", "sino", "errordevalor"],
+    ),
     "after a tab indent": (
         "si a:\n\tdevolver a y verdadero\n",
         ["si", "devolver", "y", "verdadero"],

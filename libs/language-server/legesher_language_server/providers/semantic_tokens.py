@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 
 from lsprotocol.types import SemanticTokens
 
+from ..utils.python_names import BUILTIN_CASE_MAP as _BUILTIN_CASE_MAP
+
 logger = logging.getLogger(__name__)
 
 # Semantic token types (indices must match the legend order in server.py)
@@ -33,16 +35,14 @@ _STATE_AFTER_DEF = 2  # Just saw 'def'/'definir' keyword
 _STATE_AFTER_FUNC_NAME = 3  # Just saw function name, waiting for '('
 _STATE_EXPECT_FIRST_PARAM = 4  # Just saw '(' after function name
 
-# Pre-compute lowercase→proper-case map for Python builtins.
-# Used to resolve YAML lowercase keys (e.g., "valueerror") to Python names ("ValueError"),
-# and to distinguish builtin types (int, str) from builtin functions (print, len).
-_BUILTIN_CASE_MAP: dict[str, str] = {}
-_BUILTIN_TYPE_NAMES_LOWER: set[str] = set()
-for _name in dir(builtins_module):
-    _obj = getattr(builtins_module, _name, None)
-    _BUILTIN_CASE_MAP[_name.lower()] = _name
-    if isinstance(_obj, type):
-        _BUILTIN_TYPE_NAMES_LOWER.add(_name.lower())
+# `_BUILTIN_CASE_MAP` resolves YAML lowercase keys (e.g., "valueerror") to Python
+# names ("ValueError"). This set distinguishes builtin types (int, str) from
+# builtin functions (print, len).
+_BUILTIN_TYPE_NAMES_LOWER: set[str] = {
+    _name.lower()
+    for _name in dir(builtins_module)
+    if isinstance(getattr(builtins_module, _name, None), type)
+}
 
 
 def provide_semantic_tokens(server: "LegesherLanguageServer", uri: str) -> SemanticTokens | None:

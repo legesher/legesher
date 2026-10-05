@@ -43,6 +43,7 @@ from .config import LanguageServerConfig
 from .incremental_translator import IncrementalTranslator
 from .source_map import Position as MapPosition
 from .source_map import SourceMap
+from .utils.python_names import BUILTIN_CASE_MAP
 
 logger = logging.getLogger(__name__)
 
@@ -249,15 +250,29 @@ class EnhancedIntelligenceProxy:
     def _build_translator(self, language: str) -> IncrementalTranslator:
         """A translator for documents written in ``language``.
 
-        Keywords come from the language pack via `_get_keyword_map`; builtins
-        are left untranslated because the proxy only needs the source to parse
-        as canonical Python, and builtin names already do.
+        The backend type-checks the English text, so that text has to be the
+        program that runs. ``legesher run`` renames keywords, builtins,
+        exceptions and implicit parameters (``self``, ``cls``) before Python
+        sees a file, so this does too: keywords from `_get_keyword_map`, the
+        rest from `_get_builtin_map`. Parsing alone is not enough. A localized
+        builtin or exception left in place is an undefined name to the
+        backend, and a localized ``self`` draws a warning (CORE-2342).
+
+        Like the engine, the translator renames every name spelled like one of
+        these, a user's own variable or attribute included (CORE-1107), so the
+        backend sees the same shadowing the run does. That rule is the engine's,
+        copied: when the engine changes it (CORE-2237), this has to follow, and
+        ``tests/test_proxy_engine_parity.py`` fails until it does. It differs
+        from the run in two places: it matches a word only as typed, where the
+        engine also matches the word's other Unicode forms (CORE-2352), and it
+        spells ``NotImplemented`` and ``Ellipsis`` as Python does, where the
+        engine does not yet (CORE-2219).
         """
         return IncrementalTranslator(
             source_lang=self.config.source_language,
             target_lang=language,
             keyword_map=self._get_keyword_map(language),
-            builtin_map={},  # Optional: translate builtins
+            builtin_map=self._get_builtin_map(language),
         )
 
     def translator_for(self, language: str | None) -> IncrementalTranslator:
@@ -305,6 +320,47 @@ class EnhancedIntelligenceProxy:
 
         except Exception as e:
             # Log warning and fall back to empty dict (pass-through mode)
+            logger.warning(f"Failed to load language pack for '{lang}': {e}")
+            return {}
+
+    def _get_builtin_map(self, lang: str) -> dict[str, str]:
+        """Localized builtins, exceptions and implicit parameters, to Python's names.
+
+        Pack keys are lowercase, so each becomes the name as Python spells it
+        (``valueerror`` to ``ValueError``), as the engine renders exceptions.
+        The engine does not yet do this for ``NotImplemented`` and
+        ``Ellipsis`` (CORE-2219); this does.
+        Where a word is in two sections, builtins and exceptions win over
+        implicit parameters, the order the engine looks them up in. An entry
+        the pack spells in English already is left out: nothing to rename.
+
+        Args:
+            lang: Language code (e.g., 'es', 'ar', 'zh')
+
+        Returns:
+            Dictionary mapping localized names to Python's, or empty dict on error
+
+        Example:
+            >>> proxy._get_builtin_map("es")
+            {'imprimir': 'print', 'errordevalor': 'ValueError', 'mismo': 'self', ...}
+        """
+        try:
+            pack = _get_pack_loader().load(language=lang, target="python", version="3.10")
+            sections = (pack.implicit_params or {}, pack.exceptions or {}, pack.builtins)
+
+            reversed_map: dict[str, str] = {}
+            for section in sections:
+                for english, translated in section.items():
+                    python_name = BUILTIN_CASE_MAP.get(english, english)
+                    if translated in (english, python_name):
+                        continue
+                    reversed_map[translated] = python_name
+
+            logger.debug(f"Loaded {len(reversed_map)} builtin translations for {lang}")
+
+            return reversed_map
+
+        except Exception as e:
             logger.warning(f"Failed to load language pack for '{lang}': {e}")
             return {}
 
