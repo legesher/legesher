@@ -48,6 +48,16 @@ on:
           # legesher-i18n, so `foundation` reaches the same index first, for
           # the same reason as `language-server` above.
           - mcp
+          # legesher-runtime, the localized tracebacks the `legesher` CLI
+          # requires (CORE-2351). Whenever its version is new, dispatch it
+          # before `foundation`. PyPI does not check requirements at upload,
+          # so it uploads before the legesher-i18n it requires; and if this
+          # dispatch fails, no CLI has yet gone out requiring a runtime the
+          # index lacks. A target of its own rather than part of
+          # `foundation`, because `foundation` is dispatched again after
+          # every foundation release while runtime's version moves by hand,
+          # and re-uploading an existing file fails the publish.
+          - runtime
           - vs-code
       environment:
         description: 'Target environment'
@@ -166,7 +176,7 @@ jobs:
             # Only allow known non-language-pack packages. Each one's
             # distribution name is legesher-<option>.
             case "$PACKAGE" in
-              language-server|mcp|vs-code) ;;
+              language-server|mcp|runtime|vs-code) ;;
               *) echo "ERROR: Unknown package: $PACKAGE"; exit 1 ;;
             esac
             echo "📦 Building legesher-$PACKAGE..."

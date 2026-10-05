@@ -227,7 +227,7 @@ Located in `.github/workflows/`:
   - Refuses to run unless the last reachable `language-server-v*` tag matches `project.version`
     (the baseline tag is `language-server-v0.1.3`)
 - **`publish-pypi.yml`**: PyPI publishing pipeline (manual dispatch; targets include
-  `foundation`, `language-server` and `mcp`). `scripts/tests/test_publish_pypi_build.py`
+  `foundation`, `language-server`, `mcp` and `runtime`). `scripts/tests/test_publish_pypi_build.py`
   runs its build step for every target against a stub `uv`
 - **`monitor-python-releases.yml`**: Monitors Python.org for new releases to update packs
 

@@ -257,7 +257,8 @@ them have a release workflow; the fourth is versioned by hand and has no automat
   `publish-pypi.yml` target
 - `legesher-language-server` - LSP server, tagged `language-server-v{version}` by
   `release-language-server.yml`, and a `publish-pypi.yml` target
-- `legesher-runtime` - Localized tracebacks. No release workflow, not a `publish-pypi.yml` target
+- `legesher-runtime` - Localized tracebacks, required by the `legesher` CLI. No release workflow;
+  a `publish-pypi.yml` target
 
 This lets the apps iterate without waiting on the foundation.
 
