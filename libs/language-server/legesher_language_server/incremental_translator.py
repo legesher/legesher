@@ -156,6 +156,16 @@ class IncrementalTranslator:
     ) -> tuple[str, SourceMap]:
         """Translate code and build source map.
 
+        ``tokenize.untokenize`` rebuilds the text from each token's original
+        start and end, so every token keeps its row, every gap before a token
+        keeps its width, and a translated name changes only its own width. A
+        translated name's English position is therefore its original line,
+        and its original column plus the width change of the names
+        translated before it on the same line. Running counters cannot get
+        there: the gaps between tokens, an indent the line did not open, and
+        the newlines inside a multi-line string are not tokens of their own
+        (CORE-2343).
+
         Args:
             code: Source code to translate
             keyword_map: Keyword translation mapping
@@ -173,66 +183,37 @@ class IncrementalTranslator:
         source_map_builder = SourceMapBuilder()
         result_tokens = []
 
-        # Track cumulative position changes for accurate mapping
-        translated_line = 0
-        translated_col = 0
+        # The width change so far on the row being translated. A NAME token
+        # never spans rows, so a new row starts again from zero.
+        shift_row = 0
+        shift = 0
 
         for token in tokens:
-            tok_type = token.type
             tok_string = token.string
-            start_line, start_col = token.start
-            end_line, end_col = token.end
 
-            # Translate keywords and builtins
-            if tok_type == tokenize.NAME:
-                if tok_string in keyword_map:
-                    # Translate keyword
-                    translation = keyword_map[tok_string]
-
-                    # Record mapping
-                    source_map_builder.add_mapping(
-                        original_start=Position(start_line - 1, start_col),
-                        original_end=Position(end_line - 1, end_col),
-                        translated_start=Position(translated_line, translated_col),
-                        translated_end=Position(translated_line, translated_col + len(translation)),
-                    )
-
-                    result_tokens.append(
-                        (tok_type, translation, token.start, token.end, token.line)
-                    )
-                    translated_col += len(translation)
-
-                elif tok_string in builtin_map:
-                    # Translate builtin (optional - may keep as-is)
-                    translation = builtin_map[tok_string]
-
-                    source_map_builder.add_mapping(
-                        original_start=Position(start_line - 1, start_col),
-                        original_end=Position(end_line - 1, end_col),
-                        translated_start=Position(translated_line, translated_col),
-                        translated_end=Position(translated_line, translated_col + len(translation)),
-                    )
-
-                    result_tokens.append(
-                        (tok_type, translation, token.start, token.end, token.line)
-                    )
-                    translated_col += len(translation)
-
-                else:
-                    # Keep identifier as-is (user-defined names never translate)
-                    result_tokens.append(token)
-                    translated_col += len(tok_string)
-
+            if token.type == tokenize.NAME:
+                translation = keyword_map.get(tok_string, builtin_map.get(tok_string))
             else:
-                # Non-NAME tokens pass through
-                result_tokens.append(token)
+                translation = None
 
-                # Update position tracking
-                if tok_type == tokenize.NEWLINE or tok_type == tokenize.NL:
-                    translated_line += 1
-                    translated_col = 0
-                else:
-                    translated_col += len(tok_string)
+            if translation is None:
+                # Everything else passes through, user-defined names included.
+                result_tokens.append(token)
+                continue
+
+            row, col = token.start
+            if row != shift_row:
+                shift_row, shift = row, 0
+
+            source_map_builder.add_mapping(
+                original_start=Position(row - 1, col),
+                original_end=Position(row - 1, col + len(tok_string)),
+                translated_start=Position(row - 1, col + shift),
+                translated_end=Position(row - 1, col + shift + len(translation)),
+            )
+            shift += len(translation) - len(tok_string)
+
+            result_tokens.append(token._replace(string=translation))
 
         # Reconstruct code from tokens
         translated_code = tokenize.untokenize(result_tokens)

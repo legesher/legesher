@@ -201,3 +201,113 @@ class TestForwardedDiagnostics:
         converter = default_converter()
         for diagnostic in diagnostics:
             converter.unstructure(diagnostic)  # must not raise
+
+
+# A docstring above, and keywords after other code on the last line (CORE-2343).
+# The map used to record these mappings three lines too high and too far left,
+# so a range below the docstring, or after `si` on its line, came back on the
+# wrong characters.
+DOCUMENTED_URI = "file:///documentado_es.py"
+DOCUMENTED_SPANISH = (
+    "definir saludo(nombre):\n"
+    '    """Saluda.\n'
+    "\n"
+    "    Devuelve el nombre.\n"
+    '    """\n'
+    "    devolver nombre si nombre sino indefinido\n"
+)
+DOCUMENTED_ENGLISH = (
+    "def saludo(nombre):\n"
+    '    """Saluda.\n'
+    "\n"
+    "    Devuelve el nombre.\n"
+    '    """\n'
+    "    return nombre if nombre else indefinido\n"
+)
+LAST_LINE = 5
+
+
+def _word_range(text, line, word):
+    """The wire range of the only ``word`` on ``line`` of ``text``."""
+    row = text.split("\n")[line]
+    assert row.count(word) == 1, f"{word!r} is not unique on line {line}: {row!r}"
+    start = row.index(word)
+    return _range(line, start, line, start + len(word))
+
+
+def _covered(text, lsp_range):
+    """The characters of ``text`` a one-line Range covers."""
+    assert lsp_range.start.line == lsp_range.end.line
+    row = text.split("\n")[lsp_range.start.line]
+    return row[lsp_range.start.character : lsp_range.end.character]
+
+
+class TestBelowADocstringAfterAMidLineKeyword:
+    """Positions below a multi-line string, after a keyword on their line, map exactly."""
+
+    @pytest.mark.asyncio
+    async def test_diagnostic_after_a_mid_line_keyword_lands_on_its_name(
+        self, proxy, monkeypatch, caplog
+    ):
+        _backend(
+            proxy,
+            monkeypatch,
+            {
+                "textDocument/diagnostic": {
+                    "result": {
+                        "items": [
+                            {
+                                # Where the backend reports the name, in the
+                                # English text it was sent.
+                                "range": _word_range(DOCUMENTED_ENGLISH, LAST_LINE, "indefinido"),
+                                "message": '"indefinido" is not defined',
+                                "severity": 1,
+                            }
+                        ]
+                    }
+                }
+            },
+        )
+
+        with caplog.at_level(logging.DEBUG):
+            diagnostics = await proxy.forward_diagnostic(DOCUMENTED_URI, DOCUMENTED_SPANISH, "es")
+
+        assert _forward_errors(caplog) == []
+        assert proxy._document_cache[DOCUMENTED_URI]["translated"] == DOCUMENTED_ENGLISH
+        assert len(diagnostics) == 1
+        assert diagnostics[0].range.start.line == LAST_LINE
+        assert _covered(DOCUMENTED_SPANISH, diagnostics[0].range) == "indefinido"
+
+    @pytest.mark.asyncio
+    async def test_hover_after_a_mid_line_keyword_asks_about_its_name(
+        self, proxy, monkeypatch, caplog
+    ):
+        await proxy.translate_document_for_server(DOCUMENTED_URI, DOCUMENTED_SPANISH, "es")
+        sent = _backend(
+            proxy,
+            monkeypatch,
+            {
+                "textDocument/hover": {
+                    "result": {
+                        "contents": {"kind": "markdown", "value": "(variable) indefinido"},
+                        "range": _word_range(DOCUMENTED_ENGLISH, LAST_LINE, "indefinido"),
+                    }
+                }
+            },
+        )
+
+        # The cursor on the last letter of `indefinido`, as the editor sends it.
+        spanish = _word_range(DOCUMENTED_SPANISH, LAST_LINE, "indefinido")
+        params = HoverParams(
+            text_document=TextDocumentIdentifier(uri=DOCUMENTED_URI),
+            position=Position(line=LAST_LINE, character=spanish["end"]["character"] - 1),
+        )
+        with caplog.at_level(logging.DEBUG):
+            hover = await proxy.forward_hover(params)
+
+        assert _forward_errors(caplog) == []
+        asked = sent[0][1]["position"]
+        english = _word_range(DOCUMENTED_ENGLISH, LAST_LINE, "indefinido")
+        assert asked == {"line": LAST_LINE, "character": english["end"]["character"] - 1}
+        assert hover is not None
+        assert _covered(DOCUMENTED_SPANISH, hover.range) == "indefinido"

@@ -69,13 +69,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   forward logged that at ERROR, returned nothing, and the request fell back to
   the built-in answer. Positions now enter the source map as its own type and
   become `lsprotocol` positions only in the reply. With forwarding working,
-  gaps the error hid now show on those documents: a range on a line where a
-  keyword follows other code, or below a multi-line string, can land in the
-  wrong place (CORE-2343); localized builtins and type names are reported as
-  undefined (CORE-2342, CORE-2158); the backend's `Unknown` hover for a
-  localized builtin takes precedence over the localized one (CORE-2179); and a
-  hover between an edit and the next diagnostics request is answered from the
-  text before the edit (CORE-2160). (CORE-2227)
+  gaps the error hid now show on those documents: localized builtins and type
+  names are reported as undefined (CORE-2342, CORE-2158); the backend's
+  `Unknown` hover for a localized builtin takes precedence over the localized
+  one (CORE-2179); and a hover between an edit and the next diagnostics
+  request is answered from the text before the edit (CORE-2160). (CORE-2227)
+- Forwarded hover and diagnostic ranges land on the right characters when a
+  translated keyword follows other code on its line, starts any line of an
+  indented block but the first, or sits below a multi-line string or a
+  backslash continuation. The source map behind both forwards counted each
+  token's width but not the spaces between tokens, counted an indent only on
+  the line that opened its block, and counted a new line only at a line end.
+  So it placed such a keyword too far left, and below a docstring as many
+  lines too high as the docstring had line breaks. A range the backend
+  returned there came back on the wrong characters: Pyright's undefined-name
+  diagnostic for `indefinido`, after `sino` on its line, covered `o indefini`.
+  Each translated word is now mapped at its own line, shifted by the width
+  change of the words translated before it on that line. (CORE-2343)
 
 ### Added
 

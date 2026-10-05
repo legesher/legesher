@@ -703,26 +703,102 @@ class TestAgainstRealLangserver:
         # `saludo` is columns 4-10 in English and 8-14 in Spanish.
         assert hover_range == ((0, 8), (0, 14))
 
+    @pytest.mark.langserver_drift
+    @requires_langserver
+    def test_forwarding_below_a_docstring_against_real_pyright_langserver(
+        self, config, tmp_path, caplog
+    ):
+        """Ranges below a docstring, after a mid-line keyword, land on their names (CORE-2343).
+
+        The source map recorded those mappings three lines too high and too far
+        left, so Pyright's diagnostic for `indefinido` came back on
+        `o indefini`, and its hover range for `nombre` on `i nomb`.
+        """
+        if LANGSERVER is None:
+            pytest.fail(
+                "LEGESHER_REQUIRE_LANGSERVER=1 but pyright-langserver is not installed, "
+                "so the drift check did not run. Install it with: npm install -g pyright"
+            )
+
+        config.language_server_path = LANGSERVER
+        proxy = EnhancedIntelligenceProxy(config)
+        uri = (tmp_path / "documentado.py").as_uri()
+
+        try:
+            with caplog.at_level(logging.DEBUG):
+                result = _run_off_loop(
+                    _forward_a_spanish_document(
+                        proxy,
+                        uri,
+                        SPANISH_BELOW_A_DOCSTRING,
+                        # Inside the second `nombre` of the last line.
+                        hover_at=Position(line=5, character=26),
+                    ),
+                    proxy,
+                )
+        finally:
+            _force_kill(proxy)
+
+        errors = [
+            r.getMessage()
+            for r in caplog.records
+            if r.name.startswith("legesher_language_server") and r.levelno >= logging.ERROR
+        ]
+        assert errors == []
+        assert result["started"] is True, "handshake failed against a real pyright-langserver"
+
+        lines = SPANISH_BELOW_A_DOCSTRING.split("\n")
+
+        def covered(span):
+            (start_line, start_char), (end_line, end_char) = span
+            assert start_line == end_line, span
+            return lines[start_line][start_char:end_char]
+
+        undefined = [span for message, span in result["diagnostics"] if "indefinido" in message]
+        assert len(undefined) == 1, (
+            f"expected one undefined-name diagnostic: {result['diagnostics']}"
+        )
+        assert covered(undefined[0]) == "indefinido"
+
+        assert result["hover"] is not None, "the hover forward returned nothing"
+        contents, hover_range = result["hover"]
+        assert "nombre" in contents
+        assert covered(hover_range) == "nombre"
+
 
 SPANISH_WITH_A_DEFECT = "definir saludo(nombre):\n    devolver nombre + indefinido\n"
 
+# A docstring, then keywords after other code on the line below it. The
+# condition is a name, not `verdadero`: Pyright reports nothing in a branch it
+# can prove unreachable.
+SPANISH_BELOW_A_DOCSTRING = (
+    "definir saludo(nombre):\n"
+    '    """Saluda.\n'
+    "\n"
+    "    Devuelve el nombre.\n"
+    '    """\n'
+    "    devolver nombre si nombre sino indefinido\n"
+)
 
-async def _forward_a_spanish_document(proxy: EnhancedIntelligenceProxy, uri: str) -> dict:
+
+async def _forward_a_spanish_document(
+    proxy: EnhancedIntelligenceProxy,
+    uri: str,
+    text: str = SPANISH_WITH_A_DEFECT,
+    # The last letter of `saludo`, as an editor sends it. Unmapped, column 13
+    # of the English text is inside `nombre`, so a request that skipped the
+    # source map would hover the wrong name.
+    hover_at: Position = Position(line=0, character=13),
+) -> dict:
     """Start the proxy, forward diagnostics then a hover for one document, stop.
 
     One event loop throughout, for the reason given on ``_start_and_snapshot``.
     The results are reduced to plain values before the loop closes.
     """
     started = await proxy.start()
-    diagnostics = await proxy.forward_diagnostic(uri, SPANISH_WITH_A_DEFECT, "es")
+    diagnostics = await proxy.forward_diagnostic(uri, text, "es")
     hover = await proxy.forward_hover(
-        HoverParams(
-            text_document=TextDocumentIdentifier(uri=uri),
-            # The last letter of `saludo`, as an editor sends it. Unmapped,
-            # column 13 of the English text is inside `nombre`, so a request
-            # that skipped the source map would hover the wrong name.
-            position=Position(line=0, character=13),
-        )
+        HoverParams(text_document=TextDocumentIdentifier(uri=uri), position=hover_at)
     )
     await proxy.stop()
 

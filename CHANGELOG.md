@@ -322,13 +322,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   in the output channel, and fell back to Legesher's own answer, because the
   proxy handed its source map a position type that cannot be compared.
   Positions are now converted where they enter the map. Gaps the error hid
-  now show on localized files until their own fixes land: a range on a line
-  where a keyword follows other code, or below a multi-line string, can land
-  in the wrong place (CORE-2343); localized builtins and type names are
-  reported as undefined (CORE-2342, CORE-2158); the backend's `Unknown` hover
-  for a localized builtin takes precedence over the localized one
-  (CORE-2179); and a hover between an edit and the next diagnostics request
-  is answered from the text before the edit (CORE-2160). [CORE-2227]
+  now show on localized files until their own fixes land: localized builtins
+  and type names are reported as undefined (CORE-2342, CORE-2158); the
+  backend's `Unknown` hover for a localized builtin takes precedence over the
+  localized one (CORE-2179); and a hover between an edit and the next
+  diagnostics request is answered from the text before the edit (CORE-2160).
+  [CORE-2227]
+- **language-server**: hover and diagnostic ranges from the Pyright backend
+  land on the right characters of a localized file when a translated keyword
+  follows other code on its line, starts any line of an indented block but
+  the first, or sits below a multi-line string (such as a docstring) or a
+  backslash continuation. The source map placed those keywords too far
+  left, and below a docstring too many lines up, so a range there came back
+  on the wrong characters. Each translated word is now mapped at its own
+  line, shifted by the width change of the words translated before it on
+  that line. [CORE-2343]
 - **language-server**: every request is answered in the language of the
   document it is about. The server read one language at initialize, so with
   files in several languages open, only files in that language (and English)
