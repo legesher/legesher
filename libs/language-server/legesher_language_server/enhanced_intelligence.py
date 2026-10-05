@@ -41,6 +41,8 @@ from lsprotocol.types import (
 from . import __version__
 from .config import LanguageServerConfig
 from .incremental_translator import IncrementalTranslator
+from .source_map import Position as MapPosition
+from .source_map import SourceMap
 
 logger = logging.getLogger(__name__)
 
@@ -166,6 +168,28 @@ def wire_severity(value: object) -> DiagnosticSeverity:
         if value is not None:
             logger.warning(f"Unknown diagnostic severity {value!r}; treating as Error")
         return DiagnosticSeverity.Error
+
+
+def range_to_original(source_map: SourceMap, wire_range: Mapping[str, Any]) -> Range:
+    """Map a backend range in the English text onto the localized source.
+
+    The source map finds the mapping that holds a position with ``<=`` and
+    ``<``, so it takes and returns its own ``Position``, a NamedTuple that
+    orders. ``lsprotocol``'s ``Position`` has no ordering, and handing one to
+    the map raised ``TypeError`` on every forward for a document with a
+    translated keyword (CORE-2227). Wire values become map positions on the
+    way in, and ``lsprotocol`` ones only on the way out.
+    """
+    start = source_map.to_original(
+        MapPosition(wire_range["start"]["line"], wire_range["start"]["character"])
+    )
+    end = source_map.to_original(
+        MapPosition(wire_range["end"]["line"], wire_range["end"]["character"])
+    )
+    return Range(
+        start=Position(line=start.line, character=start.character),
+        end=Position(line=end.line, character=end.character),
+    )
 
 
 class EnhancedIntelligenceProxy:
@@ -750,12 +774,11 @@ class EnhancedIntelligenceProxy:
                 logger.debug(f"Document {uri} not in cache for hover")
                 return None
 
-            source_map = cache_entry["source_map"]
+            source_map: SourceMap = cache_entry["source_map"]
 
-            # Translate position to English coordinates
-            english_pos = source_map.to_english(
-                Position(line=position.line, character=position.character)
-            )
+            # Translate position to English coordinates. The request carries an
+            # lsprotocol Position, which the source map cannot order.
+            english_pos = source_map.to_english(MapPosition(position.line, position.character))
 
             # Send hover request to Pyright
             hover_params = {
@@ -776,24 +799,7 @@ class EnhancedIntelligenceProxy:
 
             # Translate response position back to original
             if "range" in result:
-                eng_range = result["range"]
-                start_pos = source_map.to_original(
-                    Position(
-                        line=eng_range["start"]["line"],
-                        character=eng_range["start"]["character"],
-                    )
-                )
-                end_pos = source_map.to_original(
-                    Position(
-                        line=eng_range["end"]["line"],
-                        character=eng_range["end"]["character"],
-                    )
-                )
-
-                hover_range = Range(
-                    start=Position(line=start_pos.line, character=start_pos.character),
-                    end=Position(line=end_pos.line, character=end_pos.character),
-                )
+                hover_range = range_to_original(source_map, result["range"])
             else:
                 hover_range = None
 
@@ -865,28 +871,10 @@ class EnhancedIntelligenceProxy:
 
             # Translate diagnostics back to original positions
             diagnostics = []
-            source_map = self._document_cache[uri]["source_map"]
+            source_map: SourceMap = self._document_cache[uri]["source_map"]
 
             for item in items:
-                # Translate range
-                eng_range = item["range"]
-                start_pos = source_map.to_original(
-                    Position(
-                        line=eng_range["start"]["line"],
-                        character=eng_range["start"]["character"],
-                    )
-                )
-                end_pos = source_map.to_original(
-                    Position(
-                        line=eng_range["end"]["line"],
-                        character=eng_range["end"]["character"],
-                    )
-                )
-
-                diag_range = Range(
-                    start=Position(line=start_pos.line, character=start_pos.character),
-                    end=Position(line=end_pos.line, character=end_pos.character),
-                )
+                diag_range = range_to_original(source_map, item["range"])
 
                 # Create diagnostic. The message is the backend's own English
                 # text, passed through untranslated: these are type-checker

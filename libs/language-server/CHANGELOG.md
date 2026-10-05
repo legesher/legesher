@@ -62,6 +62,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   package's real version, read from its installed metadata. They said 0.1.0
   while `__version__` said 0.1.2 and `pyproject.toml` said 0.1.3. `pyproject.toml`
   is now the only place the version is written. (CORE-2203)
+- Hover and diagnostics forwarded to the type-checking backend work on a
+  document with a translated keyword. Both forwards handed the source map
+  `lsprotocol` positions, which cannot be ordered, so its range check raised
+  `'<=' not supported between instances of 'Position' and 'Position'`. The
+  forward logged that at ERROR, returned nothing, and the request fell back to
+  the built-in answer. Positions now enter the source map as its own type and
+  become `lsprotocol` positions only in the reply. With forwarding working,
+  gaps the error hid now show on those documents: a range on a line where a
+  keyword follows other code, or below a multi-line string, can land in the
+  wrong place (CORE-2343); localized builtins and type names are reported as
+  undefined (CORE-2342, CORE-2158); the backend's `Unknown` hover for a
+  localized builtin takes precedence over the localized one (CORE-2179); and a
+  hover between an edit and the next diagnostics request is answered from the
+  text before the edit (CORE-2160). (CORE-2227)
 
 ### Added
 

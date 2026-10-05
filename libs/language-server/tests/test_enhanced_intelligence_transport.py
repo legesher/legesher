@@ -18,7 +18,7 @@ than a real ``pyright-langserver``. That is deliberate: a real server gives one
 happy path and cannot be asked to flood stderr, dribble a response out in
 fragments, or go silent — the conditions that actually break a stdio transport.
 The stub also gives the transport deterministic coverage on machines with no
-Node toolchain. One integration test still runs against the real binary, to
+Node toolchain. Two integration tests still run against the real binary, to
 catch the case where the stub and reality have drifted apart.
 
 A note on why several tests drive ``start()`` from a worker thread: when the
@@ -38,6 +38,7 @@ import time
 from pathlib import Path
 
 import pytest
+from lsprotocol.types import HoverParams, Position, TextDocumentIdentifier
 
 from legesher_language_server.config import LanguageServerConfig
 from legesher_language_server.enhanced_intelligence import (
@@ -624,11 +625,11 @@ class TestDegradation:
 
 
 class TestAgainstRealLangserver:
-    """One test against the real thing, in case the stub has drifted from it.
+    """Tests against the real thing, in case the stub has drifted from it.
 
     The stub encodes our beliefs about how a language server behaves. Everything
-    else in this file verifies the transport against those beliefs; only this
-    verifies the beliefs themselves. It is the one test a wrong mental model
+    else in this file verifies the transport against those beliefs; only these
+    verify the beliefs themselves. They are the tests a wrong mental model
     cannot satisfy.
     """
 
@@ -656,6 +657,85 @@ class TestAgainstRealLangserver:
             assert snapshot["initialized"] is True
         finally:
             _force_kill(proxy)
+
+    @pytest.mark.langserver_drift
+    @requires_langserver
+    def test_forwarding_against_real_pyright_langserver(self, config, tmp_path, caplog):
+        """Hover and diagnostics on a translated document come back mapped (CORE-2227).
+
+        Until CORE-2227 both forwards raised a Position comparison error on any
+        document with a translated keyword, logged it at ERROR and returned
+        nothing, so the handshake test above passed while forwarding never did.
+        """
+        if LANGSERVER is None:
+            pytest.fail(
+                "LEGESHER_REQUIRE_LANGSERVER=1 but pyright-langserver is not installed, "
+                "so the drift check did not run. Install it with: npm install -g pyright"
+            )
+
+        config.language_server_path = LANGSERVER
+        proxy = EnhancedIntelligenceProxy(config)
+        uri = (tmp_path / "saludo.py").as_uri()
+
+        try:
+            with caplog.at_level(logging.DEBUG):
+                result = _run_off_loop(_forward_a_spanish_document(proxy, uri), proxy)
+        finally:
+            _force_kill(proxy)
+
+        errors = [
+            r.getMessage()
+            for r in caplog.records
+            if r.name.startswith("legesher_language_server") and r.levelno >= logging.ERROR
+        ]
+        assert errors == []
+        assert result["started"] is True, "handshake failed against a real pyright-langserver"
+
+        # `indefinido` is column 20 of the English text Pyright saw, and column
+        # 22 of the Spanish the reader sees: `devolver` is two longer than `return`.
+        undefined = [d for d, _ in result["diagnostics"] if "indefinido" in d]
+        assert undefined, f"Pyright's undefined-name diagnostic is missing: {result['diagnostics']}"
+        assert dict(result["diagnostics"])[undefined[0]] == ((1, 22), (1, 32))
+
+        assert result["hover"] is not None, "the hover forward returned nothing"
+        contents, hover_range = result["hover"]
+        assert "saludo" in contents
+        # `saludo` is columns 4-10 in English and 8-14 in Spanish.
+        assert hover_range == ((0, 8), (0, 14))
+
+
+SPANISH_WITH_A_DEFECT = "definir saludo(nombre):\n    devolver nombre + indefinido\n"
+
+
+async def _forward_a_spanish_document(proxy: EnhancedIntelligenceProxy, uri: str) -> dict:
+    """Start the proxy, forward diagnostics then a hover for one document, stop.
+
+    One event loop throughout, for the reason given on ``_start_and_snapshot``.
+    The results are reduced to plain values before the loop closes.
+    """
+    started = await proxy.start()
+    diagnostics = await proxy.forward_diagnostic(uri, SPANISH_WITH_A_DEFECT, "es")
+    hover = await proxy.forward_hover(
+        HoverParams(
+            text_document=TextDocumentIdentifier(uri=uri),
+            # The last letter of `saludo`, as an editor sends it. Unmapped,
+            # column 13 of the English text is inside `nombre`, so a request
+            # that skipped the source map would hover the wrong name.
+            position=Position(line=0, character=13),
+        )
+    )
+    await proxy.stop()
+
+    def span(r):
+        return ((r.start.line, r.start.character), (r.end.line, r.end.character))
+
+    return {
+        "started": started,
+        "diagnostics": [(d.message, span(d.range)) for d in diagnostics],
+        "hover": None
+        if hover is None
+        else (str(hover.contents), span(hover.range) if hover.range else None),
+    }
 
 
 class TestPlatformDiscoveryPaths:

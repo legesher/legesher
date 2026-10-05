@@ -315,6 +315,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   response is sent, so no input made this path serialize. Wire severities are
   now converted at the proxy boundary; absent or out-of-range values fall
   back to Error rather than crashing the response. [CORE-1977]
+- **language-server**: hover and diagnostics from the Pyright backend reach
+  the editor for files written with translated keywords, when
+  `pyright-langserver` is installed. Every such request failed with `'<=' not
+  supported between instances of 'Position' and 'Position'`, logged at ERROR
+  in the output channel, and fell back to Legesher's own answer, because the
+  proxy handed its source map a position type that cannot be compared.
+  Positions are now converted where they enter the map. Gaps the error hid
+  now show on localized files until their own fixes land: a range on a line
+  where a keyword follows other code, or below a multi-line string, can land
+  in the wrong place (CORE-2343); localized builtins and type names are
+  reported as undefined (CORE-2342, CORE-2158); the backend's `Unknown` hover
+  for a localized builtin takes precedence over the localized one
+  (CORE-2179); and a hover between an edit and the next diagnostics request
+  is answered from the text before the edit (CORE-2160). [CORE-2227]
 - **language-server**: every request is answered in the language of the
   document it is about. The server read one language at initialize, so with
   files in several languages open, only files in that language (and English)
