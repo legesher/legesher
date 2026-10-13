@@ -123,7 +123,8 @@ make test-coverage        # pytest over libs/ with --benchmark-disable and --cov
 make bench                # the only way timing benchmarks run (see below)
 make lint                 # ruff check libs/
 make typecheck            # mypy over core, i18n, legesher, language-server, mcp
-make check-generated      # drift gate: language registry (skips in a DB-less clone) + docs/generated + schema v2 reference
+make check-generated      # drift gate: language registry (skips in a DB-less clone) + docs/generated
+                          # + schema v2 reference + the 50 pack REFERENCE.md files
 
 # One package directly. uv workspace names: legesher-core, legesher-i18n, legesher,
 # legesher-language-server, legesher-mcp, legesher-runtime

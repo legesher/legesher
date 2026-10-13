@@ -3,8 +3,16 @@
 
 This script creates side-by-side comparison guides for developers
 who want to code in their native language using Legesher.
+
+By default the files are written in place, next to each pack. ``--out DIR``
+writes ``DIR/<lang>/REFERENCE.md`` instead, which is how
+``make check-generated-reference`` regenerates into a temporary tree and diffs
+against the committed files (CORE-2415).
 """
 
+from __future__ import annotations
+
+import argparse
 import json
 from pathlib import Path
 
@@ -1220,8 +1228,29 @@ Found a better translation? We welcome contributions from native speakers!
     return content
 
 
-def main():
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse the command line; with no arguments the files are written in place."""
+    parser = argparse.ArgumentParser(
+        description="Generate REFERENCE.md for all language packs."
+    )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        metavar="DIR",
+        help=(
+            "write DIR/<lang>/REFERENCE.md instead of the in-tree files; "
+            "make check-generated-reference uses this to diff a fresh "
+            "regeneration against the committed files"
+        ),
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> None:
     """Generate REFERENCE.md for all non-English language packs."""
+    args = parse_args(argv)
+    out_root = args.out if args.out is not None else PACKS_DIR
     languages = load_languages()
 
     # Load merged English pack (all versions combined)
@@ -1239,7 +1268,7 @@ def main():
             continue  # Skip English (it's the reference)
 
         packs_dir = get_packs_dir(lang_code)
-        output_path = PACKS_DIR / lang_code / "REFERENCE.md"
+        output_path = out_root / lang_code / "REFERENCE.md"
 
         if not packs_dir.exists():
             errors.append(f"  {lang_code}: Packs directory not found at {packs_dir}")
@@ -1252,6 +1281,8 @@ def main():
                 lang_code, languages[lang_code], pack_data, english_data
             )
 
+            if args.out is not None:
+                output_path.parent.mkdir(parents=True, exist_ok=True)
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(content)
 
