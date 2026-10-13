@@ -64,15 +64,16 @@ distribution = true
 # ROOT pyproject (verified: it reported the foundation's 0.22.0 as this
 # package's last release). Same reason `changelog_file` is spelled out below.
 version_toml = ["libs/mcp/pyproject.toml:project.version"]
-commit_parser = "angular"
+commit_parser = "conventional"
+# The release commit's subject. PSR's default is the bare version, which the
+# `chore(release)` skip in release-mcp.yml and ci.yml never matched, so every
+# release retriggered its own train once (CORE-1852).
+commit_message = "chore(release): legesher-mcp {version}"
 # false, unlike the foundation suite: a breaking change takes 0.1.0 to 0.2.0
 # and the package stays sub-1.0 until 1.0 is declared deliberately.
 major_on_zero = false
 allow_zero_version = true
-branch = "main"
 tag_format = "mcp-v{version}"
-upload_to_vcs_release = true
-upload_to_pypi = false  # publish-pypi.yml owns publishing (CORE-626)
 # Same reason as the root config: semantic-release's default author is a
 # bare word with no `@`, which downstream author-validating tooling rejects.
 commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
@@ -84,6 +85,20 @@ allowed_tags = [
 ]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
+# The `conventional` parser is the renamed `angular` one (removed in PSR 11),
+# with two defaults flipped. Pinned so the sweep changes no bump: a squash
+# body that lists feat/fix lines still counts as the one commit it is.
+parse_squash_commits = false
+ignore_merge_commits = false
+
+# PSR 10 reads these two from this table and ignores the top-level spellings
+# (`upload_to_vcs_release`, `upload_to_pypi`) the config used to carry. It
+# never uploads to PyPI: publish-pypi.yml owns that (CORE-626). The glob is
+# where release-mcp.yml builds the wheel; the default, "dist/*", attached
+# nothing to the GitHub release (CORE-1852).
+[tool.semantic_release.publish]
+upload_to_vcs_release = true
+dist_glob_patterns = ["libs/mcp/dist/*"]
 
 [tool.semantic_release.changelog]
 exclude_commit_patterns = [

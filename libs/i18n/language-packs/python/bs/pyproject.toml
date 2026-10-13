@@ -32,15 +32,24 @@ classifiers = [
 ]
 
 [tool.semantic_release]
-version_variable = "legesher_i18n_python_bs/__init__.py:__version__"
-version_toml = "pyproject.toml:project.version"
-commit_parser = "angular"
+# Every path here is relative to the GIT ROOT, not to this file. semantic-release
+# resolves repo_dir by walking up to .git/ and resolves each configured path
+# against that, so a bare "pyproject.toml" read and rewrote the ROOT pyproject
+# (CORE-1852). List form: PSR 10 rejects a bare string, and ignores the old
+# singular `version_variable` key, so the package __version__ never moved.
+version_toml = ["libs/i18n/language-packs/python/bs/pyproject.toml:project.version"]
+version_variables = ["libs/i18n/language-packs/python/bs/legesher_i18n_python_bs/__init__.py:__version__"]
+commit_parser = "conventional"
+# PSR's default release-commit subject is the bare version, which the skip in
+# release-language-packs.yml and ci.yml (`chore(release)`) never matched, so
+# every release retriggered its own train once (CORE-1852).
+commit_message = "chore(release): legesher-i18n-python-bs {version}"
 major_on_zero = true
 allow_zero_version = true
-branch = "main"
 tag_format = "i18n-python-bs-v{version}"
-upload_to_vcs_release = true
-upload_to_pypi = false
+# PSR's default author is a bare word with no `@`, which author-validating
+# tooling rejects. Same override as the root config.
+commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
 [tool.semantic_release.commit_parser_options]
 allowed_tags = [
@@ -49,9 +58,28 @@ allowed_tags = [
 ]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
+# The `conventional` parser is the renamed `angular` one (removed in PSR 11),
+# with two defaults flipped. Pinned so the sweep changes no bump: a squash
+# body that lists feat/fix lines still counts as the one commit it is.
+parse_squash_commits = false
+ignore_merge_commits = false
+
+# PSR 10 reads these from this table and ignores the top-level spellings. It
+# never uploads to PyPI. The glob is where release-language-packs.yml builds
+# the wheel; the default "dist/*" would attach nothing to the GitHub release.
+[tool.semantic_release.publish]
+upload_to_vcs_release = true
+dist_glob_patterns = ["libs/i18n/language-packs/python/bs/dist/*"]
 
 [tool.semantic_release.changelog]
 exclude_commit_patterns = [
     "^chore\\(release\\):",
     "^Merge",
 ]
+
+# The workflow passes --no-changelog: changelogs here are hand-written and
+# stamped by scripts/stamp-changelog-release.py. This is the guard for a manual
+# run that forgets the flag, which would otherwise rewrite the repo-root
+# CHANGELOG.md during a pack release.
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "libs/i18n/language-packs/python/bs/CHANGELOG.md"

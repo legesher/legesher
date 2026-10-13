@@ -75,12 +75,15 @@ dev = [
 # resolves every configured path against the repository root, so a bare
 # "pyproject.toml" would read and rewrite the ROOT pyproject (CORE-1852).
 version_toml = ["libs/language-server/pyproject.toml:project.version"]
-commit_parser = "angular"
+commit_parser = "conventional"
+# The release commit's subject. PSR's default is the bare version, which the
+# `chore(release)` skip in release-language-server.yml and ci.yml never
+# matched, so every release retriggered its own train once (CORE-1852).
+commit_message = "chore(release): legesher-language-server {version}"
 # false, like the foundation and mcp: a breaking change takes 0.1.x to 0.2.0
 # and the package stays sub-1.0 until 1.0 is declared deliberately.
 major_on_zero = false
 allow_zero_version = true
-branch = "main"
 tag_format = "language-server-v{version}"
 # semantic-release's default author is a bare word with no `@`, which
 # downstream author-validating tooling rejects. Same override as the root.
@@ -93,6 +96,11 @@ allowed_tags = [
 ]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
+# The `conventional` parser is the renamed `angular` one (removed in PSR 11),
+# with two defaults flipped. Pinned so the sweep changes no bump: a squash
+# body that lists feat/fix lines still counts as the one commit it is.
+parse_squash_commits = false
+ignore_merge_commits = false
 
 # semantic-release 10 reads these two from this table and ignores the
 # top-level spellings. It never uploads to PyPI: publish-pypi.yml owns that

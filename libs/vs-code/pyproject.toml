@@ -43,16 +43,17 @@ legesher = { workspace = true }
 legesher-core = { workspace = true }
 
 [tool.semantic_release]
-version_variable = "legesher-vs-code/__init__.py:__version__"
-version_toml = "pyproject.toml:project.version"
-commit_parser = "angular"
+# No workflow runs this config: release-apps.yml tags the extension from
+# package.json. It is kept valid for PSR 10 with every path relative to the
+# GIT ROOT, so that a manual run can never read or rewrite the ROOT pyproject
+# (CORE-1852). The old `version_variable` pointed at a file that does not exist.
+version_toml = ["libs/vs-code/pyproject.toml:project.version"]
+commit_parser = "conventional"
+commit_message = "chore(release): legesher-vs-code {version}"
 major_on_zero = true
 allow_zero_version = true
-branch = "main"
 tag_format = "vs-code-v{version}"
-upload_to_vcs_release = true
-upload_to_pypi = false
-# See root pyproject.toml — overrides python-semantic-release's invalid
+# See root pyproject.toml: overrides python-semantic-release's invalid
 # default `semantic-release <semantic-release>` author so Vercel and other
 # email-validating tooling accept the release commit.
 commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
@@ -62,9 +63,18 @@ allowed_tags = [
     "feat", "fix", "docs", "style", "refactor",
     "perf", "test", "build", "ci", "chore", "revert"
 ]
+parse_squash_commits = false
+ignore_merge_commits = false
+
+[tool.semantic_release.publish]
+upload_to_vcs_release = true
+dist_glob_patterns = ["libs/vs-code/dist/*"]
 
 [tool.semantic_release.changelog]
 exclude_commit_patterns = [
     "^chore\\(release\\):",
     "^Merge",
 ]
+
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "libs/vs-code/CHANGELOG.md"

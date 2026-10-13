@@ -132,7 +132,11 @@ version_toml = [
     "libs/legesher/pyproject.toml:project.version",
 ]
 
-commit_parser = "angular"
+commit_parser = "conventional"
+# The release commit's subject. PSR's default is the bare version ("0.23.0"),
+# which the `chore(release)` skip in ci.yml and the release trains never
+# matched, so every release retriggered its own train once (CORE-1852).
+commit_message = "chore(release): {version}"
 # false: a breaking change takes 0.22.0 to 0.23.0, and the foundation stays
 # sub-1.0 until 1.0 is declared deliberately — the same rule libs/mcp already
 # follows (CORE-1851). With `true`, three `feat(i18n)!:` commits from
@@ -144,11 +148,8 @@ commit_parser = "angular"
 # a coordinated 51-package change, never an incidental one.
 major_on_zero = false
 allow_zero_version = true
-branch = "main"
 tag_format = "v{version}"
 build_command = "uv build"
-upload_to_vcs_release = true
-upload_to_pypi = false
 # Override python-semantic-release's hardcoded default of
 # `semantic-release <semantic-release>`. That bare-word author has no `@`,
 # so downstream tooling that validates commit authors (Vercel deploy gating,
@@ -162,6 +163,19 @@ allowed_tags = [
     "feat", "fix", "docs", "style", "refactor",
     "perf", "test", "build", "ci", "chore", "revert"
 ]
+# The `conventional` parser is the renamed `angular` one (removed in PSR 11),
+# with two defaults flipped. Pinned so the sweep changes no bump: a squash
+# body that lists feat/fix lines still counts as the one commit it is.
+parse_squash_commits = false
+ignore_merge_commits = false
+
+# PSR 10 reads these two from this table and ignores the top-level spellings
+# (`upload_to_vcs_release`, `upload_to_pypi`) the config used to carry. It
+# never uploads to PyPI: publish-pypi.yml owns that (CORE-626). `dist/*` is
+# where `build_command` above writes, so the GitHub release gets the wheel.
+[tool.semantic_release.publish]
+upload_to_vcs_release = true
+dist_glob_patterns = ["dist/*"]
 
 [tool.semantic_release.changelog]
 exclude_commit_patterns = [

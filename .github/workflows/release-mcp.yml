@@ -40,6 +40,26 @@ jobs:
         with:
           python-version: '3.13'
 
+      # Same guard as release-language-server.yml (CORE-2203, CORE-1852).
+      # semantic-release computes the next version from the last tag matching
+      # tag_format; after every release that tag and project.version agree,
+      # because the train writes both. A missing or unreachable tag, or a hand
+      # edit of project.version, would each make it compute from the wrong
+      # place. The baseline is `mcp-v0.1.0`, tagged by hand once.
+      - name: Require the last release tag to match project.version
+        run: |
+          LAST_TAG=$(git tag --merged HEAD -l 'mcp-v*' --sort=-v:refname | head -1)
+          if [ -z "$LAST_TAG" ]; then
+            echo "::error::No mcp-v* tag is reachable from HEAD. Push the baseline tag before this train can run (CORE-1852)."
+            exit 1
+          fi
+          PROJECT_VERSION=$(python3 -c "import tomllib,pathlib; print(tomllib.loads(pathlib.Path('libs/mcp/pyproject.toml').read_text())['project']['version'])")
+          if [ "$LAST_TAG" != "mcp-v${PROJECT_VERSION}" ]; then
+            echo "::error::The last release tag is ${LAST_TAG}, but libs/mcp/pyproject.toml says ${PROJECT_VERSION}. The train writes project.version itself; do not edit it by hand (CORE-1852)."
+            exit 1
+          fi
+          echo "Last release: ${LAST_TAG}"
+
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
@@ -70,9 +90,11 @@ jobs:
 
       # Run from the REPO ROOT with an explicit -c, never from libs/mcp.
       # semantic-release resolves every configured path against the git root,
-      # so a run whose cwd is libs/mcp still reads root-relative paths — and
+      # so a run whose cwd is libs/mcp still reads root-relative paths, and
       # a config written as if it were cwd-relative silently targets the root
       # pyproject and the root changelog. Root + explicit -c is unambiguous.
+      # scripts/tests/test_semantic_release_configs.py checks the config's
+      # paths stay under libs/mcp (CORE-1852).
       #
       # --no-changelog: this repo's changelogs are hand-written and stamped
       # by scripts/stamp-changelog-release.py (next step), not generated.
@@ -117,13 +139,15 @@ jobs:
 
       - name: Stamp changelog
         if: steps.semantic-release.outputs.release_created == 'true'
+        env:
+          VERSION: ${{ steps.semantic-release.outputs.version }}
         run: |
-          # Only libs/mcp's changelog is stamped with this version — the root
+          # Only libs/mcp's changelog is stamped with this version; the root
           # [Unreleased] belongs to the foundation train. The script still
           # refreshes the root Package Versions table, which reads every
           # package's pyproject and so picks up the new mcp version.
           python scripts/stamp-changelog-release.py \
-            --version "${{ steps.semantic-release.outputs.version }}" \
+            --version "$VERSION" \
             --changelogs libs/mcp/CHANGELOG.md
           git add CHANGELOG.md libs/mcp/CHANGELOG.md
           if [ -n "$(git diff --cached --name-only)" ]; then
@@ -144,8 +168,9 @@ jobs:
         if: steps.semantic-release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.semantic-release.outputs.version }}
         run: |
-          echo "Creating GitHub Release for mcp-v${{ steps.semantic-release.outputs.version }}..."
+          echo "Creating GitHub Release for mcp-v${VERSION}..."
           uv run semantic-release -c libs/mcp/pyproject.toml publish
 
       - name: Upload build artifacts

@@ -17,10 +17,10 @@ on:
         required: true
         default: 'python'
         # `choice`, not `string` (CORE-1920). This value names a directory
-        # under libs/i18n/language-packs/ and is interpolated into shell and
-        # into `working-directory:`; as free text it was the one genuinely
-        # unconstrained input in this workflow. `language` was already a
-        # choice. Add an option here when a second target ships.
+        # under libs/i18n/language-packs/ and reaches the release job's shell
+        # through `env:`; as free text it was the one genuinely unconstrained
+        # input in this workflow. `language` was already a choice. Add an
+        # option here when a second target ships.
         type: choice
         options:
           - python
@@ -95,7 +95,14 @@ jobs:
   detect-changed-packs:
     name: Detect Changed Language Packs
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    # A pack's own release commit touches its pyproject.toml, which is under
+    # the paths filter above, so without this skip every release retriggered
+    # the train once (CORE-1852). `startsWith`, as in ci.yml, so a squash body
+    # that merely mentions the prefix cannot trip it.
+    if: >-
+      github.event_name == 'push' &&
+      !startsWith(github.event.head_commit.message, 'chore(release)') &&
+      !startsWith(github.event.head_commit.message, 'docs(changelog): stamp')
     outputs:
       packs: ${{ steps.detect.outputs.packs }}
     steps:
@@ -128,16 +135,32 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-changed-packs]
     if: needs.detect-changed-packs.outputs.packs != '[]'
-    permissions:
-      contents: write  # tags, and the GitHub release body
     strategy:
+      fail-fast: false
+      # One pack at a time: every job pushes a release commit to main, and
+      # parallel pushes reject each other (CORE-1852).
+      max-parallel: 1
       matrix:
         pack: ${{ fromJson(needs.detect-changed-packs.outputs.packs) }}
+    permissions:
+      contents: write  # tags, and the GitHub release body
+    env:
+      # Bound here rather than interpolated into the scripts below, so the
+      # values arrive as data instead of as shell source (CORE-1920).
+      TARGET: python
+      PACK: ${{ matrix.pack }}
+      PACK_DIR: libs/i18n/language-packs/python/${{ matrix.pack }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          # The tip of main, not the triggering or dispatched commit: this job
+          # pushes release commits to main, and a push that does not build on
+          # main's current tip is rejected (CORE-1852). In release-pack the
+          # packs release one at a time (max-parallel: 1), each on top of the
+          # last one's commits.
+          ref: main
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -146,71 +169,126 @@ jobs:
         with:
           python-version: '3.13'
 
+      # Same guard as release-language-server.yml (CORE-2203, CORE-1852).
+      # semantic-release computes the next version from the last tag matching
+      # tag_format. With none it starts at 0.0.0 and counts every commit in the
+      # repository, and with major_on_zero the breaking commits in history
+      # would cut a pack at 0.0.5 straight to 1.0.0. No pack has ever been
+      # tagged, so the baseline `i18n-<target>-<pack>-v<project.version>` on the
+      # commit that set that version is pushed by hand once, per pack.
+      - name: Require the last release tag to match project.version
+        run: |
+          LAST_TAG=$(git tag --merged HEAD -l "i18n-${TARGET}-${PACK}-v*" --sort=-v:refname | head -1)
+          PROJECT_VERSION=$(python3 -c "import os,tomllib,pathlib; print(tomllib.loads(pathlib.Path(os.environ['PACK_DIR'], 'pyproject.toml').read_text())['project']['version'])")
+          if [ -z "$LAST_TAG" ]; then
+            echo "::error::No i18n-${TARGET}-${PACK}-v* tag is reachable from HEAD. Push the baseline tag i18n-${TARGET}-${PACK}-v${PROJECT_VERSION} before this train can run (CORE-1852)."
+            exit 1
+          fi
+          if [ "$LAST_TAG" != "i18n-${TARGET}-${PACK}-v${PROJECT_VERSION}" ]; then
+            echo "::error::The last release tag is ${LAST_TAG}, but ${PACK_DIR}/pyproject.toml says ${PROJECT_VERSION}. The train writes project.version itself; do not edit it by hand (CORE-1852)."
+            exit 1
+          fi
+          echo "Last release: ${LAST_TAG}"
+
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
           version: "latest"
           enable-cache: true
 
+      # The locked python-semantic-release, as release-mcp.yml and
+      # release-language-server.yml run it, so the configs run under the
+      # version scripts/tests/test_semantic_release_configs.py checks.
       - name: Install dependencies
         run: |
-          uv pip install --system python-semantic-release
+          uv sync
 
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Release language pack
-        id: version
-        working-directory: libs/i18n/language-packs/python/${{ matrix.pack }}
+      # Run from the REPO ROOT with an explicit -c, never from the pack
+      # directory. semantic-release resolves every configured path against the
+      # git root, so a config written as if it were cwd-relative read and
+      # rewrote the ROOT pyproject (CORE-1852). Root + explicit -c is
+      # unambiguous; scripts/tests/test_semantic_release_configs.py checks the
+      # config's paths stay under the pack.
+      #
+      # --no-changelog: this repo's changelogs are hand-written and stamped by
+      # scripts/stamp-changelog-release.py (next step), not generated.
+      #
+      # `version` exits 0 whether or not it releases. Any other exit is an
+      # error and fails the job; it is no longer read as "no release needed",
+      # which is how a config PSR 10 could not even load stayed green.
+      - name: Run Semantic Release
+        id: semantic-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Bound here rather than interpolated into the script below, so the
-          # value arrives as data instead of as shell source (CORE-1920).
-          PACK: ${{ matrix.pack }}
         run: |
-          echo "📦 Releasing i18n-python-$PACK..."
-          if python -m semantic_release version --verbose; then
-            echo "released=true" >> $GITHUB_OUTPUT
+          echo "📦 Running semantic-release for legesher-i18n-${TARGET}-${PACK}..."
+
+          HEAD_BEFORE=$(git rev-parse HEAD)
+
+          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" version --no-changelog
+
+          HEAD_AFTER=$(git rev-parse HEAD)
+
+          if [ "$HEAD_BEFORE" != "$HEAD_AFTER" ]; then
+            NEW_VERSION=$(python3 -c "import os,tomllib,pathlib; print(tomllib.loads(pathlib.Path(os.environ['PACK_DIR'], 'pyproject.toml').read_text())['project']['version'])")
+            echo "✅ Release created: legesher-i18n-${TARGET}-${PACK} v${NEW_VERSION} (commit: ${HEAD_AFTER:0:7})"
+            echo "release_created=true" >> "$GITHUB_OUTPUT"
+            echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
           else
-            echo "ℹ️ No release needed for i18n-python-$PACK"
-            echo "released=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No release needed (HEAD unchanged)"
+            echo "release_created=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Stamp changelog
+        if: steps.semantic-release.outputs.release_created == 'true'
+        env:
+          VERSION: ${{ steps.semantic-release.outputs.version }}
+        run: |
+          # Only this pack's changelog is stamped with this version; the root
+          # [Unreleased] belongs to the foundation train. The script still
+          # refreshes the root Package Versions table.
+          uv run python scripts/stamp-changelog-release.py \
+            --version "$VERSION" \
+            --changelogs "${PACK_DIR}/CHANGELOG.md"
+          git add CHANGELOG.md "${PACK_DIR}/CHANGELOG.md"
+          if [ -n "$(git diff --cached --name-only)" ]; then
+            git commit -m "docs(changelog): stamp release [CORE-608]"
+          fi
+
+      - name: Push release commits
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: git push origin main
+
+      # `uv build <path>`, positional and WITH build isolation. A path build of
+      # a pack lands in that pack's own dist/ (uv sets the root workspace aside
+      # because libs/i18n, a project but not a workspace root, sits between
+      # them), which is where the config's dist_glob_patterns points, so the
+      # GitHub release gets the wheel. Built BEFORE the release is created,
+      # which the old order got backwards (CORE-1852). publish-pypi.yml names
+      # the distribution with --package instead (CORE-2313).
+      - name: Build package
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: |
+          uv build "${PACK_DIR}"
+
       - name: Create GitHub Release
-        if: steps.version.outputs.released == 'true'
-        working-directory: libs/i18n/language-packs/python/${{ matrix.pack }}
+        if: steps.semantic-release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python -m semantic_release publish --verbose
-
-      # `uv build <path>` — positional, and WITH build isolation.
-      # Two bugs lived on this line (CORE-1920 review). `-p` is uv's short
-      # form of `--python`, not `--package`, so the pack path was handed to
-      # interpreter discovery and the build failed every time — after
-      # `semantic_release version` had already pushed the tag and cut the
-      # GitHub Release, so a release could ship with no dists and a red job.
-      # And `--no-build-isolation` cannot work here regardless: the packs
-      # build with `pdm-backend`, which this job never installs. A path build
-      # of a pack lands in that pack's own dist/: uv sets the root workspace
-      # aside because libs/i18n, a project but not a workspace root, sits
-      # between them. publish-pypi.yml names the distribution with --package
-      # instead (CORE-2313).
-      - name: Build package
-        if: steps.version.outputs.released == 'true'
-        env:
-          PACK: ${{ matrix.pack }}
-        run: |
-          uv build "libs/i18n/language-packs/python/$PACK"
+          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" publish
 
       - name: Upload build artifacts
-        if: steps.version.outputs.released == 'true'
+        if: steps.semantic-release.outputs.release_created == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: i18n-python-${{ matrix.pack }}-dist-${{ github.sha }}
-          path: libs/i18n/language-packs/python/${{ matrix.pack }}/dist/
+          path: ${{ env.PACK_DIR }}/dist/
           retention-days: 90
 
   release-manual:
@@ -219,11 +297,23 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: write  # tags, and the GitHub release body
+    env:
+      # Bound here rather than interpolated into the scripts below, so the
+      # values arrive as data instead of as shell source (CORE-1920).
+      TARGET: ${{ github.event.inputs.target }}
+      PACK: ${{ github.event.inputs.language }}
+      PACK_DIR: libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          # The tip of main, not the triggering or dispatched commit: this job
+          # pushes release commits to main, and a push that does not build on
+          # main's current tip is rejected (CORE-1852). In release-pack the
+          # packs release one at a time (max-parallel: 1), each on top of the
+          # last one's commits.
+          ref: main
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -232,72 +322,124 @@ jobs:
         with:
           python-version: '3.13'
 
+      # Same guard as release-language-server.yml (CORE-2203, CORE-1852).
+      # semantic-release computes the next version from the last tag matching
+      # tag_format. With none it starts at 0.0.0 and counts every commit in the
+      # repository, and with major_on_zero the breaking commits in history
+      # would cut a pack at 0.0.5 straight to 1.0.0. No pack has ever been
+      # tagged, so the baseline `i18n-<target>-<pack>-v<project.version>` on the
+      # commit that set that version is pushed by hand once, per pack.
+      - name: Require the last release tag to match project.version
+        run: |
+          LAST_TAG=$(git tag --merged HEAD -l "i18n-${TARGET}-${PACK}-v*" --sort=-v:refname | head -1)
+          PROJECT_VERSION=$(python3 -c "import os,tomllib,pathlib; print(tomllib.loads(pathlib.Path(os.environ['PACK_DIR'], 'pyproject.toml').read_text())['project']['version'])")
+          if [ -z "$LAST_TAG" ]; then
+            echo "::error::No i18n-${TARGET}-${PACK}-v* tag is reachable from HEAD. Push the baseline tag i18n-${TARGET}-${PACK}-v${PROJECT_VERSION} before this train can run (CORE-1852)."
+            exit 1
+          fi
+          if [ "$LAST_TAG" != "i18n-${TARGET}-${PACK}-v${PROJECT_VERSION}" ]; then
+            echo "::error::The last release tag is ${LAST_TAG}, but ${PACK_DIR}/pyproject.toml says ${PROJECT_VERSION}. The train writes project.version itself; do not edit it by hand (CORE-1852)."
+            exit 1
+          fi
+          echo "Last release: ${LAST_TAG}"
+
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
           version: "latest"
           enable-cache: true
 
+      # The locked python-semantic-release, as release-mcp.yml and
+      # release-language-server.yml run it, so the configs run under the
+      # version scripts/tests/test_semantic_release_configs.py checks.
       - name: Install dependencies
         run: |
-          uv pip install --system python-semantic-release
+          uv sync
 
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Release language pack
-        id: version
-        working-directory: libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
-        # Dispatch inputs reach the script as variables, never as `${{ }}`
-        # substituted into it — substitution happens before bash parses, so
-        # an interpolated input is shell source rather than data (CORE-1920).
+      # Run from the REPO ROOT with an explicit -c, never from the pack
+      # directory. semantic-release resolves every configured path against the
+      # git root, so a config written as if it were cwd-relative read and
+      # rewrote the ROOT pyproject (CORE-1852). Root + explicit -c is
+      # unambiguous; scripts/tests/test_semantic_release_configs.py checks the
+      # config's paths stay under the pack.
+      #
+      # --no-changelog: this repo's changelogs are hand-written and stamped by
+      # scripts/stamp-changelog-release.py (next step), not generated.
+      #
+      # `version` exits 0 whether or not it releases. Any other exit is an
+      # error and fails the job; it is no longer read as "no release needed",
+      # which is how a config PSR 10 could not even load stayed green.
+      - name: Run Semantic Release
+        id: semantic-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TARGET: ${{ github.event.inputs.target }}
-          LANGUAGE: ${{ github.event.inputs.language }}
         run: |
-          echo "📦 Releasing i18n-$TARGET-$LANGUAGE..."
-          if python -m semantic_release version --verbose; then
-            echo "released=true" >> "$GITHUB_OUTPUT"
+          echo "📦 Running semantic-release for legesher-i18n-${TARGET}-${PACK}..."
+
+          HEAD_BEFORE=$(git rev-parse HEAD)
+
+          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" version --no-changelog
+
+          HEAD_AFTER=$(git rev-parse HEAD)
+
+          if [ "$HEAD_BEFORE" != "$HEAD_AFTER" ]; then
+            NEW_VERSION=$(python3 -c "import os,tomllib,pathlib; print(tomllib.loads(pathlib.Path(os.environ['PACK_DIR'], 'pyproject.toml').read_text())['project']['version'])")
+            echo "✅ Release created: legesher-i18n-${TARGET}-${PACK} v${NEW_VERSION} (commit: ${HEAD_AFTER:0:7})"
+            echo "release_created=true" >> "$GITHUB_OUTPUT"
+            echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
           else
-            echo "ℹ️ No release needed"
-            echo "released=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ No release needed (HEAD unchanged)"
+            echo "release_created=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Stamp changelog
+        if: steps.semantic-release.outputs.release_created == 'true'
+        env:
+          VERSION: ${{ steps.semantic-release.outputs.version }}
+        run: |
+          # Only this pack's changelog is stamped with this version; the root
+          # [Unreleased] belongs to the foundation train. The script still
+          # refreshes the root Package Versions table.
+          uv run python scripts/stamp-changelog-release.py \
+            --version "$VERSION" \
+            --changelogs "${PACK_DIR}/CHANGELOG.md"
+          git add CHANGELOG.md "${PACK_DIR}/CHANGELOG.md"
+          if [ -n "$(git diff --cached --name-only)" ]; then
+            git commit -m "docs(changelog): stamp release [CORE-608]"
+          fi
+
+      - name: Push release commits
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: git push origin main
+
+      # `uv build <path>`, positional and WITH build isolation. A path build of
+      # a pack lands in that pack's own dist/ (uv sets the root workspace aside
+      # because libs/i18n, a project but not a workspace root, sits between
+      # them), which is where the config's dist_glob_patterns points, so the
+      # GitHub release gets the wheel. Built BEFORE the release is created,
+      # which the old order got backwards (CORE-1852). publish-pypi.yml names
+      # the distribution with --package instead (CORE-2313).
+      - name: Build package
+        if: steps.semantic-release.outputs.release_created == 'true'
+        run: |
+          uv build "${PACK_DIR}"
+
       - name: Create GitHub Release
-        if: steps.version.outputs.released == 'true'
-        working-directory: libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}
+        if: steps.semantic-release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python -m semantic_release publish --verbose
-
-      # `uv build <path>` — positional, and WITH build isolation.
-      # Two bugs lived on this line (CORE-1920 review). `-p` is uv's short
-      # form of `--python`, not `--package`, so the pack path was handed to
-      # interpreter discovery and the build failed every time — after
-      # `semantic_release version` had already pushed the tag and cut the
-      # GitHub Release, so a release could ship with no dists and a red job.
-      # And `--no-build-isolation` cannot work here regardless: the packs
-      # build with `pdm-backend`, which this job never installs. A path build
-      # of a pack lands in that pack's own dist/: uv sets the root workspace
-      # aside because libs/i18n, a project but not a workspace root, sits
-      # between them. publish-pypi.yml names the distribution with --package
-      # instead (CORE-2313).
-      - name: Build package
-        if: steps.version.outputs.released == 'true'
-        env:
-          TARGET: ${{ github.event.inputs.target }}
-          LANGUAGE: ${{ github.event.inputs.language }}
-        run: |
-          uv build "libs/i18n/language-packs/$TARGET/$LANGUAGE"
+          uv run semantic-release -c "${PACK_DIR}/pyproject.toml" publish
 
       - name: Upload build artifacts
-        if: steps.version.outputs.released == 'true'
+        if: steps.semantic-release.outputs.release_created == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: i18n-${{ github.event.inputs.target }}-${{ github.event.inputs.language }}-dist-${{ github.sha }}
-          path: libs/i18n/language-packs/${{ github.event.inputs.target }}/${{ github.event.inputs.language }}/dist/
+          path: ${{ env.PACK_DIR }}/dist/
           retention-days: 90
