@@ -126,56 +126,30 @@ class TestVersionIndexIntegration:
 
 
 class TestPerformance:
-    """Test performance characteristics."""
+    """Structural checks that used to carry wall-clock bounds."""
 
-    def test_pack_loading_performance(self):
-        """Test that pack loading is reasonably fast."""
-        import time
+    # Wall-clock bounds (500 ms, 10 ms, 2 s) used to sit on these three tests.
+    # A loaded CI runner can miss any of them for a reason that is not a
+    # defect; timing is measured under `make bench`, and the per-commit
+    # guarantees here are structural.
 
+    def test_pack_loading(self):
+        """A pack loads."""
         loader = LanguagePackLoader()
+        assert loader.load("es", "python", "3.13") is not None
 
-        start = time.time()
-        _ = loader.load("es", "python", "3.13")
-        elapsed = time.time() - start
-
-        # Should load in under 100ms (without inheritance resolution)
-        # First load might be slower due to file I/O
-        assert elapsed < 0.5  # 500ms generous limit
-
-    def test_cached_loading_performance(self):
-        """Test that cached loading is fast."""
-        import time
-
+    def test_cached_loading_returns_the_same_object(self):
+        """A second load is the cached pack, not a reload."""
         loader = LanguagePackLoader()
-
-        # First load (cache miss)
         pack1 = loader.load("es", "python", "3.10")
-
-        # Second load (cache hit)
-        start = time.time()
         pack2 = loader.load("es", "python", "3.10")
-        elapsed = time.time() - start
-
-        # Cached load should be essentially instant
-        assert elapsed < 0.01  # 10ms
-        assert pack1 is pack2  # Same object
+        assert pack1 is pack2
 
     def test_multiple_pack_loading(self):
-        """Test loading multiple packs efficiently."""
-        import time
-
-        start = time.time()
-
-        # Load 8 packs (2 languages × 4 versions)
+        """Four versions of two packs load."""
         for lang in ["es", "ar"]:
             for version in ["3.10", "3.11", "3.12", "3.13"]:
-                pack = load_language_pack(lang, version=version)
-                assert pack is not None
-
-        elapsed = time.time() - start
-
-        # Should complete in reasonable time
-        assert elapsed < 2.0  # 2 seconds for 8 packs
+                assert load_language_pack(lang, version=version) is not None
 
 
 class TestErrorHandling:

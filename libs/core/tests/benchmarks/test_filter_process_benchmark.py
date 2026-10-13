@@ -23,15 +23,6 @@ COMMANDS = {
 }
 
 
-@pytest.fixture
-def timing_on(request):
-    config = request.config
-    if config.getoption("benchmark_disable") and not config.getoption(
-        "benchmark_enable"
-    ):
-        pytest.skip("timing runs only under make bench")
-
-
 def git(repo, *args):
     subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True)
 

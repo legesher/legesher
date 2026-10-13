@@ -16,6 +16,7 @@ import re
 import stat
 from unittest.mock import MagicMock, patch
 
+import pytest
 from click.testing import CliRunner
 
 from legesher.cli.main import cli
@@ -652,6 +653,10 @@ class TestErrorHandling:
         assert "error" in result.output.lower()
         assert "Cannot parse invalid syntax" in result.output
 
+    @pytest.mark.skipif(
+        getattr(os, "geteuid", lambda: 1)() == 0,
+        reason="root bypasses chmod; act and some self-hosted runners run as root",
+    )
     @patch("legesher.cli.translate.TokenTranslator")
     def test_translate_permission_denied_error(self, mock_translator_class, tmp_path):
         """Error when can't write to output file."""

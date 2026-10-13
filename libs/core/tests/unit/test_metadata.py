@@ -17,6 +17,7 @@ Test Coverage:
 Coverage Target: >90%
 """
 
+import os
 import sys
 
 import pytest
@@ -552,6 +553,10 @@ class TestAtomicWrite:
 
     @pytest.mark.skipif(
         sys.platform == "win32", reason="chmod doesn't restrict writes on Windows"
+    )
+    @pytest.mark.skipif(
+        getattr(os, "geteuid", lambda: 1)() == 0,
+        reason="root bypasses chmod; act and some self-hosted runners run as root",
     )
     def test_atomic_write_cleanup_on_error(self, metadata_manager, temp_repo):
         """Test that temp files are cleaned up on write errors."""
