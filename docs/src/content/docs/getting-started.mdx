@@ -116,13 +116,14 @@ definir ejemplo_manejo_errores():
 
 ### Git Integration
 
-Your code is stored in English in git, but you see it in your language:
+Your code is stored in git in the language you wrote it in:
 
 - **Your view:** Code in your native language
-- **Git storage:** English (for universal collaboration)
-- **Automatic translation:** Both directions, seamlessly
+- **Git storage:** The author's language, one stored form per file; a stray keyword in another language is
+  normalized when the file is staged
+- **Run form:** English keywords, produced only when the code runs
 
-{/* VISUAL: [Demo 15] Clean/smudge filter flow diagram showing local ↔ git translation */}
+{/* VISUAL: [Demo 15] Clean filter flow diagram: one stored form per file, stray-keyword normalization at git add, run form at run time */}
 
 ### IntelliSense Support
 

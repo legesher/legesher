@@ -113,13 +113,14 @@ definir ejemplo_manejo_errores():
 
 ### Integración con git
 
-Tu código se guarda en inglés en git, pero tú lo ves en tu idioma:
+Tu código se guarda en git en el idioma en que lo escribiste:
 
 - **Tu vista:** código en tu idioma nativo
-- **Almacenamiento en git:** inglés (para la colaboración universal)
-- **Traducción automática:** en ambas direcciones, sin fricciones
+- **Almacenamiento en git:** el idioma del autor, una sola forma almacenada por archivo; una palabra clave de otro
+  idioma que se cuele se normaliza al hacer `git add`
+- **Forma de ejecución:** palabras clave en inglés, producidas solo cuando el código se ejecuta
 
-{/* VISUAL: [Demo 15] Clean/smudge filter flow diagram showing local ↔ git translation */}
+{/* VISUAL: [Demo 15] Clean filter flow diagram: one stored form per file, stray-keyword normalization at git add, run form at run time */}
 
 ### Compatibilidad con IntelliSense
 

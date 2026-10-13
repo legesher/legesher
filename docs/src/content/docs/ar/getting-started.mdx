@@ -113,13 +113,13 @@ definir ejemplo_manejo_errores():
 
 ### التكامل مع git
 
-يُخزَّن كودك بالإنجليزية في git، لكنك تراه بلغتك:
+يُخزَّن كودك في git باللغة التي كتبته بها:
 
 - **ما تراه أنت:** الكود بلغتك الأم
-- **التخزين في git:** بالإنجليزية (من أجل تعاون عالمي)
-- **ترجمة تلقائية:** في الاتجاهين وبسلاسة
+- **التخزين في git:** لغة المؤلف، شكل مخزَّن واحد لكل ملف؛ وأي كلمة مفتاحية بلغة أخرى تتسلل إلى الملف تُعاد إلى لغته عند `git add`
+- **شكل التنفيذ:** كلمات مفتاحية بالإنجليزية، تُنتَج فقط عند تشغيل الكود
 
-{/* VISUAL: [Demo 15] Clean/smudge filter flow diagram showing local ↔ git translation */}
+{/* VISUAL: [Demo 15] Clean filter flow diagram: one stored form per file, stray-keyword normalization at git add, run form at run time */}
 
 ### دعم IntelliSense
 

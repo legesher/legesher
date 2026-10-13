@@ -191,7 +191,7 @@ policy and playbook half for agent sessions:
 - **`skills/legesher-localized-code/`** — the stable-knowledge skill
   ([Agent Skills](https://agentskills.io) format: portable across Claude
   Code, Claude apps, and the API). It teaches the mental model
-  (canonical ↔ native, deterministic vs fuzzy layers), which tool to call
+  (run form ↔ native, deterministic vs fuzzy layers), which tool to call
   when, the write → round-trip → validate workflow, and the naming
   discipline. Claude Code: copy the directory into your project's
   `.claude/skills/`. Skills carry the *stable* playbook; the MCP server

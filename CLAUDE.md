@@ -381,7 +381,7 @@ libs/i18n/language-packs/{programming-language}/{natural-language}/
 
 All packs have 37 keywords, 73 builtins, and 67 exceptions at the 3.10 base, rising to
 39/73/70 once 3.11-3.14 inheritance is applied. Translations are machine-generated
-(except the English reference); the model used is recorded per pack in
+(except the `en` pack, which carries Python's own vocabulary); the model used is recorded per pack in
 `metadata.author`.
 
 ### Independent Releases
@@ -682,7 +682,8 @@ Examples: `[vs-code:telemetry] Fix event tracking`, `[i18n:packs] Add dunder tra
 ### Key Architectural Decisions
 
 **Translation Strategy**: Hybrid (local + cloud) → Progressive Enhancement
-**Git Integration**: Canonical English storage via git filters (single source of truth)
+**Git Integration**: the stored form of a file is its author's language (CORE-1841); the clean filter normalizes
+stray keywords to it, and the run form with English keywords is produced at run time and never replaces the stored file
 **AST Transformation**: Both token-based AND tree-sitter implementations complete and production-ready
 **IDE Integration**: Language Server Protocol (multi-editor support)
 **Python Versions**: Version-aware packs with inheritance (future-proof)
@@ -761,7 +762,8 @@ Architectural rationale and detailed design decisions will be documented as the 
 - **Python Versions**: Version-aware language packs support Python 3.x evolution (see architecture docs)
 - **Privacy**: Local-first approach for code translation (cloud optional, never required)
 - **Performance**: Real-time translation in IDE requires fast AST transformation
-- **Git Compatibility**: All git workflows must work seamlessly with canonical English storage
+- **Git Compatibility**: All git workflows must work with per-file origin-language storage: the stored form is
+  the author's language, never a translation of it
 - **DCO Sign-off**: All commits must include a `Signed-off-by` trailer. Always use `git commit -s` when
   creating commits. See `CONTRIBUTING.md` for details.
 

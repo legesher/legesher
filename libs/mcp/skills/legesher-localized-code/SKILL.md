@@ -10,11 +10,12 @@ description: Use when writing, editing, or reviewing code in a repository with a
 Legesher lets people program Python in their own natural language. Every
 file has two renderings of the **same program**:
 
-- **Canonical form** — English keywords. What the interpreter, the
-  toolchain, and upstream collaborators consume.
+- **Run form** — English keywords, which CPython requires. What the
+  interpreter consumes; produced on demand, never the stored original.
 - **Native form** — the declared language's keywords (from a Legesher
   language pack), with identifiers, comments, and docstrings in that
-  language too.
+  language too. This is the original: a file's canonical form is
+  whatever its author wrote, and it is what git stores.
 
 The language pack is a reviewed dictionary, not a model: keyword and
 builtin translation is **deterministic** and reversible. Translation
@@ -31,8 +32,8 @@ a builtin's rendering is how localized code silently breaks.
 
 | You need | Call |
 | --- | --- |
-| Native rendering of canonical code | `translate_to_native` |
-| Canonical form of native code (to run, diff, or ship upstream) | `translate_to_source` |
+| Native rendering of run-form code | `translate_to_native` |
+| Run form of native code (to run, or to diff against an English project) | `translate_to_source` |
 | Proof that a file round-trips | either translate tool with `verify_round_trip: true` |
 | Engine facts to explain code or an error in the user's language | `explain_in_language` — it returns construct mappings + a static validation result; you write the prose |
 | How specific terms render in a language | `lookup_keyword_mapping` |
@@ -54,7 +55,7 @@ stdio server makes no network calls.
    for identifiers).
 3. **Round-trip before you finish.** Call `translate_to_source` on the file
    with `verify_round_trip: true`. The engine translates back, compares
-   byte-for-byte, and checks the canonical form compiles; you do not.
+   byte-for-byte, and checks the run form compiles; you do not.
    Quote the returned `verdict_line` and do not restate the verdict in your
    own words — the line states what was verified and what was not.
 4. **Validate.** `explain_in_language` includes the static validation
@@ -85,9 +86,9 @@ stdio server makes no network calls.
 
 ## Cross-language collaboration
 
-- The canonical form is the interchange format: upstream PRs, published
-  packages, and cross-team diffs travel as canonical unless the receiving
-  repository declares otherwise.
+- A file travels in the language it was written in; its canonical form is
+  the author's own. Translate to the run form only when the receiving
+  repository declares English, as an upstream English project does.
 - Two contributors in two languages are editing the same program — the
   deterministic layer keeps their renderings equivalent; the glossary
   keeps each language's identifier vocabulary internally consistent.
@@ -108,14 +109,15 @@ the move:
 
 - **`keywords`, `builtins`, `exceptions`, `implicit_params`** — the
   deterministic layer failed: a pack or engine defect. Report it with the
-  verdict line and keep the affected code canonical.
+  verdict line and keep the affected code in Python's own keywords.
 - **`collision`** — an identifier is spelled like a pack rendering
   (a known class: CORE-1840). Rename the identifier; the pack is correct.
-- **`identifiers`** — expected today; canonical storage retains native
-  identifiers. Disclosed residue, not a failure. Carry on.
+- **`identifiers`** — expected today; the run form retains native
+  identifiers, which are the original names. Disclosed residue, not a
+  failure. Carry on.
 - **`comments`, `strings`** — your own layer drifted. Fix it and re-verify.
 
 A missing pack term or an untranslatable construct: flag it explicitly and
-keep the affected code canonical rather than improvising a translation. That
-is a pack-gap signal the Legesher project collects — not a rule you may
-quietly relax.
+keep the affected code in Python's own keywords rather than improvising a
+translation. That is a pack-gap signal the Legesher project collects, not a
+rule you may quietly relax.

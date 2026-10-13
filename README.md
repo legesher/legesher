@@ -26,14 +26,16 @@ population who don't speak English as their first language. Developers must lear
 **The Solution:** Legesher translates your code in real-time:
 
 - Write code in Spanish, Arabic, or your preferred language
-- Store files in English in git (no merge conflicts!)
+- Keep each file in git in the language it was written in: one stored form, so no keyword merge conflicts
 - Collaborate with developers using any language
 - Full IDE support with IntelliSense, hover docs, and error messages in your language
 
 ### What Makes Legesher Different?
 
-- **Language-Agnostic Git:** Store canonical English in your repository, but each developer sees their preferred
-  language. No merge conflicts from keyword differences.
+- **Language-Agnostic Git:** Each file is stored in the language its author wrote it in. The clean filter keeps a
+  file in that one stored form, so keyword differences never cause merge conflicts, and renderings for a reader come
+  from `legesher translate` or, for English files, the editor's Translation Panel, never from a rewrite of the stored
+  file.
 - **Real-Time Translation:** Bidirectional translation preserves all formatting, comments, and structure.
 - **IDE Integration:** A VS Code extension ships today. It talks to a standard Language Server Protocol server, so
   other LSP-capable editors can drive the same server, though we ship no integration for them yet.
@@ -196,14 +198,32 @@ See [legesher-i18n](libs/i18n/README.md) for details.
 
 ### Git Integration
 
-- **Canonical English Storage:** Repository stores English for universal collaboration
-- **Automatic Translation:** On checkout, code translates to developer's preferred language
+- **The author's form is canonical:** the repository stores each file in the language it was written in; the run
+  form Python executes is produced at run time and never replaces the stored file
+- **Keyword normalization at `git add`:** a stray keyword in another language is rewritten to the file's stored
+  language by the clean filter, which never refuses a file
 - **Zero Conflicts:** No merge conflicts from keyword differences
-- **Multilingual Teams:** Spanish developer → English repo → Arabic developer workflow
+- **Multilingual Teams:** one stored file serves a Spanish author and readers in other languages;
+  `legesher translate` renders a copy with keywords, builtins and exceptions in the reader's language (through
+  English between two non-English languages), leaving names, comments and strings as written; the opt-in
+  keyword-only smudge renders an English file's keywords for terminal editors
 - **Metadata Tracking:** Privacy-first translation history with audit trail
 - **Atomic Operations:** Crash-safe file operations
 
 See [legesher-core](libs/core/README.md) for git filter documentation.
+
+**Three forms of one program**
+
+- **Original (canonical):** the form a name's author gave it, in the language they wrote in. `calcular_total` is
+  canonical in a Spanish file, and `os.open` is canonical because that is what the authors of `os` wrote. Git
+  stores this form.
+- **Reader view:** a rendering for someone who reads in another language, English included. `legesher translate`
+  produces one as a copy; for a file stored in English, the editor's Translation Panel shows a preview-quality one.
+  Neither rewrites the stored file. The opt-in keyword-only smudge is the one rendering that replaces a file's
+  working-tree copy, for English files only, and only when the result cleans back to what git stores.
+- **Run form:** what CPython executes, with keywords and library names in the form Python defines. `legesher run`
+  and the import hook produce it at run time; it never replaces the stored file. The import hook caches it, compiled
+  and with its English source text, beside stock bytecode (`__pycache__/<module>.<tag>.legesher-<lang>.pyc`).
 
 ### IDE Support
 

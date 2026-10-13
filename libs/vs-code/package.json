@@ -195,7 +195,7 @@
             "Chinese (中文)"
           ],
           "description": "Deprecated: use legesher.workingLanguage instead. Honoured as an alias while workingLanguage is not set.",
-          "markdownDescription": "The language **you** read and write code in.\n\nThis is your own preference — it changes what you see, not what the repository stores, so people on the same project can each work in their own language.\n\nThe language the project's code is stored in is `#legesher.sourceLanguage#`.",
+          "markdownDescription": "The language **you** read and write code in.\n\nThis is your own preference — it changes what you see, not what the repository stores, so people on the same project can each work in their own language.\n\nThe vocabulary every translation routes through is `#legesher.sourceLanguage#`; each file is stored in the language its author wrote it in.",
           "markdownDeprecationMessage": "Deprecated: use `#legesher.workingLanguage#` instead. This setting is still honoured as an alias whenever `#legesher.workingLanguage#` is not set, so existing configurations keep working — but new configurations should set the new name."
         },
         "legesher.workingLanguage": {
@@ -308,7 +308,7 @@
             "Chinese (中文)"
           ],
           "description": "The language you read and write code in right now",
-          "markdownDescription": "The language **you** read and write code in right now — your *working language*.\n\nThis is your own preference — it changes what you see, not what the repository stores, so people on the same project can each work in their own language. A file written in a different language keeps its own *file language*; this setting decides what the UI renders for you.\n\nReplaces the deprecated `#legesher.targetLanguage#`, which is still honoured while this setting is not set. The languages you read comfortably are `#legesher.knownLanguages#`; the language the project's code is stored in is `#legesher.sourceLanguage#`."
+          "markdownDescription": "The language **you** read and write code in right now — your *working language*.\n\nThis is your own preference — it changes what you see, not what the repository stores, so people on the same project can each work in their own language. A file written in a different language keeps its own *file language*; this setting decides what the UI renders for you.\n\nReplaces the deprecated `#legesher.targetLanguage#`, which is still honoured while this setting is not set. The languages you read comfortably are `#legesher.knownLanguages#`; the vocabulary every translation routes through is `#legesher.sourceLanguage#`, and each file is stored in the language its author wrote it in."
         },
         "legesher.knownLanguages": {
           "type": "array",
@@ -323,8 +323,8 @@
         "legesher.sourceLanguage": {
           "type": "string",
           "default": "en",
-          "description": "The language this project's code is stored in",
-          "markdownDescription": "The language this project's code is **stored** in — a property of the repository, not of you. Change it only if the files on disk are genuinely written in something else.\n\nTo change the language *you* read code in, use `#legesher.targetLanguage#`.\n\n**Note:** Only English (`en`) is currently supported."
+          "description": "The vocabulary every translation routes through: Python's own (en)",
+          "markdownDescription": "The vocabulary every translation routes through: Python's own, `en`. Not what the repository stores: each file is stored in the language its author wrote it in, and this setting only names the pivot.\n\nTo change the language *you* read code in, use `#legesher.workingLanguage#`.\n\n**Note:** Only English (`en`) is currently supported."
         },
         "legesher.languageDetection": {
           "type": "string",
@@ -440,7 +440,7 @@
           {
             "id": "legesher.welcome.intro",
             "title": "Welcome to Legesher 🌍",
-            "description": "Legesher enables you to code Python in your native language.💻 We currently support 51 languages (like Arabic, Hindi, Portuguese) with plans to expand to new languages and dialects. The possibilities are endless when technology speaks your language. \n\nExplore and innovate freely! Currently, your code is automatically translated to canonical English for git, collaboration, and execution.",
+            "description": "Legesher enables you to code Python in your native language.💻 We currently support 51 languages (like Arabic, Hindi, Portuguese) with plans to expand to new languages and dialects. The possibilities are endless when technology speaks your language. \n\nExplore and innovate freely! Your code stays in your language in git, and the form Python executes is produced only when the code runs.",
             "media": {
               "markdown": "images/walkthrough/welcome.md"
             }

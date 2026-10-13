@@ -3,9 +3,10 @@
 **Vision:** you should be able to write and read code in your heart language.
 
 Programming today assumes English. Legesher removes that assumption: the code you write in your
-language and the canonical English form stay in lossless correspondence, so you work in your
-language and collaborate with anyone. The mission horizon is every language people actually speak,
-7,000+ of them; the roadmap below is the honest path from where we are.
+language is the original, stored as you wrote it, and every other rendering of it, English
+included, is a translation made for a reader. So you work in your language and collaborate with
+anyone. The mission horizon is every language people actually speak, 7,000+ of them; the roadmap
+below is the honest path from where we are.
 
 **Current version:** v0.22.0 (Foundation Suite)
 
@@ -16,7 +17,8 @@ language and collaborate with anyone. The mission horizon is every language peop
 Shipped and working now:
 
 - **Two translation engines.** A token-based translator and a tree-sitter, grammar-aware
-  translator, with bidirectional (native ↔ English) translation and source mapping.
+  translator, with bidirectional translation between a pack language and Python's own vocabulary,
+  and source mapping.
 - **51 Python language packs**, covering Python 3.10 through 3.14. All 51 are available today,
   with community validation in progress.
 - **A concept-centric translations database.** Every translation offered for every term is
@@ -26,7 +28,7 @@ Shipped and working now:
   collision checks (two concepts can never share one translated word in a language) run before a
   pack ships.
 - **The developer toolchain.** CLI suite (init, translate, run, metadata), git integration with
-  clean/smudge filters so repositories store canonical English, a language server (hover,
+  a clean filter that keeps each file in its author's language, a language server (hover,
   completion, diagnostics, semantic tokens), and a VS Code extension.
 - **Per-language style profiles.** How compounds join, what replaces uppercase in caseless
   scripts, digit policy, docstring register: 51 style guides, always suggestions, never laws.

@@ -100,7 +100,7 @@ first, and only within one scope does the new name outrank the old.
 
 | Role     | Setting                      | Meaning                                |
 | -------- | ---------------------------- | -------------------------------------- |
-| Canonical| `legesher.sourceLanguage`    | What Python itself defines; the pivot  |
+| Pivot    | `legesher.sourceLanguage`    | Python's own vocabulary; the run form  |
 | File     | detected per file            | What a given file is written in        |
 | Working  | `legesher.workingLanguage`   | What the user reads and writes in      |
 | Known    | `legesher.knownLanguages`    | What the user reads comfortably        |

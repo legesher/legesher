@@ -4,8 +4,8 @@
 
 **Status**: Pre-Beta | **Languages**: 51 | **Version**: see `pyproject.toml`
 
-The legesher CLI is your gateway to programming in your native language. Translate Python code between English and localized
-keywords, manage git integration for collaborative workflows, and configure your multilingual development environment.
+The legesher CLI is your gateway to programming in your native language. Translate Python code between languages,
+manage git integration for collaborative workflows, and configure your multilingual development environment.
 
 ## About
 
@@ -15,7 +15,7 @@ instead of English. It handles:
 - **Project Setup**: `legesher init` scaffolds configuration, git integration, and AI context
 - **Code Translation**: Convert Python files between languages using language packs
 - **Execution**: `legesher run` executes a native-language file directly
-- **Git Integration**: Seamlessly collaborate with English-speaking developers via git filters
+- **Git Integration**: a clean filter that keeps each file in the language its author wrote it in
 - **Configuration**: Manage project and user settings for language preferences
 - **Metadata**: Inspect and validate the translation history recorded for your files
 
@@ -73,11 +73,12 @@ Translate Python source files between languages.
 # Translate a single file to Spanish
 legesher translate app.py --to es
 
-# Translate to English (canonical form). --from defaults to en, so name the source
+# Translate to English, the run form Python executes. --from defaults to en, so name the source
 legesher translate mi_app.py --from es --to en
 
-# Translate between two non-English languages
-legesher translate code.py --from es --to fr
+# Between two non-English languages, go through English: direct pairs are not supported yet
+legesher translate code.py --from es --to en --output code_en.py
+legesher translate code_en.py --to fr --output code_fr.py
 
 # Translate and write to different file
 legesher translate input.py --to es --output salida.py
@@ -322,7 +323,8 @@ fall back to the built-in defaults.
 
 - `language`: Default language code (e.g., `es`, `fr`, `ar`)
 - `python_version`: Target Python version (e.g., `3.12`, `3.11`), or `null` to auto-detect
-- `git.canonical_language`: The language stored in the repository (default `en`)
+- `git.canonical_language`: written as `en` by `legesher init` and `legesher git setup` for compatibility; the
+  filter does not read it, because each file is stored in its author's language
 - `git.filter_enabled`: Enable git filter integration (boolean)
 - `runtime.cache_size`: Translation cache size. Honoured when present; neither command writes it out
 - `metadata.enabled`, `metadata.directory`, `metadata.track_in_git`,
@@ -472,10 +474,10 @@ EOF
 git add .
 git commit -m "Initial commit"
 
-# File is stored in English in git, but you work in Spanish!
+# The file is stored in Spanish, as written; a stray English keyword would be normalized to Spanish
 ```
 
-### Example 2: Contributing to English Projects
+### Example 2: Working in an English Project
 
 ```bash
 # Clone an English Python project
@@ -485,11 +487,12 @@ cd python-project
 # Set up legesher to work in Spanish
 legesher git setup --language es
 
-# Translate existing code to Spanish for local development
+# Translate a throwaway copy into Spanish for reading
 legesher translate src/ --to es --output src_es/
 
-# Work in Spanish...
-# All commits automatically store in English via git filters
+# The project's files stay in English, the language their authors wrote them in.
+# A Spanish keyword typed into one of them is normalized back to English at git add;
+# a new file you write in Spanish is stored in Spanish.
 ```
 
 ### Example 3: Switching Between Languages
@@ -499,8 +502,9 @@ legesher translate src/ --to es --output src_es/
 legesher config get language
 # Output: es
 
-# Translate the codebase to French
-legesher translate src_es/ --from es --to fr --output src_fr/
+# Translate a copy of the codebase to French, through English (direct pairs are not supported yet)
+legesher translate src_es/ --from es --to en --output src_en/
+legesher translate src_en/ --to fr --output src_fr/
 
 # Update configuration
 legesher config set language fr

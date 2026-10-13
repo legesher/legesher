@@ -84,9 +84,10 @@ it loads a pack, so anything reporting `get_pack_info()` — `legesher git setup
 Codes: am, ar, bn, bs, ca, cs, cy, da, de, el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it, ja, kn,
 ko, lv, mk, ml, mn, ms, my, nl, no, pl, pt, ro, ru, si, sr, su, sv, te, th, tr, ur, uz, vi, zh
 
-`en` is the canonical reference. Every other pack is machine-generated and awaiting native-speaker review; which
-model produced a given pack is recorded in that pack's `metadata.author` field, and each pack ships its own README
-at `libs/i18n/language-packs/python/{lang}/README.md` with its counts and Python version coverage.
+`en` is Python's own vocabulary, the run form every pack maps to. Every other pack is machine-generated and awaiting
+native-speaker review; which model produced a given pack is recorded in that pack's `metadata.author` field, and
+each pack ships its own README at `libs/i18n/language-packs/python/{lang}/README.md` with its counts and Python
+version coverage.
 
 Each language pack is independently versioned at `libs/i18n/language-packs/python/{lang}/`
 

@@ -88,7 +88,7 @@ Access via Settings (`Cmd+,`) → search "Legesher":
 | ------------------------------------------- | -------------- | ------------------------------------------- |
 | `legesher.workingLanguage`                  | `en`           | The language you read and write in          |
 | `legesher.knownLanguages`                   | `[]`           | The languages you read comfortably          |
-| `legesher.sourceLanguage`                   | `en`           | The language the project is stored in       |
+| `legesher.sourceLanguage`                   | `en`           | The vocabulary translations route through   |
 | `legesher.languageDetection`                | `auto`         | Infer each file's language from it          |
 | `legesher.enabled`                          | `true`         | Enable/disable the extension                |
 | `legesher.serverCommand`                    | `legesher-lsp` | Command that starts the language server     |
@@ -119,8 +119,9 @@ right thing:
   file that is not in your working language. Seeded from your working language,
   so there is nothing to configure to get started; edit it with
   `Legesher: Manage My Languages`.
-- **Canonical** (`legesher.sourceLanguage`) — the English terms Python itself
-  defines, which every translation routes through.
+- **Pivot** (`legesher.sourceLanguage`) — the terms Python itself defines,
+  which every translation routes through. This is the run form, not a
+  canonical form: a file's canonical form is whatever its author wrote.
 
 ### Language Codes
 

@@ -223,7 +223,7 @@ When you encounter {self.language_name} code in this project:
 ### Important Notes
 
 - **This is real Python**: {self.language_name} code runs identically to English Python
-- **Git stores English**: Legesher git filters convert code to English in version control
+- **Git stores the author's language**: each file stays in the language it was written in
 - **IDE shows {self.language_name}**: Developers see and write {self.language_name} in their editor
 - **AI assistants see {self.language_name}**: You should understand and generate {self.language_name} code"""
 
@@ -281,10 +281,10 @@ When working with {self.language_name} ({self.language_code}) Python code in thi
    - Comments may be in {self.language_name}, English, or both
 
 6. **Git Integration**:
-   - This project uses Legesher git filters to store code as English in git
-   - You'll see {self.language_name} code in the working directory
-   - Git history shows English (this is expected behavior)
-   - Don't be confused if git diff shows English - that's intentional
+   - Legesher's clean filter keeps each file in the language it was written in
+   - You'll see {self.language_name} code in the working directory and in git history
+   - A stray English keyword in a {self.language_name} file is normalized at git add
+   - The English run form is produced only when the code runs; it never replaces the stored file
 
 ---
 

@@ -17,8 +17,10 @@
 # Language policy (Legesher)
 
 This repository is written in **{{DECLARED_LANGUAGE}}**.
-Canonical form: Python (English keywords). The Legesher language pack and
-tools translate between the two; both forms are the same program.
+Run form: Python's own keywords, produced when the code runs; it never
+replaces the stored file. The Legesher language pack and tools translate
+between the two; both forms are the same program, and the
+{{DECLARED_LANGUAGE}} form is the original.
 
 ## Rules for agents
 
@@ -52,7 +54,7 @@ tools translate between the two; both forms are the same program.
    untranslatable construct), flag it explicitly rather than improvising —
    that is a pack-gap signal the Legesher project wants to hear about.
 8. **Round-trip guarantee:** any file you touch must survive
-   native → canonical → native byte-identically. Verify it through the
+   native → run form → native byte-identically. Verify it through the
    call — `translate_to_source` with `verify_round_trip: true` — and
    quote the returned `verdict_line`; the verdict comes from the engine,
    never by comparing the two renderings yourself. If it reports a
@@ -63,6 +65,6 @@ tools translate between the two; both forms are the same program.
 One concept, one term. Add a row whenever you introduce a new identifier
 translation; agents and reviewers treat this table as binding.
 
-| Concept (canonical / English) | {{DECLARED_LANGUAGE}} term | Notes |
+| Concept (English rendering) | {{DECLARED_LANGUAGE}} term | Notes |
 | --- | --- | --- |
 | <!-- e.g. `user_account` --> | <!-- the term used in code --> | |

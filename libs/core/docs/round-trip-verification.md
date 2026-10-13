@@ -333,8 +333,9 @@ translation itself.
 | `libs/mcp/evals/` | orchestrator | a round-trip task scored on hit / fidelity / contradiction against `verdict_line` (gated on PR #114) |
 
 **The demo verifier measures two properties, not one.** Its existing check
-compares the back-translation against the *authored English file* — canonical
-equivalence, the number CORE-1841's "residue goes to zero" is read against.
+compares the back-translation against the *authored English file*, which is
+that demo's original: equivalence with the original, the number CORE-1841's
+"residue goes to zero" is read against.
 The round trip (`fr → en → fr` idempotence) is a different property: because
 identifiers pass through unchanged in both directions, it is byte-identical
 whenever the pack mapping is injective, and *replacing* the first check with

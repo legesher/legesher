@@ -12,4 +12,5 @@ Support for **51 languages** including:
 - Spanish (Español)
 - And 44 more!
 
-Your code is automatically translated to canonical English for git, collaboration, and execution.
+Your code stays in your language in git. The run form Python executes, with English keywords, is produced only
+when the code runs.
