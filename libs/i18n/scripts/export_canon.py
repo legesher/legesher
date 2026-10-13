@@ -121,6 +121,14 @@ ROLE_BY_DECIDER: dict[str, str] = {
     # A maintainer-run script correction pass over non-Latin scripts. Machine
     # work, not native review, and mapped as such (Madison, 2026-08-19).
     "core-1318-native-fix": "automated",
+    # The 2026-08-18 audit's v2 repair (scripts/repair_v2_audit_findings.py)
+    # and the v1 decider it mirrors. Every row the repair writes carries a
+    # value already in the shipped packs, decided in v1 by the CORE-1839
+    # mechanical star fix or by the audit's agent-assisted corrections
+    # (``claude-fable-5``, above). A rebuild's migration copies the v1
+    # decider into decided_by, so both labels reach the export.
+    "CORE-1839": "automated",
+    "CORE-1973": "automated",
 }
 
 #: Reviewer handles are matched by SHAPE, never enumerated.

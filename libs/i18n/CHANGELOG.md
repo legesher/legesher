@@ -25,6 +25,34 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   covers v2 only; the v1 pack database (`schema.py`) is out of its scope.
   [CORE-2232]
 
+- **The 2026-08-18 audit's corpus repairs are a committed, idempotent
+  ritual.** New `scripts/repair_v2_audit_findings.py` supersedes the
+  audit's v2 defects with provenance and never edits them: the nine starred
+  `except*` mirrors (da/de/fi/hi/mk/pt/ru/te/th) whose star-less
+  migration-era options could never become canon-eligible, and the five
+  corrected selections (th `pow`/`global`, hu `classmethod`, tr `globals`,
+  ms `locals`) whose canon rows still ratified the junk values. Canon
+  replacement is wholesale delete-and-insert at the `experimental` rung
+  with the v1 decision timestamp preserved, and the run then backfills
+  `option_validations.min_interpreter_ok` corpus-wide: the migrated rows
+  carried the schema default, a stamp rather than a verdict, and now carry the
+  computed answer at the current validator version, after a zero-drift
+  recomputation of every stored verdict. Every surface it writes is read
+  from v1 at run time; `--dry-run` executes the whole run, verification
+  included, against a throwaway copy. Run on 2026-09-22 against the
+  durable database's file, the repair closed the v1↔v2 canon delta at
+  9,452 = 9,452 and left 18 options honestly reading
+  `min_interpreter_ok = 0` (17 si U+200D, 1 ja U+30FB); the durable copy
+  itself takes the repair when the data repository merges the result.
+  Options are minted unscoped, exactly as the migration mints them, so a
+  rebuild from current v1 reproduces the repaired rows' public option ids;
+  on a rebuild the script lifts the five corrections to `experimental` and
+  fills `min_interpreter_ok`. It is a step of the corpus publish runbook's
+  rebuild sequence and runs on CPython 3.13 or later. The canon export maps
+  its `decided_by`, and the v1 star-fix decider a rebuild carries, to the
+  `automated` role, so the repaired rows publish.
+  [CORE-1973] [CORE-1972]
+
 - **The intake gates now run the invisible-character net, and canon reads
   the verdict.** The pack layer has refused forbidden format and
   Default_Ignorable characters since CORE-1591; the contribution path now
@@ -183,6 +211,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   reviewers. [CORE-1797]
 
 ### Fixed
+
+- **`nb` and `fil` renderings are no longer default-denied as
+  script-inconsistent.** The v2 reference layer names these languages by
+  their BCP 47 subtags while the script-policy tables are keyed by pack id
+  and v1 code (`no`, `tl`), so both the intake path and any recomputation
+  resolved NO policy for them and refused every rendering's script, a
+  misclassification of the locale rather than a verdict about the word
+  (290 stored verdicts disagreed with recomputation for exactly this
+  reason). `surface_validation` now carries the subtag-to-policy aliases,
+  applied to both the script allowlist and the format-char allowlist.
+  [CORE-1973]
 
 - **Five renderings that were never translations are replaced** — th `pow`
   and th `global` carried prompt residue (one literally read "this symbol

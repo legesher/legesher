@@ -74,9 +74,9 @@ about, and the migration reconstructs none of it (CORE-2052):
   `machine`, erasing the CORE-1985 corrections.
 
 So a rebuild is the whole sequence below, in order — build, carry the
-intake layer forward, re-apply the rung corrections, verify counts against
-the durable copy — and none of it is optional. Section 2's dry export runs
-only after the verification agrees.
+intake layer forward, re-apply the rung corrections and the audit repairs,
+verify counts against the durable copy — and none of it is optional.
+Section 2's dry export runs only after the verification agrees.
 
 ```bash
 cd libs/i18n
@@ -196,6 +196,23 @@ database, and is idempotent:
 
 ```bash
 uv run python scripts/correct_canon_review_rung.py --db build/translations_v2.db
+```
+
+Then re-apply the 2026-08-18 audit repairs (CORE-1973, CORE-1972). Current
+v1 already carries the nine starred `except*` mirrors and the five corrected
+selections, so the migration mints them, under the same option uids the
+script mints on a pre-repair copy. What a fresh build lacks is the rest of the
+repair: the five corrections sit at `machine` where a repaired copy has
+`experimental`, and every `min_interpreter_ok` is back to the schema default. The script reads
+every value it writes from the v1 database, refuses rather than replace a
+canon row that has moved off `machine` to anything but the correction, and is
+idempotent. Run it after the rung correction, the order the durable database
+went through, and on CPython 3.13 or later, the interpreter the durable
+verdicts were computed on:
+
+```bash
+uv run python scripts/repair_v2_audit_findings.py \
+    --db build/translations_v2.db --v1-db legesher_i18n/db/translations.db
 ```
 
 Last, verify the rebuilt file against the durable copy — BEFORE section 2:

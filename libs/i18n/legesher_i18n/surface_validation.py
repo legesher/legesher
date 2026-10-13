@@ -40,6 +40,7 @@ from legesher_i18n.script_policy import (
 
 __all__ = [
     "NON_PACK_SCRIPTS",
+    "SUBTAG_POLICY_ALIASES",
     "VALIDATOR_VERSION",
     "Validation",
     "allowed_format_chars_for",
@@ -89,6 +90,19 @@ NON_PACK_SCRIPTS: dict[str, frozenset[str]] = {
     "xh": frozenset({"Latin"}),  # Xhosa
 }
 
+#: The v2 reference layer names some languages by their BCP 47 subtag while
+#: the policy tables are keyed by pack id / v1 code (the pack-id divergences
+#: the locales card documents: ``no`` is BCP 47 ``nb``, and v2 calls v1's
+#: ``tl`` by its modern subtag ``fil``). Without this mapping an ``nb`` or
+#: ``fil`` rendering resolves to NO policy and default-denies as
+#: script-inconsistent — which is a misclassification of the locale, not a
+#: verdict about the word (CORE-1973 found 290 stored verdicts disagreeing
+#: with recomputation for exactly this reason).
+SUBTAG_POLICY_ALIASES: dict[str, str] = {
+    "fil": "tl",  # Filipino/Tagalog: v2 subtag vs the v1 code the tables use
+    "nb": "no",  # Norwegian Bokmål: BCP 47 subtag vs the pack id
+}
+
 
 def allowed_scripts_for(code: str) -> frozenset[str] | None:
     """Resolve the Unicode scripts a locale's identifiers may legitimately use.
@@ -106,6 +120,7 @@ def allowed_scripts_for(code: str) -> frozenset[str] | None:
     Returns:
         The allowed scripts, or ``None`` if the code has no policy.
     """
+    code = SUBTAG_POLICY_ALIASES.get(code, code)
     if has_policy(code):
         return policy_for(code).scripts
     return NON_PACK_SCRIPTS.get(code)
@@ -128,6 +143,7 @@ def allowed_format_chars_for(code: str) -> frozenset[str]:
     Returns:
         The allow-listed format characters; empty means deny all.
     """
+    code = SUBTAG_POLICY_ALIASES.get(code, code)
     return policy_for(code).allowed_format_chars if has_policy(code) else frozenset()
 
 
