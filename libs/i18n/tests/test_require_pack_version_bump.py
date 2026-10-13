@@ -58,7 +58,7 @@ def test_only_pack_content_triggers_the_gate() -> None:
     content = (
         "libs/i18n/language-packs/python/ar/legesher_i18n_python_ar/packs/3.12.yml"
     )
-    assert gate.changed_packs([content]) == {("python", "ar")}
+    assert gate.content_paths([content]) == {content: ("python", "ar")}
 
     for unrelated in (
         "libs/i18n/language-packs/python/ar/README.md",
@@ -66,13 +66,13 @@ def test_only_pack_content_triggers_the_gate() -> None:
         "libs/i18n/scripts/export_packs.py",
         "libs/i18n/language-packs/python/ar/style-guide.yml",
     ):
-        assert gate.changed_packs([unrelated]) == set(), unrelated
+        assert gate.content_paths([unrelated]) == {}, unrelated
 
 
 def test_the_trigger_is_target_aware() -> None:
     """A JavaScript pack is its own pairing, versioned on its own clock."""
     js = "libs/i18n/language-packs/javascript/ar/legesher_i18n_javascript_ar/packs/es2023.yml"
-    assert gate.changed_packs([js]) == {("javascript", "ar")}
+    assert gate.content_paths([js]) == {js: ("javascript", "ar")}
 
 
 def test_bump_patch_increments_only_the_patch() -> None:
@@ -211,6 +211,74 @@ def test_a_new_pack_is_not_asked_to_bump_a_version_it_never_had(
 
     path = "libs/i18n/language-packs/python/zz/legesher_i18n_python_zz/packs/3.12.yml"
     assert gate.main([path]) == 0
+
+
+def test_a_tracked_pack_file_identical_to_head_is_not_a_content_change(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The ``--all-files`` shape CI runs: every tracked pack file, unchanged.
+
+    pre-commit hands the gate every path under its ``files`` pattern, and the
+    gate used to read each one as changed content, so a clean checkout of
+    main was refused for every pack on every CI run.
+    """
+    _point_gate_at(repo, monkeypatch)
+    assert gate.main([CONTENT]) == 0
+
+
+def test_a_staged_content_change_still_counts_beside_unchanged_files(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Filtering against HEAD must not hide the change the gate exists for."""
+    _point_gate_at(repo, monkeypatch)
+    other = (
+        repo
+        / "libs/i18n/language-packs/python/xx/legesher_i18n_python_xx/packs/3.13.yml"
+    )
+    other.write_text("keywords:\n  if: si\n", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-qm", "second file"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+    (repo / CONTENT).write_text("keywords:\n  for: para\n", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True, capture_output=True)
+    unchanged = (
+        "libs/i18n/language-packs/python/xx/legesher_i18n_python_xx/packs/3.13.yml"
+    )
+    assert gate.main([unchanged]) == 0
+    assert gate.main([unchanged, CONTENT]) == 1
+
+
+def test_without_a_head_every_pack_path_counts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A fresh repository has nothing to compare against, so nothing is filtered."""
+    pack = tmp_path / "libs/i18n/language-packs/python/xx"
+    (pack / "legesher_i18n_python_xx/packs").mkdir(parents=True)
+    (pack / "pyproject.toml").write_text('version = "0.0.1"\n', encoding="utf-8")
+    (pack / "legesher_i18n_python_xx/__init__.py").write_text(
+        '__version__ = "0.0.1"\n', encoding="utf-8"
+    )
+    (pack / "legesher_i18n_python_xx/packs/3.12.yml").write_text(
+        "a: b\n", encoding="utf-8"
+    )
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True, capture_output=True)
+    _point_gate_at(tmp_path, monkeypatch)
+    assert gate.changed_packs([CONTENT]) == {("python", "xx")}
+
+
+def test_paths_are_normalised_before_git_sees_them(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A path pasted with ``./`` or backslashes still reaches git in a form it answers."""
+    _point_gate_at(repo, monkeypatch)
+    (repo / CONTENT).write_text("keywords:\n  for: para\n", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True, capture_output=True)
+    assert gate.changed_packs(["./" + CONTENT]) == {("python", "xx")}
+    assert gate.changed_packs([CONTENT.replace("/", "\\")]) == {("python", "xx")}
 
 
 def test_a_commit_touching_no_pack_content_is_ignored(

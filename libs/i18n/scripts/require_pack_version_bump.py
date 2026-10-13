@@ -164,14 +164,61 @@ def write_version(target: str, locale: str, version: str) -> None:
         )
 
 
-def changed_packs(paths: list[str]) -> set[tuple[str, str]]:
-    """Return the ``(target, locale)`` pairs whose CONTENT changed."""
-    found: set[tuple[str, str]] = set()
+def _normalised(raw: str) -> str:
+    """A root-relative path with forward slashes, as pre-commit passes them."""
+    return raw.replace("\\", "/").removeprefix("./")
+
+
+def _differing_from_head(paths: list[str]) -> set[str] | None:
+    """Return the subset of ``paths`` whose content differs from HEAD.
+
+    ``paths`` are root-relative with forward slashes (see ``_normalised``),
+    which is both what git takes as a pathspec here and what ``-z`` prints
+    back unquoted, non-ASCII locale directories included. None means git
+    could not answer: no HEAD yet (a fresh repository) or any other git
+    failure. The caller then counts every path, the conservative reading.
+    """
+    result = subprocess.run(
+        ["git", "diff", "--name-only", "-z", "HEAD", "--", *paths],
+        capture_output=True,
+        text=True,
+        cwd=_I18N_ROOT.parent.parent,
+    )
+    if result.returncode != 0:
+        return None
+    return {name for name in result.stdout.split("\0") if name}
+
+
+def content_paths(paths: list[str]) -> dict[str, tuple[str, str]]:
+    """Map each pack-content path in ``paths`` to its ``(target, locale)``.
+
+    Pure: this is the trigger pattern alone, with no look at git.
+    """
+    content: dict[str, tuple[str, str]] = {}
     for raw in paths:
-        match = PACK_CONTENT.search(raw.replace("\\", "/"))
+        path = _normalised(raw)
+        match = PACK_CONTENT.search(path)
         if match:
-            found.add((match.group("target"), match.group("locale")))
-    return found
+            content[path] = (match.group("target"), match.group("locale"))
+    return content
+
+
+def changed_packs(paths: list[str]) -> set[tuple[str, str]]:
+    """Return the ``(target, locale)`` pairs whose CONTENT changed.
+
+    Only a path whose content differs from HEAD counts. At commit time
+    pre-commit hands the hook the staged files, with unstaged edits stashed,
+    so a staged change differs from HEAD and counts. Under ``--all-files``,
+    which CI runs, it hands over every tracked pack file, unchanged; reading
+    each as changed content made the gate refuse every pack on every run.
+    """
+    content = content_paths(paths)
+    if not content:
+        return set()
+    differing = _differing_from_head(list(content))
+    if differing is None:
+        return set(content.values())
+    return {pair for path, pair in content.items() if path in differing}
 
 
 def all_packs() -> list[tuple[str, str]]:

@@ -227,7 +227,7 @@ Exception classes for error handling.
 
 Python conventions like `self` and `cls` translated deterministically by the
 language pack rather than the LLM. Distinct from keywords because they aren't
-actual reserved words in the Python language. (CORE-710)
+actual keywords in the Python language. (CORE-710)
 
 | English | Hindi |
 | ------- | ------ |
