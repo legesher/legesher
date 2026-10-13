@@ -115,7 +115,10 @@ def test_version_files_belong_to_the_owner(config: str) -> None:
         assert (REPO / path).is_file(), f"{config}: {entry!r} does not exist"
     for entry in section.get("version_variables", []):
         path, _, key = entry.partition(":")
-        pattern = re.compile(rf"^{re.escape(key)}\s*=\s*['\"]", re.M)
+        # PSR's own search accepts `=` or `:` after the key, so a JSON file
+        # (`"version": "x.y.z"`, key spelled with its quotes) qualifies as
+        # well as a Python or TOML `__version__ = "x.y.z"`.
+        pattern = re.compile(rf"^\s*{re.escape(key)}\s*[:=]\s*['\"]", re.M)
         assert pattern.search((REPO / path).read_text(encoding="utf-8")), (
             f"{config}: {path} declares no {key}"
         )

@@ -8,7 +8,10 @@ license = {text = "Apache-2.0"}
 authors = [
     {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
 ]
-keywords = ["legesher", "mcp", "model-context-protocol", "multilingual", "translation", "i18n"]
+keywords = [
+    "legesher", "mcp", "model-context-protocol", "python", "translation", "i18n",
+    "localization", "multilingual", "language-packs", "round-trip",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -34,6 +37,12 @@ dependencies = [
     "legesher-core>=0.23.0,<1.0.0",  # Translation engine (token translator, pack-backed factory)
     "legesher-i18n>=0.22.0,<1.0.0",  # Language registry + language pack loader
 ]
+
+[project.urls]
+Homepage = "https://legesher.io"
+Repository = "https://github.com/legesher/legesher"
+Changelog = "https://github.com/legesher/legesher/blob/main/libs/mcp/CHANGELOG.md"
+Issues = "https://github.com/legesher/legesher/issues"
 
 [tool.uv.sources]
 legesher-core = { workspace = true }
@@ -64,6 +73,12 @@ distribution = true
 # ROOT pyproject (verified: it reported the foundation's 0.22.0 as this
 # package's last release). Same reason `changelog_file` is spelled out below.
 version_toml = ["libs/mcp/pyproject.toml:project.version"]
+# server.json, the official MCP registry manifest, repeats the version twice
+# (top level and in the PyPI package entry). Both must equal the project
+# version at submission and tests/test_registry_manifest.py pins them, so
+# the release step rewrites them too. The quoted key is deliberate: the
+# pattern matches every `"version": "x.y.z"` in the JSON file.
+version_variables = ['libs/mcp/server.json:"version"']
 commit_parser = "conventional"
 # The release commit's subject. PSR's default is the bare version, which the
 # `chore(release)` skip in release-mcp.yml and ci.yml never matched, so every

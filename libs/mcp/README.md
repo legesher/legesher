@@ -1,5 +1,7 @@
 # legesher-mcp
 
+<!-- mcp-name: io.github.legesher/legesher-mcp -->
+
 The Legesher [Model Context Protocol](https://modelcontextprotocol.io) server:
 the engine's translation capability inside every MCP-capable client — Claude,
 IDE assistants, agent frameworks — as six coarse, task-shaped tools.
@@ -52,14 +54,12 @@ Notes on shape, straight from the design:
 
 ## Install
 
-The server needs the Legesher engine and at least one language pack:
+The server needs the Legesher engine. Every language pack ships inside
+`legesher-i18n`, so nothing else is installed:
 
 ```bash
-# The server (pulls legesher-core + legesher-i18n)
+# The server (pulls legesher-core and legesher-i18n, packs included)
 uvx legesher-mcp
-
-# Language packs are separate packages — install the ones you use, e.g.:
-pip install legesher-i18n-python-es legesher-i18n-python-ar
 ```
 
 Inside the monorepo workspace all 51 packs are already installed:
@@ -109,6 +109,24 @@ claude mcp add legesher --env LEGESHER_MCP_LOG_LEVEL=DEBUG -- uvx legesher-mcp
 {
   "mcpServers": {
     "legesher": {
+      "command": "uvx",
+      "args": ["legesher-mcp"],
+      "env": { "LEGESHER_MCP_LOG_LEVEL": "DEBUG" }
+    }
+  }
+}
+```
+
+### VS Code
+
+`.vscode/mcp.json` (workspace) or the user-level `mcp.json` (Command
+Palette: *MCP: Open User Configuration*):
+
+```json
+{
+  "servers": {
+    "legesher": {
+      "type": "stdio",
       "command": "uvx",
       "args": ["legesher-mcp"],
       "env": { "LEGESHER_MCP_LOG_LEVEL": "DEBUG" }
@@ -266,6 +284,15 @@ the `initialize` handshake cannot report a number the wheel does not have.
 Pre-1.0, a breaking change bumps the minor (`0.1.0` → `0.2.0`);
 `major_on_zero` is off, so reaching 1.0.0 is a deliberate decision rather
 than a side effect of one commit.
+
+## Listings
+
+`server.json` is the manifest the official MCP registry reads, and the
+`mcp-name` comment at the top of this README is how that registry confirms
+the PyPI package belongs to the listing. `docs/registry-listings.md` holds
+the canonical listing copy and what each directory reads, so every listing
+says the same thing. `tests/test_registry_manifest.py` pins the manifest to
+this package's name, version and environment variables.
 
 ## License
 

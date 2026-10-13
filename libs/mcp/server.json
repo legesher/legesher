@@ -1,0 +1,41 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.legesher/legesher-mcp",
+  "title": "Legesher",
+  "description": "Translate Python between English keywords and your language, with round-trip verification.",
+  "version": "0.1.0",
+  "websiteUrl": "https://legesher.io",
+  "repository": {
+    "url": "https://github.com/legesher/legesher",
+    "source": "github",
+    "subfolder": "libs/mcp"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "legesher-mcp",
+      "version": "0.1.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "LEGESHER_MCP_LOG_LEVEL",
+          "description": "Log level for troubleshooting. Quiet (WARNING) when unset.",
+          "isRequired": false,
+          "isSecret": false,
+          "default": "WARNING",
+          "choices": [
+            "DEBUG",
+            "INFO",
+            "WARNING",
+            "ERROR",
+            "CRITICAL"
+          ]
+        }
+      ]
+    }
+  ]
+}

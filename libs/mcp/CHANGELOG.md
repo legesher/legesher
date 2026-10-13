@@ -11,6 +11,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Registry listing metadata: `server.json` for the official MCP registry
+  (PyPI package, `uvx` runtime, stdio transport, the log-level variable),
+  the `mcp-name` ownership marker in the README, `[project.urls]` for the
+  PyPI page, a VS Code `mcp.json` example beside the other clients, and
+  `docs/registry-listings.md` with the canonical copy every directory
+  gets. `tests/test_registry_manifest.py` keeps the manifest pinned to the
+  package name, version and the variables the server reads. [CORE-1424]
 - Remote transport surface — the pieces a deployment composes into a
   remote MCP server, with local stdio behavior unchanged [CORE-1420]:
   - **Backend seam** (`legesher_mcp.backend`): everything a tool call or
