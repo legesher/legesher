@@ -57,6 +57,9 @@ pa = pytest.importorskip("pyarrow")
 pq = pytest.importorskip("pyarrow.parquet")
 
 SALT = "test-salt"
+#: Legesher organisation repositories a reader with no access can open. Only
+#: the ones the card links today; extend it when the card links another.
+PUBLIC_LEGESHER_REPOS = frozenset({"legesher", "legesher-translations"})
 
 #: Strings that exist in the fixture database's PRIVATE columns and must not
 #: appear anywhere in the published files.
@@ -678,16 +681,25 @@ def test_the_card_names_the_repo_it_is_actually_published_to(
 def test_the_card_links_nowhere_that_a_public_reader_cannot_reach(
     exported: Path,
 ) -> None:
-    """No outbound link may point at a private Legesher repository.
+    """Every Legesher repository the card links must be a public one.
 
     The dataset page is read by people with no access to our source repos, so
-    a link there is a 404 with our name on it. The Hub discussions tab is the
-    reply channel that is as public as the dataset itself.
+    a link there is a 404 with our name on it. The check is an allowlist of
+    the organisation's public repositories rather than a list of private
+    names, so the test itself names nothing that is not public. The Hub
+    discussions tab is the reply channel that is as public as the dataset
+    itself.
     """
     card = (exported / "README.md").read_text(encoding="utf-8")
-    private_repos = ("legesher/legesher-next", "legesher/legesher-hosted")
-    for repo in private_repos:
-        assert f"github.com/{repo}" not in card, f"card links private {repo}"
+    linked = {
+        name.removesuffix(".git")
+        for name in re.findall(
+            r"github\.com/legesher/([A-Za-z0-9_.-]+)", card, re.IGNORECASE
+        )
+    }
+    assert linked, "the card no longer links any Legesher repository"
+    not_public = linked - PUBLIC_LEGESHER_REPOS
+    assert not not_public, f"card links non-public repositories: {sorted(not_public)}"
     assert "/discussions" in card  # the reply channel is on the Hub
 
 

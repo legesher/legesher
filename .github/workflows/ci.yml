@@ -92,7 +92,7 @@ jobs:
       # dispatch, so `Lint & Validate` died at `Set up job` on every run from
       # the moment SHA pinning was re-enabled:
       #
-      #   The action actions/cache@v4 is not allowed in legesher/legesher-next
+      #   The action actions/cache@v4 is not allowed in this repository
       #   because all actions must be pinned to a full-length commit SHA.
       #
       # The action is four steps and two of them (install pre-commit, freeze)

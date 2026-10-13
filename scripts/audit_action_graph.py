@@ -8,7 +8,7 @@ unpinned ``actions/cache@v4``, zizmor reports nothing — confirmed against
 v1.29.0 both offline and online on 2026-08-16.
 
 That blind spot is not hypothetical. It is exactly the shape that took
-``Lint & Validate`` down on every legesher-next run and needed CORE-1926 to
+``Lint & Validate`` down on every run of this repository and needed CORE-1926 to
 fix, while the pinning gate reported green the entire time. A gate that is
 silent about the failure we actually had is the one worth building (CORE-1922).
 
