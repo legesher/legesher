@@ -34,6 +34,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- `legesher_core.repo_attribution`: opt-in usage attribution, the
+  `X-Legesher-Repo` label a client can attach to hosted calls (CORE-1784).
+  The label is the first 32 hex characters of an unkeyed SHA-256 of a fixed
+  prefix and the canonical `origin` remote, so every clone of one
+  repository agrees. It is not secret: anyone who knows a remote URL can
+  compute its label. Canonicalization is literal (ASCII-only lowercasing,
+  NFC, no percent-decoding or punycode) and shared with the VS Code helper
+  through `tests/fixtures/repo_attribution_vectors.json`; a remote with an
+  `@` left after the userinfo is removed has no canonical form, so a
+  password in a malformed remote never reaches the hash. A repository
+  without a remote gets a label salted per install, from a salt minted
+  atomically into `~/.legesher/install-salt`; a damaged or unreadable salt
+  means no label. Off unless `telemetry.repo_attribution` is the boolean
+  `true`; `LEGESHER_TELEMETRY_DISABLED` and `DO_NOT_TRACK` win over any
+  config. `repo_label` never raises. See `docs/repo-attribution.md`.
+
 - `legesher_core.guard`: the checks behind `legesher guard`, moved out of the
   clean filter, where a refusal was a silent passthrough (CORE-2109). The
   Unicode checks are unchanged except around a lone CR, which Python reads as

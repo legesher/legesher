@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `legesher.telemetry.repoAttribution` (default off): consent to opt-in
+  usage attribution, a repository label for requests to the hosted service
+  (CORE-1784). The setting records your choice only; the extension does not
+  send the label yet. `src/repoAttribution.ts` is the twin of the Python
+  helper, pinned to the same shared vectors: the first 32 hex characters of
+  an unkeyed SHA-256 of the canonical `origin` remote (not secret: anyone
+  who knows a remote URL can compute it), or of a per-install salt and the
+  path when there is no remote. It needs `legesher.telemetry.enabled` and
+  VS Code's own telemetry setting; `LEGESHER_TELEMETRY_DISABLED` and
+  `DO_NOT_TRACK` win.
 - **Unicode highlighting**: a translated file no longer opens covered in warnings. VS Code's
   ambiguous-character check reports Arabic Alef (U+0627) as a likely impersonation of Latin `l`,
   Cyrillic small a (U+0430) of `a` and Turkish dotless i (U+0131) of `i`, so it fired on nearly every

@@ -3,7 +3,8 @@
 This module provides CLI commands for viewing and modifying Legesher
 configuration. Values live in the project config (.legesher/config.yml)
 or the user-level config (~/.legesher/config.yml); project values take
-precedence when both define a key.
+precedence when both define a key. The telemetry section is per user:
+it is read from the user-level config only and set with --global only.
 
 Commands:
     legesher config list: Display all configuration values
@@ -17,6 +18,8 @@ from pathlib import Path
 
 import click
 import yaml
+
+from legesher.config import USER_ONLY_SECTIONS, user_telemetry
 
 
 def _find_config_path() -> Path:
@@ -79,7 +82,9 @@ def _load_merged_config() -> tuple[dict, list[Path]]:
     Merging is a top-level update, matching LegesherConfig.load(): a
     project-level section replaces the user-level section of the same
     name entirely, so these commands report what the runtime actually
-    uses.
+    uses. The telemetry section is the exception, again matching the
+    runtime: it is the user's own section filled out with the defaults,
+    and a project config never changes it.
 
     Returns:
         Tuple of (merged data, list of contributing config paths)
@@ -88,11 +93,13 @@ def _load_merged_config() -> tuple[dict, list[Path]]:
         click.ClickException: If neither config file exists
     """
     data: dict = {}
+    user_data: dict | None = None
     paths: list[Path] = []
 
     user_path = _user_config_path()
     if user_path.exists():
-        data = _load_yaml_mapping(user_path)
+        user_data = _load_yaml_mapping(user_path)
+        data = dict(user_data)
         paths.append(user_path)
 
     try:
@@ -105,6 +112,7 @@ def _load_merged_config() -> tuple[dict, list[Path]]:
         data.update(project_data)
         paths.append(project_path)
 
+    data["telemetry"] = user_telemetry(user_data)
     return data, paths
 
 
@@ -267,9 +275,15 @@ def config_set(key: str, value: str, use_global: bool):
     KEY is a dotted path like 'git.enabled' or 'translation.default_target'.
     VALUE is the new value (booleans: true/false, numbers auto-detected).
     With --global, the value is written to the user-level config
-    (~/.legesher/config.yml) instead of the project config.
+    (~/.legesher/config.yml) instead of the project config. Telemetry
+    keys are per user and need --global.
     """
     _validate_key(key)
+    if key.split(".", 1)[0] in USER_ONLY_SECTIONS and not use_global:
+        raise click.ClickException(
+            f"'{key}' is a per-user setting and is never read from a project "
+            f"config. Use: legesher config set --global {key} {value}"
+        )
     if use_global:
         config_path = _user_config_path()
         data = _load_yaml_mapping(config_path) if config_path.exists() else {}

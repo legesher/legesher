@@ -11,6 +11,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- `telemetry.enabled` (default true) and `telemetry.repo_attribution`
+  (default false) config keys, carried by `LegesherConfig` (CORE-1784).
+  Repo attribution feeds the `X-Legesher-Repo` label
+  (`legesher_core.repo_attribution`). Telemetry is per user: it is read
+  from `~/.legesher/config.yml` only, a project config cannot change it,
+  `legesher config set` needs `--global` for it, and `save_user_config`
+  keeps the stored choice. `telemetry: null` reads as an empty section.
 - `legesher guard --diff BASE` for a pull-request check, `--format github`
   for workflow annotations, and the `.legesher/` artifact check in both the
   staged and diff modes. A symlink marked for Legesher is refused (in diff

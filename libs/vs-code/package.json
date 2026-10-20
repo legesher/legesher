@@ -369,6 +369,15 @@
           ],
           "markdownDescription": "Enable usage telemetry to help improve Legesher. Off by default; also gated by VS Code's global telemetry setting. Events contain **no code content, no file paths, and no identifiers we collect**; the bundled VS Code telemetry library adds a pseudonymous machine id."
         },
+        "legesher.telemetry.repoAttribution": {
+          "type": "boolean",
+          "default": false,
+          "tags": [
+            "telemetry",
+            "usesOnlineServices"
+          ],
+          "markdownDescription": "Consent to opt-in usage attribution: a repository label attached to requests to Legesher's hosted service.\n\n**This setting records your choice only.** The extension does not send this label today, and no request is gated on this setting. It exists so your choice is on record before any such request ships; if that changes it will be announced in the changelog and in the extension README first.\n\nThe label is not secret. It is a SHA-256 hash of the repository's normalized `origin` remote URL with no key, so anyone who knows a remote URL can compute its label and tell whether that repository is in use. A repository with no remote gets a label salted per install instead. Requires `#legesher.telemetry.enabled#` and VS Code's own telemetry setting."
+        },
         "legesher.telemetry.contributeToMLTraining": {
           "type": "boolean",
           "default": false,

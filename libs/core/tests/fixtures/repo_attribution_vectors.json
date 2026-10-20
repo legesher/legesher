@@ -1,0 +1,574 @@
+{
+  "description": "Shared vectors for the X-Legesher-Repo label (CORE-1784). Both libs/core/tests/unit/test_repo_attribution.py and libs/vs-code/test/unit/repoAttribution.test.ts load this file, so the Python and TypeScript helpers cannot drift. Expected values are written from the specification in libs/core/docs/repo-attribution.md, not from either implementation. A null canonical form means a local path or an unusable remote: the salted per-install fallback applies. kill_switch lists values of LEGESHER_TELEMETRY_DISABLED and DO_NOT_TRACK and whether each one is set. Strings are escaped so an editor cannot normalize the NFC and NFD inputs into one another.",
+  "label_prefix": "legesher-repo/v1:",
+  "label_hex_length": 32,
+  "vectors": [
+    {
+      "name": "https, mixed-case host",
+      "input": "https://GitHub.com/Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "https, credentials in userinfo",
+      "input": "https://user:ghp_SECRETTOKEN123@github.com/Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "ssh, trailing slash",
+      "input": "ssh://git@github.com/Org/Repo.git/",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "scp-like",
+      "input": "git@github.com:Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "scp-like, uppercase host",
+      "input": "git@GitHub.COM:Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "scp-like, leading slash in path",
+      "input": "git@github.com:/Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "git scheme, no .git",
+      "input": "git://github.com/Org/Repo",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "git+ssh scheme",
+      "input": "git+ssh://git@github.com/Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "uppercase scheme and host",
+      "input": "HTTPS://GITHUB.COM/Org/Repo",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "uppercase .GIT suffix",
+      "input": "https://github.com/Org/Repo.GIT",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "surrounding ASCII whitespace",
+      "input": "  \thttps://github.com/Org/Repo.git\r\n",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "leading byte order mark",
+      "input": "\ufeffhttps://github.com/Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "query and fragment",
+      "input": "https://github.com/Org/Repo.git?token=SECRET#frag",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "credentials, query and fragment",
+      "input": "https://alice:s3cr3t@github.com/Org/Repo.git?ref=main#readme",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "numeric port",
+      "input": "https://github.com:443/Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "ssh with a port",
+      "input": "ssh://git@github.com:2222/Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "non-numeric port",
+      "input": "https://github.com:notaport/Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "small commercial at in the password",
+      "input": "https://alice:s3cr3t\ufe6b@github.com/Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "unencoded @ in the password",
+      "input": "https://alice:p@ss@github.com/Org/Repo.git",
+      "canonical": "github.com/org/repo",
+      "label": "911291cf9ed06123ef8dc78a6e5bbb77"
+    },
+    {
+      "name": "GitHub path, title case owner",
+      "input": "https://github.com/Legesher/legesher-next.git",
+      "canonical": "github.com/legesher/legesher-next",
+      "label": "00c92c545f480fb7a8333b22ee37cd44"
+    },
+    {
+      "name": "GitHub path, upper case owner",
+      "input": "git@github.com:LEGESHER/Legesher-Next.git",
+      "canonical": "github.com/legesher/legesher-next",
+      "label": "00c92c545f480fb7a8333b22ee37cd44"
+    },
+    {
+      "name": "ssh, IPv6 loopback with port",
+      "input": "ssh://git@[::1]:2222/owner/repo.git",
+      "canonical": "[::1]/owner/repo",
+      "label": "73f3aa71c71d67b9cfb2bcf5e144cd21"
+    },
+    {
+      "name": "scp-like, IPv6 loopback",
+      "input": "git@[::1]:owner/repo.git",
+      "canonical": "[::1]/owner/repo",
+      "label": "73f3aa71c71d67b9cfb2bcf5e144cd21"
+    },
+    {
+      "name": "https, IPv6 with uppercase hex and port",
+      "input": "https://[2001:DB8::1]:8443/Owner/Repo.git",
+      "canonical": "[2001:db8::1]/owner/repo",
+      "label": "05289701ac095b0a9e28b23a1894205c"
+    },
+    {
+      "name": "unclosed IPv6 bracket",
+      "input": "https://[github.com/owner/repo",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "space in path",
+      "input": "https://github.com/owner/my repo.git",
+      "canonical": "github.com/owner/my repo",
+      "label": "85ff52f973e42e624aad9c33dfe4d2b9"
+    },
+    {
+      "name": "percent escape kept",
+      "input": "https://github.com/owner/my%20repo.git",
+      "canonical": "github.com/owner/my%20repo",
+      "label": "d01bf342b46699520c275495ff68e45c"
+    },
+    {
+      "name": "dot segments kept",
+      "input": "https://github.com/a/../owner/repo.git",
+      "canonical": "github.com/a/../owner/repo",
+      "label": "0b48defa46cf377722faf14b69c16bf5"
+    },
+    {
+      "name": "backslash in path kept",
+      "input": "https://github.com/owner\\repo.git",
+      "canonical": "github.com/owner\\repo",
+      "label": "59d795f05e7ed6c5a437faf49e709948"
+    },
+    {
+      "name": "backslash after host means no path",
+      "input": "https://github.com\\owner\\repo.git",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "one .git stripped, not two",
+      "input": "https://github.com/owner/repo.git.git",
+      "canonical": "github.com/owner/repo.git",
+      "label": "ca9c15be11fadf5f33ccfcfabddc1524"
+    },
+    {
+      "name": "only ASCII whitespace is trimmed",
+      "input": "https://github.com/Org/Repo.git\u001f",
+      "canonical": "github.com/org/repo.git\u001f",
+      "label": "6eb4121dc077dd4111f060ea5cbfd738"
+    },
+    {
+      "name": "a trailing byte order mark is kept",
+      "input": "https://github.com/Org/Repo.git\ufeff",
+      "canonical": "github.com/org/repo.git\ufeff",
+      "label": "8dc61f0cf2804b436093a4a410c257c0"
+    },
+    {
+      "name": "scp-like splits at the first colon, as git does",
+      "input": "host:owner:repo.git",
+      "canonical": "host/owner:repo",
+      "label": "226d7cfe376cda6006834fabf28c505a"
+    },
+    {
+      "name": "scp-like with a password: an @ is left over",
+      "input": "user:pass@host:owner/repo",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "scp-like with a password before the host",
+      "input": "user:hunter2@github.com:acme/repo.git",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "https with a slash in the password",
+      "input": "https://user:p/ss@github.com/acme/repo.git",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "an @ in an scp-like path",
+      "input": "git@github.com:acme/repo@v2.git",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "Windows drive, forward slashes",
+      "input": "C:/Users/alice/repo",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "Windows drive, backslashes",
+      "input": "C:\\Users\\alice\\repo",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "Windows drive, lowercase letter",
+      "input": "d:/work/repo.git",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "POSIX absolute path",
+      "input": "/home/alice/repo",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "relative path",
+      "input": "../other",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "file scheme",
+      "input": "file:///home/alice/repo.git",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "file scheme with a host",
+      "input": "FILE://server/share/repo.git",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "no path",
+      "input": "https://github.com/",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "not a URL",
+      "input": "notaurl",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "empty",
+      "input": "",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "whitespace only",
+      "input": " \t\n",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "lone surrogate",
+      "input": "https://github.com/owner/re\ud800po.git",
+      "canonical": null,
+      "label": null
+    },
+    {
+      "name": "Unicode host, NFC",
+      "input": "https://b\u00fccher.de/owner/repo.git",
+      "canonical": "b\u00fccher.de/owner/repo",
+      "label": "77bd180dfa4b910c23d2261e53e7246a"
+    },
+    {
+      "name": "Unicode host, NFD",
+      "input": "https://bu\u0308cher.de/owner/repo.git",
+      "canonical": "b\u00fccher.de/owner/repo",
+      "label": "77bd180dfa4b910c23d2261e53e7246a"
+    },
+    {
+      "name": "Unicode host, scp-like",
+      "input": "git@b\u00fccher.de:owner/repo.git",
+      "canonical": "b\u00fccher.de/owner/repo",
+      "label": "77bd180dfa4b910c23d2261e53e7246a"
+    },
+    {
+      "name": "Unicode host, non-ASCII capital kept",
+      "input": "https://B\u00dcCHER.de/owner/repo.git",
+      "canonical": "b\u00dccher.de/owner/repo",
+      "label": "f40cdda80188a4e0533600c15050305e"
+    },
+    {
+      "name": "punycode host kept as given",
+      "input": "https://xn--bcher-kva.de/owner/repo.git",
+      "canonical": "xn--bcher-kva.de/owner/repo",
+      "label": "c562f147de7faf885eeeef1fb818c089"
+    },
+    {
+      "name": "Devanagari path",
+      "input": "https://github.com/\u0905\u0928\u0941\u0935\u093e\u0926/\u0915\u094b\u0921.git",
+      "canonical": "github.com/\u0905\u0928\u0941\u0935\u093e\u0926/\u0915\u094b\u0921",
+      "label": "5c6c4655652fd9d4b653e0534acfc9c4"
+    },
+    {
+      "name": "Devanagari nukta, precomposed QA",
+      "input": "https://git.example.org/team/\u0958\u0932\u092e.git",
+      "canonical": "git.example.org/team/\u0915\u093c\u0932\u092e",
+      "label": "3168fd6875ff05188387db4c9b964f20"
+    },
+    {
+      "name": "Devanagari nukta, KA plus NUKTA",
+      "input": "https://git.example.org/team/\u0915\u093c\u0932\u092e.git",
+      "canonical": "git.example.org/team/\u0915\u093c\u0932\u092e",
+      "label": "3168fd6875ff05188387db4c9b964f20"
+    },
+    {
+      "name": "vocalised Arabic, NFC",
+      "input": "https://git.example.org/team/\u0645\u064f\u0633\u064e\u062c\u064e\u0651\u0644-\u0622\u0645\u0646.git",
+      "canonical": "git.example.org/team/\u0645\u064f\u0633\u064e\u062c\u064e\u0651\u0644-\u0622\u0645\u0646",
+      "label": "b98490d46358d2f4722a1eb914454426"
+    },
+    {
+      "name": "vocalised Arabic, NFD",
+      "input": "https://git.example.org/team/\u0645\u064f\u0633\u064e\u062c\u064e\u0651\u0644-\u0627\u0653\u0645\u0646.git",
+      "canonical": "git.example.org/team/\u0645\u064f\u0633\u064e\u062c\u064e\u0651\u0644-\u0622\u0645\u0646",
+      "label": "b98490d46358d2f4722a1eb914454426"
+    },
+    {
+      "name": "vocalised Arabic, shadda typed before fatha",
+      "input": "git@git.example.org:team/\u0645\u064f\u0633\u064e\u062c\u0651\u064e\u0644-\u0627\u0653\u0645\u0646.git",
+      "canonical": "git.example.org/team/\u0645\u064f\u0633\u064e\u062c\u064e\u0651\u0644-\u0622\u0645\u0646",
+      "label": "b98490d46358d2f4722a1eb914454426"
+    },
+    {
+      "name": "Sinhala with ZWJ, NFC",
+      "input": "https://git.example.org/team/\u0dc1\u0dca\u200d\u0dbb\u0dd3-\u0d9a\u0ddd\u0da9\u0dca.git",
+      "canonical": "git.example.org/team/\u0dc1\u0dca\u200d\u0dbb\u0dd3-\u0d9a\u0ddd\u0da9\u0dca",
+      "label": "144a684027cae8037a4608fbde0f4f20"
+    },
+    {
+      "name": "Sinhala with ZWJ, NFD",
+      "input": "https://git.example.org/team/\u0dc1\u0dca\u200d\u0dbb\u0dd3-\u0d9a\u0dd9\u0dcf\u0dca\u0da9\u0dca.git",
+      "canonical": "git.example.org/team/\u0dc1\u0dca\u200d\u0dbb\u0dd3-\u0d9a\u0ddd\u0da9\u0dca",
+      "label": "144a684027cae8037a4608fbde0f4f20"
+    },
+    {
+      "name": "CJK path",
+      "input": "https://gitee.com/\u5f00\u6e90/\u4ed3\u5e93.git",
+      "canonical": "gitee.com/\u5f00\u6e90/\u4ed3\u5e93",
+      "label": "654e3dbf0694520a4edb0d4918ba3cc1"
+    },
+    {
+      "name": "CJK compatibility ideograph",
+      "input": "https://gitee.com/team/\uf900.git",
+      "canonical": "gitee.com/team/\u8c48",
+      "label": "a465ee37f665ca013834a2c821a3a689"
+    },
+    {
+      "name": "CJK unified ideograph",
+      "input": "https://gitee.com/team/\u8c48.git",
+      "canonical": "gitee.com/team/\u8c48",
+      "label": "a465ee37f665ca013834a2c821a3a689"
+    },
+    {
+      "name": "astral-plane CJK, a surrogate pair in UTF-16",
+      "input": "https://gitee.com/Team/\ud840\udc00\ud869\uded6.git",
+      "canonical": "gitee.com/team/\ud840\udc00\ud869\uded6",
+      "label": "62a15530b5cfe5c07c12fb47e03c8339"
+    },
+    {
+      "name": "Kelvin sign normalizes to K, then lowercases",
+      "input": "https://github.com/\u212aelvin/repo",
+      "canonical": "github.com/kelvin/repo",
+      "label": "2deac010a31390d7011e3e7b85a9096e"
+    },
+    {
+      "name": "plain kelvin",
+      "input": "https://github.com/kelvin/repo",
+      "canonical": "github.com/kelvin/repo",
+      "label": "2deac010a31390d7011e3e7b85a9096e"
+    },
+    {
+      "name": "capital W with ring composes only once lowercased",
+      "input": "https://github.com/owner/W\u030aave",
+      "canonical": "github.com/owner/\u1e98ave",
+      "label": "45ea0fd0c2613a202681951018a5928d"
+    },
+    {
+      "name": "precomposed w with ring",
+      "input": "https://github.com/owner/\u1e98ave",
+      "canonical": "github.com/owner/\u1e98ave",
+      "label": "45ea0fd0c2613a202681951018a5928d"
+    }
+  ],
+  "same_label": {
+    "one repository, every spelling": [
+      "https, mixed-case host",
+      "https, credentials in userinfo",
+      "ssh, trailing slash",
+      "scp-like",
+      "scp-like, uppercase host",
+      "scp-like, leading slash in path",
+      "git scheme, no .git",
+      "git+ssh scheme",
+      "uppercase scheme and host",
+      "uppercase .GIT suffix",
+      "surrounding ASCII whitespace",
+      "leading byte order mark",
+      "query and fragment",
+      "credentials, query and fragment",
+      "numeric port",
+      "ssh with a port",
+      "non-numeric port",
+      "small commercial at in the password",
+      "unencoded @ in the password"
+    ],
+    "GitHub path case": [
+      "GitHub path, title case owner",
+      "GitHub path, upper case owner"
+    ],
+    "IPv6 loopback": [
+      "ssh, IPv6 loopback with port",
+      "scp-like, IPv6 loopback"
+    ],
+    "Unicode host": [
+      "Unicode host, NFC",
+      "Unicode host, NFD",
+      "Unicode host, scp-like"
+    ],
+    "Devanagari nukta": [
+      "Devanagari nukta, precomposed QA",
+      "Devanagari nukta, KA plus NUKTA"
+    ],
+    "vocalised Arabic": [
+      "vocalised Arabic, NFC",
+      "vocalised Arabic, NFD",
+      "vocalised Arabic, shadda typed before fatha"
+    ],
+    "Sinhala with ZWJ": [
+      "Sinhala with ZWJ, NFC",
+      "Sinhala with ZWJ, NFD"
+    ],
+    "CJK compatibility": [
+      "CJK compatibility ideograph",
+      "CJK unified ideograph"
+    ],
+    "Kelvin": [
+      "Kelvin sign normalizes to K, then lowercases",
+      "plain kelvin"
+    ],
+    "w with ring": [
+      "capital W with ring composes only once lowercased",
+      "precomposed w with ring"
+    ]
+  },
+  "different_label": [
+    [
+      "Unicode host, NFC",
+      "punycode host kept as given"
+    ],
+    [
+      "Unicode host, NFC",
+      "Unicode host, non-ASCII capital kept"
+    ],
+    [
+      "space in path",
+      "percent escape kept"
+    ]
+  ],
+  "kill_switch": [
+    {
+      "value": "1",
+      "set": true
+    },
+    {
+      "value": "true",
+      "set": true
+    },
+    {
+      "value": "yes",
+      "set": true
+    },
+    {
+      "value": "anything",
+      "set": true
+    },
+    {
+      "value": "\ufeff0",
+      "set": true
+    },
+    {
+      "value": "\u001c0",
+      "set": true
+    },
+    {
+      "value": "0\u001f",
+      "set": true
+    },
+    {
+      "value": "0\u00a0",
+      "set": true
+    },
+    {
+      "value": "0",
+      "set": false
+    },
+    {
+      "value": "false",
+      "set": false
+    },
+    {
+      "value": "no",
+      "set": false
+    },
+    {
+      "value": "off",
+      "set": false
+    },
+    {
+      "value": "",
+      "set": false
+    },
+    {
+      "value": " OFF ",
+      "set": false
+    },
+    {
+      "value": "\tNo\n",
+      "set": false
+    },
+    {
+      "value": "FaLsE",
+      "set": false
+    }
+  ]
+}

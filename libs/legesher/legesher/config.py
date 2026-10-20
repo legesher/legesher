@@ -11,8 +11,14 @@ Configuration precedence (highest to lowest):
     1. Project config (.legesher/config.yml)
     2. User global config (~/.legesher/config.yml)
     3. Default values
+
+The ``telemetry`` section is the exception: it is consent, so it is read
+from the user config only and a project config cannot change it. A
+committed project file must not be able to opt every collaborator in, or
+switch a user's telemetry back on.
 """
 
+import copy
 import logging
 from pathlib import Path
 from typing import Optional
@@ -21,6 +27,12 @@ import yaml
 
 # Configure logger
 logger = logging.getLogger(__name__)
+
+# Telemetry defaults: on (with a first-run notice), repo attribution off.
+DEFAULT_TELEMETRY: dict[str, bool] = {
+    "enabled": True,
+    "repo_attribution": False,
+}
 
 # Default configuration values
 DEFAULT_CONFIG = {
@@ -40,7 +52,44 @@ DEFAULT_CONFIG = {
         "verbose_history": False,
         "max_history_entries": 100,
     },
+    # Telemetry is opt-out with a first-run notice; repo attribution (the
+    # X-Legesher-Repo label on hosted calls) is a separate opt-in. The
+    # kill switches LEGESHER_TELEMETRY_DISABLED and DO_NOT_TRACK win over
+    # both (legesher_core.repo_attribution). Read from the user config only.
+    "telemetry": dict(DEFAULT_TELEMETRY),
 }
+
+#: Top-level config keys a project config may not set (see the module docstring).
+USER_ONLY_SECTIONS = ("telemetry",)
+
+
+def telemetry_section(value: object) -> dict:
+    """A ``telemetry`` config value as a mapping.
+
+    ``null`` (or a missing section) reads as an empty section. A scalar in
+    place of the mapping (``telemetry: false``, ``telemetry: off``) is read
+    as the ``enabled`` switch; ``legesher_core.repo_attribution`` decides
+    which values mean off, so that rule lives in one place.
+    """
+    if isinstance(value, dict):
+        return value
+    if value is None:
+        return {}
+    return {"enabled": value}
+
+
+def user_telemetry(user_data: object) -> dict:
+    """The effective telemetry section: the user's own, else the defaults.
+
+    ``user_data`` is the user config file's raw YAML (``None`` when there is
+    no file). Project config never contributes to this.
+    """
+    if isinstance(user_data, dict) and "telemetry" in user_data:
+        return {
+            **DEFAULT_TELEMETRY,
+            **telemetry_section(user_data["telemetry"]),
+        }
+    return dict(DEFAULT_TELEMETRY)
 
 
 class LegesherConfig:
@@ -82,6 +131,8 @@ class LegesherConfig:
         metadata_track_in_git: bool = True,
         metadata_verbose_history: bool = False,
         metadata_max_history_entries: int = 100,
+        telemetry_enabled: bool = True,
+        telemetry_repo_attribution: bool = False,
     ) -> None:
         """Initialize configuration with values.
 
@@ -106,6 +157,8 @@ class LegesherConfig:
         self.metadata_track_in_git = metadata_track_in_git
         self.metadata_verbose_history = metadata_verbose_history
         self.metadata_max_history_entries = metadata_max_history_entries
+        self.telemetry_enabled = telemetry_enabled
+        self.telemetry_repo_attribution = telemetry_repo_attribution
 
         # Validate metadata configuration
         self._validate_metadata_config()
@@ -127,6 +180,7 @@ class LegesherConfig:
         git_config = data.get("git", {})
         runtime_config = data.get("runtime", {})
         metadata_config = data.get("metadata", {})
+        telemetry_config = telemetry_section(data.get("telemetry"))
 
         config = cls(
             language=data.get("language", "en"),
@@ -140,6 +194,8 @@ class LegesherConfig:
             metadata_max_history_entries=metadata_config.get(
                 "max_history_entries", 100
             ),
+            telemetry_enabled=telemetry_config.get("enabled", True),
+            telemetry_repo_attribution=telemetry_config.get("repo_attribution", False),
         )
 
         # Set runtime_cache_size from config (not in __init__ to keep it simple)
@@ -171,6 +227,10 @@ class LegesherConfig:
                 "track_in_git": self.metadata_track_in_git,
                 "verbose_history": self.metadata_verbose_history,
                 "max_history_entries": self.metadata_max_history_entries,
+            },
+            "telemetry": {
+                "enabled": self.telemetry_enabled,
+                "repo_attribution": self.telemetry_repo_attribution,
             },
         }
 
@@ -254,7 +314,8 @@ class LegesherConfig:
         """Load configuration with precedence: project > user > defaults.
 
         This method loads configuration from both project and user config files,
-        with project config taking precedence over user config.
+        with project config taking precedence over user config, except for
+        the ``telemetry`` section, which comes from the user config only.
 
         Args:
             repo_root: Git repository root (default: auto-detect)
@@ -266,7 +327,7 @@ class LegesherConfig:
             >>> config = LegesherConfig.load()  # Load with precedence
         """
         # Start with default config
-        merged_data = DEFAULT_CONFIG.copy()
+        merged_data = copy.deepcopy(DEFAULT_CONFIG)
 
         # Merge user config (if exists)
         try:
@@ -286,7 +347,24 @@ class LegesherConfig:
         except Exception as e:
             logger.debug(f"Could not load project config: {e}")
 
+        # Telemetry is consent: the user's own section, never the project's.
+        # to_dict() always writes a full telemetry block, so without this a
+        # project file holding only `language: es` would reset the user's
+        # choice, and one holding `telemetry:` would make it for them.
+        merged_data["telemetry"] = user_telemetry(cls._read_user_yaml())
+
         return cls.from_dict(merged_data)
+
+    @staticmethod
+    def _read_user_yaml() -> object:
+        """The user config file's raw YAML, or ``None`` if it cannot be read."""
+        config_path = Path.home() / ".legesher" / "config.yml"
+        try:
+            with open(config_path, encoding="utf-8") as f:
+                return yaml.safe_load(f)
+        except (OSError, ValueError, yaml.YAMLError) as e:
+            logger.debug(f"Could not read user config for telemetry: {e}")
+            return None
 
     def save_project_config(self, repo_root: Path | None = None) -> Path:
         """Save configuration to project .legesher/config.yml.
@@ -313,15 +391,24 @@ class LegesherConfig:
 
         config_path = legesher_dir / "config.yml"
 
+        # Telemetry is per user, so it never goes into a project file.
+        data = self.to_dict()
+        for section in USER_ONLY_SECTIONS:
+            data.pop(section, None)
+
         # Write configuration
         with open(config_path, "w") as f:
-            yaml.safe_dump(self.to_dict(), f, default_flow_style=False, sort_keys=False)
+            yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
 
         logger.info(f"Saved project config to {config_path}")
         return config_path
 
     def save_user_config(self) -> Path:
         """Save configuration to user ~/.legesher/config.yml.
+
+        The file's existing ``telemetry`` section is kept as it is: this
+        method rewrites settings such as the language, and must not reset
+        a consent choice made with ``legesher config set --global``.
 
         Returns:
             Path to saved config file
@@ -336,9 +423,18 @@ class LegesherConfig:
 
         config_path = legesher_dir / "config.yml"
 
+        data = self.to_dict()
+        for section in USER_ONLY_SECTIONS:
+            data.pop(section, None)
+        existing = self._read_user_yaml()
+        if isinstance(existing, dict):
+            for section in USER_ONLY_SECTIONS:
+                if section in existing:
+                    data[section] = existing[section]
+
         # Write configuration
         with open(config_path, "w") as f:
-            yaml.safe_dump(self.to_dict(), f, default_flow_style=False, sort_keys=False)
+            yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
 
         logger.info(f"Saved user config to {config_path}")
         return config_path
