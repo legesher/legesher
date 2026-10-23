@@ -26,7 +26,7 @@ Amharic, Arabic, Bengali, Bosnian, Burmese, Catalan, Chinese, Croatian, Czech, D
 Finnish, French, Galician, German, Greek, Gujarati, Hebrew, Hindi, Hungarian, Indonesian, Irish, Italian,
 Japanese, Kannada, Korean, Latvian, Macedonian, Malay, Malayalam, Mongolian, Norwegian, Persian, Polish,
 Portuguese, Romanian, Russian, Scottish Gaelic, Serbian, Sinhala, Spanish, Sundanese, Swedish, Telugu, Thai,
-Turkish, Urdu, Uzbek, Vietnamese, Welsh
+Turkish, Ukrainian, Urdu, Uzbek, Vietnamese, Welsh
 
 All languages are currently in **experimental** status, awaiting community validation.
 
@@ -137,8 +137,8 @@ lv (Latvian)          mk (Macedonian)       ml (Malayalam)        mn (Mongolian)
 ms (Malay)            my (Burmese)          nl (Dutch)            no (Norwegian)
 pl (Polish)           pt (Portuguese)       ro (Romanian)         ru (Russian)
 si (Sinhala)          sr (Serbian)          su (Sundanese)        sv (Swedish)
-te (Telugu)           th (Thai)             tr (Turkish)          ur (Urdu)
-uz (Uzbek)            vi (Vietnamese)       zh (Chinese)
+te (Telugu)           th (Thai)             tr (Turkish)          uk (Ukrainian)
+ur (Urdu)             uz (Uzbek)            vi (Vietnamese)       zh (Chinese)
 ```
 
 ## Status Bar Indicators

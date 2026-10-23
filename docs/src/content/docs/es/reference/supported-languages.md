@@ -1,13 +1,13 @@
 ---
 title: Idiomas compatibles
-description: Los 51 idiomas compatibles con Legesher para programar en tu idioma nativo
+description: Los 52 idiomas compatibles con Legesher para programar en tu idioma nativo
 sidebar:
   badge:
     text: revisión
     variant: caution
 ---
 
-Legesher es actualmente compatible con **51 idiomas** para el desarrollo en Python. Cada paquete de idioma incluye
+Legesher es actualmente compatible con **52 idiomas** para el desarrollo en Python. Cada paquete de idioma incluye
 las 37 palabras clave, las 72 funciones integradas y las 66 excepciones de Python en el idioma de destino, lo que te
 permite escribir código Python plenamente funcional en tu idioma nativo.
 
@@ -66,6 +66,7 @@ Todos los paquetes de idioma tienen actualmente el estado **experimental**. Los 
 | te     | Telugu            | తెలుగు           | No  | Experimental |
 | th     | Tailandés         | ไทย              | No  | Experimental |
 | tr     | Turco             | Türkçe           | No  | Experimental |
+| uk     | Ucraniano         | Українська       | No  | Experimental |
 | ur     | Urdu              | اردو             | Sí  | Experimental |
 | uz     | Uzbeko            | O'zbek           | No  | Experimental |
 | vi     | Vietnamita        | Tiếng Việt       | No  | Experimental |
@@ -84,7 +85,7 @@ El árabe, el hebreo, el persa y el urdu son idiomas que se escriben de derecha 
 ## Estado de las traducciones
 
 - **Experimental**: las traducciones funcionan, pero aún no han sido validadas por miembros de la comunidad
-  hablantes nativos. Es el estado actual de los 51 paquetes.
+  hablantes nativos. Es el estado actual de los 52 paquetes.
 - **Disponible**: las traducciones han sido revisadas y aprobadas por hablantes nativos. Este estado se asignará
   tras la validación comunitaria (prevista para la v1.0.0).
 - **Obsoleto**: el paquete de idioma ya no se mantiene activamente y queda excluido de las listas de idiomas

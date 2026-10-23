@@ -234,3 +234,23 @@ class TestStrictAudit:
             SchemaValidator.validate_pack_strict(_pack(ZZ, builtins={"len": "довжина"}))
             == []
         )
+
+
+class TestUkrainian:
+    def test_ukrainian_declares_the_russian_only_letters(self) -> None:
+        # The shipped denylist, stated outright so a silent edit to the table
+        # cannot shrink it without a test changing too.
+        assert SCRIPT_POLICIES["uk"].forbidden_letters == frozenset("ыЫэЭъЪёЁ")
+
+    def test_shipped_ukrainian_pack_is_clean(self) -> None:
+        from legesher_i18n import load_language_pack
+
+        pack = load_language_pack("uk", version="3.14")
+        values = [
+            *pack.keywords.values(),
+            *pack.builtins.values(),
+            *pack.exceptions.values(),
+            *pack.implicit_params.values(),
+        ]
+        assert len(values) == 184
+        assert [v for v in values if forbidden_letters_in(v, "uk")] == []

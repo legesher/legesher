@@ -176,7 +176,7 @@
             // a-zA-Z          | Basic Latin         | en, da, de, es, fi, fr, hu, id, it, ms, nl, no, pl, pt, sv, tr, vi
             // \u00C0-\u024F   | Latin Extended      | da, de, es, fi, fr, hu, id, it, nl, no, pl, pt, sv, tr, vi (accents)
             // \u0370-\u03FF   | Greek               | el (Greek)
-            // \u0400-\u04FF   | Cyrillic            | ru (Russian)
+            // \u0400-\u04FF   | Cyrillic            | mk, mn, ru, sr, uk
             // \u0590-\u05FF   | Hebrew              | he (Hebrew) [RTL]
             // \u0600-\u06FF   | Arabic              | ar (Arabic) [RTL]
             // \u0900-\u097F   | Devanagari          | hi (Hindi)

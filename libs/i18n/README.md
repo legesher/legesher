@@ -10,9 +10,9 @@ and multi-provider translation API for multilingual programming.
 The `legesher-i18n` package provides the core internationalization infrastructure for Legesher,
 enabling developers to code in their native language. It includes:
 
-- **51 Complete Language Packs**: Support for am, ar, bn, bs, ca, cs, cy, da, de, el, en, es, fa, fi, fr, ga, gd,
+- **52 Complete Language Packs**: Support for am, ar, bn, bs, ca, cs, cy, da, de, el, en, es, fa, fi, fr, ga, gd,
   gl, gu, he, hi, hr, hu, id, it, ja, kn, ko, lv, mk, ml, mn, ms, my, nl, no, pl, pt, ro, ru, si, sr, su, sv,
-  te, th, tr, ur, uz, vi, zh
+  te, th, tr, uk, ur, uz, vi, zh
 - **Version-Aware Language Packs**: Automatic adaptation to Python 3.10-3.14 with inheritance
 - **Auto-Detection**: Detects Python version from `pyproject.toml`, `.python-version`, or runtime
 - **Pack Inheritance**: Child packs inherit from parents, defining only what's new
@@ -82,7 +82,7 @@ it loads a pack, so anything reporting `get_pack_info()` — `legesher git setup
 `143 builtins`, which is these 73 plus these 70, not a disagreement with the numbers above.
 
 Codes: am, ar, bn, bs, ca, cs, cy, da, de, el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it, ja, kn,
-ko, lv, mk, ml, mn, ms, my, nl, no, pl, pt, ro, ru, si, sr, su, sv, te, th, tr, ur, uz, vi, zh
+ko, lv, mk, ml, mn, ms, my, nl, no, pl, pt, ro, ru, si, sr, su, sv, te, th, tr, uk, ur, uz, vi, zh
 
 `en` is Python's own vocabulary, the run form every pack maps to. Every other pack is machine-generated and awaiting
 native-speaker review; which model produced a given pack is recorded in that pack's `metadata.author` field, and

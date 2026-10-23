@@ -92,6 +92,8 @@ html[data-snippet-lang="th"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="th"] .lg-code pre[data-lang="th"]{display:block}
 html[data-snippet-lang="tr"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="tr"] .lg-code pre[data-lang="tr"]{display:block}
+html[data-snippet-lang="uk"] .lg-code pre[data-lang]{display:none}
+html[data-snippet-lang="uk"] .lg-code pre[data-lang="uk"]{display:block}
 html[data-snippet-lang="ur"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="ur"] .lg-code pre[data-lang="ur"]{display:block}
 html[data-snippet-lang="uz"] .lg-code pre[data-lang]{display:none}

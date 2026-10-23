@@ -1,0 +1,10 @@
+# Screened by the same model, in the same session, that selected this
+# vocabulary (CORE-1644). Independent review of the surface stays with native
+# review (CORE-1538), where every experimental pack routes anyway.
+language: uk
+target: python
+screener: "claude-opus-5-5 (linguist framing, CORE-1305/CORE-401)"
+screened_at: "2026-10-22"
+coverage_digest: af040056da2f8e35e12c4c08b534cbf30446a2423bb054b1a5916eb2a58ce71b
+terms_screened: 184
+flags: []

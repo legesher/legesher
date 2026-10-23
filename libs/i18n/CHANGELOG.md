@@ -11,6 +11,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Ukrainian (`uk`) ships.** The pack is regenerated DB-first from 184
+  selections made by the new idempotent `scripts/translate/backfill_core1644.py`,
+  which keeps the 2025 community candidates where they are right and replaces
+  them, with a recorded reason, where they are wrong in sense or form. Four
+  calls are flags with both sides' candidate rows already in the database
+  (`--apostrophe`, `--def`, `--none`, `--verbs`), so flipping one is a re-run
+  and a regen; the run checks the whole target state before it writes
+  anything. The script policy forbids the Russian-only ы э ъ ё for `uk`.
+  [CORE-1644]
+
 - **Same-script leakage is a blocking gate.** The script gate cannot see a
   Russian letter in a Ukrainian value, because both are Cyrillic.
   `ScriptPolicy.forbidden_letters` (matched after NFC) is refused by

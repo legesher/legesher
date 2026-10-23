@@ -85,6 +85,7 @@ legesher-i18n-python-sv = { workspace = true }
 legesher-i18n-python-te = { workspace = true }
 legesher-i18n-python-th = { workspace = true }
 legesher-i18n-python-tr = { workspace = true }
+legesher-i18n-python-uk = { workspace = true }
 legesher-i18n-python-ur = { workspace = true }
 legesher-i18n-python-uz = { workspace = true }
 legesher-i18n-python-vi = { workspace = true }

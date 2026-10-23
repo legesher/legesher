@@ -1,5 +1,5 @@
 # _cyrillic.yml — Script-family node: Cyrillic-script languages.
-# Members: mk, mn, ru, sr (sr is digraphic — this node covers the Cyrillic
+# Members: mk, mn, ru, sr, uk (sr is digraphic — this node covers the Cyrillic
 # orthography). Bicameral; standard PEP 8 casing applies. Structural node only.
 # No content keys.
 

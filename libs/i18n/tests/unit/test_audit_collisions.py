@@ -90,8 +90,8 @@ class TestExpectedPackEnforcement:
         instead, the regression-protection contract breaks.
         """
         codes = audit_module._expected_pack_codes()
-        # 51 supported languages per CLAUDE.md.
-        assert len(codes) == 51, f"Expected 51 codes, got {len(codes)}"
+        # 52 supported languages (languages.json).
+        assert len(codes) == 52, f"Expected 52 codes, got {len(codes)}"
         # Spot-checks against known entries.
         for required in ("en", "es", "ar", "ur", "zh", "ja"):
             assert required in codes, f"{required} missing from registry"

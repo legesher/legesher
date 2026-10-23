@@ -19,7 +19,7 @@ Shipped and working now:
 - **Two translation engines.** A token-based translator and a tree-sitter, grammar-aware
   translator, with bidirectional translation between a pack language and Python's own vocabulary,
   and source mapping.
-- **51 Python language packs**, covering Python 3.10 through 3.14. All 51 are available today,
+- **52 Python language packs**, covering Python 3.10 through 3.14. All 52 are available today,
   with community validation in progress.
 - **A concept-centric translations database.** Every translation offered for every term is
   collected as an option with provenance (who or what proposed it, how, when); packs are exports
@@ -71,7 +71,7 @@ Review stops being a maintainer bottleneck and becomes a community practice.
 
 ### Stage 4 | 103 languages
 
-Coverage grows from 51 packs to 103, prioritized by the languages major multilingual models serve
+Coverage grows from 52 packs to 103, prioritized by the languages major multilingual models serve
 well and by what our community asks for.
 
 - Expansion generation runs against the published corpus, so community options and native review

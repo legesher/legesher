@@ -737,6 +737,6 @@ class TestBackfillApplied:
                 f"{ref}: says {match.group(1)!r}, DB says {db[code]!r}"
             )
             checked += 1
-        # 50, not 51: en is the canonical source language and ships no
+        # 51, not 52: en is the canonical source language and ships no
         # REFERENCE.md (there is nothing to translate back to).
-        assert checked == 50
+        assert checked == 51

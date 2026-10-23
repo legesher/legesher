@@ -115,7 +115,6 @@ BCP47_FALLBACK: dict[str, str] = {
     "ne": "ne",  # Nepali
     "sw": "sw",  # Swahili
     "tl": "tl",  # Tagalog
-    "uk": "uk",  # Ukrainian
     "xh": "xh",  # Xhosa
 }
 

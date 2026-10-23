@@ -426,6 +426,15 @@
       "has_case_distinction": true,
       "status": "experimental"
     },
+    "uk": {
+      "name": "Ukrainian",
+      "native": "Українська",
+      "iso639_2": "ukr",
+      "bcp47": "uk",
+      "rtl": false,
+      "has_case_distinction": true,
+      "status": "experimental"
+    },
     "ur": {
       "name": "Urdu",
       "native": "اردو",

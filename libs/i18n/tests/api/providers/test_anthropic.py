@@ -540,7 +540,7 @@ class TestSupportedLanguageInventory:
     """The derived inventory must not silently drop pairs that used to work."""
 
     def test_grandfathered_codes_survive_the_derivation(self, provider):
-        """bg and uk predate languages.json and have no pack; Claude still serves them."""
+        """bg and uk predate languages.json; Claude serves both (bg has no pack yet, uk is now derived)."""
         for code in ("bg", "uk"):
             assert code in provider.SUPPORTED_LANGUAGES
             assert provider.supports("en", code)

@@ -1,0 +1,80 @@
+# uk.yml: Ukrainian Python style guide
+# Ukrainian (Українська): Cyrillic, left-to-right.
+# A profile of best-practice Python for Ukrainian: which conventions the script
+# can express and the constraints its characters impose. Rules only: vocabulary
+# (word choices, symbol names) lives in the language packs.
+
+language: "uk"
+extends:
+- python.yml
+- _ltr.yml
+- _cyrillic.yml
+version: 0.1.0
+status: experimental
+
+# Which Python naming conventions this script can express, plus profile facts.
+supports:
+  case_distinction: true
+  snake_case: true
+  upper_snake_case: true
+  pascal_case: true
+  camel_case: true
+  native_digits: false
+  combining_marks: false
+  requires_word_separator: false
+  diacritics_in_identifiers: false
+  cursive_joining: false
+
+# How identifiers are formed.
+naming:
+  case_substitute: not_needed
+  detail: >
+    Ukrainian has letter case; snake_case / CapWords / UPPER_SNAKE apply as in
+    PEP 8. A single-word name stays bare; a multi-word idea joins with
+    underscores. Exception and class names are CapWords, so a multi-word
+    exception needs no joiner (ПомилкаЗначення).
+  word_formation:
+  - >-
+    Action keywords and action builtins take the infinitive, the form
+    Ukrainian software already uses for commands and menu items (Зберегти,
+    Відкрити), never the imperative. One verb form across the pack: a reader
+    should never meet визначити beside поверни.
+  - >-
+    In X-error and X-warning compounds a noun subject follows the head in the
+    genitive (Помилка + Значення, Попередження + Застарілості), which is
+    Ukrainian noun-phrase order; a calque of English noun-first order
+    (ЗначенняПомилка) is not Ukrainian. A true adjective keeps its normal
+    place before the noun (АрифметичнаПомилка, СинтаксичнаПомилка).
+  - >-
+    Prefer the Ukrainian adjective in -льний / -увальний over an active
+    participle in -учий / -ючий, which reads as a Russian pattern
+    (блокувальний, not блокуючий; наявний, not існуючий).
+  - >-
+    Exception-family naming keeps three distinct roots, mirroring Python's
+    hierarchy: Помилка (error), Виняток (exception), Попередження (warning).
+    Виняток is the Ukrainian term; виключення is a calque of the Russian
+    исключение and is not used.
+  - >-
+    Ukrainian morphology, never a Russian-shaped form that happens to be valid
+    Cyrillic: inanimate abstract nouns take the Ukrainian genitive in -у where
+    Ukrainian takes it (код_символу, not код_символа).
+
+# Script identity + the constraints its characters impose.
+script:
+  name: "Cyrillic"
+  direction: ltr
+  constraints:
+  - "Cyrillic has upper/lowercase; PEP 8 casing applies unchanged. Do NOT mix Latin and Cyrillic in one identifier: а/a, е/e, і/i, о/o, р/p, с/c, х/x are homoglyphs the Unicode gate flags."
+  - "Ukrainian letters і ї є ґ belong to the alphabet. The Russian-only letters ы э ъ ё never appear in a Ukrainian identifier; the script policy lists them as forbidden letters, a blocking gate at selection, export and pack audit."
+  - "Apostrophe: Ukrainian spells some words with an apostrophe (ім'я, об'єкт, пам'ять). U+0027 and U+2019 cannot appear in a Python identifier, so identifiers omit it (обєкт, памяті). U+02BC MODIFIER LETTER APOSTROPHE is identifier-legal but is not used: it renders like the keyboard apostrophe, and a typed U+0027 opens a string literal mid-word."
+  - "Digits: written with ASCII 0-9."
+
+# Formatting rules.
+formatting:
+  comment_prefix: "#"
+  programming_punctuation: ascii_only
+  docstrings: PEP 257 structure, prose in Ukrainian
+
+# Editor rendering (VS Code extension, not the translation prompt).
+rendering:
+  noto_font: "Noto Sans"   # covers Cyrillic

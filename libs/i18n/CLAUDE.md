@@ -8,12 +8,12 @@ This file provides guidance for working with the `legesher-i18n` package.
 **Status**: Production-Ready (Pre-Beta)
 **Python**: >=3.10,<4.0
 
-Internationalization infrastructure with 51 language packs, version-aware inheritance,
+Internationalization infrastructure with 52 language packs, version-aware inheritance,
 and multi-provider translation API.
 
 ## Key Capabilities
 
-- **51 Language Packs**: All in experimental status (see `languages.json`)
+- **52 Language Packs**: All in experimental status (see `languages.json`)
 - **Version-Aware Loading**: Automatic Python 3.10-3.14 adaptation
 - **Pack Inheritance**: Child packs inherit from parents, reducing duplication
 - **Translation API**: Multi-provider support (Anthropic, Google, DeepL, LibreTranslate)
@@ -47,7 +47,7 @@ libs/i18n/
 │       └── dashboard.py      # Usage dashboard
 ├── language-packs/
 │   └── python/
-│       ├── am/, ar/, bn/, bs/, ...  # 51 language packs
+│       ├── am/, ar/, bn/, bs/, ...  # 52 language packs
 │       └── version-index.yml   # Python version inheritance
 └── tests/
 ```
@@ -248,7 +248,7 @@ next expansion batch runs, confirm the convention it will inherit is the one you
 
 ### Language Status
 
-All 51 languages are currently **experimental**:
+All 52 languages are currently **experimental**:
 
 - Translations work but await community validation
 - Status defined in `languages.json`

@@ -155,7 +155,7 @@ class TestAllNonCasedLanguagesCovered:
     languages get the rule via the registry.
     """
 
-    # All 51 supported languages, partitioned by case distinction.
+    # All 52 supported languages, partitioned by case distinction.
     _NO_CASE_LANGS = (
         # Arabic family (RTL).
         "ar",
@@ -248,9 +248,9 @@ class TestAllNonCasedLanguagesCovered:
         assert LANGUAGE_CASE_DISTINCTION.get("ar") is False
         assert LANGUAGE_CASE_DISTINCTION.get("zh") is False
         assert LANGUAGE_CASE_DISTINCTION.get("hi") is False
-        # 51 supported languages must all have the field set.
-        assert len(LANGUAGE_CASE_DISTINCTION) == 51, (
-            f"Expected 51 entries, got {len(LANGUAGE_CASE_DISTINCTION)}"
+        # 52 supported languages must all have the field set.
+        assert len(LANGUAGE_CASE_DISTINCTION) == 52, (
+            f"Expected 52 entries, got {len(LANGUAGE_CASE_DISTINCTION)}"
         )
 
     def test_style_guide_can_override_languages_json(self, tmp_path) -> None:

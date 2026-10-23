@@ -1,9 +1,9 @@
 ---
 title: Supported Languages
-description: All 51 languages supported by Legesher for coding in your native language
+description: All 52 languages supported by Legesher for coding in your native language
 ---
 
-Legesher currently supports **51 languages** for Python development. Each language pack consists of
+Legesher currently supports **52 languages** for Python development. Each language pack consists of
 Python's 37 keywords, 72 builtins, and 66 exceptions in the target language, enabling you to write fully functional Python
 code in your native language.
 
@@ -62,6 +62,7 @@ All language packs currently have **experimental** status. Language packs are in
 | te   | Telugu           | తెలుగు           | No  | Experimental |
 | th   | Thai             | ไทย              | No  | Experimental |
 | tr   | Turkish          | Türkçe           | No  | Experimental |
+| uk   | Ukrainian        | Українська       | No  | Experimental |
 | ur   | Urdu             | اردو             | Yes | Experimental |
 | uz   | Uzbek            | O'zbek           | No  | Experimental |
 | vi   | Vietnamese       | Tiếng Việt       | No  | Experimental |
@@ -82,7 +83,7 @@ an RTL language is active.
 ## Translation Status
 
 - **Experimental**: Translations are functional but have not yet been validated by native-speaking
-  community members. This is the current status for all 51 packs.
+  community members. This is the current status for all 52 packs.
 - **Available**: Translations have been reviewed and approved by native speakers. This status will be
   assigned after community validation (planned for v1.0.0).
 - **Deprecated**: Language pack is no longer actively maintained and is excluded from active language

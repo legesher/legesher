@@ -86,7 +86,6 @@ NON_PACK_SCRIPTS: dict[str, frozenset[str]] = {
     "ne": frozenset({"Devanagari"}),  # Nepali
     "sw": frozenset({"Latin"}),  # Swahili
     "tl": frozenset({"Latin"}),  # Tagalog
-    "uk": frozenset({"Cyrillic"}),  # Ukrainian
     "xh": frozenset({"Latin"}),  # Xhosa
 }
 

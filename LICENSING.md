@@ -20,9 +20,9 @@ distribute them freely, subject to the terms of the license.
 | `legesher-language-server` | [libs/language-server/](libs/language-server/)                       | Apache-2.0 |
 | `legesher-mcp`             | [libs/mcp/](libs/mcp/)                                               | Apache-2.0 |
 | `legesher-vs-code`         | [libs/vs-code/](libs/vs-code/)                                       | Apache-2.0 |
-| Python language packs (51) | [libs/i18n/language-packs/python/](libs/i18n/language-packs/python/) | Apache-2.0 |
+| Python language packs (52) | [libs/i18n/language-packs/python/](libs/i18n/language-packs/python/) | Apache-2.0 |
 
-The 51 Python language packs inherit their license from [libs/i18n/LICENSE](libs/i18n/LICENSE).
+The 52 Python language packs inherit their license from [libs/i18n/LICENSE](libs/i18n/LICENSE).
 
 Everything published from this repository is Apache-2.0. You may use, modify, and redistribute
 it — including commercially — subject to the license terms.

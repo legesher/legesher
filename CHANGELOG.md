@@ -96,6 +96,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: Ukrainian (`uk`) is the 52nd language. The pack covers all 184
+  terms (39 keywords, 73 builtins, 70 exceptions, `self` and `cls`), ships
+  `experimental` and unreviewed by a native speaker, and follows a new
+  `style-guides/uk.yml`: infinitive verbs, CapWords exceptions
+  (`ПомилкаЗначення`), and words spelled with an apostrophe written without
+  it (`обєкт`), since the keyboard apostrophe cannot appear in an
+  identifier. [CORE-1644]
+
 - **cli**: `legesher guard` refuses what must not be committed: bidi
   reordering controls, invisible characters outside string and comment
   prose, Arabic tatweel, identifier characters outside every supported

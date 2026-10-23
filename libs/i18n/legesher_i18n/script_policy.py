@@ -330,6 +330,12 @@ SCRIPT_POLICIES: dict[str, ScriptPolicy] = {
     "mk": ScriptPolicy(scripts=frozenset({"Cyrillic"})),
     "sr": ScriptPolicy(scripts=frozenset({"Cyrillic"})),
     "mn": ScriptPolicy(scripts=frozenset({"Cyrillic"})),
+    # Ukrainian never uses the Russian-only ы э ъ ё; a value carrying one is
+    # Russian leakage from the shared candidate pool, not Ukrainian.
+    "uk": ScriptPolicy(
+        scripts=frozenset({"Cyrillic"}),
+        forbidden_letters=frozenset("ыЫэЭъЪёЁ"),
+    ),
     # --- Greek ---------------------------------------------------------------
     "el": ScriptPolicy(scripts=frozenset({"Greek"})),
     # --- Latin (explicit non-default member) ---------------------------------

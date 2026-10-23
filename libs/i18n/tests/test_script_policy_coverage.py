@@ -51,9 +51,9 @@ class TestPolicyCoverage:
             "SCRIPT_POLICIES in legesher_i18n/script_policy.py."
         )
 
-    def test_shipped_pack_count_is_51(self) -> None:
+    def test_shipped_pack_count_is_52(self) -> None:
         # Guards against silent drift; bump intentionally with the 103 expansion.
-        assert len(_shipped_language_codes()) == 51
+        assert len(_shipped_language_codes()) == 52
 
     def test_policy_table_has_no_orphans(self) -> None:
         # Every policy entry should correspond to a shipped pack (no dead rows).

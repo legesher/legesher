@@ -1640,7 +1640,7 @@ def test_packs_rows_are_one_per_pairing(exported: Path) -> None:
 
     packs = pq.read_table(exported / "data" / "packs.parquet").to_pylist()
     locales = pq.read_table(exported / "data" / "locales.parquet").to_pylist()
-    assert len(packs) == len(locales) == 51
+    assert len(packs) == len(locales) == 52
     assert {r["locale"] for r in packs} == {r["locale"] for r in locales}
     assert all(r["pl_versions"] == list(export_packs.VERSIONS) for r in packs)
 
@@ -1650,7 +1650,7 @@ def test_json_is_one_loadable_file_per_pairing(exported: Path) -> None:
     import json as jsonlib
 
     files = sorted((exported / "json").rglob("*.json"))
-    assert len(files) == 51
+    assert len(files) == 52
     assert all(f.name == "python.json" for f in files)
 
     ar = jsonlib.loads((exported / "json" / "ar" / "python.json").read_text("utf-8"))

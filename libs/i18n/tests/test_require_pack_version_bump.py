@@ -45,7 +45,7 @@ def test_every_shipped_pack_declares_one_version() -> None:
 def test_the_tree_has_the_packs_we_think_it_has() -> None:
     """A guard on the guard: an empty sweep would pass the test above."""
     pairs = gate.all_packs()
-    assert len(pairs) == 51, f"expected 51 pairings, found {len(pairs)}"
+    assert len(pairs) == 52, f"expected 52 pairings, found {len(pairs)}"
     assert ("python", "ar") in pairs
 
 

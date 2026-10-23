@@ -64,6 +64,7 @@ export type LanguageCode =
     'te' |
     'th' |
     'tr' |
+    'uk' |
     'ur' |
     'uz' |
     'vi' |
@@ -119,6 +120,7 @@ export const LANGUAGE_METADATA: Record<LanguageCode, LanguageMetadata> = {
     'te': { name: 'Telugu', native: 'తెలుగు', iso639_2: 'tel', bcp47: 'te', rtl: false, status: 'experimental' },
     'th': { name: 'Thai', native: 'ไทย', iso639_2: 'tha', bcp47: 'th', rtl: false, status: 'experimental' },
     'tr': { name: 'Turkish', native: 'Türkçe', iso639_2: 'tur', bcp47: 'tr', rtl: false, status: 'experimental' },
+    'uk': { name: 'Ukrainian', native: 'Українська', iso639_2: 'ukr', bcp47: 'uk', rtl: false, status: 'experimental' },
     'ur': { name: 'Urdu', native: 'اردو', iso639_2: 'urd', bcp47: 'ur', rtl: true, status: 'experimental' },
     'uz': { name: 'Uzbek', native: 'O\'zbek', iso639_2: 'uzb', bcp47: 'uz-Latn', rtl: false, status: 'experimental' },
     'vi': { name: 'Vietnamese', native: 'Tiếng Việt', iso639_2: 'vie', bcp47: 'vi', rtl: false, status: 'experimental' },

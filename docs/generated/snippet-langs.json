@@ -282,6 +282,12 @@
   "rtl": false
  },
  {
+  "code": "uk",
+  "native": "Українська",
+  "name": "Ukrainian",
+  "rtl": false
+ },
+ {
   "code": "ur",
   "native": "اردو",
   "name": "Urdu",
