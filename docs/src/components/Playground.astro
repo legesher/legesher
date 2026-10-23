@@ -3,12 +3,15 @@
 // translate → execute it entirely client-side via Pyodide.
 //
 // v1 offers LTR pack languages only; RTL editing is CORE-1552. The offered set is
-// snippet-langs filtered to non-RTL — every such language has both a seed
-// (hello-world variant) and a vendored wheel, verified by build_wheels.sh.
+// snippet-langs filtered to non-RTL languages that have a vendored wheel in
+// wheels-manifest.json. A pack added after the last build_wheels.sh run appears
+// in the static snippets but is held out here until the wheels are rebuilt,
+// rather than offered and failing on Run.
 //
 // These JSON artifacts are the same ones the static snippets use; importing them
 // statically bundles their contents at build time.
 import langsMeta from '../../.astro/integrations/legesher-snippets/snippet-langs.json';
+import wheels from '../../public/wheels/wheels-manifest.json';
 import helloWorld from '../../.astro/integrations/legesher-snippets/snippets/hello-world.json';
 import loops from '../../.astro/integrations/legesher-snippets/snippets/loops.json';
 import functions from '../../.astro/integrations/legesher-snippets/snippets/functions.json';
@@ -24,8 +27,9 @@ type Snippet = {
 };
 const meta = langsMeta as LangMeta[];
 
+const vendored = new Set(Object.keys((wheels as { packs: Record<string, string> }).packs));
 const offered = meta
-  .filter((l) => !l.rtl)
+  .filter((l) => !l.rtl && vendored.has(l.code))
   .map((l) => ({ code: l.code, native: l.native, name: l.name }));
 const rtlNative = meta.filter((l) => l.rtl).map((l) => l.native);
 

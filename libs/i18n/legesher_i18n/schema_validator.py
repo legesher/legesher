@@ -29,6 +29,7 @@ from .exceptions import PackValidationError, VersionIndexError
 from .script_policy import (
     ALWAYS_ALLOWED_SCRIPTS,
     FORBIDDEN_FORMAT_CHARS,
+    forbidden_letters_in,
     has_policy,
     is_default_ignorable,
     nfkc_delta_class,
@@ -1477,6 +1478,51 @@ class SchemaValidator:
         return findings
 
     @staticmethod
+    def check_forbidden_letters(
+        pack_schema: "LanguagePackSchema",
+        language: str | None = None,
+    ) -> list["Finding"]:
+        """Flag values carrying letters the language's orthography never uses.
+
+        :meth:`check_script_consistency` cannot see this class: a Russian
+        ``ы`` inside a Ukrainian value is Cyrillic, which Ukrainian allows.
+        The per-language denylist is
+        :attr:`legesher_i18n.script_policy.ScriptPolicy.forbidden_letters`,
+        the same set the selection gate (``set_selected``) refuses, so a
+        value this check flags could never have been selected through the
+        DB. Unpolicied languages yield nothing here; the ``no-policy``
+        finding belongs to the script check.
+
+        Args:
+            pack_schema: Validated, merged pack.
+            language: Language code. Defaults to ``pack_schema.language``.
+        """
+        lang = (language or pack_schema.language).lower()
+        findings: list[Finding] = []
+        items = SchemaValidator._iter_translation_items(pack_schema)
+        # The vocabulary sections are outside _TRANSLATION_SECTIONS (they are
+        # not token maps), but a recommended name is still text in the language.
+        for section in _VOCABULARY_SECTIONS:
+            mapping: dict[str, str] = getattr(pack_schema, section, {}) or {}
+            items += [(section, key, value) for key, value in mapping.items()]
+        for section, key, value in items:
+            leaked = forbidden_letters_in(value, lang)
+            if leaked:
+                findings.append(
+                    Finding(
+                        severity="error",
+                        code="forbidden-letter",
+                        location=f"{section}.{key}",
+                        message=(
+                            f"Value '{value}' contains {leaked}, letters the "
+                            f"'{lang}' orthography never uses (a same-script "
+                            "neighbour's spelling)."
+                        ),
+                    )
+                )
+        return findings
+
+    @staticmethod
     def check_format_chars(
         pack_schema: "LanguagePackSchema",
         language: str | None = None,
@@ -2156,7 +2202,8 @@ class SchemaValidator:
         in order:
 
         1. :meth:`check_normalization`
-        2. :meth:`check_script_consistency`
+        2. :meth:`check_script_consistency`, then
+           :meth:`check_forbidden_letters` (same-script orthography leakage)
         3. :meth:`check_format_chars`
         4. :meth:`check_keyword_collisions`
         5. :meth:`check_min_interpreter_identifier`
@@ -2213,6 +2260,7 @@ class SchemaValidator:
         findings: list[Finding] = []
         findings += SchemaValidator.check_normalization(pack_schema)
         findings += SchemaValidator.check_script_consistency(pack_schema, lang)
+        findings += SchemaValidator.check_forbidden_letters(pack_schema, lang)
         findings += SchemaValidator.check_format_chars(pack_schema, lang)
         findings += SchemaValidator.check_keyword_collisions(pack_schema)
         if run_min_interpreter:

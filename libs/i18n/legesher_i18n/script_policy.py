@@ -44,7 +44,11 @@ How to add a new language (51 -> 103 expansion)
    :class:`ScriptPolicy` constructor refuses an entry that is in
    :data:`FORBIDDEN_FORMAT_CHARS` or is not category ``Cf``, so the hole can
    never reach a character the net exists to block.
-5. Add a coverage row to ``tests/test_script_policy_coverage.py`` (the test
+5. If the language shares its script with a neighbour whose letters it does
+   not use, list those letters in ``forbidden_letters`` (Ukrainian forbids the
+   Russian-only ы э ъ ё). The script gate cannot see this class of bleed: the
+   letters are in the allowed script, so only an orthography denylist does.
+6. Add a coverage row to ``tests/test_script_policy_coverage.py`` (the test
    asserts every shipped pack code has a policy — a missing entry fails CI).
 
 Default-deny
@@ -209,6 +213,10 @@ class ScriptPolicy:
             for the vast majority of languages.
         normalization: Unicode normalization form the validator enforces
             stability against. Always ``"NFKC"`` for Python-identifier safety.
+        forbidden_letters: Letters of an allowed script that this orthography
+            never uses (both cases listed). Catches same-script leakage the
+            script gate cannot see, such as a Russian ``ы`` inside a Ukrainian
+            value. Empty for most languages.
 
     Raises:
         ValueError: if ``allowed_format_chars`` names a character in
@@ -219,12 +227,18 @@ class ScriptPolicy:
             controls, the BOM, and tatweel are never orthography: no policy
             may ever allowlist one, and this constructor is where that stops
             being a social rule (CORE-2029 review finding).
+        ValueError: if ``forbidden_letters`` names anything other than a
+            single letter. That each one belongs to the policy's own scripts
+            (a letter from another script is already the script gate's job)
+            is asserted by ``tests/test_script_policy_coverage.py``, since the
+            script table is built after this class.
     """
 
     scripts: frozenset[str]
     direction: str = "ltr"
     allowed_format_chars: frozenset[str] = field(default_factory=frozenset)
     normalization: str = "NFKC"
+    forbidden_letters: frozenset[str] = field(default_factory=frozenset)
 
     def __post_init__(self) -> None:
         forbidden = self.allowed_format_chars & FORBIDDEN_FORMAT_CHARS
@@ -242,6 +256,19 @@ class ScriptPolicy:
                 "allowed_format_chars is a hole punched for format (Cf) "
                 "characters an orthography requires; these are not Cf: "
                 + ", ".join(f"U+{ord(ch):04X}" for ch in sorted(non_format))
+            )
+        not_letters = {
+            ch
+            for ch in self.forbidden_letters
+            if len(ch) != 1 or not unicodedata.category(ch).startswith("L")
+        }
+        if not_letters:
+            raise ValueError(
+                "forbidden_letters lists single letters; these are not: "
+                + ", ".join(
+                    " ".join(f"U+{ord(c):04X}" for c in ch)
+                    for ch in sorted(not_letters)
+                )
             )
 
 
@@ -366,6 +393,32 @@ def policy_for(language: str) -> ScriptPolicy:
 def has_policy(language: str) -> bool:
     """Return True if *language* has a registered script policy."""
     return language.lower() in SCRIPT_POLICIES
+
+
+def forbidden_letters_in(value: str, language: str) -> list[str]:
+    """Return the letters in *value* that *language*'s orthography forbids.
+
+    The value is composed to NFC first, so a decomposed ``е`` + U+0308 is
+    caught as the ``ё`` it renders as. An unpolicied language forbids nothing
+    here; the default-deny for those lives in the script gate.
+
+    Args:
+        value: A translation value.
+        language: ISO 639 language code (case-insensitive).
+
+    Returns:
+        The forbidden letters found, in order of first appearance.
+    """
+    if not has_policy(language):
+        return []
+    forbidden = policy_for(language).forbidden_letters
+    if not forbidden:
+        return []
+    found: list[str] = []
+    for ch in unicodedata.normalize("NFC", value):
+        if ch in forbidden and ch not in found:
+            found.append(ch)
+    return found
 
 
 # ---------------------------------------------------------------------------

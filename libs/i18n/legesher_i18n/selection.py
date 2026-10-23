@@ -36,7 +36,7 @@ import unicodedata
 from dataclasses import dataclass
 
 from .schema_validator import LanguagePackSchema, SchemaValidator
-from .script_policy import nfkc_delta_class
+from .script_policy import forbidden_letters_in, nfkc_delta_class
 
 # Translation sources ordered from most to least trusted. Sources not in
 # this tuple rank below all listed sources. See
@@ -94,7 +94,7 @@ class SelectionResult:
     source: str | None = None
 
 
-def is_valid_pack_value(term: str, value: str) -> bool:
+def is_valid_pack_value(term: str, value: str, language: str | None = None) -> bool:
     """Return True if ``value`` may be published for ``term``.
 
     Delegates to the pack schema's identifier check so the selection gate
@@ -107,9 +107,16 @@ def is_valid_pack_value(term: str, value: str) -> bool:
     with one. The mirror was optional until CORE-1839, which is how nine
     packs shipped values that reverse-translated to ``except**``.
 
+    When ``language`` is given, the value must also carry none of the
+    letters that language's orthography forbids (``script_policy``
+    ``forbidden_letters``: the Russian-only ы э ъ ё for Ukrainian), the same
+    rule the pack audit's ``forbidden-letter`` check enforces.
+
     Args:
         term: The source term (e.g. ``"arithmeticerror"``, ``"except*"``).
         value: The candidate translation value.
+        language: The value's language code, or None to skip the
+            orthography check.
 
     Returns:
         True if the value passes the publish gate.
@@ -117,6 +124,8 @@ def is_valid_pack_value(term: str, value: str) -> bool:
     if not isinstance(value, str) or not value:
         return False
     if value != value.strip():
+        return False
+    if language is not None and forbidden_letters_in(value, language):
         return False
     return LanguagePackSchema._is_valid_identifier(value, source_key=term)
 
@@ -138,7 +147,9 @@ MAX_SYMBOL_NAME_LENGTH = 60
 _FORBIDDEN_NAME_CATEGORIES = frozenset({"Cc", "Cf", "Cs", "Co", "Cn", "Zl", "Zp"})
 
 
-def vocabulary_value_error(section: str, slug: str, value: str) -> str | None:
+def vocabulary_value_error(
+    section: str, slug: str, value: str, language: str | None = None
+) -> str | None:
     """The publish gate for the vocabulary partition (CORE-1396).
 
     Returns a human-readable reason the value may not be published, or
@@ -183,15 +194,27 @@ def vocabulary_value_error(section: str, slug: str, value: str) -> str | None:
         generation script; keeping every rule HERE is what makes those
         layers unable to disagree.
 
+    Both sections also refuse, when ``language`` is given, the letters that
+    language's orthography forbids (``script_policy`` ``forbidden_letters``),
+    the same rule the term gate applies: a Russian ``ы`` in a Ukrainian
+    recommended name is the same leak as one in a Ukrainian keyword.
+
     Args:
         section: ``"symbols"`` or ``"variable_conventions"``.
         slug: The entry slug, used only in the message.
         value: The candidate value.
+        language: The value's language code, or None to skip the
+            orthography check.
     """
     if not isinstance(value, str) or not value:
         return f"{section}.{slug}: value is empty"
     if value != value.strip():
         return f"{section}.{slug}: value has leading/trailing whitespace ({value!r})"
+    if language is not None and (leaked := forbidden_letters_in(value, language)):
+        return (
+            f"{section}.{slug}: {value!r} contains {leaked}, letters the "
+            f"{language!r} orthography never uses"
+        )
 
     if section == "symbols":
         bad = sorted(
@@ -295,6 +318,7 @@ def select_canonical(
     term: str,
     candidates: list[dict],
     pack_value: str | None = None,
+    language: str | None = None,
 ) -> SelectionResult | None:
     """Choose the canonical translation for a (term, language) pair.
 
@@ -305,6 +329,8 @@ def select_canonical(
             ``confidence``.
         pack_value: The value the shipped pack currently carries for this
             term, if any. When valid it anchors the selection (rule 2).
+        language: The pair's language code; when given, rule 1's gate also
+            applies the language's forbidden letters.
 
     Returns:
         A :class:`SelectionResult`, or None when nothing passes the
@@ -312,7 +338,7 @@ def select_canonical(
         pack-shipping languages, never fall back to a dirty value).
     """
     # Rule 2: shipped-pack anchor (subject to rule 1's gate).
-    if pack_value is not None and is_valid_pack_value(term, pack_value):
+    if pack_value is not None and is_valid_pack_value(term, pack_value, language):
         matching = next(
             (c for c in candidates if c.get("translation") == pack_value),
             None,
@@ -325,7 +351,9 @@ def select_canonical(
 
     # Rule 3: best valid candidate by (source trust, confidence, text).
     valid = [
-        c for c in candidates if is_valid_pack_value(term, c.get("translation", ""))
+        c
+        for c in candidates
+        if is_valid_pack_value(term, c.get("translation", ""), language)
     ]
     if not valid:
         return None

@@ -21,8 +21,10 @@ The exporter's safety contract:
   safety), and generated pyproject carries no [tool.uv.sources]
 """
 
+import re
 import tempfile
 import unicodedata
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -495,6 +497,73 @@ class TestPackagingSafety:
         )
         assert "[tool.uv.sources]" not in toml_text
         assert "editable" not in toml_text
+
+    def test_generated_pyproject_matches_the_shipped_shape(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """A new pack's pyproject is the one the shipped packs share.
+
+        The template once froze a pre-CORE-1852 shape whose bare
+        ``pyproject.toml`` semantic-release path rewrites the ROOT pyproject
+        on a pack's first release. Normalized for code, name and version, the
+        generated file must equal the most common shipped shape, read from the
+        real pack tree, so a future fix to the packs fails here until the
+        template carries it too.
+        """
+        from legesher_i18n.language_registry import get_language_name
+        from tests import language_packs_root
+
+        def normalize(text: str, code: str) -> str:
+            name = get_language_name(code)
+            text = re.sub(r'^version = ".*"$', 'version = "V"', text, flags=re.M)
+            for old, new in (
+                (f"python/{code}/", "python/CODE/"),
+                (f"python_{code}", "python_CODE"),
+                (f"python-{code}", "python-CODE"),
+                (name, "NAME"),
+                (name.lower(), "name"),
+            ):
+                text = text.replace(old, new)
+            return text
+
+        shipped = Counter(
+            normalize(path.read_text(encoding="utf-8"), path.parent.name)
+            for path in language_packs_root().glob("*/pyproject.toml")
+        )
+        majority, count = shipped.most_common(1)[0]
+        assert count > len(list(language_packs_root().glob("*/pyproject.toml"))) // 2
+
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True, include_packaging=True)
+        generated = (temp_output_dir / "es" / "pyproject.toml").read_text(
+            encoding="utf-8"
+        )
+        assert normalize(generated, "es") == majority
+
+    def test_packaging_names_the_language_from_the_registry(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """Bengali was never in the old hand-kept name map, which fell back
+        to the upper-cased code ("BN language pack")."""
+        _populate_full_language(temp_db, "bn")
+        exporter.export_language("bn", overwrite=True, include_packaging=True)
+        lang_dir = temp_output_dir / "bn"
+        toml_text = (lang_dir / "pyproject.toml").read_text(encoding="utf-8")
+        assert "Natural Language :: Bengali" in toml_text
+        readme = (lang_dir / "README.md").read_text(encoding="utf-8")
+        assert "Bengali (বাংলা)" in readme
+        assert "BN" not in readme
+
+    def test_generated_changelog_starts_unreleased(
+        self, exporter, temp_db, temp_output_dir
+    ):
+        """The release stamper rewrites ``## [Unreleased]`` and skips a
+        changelog without one, so a new pack must not arrive pre-dated."""
+        _populate_full_language(temp_db, "es")
+        exporter.export_language("es", overwrite=True, include_packaging=True)
+        text = (temp_output_dir / "es" / "CHANGELOG.md").read_text(encoding="utf-8")
+        assert "## [Unreleased]" in text
+        assert re.search(r"^## \[\d", text, flags=re.M) is None
 
     def test_existing_packaging_never_overwritten(
         self, exporter, temp_db, temp_output_dir
@@ -1125,6 +1194,37 @@ class TestBulkExportBlastRadius:
         assert "es" not in excinfo.value.failures
         assert not (temp_output_dir / "am").exists()
         assert _pack_file(temp_output_dir, "es", "3.10").exists()
+
+    def test_forbidden_letter_planted_past_set_selected_is_refused(
+        self, exporter, temp_db, temp_output_dir, monkeypatch
+    ):
+        """A forbidden letter written straight into the table, past the
+        set_selected gate (an old or out-of-band write), still never reaches
+        the pack: the exporter re-applies the language's forbidden letters
+        when it loads selections. ``zz`` is a synthetic Cyrillic policy that
+        forbids the Russian-only ы."""
+        from legesher_i18n.script_policy import SCRIPT_POLICIES, ScriptPolicy
+
+        monkeypatch.setitem(
+            SCRIPT_POLICIES,
+            "zz",
+            ScriptPolicy(
+                scripts=frozenset({"Cyrillic"}), forbidden_letters=frozenset("ыЫ")
+            ),
+        )
+        _populate_full_language(temp_db, "zz")
+        conn = temp_db._get_connection()
+        conn.execute(
+            "UPDATE selected_translations SET translation = ? "
+            "WHERE language_code = 'zz' AND term_id = "
+            "(SELECT id FROM terms WHERE name = 'len' AND category = 'builtin_func')",
+            ("довжына",),
+        )
+        conn.commit()
+
+        with pytest.raises(CorruptSelectionError, match="довжына"):
+            exporter.export_language("zz", overwrite=True)
+        assert not (temp_output_dir / "zz").exists()
 
     def test_environmental_failure_is_ranked_below_data_integrity(
         self, exporter, temp_db, temp_output_dir

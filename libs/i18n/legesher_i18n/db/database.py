@@ -906,7 +906,9 @@ class TranslationDatabase:
             ValueError: If the translation is not a valid publishable
                 identifier (CORE-1400 selection gate — dirty candidates
                 are tolerated in ``translations`` but can never become
-                the selected value), or if it collides with another
+                the selected value), if it carries a letter the language's
+                orthography forbids (``script_policy`` ``forbidden_letters``,
+                e.g. a Russian ``ы`` in Ukrainian), or if it collides with another
                 term's selected translation in the same language and
                 programming language (unless allow_collision=True).
                 Same-name terms (e.g. ``type`` as builtin and as 3.12
@@ -916,6 +918,7 @@ class TranslationDatabase:
 
         # CORE-1400: enforce the publish gate at the write boundary so no
         # caller can select a value that pack validation would reject.
+        from ..script_policy import forbidden_letters_in
         from ..selection import is_valid_pack_value
 
         term_row = conn.execute(
@@ -929,6 +932,15 @@ class TranslationDatabase:
                 f"-> {translation!r}. Dirty candidates stay in the "
                 f"'translations' pool; only clean identifiers may be "
                 f"selected (CORE-1400)."
+            )
+        leaked = forbidden_letters_in(translation, language_code)
+        if leaked:
+            raise ValueError(
+                f"Translation carries letters the {language_code!r} orthography "
+                f"never uses: term_id={term_id} ({term_name!r}) -> "
+                f"{translation!r} contains {leaked}. A same-script neighbour's "
+                f"spelling leaked into the candidate pool (script_policy "
+                f"forbidden_letters)."
             )
 
         if not allow_collision:
@@ -1206,7 +1218,7 @@ class TranslationDatabase:
             raise ValueError(f"No vocabulary entry with id {entry_id}")
 
         section, slug = entry[0], entry[1]
-        error = vocabulary_value_error(section, slug, value)
+        error = vocabulary_value_error(section, slug, value, language_code)
         if error is not None:
             raise ValueError(
                 f"Refusing to select vocabulary value for '{language_code}' — {error}"

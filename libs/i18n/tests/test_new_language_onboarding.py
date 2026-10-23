@@ -14,6 +14,8 @@ Onboarding checklist (each maps to a test below):
   5. No value equals a live Python keyword/builtin (except its own target).
   6. ZWJ-bearing values declare python_version_min >= 3.13.
   7. No duplicate targets (except the intentional keywords.type==builtins.type).
+  8. If the script is shared with a neighbour whose letters the language does
+     not use, declare them as forbidden_letters (tests/test_forbidden_letters.py).
 """
 
 from __future__ import annotations

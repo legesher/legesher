@@ -11,6 +11,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Same-script leakage is a blocking gate.** The script gate cannot see a
+  Russian letter in a Ukrainian value, because both are Cyrillic.
+  `ScriptPolicy.forbidden_letters` (matched after NFC) is refused by
+  `set_selected` and `set_selected_vocabulary`, by the exporter's selection
+  load, and by the strict audit's new `forbidden-letter` check, vocabulary
+  sections included. New-pack packaging now takes language names from
+  `languages.json` (the 26-language map it replaced fell back to the
+  upper-cased code), generates the shipped `pyproject.toml` shape, whose
+  git-root-relative release paths keep a new pack's first release from
+  rewriting the root `pyproject.toml`, and starts the pack changelog under
+  `## [Unreleased]` instead of a pre-dated release. Tests pin the pyproject
+  template to the most common shipped shape. [CORE-1644]
+
 - **The translations schema v2 has a reference again, and it cannot go
   stale.** `docs/schema-v2-reference.md` describes every table, column,
   index, trigger and view in `schema_v2.sql`. It is generated: the structure

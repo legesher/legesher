@@ -210,7 +210,7 @@ def main() -> int:
 
             # The selection rule, pack value as anchor.
             pool = db.get_translations(term_id=term_id, language_code=lang)
-            result = select_canonical(term, pool, pack_value=value)
+            result = select_canonical(term, pool, pack_value=value, language=lang)
             if result is None or result.translation != value:
                 # Shipped value failed the gate — surface it, don't guess.
                 stats["invalid_pack_values"] += 1

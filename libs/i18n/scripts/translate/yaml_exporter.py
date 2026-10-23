@@ -78,7 +78,7 @@ from pathlib import Path
 import yaml
 
 from legesher_i18n.db import TranslationDatabase
-from legesher_i18n.language_registry import get_language_name
+from legesher_i18n.language_registry import get_language_name, get_native_name
 from legesher_i18n.schema_validator import SchemaValidator
 from legesher_i18n.selection import is_valid_pack_value, vocabulary_value_error
 from legesher_i18n.term_definitions import (
@@ -107,35 +107,17 @@ logger = logging.getLogger(__name__)
 # The term lists imported above are pinned to the real stdlib by
 # tests/test_baseline_against_stdlib.py.
 
-# Natural language names for README generation
-NATURAL_LANGUAGE_NAMES = {
-    "ar": ("Arabic", "العربية"),
-    "da": ("Danish", "Dansk"),
-    "de": ("German", "Deutsch"),
-    "el": ("Greek", "Ελληνικά"),
-    "en": ("English", "English"),
-    "es": ("Spanish", "Español"),
-    "fi": ("Finnish", "Suomi"),
-    "fr": ("French", "Français"),
-    "he": ("Hebrew", "עברית"),
-    "hi": ("Hindi", "हिन्दी"),
-    "hu": ("Hungarian", "Magyar"),
-    "id": ("Indonesian", "Bahasa Indonesia"),
-    "it": ("Italian", "Italiano"),
-    "ja": ("Japanese", "日本語"),
-    "ko": ("Korean", "한국어"),
-    "ms": ("Malay", "Bahasa Melayu"),
-    "nl": ("Dutch", "Nederlands"),
-    "no": ("Norwegian", "Norsk"),
-    "pl": ("Polish", "Polski"),
-    "pt": ("Portuguese", "Português"),
-    "ru": ("Russian", "Русский"),
-    "sv": ("Swedish", "Svenska"),
-    "th": ("Thai", "ไทย"),
-    "tr": ("Turkish", "Türkçe"),
-    "vi": ("Vietnamese", "Tiếng Việt"),
-    "zh": ("Chinese", "中文"),
-}
+
+def _language_names(language_code: str) -> tuple[str, str]:
+    """(English name, native name) for packaging text, from the registry.
+
+    ``languages.json`` is generated from the DB and lists every published
+    language, so a newly onboarded one is named correctly. The hand-kept map
+    this replaced covered 26 languages and fell back to the upper-cased code
+    for the rest ("UK language pack", "Natural Language :: UK").
+    """
+    return get_language_name(language_code), get_native_name(language_code)
+
 
 # Categories tried, in order, when resolving a builtins-section slot.
 _BUILTIN_CATEGORIES = ("builtin_func", "builtin_type", "special_constant")
@@ -345,7 +327,7 @@ class YAMLExporter:
                 continue
             name = row["term_name"]
             value = row["translation"]
-            if not is_valid_pack_value(name, value):
+            if not is_valid_pack_value(name, value, language_code):
                 invalid.append(f"{name} -> {value!r}")
                 continue
             slots[(row["term_category"], name)] = value
@@ -536,7 +518,10 @@ class YAMLExporter:
             invalid = [
                 error
                 for slug, value in values.items()
-                if (error := vocabulary_value_error(section, slug, value)) is not None
+                if (
+                    error := vocabulary_value_error(section, slug, value, language_code)
+                )
+                is not None
             ]
             if invalid:
                 raise CorruptSelectionError(
@@ -1030,9 +1015,7 @@ class YAMLExporter:
 
     def _generate_init_py(self, language_code: str, package_dir: Path):
         """Generate __init__.py for the language pack."""
-        lang_name, _ = NATURAL_LANGUAGE_NAMES.get(
-            language_code, (language_code.upper(), language_code)
-        )
+        lang_name, _ = _language_names(language_code)
 
         init_content = f'''"""{lang_name} language pack for Python in Legesher.
 
@@ -1058,14 +1041,21 @@ __all__ = ["__version__", "LANGUAGE", "TARGET", "PACK_DIR"]
     def _generate_pyproject_toml(self, language_code: str, lang_dir: Path):
         """Generate a uv-workspace-safe pyproject.toml for a NEW pack.
 
+        The template is the shape the shipped packs share, CORE-1852's
+        release fixes included: semantic-release resolves every path against
+        the git root, so the pre-fix bare ``pyproject.toml`` would rewrite the
+        ROOT pyproject on a new pack's first release.
+        ``tests/translate/test_yaml_exporter.py`` pins the template to the
+        shipped shape so the two cannot drift apart again.
+
         The root workspace declares ``legesher-i18n = {{ workspace = true }}``
         for every member, so the pack must NOT carry its own
         ``[tool.uv.sources]`` override (the pre-CORE-1400 template's
         editable-path source broke workspace resolution).
         """
-        lang_name, native_name = NATURAL_LANGUAGE_NAMES.get(
-            language_code, (language_code.upper(), language_code)
-        )
+        lang_name, native_name = _language_names(language_code)
+        # semantic-release paths are git-root relative (CORE-1852).
+        pack_root = f"libs/i18n/language-packs/python/{language_code}"
 
         toml_content = f"""[build-system]
 requires = ["pdm-backend"]
@@ -1078,7 +1068,7 @@ authors = [
 license = {{text = "Apache-2.0"}}
 requires-python = ">=3.10,<4.0"
 dependencies = [
-    "legesher-i18n>=0.0.1,<0.1.0",
+    "legesher-i18n>=0.2.0,<1.0.0",
 ]
 name = "legesher-i18n-python-{language_code}"
 version = "0.0.1"
@@ -1101,15 +1091,24 @@ classifiers = [
 ]
 
 [tool.semantic_release]
-version_variable = "legesher_i18n_python_{language_code}/__init__.py:__version__"
-version_toml = "pyproject.toml:project.version"
-commit_parser = "angular"
+# Every path here is relative to the GIT ROOT, not to this file. semantic-release
+# resolves repo_dir by walking up to .git/ and resolves each configured path
+# against that, so a bare "pyproject.toml" read and rewrote the ROOT pyproject
+# (CORE-1852). List form: PSR 10 rejects a bare string, and ignores the old
+# singular `version_variable` key, so the package __version__ never moved.
+version_toml = ["{pack_root}/pyproject.toml:project.version"]
+version_variables = ["{pack_root}/legesher_i18n_python_{language_code}/__init__.py:__version__"]
+commit_parser = "conventional"
+# PSR's default release-commit subject is the bare version, which the skip in
+# release-language-packs.yml and ci.yml (`chore(release)`) never matched, so
+# every release retriggered its own train once (CORE-1852).
+commit_message = "chore(release): legesher-i18n-python-{language_code} {{version}}"
 major_on_zero = true
 allow_zero_version = true
-branch = "main"
 tag_format = "i18n-python-{language_code}-v{{version}}"
-upload_to_vcs_release = true
-upload_to_pypi = false
+# PSR's default author is a bare word with no `@`, which author-validating
+# tooling rejects. Same override as the root config.
+commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
 [tool.semantic_release.commit_parser_options]
 allowed_tags = [
@@ -1118,12 +1117,31 @@ allowed_tags = [
 ]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
+# The `conventional` parser is the renamed `angular` one (removed in PSR 11),
+# with two defaults flipped. Pinned so the sweep changes no bump: a squash
+# body that lists feat/fix lines still counts as the one commit it is.
+parse_squash_commits = false
+ignore_merge_commits = false
+
+# PSR 10 reads these from this table and ignores the top-level spellings. It
+# never uploads to PyPI. The glob is where release-language-packs.yml builds
+# the wheel; the default "dist/*" would attach nothing to the GitHub release.
+[tool.semantic_release.publish]
+upload_to_vcs_release = true
+dist_glob_patterns = ["{pack_root}/dist/*"]
 
 [tool.semantic_release.changelog]
 exclude_commit_patterns = [
     "^chore\\\\(release\\\\):",
     "^Merge",
 ]
+
+# The workflow passes --no-changelog: changelogs here are hand-written and
+# stamped by scripts/stamp-changelog-release.py. This is the guard for a manual
+# run that forgets the flag, which would otherwise rewrite the repo-root
+# CHANGELOG.md during a pack release.
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "{pack_root}/CHANGELOG.md"
 """
         toml_file = lang_dir / "pyproject.toml"
         toml_file.write_text(toml_content, encoding="utf-8")
@@ -1133,9 +1151,7 @@ exclude_commit_patterns = [
         self, language_code: str, lang_dir: Path, counts: dict[str, int]
     ):
         """Generate README.md for the language pack."""
-        lang_name, native_name = NATURAL_LANGUAGE_NAMES.get(
-            language_code, (language_code.upper(), language_code)
-        )
+        lang_name, native_name = _language_names(language_code)
 
         readme_content = f"""# legesher-i18n-python-{language_code}
 
@@ -1227,11 +1243,15 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
         logger.debug(f"Wrote {readme_file}")
 
     def _generate_changelog(self, language_code: str, lang_dir: Path):
-        """Generate CHANGELOG.md for the language pack."""
-        lang_name, _ = NATURAL_LANGUAGE_NAMES.get(
-            language_code, (language_code.upper(), language_code)
-        )
-        today = datetime.now().strftime("%Y-%m-%d")
+        """Generate CHANGELOG.md for the language pack.
+
+        The pack starts under ``## [Unreleased]``, the shape every shipped pack
+        changelog has: ``scripts/stamp-changelog-release.py`` turns that heading
+        into the dated version at release time and skips a changelog without
+        one, so a pre-dated ``[0.0.1]`` heading would claim a release that never
+        happened and leave the real first release with no section.
+        """
+        lang_name, native_name = _language_names(language_code)
 
         changelog_content = f"""# Changelog - legesher-i18n-python-{language_code}
 
@@ -1240,30 +1260,14 @@ All notable changes to this language pack.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.1] - {today}
+## [Unreleased]
 
 ### Added
 
-- **Initial {lang_name} Language Pack**
-  - Complete keyword translations for Python 3.10-3.14
-  - Built-in function and type translations
-  - Exception class translations
-  - Version-aware inheritance system (3.10 → 3.11 → 3.12 → 3.13 → 3.14)
-  - Support for Python 3.10+ features (match/case)
-  - Support for Python 3.11+ features (except*)
-  - Support for Python 3.12+ features (type parameter syntax)
-
-### Technical Details
-
-- **Python Versions**: 3.10, 3.11, 3.12, 3.13, 3.14
-- **Inheritance Depth**: 5 levels (3.10 base → 3.14)
-- **Translation Source**: Legesher translation pipeline (canonical selections)
-- **Format**: YAML with version inheritance
-
-## Links
-
-- [GitHub Repository](https://github.com/legesher/legesher)
-- [Legesher Monorepo](../../../)
+- {lang_name} ({native_name}) language pack: keywords, builtins, exceptions
+  and implicit parameters for Python 3.10 through 3.14, with version-aware
+  inheritance (3.10 base, each later version extending the one before).
+  Experimental: generated, not yet reviewed by a native speaker.
 """
         changelog_file = lang_dir / "CHANGELOG.md"
         changelog_file.write_text(changelog_content, encoding="utf-8")
