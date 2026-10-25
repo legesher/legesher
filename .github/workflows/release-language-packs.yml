@@ -64,6 +64,7 @@ on:
           - mn
           - ms
           - my
+          - ne
           - nl
           - "no"
           - pl
@@ -74,13 +75,16 @@ on:
           - sr
           - su
           - sv
+          - sw
           - te
           - th
+          - tl
           - tr
           - uk
           - ur
           - uz
           - vi
+          - xh
           - zh
 
 # Read-only by default; the two jobs that cut a release opt up to

@@ -20,7 +20,7 @@ between natural languages.
   optional `implicit_param_map` constructor parameter; dispatch order is
   `keyword → builtin → implicit_param → IdentifierMap`. The extractor skips
   self/cls entirely so they don't reach the LLM.
-- **52 Languages**: Via language pack system
+- **56 Languages**: Via language pack system
 - **Perfect Round-Trip**: EN→ES→EN translation is byte-identical
 - **RTL Support**: Arabic, Hebrew, Persian, Urdu with UTF-8 encoding
 - **Git Integration**: A clean filter that keeps each block's keywords in its stored form, and the guard

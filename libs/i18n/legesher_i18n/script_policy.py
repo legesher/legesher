@@ -312,6 +312,7 @@ SCRIPT_POLICIES: dict[str, ScriptPolicy] = {
     "bn": ScriptPolicy(scripts=frozenset({"Bengali"})),
     "gu": ScriptPolicy(scripts=frozenset({"Gujarati"})),
     "hi": ScriptPolicy(scripts=frozenset({"Devanagari"})),
+    "ne": ScriptPolicy(scripts=frozenset({"Devanagari"})),
     "kn": ScriptPolicy(scripts=frozenset({"Kannada"})),
     "ml": ScriptPolicy(scripts=frozenset({"Malayalam"})),
     "te": ScriptPolicy(scripts=frozenset({"Telugu"})),
@@ -340,6 +341,12 @@ SCRIPT_POLICIES: dict[str, ScriptPolicy] = {
     "el": ScriptPolicy(scripts=frozenset({"Greek"})),
     # --- Latin (explicit non-default member) ---------------------------------
     "uz": _latin(),
+    # Standard Swahili has no q or x (loans are respelled: teksi, faksi); a
+    # value carrying one is untranslated English, not Swahili.
+    "sw": ScriptPolicy(
+        scripts=frozenset({"Latin"}),
+        forbidden_letters=frozenset("qQxX"),
+    ),
     # --- Latin (default group) ----------------------------------------------
     "bs": _latin(),
     "ca": _latin(),
@@ -367,8 +374,14 @@ SCRIPT_POLICIES: dict[str, ScriptPolicy] = {
     "ro": _latin(),
     "su": _latin(),
     "sv": _latin(),
+    # Filipino (pack id tl, BCP 47 fil): the 28-letter alphabet includes the
+    # loan letters c f j ñ q v x z, so there are no forbidden letters.
+    "tl": _latin(),
     "tr": _latin(),
     "vi": _latin(),
+    # Xhosa writes its click consonants with c, q and x, so unlike sw it
+    # carries no forbidden letters.
+    "xh": _latin(),
 }
 
 
@@ -433,7 +446,7 @@ def forbidden_letters_in(value: str, language: str) -> list[str]:
 # Unicode does not expose Script / Script_Extensions through the stdlib
 # `unicodedata` module directly, so we derive a coarse script name from the
 # character's Unicode block via a compact range table. The blocks covered are
-# exactly those used by the 51 shipped packs plus the common digits/punctuation
+# exactly those used by the shipped packs plus the common digits/punctuation
 # that map to the script-agnostic "Common" pseudo-script. Anything outside the
 # table — letters from a script not in the table, private-use, etc. — is
 # reported as "Unknown", which the validator treats as a script violation.

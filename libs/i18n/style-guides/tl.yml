@@ -1,0 +1,90 @@
+# tl.yml: Filipino Python style guide
+# Filipino (pack id tl, BCP 47 fil): Latin, left-to-right.
+# A profile of best-practice Python for Filipino: which conventions the script
+# can express and the constraints its characters impose. Rules only: vocabulary
+# (word choices, symbol names) lives in the language packs.
+#
+# The pack id is tl, the two-letter code every pack id uses; the language is
+# Filipino, the Tagalog-based national standard, so the name, the BCP 47 tag
+# and iso639_2 all say fil (as no / nb: the id stays two letters, the tag is
+# exact).
+
+language: "tl"
+extends:
+- python.yml
+- _ltr.yml
+version: 0.1.0
+status: experimental
+
+# Which Python naming conventions this script can express, plus profile facts.
+supports:
+  case_distinction: true
+  snake_case: true
+  upper_snake_case: true
+  pascal_case: true
+  camel_case: true
+  native_digits: false
+  combining_marks: false
+  requires_word_separator: false
+  diacritics_in_identifiers: true
+  cursive_joining: false
+
+# How identifiers are formed.
+naming:
+  case_substitute: not_needed
+  detail: >
+    Standard Filipino is the register: the national language as the Komisyon
+    sa Wikang Filipino writes it, in the 28-letter alphabet. Pack values
+    mirror how Python spells its own reserved words: lowercase, with the words
+    of a multi-word name run together (pagkakamalisahalaga, kuninangkatangian),
+    as Python writes getattr and isinstance. Filipino writes a hyphen after a
+    prefix before a vowel (pag-angkat); identifiers cannot hold one, so the
+    fused value drops it. Capitals and underscores are left to the
+    programmer's own code. The word boundaries are not lost: the database
+    keeps each value's separated form (pagkakamali_sa_halaga) as a candidate
+    row and in its rationale.
+  word_formation:
+  - >-
+    Action keywords and action builtins take the object-focus form that
+    Filipino software uses for commands (buksan, burahin, ilimbag, ibalik,
+    isagawa). It doubles as the infinitive and the imperative, so there is one
+    verb form and no honorific choice. Transitive meaning takes the transitive
+    form: return gives a value back (ibalik), it does not go back (bumalik).
+  - >-
+    A multi-word name follows Filipino order: the head first, then its
+    complement, joined by the linker or preposition Filipino uses
+    (pagkakamali sa halaga, error in a value; babala sa pagkaluma, warning
+    about obsolescence; listahan ng katangian, list of attributes).
+  - >-
+    Exception-family naming keeps three distinct roots, mirroring Python's
+    hierarchy: pagkakamali (error), eksepsiyon (exception), babala
+    (warning). mali is False, so the error root is the noun pagkakamali.
+  - >-
+    Spanish and English loans are standard Filipino and are accepted when
+    respelled to Filipino orthography (klase, listahan, kodigo, proseso,
+    koneksiyon, modyul, indeks, sintaks, memorya, bayt, baryabol). A value
+    spelled like the English term is untranslated, not a choice; where
+    Filipino has a coined or native term it wins (talaksan for file, teklado
+    for keyboard, buumbilang for integer, pangkat for set). Two
+    English-identical values are accepted by name, as in the other
+    Latin-script packs: lambda (the Greek letter's name) and ascii (an
+    acronym).
+
+# Script identity + the constraints its characters impose.
+script:
+  name: "Latin"
+  direction: ltr
+  constraints:
+  - "Filipino uses Latin script with case. In the programmer's own code PEP 8 casing applies unchanged; pack values are lowercase (see naming)."
+  - "The 28-letter alphabet includes c, f, j, ñ, q, v, x and z for loans and names, so there is no forbidden-letter rule. ñ is precomposed (U+00F1), an NFC and NFKC fixed point."
+  - "Digits: written with ASCII 0-9."
+
+# Formatting rules.
+formatting:
+  comment_prefix: "#"
+  programming_punctuation: ascii_only
+  docstrings: PEP 257 structure, prose in Filipino
+
+# Editor rendering (VS Code extension, not the translation prompt).
+rendering:
+  noto_font: "Noto Sans"   # Latin default

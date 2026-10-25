@@ -96,6 +96,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **i18n**: Four languages join, completing the partial languages the
+  translations database already held: Swahili (`sw`), Nepali (`ne`),
+  Filipino (`tl`, BCP 47 `fil`) and Xhosa (`xh`), for 56 in all. Each pack
+  covers all 184 terms, ships `experimental` and unreviewed by a native
+  speaker, and follows its own new style guide. Their values are written the
+  way Python writes its own reserved words, lowercase with the words of a
+  multi-word name run together (`hitilafuyathamani`, `मानत्रुटि`,
+  `pagkakamalisahalaga`, `impazamoyexabiso` for `ValueError`); capitals and
+  underscores are left to the programmer's code, and the database keeps each
+  value's word boundaries. The Swahili script policy refuses `q` and `x`,
+  which Standard Swahili never uses, so an untranslated English value cannot
+  ship. [CORE-2181] [CORE-2477] [CORE-2478] [CORE-2479] [CORE-2480]
+
 - **i18n**: Ukrainian (`uk`) is the 52nd language. The pack covers all 184
   terms (39 keywords, 73 builtins, 70 exceptions, `self` and `cls`), ships
   `experimental` and unreviewed by a native speaker, and follows a new

@@ -98,10 +98,8 @@ published.
 
 Check the summary before going further:
 
-* `locales` — **51**. Not 52: `language-packs/python` also contains
+* `locales`: **56**. Not 57: `language-packs/python` also contains
   `version-index.yml`, a file, and a plain directory listing counts it. The
-  database's python selection layer likewise spans 52 locale codes, but the
-  52nd is `uk`, a six-row stub with no pack tree and no registry entry. The
   exporter refuses to run if the registry and the pack tree disagree.
 * `tiers present` — `experimental` for every locale, until the ladder in
   [`pack-maturity-ladder.md`](pack-maturity-ladder.md) promotes one.

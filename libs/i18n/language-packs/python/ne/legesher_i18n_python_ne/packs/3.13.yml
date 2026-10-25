@@ -1,0 +1,19 @@
+# Nepali Language Pack for Python 3.13+
+# Extends 3.12 pack and adds PythonFinalizationError
+
+language: ne
+target: python
+version: '3.13'
+extends: 3.12.yml
+keywords: {}
+exceptions:
+  pythonfinalizationerror: पाइथनसमापनत्रुटि
+metadata:
+  python_version_min: '3.13'
+  python_version_max: '3.14'
+  compatibility_tested:
+  - '3.13'
+  last_updated: '2026-10-25'
+  community_reviewed: false
+  author: Legesher Team (Claude AI Model)
+  license: Apache-2.0

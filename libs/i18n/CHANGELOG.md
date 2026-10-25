@@ -11,6 +11,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Swahili (`sw`), Nepali (`ne`), Filipino (`tl`) and Xhosa (`xh`) ship.**
+  Each pack is regenerated DB-first from 184 selections made by an idempotent
+  backfill (`scripts/translate/backfill_core2477.py`, `_core2478`,
+  `_core2479`, `_core2480`): community candidates kept where they are right
+  and replaced, with a recorded reason, where they are wrong in sense or form
+  or untranslated English. Seeds keep every multi-word value's word
+  boundaries (`hitilafu_ya_thamani`); the shipped value is derived from it
+  (`hitilafuyathamani`), and the database records the separated form as a
+  candidate row and in each rationale. Each language's open calls are flags
+  with both sides' candidate rows in the database, and every run checks all
+  flag combinations before it writes anything. The Nepali, Filipino and
+  Xhosa backfills share the new `scripts/translate/backfill_common.py`.
+  The `sw` script policy forbids `q` and `x`; the Nepali registry row's
+  `has_case_distinction` is corrected to false; `NON_PACK_SCRIPTS` and
+  `BCP47_FALLBACK` are now empty. [CORE-2181]
+
 - **Ukrainian (`uk`) ships.** The pack is regenerated DB-first from 184
   selections made by the new idempotent `scripts/translate/backfill_core1644.py`,
   which keeps the 2025 community candidates where they are right and replaces

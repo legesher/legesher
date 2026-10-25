@@ -19,7 +19,7 @@ Shipped and working now:
 - **Two translation engines.** A token-based translator and a tree-sitter, grammar-aware
   translator, with bidirectional translation between a pack language and Python's own vocabulary,
   and source mapping.
-- **52 Python language packs**, covering Python 3.10 through 3.14. All 52 are available today,
+- **56 Python language packs**, covering Python 3.10 through 3.14. All 56 are available today,
   with community validation in progress.
 - **A concept-centric translations database.** Every translation offered for every term is
   collected as an option with provenance (who or what proposed it, how, when); packs are exports
@@ -31,7 +31,7 @@ Shipped and working now:
   a clean filter that keeps each file in its author's language, a language server (hover,
   completion, diagnostics, semantic tokens), and a VS Code extension.
 - **Per-language style profiles.** How compounds join, what replaces uppercase in caseless
-  scripts, digit policy, docstring register: 51 style guides, always suggestions, never laws.
+  scripts, digit policy, docstring register: 56 style guides, always suggestions, never laws.
 
 ## How This Roadmap Is Ordered
 
@@ -71,7 +71,7 @@ Review stops being a maintainer bottleneck and becomes a community practice.
 
 ### Stage 4 | 103 languages
 
-Coverage grows from 52 packs to 103, prioritized by the languages major multilingual models serve
+Coverage grows from 56 packs to 103, prioritized by the languages major multilingual models serve
 well and by what our community asks for.
 
 - Expansion generation runs against the published corpus, so community options and native review

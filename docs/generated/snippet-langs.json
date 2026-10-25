@@ -204,6 +204,12 @@
   "rtl": false
  },
  {
+  "code": "ne",
+  "native": "नेपाली",
+  "name": "Nepali",
+  "rtl": false
+ },
+ {
   "code": "nl",
   "native": "Nederlands",
   "name": "Dutch",
@@ -264,6 +270,12 @@
   "rtl": false
  },
  {
+  "code": "sw",
+  "native": "Kiswahili",
+  "name": "Swahili",
+  "rtl": false
+ },
+ {
   "code": "te",
   "native": "తెలుగు",
   "name": "Telugu",
@@ -273,6 +285,12 @@
   "code": "th",
   "native": "ไทย",
   "name": "Thai",
+  "rtl": false
+ },
+ {
+  "code": "tl",
+  "native": "Filipino",
+  "name": "Filipino",
   "rtl": false
  },
  {
@@ -303,6 +321,12 @@
   "code": "vi",
   "native": "Tiếng Việt",
   "name": "Vietnamese",
+  "rtl": false
+ },
+ {
+  "code": "xh",
+  "native": "isiXhosa",
+  "name": "Xhosa",
   "rtl": false
  },
  {

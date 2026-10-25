@@ -8,7 +8,7 @@ Production-ready translation engine for multilingual Python with two complete tr
 
 - **Two Translator Backends**: Choose between token-based or tree-sitter AST-based translation
 - **Complete Keyword Translation**: All 39 Python keywords across 3.10-3.14
-- **52 Languages Supported**: Via independent language pack system
+- **56 Languages Supported**: Via independent language pack system
 - **Perfect Formatting**: Preserves indentation, comments, docstrings
 - **Round-Trip**: EN→ES→EN is byte-identical for the corpus the sweep covers; the known exceptions are listed as
   strict xfails in `libs/mcp/tests/test_roundtrip_sweep.py`
@@ -41,7 +41,7 @@ back_to_english = es_to_en.translate_code(spanish)
 
 # List available languages
 languages = TokenTranslator.list_available_languages()
-# [('am', 'AM'), ('ar', 'AR'), ('bn', 'BN'), ... (52 languages)]
+# [('am', 'AM'), ('ar', 'AR'), ('bn', 'BN'), ... (56 languages)]
 ```
 
 ### Choosing a Translator Backend

@@ -1,0 +1,90 @@
+# ne.yml: Nepali Python style guide
+# Nepali (नेपाली): Devanagari (Brahmic), left-to-right.
+# A profile of best-practice Python for Nepali: which conventions the script
+# can express and the constraints its characters impose. Rules only: vocabulary
+# (word choices, symbol names) lives in the language packs.
+
+language: "ne"
+extends:
+- python.yml
+- _ltr.yml
+- _brahmic.yml
+version: 0.1.0
+status: experimental
+
+# Which Python naming conventions this script can express, plus profile facts.
+supports:
+  case_distinction: false
+  snake_case: true
+  upper_snake_case: false
+  pascal_case: false
+  camel_case: false
+  native_digits: true
+  combining_marks: true
+  requires_word_separator: false
+  diacritics_in_identifiers: true
+  cursive_joining: false
+
+# How identifiers are formed.
+naming:
+  case_substitute: morphology
+  detail: >
+    Standard written Nepali is the register: the language of schools,
+    government and published dictionaries, not Hindi. No letter case exists.
+    Pack values mirror how Python spells its own reserved words: the words of
+    a multi-word name run together with no separator (आयातगर्नु, मानत्रुटि),
+    as Python writes getattr and isinstance. Underscores are left to the
+    programmer's own code. The word boundaries are not lost: the database
+    keeps each value's separated form (आयात_गर्नु) as a candidate row and in
+    its rationale, and the backfill derives the shipped value from it.
+  word_formation:
+  - >-
+    Action keywords and action builtins take the infinitive in -नु (खोल्नु,
+    फर्काउनु, आयात गर्नु), the dictionary form, which carries no honorific
+    level. One verb form across the pack: a reader should never meet खोल्नु
+    beside छाप्नुहोस्. Transitive meaning takes the transitive verb:
+    return gives a value back (फर्काउनु), it does not go back (फर्किनु).
+  - >-
+    Nepali compounds are head-final, like English: the modifier comes first
+    and the head noun last (मान त्रुटि, value error; आयात चेतावनी, import
+    warning; सञ्चालन प्रणाली त्रुटि, operating system error).
+  - >-
+    Exception-family naming keeps three distinct roots, mirroring Python's
+    hierarchy: त्रुटि (error), अपवाद (exception), चेतावनी (warning).
+  - >-
+    Nepali words, never their Hindi counterparts: र not और, मा not में,
+    बाट not से, होइन not नहीं, -नु not -ना infinitives. The two languages
+    share the script, so this is a lexical check, not a letter rule: any value
+    identical to the shipped hi value is listed for a by-hand check that it is
+    also correct Nepali.
+  - >-
+    Nepali spelling, not Hindi's: before a stop consonant the nasal is written
+    as that consonant's own nasal with a virama, as the Nepal Academy writes
+    tatsam words (बिन्दु, सन्दर्भ, सङ्ख्या, पूर्णाङ्क, सङ्कलन), not the anusvara
+    Hindi uses there (बिंदु, संख्या). The anusvara stays before य र ल व श ष स ह
+    and at the end of a word (स्वयं). Nepali forms such as लम्बाइ stand. No
+    nukta: Nepali does not use ज़ फ़ क़.
+  - >-
+    A transparent native or Sanskrit-derived technical term wins over a
+    transliterated English one (द्विआधारी for bin, तार्किक for bool, पाठ for
+    str, पहिचान for id). A loan is accepted only where it is the word Nepali
+    computing uses (बाइट, फाइल, पाइथन, युनिकोड, ह्यास, बफर, पाइप, ट्याब).
+
+# Script identity + the constraints its characters impose.
+script:
+  name: "Devanagari (Brahmic)"
+  direction: ltr
+  constraints:
+  - "Combining vowel signs, virama, anusvara, chandrabindu and visarga are legal in identifiers, but each identifier must be an NFKC fixed point. Zero-width joiner (U+200D) and non-joiner (U+200C) are forbidden even where visually customary."
+  - "No nukta letters: their precomposed forms (U+0958 to U+095F) are NFC composition exclusions, so they would not survive normalisation, and Nepali does not use them."
+  - "Digits: Nepali natively uses १२३; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+
+# Formatting rules.
+formatting:
+  comment_prefix: "#"
+  programming_punctuation: ascii_only
+  docstrings: PEP 257 structure, prose in Nepali
+
+# Editor rendering (VS Code extension, not the translation prompt).
+rendering:
+  noto_font: "Noto Sans Devanagari"

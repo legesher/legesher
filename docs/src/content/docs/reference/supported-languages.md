@@ -1,10 +1,10 @@
 ---
 title: Supported Languages
-description: All 52 languages supported by Legesher for coding in your native language
+description: All 56 languages supported by Legesher for coding in your native language
 ---
 
-Legesher currently supports **52 languages** for Python development. Each language pack consists of
-Python's 37 keywords, 72 builtins, and 66 exceptions in the target language, enabling you to write fully functional Python
+Legesher currently supports **56 languages** for Python development. Each language pack consists of
+Python's 39 keywords, 73 builtins, and 70 exceptions in the target language, enabling you to write fully functional Python
 code in your native language.
 
 <!-- VISUAL: [Demo 4] Grid showing the same code snippet in 6+ visually distinct languages (Arabic, Japanese, Chinese, Spanish, French, Hindi) -->
@@ -49,6 +49,7 @@ All language packs currently have **experimental** status. Language packs are in
 | mn   | Mongolian        | Монгол           | No  | Experimental |
 | ms   | Malay            | Bahasa Melayu    | No  | Experimental |
 | my   | Burmese          | မြန်မာ           | No  | Experimental |
+| ne   | Nepali           | नेपाली           | No  | Experimental |
 | nl   | Dutch            | Nederlands       | No  | Experimental |
 | no   | Norwegian        | Norsk            | No  | Experimental |
 | pl   | Polish           | Polski           | No  | Experimental |
@@ -59,13 +60,16 @@ All language packs currently have **experimental** status. Language packs are in
 | sr   | Serbian          | Српски           | No  | Experimental |
 | su   | Sundanese        | Basa Sunda       | No  | Experimental |
 | sv   | Swedish          | Svenska          | No  | Experimental |
+| sw   | Swahili          | Kiswahili        | No  | Experimental |
 | te   | Telugu           | తెలుగు           | No  | Experimental |
 | th   | Thai             | ไทย              | No  | Experimental |
+| tl   | Filipino         | Filipino         | No  | Experimental |
 | tr   | Turkish          | Türkçe           | No  | Experimental |
 | uk   | Ukrainian        | Українська       | No  | Experimental |
 | ur   | Urdu             | اردو             | Yes | Experimental |
 | uz   | Uzbek            | O'zbek           | No  | Experimental |
 | vi   | Vietnamese       | Tiếng Việt       | No  | Experimental |
+| xh   | Xhosa            | isiXhosa         | No  | Experimental |
 | zh   | Chinese          | 中文             | No  | Experimental |
 
 ## Python Version Support
@@ -83,7 +87,7 @@ an RTL language is active.
 ## Translation Status
 
 - **Experimental**: Translations are functional but have not yet been validated by native-speaking
-  community members. This is the current status for all 52 packs.
+  community members. This is the current status for all 56 packs.
 - **Available**: Translations have been reviewed and approved by native speakers. This status will be
   assigned after community validation (planned for v1.0.0).
 - **Deprecated**: Language pack is no longer actively maintained and is excluded from active language

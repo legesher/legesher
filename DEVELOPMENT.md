@@ -36,7 +36,7 @@ All packages live under `libs/`:
 | Package             | Path                    | License                 | Description                                    |
 | ------------------- | ----------------------- | ----------------------- | ---------------------------------------------- |
 | **legesher-core**   | `libs/core/`            | Apache 2.0              | Translation engine, git filters, AST utilities |
-| **legesher-i18n**   | `libs/i18n/`            | Apache 2.0              | 52 language packs, translation API, caching    |
+| **legesher-i18n**   | `libs/i18n/`            | Apache 2.0              | 56 language packs, translation API, caching    |
 | **legesher** (CLI)  | `libs/legesher/`        | Apache 2.0 / Commercial | CLI tools: init, translate, run, git, metadata |
 | **language-server** | `libs/language-server/` | Apache 2.0              | LSP server (hover, completion, diagnostics)    |
 | **vs-code**         | `libs/vs-code/`         | Apache 2.0              | VS Code extension                              |

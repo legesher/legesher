@@ -309,6 +309,15 @@
       "has_case_distinction": false,
       "status": "experimental"
     },
+    "ne": {
+      "name": "Nepali",
+      "native": "नेपाली",
+      "iso639_2": "nep",
+      "bcp47": "ne",
+      "rtl": false,
+      "has_case_distinction": false,
+      "status": "experimental"
+    },
     "nl": {
       "name": "Dutch",
       "native": "Nederlands",
@@ -399,6 +408,15 @@
       "has_case_distinction": true,
       "status": "experimental"
     },
+    "sw": {
+      "name": "Swahili",
+      "native": "Kiswahili",
+      "iso639_2": "swa",
+      "bcp47": "sw",
+      "rtl": false,
+      "has_case_distinction": true,
+      "status": "experimental"
+    },
     "te": {
       "name": "Telugu",
       "native": "తెలుగు",
@@ -415,6 +433,15 @@
       "bcp47": "th",
       "rtl": false,
       "has_case_distinction": false,
+      "status": "experimental"
+    },
+    "tl": {
+      "name": "Filipino",
+      "native": "Filipino",
+      "iso639_2": "fil",
+      "bcp47": "fil",
+      "rtl": false,
+      "has_case_distinction": true,
       "status": "experimental"
     },
     "tr": {
@@ -458,6 +485,15 @@
       "native": "Tiếng Việt",
       "iso639_2": "vie",
       "bcp47": "vi",
+      "rtl": false,
+      "has_case_distinction": true,
+      "status": "experimental"
+    },
+    "xh": {
+      "name": "Xhosa",
+      "native": "isiXhosa",
+      "iso639_2": "xho",
+      "bcp47": "xh",
       "rtl": false,
       "has_case_distinction": true,
       "status": "experimental"

@@ -254,3 +254,31 @@ class TestUkrainian:
         ]
         assert len(values) == 184
         assert [v for v in values if forbidden_letters_in(v, "uk")] == []
+
+
+class TestSwahili:
+    def test_swahili_declares_q_and_x(self) -> None:
+        # Standard Swahili has no q or x, so either letter in a value is
+        # untranslated English. Stated outright so the table cannot shrink
+        # silently.
+        assert SCRIPT_POLICIES["sw"].forbidden_letters == frozenset("qQxX")
+
+    @pytest.mark.parametrize(
+        ("term", "value"),
+        [("max", "max"), ("hex", "hex"), ("exec", "exec"), ("str", "Squa")],
+    )
+    def test_english_leakage_is_refused(self, term: str, value: str) -> None:
+        assert not is_valid_pack_value(term, value, "sw")
+
+    def test_shipped_swahili_pack_is_clean(self) -> None:
+        from legesher_i18n import load_language_pack
+
+        pack = load_language_pack("sw", version="3.14")
+        values = [
+            *pack.keywords.values(),
+            *pack.builtins.values(),
+            *pack.exceptions.values(),
+            *pack.implicit_params.values(),
+        ]
+        assert len(values) == 184
+        assert [v for v in values if forbidden_letters_in(v, "sw")] == []

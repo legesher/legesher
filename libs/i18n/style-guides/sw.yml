@@ -1,0 +1,106 @@
+# sw.yml: Swahili Python style guide
+# Swahili (Kiswahili): Latin, left-to-right.
+# A profile of best-practice Python for Swahili: which conventions the script
+# can express and the constraints its characters impose. Rules only: vocabulary
+# (word choices, symbol names) lives in the language packs.
+
+language: "sw"
+extends:
+- python.yml
+- _ltr.yml
+version: 0.1.0
+status: experimental
+
+# Which Python naming conventions this script can express, plus profile facts.
+supports:
+  case_distinction: true
+  snake_case: true
+  upper_snake_case: true
+  pascal_case: true
+  camel_case: true
+  native_digits: false
+  combining_marks: false
+  requires_word_separator: false
+  diacritics_in_identifiers: false
+  cursive_joining: false
+
+# How identifiers are formed.
+naming:
+  case_substitute: not_needed
+  detail: >
+    Standard Swahili (Kiswahili sanifu) is the register: the written standard
+    of schools, government and published dictionaries, not a regional or
+    colloquial variety. Pack values mirror how Python spells its own reserved
+    words: lowercase, with the words of a multi-word name run together
+    (getattr, isinstance, elif; the en pack's valueerror). So a Swahili value
+    is hitilafuyathamani, patasifa, vinginevyoikiwa, never hyphenated. Capitals
+    and underscores are left to the programmer's own code, where PEP 8 gives
+    them a meaning (CapWords classes, snake_case names, UPPER_SNAKE constants).
+    The word boundaries are not lost: the database keeps each value's
+    separated form (hitilafu_ya_thamani) as a candidate row and in its
+    rationale, and the backfill derives the shipped value from it.
+  word_formation:
+  - >-
+    Action keywords and action builtins take the bare verb stem, the
+    singular imperative that Swahili software uses for commands and menu
+    items (Fungua, Hifadhi, Chapisha, Futa), never the ku- infinitive. One
+    verb form across the pack: a reader should never meet fungua beside
+    kufuta. Some stems begin with ku as part of the root (kusanya, collect);
+    that is the stem, not an infinitive. A verb that is not itself the
+    command but sits inside a longer name keeps the ku- infinitive Swahili
+    grammar requires there (kwakutumia, by using; inawezakuitwa, can be
+    called; mahalipakusimama, the place to stop).
+  - >-
+    A multi-word name follows Swahili noun-phrase order: the head noun first,
+    then its modifier, joined by the associative particle that agrees with
+    the head's noun class (hitilafu, class 9: hitilafu ya thamani; onyo,
+    class 5: onyo la uagizaji; kiwango, class 7: kiwango cha chini; vigeu,
+    class 8: vigeu vya kote; msimbo, class 3: msimbo wa herufi; mahali, class
+    16: mahali pa kusimama). Relative and adjectival modifiers agree the same
+    way (faili isiyopatikana, muunganisho uliokataliwa). The particle stays in
+    the fused value (hitilafuyathamani); dropping it (hitilafuthamani) is not
+    a Swahili noun phrase.
+  - >-
+    A keyword that stands before a name it cannot see (global, nonlocal, in,
+    as, with) takes a word with no noun-class agreement: an adverb, a
+    preposition or a conjunction (kote, nje, katika, kama, kwakutumia),
+    never a concord-bearing form whose class would be a guess.
+  - >-
+    Exception-family naming keeps three distinct roots, mirroring Python's
+    hierarchy: hitilafu (error), hali ya kipekee (exception, an exceptional
+    condition; plural hali takes za, as in kundilahalizakipekee), onyo
+    (warning). Kosa (mistake) is not used as a root, so the families never
+    blur.
+  - >-
+    English leakage: a value spelled like the English term is untranslated,
+    not a choice. A loan is accepted only when it is the established
+    Swahili word and is respelled to Swahili orthography, with open
+    syllables and Swahili letters: baiti (byte), faili (file), kibodi
+    (keyboard), moduli (module), desimali (decimal), yunikodi (Unicode),
+    hashi (hash). Two English-identical values are accepted by name, as in
+    the other Latin-script packs: lambda (the Greek letter's name, which
+    Swahili uses unchanged) and ascii (an acronym with no Swahili
+    expansion). Where a transparent native word exists it wins over a loan
+    (sambamba for async, mantiki for bool, maandishi for str). The proper
+    name Python is lowercased inside a value like every other word
+    (hitilafuyakuhitimishapython).
+
+# Script identity + the constraints its characters impose.
+script:
+  name: "Latin"
+  direction: ltr
+  constraints:
+  - "Swahili uses Latin script with case. In the programmer's own code PEP 8 casing applies unchanged; pack values are lowercase (see naming). Standard orthography uses no diacritics."
+  - "Standard Swahili has no q or x; loans are respelled (teksi, faksi, eksirei). The script policy lists q and x as forbidden letters, a blocking gate at selection, export and pack audit, so an untranslated English value such as max, hex or exec cannot ship."
+  - "c occurs only in the digraph ch, apart from the accepted acronym ascii. The gate cannot state that as a single-letter rule, so it is a review check, not a mechanical one."
+  - "Digits: written with ASCII 0-9."
+
+# Formatting rules.
+formatting:
+  comment_prefix: "#"
+  programming_punctuation: ascii_only
+  docstrings: PEP 257 structure, prose in Swahili
+
+# Editor rendering (VS Code extension, not the translation prompt).
+rendering:
+  noto_font: "Noto Sans"   # Latin default

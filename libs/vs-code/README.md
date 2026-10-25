@@ -2,7 +2,7 @@
 
 Write Python code in your native language with real-time translation and IDE support.
 
-**Languages**: 51 | **VS Code**: 1.110.0+ | **Status**: Preview
+**Languages**: 56 | **VS Code**: 1.110.0+ | **Status**: Preview
 
 The version this README ships with is the `version` field in `package.json`.
 
@@ -10,7 +10,7 @@ The version this README ships with is the `version` field in `package.json`.
 
 The Legesher VS Code extension provides the UI and editor integration for coding Python in your native language:
 
-- **Language Selector**: Choose from 51 supported languages via status bar or command palette
+- **Language Selector**: Choose from 56 supported languages via status bar or command palette
 - **Translation Panel**: Side-by-side view of your code in English and your selected language
 - **Onboarding Flow**: First-time setup wizard for language selection and preferences
 - **Status Indicators**: Visual feedback for connection status and current language
@@ -23,10 +23,10 @@ The Legesher VS Code extension provides the UI and editor integration for coding
 ## Supported Languages
 
 Amharic, Arabic, Bengali, Bosnian, Burmese, Catalan, Chinese, Croatian, Czech, Danish, Dutch, English,
-Finnish, French, Galician, German, Greek, Gujarati, Hebrew, Hindi, Hungarian, Indonesian, Irish, Italian,
-Japanese, Kannada, Korean, Latvian, Macedonian, Malay, Malayalam, Mongolian, Norwegian, Persian, Polish,
-Portuguese, Romanian, Russian, Scottish Gaelic, Serbian, Sinhala, Spanish, Sundanese, Swedish, Telugu, Thai,
-Turkish, Ukrainian, Urdu, Uzbek, Vietnamese, Welsh
+Filipino, Finnish, French, Galician, German, Greek, Gujarati, Hebrew, Hindi, Hungarian, Indonesian, Irish,
+Italian, Japanese, Kannada, Korean, Latvian, Macedonian, Malay, Malayalam, Mongolian, Nepali, Norwegian,
+Persian, Polish, Portuguese, Romanian, Russian, Scottish Gaelic, Serbian, Sinhala, Spanish, Sundanese, Swahili,
+Swedish, Telugu, Thai, Turkish, Ukrainian, Urdu, Uzbek, Vietnamese, Welsh, Xhosa
 
 All languages are currently in **experimental** status, awaiting community validation.
 
@@ -134,11 +134,12 @@ gd (Scottish Gaelic)  gl (Galician)         gu (Gujarati)         he (Hebrew)
 hi (Hindi)            hr (Croatian)         hu (Hungarian)        id (Indonesian)
 it (Italian)          ja (Japanese)         kn (Kannada)          ko (Korean)
 lv (Latvian)          mk (Macedonian)       ml (Malayalam)        mn (Mongolian)
-ms (Malay)            my (Burmese)          nl (Dutch)            no (Norwegian)
-pl (Polish)           pt (Portuguese)       ro (Romanian)         ru (Russian)
-si (Sinhala)          sr (Serbian)          su (Sundanese)        sv (Swedish)
-te (Telugu)           th (Thai)             tr (Turkish)          uk (Ukrainian)
-ur (Urdu)             uz (Uzbek)            vi (Vietnamese)       zh (Chinese)
+ms (Malay)            my (Burmese)          ne (Nepali)           nl (Dutch)
+no (Norwegian)        pl (Polish)           pt (Portuguese)       ro (Romanian)
+ru (Russian)          si (Sinhala)          sr (Serbian)          su (Sundanese)
+sv (Swedish)          sw (Swahili)          te (Telugu)           th (Thai)
+tl (Filipino)         tr (Turkish)          uk (Ukrainian)        ur (Urdu)
+uz (Uzbek)            vi (Vietnamese)       xh (Xhosa)            zh (Chinese)
 ```
 
 ## Status Bar Indicators

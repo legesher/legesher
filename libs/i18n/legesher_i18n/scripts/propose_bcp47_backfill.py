@@ -131,8 +131,8 @@ EDITORIAL_DECISIONS: dict[str, tuple[str, str]] = {
         "DECIDED fil (Madison, 2026-07-15). tl = Tagalog (the individual language); fil = Filipino "
         "(the standardized national language, Tagalog-based, what 'Philippines "
         "localization' normally means; CLDR treats tl as an alias for fil). Both "
-        "are valid, live registry entries. tl has in_registry=0 and NO pack, so "
-        "this is free to change now and expensive to change later.",
+        "are valid, live registry entries. The pack shipped with pack id tl, name "
+        "Filipino and iso639_2 fil (CORE-2479, 2026-10-25).",
     ),
 }
 

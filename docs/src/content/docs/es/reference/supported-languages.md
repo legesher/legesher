@@ -1,14 +1,14 @@
 ---
 title: Idiomas compatibles
-description: Los 52 idiomas compatibles con Legesher para programar en tu idioma nativo
+description: Los 56 idiomas compatibles con Legesher para programar en tu idioma nativo
 sidebar:
   badge:
     text: revisión
     variant: caution
 ---
 
-Legesher es actualmente compatible con **52 idiomas** para el desarrollo en Python. Cada paquete de idioma incluye
-las 37 palabras clave, las 72 funciones integradas y las 66 excepciones de Python en el idioma de destino, lo que te
+Legesher es actualmente compatible con **56 idiomas** para el desarrollo en Python. Cada paquete de idioma incluye
+las 39 palabras clave, las 73 funciones integradas y las 70 excepciones de Python en el idioma de destino, lo que te
 permite escribir código Python plenamente funcional en tu idioma nativo.
 
 <!-- VISUAL: [Demo 4] Grid showing the same code snippet in 6+ visually distinct languages (Arabic, Japanese, Chinese, Spanish, French, Hindi) -->
@@ -53,6 +53,7 @@ Todos los paquetes de idioma tienen actualmente el estado **experimental**. Los 
 | mn     | Mongol            | Монгол           | No  | Experimental |
 | ms     | Malayo            | Bahasa Melayu    | No  | Experimental |
 | my     | Birmano           | မြန်မာ           | No  | Experimental |
+| ne     | Nepalí            | नेपाली           | No  | Experimental |
 | nl     | Neerlandés        | Nederlands       | No  | Experimental |
 | no     | Noruego           | Norsk            | No  | Experimental |
 | pl     | Polaco            | Polski           | No  | Experimental |
@@ -63,13 +64,16 @@ Todos los paquetes de idioma tienen actualmente el estado **experimental**. Los 
 | sr     | Serbio            | Српски           | No  | Experimental |
 | su     | Sundanés          | Basa Sunda       | No  | Experimental |
 | sv     | Sueco             | Svenska          | No  | Experimental |
+| sw     | Suajili           | Kiswahili        | No  | Experimental |
 | te     | Telugu            | తెలుగు           | No  | Experimental |
 | th     | Tailandés         | ไทย              | No  | Experimental |
+| tl     | Filipino          | Filipino         | No  | Experimental |
 | tr     | Turco             | Türkçe           | No  | Experimental |
 | uk     | Ucraniano         | Українська       | No  | Experimental |
 | ur     | Urdu              | اردو             | Sí  | Experimental |
 | uz     | Uzbeko            | O'zbek           | No  | Experimental |
 | vi     | Vietnamita        | Tiếng Việt       | No  | Experimental |
+| xh     | Xhosa             | isiXhosa         | No  | Experimental |
 | zh     | Chino             | 中文             | No  | Experimental |
 
 ## Compatibilidad con versiones de Python
@@ -85,7 +89,7 @@ El árabe, el hebreo, el persa y el urdu son idiomas que se escriben de derecha 
 ## Estado de las traducciones
 
 - **Experimental**: las traducciones funcionan, pero aún no han sido validadas por miembros de la comunidad
-  hablantes nativos. Es el estado actual de los 52 paquetes.
+  hablantes nativos. Es el estado actual de los 56 paquetes.
 - **Disponible**: las traducciones han sido revisadas y aprobadas por hablantes nativos. Este estado se asignará
   tras la validación comunitaria (prevista para la v1.0.0).
 - **Obsoleto**: el paquete de idioma ya no se mantiene activamente y queda excluido de las listas de idiomas

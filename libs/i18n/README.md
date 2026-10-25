@@ -1,6 +1,6 @@
 # legesher-i18n
 
-Industrial-strength internationalization infrastructure with 51 language packs, version-aware inheritance,
+Industrial-strength internationalization infrastructure with 56 language packs, version-aware inheritance,
 and multi-provider translation API for multilingual programming.
 
 **Status**: Pre-Beta | **Python**: 3.10-3.14 | **Version**: see `pyproject.toml`
@@ -10,9 +10,9 @@ and multi-provider translation API for multilingual programming.
 The `legesher-i18n` package provides the core internationalization infrastructure for Legesher,
 enabling developers to code in their native language. It includes:
 
-- **52 Complete Language Packs**: Support for am, ar, bn, bs, ca, cs, cy, da, de, el, en, es, fa, fi, fr, ga, gd,
-  gl, gu, he, hi, hr, hu, id, it, ja, kn, ko, lv, mk, ml, mn, ms, my, nl, no, pl, pt, ro, ru, si, sr, su, sv,
-  te, th, tr, uk, ur, uz, vi, zh
+- **56 Complete Language Packs**: Support for am, ar, bn, bs, ca, cs, cy, da, de, el, en, es, fa, fi, fr, ga, gd,
+  gl, gu, he, hi, hr, hu, id, it, ja, kn, ko, lv, mk, ml, mn, ms, my, ne, nl, no, pl, pt, ro, ru, si, sr, su, sv,
+  sw, te, th, tl, tr, uk, ur, uz, vi, xh, zh
 - **Version-Aware Language Packs**: Automatic adaptation to Python 3.10-3.14 with inheritance
 - **Auto-Detection**: Detects Python version from `pyproject.toml`, `.python-version`, or runtime
 - **Pack Inheritance**: Child packs inherit from parents, defining only what's new
@@ -70,7 +70,7 @@ Language packs automatically adapt to different Python versions:
 
 ### Supported Languages
 
-**51 complete language packs** - All support Python 3.10-3.14 with version inheritance, and all carry the same
+**56 complete language packs** - All support Python 3.10-3.14 with version inheritance, and all carry the same
 term coverage:
 
 - **Keywords**: 39 (the 3.10 set plus `except*` in 3.11 and `type` in 3.12)
@@ -82,7 +82,7 @@ it loads a pack, so anything reporting `get_pack_info()` — `legesher git setup
 `143 builtins`, which is these 73 plus these 70, not a disagreement with the numbers above.
 
 Codes: am, ar, bn, bs, ca, cs, cy, da, de, el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it, ja, kn,
-ko, lv, mk, ml, mn, ms, my, nl, no, pl, pt, ro, ru, si, sr, su, sv, te, th, tr, uk, ur, uz, vi, zh
+ko, lv, mk, ml, mn, ms, my, ne, nl, no, pl, pt, ro, ru, si, sr, su, sv, sw, te, th, tl, tr, uk, ur, uz, vi, xh, zh
 
 `en` is Python's own vocabulary, the run form every pack maps to. Every other pack is machine-generated and awaiting
 native-speaker review; which model produced a given pack is recorded in that pack's `metadata.author` field, and
@@ -276,7 +276,7 @@ legesher-i18n registry list --target python --version 3.13
 │ es   │ ES       │       39 │       73 │ ✓ complete │
 │ fr   │ FR       │       39 │       73 │ ✓ complete │
 ...
-Found 51 language pack(s)
+Found 56 language pack(s)
 ```
 
 #### `export` - Export Pack Contents

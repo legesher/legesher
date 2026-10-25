@@ -22,7 +22,21 @@ entries:
 - ga:lambda
 - hr:lambda
 - lv:lambda
+# Swahili names the letter lambda too; the community-source row in
+# translations.db agrees, and style-guides/sw.yml names it as accepted.
+- sw:lambda
+# Xhosa names the letter lambda too; style-guides/xh.yml names it as accepted.
+- xh:lambda
+# Filipino names the letter lambda too; style-guides/tl.yml names it as accepted.
+- tl:lambda
 # ASCII is an acronym; no pack translates it semantically (others keep or
 # transliterate it: ASCII, ascii_, kode_ascii, аски, アスキー, ...). Czech
 # keeps the lowercase acronym as-is.
 - cs:ascii
+# Swahili keeps the acronym too: the community-source row agrees, and
+# style-guides/sw.yml names it as accepted.
+- sw:ascii
+# Xhosa keeps the acronym too; style-guides/xh.yml names it as accepted.
+- xh:ascii
+# Filipino keeps the acronym too; style-guides/tl.yml names it as accepted.
+- tl:ascii

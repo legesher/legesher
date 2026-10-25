@@ -17,7 +17,7 @@ Python expertise.
 
 | If you are | Start here | Look for |
 | --- | --- | --- |
-| A speaker of one of our 52 pack languages | Offer a better word. Every translation you propose is collected as an option in the shared map; it is never a conflict with what ships today | `contrib:localization` |
+| A speaker of one of our 56 pack languages | Offer a better word. Every translation you propose is collected as an option in the shared map; it is never a conflict with what ships today | `contrib:localization` |
 | A linguist, teacher, or careful reader | Native review: help decide what your language ships with. Start with the [reviewer guide](libs/i18n/REVIEWING.md) | `contrib:localization` |
 | A developer | Engine, toolchain, and editor issues scoped for newcomers | `good first issue`, `contrib:code` |
 | A bilingual writer | Docs localization: translate a guide so readers see the same words in the docs and in their editor | `contrib:docs` |
@@ -851,7 +851,7 @@ See [README.md](README.md#versioning-strategy) for complete versioning strategy.
 Language work is the heart of this project, and it follows one principle: **we collect options, we
 don't overwrite winners.** The translations database holds every translation offered for every
 term, with provenance. A language pack is the current best pick exported from those options, and
-all 52 packs are available today with community validation in progress.
+all 56 packs are available today with community validation in progress.
 
 What that means for you:
 

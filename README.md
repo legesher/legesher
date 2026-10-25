@@ -49,18 +49,18 @@ population who don't speak English as their first language. Developers must lear
 `pyproject.toml` (or `package.json` for the VS Code extension); for what changed last, read
 [CHANGELOG.md](CHANGELOG.md).
 
-- **Languages:** 52 supported languages (all experimental, awaiting community validation):
-  - Amharic, Arabic, Bengali, Bosnian, Burmese, Catalan, Chinese, Croatian, Czech, Danish, Dutch, English, Finnish,
-    French, Galician, German, Greek, Gujarati, Hebrew, Hindi, Hungarian, Indonesian, Irish, Italian, Japanese, Kannada,
-    Korean, Latvian, Macedonian, Malay, Malayalam, Mongolian, Norwegian, Persian, Polish, Portuguese, Romanian, Russian,
-    Scottish Gaelic, Serbian, Sinhala, Spanish, Sundanese, Swedish, Telugu, Thai, Turkish, Ukrainian, Urdu, Uzbek,
-    Vietnamese, Welsh
+- **Languages:** 56 supported languages (all experimental, awaiting community validation):
+  - Amharic, Arabic, Bengali, Bosnian, Burmese, Catalan, Chinese, Croatian, Czech, Danish, Dutch, English, Filipino,
+    Finnish, French, Galician, German, Greek, Gujarati, Hebrew, Hindi, Hungarian, Indonesian, Irish, Italian, Japanese,
+    Kannada, Korean, Latvian, Macedonian, Malay, Malayalam, Mongolian, Nepali, Norwegian, Persian, Polish, Portuguese,
+    Romanian, Russian, Scottish Gaelic, Serbian, Sinhala, Spanish, Sundanese, Swahili, Swedish, Telugu, Thai, Turkish,
+    Ukrainian, Urdu, Uzbek, Vietnamese, Welsh, Xhosa
 - **Target:** Python 3.10-3.14
 - **Translation:** Two backends - a pure-stdlib token translator and a Tree-sitter AST translator behind the
   optional `treesitter` extra. Both produce identical output
 - **Git:** A clean filter that stores each file in its author's language, and a pre-commit guard
 - **IDE:** LSP server with hover, completion, diagnostics, and semantic tokens
-- **VS Code:** Extension covering all 52 languages, installed from VSIX
+- **VS Code:** Extension covering all 56 languages, installed from VSIX
 - **Tests:** 200+ test files across the core, i18n, legesher, language-server, mcp, and runtime packages
 
 ## Licensing
@@ -153,7 +153,7 @@ The Legesher VS Code extension is available in pre-beta:
    - In VS Code: Extensions → `...` menu → "Install from VSIX..."
 
 2. **Features included:**
-   - Language selector with 52 languages
+   - Language selector with 56 languages
    - Translation panel (side-by-side view)
    - Syntax highlighting for translated code
    - Onboarding flow with language selection
@@ -185,7 +185,7 @@ See [legesher-core](libs/core/README.md) for details.
 
 ### Language Pack System
 
-- **52 Languages:** Every language listed under Current Status, all at experimental status
+- **56 Languages:** Every language listed under Current Status, all at experimental status
 - **Version-Aware:** Automatically adapts to Python 3.10, 3.11, 3.12, 3.13, 3.14
 - **Pack Inheritance:** Version files inherit from previous versions, minimizing duplication
 - **Translation API:** Optional multi-provider translation (Anthropic, Cohere Aya, DeepL, Google, LibreTranslate,
@@ -284,11 +284,11 @@ This lets the apps iterate without waiting on the foundation.
 
 ### Language Packs (Independent)
 
-52 language packs are released independently, allowing each language community to iterate at their own pace:
+56 language packs are released independently, allowing each language community to iterate at their own pace:
 
 - `legesher-i18n-python-{lang}` v0.0.x - Translations for Python
-- Supported: am, ar, bn, bs, ca, cs, cy, da, de, el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it,
-  ja, kn, ko, lv, mk, ml, mn, ms, my, nl, no, pl, pt, ro, ru, si, sr, su, sv, te, th, tr, uk, ur, uz, vi, zh
+- Supported: am, ar, bn, bs, ca, cs, cy, da, de, el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it, ja, kn,
+  ko, lv, mk, ml, mn, ms, my, ne, nl, no, pl, pt, ro, ru, si, sr, su, sv, sw, te, th, tl, tr, uk, ur, uz, vi, xh, zh
 
 Each pack supports Python 3.10-3.14 with version-aware inheritance. All packs currently have **experimental** status,
 awaiting community validation before being marked as **accepted**.

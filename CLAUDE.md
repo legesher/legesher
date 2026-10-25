@@ -9,18 +9,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Last Updated**: 2026-03-01
 
 This is an active monorepo with **production-ready implementations** across all major packages. The project has
-evolved significantly beyond initial planning and now features comprehensive test coverage, 52 supported language packs
+evolved significantly beyond initial planning and now features comprehensive test coverage, 56 supported language packs
 (all in experimental status), complete LSP implementation, and a fully functional VS Code extension.
 
 **Version Strategy:**
 
-- **v0.5.x** (current): Pre-beta with 52 experimental language packs awaiting community validation
+- **v0.5.x** (current): Pre-beta with 56 experimental language packs awaiting community validation
 - **v1.0.0**: Major release after community validation with accepted language packs
 - Language packs: **experimental** (current, works but unvalidated) → **accepted** (community validated)
 
 **Language Status** (source of truth: `libs/i18n/legesher_i18n/languages.json`):
 
-- **52 supported languages** - All currently in experimental status
+- **56 supported languages** - All currently in experimental status
 - Experimental = translations work but await community validation
 - Accepted = community-validated translations (future milestone)
 
@@ -47,9 +47,9 @@ Zed and JetBrains PyCharm etc.
   - `legesher/`: Main package with primary API and functionality
   - `i18n/`: Internationalization infrastructure AND language pack packages
     - `legesher_i18n/`: Core infrastructure (pack loading, validation, translation API)
-    - `language-packs/python/`: **52 independently versioned Python language packs** (am, ar, bn, bs, ca, cs, cy, da, de,
-      el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it, ja, kn, ko, lv, mk, ml, mn, ms, my, nl, no, pl,
-      pt, ro, ru, si, sr, su, sv, te, th, tr, uk, ur, uz, vi, zh)
+    - `language-packs/python/`: **56 independently versioned Python language packs** (am, ar, bn, bs, ca, cs, cy, da, de,
+      el, en, es, fa, fi, fr, ga, gd, gl, gu, he, hi, hr, hu, id, it, ja, kn, ko, lv, mk, ml, mn, ms, my, ne, nl, no, pl,
+      pt, ro, ru, si, sr, su, sv, sw, te, th, tl, tr, uk, ur, uz, vi, xh, zh)
     - `language-packs-archive/`: Legacy community translations, retained for provenance
   - `vs-code/`: VS Code editor integration for Python language (`legesher-vs-code`)
     - Based on the `vscode-python` package (<https://github.com/microsoft/vscode-python>)
@@ -67,10 +67,10 @@ Zed and JetBrains PyCharm etc.
 | Package             | Version | Status           | Description                                                     |
 | ------------------- | ------- | ---------------- | --------------------------------------------------------------- |
 | **core**            | 0.5.1   | Production-ready | Token & tree-sitter translators, git filters, cultural comments |
-| **i18n**            | 0.5.1   | Production-ready | 52 language packs (experimental), translation API, caching      |
+| **i18n**            | 0.5.1   | Production-ready | 56 language packs (experimental), translation API, caching      |
 | **legesher**        | 0.5.1   | Production-ready | CLI suite (init, translate, run, git, metadata), runtime hooks  |
 | **language-server** | 0.1.2   | Production-ready | Full LSP with hover, completion, diagnostics, semantic tokens   |
-| **vs-code**         | 0.1.5   | Production-ready | Extension with telemetry/feedback, all 52 languages supported   |
+| **vs-code**         | 0.1.5   | Production-ready | Extension with telemetry/feedback, all 56 languages supported   |
 
 **Language pack versions**: 0.0.1–0.0.3 (see each pack's `pyproject.toml` for exact version)
 
@@ -299,7 +299,7 @@ See `libs/i18n/CLAUDE.md` for full schema details and query examples.
 | Table                   | Purpose                                                         | Key Constraint                                        |
 | ----------------------- | --------------------------------------------------------------- | ----------------------------------------------------- |
 | `terms`                 | Canonical reserved words (cross-language)                       | `UNIQUE(name, programming_language)`                  |
-| `languages`             | Language registry (62 languages: 52 with YAML packs, 10 legacy) | `code` PK (ISO 639-1)                                 |
+| `languages`             | Language registry (56 languages, all with YAML packs)   | `code` PK (ISO 639-1)                                 |
 | `translations`          | All translation suggestions (complete catalog)                  | `UNIQUE(term_id, language_code, source, translation)` |
 | `selected_translations` | Active translation per term+language for YAML packs             | `UNIQUE(term_id, language_code)`                      |
 
@@ -324,7 +324,7 @@ libs/i18n/language-packs/{programming-language}/{natural-language}/
 
 ### Current Language Packs
 
-**52 supported language packs** (all experimental) - Support Python 3.10-3.14 with version inheritance:
+**56 supported language packs** (all experimental) - Support Python 3.10-3.14 with version inheritance:
 
 | Code | Language        | Native Name      | RTL | Status       |
 | ---- | --------------- | ---------------- | --- | ------------ |
@@ -362,6 +362,7 @@ libs/i18n/language-packs/{programming-language}/{natural-language}/
 | mn   | Mongolian       | Монгол           | No  | Experimental |
 | ms   | Malay           | Bahasa Melayu    | No  | Experimental |
 | my   | Burmese         | မြန်မာ           | No  | Experimental |
+| ne   | Nepali          | नेपाली           | No  | Experimental |
 | nl   | Dutch           | Nederlands       | No  | Experimental |
 | no   | Norwegian       | Norsk            | No  | Experimental |
 | pl   | Polish          | Polski           | No  | Experimental |
@@ -372,13 +373,16 @@ libs/i18n/language-packs/{programming-language}/{natural-language}/
 | sr   | Serbian         | Српски           | No  | Experimental |
 | su   | Sundanese       | Basa Sunda       | No  | Experimental |
 | sv   | Swedish         | Svenska          | No  | Experimental |
+| sw   | Swahili         | Kiswahili        | No  | Experimental |
 | te   | Telugu          | తెలుగు           | No  | Experimental |
 | th   | Thai            | ไทย              | No  | Experimental |
+| tl   | Filipino        | Filipino         | No  | Experimental |
 | tr   | Turkish         | Türkçe           | No  | Experimental |
 | uk   | Ukrainian       | Українська       | No  | Experimental |
 | ur   | Urdu            | اردو             | Yes | Experimental |
 | uz   | Uzbek           | O'zbek           | No  | Experimental |
 | vi   | Vietnamese      | Tiếng Việt       | No  | Experimental |
+| xh   | Xhosa           | isiXhosa         | No  | Experimental |
 | zh   | Chinese         | 中文             | No  | Experimental |
 
 All packs have 37 keywords, 73 builtins, and 67 exceptions at the 3.10 base, rising to
@@ -630,7 +634,7 @@ When bumping package versions or creating a release, follow these steps:
 
 - **v0.5.x** (current - Pre-Beta): Feature-complete with experimental language packs:
   - Two translator backends (token & tree-sitter)
-  - 52 language packs with version inheritance (all experimental)
+  - 56 language packs with version inheritance (all experimental)
   - Complete CLI suite (init, translate, run, git, metadata)
   - Full LSP server with 4 providers (pygls 2.0)
   - VS Code extension with telemetry/feedback
@@ -742,7 +746,7 @@ Architectural rationale and detailed design decisions will be documented as the 
 ### Project Context
 
 - This monorepo is **production-ready (pre-beta)** with feature-complete packages
-- 52 language packs available (all experimental, awaiting community validation)
+- 56 language packs available (all experimental, awaiting community validation)
 - Implementation follows the tier system (Tier 1 → Tier 2 → Tier 3)
 - Issues are tracked in Linear workspace with package and phase labels
 - See package-specific CLAUDE.md files in `libs/*/CLAUDE.md` for detailed guidance

@@ -36,9 +36,9 @@ export_packs = _load_module()
 
 
 def test_version_index_is_not_counted_as_a_locale() -> None:
-    """``version-index.yml`` is a file in the pack tree, not a 52nd language.
+    """``version-index.yml`` is a file in the pack tree, not a 57th language.
 
-    A plain directory listing of ``language-packs/python`` returns 52 entries
+    A plain directory listing of ``language-packs/python`` returns 57 entries
     and this is the one that is not a locale. The count reaches a public
     dataset card, so it is asserted rather than eyeballed.
     """
@@ -1640,7 +1640,7 @@ def test_packs_rows_are_one_per_pairing(exported: Path) -> None:
 
     packs = pq.read_table(exported / "data" / "packs.parquet").to_pylist()
     locales = pq.read_table(exported / "data" / "locales.parquet").to_pylist()
-    assert len(packs) == len(locales) == 52
+    assert len(packs) == len(locales) == 56
     assert {r["locale"] for r in packs} == {r["locale"] for r in locales}
     assert all(r["pl_versions"] == list(export_packs.VERSIONS) for r in packs)
 
@@ -1650,7 +1650,7 @@ def test_json_is_one_loadable_file_per_pairing(exported: Path) -> None:
     import json as jsonlib
 
     files = sorted((exported / "json").rglob("*.json"))
-    assert len(files) == 52
+    assert len(files) == 56
     assert all(f.name == "python.json" for f in files)
 
     ar = jsonlib.loads((exported / "json" / "ar" / "python.json").read_text("utf-8"))

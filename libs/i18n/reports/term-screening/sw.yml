@@ -1,0 +1,12 @@
+# Screened by the same model, in the same session, that selected this
+# vocabulary (CORE-2478). Independent review of the surface stays with native
+# review (CORE-1538), where every experimental pack routes anyway. Re-screened
+# after the values became lowercase and fused: no stem forms across a word
+# boundary.
+language: sw
+target: python
+screener: "claude-opus-5-5 (linguist framing, CORE-1305/CORE-401)"
+screened_at: "2026-10-25"
+coverage_digest: 22df75cc4841f81be3e997ec0ba9808625198e52949ace3b082a0b5b7e67d457
+terms_screened: 184
+flags: []

@@ -422,7 +422,7 @@ TARGET = "python"
 MESSAGES_SEED = _I18N_ROOT / "legesher_i18n" / "db" / "seeds" / "cpython_messages.json"
 
 #: SPDX identifier declared for the published compilation. Matches the monorepo
-#: LICENSE, ``libs/i18n/pyproject.toml``, all 51 per-pack ``pyproject.toml``
+#: LICENSE, ``libs/i18n/pyproject.toml``, every per-pack ``pyproject.toml``
 #: files, and — since CORE-1043 — every pack's own ``metadata.license``.
 #:
 #: The in-pack field said ``MIT`` on all 255 files until then, contradicting the
@@ -507,7 +507,7 @@ def pack_locales() -> list[str]:
     A directory only counts when it carries the ``legesher_i18n_python_<code>``
     subtree, which is what makes it a pack rather than a stray directory --
     the pack tree also holds ``version-index.yml``, a FILE, and a plain
-    directory listing counts it as a 52nd locale. It is not one.
+    directory listing counts it as one more locale. It is not one.
     """
     return sorted(
         d.name

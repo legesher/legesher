@@ -51,6 +51,7 @@ export type LanguageCode =
     'mn' |
     'ms' |
     'my' |
+    'ne' |
     'nl' |
     'no' |
     'pl' |
@@ -61,13 +62,16 @@ export type LanguageCode =
     'sr' |
     'su' |
     'sv' |
+    'sw' |
     'te' |
     'th' |
+    'tl' |
     'tr' |
     'uk' |
     'ur' |
     'uz' |
     'vi' |
+    'xh' |
     'zh';
 
 export const CANONICAL_LANGUAGE: LanguageCode = 'en';
@@ -107,6 +111,7 @@ export const LANGUAGE_METADATA: Record<LanguageCode, LanguageMetadata> = {
     'mn': { name: 'Mongolian', native: 'Монгол', iso639_2: 'mon', bcp47: 'mn-Cyrl', rtl: false, status: 'experimental' },
     'ms': { name: 'Malay', native: 'Bahasa Melayu', iso639_2: 'msa', bcp47: 'ms', rtl: false, status: 'experimental' },
     'my': { name: 'Burmese', native: 'မြန်မာ', iso639_2: 'mya', bcp47: 'my', rtl: false, status: 'experimental' },
+    'ne': { name: 'Nepali', native: 'नेपाली', iso639_2: 'nep', bcp47: 'ne', rtl: false, status: 'experimental' },
     'nl': { name: 'Dutch', native: 'Nederlands', iso639_2: 'nld', bcp47: 'nl', rtl: false, status: 'experimental' },
     'no': { name: 'Norwegian', native: 'Norsk', iso639_2: 'nor', bcp47: 'nb', rtl: false, status: 'experimental' },
     'pl': { name: 'Polish', native: 'Polski', iso639_2: 'pol', bcp47: 'pl', rtl: false, status: 'experimental' },
@@ -117,13 +122,16 @@ export const LANGUAGE_METADATA: Record<LanguageCode, LanguageMetadata> = {
     'sr': { name: 'Serbian', native: 'Српски', iso639_2: 'srp', bcp47: 'sr-Cyrl', rtl: false, status: 'experimental' },
     'su': { name: 'Sundanese', native: 'Basa Sunda', iso639_2: 'sun', bcp47: 'su', rtl: false, status: 'experimental' },
     'sv': { name: 'Swedish', native: 'Svenska', iso639_2: 'swe', bcp47: 'sv', rtl: false, status: 'experimental' },
+    'sw': { name: 'Swahili', native: 'Kiswahili', iso639_2: 'swa', bcp47: 'sw', rtl: false, status: 'experimental' },
     'te': { name: 'Telugu', native: 'తెలుగు', iso639_2: 'tel', bcp47: 'te', rtl: false, status: 'experimental' },
     'th': { name: 'Thai', native: 'ไทย', iso639_2: 'tha', bcp47: 'th', rtl: false, status: 'experimental' },
+    'tl': { name: 'Filipino', native: 'Filipino', iso639_2: 'fil', bcp47: 'fil', rtl: false, status: 'experimental' },
     'tr': { name: 'Turkish', native: 'Türkçe', iso639_2: 'tur', bcp47: 'tr', rtl: false, status: 'experimental' },
     'uk': { name: 'Ukrainian', native: 'Українська', iso639_2: 'ukr', bcp47: 'uk', rtl: false, status: 'experimental' },
     'ur': { name: 'Urdu', native: 'اردو', iso639_2: 'urd', bcp47: 'ur', rtl: true, status: 'experimental' },
     'uz': { name: 'Uzbek', native: 'O\'zbek', iso639_2: 'uzb', bcp47: 'uz-Latn', rtl: false, status: 'experimental' },
     'vi': { name: 'Vietnamese', native: 'Tiếng Việt', iso639_2: 'vie', bcp47: 'vi', rtl: false, status: 'experimental' },
+    'xh': { name: 'Xhosa', native: 'isiXhosa', iso639_2: 'xho', bcp47: 'xh', rtl: false, status: 'experimental' },
     'zh': { name: 'Chinese', native: '中文', iso639_2: 'zho', bcp47: 'zh-Hans', rtl: false, status: 'experimental' },
 };
 

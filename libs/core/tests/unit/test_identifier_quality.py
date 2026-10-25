@@ -12,7 +12,7 @@ the four AC categories from CORE-710:
 4. **Consistency validation** — same identifier maps to same value within
    a file, no duplicate values within a pack section.
 
-Tests parametrize over all 51 supported languages from
+Tests parametrize over every supported language from
 ``legesher_i18n.language_registry.get_available_language_codes()``. The
 LLM-driven round-trip tests (``TestRoundTripPreservesSelfCls``) are
 gated by ``@pytest.mark.slow`` and run synthetically (constructed
@@ -30,7 +30,7 @@ from legesher_core.tree_sitter.translator import TreeSitterTranslator
 from legesher_i18n.language_registry import get_active_language_codes
 from legesher_i18n.pack_loader import LanguagePackLoader
 
-# All 51 supported language codes from languages.json. Uses the "active"
+# Every supported language code from languages.json. Uses the "active"
 # accessor (available + experimental) since all current packs are
 # experimental status until community validation lands them as available.
 ALL_LANGS = sorted(get_active_language_codes())

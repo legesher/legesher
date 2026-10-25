@@ -90,8 +90,8 @@ class TestExpectedPackEnforcement:
         instead, the regression-protection contract breaks.
         """
         codes = audit_module._expected_pack_codes()
-        # 52 supported languages (languages.json).
-        assert len(codes) == 52, f"Expected 52 codes, got {len(codes)}"
+        # 56 supported languages (languages.json).
+        assert len(codes) == 56, f"Expected 56 codes, got {len(codes)}"
         # Spot-checks against known entries.
         for required in ("en", "es", "ar", "ur", "zh", "ja"):
             assert required in codes, f"{required} missing from registry"
@@ -117,7 +117,7 @@ class TestTargetGating:
         assert audit_module.audit_packs(target="javascript") is True
 
     def test_default_target_is_python(self, audit_module) -> None:
-        """Calling with no target preserves the Python behaviour (all 51
-        packs audited, zero collisions)."""
+        """Calling with no target preserves the Python behaviour (every
+        pack audited, zero collisions)."""
         assert audit_module.audit_packs() is True
         assert audit_module.audit_packs(target="python") is True

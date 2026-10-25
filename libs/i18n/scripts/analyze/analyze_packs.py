@@ -2,7 +2,7 @@
 """
 Language Pack Analysis Script
 
-Analyzes all 51 Python language packs to detect:
+Analyzes every published Python language pack to detect:
 - Multi-word translations (spaces)
 - Punctuation in translations (/, -, :, ., ,, ;)
 - Duplicate translations (same value for different terms)
@@ -19,60 +19,10 @@ import json
 import unicodedata
 
 
-# Language codes for all 51 packs
-LANGUAGES = [
-    "am",
-    "ar",
-    "bn",
-    "bs",
-    "ca",
-    "cs",
-    "cy",
-    "da",
-    "de",
-    "el",
-    "en",
-    "es",
-    "fa",
-    "fi",
-    "fr",
-    "ga",
-    "gd",
-    "gl",
-    "gu",
-    "he",
-    "hi",
-    "hr",
-    "hu",
-    "id",
-    "it",
-    "ja",
-    "kn",
-    "ko",
-    "lv",
-    "mk",
-    "ml",
-    "mn",
-    "ms",
-    "my",
-    "nl",
-    "no",
-    "pl",
-    "pt",
-    "ro",
-    "ru",
-    "si",
-    "sr",
-    "su",
-    "sv",
-    "te",
-    "th",
-    "tr",
-    "ur",
-    "uz",
-    "vi",
-    "zh",
-]
+# Language codes for every published pack, read from the registry rather than
+# kept by hand (a hand-kept list here silently skipped uk and sw).
+with open("libs/i18n/legesher_i18n/languages.json", encoding="utf-8") as _f:
+    LANGUAGES = sorted(json.load(_f)["languages"])
 
 # Known placeholders/untranslated markers
 PLACEHOLDER_PATTERNS = [
@@ -439,41 +389,15 @@ def generate_reports(all_issues):
 
 
 def get_language_name(code):
-    """Get full language name from code."""
-    names = {
-        "ar": "Arabic",
-        "da": "Danish",
-        "de": "German",
-        "el": "Greek",
-        "en": "English",
-        "es": "Spanish",
-        "fi": "Finnish",
-        "fr": "French",
-        "he": "Hebrew",
-        "hi": "Hindi",
-        "hu": "Hungarian",
-        "id": "Indonesian",
-        "it": "Italian",
-        "ja": "Japanese",
-        "ko": "Korean",
-        "ms": "Malay",
-        "nl": "Dutch",
-        "no": "Norwegian",
-        "pl": "Polish",
-        "pt": "Portuguese",
-        "ru": "Russian",
-        "sv": "Swedish",
-        "th": "Thai",
-        "tr": "Turkish",
-        "vi": "Vietnamese",
-        "zh": "Chinese",
-    }
+    """Get full language name from code, as the registry names it."""
+    with open("libs/i18n/legesher_i18n/languages.json", encoding="utf-8") as f:
+        names = {k: v["name"] for k, v in json.load(f)["languages"].items()}
     return names.get(code, code)
 
 
 def main():
     """Main analysis function."""
-    print("🔍 Analyzing 51 Python language packs...\n")
+    print(f"🔍 Analyzing {len(LANGUAGES)} Python language packs...\n")
 
     all_issues = {}
 

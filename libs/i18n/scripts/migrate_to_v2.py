@@ -111,12 +111,8 @@ __all__ = [
 #: v1 language codes with no `bcp47` value in the database, and the tag they
 #: resolve to. CORE-1500 owns the authoritative, IANA-verified backfill; this map
 #: exists so the migration is runnable today and fails loudly on anything new.
-BCP47_FALLBACK: dict[str, str] = {
-    "ne": "ne",  # Nepali
-    "sw": "sw",  # Swahili
-    "tl": "tl",  # Tagalog
-    "xh": "xh",  # Xhosa
-}
+#: Empty since the four CORE-2181 languages shipped with their tags in the DB.
+BCP47_FALLBACK: dict[str, str] = {}
 
 #: v1 `source` vocabulary -> v2 provenance source. v1 mixed *where a row came
 #: from* with *who asserted it*; v2 separates them.

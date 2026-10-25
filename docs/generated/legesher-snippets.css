@@ -66,6 +66,8 @@ html[data-snippet-lang="ms"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="ms"] .lg-code pre[data-lang="ms"]{display:block}
 html[data-snippet-lang="my"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="my"] .lg-code pre[data-lang="my"]{display:block}
+html[data-snippet-lang="ne"] .lg-code pre[data-lang]{display:none}
+html[data-snippet-lang="ne"] .lg-code pre[data-lang="ne"]{display:block}
 html[data-snippet-lang="nl"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="nl"] .lg-code pre[data-lang="nl"]{display:block}
 html[data-snippet-lang="no"] .lg-code pre[data-lang]{display:none}
@@ -86,10 +88,14 @@ html[data-snippet-lang="su"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="su"] .lg-code pre[data-lang="su"]{display:block}
 html[data-snippet-lang="sv"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="sv"] .lg-code pre[data-lang="sv"]{display:block}
+html[data-snippet-lang="sw"] .lg-code pre[data-lang]{display:none}
+html[data-snippet-lang="sw"] .lg-code pre[data-lang="sw"]{display:block}
 html[data-snippet-lang="te"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="te"] .lg-code pre[data-lang="te"]{display:block}
 html[data-snippet-lang="th"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="th"] .lg-code pre[data-lang="th"]{display:block}
+html[data-snippet-lang="tl"] .lg-code pre[data-lang]{display:none}
+html[data-snippet-lang="tl"] .lg-code pre[data-lang="tl"]{display:block}
 html[data-snippet-lang="tr"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="tr"] .lg-code pre[data-lang="tr"]{display:block}
 html[data-snippet-lang="uk"] .lg-code pre[data-lang]{display:none}
@@ -100,5 +106,7 @@ html[data-snippet-lang="uz"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="uz"] .lg-code pre[data-lang="uz"]{display:block}
 html[data-snippet-lang="vi"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="vi"] .lg-code pre[data-lang="vi"]{display:block}
+html[data-snippet-lang="xh"] .lg-code pre[data-lang]{display:none}
+html[data-snippet-lang="xh"] .lg-code pre[data-lang="xh"]{display:block}
 html[data-snippet-lang="zh"] .lg-code pre[data-lang]{display:none}
 html[data-snippet-lang="zh"] .lg-code pre[data-lang="zh"]{display:block}

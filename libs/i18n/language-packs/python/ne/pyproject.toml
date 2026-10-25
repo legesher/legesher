@@ -1,0 +1,85 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+authors = [
+    {name = "Madison (Pfaff) Edgar", email = "7844510+madiedgar@users.noreply.github.com"}
+]
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "legesher-i18n>=0.2.0,<1.0.0",
+]
+name = "legesher-i18n-python-ne"
+version = "0.0.1"
+description = "Nepali language pack for Python in Legesher"
+readme = "README.md"
+keywords = ["legesher", "i18n", "nepali", "python", "translation", "multilingual"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Internationalization",
+    "Topic :: Software Development :: Localization",
+    "Natural Language :: Nepali",
+    "Operating System :: OS Independent",
+]
+
+[tool.semantic_release]
+# Every path here is relative to the GIT ROOT, not to this file. semantic-release
+# resolves repo_dir by walking up to .git/ and resolves each configured path
+# against that, so a bare "pyproject.toml" read and rewrote the ROOT pyproject
+# (CORE-1852). List form: PSR 10 rejects a bare string, and ignores the old
+# singular `version_variable` key, so the package __version__ never moved.
+version_toml = ["libs/i18n/language-packs/python/ne/pyproject.toml:project.version"]
+version_variables = ["libs/i18n/language-packs/python/ne/legesher_i18n_python_ne/__init__.py:__version__"]
+commit_parser = "conventional"
+# PSR's default release-commit subject is the bare version, which the skip in
+# release-language-packs.yml and ci.yml (`chore(release)`) never matched, so
+# every release retriggered its own train once (CORE-1852).
+commit_message = "chore(release): legesher-i18n-python-ne {version}"
+major_on_zero = true
+allow_zero_version = true
+tag_format = "i18n-python-ne-v{version}"
+# PSR's default author is a bare word with no `@`, which author-validating
+# tooling rejects. Same override as the root config.
+commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "feat", "fix", "docs", "style", "refactor",
+    "perf", "test", "build", "ci", "chore", "revert"
+]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
+# The `conventional` parser is the renamed `angular` one (removed in PSR 11),
+# with two defaults flipped. Pinned so the sweep changes no bump: a squash
+# body that lists feat/fix lines still counts as the one commit it is.
+parse_squash_commits = false
+ignore_merge_commits = false
+
+# PSR 10 reads these from this table and ignores the top-level spellings. It
+# never uploads to PyPI. The glob is where release-language-packs.yml builds
+# the wheel; the default "dist/*" would attach nothing to the GitHub release.
+[tool.semantic_release.publish]
+upload_to_vcs_release = true
+dist_glob_patterns = ["libs/i18n/language-packs/python/ne/dist/*"]
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    "^chore\\(release\\):",
+    "^Merge",
+]
+
+# The workflow passes --no-changelog: changelogs here are hand-written and
+# stamped by scripts/stamp-changelog-release.py. This is the guard for a manual
+# run that forgets the flag, which would otherwise rewrite the repo-root
+# CHANGELOG.md during a pack release.
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "libs/i18n/language-packs/python/ne/CHANGELOG.md"

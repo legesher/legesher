@@ -59,6 +59,7 @@ members = [
     "legesher-i18n-python-mn",
     "legesher-i18n-python-ms",
     "legesher-i18n-python-my",
+    "legesher-i18n-python-ne",
     "legesher-i18n-python-nl",
     "legesher-i18n-python-no",
     "legesher-i18n-python-pl",
@@ -69,13 +70,16 @@ members = [
     "legesher-i18n-python-sr",
     "legesher-i18n-python-su",
     "legesher-i18n-python-sv",
+    "legesher-i18n-python-sw",
     "legesher-i18n-python-te",
     "legesher-i18n-python-th",
+    "legesher-i18n-python-tl",
     "legesher-i18n-python-tr",
     "legesher-i18n-python-uk",
     "legesher-i18n-python-ur",
     "legesher-i18n-python-uz",
     "legesher-i18n-python-vi",
+    "legesher-i18n-python-xh",
     "legesher-i18n-python-zh",
     "legesher-language-server",
     "legesher-mcp",
@@ -2176,6 +2180,17 @@ dependencies = [
 requires-dist = [{ name = "legesher-i18n", editable = "libs/i18n" }]
 
 [[package]]
+name = "legesher-i18n-python-ne"
+version = "0.0.1"
+source = { editable = "libs/i18n/language-packs/python/ne" }
+dependencies = [
+    { name = "legesher-i18n" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "legesher-i18n", editable = "libs/i18n" }]
+
+[[package]]
 name = "legesher-i18n-python-nl"
 version = "0.0.4"
 source = { editable = "libs/i18n/language-packs/python/nl" }
@@ -2286,6 +2301,17 @@ dependencies = [
 requires-dist = [{ name = "legesher-i18n", editable = "libs/i18n" }]
 
 [[package]]
+name = "legesher-i18n-python-sw"
+version = "0.0.1"
+source = { editable = "libs/i18n/language-packs/python/sw" }
+dependencies = [
+    { name = "legesher-i18n" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "legesher-i18n", editable = "libs/i18n" }]
+
+[[package]]
 name = "legesher-i18n-python-te"
 version = "0.0.3"
 source = { editable = "libs/i18n/language-packs/python/te" }
@@ -2300,6 +2326,17 @@ requires-dist = [{ name = "legesher-i18n", editable = "libs/i18n" }]
 name = "legesher-i18n-python-th"
 version = "0.0.5"
 source = { editable = "libs/i18n/language-packs/python/th" }
+dependencies = [
+    { name = "legesher-i18n" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "legesher-i18n", editable = "libs/i18n" }]
+
+[[package]]
+name = "legesher-i18n-python-tl"
+version = "0.0.1"
+source = { editable = "libs/i18n/language-packs/python/tl" }
 dependencies = [
     { name = "legesher-i18n" },
 ]
@@ -2355,6 +2392,17 @@ requires-dist = [{ name = "legesher-i18n", editable = "libs/i18n" }]
 name = "legesher-i18n-python-vi"
 version = "0.0.5"
 source = { editable = "libs/i18n/language-packs/python/vi" }
+dependencies = [
+    { name = "legesher-i18n" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "legesher-i18n", editable = "libs/i18n" }]
+
+[[package]]
+name = "legesher-i18n-python-xh"
+version = "0.0.1"
+source = { editable = "libs/i18n/language-packs/python/xh" }
 dependencies = [
     { name = "legesher-i18n" },
 ]

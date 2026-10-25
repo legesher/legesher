@@ -8,12 +8,12 @@ This file provides guidance for working with the `legesher-i18n` package.
 **Status**: Production-Ready (Pre-Beta)
 **Python**: >=3.10,<4.0
 
-Internationalization infrastructure with 52 language packs, version-aware inheritance,
+Internationalization infrastructure with 56 language packs, version-aware inheritance,
 and multi-provider translation API.
 
 ## Key Capabilities
 
-- **52 Language Packs**: All in experimental status (see `languages.json`)
+- **56 Language Packs**: All in experimental status (see `languages.json`)
 - **Version-Aware Loading**: Automatic Python 3.10-3.14 adaptation
 - **Pack Inheritance**: Child packs inherit from parents, reducing duplication
 - **Translation API**: Multi-provider support (Anthropic, Google, DeepL, LibreTranslate)
@@ -47,7 +47,7 @@ libs/i18n/
 │       └── dashboard.py      # Usage dashboard
 ├── language-packs/
 │   └── python/
-│       ├── am/, ar/, bn/, bs/, ...  # 52 language packs
+│       ├── am/, ar/, bn/, bs/, ...  # 56 language packs
 │       └── version-index.yml   # Python version inheritance
 └── tests/
 ```
@@ -248,7 +248,7 @@ next expansion batch runs, confirm the convention it will inherit is the one you
 
 ### Language Status
 
-All 52 languages are currently **experimental**:
+All 56 languages are currently **experimental**:
 
 - Translations work but await community validation
 - Status defined in `languages.json`
@@ -341,7 +341,7 @@ rule fits: `set_selected`'s publish gate demands a valid Python identifier
 round-trip break (nothing reverse-translates a symbol name).
 
 The canonical inventory is **code**, in `legesher_i18n/vocabulary_definitions.py`
-— identical in all 51 languages, so there is one place to change it and nothing
+— identical in every language, so there is one place to change it and nothing
 to keep in sync. `scripts/seed_vocabulary.py` projects it into the DB and seeds
 the `en` values (English is seeded, never generated);
 `scripts/translate/generate_vocabulary.py` fills the other 50 from a
@@ -368,7 +368,7 @@ keyword, two term rows).
 
 #### `languages` — Language registry
 
-62 languages total: 51 with YAML packs, 11 legacy community languages.
+56 languages total, all with YAML packs.
 
 | Column                                                    | Type          | Notes                               |
 | --------------------------------------------------------- | ------------- | ----------------------------------- |

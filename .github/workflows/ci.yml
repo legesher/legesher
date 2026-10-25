@@ -237,7 +237,7 @@ jobs:
       # shell-agnostic across the Linux/macOS/Windows test matrix and
       # avoids YAML-block-scalar indentation pitfalls (Copilot review
       # on PR #237).
-      - name: i18n collision audit (DB + all 51 packs)
+      - name: i18n collision audit (DB + all packs)
         if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         run: uv run python libs/i18n/scripts/audit_collisions.py
 

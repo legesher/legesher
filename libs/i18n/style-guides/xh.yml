@@ -1,0 +1,85 @@
+# xh.yml: Xhosa Python style guide
+# Xhosa (isiXhosa): Latin, left-to-right.
+# A profile of best-practice Python for Xhosa: which conventions the script
+# can express and the constraints its characters impose. Rules only: vocabulary
+# (word choices, symbol names) lives in the language packs.
+
+language: "xh"
+extends:
+- python.yml
+- _ltr.yml
+version: 0.1.0
+status: experimental
+
+# Which Python naming conventions this script can express, plus profile facts.
+supports:
+  case_distinction: true
+  snake_case: true
+  upper_snake_case: true
+  pascal_case: true
+  camel_case: true
+  native_digits: false
+  combining_marks: false
+  requires_word_separator: false
+  diacritics_in_identifiers: false
+  cursive_joining: false
+
+# How identifiers are formed.
+naming:
+  case_substitute: not_needed
+  detail: >
+    Standard written Xhosa is the register: the language of schools,
+    government and published dictionaries. Pack values mirror how Python
+    spells its own reserved words: lowercase, with the words of a multi-word
+    name run together (impazamoyexabiso, cimauphawu), as Python writes getattr
+    and isinstance. Xhosa is written conjunctively already, so this extends
+    its own habit. A noun keeps its class prefix in lowercase; the capital of
+    a proper noun (isiXhosa) belongs to prose, not to a pack value. Capitals
+    and underscores are left to the programmer's own code. The word
+    boundaries are not lost: the database keeps each value's separated form
+    (impazamo_yexabiso) as a candidate row and in its rationale.
+  word_formation:
+  - >-
+    Action keywords and action builtins take the bare verb stem, the
+    singular imperative (vula, cima, zama, qhubeka), as Swahili does, never
+    the uku- infinitive. Transitive meaning takes the transitive or causative
+    verb: return gives a value back (buyisa), it does not come back (buya).
+  - >-
+    A multi-word name follows Xhosa noun-phrase order: the head noun first,
+    then its modifier, joined by the possessive concord that agrees with the
+    head's noun class, with the vowel coalescence Xhosa writes (ya + i gives
+    ye: impazamo yexabiso; sa + ii gives see: isilumkiso seebhayithi; kwa + i
+    gives kwe: ukuphuma kwesivelisi). Relatives agree the same way (ifayile
+    engafumanekiyo).
+  - >-
+    Exception-family naming keeps three distinct roots, mirroring Python's
+    hierarchy: impazamo (error), imeko ekhethekileyo (exception, a special
+    condition), isilumkiso (warning).
+  - >-
+    English leakage: a value spelled like the English term is untranslated,
+    not a choice. A loan is accepted only when Xhosa uses it and it is
+    respelled to Xhosa orthography with its class prefix (ifayile, ibhayithi,
+    ifolda, ikhibhodi, imodyuli, iyunikhowudi, iseti). Two English-identical
+    values are accepted by name, as in the other Latin-script packs: lambda
+    (the Greek letter's name) and ascii (an acronym). A word that a loan would
+    make a near-homograph of an everyday word is avoided (hash is not ihashi,
+    which reads as ihashe, horse).
+
+# Script identity + the constraints its characters impose.
+script:
+  name: "Latin"
+  direction: ltr
+  constraints:
+  - "Xhosa uses Latin script with case. In the programmer's own code PEP 8 casing applies unchanged; pack values are lowercase (see naming). Standard orthography uses no diacritics."
+  - "Click consonants are written with ordinary Latin letters, c (dental), q (alveolar) and x (lateral), alone or in digraphs and trigraphs (gc, nq, xh, ngx). They need no special handling. Unlike Swahili, Xhosa uses q and x, so it carries no forbidden-letter rule for them."
+  - "Digits: written with ASCII 0-9."
+
+# Formatting rules.
+formatting:
+  comment_prefix: "#"
+  programming_punctuation: ascii_only
+  docstrings: PEP 257 structure, prose in Xhosa
+
+# Editor rendering (VS Code extension, not the translation prompt).
+rendering:
+  noto_font: "Noto Sans"   # Latin default

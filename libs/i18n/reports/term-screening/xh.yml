@@ -1,0 +1,13 @@
+# Screened by the same model, in the same session, that selected this
+# vocabulary (CORE-2480). Independent review of the surface stays with native
+# review (CORE-1538), where every experimental pack routes anyway. The fused
+# surface was checked for vulgar or unfortunate stems formed across a word
+# boundary: none. hash avoids the loan ihashi, a near-homograph of ihashe
+# (horse).
+language: xh
+target: python
+screener: "claude-opus-5-5 (linguist framing, CORE-1305/CORE-401)"
+screened_at: "2026-10-25"
+coverage_digest: 4726df12091c80b4cfbc3473f056a003640713de6dd27a88d38a19a573af8343
+terms_screened: 184
+flags: []

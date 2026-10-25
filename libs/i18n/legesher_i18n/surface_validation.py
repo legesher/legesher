@@ -81,13 +81,10 @@ class Validation:
 #: validator can classify their options. ``script_policy.SCRIPT_POLICIES`` is
 #: keyed to shipped packs only (``tests/test_script_policy_coverage.py`` forbids
 #: orphan entries), so these live here until they ship. Same set as
-#: ``migrate_to_v2.BCP47_FALLBACK``.
-NON_PACK_SCRIPTS: dict[str, frozenset[str]] = {
-    "ne": frozenset({"Devanagari"}),  # Nepali
-    "sw": frozenset({"Latin"}),  # Swahili
-    "tl": frozenset({"Latin"}),  # Tagalog
-    "xh": frozenset({"Latin"}),  # Xhosa
-}
+#: ``migrate_to_v2.BCP47_FALLBACK``. Empty since the four CORE-2181 languages
+#: (ne, sw, tl, xh) shipped: every DB language now has a policy. A language
+#: added to the DB ahead of its pack goes here until the pack ships.
+NON_PACK_SCRIPTS: dict[str, frozenset[str]] = {}
 
 #: The v2 reference layer names some languages by their BCP 47 subtag while
 #: the policy tables are keyed by pack id / v1 code (the pack-id divergences

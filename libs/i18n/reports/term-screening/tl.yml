@@ -1,0 +1,14 @@
+# Screened by the same model, in the same session, that selected this
+# vocabulary (CORE-2479). Independent review of the surface stays with native
+# review (CORE-1538), where every experimental pack routes anyway. The fused
+# surface was checked for vulgar or unfortunate stems formed across a word
+# boundary: none. titik (letter, in chr and ord) contains the vulgar titi
+# but is the standard school word for a letter of the alphabet, so it is not
+# flagged.
+language: tl
+target: python
+screener: "claude-opus-5-5 (linguist framing, CORE-1305/CORE-401)"
+screened_at: "2026-10-25"
+coverage_digest: f8f761484836c6b614b3cda8fa1f86eeebdb5a10f76ab22d8ab9d4d5501393a4
+terms_screened: 184
+flags: []

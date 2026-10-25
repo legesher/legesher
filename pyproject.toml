@@ -72,6 +72,7 @@ legesher-i18n-python-ml = { workspace = true }
 legesher-i18n-python-mn = { workspace = true }
 legesher-i18n-python-ms = { workspace = true }
 legesher-i18n-python-my = { workspace = true }
+legesher-i18n-python-ne = { workspace = true }
 legesher-i18n-python-nl = { workspace = true }
 legesher-i18n-python-no = { workspace = true }
 legesher-i18n-python-pl = { workspace = true }
@@ -82,13 +83,16 @@ legesher-i18n-python-si = { workspace = true }
 legesher-i18n-python-sr = { workspace = true }
 legesher-i18n-python-su = { workspace = true }
 legesher-i18n-python-sv = { workspace = true }
+legesher-i18n-python-sw = { workspace = true }
 legesher-i18n-python-te = { workspace = true }
 legesher-i18n-python-th = { workspace = true }
+legesher-i18n-python-tl = { workspace = true }
 legesher-i18n-python-tr = { workspace = true }
 legesher-i18n-python-uk = { workspace = true }
 legesher-i18n-python-ur = { workspace = true }
 legesher-i18n-python-uz = { workspace = true }
 legesher-i18n-python-vi = { workspace = true }
+legesher-i18n-python-xh = { workspace = true }
 legesher-i18n-python-zh = { workspace = true }
 legesher = { workspace = true }
 legesher-language-server = { workspace = true }

@@ -173,13 +173,13 @@
             //
             // Range           | Script              | Languages Supported
             // ----------------|---------------------|--------------------
-            // a-zA-Z          | Basic Latin         | en, da, de, es, fi, fr, hu, id, it, ms, nl, no, pl, pt, sv, tr, vi
-            // \u00C0-\u024F   | Latin Extended      | da, de, es, fi, fr, hu, id, it, nl, no, pl, pt, sv, tr, vi (accents)
+            // a-zA-Z          | Basic Latin         | en, da, de, es, fi, fr, hu, id, it, ms, nl, no, pl, pt, sv, sw, tl, tr, vi, xh
+            // \u00C0-\u024F   | Latin Extended      | da, de, es, fi, fr, hu, id, it, nl, no, pl, pt, sv, tl, tr, vi (accents)
             // \u0370-\u03FF   | Greek               | el (Greek)
             // \u0400-\u04FF   | Cyrillic            | mk, mn, ru, sr, uk
             // \u0590-\u05FF   | Hebrew              | he (Hebrew) [RTL]
             // \u0600-\u06FF   | Arabic              | ar (Arabic) [RTL]
-            // \u0900-\u097F   | Devanagari          | hi (Hindi)
+            // \u0900-\u097F   | Devanagari          | hi, ne
             // \u0E00-\u0E7F   | Thai                | th (Thai)
             // \u3040-\u30FF   | Hiragana + Katakana | ja (Japanese)
             // \u4E00-\u9FFF   | CJK Unified         | zh (Chinese), ja (Japanese kanji)

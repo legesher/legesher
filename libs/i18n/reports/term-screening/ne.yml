@@ -1,0 +1,12 @@
+# Screened by the same model, in the same session, that selected this
+# vocabulary (CORE-2477). Independent review of the surface stays with native
+# review (CORE-1538), where every experimental pack routes anyway. The fused
+# surface was checked for vulgar or unfortunate stems formed across a word
+# boundary: none.
+language: ne
+target: python
+screener: "claude-opus-5-5 (linguist framing, CORE-1305/CORE-401)"
+screened_at: "2026-10-25"
+coverage_digest: e7cc1f08c39b28adb1956959d4077029c0c04a84f58fb11d737b85b1b7d1f3f0
+terms_screened: 184
+flags: []
