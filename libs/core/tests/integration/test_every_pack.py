@@ -3,8 +3,8 @@
 The MCP suite's all-packs sweep (``libs/mcp/tests/test_roundtrip_sweep.py``)
 is scheduled rather than per commit because it goes through an MCP session
 and validates both forms. At the engine layer the same sweep is cheap:
-translate -> reverse -> compile of the whole corpus through all fifty
-non-English packs measures under two seconds, so it runs here on every
+translate -> reverse -> compile of the whole corpus through every
+non-English pack measured under two seconds when this sweep was added, so it runs here on every
 commit. Same corpus (``tests/corpus.py``), same ledger shape, so a fix that
 turns a known failure into a pass is reported by both sweeps as "remove me".
 

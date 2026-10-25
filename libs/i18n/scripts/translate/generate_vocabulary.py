@@ -10,7 +10,7 @@ Design notes worth knowing before running it
 --------------------------------------------
 * **One call per language, both sections together.** They share the
   script/formatting profile and the framing, so batching keeps a full run
-  at 51 calls rather than 2,448 (CORE-1805's economics rule: a per-item
+  at one call per language rather than one per entry (CORE-1805's economics rule: a per-item
   call is the leak).
 * **English is never generated.** ``scripts/seed_vocabulary.py`` seeds it
   from the canonical inventory — the English name of a symbol IS the
@@ -45,7 +45,7 @@ Usage:
 Afterwards, in order:
     python scripts/export_packs.py                      # regenerate packs
     python scripts/verify_pack_regen.py --db <db>       # the regen gate
-    python scripts/audit_collisions.py                  # expect 51/51
+    python scripts/audit_collisions.py                  # expect "all N expected"
     ... then the durable-home push (libs/i18n/CLAUDE.md).
 """
 

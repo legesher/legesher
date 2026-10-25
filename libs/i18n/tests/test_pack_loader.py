@@ -348,8 +348,8 @@ class TestInheritanceEdgeCases:
         """CORE-1112 / CORE-1187: cover the defensive raise that fires when
         a pack with an ``extends`` field isn't inside a ``packs/`` directory.
 
-        This path is unreachable through the public ``load()`` API (all 51
-        real packs live in the monorepo ``packs/`` layout) but guards
+        This path is unreachable through the public ``load()`` API (every
+        real pack lives in the monorepo ``packs/`` layout) but guards
         against future layout changes that would otherwise silently skip
         the sandbox derivation. ``_resolve_inheritance`` is called
         directly to exercise it.

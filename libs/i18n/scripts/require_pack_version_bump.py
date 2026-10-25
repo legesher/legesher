@@ -46,8 +46,8 @@ Usage:
     python scripts/require_pack_version_bump.py --fix <staged pack files>
     python scripts/require_pack_version_bump.py --all
 
-``--fix`` applies the patch bump to both files, so a regeneration touching all
-51 packs is one command rather than 51 hand edits. ``--all`` checks property 2
+``--fix`` applies the patch bump to both files, so a regeneration touching every
+pack is one command rather than one hand edit per pack. ``--all`` checks property 2
 across the whole tree, ignoring git state -- the repo-wide invariant, which the
 test suite runs.
 """

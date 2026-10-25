@@ -469,7 +469,7 @@
           {
             "id": "legesher.welcome.intro",
             "title": "Welcome to Legesher 🌍",
-            "description": "Legesher enables you to code Python in your native language.💻 We currently support 51 languages (like Arabic, Hindi, Portuguese) with plans to expand to new languages and dialects. The possibilities are endless when technology speaks your language. \n\nExplore and innovate freely! Your code stays in your language in git, and the form Python executes is produced only when the code runs.",
+            "description": "Legesher enables you to code Python in your native language.💻 We currently support 56 languages (like Arabic, Hindi, Portuguese) with plans to expand to new languages and dialects. The possibilities are endless when technology speaks your language. \n\nExplore and innovate freely! Your code stays in your language in git, and the form Python executes is produced only when the code runs.",
             "media": {
               "markdown": "images/walkthrough/welcome.md"
             }

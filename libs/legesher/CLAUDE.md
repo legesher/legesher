@@ -14,7 +14,7 @@ and metadata viewing.
 
 ## Key Capabilities
 
-- **Code Translation**: Convert Python files between 51 languages
+- **Code Translation**: Convert Python files between 56 languages
 - **Git Integration**: Setup and manage git filter integration
 - **Metadata**: View and validate language pack information
 - **Runtime Import Hooks**: Transparent code translation at import time

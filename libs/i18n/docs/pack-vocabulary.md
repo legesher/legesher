@@ -57,7 +57,7 @@ legesher_i18n/vocabulary_definitions.py   canonical inventory (code)
         ├──> scripts/seed_vocabulary.py ──> vocabulary_entries      (DB)
         │                              └──> selected_vocabulary     (DB, `en`)
         │
-        ├──> scripts/translate/generate_vocabulary.py ──> the other 50 locales
+        ├──> scripts/translate/generate_vocabulary.py ──> every other locale
         │
         └──> scripts/translate/prompts/vocabulary_prompt.md   (the spec)
 
@@ -65,8 +65,8 @@ selected_vocabulary ──> scripts/translate/yaml_exporter.py ──> 3.10.yml
 ```
 
 The **canonical inventory is code**, for the same reason the term inventory is:
-which slugs exist, what glyph each names, and what it does are identical in all
-51 languages. One place to change, nothing to keep in sync, and the generation
+which slugs exist, what glyph each names, and what it does are identical in every
+language. One place to change, nothing to keep in sync, and the generation
 prompt is rendered from it so it can never ask for a slug the schema rejects.
 
 Only the localized side — one string per (entry, language) — is data.
@@ -80,8 +80,8 @@ Only the localized side — one string per (entry, language) — is data.
    character.
 2. Glyph keys would put `:`, `#`, `'`, `"` and `@` on the left-hand side of a
    YAML mapping. Every one is a quoting hazard and `#` starts a comment.
-3. The glyph is a constant. Shipping it in 51 packs is 51 copies of the same
-   character; consumers read it from `vocabulary_definitions` and join on slug.
+3. The glyph is a constant. Shipping it in every pack is one copy of the same
+   character per pack; consumers read it from `vocabulary_definitions` and join on slug.
 
 `variable_conventions` is keyed by **role** (`loop_index`), never by the
 English spelling, so a language whose habit differs from English's has
@@ -195,7 +195,7 @@ The pack schema is `extra="forbid"`. That cuts both ways:
   validation error, not ignored extras. A vocabulary-carrying pack is
   therefore not a drop-in for an older runtime.
 - A pack **without** the sections loads identically on every version — both
-  default to `{}` — which is why all 51 shipped packs are unaffected.
+  default to `{}` — which is why every shipped pack is unaffected.
 
 Ship vocabulary in a pack only once the consuming version floor includes the
 schema that understands it; until then the sections live in the database and
@@ -211,7 +211,7 @@ cd libs/i18n
 #    the inventory entry, so a model call would reproduce a constant.
 uv run python scripts/seed_vocabulary.py --db legesher_i18n/db/translations.db
 
-# 2. The other 50 locales. Needs ANTHROPIC_API_KEY.
+# 2. Every other locale. Needs ANTHROPIC_API_KEY.
 uv run python scripts/translate/generate_vocabulary.py \
     --db legesher_i18n/db/translations.db --all --skip-complete
 
@@ -220,7 +220,7 @@ uv run python scripts/export_packs.py
 
 # 4. The gates.
 uv run python scripts/verify_pack_regen.py --db legesher_i18n/db/translations.db
-uv run python scripts/audit_collisions.py            # expect 51/51
+uv run python scripts/audit_collisions.py            # expect "all N expected", 0 collisions
 uv run pre-commit run --files language-packs/python/*/*/packs/*.yml
 
 # 5. The durable-home push (libs/i18n/CLAUDE.md). The database is an
@@ -233,8 +233,8 @@ an API call, which is the cheap way to review the framing before a run.
 
 ## Review status
 
-Generated values enter at the **experimental** tier — where all 51 packs
-already sit, and where model generation is the norm. Native review rides the
+Generated values enter at the **experimental** tier — where every shipped
+pack sits today, and where model generation is the norm. Native review rides the
 standing review queue; it is not a precondition for the values existing.
 
 The generation script stores the model's `notes` as the rationale on every

@@ -193,7 +193,7 @@ class TestCoverage:
         assert "warning" in captured.out.lower()
 
     def test_pack_without_example_is_warning_by_default(self, tmp_path, capsys):
-        # Only an es example: the other ~50 shipped packs have no example
+        # Only an es example: every other shipped pack has no example
         root = make_examples_tree(tmp_path, {"es": VALID_ES_EXAMPLE})
 
         exit_code = main(["--examples-root", str(root)])

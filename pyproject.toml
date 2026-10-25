@@ -150,7 +150,7 @@ commit_message = "chore(release): {version}"
 # were HuggingFace dataset renames and a corpus taxonomy change — not breaks
 # in the public Python API that a 1.0 is supposed to be a promise about.
 # Every language pack also pins `legesher-i18n<1.0.0`, so a 1.0 foundation is
-# a coordinated 51-package change, never an incidental one.
+# a coordinated change across every pack, never an incidental one.
 major_on_zero = false
 allow_zero_version = true
 tag_format = "v{version}"

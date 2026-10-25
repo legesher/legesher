@@ -10,7 +10,7 @@
   //
   // The check is not wrong; its default is wrong for a repository whose subject
   // matter is non-English source code. The list below is the exact set of
-  // characters this repository's 51 language packs use that VS Code would
+  // characters this repository's language packs use that VS Code would
   // otherwise flag. It is derived from the packs, not hand-picked, and written
   // as \u escapes so the file reads left to right in review.
   //
@@ -57,7 +57,8 @@
     "\u03c1": true,  // U+03C1 GREEK SMALL LETTER RHO
     "\u03c3": true,  // U+03C3 GREEK SMALL LETTER SIGMA
     "\u03c5": true,  // U+03C5 GREEK SMALL LETTER UPSILON
-    // Cyrillic (mk, mn, ru, sr)
+    // Cyrillic (mk, mn, ru, sr, uk)
+    "\u0406": true,  // U+0406 CYRILLIC CAPITAL LETTER BYELORUSSIAN-UKRAINIAN I
     "\u0408": true,  // U+0408 CYRILLIC CAPITAL LETTER JE
     "\u0410": true,  // U+0410 CYRILLIC CAPITAL LETTER A
     "\u0412": true,  // U+0412 CYRILLIC CAPITAL LETTER VE
@@ -80,6 +81,7 @@
     "\u0441": true,  // U+0441 CYRILLIC SMALL LETTER ES
     "\u0443": true,  // U+0443 CYRILLIC SMALL LETTER U
     "\u0445": true,  // U+0445 CYRILLIC SMALL LETTER HA
+    "\u0456": true,  // U+0456 CYRILLIC SMALL LETTER BYELORUSSIAN-UKRAINIAN I
     "\u0458": true,  // U+0458 CYRILLIC SMALL LETTER JE
     "\u04ae": true,  // U+04AE CYRILLIC CAPITAL LETTER STRAIGHT U
     "\u04af": true,  // U+04AF CYRILLIC SMALL LETTER STRAIGHT U
@@ -94,6 +96,8 @@
     "\u0647": true,  // U+0647 ARABIC LETTER HEH
     "\u06be": true,  // U+06BE ARABIC LETTER HEH DOACHASHMEE
     "\u06c1": true,  // U+06C1 ARABIC LETTER HEH GOAL
+    // Devanagari (ne)
+    "\u0903": true,  // U+0903 DEVANAGARI SIGN VISARGA
     // Telugu (te)
     "\u0c02": true,  // U+0C02 TELUGU SIGN ANUSVARA
     // Kannada (kn)

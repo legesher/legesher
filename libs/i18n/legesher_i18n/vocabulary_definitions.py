@@ -21,7 +21,7 @@ Why a Python module and not a YAML/JSON seed
 --------------------------------------------
 The same reason the term inventory lives in :mod:`term_definitions`: the
 *canonical* side of a vocabulary entry (its slug, its glyph, its English
-name, what it does) is invariant across all 51 languages and must never
+name, what it does) is invariant across every language and must never
 drift between the database, the exporter and the generation prompt.
 Every consumer reads it from here, so there is one place to change and
 nothing to keep in sync. Only the *localized* side — one string per
@@ -39,7 +39,7 @@ not the raw glyph (``:``). Three reasons, in order of weight:
    left-hand side of a YAML mapping — every one of them a quoting
    hazard, and ``#`` is a comment introducer.
 3. The glyph is canonical data, identical in every language, so shipping
-   it in 51 packs would be 51 copies of a constant. Consumers read it
+   it in every pack would be one copy of a constant per pack. Consumers read it
    from :data:`SYMBOLS` here and join on the slug.
 """
 

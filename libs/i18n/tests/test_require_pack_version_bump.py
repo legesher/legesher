@@ -168,7 +168,7 @@ def test_a_bump_that_moves_only_pyproject_is_refused(
 def test_fix_bumps_both_declarations_together(
     repo: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """--fix is what makes a 51-pack regeneration one command, not 51 edits."""
+    """--fix is what makes a whole-tree regeneration one command, not one edit per pack."""
     _point_gate_at(repo, monkeypatch)
     (repo / CONTENT).write_text("keywords:\n  for: para\n", encoding="utf-8")
 

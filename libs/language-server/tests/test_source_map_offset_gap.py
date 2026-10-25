@@ -28,7 +28,7 @@ def test_proportional_interior_mapping_round_trips():
     # A span that changes length (7 -> 3) makes interior positions map
     # proportionally; round-tripping an interior position is lossy today. The
     # deferred rework fixes both the rounding and the UTF-16-vs-str unit gap
-    # (the latter only bites non-BMP text, which all 51 scripts avoid).
+    # (the latter only bites non-BMP text, which every shipped pack avoids).
     mapping = PositionMapping(
         original_start=Position(0, 0),
         original_end=Position(0, 7),  # "definir"

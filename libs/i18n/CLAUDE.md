@@ -344,7 +344,7 @@ The canonical inventory is **code**, in `legesher_i18n/vocabulary_definitions.py
 — identical in every language, so there is one place to change it and nothing
 to keep in sync. `scripts/seed_vocabulary.py` projects it into the DB and seeds
 the `en` values (English is seeded, never generated);
-`scripts/translate/generate_vocabulary.py` fills the other 50 from a
+`scripts/translate/generate_vocabulary.py` fills every other locale from a
 linguist-framed prompt. Sections are optional but all-or-nothing: the exporter
 skips an incomplete one rather than shipping it half-filled.
 

@@ -1038,7 +1038,7 @@ async function selectLanguage(context: vscode.ExtensionContext): Promise<void> {
         };
     };
 
-    // Known languages first, under a separator: on a 51-language list this is
+    // Known languages first, under a separator: on a list this long it is
     // the difference between a picker you scan and one you search (CORE-1760).
     // The known set is seeded from the working language, so the first section
     // is never empty.

@@ -754,7 +754,7 @@ class TestUnreadableExistingPack:
     def test_bulk_export_does_not_swallow_the_error(
         self, exporter, temp_db, temp_output_dir
     ):
-        """A corrupt pack must not be reduced to a log line in a 51-pack
+        """A corrupt pack must not be reduced to a log line in a whole-tree
         run — export_all reports data-integrity failures."""
         _populate_full_language(temp_db, "es")
         exporter.export_language("es", overwrite=True)
@@ -963,7 +963,7 @@ class TestInterpreterFloorTiering:
     ):
         """The majority real-world pattern must not be blocked.
 
-        22 of the 51 shipped packs spell the two ``type`` slots (3.10
+        22 shipped packs spell the two ``type`` slots (3.10
         builtin, 3.12 soft keyword) differently. One slot adopting a
         conjunct spelling strips onto the other's — but it is the SAME
         term name, which ``db.find_collisions`` deliberately does not

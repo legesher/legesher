@@ -1,7 +1,7 @@
 # Pack Vocabulary Prompt (CORE-1396)
 
 Specification for filling the two vocabulary sections of a language pack —
-`symbols` and `variable_conventions` — for the 51 supported languages.
+`symbols` and `variable_conventions` — for every supported language.
 Companion to `implicit_params_prompt.md`, and deliberately shaped the same
 way: conceptual framing first, hard invariants second, template third,
 provenance last.
@@ -193,7 +193,7 @@ authoritative.
 ## Review status
 
 Values generated this way enter at the **experimental** tier, which is
-where all 51 language packs already sit and where model generation is the
+where every shipped language pack sits today and where model generation is the
 norm. Native review rides the standing review queue; it is not a
 precondition for the values existing, and it is not part of CORE-1396.
 
@@ -205,5 +205,5 @@ signal than confidence scores.
 
 - v1 (CORE-1396): linguist-framed, one call per language covering both
   sections together. Batching the two is deliberate — they share the
-  script/formatting profile, and one call per language keeps the run at 51
-  calls rather than 2,448.
+  script/formatting profile, and batching keeps the run at one call per
+  language rather than one per entry.

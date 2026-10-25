@@ -15,7 +15,7 @@ Language Server Protocol (LSP) implementation for IDE integration, built on pygl
 
 - **Four LSP Providers**: Hover, Completion, Diagnostic, Semantic Tokens
 - **Enhanced Python intelligence**: real-time code translation proxy
-- **Multi-Language**: Supports all 51 experimental languages
+- **Multi-Language**: Supports all 56 experimental languages
 - **Configuration**: Environment variable and Pydantic-based config
 - **pygls 2.0**: Latest LSP library for Python 3.13 compatibility
 

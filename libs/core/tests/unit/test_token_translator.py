@@ -304,7 +304,7 @@ class TestReservedWordTranslation:
     def test_from_language_pack_picks_up_implicit_params(self):
         """from_language_pack reads pack.implicit_params and threads to mapper.
 
-        Post-CORE-710: all 51 packs ship implicit_params with self/cls.
+        Post-CORE-710: every pack ships implicit_params with self/cls.
         This test confirms the wire-up: from_language_pack reads pack.implicit_params
         and forwards it to the TokenMapper so translation lookups succeed.
         """

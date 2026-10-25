@@ -2,7 +2,7 @@
 
 > Language Server Protocol implementation for multilingual Python programming
 
-**Status**: Pre-Beta | **Python**: 3.10-3.14 | **Languages**: 51 | **Version**: see `pyproject.toml`
+**Status**: Pre-Beta | **Python**: 3.10-3.14 | **Languages**: 56 | **Version**: see `pyproject.toml`
 
 ## Overview
 

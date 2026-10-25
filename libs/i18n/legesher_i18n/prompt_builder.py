@@ -589,7 +589,7 @@ class PromptBuilder:
         #   1. Style guide's ``script.has_case_distinction`` (if set
         #      explicitly to True/False, that wins).
         #   2. ``languages.json``'s ``has_case_distinction`` field --
-        #      single source of truth for the 51 supported languages.
+        #      single source of truth for the supported languages.
         #   3. Default True (case-distinguishing) for unknown languages.
         # Empirically: gemma3:12b on hi (no specific style guide) used
         # to default to ``True`` and produced Latin transliteration

@@ -1,6 +1,6 @@
 # 🗣️ Choose Your Language
 
-Select from **51 supported languages**:
+Select from **56 supported languages**:
 
 | Language | Native Name |
 |----------|-------------|
@@ -17,6 +17,6 @@ Select from **51 supported languages**:
 | Russian | Русский |
 | Spanish | Español |
 
-...and 39 more!
+...and 44 more!
 
 You can change your language anytime via the status bar or command palette.

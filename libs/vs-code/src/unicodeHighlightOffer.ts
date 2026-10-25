@@ -112,9 +112,9 @@ function highlightConfig(resource?: vscode.Uri): vscode.WorkspaceConfiguration {
  * The pack characters VS Code would flag, computed once per language.
  *
  * Memoized because the caller runs on every editor switch and the answer is a
- * property of the pack, which does not change while the window is open. Thirty-
- * four of the fifty-one packs derive an empty set, and that emptiness is the
- * cheapest early exit there is.
+ * property of the pack, which does not change while the window is open. Most
+ * packs derive an empty set, and that emptiness is the cheapest early exit
+ * there is.
  */
 function derivedFor(extensionPath: string, language: string): readonly string[] {
     const cached = derivedByLanguage.get(language);

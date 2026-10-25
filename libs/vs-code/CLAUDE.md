@@ -14,14 +14,14 @@ VS Code extension providing multilingual Python coding support via LSP client.
 ## Key Capabilities
 
 - **LSP Client**: Connects to `legesher-language-server`
-- **Language Selector**: Quick-pick menu listing all active languages from the registry (currently 51)
+- **Language Selector**: Quick-pick menu listing all active languages from the registry (currently 56)
 - **Translation Panel**: Side-by-side code comparison
 - **Synchronized Scrolling**: Both panes scroll together
 - **Status Indicators**: Connection status and current language
 - **Telemetry**: Privacy-focused usage tracking
 - **Feedback System**: Two-stage prompting with GitHub integration
 
-**Note**: The extension supports all 51 languages via `getActiveLanguages()` from the generated language registry.
+**Note**: The extension supports all 56 languages via `getActiveLanguages()` from the generated language registry.
 
 ## Directory Structure
 
@@ -80,7 +80,7 @@ In VS Code settings (`settings.json`):
 
 ```json
 {
-  "legesher.workingLanguage": "es", // Any of 51 supported languages
+  "legesher.workingLanguage": "es", // Any of 56 supported languages
   "legesher.knownLanguages": ["es", "en"], // Seeded from workingLanguage when empty
   "legesher.sourceLanguage": "en", // Only en currently
   "legesher.languageDetection": "auto", // auto, off

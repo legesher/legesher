@@ -40,7 +40,7 @@ Blocking classes:
 - ``export_failed``    — regenerating a language raised. The export is
   per language and this script's whole product is the report, so an
   uncaught exception would abort the run with no report file and no
-  findings for the other 50 languages — an early-alphabet failure
+  findings for every other language — an early-alphabet failure
   (``am``) would blank the entire matrix. Failures are recorded as this
   blocking class and the run continues.
 
@@ -613,7 +613,7 @@ def main() -> int:
             try:
                 exporter.export_language(lang, overwrite=True, strict=True)
             except Exception as exc:  # noqa: BLE001 - reported, not raised
-                # One unexportable language must not cost the other 50
+                # One unexportable language must not cost every other one
                 # their evidence: an uncaught exception here aborts
                 # before the report is written, and the earlier the
                 # language sorts, the more of the matrix it blanks.

@@ -161,8 +161,8 @@ _XID_ONLY_FROM_CPYTHON_313 = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
 #   with the interpreter, so the whole partition lives in 3.10.yml and the
 #   later files inherit it through ``extends``.
 # * Completeness: OPTIONAL, per section, all-or-nothing. Missing vocabulary
-#   never blocks a pack the way a missing term does — the 51 shipped packs
-#   predate the partition and must keep exporting unchanged — but a
+#   never blocks a pack the way a missing term does — no shipped pack
+#   carries either section yet, and each must keep exporting unchanged — but a
 #   half-filled section is never emitted either. See
 #   ``_build_vocabulary_sections``.
 _PACK_SECTIONS = (
@@ -231,8 +231,8 @@ class BulkExportError(ValueError):
 
     Raised by :meth:`YAMLExporter.export_all_languages` AFTER every other
     language has been exported. Aborting on the first bad language would
-    make the blast radius alphabetical — a corrupt ``am`` would drop all
-    51 packs, a corrupt ``zh`` only one — while each language is already
+    make the blast radius alphabetical — a corrupt ``am`` would drop every
+    pack, a corrupt ``zh`` only one — while each language is already
     written atomically, so continuing costs nothing in safety.
 
     Failures are ranked, not flattened: :attr:`data_integrity` means the
@@ -590,8 +590,8 @@ class YAMLExporter:
         ticket settled on (``db.find_collisions``): the dual-slot ``type``
         term — 3.10 builtin and 3.12 soft keyword — occupies two sections
         but is ONE surface token, so its two slots landing on one stripped
-        spelling is not a round-trip ambiguity. 22 of the 51 shipped packs
-        already spell those two slots differently; keying on
+        spelling is not a round-trip ambiguity. 22 shipped packs already
+        spell those two slots differently; keying on
         ``section.name`` would block every one of them that adopts a
         conjunct spelling for a single slot.
 

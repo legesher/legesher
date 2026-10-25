@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS selected_translations (
 #
 # The canonical inventory (which slugs exist, their glyphs, their English
 # names) lives in ``legesher_i18n/vocabulary_definitions.py``, not here:
-# it is identical in all 51 languages, so it is code, and
+# it is identical in every language, so it is code, and
 # ``scripts/seed_vocabulary.py`` projects it into ``vocabulary_entries``.
 # That is why this table carries no glyph column — a glyph is canonical.
 VOCABULARY_ENTRIES_TABLE = """

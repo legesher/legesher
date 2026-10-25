@@ -189,7 +189,7 @@ export function isUnfamiliarFileLanguage(
  * list's order.
  *
  * The picker shows the known partition first, under a separator: on a
- * 51-language list that is the difference between a picker you scan and one
+ * list this long that is the difference between a picker you scan and one
  * you search.
  */
 export function partitionByKnown<T extends { code: string }>(

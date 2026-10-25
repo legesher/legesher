@@ -48,8 +48,8 @@ For each `(term, language)` pair, in precedence order:
    unmirrored value reverse-translates to `except**`, which does not
    parse. This rule previously *allowed* the mirror without demanding it,
    and nine packs shipped unmirrored values (`ru: кроме` among them) that
-   passed every gate — see CORE-1839. The word itself is free: only 38 of
-   51 packs spell `except*` as their `except` term plus `*`; the rest use
+   passed every gate — see CORE-1839. The word itself is free: most
+   packs spell `except*` as their `except` term plus `*`; the rest use
    a distinct term (`zh: 多重捕获*`) and are equally valid.
 
 2. **Shipped-pack anchor.** If the language already ships a pack value

@@ -189,8 +189,8 @@ nothing for a reader outside the project. A test holds this
 matching the corpus exporter; it is no longer a rule the operator carries.
 
 Before pushing, confirm the card's figures match the artifact rather than any
-milestone or release description — several still say 51 locales where they
-mean something else, and several say 52 where the answer is 51.
+milestone or release description. Those are hand-written and have carried stale
+locale counts in both directions; the artifact and `languages.json` are the answer.
 
 ## Why not the database
 

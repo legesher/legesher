@@ -11,8 +11,8 @@ hold:
 2. The publish gate applies two different regimes: prose for ``symbols``,
    real identifiers for ``variable_conventions``. Each rejects what the
    other must allow.
-3. The pack schema accepts both sections, defaults them empty (so all 51
-   shipped packs validate unchanged), and routes each through its own
+3. The pack schema accepts both sections, defaults them empty (so every
+   shipped pack validates unchanged), and routes each through its own
    validator.
 4. The strict safety layer catches the failures that matter for advice a
    developer types: keywords, shadowed term surfaces, partial sections.
@@ -285,7 +285,7 @@ class TestSchemaField:
 
 class TestSafetyLayer:
     def test_shipped_packs_are_unaffected(self) -> None:
-        # The 51 shipped packs predate the partition. Both sections default
+        # No shipped pack carries either section yet. Both sections default
         # empty, so every new check runs over nothing and finds nothing.
         schema = make_schema(keywords={"def": "definir"})
         findings = SchemaValidator.validate_pack_strict(schema, "es")

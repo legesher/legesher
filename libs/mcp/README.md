@@ -62,7 +62,7 @@ The server needs the Legesher engine. Every language pack ships inside
 uvx legesher-mcp
 ```
 
-Inside the monorepo workspace all 51 packs are already installed:
+Inside the monorepo workspace every shipped pack is already installed:
 
 ```bash
 uv run legesher-mcp
