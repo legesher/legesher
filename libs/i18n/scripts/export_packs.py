@@ -171,6 +171,10 @@ UNTAGGED = "(untagged)"
 #:   the card's prose where no data file changes. 0.4.1 is the second kind:
 #:   every one of the 56 hashed files was byte-identical to 0.4.0
 #:
+#: 0.5.0 is the minor kind: five new locales (uk, sw, ne, tl, xh) take the
+#: dataset from 51 to 56, every row they add is new, and no existing row
+#: changes. The schema is the one 0.4.0 froze.
+#:
 #: Deliberately NOT aligned to ``legesher-i18n``'s version, though the two look
 #: like one product. That number tracks the library, and the pack data ships in
 #: separately versioned distributions: aligning would move this version when
@@ -180,7 +184,7 @@ UNTAGGED = "(untagged)"
 #: Started at 0.1.0 rather than 1.0.0 because every locale is stamped
 #: ``experimental`` with no native-speaker sign-off, and the schema is still
 #: moving. A 0.x says usable-not-settled, which is what the card says in prose.
-DATASET_VERSION = "0.4.1"
+DATASET_VERSION = "0.5.0"
 
 #: Tag shape a published revision is expected to carry, e.g.
 #: ``language-packs-v0.1.0``. The one version string the Hub revision, the

@@ -40,7 +40,7 @@ when they were written.
    uv run python scripts/verify_pack_regen.py --db legesher_i18n/db/translations.db
    ```
 
-   Expect `PASS: regeneration reproduces all 255 shipped pack file(s)`.
+   Expect `PASS: regeneration reproduces all 280 shipped pack file(s)`.
    Informational findings (`comment_lost`, `not_byte_identical`) do not block.
 
 2. **The working tree is clean and carries the release tag.** The manifest
@@ -49,8 +49,8 @@ when they were written.
    wrongly-tagged one leaves it sharing no version string with its release.
 
    The tag is `language-packs-v<DATASET_VERSION>`, matching the version
-   declared in `scripts/export_packs.py` — `language-packs-v0.1.0` for this
-   release. **Semantic, not date-based** (2026-08-28): major for a breaking
+   declared in `scripts/export_packs.py`: `language-packs-v0.5.0` for the
+   0.5.0 release. **Semantic, not date-based** (2026-08-28): major for a breaking
    schema change, minor for new languages, terms or interpreter versions, patch
    for corrections to renderings a release already carried.
 
