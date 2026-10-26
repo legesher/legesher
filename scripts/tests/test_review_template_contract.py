@@ -1,0 +1,624 @@
+"""The review template's consistency contract (CORE-1702).
+
+``scripts/generate_reference_docs.py`` writes one REFERENCE.md per registry
+language. That file is the markdown review template: a reviewer copies it,
+fills the Suggested and Comments columns, and submits it. The contract below
+is what makes a review interpretable later, across pack versions, Python
+versions, languages and dialects:
+
+* every version string comes from one source (the pack's ``pyproject.toml``,
+  its version files, ``version-index.yml``); the hidden line, the heading and
+  the language column agree;
+* the Python axis is explicit: the template shows the newest Python view and
+  every row states the versions its word applies to, with the earlier word
+  where one exists (Sinhala ZWJ forms);
+* every row carries a stable key, the key set equals English's for the same
+  view, and a term a pack lacks is listed, never silently filled with English;
+* values are byte-identical to the pack, RTL terms are single runs;
+* nothing repo-wide is in a template, so regeneration is per pack;
+* a dialect pack marks the rows it inherits from its base.
+
+Expected values are derived from the YAML and the registry in this module,
+independently of the generator's own loader.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import importlib.util
+import json
+import re
+import shutil
+import sys
+import unicodedata
+from pathlib import Path
+
+import pytest
+import yaml
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python 3.10
+    import tomli as tomllib  # type: ignore[import-not-found, no-redef]
+
+from legesher_i18n.intake.review_template import parse_metadata_line
+
+ROOT = Path(__file__).resolve().parents[2]
+PACKS_DIR = ROOT / "libs" / "i18n" / "language-packs" / "python"
+REGISTRY_PATH = ROOT / "libs" / "i18n" / "legesher_i18n" / "languages.json"
+REGISTRY = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))["languages"]
+CODES = sorted(REGISTRY)
+RTL_CODES = [code for code in CODES if REGISTRY[code]["rtl"]]
+VERSION_INDEX = yaml.safe_load(
+    (PACKS_DIR / "version-index.yml").read_text(encoding="utf-8")
+)["python_versions"]
+SECTIONS = ("keywords", "builtins", "exceptions", "implicit_params")
+INDEX_LISTS = {
+    "keywords": "added_keywords",
+    "builtins": "added_builtins",
+    "exceptions": "added_exceptions",
+}
+
+
+def _version_key(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
+
+
+PY_VERSIONS = sorted(VERSION_INDEX, key=_version_key)
+NEWEST = PY_VERSIONS[-1]
+
+
+def _generator():
+    spec = importlib.util.spec_from_file_location(
+        "generate_reference_docs", ROOT / "scripts" / "generate_reference_docs.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    # Registered before exec: the generator's dataclasses resolve their
+    # string annotations through sys.modules[module.__name__].
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+G = _generator()
+
+
+def _version_files(code: str, packs_root: Path = PACKS_DIR) -> list[Path]:
+    (packs_dir,) = list((packs_root / code).glob("legesher_i18n_python_*/packs"))
+    return sorted(packs_dir.glob("3.*.yml"), key=lambda p: _version_key(p.stem))
+
+
+def _layers(code: str, packs_root: Path = PACKS_DIR) -> list[tuple[str, dict]]:
+    """``(python version, raw YAML)`` per version file, oldest first."""
+    return [
+        (path.stem, yaml.safe_load(path.read_text(encoding="utf-8")) or {})
+        for path in _version_files(code, packs_root)
+    ]
+
+
+def _merged(
+    code: str, upto: str = NEWEST, packs_root: Path = PACKS_DIR
+) -> dict[str, str]:
+    """``section.term -> word`` as the files up to *upto* merge, later files winning."""
+    words: dict[str, str] = {}
+    for version, data in _layers(code, packs_root):
+        if _version_key(version) > _version_key(upto):
+            continue
+        for section in SECTIONS:
+            for term, word in (data.get(section) or {}).items():
+                words[f"{section}.{term}"] = str(word)
+    return words
+
+
+def _pyproject(code: str, packs_root: Path = PACKS_DIR) -> dict:
+    with (packs_root / code / "pyproject.toml").open("rb") as handle:
+        return tomllib.load(handle)["project"]
+
+
+def _rows(text: str) -> dict[str, list[str]]:
+    """Key -> stripped cells of every six-cell term row in *text*."""
+    rows: dict[str, list[str]] = {}
+    in_fence = False
+    for line in text.splitlines():
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence or not line.startswith("| `"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) == 6:
+            rows[cells[0].strip("`")] = cells
+    return rows
+
+
+@pytest.fixture(scope="module")
+def english_view():
+    return G.load_pack_view("en")
+
+
+@pytest.fixture(scope="module")
+def views(english_view):
+    return {code: G.load_pack_view(code) for code in CODES}
+
+
+@pytest.fixture(scope="module")
+def templates(views, english_view):
+    return {code: G.render_template(views[code], english_view) for code in CODES}
+
+
+# --- versions -----------------------------------------------------------------
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_view_takes_every_version_from_its_single_source(views, code: str) -> None:
+    view = views[code]
+    project = _pyproject(code)
+    assert view.pack_name == project["name"]
+    assert view.pack_version == project["version"]
+    assert view.python == _version_files(code)[-1].stem == NEWEST
+    assert view.python_versions == tuple(path.stem for path in _version_files(code))
+    assert view.code == code
+    assert view.bcp47 == REGISTRY[code]["bcp47"]
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_hidden_line_heading_and_column_agree(templates, views, code: str) -> None:
+    text = templates[code]
+    view = views[code]
+    meta = parse_metadata_line(text)
+    assert (meta.pack, meta.pack_version, meta.python, meta.code, meta.bcp47) == (
+        view.pack_name,
+        view.pack_version,
+        view.python,
+        code,
+        view.bcp47,
+    )
+    name, native = REGISTRY[code]["name"], REGISTRY[code]["native"]
+    heading = f"# {name} ({native}) · {view.pack_name} {view.pack_version} · Python {view.python}"
+    assert text.splitlines()[1] == heading
+    column = f"| {name} · {view.pack_version} · Python {view.python} |"
+    assert text.count(column) == len(SECTIONS)
+    # One source: the only x.y.z in the file is the pack version, and the only
+    # Python version literal outside the tables is the view's.
+    assert set(re.findall(r"\b\d+\.\d+\.\d+\b", text)) == {view.pack_version}
+    usage = text.split("## Usage", 1)[1].split("## ", 1)[0]
+    assert f'"{view.python}"' in usage
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_digest_fingerprints_this_packs_version_files(views, code: str) -> None:
+    digest = hashlib.sha256()
+    for path in _version_files(code):
+        digest.update(path.name.encode())
+        digest.update(path.read_bytes())
+    assert views[code].digest == digest.hexdigest()[:12]
+
+
+# --- the Python axis ------------------------------------------------------------
+
+
+def test_index_additions_appear_in_the_english_file_for_that_version() -> None:
+    layers = dict(_layers("en"))
+    for version, info in VERSION_INDEX.items():
+        for section, list_name in INDEX_LISTS.items():
+            for term in info.get(list_name) or []:
+                assert term in (layers[version].get(section) or {}), (
+                    f"version-index says {section}.{term} arrives in {version}, "
+                    f"but en/{version}.yml does not set it"
+                )
+
+
+def _index_additions() -> list[tuple[str, str]]:
+    return [
+        (f"{section}.{term}", version)
+        for version, info in VERSION_INDEX.items()
+        for section, list_name in INDEX_LISTS.items()
+        for term in info.get(list_name) or []
+    ]
+
+
+@pytest.mark.parametrize(("key", "version"), _index_additions())
+@pytest.mark.parametrize("code", CODES)
+def test_added_terms_apply_from_the_version_that_added_them(
+    views, code: str, key: str, version: str
+) -> None:
+    row = views[code].rows_by_key[key]
+    assert _version_key(row.applies_from) >= _version_key(version)
+    if not row.earlier:
+        assert row.applies_from == version
+
+
+def _histories(
+    code: str, packs_root: Path = PACKS_DIR
+) -> dict[str, list[tuple[str, str]]]:
+    """``key -> [(version, word), ...]`` for every distinct consecutive word along the chain."""
+    histories: dict[str, list[tuple[str, str]]] = {}
+    for version, data in _layers(code, packs_root):
+        for section in SECTIONS:
+            for term, word in (data.get(section) or {}).items():
+                history = histories.setdefault(f"{section}.{term}", [])
+                if not history or history[-1][1] != str(word):
+                    history.append((version, str(word)))
+    return histories
+
+
+def _expected_earlier(
+    history: list[tuple[str, str]], versions: list[str]
+) -> tuple[tuple[str, str, str], ...]:
+    return tuple(
+        (version, versions[versions.index(history[index + 1][0]) - 1], word)
+        for index, (version, word) in enumerate(history[:-1])
+    )
+
+
+def _overrides() -> list[tuple[str, str, list[tuple[str, str]]]]:
+    """Every (code, key, history) whose word changes along the chain."""
+    return [
+        (code, key, history)
+        for code in CODES
+        for key, history in _histories(code).items()
+        if len(history) > 1
+    ]
+
+
+OVERRIDES = _overrides()
+
+
+def test_the_shipped_overrides_are_the_ones_this_contract_is_built_on() -> None:
+    # Sinhala's ZWJ rows and Japanese divmod; a new override is fine, but it
+    # must be deliberate, so the set is pinned by language, not by count.
+    assert {code for code, *_ in OVERRIDES} == {"si", "ja"}
+    assert ("si", "keywords.True") in {(code, key) for code, key, *_ in OVERRIDES}
+
+
+@pytest.mark.parametrize(("code", "key", "history"), OVERRIDES)
+def test_an_overridden_word_states_every_range(
+    views, templates, code, key, history
+) -> None:
+    row = views[code].rows_by_key[key]
+    versions = list(views[code].python_versions)
+    assert row.word == history[-1][1]
+    assert row.applies_from == history[-1][0]
+    assert row.earlier == _expected_earlier(history, versions)
+    cells = _rows(templates[code])[key]
+    assert cells[2] == f"`{row.word}`"
+    ranges = "".join(f" ({start} to {end}: `{old}`)" for start, end, old in row.earlier)
+    assert cells[3] == f"{row.applies_from}+{ranges}"
+
+
+def test_sinhala_true_keeps_its_joiner_and_states_the_range(views) -> None:
+    row = views["si"].rows_by_key["keywords.True"]
+    assert "‍" in row.word
+    assert "‍" not in row.earlier[0][2]
+    assert row.earlier[0][0] == PY_VERSIONS[0]
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_unoverridden_rows_state_a_single_open_range(
+    templates, views, code: str
+) -> None:
+    cells = _rows(templates[code])
+    for row in views[code].rows:
+        if not row.earlier and row.inherited_from is None and row.word is not None:
+            assert cells[row.key][3] == f"{row.applies_from}+"
+
+
+def test_a_python_version_view_omits_later_terms_and_earlier_words() -> None:
+    older = PY_VERSIONS[1]
+    view = G.load_pack_view("si", python_version=older)
+    assert view.python == older
+    assert set(view.rows_by_key) == set(_merged("si", upto=older))
+    assert "keywords.type" not in view.rows_by_key
+    true_row = view.rows_by_key["keywords.True"]
+    assert true_row.word == _merged("si", upto=older)["keywords.True"]
+    assert true_row.earlier == ()
+    text = G.render_template(view, G.load_pack_view("en", python_version=older))
+    assert parse_metadata_line(text).python == older
+
+
+# --- languages ---------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_key_set_equals_english_for_the_same_view(
+    views, english_view, code: str
+) -> None:
+    keys = [row.key for row in views[code].rows]
+    assert keys == [row.key for row in english_view.rows]
+    assert all(key.split(".", 1)[0] in SECTIONS for key in keys)
+    assert views[code].lacking == ()
+    assert set(keys) == set(_merged(code))
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_values_are_byte_identical_to_the_pack(templates, code: str) -> None:
+    cells = _rows(templates[code])
+    expected = _merged(code)
+    assert set(cells) == set(expected)
+    for key, word in expected.items():
+        assert cells[key][2] == f"`{word}`"
+        assert unicodedata.normalize("NFC", word) == word
+
+
+@pytest.mark.parametrize(
+    ("code", "key", "check"),
+    [
+        ("si", "keywords.True", lambda w: "‍" in w),
+        (
+            "hi",
+            "keywords.class",
+            lambda w: any(unicodedata.category(c) in {"Mn", "Mc"} for c in w),
+        ),
+        (
+            "th",
+            "keywords.while",
+            lambda w: any(unicodedata.category(c) == "Mn" for c in w),
+        ),
+        ("ar", "keywords.except*", lambda w: w.endswith("*") and "؀" <= w[0] <= "ۿ"),
+        (
+            "he",
+            "builtins.__import__",
+            lambda w: w.startswith("__") and "א" <= w[2] <= "ת",
+        ),
+        ("zh", "keywords.class", lambda w: all("一" <= c <= "鿿" for c in w)),
+    ],
+)
+def test_script_specific_values_survive_rendering(templates, code, key, check) -> None:
+    word = _merged(code)[key]
+    assert check(word), (
+        f"the {code} pack no longer carries the script feature this test pins"
+    )
+    assert _rows(templates[code])[key][2] == f"`{word}`"
+
+
+@pytest.mark.parametrize("code", RTL_CODES)
+def test_rtl_term_cells_are_single_right_to_left_runs(templates, code: str) -> None:
+    # A single strong-RTL run with neutrals only at the edges renders in the
+    # same visual order inside a table cell as on a Python source line.
+    for key, cells in _rows(templates[code]).items():
+        words = [cells[2].strip("`")] + re.findall(r"`([^`]+)`", cells[3])
+        for word in words:
+            word = word.strip("_*")
+            classes = {unicodedata.bidirectional(char) for char in word}
+            assert classes <= {"R", "AL", "NSM", "ON", "BN"}, (key, word, classes)
+            assert classes & {"R", "AL"}, (key, word)
+
+
+def test_a_lacking_term_is_listed_not_filled_with_english(
+    tmp_path: Path, english_view
+) -> None:
+    packs_root = tmp_path / "packs"
+    shutil.copytree(PACKS_DIR / "si", packs_root / "si")
+    shutil.copytree(PACKS_DIR / "en", packs_root / "en")
+    base = packs_root / "si" / "legesher_i18n_python_si" / "packs" / "3.10.yml"
+    data = yaml.safe_load(base.read_text(encoding="utf-8"))
+    del data["keywords"]["while"]
+    base.write_text(
+        yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
+    view = G.load_pack_view("si", packs_root=packs_root)
+    assert view.lacking == ("keywords.while",)
+    row = view.rows_by_key["keywords.while"]
+    assert row.word is None
+    cells = _rows(G.render_template(view, english_view))["keywords.while"]
+    assert cells[2] == "(no word in this pack)"
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_template_carries_nothing_repo_wide(templates, code: str) -> None:
+    text = templates[code]
+    assert not re.search(r"\b[0-9a-f]{40}\b", text)
+    assert not re.search(r"\b\d{4}-\d{2}-\d{2}\b", text)
+    assert str(len(REGISTRY)) + " languages" not in text
+
+
+def test_a_template_is_a_function_of_its_own_pack_only(
+    tmp_path: Path, english_view
+) -> None:
+    packs_root = tmp_path / "packs"
+    shutil.copytree(PACKS_DIR, packs_root)
+    other = packs_root / "de" / "legesher_i18n_python_de" / "packs" / "3.10.yml"
+    other.write_text(
+        other.read_text(encoding="utf-8").replace("wenn", "falls"), encoding="utf-8"
+    )
+    before = G.render_template(G.load_pack_view("si"), english_view)
+    after = G.render_template(
+        G.load_pack_view("si", packs_root=packs_root),
+        G.load_pack_view("en", packs_root=packs_root),
+    )
+    assert before == after
+
+
+# --- dialects --------------------------------------------------------------------
+
+
+def test_a_dialect_pack_marks_the_rows_it_inherits(tmp_path: Path) -> None:
+    packs_root = tmp_path / "packs"
+    shutil.copytree(PACKS_DIR / "es", packs_root / "es")
+    shutil.copytree(PACKS_DIR / "en", packs_root / "en")
+    dialect = packs_root / "es-MX" / "legesher_i18n_python_es_mx" / "packs"
+    dialect.mkdir(parents=True)
+    (packs_root / "es-MX" / "pyproject.toml").write_text(
+        '[project]\nname = "legesher-i18n-python-es-mx"\nversion = "0.0.1"\n',
+        encoding="utf-8",
+    )
+    (dialect / "3.10.yml").write_text(
+        "language: es-MX\ntarget: python\nversion: '3.10'\nkeywords:\n  if: si_mx\n"
+        "builtins:\n  print: imprimir_mx\n",
+        encoding="utf-8",
+    )
+    registry = {
+        **REGISTRY,
+        "es-MX": {**REGISTRY["es"], "name": "Spanish (Mexico)", "bcp47": "es-MX"},
+    }
+    view = G.load_pack_view("es-MX", packs_root=packs_root, registry=registry)
+    assert view.base == "es"
+    assert view.pack_version == "0.0.1"
+    assert view.python == "3.10"
+    own = {row.key for row in view.rows if row.inherited_from is None}
+    assert own == {"keywords.if", "builtins.print"}
+    base_words = _merged("es", upto="3.10")
+    for row in view.rows:
+        if row.inherited_from is not None:
+            assert row.inherited_from == "es"
+            assert row.word == base_words[row.key]
+    assert view.lacking == ()
+    english = G.load_pack_view("en", packs_root=packs_root, python_version="3.10")
+    text = G.render_template(view, english)
+    cells = _rows(text)
+    assert cells["keywords.while"][3] == "3.10+ · inherited from es"
+    assert cells["keywords.if"][3] == "3.10+"
+    # Rendering reads the injected registry, not the global one.
+    assert f"| **ISO 639-2** | `{REGISTRY['es']['iso639_2']}` |" in text
+    assert "| **BCP 47 Tag** | `es-MX` |" in text
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_shipped_packs_inherit_nothing(views, code: str) -> None:
+    assert views[code].base is None
+    assert all(row.inherited_from is None for row in views[code].rows)
+
+
+# --- the template as a whole -----------------------------------------------------------
+
+
+REQUIRED_CONSENT_LINES = [
+    "- [ ] These suggestions and comments are my own work. AI help with formatting is fine; the",
+    "      linguistic judgment is mine.",
+    "- [ ] I sign off under the Developer Certificate of Origin.",
+    "- [ ] I license my suggestions and comments under Apache-2.0.",
+    "- [ ] I agree to the Code of Conduct.",
+    '- [ ] I have read "Your contributions and your data" (CONTRIBUTOR_PRIVACY.md, version 1.0) and agree.',
+    "- [ ] My contribution data may appear in research datasets and publications (never my identity).",
+    "Credit me as (keep one): anonymous · my GitHub handle · this name: `<name>`",
+]
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_consent_block_matches_the_decision_record(templates, code: str) -> None:
+    text = templates[code]
+    for line in REQUIRED_CONSENT_LINES:
+        assert line in text, line
+    assert "- [x]" not in text
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_sections_are_the_same_in_every_language(templates, code: str) -> None:
+    headings = [line for line in templates[code].splitlines() if line.startswith("## ")]
+    assert headings == [
+        "## About you",
+        "## Before you submit",
+        "## Language Details",
+        "## Keywords",
+        "## Built-in Functions",
+        "## Exceptions",
+        "## Reserved Words",
+        "## Example Code",
+        "## Usage",
+        "## Notes for Future Updates",
+        "## How to submit this review",
+    ]
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_footer_points_at_language_packs_not_the_yaml(templates, code: str) -> None:
+    text = templates[code]
+    assert "Edit `legesher_i18n_python_" not in text
+    assert "https://github.com/legesher/language-packs/blob/main/REVIEWING.md" in text
+    bcp47 = REGISTRY[code]["bcp47"]
+    assert f"`reviews/{bcp47}/{bcp47}-<your-github-username>.md`" in text
+    assert "leave the first line of the file and" in text
+    assert "—" not in text
+
+
+def test_generator_writes_exactly_the_registry(tmp_path: Path) -> None:
+    out = tmp_path / "out"
+    G.main(["--out", str(out)])
+    written = {path.parent.name for path in out.glob("*/REFERENCE.md")}
+    assert written == set(REGISTRY)
+    assert {path.name for path in out.iterdir()} == set(REGISTRY)
+
+
+def test_generator_can_write_one_language(tmp_path: Path) -> None:
+    out = tmp_path / "out"
+    G.main(["--out", str(out), "--languages", "si,ja"])
+    assert {path.parent.name for path in out.glob("*/REFERENCE.md")} == {"si", "ja"}
+
+
+def test_a_word_overridden_twice_states_two_ranges(tmp_path: Path) -> None:
+    packs_root = tmp_path / "packs"
+    shutil.copytree(PACKS_DIR / "si", packs_root / "si")
+    shutil.copytree(PACKS_DIR / "en", packs_root / "en")
+    middle = packs_root / "si" / "legesher_i18n_python_si" / "packs" / "3.11.yml"
+    data = yaml.safe_load(middle.read_text(encoding="utf-8"))
+    data.setdefault("keywords", {})["True"] = "සත්යය"
+    middle.write_text(
+        yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
+    view = G.load_pack_view("si", packs_root=packs_root)
+    history = _histories("si", packs_root)["keywords.True"]
+    assert len(history) == 3
+    row = view.rows_by_key["keywords.True"]
+    assert row.earlier == _expected_earlier(history, list(view.python_versions))
+    assert [end for _, end, _ in row.earlier] == ["3.10", "3.12"]
+
+
+def test_a_word_set_before_its_term_arrives_is_refused(tmp_path: Path) -> None:
+    packs_root = tmp_path / "packs"
+    shutil.copytree(PACKS_DIR / "si", packs_root / "si")
+    shutil.copytree(PACKS_DIR / "en", packs_root / "en")
+    base = packs_root / "si" / "legesher_i18n_python_si" / "packs" / "3.10.yml"
+    data = yaml.safe_load(base.read_text(encoding="utf-8"))
+    data["keywords"]["type"] = (
+        "වර්ගය"  # the keyword arrives in 3.12 per version-index.yml
+    )
+    base.write_text(
+        yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match=r"keywords\.type"):
+        G.load_pack_view("si", packs_root=packs_root)
+
+
+@pytest.mark.parametrize(
+    ("tag", "expected"),
+    [
+        ("es-MX", "es"),  # a region variant inherits from its base language
+        (
+            "pa-Arab",
+            None,
+        ),  # a script variant does not: the base is written in another script
+        ("zh-Hans", None),  # no registry language has the bare tag
+        ("fil", None),
+    ],
+)
+def test_only_region_dialects_acquire_a_base(tag: str, expected: str | None) -> None:
+    registry = {**REGISTRY, "pa": {**REGISTRY["hi"], "name": "Punjabi", "bcp47": "pa"}}
+    assert G._base_code(tag, registry) == expected
+
+
+HOOK_PATHS = [
+    "libs/i18n/language-packs/python/si/legesher_i18n_python_si/packs/3.13.yml",
+    "libs/i18n/language-packs/python/si/pyproject.toml",
+    "libs/i18n/language-packs/python/version-index.yml",
+    "libs/i18n/legesher_i18n/languages.json",
+    "libs/i18n/legesher_i18n/intake/review_template.py",
+    "scripts/generate_reference_docs.py",
+]
+
+
+@pytest.mark.parametrize("path", HOOK_PATHS)
+def test_regenerate_hook_fires_on_every_template_input(path: str) -> None:
+    config = yaml.safe_load(
+        (ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    )
+    hooks = [
+        hook
+        for repo in config["repos"]
+        for hook in repo["hooks"]
+        if hook.get("id") == "regenerate-reference-docs"
+    ]
+    assert len(hooks) == 1
+    assert re.search(hooks[0]["files"], path), (
+        f"{path} does not trigger the regenerate hook"
+    )

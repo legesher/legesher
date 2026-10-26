@@ -126,6 +126,17 @@ person, not to a score.
 
 **Partial reviews submit cleanly.** Thirty concepts reviewed well beat 180 rushed.
 
+**Reviewing by file, the markdown lane.** Every pack's `REFERENCE.md` (generated here by
+`scripts/generate_reference_docs.py`, mirrored to preview-repo and to language-packs) is also
+its review template: the term tables carry empty `Suggested` and `Comments` columns, and the header
+pins the pack version and Python view the words come from. Copy it into the language-packs
+repository as `reviews/<tag>/<tag>-<your-github-username>.md` (`<tag>` is the language's
+BCP 47 tag; the template names the exact path), fill in the rows you have an opinion on, and open a
+pull request there. The lane's rules (the row vocabulary, the rule that a review of the same pack
+version updates the file and a version bump starts a new one, the consent block) live in one place,
+[language-packs REVIEWING.md](https://github.com/legesher/language-packs/blob/main/REVIEWING.md);
+this guide does not repeat them.
+
 **Models review too, and their opinion is worth zero.** We use language models to propose candidates,
 and we also let them review: ranking, annotating, flagging things worth a human's attention. Machine
 reviews are labeled as machine reviews everywhere they appear, and they carry **zero weight toward

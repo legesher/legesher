@@ -11,6 +11,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Every pack's `REFERENCE.md` is now its markdown review template.** The
+  generator (`scripts/generate_reference_docs.py`) stamps a hidden first line
+  pinning the pack version, the Python view, the registry code and BCP 47
+  tag and a digest of the pack's version files; the heading and the language
+  column name the same versions. Every term row carries a stable key
+  (`keywords.True`, `exceptions.valueerror`), the current word, an
+  `Applies to` column stating the Python versions the word covers (with the
+  earlier word where a later version file overrides it, as Sinhala's ZWJ
+  forms do on 3.13+), and empty `Suggested` and `Comments` columns. The
+  consent and attestation block, an About you section, Notes for Future
+  Updates and a footer pointing reviewers at
+  `reviews/<bcp47>/<bcp47>-<github-username>.md` in language-packs
+  replace the edit-the-YAML footer. English gets a file too. A dialect pack
+  marks the rows it inherits from its base language. `--languages` and
+  `--python-version` select packs and the Python view. The regenerate hook
+  also fires on a pack `pyproject.toml`, the version index and the
+  generator, and `make check-generated` fails on a version bump without a
+  regeneration. `legesher_i18n.intake.review_template` reads the hidden line
+  back, derives the bundle `kit_version`, and refuses a review pinned to a
+  pack version, Python version or locale that does not exist.
 - **Swahili (`sw`), Nepali (`ne`), Filipino (`tl`) and Xhosa (`xh`) ship.**
   Each pack is regenerated DB-first from 184 selections made by an idempotent
   backfill (`scripts/translate/backfill_core2477.py`, `_core2478`,

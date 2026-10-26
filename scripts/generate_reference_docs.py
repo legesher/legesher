@@ -1,29 +1,98 @@
-#!/usr/bin/env python3
-"""Generate REFERENCE.md files for all language packs.
+"""Generate REFERENCE.md, the review template, for every registry language.
 
-This script creates side-by-side comparison guides for developers
-who want to code in their native language using Legesher.
+Each ``libs/i18n/language-packs/python/<code>/REFERENCE.md`` is both the
+readable reference for a pack and the markdown review template for it: a
+reviewer copies the file into the language-packs repository as
+``reviews/<bcp47>/<bcp47>-<github-username>.md``, fills the Suggested
+and Comments columns, and opens a pull request. The same bytes are mirrored to
+preview-repo (``languages/<code>/REFERENCE.md``) and language-packs
+(``reference/<bcp47>.md``).
 
 By default the files are written in place, next to each pack. ``--out DIR``
-writes ``DIR/<lang>/REFERENCE.md`` instead, which is how
+writes ``DIR/<code>/REFERENCE.md`` instead, which is how
 ``make check-generated-reference`` regenerates into a temporary tree and diffs
-against the committed files (CORE-2415).
+against the committed files (CORE-2415). ``--languages si,ja`` restricts the
+run; ``--python-version 3.11`` renders the view at that Python version instead
+of the newest one.
+
+The consistency contract (scripts/tests/test_review_template_contract.py
+enforces every line):
+
+Versions
+  * Every version string in a template comes from one source: the pack version
+    from that pack's ``pyproject.toml``, the Python versions from the pack's
+    version files, the version a term arrives in from ``version-index.yml``.
+    No literal anywhere.
+  * The hidden first line, the heading and the language column header agree.
+    A version bump without regeneration fails ``make check-generated``.
+  * The template shows the newest Python view of the pack (its highest version
+    file, merged along the ``extends:`` chain). Every row states the versions
+    its word applies to, and where an earlier Python version uses a different
+    word (Sinhala ZWJ forms on 3.13+), the row shows that word and its range.
+    ``--python-version`` renders any other view the same way.
+  * The review pin a file carries is checked by
+    ``legesher_i18n.intake.review_template.check_review_pin``.
+
+Languages
+  * Every row carries a stable key, ``<yaml section>.<yaml key>``
+    (``keywords.True``, ``exceptions.valueerror``), never the English display
+    text; a row means the same term in every language.
+  * Every language has the same sections and the same key set as English for
+    the same Python view. A term a pack lacks is listed with an empty word and
+    recorded in ``PackView.lacking``; it is never filled with English.
+  * Templates exist for exactly the registry's languages.
+  * Values are written byte-identical to the pack (NFC as stored, joiners
+    kept). RTL terms are single right-to-left runs, so they render in the
+    same order in a table cell as on a source line.
+
+Dialects and locale identity
+  * The review folder and file name follow the registry's BCP 47 tag; the
+    hidden line carries both ``code`` and ``bcp47``, so a parser never guesses.
+  * A dialect pack (``es-MX`` beside ``es``) marks every row it inherits from
+    its base language (``TermRow.inherited_from``); its own rows are unmarked.
+
+Regeneration is per pack: a template's bytes depend only on its own pack's
+inputs and ``FORMAT_VERSION``. Nothing repo-wide (no commit SHA, no date, no
+language count) goes in, so changing one pack rewrites one template.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import re
+from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python 3.10
+    import tomli as tomllib  # type: ignore[import-not-found, no-redef]
+
+from legesher_i18n.intake.review_template import (
+    FORMAT_VERSION,
+    TemplateMetadata,
+    render_metadata_line,
+    review_file_name,
+    review_folder,
+)
 
 # Paths
 ROOT = Path(__file__).parent.parent
 I18N_DIR = ROOT / "libs" / "i18n"
 PACKS_DIR = I18N_DIR / "language-packs" / "python"
 LANGUAGES_JSON = I18N_DIR / "legesher_i18n" / "languages.json"
-
+VERSION_INDEX = PACKS_DIR / "version-index.yml"
+SECTIONS = ("keywords", "builtins", "exceptions", "implicit_params")
+INDEX_LISTS = {
+    "keywords": "added_keywords",
+    "builtins": "added_builtins",
+    "exceptions": "added_exceptions",
+}
+LANGUAGE_PACKS_URL = "https://github.com/legesher/language-packs"
 # Script (writing system) for each language
 # Based on Aya/Cohere documentation and Unicode CLDR
 LANGUAGE_SCRIPTS = {
@@ -259,6 +328,23 @@ EXAMPLE_TEXT = {
         "msg_count": "Μετρητής:",
         "msg_error": "Σφάλμα:",
         "msg_done": "Ολοκληρώθηκε!",
+    },
+    "en": {
+        "factorial": "factorial",
+        "main": "main",
+        "numbers": "numbers",
+        "num": "num",
+        "result": "result",
+        "count": "count",
+        "error_var": "error",
+        "docstring": "Calculate the factorial of n.",
+        "comment_example": "Example: factorial function with error handling",
+        "comment_while": "Demonstrate a while loop",
+        "comment_try": "Demonstrate try/except",
+        "msg_negative": "Negative numbers are not allowed",
+        "msg_count": "Count:",
+        "msg_error": "Error:",
+        "msg_done": "Done!",
     },
     "es": {
         "factorial": "factorial",
@@ -1045,51 +1131,328 @@ def get_packs_dir(lang_code: str) -> Path:
     return PACKS_DIR / lang_code / f"legesher_i18n_python_{lang_code}" / "packs"
 
 
+def find_packs_dir(code: str, packs_root: Path = PACKS_DIR) -> Path:
+    """The ``packs`` directory of a pack under *packs_root*.
+
+    The package directory is ``legesher_i18n_python_<code>`` for every shipped
+    pack; a dialect pack whose code is not a Python identifier (``es-MX``)
+    normalises it, so a single ``legesher_i18n_python_*`` match is accepted.
+    """
+    exact = packs_root / code / f"legesher_i18n_python_{code}" / "packs"
+    if exact.is_dir():
+        return exact
+    matches = sorted((packs_root / code).glob("legesher_i18n_python_*/packs"))
+    if len(matches) == 1:
+        return matches[0]
+    raise FileNotFoundError(f"Packs directory not found: {exact}")
+
+
+def _version_key(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
+
+
+def version_layers(packs_dir: Path) -> list[tuple[str, dict]]:
+    """``(python version, raw YAML)`` per version file, oldest first."""
+    files = sorted(packs_dir.glob("3.*.yml"), key=lambda p: _version_key(p.stem))
+    if not files:
+        raise FileNotFoundError(f"No version files found in {packs_dir}")
+    return [(path.stem, load_yaml(path) or {}) for path in files]
+
+
 def load_merged_pack(lang_code: str) -> dict:
     """Load and merge all YAML files for a language pack.
 
     This merges all version files (3.10.yml, 3.11.yml, etc.) to get
-    the complete set of keywords, builtins, and exceptions.
+    the complete set of keywords, builtins, and exceptions; a later file
+    overrides an earlier word, which is the newest Python view.
     """
-    packs_dir = get_packs_dir(lang_code)
-
-    if not packs_dir.exists():
-        raise FileNotFoundError(f"Packs directory not found: {packs_dir}")
-
-    # Find all version YAML files
-    version_files = sorted(packs_dir.glob("3.*.yml"))
-
-    if not version_files:
-        raise FileNotFoundError(f"No version files found in {packs_dir}")
-
-    # Merge all versions (base + additions from each version)
-    merged = {
-        "keywords": {},
-        "builtins": {},
-        "exceptions": {},
-        "implicit_params": {},
-    }
-
-    for version_file in version_files:
-        data = load_yaml(version_file)
-
-        # Merge keywords
-        if "keywords" in data and data["keywords"]:
-            merged["keywords"].update(data["keywords"])
-
-        # Merge builtins
-        if "builtins" in data and data["builtins"]:
-            merged["builtins"].update(data["builtins"])
-
-        # Merge exceptions
-        if "exceptions" in data and data["exceptions"]:
-            merged["exceptions"].update(data["exceptions"])
-
-        # Merge implicit_params (CORE-710: self, cls)
-        if "implicit_params" in data and data["implicit_params"]:
-            merged["implicit_params"].update(data["implicit_params"])
-
+    merged: dict[str, dict] = {section: {} for section in SECTIONS}
+    for _version, data in version_layers(find_packs_dir(lang_code)):
+        for section in SECTIONS:
+            if data.get(section):
+                merged[section].update(data[section])
     return merged
+
+
+def pack_digest(packs_dir: Path) -> str:
+    """First 12 hex digits of a SHA-256 over this pack's version files, by name."""
+    digest = hashlib.sha256()
+    for path in sorted(packs_dir.glob("3.*.yml"), key=lambda p: _version_key(p.stem)):
+        digest.update(path.name.encode())
+        digest.update(path.read_bytes())
+    return digest.hexdigest()[:12]
+
+
+def _pyproject_project(pack_root: Path) -> dict:
+    with (pack_root / "pyproject.toml").open("rb") as handle:
+        return tomllib.load(handle)["project"]
+
+
+def pack_version_from_pyproject(pack_root: Path) -> str:
+    """The pack's version, from its own ``pyproject.toml`` and nowhere else."""
+    return str(_pyproject_project(pack_root)["version"])
+
+
+def pack_distribution_name(pack_root: Path) -> str:
+    """The pack's distribution name (``legesher-i18n-python-si``) from ``pyproject.toml``."""
+    return str(_pyproject_project(pack_root)["name"])
+
+
+def _term_arrivals(index_path: Path = VERSION_INDEX) -> tuple[str, dict[str, str]]:
+    """The base Python version and ``key -> version`` for every term the index adds later."""
+    index = load_yaml(index_path)["python_versions"]
+    versions = sorted(index, key=_version_key)
+    arrivals: dict[str, str] = {}
+    for version in versions:
+        for section, list_name in INDEX_LISTS.items():
+            for term in index[version].get(list_name) or []:
+                arrivals[f"{section}.{term}"] = version
+    return versions[0], arrivals
+
+
+@dataclass(frozen=True)
+class TermRow:
+    """One term of one pack in one Python view."""
+
+    key: str
+    section: str
+    term: str
+    english: str
+    word: str | None
+    applies_from: str
+    earlier: tuple[tuple[str, str, str], ...]
+    inherited_from: str | None
+
+
+@dataclass(frozen=True)
+class PackView:
+    """A pack's words at one Python version, with every version string it needs."""
+
+    code: str
+    bcp47: str
+    name: str
+    native: str
+    rtl: bool
+    iso639_2: str
+    status: str
+    pack_name: str
+    pack_version: str
+    python: str
+    python_versions: tuple[str, ...]
+    digest: str
+    rows: tuple[TermRow, ...]
+    lacking: tuple[str, ...]
+    base: str | None
+
+    @property
+    def rows_by_key(self) -> dict[str, TermRow]:
+        return {row.key: row for row in self.rows}
+
+    @property
+    def metadata(self) -> TemplateMetadata:
+        return TemplateMetadata(
+            format=FORMAT_VERSION,
+            pack=self.pack_name,
+            pack_version=self.pack_version,
+            python=self.python,
+            code=self.code,
+            bcp47=self.bcp47,
+            digest=self.digest,
+        )
+
+    def section_rows(self, section: str) -> list[TermRow]:
+        return [row for row in self.rows if row.section == section]
+
+
+def _word_histories(
+    layers: list[tuple[str, dict]], upto: str
+) -> dict[str, list[tuple[str, str]]]:
+    """``key -> [(version, word), ...]`` for every distinct word along the chain up to *upto*."""
+    histories: dict[str, list[tuple[str, str]]] = {}
+    for version, data in layers:
+        if _version_key(version) > _version_key(upto):
+            continue
+        for section in SECTIONS:
+            for term, word in (data.get(section) or {}).items():
+                key = f"{section}.{term}"
+                history = histories.setdefault(key, [])
+                if not history or history[-1][1] != str(word):
+                    history.append((version, str(word)))
+    return histories
+
+
+def _row_from_history(
+    key: str,
+    english: str,
+    history: list[tuple[str, str]],
+    versions: list[str],
+    base_version: str,
+    arrivals: dict[str, str],
+    inherited_from: str | None,
+) -> TermRow:
+    section, term = key.split(".", 1)
+    term_from = arrivals.get(key, base_version)
+    first_version = history[0][0]
+    if _version_key(first_version) < _version_key(term_from):
+        raise ValueError(
+            f"{key} is set in {first_version}.yml but the term arrives in Python {term_from}"
+            " (version-index.yml); a word cannot predate its term"
+        )
+    word_from, word = history[-1]
+    earlier: list[tuple[str, str, str]] = []
+    for index, (version, old_word) in enumerate(history[:-1]):
+        next_version = history[index + 1][0]
+        before = versions[versions.index(next_version) - 1]
+        earlier.append((version, before, old_word))
+    applies_from = word_from
+    return TermRow(
+        key=key,
+        section=section,
+        term=term,
+        english=english,
+        word=word,
+        applies_from=applies_from,
+        earlier=tuple(earlier),
+        inherited_from=inherited_from,
+    )
+
+
+_TAG_RE = re.compile(
+    r"^(?P<language>[a-z]{2,3})(?:-(?P<script>[A-Z][a-z]{3}))?(?:-(?P<region>[A-Z]{2}|\d{3}))?$"
+)
+
+
+def _base_code(bcp47: str, registry: dict) -> str | None:
+    """The registry language a region dialect inherits from, if the registry has one.
+
+    Only a region subtag makes a dialect (``es-MX`` from ``es``, ``zh-Hans-TW``
+    from ``zh-Hans``). A script subtag never does: ``pa-Arab`` must not inherit
+    Gurmukhi words from ``pa``.
+    """
+    match = _TAG_RE.match(bcp47)
+    if match is None or match.group("region") is None:
+        return None
+    base_tag = match.group("language")
+    if match.group("script"):
+        base_tag += "-" + match.group("script")
+    by_tag = {entry["bcp47"]: code for code, entry in registry.items()}
+    return by_tag.get(base_tag)
+
+
+def load_pack_view(
+    code: str,
+    *,
+    packs_root: Path = PACKS_DIR,
+    registry: dict | None = None,
+    python_version: str | None = None,
+) -> PackView:
+    """Build the view of one pack at one Python version.
+
+    *python_version* defaults to the pack's newest version file. The key set is
+    English's at the same version; a key the pack lacks becomes a row with no
+    word and an entry in ``lacking``. A dialect pack takes the rows it does not
+    define from its base language, marked ``inherited_from``.
+    """
+    languages = registry if registry is not None else load_languages()
+    info = languages[code]
+    pack_root = packs_root / code
+    packs_dir = find_packs_dir(code, packs_root)
+    layers = version_layers(packs_dir)
+    versions = [version for version, _ in layers]
+    python = python_version if python_version is not None else versions[-1]
+    if python not in versions:
+        raise ValueError(
+            f"{code} has no {python}.yml version file (has {', '.join(versions)})"
+        )
+    index_path = packs_root / "version-index.yml"
+    base_version, arrivals = _term_arrivals(
+        index_path if index_path.is_file() else VERSION_INDEX
+    )
+
+    canonical = json.loads(LANGUAGES_JSON.read_text(encoding="utf-8"))[
+        "canonical_language"
+    ]
+    english_layers = version_layers(find_packs_dir(canonical, packs_root))
+    english = _word_histories(english_layers, python)
+    own = _word_histories(layers, python)
+
+    base = _base_code(info["bcp47"], languages)
+    base_histories: dict[str, list[tuple[str, str]]] = {}
+    base_versions: list[str] = []
+    if base is not None:
+        base_layers = version_layers(find_packs_dir(base, packs_root))
+        base_versions = [version for version, _ in base_layers]
+        base_histories = _word_histories(base_layers, python)
+
+    rows: list[TermRow] = []
+    lacking: list[str] = []
+    for section in SECTIONS:
+        keys = sorted(
+            (key for key in english if key.startswith(section + ".")),
+            key=lambda k: k.split(".", 1)[1].lower(),
+        )
+        for key in keys:
+            english_word = english[key][-1][1]
+            if key in own:
+                rows.append(
+                    _row_from_history(
+                        key,
+                        english_word,
+                        own[key],
+                        versions,
+                        base_version,
+                        arrivals,
+                        None,
+                    )
+                )
+            elif key in base_histories:
+                rows.append(
+                    _row_from_history(
+                        key,
+                        english_word,
+                        base_histories[key],
+                        base_versions,
+                        base_version,
+                        arrivals,
+                        base,
+                    )
+                )
+            else:
+                lacking.append(key)
+                rows.append(
+                    TermRow(
+                        key=key,
+                        section=section,
+                        term=key.split(".", 1)[1],
+                        english=english_word,
+                        word=None,
+                        applies_from=max(
+                            arrivals.get(key, base_version),
+                            versions[0],
+                            key=_version_key,
+                        ),
+                        earlier=(),
+                        inherited_from=None,
+                    )
+                )
+
+    return PackView(
+        code=code,
+        bcp47=info["bcp47"],
+        name=info["name"],
+        native=info["native"],
+        rtl=bool(info.get("rtl", False)),
+        iso639_2=str(info.get("iso639_2", "")),
+        status=str(info.get("status", "experimental")),
+        pack_name=pack_distribution_name(pack_root),
+        pack_version=pack_version_from_pyproject(pack_root),
+        python=python,
+        python_versions=tuple(versions),
+        digest=pack_digest(packs_dir),
+        rows=tuple(rows),
+        lacking=tuple(lacking),
+        base=base,
+    )
 
 
 def generate_example_code(
@@ -1111,101 +1474,113 @@ def generate_example_code(
     example = f'''```python
 # {txt["comment_example"]}
 
-{kw.get('from', 'from')} typing {kw.get('import', 'import')} Optional
+{kw.get("from", "from")} typing {kw.get("import", "import")} Optional
 
-{kw.get('def', 'def')} {txt["factorial"]}(n):
+{kw.get("def", "def")} {txt["factorial"]}(n):
     """{txt["docstring"]}"""
-    {kw.get('if', 'if')} n < 0:
-        {kw.get('raise', 'raise')} {value_error}("{txt["msg_negative"]}")
-    {kw.get('elif', 'elif')} n == 0 {kw.get('or', 'or')} n == 1:
-        {kw.get('return', 'return')} 1
-    {kw.get('else', 'else')}:
-        {kw.get('return', 'return')} n * {txt["factorial"]}(n - 1)
+    {kw.get("if", "if")} n < 0:
+        {kw.get("raise", "raise")} {value_error}("{txt["msg_negative"]}")
+    {kw.get("elif", "elif")} n == 0 {kw.get("or", "or")} n == 1:
+        {kw.get("return", "return")} 1
+    {kw.get("else", "else")}:
+        {kw.get("return", "return")} n * {txt["factorial"]}(n - 1)
 
-{kw.get('def', 'def')} {txt["main"]}():
-    {txt["numbers"]} = [{bl.get('int', 'int')}(x) {kw.get('for', 'for')} x {kw.get('in', 'in')} {bl.get('range', 'range')}(6)]
+{kw.get("def", "def")} {txt["main"]}():
+    {txt["numbers"]} = [{bl.get("int", "int")}(x) {kw.get("for", "for")} x {kw.get("in", "in")} {bl.get("range", "range")}(6)]
 
-    {kw.get('for', 'for')} {txt["num"]} {kw.get('in', 'in')} {txt["numbers"]}:
+    {kw.get("for", "for")} {txt["num"]} {kw.get("in", "in")} {txt["numbers"]}:
         {txt["result"]} = {txt["factorial"]}({txt["num"]})
-        {bl.get('print', 'print')}(f"{{{txt["num"]}}}! = {{{txt["result"]}}}")
+        {bl.get("print", "print")}(f"{{{txt["num"]}}}! = {{{txt["result"]}}}")
 
     # {txt["comment_while"]}
     {txt["count"]} = 0
-    {kw.get('while', 'while')} {txt["count"]} < 3:
-        {bl.get('print', 'print')}(f"{txt["msg_count"]} {{{txt["count"]}}}")
+    {kw.get("while", "while")} {txt["count"]} < 3:
+        {bl.get("print", "print")}(f"{txt["msg_count"]} {{{txt["count"]}}}")
         {txt["count"]} += 1
 
     # {txt["comment_try"]}
-    {kw.get('try', 'try')}:
+    {kw.get("try", "try")}:
         {txt["factorial"]}(-1)
-    {kw.get('except', 'except')} {value_error} {kw.get('as', 'as')} {txt["error_var"]}:
-        {bl.get('print', 'print')}(f"{txt["msg_error"]} {{{txt["error_var"]}}}")
-    {kw.get('finally', 'finally')}:
-        {bl.get('print', 'print')}("{txt["msg_done"]}")
+    {kw.get("except", "except")} {value_error} {kw.get("as", "as")} {txt["error_var"]}:
+        {bl.get("print", "print")}(f"{txt["msg_error"]} {{{txt["error_var"]}}}")
+    {kw.get("finally", "finally")}:
+        {bl.get("print", "print")}("{txt["msg_done"]}")
 
-{kw.get('if', 'if')} __name__ == "__main__":
+{kw.get("if", "if")} __name__ == "__main__":
     {txt["main"]}()
 ```'''
     return example
 
 
-def generate_reference_md(
-    lang_code: str, lang_info: dict, pack_data: dict, english_data: dict
-) -> str:
-    """Generate REFERENCE.md content for a language pack."""
-    name = lang_info["name"]
-    native = lang_info["native"]
-    rtl = lang_info.get("rtl", False)
+def _applies_to(row: TermRow) -> str:
+    cell = f"{row.applies_from}+"
+    for start, end, old_word in row.earlier:
+        cell += f" ({start} to {end}: `{old_word}`)"
+    if row.inherited_from is not None:
+        cell += f" · inherited from {row.inherited_from}"
+    return cell
 
-    keywords = pack_data.get("keywords", {})
-    builtins = pack_data.get("builtins", {})
-    exceptions = pack_data.get("exceptions", {})
-    implicit_params = pack_data.get("implicit_params", {})
 
-    en_keywords = english_data.get("keywords", {})
-    en_builtins = english_data.get("builtins", {})
-    en_exceptions = english_data.get("exceptions", {})
-    en_implicit_params = english_data.get("implicit_params", {})
+def _term_table(view: PackView, section: str) -> str:
+    column = f"{view.name} · {view.pack_version} · Python {view.python}"
+    lines = [
+        f"| Key | English | {column} | Applies to | Suggested | Comments |",
+        f"| --- | ------- | {'-' * len(column)} | ---------- | --------- | -------- |",
+    ]
+    for row in view.section_rows(section):
+        word = f"`{row.word}`" if row.word is not None else "(no word in this pack)"
+        lines.append(
+            f"| `{row.key}` | `{row.english}` | {word} | {_applies_to(row)} | | |"
+        )
+    return "\n".join(lines)
 
-    # Build keyword table (sorted alphabetically by English)
-    keyword_rows = []
-    for eng_kw in sorted(en_keywords.keys(), key=str.lower):
-        trans = keywords.get(eng_kw, eng_kw)
-        keyword_rows.append(f"| `{eng_kw}` | `{trans}` |")
 
-    # Build builtin table (sorted alphabetically)
-    builtin_rows = []
-    for eng_bl in sorted(en_builtins.keys(), key=str.lower):
-        trans = builtins.get(eng_bl, eng_bl)
-        builtin_rows.append(f"| `{eng_bl}` | `{trans}` |")
+SECTION_TITLES = {
+    "keywords": "Keywords",
+    "builtins": "Built-in Functions",
+    "exceptions": "Exceptions",
+    "implicit_params": "Reserved Words",
+}
 
-    # Build exception table (sorted alphabetically)
-    exception_rows = []
-    for eng_ex in sorted(en_exceptions.keys(), key=str.lower):
-        trans = exceptions.get(eng_ex, eng_ex)
-        exception_rows.append(f"| `{eng_ex}` | `{trans}` |")
 
-    # Build implicit-param table (CORE-710: self, cls). Sorted alphabetically.
-    implicit_param_rows = []
-    for eng_rw in sorted(en_implicit_params.keys(), key=str.lower):
-        trans = implicit_params.get(eng_rw, eng_rw)
-        implicit_param_rows.append(f"| `{eng_rw}` | `{trans}` |")
+def render_template(view: PackView, english_view: PackView) -> str:
+    """The REFERENCE.md of *view*, also its review template.
 
-    # Generate example code
-    example = generate_example_code(lang_code, keywords, builtins, exceptions)
+    *english_view* is the English view at the same Python version; rendering
+    refuses a pair whose key sets differ, so a template can never show a key
+    set that is not English's.
+    """
+    own_keys = [row.key for row in view.rows]
+    english_keys = [row.key for row in english_view.rows]
+    if own_keys != english_keys:
+        raise ValueError(
+            f"{view.code} rows do not match the English view at Python {view.python}: "
+            f"{sorted(set(own_keys) ^ set(english_keys))}"
+        )
 
-    # Language metadata
-    iso639_2 = lang_info.get("iso639_2", "")
-    bcp47 = lang_info.get("bcp47", lang_code)
-    status = lang_info.get("status", "experimental")
-    script = LANGUAGE_SCRIPTS.get(lang_code, "Unknown")
+    name, native, code = view.name, view.native, view.code
+    folder = review_folder(code, view.bcp47)
+    first_file = review_file_name(folder, "<your-github-username>")
+    bumped_file = review_file_name(folder, "<your-github-username>", "<pack-version>")
 
-    # Status badge color
+    words = {
+        section: {
+            row.term: row.word
+            for row in view.section_rows(section)
+            if row.word is not None
+        }
+        for section in SECTIONS
+    }
+    example = generate_example_code(
+        code, words["keywords"], words["builtins"], words["exceptions"]
+    )
+
+    iso639_2 = view.iso639_2
+    status = view.status
+    script = LANGUAGE_SCRIPTS.get(code, "Unknown")
     status_color = "yellow" if status == "experimental" else "brightgreen"
-
-    # Build badge line
     badges = (
-        f"![Legesher](https://img.shields.io/badge/Legesher-{lang_code}-blue?"
+        f"![Legesher](https://img.shields.io/badge/Legesher-{code}-blue?"
         f"style=for-the-badge&logo=python&logoColor=white)\n"
         f"![Script](https://img.shields.io/badge/Script-"
         f"{script.replace(' ', '%20').replace('(', '%28').replace(')', '%29').replace(',', '%2C')}"
@@ -1213,28 +1588,92 @@ def generate_reference_md(
         f"![Status](https://img.shields.io/badge/Status-{status.capitalize()}-"
         f"{status_color}?style=for-the-badge)"
     )
-    if rtl:
-        badges += (
-            "\n![RTL](https://img.shields.io/badge/Direction-RTL-orange?"
-            "style=for-the-badge)"
+    if view.rtl:
+        badges += "\n![RTL](https://img.shields.io/badge/Direction-RTL-orange?style=for-the-badge)"
+
+    rtl_note = ""
+    if view.rtl:
+        rtl_note = (
+            "\n>\n> **Note:** This is a right-to-left (RTL) language. RTL support is a work in\n"
+            "> progress; the words below render in the same order a Python source line shows\n"
+            "> them."
         )
 
-    # Build blockquote section
-    blockquote = (
-        f"> Write Python code in {name}. This guide shows the {name} keywords\n"
-        f"> to use for Legesher to understand your code."
+    older = [v for v in view.python_versions if v != view.python]
+    if older:
+        coverage = (
+            f"The pack also covers Python {older[0]}"
+            + (f" to {older[-1]}" if len(older) > 1 else "")
+            + ". Where an earlier Python version uses a different word, the\n"
+            '"Applies to" column shows that word and its versions.'
+        )
+    else:
+        coverage = f"Python {view.python} is the only version this pack covers so far."
+
+    base_note = ""
+    if view.base is not None:
+        base_note = (
+            f"\n\nThis is a dialect pack. Rows marked `inherited from {view.base}` carry the"
+            f" `{view.base}` word unchanged; a review of this file is a review of"
+            f" `{view.pack_name}`, not of `{view.base}`."
+        )
+
+    lacking_note = ""
+    if view.lacking:
+        lacking_note = (
+            "\n\nTerms this pack has no word for yet (listed so the row still exists): "
+            + ", ".join(f"`{key}`" for key in view.lacking)
+            + "."
+        )
+
+    sections = "\n\n".join(
+        f"## {SECTION_TITLES[section]}\n\n{_section_intro(section, name, view)}\n\n{_term_table(view, section)}"
+        for section in SECTIONS
     )
-    if rtl:
-        blockquote += (
-            "\n>\n> **Note:** This is a right-to-left (RTL) language. "
-            "RTL support is currently a work in progress — we welcome your feedback!"
-        )
 
-    content = f"""# {name} ({native}) - Python Quick Reference
+    return f"""{render_metadata_line(view.metadata)}
+# {name} ({native}) · {view.pack_name} {view.pack_version} · Python {view.python}
 
 {badges}
 
-{blockquote}
+> Write Python code in {name}. This guide shows the {name} words Legesher
+> understands for Python's keywords, built-in functions, exceptions and
+> reserved words, as shipped in `{view.pack_name}` {view.pack_version}.{rtl_note}
+
+This file is also the review template for this pack. To review it, copy this file to
+`reviews/{folder}/{first_file}` in the
+[language-packs repository]({LANGUAGE_PACKS_URL}), fill in the Suggested and
+Comments columns for the terms you want to review, and open a pull request. Untouched rows
+mean "no opinion". The full guide is
+[REVIEWING.md]({LANGUAGE_PACKS_URL}/blob/main/REVIEWING.md).
+
+The words shown are the Python {view.python} view of this pack, its newest version file.
+{coverage}{base_note}{lacking_note}
+
+## About you
+
+- GitHub username: `<your-github-username>` (must be the account that opens the pull request)
+- Your relationship to {name} (keep one): native speaker · fluent · professional · learning
+
+## Before you submit
+
+Required:
+
+- [ ] These suggestions and comments are my own work. AI help with formatting is fine; the
+      linguistic judgment is mine.
+- [ ] I sign off under the Developer Certificate of Origin.
+- [ ] I license my suggestions and comments under Apache-2.0.
+- [ ] I agree to the Code of Conduct.
+- [ ] I have read "Your contributions and your data" (CONTRIBUTOR_PRIVACY.md, version 1.0) and agree.
+
+Optional:
+
+- [ ] My contribution data may appear in research datasets and publications (never my identity).
+
+Credit me as (keep one): anonymous · my GitHub handle · this name: `<name>`
+
+Do not put an email address in this file. It is public. To reach us privately, write to
+<contribute@legesher.com>.
 
 ## Language Details
 
@@ -1243,45 +1682,14 @@ def generate_reference_md(
 | **Language** | {name} |
 | **Native Name** | {native} |
 | **Script** | {script} |
-| **ISO 639-1** | `{lang_code}` |
+| **Pack** | `{view.pack_name}` {view.pack_version} |
+| **Python view** | {view.python} (version files: {", ".join(view.python_versions)}) |
 | **ISO 639-2** | `{iso639_2}` |
-| **BCP 47 Tag** | `{bcp47}` |
-| **Text Direction** | {"Right-to-Left (RTL)" if rtl else "Left-to-Right (LTR)"} |
+| **BCP 47 Tag** | `{view.bcp47}` |
+| **Text Direction** | {"Right-to-Left (RTL)" if view.rtl else "Left-to-Right (LTR)"} |
 | **Status** | {status.capitalize()} |
 
-## Keywords ({len(keywords)} terms)
-
-These are Python's reserved words translated to {name}.
-
-| English | {name} |
-| ------- | ------ |
-{chr(10).join(keyword_rows)}
-
-## Built-in Functions ({len(builtins)} terms)
-
-Python's built-in functions and types in {name}.
-
-| English | {name} |
-| ------- | ------ |
-{chr(10).join(builtin_rows)}
-
-## Exceptions ({len(exceptions)} terms)
-
-Exception classes for error handling.
-
-| English | {name} |
-| ------- | ------ |
-{chr(10).join(exception_rows)}
-
-## Reserved Words ({len(implicit_param_rows)} terms)
-
-Python conventions like `self` and `cls` translated deterministically by the
-language pack rather than the LLM. Distinct from keywords because they aren't
-actual keywords in the Python language. (CORE-710)
-
-| English | {name} |
-| ------- | ------ |
-{chr(10).join(implicit_param_rows)}
+{sections}
 
 ## Example Code
 
@@ -1294,34 +1702,60 @@ Here's an example showing {name} Python code with Legesher:
 ```python
 from legesher_i18n import LanguagePackLoader
 
-# Load {name} pack for Python 3.12
+# Load the {name} pack for Python {view.python}
 loader = LanguagePackLoader()
-pack = loader.load("{lang_code}", "python", "3.12")
+pack = loader.load("{code}", "python", "{view.python}")
 
 # Translate code
 from legesher import translate
-english_code = translate(your_{lang_code}_code, from_lang="{lang_code}", to_lang="en")
+english_code = translate(your_{code.replace("-", "_")}_code, from_lang="{code}", to_lang="en")
 ```
 
-## Contributing
+## Notes for Future Updates
 
-Found a better translation? We welcome contributions from native speakers!
+Language-wide observations: word order, register, how compounds join. Write them here when you
+review; they often matter more than any single word.
 
-1. Edit `legesher_i18n_python_{lang_code}/packs/<version>.yml` for the Python version where the term was introduced:
-   - `3.10.yml` - Base translations (most terms)
-   - `3.11.yml` - Terms added in Python 3.11 (e.g., `except*`)
-   - `3.12.yml` - Terms added in Python 3.12 (e.g., `type`)
-   - `3.13.yml` / `3.14.yml` - Future additions
-2. Submit a pull request with your reasoning
-3. Translations should be natural, commonly used in CS education, and easy to type
+## How to submit this review
+
+1. Copy this file to `reviews/{folder}/{first_file}` in
+   [language-packs]({LANGUAGE_PACKS_URL}). The username in the name must be the account that
+   opens the pull request.
+2. For each term you have an opinion on: `✓` in Comments endorses the current word; `Keep` plus a
+   note endorses it with a recorded limitation; a word in Suggested plus your reasoning in Comments
+   proposes a replacement. Leave the other rows untouched, and leave the first line of the file and
+   the Key, English, current-word and Applies to columns as they are: the importer reads them.
+3. Fill in "About you", tick the boxes under "Before you submit", and open a pull request with one
+   language per pull request. Sign your commits off (`git commit -s`).
+4. A second review of the same pack version updates your existing file. After a pack version bump,
+   start a new file named `{bumped_file}` from the regenerated template.
+
+The guide is [REVIEWING.md]({LANGUAGE_PACKS_URL}/blob/main/REVIEWING.md); the folder rules are in
+[reviews/README.md]({LANGUAGE_PACKS_URL}/blob/main/reviews/README.md).
 """
-    return content
+
+
+def _section_intro(section: str, name: str, view: PackView) -> str:
+    count = sum(1 for row in view.section_rows(section) if row.word is not None)
+    if section == "keywords":
+        return (
+            f"These are Python's reserved words translated to {name} ({count} terms)."
+        )
+    if section == "builtins":
+        return f"Python's built-in functions and types in {name} ({count} terms)."
+    if section == "exceptions":
+        return f"Exception classes for error handling ({count} terms)."
+    return (
+        f"Python conventions like `self` and `cls` translated deterministically by the\n"
+        f"language pack rather than the LLM ({count} terms). Distinct from keywords because they\n"
+        "aren't actual keywords in the Python language."
+    )
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse the command line; with no arguments the files are written in place."""
     parser = argparse.ArgumentParser(
-        description="Generate REFERENCE.md for all language packs."
+        description="Generate REFERENCE.md, the review template, for every registry language."
     )
     parser.add_argument(
         "--out",
@@ -1329,63 +1763,62 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         metavar="DIR",
         help=(
-            "write DIR/<lang>/REFERENCE.md instead of the in-tree files; "
+            "write DIR/<code>/REFERENCE.md instead of the in-tree files; "
             "make check-generated-reference uses this to diff a fresh "
             "regeneration against the committed files"
         ),
+    )
+    parser.add_argument(
+        "--languages",
+        default=None,
+        metavar="CODES",
+        help="comma-separated registry codes to generate (default: every registry language)",
+    )
+    parser.add_argument(
+        "--python-version",
+        default=None,
+        metavar="X.Y",
+        help="render the view at this Python version instead of each pack's newest version file",
     )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Generate REFERENCE.md for all non-English language packs."""
+    """Generate REFERENCE.md for every registry language (or ``--languages``)."""
     args = parse_args(argv)
     out_root = args.out if args.out is not None else PACKS_DIR
     languages = load_languages()
-
-    # Load merged English pack (all versions combined)
-    try:
-        english_data = load_merged_pack("en")
-    except FileNotFoundError as e:
-        print(f"Error loading English pack: {e}")
-        return
+    codes = sorted(languages)
+    if args.languages:
+        codes = [code.strip() for code in args.languages.split(",") if code.strip()]
+        unknown = [code for code in codes if code not in languages]
+        if unknown:
+            raise SystemExit(f"not in the language registry: {', '.join(unknown)}")
 
     generated = []
     errors = []
+    english_views: dict[str, PackView] = {}
 
-    for lang_code in sorted(languages.keys()):
-        if lang_code == "en":
-            continue  # Skip English (it's the reference)
-
-        packs_dir = get_packs_dir(lang_code)
+    for lang_code in codes:
         output_path = out_root / lang_code / "REFERENCE.md"
-
-        if not packs_dir.exists():
-            errors.append(f"  {lang_code}: Packs directory not found at {packs_dir}")
-            continue
-
         try:
-            # Load merged pack data (all versions combined)
-            pack_data = load_merged_pack(lang_code)
-            content = generate_reference_md(
-                lang_code, languages[lang_code], pack_data, english_data
-            )
-
+            view = load_pack_view(lang_code, python_version=args.python_version)
+            if view.python not in english_views:
+                english_views[view.python] = load_pack_view(
+                    "en", python_version=view.python
+                )
+            content = render_template(view, english_views[view.python])
             if args.out is not None:
                 output_path.parent.mkdir(parents=True, exist_ok=True)
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(content)
-
-            # Count totals from merged data
-            kw_count = len(pack_data.get("keywords", {}))
-            bl_count = len(pack_data.get("builtins", {}))
-            ex_count = len(pack_data.get("exceptions", {}))
-
+            counts = {section: len(view.section_rows(section)) for section in SECTIONS}
             generated.append(
-                f"  {lang_code}: {languages[lang_code]['name']} "
-                f"({kw_count} kw, {bl_count} builtins, {ex_count} exceptions)"
+                f"  {lang_code}: {view.name} {view.pack_version} "
+                f"({counts['keywords']} kw, {counts['builtins']} builtins, "
+                f"{counts['exceptions']} exceptions)"
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - every language is reported, then the run fails
             errors.append(f"  {lang_code}: Error - {e}")
 
     print(f"Generated {len(generated)} REFERENCE.md files:")
@@ -1396,6 +1829,7 @@ def main(argv: list[str] | None = None) -> None:
         print(f"\nErrors ({len(errors)}):")
         for e in errors:
             print(e)
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

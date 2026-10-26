@@ -6,22 +6,21 @@ tables: ``LANGUAGE_SCRIPTS`` (the Script row and badge) and ``EXAMPLE_TEXT``
 missing from either does not fail the generator. It falls back to "Unknown" and
 to Spanish, which is how the first Ukrainian REFERENCE.md shipped a Spanish
 example under a Ukrainian heading. This module reads the registry the
-generator serves and requires both entries for every published language.
+generator serves and requires both entries for every published language,
+English included: its REFERENCE.md is the review template like any other.
 """
 
 from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "libs" / "i18n" / "legesher_i18n" / "languages.json"
-
-#: The canonical language ships no REFERENCE.md, so it needs no example text.
-CANONICAL = json.loads(REGISTRY.read_text(encoding="utf-8"))["canonical_language"]
 
 
 def _generator():
@@ -30,6 +29,9 @@ def _generator():
     )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
+    # Registered before exec: the generator's dataclasses resolve their
+    # string annotations through sys.modules[module.__name__].
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -46,7 +48,7 @@ def test_language_has_a_script(code: str) -> None:
     )
 
 
-@pytest.mark.parametrize("code", [c for c in LANGUAGES if c != CANONICAL])
+@pytest.mark.parametrize("code", LANGUAGES)
 def test_language_has_example_text(code: str) -> None:
     assert code in GENERATOR.EXAMPLE_TEXT, (
         f"{code!r} is published but has no EXAMPLE_TEXT entry; its "

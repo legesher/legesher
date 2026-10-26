@@ -64,7 +64,10 @@ repos:
   hooks:
   - id: markdownlint
     args: [--fix]
-    exclude: ^(\.claude/|libs/i18n/context/|libs/i18n/docs/|libs/vs-code/|scripts/|docs/src/content/|docs/development/)
+    # The pack REFERENCE.md files are generated (scripts/generate_reference_docs.py)
+    # and their shape is pinned by scripts/tests/test_review_template_contract.py;
+    # a --fix pass over them would only create drift for make check-generated.
+    exclude: ^(\.claude/|libs/i18n/context/|libs/i18n/docs/|libs/i18n/language-packs/python/[^/]+/REFERENCE\.md|libs/vs-code/|scripts/|docs/src/content/|docs/development/)
 
   # YAML formatting
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
@@ -169,9 +172,13 @@ repos:
     name: Check internal dependency version bounds
     pass_filenames: false
 
-  # Regenerate REFERENCE.md when language pack YAML files change
+  # Regenerate REFERENCE.md (the review template) when a pack's YAML, its
+  # pyproject.toml version, the version index, the registry, the metadata-line
+  # module or the generator changes: the
+  # template pins the pack version in its header, so a bump without a
+  # regeneration is drift (make check-generated-reference catches it in CI).
   - entry: uv run python scripts/generate_reference_docs.py
-    files: ^libs/i18n/language-packs/.*/packs/.*\.yml$
+    files: ^(libs/i18n/language-packs/.*/packs/.*\.yml|libs/i18n/language-packs/python/[^/]+/pyproject\.toml|libs/i18n/language-packs/python/version-index\.yml|libs/i18n/legesher_i18n/languages\.json|libs/i18n/legesher_i18n/intake/review_template\.py|scripts/generate_reference_docs\.py)$
     id: regenerate-reference-docs
     language: system
     name: Regenerate Reference Documentation

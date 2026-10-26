@@ -1,11 +1,49 @@
-# Japanese (日本語) - Python Quick Reference
+<!-- legesher-review-template format=1 pack=legesher-i18n-python-ja pack_version=0.0.4 python=3.14 code=ja bcp47=ja digest=fa73695f494c -->
+# Japanese (日本語) · legesher-i18n-python-ja 0.0.4 · Python 3.14
 
 ![Legesher](https://img.shields.io/badge/Legesher-ja-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Script](https://img.shields.io/badge/Script-Japanese%20%28Kanji%2C%20Hiragana%2C%20Katakana%29-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Experimental-yellow?style=for-the-badge)
 
-> Write Python code in Japanese. This guide shows the Japanese keywords
-> to use for Legesher to understand your code.
+> Write Python code in Japanese. This guide shows the Japanese words Legesher
+> understands for Python's keywords, built-in functions, exceptions and
+> reserved words, as shipped in `legesher-i18n-python-ja` 0.0.4.
+
+This file is also the review template for this pack. To review it, copy this file to
+`reviews/ja/ja-<your-github-username>.md` in the
+[language-packs repository](https://github.com/legesher/language-packs), fill in the Suggested and
+Comments columns for the terms you want to review, and open a pull request. Untouched rows
+mean "no opinion". The full guide is
+[REVIEWING.md](https://github.com/legesher/language-packs/blob/main/REVIEWING.md).
+
+The words shown are the Python 3.14 view of this pack, its newest version file.
+The pack also covers Python 3.10 to 3.13. Where an earlier Python version uses a different word, the
+"Applies to" column shows that word and its versions.
+
+## About you
+
+- GitHub username: `<your-github-username>` (must be the account that opens the pull request)
+- Your relationship to Japanese (keep one): native speaker · fluent · professional · learning
+
+## Before you submit
+
+Required:
+
+- [ ] These suggestions and comments are my own work. AI help with formatting is fine; the
+      linguistic judgment is mine.
+- [ ] I sign off under the Developer Certificate of Origin.
+- [ ] I license my suggestions and comments under Apache-2.0.
+- [ ] I agree to the Code of Conduct.
+- [ ] I have read "Your contributions and your data" (CONTRIBUTOR_PRIVACY.md, version 1.0) and agree.
+
+Optional:
+
+- [ ] My contribution data may appear in research datasets and publications (never my identity).
+
+Credit me as (keep one): anonymous · my GitHub handle · this name: `<name>`
+
+Do not put an email address in this file. It is public. To reach us privately, write to
+<contribute@legesher.com>.
 
 ## Language Details
 
@@ -14,225 +52,226 @@
 | **Language** | Japanese |
 | **Native Name** | 日本語 |
 | **Script** | Japanese (Kanji, Hiragana, Katakana) |
-| **ISO 639-1** | `ja` |
+| **Pack** | `legesher-i18n-python-ja` 0.0.4 |
+| **Python view** | 3.14 (version files: 3.10, 3.11, 3.12, 3.13, 3.14) |
 | **ISO 639-2** | `jpn` |
 | **BCP 47 Tag** | `ja` |
 | **Text Direction** | Left-to-Right (LTR) |
 | **Status** | Experimental |
 
-## Keywords (39 terms)
+## Keywords
 
-These are Python's reserved words translated to Japanese.
+These are Python's reserved words translated to Japanese (39 terms).
 
-| English | Japanese |
-| ------- | ------ |
-| `and` | `そして` |
-| `as` | `作為` |
-| `assert` | `アサーション` |
-| `async` | `非同期` |
-| `await` | `待機` |
-| `break` | `中断する` |
-| `case` | `ケース` |
-| `class` | `クラス` |
-| `continue` | `継続する` |
-| `def` | `定義する` |
-| `del` | `削除` |
-| `elif` | `それ以外もし` |
-| `else` | `それ以外の場合` |
-| `except` | `除く` |
-| `except*` | `除く*` |
-| `False` | `偽` |
-| `finally` | `ついに` |
-| `for` | `ループ` |
-| `from` | `から` |
-| `global` | `グローバル` |
-| `if` | `もし` |
-| `import` | `インポート` |
-| `in` | `含む` |
-| `is` | `である` |
-| `lambda` | `ラムダ` |
-| `match` | `マッチ` |
-| `None` | `なし` |
-| `nonlocal` | `非ローカル` |
-| `not` | `ない` |
-| `or` | `または` |
-| `pass` | `無し` |
-| `raise` | `エラーをスローする` |
-| `return` | `戻り値` |
-| `True` | `真` |
-| `try` | `試す` |
-| `type` | `型` |
-| `while` | `条件ループ` |
-| `with` | `文脈` |
-| `yield` | `生成する` |
+| Key | English | Japanese · 0.0.4 · Python 3.14 | Applies to | Suggested | Comments |
+| --- | ------- | ------------------------------ | ---------- | --------- | -------- |
+| `keywords.and` | `and` | `そして` | 3.10+ | | |
+| `keywords.as` | `as` | `作為` | 3.10+ | | |
+| `keywords.assert` | `assert` | `アサーション` | 3.10+ | | |
+| `keywords.async` | `async` | `非同期` | 3.10+ | | |
+| `keywords.await` | `await` | `待機` | 3.10+ | | |
+| `keywords.break` | `break` | `中断する` | 3.10+ | | |
+| `keywords.case` | `case` | `ケース` | 3.10+ | | |
+| `keywords.class` | `class` | `クラス` | 3.10+ | | |
+| `keywords.continue` | `continue` | `継続する` | 3.10+ | | |
+| `keywords.def` | `def` | `定義する` | 3.10+ | | |
+| `keywords.del` | `del` | `削除` | 3.10+ | | |
+| `keywords.elif` | `elif` | `それ以外もし` | 3.10+ | | |
+| `keywords.else` | `else` | `それ以外の場合` | 3.10+ | | |
+| `keywords.except` | `except` | `除く` | 3.10+ | | |
+| `keywords.except*` | `except*` | `除く*` | 3.11+ | | |
+| `keywords.False` | `False` | `偽` | 3.10+ | | |
+| `keywords.finally` | `finally` | `ついに` | 3.10+ | | |
+| `keywords.for` | `for` | `ループ` | 3.10+ | | |
+| `keywords.from` | `from` | `から` | 3.10+ | | |
+| `keywords.global` | `global` | `グローバル` | 3.10+ | | |
+| `keywords.if` | `if` | `もし` | 3.10+ | | |
+| `keywords.import` | `import` | `インポート` | 3.10+ | | |
+| `keywords.in` | `in` | `含む` | 3.10+ | | |
+| `keywords.is` | `is` | `である` | 3.10+ | | |
+| `keywords.lambda` | `lambda` | `ラムダ` | 3.10+ | | |
+| `keywords.match` | `match` | `マッチ` | 3.10+ | | |
+| `keywords.None` | `None` | `なし` | 3.10+ | | |
+| `keywords.nonlocal` | `nonlocal` | `非ローカル` | 3.10+ | | |
+| `keywords.not` | `not` | `ない` | 3.10+ | | |
+| `keywords.or` | `or` | `または` | 3.10+ | | |
+| `keywords.pass` | `pass` | `無し` | 3.10+ | | |
+| `keywords.raise` | `raise` | `エラーをスローする` | 3.10+ | | |
+| `keywords.return` | `return` | `戻り値` | 3.10+ | | |
+| `keywords.True` | `True` | `真` | 3.10+ | | |
+| `keywords.try` | `try` | `試す` | 3.10+ | | |
+| `keywords.type` | `type` | `型` | 3.12+ | | |
+| `keywords.while` | `while` | `条件ループ` | 3.10+ | | |
+| `keywords.with` | `with` | `文脈` | 3.10+ | | |
+| `keywords.yield` | `yield` | `生成する` | 3.10+ | | |
 
-## Built-in Functions (73 terms)
+## Built-in Functions
 
-Python's built-in functions and types in Japanese.
+Python's built-in functions and types in Japanese (73 terms).
 
-| English | Japanese |
-| ------- | ------ |
-| `__import__` | `__インポート__` |
-| `abs` | `絶対値` |
-| `aiter` | `非同期イテレーター` |
-| `all` | `すべて` |
-| `anext` | `非同期イテレーターから次の項目を取得する` |
-| `any` | `任意` |
-| `ascii` | `アスキー` |
-| `bin` | `バイナリ` |
-| `bool` | `ブール値` |
-| `breakpoint` | `ブレークポイント` |
-| `bytearray` | `バイト配列` |
-| `bytes` | `バイト` |
-| `callable` | `可呼び` |
-| `chr` | `文字` |
-| `classmethod` | `クラスメソッド` |
-| `compile` | `コンパイル` |
-| `complex` | `複素数` |
-| `delattr` | `削除属性` |
-| `dict` | `辞書` |
-| `dir` | `ディレクトリ` |
-| `divmod` | `ディビジョン・モジュール` |
-| `ellipsis` | `省略記号` |
-| `enumerate` | `イテレート` |
-| `eval` | `評価` |
-| `exec` | `実行する` |
-| `filter` | `フィルタ` |
-| `float` | `浮動小数点数` |
-| `format` | `書式設定` |
-| `frozenset` | `フロゼンスイート` |
-| `getattr` | `属性を取得する` |
-| `globals` | `グローバル変数` |
-| `hasattr` | `有属性` |
-| `hash` | `ハッシュ` |
-| `help` | `ヘルプ` |
-| `hex` | `ヘクス` |
-| `id` | `オブジェクトの識別子` |
-| `input` | `入力` |
-| `int` | `整数` |
-| `isinstance` | `インスタンスチェック` |
-| `issubclass` | `サブクラスであるかどうかを確認する` |
-| `iter` | `反復` |
-| `len` | `長さ` |
-| `list` | `リスト` |
-| `locals` | `ローカル変数` |
-| `map` | `マップ` |
-| `max` | `最大値` |
-| `memoryview` | `メモリビュー` |
-| `min` | `最小値` |
-| `next` | `次の` |
-| `notimplemented` | `未実装` |
-| `object` | `オブジェクト` |
-| `oct` | `八進数` |
-| `open` | `開く` |
-| `ord` | `ユニコードの文字コードを返す` |
-| `pow` | `べき乗` |
-| `print` | `印刷` |
-| `property` | `プロパティ` |
-| `range` | `範囲` |
-| `repr` | `レプリケーション` |
-| `reversed` | `逆順` |
-| `round` | `丸める` |
-| `set` | `セット` |
-| `setattr` | `属性を設定する` |
-| `slice` | `スライス` |
-| `sorted` | `並べ替えられた` |
-| `staticmethod` | `静的メソッド` |
-| `str` | `文字列` |
-| `sum` | `合計` |
-| `super` | `スーパー` |
-| `tuple` | `タプル` |
-| `type` | `型` |
-| `vars` | `変数` |
-| `zip` | `ジップ` |
+| Key | English | Japanese · 0.0.4 · Python 3.14 | Applies to | Suggested | Comments |
+| --- | ------- | ------------------------------ | ---------- | --------- | -------- |
+| `builtins.__import__` | `__import__` | `__インポート__` | 3.10+ | | |
+| `builtins.abs` | `abs` | `絶対値` | 3.10+ | | |
+| `builtins.aiter` | `aiter` | `非同期イテレーター` | 3.10+ | | |
+| `builtins.all` | `all` | `すべて` | 3.10+ | | |
+| `builtins.anext` | `anext` | `非同期イテレーターから次の項目を取得する` | 3.10+ | | |
+| `builtins.any` | `any` | `任意` | 3.10+ | | |
+| `builtins.ascii` | `ascii` | `アスキー` | 3.10+ | | |
+| `builtins.bin` | `bin` | `バイナリ` | 3.10+ | | |
+| `builtins.bool` | `bool` | `ブール値` | 3.10+ | | |
+| `builtins.breakpoint` | `breakpoint` | `ブレークポイント` | 3.10+ | | |
+| `builtins.bytearray` | `bytearray` | `バイト配列` | 3.10+ | | |
+| `builtins.bytes` | `bytes` | `バイト` | 3.10+ | | |
+| `builtins.callable` | `callable` | `可呼び` | 3.10+ | | |
+| `builtins.chr` | `chr` | `文字` | 3.10+ | | |
+| `builtins.classmethod` | `classmethod` | `クラスメソッド` | 3.10+ | | |
+| `builtins.compile` | `compile` | `コンパイル` | 3.10+ | | |
+| `builtins.complex` | `complex` | `複素数` | 3.10+ | | |
+| `builtins.delattr` | `delattr` | `削除属性` | 3.10+ | | |
+| `builtins.dict` | `dict` | `辞書` | 3.10+ | | |
+| `builtins.dir` | `dir` | `ディレクトリ` | 3.10+ | | |
+| `builtins.divmod` | `divmod` | `ディビジョン・モジュール` | 3.13+ (3.10 to 3.12: `ディビジョンモジュール`) | | |
+| `builtins.ellipsis` | `ellipsis` | `省略記号` | 3.10+ | | |
+| `builtins.enumerate` | `enumerate` | `イテレート` | 3.10+ | | |
+| `builtins.eval` | `eval` | `評価` | 3.10+ | | |
+| `builtins.exec` | `exec` | `実行する` | 3.10+ | | |
+| `builtins.filter` | `filter` | `フィルタ` | 3.10+ | | |
+| `builtins.float` | `float` | `浮動小数点数` | 3.10+ | | |
+| `builtins.format` | `format` | `書式設定` | 3.10+ | | |
+| `builtins.frozenset` | `frozenset` | `フロゼンスイート` | 3.10+ | | |
+| `builtins.getattr` | `getattr` | `属性を取得する` | 3.10+ | | |
+| `builtins.globals` | `globals` | `グローバル変数` | 3.10+ | | |
+| `builtins.hasattr` | `hasattr` | `有属性` | 3.10+ | | |
+| `builtins.hash` | `hash` | `ハッシュ` | 3.10+ | | |
+| `builtins.help` | `help` | `ヘルプ` | 3.10+ | | |
+| `builtins.hex` | `hex` | `ヘクス` | 3.10+ | | |
+| `builtins.id` | `id` | `オブジェクトの識別子` | 3.10+ | | |
+| `builtins.input` | `input` | `入力` | 3.10+ | | |
+| `builtins.int` | `int` | `整数` | 3.10+ | | |
+| `builtins.isinstance` | `isinstance` | `インスタンスチェック` | 3.10+ | | |
+| `builtins.issubclass` | `issubclass` | `サブクラスであるかどうかを確認する` | 3.10+ | | |
+| `builtins.iter` | `iter` | `反復` | 3.10+ | | |
+| `builtins.len` | `len` | `長さ` | 3.10+ | | |
+| `builtins.list` | `list` | `リスト` | 3.10+ | | |
+| `builtins.locals` | `locals` | `ローカル変数` | 3.10+ | | |
+| `builtins.map` | `map` | `マップ` | 3.10+ | | |
+| `builtins.max` | `max` | `最大値` | 3.10+ | | |
+| `builtins.memoryview` | `memoryview` | `メモリビュー` | 3.10+ | | |
+| `builtins.min` | `min` | `最小値` | 3.10+ | | |
+| `builtins.next` | `next` | `次の` | 3.10+ | | |
+| `builtins.notimplemented` | `notimplemented` | `未実装` | 3.10+ | | |
+| `builtins.object` | `object` | `オブジェクト` | 3.10+ | | |
+| `builtins.oct` | `oct` | `八進数` | 3.10+ | | |
+| `builtins.open` | `open` | `開く` | 3.10+ | | |
+| `builtins.ord` | `ord` | `ユニコードの文字コードを返す` | 3.10+ | | |
+| `builtins.pow` | `pow` | `べき乗` | 3.10+ | | |
+| `builtins.print` | `print` | `印刷` | 3.10+ | | |
+| `builtins.property` | `property` | `プロパティ` | 3.10+ | | |
+| `builtins.range` | `range` | `範囲` | 3.10+ | | |
+| `builtins.repr` | `repr` | `レプリケーション` | 3.10+ | | |
+| `builtins.reversed` | `reversed` | `逆順` | 3.10+ | | |
+| `builtins.round` | `round` | `丸める` | 3.10+ | | |
+| `builtins.set` | `set` | `セット` | 3.10+ | | |
+| `builtins.setattr` | `setattr` | `属性を設定する` | 3.10+ | | |
+| `builtins.slice` | `slice` | `スライス` | 3.10+ | | |
+| `builtins.sorted` | `sorted` | `並べ替えられた` | 3.10+ | | |
+| `builtins.staticmethod` | `staticmethod` | `静的メソッド` | 3.10+ | | |
+| `builtins.str` | `str` | `文字列` | 3.10+ | | |
+| `builtins.sum` | `sum` | `合計` | 3.10+ | | |
+| `builtins.super` | `super` | `スーパー` | 3.10+ | | |
+| `builtins.tuple` | `tuple` | `タプル` | 3.10+ | | |
+| `builtins.type` | `type` | `型` | 3.10+ | | |
+| `builtins.vars` | `vars` | `変数` | 3.10+ | | |
+| `builtins.zip` | `zip` | `ジップ` | 3.10+ | | |
 
-## Exceptions (70 terms)
+## Exceptions
 
-Exception classes for error handling.
+Exception classes for error handling (70 terms).
 
-| English | Japanese |
-| ------- | ------ |
-| `arithmeticerror` | `算数エラー` |
-| `assertionerror` | `アサーティブエラー` |
-| `attributeerror` | `属性エラー` |
-| `baseexception` | `ベーシック例外` |
-| `baseexceptiongroup` | `基底例外グループ` |
-| `blockingioerror` | `ブロッキング入出力エラー` |
-| `brokenpipeerror` | `ブロークンピープラーエラー` |
-| `buffererror` | `バッファエラー` |
-| `byteswarning` | `バイト警告` |
-| `childprocesserror` | `子プロセスエラー` |
-| `connectionabortederror` | `接続中止エラー` |
-| `connectionerror` | `接続エラー` |
-| `connectionrefusederror` | `接続拒否エラー` |
-| `connectionreseterror` | `接続リセットエラー` |
-| `deprecationwarning` | `警告非推奨` |
-| `encodingwarning` | `エンコーディング警告` |
-| `environmenterror` | `環境エラー` |
-| `eoferror` | `エラーが発生しました` |
-| `exception` | `例外` |
-| `exceptiongroup` | `例外グループ` |
-| `fileexistserror` | `ファイルが既に存在するエラー` |
-| `filenotfounderror` | `ファイルが見つかりませんエラー` |
-| `floatingpointerror` | `浮動小数点数エラー` |
-| `futurewarning` | `将来の警告` |
-| `generatorexit` | `ジェネレータを終了する` |
-| `importerror` | `インポートエラー` |
-| `importwarning` | `インポート警告` |
-| `indentationerror` | `インデントエラー` |
-| `indexerror` | `インデックスエラー` |
-| `interruptederror` | `中断エラー` |
-| `ioerror` | `入出力エラー` |
-| `isadirectoryerror` | `イサディレクトリエラー` |
-| `keyboardinterrupt` | `キーボード中断` |
-| `keyerror` | `キーエラー` |
-| `lookuperror` | `ルックアップエラー` |
-| `memoryerror` | `メモリエラー` |
-| `modulenotfounderror` | `モジュールが見つかりません` |
-| `nameerror` | `未定義名エラー` |
-| `notadirectoryerror` | `ノットディレクトリエラー` |
-| `notimplementederror` | `未実装エラー` |
-| `oserror` | `オペレーティングシステムエラー` |
-| `overflowerror` | `オーバーフローエラー` |
-| `pendingdeprecationwarning` | `未使用の警告` |
-| `permissionerror` | `アクセス拒否` |
-| `processlookuperror` | `プロセスルックアップエラー` |
-| `pythonfinalizationerror` | `パイソン終了処理エラー` |
-| `recursionerror` | `再帰エラー` |
-| `referenceerror` | `参照エラー` |
-| `resourcewarning` | `リソース警告` |
-| `runtimeerror` | `実行時エラー` |
-| `runtimewarning` | `ランタイム警告` |
-| `stopasynciteration` | `非同期反復を停止する` |
-| `stopiteration` | `停止反復` |
-| `syntaxerror` | `構文エラー` |
-| `syntaxwarning` | `構文警告` |
-| `systemerror` | `システムエラー` |
-| `systemexit` | `システム終了` |
-| `taberror` | `タブエラー` |
-| `timeouterror` | `タイムアウトエラー` |
-| `typeerror` | `型エラー` |
-| `unboundlocalerror` | `未定義の変数によるエラー` |
-| `unicodedecodeerror` | `ユニコードのデコードエラー` |
-| `unicodeencodeerror` | `ユニコードのエンコードエラー` |
-| `unicodeerror` | `ユニコードエラー` |
-| `unicodetranslateerror` | `ユニコード翻訳エラー` |
-| `unicodewarning` | `ユニコード警告` |
-| `userwarning` | `ユーザーワーニング` |
-| `valueerror` | `値の誤り` |
-| `warning` | `警告` |
-| `zerodivisionerror` | `ゼロ除算エラー` |
+| Key | English | Japanese · 0.0.4 · Python 3.14 | Applies to | Suggested | Comments |
+| --- | ------- | ------------------------------ | ---------- | --------- | -------- |
+| `exceptions.arithmeticerror` | `arithmeticerror` | `算数エラー` | 3.10+ | | |
+| `exceptions.assertionerror` | `assertionerror` | `アサーティブエラー` | 3.10+ | | |
+| `exceptions.attributeerror` | `attributeerror` | `属性エラー` | 3.10+ | | |
+| `exceptions.baseexception` | `baseexception` | `ベーシック例外` | 3.10+ | | |
+| `exceptions.baseexceptiongroup` | `baseexceptiongroup` | `基底例外グループ` | 3.11+ | | |
+| `exceptions.blockingioerror` | `blockingioerror` | `ブロッキング入出力エラー` | 3.10+ | | |
+| `exceptions.brokenpipeerror` | `brokenpipeerror` | `ブロークンピープラーエラー` | 3.10+ | | |
+| `exceptions.buffererror` | `buffererror` | `バッファエラー` | 3.10+ | | |
+| `exceptions.byteswarning` | `byteswarning` | `バイト警告` | 3.10+ | | |
+| `exceptions.childprocesserror` | `childprocesserror` | `子プロセスエラー` | 3.10+ | | |
+| `exceptions.connectionabortederror` | `connectionabortederror` | `接続中止エラー` | 3.10+ | | |
+| `exceptions.connectionerror` | `connectionerror` | `接続エラー` | 3.10+ | | |
+| `exceptions.connectionrefusederror` | `connectionrefusederror` | `接続拒否エラー` | 3.10+ | | |
+| `exceptions.connectionreseterror` | `connectionreseterror` | `接続リセットエラー` | 3.10+ | | |
+| `exceptions.deprecationwarning` | `deprecationwarning` | `警告非推奨` | 3.10+ | | |
+| `exceptions.encodingwarning` | `encodingwarning` | `エンコーディング警告` | 3.10+ | | |
+| `exceptions.environmenterror` | `environmenterror` | `環境エラー` | 3.10+ | | |
+| `exceptions.eoferror` | `eoferror` | `エラーが発生しました` | 3.10+ | | |
+| `exceptions.exception` | `exception` | `例外` | 3.10+ | | |
+| `exceptions.exceptiongroup` | `exceptiongroup` | `例外グループ` | 3.11+ | | |
+| `exceptions.fileexistserror` | `fileexistserror` | `ファイルが既に存在するエラー` | 3.10+ | | |
+| `exceptions.filenotfounderror` | `filenotfounderror` | `ファイルが見つかりませんエラー` | 3.10+ | | |
+| `exceptions.floatingpointerror` | `floatingpointerror` | `浮動小数点数エラー` | 3.10+ | | |
+| `exceptions.futurewarning` | `futurewarning` | `将来の警告` | 3.10+ | | |
+| `exceptions.generatorexit` | `generatorexit` | `ジェネレータを終了する` | 3.10+ | | |
+| `exceptions.importerror` | `importerror` | `インポートエラー` | 3.10+ | | |
+| `exceptions.importwarning` | `importwarning` | `インポート警告` | 3.10+ | | |
+| `exceptions.indentationerror` | `indentationerror` | `インデントエラー` | 3.10+ | | |
+| `exceptions.indexerror` | `indexerror` | `インデックスエラー` | 3.10+ | | |
+| `exceptions.interruptederror` | `interruptederror` | `中断エラー` | 3.10+ | | |
+| `exceptions.ioerror` | `ioerror` | `入出力エラー` | 3.10+ | | |
+| `exceptions.isadirectoryerror` | `isadirectoryerror` | `イサディレクトリエラー` | 3.10+ | | |
+| `exceptions.keyboardinterrupt` | `keyboardinterrupt` | `キーボード中断` | 3.10+ | | |
+| `exceptions.keyerror` | `keyerror` | `キーエラー` | 3.10+ | | |
+| `exceptions.lookuperror` | `lookuperror` | `ルックアップエラー` | 3.10+ | | |
+| `exceptions.memoryerror` | `memoryerror` | `メモリエラー` | 3.10+ | | |
+| `exceptions.modulenotfounderror` | `modulenotfounderror` | `モジュールが見つかりません` | 3.10+ | | |
+| `exceptions.nameerror` | `nameerror` | `未定義名エラー` | 3.10+ | | |
+| `exceptions.notadirectoryerror` | `notadirectoryerror` | `ノットディレクトリエラー` | 3.10+ | | |
+| `exceptions.notimplementederror` | `notimplementederror` | `未実装エラー` | 3.10+ | | |
+| `exceptions.oserror` | `oserror` | `オペレーティングシステムエラー` | 3.10+ | | |
+| `exceptions.overflowerror` | `overflowerror` | `オーバーフローエラー` | 3.10+ | | |
+| `exceptions.pendingdeprecationwarning` | `pendingdeprecationwarning` | `未使用の警告` | 3.10+ | | |
+| `exceptions.permissionerror` | `permissionerror` | `アクセス拒否` | 3.10+ | | |
+| `exceptions.processlookuperror` | `processlookuperror` | `プロセスルックアップエラー` | 3.10+ | | |
+| `exceptions.pythonfinalizationerror` | `pythonfinalizationerror` | `パイソン終了処理エラー` | 3.13+ | | |
+| `exceptions.recursionerror` | `recursionerror` | `再帰エラー` | 3.10+ | | |
+| `exceptions.referenceerror` | `referenceerror` | `参照エラー` | 3.10+ | | |
+| `exceptions.resourcewarning` | `resourcewarning` | `リソース警告` | 3.10+ | | |
+| `exceptions.runtimeerror` | `runtimeerror` | `実行時エラー` | 3.10+ | | |
+| `exceptions.runtimewarning` | `runtimewarning` | `ランタイム警告` | 3.10+ | | |
+| `exceptions.stopasynciteration` | `stopasynciteration` | `非同期反復を停止する` | 3.10+ | | |
+| `exceptions.stopiteration` | `stopiteration` | `停止反復` | 3.10+ | | |
+| `exceptions.syntaxerror` | `syntaxerror` | `構文エラー` | 3.10+ | | |
+| `exceptions.syntaxwarning` | `syntaxwarning` | `構文警告` | 3.10+ | | |
+| `exceptions.systemerror` | `systemerror` | `システムエラー` | 3.10+ | | |
+| `exceptions.systemexit` | `systemexit` | `システム終了` | 3.10+ | | |
+| `exceptions.taberror` | `taberror` | `タブエラー` | 3.10+ | | |
+| `exceptions.timeouterror` | `timeouterror` | `タイムアウトエラー` | 3.10+ | | |
+| `exceptions.typeerror` | `typeerror` | `型エラー` | 3.10+ | | |
+| `exceptions.unboundlocalerror` | `unboundlocalerror` | `未定義の変数によるエラー` | 3.10+ | | |
+| `exceptions.unicodedecodeerror` | `unicodedecodeerror` | `ユニコードのデコードエラー` | 3.10+ | | |
+| `exceptions.unicodeencodeerror` | `unicodeencodeerror` | `ユニコードのエンコードエラー` | 3.10+ | | |
+| `exceptions.unicodeerror` | `unicodeerror` | `ユニコードエラー` | 3.10+ | | |
+| `exceptions.unicodetranslateerror` | `unicodetranslateerror` | `ユニコード翻訳エラー` | 3.10+ | | |
+| `exceptions.unicodewarning` | `unicodewarning` | `ユニコード警告` | 3.10+ | | |
+| `exceptions.userwarning` | `userwarning` | `ユーザーワーニング` | 3.10+ | | |
+| `exceptions.valueerror` | `valueerror` | `値の誤り` | 3.10+ | | |
+| `exceptions.warning` | `warning` | `警告` | 3.10+ | | |
+| `exceptions.zerodivisionerror` | `zerodivisionerror` | `ゼロ除算エラー` | 3.10+ | | |
 
-## Reserved Words (2 terms)
+## Reserved Words
 
 Python conventions like `self` and `cls` translated deterministically by the
-language pack rather than the LLM. Distinct from keywords because they aren't
-actual keywords in the Python language. (CORE-710)
+language pack rather than the LLM (2 terms). Distinct from keywords because they
+aren't actual keywords in the Python language.
 
-| English | Japanese |
-| ------- | ------ |
-| `cls` | `自クラス` |
-| `self` | `自己` |
+| Key | English | Japanese · 0.0.4 · Python 3.14 | Applies to | Suggested | Comments |
+| --- | ------- | ------------------------------ | ---------- | --------- | -------- |
+| `implicit_params.cls` | `cls` | `自クラス` | 3.10+ | | |
+| `implicit_params.self` | `self` | `自己` | 3.10+ | | |
 
 ## Example Code
 
@@ -282,23 +321,33 @@ Here's an example showing Japanese Python code with Legesher:
 ```python
 from legesher_i18n import LanguagePackLoader
 
-# Load Japanese pack for Python 3.12
+# Load the Japanese pack for Python 3.14
 loader = LanguagePackLoader()
-pack = loader.load("ja", "python", "3.12")
+pack = loader.load("ja", "python", "3.14")
 
 # Translate code
 from legesher import translate
 english_code = translate(your_ja_code, from_lang="ja", to_lang="en")
 ```
 
-## Contributing
+## Notes for Future Updates
 
-Found a better translation? We welcome contributions from native speakers!
+Language-wide observations: word order, register, how compounds join. Write them here when you
+review; they often matter more than any single word.
 
-1. Edit `legesher_i18n_python_ja/packs/<version>.yml` for the Python version where the term was introduced:
-   - `3.10.yml` - Base translations (most terms)
-   - `3.11.yml` - Terms added in Python 3.11 (e.g., `except*`)
-   - `3.12.yml` - Terms added in Python 3.12 (e.g., `type`)
-   - `3.13.yml` / `3.14.yml` - Future additions
-2. Submit a pull request with your reasoning
-3. Translations should be natural, commonly used in CS education, and easy to type
+## How to submit this review
+
+1. Copy this file to `reviews/ja/ja-<your-github-username>.md` in
+   [language-packs](https://github.com/legesher/language-packs). The username in the name must be the account that
+   opens the pull request.
+2. For each term you have an opinion on: `✓` in Comments endorses the current word; `Keep` plus a
+   note endorses it with a recorded limitation; a word in Suggested plus your reasoning in Comments
+   proposes a replacement. Leave the other rows untouched, and leave the first line of the file and
+   the Key, English, current-word and Applies to columns as they are: the importer reads them.
+3. Fill in "About you", tick the boxes under "Before you submit", and open a pull request with one
+   language per pull request. Sign your commits off (`git commit -s`).
+4. A second review of the same pack version updates your existing file. After a pack version bump,
+   start a new file named `ja-<your-github-username>-<pack-version>.md` from the regenerated template.
+
+The guide is [REVIEWING.md](https://github.com/legesher/language-packs/blob/main/REVIEWING.md); the folder rules are in
+[reviews/README.md](https://github.com/legesher/language-packs/blob/main/reviews/README.md).
