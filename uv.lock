@@ -2584,7 +2584,7 @@ dev = [
 
 [[package]]
 name = "legesher-vs-code"
-version = "0.1.0"
+version = "0.1.5"
 source = { editable = "libs/vs-code" }
 dependencies = [
     { name = "legesher" },

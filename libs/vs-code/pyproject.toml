@@ -11,16 +11,16 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
     # Sibling packages are version-bumped together by semantic-release
     # (see root pyproject.toml `version_toml`), which this package does not
-    # participate in. `major_on_zero = true` means a breaking change bumps
-    # 0.x to 1.0, so `<1.0.0` is the compatibility boundary and minor bumps
-    # resolve without touching this file. The `[tool.uv.sources]` workspace
+    # participate in. The root sets `major_on_zero = false`, so a breaking
+    # change stays within 0.x; `<1.0.0` is the compatibility boundary and
+    # minor bumps resolve without touching this file. The `[tool.uv.sources]` workspace
     # override below is what applies in-repo; these ranges are what ship in
     # the wheel metadata and govern any out-of-workspace install.
     "legesher>=0.22.0,<1.0.0",
     "legesher-core>=0.22.0,<1.0.0",
 ]
 name = "legesher-vs-code"
-version = "0.1.0"
+version = "0.1.5"
 description = "Dependency bundle installing the Python side of the Legesher VS Code extension"
 readme = "README.md"
 keywords = ["vscode", "editor", "extension", "translation", "multilingual", "python"]
@@ -42,6 +42,10 @@ classifiers = [
 legesher = { workspace = true }
 legesher-core = { workspace = true }
 
+# No workflow runs the section below (its own note says why it is kept valid).
+# legesher-vs-code is not published to PyPI (CORE-2416); the section and the
+# publish target go in a follow-on. `project.version` above follows
+# package.json, held together by scripts/tests/test_vs_code_version_source.py.
 [tool.semantic_release]
 # No workflow runs this config: release-apps.yml tags the extension from
 # package.json. It is kept valid for PSR 10 with every path relative to the
