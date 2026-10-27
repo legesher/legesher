@@ -158,6 +158,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The packaged extension no longer carries contributor notes, the test runner
+  configuration and fixtures, or the Python dependency bundle's `pyproject.toml`;
+  the files the extension reads at runtime are unchanged.
 - **Language packs**: pack files are now validated at load — a 1 MiB size cap and a runtime shape check on
   keywords/builtins/exceptions; malformed or oversized packs are skipped with a warning instead of being trusted (CORE-1453)
 - **Telemetry**: defaults to OFF — opt in via `legesher.telemetry.enabled` (CORE-1586)

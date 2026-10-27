@@ -1,13 +1,24 @@
 # Development and testing
 .vscode/**
 .vscode-test/**
+.vscode-test.mjs
 src/**
 
-# Build configuration
+# Build and lint configuration
 esbuild.js
 tsconfig.json
-.eslintrc.json
-.prettierrc
+eslint.config.mjs
+
+# Tests and fixtures
+test/**
+
+# The legesher-vs-code Python dependency bundle and pdm's build scrap: the
+# extension reads neither
+pyproject.toml
+.pdm-build/**
+
+# Working notes for contributors, not for the listing
+CLAUDE.md
 
 # Source maps and TypeScript sources
 **/*.map
