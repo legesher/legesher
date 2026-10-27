@@ -29,11 +29,18 @@ Two lane-specific notes, both deliberate:
   ``false`` in the bundle and the Stage-0 importer runs with
   ``required_attestations=('original_work', 'coc_agreed')``. The Stage-1
   bundle app collects the full set.
-* **Consent.** The form carries the required CONTRIBUTOR_PRIVACY checkbox and
-  a credit-preference dropdown (CORE-397). Both are read here, with the notice
-  version taken from the checkbox's own label so a version bump re-consents
-  naturally. An unticked box means no consent block, and the importer then
-  mints NO identity (decision 2026-08-11) while still recording the words.
+* **Consent.** The form carries the required CONTRIBUTOR_PRIVACY checkbox,
+  a credit-preference dropdown and an optional display-name input (CORE-397,
+  CORE-2070). All three are read here, with the notice version taken from
+  the checkbox's own label so a version bump re-consents naturally. An
+  unticked box means no consent block, and the importer then mints NO
+  identity (decision 2026-08-11) while still recording the words. A display
+  name is stored in NFC (the store half of the Unicode contract), and one
+  made of nothing but whitespace or invisible characters counts as blank.
+
+The field sequence (:data:`_FIELD_ORDER`) is checked by a test against a dated
+copy of the live form in ``tests/fixtures/issue_forms/``, so a field added to
+the form shows up as a failing test rather than as refused submissions.
 """
 
 from __future__ import annotations
@@ -41,6 +48,9 @@ from __future__ import annotations
 import re
 import sqlite3
 from dataclasses import dataclass, field
+
+from legesher_i18n.db.schema_v2 import normalize_surface_form
+from legesher_i18n.surface_validation import format_char_violations
 
 __all__ = ["ParsedIssue", "parse_issue", "STAGE0_KIT_VERSION"]
 
@@ -72,16 +82,23 @@ _LANGUAGE_CLAIM: dict[str, tuple[str, bool]] = {
     "i am learning it": ("contributor", False),
 }
 
-#: The `credit` dropdown. "A display name I will give you" has NO accompanying
-#: text field on the form, and the importer refuses `credit_preference='name'`
-#: without `credit_text` — so it falls back to the anonymous default and leaves
-#: the maintainer a note. The notice already tells contributors credit can be
+#: The `credit` dropdown. "A display name I will give you" is honoured only
+#: when the optional display-name input (:data:`_DISPLAY_NAME_FIELD`) carries
+#: text: the importer refuses `credit_preference='name'` without
+#: `credit_text`, so a blank input (or one holding only invisible
+#: characters) falls back to the anonymous default and leaves the maintainer
+#: a note (CORE-2070). The notice already tells contributors credit can be
 #: changed by asking, so nothing is lost that a reply cannot recover.
 _CREDIT_CHOICE: dict[str, str] = {
     "anonymous": "anonymous",
     "my github handle": "handle",
-    "a display name": "anonymous",
+    "a display name": "name",
 }
+
+#: The optional input that follows the credit dropdown on every form. GitHub
+#: renders an empty optional field as ``_No response_``, which reads as blank.
+_DISPLAY_NAME_FIELD = "Your display name, if you chose one"
+_NO_RESPONSE = "_no response_"
 
 _EMOJIS = ("✅", "❓", "🤔")
 
@@ -101,14 +118,21 @@ class ParsedIssue:
 #: last (or the first) occurrence of a label lets a submitter who chose
 #: "I am learning it" award themselves `native_claimed` — double endorsement
 #: weight on a published column — from the Additional-context box.
+#:
+#: The list must match the live form exactly: a heading missing here is not a
+#: boundary, so its section is read as the end of the one before it. The
+#: optional "Other" language input sits right after the language dropdown, and
+#: without it every real submission was refused for having no locale code.
 _FIELD_ORDER: tuple[str, ...] = (
     "Language being reviewed",
+    "Your language, if you chose Other",
     "Python version reviewed",
     "Your relationship to this language",
     "Anything you want us to know about your background",
     "Review notes",
     "Additional context",
     "How would you like to be credited?",
+    _DISPLAY_NAME_FIELD,
     "Consent",
 )
 
@@ -309,7 +333,7 @@ def parse_issue(payload: dict, conn: sqlite3.Connection) -> ParsedIssue:
             )
 
     extra = sections.get("Additional context", "")
-    if extra and extra != "_No response_":
+    if extra and extra.casefold() != _NO_RESPONSE:
         notes.append(
             "additional-context text stays on the issue (linked via source.url); "
             "not ingested as commentary — it is not keyed to a concept"
@@ -366,7 +390,7 @@ def _claim_from(sections: dict[str, str], notes: list[str]) -> tuple[str, bool]:
     for prefix, (rung, fluent) in _LANGUAGE_CLAIM.items():
         if answer.startswith(prefix):
             return rung, fluent
-    if answer and answer != "_no response_":
+    if answer and answer != _NO_RESPONSE:
         notes.append(
             f"unrecognized language-claim answer {answer!r}: recorded at the "
             "'contributor' rung, which is the safe default"
@@ -392,10 +416,42 @@ def _consent_from(sections: dict[str, str], notes: list[str]) -> dict[str, str] 
         if choice.startswith(prefix):
             preference = value
             break
-    if choice.startswith("a display name"):
+    consent: dict[str, str] = {
+        "consent_version": match.group("version"),
+        "credit_preference": preference,
+    }
+    if preference != "name":
+        return consent
+    # Name credit needs a name. The input is optional on the form, so the
+    # dropdown choice alone is not enough: without text the importer would
+    # refuse the whole submission, which punishes the contributor for a blank
+    # box. Record anonymous and leave the maintainer a note instead.
+    display_name = normalize_surface_form(sections.get(_DISPLAY_NAME_FIELD, ""))
+    if _is_blank_name(display_name):
+        consent["credit_preference"] = "anonymous"
         notes.append(
-            "contributor asked to be credited by display name, but the form "
-            "collects no name field: recorded as 'anonymous' for now. Ask them "
-            "for the name in the reply, then set it as a maintainer action."
+            "contributor asked to be credited by display name but left the "
+            "display-name field blank or holding only invisible characters, so "
+            "they are recorded as 'anonymous' for now: check the "
+            "contribute@legesher.com inbox for the name first, otherwise ask "
+            "for it in the reply, then set it as a maintainer action."
         )
-    return {"consent_version": match.group("version"), "credit_preference": preference}
+        return consent
+    consent["credit_text"] = display_name
+    return consent
+
+
+def _is_blank_name(name: str) -> bool:
+    """Whether a display name carries nothing a reader could see.
+
+    Blank means empty, GitHub's ``_No response_`` placeholder, or nothing but
+    whitespace and invisible characters (zero-width joiners and spaces, word
+    joiners, the rest of the format and Default_Ignorable set that
+    :func:`~legesher_i18n.surface_validation.format_char_violations` nets). A
+    name that merely CONTAINS an invisible, such as a Sinhala conjunct joined
+    by U+200D, is a real name and is kept.
+    """
+    if not name or name.casefold() == _NO_RESPONSE:
+        return True
+    invisible = set(format_char_violations(name, frozenset()))
+    return all(ch.isspace() or ch in invisible for ch in name)

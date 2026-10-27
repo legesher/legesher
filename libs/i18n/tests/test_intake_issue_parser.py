@@ -13,12 +13,14 @@ format without touching the pipeline.
 from __future__ import annotations
 
 import sqlite3
+import unicodedata
 from pathlib import Path
 
 import pytest
+import yaml
 
 from legesher_i18n.db.schema_v2 import apply_schema_v2, contributor_id
-from legesher_i18n.intake.issue_parser import parse_issue
+from legesher_i18n.intake.issue_parser import _FIELD_ORDER, parse_issue
 from legesher_i18n.intake.pipeline import BundleImporter
 
 SALT = "intake-test-salt"
@@ -29,6 +31,10 @@ ISSUE_BODY = """\
 ### Language being reviewed
 
 Urdu (ur)
+
+### Your language, if you chose Other
+
+_No response_
 
 ### Python version reviewed
 
@@ -57,6 +63,10 @@ _No response_
 ### How would you like to be credited?
 
 My GitHub handle
+
+### Your display name, if you chose one
+
+_No response_
 
 ### Consent
 
@@ -219,6 +229,53 @@ def test_missing_locale_code_is_a_parse_error(db_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# The field sequence is checked against a dated copy of the live form in
+# legesher/language-packs. Copying the form by hand is how the "Other"
+# language input went missing and every real submission was refused.
+# ---------------------------------------------------------------------------
+
+FORM_SNAPSHOTS = Path(__file__).parent / "fixtures" / "issue_forms"
+
+
+def live_review_form() -> dict:
+    snapshots = sorted(FORM_SNAPSHOTS.glob("language_pack_review.*.yml"))
+    assert len(snapshots) == 1, f"expected one dated form copy, found {snapshots}"
+    return yaml.safe_load(snapshots[0].read_text(encoding="utf-8"))
+
+
+def test_the_field_order_matches_the_live_review_form() -> None:
+    # The only exclusion is the `markdown` element: it is prose with no label,
+    # and GitHub renders no heading for it in the issue body. Every other
+    # element (dropdown, input, textarea, checkboxes) renders a `###` heading.
+    form_labels = [
+        element["attributes"]["label"]
+        for element in live_review_form()["body"]
+        if element["type"] != "markdown"
+    ]
+    unknown = [label for label in form_labels if label not in _FIELD_ORDER]
+    assert not unknown, f"form fields missing from _FIELD_ORDER: {unknown}"
+    stale = [label for label in _FIELD_ORDER if label not in form_labels]
+    assert not stale, f"_FIELD_ORDER labels the form no longer has: {stale}"
+    assert list(_FIELD_ORDER) == form_labels
+
+
+def test_text_in_the_other_language_box_does_not_become_the_locale(
+    db_path: Path,
+) -> None:
+    # Without the "Other" heading in the field order, this section was read as
+    # the tail of the language field, and the locale regex anchors at its end.
+    body = ISSUE_BODY.replace(
+        "### Your language, if you chose Other\n\n_No response_",
+        "### Your language, if you chose Other\n\nTigrinya (ti)",
+    )
+    assert body != ISSUE_BODY
+    conn = sqlite3.connect(db_path)
+    parsed = parse_issue(issue_payload(body), conn)
+    conn.close()
+    assert parsed.bundle["locale"] == "ur"
+
+
+# ---------------------------------------------------------------------------
 # CORE-397 form (PR #101): the fields the old form did not have (CORE-1838 §0)
 # ---------------------------------------------------------------------------
 
@@ -298,20 +355,197 @@ def test_an_unticked_privacy_checkbox_mints_no_identity(db_path: Path) -> None:
     conn.close()
 
 
-def test_a_display_name_choice_is_flagged_because_the_form_collects_no_name(
+# ---------------------------------------------------------------------------
+# CORE-2070: "A display name I will give you" is honoured only when the
+# optional display-name input carries text. Latin identifiers prove nothing
+# here, so the names below use pointed Hebrew and Devanagari.
+# ---------------------------------------------------------------------------
+
+DISPLAY_NAME_CHOICE = ISSUE_BODY.replace(
+    "My GitHub handle", "A display name I will give you"
+)
+
+
+def with_display_name(name: str) -> str:
+    body = DISPLAY_NAME_CHOICE.replace(
+        "### Your display name, if you chose one\n\n_No response_",
+        f"### Your display name, if you chose one\n\n{name}",
+    )
+    assert body != DISPLAY_NAME_CHOICE, "the display-name section was not found"
+    return body
+
+
+def test_a_filled_display_name_lands_as_name_credit(db_path: Path) -> None:
+    name = "\u05e9\u05b8\u05c1\u05e8\u05b8\u05d4 \u05dc\u05b5\u05d5\u05b4\u05d9"  # pointed Hebrew
+    conn = sqlite3.connect(db_path)
+    parsed = parse_issue(issue_payload(with_display_name(name)), conn)
+    conn.close()
+    assert parsed.bundle["contributor"]["consent"] == {
+        "consent_version": "1.0",
+        "credit_preference": "name",
+        "credit_text": name,
+    }
+    assert not any("display name" in note.lower() for note in parsed.notes)
+
+    result = stage0_importer(db_path).import_bundle(parsed.bundle)
+    assert result.status == "accepted"
+    conn = sqlite3.connect(db_path)
+    assert conn.execute(
+        "SELECT credit_preference, display_name, github_handle FROM contributor_identities"
+    ).fetchone() == ("name", name, None)
+    conn.close()
+
+
+def test_a_display_name_is_trimmed_before_it_is_recorded(db_path: Path) -> None:
+    name = "\u0905\u0928\u0928\u094d\u092f\u093e \u0936\u0930\u094d\u092e\u093e"  # Devanagari
+    conn = sqlite3.connect(db_path)
+    parsed = parse_issue(issue_payload(with_display_name(f"  {name}  ")), conn)
+    conn.close()
+    assert parsed.bundle["contributor"]["consent"]["credit_text"] == name
+
+
+def test_a_blank_display_name_records_anonymous_with_a_note(db_path: Path) -> None:
+    # The input is optional, so GitHub renders a blank one as ``_No response_``.
+    # Importing credit_preference 'name' without text would be refused by the
+    # importer, so the parser records anonymous and leaves the maintainer a note.
+    conn = sqlite3.connect(db_path)
+    parsed = parse_issue(issue_payload(DISPLAY_NAME_CHOICE), conn)
+    conn.close()
+    assert parsed.bundle["contributor"]["consent"]["credit_preference"] == "anonymous"
+    assert "credit_text" not in parsed.bundle["contributor"]["consent"]
+    assert any("display-name field blank" in note for note in parsed.notes)
+    # The form tells contributors they may send the name to the contribute
+    # inbox instead, so the note sends the maintainer there first.
+    assert any("contribute@legesher.com" in note for note in parsed.notes)
+
+    result = stage0_importer(db_path).import_bundle(parsed.bundle)
+    assert result.status == "accepted"
+    conn = sqlite3.connect(db_path)
+    assert conn.execute(
+        "SELECT credit_preference, display_name FROM contributor_identities"
+    ).fetchone() == ("anonymous", None)
+    conn.close()
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "\u200d",  # ZERO WIDTH JOINER alone
+        "\u200b",  # ZERO WIDTH SPACE alone
+        "\u2060",  # WORD JOINER alone
+        "\u200d \u200b\u2060",  # several, with a space between
+    ],
+)
+def test_a_display_name_of_only_invisible_characters_counts_as_blank(
+    db_path: Path, name: str
+) -> None:
+    conn = sqlite3.connect(db_path)
+    parsed = parse_issue(issue_payload(with_display_name(name)), conn)
+    conn.close()
+    assert parsed.bundle["contributor"]["consent"] == {
+        "consent_version": "1.0",
+        "credit_preference": "anonymous",
+    }
+    assert any("display-name field blank" in note for note in parsed.notes)
+
+    result = stage0_importer(db_path).import_bundle(parsed.bundle)
+    assert result.status == "accepted"
+    conn = sqlite3.connect(db_path)
+    assert conn.execute(
+        "SELECT credit_preference, display_name FROM contributor_identities"
+    ).fetchone() == ("anonymous", None)
+    conn.close()
+
+
+def test_a_sinhala_name_with_a_zwj_conjunct_is_kept(db_path: Path) -> None:
+    # The check is "nothing but invisibles", not "contains an invisible": the
+    # ZWJ in this conjunct is part of how the name is written.
+    name = "\u0db4\u0dca\u200d\u0dbb\u0dd2\u0dba\u0dcf"  # Sinhala, ZWJ conjunct
+    assert "\u200d" in name
+    conn = sqlite3.connect(db_path)
+    parsed = parse_issue(issue_payload(with_display_name(name)), conn)
+    conn.close()
+    assert parsed.bundle["contributor"]["consent"]["credit_preference"] == "name"
+    assert parsed.bundle["contributor"]["consent"]["credit_text"] == name
+    assert not any("display name" in note.lower() for note in parsed.notes)
+
+
+def test_a_display_name_is_stored_in_nfc(db_path: Path) -> None:
+    # Vocalised Arabic typed with the shadda before the fatha, a common
+    # keyboard order. NFC puts the fatha (ccc 30) before the shadda (ccc 33).
+    typed = "\u0639\u064e\u0632\u0651\u064e\u0629"
+    stored = "\u0639\u064e\u0632\u064e\u0651\u0629"
+    assert not unicodedata.is_normalized("NFC", typed)
+    assert unicodedata.normalize("NFC", typed) == stored
+    conn = sqlite3.connect(db_path)
+    parsed = parse_issue(issue_payload(with_display_name(typed)), conn)
+    conn.close()
+    assert parsed.bundle["contributor"]["consent"]["credit_text"] == stored
+
+    result = stage0_importer(db_path).import_bundle(parsed.bundle)
+    assert result.status == "accepted"
+    conn = sqlite3.connect(db_path)
+    assert conn.execute(
+        "SELECT display_name FROM contributor_identities"
+    ).fetchone() == (stored,)
+    conn.close()
+
+
+def test_a_display_name_already_in_nfc_is_unchanged(db_path: Path) -> None:
+    name = "\u0905\u0928\u0928\u094d\u092f\u093e"  # Devanagari, already NFC
+    assert unicodedata.is_normalized("NFC", name)
+    conn = sqlite3.connect(db_path)
+    parsed = parse_issue(issue_payload(with_display_name(name)), conn)
+    conn.close()
+    assert parsed.bundle["contributor"]["consent"]["credit_text"] == name
+
+
+def test_a_display_name_is_ignored_unless_name_credit_was_chosen(
     db_path: Path,
 ) -> None:
-    # "A display name I will give you" has no accompanying text field, and the
-    # importer refuses credit_preference 'name' without credit_text. Falling
-    # back to the anonymous default keeps the submission importable and leaves
-    # the maintainer a note; the notice already says credit can be changed by
-    # asking.
-    body = ISSUE_BODY.replace("My GitHub handle", "A display name I will give you")
+    # Handle credit with text in the name box: the dropdown wins, the text is
+    # not carried, so a stray entry cannot publish a name nobody asked for.
+    body = ISSUE_BODY.replace(
+        "### Your display name, if you chose one\n\n_No response_",
+        "### Your display name, if you chose one\n\n\u0928\u0940\u0932\u093e",
+    )
+    conn = sqlite3.connect(db_path)
+    parsed = parse_issue(issue_payload(body), conn)
+    conn.close()
+    assert parsed.bundle["contributor"]["consent"] == {
+        "consent_version": "1.0",
+        "credit_preference": "handle",
+    }
+
+
+def test_an_issue_without_the_display_name_section_still_parses(
+    db_path: Path,
+) -> None:
+    # Issues filed before the field existed render no such heading. The field
+    # is optional, so the parse succeeds and name credit falls back to anonymous.
+    body = DISPLAY_NAME_CHOICE.replace(
+        "### Your display name, if you chose one\n\n_No response_\n\n", ""
+    )
+    assert "Your display name" not in body
     conn = sqlite3.connect(db_path)
     parsed = parse_issue(issue_payload(body), conn)
     conn.close()
     assert parsed.bundle["contributor"]["consent"]["credit_preference"] == "anonymous"
-    assert any("display name" in note.lower() for note in parsed.notes)
+    assert any("display-name field blank" in note for note in parsed.notes)
+
+
+def test_a_forged_display_name_heading_is_refused(db_path: Path) -> None:
+    # The heading typed into Additional context duplicates the form's own, and
+    # a duplicate is refused like every other forged heading.
+    body = forge(
+        "_No response_\n\n### How would you like",
+        "### Your display name, if you chose one\n\n\u0928\u0940\u0932\u093e\n\n### How would you like",
+    )
+    assert body.count("### Your display name, if you chose one") == 2
+    conn = sqlite3.connect(db_path)
+    with pytest.raises(ValueError, match="more than once"):
+        parse_issue(issue_payload(body), conn)
+    conn.close()
 
 
 def test_an_unticked_code_of_conduct_box_is_refused_by_the_importer(

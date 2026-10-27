@@ -271,6 +271,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **Review issues from the live language-packs form now import, and a
+  chosen display name is recorded.** The issue parser did not know the
+  form's optional "Your language, if you chose Other" field, so it read that
+  section as part of the language answer and refused every submission for
+  having no locale code. It now knows that field and reads the "Your display
+  name, if you chose one" input. A contributor who picks display-name credit gets
+  `credit_preference = 'name'` with the name stored in NFC. A name box left
+  blank, or holding only invisible characters such as a lone zero-width
+  joiner, records the contributor as anonymous and leaves a parse note asking
+  the maintainer to check the contribute inbox or ask in the reply. A test
+  now compares the parser's field order with a dated copy of the live form
+  under `tests/fixtures/issue_forms/`; refresh that copy when the form changes.
+
 - **`nb` and `fil` renderings are no longer default-denied as
   script-inconsistent.** The v2 reference layer names these languages by
   their BCP 47 subtags while the script-policy tables are keyed by pack id
