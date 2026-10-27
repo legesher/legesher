@@ -119,15 +119,15 @@
     },
     {
       "name": "GitHub path, title case owner",
-      "input": "https://github.com/Legesher/legesher-next.git",
-      "canonical": "github.com/legesher/legesher-next",
-      "label": "00c92c545f480fb7a8333b22ee37cd44"
+      "input": "https://github.com/Legesher/legesher.git",
+      "canonical": "github.com/legesher/legesher",
+      "label": "e1f8afd3c35314d82ba7caab2a90d7a1"
     },
     {
       "name": "GitHub path, upper case owner",
-      "input": "git@github.com:LEGESHER/Legesher-Next.git",
-      "canonical": "github.com/legesher/legesher-next",
-      "label": "00c92c545f480fb7a8333b22ee37cd44"
+      "input": "git@github.com:LEGESHER/Legesher.git",
+      "canonical": "github.com/legesher/legesher",
+      "label": "e1f8afd3c35314d82ba7caab2a90d7a1"
     },
     {
       "name": "ssh, IPv6 loopback with port",

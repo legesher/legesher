@@ -19,7 +19,7 @@ dependencies = [
 ]
 name = "legesher-core"
 version = "0.23.0"
-description = "Translation engine for multilingual Python — keyword, builtin, and identifier rewriting"
+description = "Translation engine for multilingual Python: keyword, builtin, and identifier rewriting"
 readme = "README.md"
 keywords = ["translation", "i18n", "programming", "multilingual", "code-translation"]
 classifiers = [
@@ -47,6 +47,13 @@ treesitter = [
 
 [project.scripts]
 legesher-filter = "legesher_core.__main__:main"
+
+[project.urls]
+Homepage = "https://legesher.io"
+Documentation = "https://docs.legesher.io"
+Repository = "https://github.com/legesher/legesher"
+Changelog = "https://github.com/legesher/legesher/blob/main/libs/core/CHANGELOG.md"
+Issues = "https://github.com/legesher/legesher/issues"
 
 [tool.pdm.build]
 # Include the whole package directory so non-.py files ship in the wheel.

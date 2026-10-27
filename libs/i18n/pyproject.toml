@@ -22,7 +22,7 @@ dependencies = [
 ]
 name = "legesher-i18n"
 version = "0.23.0"
-description = "Language packs for Legesher — version-aware loading, inheritance, and schema validation"
+description = "Language packs for Legesher: version-aware loading, inheritance, and schema validation"
 readme = "README.md"
 keywords = ["translation", "i18n", "l10n", "programming", "multilingual", "languages"]
 classifiers = [
@@ -42,6 +42,13 @@ classifiers = [
 [project.scripts]
 legesher-i18n = "legesher_i18n.cli:cli"
 legesher-api = "legesher_i18n.api.cli:main"
+
+[project.urls]
+Homepage = "https://legesher.io"
+Documentation = "https://docs.legesher.io"
+Repository = "https://github.com/legesher/legesher"
+Changelog = "https://github.com/legesher/legesher/blob/main/libs/i18n/CHANGELOG.md"
+Issues = "https://github.com/legesher/legesher/issues"
 
 [tool.pdm.build]
 includes = ["legesher_i18n/"]

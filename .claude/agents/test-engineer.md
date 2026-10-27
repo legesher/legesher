@@ -291,7 +291,7 @@ open htmlcov/index.html
 
 ### Coverage Targets
 
-- **Overall**: 90%+ coverage (legesher-hosted gates at 90; js-engine-repo gates at 95/88/95/95 lines/branches/functions/statements)
+- **Overall**: 90%+ coverage (a repository may gate higher; its own coverage config is the threshold of record)
 - **Critical paths**: 100% coverage (security, data integrity)
 - **New code**: 95%+ coverage
 - **Edge cases**: Explicit tests (not just coverage)

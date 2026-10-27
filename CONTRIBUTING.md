@@ -392,7 +392,7 @@ standards for language contributions, and the moderation path. The short version
 
 ### Enforcement
 
-Violations may result in temporary or permanent ban from the project. Report issues to: <conduct@legesher.com>
+Violations may result in temporary or permanent ban from the project. Report issues to: <support@legesher.com>
 
 ## Development Guidelines
 

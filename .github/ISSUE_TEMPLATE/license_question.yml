@@ -103,8 +103,8 @@ body:
       ---
 
       ## Contact
-      - [legal@legesher.com](mailto:legal@legesher.com) — licensing and trademark questions
-      - [sales@legesher.com](mailto:sales@legesher.com) — the hosted service, plans, and enterprise use
+      - [legal@legesher.com](mailto:legal@legesher.com): licensing and trademark questions
+      - [hello@legesher.com](mailto:hello@legesher.com): the hosted service, plans, and enterprise use
 
 - type: checkboxes
   id: terms

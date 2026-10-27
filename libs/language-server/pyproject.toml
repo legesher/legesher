@@ -12,6 +12,7 @@ keywords = ["legesher", "multilingual", "programming", "lsp", "language-server"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -29,6 +30,13 @@ dependencies = [
     # (major_on_zero = true) moves 0.x to 1.0 on a breaking change.
     "legesher-i18n>=0.22.0,<1.0.0",  # Language pack loading (CORE-450)
 ]
+
+[project.urls]
+Homepage = "https://legesher.io"
+Documentation = "https://docs.legesher.io"
+Repository = "https://github.com/legesher/legesher"
+Changelog = "https://github.com/legesher/legesher/blob/main/libs/language-server/CHANGELOG.md"
+Issues = "https://github.com/legesher/legesher/issues"
 
 [tool.uv.sources]
 legesher-i18n = { workspace = true }

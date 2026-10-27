@@ -50,6 +50,13 @@ classifiers = [
 [project.scripts]
 legesher = "legesher.cli.main:cli"
 
+[project.urls]
+Homepage = "https://legesher.io"
+Documentation = "https://docs.legesher.io"
+Repository = "https://github.com/legesher/legesher"
+Changelog = "https://github.com/legesher/legesher/blob/main/libs/legesher/CHANGELOG.md"
+Issues = "https://github.com/legesher/legesher/issues"
+
 [tool.pdm.build]
 # Explicit include list: without it pdm-backend auto-discovers every
 # top-level package directory, which shipped a stray `scripts` package

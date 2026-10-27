@@ -260,7 +260,7 @@ cites the guideline. Appeals follow the [Code of Conduct](../../CODE_OF_CONDUCT.
 
 - **Anything about contributing**: <contribute@legesher.com>
 - **Privacy, credit, or withdrawal**: <privacy@legesher.com>
-- **Conduct**: <conduct@legesher.com>
+- **Conduct**: <support@legesher.com>
 - **Everything else**:
   [GitHub Discussions](https://github.com/legesher/legesher/discussions)
 

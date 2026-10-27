@@ -65,8 +65,8 @@ Nothing is percent-decoded or percent-encoded, a Unicode host is not converted
 to or from punycode, and `.` and `..` segments are kept. Two spellings that
 differ in any of those ways count as different remotes.
 
-Lowercasing ASCII letters makes `github.com/Legesher/legesher-next` and
-`github.com/LEGESHER/Legesher-Next` one repository, which matches how GitHub and
+Lowercasing ASCII letters makes `github.com/Legesher/legesher` and
+`github.com/LEGESHER/Legesher` one repository, which matches how GitHub and
 most hosts treat owner and repository names. The trade-off: two repositories on
 a case-sensitive self-hosted server whose paths differ only in ASCII letter case
 share one label.

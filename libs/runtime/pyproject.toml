@@ -17,6 +17,7 @@ keywords = ["legesher", "traceback", "excepthook", "localization", "multilingual
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -35,6 +36,13 @@ dependencies = [
     # workspace override, so the floor is the only thing protecting the wheel.
     "legesher-i18n>=0.23.0,<1.0.0",  # message catalog + language pack loader
 ]
+
+[project.urls]
+Homepage = "https://legesher.io"
+Documentation = "https://docs.legesher.io"
+Repository = "https://github.com/legesher/legesher"
+Changelog = "https://github.com/legesher/legesher/blob/main/libs/runtime/CHANGELOG.md"
+Issues = "https://github.com/legesher/legesher/issues"
 
 [tool.uv.sources]
 legesher-i18n = { workspace = true }
