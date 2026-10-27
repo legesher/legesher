@@ -20,6 +20,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **mcp**: the no-telemetry promise in the `legesher-mcp` README, package
+  docstring and MCP instructions is withdrawn ahead of an opt-in usage
+  report; the server still sends nothing. [CORE-2252]
 - **core/cli**: the clean filter runs as git's long-running filter process,
   so a git command starts it once instead of once per file. `git status`
   over a Django checkout with all 2,932 `.py` files stat-dirty took 1,548.7 s

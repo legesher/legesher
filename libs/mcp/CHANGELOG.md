@@ -158,8 +158,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Initial Legesher MCP server package: the engine's translation capability
   as a Model Context Protocol stdio server, per the CORE-1165 architecture
   design (five coarse tools, resources over tool-shaped reads, engine facts
-  over generated prose). Free forever, Apache-2.0, no telemetry — the local
-  server makes no network calls and emits nothing. [CORE-1175]
+  over generated prose). Free forever, Apache-2.0; every tool call is
+  served by the local engine. [CORE-1175]
   - **Tools**: `translate_to_native` (files and fragments alike; X→Y pivots
     through English and reports `pivoted`), `translate_to_source` (fixed to
     the English pivot), `explain_in_language` (deterministic engine facts:
@@ -187,6 +187,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **The no-telemetry promise is withdrawn.** The README, the package
+  docstring and the server's MCP instructions said the stdio server would
+  never emit telemetry ("emits no events, pings, or metrics of any kind").
+  That claim is retracted ahead of the code: a coming release adds optional
+  usage telemetry (tool name, call count, error class, server and engine
+  versions, a random install id; never source, identifiers, translated
+  text, prompts or paths), off by default and enabled only by
+  `LEGESHER_MCP_TELEMETRY=on`, with `DO_NOT_TRACK=1` or
+  `LEGESHER_TELEMETRY_DISABLED=1` always honoured. This version still
+  sends nothing. The wording changes first so that no public
+  release carries a promise the next one breaks. The published surface
+  digest moves with the instructions text. [CORE-2252]
 - Engine failures (and gate denials) now surface as their machine code
   directly — `unsupported_language: ...` — instead of inside the SDK's
   `Error executing tool <name>: ...` wrapper, so the code stays first,

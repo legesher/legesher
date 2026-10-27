@@ -214,8 +214,9 @@ below is written to become CORE-1423's implementation checklist so requirements 
 
 ### Existing mitigations (local server)
 
-- Local-only by construction: stdio transport, no network calls, no accounts, no telemetry
-  (`libs/mcp/legesher_mcp/server.py` module header and `_INSTRUCTIONS`).
+- Local-only by construction: stdio transport, no account, and no network call on any tool call
+  (`libs/mcp/legesher_mcp/server.py` module header and `_INSTRUCTIONS`). Optional usage telemetry is
+  planned, off by default and not yet shipped (`libs/mcp/README.md`, Privacy).
 - Path traversal cut off before any resolution: `LANG_CODE_PATTERN` is validated prior to pack/path lookup
   (`libs/mcp/legesher_mcp/engine.py`).
 - Input caps: `SOURCE_MAX_CHARS`, `SNIPPET_MAX_CHARS`, `LANG_CODE_MAX_LENGTH` enforced through Pydantic field

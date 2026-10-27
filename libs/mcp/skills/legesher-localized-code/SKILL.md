@@ -41,8 +41,8 @@ a builtin's rendering is how localized code silently breaks.
 | The full dictionary for a language | resource `legesher://languages/{lang}/terms` |
 | Coverage picture of an existing repo | `map_existing_codebase` |
 
-Everything is static and local: code is parsed, never executed, and the
-stdio server makes no network calls.
+Everything is static and local: code is parsed, never executed, and no
+tool call makes a network request.
 
 ## The writing workflow
 

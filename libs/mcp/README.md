@@ -7,10 +7,12 @@ the engine's translation capability inside every MCP-capable client — Claude,
 IDE assistants, agent frameworks — as six coarse, task-shaped tools.
 
 **Using the MCP server is free forever (Apache-2.0).** The local server runs
-entirely against the locally installed Legesher engine: it needs no account
-and sends no telemetry. Some capabilities require a Legesher account on the
-hosted instance. What the server does is defined by this open package and
-nothing else.
+entirely against the locally installed Legesher engine: it needs no account,
+and every tool call is served locally. Optional usage telemetry is planned
+and will be off unless you turn it on; the Privacy section below says
+exactly what it would send. Some capabilities require a Legesher account on
+the hosted instance. What the server does is defined by this open package
+and nothing else.
 
 ## Tools
 
@@ -217,10 +219,29 @@ policy and playbook half for agent sessions:
 
 ## Privacy
 
-- **No telemetry.** The stdio server emits no events, pings, or metrics of
-  any kind.
-- **No network.** Every tool call is served by the local engine.
-- **No persistence.** Submitted source is processed in memory; file *paths*
+- **No telemetry in this version.** The server sends nothing. A coming
+  release adds an optional usage report so the maintainers can see which
+  tools are used and how often; earlier versions of this README promised
+  that the server would never emit telemetry, and that promise is
+  withdrawn. When the report ships:
+  - It is **off by default**. Nothing is sent unless you set
+    `LEGESHER_MCP_TELEMETRY=on` in the server's environment (the `env`
+    block or `--env` flag of your client config, as in the examples
+    above).
+  - `DO_NOT_TRACK=1` or `LEGESHER_TELEMETRY_DISABLED=1` always wins and
+    overrides every other setting.
+  - It sends only: tool name, call count, error class, server and engine
+    versions, and a random install id (kept per install so repeated
+    reports count once; not derived from your machine, account or code).
+    Never source code, file contents, identifiers, translated text,
+    prompts, file paths, or anything that identifies you personally.
+  - It runs off the request path: a tool call never waits on it or fails
+    because of it, and a report that cannot be delivered is dropped.
+  - It never touches the MCP stdio stream.
+- **No network on a tool call.** Every tool call is served by the local
+  engine. The usage report above, once it ships and only if you enable
+  it, is the only outbound traffic this package is designed to initiate.
+- **Your code is not stored.** Submitted source is processed in memory; file *paths*
   passed to `map_existing_codebase` are report labels — echoed back to you,
   never logged, never used to touch the filesystem. This is why
   `validate_identifier_translations` takes your glossary as *content* and
@@ -231,10 +252,10 @@ policy and playbook half for agent sessions:
   teammates is a system of record, and belongs behind the hosted API — not
   in a local subprocess.
 - **Declared, not just claimed.** All six tools carry MCP annotations
-  saying so — `readOnlyHint: true`, `idempotentHint: true`,
+  saying so: `readOnlyHint: true`, `idempotentHint: true`,
   `destructiveHint: false`, `openWorldHint: false`. Clients that read the
   hints (Claude Code among them) can reduce or skip approval prompts,
-  because nothing here writes a file, executes submitted code (validation
+  because no tool call writes a file, executes submitted code (validation
   is `compile()` only), or opens a socket. A surface-lock test asserts the
   annotations, so a future tool that *does* any of those has to change them
   deliberately.

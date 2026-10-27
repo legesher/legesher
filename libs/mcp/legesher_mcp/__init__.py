@@ -12,9 +12,10 @@ loopback by default.
 
 Using the MCP server is free forever (Apache-2.0). The local server runs
 entirely against the locally installed engine (``legesher-core`` +
-``legesher-i18n`` + language packs): it needs no account and sends no
-telemetry. Some capabilities require a Legesher account on the hosted
-instance.
+``legesher-i18n`` + language packs): it needs no account, and every tool
+call is served locally. Optional usage telemetry is planned and will be
+off unless enabled; the README's Privacy section says what it would send.
+Some capabilities require a Legesher account on the hosted instance.
 
 Run it:
 

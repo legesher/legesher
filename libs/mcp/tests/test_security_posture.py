@@ -160,7 +160,7 @@ async def test_published_text_is_printable_and_bounded(
 #: scanners diff it — so changing one is a deliberate act with a review,
 #: not a typo fix that lands unnoticed. When this fails on an intended
 #: edit, run the test's own failure message to get the new value.
-SURFACE_DIGEST = "1d1f55335252b59c4423c94308cdc54c663e92069770ed41b90c6a55e21a9d64"
+SURFACE_DIGEST = "1422df1afcea964d9c9e8e84dfb39fef08b762d32d01d481c82b54084b51ef24"
 
 
 def _surface_digest(tools: Any, prompts: Any, instructions: str | None) -> str:

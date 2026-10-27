@@ -22,8 +22,10 @@ deployment installs a policy).
 
 Two transports serve the same server:
 
-- **stdio** (the default, and what ``legesher-mcp`` runs): local-only —
-  no network calls, no accounts, no telemetry.
+- **stdio** (the default, and what ``legesher-mcp`` runs): local-only.
+  Every tool call is served by the installed engine, with no account.
+  Optional usage telemetry is planned, off unless enabled (README,
+  Privacy).
 - **streamable HTTP** (``legesher-mcp --transport streamable-http``):
   the same tools bound to one interface, loopback by default. Stateless,
   plain JSON responses, with the ``Origin`` header validated against the
@@ -90,8 +92,8 @@ before recording them, and map_existing_codebase for a repo-level
 legibility report. The language catalog is the legesher://languages
 resource; full dictionaries are
 legesher://languages/{lang}/terms. X→Y translation pivots through English
-(results say so via `pivoted`). Everything runs locally: no network, no
-telemetry."""
+(results say so via `pivoted`). Every tool call runs locally against the
+installed engine; no tool call makes a network request."""
 
 _LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
@@ -737,7 +739,7 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 
 def main() -> None:
-    """Run the Legesher MCP server (local engine, no telemetry).
+    """Run the Legesher MCP server against the local engine.
 
     stdio by default; ``--transport streamable-http`` serves the same
     server over HTTP, bound to ``--host``/``--port``.
