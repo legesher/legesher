@@ -20,6 +20,7 @@ from legesher_i18n.intake.review_template import (
     TemplateMetadata,
     check_review_pin,
     known_pack_versions,
+    known_pins_from_template,
     parse_metadata_line,
     render_metadata_line,
     review_file_name,
@@ -185,3 +186,66 @@ def test_known_pack_versions_reads_the_git_history_of_pyproject(tmp_path: Path) 
     # No CHANGELOG.md at all: the earlier bumps exist only in git.
     assert known_pack_versions(pack) == {"0.0.1", "0.0.2", "0.0.3"}
     assert known_pack_versions(pack, use_git=False) == {"0.0.3"}
+
+
+# --- the pin index where no pack tree exists (CORE-2508) ---------------------
+
+
+def _git(cwd: Path, *args: str) -> None:
+    import subprocess
+
+    subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid", *args],
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+    )
+
+
+def test_pins_from_a_template_outside_git_are_its_own_line(tmp_path: Path) -> None:
+    template = tmp_path / "si.md"
+    template.write_text(
+        (PACKS_DIR / "si" / "REFERENCE.md").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    versions, pythons = known_pins_from_template(template)
+    meta = parse_metadata_line(template.read_text(encoding="utf-8"))
+    assert (versions, pythons) == ({meta.pack_version}, {meta.python})
+
+
+def test_pins_from_a_template_include_every_pin_its_history_carried(
+    tmp_path: Path,
+) -> None:
+    text = (PACKS_DIR / "si" / "REFERENCE.md").read_text(encoding="utf-8")
+    meta = parse_metadata_line(text)
+    old = text.replace(
+        f"pack_version={meta.pack_version}", "pack_version=0.0.1", 1
+    ).replace(f"python={meta.python}", "python=3.12", 1)
+    _git(tmp_path, "init", "-q")
+    template = tmp_path / "si.md"
+    template.write_text(old, encoding="utf-8")
+    _git(tmp_path, "add", "si.md")
+    _git(tmp_path, "commit", "-q", "-m", "old pin")
+    template.write_text(text, encoding="utf-8")
+    _git(tmp_path, "commit", "-q", "-am", "new pin")
+    versions, pythons = known_pins_from_template(template)
+    assert versions == {"0.0.1", meta.pack_version}
+    assert pythons == {"3.12", meta.python}
+    assert known_pins_from_template(template, use_git=False) == (
+        {meta.pack_version},
+        {meta.python},
+    )
+
+
+def test_templates_at_takes_the_path_literally_never_as_a_glob(tmp_path: Path) -> None:
+    from legesher_i18n.intake.review_template import ReviewTemplateError, templates_at
+
+    _git(tmp_path, "init", "-q")
+    (tmp_path / "reference").mkdir()
+    (tmp_path / "reference" / "si.md").write_text("template\n", encoding="utf-8")
+    _git(tmp_path, "add", "reference/si.md")
+    _git(tmp_path, "commit", "-q", "-m", "template")
+    assert templates_at(tmp_path, "HEAD", "reference/si.md") == ["template\n"]
+    for pattern in ("reference/s?.md", "reference/*.md", "reference/[s]i.md"):
+        with pytest.raises(ReviewTemplateError):
+            templates_at(tmp_path, "HEAD", pattern)

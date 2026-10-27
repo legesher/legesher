@@ -1551,15 +1551,19 @@ cli.add_command(registry)
 # modules import from this one's neighbours and a top-of-file import would be
 # circular; the cost is eager either way.
 from legesher_i18n.intake.commands import (  # noqa: E402
+    check_review_files,
     clear_option,
     import_issue,
     import_review_bundle,
+    import_review_file,
     quarantine_queue,
     rescreen_flagged,
 )
 
 cli.add_command(import_review_bundle)
 cli.add_command(import_issue)
+cli.add_command(import_review_file)
+cli.add_command(check_review_files)
 cli.add_command(quarantine_queue)
 cli.add_command(clear_option)
 cli.add_command(rescreen_flagged)

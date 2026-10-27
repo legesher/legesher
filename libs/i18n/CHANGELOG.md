@@ -11,6 +11,38 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **A filled-in review template can be imported.** `legesher-i18n
+  import-review-file <path> --pull-request <url>` reads one markdown review
+  from a merged `legesher/language-packs` pull request into the same review
+  bundle every other lane produces, then runs the usual import: quarantine by
+  default, screening, the reply. The file is read from git at the commit the
+  pull request merged, never from the working tree. `✓` endorses the current word, `Keep` plus a
+  note endorses it with the note recorded, a word in `Suggested` with reasoning
+  proposes a replacement, a comment alone is commentary, and Notes for Future
+  Updates becomes locale-wide commentary. The contributor's identity comes from
+  the pull request author; a file whose name or About-you username names
+  someone else is refused. So is a file whose pin, boxes, columns or unchanged
+  cells differ from the template it was copied from, with every problem named
+  by row key or line. Importing the same file from the same pull request twice
+  writes nothing the second time. Review sessions from this lane carry
+  `method='github'`, a `reference-md/...` kit version, and `after_reveal` on
+  every row, so a critique-first review is told apart from a blind-first one.
+- **`legesher-i18n check-review-files`** runs the mechanical checks on review
+  files with no database and no salt, for a pull-request check or a
+  maintainer's machine: the pin, the boxes, the file name against the pull
+  request author, and on each suggestion identifier validity at the pinned
+  Python version, NFKC stability, the language's script and format-character
+  policy, and collisions with the pack's other words, the file's other
+  suggestions and live Python names, earlier-tier spellings included. A
+  spelling that is an identifier only from Python 3.13 on a row the pack also
+  ships for 3.10 to 3.12 is a warning. Templates and known versions are read
+  from the base branch (`--base-ref`, default `origin/main`), never from the
+  pull request itself. The report names every failing row by its key and shows
+  reviewer text only inside code spans. Run it on Python 3.13 or newer: on
+  older Unicode tables it refuses to judge a 3.13-only spelling and fails it.
+- **Review bundle 1.1** adds a pull-request source (`source.kind
+  'github_pull_request'` and `source.path`) and `locale_commentary`. A 1.0
+  bundle may use neither, so no existing session id changes.
 - **Every pack's `REFERENCE.md` is now its markdown review template.** The
   generator (`scripts/generate_reference_docs.py`) stamps a hidden first line
   pinning the pack version, the Python view, the registry code and BCP 47
@@ -270,6 +302,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   reviewers. [CORE-1797]
 
 ### Fixed
+
+- **`import-issue` matches the issue URL whole.** A trailing newline after the
+  issue number is now refused, as anything else after it already was.
 
 - **The example program in every pack's `REFERENCE.md` now round-trips
   through its pack.** Twelve of the hand-written example identifiers were

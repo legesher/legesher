@@ -2,12 +2,23 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://legesher.io/schemas/review-bundle-1.0.json",
   "title": "Legesher review bundle",
-  "description": "One completed review sitting, in the canonical wire shape every intake lane shares (CORE-1688; contract from the CORE-1538 intake architecture, section 4). The canonical-JSON bytes of this document mint the session uid, so the shape is append-only: fields may be ADDED in a later bundle_version, never changed or removed within one. The bundle is a PUBLIC artifact: no email address, no private contact detail, ever — contact rides the private channel (CORE-1568) and only contact_captured (a boolean) is asserted here.",
+  "description": "One completed review sitting, in the canonical wire shape every intake lane shares (CORE-1688; contract from the CORE-1538 intake architecture, section 4). The canonical-JSON bytes of this document mint the session uid, so the shape is append-only: fields may be ADDED in a later bundle_version, never changed or removed within one. 1.1 adds the pull-request source (source.kind 'github_pull_request' and source.path) and locale_commentary; a 1.0 bundle may use neither, so no 1.0 session uid moves. The bundle is a PUBLIC artifact: no email address, no private contact detail, ever — contact rides the private channel (CORE-1568) and only contact_captured (a boolean) is asserted here.",
   "type": "object",
   "additionalProperties": false,
   "required": ["bundle_version", "kit_version", "locale", "track", "contributor", "attestations", "responses"],
+  "allOf": [
+    {
+      "if": { "properties": { "bundle_version": { "const": "1.0" } } },
+      "then": {
+        "properties": {
+          "locale_commentary": false,
+          "source": { "properties": { "kind": { "const": "github_issue" }, "path": false } }
+        }
+      }
+    }
+  ],
   "properties": {
-    "bundle_version": { "const": "1.0" },
+    "bundle_version": { "enum": ["1.0", "1.1"] },
     "kit_version": {
       "type": "string",
       "minLength": 1,
@@ -167,6 +178,20 @@
         }
       }
     },
+    "locale_commentary": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Locale-wide observations not keyed to one concept (bundle 1.1: the review template's Notes for Future Updates). Recorded as concept_commentary with no concept.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["topic", "body"],
+        "properties": {
+          "topic": { "enum": ["word_formation", "expansion", "register", "pedagogy", "style", "general"] },
+          "body": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
     "style_answers": {
       "type": "array",
       "items": {
@@ -202,12 +227,13 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["kind"],
-      "description": "Where a maintainer-imported bundle came from, when it was not submitted as a bundle file directly (the Stage-0 issue lane). Part of the canonical bytes, so the same issue always re-mints the same session uid.",
+      "description": "Where a maintainer-imported bundle came from, when it was not submitted as a bundle file directly (the Stage-0 issue lane, or a review file from a merged pull request). Part of the canonical bytes, so the same issue, or the same file from the same pull request, always re-mints the same session uid.",
       "properties": {
-        "kind": { "enum": ["github_issue"] },
+        "kind": { "enum": ["github_issue", "github_pull_request"] },
         "url": { "type": "string" },
         "id": { "type": "integer" },
-        "created_at": { "type": ["string", "null"], "description": "GitHub-attested creation time; used as started_at for the withdrawal rule." }
+        "created_at": { "type": ["string", "null"], "description": "GitHub-attested creation time; used as started_at for the withdrawal rule." },
+        "path": { "type": "string", "minLength": 1, "description": "The review file's path in the repository the pull request merged into (bundle 1.1)." }
       }
     }
   },

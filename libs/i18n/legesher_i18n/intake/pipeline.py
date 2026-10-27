@@ -788,6 +788,8 @@ class BundleImporter:
         for index, answer in enumerate(obj.get("style_answers", [])):
             if answer.get("rationale"):
                 texts.append((f"style_answers[{index}].rationale", answer["rationale"]))
+        for index, commentary in enumerate(obj.get("locale_commentary", [])):
+            texts.append((f"locale_commentary[{index}].body", commentary["body"]))
         return texts
 
     def _stage_conduct(self, obj: dict) -> list[str]:
@@ -1485,6 +1487,30 @@ class BundleImporter:
                         " reason, note) VALUES (?, ?, ?, ?)",
                         (uid, cid, reason, comment),
                     )
+
+            # Locale-wide observations (bundle 1.1): commentary with no concept.
+            for commentary in obj.get("locale_commentary", []):
+                com_uid = commentary_uid(
+                    ses_uid, cid, None, locale, commentary["topic"], commentary["body"]
+                )
+                conn.execute(
+                    "INSERT INTO concept_commentary(uid, contributor_id,"
+                    " session_uid, concept_id, locale, topic, body)"
+                    " VALUES (?, ?, ?, NULL, ?, ?, ?)",
+                    (
+                        com_uid,
+                        cid,
+                        ses_uid,
+                        locale,
+                        commentary["topic"],
+                        commentary["body"],
+                    ),
+                )
+                conn.execute(
+                    "INSERT OR IGNORE INTO commentary_moderation(commentary_uid)"
+                    " VALUES (?)",
+                    (com_uid,),
+                )
 
             for answer in obj.get("style_answers", []):
                 live = conn.execute(

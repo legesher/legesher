@@ -33,6 +33,7 @@ import io
 import json
 import re
 import shutil
+import sqlite3
 import sys
 import tokenize
 import unicodedata
@@ -839,4 +840,132 @@ def test_regenerate_hook_fires_on_every_template_input(path: str) -> None:
     assert len(hooks) == 1
     assert re.search(hooks[0]["files"], path), (
         f"{path} does not trigger the regenerate hook"
+    )
+
+
+# --- the template read back by the review parser (CORE-2508) ------------------------
+#
+# The parser keys on what the generator writes: the hidden line, the six boxes,
+# the six columns and the row keys. These tests render templates the shipped
+# packs cannot produce today (a dialect, a lacking term) and read them back, so
+# the parser's decisions on those rows are pinned to the generator's real output.
+
+from legesher_i18n.db.schema_v2 import apply_schema_v2  # noqa: E402
+from legesher_i18n.intake.review_parser import (  # noqa: E402
+    PullRequest,
+    ReviewFileRefused,
+    parse_review_file,
+    read_review_file,
+)
+
+
+def _filled(template: str, rows: dict[str, tuple[str, str]], user: str = "reviewer") -> str:
+    """Tick every box, name *user*, fill *rows* (key -> Suggested, Comments)."""
+    text = template.replace("`<your-github-username>`", f"`{user}`", 1).replace("- [ ]", "- [x]")
+    lines = text.split("\n")
+    for index, line in enumerate(lines):
+        for key, (suggested, comments) in rows.items():
+            if line.startswith(f"| `{key}` |"):
+                lines[index] = f"{line[: -len('| | |')]}| {suggested} | {comments} |"
+    return "\n".join(lines)
+
+
+def _concept_db(tmp_path: Path, tag: str, terms: dict[str, str]) -> sqlite3.Connection:
+    conn = sqlite3.connect(tmp_path / "contract.db")
+    apply_schema_v2(conn)
+    conn.execute(
+        "INSERT INTO programming_languages(code, name, status) VALUES ('python', 'Python', 'shipping')"
+    )
+    language, _, region = tag.partition("-")
+    conn.execute(
+        "INSERT INTO locales(tag, language_subtag, region_subtag, name, native_name,"
+        " direction, in_registry) VALUES (?, ?, ?, ?, ?, 'ltr', 1)",
+        (tag, language, region or None, tag, tag),
+    )
+    for term, category in terms.items():
+        cursor = conn.execute(
+            "INSERT INTO concepts(slug, definition_en, category) VALUES (?, ?, ?)",
+            (term, term, category),
+        )
+        conn.execute(
+            "INSERT INTO terms(concept_id, programming_language, name, category)"
+            " VALUES (?, 'python', ?, ?)",
+            (cursor.lastrowid, term, category),
+        )
+    return conn
+
+
+def _dialect_template(tmp_path: Path) -> str:
+    packs_root = tmp_path / "packs"
+    shutil.copytree(PACKS_DIR / "es", packs_root / "es")
+    shutil.copytree(PACKS_DIR / "en", packs_root / "en")
+    dialect = packs_root / "es-MX" / "legesher_i18n_python_es_mx" / "packs"
+    dialect.mkdir(parents=True)
+    (packs_root / "es-MX" / "pyproject.toml").write_text(
+        '[project]\nname = "legesher-i18n-python-es-mx"\nversion = "0.0.1"\n', encoding="utf-8"
+    )
+    (dialect / "3.10.yml").write_text(
+        "language: es-MX\ntarget: python\nversion: '3.10'\nkeywords:\n  if: si_mx\n",
+        encoding="utf-8",
+    )
+    registry = {**REGISTRY, "es-MX": {**REGISTRY["es"], "name": "Spanish (Mexico)", "bcp47": "es-MX"}}
+    view = G.load_pack_view("es-MX", packs_root=packs_root, registry=registry)
+    english = G.load_pack_view("en", packs_root=packs_root, python_version="3.10")
+    return G.render_template(view, english)
+
+
+def test_a_verdict_on_an_inherited_dialect_row_is_evidence_for_the_dialect(
+    tmp_path: Path,
+) -> None:
+    template = _dialect_template(tmp_path)
+    base_word = _merged("es", upto="3.10")["keywords.while"]
+    text = _filled(template, {"keywords.while": ("", "✓"), "keywords.for": ("`pa_cada`", "regional")})
+    review = read_review_file(text, template)
+    inherited = {row.key: row.inherited_from for row in review.answered}
+    assert inherited == {"keywords.while": "es", "keywords.for": "es"}
+    assert any("inherited from es" in note and "es-MX" in note for note in review.notes)
+
+    conn = _concept_db(tmp_path, "es-MX", {"while": "keyword", "for": "keyword"})
+    bundle = parse_review_file(
+        text,
+        template_text=template,
+        path="reviews/es-MX/es-MX-reviewer.md",
+        pull_request=PullRequest("https://github.com/legesher/language-packs/pull/9", 9, "reviewer"),
+        conn=conn,
+    ).bundle
+    assert bundle["locale"] == "es-MX"
+    surfaces = {r["concept"]: [e["surface_form"] for e in r["endorsements"]] for r in bundle["responses"]}
+    assert surfaces == {"while": [base_word], "for": ["pa_cada"]}
+
+
+def _lacking_template(tmp_path: Path, english_view) -> str:
+    packs_root = tmp_path / "packs"
+    shutil.copytree(PACKS_DIR / "si", packs_root / "si")
+    shutil.copytree(PACKS_DIR / "en", packs_root / "en")
+    base = packs_root / "si" / "legesher_i18n_python_si" / "packs" / "3.10.yml"
+    data = yaml.safe_load(base.read_text(encoding="utf-8"))
+    del data["keywords"]["while"]
+    base.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    return G.render_template(G.load_pack_view("si", packs_root=packs_root), english_view)
+
+
+@pytest.mark.parametrize("comments", ["✓", "Keep: fine as it is"])
+def test_a_tick_or_keep_on_a_no_word_row_is_refused_by_key(
+    tmp_path: Path, english_view, comments: str
+) -> None:
+    template = _lacking_template(tmp_path, english_view)
+    with pytest.raises(ReviewFileRefused) as caught:
+        read_review_file(_filled(template, {"keywords.while": ("", comments)}), template)
+    problems = "\n".join(caught.value.problems)
+    assert "keywords.while" in problems and "nothing to endorse" in problems
+
+
+def test_a_suggestion_on_a_no_word_row_proposes_the_first_word(
+    tmp_path: Path, english_view
+) -> None:
+    template = _lacking_template(tmp_path, english_view)
+    text = _filled(template, {"keywords.while": ("`අතරතුර`", "the usual word for while")})
+    (row,) = read_review_file(text, template).answered
+    assert (row.key, row.current, row.verdict, row.suggested) == (
+        "keywords.while", None, "suggest", "අතරතුර",
     )

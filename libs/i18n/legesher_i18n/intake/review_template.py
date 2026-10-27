@@ -55,6 +55,21 @@ _PAIR_RE = re.compile(r"(?P<key>[a-z_0-9]+)=(?P<value>\S+)")
 _CHANGELOG_VERSION_RE = re.compile(r"^## \[(?P<version>\d+\.\d+\.\d+)\]", re.MULTILINE)
 
 
+def code_span(value: str) -> str:
+    """*value* as one inert markdown code span, whatever it contains.
+
+    Reviewer text reaches reports that may be posted on a pull request. Inside a
+    code span GitHub renders no image, link or @-mention, so every value a
+    reviewer controls goes through here: the fence is one backtick longer than
+    the longest run inside, and line breaks become spaces.
+    """
+    flat = " ".join(value.splitlines())
+    runs = [len(run) for run in re.findall(r"`+", flat)]
+    fence = "`" * (max(runs, default=0) + 1)
+    pad = " " if flat.startswith("`") or flat.endswith("`") or not flat else ""
+    return f"{fence}{pad}{flat}{pad}{fence}"
+
+
 class ReviewTemplateError(ValueError):
     """A template or review file whose metadata line cannot be trusted."""
 
@@ -95,7 +110,7 @@ def parse_metadata_line(text: str) -> TemplateMetadata:
     match = _LINE_RE.match(first_line)
     if match is None:
         raise ReviewTemplateError(
-            f"the first line is not a {METADATA_PREFIX} metadata line: {first_line!r}"
+            f"the first line is not a {METADATA_PREFIX} metadata line: {code_span(first_line)}"
         )
     pairs = [
         (m.group("key"), m.group("value"))
@@ -105,13 +120,13 @@ def parse_metadata_line(text: str) -> TemplateMetadata:
     duplicated = sorted({key for key in keys if keys.count(key) > 1})
     if duplicated:
         raise ReviewTemplateError(
-            f"metadata line repeats {', '.join(duplicated)}: {first_line!r}"
+            f"metadata line repeats {', '.join(duplicated)}: {code_span(first_line)}"
         )
     values = dict(pairs)
     missing = [name for name in _FIELDS if name not in values]
     if missing:
         raise ReviewTemplateError(
-            f"metadata line is missing {', '.join(missing)}: {first_line!r}"
+            f"metadata line is missing {', '.join(missing)}: {code_span(first_line)}"
         )
     if values["format"] != str(FORMAT_VERSION):
         raise ReviewTemplateError(
@@ -191,6 +206,110 @@ def _versions_from_git(pyproject: Path) -> set[str]:
     return {m.group("version") for m in _PYPROJECT_VERSION_RE.finditer(result.stdout)}
 
 
+def known_pins_from_template(
+    template: Path, *, use_git: bool = True
+) -> tuple[set[str], set[str]]:
+    """``(pack versions, Python versions)`` a published template has ever pinned.
+
+    The index a check uses where no pack tree exists (language-packs, which
+    holds only ``reference/<tag>.md``): the template's own metadata line, plus,
+    when *use_git* is true, every metadata line git history ever added to it.
+    A review pinning a version that no published template carried is refused.
+    """
+    versions: set[str] = set()
+    pythons: set[str] = set()
+    lines = [template.read_text(encoding="utf-8").split("\n", 1)[0]]
+    if use_git:
+        try:
+            result = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(template.parent),
+                    "log",
+                    "--format=",
+                    "-p",
+                    "--",
+                    template.name,
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=60,
+                check=False,
+            )
+        except (OSError, subprocess.SubprocessError):
+            result = None
+        if result is not None and result.returncode == 0:
+            lines += [
+                line[1:]
+                for line in result.stdout.splitlines()
+                if line.startswith("+<!--")
+            ]
+    for line in lines:
+        try:
+            meta = parse_metadata_line(line)
+        except ReviewTemplateError:
+            continue
+        versions.add(meta.pack_version)
+        pythons.add(meta.python)
+    return versions, pythons
+
+
+def templates_at(repo: Path, ref: str, path: str) -> list[str]:
+    """Every version of the template at *path* reachable from *ref*, newest first.
+
+    The trusted source for a pull-request check: read from the BASE ref, never
+    from the pull request's own checkout, so a pull request that also edits
+    ``reference/<tag>.md`` cannot vouch for its own review. The full list lets a
+    review pinned before a version bump be read against the template it was
+    copied from (match it by the metadata line).
+
+    *path* is taken literally (``--literal-pathspecs``): it is built from a
+    review's own metadata, so a ``?`` or ``*`` in it must never glob.
+
+    Raises:
+        ReviewTemplateError: when git cannot read *path* at *ref*, *ref* is not a
+            ref, or a version is not UTF-8.
+    """
+    if not ref or ref.startswith("-"):
+        raise ReviewTemplateError(f"{code_span(ref)} is not a git ref")
+
+    def git(*args: str) -> bytes:
+        try:
+            result = subprocess.run(
+                ["git", "--literal-pathspecs", "-C", str(repo), *args],
+                capture_output=True,
+                timeout=60,
+                check=False,
+            )
+        except (OSError, subprocess.SubprocessError) as error:
+            raise ReviewTemplateError(
+                f"git could not run in {repo}: {error}"
+            ) from error
+        if result.returncode != 0:
+            raise ReviewTemplateError(
+                f"git {' '.join(args[:2])} failed in {repo}: "
+                f"{result.stderr.decode('utf-8', 'replace').strip()}"
+            )
+        return result.stdout
+
+    commits = git("log", "--format=%H", ref, "--", path).decode("ascii").split()
+    if not commits:
+        raise ReviewTemplateError(
+            f"{code_span(path)} has no history at {code_span(ref)}"
+        )
+    texts: list[str] = []
+    for commit in commits:
+        try:
+            texts.append(git("show", f"{commit}:{path}").decode("utf-8"))
+        except UnicodeDecodeError as error:
+            raise ReviewTemplateError(
+                f"{path} at {commit} is not UTF-8: {error}"
+            ) from error
+    return texts
+
+
 def check_review_pin(
     meta: TemplateMetadata,
     *,
@@ -210,20 +329,20 @@ def check_review_pin(
     problems: list[str] = []
     if meta.pack_version not in known_versions:
         problems.append(
-            f"{meta.pack} has no version {meta.pack_version} "
+            f"{code_span(meta.pack)} has no version {code_span(meta.pack_version)} "
             f"(known: {', '.join(sorted(known_versions)) or 'none'})"
         )
     if meta.python not in python_versions:
         problems.append(
-            f"{meta.pack} has no Python {meta.python} version file "
+            f"{code_span(meta.pack)} has no Python {code_span(meta.python)} version file "
             f"(has: {', '.join(sorted(python_versions)) or 'none'})"
         )
     if registry_entry is None:
-        problems.append(f"code {meta.code} is not in the language registry")
+        problems.append(f"code {code_span(meta.code)} is not in the language registry")
     elif registry_entry.get("bcp47") != meta.bcp47:
         problems.append(
-            f"bcp47 {meta.bcp47} disagrees with the registry's "
-            f"{registry_entry.get('bcp47')} for code {meta.code}"
+            f"bcp47 {code_span(meta.bcp47)} disagrees with the registry's "
+            f"{registry_entry.get('bcp47')} for code {code_span(meta.code)}"
         )
     return problems
 

@@ -38,6 +38,26 @@ write corpus rows, so they need consent recorded and a reply, nothing more.
 Flags write no options; they route to native review and are tracked to a
 resolution on the option.
 
+Reviews also arrive as **pull requests** to `legesher/language-packs` that add a
+file under `reviews/<tag>/`: a markdown review (the language's
+`reference/<tag>.md` template, filled in) or a JSON bundle. Merging such a pull
+request accepts the file as evidence; it never writes the corpus. The import
+below is what records it, once, after the merge. List the merged review pull
+requests not yet imported:
+
+```bash
+gh pr list -R legesher/language-packs --state merged --limit 100 \
+  --search "-label:contrib:imported" --json url,author,files \
+  --jq '.[] | select([.files[].path | select(startswith("reviews/") and . != "reviews/README.md")] | length > 0)
+        | "\(.url)  \(.author.login)  \([.files[].path | select(startswith("reviews/"))] | join(" "))"'
+```
+
+The list filters on the `contrib:imported` label, which `--reply` applies after
+an import. The label must exist in `legesher/language-packs` first: until it
+does, the filter excludes nothing (every merged review pull request stays on
+the list; re-importing one is a harmless `duplicate`), and the reply's label
+step fails after its comment has posted.
+
 ## 1. Triage the queue
 
 Read the open issues carrying `contrib:localization` that you have not yet
@@ -51,6 +71,35 @@ imported. For each one, decide only whether it is intake-shaped:
 
 Consent is not a judgment call: **no consent checkbox, no import.** Reply and
 ask, do not infer it.
+
+For a review pull request, triage happens **before the merge**, because the
+merge is the acceptance. Run the mechanical check on the pull request's files
+from a checkout of its branch, on Python 3.13 or newer, and read the report it
+prints (the same report the pull-request check shows in its job summary once
+that check is switched on). Older interpreters lack the Unicode 15.1 identifier
+rules, so the check refuses to judge a 3.13-only spelling there and fails it:
+
+```bash
+git -C <checkout> fetch origin
+uv run legesher-i18n check-review-files <checkout>/reviews/<tag>/<file>.md \
+  --author <pull-request-author> --base-ref origin/main --report review-check.md
+```
+
+The template and the known pins are read from `--base-ref`, never from the
+pull request's own files, so a pull request that also edits
+`reference/<tag>.md` cannot vouch for its own review; a review pinned before a
+pack version bump is matched to the template it was copied from in that
+history.
+
+It names every failing row by its key (an edited current word, an invalid or
+colliding suggestion) and every file-level problem (an unticked box, a file
+name that is not the author's, a pin that does not exist).
+Rows marked `version-tier` are warnings: a Python 3.13+ spelling (a Sinhala
+joiner, say) the pack would also need in a 3.10 to 3.12 form. Merge a markdown
+review only when its report has no failing rows. A JSON bundle has no checker in
+this command yet (it reports the file as unchecked, a failing result): read the
+bundle against its schema by hand before merging it, until the bundle lane adds
+its checker.
 
 ## 2. Import
 
@@ -68,7 +117,22 @@ writes, and the push in step 6 would carry the fork to the durable home.
 read -rs LEGESHER_CONTRIBUTOR_SALT && export LEGESHER_CONTRIBUTOR_SALT
 uv run legesher-i18n import-issue <issue-url> --db build/translations_v2.db
 uv run legesher-i18n import-review-bundle <file> --db build/translations_v2.db
+uv run legesher-i18n import-review-file <checkout>/reviews/<tag>/<file>.md \
+  --pull-request <merged-pull-request-url> --db build/translations_v2.db
 ```
+
+`import-review-file` takes the path of the review in a language-packs checkout
+that has fetched the merge, and reads the file **from git at the commit the pull
+request merged**, never from the working tree: a later pull request to the same
+file, or a maintainer edit, is not recorded under this one. The file must be one
+the pull request lists as changed. The template comes from the pull request's base
+commit, matched to the review's pin. Identity is the pull request author; a pull request
+that has not merged is refused. A refusal names each row or line and imports
+nothing. `--before-merge` reads an open pull request at its head commit for a
+dry run: it cannot reply or sync, and it refuses a database that carries a salt
+fingerprint. To dry-run against real data, copy the database, delete the
+`salt_fingerprint` row from the copy's `build_meta`, and export a throwaway
+salt; never do either to the operational database.
 
 Read the per-stage report each run prints. Three outcomes need a decision:
 
@@ -179,6 +243,9 @@ submissions only. Two rules the flag enforces for you:
   validated and never read from submission content, because a submitter who
   controlled it could have `gh` comment on, label and close any issue your token
   can reach.
+- **A review pull request is commented on and labelled, never closed.** It is
+  already merged. `import-review-file --pull-request <url> --reply` posts on the
+  URL you typed; a pull request given as a JSON file has no reply target.
 - **A halted import replies with nothing at all**, for the reason in step 2.
 
 ## 6. Push to the durable data home
