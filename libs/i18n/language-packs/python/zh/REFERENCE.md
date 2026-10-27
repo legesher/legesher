@@ -307,8 +307,8 @@ Here's an example showing Chinese Python code with Legesher:
     # 演示try/except
     尝试:
         阶乘(-1)
-    除外 值错误 作为 错误:
-        打印(f"错误： {错误}")
+    除外 值错误 作为 错误信息:
+        打印(f"错误： {错误信息}")
     最后:
         打印("完成！")
 

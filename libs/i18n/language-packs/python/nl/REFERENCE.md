@@ -307,8 +307,8 @@ definitie hoofd():
     # Demonstreer try/except
     proberen:
         faculteit(-1)
-    behalve waardefout als fout:
-        afdrukken(f"Fout: {fout}")
+    behalve waardefout als foutmelding:
+        afdrukken(f"Fout: {foutmelding}")
     tenslotte:
         afdrukken("Klaar!")
 

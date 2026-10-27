@@ -45,6 +45,14 @@ Languages
     kept). RTL terms are single right-to-left runs, so they render in the
     same order in a table cell as on a source line.
 
+The example program
+  * Its keywords, builtins and exceptions are the pack's words for the same
+    view, so they change with the pack. Its identifiers come from
+    ``EXAMPLE_TEXT``, are NFKC-normalised, and are never a word of that
+    pack, compared after NFKC normalisation as Python compares names: with
+    the pack words reversed to English the program compiles, and no variable
+    shadows a keyword, builtin or exception. The contract test checks both.
+
 Dialects and locale identity
   * The review folder and file name follow the registry's BCP 47 tag; the
     hidden line carries both ``code`` and ``bcp47``, so a parser never guesses.
@@ -158,6 +166,9 @@ LANGUAGE_SCRIPTS = {
 # Keys: factorial, main, numbers, num, result, count, error_var,
 #       docstring, comment_example, comment_while, comment_try,
 #       msg_negative, msg_count, msg_error, msg_done
+# The first seven are identifiers in the example program. An identifier must
+# not be a word of that language's pack (a keyword there breaks the program,
+# a builtin or exception name shadows it); the contract test refuses one.
 EXAMPLE_TEXT = {
     "am": {
         "factorial": "ፋክቶሪያል",
@@ -183,7 +194,7 @@ EXAMPLE_TEXT = {
         "num": "رقم",
         "result": "النتيجة",
         "count": "العداد",
-        "error_var": "خطأ",
+        "error_var": "الخطأ",
         "docstring": "حساب مضروب العدد ن.",
         "comment_example": "مثال: دالة المضروب مع معالجة الأخطاء",
         "comment_while": "توضيح حلقة while",
@@ -199,7 +210,7 @@ EXAMPLE_TEXT = {
         "numbers": "সংখ্যাসমূহ",
         "num": "সংখ্যা",
         "result": "ফলাফল",
-        "count": "গণনা",
+        "count": "গণক",
         "error_var": "ত্রুটি",
         "docstring": "n এর গুণনফল গণনা করুন।",
         "comment_example": "উদাহরণ: ত্রুটি পরিচালনাসহ গুণনফল ফাংশন",
@@ -317,7 +328,7 @@ EXAMPLE_TEXT = {
         "main": "κύριο",
         "numbers": "αριθμοί",
         "num": "αριθμός",
-        "result": "αποτέλεσμα",
+        "result": "τιμή",
         "count": "μετρητής",
         "error_var": "σφάλμα",
         "docstring": "Υπολογισμός παραγοντικού του n.",
@@ -506,7 +517,7 @@ EXAMPLE_TEXT = {
         "num": "संख्या",
         "result": "परिणाम",
         "count": "गिनती",
-        "error_var": "त्रुटि",
+        "error_var": "ग़लती",
         "docstring": "n का क्रमगुणित गणना करें।",
         "comment_example": "उदाहरण: त्रुटि प्रबंधन के साथ क्रमगुणित फ़ंक्शन",
         "comment_while": "while लूप प्रदर्शन",
@@ -540,7 +551,7 @@ EXAMPLE_TEXT = {
         "num": "szam",
         "result": "eredmeny",
         "count": "szamlalo",
-        "error_var": "hiba",
+        "error_var": "hibauzenet",
         "docstring": "Számítsd ki n faktoriálisát.",
         "comment_example": "Példa: Faktoriális függvény hibakezeléssel",
         "comment_while": "While ciklus bemutatása",
@@ -625,7 +636,7 @@ EXAMPLE_TEXT = {
         "num": "숫자",
         "result": "결과",
         "count": "카운트",
-        "error_var": "오류",
+        "error_var": "오류_내용",
         "docstring": "n의 팩토리얼을 계산합니다.",
         "comment_example": "예제: 오류 처리가 있는 팩토리얼 함수",
         "comment_while": "while 루프 시연",
@@ -726,7 +737,7 @@ EXAMPLE_TEXT = {
         "numbers": "ဂဏန်းများ",
         "num": "ဂဏန်း",
         "result": "ရလဒ်",
-        "count": "ရေတွက်",
+        "count": "အရေအတွက်",
         "error_var": "အမှား",
         "docstring": "n ၏ ဖက်တိုရီယယ်ကို တွက်ချက်ပါ။",
         "comment_example": "ဥပမာ: အမှားကိုင်တွယ်မှုပါ ဖက်တိုရီယယ် လုပ်ဆောင်ချက်",
@@ -761,7 +772,7 @@ EXAMPLE_TEXT = {
         "num": "getal",
         "result": "resultaat",
         "count": "teller",
-        "error_var": "fout",
+        "error_var": "foutmelding",
         "docstring": "Bereken de faculteit van n.",
         "comment_example": "Voorbeeld: Faculteitsfunctie met foutafhandeling",
         "comment_while": "Demonstreer while-lus",
@@ -778,7 +789,7 @@ EXAMPLE_TEXT = {
         "num": "nummer",
         "result": "resultat",
         "count": "teller",
-        "error_var": "feil",
+        "error_var": "feilmelding",
         "docstring": "Beregn fakultet av n.",
         "comment_example": "Eksempel: Fakultetsfunksjon med feilhåndtering",
         "comment_while": "Demonstrer while-løkke",
@@ -914,7 +925,7 @@ EXAMPLE_TEXT = {
         "num": "nummer",
         "result": "resultat",
         "count": "rakna",
-        "error_var": "fel",
+        "error_var": "felmeddelande",
         "docstring": "Beräkna fakulteten av n.",
         "comment_example": "Exempel: Fakultetsfunktion med felhantering",
         "comment_while": "Demonstrera while-loop",
@@ -999,7 +1010,7 @@ EXAMPLE_TEXT = {
         "num": "sayi",
         "result": "sonuc",
         "count": "sayac",
-        "error_var": "hata",
+        "error_var": "hata_mesaji",
         "docstring": "n'nin faktöriyelini hesapla.",
         "comment_example": "Örnek: Hata işlemeli faktöriyel fonksiyonu",
         "comment_while": "while döngüsü gösterimi",
@@ -1101,7 +1112,7 @@ EXAMPLE_TEXT = {
         "num": "数字",
         "result": "结果",
         "count": "计数",
-        "error_var": "错误",
+        "error_var": "错误信息",
         "docstring": "计算n的阶乘。",
         "comment_example": "示例：带错误处理的阶乘函数",
         "comment_while": "演示while循环",

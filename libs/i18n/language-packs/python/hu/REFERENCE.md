@@ -307,8 +307,8 @@ definíró fo():
     # Try/except bemutatása
     próbálja:
         faktorialis(-1)
-    kivéve Értétvéltesés mint hiba:
-        nyomtat(f"Hiba: {hiba}")
+    kivéve Értétvéltesés mint hibauzenet:
+        nyomtat(f"Hiba: {hibauzenet}")
     finalizálás:
         nyomtat("Kész!")
 

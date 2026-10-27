@@ -17,6 +17,8 @@ versions, languages and dialects:
 * values are byte-identical to the pack, RTL terms are single runs;
 * nothing repo-wide is in a template, so regeneration is per pack;
 * a dialect pack marks the rows it inherits from its base.
+* the example program round-trips: with its pack words reversed to English it
+  compiles, and none of its illustrative identifiers is a word of the pack.
 
 Expected values are derived from the YAML and the registry in this module,
 independently of the generator's own loader.
@@ -24,13 +26,17 @@ independently of the generator's own loader.
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import importlib.util
+import io
 import json
 import re
 import shutil
 import sys
+import tokenize
 import unicodedata
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -41,7 +47,9 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - Python 3.10
     import tomli as tomllib  # type: ignore[import-not-found, no-redef]
 
+from legesher_core.language_interface import create_translator_from_language_pack
 from legesher_i18n.intake.review_template import parse_metadata_line
+from legesher_i18n.script_policy import nfkc_delta_class
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKS_DIR = ROOT / "libs" / "i18n" / "language-packs" / "python"
@@ -595,6 +603,216 @@ def test_a_word_set_before_its_term_arrives_is_refused(tmp_path: Path) -> None:
 def test_only_region_dialects_acquire_a_base(tag: str, expected: str | None) -> None:
     registry = {**REGISTRY, "pa": {**REGISTRY["hi"], "name": "Punjabi", "bcp47": "pa"}}
     assert G._base_code(tag, registry) == expected
+
+
+# --- the example program -------------------------------------------------------------
+
+#: True where ``tokenize`` spells NAME as ``\w+`` (CPython < 3.12), which
+#: excludes marks and format characters (libs/core/tests/interpreter_gaps.py,
+#: gap 1). The engine's return hop cannot match a pack word that fragments.
+PURE_PYTHON_TOKENIZER = sys.version_info < (3, 12)
+
+
+def _example_source(text: str) -> str:
+    """The Python program inside the first ```python fence of *text*.
+
+    *text* is a rendered template (the fence under its Example Code heading is
+    taken) or the fenced block ``generate_example_code`` returns.
+    """
+    if "\n## Example Code\n" in text:
+        text = text.split("\n## Example Code\n", 1)[1].split("\n## ", 1)[0]
+    match = re.search(r"```python\n(.*?)\n```", text, re.DOTALL)
+    assert match is not None, "no ```python fence in the example"
+    return match.group(1)
+
+
+def _example_identifier_keys() -> list[str]:
+    """The EXAMPLE_TEXT keys whose values the example program uses as names.
+
+    Read off the English program: every name it binds or reads that is an
+    English EXAMPLE_TEXT value is an identifier key. The other keys are the
+    docstring, the comments and the message strings, which no pack word can
+    break.
+    """
+    english = G.load_pack_view("en")
+    tree = ast.parse(_example_source(G.render_template(english, english)))
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name):
+            names.add(node.id)
+        elif isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+            names.add(node.name)
+        elif isinstance(node, ast.arg):
+            names.add(node.arg)
+        elif isinstance(node, ast.ExceptHandler) and node.name:
+            names.add(node.name)
+    keys = [key for key, value in G.EXAMPLE_TEXT["en"].items() if value in names]
+    assert keys, "the English example binds none of its EXAMPLE_TEXT values"
+    return keys
+
+
+EXAMPLE_IDENTIFIER_KEYS = _example_identifier_keys()
+
+
+def _reverse_translate(source: str, code: str, python: str) -> str:
+    """*source*, written in *code*'s words, back in canonical English.
+
+    The same construction ``libs/i18n/scripts/validate_showcase_examples.py``
+    uses for the preview showcase: the pack's English-to-local translator,
+    reversed. The view's Python version is passed so the words reversed are
+    the ones the template shows, not the running interpreter's.
+    """
+    en_to_local = create_translator_from_language_pack(
+        "python", code, programming_language_version=python
+    )
+    return en_to_local.reverse().translate_code(source, code, "en")
+
+
+#: True where ZWNJ, ZWJ and U+30FB are identifier characters (Unicode 15.1,
+#: CPython 3.13+); libs/core/tests/interpreter_gaps.py, gap 2.
+IDENTIFIER_RULES_ARE_UNICODE_15_1 = tuple(
+    int(part) for part in unicodedata.unidata_version.split(".")
+) >= (15, 1)
+
+#: The characters Unicode 15.1 added to XID_Continue that the packs use.
+UNICODE_15_1_CONTINUE_ADDITIONS = "\u200c\u200d\u30fb"
+
+
+def _identifier_under_unicode_15_1(word: str) -> bool:
+    """Whether *word* is an identifier once ZWNJ, ZWJ and U+30FB may continue one."""
+    if not word or word[0] in UNICODE_15_1_CONTINUE_ADDITIONS:
+        return False
+    stand_in = {ord(ch): "_" for ch in UNICODE_15_1_CONTINUE_ADDITIONS}
+    return word.translate(stand_in).isidentifier()
+
+
+def _not_identifiers_here(code: str) -> list[str]:
+    """Gap-2 words of *code*'s newest view and example identifiers, on this interpreter.
+
+    Empty when this interpreter's Unicode tables are 15.1 or later (CPython
+    3.13+). Before 15.1 it mirrors the strict ledger in
+    libs/core/tests/interpreter_gaps.py (gap 2): it lists the words and example
+    identifiers that ``str.isidentifier()`` refuses here but that become
+    identifiers once ZWNJ, ZWJ and U+30FB are identifier characters (the
+    Sinhala conjuncts spelled with ZWJ, the Japanese ``divmod`` with the
+    katakana middle dot). If anything else is not an identifier, it returns
+    an empty list, so the test fails instead of expecting a failure. English
+    terms that are not identifiers themselves (``except*``) are left out.
+    """
+    if IDENTIFIER_RULES_ARE_UNICODE_15_1:
+        return []
+    english = _merged("en")
+    words = [word for key, word in _merged(code).items() if english[key].isidentifier()]
+    names = [G.EXAMPLE_TEXT[code][key] for key in EXAMPLE_IDENTIFIER_KEYS]
+    refused = [word for word in words + names if not word.isidentifier()]
+    if not all(_identifier_under_unicode_15_1(word) for word in refused):
+        return []
+    return refused
+
+
+def _error_tokens(source: str) -> Counter[str]:
+    """Multiset of ERRORTOKEN strings the running ``tokenize`` emits."""
+    try:
+        return Counter(
+            token.string
+            for token in tokenize.generate_tokens(io.StringIO(source).readline)
+            if token.type == tokenize.ERRORTOKEN
+        )
+    except tokenize.TokenError:
+        return Counter()
+
+
+def _fragmenting_pack_words(code: str, native: str) -> list[str]:
+    """Fragments of the pack words in *native* the running tokenizer cannot read whole.
+
+    The same program rendered with English keywords, builtins and exceptions
+    but the same identifiers is the baseline, so an identifier that fragments
+    appears in both renderings and cancels out; what remains came from a pack
+    word. Empty with the C tokenizer (CPython 3.12+).
+    """
+    if not PURE_PYTHON_TOKENIZER:
+        return []
+    english_words = _example_source(G.generate_example_code(code, {}, {}, {}))
+    return sorted((_error_tokens(native) - _error_tokens(english_words)).elements())
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_example_code_round_trips_and_compiles(
+    request: pytest.FixtureRequest, templates, views, code: str
+) -> None:
+    source = _example_source(templates[code])
+    unspellable = _not_identifiers_here(code)
+    if unspellable:
+        request.applymarker(
+            pytest.mark.xfail(
+                strict=True,
+                reason=(
+                    f"{code}: {unspellable} are identifiers only from Unicode 15.1 "
+                    f"(CPython 3.13) and this interpreter's tables "
+                    f"({unicodedata.unidata_version}) reject them, so the view "
+                    "neither loads nor compiles here "
+                    "(libs/core/tests/interpreter_gaps.py, gap 2)"
+                ),
+            )
+        )
+    else:
+        fragments = _fragmenting_pack_words(code, source)
+        if fragments:
+            shown = ", ".join(f"U+{ord(ch):04X}" for ch in dict.fromkeys(fragments))
+            pytest.skip(
+                f"pure-Python tokenize (CPython {sys.version_info.major}."
+                f"{sys.version_info.minor}) spells NAME as \\w+ and reads {shown} as "
+                "ERRORTOKEN fragments, so the return hop never matches the pack "
+                "words they belong to and whether the example compiles is not "
+                "predicted; pinned strictly by libs/core/tests "
+                "(interpreter_gaps.py, gap 1; CORE-2192)"
+            )
+    canonical = _reverse_translate(source, code, views[code].python)
+    try:
+        compile(canonical, f"<{code} REFERENCE.md example>", "exec")
+    except SyntaxError as exc:
+        line = canonical.splitlines()[exc.lineno - 1] if exc.lineno else ""
+        pytest.fail(
+            f"{code}: the example does not compile once its pack words are "
+            f"English again: line {exc.lineno}: {exc.msg}\n    {line.strip()}"
+        )
+
+
+@pytest.mark.parametrize("code", CODES)
+def test_example_identifiers_never_collide_with_pack_words(code: str) -> None:
+    # Python compares names after NFKC (PEP 3131), so a spelling that is
+    # NFKC-equal to a pack word shadows it as surely as the same bytes do.
+    owners: dict[str, list[str]] = {}
+    for key, history in _histories(code).items():
+        for _version, word in history:
+            owners.setdefault(unicodedata.normalize("NFKC", word), []).append(key)
+    text = G.EXAMPLE_TEXT[code]
+    problems = [
+        f"EXAMPLE_TEXT[{code!r}][{key!r}] = {text[key]!r} is this pack's word for "
+        + ", ".join(owners[unicodedata.normalize("NFKC", text[key])])
+        for key in EXAMPLE_IDENTIFIER_KEYS
+        if unicodedata.normalize("NFKC", text[key]) in owners
+    ]
+    assert not problems, "\n".join(problems)
+
+
+def test_example_identifiers_are_nfkc_fixed_points() -> None:
+    # The hi and bn style guides (and python.yml) require identifiers to be
+    # NFKC fixed points, so the name in the template is the name Python binds.
+    # The one allowance is the pack gate's own: Thai SARA AM (U+0E33), whose
+    # decomposition CPython folds to the same identifier ("sara-am-only" in
+    # legesher_i18n.script_policy). Any other instability is a failure.
+    unstable = []
+    for code in CODES:
+        for key in EXAMPLE_IDENTIFIER_KEYS:
+            word = G.EXAMPLE_TEXT[code][key]
+            delta = nfkc_delta_class(word)
+            if delta is not None and delta != "sara-am-only":
+                unstable.append(
+                    f"EXAMPLE_TEXT[{code!r}][{key!r}] = {word!r} is NFKC-unstable "
+                    f"({delta})"
+                )
+    assert not unstable, "\n".join(unstable)
 
 
 HOOK_PATHS = [

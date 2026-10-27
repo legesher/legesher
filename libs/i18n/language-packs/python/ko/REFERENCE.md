@@ -307,8 +307,8 @@ Here's an example showing Korean Python code with Legesher:
     # try/except 시연
     시도:
         팩토리얼(-1)
-    제외 값오류 알려주기 오류:
-        출력(f"오류: {오류}")
+    제외 값오류 알려주기 오류_내용:
+        출력(f"오류: {오류_내용}")
     마지막으로:
         출력("완료!")
 

@@ -271,6 +271,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **The example program in every pack's `REFERENCE.md` now round-trips
+  through its pack.** Twelve of the hand-written example identifiers were
+  also a word of their language's pack, so three examples did not parse (a
+  variable named with the word for `yield` in Greek, for `False` in Dutch
+  and Chinese) and nine shadowed a builtin or an exception name (`EOFError`
+  in Arabic, Hindi, Norwegian, Swedish and Turkish; `OSError` in Hungarian
+  and Korean; `enumerate` in Bengali and Burmese). Each has a plain
+  replacement that is not a pack word, and the twelve templates are
+  regenerated. The contract test now reverse-translates every example
+  through its pack and compiles it, and refuses an example identifier that
+  equals any word of the pack once both are NFKC-normalised, as Python
+  compares names.
+
 - **Review issues from the live language-packs form now import, and a
   chosen display name is recorded.** The issue parser did not know the
   form's optional "Your language, if you chose Other" field, so it read that

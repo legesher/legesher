@@ -307,8 +307,8 @@ tanımla ana():
     # try/except gösterimi
     deneme:
         faktoriyel(-1)
-    yada değerhatası eşdeğer hata:
-        yazdır(f"Hata: {hata}")
+    yada değerhatası eşdeğer hata_mesaji:
+        yazdır(f"Hata: {hata_mesaji}")
     sonunda:
         yazdır("Bitti!")
 

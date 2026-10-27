@@ -307,8 +307,8 @@ definisjon hoved():
     # Demonstrer try/except
     prøve:
         fakultet(-1)
-    unntatt værdfeil som feil:
-        skrive(f"Feil: {feil}")
+    unntatt værdfeil som feilmelding:
+        skrive(f"Feil: {feilmelding}")
     forrestil:
         skrive("Ferdig!")
 

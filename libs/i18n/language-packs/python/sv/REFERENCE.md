@@ -307,8 +307,8 @@ definiere huvud():
     # Demonstrera try/except
     prova:
         fakultet(-1)
-    förutom värdefel som fel:
-        skrivaut(f"Fel: {fel}")
+    förutom värdefel som felmeddelande:
+        skrivaut(f"Fel: {felmeddelande}")
     slutliggare:
         skrivaut("Klart!")
 
