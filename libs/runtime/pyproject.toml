@@ -1,5 +1,10 @@
 [project]
 name = "legesher-runtime"
+# Versioned by hand: no release train bumps this, and it is not in the root
+# [tool.semantic_release] lists. This is the single source: __version__ reads
+# it back through importlib.metadata, and tests/test_version.py fails on a
+# literal copy. Bump it before dispatching the `runtime` target of
+# publish-pypi.yml; see "Versioning" in README.md.
 version = "0.1.0"
 description = "Localized tracebacks and runtime exception hooks for Legesher"
 readme = "README.md"
@@ -21,8 +26,9 @@ classifiers = [
 
 dependencies = [
     # Sibling ranges ship in the wheel metadata; in-repo the workspace override
-    # in [tool.uv.sources] applies. <1.0.0 because semantic-release
-    # (major_on_zero = true) moves 0.x to 1.0 on a breaking change.
+    # in [tool.uv.sources] applies. <1.0.0 because a 1.0 foundation is a
+    # deliberate, coordinated change (major_on_zero = false in the root
+    # pyproject), and this range stops there.
     # >=0.23.0: renderer.py imports db.schema_v2.is_identity_translation, which
     # first ships in 0.23.0 (CORE-1355). Against 0.22.0 the module-level import
     # fails and the whole package is unimportable — masked in-repo by the

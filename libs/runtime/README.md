@@ -93,6 +93,18 @@ controls; isolation/ordering is a display-layer concern). Revisiting this —
 e.g. optional bidi isolation of interpolated LTR values for terminals that do
 implement the bidi algorithm — is tracked with the RTL rendering work.
 
+## Versioning
+
+`legesher-runtime` has no release train: its version is set by hand in
+`pyproject.toml`, and that field is the single source. `__version__` reads it
+back through `importlib.metadata`, so it cannot report a number the wheel does
+not have.
+
+A new version is published before the foundation packages (`legesher-core`,
+`legesher-i18n`, `legesher`). A file uploaded to an index can never be uploaded
+again, so a rehearsal on TestPyPI uses a development release of the next version
+(`0.1.1.dev1` while `0.1.0` is current) and leaves the real number free.
+
 ## License
 
 Apache-2.0.

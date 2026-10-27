@@ -16,9 +16,19 @@ Example:
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _distribution_version
+
 from .hooks import install, uninstall
 from .renderer import TracebackRenderer
 
-__version__ = "0.1.0"
+try:
+    #: Read from the installed distribution's metadata rather than hand-kept
+    #: here, so the wheel's own version (project.version in pyproject.toml,
+    #: bumped by hand) is the only one. A literal copy would have to be bumped
+    #: by hand alongside project.version, and nothing checked that (CORE-2359).
+    __version__ = _distribution_version("legesher-runtime")
+except PackageNotFoundError:  # pragma: no cover (running from an uninstalled tree)
+    __version__ = "0.0.0.dev0"
 
 __all__ = ["TracebackRenderer", "install", "uninstall", "__version__"]
