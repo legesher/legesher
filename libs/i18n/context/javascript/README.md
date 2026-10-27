@@ -9,7 +9,7 @@ human reviewer) toward an accurate, consistent native-language term.
 - **Total Documents**: 62
 - **Template Version**: Tier 1 (Concise Translation Brief) — see `../../docs/context-template-tier1.md`
 - **Target**: the **JEJ** ("Just Enough JavaScript") teaching subset
-- **Source of truth**: the surface is **Legesher-owned** (CORE-1581), exported by `@legesher/jej` with every post-transcription addition citing its `reference.md` section — last verified against `upstream-courseware` @ `c1deb12` (their enumerated `lib/completing` constants did not survive their greenfield rewrite). Counts: **17 keywords, 16 builtins, 29 members** (`of` and `log` joined via CORE-1571).
+- **Source of truth**: the surface is **Legesher-owned** (CORE-1581), exported by `@legesher/jej` with every post-transcription addition citing its `reference.md` section — last verified against the upstream courseware repository at `c1deb12` (its enumerated `lib/completing` constants did not survive its greenfield rewrite). Counts: **17 keywords, 16 builtins, 29 members** (`of` and `log` joined via CORE-1571).
 
 ## Partitions (62 terms)
 

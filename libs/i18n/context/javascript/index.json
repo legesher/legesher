@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "language": "javascript",
-  "target_note": "JEJ subset, Legesher-owned surface (CORE-1581) verified @ upstream-courseware c1deb12 (17 keywords / 16 builtins / 29 members). of/log joined via CORE-1571; remaining console.* held pending CORE-1609 Q1.",
+  "target_note": "JEJ subset, Legesher-owned surface (CORE-1581) verified against the upstream courseware repository at c1deb12 (17 keywords / 16 builtins / 29 members). of/log joined via CORE-1571; remaining console.* held pending CORE-1609 Q1.",
   "total_documents": 62,
   "last_updated": "2026-07-27",
   "documents": [
