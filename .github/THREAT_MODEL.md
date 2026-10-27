@@ -1,7 +1,8 @@
 # Script-inclusion threat model
 
 **Scope:** every surface where "additional scripts" — code, or data that shapes how code renders or executes — can
-enter a Legesher product. One section per surface: attack classes, existing mitigations (with file citations), gaps,
+enter a Legesher product. One section per surface: attack classes, existing mitigations (with file citations where the
+code lives here), gaps,
 and a verdict.
 
 **Out of scope:** the Hosted-API service chapter (STRIDE/OWASP analysis of the FastAPI service — auth, rate limiting,
@@ -10,7 +11,7 @@ billing) is a separate document tracked as CORE-1090 and deferred until a Hosted
 **Status:** governing | superseded-by: none | defers-to: [SECURITY.md](SECURITY.md) (reporting, disclosure, response
 process)
 
-**Ticket:** CORE-1452. File paths are relative to the repository root unless prefixed with a repository name.
+**Ticket:** CORE-1452. File paths are relative to the repository root.
 
 ---
 
@@ -27,7 +28,8 @@ Two prior workstreams anchor the mitigations cited throughout:
 - **CORE-1315** — Unicode/script safety validation gate: per-language `ScriptPolicy` (default-deny), `SchemaValidator`
   strict checks, path-traversal guards in the pack loader, and the `validate-packs` CI gate (blocking since
   CORE-1318).
-- **CORE-1453** — the "data, not code" contract made mechanical: `legesher_i18n/data_contract.py` (safe-load-only YAML
+- **CORE-1453** — the "data, not code" contract made mechanical: `libs/i18n/legesher_i18n/data_contract.py`
+  (safe-load-only YAML
   with no tags/anchors, file-size cap, URL-scheme allowlist, top-level-key allowlist, pack-level render-vs-execute
   round-trip).
 
@@ -77,7 +79,7 @@ extension. They are the primary community-contribution surface once packs open f
 
 The pack layer is gated; the **map layer** moved out of this repository entirely (CORE-2011, ratified
 2026-08-30): building, persisting, sharing, and verifying `.legesher/` map artifacts is the commercial map engine's
-capability, and the free engine here neither reads nor renders from them (`tests/test_map_family_absent.py` enforces
+capability, and the free engine here neither reads nor renders from them (`libs/core/tests/test_map_family_absent.py` enforces
 the boundary). What remains in scope here is the embedded identifier map
 (`libs/core/legesher_core/tree_sitter/identifier_map.py`) and the shared identity/collision contract
 (`legesher_core.text_identity`: store-NFC, compare-NFKC+casefold) that any consumer of those artifacts must uphold.
@@ -142,19 +144,15 @@ translation must not silently *alter* what executes.
 
 ### Gaps
 
-- **Guard asymmetry:** `unicode_guard` runs on the git-filter path but not on the import-hook path. Source imported
-  directly (never having passed through the clean filter — e.g. a file received from a collaborator, or a repo where
-  the filter is not installed) is translated and compiled without a bidi/invisible scan. The engine-side guard exists;
-  it is simply not wired into `import_hook.get_data` or the `legesher run` path (`libs/legesher/legesher/cli/run.py`).
+- **Guard coverage is not uniform** across every path by which source reaches the engine; closure is tracked
+  internally.
 - The hook's language-detection heuristic (`import_hook.py`, keyword-substring check) decides whether translation
-  applies; it is a UX heuristic, not a security control, and should never be one — the guard above must run regardless
-  of detection outcome.
+  applies; it is a UX heuristic, not a security control, and should never be one. Any source guard must run regardless
+  of the detection outcome.
 
 ### Verdict
 
-**Child-ticket proposal — "Runtime: unicode_guard on the import-hook and run paths"**: invoke
-`unicode_guard.scan_text` (with the active language's format-char allowlist) on source before translation/compilation
-in `import_hook` and `legesher run`, achieving parity with the git clean filter. Fail closed with a clear diagnostic.
+**Tracked internally.**
 
 ---
 
@@ -257,11 +255,11 @@ proposed); the checklist above supersedes ad-hoc requirement tracking there.
 
 ---
 
-## Surface 5 — Courseware integrations (courseware / JEJ)
+## Surface 5 — Courseware integrations
 
-Localized code written by students is translated by Legesher's JS layer (`js-engine-repo` repository) and graded on the
-customer's Jobe sandbox. Legesher code never runs inside the customer's platform; the integration boundary is: we
-supply translation, they own execution.
+Localized code written by students is translated by Legesher's JavaScript layer and graded in a courseware customer's own
+sandbox. Legesher code never runs inside the customer's platform; the integration boundary is: we supply translation,
+they own execution.
 
 ### Attack classes
 
@@ -274,16 +272,15 @@ supply translation, they own execution.
 
 ### Existing mitigations
 
-- Fail-closed source guard on the JS side: `js-engine-repo/packages/core/src/assert-source-safe.ts` rejects bidi
-  controls, invisibles, and the full `\p{Default_Ignorable_Code_Point}` derived property on first hit — hostile text
-  is rejected, never sanitized (CORE-1384 lineage; known residual: script-aware allowlist for invisible marks in
-  unsupported scripts is CORE-1558).
-- Constrained execution surface in the JEJ package: `js-engine-repo/packages/jej/src/is-allowed-global.ts` (global
-  allowlist), `deep-freeze.ts` (immutable surface), `surface.ts`, with `conformance-fixtures.ts` pinning expected
-  behavior.
+- Fail-closed source guard on the JavaScript side: a source-safety assertion in that layer rejects bidi controls, invisibles,
+  and the full `\p{Default_Ignorable_Code_Point}` derived property on first hit. Hostile text is rejected, never
+  sanitized (CORE-1384 lineage; known residual: script-aware allowlist for invisible marks in unsupported scripts is
+  CORE-1558).
+- Constrained execution surface in the teaching-subset package: a global allowlist, a deep-frozen immutable surface,
+  and conformance fixtures that pin expected behavior.
 - Translation is deterministic token mapping over reviewed packs — it cannot *invent* constructs; it can only rename
   terms the pack maps, so canonical output contains exactly the construct set of the input.
-- The grading sandbox itself is the customer's (Jobe), keeping arbitrary-code execution off Legesher infrastructure
+- The grading sandbox itself is the courseware customer's, keeping arbitrary-code execution off Legesher infrastructure
   entirely.
 
 ### Gaps
@@ -306,7 +303,7 @@ fixtures demonstrating that localized submissions cannot smuggle constructs past
 ## Surface 6 — Auto-PR package-map engine (future)
 
 A planned engine that raises pull requests onto third-party repositories carrying package-map updates. Nothing is
-built; today only a local `legesher map` CLI exists (`libs/legesher/legesher/cli/map_cmd.py`).
+built, and the map capability it would carry lives on the commercial side (CORE-2011; see Surface 1).
 
 ### Attack classes
 
@@ -380,8 +377,8 @@ ticket must carry the Surface-1 contract as an acceptance criterion.
 
 | # | Surface | Verdict |
 | --- | --- | --- |
-| 1 | Language packs | Pack layer gated (CORE-1315/1453/1318); **proposal:** map-layer render-vs-execute gate at load |
-| 2 | Import hook / runtime | **Proposal:** unicode_guard on the import-hook and run paths (parity with the git filter) |
+| 1 | Language packs | Pack layer gated (CORE-1315/1453/1318); the map layer and its load-time gate sit on the commercial side (CORE-2011) |
+| 2 | Import hook / runtime | Tracked internally |
 | 3 | Contributor CI bots | Boundary adequate today; design carried by existing CORE-1454 |
 | 4 | MCP server tools | Local boundary adequate today; hosted checklist owned by existing CORE-1423 |
 | 5 | Courseware integrations | **Proposal:** integration-guide responsibility boundary + guard-parity fixtures |
