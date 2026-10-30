@@ -121,9 +121,20 @@ publisher, and every later run of the same workflow and environment uses it.
 | Environment | `pypi` on PyPI, `testpypi` on TestPyPI |
 
 The job runs in the GitHub environment named by the `environment` input. Neither exists
-yet. Create and protect `pypi` and `testpypi` before the first dispatch, limiting `pypi`
-to the `main` branch and `testpypi` to `main` and `rehearsal/*` (see "TestPyPI first"): a
-dispatch into a missing environment creates it with no protection rules.
+yet. Create and protect `pypi` and `testpypi` before the first dispatch: a dispatch into
+a missing environment creates it with no protection rules.
+
+| Setting | `pypi` | `testpypi` |
+| --- | --- | --- |
+| Required reviewers | the release maintainer | none |
+| Prevent self-review | off | n/a |
+| Allow administrators to bypass | off | off |
+| Deployment branches and tags | selected: `main` | selected: `rehearsal/*` |
+
+Prevent self-review stays off because the maintainer who dispatches the run is also the
+one who approves it. Administrator bypass is on by default; with it on, any repository
+admin can skip the review. `testpypi` refuses `main`, where the real version numbers
+live, so that no TestPyPI upload uses one up (see "TestPyPI first").
 
 ### Order of dispatch
 
