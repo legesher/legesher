@@ -86,6 +86,10 @@ def canon_state_timestamp(repo_dir: Path, canon_path: str) -> datetime:
             f"FRESHNESS CHECK REFUSED: no commit touches {canon_path!r} under "
             f"{repo_dir} — wrong --canon-path or wrong working directory."
         )
+    # git 2.47+ prints a UTC offset in strict ISO form as "Z"; Python's
+    # fromisoformat only accepts that spelling from 3.11 (CORE-2542).
+    if stamp.endswith("Z"):
+        stamp = stamp[:-1] + "+00:00"
     return datetime.fromisoformat(stamp)
 
 

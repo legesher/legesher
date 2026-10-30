@@ -7,6 +7,7 @@ the IO edges (git, Hub) are exercised only where they can run offline.
 
 from __future__ import annotations
 
+import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -90,6 +91,21 @@ class TestCanonTimestamp:
     def test_refuses_a_pathspec_no_commit_touches(self):
         with pytest.raises(SystemExit, match="no commit touches"):
             canon_state_timestamp(I18N_ROOT, "no-such-canon-tree")
+
+    def test_parses_the_utc_stamp_git_2_47_prints_with_a_trailing_z(self, monkeypatch):
+        # A UTC committer (GitHub's pull-request merge ref, a bot, TZ=UTC)
+        # makes `git log --format=%cI` print "Z"; Python 3.10 rejects it
+        # unless it is normalised first (CORE-2542).
+        def fake_git(argv, **kwargs):
+            assert argv[:3] == ["git", "log", "-1"]
+            return subprocess.CompletedProcess(
+                argv, 0, stdout="2026-10-30T01:08:18Z\n", stderr=""
+            )
+
+        monkeypatch.setattr(freshness.subprocess, "run", fake_git)
+        ts = canon_state_timestamp(I18N_ROOT, "language-packs")
+        assert ts == datetime(2026, 10, 30, 1, 8, 18, tzinfo=timezone.utc)
+        assert ts.utcoffset() == timedelta(0)
 
 
 class TestMain:
