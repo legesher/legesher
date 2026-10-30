@@ -16,6 +16,7 @@ import pytest
 
 from legesher_i18n.intake.review_gate import gate_review_file
 from legesher_i18n.intake.review_template import known_pack_versions
+from tests.interpreter_gaps import IDENTIFIER_RULES_ARE_UNICODE_15_1
 from tests.review_fixtures import (
     CODES,
     PACKS_DIR,
@@ -29,6 +30,12 @@ from tests.review_fixtures import (
 )
 
 SI = template_text("si")
+
+#: A Sinhala suggestion with U+200D on a row pinned at Python 3.14 that also
+#: ships for 3.10 to 3.12. Only Unicode 15.1 tables (CPython 3.13+) can judge
+#: the joiner; older tables make the gate report instead of guess, so the
+#: joiner-word tests below assert one branch each.
+JOINER_SUGGESTION = {"keywords.is": ("`අනන්\u200dයවේ`", "වේ alone means becomes")}
 
 
 def python_versions(code: str) -> set[str]:
@@ -107,14 +114,33 @@ def test_a_suggestion_equal_to_its_own_english_term_is_not_a_collision() -> None
     assert "builtins.print" not in failing(report, "collision")
 
 
+@pytest.mark.skipif(
+    not IDENTIFIER_RULES_ARE_UNICODE_15_1,
+    reason="judging U+200D needs Unicode 15.1 tables (CPython 3.13 or newer)",
+)
 def test_a_joiner_word_on_a_row_that_covers_python_3_10_warns_by_key() -> None:
-    report = gate(
-        fill(SI, {"keywords.is": ("`අනන්\u200dයවේ`", "වේ alone means becomes")})
-    )
+    report = gate(fill(SI, JOINER_SUGGESTION))
     tier = {f.key: f for f in report.findings if f.check == "version-tier"}
     assert tier["keywords.is"].severity == "warn"
     assert "3.10 to 3.12" in tier["keywords.is"].detail
     assert report.passed
+
+
+@pytest.mark.skipif(
+    IDENTIFIER_RULES_ARE_UNICODE_15_1,
+    reason="the older-tables branch: CPython 3.10 to 3.12 cannot judge U+200D",
+)
+def test_a_joiner_word_on_older_tables_is_reported_not_judged() -> None:
+    report = gate(fill(SI, JOINER_SUGGESTION))
+    tier = {f.key: f for f in report.findings if f.check == "version-tier"}
+    assert tier["keywords.is"].severity == "warn"
+    assert "3.10 to 3.12" in tier["keywords.is"].detail
+    identifier = failing(report, "identifier")
+    assert set(identifier) == {"keywords.is"}
+    assert "cannot judge" in identifier["keywords.is"]
+    assert "3.13 or newer" in identifier["keywords.is"]
+    assert {f.check for f in report.findings if f.severity == "fail"} == {"identifier"}
+    assert not report.passed
 
 
 def test_a_joiner_word_is_an_invalid_identifier_at_a_python_3_12_pin() -> None:
