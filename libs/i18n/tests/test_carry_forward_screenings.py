@@ -64,6 +64,13 @@ SOURCE_HISTORY: tuple[tuple[int, str, str, str, str | None], ...] = (
     (6, OPT_REJECTED, "rejected", "madi", "keyboard mash"),
 )
 
+#: Stamp for every fixture column the schema defaults to ``datetime('now')``.
+#: Both databases must be byte-equal except for what a test changes on
+#: purpose; a default taken at insert time differs whenever the two fixtures
+#: straddle a second boundary, and the carry-forward rightly refuses a row
+#: that differs at the same key (CORE-2537).
+STAMP = "2026-02-02T00:00:00Z"
+
 #: Tables the carry moves wholesale; used to assert the full closure landed.
 INTAKE_ROWS_EXPECTED = {
     "review_sessions": 1,
@@ -146,19 +153,19 @@ def _add_option(
     ).fetchone()[0]
     conn.execute(
         "INSERT INTO options(uid, concept_id, locale, programming_language,"
-        " surface_form) VALUES (?, ?, 'uk', NULL, ?)",
-        (uid, concept_id, surface),
+        " surface_form, first_seen_at) VALUES (?, ?, 'uk', NULL, ?, ?)",
+        (uid, concept_id, surface, STAMP),
     )
     conn.execute(
-        "INSERT INTO option_provenance(option_uid, source, contributor_id)"
-        " VALUES (?, ?, NULL)",
-        (uid, provenance),
+        "INSERT INTO option_provenance(option_uid, source, contributor_id,"
+        " created_at) VALUES (?, ?, NULL, ?)",
+        (uid, provenance, STAMP),
     )
     conn.execute(
         "INSERT INTO option_validations(option_uid, validator_version,"
-        " identifier_valid, nfkc_stable, script_consistent, format_chars_clean)"
-        " VALUES (?, 'audit-v1', 1, 1, 1, 1)",
-        (uid,),
+        " identifier_valid, nfkc_stable, script_consistent, format_chars_clean,"
+        " checked_at) VALUES (?, 'audit-v1', 1, 1, 1, 1, ?)",
+        (uid, STAMP),
     )
 
 
@@ -166,8 +173,9 @@ def _add_intake_layer(path: Path) -> None:
     """The community rows only the intake path writes — source-side only."""
     conn = connect(path)
     conn.execute(
-        "INSERT INTO contributors(id, current_rung) VALUES (?, 'contributor')",
-        (CONTRIB_NEW,),
+        "INSERT INTO contributors(id, current_rung, joined_at)"
+        " VALUES (?, 'contributor', ?)",
+        (CONTRIB_NEW, STAMP),
     )
     conn.execute(
         "INSERT INTO contributor_identities(contributor_id, source_key,"
@@ -179,18 +187,19 @@ def _add_intake_layer(path: Path) -> None:
     _add_option(conn, OPT_REJECTED, "pass-noop", "слово")
     conn.execute(
         "INSERT INTO endorsements(uid, option_uid, contributor_id, method,"
-        " rung_at_endorsement) VALUES (?, ?, ?, 'github', 'contributor')",
-        (END_NEW, OPT_COMMUNITY, CONTRIB_NEW),
+        " rung_at_endorsement, created_at)"
+        " VALUES (?, ?, ?, 'github', 'contributor', ?)",
+        (END_NEW, OPT_COMMUNITY, CONTRIB_NEW, STAMP),
     )
     concept_id = conn.execute(
         "SELECT id FROM concepts WHERE slug = 'pass-noop'"
     ).fetchone()[0]
     conn.execute(
         "INSERT INTO review_sessions(uid, contributor_id, locale, track,"
-        " method, kit_version, rung_at_session, bundle_digest)"
+        " method, kit_version, rung_at_session, bundle_digest, submitted_at)"
         " VALUES (?, ?, 'uk', 'reserved_words', 'github', 'v2@test',"
-        " 'contributor', ?)",
-        (SESSION, CONTRIB_NEW, "1a" * 32),
+        " 'contributor', ?, ?)",
+        (SESSION, CONTRIB_NEW, "1a" * 32, STAMP),
     )
     conn.execute(
         "INSERT INTO session_options(session_uid, option_uid, elicited)"
@@ -209,9 +218,9 @@ def _add_intake_layer(path: Path) -> None:
     )
     conn.execute(
         "INSERT INTO concept_commentary(uid, contributor_id, session_uid,"
-        " concept_id, locale, topic, body)"
-        " VALUES (?, ?, ?, ?, 'uk', 'general', 'a note')",
-        (COMMENT, CONTRIB_NEW, SESSION, concept_id),
+        " concept_id, locale, topic, body, created_at)"
+        " VALUES (?, ?, ?, ?, 'uk', 'general', 'a note', ?)",
+        (COMMENT, CONTRIB_NEW, SESSION, concept_id, STAMP),
     )
     conn.execute(
         "INSERT INTO commentary_moderation(commentary_uid, status)"
