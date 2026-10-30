@@ -4,17 +4,19 @@
 # Build Preview Release - Compile wheels and copy to preview repo
 #
 # This script builds Python wheels from the monorepo packages and
-# copies them to the preview-repo repository for distribution.
+# copies them to a local checkout of the preview repository for
+# distribution.
 #
 # Usage:
-#   ./scripts/build-preview-release.sh [version] [preview-repo-path]
+#   ./scripts/build-preview-release.sh <version> <preview-repo-path>
 #
 # Example:
-#   ./scripts/build-preview-release.sh 0.1.0-beta.2 ../Legesher/preview-repo
+#   ./scripts/build-preview-release.sh 0.1.0-beta.2 /path/to/preview-checkout
 #
 # Requirements:
 # - uv installed
-# - preview-repo repository cloned locally
+# - the preview repository cloned locally; its path is the second
+#   argument and is required (there is no default)
 #######################################################################
 
 set -e  # Exit on error
@@ -27,8 +29,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-VERSION="${1:-0.1.0-beta.1}"
-PREVIEW_REPO="${2:-../Legesher/preview-repo}"
+VERSION="${1:-}"
+PREVIEW_REPO="${2:-}"
 
 print_header() {
     echo ""
@@ -52,11 +54,21 @@ print_info() {
 
 print_header
 
-# Validate preview repo exists
+# Validate the version and the preview repo path were given and the path exists
+if [ -z "${VERSION}" ]; then
+    print_error "Missing the version (first argument)"
+    echo "   Usage: ./scripts/build-preview-release.sh <version> <preview-repo-path>"
+    exit 1
+fi
+if [ -z "${PREVIEW_REPO}" ]; then
+    print_error "Missing the preview repository path (second argument)"
+    echo "   Usage: ./scripts/build-preview-release.sh <version> <preview-repo-path>"
+    exit 1
+fi
 if [ ! -d "${PREVIEW_REPO}" ]; then
     print_error "Preview repository not found at: ${PREVIEW_REPO}"
     echo "   Please provide the correct path as second argument"
-    echo "   Example: ./scripts/build-preview-release.sh 0.1.0-beta.2 /path/to/preview-repo"
+    echo "   Example: ./scripts/build-preview-release.sh 0.1.0-beta.2 /path/to/preview-checkout"
     exit 1
 fi
 

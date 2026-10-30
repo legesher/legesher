@@ -736,7 +736,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   pinned; 36 tests through the MCP layer. [CORE-1175]
 - **i18n**: client-shape pack emitter — `scripts/emit_js_client_pack.py`
   renders a locale's canonical selections into the `@legesher/core`
-  `LanguagePack` TypeScript artifact for vendoring into `js-engine-repo`.
+  `LanguagePack` TypeScript artifact for vendoring into the JavaScript engine repository.
   Registry-driven metadata, fail-loud completeness (partial packs are never
   emitted), deterministic byte-identical output with the source commit
   pinned in the generated header. [CORE-1371]
@@ -773,7 +773,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   JavaScript pack's members in generation. [CORE-1582]
 - **i18n**: `of` and `log` join the JavaScript/JEJ context corpus — 60 → 62
   Tier-1 briefs, following the engine-side surface widening to 17 keywords /
-  29 members (js-engine-repo, CORE-1571) now that the key-set is Legesher-owned.
+  29 members (in the JavaScript engine repository) now that the key-set is Legesher-owned.
   Each brief encodes its term's load-bearing constraint: `of` must stay
   distinct from `in` (Python spells value-iteration with "in," while
   JavaScript's `in` is key presence, and both live in the collision-gated
@@ -882,7 +882,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   attestations are *required* and never changes what a bundle asserts.
   [CORE-1868]
 - **i18n**: showcase examples are gated on transpiling. Every
-  `hello_world.py` in preview-repo must reverse-translate to canonical
+  `hello_world.py` in the preview repository must reverse-translate to canonical
   English through its own pack and survive `ast.parse`. Shipped warn-only
   against a 40/51 baseline, then flipped blocking once a real run reported
   51/51. [CORE-1403, CORE-1779]

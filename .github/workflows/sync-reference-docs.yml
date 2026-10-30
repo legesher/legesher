@@ -21,19 +21,28 @@ jobs:
   sync-to-preview:
     name: Sync Reference Documentation
     runs-on: ubuntu-latest
+    # The target repository (owner/name) comes from the `PREVIEW_REPOSITORY`
+    # secret, not a variable, so the runner masks it in the public logs.
+    # A job-level `if:` cannot read secrets, so each step checks it instead
+    # and the job does nothing when it is unset.
+    env:
+      PREVIEW_REPOSITORY: ${{ secrets.PREVIEW_REPOSITORY }}
 
     steps:
       - name: Checkout monorepo
+        if: ${{ env.PREVIEW_REPOSITORY != '' }}
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Checkout preview repository
+        if: ${{ env.PREVIEW_REPOSITORY != '' }}
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          repository: legesher/preview-repo
+          repository: ${{ env.PREVIEW_REPOSITORY }}
           token: ${{ secrets.PREVIEW_REPO_PAT }}
           path: preview
 
       - name: Sync REFERENCE.md files
+        if: ${{ env.PREVIEW_REPOSITORY != '' }}
         # Bound through `env:` rather than interpolated into the script —
         # `${{ }}` substitutes before bash parses, making the value shell
         # source (CORE-1920). `force` is a boolean input, so the reachable
@@ -42,7 +51,7 @@ jobs:
         env:
           FORCE: ${{ github.event.inputs.force || 'false' }}
         run: |
-          echo "📚 Syncing REFERENCE.md files to preview-repo..."
+          echo "📚 Syncing REFERENCE.md files to the preview repository..."
 
           # Sync all language pack REFERENCE.md files
           for lang_dir in libs/i18n/language-packs/python/*/; do
@@ -71,6 +80,7 @@ jobs:
           done
 
       - name: Commit and push to preview
+        if: ${{ env.PREVIEW_REPOSITORY != '' }}
         working-directory: preview
         run: |
           git config user.name "github-actions[bot]"
@@ -95,4 +105,4 @@ jobs:
 
           git push
 
-          echo "🚀 Pushed $CHANGED file(s) to preview-repo"
+          echo "🚀 Pushed $CHANGED file(s) to the preview repository"

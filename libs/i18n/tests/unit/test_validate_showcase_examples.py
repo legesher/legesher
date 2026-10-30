@@ -54,7 +54,7 @@ def make_examples_tree(root: Path, files: dict[str, str]) -> Path:
 
 @pytest.mark.unit
 class TestResolveExamplesRoot:
-    """Resolution order: CLI arg -> env var -> sibling checkout."""
+    """Resolution order: CLI arg -> env var. Nothing else is searched."""
 
     def test_cli_arg_wins_over_env(self, tmp_path, monkeypatch):
         cli_root = tmp_path / "cli-root"
@@ -63,7 +63,7 @@ class TestResolveExamplesRoot:
         env_root.mkdir()
         monkeypatch.setenv("LEGESHER_PREVIEW_ROOT", str(env_root))
 
-        resolved = resolve_examples_root(str(cli_root), repo_root=tmp_path)
+        resolved = resolve_examples_root(str(cli_root))
 
         assert resolved == cli_root
 
@@ -72,25 +72,22 @@ class TestResolveExamplesRoot:
         env_root.mkdir()
         monkeypatch.setenv("LEGESHER_PREVIEW_ROOT", str(env_root))
 
-        resolved = resolve_examples_root(None, repo_root=tmp_path / "repo")
+        resolved = resolve_examples_root(None)
 
         assert resolved == env_root
 
-    def test_sibling_checkout_fallback(self, tmp_path, monkeypatch):
+    def test_env_var_naming_a_missing_dir_resolves_to_none(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("LEGESHER_PREVIEW_ROOT", str(tmp_path / "absent"))
+
+        resolved = resolve_examples_root(None)
+
+        assert resolved is None
+
+    def test_returns_none_when_neither_is_given(self, tmp_path, monkeypatch):
         monkeypatch.delenv("LEGESHER_PREVIEW_ROOT", raising=False)
-        repo_root = tmp_path / "legesher"
-        sibling = tmp_path / "preview-repo"
-        repo_root.mkdir()
-        sibling.mkdir()
+        monkeypatch.chdir(tmp_path)
 
-        resolved = resolve_examples_root(None, repo_root=repo_root)
-
-        assert resolved == sibling
-
-    def test_returns_none_when_nothing_exists(self, tmp_path, monkeypatch):
-        monkeypatch.delenv("LEGESHER_PREVIEW_ROOT", raising=False)
-
-        resolved = resolve_examples_root(None, repo_root=tmp_path / "repo")
+        resolved = resolve_examples_root(None)
 
         assert resolved is None
 
@@ -178,6 +175,54 @@ class TestMissingExamplesRoot:
         assert exit_code == 2
         assert str(missing) in captured.out
 
+    def test_env_var_root_is_validated(self, tmp_path, monkeypatch, capsys):
+        root = make_examples_tree(tmp_path / "env-root", {"es": VALID_ES_EXAMPLE})
+        monkeypatch.setenv("LEGESHER_PREVIEW_ROOT", str(root))
+
+        exit_code = main([])
+
+        captured = capsys.readouterr()
+        assert exit_code == 0
+        assert "1/1" in captured.out
+        assert str(root) in captured.out
+
+    def test_env_var_naming_a_missing_dir_exits_two(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        missing = tmp_path / "does-not-exist"
+        monkeypatch.setenv("LEGESHER_PREVIEW_ROOT", str(missing))
+
+        exit_code = main([])
+
+        captured = capsys.readouterr()
+        assert exit_code == 2
+        assert str(missing) in captured.out
+
+    def test_nothing_given_with_skip_flag_exits_zero_with_notice(
+        self, monkeypatch, capsys
+    ):
+        monkeypatch.delenv("LEGESHER_PREVIEW_ROOT", raising=False)
+
+        exit_code = main(["--skip-if-missing", "--quiet"])
+
+        captured = capsys.readouterr()
+        assert exit_code == 0
+        assert "NOTICE" in captured.out
+        assert "LEGESHER_PREVIEW_ROOT" in captured.out
+        assert "skip" in captured.out.lower()
+
+    def test_nothing_given_without_skip_flag_exits_two_naming_env_var(
+        self, monkeypatch, capsys
+    ):
+        monkeypatch.delenv("LEGESHER_PREVIEW_ROOT", raising=False)
+
+        exit_code = main([])
+
+        captured = capsys.readouterr()
+        assert exit_code == 2
+        assert "ERROR" in captured.out
+        assert "LEGESHER_PREVIEW_ROOT" in captured.out
+
 
 @pytest.mark.unit
 class TestCoverage:
@@ -210,42 +255,3 @@ class TestCoverage:
         captured = capsys.readouterr()
         assert exit_code == 1
         assert "missing" in captured.out.lower()
-
-
-@pytest.mark.unit
-class TestWorktreeResolution:
-    def test_worktree_checkout_resolves_main_root_sibling(self, tmp_path, monkeypatch):
-        # From a linked worktree under .claude/worktrees/, the naive
-        # repo_root.parent sibling is .claude/worktrees/preview-repo —
-        # never the real checkout. The resolver must fall back to the MAIN
-        # checkout's sibling via the git common dir (post-merge review
-        # finding, 2026-08-09: the hook was vacuously green from worktrees).
-        import subprocess
-
-        monkeypatch.delenv("LEGESHER_PREVIEW_ROOT", raising=False)
-        main_root = tmp_path / "legesher"
-        main_root.mkdir()
-        run = lambda *a: subprocess.run(  # noqa: E731
-            a, cwd=main_root, check=True, capture_output=True
-        )
-        run("git", "init", "-q")
-        run(
-            "git",
-            "-c",
-            "user.email=t@t",
-            "-c",
-            "user.name=t",
-            "commit",
-            "--allow-empty",
-            "-q",
-            "-m",
-            "init",
-        )
-        run("git", "worktree", "add", "-q", ".claude/worktrees/wt")
-        (tmp_path / "preview-repo").mkdir()
-
-        resolved = resolve_examples_root(
-            None, repo_root=main_root / ".claude" / "worktrees" / "wt"
-        )
-
-        assert resolved == tmp_path / "preview-repo"

@@ -568,13 +568,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   review; the screen never rewrites translations.
 
 - **Showcase example transpile gate (CORE-1403).**
-  `scripts/validate_showcase_examples.py` verifies every preview-repo
+  `scripts/validate_showcase_examples.py` verifies every preview repository
   showcase `hello_world.py` against its shipped Python pack: the example
   must reverse-translate to canonical English through the engine
   (`create_translator_from_language_pack` + `reverse()`, the GitFilter
   construction) and the result must `ast.parse`. Any regressed language
   exits non-zero. Examples root resolves from `--examples-root`, then
-  `LEGESHER_PREVIEW_ROOT`, then the sibling `../preview-repo`
+  `LEGESHER_PREVIEW_ROOT`, then the sibling preview repository
   checkout; contributors without the checkout are never blocked (the
   pre-commit hook `validate-showcase-examples` runs
   `--skip-if-missing --quiet` on pack-file changes). Coverage gaps —
@@ -646,7 +646,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **Client-shape pack emitter for JavaScript-target locales (CORE-1371).**
   `scripts/emit_js_client_pack.py` renders the canonical selections into the
   `@legesher/core` `LanguagePack` TypeScript shape for vendoring into
-  `js-engine-repo` (`packages/packs/src/packs/<locale>.ts`). Registry-driven
+  the JavaScript engine repository (`packages/packs/src/packs/<locale>.ts`). Registry-driven
   metadata (bcp47 locale, direction, DB numeral-system vocabulary mapped to
   the CLDR numbering-system id, `languages.status` as stability); fail-loud
   completeness — a partial pack is never emitted (CORE-1400 rule 4);
@@ -829,9 +829,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - **Showcase-example gate is blocking (CORE-1779).** The
   `validate-showcase-examples` pre-commit hook no longer runs in report
-  mode: a pack edit that breaks a preview-repo `hello_world.py`
+  mode: a pack edit that breaks a preview repository `hello_world.py`
   showcase now fails the commit. The 11 regressions pending at gate
-  introduction were cleared (example repairs in preview-repo plus the
+  introduction were cleared (example repairs in the preview repository plus the
   CORE-1763 term replacements; 51/51 on a real run), and the script's
   `--warn-only` flag was removed so the gate cannot be quietly
   re-softened. Operational notes live in `docs/quality-gates.md`.
@@ -1861,7 +1861,7 @@ my, ro, sr, su, uz`) into the languages table. [CORE-710]
   - Localized example code for each language
 
 - **GitHub Actions Sync Workflow** (CORE-555)
-  - `.github/workflows/sync-reference-docs.yml` syncs REFERENCE.md to preview-repo repo
+  - `.github/workflows/sync-reference-docs.yml` syncs REFERENCE.md to the preview repository
   - Triggers on REFERENCE.md changes to main branch
   - Supports manual dispatch with force-sync option
 

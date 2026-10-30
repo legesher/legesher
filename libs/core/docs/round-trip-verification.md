@@ -16,7 +16,7 @@ The guarantee had no owner. It was re-derived in every place that needed it:
 | `libs/core/tests/unit/test_round_trip.py` | `TokenTranslator` + fixture maps | `assert original == back` |
 | `libs/core/tests/unit/test_git_filter.py` | `GitFilter.clean` / `.smudge` | `assert original == back` |
 | `libs/mcp/tests/test_roundtrip_sweep.py` | MCP client session | `assert` + a local `first_divergence` |
-| `integrations-repo` `verify.py` | `legesher` CLI subprocess | `difflib` + prefix-based bucketing |
+| The integration harness's `verify.py` (a separate repository) | `legesher` CLI subprocess | `difflib` + prefix-based bucketing |
 | `libs/mcp/skills/legesher-localized-code/SKILL.md` | **the agent** | *"Byte-identical output is the guarantee holding"* |
 
 The last row is the defect. Exact string comparison over a long file is the
@@ -343,7 +343,7 @@ it would have reported permanent success while measuring nothing. The
 verifier keeps 3a (canonical equivalence, classified) and adds 3b (round
 trip).
 
-`integrations-repo` gains a `pyproject.toml` declaring `legesher-core`
+The integration harness (a separate repository) gains a `pyproject.toml` declaring `legesher-core`
 with a `[tool.uv.sources]` path pin to the sibling checkout. Nothing is on
 PyPI yet; when the packages publish (CORE-626) the source block is deleted
 and nothing else changes.

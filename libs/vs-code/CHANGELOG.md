@@ -103,6 +103,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   yet and the README is what changes when it is. The log used to say the server package was
   planned for a future release. (CORE-2203)
 
+- **Install and privacy links**: the walkthrough's installation guide link now opens the
+  installation section of the public repository README, and the privacy link in the
+  translation-feedback prompt opens the ML training section of the extension privacy policy on
+  docs.legesher.io. Both pointed into a repository that is not public, so they did not load for most
+  users. The ML training links in the settings and the README now use that section's real anchor.
+
 ### Security
 
 - **Error telemetry**: an error report can no longer carry your home directory off the machine. Every
@@ -239,7 +245,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Interactive Walkthrough**: 6-step onboarding experience for first-time users
   - Welcome introduction to Legesher
-  - Installation guide linking to preview-repo docs
+  - Installation guide linking to the preview repository's docs
   - Language selection with command integration
   - Translation panel demo with sample Python code
   - Hover translation tutorial
@@ -257,7 +263,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Privacy URL**: Updated to point to GitHub PRIVACY_POLICY.md
 - **Feedback URL**: Default to legesher.io/go/vs-code-extension-survey
 - **Marketplace Metadata**: Updated categories to include "Language Packs", improved keywords for discoverability
-- **README**: Rewritten with installation links to preview-repo docs
+- **README**: Rewritten with installation links to the preview repository's docs
 - **Build System**: Added dotenv integration to inject telemetry connection string at build time
 
 ## 0.1.1 (2026-01-27)

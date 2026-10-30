@@ -5,7 +5,7 @@ readable reference for a pack and the markdown review template for it: a
 reviewer copies the file into the language-packs repository as
 ``reviews/<bcp47>/<bcp47>-<github-username>.md``, fills the Suggested
 and Comments columns, and opens a pull request. The same bytes are mirrored to
-preview-repo (``languages/<code>/REFERENCE.md``) and language-packs
+the preview repository (``languages/<code>/REFERENCE.md``) and language-packs
 (``reference/<bcp47>.md``).
 
 By default the files are written in place, next to each pack. ``--out DIR``

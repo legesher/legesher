@@ -292,7 +292,7 @@ describe('Telemetry Module', () => {
             },
             {
                 what: 'a nested path with dots and hyphens',
-                input: 'Cannot read /var/lib/data-repo/cache/lang-pack.v2.json',
+                input: 'Cannot read /var/lib/example-data/cache/lang-pack.v2.json',
                 expected: 'Cannot read <path>',
             },
             {

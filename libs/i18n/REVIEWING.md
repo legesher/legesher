@@ -127,7 +127,7 @@ person, not to a score.
 **Partial reviews submit cleanly.** Thirty concepts reviewed well beat 180 rushed.
 
 **Reviewing by file, the markdown lane.** Every pack's `REFERENCE.md` (generated here by
-`scripts/generate_reference_docs.py`, mirrored to preview-repo and to language-packs) is also
+`scripts/generate_reference_docs.py`, mirrored to the preview repository and to language-packs) is also
 its review template: the term tables carry empty `Suggested` and `Comments` columns, and the header
 pins the pack version and Python view the words come from. Copy it into the language-packs
 repository as `reviews/<tag>/<tag>-<your-github-username>.md` (`<tag>` is the language's

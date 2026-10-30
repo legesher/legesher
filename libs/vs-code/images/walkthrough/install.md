@@ -7,4 +7,4 @@ This VS Code extension provides **visual feedback**:
 
 To **write and run code** in your native language, install the full Legesher package suite.
 
-[View Installation Guide](https://github.com/legesher/preview-repo/blob/main/docs/INSTALLATION.md)
+[View Installation Guide](https://github.com/legesher/legesher#installation)

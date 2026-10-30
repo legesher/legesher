@@ -132,7 +132,7 @@ class TestIdentifierAllowlist:
     """
 
     #: The cross-engine contract. ``SUPPORTED_SCRIPTS`` in ``@legesher/core``'s
-    #: ``script-allowlist.ts`` (js-engine-repo) carries the same names; the two
+    #: ``script-allowlist.ts`` (the JavaScript engine) carries the same names; the two
     #: engines ship from different repositories, so this list is the forcing
     #: function — adding a language whose script is new fails here, and the
     #: failure is the reminder to update the JavaScript engine in the same beat.

@@ -257,7 +257,7 @@ records the evidence.
   corrections, and no telemetry event is gated on it. It is here so the consent
   is on record before any such event exists. If that changes, it will be in the
   changelog and here first. See
-  [privacy](https://docs.legesher.io/privacy#ml-training)
+  [privacy](https://docs.legesher.io/privacy/#ml-training-data-opt-in-only)
 - **No code collection**: Your code never leaves your machine
 - Respects VS Code's global telemetry settings
 

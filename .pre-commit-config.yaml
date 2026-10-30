@@ -203,8 +203,9 @@ repos:
     name: Update Pack README Counts
     pass_filenames: false
 
-  # Showcase example transpile check (CORE-1403): every preview-repo
-  # hello_world.py must reverse-translate through its pack and ast.parse.
+  # Showcase example transpile check: every hello_world.py in the preview
+  # repository checkout named by LEGESHER_PREVIEW_ROOT must reverse-translate
+  # through its pack and ast.parse.
   # --skip-if-missing: contributors without the preview checkout aren't blocked.
   # Strict since 2026-08-10 (CORE-1779) — gate status and history live in
   # libs/i18n/docs/quality-gates.md.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validate showcase hello_world examples against shipped packs (CORE-1403).
 
-The preview-repo repo showcases one `hello_world.py` per language
+The preview repository showcases one `hello_world.py` per language
 (`languages/<lang>/hello_world.py`, including the `en` canonical). Pack
 edits happen in THIS repo, so a pack change can silently break those
 examples. For every example whose language has a shipped Python pack,
@@ -21,11 +21,12 @@ Examples-root resolution, in priority order:
 
 1. ``--examples-root`` CLI argument
 2. ``LEGESHER_PREVIEW_ROOT`` environment variable
-3. sibling checkout ``../preview-repo`` relative to the monorepo root
 
-If no root exists: with ``--skip-if-missing`` (the pre-commit mode, so
-contributors without the preview checkout aren't blocked) print a notice
-and exit 0; otherwise exit 2.
+Nothing else is searched: the checkout is never guessed from a directory
+name. If neither is given, or the path given is not a directory: with
+``--skip-if-missing`` (the pre-commit mode, so contributors without the
+showcase examples checkout aren't blocked) print a notice and exit 0;
+otherwise exit 2 with a message naming ``LEGESHER_PREVIEW_ROOT``.
 
 Coverage mismatches are warnings, not failures: an example with no
 shipped pack cannot be validated, and a pack with no example is a
@@ -33,9 +34,10 @@ showcase gap. ``--strict-coverage`` promotes missing examples for
 existing packs to failures.
 
 Usage (repo root):
-    uv run python libs/i18n/scripts/validate_showcase_examples.py
+    LEGESHER_PREVIEW_ROOT=/path/to/preview-checkout \\
+        uv run python libs/i18n/scripts/validate_showcase_examples.py
     uv run python libs/i18n/scripts/validate_showcase_examples.py \\
-        --examples-root ../preview-repo
+        --examples-root /path/to/preview-checkout
     uv run python libs/i18n/scripts/validate_showcase_examples.py \\
         --skip-if-missing --quiet    # pre-commit mode
 
@@ -49,47 +51,15 @@ Exit codes:
 import argparse
 import ast
 import os
-import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 
-def _git_main_checkout_root(repo_root: Path) -> Path | None:
-    """The MAIN checkout's root when *repo_root* is a linked git worktree.
+# Environment variable naming the showcase examples checkout
+EXAMPLES_ROOT_ENV = "LEGESHER_PREVIEW_ROOT"
 
-    The git common dir is ``<main>/.git`` for every linked worktree; its
-    parent is the main checkout. None when git is unavailable, *repo_root*
-    is not a repository, or it already IS the main checkout.
-    """
-    try:
-        out = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(repo_root),
-                "rev-parse",
-                "--path-format=absolute",
-                "--git-common-dir",
-            ],
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=10,
-        ).stdout.strip()
-    except (OSError, subprocess.SubprocessError):
-        return None
-    common_dir = Path(out)
-    if common_dir.name != ".git":
-        return None  # bare or unusual layout — no main checkout to offer
-    main_root = common_dir.parent
-    return None if main_root == repo_root.resolve() else main_root
-
-
-# Monorepo root: libs/i18n/scripts/<this file> -> parents[3]
-REPO_ROOT = Path(__file__).resolve().parents[3]
-
-# Layout inside the preview-repo checkout
+# Layout inside the preview repository checkout
 EXAMPLES_SUBDIR = "languages"
 EXAMPLE_FILENAME = "hello_world.py"
 
@@ -109,37 +79,18 @@ class Finding:
         return f"FAIL [{self.language}] {self.kind}: {self.message}"
 
 
-def resolve_examples_root(
-    cli_value: str | None, repo_root: Path = REPO_ROOT
-) -> Path | None:
-    """Resolve the preview-repo checkout root.
+def resolve_examples_root(cli_value: str | None) -> Path | None:
+    """Resolve the showcase examples checkout root.
 
-    Priority: CLI arg > LEGESHER_PREVIEW_ROOT env var > sibling checkout
-    ``../preview-repo`` > the MAIN checkout's sibling when *repo_root*
-    is a linked git worktree. Returns None if no candidate exists on disk.
-
-    The worktree fallback matters: under the standard flow here
-    (``.claude/worktrees/<name>``), the naive sibling resolves to
-    ``.claude/worktrees/preview-repo`` — never a real checkout — and
-    the pre-commit hook would pass vacuously via ``--skip-if-missing``
-    (post-merge review finding, 2026-08-09).
+    Priority: CLI arg > ``LEGESHER_PREVIEW_ROOT`` env var. Nothing else is
+    searched, so no path is derived from a repository's name. Returns None
+    when neither is set or the chosen path is not a directory.
     """
-    candidates: list[Path] = []
-    if cli_value:
-        candidates.append(Path(cli_value))
-    else:
-        env_value = os.environ.get("LEGESHER_PREVIEW_ROOT")
-        if env_value:
-            candidates.append(Path(env_value))
-        candidates.append(repo_root.parent / "preview-repo")
-        main_root = _git_main_checkout_root(repo_root)
-        if main_root is not None:
-            candidates.append(main_root.parent / "preview-repo")
-
-    for candidate in candidates:
-        if candidate.is_dir():
-            return candidate
-    return None
+    value = cli_value or os.environ.get(EXAMPLES_ROOT_ENV)
+    if not value:
+        return None
+    candidate = Path(value)
+    return candidate if candidate.is_dir() else None
 
 
 def discover_examples(examples_root: Path) -> dict[str, Path]:
@@ -203,8 +154,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--examples-root",
-        help="Path to the preview-repo checkout "
-        "(default: $LEGESHER_PREVIEW_ROOT, then ../preview-repo)",
+        help="Path to the preview repository checkout that holds the "
+        "showcase examples (default: $LEGESHER_PREVIEW_ROOT)",
     )
     parser.add_argument(
         "--skip-if-missing",
@@ -228,21 +179,21 @@ def main(argv: list[str] | None = None) -> int:
 
     examples_root = resolve_examples_root(args.examples_root)
     if examples_root is None:
-        wanted = args.examples_root or (
-            os.environ.get("LEGESHER_PREVIEW_ROOT")
-            or str(REPO_ROOT.parent / "preview-repo")
-        )
-        if args.skip_if_missing:
-            print(
-                f"NOTICE: showcase examples root not found ({wanted}); "
-                "skipping showcase validation."
+        wanted = args.examples_root or os.environ.get(EXAMPLES_ROOT_ENV)
+        if wanted:
+            reason = f"showcase examples root not found: {wanted}"
+        else:
+            reason = (
+                f"no showcase examples checkout given: {EXAMPLES_ROOT_ENV} "
+                "is not set and --examples-root was not passed"
             )
+        if args.skip_if_missing:
+            print(f"NOTICE: {reason}; skipping showcase validation.")
             return 0
-        print(f"ERROR: showcase examples root not found: {wanted}")
+        print(f"ERROR: {reason}")
         print(
-            "Pass --examples-root, set LEGESHER_PREVIEW_ROOT, or check out "
-            "preview-repo as a sibling of the monorepo "
-            "(or use --skip-if-missing)."
+            f"Set {EXAMPLES_ROOT_ENV} to the preview repository checkout or "
+            "pass --examples-root (or use --skip-if-missing)."
         )
         return 2
 
@@ -309,7 +260,7 @@ def main(argv: list[str] | None = None) -> int:
     if findings:
         print(
             "hint: failures in languages you did not touch usually mean a "
-            "stale preview-repo checkout — pull it and re-run "
+            "stale preview repository checkout; pull it and re-run "
             "(see libs/i18n/docs/quality-gates.md, showcase-gate detail)"
         )
         return 1

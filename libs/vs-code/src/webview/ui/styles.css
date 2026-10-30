@@ -196,7 +196,8 @@ code {
     direction: rtl !important;
     text-align: right !important;
     /* isolate, not the legacy `embed`: prevents bidi bleed across the pane
-       boundary. See js-engine-repo docs/bidi-display-prose-policy.md (CORE-1532). */
+       boundary. See the JavaScript engine repository's
+       docs/bidi-display-prose-policy.md. */
     unicode-bidi: isolate;
 }
 

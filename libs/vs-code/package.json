@@ -405,7 +405,7 @@
             "telemetry",
             "usesOnlineServices"
           ],
-          "markdownDescription": "Consent to contribute translation feedback towards improving Legesher's translations.\n\n**This setting records your answer only.** Legesher does not currently send translation corrections, and no telemetry event is gated on this setting. It exists so your consent is on record before any such event ships; if that changes it will be announced in the changelog and in the extension README first.\n\nLegesher never collects your code, file paths, or personal information. You can change this anytime. [Learn more about our privacy practices](https://docs.legesher.io/privacy#ml-training)"
+          "markdownDescription": "Consent to contribute translation feedback towards improving Legesher's translations.\n\n**This setting records your answer only.** Legesher does not currently send translation corrections, and no telemetry event is gated on this setting. It exists so your consent is on record before any such event ships; if that changes it will be announced in the changelog and in the extension README first.\n\nLegesher never collects your code, file paths, or personal information. You can change this anytime. [Learn more about our privacy practices](https://docs.legesher.io/privacy/#ml-training-data-opt-in-only)"
         }
       }
     },
@@ -477,7 +477,7 @@
           {
             "id": "legesher.welcome.install",
             "title": "Install the Full Legesher Suite",
-            "description": "This extension provides **visual feedback** - syntax highlighting, hover translations, and the translation panel.\n\nTo actually **write and run code** in your native language, you'll need the full Legesher package suite. Follow the installation instructions to get started.\n\n[View Installation Instructions](https://github.com/legesher/preview-repo/blob/main/docs/INSTALLATION.md)",
+            "description": "This extension provides **visual feedback** - syntax highlighting, hover translations, and the translation panel.\n\nTo actually **write and run code** in your native language, you'll need the full Legesher package suite. Follow the installation instructions to get started.\n\n[View Installation Instructions](https://github.com/legesher/legesher#installation)",
             "media": {
               "markdown": "images/walkthrough/install.md"
             }

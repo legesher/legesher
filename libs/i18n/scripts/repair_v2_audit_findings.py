@@ -29,7 +29,7 @@ defect class cannot recur through the intake path.
 
 **Phase 2 — the five audit-corrected selections.** th ``pow``/``global``,
 hu ``classmethod``, tr ``globals``, ms ``locals`` were replaced in v1
-(data-repo ``664bc45``) but the corpus still offers only the junk values
+(the private data repository, ``664bc45``) but the corpus still offers only the junk values
 and its canon still ratifies them. This phase inserts the corrected
 renderings with the v1 audit rationale as provenance, then replaces each
 canon row wholesale (delete + insert — ``trg_canon_no_update`` forbids
@@ -120,7 +120,7 @@ EXCEPT_STAR_LOCALES: tuple[str, ...] = (
 )
 
 #: (locale, term name) cells replaced in v1 by the 2026-08-18 audit
-#: (data-repo ``664bc45``) and still junk in v2.
+#: (the private data repository, ``664bc45``) and still junk in v2.
 CORRECTED_CELLS: tuple[tuple[str, str], ...] = (
     ("th", "pow"),
     ("th", "global"),
@@ -430,7 +430,7 @@ def repair_corrected_selections(
             surface=surface,
             rationale=(
                 "CORE-1973: 2026-08-18 audit correction carried from v1"
-                f" (data-repo 664bc45). {selected['selection_reason']}"
+                f" (the private data repository, 664bc45). {selected['selection_reason']}"
             ),
             counts=counts,
         )

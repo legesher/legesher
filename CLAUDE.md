@@ -175,8 +175,8 @@ zizmor on workflows, the local hooks that catch real mistakes are:
 
 - `validate-language-pack-yaml`, `enforce-pack-data-contract`: pack YAML shape.
 - `validate-showcase-examples`: reverse-translates the `hello_world.py` showcase examples through the packs.
-  It reads them from a `preview-repo` checkout (`LEGESHER_PREVIEW_ROOT` or a sibling directory) and skips
-  without failing when there is none, so a pack change that breaks an example can pass locally.
+  It reads them from the preview repository checkout (`LEGESHER_PREVIEW_ROOT`) and skips without failing
+  when that is not set, so a pack change that breaks an example can pass locally.
 - `require-pack-version-bump`: a pack content change must move the pack's version, and the version in its
   `pyproject.toml` and `__init__.py` must agree. A bump can leave `uv.lock` modified; stage it.
 - `check-changelog-on-version-bump`: a version change in core, i18n, legesher, language-server or the

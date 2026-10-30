@@ -1,7 +1,7 @@
 """The two mirrors of the generated REFERENCE.md files carry the same bytes (CORE-1702).
 
 The monorepo generates ``libs/i18n/language-packs/python/<code>/REFERENCE.md``.
-preview-repo mirrors it at ``languages/<code>/REFERENCE.md`` and
+The preview repository mirrors it at ``languages/<code>/REFERENCE.md`` and
 language-packs at ``reference/<bcp47>.md``. Point ``LEGESHER_PREVIEW_ROOT`` or
 ``LEGESHER_LANGUAGE_PACKS_ROOT`` at a checkout and this module diffs every
 registry language's file against the committed one here. Unset, the tests

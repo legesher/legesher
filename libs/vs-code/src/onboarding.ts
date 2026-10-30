@@ -76,7 +76,7 @@ export class OnboardingManager {
         if (result === 'Learn More') {
             // Open privacy policy
             await vscode.env.openExternal(
-                vscode.Uri.parse('https://github.com/legesher/preview-repo/blob/main/PRIVACY_POLICY.md')
+                vscode.Uri.parse('https://docs.legesher.io/privacy/#ml-training-data-opt-in-only')
             );
 
             // Show a follow-up dialog with just Yes/No (they've read the policy)

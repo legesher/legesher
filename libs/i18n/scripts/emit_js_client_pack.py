@@ -5,7 +5,7 @@ CORE-1371 step 3 (client half). Reads the canonical selections from
 ``translations.db`` (``selected_translations``, the CORE-1400 publish layer)
 for ``programming_language='javascript'`` and renders the ``@legesher/core``
 ``LanguagePack`` shape as a generated TypeScript module, ready to vendor into
-``js-engine-repo`` ``packages/packs/src/packs/<locale>.ts``.
+the JavaScript engine repository's ``packages/packs/src/packs/<locale>.ts``.
 
 Contract:
 

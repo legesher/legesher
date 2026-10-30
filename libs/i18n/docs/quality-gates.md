@@ -29,7 +29,7 @@ listed under the table.
 | Style guides | `libs/i18n/legesher_i18n/scripts/validate_style_guides.py` | Style-guide schema violations; drift between guides' derived flags and `legesher_i18n/languages.json` | pre-commit hook `validate-style-guides` | Blocking |
 | Regen integrity | `libs/i18n/scripts/verify_pack_regen.py` | Regen-vs-shipped diff classes (`value_changed`, `key_added`, `key_removed`, `unknown_section`, `not_regenerated`, ...) — proves DB→YAML regeneration is safe (CORE-1400) | Manual ritual; wired into nothing — run before any pack regeneration | Blocking by convention |
 | Untranslated terms | `libs/i18n/scripts/translate/find_untranslated.py` | Pack entries whose translation equals the source term (key == value), net of the intentional-loanword allowlist; allowlisted cognates report as their own class (identity_ok, CORE-1355), and `--check-db` drift-checks the allowlist against the corpus DB's selected translations — drift blocks even under `--warn-only` | pre-commit hook `find-untranslated-terms` (changed pack files, runs `--check-db`) | **Report-only for pack findings** (`--warn-only`); DB drift always blocking; flips fully strict when pending triage below clears |
-| Showcase examples | `libs/i18n/scripts/validate_showcase_examples.py` | Pack edits that break the preview-repo `hello_world.py` showcase: each example must reverse-translate to Python's own vocabulary (the run form) via its pack (`create_translator_from_language_pack` + `reverse()`) and `ast.parse`; coverage gaps (example↔pack) reported as warnings (`--strict-coverage` promotes missing examples to failures) (CORE-1403) | pre-commit hook `validate-showcase-examples` (any pack-file change triggers a full 51-language sweep; skips with a notice when no preview checkout) | **Blocking** since 2026-08-10 (CORE-1779: the 11-item pending list cleared, 51/51) — see the showcase-gate detail below |
+| Showcase examples | `libs/i18n/scripts/validate_showcase_examples.py` | Pack edits that break the preview repository's `hello_world.py` showcase: each example must reverse-translate to Python's own vocabulary (the run form) via its pack (`create_translator_from_language_pack` + `reverse()`) and `ast.parse`; coverage gaps (example↔pack) reported as warnings (`--strict-coverage` promotes missing examples to failures) | pre-commit hook `validate-showcase-examples` (any pack-file change triggers a full 51-language sweep; reads the checkout from `LEGESHER_PREVIEW_ROOT` and skips with a notice when it is not set) | **Blocking** since 2026-08-10 (the 11-item pending list cleared, 51/51); see the showcase-gate detail below |
 | Community screening | `legesher-i18n quarantine-queue` + `clear-option` (verdicts in `option_screenings`) | Anything a stranger submits reaching rankings, canon or the corpus export unread: every community-created option lands `quarantined` and only a maintainer verdict of `cleared` releases it (CORE-1828, interim until CORE-1797's automated gate) | Manual ritual per import — `docs/intake-moderation-runbook.md` | **Blocking by construction**: withheld rows are invisible to `option_standings` and absent from the export, no run required |
 | Canon quarantine gate | `trg_canon_no_quarantined_option` (DB trigger) | Promoting a word to canon while its screening verdict is anything other than `cleared`; the mirrored `trg_screenings_no_quarantine_while_canon` refuses withholding a word that is currently canon-selected | Every `canon_selections` INSERT | Blocking |
 | Native review | Human process (intake design: CORE-1538, endorse/pass/flag) | Semantic quality, loanword judgment, everything mechanical gates cannot see | Manual ritual, async | Not a merge blocker (mechanical gates are the floor) |
@@ -44,30 +44,32 @@ cd libs/i18n && uv run python -m legesher_i18n.scripts.enforce_data_contract   #
 cd libs/i18n && uv run python -m legesher_i18n.scripts.validate_style_guides
 uv run python libs/i18n/scripts/verify_pack_regen.py                 # before any regen
 uv run python libs/i18n/scripts/translate/find_untranslated.py       # untranslated terms
-uv run python libs/i18n/scripts/validate_showcase_examples.py        # showcase examples (needs preview-repo checkout)
+uv run python libs/i18n/scripts/validate_showcase_examples.py        # showcase examples (needs LEGESHER_PREVIEW_ROOT)
 uv run python libs/i18n/scripts/translate/screen_terms.py --gate     # term-screening gate (CORE-401)
 ```
 
 ## Showcase-examples gate detail
 
 Strict since 2026-08-10 (CORE-1779). The 11 regressions pending at gate
-introduction were cleared by example fixes in preview-repo (#25) plus
+introduction were cleared by example fixes in the preview repository (its PR #25) plus
 the CORE-1763 term replacements; `--warn-only` was removed from the script
 outright so the gate cannot be silently re-softened.
 
 Operational notes, because the examples live in a different repo:
 
-- **Preview state matters.** The 51/51 green assumes a preview-repo
+- **Preview state matters.** The 51/51 green assumes a preview repository
   checkout at (or after) its PR #25 merge. A stale checkout can fail your
-  commit with regressions that no longer exist on preview `main` — `git -C
-  ../preview-repo pull` first. `LEGESHER_PREVIEW_ROOT` overrides the
-  sibling-checkout resolution.
+  commit with regressions that no longer exist on preview `main`: run
+  `git -C "$LEGESHER_PREVIEW_ROOT" pull` first.
+- **Finding the checkout.** The script reads it only from `--examples-root`
+  or `LEGESHER_PREVIEW_ROOT`. With neither, the pre-commit hook skips with a
+  notice and a direct run exits 2 with a message naming the variable.
 - **Blast radius is the full sweep**, not just the language you edited:
   the hook validates all 51 examples (~1s), so a failure can name a
   language your change did not touch. That is the cross-language
   regression signal working as designed.
 - **Recovery for a legitimate pack change** that breaks an example: land
-  the example fix in preview-repo first (that repo has no gate on this
+  the example fix in the preview repository first (it has no gate on this
   path), pull it, then commit the pack change here. For a genuinely stuck
   moment, `SKIP=validate-showcase-examples git commit …` skips only this
   hook — never `--no-verify`.

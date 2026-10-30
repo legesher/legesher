@@ -233,7 +233,7 @@ the durable copy was cut — in which case say, out loud, why each difference
 exists before proceeding. The superseded build moved aside at the top of
 this section is the third witness: `sqlite3` the same query against
 `build/translations_v2.superseded.db` when the other two disagree. A
-difference nobody can explain is a stop, not a footnote — data-repo
+difference nobody can explain is a stop, not a footnote: the private data repository's
 history already records one rebuild that silently reverted durable state
 (the CORE-1866 incident), and this verification is what makes that class of
 loss loud.
