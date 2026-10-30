@@ -27,6 +27,9 @@ repos:
     exclude: '(^|/)((ts|js)config[^/]*|\.vscode/[^/]+)\.json$'
   - id: check-added-large-files
     args: [--maxkb=1000]
+    # The docs playground's wheels are committed on purpose (docs/scripts/build_wheels.sh
+    # regenerates them), and the i18n wheel is over the limit.
+    exclude: '^docs/public/wheels/[^/]+\.whl$'
   - id: check-merge-conflict
   - id: check-case-conflict
   - id: mixed-line-ending
