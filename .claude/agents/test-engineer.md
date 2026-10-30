@@ -25,7 +25,7 @@ Write tests that:
 ## Your Expertise
 
 - **Pytest**: Fixtures, parametrize, marks, plugins
-- **Vitest**: the same discipline for js-engine-repo and the site (`describe`/`it`, `test.each`, fast-check)
+- **Vitest**: the same discipline for the TypeScript packages and the site (`describe`/`it`, `test.each`, fast-check)
 - **TDD**: Red-Green-Refactor cycle
 - **Test Patterns**: Arrange-Act-Assert, Given-When-Then
 - **Mocking**: unittest.mock, pytest-mock, fixtures

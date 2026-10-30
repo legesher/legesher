@@ -2,7 +2,7 @@
 
 Specification for filling the two vocabulary sections of a language pack —
 `symbols` and `variable_conventions` — for every supported language.
-Companion to `implicit_params_prompt.md`, and deliberately shaped the same
+Companion to `reserved_words_prompt.md`, and deliberately shaped the same
 way: conceptual framing first, hard invariants second, template third,
 provenance last.
 

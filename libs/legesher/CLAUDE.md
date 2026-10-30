@@ -1,194 +1,34 @@
-# legesher - Claude Code Guide
+# legesher
 
-This file provides guidance for working with the main `legesher` CLI package.
+The `legesher` command (`legesher.cli.main:cli`) and the import machinery behind `legesher run`. It is mostly a
+front end over `legesher-core`, `legesher-i18n` and `legesher-runtime`. The root `CLAUDE.md` holds the
+repository commands and the testing contract.
 
-## Package Overview
+## Tests
 
-**Version**: 0.4.0
-**Status**: Production-Ready (Pre-Beta)
-**Python**: >=3.10,<4.0
-**CLI Entry Point**: `legesher`
+`make test-legesher` from the root; the expected summary line is in the root file. `--strict-markers` is on,
+so register a new marker in `pyproject.toml`.
 
-The main user-facing package providing CLI tools for code translation, git integration,
-and metadata viewing.
+## Layout
 
-## Key Capabilities
+- `legesher/cli/`: one module per command. `main.py` registers each with `cli.add_command()`. Commands:
+  `init`, `translate`, `run`, `git` (`setup`, `status`), `guard`, `metadata` (`show`, `history`, `list`,
+  `validate`, `raw`), `config` (`get`, `set`, `list`). `legesher <command> --help` is the reference for flags.
+- `legesher/runtime/`: `import_hook.py` (translates a localized module at import time), `source_mapper.py`,
+  `error_handler.py` (traceback frames point at the localized source). `legesher run` installs both through
+  `install_import_hook()` and `install_error_handler()`.
+- `legesher/config.py`: project `.legesher/config.yml` over user `~/.legesher/config.yml` over defaults.
 
-- **Code Translation**: Convert Python files between 56 languages
-- **Git Integration**: Setup and manage git filter integration
-- **Metadata**: View and validate language pack information
-- **Runtime Import Hooks**: Transparent code translation at import time
+## Gotchas
 
-## Directory Structure
-
-```text
-libs/legesher/
-├── legesher/
-│   ├── __init__.py       # Package init with version
-│   ├── cli/
-│   │   ├── __init__.py   # CLI package
-│   │   ├── main.py       # CLI entry point
-│   │   ├── init.py       # init command
-│   │   ├── translate.py  # translate command
-│   │   ├── run.py        # run command
-│   │   ├── git.py        # git commands (setup, status)
-│   │   └── metadata.py   # metadata commands
-│   └── config.py         # Configuration management
-├── tests/
-│   ├── unit/
-│   └── integration/
-└── pyproject.toml
-```
-
-## CLI Commands
-
-### translate - Convert Code
-
-```bash
-# Translate file (keywords/builtins only)
-legesher translate input.py --from es --to en --output output.py
-
-# Translate directory
-legesher translate src/ --from es --to en --output translated/
-
-# In-place translation
-legesher translate code.py --from es --to en --in-place
-
-# Auto-detect source language
-legesher translate input.py --to en -o output.py
-
-# Pipe translation
-cat input.py | legesher translate --from es --to en
-
-# Full LLM translation (identifiers, comments, strings, docstrings)
-legesher translate src/ --to es --full --llm-backend anthropic
-
-# Full translation with local model (vLLM, Ollama, llama.cpp)
-legesher translate src/ --to ur --full --llm-backend openai-compat \
-    --llm-base-url http://localhost:8000
-
-# Full translation with Cohere Aya
-legesher translate src/ --to zh --full --llm-backend cohere-aya
-
-# Batch with cross-file consistency and resume support
-legesher translate src/ --to zh --full \
-    --identifier-map .legesher/identifier_map.json \
-    --checkpoint .legesher/checkpoint.txt
-```
-
-### git - Repository Integration
-
-```bash
-# Setup git filters for a repository
-legesher git setup
-
-# Show current git configuration
-legesher git status
-```
-
-### metadata - Language Pack Info
-
-```bash
-# List installed language packs
-legesher metadata list
-
-# Show details for a language
-legesher metadata show es
-
-# Validate metadata
-legesher metadata validate
-```
-
-## Configuration Files
-
-Configuration is managed via `legesher/config.py` module.
-
-**Project config** (`.legesher/config.yml` in git repo root):
-
-```yaml
-language: es
-python_version: "3.13"
-git:
-  canonical_language: en
-```
-
-**Global config** (`~/.legesher/config.yml`):
-
-```yaml
-language: en
-python_version: null # Auto-detect
-```
-
-**Precedence** (highest to lowest):
-
-1. Project config (`.legesher/config.yml`)
-2. User global config (`~/.legesher/config.yml`)
-3. Default values
-
-## Testing
-
-```bash
-cd libs/legesher
-
-# Run all tests
-uv run pytest tests/ -v
-
-# Run CLI tests
-uv run pytest tests/unit/test_cli.py -v
-
-# Run integration tests
-uv run pytest tests/integration/ -v
-
-# With coverage
-uv run pytest tests/ --cov=legesher --cov-report=html
-```
-
-## Dependencies
-
-- `click>=8.0.0` - CLI framework
-- `pyyaml>=6.0` - YAML configuration
-- `questionary>=2.0.0` - Interactive prompts
-- `legesher-core` - Translation engine
-- `legesher-i18n` - Language packs
-
-## Common Tasks
-
-### Adding a New CLI Command
-
-1. Create command file in `legesher/cli/`
-2. Use Click decorators for argument parsing
-3. Register in `legesher/cli/main.py` using `cli.add_command()`
-4. Add tests in `tests/`
-
-### Debugging Translation
-
-```bash
-# Verbose output
-legesher translate input.py --to en --verbose
-
-# Check git configuration
-legesher git status
-
-# Verify language pack
-legesher metadata show es
-```
-
-## Runtime Import Hooks
-
-For transparent translation at import time:
-
-```python
-from legesher.runtime import install_hooks
-
-# Install hooks for Spanish code
-install_hooks(language='es')
-
-# Now Spanish Python files can be imported directly
-import mi_modulo_espanol  # Translated on-the-fly
-```
-
-## Integration with Other Packages
-
-- Uses `legesher-core` for actual translation
-- Uses `legesher-i18n` for language pack loading
-- Git filters call back to this CLI
+- **`legesher.runtime` is not `legesher_runtime`.** The first is this package's import hook and source mapper.
+  The second is a separate distribution (`libs/runtime/`) that renders exception type names and messages from
+  the pack. `legesher run` uses both.
+- **`telemetry` is read from the user config only.** It is consent, so a committed project config must not be
+  able to change it (`USER_ONLY_SECTIONS` in `config.py`). Keep any new consent setting user-only too.
+- **`metadata` is per-file translation history** under `.legesher/metadata/`, not language-pack information.
+- `translate` takes `--from` (default `en`) and requires `--to`. Without `--full` it moves only keywords and
+  builtins. `--full` sends identifiers, comments and strings to a model backend (`anthropic`, `cohere-aya`,
+  `openai-compat`). The provider classes live in `legesher_i18n.api.providers`, not here.
+- `examples/` holds demo scripts named `test_*.py`, some in Spanish. Pytest pointed at `libs/legesher` collects
+  them and stops with three collection errors. Point it at `libs/legesher/tests`.

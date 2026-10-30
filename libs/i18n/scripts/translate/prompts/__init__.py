@@ -1,6 +1,7 @@
 """Prompt assets for the AI translation pipeline.
 
-This package holds `implicit_params_prompt.md`, a specification document for
-the reserved-words prompt (see libs/i18n/CLAUDE.md) — not a loadable template.
-There is no importable prompt-builder code here.
+This package holds the Markdown specifications the generation scripts follow:
+`reserved_words_prompt.md`, `vocabulary_prompt.md`, `messages_prompt.md` and
+`term_screening_prompt.md`. They are specification documents, not loadable
+templates. There is no importable prompt-builder code here.
 """

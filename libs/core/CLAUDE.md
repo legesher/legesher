@@ -1,149 +1,52 @@
-# legesher-core - Claude Code Guide
+# legesher-core
 
-This file provides guidance for working with the `legesher-core` package.
+The translation engine. It rewrites Python keywords, builtins and the implicit parameters (`self`, `cls`)
+through a language pack, and owns the git clean filter, the guard, round-trip verification and the
+text-identity and Unicode contracts that other packages import. The root `CLAUDE.md` holds the repository
+commands and the testing contract; this file covers what is specific to this package.
 
-## Package Overview
+## Tests
 
-**Version**: 0.4.0
-**Status**: Production-Ready (Pre-Beta)
-**Python**: >=3.10,<4.0
+`make test-core` from the root; the expected summary line is in the root file.
 
-The core translation engine providing two complete translator backends for converting Python code
-between natural languages.
+- `--strict-markers` is on. A new marker must be registered under `[tool.pytest.ini_options]` in
+  `pyproject.toml` or collection fails.
+- `tests/conftest.py` imports `TreeSitterTranslator`, so the suite needs the `treesitter` extra. The workspace
+  installs it (the `legesher` package depends on `legesher-core[treesitter]`).
+- The `translator_class` fixture runs a test against both backends. Use it for any behaviour both share.
 
-## Key Capabilities
+## Layout
 
-- **Two Translator Backends**: TokenTranslator (~140μs) and TreeSitterTranslator (~160μs)
-- **Python Keywords**: Full support for Python 3.10 keyword set (37 keywords)
-- **Reserved Words** (CORE-710): `self`/`cls` translated deterministically via
-  the language pack's `implicit_params` section. Both translators accept an
-  optional `implicit_param_map` constructor parameter; dispatch order is
-  `keyword → builtin → implicit_param → IdentifierMap`. The extractor skips
-  self/cls entirely so they don't reach the LLM.
-- **56 Languages**: Via language pack system
-- **Perfect Round-Trip**: EN→ES→EN translation is byte-identical
-- **RTL Support**: Arabic, Hebrew, Persian, Urdu with UTF-8 encoding
-- **Git Integration**: A clean filter that keeps each block's keywords in its stored form, and the guard
-- **Cultural Comments**: MLCP protocol support
+- `transformer.py`: `TokenTranslator`, pure stdlib. `tree_sitter/translator.py`: `TreeSitterTranslator`.
+  `language_interface.py`: the `Translator` protocol and the `create_translator*` factories
+  (`LEGESHER_USE_TREE_SITTER=true` switches the default backend).
+- `tree_sitter/llm_translator.py`, `extractor.py`, `identifier_map.py`, `identifier_validator.py`: the full
+  (model-backed) translation of identifiers, comments and strings behind `legesher translate --full`.
+- `git_filter.py`, `filter_process.py`, `stored_form.py`, `guard.py`: the clean filter, git's long-running
+  filter protocol, keyword normalization to each block's stored form, and the checks behind `legesher guard`.
+  `__main__.py` is the `legesher-filter` console script git calls.
+- `text_identity.py` (`compare_key`), `unicode_guard.py` (`scan_text`), `script_lookup.py`: the text and
+  script contracts other packages import.
+- `round_trip.py`: the owning round-trip implementation (`verify_round_trip`).
+- `artifact_io.py`: shared read, write and versioning for the files under `.legesher/`.
+- `metadata.py`, `translation_tracker.py`: per-file history under `.legesher/metadata/`.
+- `translation_memory/`, `cultural_comments.py`, `ai_context.py`, `repo_attribution.py`: see the module
+  docstrings and `libs/core/docs/`.
 
-## Directory Structure
+## Rules
 
-```text
-libs/core/
-├── legesher_core/
-│   ├── __init__.py           # Public API exports
-│   ├── transformer.py        # TokenTranslator implementation
-│   ├── tree_sitter/          # TreeSitterTranslator implementation
-│   ├── language_interface.py # create_translator() factory and Protocol
-│   ├── git_filter.py         # Git clean filter (and the opt-in keyword-only smudge)
-│   ├── filter_process.py     # Git's long-running filter process protocol
-│   ├── stored_form.py        # Keyword normalization to each block's stored form
-│   ├── guard.py              # The checks behind `legesher guard`
-│   ├── round_trip.py         # Round-trip verification (comparator/classifier/report)
-│   ├── metadata.py           # MetadataManager for tracking
-│   ├── types.py              # Type definitions
-│   └── utils.py              # Utility functions
-├── tests/
-│   ├── unit/                 # Unit tests
-│   ├── integration/          # Integration tests
-│   └── benchmarks/           # Performance benchmarks
-└── pyproject.toml
-```
-
-## Key APIs
-
-### Using Language Packs (Recommended)
-
-```python
-from legesher_core import TokenTranslator
-
-# Create from language pack (auto-detects Python version)
-translator = TokenTranslator.from_language_pack("es")
-
-# Translate code
-code = "def greet():\n    print('Hello!')"
-spanish = translator.translate_code(code)
-
-# Reverse translation
-es_to_en = translator.reverse()
-back = es_to_en.translate_code(spanish)
-```
-
-### Choosing Backend
-
-```python
-from legesher_core import create_translator
-
-# Default: TokenTranslator
-translator = create_translator("python", keyword_map, builtin_map)
-
-# Tree-sitter backend
-translator = create_translator("python", keyword_map, builtin_map, use_tree_sitter=True)
-
-# CORE-710: with implicit_param_map for self/cls translation
-translator = create_translator(
-    "python", keyword_map, builtin_map,
-    implicit_param_map={"self": "propio", "cls": "clase"},
-)
-# When using create_translator_from_language_pack(), the implicit_params
-# section is auto-loaded from the pack — no explicit kwarg needed.
-
-# Or via environment variable
-# export LEGESHER_USE_TREE_SITTER=true
-```
-
-### Metadata Tracking
-
-```python
-from legesher_core.metadata import MetadataManager
-
-manager = MetadataManager(repo_root)
-metadata = manager.create_metadata(path, original_language="es")
-manager.record_translation(path, record)
-```
-
-## Testing
-
-```bash
-cd libs/core
-
-# Run all tests
-uv run pytest tests/ -v
-
-# Run specific category
-uv run pytest tests/unit/ -v
-uv run pytest tests/integration/ -v
-
-# Run benchmarks
-uv run pytest tests/benchmarks/ --benchmark-only
-
-# With coverage
-uv run pytest tests/ --cov=legesher_core --cov-report=html
-```
-
-## Dependencies
-
-- `click>=8.0.0` - CLI framework
-- `legesher-i18n` - Language pack loading
-- `tree-sitter>=0.20.4` - AST parsing
-- `tree-sitter-python>=0.21.0` - Python grammar
-
-## Common Tasks
-
-### Adding a New Translator Feature
-
-1. Implement in both `transformer.py` (Token) and `tree_sitter/` (TreeSitter)
-2. Update Protocol in `language_interface.py` if interface changes
-3. Add tests in both `tests/unit/` and `tests/integration/`
-4. Run benchmarks to ensure performance is maintained
-
-### Debugging Translation Issues
-
-1. Use `translator.translate_code(code, debug=True)` for verbose output
-2. Check metadata at `.legesher/metadata/` for history
-3. Compare TokenTranslator vs TreeSitterTranslator output
-
-## Related Issues
-
-- CORE-415: Language abstraction interface
-- CORE-421: TypeScript support (in backlog)
+- **Tree-sitter stays optional.** The tree-sitter exports in `legesher_core/__init__.py` load lazily (PEP 562),
+  so `import legesher_core` and `TokenTranslator` work without the C extensions.
+  `tests/test_import_without_tree_sitter.py` enforces this. Never add a top-level `tree_sitter` import on the
+  token path.
+- **Translation behaviour changes in both backends.** `TokenTranslator` and `TreeSitterTranslator` share
+  `TokenMapper`; a change to one that the other lacks is a divergence the both-backend tests should catch.
+- **Implicit parameters come from the pack's `implicit_params` section.** The canonical list is
+  `legesher_i18n.term_definitions.IMPLICIT_PARAMS`. The extractor skips them, so they never reach the model.
+  `create_translator_from_language_pack()` loads the section itself; `create_translator()` takes
+  `implicit_param_map` explicitly.
+- **The language server keeps its own copy of the renaming rule** (it does not depend on this package).
+  Changing how names are renamed here fails `libs/language-server/tests/test_proxy_engine_parity.py` until the
+  proxy follows.
+- Design notes: `libs/core/docs/` (round-trip verification, translation memory, repository attribution,
+  adding languages, the tree-sitter ADR).

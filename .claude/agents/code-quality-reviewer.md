@@ -129,4 +129,4 @@ This agent is most useful:
 - Before opening a PR (self-review)
 - After a significant refactor
 - When adding a new package or module
-- As part of the `/review` skill workflow
+- As one pass of a wider review before merging

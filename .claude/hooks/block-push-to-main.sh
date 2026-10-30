@@ -4,8 +4,8 @@
 # Claude Code PreToolUse hook that blocks direct pushes to main/master.
 # Invoked by .claude/settings.json on every Bash tool call.
 #
-# Enforces the workflow rule: every change must go through a branch + PR,
-# even trivial ones. See MEMORY.md for rationale.
+# Enforces the workflow rule: every change goes through a branch and a pull
+# request, even a trivial one, so it is reviewed and has a record.
 #
 # Input:  JSON payload on stdin with .tool_input.command
 # Output: exit 0 to allow, exit 2 (with stderr message) to block
@@ -102,7 +102,6 @@ if [ -n "$target" ]; then
 BLOCKED: Direct push to main/master is forbidden.
 Reason: $target
 Create a branch and open a PR instead.
-See MEMORY.md workflow rules.
 EOF
   exit 2
 fi

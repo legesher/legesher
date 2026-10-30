@@ -1,204 +1,70 @@
-# legesher-vscode - Claude Code Guide
+# legesher-vscode
 
-This file provides guidance for working with the `legesher-vscode` VS Code extension.
+The VS Code extension, in TypeScript: an LSP client for `legesher-language-server`, the translation panel,
+language selection and detection, onboarding, telemetry and feedback. Commands, settings and the supported
+VS Code and Node versions are declared in `package.json` (`contributes`, `engines`). The root `CLAUDE.md` holds
+the repository commands and conventions.
 
-## Package Overview
+## Build and test
 
-**Version**: 0.1.2
-**Status**: Preview
-**VS Code**: 1.85.0+
-**Language**: TypeScript
-
-VS Code extension providing multilingual Python coding support via LSP client.
-
-## Key Capabilities
-
-- **LSP Client**: Connects to `legesher-language-server`
-- **Language Selector**: Quick-pick menu listing all active languages from the registry (currently 56)
-- **Translation Panel**: Side-by-side code comparison
-- **Synchronized Scrolling**: Both panes scroll together
-- **Status Indicators**: Connection status and current language
-- **Telemetry**: Privacy-focused usage tracking
-- **Feedback System**: Two-stage prompting with GitHub integration
-
-**Note**: The extension supports all 56 languages via `getActiveLanguages()` from the generated language registry.
-
-## Directory Structure
-
-```text
-libs/vs-code/
-├── src/
-│   ├── extension.ts          # Extension entry point
-│   ├── client.ts             # LSP client
-│   ├── languagePackLoader.ts # Language pack loading
-│   ├── telemetry.ts          # Telemetry system
-│   ├── feedback.ts           # User feedback
-│   ├── utils.ts              # Utilities
-│   ├── logger.ts             # Logging
-│   └── keywords.ts           # Keyword definitions
-├── package.json              # Extension manifest
-├── tsconfig.json             # TypeScript config
-└── pyproject.toml            # Python tooling (for integration)
-```
-
-## Development
-
-### Prerequisites
-
-- Node.js 18+
-- npm or pnpm
-- VS Code 1.85.0+
-- Python 3.10+ (for language server)
-
-### Setup
+Run from `libs/vs-code/` after `npm ci`.
 
 ```bash
-cd libs/vs-code
-npm install
-npm run compile
+npm run compile      # esbuild bundle to out/ (make vscode-compile from the root)
+npm run typecheck    # tsc, no emit
+npm run lint         # eslint src/
+npm run test:unit    # mocha + ts-node over test/unit/**/*.test.ts; no editor needed
+npm test             # pretest (typecheck, compile, compile:integration, lint, test:unit), then
+                     # vscode-test: test/integration in a downloaded VS Code; Linux needs xvfb-run -a
+npm run package      # .vsix via vsce (make vscode-package)
 ```
 
-### Running in Development
+- **No workflow runs these on a pull request.** `release-apps.yml` runs `npm test` on three operating systems
+  only after a push to `main` that touches `libs/vs-code/`, and then releases. Run `npm test` locally before
+  raising a PR that changes this package, and quote its result.
+- **Unit-tested modules must not import `vscode`.** `test:unit` runs outside an editor, where the module does
+  not exist. Put logic you want unit-tested in a `vscode`-free module (as `languageProfile.ts`,
+  `languageDetection.ts`, `serverInstall.ts` and the other modules under test are) and keep the editor wiring
+  in `extension.ts`, `client.ts` or `config.ts`. `test/unit/support/languageClient.ts` stands in for
+  `vscode` when a test must load `vscode-languageclient`.
+- `.vscode-test.mjs` puts the test editor's user-data directory under the system temp directory. macOS caps
+  socket paths at 103 characters, and the default path inside a git worktree passes that limit.
 
-1. Open `libs/vs-code/` in VS Code
-2. Press F5 to launch Extension Development Host
-3. Open a Python file in the new window
-4. Extension activates automatically
+## Generated and guarded files
 
-### npm Scripts
+- `src/generated/languages.ts` is generated (see the root file); do not edit it.
+- The language settings in `package.json` (`legesher.workingLanguage`, `legesher.targetLanguage`) carry
+  hand-kept `enum` and `enumDescriptions` arrays. `scripts/tests/test_vscode_language_enums.py` requires them
+  to list exactly the registry's published codes, each labelled as itself. A new language means editing both
+  arrays in step.
+- `package.json` is the extension's only version source; `release-apps.yml` tags `vscode-v<version>` from it.
+  `pyproject.toml` (the `legesher-vs-code` Python dependency bundle) must carry the same version.
+  `scripts/tests/test_vs_code_version_source.py` fails when they differ, so bump both together.
 
-```bash
-npm run compile    # Compile TypeScript
-npm run watch      # Watch mode for development
-npm run lint       # Run linting
-npm run package    # Create .vsix package
-```
+## Language roles
 
-## Configuration Options
+`src/languageProfile.ts` holds the rules. Keep the roles separate:
 
-In VS Code settings (`settings.json`):
+| Role    | Setting                    | Meaning                               |
+| ------- | -------------------------- | ------------------------------------- |
+| Pivot   | `legesher.sourceLanguage`  | Python's own vocabulary; the run form |
+| File    | detected per file          | What a given file is written in       |
+| Working | `legesher.workingLanguage` | What the user reads and writes in     |
+| Known   | `legesher.knownLanguages`  | What the user reads comfortably       |
 
-```json
-{
-  "legesher.workingLanguage": "es", // Any of 56 supported languages
-  "legesher.knownLanguages": ["es", "en"], // Seeded from workingLanguage when empty
-  "legesher.sourceLanguage": "en", // Only en currently
-  "legesher.languageDetection": "auto", // auto, off
-  "legesher.serverCommand": "legesher-lsp",
-  "legesher.trace.server": "off", // off, messages, verbose
-  "legesher.enabled": true
-}
-```
+- The client sends the file and working languages as separate `initializationOptions` slots (`fileLanguage`,
+  `workingLanguage`), plus a deprecated `targetLanguage` slot that mirrors `fileLanguage` for older servers.
+  Never collapse them client-side; the server cannot separate one value again. Each document's language goes to
+  the server in a `legesher/documentLanguage` notification. Detection happens here, never in the server.
+- `legesher.targetLanguage` is deprecated but still honoured where `legesher.workingLanguage` is not set, at
+  its own scope. VS Code's scope precedence (folder over workspace over user) decides first; only within one
+  scope does the new name outrank the old.
 
-### Language roles (CORE-1760)
+## Other gotchas
 
-`legesher.targetLanguage` is **deprecated** — it meant the file's language and
-the reader's language at once, which diverge the moment you open someone
-else's file. It is still honoured wherever `legesher.workingLanguage` is not
-set, at its own scope: VS Code precedence (folder > workspace > user) decides
-first, and only within one scope does the new name outrank the old.
-
-| Role     | Setting                      | Meaning                                |
-| -------- | ---------------------------- | -------------------------------------- |
-| Pivot    | `legesher.sourceLanguage`    | Python's own vocabulary; the run form  |
-| File     | detected per file            | What a given file is written in        |
-| Working  | `legesher.workingLanguage`   | What the user reads and writes in      |
-| Known    | `legesher.knownLanguages`    | What the user reads comfortably        |
-
-The file and working languages reach the language server as **separate**
-`initializationOptions` slots (`fileLanguage`, `workingLanguage`), plus a
-deprecated `targetLanguage` slot mirroring `fileLanguage` for older servers.
-Never collapse them client-side — the server cannot un-collapse one value.
-The rules live in `src/languageProfile.ts`, which is free of `vscode` imports
-so they are unit-testable without an editor host.
-
-## Commands
-
-Access via Command Palette (Cmd+Shift+P / Ctrl+Shift+P):
-
-- **Legesher: Show Translation Panel** - Open side-by-side view
-- **Legesher: Select Language** - Choose the working language
-- **Legesher: Manage My Languages** - Edit the known-language set
-- **Legesher: Restart Language Server** - Restart connection
-
-## Status Bar Indicators
-
-- **Connection**: `$(check) Legesher`, `$(sync~spin) Legesher`, `$(warning) Legesher`
-- **Language**: `$(globe) {LANG_CODE}` - The language in effect for this file
-- **Mismatch**: `$(search) {FILE} → {WORKING}` - The file is written in a
-  language that is neither your working language nor one you have marked as
-  known; a file in a known language shows no mismatch
-
-## Telemetry
-
-Privacy-focused telemetry respects VS Code global settings:
-
-```json
-{
-  "legesher.telemetry.enabled": false,
-  "legesher.telemetry.contributeToMLTraining": false
-}
-```
-
-## Testing
-
-**Note**: No automated tests currently. Manual testing required:
-
-1. Launch Extension Development Host (F5)
-2. Open Python file
-3. Verify extension activates
-4. Test language selection
-5. Test translation panel
-
-## Common Tasks
-
-### Adding a New UI Language
-
-1. Update `src/languagePackLoader.ts` with language entry
-2. Add to package.json `contributes.configuration` enum
-3. Update language selector in `src/extension.ts`
-4. Test in Extension Development Host
-
-### Debugging Extension Issues
-
-1. Set `legesher.trace.server: "verbose"`
-2. Open Output panel → "Legesher Language Server"
-3. Check Developer Tools (Help → Toggle Developer Tools)
-
-### Building for Distribution
-
-```bash
-npm run package
-# Creates legesher-vscode-{version}.vsix
-
-# Install locally
-code --install-extension legesher-vscode-0.1.2.vsix
-```
-
-## Architecture
-
-```text
-┌─────────────────────────────┐
-│   VS Code Extension         │
-│   (TypeScript)              │
-│   - extension.ts (entry)    │
-│   - client.ts (LSP client)  │
-└──────────────┬──────────────┘
-               │ LSP Protocol (JSON-RPC)
-               ↓
-┌──────────────────────────────┐
-│   Legesher Language Server   │
-│   (Python)                   │
-│   - Translation Engine       │
-│   - LSP Providers            │
-└──────────────────────────────┘
-```
-
-## Dependencies
-
-- `vscode-languageclient` - LSP client library
-- VS Code Extension API
-
-## Related Issues
-
-- CORE-477: Telemetry and feedback system
+- The extension does not bundle the server. `legesher.serverCommand` defaults to `legesher-lsp` from the
+  `legesher-language-server` Python package; `serverInstall.ts` words the message shown when it is missing.
+- Telemetry is opt-in: `legesher.telemetry.enabled`, `legesher.telemetry.repoAttribution` and
+  `legesher.telemetry.contributeToMLTraining` all default to `false`, and VS Code's global telemetry setting
+  also gates sending.
+- Debugging: set `legesher.trace.server` to `verbose` and read the "Legesher Language Server" output channel.

@@ -51,7 +51,7 @@ jobs:
     # the skip-gate on the very commit that introduced this workflow.
     # Two independent gates:
     #  1. push-to-main: skip semantic-release's own auto-commits.
-    #  2. pull_request: skip while the PR is a draft (see /pr draft-first).
+    #  2. pull_request: skip while the PR is a draft.
     #     Draft PRs cost zero Actions minutes; marking the PR ready fires
     #     `ready_for_review` and runs this against the final commit. The
     #     `ci:run` label forces a run without leaving draft.
@@ -124,7 +124,7 @@ jobs:
     # uses `startsWith` instead of `contains`.
     # Two independent gates:
     #  1. push-to-main: skip semantic-release's own auto-commits.
-    #  2. pull_request: skip while the PR is a draft (see /pr draft-first).
+    #  2. pull_request: skip while the PR is a draft.
     #     Draft PRs cost zero Actions minutes; marking the PR ready fires
     #     `ready_for_review` and runs this against the final commit. The
     #     `ci:run` label forces a run without leaving draft.
