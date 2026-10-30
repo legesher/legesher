@@ -100,9 +100,17 @@ does not free the file name (CORE-626).
 
 The workflow authenticates with OpenID Connect (`id-token: write`) through a
 [Trusted Publisher](https://docs.pypi.org/trusted-publishers/) registration. There is no
-`PYPI_API_TOKEN` or `TEST_PYPI_API_TOKEN` secret, and the workflow reads none. Before the
-first dispatch, register one pending publisher per package on each index. PyPI and
-TestPyPI are separate instances, with separate accounts and separate registrations.
+`PYPI_API_TOKEN` or `TEST_PYPI_API_TOKEN` secret, and the workflow reads none. A package's
+first upload to an index needs a pending publisher. On PyPI, register it from the
+`Legesher` organization's Publishing page, so the project is created organization-owned.
+PyPI and TestPyPI are separate instances, with separate accounts and separate
+registrations.
+
+An index holds only one pending publisher per repository, workflow and environment, and
+all six packages share those, so register them one at a time: register a package's
+pending publisher, dispatch that package alone (see "First publish to an index"), and
+register the next once its project exists. From then on the registration is an ordinary
+publisher, and every later run of the same workflow and environment uses it.
 
 | Field | Value |
 | --- | --- |
@@ -133,6 +141,30 @@ confirm each upload before the next:
 On the first publish, check installs once the whole set is up: `legesher-runtime` requires
 `legesher-i18n>=0.23.0`, which is on the index only after `foundation` has uploaded. On
 later publishes, a package can be checked as soon as its own requirements are on the index.
+
+### First publish to an index
+
+A pending publisher creates exactly one project, so a run that uploads several new
+packages creates one of them and has the rest refused. On an index where the packages
+do not exist yet, `foundation` is replaced by its three packages one at a time, and every
+dispatch carries one package:
+
+1. `runtime`
+2. `i18n`
+3. `core`
+4. `cli` (the `legesher` distribution)
+5. `mcp`
+6. `language-server`
+
+Before each dispatch, register that package's pending publisher; after it, confirm the
+project exists before registering the next. Once all six exist, later releases follow
+"Order of dispatch", with `foundation`, and never the `i18n`, `core` or `cli` targets:
+the three share one version, and a file uploaded by one of them makes the next
+`foundation` run fail to re-upload it.
+
+If a run in this sequence is refused at the token exchange after the first project
+exists, nothing was uploaded: stop and record it on the release ticket before going on.
+The TestPyPI rehearsal runs the same sequence first, so it would surface there.
 
 Do not dispatch the `all-language-packs`, `i18n-python-*` or `vs-code` targets, although
 the dropdown still offers them. The language packs are not published from this

@@ -236,7 +236,9 @@ Facts that change what you write:
   the trains. Do not start a normal commit subject with them.
 - No train uploads to PyPI. `publish-pypi.yml` is a manual dispatch per target (`foundation`, `language-server`,
   `mcp`, `runtime`, packs). `legesher-runtime` has no train: its version moves by hand, and a new runtime version
-  is published before `foundation`.
+  is published before `foundation`. The `i18n`, `core` and `cli` targets exist only for the first publish to an
+  index, which goes one package per run (a pending publisher creates one project); see
+  `.github/RELEASE_CHECKLIST.md`, "First publish to an index".
 
 ## CI
 

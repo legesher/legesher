@@ -22,7 +22,8 @@ uploaded.
 
 It also checks that the publish set is closed: every workspace package a
 published package requires is itself published by one of the set's targets
-(CORE-2351).
+(CORE-2351), and that every package in the set has a target that builds it
+alone, which a first publish to an index needs (CORE-2541).
 """
 
 from __future__ import annotations
@@ -171,6 +172,8 @@ def _expected(option: str, languages: list[str]) -> set[str]:
         return {"legesher-core", "legesher-i18n", "legesher"}
     if option == "all-language-packs":
         return {f"legesher-i18n-python-{lang}" for lang in languages}
+    if option == "cli":
+        return {"legesher"}
     return {f"legesher-{option}"}
 
 
@@ -277,6 +280,25 @@ def test_the_publish_set_carries_every_package_it_requires() -> None:
     )
 
 
+def test_every_published_package_has_a_target_of_its_own() -> None:
+    """A first publish to an index uploads one package per run.
+
+    A pending publisher creates exactly one project when its token is minted,
+    and PyPI accepts only one pending publisher per repository, workflow and
+    environment, so `foundation`'s first run would create one of its three
+    projects and have the other two uploads refused (CORE-2541).
+    """
+    languages = json.loads(LANGUAGES.read_text(encoding="utf-8"))["languages"]
+    published = set().union(*(_expected(option, languages) for option in PUBLISH_SET))
+    single = [_expected(option, languages) for option in OPTIONS]
+    alone = set().union(*(names for names in single if len(names) == 1))
+    missing = sorted(published - alone)
+    assert not missing, (
+        f"no publish-pypi.yml target builds these alone, so a first publish "
+        f"cannot create their projects: {missing}"
+    )
+
+
 @needs_bash
 def test_the_language_list_is_every_registry_language(all_langs: str) -> None:
     registry = sorted(json.loads(LANGUAGES.read_text(encoding="utf-8"))["languages"])
@@ -299,6 +321,33 @@ def test_target_builds_into_dist(
     expected = {name.replace("-", "_") for name in _expected(option, all_langs.split())}
     assert stems == expected, f"target {option!r} left {built} in dist/"
     assert len(built) == 2 * len(expected), f"target {option!r} left {built} in dist/"
+
+
+@needs_bash
+@pytest.mark.parametrize(
+    "step", ["Verify installation (TestPyPI)", "Verify installation (PyPI)"]
+)
+@pytest.mark.parametrize("option", OPTIONS)
+def test_install_hint_names_the_built_distributions(
+    option: str, step: str, all_langs: str
+) -> None:
+    """The install line a run prints names what that run uploaded."""
+    proc = subprocess.run(
+        [*BASH, _step_script(DOCUMENT, step)],
+        cwd=REPO,
+        env={**os.environ, "PACKAGE": option, "ALL_LANGS": all_langs},
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    named = {
+        line.split()[-1]
+        for line in proc.stdout.splitlines()
+        if line.strip().startswith("pip install")
+    }
+    assert named == _expected(option, all_langs.split()), (
+        f"{step!r} for target {option!r} names {sorted(named)}"
+    )
 
 
 @needs_bash

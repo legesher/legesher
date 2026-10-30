@@ -11,6 +11,17 @@ on:
         # Language pack options must match libs/i18n/legesher_i18n/languages.json (source of truth)
         options:
           - foundation
+          # The three `foundation` packages one at a time, for a first publish
+          # to an index (CORE-2541). A pending publisher creates exactly one
+          # project, and PyPI holds only one pending publisher per repository,
+          # workflow and environment, so a first upload creates one project
+          # per run. Once a project exists, `foundation` publishes it again;
+          # these three are for a first publish only, because a later release
+          # sent through one of them makes the next `foundation` run fail to
+          # re-upload that file.
+          - i18n
+          - core
+          - cli
           - all-language-packs
           - i18n-python-ar
           - i18n-python-da
@@ -84,6 +95,10 @@ jobs:
           && (github.event.inputs.environment == 'pypi'
             && 'https://pypi.org/search/?q=legesher'
             || 'https://test.pypi.org/search/?q=legesher')
+          || github.event.inputs.package == 'cli'
+          && (github.event.inputs.environment == 'pypi'
+            && 'https://pypi.org/p/legesher'
+            || 'https://test.pypi.org/p/legesher')
           || (github.event.inputs.environment == 'pypi'
             && format('https://pypi.org/p/legesher-{0}', github.event.inputs.package)
             || format('https://test.pypi.org/p/legesher-{0}', github.event.inputs.package))
@@ -174,13 +189,14 @@ jobs:
 
           else
             # Only allow known non-language-pack packages. Each one's
-            # distribution name is legesher-<option>.
+            # distribution name is legesher-<option>, except the CLI's.
             case "$PACKAGE" in
-              language-server|mcp|runtime|vs-code) ;;
+              cli) DIST="legesher" ;;
+              core|i18n|language-server|mcp|runtime|vs-code) DIST="legesher-$PACKAGE" ;;
               *) echo "ERROR: Unknown package: $PACKAGE"; exit 1 ;;
             esac
-            echo "📦 Building legesher-$PACKAGE..."
-            uv build --package "legesher-$PACKAGE" --out-dir dist/
+            echo "📦 Building $DIST..."
+            uv build --package "$DIST" --out-dir dist/
           fi
 
       - name: Check distribution
@@ -215,6 +231,8 @@ jobs:
             for lang in $ALL_LANGS; do
               echo "  pip install --index-url https://test.pypi.org/simple/ legesher-i18n-python-$lang"
             done
+          elif [ "$PACKAGE" = "cli" ]; then
+            echo "  pip install --index-url https://test.pypi.org/simple/ legesher"
           else
             echo "  pip install --index-url https://test.pypi.org/simple/ legesher-$PACKAGE"
           fi
@@ -236,6 +254,8 @@ jobs:
             for lang in $ALL_LANGS; do
               echo "  pip install legesher-i18n-python-$lang"
             done
+          elif [ "$PACKAGE" = "cli" ]; then
+            echo "  pip install legesher"
           else
             echo "  pip install legesher-$PACKAGE"
           fi
