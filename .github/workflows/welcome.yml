@@ -1,0 +1,26 @@
+name: Welcome
+
+# Welcomes everyone who opens an issue or pull request here, and celebrates
+# their merges. The shared wording lives in legesher/.github; this
+# repository's own sections live in .github/welcome/.
+
+on:
+  issues:
+    types: [opened]
+  # Runs from the default branch so it can comment on pull requests from
+  # forks. It never checks out or runs code from the pull request.
+  pull_request_target:  # zizmor: ignore[dangerous-triggers]
+    types: [opened, closed]
+
+permissions: {}
+
+jobs:
+  welcome:
+    name: Welcome
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: legesher/.github/actions/welcome@707d0efacd15341f41047e156af0fde2079283c2 # main
