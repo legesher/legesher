@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-11-03
+
 ### Added
 
 - **A filled-in review template can be imported.** `legesher-i18n
