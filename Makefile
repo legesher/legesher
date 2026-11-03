@@ -98,19 +98,19 @@ test-all: test
 # Individual package tests
 test-i18n:
 	@echo "Running i18n tests..."
-	cd libs/i18n && uv run pytest tests/ -v
+	cd libs/i18n && uv run pytest tests/ -v -n auto
 
 test-core:
 	@echo "Running core tests..."
-	cd libs/core && uv run pytest tests/ -v
+	cd libs/core && uv run pytest tests/ -v -n auto
 
 test-legesher:
 	@echo "Running legesher tests..."
-	cd libs/legesher && uv run pytest tests/ -v
+	cd libs/legesher && uv run pytest tests/ -v -n auto
 
 test-language-server:
 	@echo "Running language-server tests..."
-	cd libs/language-server && uv run pytest tests/ -v
+	cd libs/language-server && uv run pytest tests/ -v -n auto
 
 # Release-tier language-server suite: the clean-environment wheel install
 # (CORE-2203). Builds the wheels, installs them into an empty venv and drives
@@ -124,7 +124,7 @@ test-language-server-scheduled:
 
 test-mcp:
 	@echo "Running MCP server tests..."
-	cd libs/mcp && uv run pytest tests/ -v
+	cd libs/mcp && uv run pytest tests/ -v -n auto
 
 # Release-tier MCP suites: the all-packs round-trip sweep (CORE-1745) and the
 # clean-environment wheel spawn test (CORE-1746). Excluded from `test-mcp`

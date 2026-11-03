@@ -221,12 +221,14 @@ jobs:
       # true` a sibling leg's failure cancels this one, `cancelled()` flips
       # true, and every gated step would skip — losing exactly the
       # visibility this buys.
+      # The larger suites run on one worker per CPU (pytest-xdist); the
+      # runtime suite is small enough that starting workers costs more.
       - name: Run core tests
-        run: uv run pytest libs/core/tests/ -v --cov=legesher_core --cov-report=xml:coverage-core.xml
+        run: uv run pytest libs/core/tests/ -v -n auto --cov=legesher_core --cov-report=xml:coverage-core.xml
 
       - name: Run i18n tests
         if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
-        run: uv run pytest libs/i18n/tests/ -v --cov=legesher_i18n --cov-report=xml:coverage-i18n.xml
+        run: uv run pytest libs/i18n/tests/ -v -n auto --cov=legesher_i18n --cov-report=xml:coverage-i18n.xml
 
       # CORE-950 collision guardrail. Pre-commit's
       # validate-language-pack-yaml hook (configured at
@@ -245,18 +247,18 @@ jobs:
 
       - name: Run legesher tests
         if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
-        run: uv run pytest libs/legesher/tests/ -v --cov=legesher --cov-report=xml:coverage-legesher.xml
+        run: uv run pytest libs/legesher/tests/ -v -n auto --cov=legesher --cov-report=xml:coverage-legesher.xml
 
       - name: Run language-server tests
         if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
-        run: uv run pytest libs/language-server/tests/ -v --cov=legesher_language_server --cov-report=xml:coverage-ls.xml
+        run: uv run pytest libs/language-server/tests/ -v -n auto --cov=legesher_language_server --cov-report=xml:coverage-ls.xml
 
       # Per-commit tier only. The `scheduled` suites (all-packs round-trip
       # sweep, clean-environment wheel spawn) are deselected by libs/mcp's
       # own addopts and gate the release instead — see release-mcp.yml.
       - name: Run MCP server tests
         if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
-        run: uv run pytest libs/mcp/tests/ -v --cov=legesher_mcp --cov-report=xml:coverage-mcp.xml
+        run: uv run pytest libs/mcp/tests/ -v -n auto --cov=legesher_mcp --cov-report=xml:coverage-mcp.xml
 
       # Never ran here before CORE-2129: `make test` had a test-runtime
       # target, this workflow did not. The suite builds its own message

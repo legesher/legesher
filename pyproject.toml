@@ -116,6 +116,7 @@ dev = [
     "psutil>=7.2.2",
     "vulture>=2.16",
     "hypothesis>=6.168.0",
+    "pytest-xdist>=3.6",
 ]
 
 [build-system]
