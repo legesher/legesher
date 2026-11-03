@@ -19,29 +19,10 @@ Before triggering a release:
 
 Releases happen automatically when you merge to `main`:
 
-Each release train runs in the GitHub environment `release`, so a run waits at
-"Review deployments" for the release maintainer's approval before it versions
-anything, and only runs from `main` can enter it. The train pushes its version
-commit with a one-hour token minted from the `legesher-release-train` GitHub App
-(`actions/create-github-app-token`, SHA-pinned), never with `GITHUB_TOKEN`: the
-`protect main` ruleset requires pull requests, a `GITHUB_TOKEN` push is attributed
-to the GitHub Actions app, which the organization cannot list as a bypass actor,
-and the release App is the ruleset's one bypass actor. The App holds `contents`
-read and write on this repository alone. Its App ID is the environment variable
-`RELEASE_APP_ID` and its private key the environment secret
-`RELEASE_APP_PRIVATE_KEY`, both scoped to the `release` environment.
-
-| Setting | `release` |
-| --- | --- |
-| Required reviewers | the release maintainer |
-| Prevent self-review | off |
-| Allow administrators to bypass | off |
-| Deployment branches and tags | selected: `main` |
-
-A push with the App token starts the push-to-main workflows (`ci.yml`, `codeql.yml`,
-`security.yml`) on the release commit, where a `GITHUB_TOKEN` push starts none. The
-trains skip their own release commits by subject, so a release does not retrigger
-its train.
+Each release train runs in the GitHub environment `release`: a run waits for a
+maintainer's approval before it versions anything, only runs from `main` can
+enter it, and the train pushes its version commit with a short-lived token
+minted in that environment.
 
 **Foundation Suite** (core, i18n, legesher):
 
