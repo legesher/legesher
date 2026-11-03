@@ -10,7 +10,9 @@ backends: a name after a dot, a keyword-argument name, and a module path.
 A name the file binds itself keeps its old rendering everywhere, so a
 definition and its uses still agree; telling such a name from the builtin it
 shadows is CORE-2614, and soft keywords used as names are CORE-2613. Those
-rows are strict xfails below.
+rows are strict xfails below, with the target slice 1 stops short of: the
+author's own attribute localized and its string references renamed with it
+(CORE-2628).
 
 The reproductions are executed, not compared as text: the defect was English
 that reads plausibly and does not run.
@@ -362,6 +364,44 @@ class TestLaterSlices:
         spanish = forward.translate_code(english)
         assert reverse.translate_code(spanish) == english, "the trip itself must hold"
         assert rendering not in spanish
+
+
+class TestTheAuthorsAttributeLocalizes:
+    """The target the slice 1 interim stops short of: an attribute the author
+    defines, spelled like a pack term, localizes with the term, and the string
+    that names it follows. Slice 1 keeps ``self.rango`` as written, which runs
+    but is not localized; resolving that the author owns the attribute and
+    renaming its string references is CORE-2628."""
+
+    @BACKENDS
+    @pytest.mark.parametrize("language", ["es", "hi", "ar"])
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "CORE-2628: an author's own attribute spelled like a pack term is "
+            "kept as written, and its getattr string is not renamed with it"
+        ),
+    )
+    def test_the_attribute_and_its_string_both_become_english(
+        self, language, tree_sitter
+    ):
+        pack = LanguagePackLoader().load(language, target="python", version=TIER)
+        keyword, builtin = pack.keywords, pack.builtins
+        own = pack.implicit_params["self"]
+        cls = {"es": "Punto", "hi": "बिंदु", "ar": "نُقطة"}[language]
+        attribute = builtin["range"]
+        native = (
+            f"{keyword['class']} {cls}:\n"
+            f"    {keyword['def']} __init__({own}):\n"
+            f"        {own}.{attribute} = 5\n"
+            f"p = {cls}()\n"
+            f"{builtin['print']}({builtin['getattr']}(p, '{attribute}'))\n"
+        )
+        _, reverse = translators(language, tree_sitter)
+        english = reverse.translate_code(native)
+        assert "self.range = 5" in english
+        assert "getattr(p, 'range')" in english
+        assert run(english) == "5\n"
 
 
 class TestABuiltinUsedAsTheBuiltinStillTranslates:
