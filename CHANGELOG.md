@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **i18n/runtime**: tracebacks localize their structure and messages from an
+  installed package, with no translations database present. [CORE-1679]
+
 ## [0.25.0] - 2026-11-03
 
 ### Added
@@ -40,8 +45,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `os.open`. The language server's proxy follows the engine. [CORE-2237]
 - **core/mcp**: the round-trip check no longer reports VERIFIED for code it
   cannot vouch for; such a trip reads `round-trip NOT VERIFIED`. [CORE-2237]
-- **i18n/runtime**: tracebacks localize their structure and messages from an
-  installed package, with no translations database present. [CORE-1679]
 
 ### Security
 
