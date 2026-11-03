@@ -554,11 +554,14 @@ class TestDiscovery:
         It is the default prefix on Apple Silicon and was absent from a list
         that named only Intel and npm locations.
         """
-        from legesher_language_server.enhanced_intelligence import FALLBACK_BIN_DIRS
-
-        assert "/opt/homebrew/bin" in FALLBACK_BIN_DIRS, (
-            f"Homebrew prefix missing from fallback search: {FALLBACK_BIN_DIRS}"
+        from legesher_language_server.enhanced_intelligence import (
+            default_fallback_bin_dirs,
         )
+
+        # The macOS list, whatever the host: FALLBACK_BIN_DIRS is the running
+        # platform's, and Windows has its own.
+        dirs = default_fallback_bin_dirs(platform="darwin", environ={})
+        assert "/opt/homebrew/bin" in dirs, f"Homebrew prefix missing from fallback search: {dirs}"
 
 
 class TestFraming:
