@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-11-03
+
 ### Changed
 
 - **A v2 database's schema is created in one transaction.** Each statement

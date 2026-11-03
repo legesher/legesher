@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-11-03
+
 ### Added
 
 - **mcp**: `glama.json` at the repository root names the maintainer who can
@@ -1606,11 +1608,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.24.0  | Yes      |
-| legesher-i18n            | 0.24.0  | Yes      |
-| legesher (CLI)           | 0.24.0  | —        |
+| legesher-core            | 0.25.0  | Yes      |
+| legesher-i18n            | 0.25.0  | Yes      |
+| legesher (CLI)           | 0.25.0  | —        |
 | legesher-language-server | 0.2.0   | Yes      |
-| legesher-vscode          | 0.1.5   | —        |
+| legesher-vscode          | 0.1.7   | —        |
 
 ### Removed
 
