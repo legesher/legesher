@@ -48,8 +48,9 @@ legesher run programa.py --lang es
 ## Guarantees
 
 - **Unmatched messages pass through untranslated.** A message the catalog has
-  no matcher for is printed exactly as CPython produced it (with the type
-  name still localized when the pack knows it).
+  no matcher for, or no translation for in the target language, is printed
+  exactly as CPython produced it (with the type name still localized when the
+  pack knows it). With `lang="en"` the output is CPython's own.
 - **The hooks never raise.** Any renderer failure falls back to the original
   traceback verbatim, via the previously installed hook — and
   `TracebackRenderer.render()` holds the same contract standalone: a bogus

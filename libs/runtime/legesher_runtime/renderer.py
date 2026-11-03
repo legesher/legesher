@@ -193,8 +193,8 @@ class TracebackRenderer:
         # Only translated rules rewrite anything. A rule without a translation
         # for this language would re-render the message from its English
         # template, and a matcher can accept wording its template does not
-        # reproduce ("takes 1 positional argument" comes back plural). Without
-        # it the line passes through as CPython printed it, so ``en`` output
+        # reproduce ("takes 1 positional argument" comes back plural). Left
+        # out, the line passes through as CPython printed it, so ``en`` output
         # stays byte-identical to stock CPython.
         rules = [rule for rule in rules if rule.localized]
         self._structural: dict[str, MessageRule] = {

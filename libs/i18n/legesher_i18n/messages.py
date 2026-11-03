@@ -6,17 +6,16 @@ activated by ``scripts/activate_messages_partition.py`` and filled by
 ``scripts/seed_message_templates.py`` from the tracked seeds in
 ``db/seeds/``. This module is the runtime-facing read path:
 :func:`load_catalog` reads once (the database, or the seed files when it
-falls back) and returns plain, immutable rules
-(compiled matcher + localized template), so consumers such as the
-``legesher-runtime`` traceback renderer hold no SQLite connection at render
-time.
+falls back) and returns plain, immutable rules (compiled matcher + localized
+template), so consumers such as the ``legesher-runtime`` traceback renderer
+hold no SQLite connection at render time.
 
 No wheel and no clone carries the database (CORE-1794), so when the DEFAULT
-database has no catalog rows (templates with a matcher),
-:func:`load_catalog` reads the seed the database is filled from, which
-ships as package data. An installed package
-therefore renders the catalog a seeded checkout renders. Rows in the
-database always win; an explicit ``db_path`` is never replaced by the seed.
+database has no catalog rows (templates with a matcher), :func:`load_catalog`
+reads the seed the database is filled from, which ships as package data. An
+installed package therefore renders the catalog a seeded checkout renders.
+Rows in the database always win; an explicit ``db_path`` is never replaced
+by the seed.
 
 Version tiering: templates are keyed by ``(implementation, key,
 version_added)`` with an optional ``version_removed`` — CPython 3.12's
