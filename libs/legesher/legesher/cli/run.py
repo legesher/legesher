@@ -13,6 +13,7 @@ import logging
 import shlex
 import sys
 from pathlib import Path
+from types import TracebackType
 
 import click
 import legesher_runtime
@@ -23,6 +24,17 @@ from legesher.runtime.source_mapper import get_source_mapper
 from legesher_core import TokenTranslator
 
 logger = logging.getLogger(__name__)
+
+
+def _from_script(tb: TracebackType | None, script: str) -> TracebackType | None:
+    """The traceback from the script's first frame on; None if it has none.
+
+    The frames above it are this command's own (the console script, click,
+    ``run``), which ``python script.py`` would never show.
+    """
+    while tb is not None and tb.tb_frame.f_code.co_filename != script:
+        tb = tb.tb_next
+    return tb
 
 
 @click.command()
@@ -109,6 +121,16 @@ def run(script: str, lang: str | None, args: str | None):
         raise  # Allow scripts to exit normally
     except KeyboardInterrupt:
         sys.exit(130)  # Standard Unix exit code for Ctrl+C
-    except Exception:
-        # Exception will be handled by our custom excepthook
-        raise
+    except Exception as exc:
+        # Report the script's error as `python script.py` would: from the
+        # script's first frame (a syntax error in the script has none, and
+        # CPython prints it without a header), through the installed hook,
+        # exit status 1. An error before the script ran, such as a file that
+        # cannot be decoded, is the command's own and keeps every frame.
+        script_file = str(script_path)
+        tb = _from_script(exc.__traceback__, script_file)
+        compile_error = isinstance(exc, SyntaxError) and exc.filename == script_file
+        if tb is None and not compile_error:
+            raise
+        sys.excepthook(type(exc), exc, tb)
+        sys.exit(1)

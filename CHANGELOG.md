@@ -13,6 +13,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - **i18n/runtime**: tracebacks localize their structure and messages from an
   installed package, with no translations database present. [CORE-1679]
+- **cli**: `legesher run` reports an error in the script from the script's first
+  frame, as `python script.py` does. [CORE-2552]
 
 ## [0.25.0] - 2026-11-03
 
