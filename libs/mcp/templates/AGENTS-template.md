@@ -58,7 +58,9 @@ between the two; both forms are the same program, and the
    call — `translate_to_source` with `verify_round_trip: true` — and
    quote the returned `verdict_line`; the verdict comes from the engine,
    never by comparing the two renderings yourself. If it reports a
-   failure, stop and report rather than committing.
+   failure, or NOT VERIFIED, stop and report rather than committing.
+   After a dot, as a keyword argument and in a module path, a library's
+   names keep their own spelling (`os.open`, `type=int`).
 
 ## Project glossary
 

@@ -25,6 +25,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   language server's README and the extension's LICENSE by absolute URL, so the
   Marketplace rendering resolves them; its install steps name the Marketplace
   and keep the `.vsix` as the fallback.
+- **core/language-server**: a name after a dot, a keyword-argument name and a
+  module path keep their spelling in both directions when they are spelled
+  like a builtin, so `mismo.rango` becomes `self.rango` and `os.open` stays
+  `os.open`. The language server's proxy follows the engine. [CORE-2237]
+- **core/mcp**: the round-trip check no longer reports VERIFIED for code it
+  cannot vouch for; such a trip reads `round-trip NOT VERIFIED`. [CORE-2237]
 
 ## [0.24.0] - 2026-11-03
 

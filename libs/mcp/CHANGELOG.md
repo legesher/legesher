@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- With `verify_round_trip: true`, a byte-identical trip that the check cannot
+  vouch for reads `round-trip NOT VERIFIED` in `verdict_line`, and
+  `round_trip.schema_version` is 1.1.0 (from legesher-core). The skill and
+  the AGENTS template say what to do with it, and that a library's names keep
+  their own spelling after a dot and as keyword arguments. [CORE-2237]
+
 ## [0.2.0] - 2026-11-03
 
 ### Added

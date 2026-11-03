@@ -258,11 +258,13 @@ class EnhancedIntelligenceProxy:
         builtin or exception left in place is an undefined name to the
         backend, and a localized ``self`` draws a warning (CORE-2342).
 
-        Like the engine, the translator renames every name spelled like one of
-        these, a user's own variable or attribute included (CORE-1107), so the
-        backend sees the same shadowing the run does. That rule is the engine's,
-        copied: when the engine changes it (CORE-2237), this has to follow, and
-        ``tests/test_proxy_engine_parity.py`` fails until it does. It differs
+        Like the engine, the translator renames a name spelled like one of
+        these, a user's own variable included (CORE-1107), so the backend sees
+        the same shadowing the run does; a name after a dot, a keyword-argument
+        name and a module path keep their spelling (CORE-2237). That rule is
+        the engine's: both read it from ``name_positions``, which ships
+        byte-identical in each package, and ``tests/test_proxy_engine_parity.py``
+        fails when the two apply it differently. It differs
         from the run in two places: it matches a word only as typed, where the
         engine also matches the word's other Unicode forms (CORE-2352), and it
         spells ``NotImplemented`` and ``Ellipsis`` as Python does, where the

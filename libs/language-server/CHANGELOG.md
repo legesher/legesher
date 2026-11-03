@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- The enhanced-intelligence proxy keeps a name after a dot, a keyword-argument
+  name and a module path as written, as the engine does, so the type checker
+  checks the English that `legesher run` executes. (CORE-2237)
+
 ## [0.2.0] - 2026-11-03
 
 ### Fixed

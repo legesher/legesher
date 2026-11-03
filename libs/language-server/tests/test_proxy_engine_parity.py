@@ -3,11 +3,16 @@
 The language server does not depend on legesher-core, so the proxy keeps its
 own copy of the engine's renaming rule. These pin the two together with
 shared inputs: the same localized source, translated by both, must give the
-same English. If the engine's rule changes (CORE-2237 plans to stop renaming
-attributes, keyword arguments, definitions, module paths and import-shadowed
-names spelled like a builtin, and soft keywords used as names), they fail
-until the proxy follows. Known differences are strict
-xfails naming the ticket that removes them.
+same English. If the engine's rule changes, they fail until the proxy
+follows. Known differences are strict xfails naming the ticket that removes
+them.
+
+CORE-2237 keeps a name after a dot, a keyword-argument name and a module path
+as written. Both sides read that rule from ``name_positions.py``, which ships
+byte-identical in each package (``scripts/tests/test_name_positions_copies.py``);
+the cases here check that each side applies it the same way. CORE-2613 (soft
+keywords used as names) and CORE-2614 (shadowed builtins) will change the
+rule again.
 
 They need legesher-core, which the monorepo workspace installs; an install
 of this package on its own skips them.
@@ -53,6 +58,22 @@ SPANISH = {
     "a module path": "importar cadena\n",
     "a soft keyword used as a name": "coincidir = patron.coincidir(texto)\n",
     "a builtin shadowed by an import": "desde os importar abrir\nfd = abrir('p', 0)\n",
+    # CORE-2237: positions kept as written, and the bindings that keep their
+    # old rendering so a definition and its uses agree.
+    "a library function after a dot": "fd = os.open('p', 0)\nn = longitud(os.sep)\n",
+    "a keyword argument into a library": "analizador.add_argument('--n', type=entero)\n",
+    "a keyword argument in a class header": "clase C(Base, metaclass=tipo):\n    pasar\n",
+    "a dotted module path and its module": (
+        "importar entrada.lista como el\nimportar rango\nrango.x\n"
+    ),
+    "a relative import": "desde . importar uno\ndesde .. importar dos\n",
+    "a class field read as an attribute": (
+        "clase P:\n    tipo = 'x'\np = P(tipo='y')\nimprimir(p.tipo)\n"
+    ),
+    "a parameter passed by keyword": ("definir f(lista=nulo):\n    devolver lista\nf(lista=[1])\n"),
+    "a method called as an attribute": (
+        "clase Pila:\n    definir longitud(mismo):\n        devolver 3\nPila().longitud()\n"
+    ),
 }
 
 # CPython 3.10 and 3.11 tokenize in pure Python, which splits a word at a
@@ -71,6 +92,15 @@ ENGLISH = (
     "            return 0\n"
 )
 OTHER_PACKS = ["fr", "de", "ar", "zh", "hi", "am"]
+
+# Library names after a dot and as keyword arguments, and a module path:
+# the engine keeps them in English when it localizes (CORE-2237).
+ENGLISH_KEPT = (
+    "import argparse\n"
+    "fd = os.open(path, 0)\n"
+    "argparse.ArgumentParser().add_argument('--n', type=int, default=len(path))\n"
+    "self.input = input()\n"
+)
 
 KNOWN_DIFFERENCES = {
     "NotImplemented and Ellipsis": pytest.param(
@@ -124,6 +154,13 @@ class TestTheProxySendsWhatRuns:
     async def test_other_packs(self, proxy, language):
         localized = _engine(language).translate_code(ENGLISH)
         assert localized != ENGLISH, f"the {language} pack translated nothing"
+        await _assert_same_english(proxy, language, localized)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("language", OTHER_PACKS)
+    async def test_other_packs_keep_the_same_names(self, proxy, language):
+        localized = _engine(language).translate_code(ENGLISH_KEPT)
+        assert "os.open" in localized and "type=" in localized, localized
         await _assert_same_english(proxy, language, localized)
 
     @pytest.mark.asyncio

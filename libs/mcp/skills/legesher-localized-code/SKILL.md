@@ -83,6 +83,12 @@ tool call makes a network request.
   renamed and re-checked, never recorded.
 - **Never "correct" localized names to English.** Localized identifiers
   are the repository working as intended.
+- **A library's names stay the library's.** After a dot, as a keyword
+  argument and in a module path, a name keeps its spelling in both
+  directions, even when it is spelled like a builtin: write `os.open` and
+  `type=int`, not the pack's word for `open` or `type`. The engine leaves
+  those positions alone, so a pack word there reaches the run form
+  unchanged and names nothing.
 
 ## Cross-language collaboration
 
@@ -116,6 +122,14 @@ the move:
   identifiers, which are the original names. Disclosed residue, not a
   failure. Carry on.
 - **`comments`, `strings`** — your own layer drifted. Fix it and re-verify.
+
+A `NOT VERIFIED` verdict came back byte-identical, but names a position the
+check cannot vouch for. `an attribute spelled like a pack term, kept as
+written` (or a keyword argument, or a module name) means the run form kept a
+pack word: correct for a name of your own, wrong for a library's name, so
+write the library's name. `a name the code binds, rendered as the builtin`
+and `a soft keyword used as a name` are engine limits today: rename the
+identifier so it is not spelled like a pack term, then re-verify.
 
 A missing pack term or an untranslatable construct: flag it explicitly and
 keep the affected code in Python's own keywords rather than improvising a

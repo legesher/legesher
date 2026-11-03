@@ -5,13 +5,16 @@ improvement over the token-based approach. It provides the same API as TokenTran
 while leveraging tree-sitter for better performance and error handling.
 """
 
+import io
 import logging
 import sys
+import tokenize
 import unicodedata
 from pathlib import Path
 
 from .parser import PythonParser, TreeSitterError
 from ..exceptions import InvalidCodeError
+from ..name_positions import kept_names
 from ..token_mapper import TokenMapper
 from ..types import CulturalCommentMetadata
 from ..utils import (
@@ -206,6 +209,14 @@ class TreeSitterTranslator:
             # Walk the tree to find keywords and builtins
             self._find_translations(tree.root_node, replacements)
 
+            # The walk matches by name alone. Names in a position where they
+            # cannot be the builtin (an attribute, a keyword argument, a
+            # module path) keep their spelling, by the token-level rule the
+            # token path applies, so the two backends agree (CORE-2237).
+            kept = self._kept_start_bytes(source_code)
+            if kept:
+                replacements = [r for r in replacements if r[0] not in kept]
+
             # Apply replacements at character level to avoid UTF-8 round-trip issues
             result = self._apply_replacements(source_code, byte_to_char, replacements)
 
@@ -242,6 +253,31 @@ class TreeSitterTranslator:
             # Catch-all for unexpected errors
             logger.error(f"Translation failed unexpectedly: {e}")
             raise InvalidCodeError(f"Failed to translate code: {e}") from e
+
+    def _kept_start_bytes(self, source_code: str) -> frozenset[int]:
+        """UTF-8 start offsets of the names ``name_positions`` keeps.
+
+        Tree-sitter parses code the tokenizer rejects (an unclosed bracket
+        while typing); there the token rule cannot run and nothing is kept,
+        which is what this backend did before.
+        """
+        try:
+            tokens = list(tokenize.generate_tokens(io.StringIO(source_code).readline))
+        except (tokenize.TokenError, SyntaxError, ValueError, RecursionError):
+            return frozenset()
+        kept = kept_names(tokens, self.mapper.get_keyword)
+        if not kept:
+            return frozenset()
+        # StringIO.readline splits on "\n" only, so rows are "\n"-delimited.
+        lines = source_code.split("\n")
+        row_starts = [0]
+        for line in lines:
+            row_starts.append(row_starts[-1] + len(line.encode("utf-8")) + 1)
+        starts = set()
+        for index in kept:
+            row, col = tokens[index].start
+            starts.add(row_starts[row - 1] + len(lines[row - 1][:col].encode("utf-8")))
+        return frozenset(starts)
 
     def _find_translations(self, node, replacements: list) -> None:
         """Recursively find and collect keyword and builtin translations.

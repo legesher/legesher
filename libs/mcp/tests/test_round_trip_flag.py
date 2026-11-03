@@ -103,7 +103,7 @@ async def test_flag_verifies_a_clean_trip_on_translate_to_native(
     assert info["divergences"] == []
     assert "keywords" in info["verified"]
     assert info["grammar_version"] == "3.13"
-    assert info["schema_version"] == "1.0.0"
+    assert info["schema_version"] == "1.1.0"
     assert info["pivoted"] is False
     # compile_check understands English only, and the forward rendering
     # here is Spanish — the compile fact is unknown, never assumed.
@@ -126,6 +126,31 @@ async def test_flag_verifies_a_clean_trip_on_translate_to_source(
     # is earned, and clean keyword-bearing source earns a true.
     assert info["forward_valid"] is True
     assert "keywords" in info["verified"]
+
+
+async def test_an_attribute_spelled_like_a_builtin_is_not_verified(
+    client: ClientSession,
+) -> None:
+    """CORE-2237 through the tool: the author's attribute keeps its name in
+    the English, and a trip that cannot vouch for it never reads VERIFIED,
+    although it comes back byte-identical."""
+    spanish = (
+        "clase Punto:\n"
+        "    definir __init__(mismo):\n"
+        "        mismo.rango = 5\n"
+        "imprimir(obtenerelatributo(Punto(), 'rango'))\n"
+    )
+    result = await call_ok(
+        client,
+        "translate_to_source",
+        {"source": spanish, "source_lang": "es", "verify_round_trip": True},
+    )
+    assert "self.rango = 5" in result["translated_source"]
+    info = result["round_trip"]
+    assert info["round_trips"] is True
+    assert info["verdict_line"].startswith("legesher: round-trip NOT VERIFIED")
+    assert "builtins" not in info["verified"]
+    assert "rango" not in info["verdict_line"]
 
 
 async def test_verdict_line_is_single_line_and_states_its_limits(
