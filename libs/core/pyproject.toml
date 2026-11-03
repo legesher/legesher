@@ -18,7 +18,7 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 name = "legesher-core"
-version = "0.25.0"
+version = "0.25.1"
 description = "Translation engine for multilingual Python: keyword, builtin, and identifier rewriting"
 readme = "README.md"
 keywords = ["translation", "i18n", "programming", "multilingual", "code-translation"]
