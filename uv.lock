@@ -2461,7 +2461,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "legesher-mcp"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "libs/mcp" }
 dependencies = [
     { name = "legesher-core" },
