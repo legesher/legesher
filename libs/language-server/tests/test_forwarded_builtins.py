@@ -197,15 +197,18 @@ class TestTheBackendSeesTheProgramThatRuns:
         assert opened == ["input = 3\nprint(input)\n"]
 
     @pytest.mark.asyncio
-    async def test_an_attribute_spelled_like_a_builtin_is_renamed_too(self, proxy, monkeypatch):
-        # The engine writes `str.format` as `.formatear`, because it renames
-        # every name, attributes included. Left in place, Pyright reports
-        # `Cannot access attribute "formatear"`.
+    async def test_an_attribute_keeps_its_spelling_as_the_engine_keeps_it(self, proxy, monkeypatch):
+        # A name after a dot is never the builtin, so the engine leaves it as
+        # written in both directions (CORE-2237): it writes `str.format` as
+        # `.format`, and `legesher run` executes a native `.formatear` as
+        # `.formatear`. Pyright reporting `Cannot access attribute
+        # "formatear"` is then the truth about the program that runs.
         opened = _stub_backend(proxy, monkeypatch, [])
 
+        await proxy.forward_diagnostic(URI, 'imprimir("{}".format(1))\n', "es")
         await proxy.forward_diagnostic(URI, 'imprimir("{}".formatear(1))\n', "es")
 
-        assert opened == ['print("{}".format(1))\n']
+        assert opened == ['print("{}".format(1))\n', 'print("{}".formatear(1))\n']
 
 
 class TestAGenuineUndefinedName:

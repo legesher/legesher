@@ -293,7 +293,8 @@ class TestSerialisation:
             pack=spanish_pack,
         )
         payload = json.loads(json.dumps(report.to_dict()))
-        assert report.schema_version == "1.0.0"
+        # 1.1.0 (CORE-2237) added finding_count and findings.
+        assert report.schema_version == "1.1.0"
         assert set(payload) == {
             "schema_version",
             "round_trips",
@@ -302,6 +303,8 @@ class TestSerialisation:
             "divergence_count",
             "divergences",
             "verified",
+            "finding_count",
+            "findings",
             "source_lang",
             "through_lang",
             "pivoted",
@@ -323,6 +326,23 @@ class TestSerialisation:
             "expected",
             "actual",
             "kind",
+            "layer",
+        }
+
+    def test_finding_rows_are_pinned(self, spanish_pack):
+        report = verify_round_trip(
+            "def f(list):\n    return list\n",
+            "en",
+            "es",
+            "3.13",
+            translate=perfect_translate,
+            pack=spanish_pack,
+        )
+        assert set(report.to_dict()["findings"][0]) == {
+            "line",
+            "offset",
+            "kind",
+            "role",
             "layer",
         }
 

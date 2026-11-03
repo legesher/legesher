@@ -21,11 +21,13 @@ from __future__ import annotations
 
 import io
 import tokenize
+import unicodedata
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Protocol
 
+from legesher_core.name_positions import SOFT_KEYWORDS, name_roles, word_at
 from legesher_core.utils import merge_exception_translations
 
 if TYPE_CHECKING:
@@ -34,7 +36,10 @@ if TYPE_CHECKING:
 __all__ = [
     "Divergence",
     "DivergenceKind",
+    "FINDING_TICKETS",
+    "FindingKind",
     "Layer",
+    "NameFinding",
     "PACK_LAYERS",
     "RoundTripReport",
     "SCHEMA_VERSION",
@@ -101,6 +106,61 @@ class Divergence:
             f"  expected: {self.expected!r}\n"
             f"  actual:   {self.actual!r}"
         )
+
+
+class FindingKind(str, Enum):
+    """Why a byte-identical round trip still cannot vouch for one name.
+
+    Byte identity says the trip came back; it says nothing about whether the
+    canonical form in between means what the native one does. ``self.rango``
+    renamed to ``self.range`` comes back as ``self.rango`` (CORE-2237).
+    """
+
+    #: A name kept as written (an attribute, a keyword argument, a module
+    #: path) was renamed on the way out.
+    RENAMED = "renamed"
+    #: The trip changed the token structure, so names could not be compared.
+    UNCHECKED = "unchecked"
+    #: Native source: a name kept as written is spelled like a pack term an
+    #: earlier version would have localized there (a builtin, exception,
+    #: implicit parameter or soft keyword), so the check cannot tell the
+    #: author's own name from a localized library name (``os.abrir``).
+    KEPT_PACK_TERM = "kept_pack_term"
+    #: The code binds a name spelled like a builtin, which the engine still
+    #: renders as the builtin, and renders in every position, attributes and
+    #: keyword arguments included (CORE-2614).
+    SHADOWED = "shadowed"
+    #: A soft keyword used as a name, which the engine still renders as the
+    #: keyword (CORE-2613).
+    SOFT_KEYWORD = "soft_keyword"
+
+
+#: The ticket each finding kind is tracked under, quoted in the verdict line.
+FINDING_TICKETS: dict[FindingKind, str] = {
+    FindingKind.RENAMED: "CORE-2237",
+    FindingKind.UNCHECKED: "CORE-2237",
+    FindingKind.KEPT_PACK_TERM: "CORE-2237",
+    FindingKind.SHADOWED: "CORE-2614",
+    FindingKind.SOFT_KEYWORD: "CORE-2613",
+}
+
+
+@dataclass(frozen=True)
+class NameFinding:
+    """One name a byte-identical round trip cannot vouch for.
+
+    ``line`` and ``offset`` are 1-based and locate the name in the source.
+    ``role`` is the ``name_positions`` role of a kept name, ``"binding"`` for
+    a shadowed builtin, or None. ``layer`` is the pack section the name is
+    spelled from, when there is one. Never carries the name itself: findings
+    feed the verdict line, which must not quote source content.
+    """
+
+    line: int
+    offset: int
+    kind: FindingKind
+    role: str | None = None
+    layer: Layer | None = None
 
 
 def _first_differing_column(expected: str, actual: str) -> int:
@@ -401,7 +461,141 @@ def classified(
     ]
 
 
-SCHEMA_VERSION = "1.0.0"
+def _all_tokens(source: str) -> list[tokenize.TokenInfo] | None:
+    try:
+        return list(tokenize.generate_tokens(io.StringIO(source).readline))
+    except _TOKENIZE_FAILURES:
+        return None
+
+
+def _keyword_lookup(
+    pack: LanguagePack, *, native_side: bool
+) -> Callable[[str], str | None]:
+    """The keyword table for the side ``source`` is written in, the way the
+    engine reads it (as typed, then NFC, then NFKC)."""
+    table = (
+        {native: english for english, native in pack.keywords.items()}
+        if native_side
+        else dict(pack.keywords)
+    )
+
+    nfkc = {unicodedata.normalize("NFKC", key): value for key, value in table.items()}
+
+    def lookup(name: str) -> str | None:
+        found = table.get(name)
+        if found is None and not name.isascii():
+            found = table.get(unicodedata.normalize("NFC", name))
+            if found is None:
+                found = nfkc.get(unicodedata.normalize("NFKC", name))
+        return found
+
+    return lookup
+
+
+def _name_findings(
+    source: str, forward: str, pack: LanguagePack, *, native_side: bool
+) -> list[NameFinding]:
+    """Names a byte-identical trip cannot vouch for, in source order.
+
+    Reads the source's own token roles (``name_positions``, the rule the
+    engine applies), then checks four things: a kept name must come out of
+    the forward hop unchanged; in native source a kept name spelled like a
+    pack term is ambiguous; a bound name spelled like a builtin is still
+    rendered as the builtin; a soft keyword outside its statement is still
+    rendered as the keyword. Source that does not tokenize yields nothing:
+    the engine passes it through unchanged.
+    """
+    tokens = _all_tokens(source)
+    if tokens is None:
+        return []
+    keyword_of = _keyword_lookup(pack, native_side=native_side)
+    roles = name_roles(tokens, keyword_of)
+    sections = _pack_sections(pack)
+    findings: list[NameFinding] = []
+
+    def found(
+        index: int, kind: FindingKind, role: str | None, layer: Layer | None
+    ) -> None:
+        line, column = tokens[index].start
+        findings.append(NameFinding(line, column + 1, kind, role, layer))
+
+    def own_layer(term: str) -> Layer | None:
+        layer = _pack_layer(term, sections, native_side=native_side)
+        return layer if layer in PACK_LAYERS else None
+
+    def ambiguous(term: str) -> Layer | None:
+        """The layer of a kept native name an earlier version could have
+        produced by localizing an English one. English never puts a hard
+        keyword after a dot, so only a soft keyword counts there."""
+        layer = own_layer(term)
+        if layer is Layer.KEYWORDS and keyword_of(term) not in SOFT_KEYWORDS:
+            return None
+        return layer
+
+    forward_tokens = _all_tokens(forward)
+    aligned = forward_tokens is not None and len(forward_tokens) == len(tokens)
+    if roles.kept and not aligned:
+        first = min(roles.kept)
+        found(first, FindingKind.UNCHECKED, None, None)
+    for index, role in roles.kept.items():
+        term = roles.words.get(index, tokens[index].string)
+        if (
+            aligned
+            and forward_tokens is not None
+            and word_at(forward_tokens, index) != term
+        ):
+            found(index, FindingKind.RENAMED, role, own_layer(term))
+        elif native_side and (layer := ambiguous(term)) is not None:
+            found(index, FindingKind.KEPT_PACK_TERM, role, layer)
+
+    def section_of(term: str, layers: tuple[Layer, ...]) -> Layer | None:
+        """The first of ``layers`` whose own side renders ``term``. Asked per
+        section, because ``type`` is a keyword before it is a builtin in the
+        3.12+ packs."""
+        for layer, mapping in sections:
+            own = mapping.values() if native_side else mapping.keys()
+            if layer in layers and term in own:
+                return layer
+        return None
+
+    for index in roles.bindings:
+        term = roles.words.get(index, tokens[index].string)
+        if layer := section_of(term, (Layer.BUILTINS, Layer.EXCEPTIONS)):
+            found(index, FindingKind.SHADOWED, "binding", layer)
+    # A position that would be kept, left to the old rendering because the
+    # file binds the same name (``x.type`` beside ``def f(type)``, ``cls=``
+    # beside a classmethod's ``cls``).
+    for index, role in roles.unkept.items():
+        term = roles.words.get(index, tokens[index].string)
+        layers = (Layer.BUILTINS, Layer.EXCEPTIONS, Layer.IMPLICIT_PARAMS)
+        if layer := section_of(term, layers):
+            found(index, FindingKind.SHADOWED, role, layer)
+
+    # A soft keyword the pack renders, used as a name. ``type`` is also a
+    # builtin, so its uses are the builtin and its bindings are SHADOWED.
+    rendered = {
+        soft
+        for soft in SOFT_KEYWORDS - {"type"}
+        if pack.keywords.get(soft, soft) != soft
+    }
+    if rendered:
+        for index, token in enumerate(tokens):
+            if (
+                token.type != tokenize.NAME
+                or index in roles.kept
+                or index in roles.soft_keyword_statements
+            ):
+                continue
+            word = roles.words.get(index, token.string)
+            soft = keyword_of(word) if native_side else word
+            if soft in rendered:
+                found(index, FindingKind.SOFT_KEYWORD, None, Layer.KEYWORDS)
+
+    findings.sort(key=lambda finding: (finding.line, finding.offset))
+    return findings
+
+
+SCHEMA_VERSION = "1.1.0"
 
 #: The ticket that widens coverage; referenced in every verdict line, so a
 #: constant rather than a string scattered through f-strings.
@@ -441,6 +635,29 @@ def _layers_exercised(
     return frozenset(present)
 
 
+_ROLE_NOUNS = {
+    "attribute": "an attribute",
+    "keyword_argument": "a keyword argument",
+    "module": "a module name",
+}
+
+
+def _finding_phrase(finding: NameFinding) -> str:
+    """What one finding means, in words that never quote the source."""
+    noun = _ROLE_NOUNS.get(finding.role or "", "a name")
+    if finding.kind is FindingKind.RENAMED:
+        return f"{noun} renamed where it cannot be the builtin"
+    if finding.kind is FindingKind.UNCHECKED:
+        return "token structure changed, names not compared"
+    if finding.kind is FindingKind.KEPT_PACK_TERM:
+        return f"{noun} spelled like a pack term, kept as written"
+    if finding.kind is FindingKind.SHADOWED and finding.role != "binding":
+        return f"{noun} renamed because the code binds the same name"
+    if finding.kind is FindingKind.SHADOWED:
+        return "a name the code binds, rendered as the builtin"
+    return "a soft keyword used as a name, rendered as the keyword"
+
+
 @dataclass(frozen=True)
 class RoundTripReport:
     """The result of one round trip. Facts only - never policy.
@@ -448,6 +665,11 @@ class RoundTripReport:
     Callers set policy: the MCP sweep fails on residue, the demo verifier
     warns on it, both from this one report. ``forward``/``returned`` exist
     for in-process reuse and are never serialised.
+
+    ``round_trips`` is byte identity and nothing more. ``findings`` holds
+    the names a byte-identical trip still cannot vouch for (CORE-2237),
+    bounded like ``divergences``, with the true total in ``finding_count``;
+    any finding makes the verdict NOT VERIFIED.
     """
 
     round_trips: bool
@@ -461,6 +683,8 @@ class RoundTripReport:
     grammar_version: str
     forward: str
     returned: str
+    findings: tuple[NameFinding, ...] = ()
+    finding_count: int = 0
     schema_version: str = SCHEMA_VERSION
 
     @property
@@ -469,6 +693,10 @@ class RoundTripReport:
         counts, coverage, pivot, grammar - never source content. Source
         lines are attacker-influenced input, and this line is reproduced
         into agent prose and logs by instruction.
+
+        FAILED when the trip did not come back or its canonical form does
+        not compile; NOT VERIFIED when it came back byte-identical with
+        name findings; VERIFIED only when neither.
         """
         trip = f"{self.source_lang}→{self.through_lang}→{self.source_lang}"
         pivot = " · via pivot" if self.pivoted else ""
@@ -508,6 +736,21 @@ class RoundTripReport:
                 f"divergences shown{pivot} · {grammar}"
             )
 
+        if self.finding_count:
+            first_finding = self.findings[0] if self.findings else None
+            where = (
+                f" · first at line {first_finding.line} col {first_finding.offset}: "
+                f"{_finding_phrase(first_finding)} "
+                f"({FINDING_TICKETS[first_finding.kind]})"
+                if first_finding is not None
+                else ""
+            )
+            return (
+                f"legesher: round-trip NOT VERIFIED — {trip} · byte-identical, "
+                f"but {self.finding_count} name(s) it cannot vouch for{where}"
+                f"{pivot} · {grammar}"
+            )
+
         exercised = ", ".join(sorted(layer.value for layer in self.verified)) or "none"
         uncovered = ", ".join(
             sorted(layer.value for layer in Layer if layer not in self.verified)
@@ -539,6 +782,17 @@ class RoundTripReport:
                 for d in self.divergences
             ],
             "verified": sorted(layer.value for layer in self.verified),
+            "finding_count": self.finding_count,
+            "findings": [
+                {
+                    "line": f.line,
+                    "offset": f.offset,
+                    "kind": f.kind.value,
+                    "role": f.role,
+                    "layer": f.layer.value if f.layer else None,
+                }
+                for f in self.findings
+            ],
             "source_lang": self.source_lang,
             "through_lang": self.through_lang,
             "pivoted": self.pivoted,
@@ -640,6 +894,8 @@ def verify_round_trip(
         else ()
     )
 
+    findings = _name_findings(source, forward, pack, native_side=native_side)
+
     clean = count == 0
     exercised = _layers_exercised(source, pack, native_side=native_side)
     if clean:
@@ -655,6 +911,11 @@ def verify_round_trip(
         # is the exact over-claim `verified` exists to prevent, so on an
         # incompletely-attributed failure nothing is credited.
         verified = frozenset()
+    if findings:
+        # A layer holding a name the trip cannot vouch for is not verified,
+        # however clean the bytes; a finding with no layer could be any.
+        layers = {finding.layer for finding in findings}
+        verified = frozenset() if None in layers else frozenset(verified - layers)
 
     return RoundTripReport(
         round_trips=clean,
@@ -668,4 +929,6 @@ def verify_round_trip(
         grammar_version=python_version,
         forward=forward,
         returned=returned,
+        findings=tuple(findings[:max_divergences]),
+        finding_count=len(findings),
     )

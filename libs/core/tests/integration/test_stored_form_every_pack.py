@@ -58,6 +58,10 @@ KNOWN_REFUSED_RENDERS: dict[tuple[str, str], str] = {
         "CORE-1840: identifier `y` reads as the pack's word for `and`, "
         "so the keyword-only smudge refuses the render"
     ),
+    ("cy", "builtin_named_positions.py"): (
+        "CORE-1840: the module name `os` reads as the pack's word for `if`, "
+        "so the keyword-only smudge refuses the render"
+    ),
 }
 
 

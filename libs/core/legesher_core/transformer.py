@@ -15,6 +15,7 @@ from typing import cast
 
 from .cultural_comments import CulturalCommentParser
 from .exceptions import InvalidCodeError
+from .name_positions import kept_names
 from .token_mapper import TokenMapper
 from .types import CulturalCommentMetadata
 from .utils import validate_utf8_encoding, normalize_newlines
@@ -158,6 +159,9 @@ class TokenTranslator:
             - Cultural comments (#@culture[lang]: ...) are extracted when
               return_metadata=True for IDE tooltip/decoration support
             - Variable and function names are NOT translated (out of scope)
+            - A name after a dot, a keyword-argument name and a module path
+              keep their spelling even when spelled like a builtin, unless
+              the file binds that name itself (``name_positions``, CORE-2237)
             - Incomplete code is handled gracefully (translates valid portion)
             - Syntax errors return original code unchanged
         """
@@ -187,6 +191,11 @@ class TokenTranslator:
                     f"cultural comment(s) from source"
                 )
 
+            # Names in a position where they cannot be the builtin (an
+            # attribute, a keyword argument, a module path) keep their
+            # spelling in both directions (CORE-2237).
+            kept = kept_names(tokens, self._keyword_of)
+
             # Translate tokens (index-based for compound keyword lookahead)
             translated_tokens = []
             i = 0
@@ -194,7 +203,7 @@ class TokenTranslator:
                 tok = tokens[i]
 
                 # Check if this is a NAME token (keyword, builtin, or identifier)
-                if tok.type == tokenize.NAME:
+                if tok.type == tokenize.NAME and i not in kept:
                     # Table lookups use the NFC form (compare-NFC contract,
                     # see unicode_guard): a canonically equivalent rendering
                     # of a keyword/builtin translates identically, and the
@@ -301,6 +310,13 @@ class TokenTranslator:
             # Catch-all for unexpected errors
             logger.error(f"Translation failed unexpectedly: {e}")
             raise InvalidCodeError(f"Failed to translate code: {e}") from e
+
+    def _keyword_of(self, name: str) -> str | None:
+        """The keyword table's rendering of one NAME token, looked up the way
+        ``translate_code`` looks it up."""
+        return self.mapper.get_keyword(
+            name if name.isascii() else unicodedata.normalize("NFC", name)
+        )
 
     def translate_file(self, file_path: Path, target_lang: str) -> str:
         """Translate a Python file to target language.

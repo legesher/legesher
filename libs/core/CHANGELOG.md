@@ -9,6 +9,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- A name after a dot, a keyword-argument name and a module path keep their
+  spelling in both directions when they are spelled like a builtin, an
+  exception or an implicit parameter, in the token and tree-sitter backends:
+  `mismo.rango` becomes `self.rango` in English, and `user.id`, `type=int` and
+  `os.open` stay English when localizing. A name the file binds itself keeps
+  its previous rendering in every position, so a definition and its uses
+  still agree. Code localized by an earlier version where such a name was
+  translated (`os.abrir`, `tipo=entero`) now reaches English unchanged; write
+  the library's own name there. [CORE-2237]
+- The round-trip check no longer reports VERIFIED for code it cannot vouch
+  for. A byte-identical trip reads `round-trip NOT VERIFIED` when a name that
+  is kept as written changed on the way, when native source keeps a name
+  there that an earlier version would have localized (a builtin, exception,
+  implicit parameter or soft keyword), or when the code binds a builtin's name
+  or uses a soft keyword as a name. `RoundTripReport` gains `findings` and
+  `finding_count`, and its schema version is 1.1.0. [CORE-2237]
+
 ## [0.24.0] - 2026-11-03
 
 ### Changed

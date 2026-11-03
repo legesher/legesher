@@ -1,6 +1,8 @@
 # Round-trip verification — the owning implementation
 
-**Status**: design v2, amended 2026-08-17 after adversarial review · **Ticket**: CORE-1813
+**Status**: design v2, amended 2026-08-17 after adversarial review, and on
+2026-11-03 for names a byte-identical trip cannot vouch for (CORE-2237) ·
+**Ticket**: CORE-1813
 
 Native → canonical → native returning byte-identical source is the claim this
 project rests on. This document specifies the one implementation that owns
@@ -48,6 +50,35 @@ variant of one failure: **the check reporting VERIFIED it had not earned.**
    vector (demonstrated: a crafted string literal that always diverges and
    lands in `divergences[0]`) and moves source content into logs. The line
    carries locations, layers and counts — never content.
+
+## What CORE-2237 added (v3)
+
+A fourth variant of the same failure: **byte identity cannot see a renamed
+name.** The engine used to translate a builtin's name wherever its token
+appeared. Spanish `mismo.rango = 5` (the author's own attribute, spelled
+like the pack's word for `range`) went to `self.range = 5` and came back as
+`mismo.rango = 5`, byte-identical, while `getattr(p, 'rango')` in the
+English raised `AttributeError`. The verdict read VERIFIED.
+
+The engine now keeps a name after a dot, a keyword-argument name and a module
+path as written in both directions (`legesher_core.name_positions`), and the
+report carries **name findings**: names a byte-identical trip still cannot
+vouch for. Any finding turns the verdict into NOT VERIFIED, and removes the
+finding's layer from `verified`.
+
+| Finding | When | Tracked by |
+| --- | --- | --- |
+| `renamed` | a name the engine keeps changed on the way out | CORE-2237 |
+| `unchecked` | the trip changed the token structure, so names could not be compared | CORE-2237 |
+| `kept_pack_term` | native source keeps a name spelled like a term an earlier version would have localized there (a builtin, exception, implicit parameter or soft keyword): right for the author's own attribute, wrong for a localized library name (`os.abrir`), and the check cannot tell which | CORE-2237 |
+| `shadowed` | the code binds a name spelled like a builtin, which the engine still renders as the builtin, also after a dot and as a keyword argument (`x.type` beside `def f(type)`, `cls=` beside a classmethod) | CORE-2614 |
+| `soft_keyword` | a soft keyword used as a name, which the engine still renders as the keyword | CORE-2613 |
+
+The findings are read from the source's own tokens with the same
+`name_positions` rule the engine applies, so the check and the engine cannot
+disagree about which names are kept. A `renamed` finding is the guard: it
+fires on the engine as it was before CORE-2237, and on any backend that
+regresses.
 
 ## Design
 
@@ -205,7 +236,7 @@ Callers surface it as an error (`EngineError("vacuous_round_trip")` at the
 MCP boundary), never as a verdict.
 
 ```python
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"   # 1.1.0 (CORE-2237): finding_count and findings
 
 @dataclass(frozen=True)
 class RoundTripReport:
@@ -220,6 +251,8 @@ class RoundTripReport:
     grammar_version: str
     forward: str                      # in-process callers only — never serialized
     returned: str
+    findings: tuple[NameFinding, ...] = ()  # bounded by max_divergences
+    finding_count: int = 0            # true total
     schema_version: str = SCHEMA_VERSION
 ```
 
@@ -264,6 +297,16 @@ legesher: round-trip FAILED — es→en→es · line 12 col 8 · layer keywords 
 legesher: round-trip FAILED — es→en→es · canonical form does not compile ·
 grammar 3.13
 ```
+
+```text
+legesher: round-trip NOT VERIFIED — es→en→es · byte-identical, but 1 name(s)
+it cannot vouch for · first at line 3 col 15: an attribute spelled like a
+pack term, kept as written (CORE-2237) · grammar 3.13
+```
+
+A failed trip still reads FAILED; NOT VERIFIED is only ever a byte-identical
+trip with findings. The line names the first finding by location and kind,
+never by the name itself.
 
 One line, quoted rather than paraphrased. This is CORE-1843's recorded
 mitigation — *return facts in a form that is rendered rather than restated* —

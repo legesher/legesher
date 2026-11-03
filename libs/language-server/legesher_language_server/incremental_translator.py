@@ -14,6 +14,7 @@ import io
 import tokenize
 from typing import NamedTuple
 
+from .name_positions import kept_names
 from .source_map import Position, SourceMap, SourceMapBuilder
 from .type_alias_generator import TypeAliasGenerator
 
@@ -166,6 +167,9 @@ class IncrementalTranslator:
         the newlines inside a multi-line string are not tokens of their own
         (CORE-2343).
 
+        A name after a dot, a keyword-argument name and a module path keep
+        their spelling, as the engine's do (``name_positions``, CORE-2237).
+
         Args:
             code: Source code to translate
             keyword_map: Keyword translation mapping
@@ -188,10 +192,12 @@ class IncrementalTranslator:
         shift_row = 0
         shift = 0
 
-        for token in tokens:
+        kept = kept_names(tokens, keyword_map.get)
+
+        for index, token in enumerate(tokens):
             tok_string = token.string
 
-            if token.type == tokenize.NAME:
+            if token.type == tokenize.NAME and index not in kept:
                 translation = keyword_map.get(tok_string, builtin_map.get(tok_string))
             else:
                 translation = None
