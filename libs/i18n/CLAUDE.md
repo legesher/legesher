@@ -167,6 +167,10 @@ skips an incomplete section rather than shipping it half-filled.
 A database whose partition predates the provenance columns is refused by every write path until
 `scripts/add_message_provenance.py` has run on it.
 
+The seed is also what ships. No wheel or clone carries the database, so `load_catalog` reads
+`legesher_i18n/db/seeds/` whenever the default database carries no message catalog. A translation that reaches
+the database only through step 3 or 4 is not in an installed package until the seed carries it too.
+
 ## Adding a language
 
 Database first, like any value change: a `languages` row with `in_registry = 1`, then `generate_languages.py`.

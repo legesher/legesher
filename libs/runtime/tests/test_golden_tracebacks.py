@@ -11,12 +11,17 @@ them, so the suite requires 3.11+ (the workspace floor for DB paths is 3.13).
 RTL posture (v1): the Arabic goldens are LOGICAL-order strings — the
 renderer inserts no bidi control characters and leaves display reordering to
 the terminal. See libs/runtime/README.md.
+
+Every golden runs twice: against the seeded database the conftest builds, and
+with no database at all, which is what an installed package has. Both must
+render the same lines.
 """
 
 from __future__ import annotations
 
 import re
 import sys
+import traceback
 
 import pytest
 
@@ -53,6 +58,20 @@ CHAINED_SCRIPT = (
 
 
 FRAME_MARKERS = ('File "', 'Archivo "', 'الملف "')
+
+
+@pytest.fixture(autouse=True, params=["seeded database", "no database"])
+def catalog_source(request, tmp_path, monkeypatch) -> str:
+    """Where the catalog comes from: the conftest's database, or nowhere.
+
+    ``translations.db`` never ships in a wheel, so on an installed package the
+    default path has nothing behind it and the catalog is read from the seed
+    that ships with ``legesher-i18n`` (CORE-1679).
+    """
+    if request.param == "no database":
+        missing = tmp_path / "translations.db"
+        monkeypatch.setattr("legesher_i18n.messages.default_db_path", lambda: missing)
+    return request.param
 
 
 def rendered_tail(lang: str, cap) -> list[str]:
@@ -154,3 +173,30 @@ class TestArabicGoldens:
         # line, i.e. the string starts with the Arabic token, not the path.
         frame_line = next(line for line in rendered.splitlines() if "script.py" in line)
         assert re.match(r'\s*الملف "', frame_line)
+
+
+class TestEnglishIsStockCPython:
+    """``en`` renders exactly what CPython prints, from either catalog source.
+
+    The catalog has no ``en`` translations, so no rule may rewrite anything.
+    Two of its matchers accept wording their English templates do not
+    reproduce (the singular "1 positional argument", the module path after
+    "cannot import name"); those cases are here for that reason.
+    """
+
+    @pytest.mark.parametrize(
+        "code",
+        [
+            ZERODIV_SCRIPT,
+            CHAINED_SCRIPT,
+            "print(variable_desconocida)\n",
+            "def f(a):\n    pass\n\nf(1, 2)\n",
+            "from json import no_such_name\n",
+        ],
+        ids=["zerodivision", "chained", "nameerror", "arg-count-singular", "import-path"],
+    )
+    def test_output_is_byte_identical(self, raise_from_script, code):
+        cap = raise_from_script(code)
+        stock = "".join(traceback.format_exception(cap.exc_type, cap.exc_value, cap.exc_tb))
+        rendered = TracebackRenderer("en").render(cap.exc_type, cap.exc_value, cap.exc_tb)
+        assert rendered == stock

@@ -34,7 +34,10 @@ legesher run programa.py --lang es
 - Structural strings (`Traceback (most recent call last):`, `File …, line …,
   in …`, the chained-exception sentences) and message templates come from the
   Legesher message catalog; the catalog's matchers carry named slots, so
-  values (names, counts, types, paths) survive translation.
+  values (names, counts, types, paths) survive translation. The catalog
+  ships inside `legesher-i18n`, so an installed package needs no
+  translations database. Its Spanish and Arabic entries are machine
+  translations awaiting review by native speakers.
 - Exception TYPE names come from the python language pack for the language,
   consumed as-is.
 - `uninstall()` restores the hooks that were live before the first
@@ -45,8 +48,9 @@ legesher run programa.py --lang es
 ## Guarantees
 
 - **Unmatched messages pass through untranslated.** A message the catalog has
-  no matcher for is printed exactly as CPython produced it (with the type
-  name still localized when the pack knows it).
+  no matcher for, or no translation for in the target language, is printed
+  exactly as CPython produced it (with the type name still localized when the
+  pack knows it). With `lang="en"` the output is CPython's own.
 - **The hooks never raise.** Any renderer failure falls back to the original
   traceback verbatim, via the previously installed hook — and
   `TracebackRenderer.render()` holds the same contract standalone: a bogus
