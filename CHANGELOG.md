@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **mcp**: `glama.json` at the repository root names the maintainer who can
+  claim and edit the `legesher-mcp` listing on Glama. [CORE-1424]
+
 ### Changed
 
 - **ci**: the core, i18n, legesher, language-server and mcp suites run on one
