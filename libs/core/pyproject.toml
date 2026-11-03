@@ -89,6 +89,7 @@ markers = [
     "unit: Unit tests",
     "integration: Integration tests",
     "slow: Slow-running tests",
+    "timing: measures wall-clock time; bounds enforced only with --timing (make bench)",
 ]
 
 [tool.mypy]
