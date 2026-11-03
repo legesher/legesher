@@ -28,6 +28,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Marketplace rendering resolves them; its install steps name the Marketplace
   and keep the `.vsix` as the fallback.
 
+### Security
+
+- **legesher-vscode**: 0.1.7. The packaged extension bundles `js-yaml` 4.3.2
+  and `brace-expansion` 5.0.12, releases with published security fixes.
+
 ## [0.24.0] - 2026-11-03
 
 ### Moved
