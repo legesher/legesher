@@ -35,7 +35,7 @@ dependencies = [
     # the <1.0.0 cap at release (major_on_zero). Restamp both bounds when
     # semantic-release cuts that version (rides CORE-626 / CORE-1598). The
     # workspace override hides this locally; wheel metadata is what enforces it.
-    "legesher-core>=0.23.0,<1.0.0",  # Translation engine (token translator, pack-backed factory)
+    "legesher-core>=0.25.0,<1.0.0",  # Translation engine (token translator, pack-backed factory)
     "legesher-i18n>=0.22.0,<1.0.0",  # Language registry + language pack loader
 ]
 

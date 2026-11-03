@@ -59,8 +59,9 @@ between the two; both forms are the same program, and the
    quote the returned `verdict_line`; the verdict comes from the engine,
    never by comparing the two renderings yourself. If it reports a
    failure, or NOT VERIFIED, stop and report rather than committing.
-   After a dot, as a keyword argument and in a module path, a library's
-   names keep their own spelling (`os.open`, `type=int`).
+   After a dot, as a keyword argument and in a module path, write a
+   library's name as the code shows it (`os.open`, `type=int`), never the
+   pack's word for a builtin.
 
 ## Project glossary
 

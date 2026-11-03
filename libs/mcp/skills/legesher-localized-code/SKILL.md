@@ -83,12 +83,12 @@ tool call makes a network request.
   renamed and re-checked, never recorded.
 - **Never "correct" localized names to English.** Localized identifiers
   are the repository working as intended.
-- **A library's names stay the library's.** After a dot, as a keyword
-  argument and in a module path, a name keeps its spelling in both
-  directions, even when it is spelled like a builtin: write `os.open` and
-  `type=int`, not the pack's word for `open` or `type`. The engine leaves
-  those positions alone, so a pack word there reaches the run form
-  unchanged and names nothing.
+- **A pack's word for a builtin never goes on a library's name.** The
+  language pack translates Python's own vocabulary, not a library's. After
+  a dot, as a keyword argument and in a module path, write the library's
+  name as the code shows it (`os.open`, `type=int`), not the pack's word
+  for `open` or `type`. The engine leaves those positions alone, so a pack
+  word there reaches the run form unchanged and names nothing.
 
 ## Cross-language collaboration
 
