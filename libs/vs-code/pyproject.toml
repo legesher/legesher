@@ -52,7 +52,11 @@ legesher-core = { workspace = true }
 # GIT ROOT, so that a manual run can never read or rewrite the ROOT pyproject
 # (CORE-1852). The old `version_variable` pointed at a file that does not exist.
 version_toml = ["libs/vs-code/pyproject.toml:project.version"]
-commit_parser = "conventional"
+# `conventional-monorepo` is the conventional parser plus `path_filters`
+# (below): a commit counts toward this package's next version only when it
+# changes a file in the package's directory. The plain parser counted every
+# feat/fix in the repository (CORE-2627).
+commit_parser = "conventional-monorepo"
 commit_message = "chore(release): legesher-vs-code {version}"
 major_on_zero = true
 allow_zero_version = true
@@ -63,6 +67,8 @@ tag_format = "vs-code-v{version}"
 commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
 [tool.semantic_release.commit_parser_options]
+# Relative to the working directory, which is the repository root in every train.
+path_filters = ["libs/vs-code"]
 allowed_tags = [
     "feat", "fix", "docs", "style", "refactor",
     "perf", "test", "build", "ci", "chore", "revert"

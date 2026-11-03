@@ -138,7 +138,12 @@ version_toml = [
     "libs/legesher/pyproject.toml:project.version",
 ]
 
-commit_parser = "conventional"
+# `conventional-monorepo` is the conventional parser plus `path_filters` (in
+# commit_parser_options below): a commit counts toward the next foundation
+# version only when it changes a file in one of the three packages. The plain
+# parser counted every feat/fix in the repository, so another package's fix
+# bumped the foundation (CORE-2627).
+commit_parser = "conventional-monorepo"
 # The release commit's subject. PSR's default is the bare version ("0.23.0"),
 # which the `chore(release)` skip in ci.yml and the release trains never
 # matched, so every release retriggered its own train once (CORE-1852).
@@ -155,7 +160,10 @@ commit_message = "chore(release): {version}"
 major_on_zero = false
 allow_zero_version = true
 tag_format = "v{version}"
-build_command = "uv build"
+# No build_command: semantic-release builds nothing. `uv build` at the root
+# built the root workspace package, which is not published, and the release
+# attached it (CORE-2604). release-foundation.yml builds the three packages
+# and attaches their wheels and sdists itself.
 # Override python-semantic-release's hardcoded default of
 # `semantic-release <semantic-release>`. That bare-word author has no `@`,
 # so downstream tooling that validates commit authors (Vercel deploy gating,
@@ -163,8 +171,11 @@ build_command = "uv build"
 # only affects shell-driven commits — semantic-release uses its own author.
 commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
-# Filter to foundation packages only
 [tool.semantic_release.commit_parser_options]
+# The foundation's three packages. Paths are relative to the working
+# directory, which is the repository root in every train. libs/i18n includes
+# the language packs, which ship inside the legesher-i18n wheel.
+path_filters = ["libs/core", "libs/i18n", "libs/legesher"]
 allowed_tags = [
     "feat", "fix", "docs", "style", "refactor",
     "perf", "test", "build", "ci", "chore", "revert"
@@ -177,11 +188,14 @@ ignore_merge_commits = false
 
 # PSR 10 reads these two from this table and ignores the top-level spellings
 # (`upload_to_vcs_release`, `upload_to_pypi`) the config used to carry. It
-# never uploads to PyPI: publish-pypi.yml owns that (CORE-626). `dist/*` is
-# where `build_command` above writes, so the GitHub release gets the wheel.
+# never uploads to PyPI: publish-pypi.yml owns that (CORE-626). It uploads
+# nothing to the GitHub release either: release-foundation.yml attaches the
+# three packages' wheels and sdists, so there is one upload path (CORE-2604).
+# The empty glob list is what holds: PSR 10.6.1 stores upload_to_vcs_release
+# but never reads it, so `semantic-release publish` uploads every glob.
 [tool.semantic_release.publish]
-upload_to_vcs_release = true
-dist_glob_patterns = ["dist/*"]
+upload_to_vcs_release = false
+dist_glob_patterns = []
 
 [tool.semantic_release.changelog]
 exclude_commit_patterns = [
