@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **The export manifest names its files with forward slashes on every
+  platform.** An export run on Windows filed its checksums under keys
+  such as `assets\language-packs-card.png`, so the manifest disagreed with
+  the card and the push gate about which files it accounted for.
+
 ## [0.24.0] - 2026-11-03
 
 ### Added
@@ -304,11 +311,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   reviewers. [CORE-1797]
 
 ### Fixed
-
-- **The export manifest names its files with forward slashes on every
-  platform.** An export run on Windows filed its checksums under keys
-  such as `assets\language-packs-card.png`, so the manifest disagreed with
-  the card and the push gate about which files it accounted for.
 
 - **`import-issue` matches the issue URL whole.** A trailing newline after the
   issue number is now refused, as anything else after it already was.
