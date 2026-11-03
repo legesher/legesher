@@ -16,6 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 
 from legesher_core import TokenTranslator
+from tests.timing import assert_within
 from legesher_i18n.exceptions import PackNotFoundError
 
 
@@ -341,11 +342,17 @@ class TestBackwardCompatibility:
         assert spanish_keywords["def"] in new_result
 
 
+@pytest.mark.timing
 class TestPerformance:
-    """Test performance benchmarks."""
+    """Latency of pack loading and translation.
+
+    The code runs in every run; the wall-clock bounds are enforced only under
+    ``--timing`` (``make bench``), because a bound in the default run measures
+    the machine's load as much as the code.
+    """
 
     def test_pack_loading_performance(self):
-        """Test pack loading is <500ms (relaxed for Windows CI)."""
+        """A cold pack load stays under 500 ms."""
         from legesher_i18n import LanguagePackLoader
 
         loader = LanguagePackLoader()
@@ -353,43 +360,46 @@ class TestPerformance:
 
         # Measure first load (cold cache)
         start = time.perf_counter()
-        loader.load("es", "python", "3.13")
+        pack = loader.load("es", "python", "3.13")
         duration = time.perf_counter() - start
 
-        # Relaxed to 500ms for Windows CI where cold loads are slower
-        # Local development typically sees <50ms
-        assert duration < 0.5, f"Pack loading too slow: {duration:.3f}s"
+        assert pack is not None
+        # Local development typically sees <50ms; Windows CI cold loads are slower.
+        assert_within(duration * 1000, 500, "a cold pack load")
 
     def test_cached_pack_loading_fast(self):
-        """Test cached pack loading is very fast."""
+        """A second load of the same pack is a cache hit, and returns the same pack."""
         from legesher_i18n import LanguagePackLoader
 
         loader = LanguagePackLoader()
+        loader.clear_cache()
 
-        # First load (cache miss)
-        loader.load("es", "python", "3.13")
-
-        # Second load (cache hit)
+        first = loader.load("es", "python", "3.13")
+        hits_before = loader.get_cache_stats()["hits"]
         start = time.perf_counter()
-        loader.load("es", "python", "3.13")
+        second = loader.load("es", "python", "3.13")
         duration = time.perf_counter() - start
 
-        # Cached should be under 1ms
-        assert duration < 0.001, f"Cached load too slow: {duration:.3f}s"
+        assert loader.get_cache_stats()["hits"] == hits_before + 1, (
+            "the second load of es/python/3.13 missed the cache"
+        )
+        assert second is first
+        assert_within(duration * 1000, 1, "a cached pack load")
 
     def test_translation_performance(self):
-        """Test translation doesn't degrade with pack integration."""
+        """Translating 500 lines stays under 100 ms."""
         translator = TokenTranslator.from_language_pack("es")
 
         # Create 500-line test code
         code = "def foo(): return 42\n" * 500
 
         start = time.perf_counter()
-        translator.translate_code(code)
+        translated = translator.translate_code(code)
         duration = time.perf_counter() - start
 
-        # Should be under 100ms for 500 lines
-        assert duration < 0.1, f"Translation too slow: {duration:.3f}s for 500 lines"
+        assert translated.count("\n") == 500
+        assert "def foo" not in translated, "the keywords were not translated"
+        assert_within(duration * 1000, 100, "translating 500 lines")
 
 
 class TestLanguagePackIntegration:

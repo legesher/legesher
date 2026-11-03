@@ -151,7 +151,7 @@ test-coverage:
 # the results under .benchmarks/ (gitignored) for `pytest-benchmark compare`.
 # One invocation per package: both suites live in a `tests` package, and a
 # single pytest run would import the second `tests.benchmarks` as the first.
-# The language server's timing tests are plain tests, not benchmark fixtures:
+# The core and language-server timing tests are plain tests, not benchmark fixtures:
 # they run in its default suite with their wall-clock bounds off, and
 # `--timing` turns the bounds on (CORE-2321). `-m timing` selects them, and
 # --no-cov because that subset is not a coverage run.
@@ -159,6 +159,7 @@ bench:
 	@echo "Running benchmarks (timing on, autosave to .benchmarks/)..."
 	cd libs/core && uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-autosave
 	cd libs/legesher && uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-autosave
+	cd libs/core && uv run pytest tests/ -m timing --timing --no-cov
 	cd libs/language-server && uv run pytest tests/ -m timing --timing --no-cov
 
 # ============================================================================
