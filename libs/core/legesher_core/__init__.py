@@ -122,7 +122,7 @@ if TYPE_CHECKING:
     from .tree_sitter.llm_translator import LLMTranslator
     from .tree_sitter.translator import TreeSitterTranslator
 
-__version__ = "0.24.0"
+__version__ = "0.25.0"
 
 __all__ = [
     # Translation engine

@@ -32,4 +32,4 @@ Note the two are different things despite the similar names:
 type names and messages.
 """
 
-__version__ = "0.24.0"
+__version__ = "0.25.0"
