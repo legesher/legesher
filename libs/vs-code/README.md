@@ -17,8 +17,8 @@ The Legesher VS Code extension provides the UI and editor integration for coding
 - **Syntax Highlighting**: Color-coded keywords in translated code view
 
 > **Note**: Hover, completion, diagnostics and keyword highlighting come from the
-> [Legesher language server](../language-server/README.md), a separate Python package. See
-> [The language server](#the-language-server) below.
+> [Legesher language server](https://github.com/legesher/legesher/blob/main/libs/language-server/README.md),
+> a separate Python package. See [The language server](#the-language-server) below.
 
 ## Supported Languages
 
@@ -46,17 +46,29 @@ For complete installation instructions (VS Code extension + Python packages), se
 
 ### Quick Install (Extension Only)
 
-1. Download the latest `.vsix` file from [releases](https://github.com/legesher/legesher/releases)
-2. In VS Code: Extensions (`Cmd+Shift+X`) → `...` menu → "Install from VSIX..."
-3. Select the downloaded file
+Install from the VS Code Marketplace: open Extensions (`Cmd+Shift+X`), search for
+"Legesher" and click Install, or run:
+
+```bash
+code --install-extension legesher.legesher-vscode
+```
+
+To install from a `.vsix` instead, download the latest one from
+[releases](https://github.com/legesher/legesher/releases), then in VS Code open
+Extensions (`Cmd+Shift+X`) → `...` menu → "Install from VSIX..." and select the file.
 
 ### The language server
 
 The extension does not bundle its language server. It runs the command in
 `legesher.serverCommand`, which defaults to `legesher-lsp`. That command comes
-from the `legesher-language-server` Python package, which is not on PyPI yet.
-When it is installed, it has to be on the `PATH` VS Code sees, or
-`legesher.serverCommand` has to hold its full path.
+from the `legesher-language-server` Python package:
+
+```bash
+pip install legesher-language-server
+```
+
+`legesher-lsp` has to be on the `PATH` VS Code sees, or `legesher.serverCommand`
+has to hold its full path.
 
 Hover, completion, diagnostics and keyword highlighting all come from the
 server. Without it the extension still starts: the language picker and the
@@ -264,4 +276,4 @@ records the evidence.
 ---
 
 **Author**: Madison Edgar - Legesher
-**License**: [Apache 2.0](./LICENSE)
+**License**: [Apache 2.0](https://github.com/legesher/legesher/blob/main/libs/vs-code/LICENSE)

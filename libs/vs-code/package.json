@@ -7,7 +7,7 @@
   "displayName": "Legesher - Code in Your Language",
   "description": "Write Python code in your native language with real-time translation",
   "icon": "images/icon.png",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publisher": "legesher",
   "author": {
     "name": "Madison Edgar",

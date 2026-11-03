@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **legesher-vscode**: 0.1.6. The README packaged into the `.vsix` links the
+  language server's README and the extension's LICENSE by absolute URL, so the
+  Marketplace rendering resolves them; its install steps name the Marketplace
+  and keep the `.vsix` as the fallback.
+
 ## [0.24.0] - 2026-11-03
 
 ### Moved
