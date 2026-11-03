@@ -179,13 +179,25 @@ def apply_schema_v2(conn: sqlite3.Connection) -> None:
     for the same reason: without it, ``INSERT OR REPLACE`` slips past every
     append-only ``BEFORE DELETE`` trigger (see :func:`connect`).
 
+    The whole schema is one transaction. Run statement by statement, each
+    of its CREATEs commits on its own, so building one database costs a
+    journal file and a disk flush per statement: ten times slower on macOS
+    and seconds per database on Windows. In one transaction, a statement
+    that fails also leaves no half-built schema behind. The schema's own
+    ``PRAGMA foreign_keys`` has no effect inside the transaction, which is
+    why both pragmas are set on the connection first.
+
     Args:
         conn: An open SQLite connection to an empty database.
     """
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA recursive_triggers = ON")
-    conn.executescript(read_schema_sql())
-    conn.commit()
+    try:
+        conn.executescript("BEGIN;\n" + read_schema_sql() + "\nCOMMIT;\n")
+    except sqlite3.Error:
+        if conn.in_transaction:
+            conn.rollback()
+        raise
 
 
 #: The messages partition (CORE-1679): the three DEFERRED tables schema v2

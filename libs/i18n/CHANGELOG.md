@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **A v2 database's schema is created in one transaction.** Each statement
+  used to commit on its own, so creating a database took ten times longer
+  on macOS and seconds on Windows, and a statement that failed left a
+  half-built schema behind. A failure now leaves the database empty.
+
 ### Fixed
 
 - **The export manifest names its files with forward slashes on every

@@ -328,6 +328,31 @@ def test_foreign_keys_must_be_enabled_per_connection(tmp_path: Path) -> None:
     checked.close()
 
 
+def test_a_failing_schema_leaves_no_half_built_database(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The schema is one transaction: a statement that fails undoes the rest.
+
+    Statement by statement, every CREATE before the failing one would stay,
+    and the next run would meet a database that is neither empty nor v2.
+    """
+    import legesher_i18n.db.schema_v2 as schema_v2
+
+    good = schema_v2.read_schema_sql()
+    monkeypatch.setattr(
+        schema_v2, "read_schema_sql", lambda: good + "\nCREATE TABLE (;\n"
+    )
+    conn = sqlite3.connect(tmp_path / "v2.db")
+    with pytest.raises(sqlite3.OperationalError):
+        apply_schema_v2(conn)
+    assert not conn.in_transaction
+    left = conn.execute(
+        "SELECT name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'"
+    ).fetchall()
+    assert left == [], f"a failed schema left {len(left)} objects: {left[:5]}"
+    conn.close()
+
+
 def test_recursive_triggers_must_be_enabled_per_connection(tmp_path: Path) -> None:
     """`PRAGMA recursive_triggers` is the second per-connection trap.
 
