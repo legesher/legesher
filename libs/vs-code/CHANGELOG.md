@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--next-version-placeholder-->
 
+## 0.1.8 (2026-11-04)
+
+### Fixed
+
+- **Icon**: the extension icon is 512 by 512 pixels. At 2006 by 2006 it exceeded the Visual Studio
+  Marketplace's 1024 by 1024 limit, and the Marketplace rejected the package
+
 ## 0.1.7 (2026-11-03)
 
 ### Security
