@@ -2474,7 +2474,7 @@ requires-dist = [{ name = "legesher-i18n", specifier = ">=0.2.0,<1.0.0" }]
 
 [[package]]
 name = "legesher-language-server"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "libs/language-server" }
 dependencies = [
     { name = "legesher-i18n" },
