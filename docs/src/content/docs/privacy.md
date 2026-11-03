@@ -3,7 +3,7 @@ title: Privacy Policy — VS Code Extension & Documentation
 description: Product-specific privacy practices for the Legesher VS Code extension and documentation site
 ---
 
-**Last Updated:** April 20, 2026
+**Last Updated:** November 4, 2026
 
 > **Looking for the company-wide policy?** General terms — including your rights, how to contact us,
 > retention periods, GDPR/CCPA/CPRA disclosures, and who we are — live in the
@@ -91,7 +91,7 @@ This data helps us:
 
 ### Telemetry storage
 
-- **Location:** Azure Application Insights (US region)
+- **Location:** Azure Application Insights, UAE North region (United Arab Emirates)
 - **Retention:** 90 days for telemetry; pseudonymous ML training data retained indefinitely
 - **Security:** industry-standard encryption (TLS 1.3 in transit, AES-256 at rest)
 
