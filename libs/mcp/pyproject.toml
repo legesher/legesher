@@ -81,7 +81,11 @@ version_toml = ["libs/mcp/pyproject.toml:project.version"]
 # the release step rewrites them too. The quoted key is deliberate: the
 # pattern matches every `"version": "x.y.z"` in the JSON file.
 version_variables = ['libs/mcp/server.json:"version"']
-commit_parser = "conventional"
+# `conventional-monorepo` is the conventional parser plus `path_filters`
+# (below): a commit counts toward this package's next version only when it
+# changes a file in the package's directory. The plain parser counted every
+# feat/fix in the repository (CORE-2627).
+commit_parser = "conventional-monorepo"
 # The release commit's subject. PSR's default is the bare version, which the
 # `chore(release)` skip in release-mcp.yml and ci.yml never matched, so every
 # release retriggered its own train once (CORE-1852).
@@ -96,6 +100,8 @@ tag_format = "mcp-v{version}"
 commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
 [tool.semantic_release.commit_parser_options]
+# Relative to the working directory, which is the repository root in every train.
+path_filters = ["libs/mcp"]
 allowed_tags = [
     "feat", "fix", "docs", "style", "refactor",
     "perf", "test", "build", "ci", "chore", "revert"
