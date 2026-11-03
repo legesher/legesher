@@ -20,6 +20,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **ci**: the foundation, mcp and language-server release trains run in the
+  `release` environment and wait for a maintainer's approval before they
+  version anything.
 - **mcp**: the no-telemetry promise in the `legesher-mcp` README, package
   docstring and MCP instructions is withdrawn ahead of an opt-in usage
   report; the server still sends nothing. [CORE-2252]

@@ -19,6 +19,11 @@ Before triggering a release:
 
 Releases happen automatically when you merge to `main`:
 
+Each release train runs in the GitHub environment `release`: a run waits for a
+maintainer's approval before it versions anything, only runs from `main` can
+enter it, and the train pushes its version commit with a short-lived token
+minted in that environment.
+
 **Foundation Suite** (core, i18n, legesher):
 
 ```bash
