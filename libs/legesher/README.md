@@ -144,6 +144,9 @@ falling back to `en` when that key is absent. A config written by `legesher init
 key (see [Configuration](#configuration)), so dropping `--lang` there runs the file untranslated and
 Python raises `SyntaxError`. Pass `--lang`, or write the config with `legesher git setup`.
 
+An error in the script is reported as `python programa.py` would report it: the traceback starts at the
+script's first frame, and the command exits with status 1.
+
 ### `legesher git`
 
 Git stores each file in its author's language. `legesher git setup` configures the clean filter, as one

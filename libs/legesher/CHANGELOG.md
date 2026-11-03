@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- `legesher run` reports an error in the script from the script's first frame, as
+  `python script.py` does, without the command's own frames above it. [CORE-2552]
+
 ## [0.25.0] - 2026-11-03
 
 ### Fixed
