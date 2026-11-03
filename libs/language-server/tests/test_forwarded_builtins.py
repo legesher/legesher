@@ -197,9 +197,7 @@ class TestTheBackendSeesTheProgramThatRuns:
         assert opened == ["input = 3\nprint(input)\n"]
 
     @pytest.mark.asyncio
-    async def test_an_attribute_keeps_its_spelling_as_the_engine_keeps_it(
-        self, proxy, monkeypatch
-    ):
+    async def test_an_attribute_keeps_its_spelling_as_the_engine_keeps_it(self, proxy, monkeypatch):
         # A name after a dot is never the builtin, so the engine leaves it as
         # written in both directions (CORE-2237): it writes `str.format` as
         # `.format`, and `legesher run` executes a native `.formatear` as
