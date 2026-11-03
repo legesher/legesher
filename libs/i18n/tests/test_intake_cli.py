@@ -109,7 +109,7 @@ def test_import_review_bundle_accepts_and_prints_the_reply(
     assert result.exit_code == 0, result.output
     assert "accepted" in result.output
     assert NEW_OPT in result.output  # reply names the option uids
-    ledger = json.loads(report_path.read_text())
+    ledger = json.loads(report_path.read_text(encoding="utf-8"))
     assert ledger["status"] == "accepted"
     # Every created option is quarantined on arrival, so the ledger carries
     # one list, not two copies of it.

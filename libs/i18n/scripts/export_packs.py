@@ -114,7 +114,7 @@ import subprocess
 import sys
 import unicodedata
 from collections import Counter
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
@@ -1643,6 +1643,16 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def manifest_key(file: PurePath, tree: PurePath) -> str:
+    """The name ``file`` has in the manifest: relative to ``tree``, with ``/``.
+
+    The manifest is published, and the card and the push gate name the same
+    files with forward slashes, so the key cannot follow the separator of the
+    machine that ran the export.
+    """
+    return file.relative_to(tree).as_posix()
+
+
 class ExportRefused(SystemExit):
     """A gate refused the push. Named so a caller can tell it from a crash."""
 
@@ -2027,10 +2037,7 @@ def main() -> int:
             "categories": list(CATEGORY_FAMILIES),
             "pl_versions": list(VERSIONS),
             "locales": locales,
-            "files": {
-                str(f.relative_to(tree)): sha256(f)
-                for f in sorted(files, key=lambda f: str(f.relative_to(tree)))
-            },
+            "files": dict(sorted((manifest_key(f, tree), sha256(f)) for f in files)),
         }
 
     # Copied BEFORE the manifest is built. The manifest is the artifact's own

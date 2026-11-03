@@ -189,7 +189,7 @@ class TestUserConfig:
         assert config is not None
         assert config.language == "ar"
 
-    def test_load_user_config_not_exists(self):
+    def test_load_user_config_not_exists(self, temp_home):
         """Test loading user config when file doesn't exist."""
         config, exists = LegesherConfig.load_user_config()
         # Should return None when file doesn't exist
@@ -253,7 +253,7 @@ class TestConfigPrecedence:
         config = LegesherConfig.load(temp_git_repo)
         assert config.language == "es"  # Project config wins
 
-    def test_load_defaults_when_no_configs(self, temp_git_repo):
+    def test_load_defaults_when_no_configs(self, temp_git_repo, temp_home):
         """Test loading with no config files uses defaults."""
         config = LegesherConfig.load(temp_git_repo)
         assert config.language == DEFAULT_CONFIG["language"]

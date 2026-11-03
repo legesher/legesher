@@ -26,6 +26,7 @@ SMUDGE = "legesher-filter --smudge --path %f"
 def isolated_git_config(tmp_path_factory, monkeypatch):
     home = tmp_path_factory.mktemp("home")
     monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))  # Path.home() on Windows
     monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(home / "gitconfig"))
     monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
     return home
@@ -53,6 +54,22 @@ def config(repo, key, scope="--local"):
 
 def hook(repo):
     return repo / ".git" / "hooks" / "pre-commit"
+
+
+def path_without_legesher() -> str:
+    """A PATH on which neither ``legesher`` nor ``legesher-filter`` resolves.
+
+    The POSIX system directories alone; on Windows, where git itself has to
+    stay reachable, the interpreter's own directory is dropped instead.
+    """
+    if sys.platform != "win32":
+        return "/usr/bin:/bin"
+    bin_dir = os.path.normcase(os.path.dirname(sys.executable))
+    return os.pathsep.join(
+        entry
+        for entry in os.environ.get("PATH", "").split(os.pathsep)
+        if os.path.normcase(entry.rstrip("\\/")) != bin_dir
+    )
 
 
 def setup(*args, **kwargs):
@@ -89,6 +106,10 @@ class TestSetup:
         setup("--language", "es")
         script = hook(repo).read_text()
         assert "legesher guard --staged" in script
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="no execute bit on NTFS")
+    def test_the_guard_hook_is_executable(self, repo):
+        setup("--language", "es")
         assert os.stat(hook(repo)).st_mode & stat.S_IXUSR
 
     def test_a_rerun_leaves_the_hook_as_it_was(self, repo):
@@ -208,7 +229,9 @@ class TestTheHookRefusesACommit:
 
     def test_a_trojan_source_commit_is_refused(self, repo, on_path):
         assert setup("--language", "es").exit_code == 0
-        (repo / "t.py").write_text('definir f():\n    x = "user\u202e"\n')
+        (repo / "t.py").write_text(
+            'definir f():\n    x = "user\u202e"\n', encoding="utf-8"
+        )
         git(repo, "add", "t.py", ".gitattributes")
         result = git(repo, "commit", "-m", "trojan", check=False)
         assert result.returncode != 0
@@ -219,9 +242,9 @@ class TestTheHookRefusesACommit:
         # The hook names the legesher that installed it, so a commit from a
         # shell where the project environment is not active is still checked.
         assert setup("--language", "es").exit_code == 0
-        (repo / "t.py").write_text('x = "user\u202e"\n')
+        (repo / "t.py").write_text('x = "user\u202e"\n', encoding="utf-8")
         git(repo, "add", "t.py", ".gitattributes")
-        monkeypatch.setenv("PATH", "/usr/bin:/bin")
+        monkeypatch.setenv("PATH", path_without_legesher())
         result = git(repo, "commit", "-m", "trojan", check=False)
         assert result.returncode != 0, result.stdout + result.stderr
         assert "t.py:1:10: unicode: U+202E" in result.stdout + result.stderr
@@ -315,8 +338,17 @@ class TestFilterProcess:
 
     def test_the_launcher_names_the_filter_that_ran_setup(self, repo):
         setup("--language", "es")
-        filter_path = os.path.join(os.path.dirname(sys.executable), "legesher-filter")
+        suffix = ".exe" if sys.platform == "win32" else ""
+        filter_path = os.path.join(
+            os.path.dirname(sys.executable), "legesher-filter" + suffix
+        )
         assert f"FILTER='{filter_path}'" in launcher(repo).read_text()
+
+    def test_the_scripts_are_written_with_lf_line_endings(self, repo):
+        # sh runs both on every platform; a CRLF launcher dies on its first line.
+        setup("--language", "es")
+        assert b"\r" not in launcher(repo).read_bytes()
+        assert b"\r" not in hook(repo).read_bytes()
 
     def test_the_keyword_smudge_reaches_the_process(self, repo):
         setup("--language", "es", "--keyword-smudge")
@@ -352,7 +384,7 @@ class TestFilterProcess:
             )
             + "\n"
         )
-        monkeypatch.setenv("PATH", "/usr/bin:/bin")
+        monkeypatch.setenv("PATH", path_without_legesher())
         text = "definir f(x):\n    si x:\n        return 1\n"
         (repo / "m.py").write_text(text)
         (repo / "big.py").write_text("x = 1\n" * 20000)
@@ -393,7 +425,7 @@ class TestFilterProcess:
         broken.write_text(body)
         broken.chmod(0o755)
         self.replace_filter(repo, broken)
-        monkeypatch.setenv("PATH", "/usr/bin:/bin")
+        monkeypatch.setenv("PATH", path_without_legesher())
         text = "definir f(x):\n    si x:\n        return 1\n"
         (repo / "m.py").write_text(text)
         (repo / "n.py").write_text(text)

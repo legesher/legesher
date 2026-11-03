@@ -29,6 +29,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **ci**: the push-to-main test matrix's Windows job runs the same suites
+  green as the other legs, with a longer time budget.
 - **ci**: the foundation, mcp and language-server release trains run in the
   `release` environment and wait for a maintainer's approval before they
   version anything.
@@ -270,6 +272,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **cli**: `legesher git setup` writes the filter-process launcher and the
+  guard hook with LF line endings on every platform; on Windows they were
+  written with CRLF, which `sh` does not run.
+- **i18n**: the export manifest names its files with forward slashes on
+  every platform; an export run on Windows filed them under backslash keys.
 - **cli**: packages that ship data files now work under the runtime import
   hook. The hook's loader had no resource reader, so `importlib.resources`
   raised "Can't open orphan path" for any package it claimed, and

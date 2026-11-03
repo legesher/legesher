@@ -87,7 +87,7 @@ class TestStaged:
         stage(repo, "gone.py", "x = 1\n")
         git(repo, "commit", "-q", "-m", "gone")
         git(repo, "rm", "-q", "gone.py")
-        (repo / "loose.py").write_text('x = "\u202e"\n')
+        (repo / "loose.py").write_text('x = "\u202e"\n', encoding="utf-8")
         result = run("--staged", "--language", "es")
         assert result.exit_code == 0, result.output
 
@@ -247,7 +247,7 @@ class TestDiff:
         base = head(repo)
         git(repo, "rm", "-q", "gone.py")
         git(repo, "mv", "moved.py", "renamed.py")
-        (repo / "renamed.py").write_text('x = "\u202e"\n')
+        (repo / "renamed.py").write_text('x = "\u202e"\n', encoding="utf-8")
         git(repo, "add", "renamed.py")
         git(repo, "commit", "-q", "-m", "c")
         result = run("--diff", base, "--language", "es")

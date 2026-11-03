@@ -590,7 +590,9 @@ class TestPackageDataUnderHook:
         pkg_dir = tmp_path / name
         pkg_dir.mkdir()
         (pkg_dir / "__init__.py").write_text(init_source, encoding="utf-8")
-        (pkg_dir / "data.txt").write_text(self.DATA_TEXT, encoding="utf-8")
+        # Bytes: the tests compare what is read back with these exact bytes,
+        # and text mode would write CRLF on Windows.
+        (pkg_dir / "data.txt").write_bytes(self.DATA_TEXT.encode("utf-8"))
         (pkg_dir / "blob.bin").write_bytes(self.DATA_BINARY)
         importlib.invalidate_caches()
         return pkg_dir
@@ -1602,6 +1604,7 @@ class TestBytecodeCache:
         assert module.value() == 41, tagged
         assert stats["hits"] == 0 and stats["writes"] == 1, stats
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX directory permissions")
     def test_unwritable_pycache_still_imports(self, tmp_path):
         if hasattr(os, "geteuid") and os.geteuid() == 0:
             pytest.skip("root ignores directory permissions")

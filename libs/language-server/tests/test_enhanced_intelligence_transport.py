@@ -554,11 +554,14 @@ class TestDiscovery:
         It is the default prefix on Apple Silicon and was absent from a list
         that named only Intel and npm locations.
         """
-        from legesher_language_server.enhanced_intelligence import FALLBACK_BIN_DIRS
-
-        assert "/opt/homebrew/bin" in FALLBACK_BIN_DIRS, (
-            f"Homebrew prefix missing from fallback search: {FALLBACK_BIN_DIRS}"
+        from legesher_language_server.enhanced_intelligence import (
+            default_fallback_bin_dirs,
         )
+
+        # The macOS list, whatever the host: FALLBACK_BIN_DIRS is the running
+        # platform's, and Windows has its own.
+        dirs = default_fallback_bin_dirs(platform="darwin", environ={})
+        assert "/opt/homebrew/bin" in dirs, f"Homebrew prefix missing from fallback search: {dirs}"
 
 
 class TestFraming:
@@ -936,6 +939,10 @@ class TestPlatformDiscoveryPaths:
         """A stripped environment yields no candidates rather than a crash."""
         assert default_fallback_bin_dirs(platform="win32", environ={}) == []
 
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="the POSIX branch spells its home paths with the host separator",
+    )
     def test_posix_searches_the_homebrew_and_npm_prefixes(self):
         """The Apple Silicon prefix and the npm global bin are both covered."""
         dirs = default_fallback_bin_dirs(platform="darwin", environ={})

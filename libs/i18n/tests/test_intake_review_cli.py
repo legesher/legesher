@@ -437,7 +437,9 @@ def test_a_file_whose_check_raises_is_a_failing_report_and_the_run_continues(
     runner: CliRunner, repo: Path, tmp_path: Path
 ) -> None:
     review, _ = merge(repo, fill(SI, GOOD), tmp_path)
-    link = repo / "reviews" / "si" / "x@legesher ![p](https:" / "si-link.md"
+    # The directory name carries a mention and an image link the report must
+    # not render; it keeps to characters every file system accepts.
+    link = repo / "reviews" / "si" / "x@legesher ![p](https" / "si-link.md"
     link.parent.mkdir(parents=True)
     link.symlink_to(review)
     report = tmp_path / "gate.md"

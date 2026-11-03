@@ -13,7 +13,7 @@ import importlib.util
 import inspect
 import re
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from unittest import mock
 
 import pytest
@@ -1107,6 +1107,28 @@ def test_the_banner_ships_and_the_manifest_accounts_for_it(exported: Path) -> No
     assert any(
         fnmatch.fnmatch(target, pattern) for pattern in export_packs.PUSH_ALLOW_PATTERNS
     ), "the banner is built but would be left out of the upload"
+
+
+def test_manifest_keys_use_forward_slashes_on_every_platform() -> None:
+    """The manifest ships to the Hub, where ``assets/card.png`` is the name.
+
+    Built from the exporting machine's own paths, a key carried that machine's
+    separator: on Windows the banner's checksum was filed under
+    ``assets\\language-packs-card.png``, and the card's promise of a checksum
+    for every file it names was false there.
+    """
+    tree = PureWindowsPath(r"D:\a\export")
+    assert (
+        export_packs.manifest_key(tree / "assets" / "language-packs-card.png", tree)
+        == "assets/language-packs-card.png"
+    )
+    assert export_packs.manifest_key(tree / "json" / "ar" / "python.json", tree) == (
+        "json/ar/python.json"
+    )
+    posix = PurePosixPath("/tmp/export")
+    assert export_packs.manifest_key(posix / "data" / "locales.parquet", posix) == (
+        "data/locales.parquet"
+    )
 
 
 def test_the_export_refuses_when_the_banner_is_missing(

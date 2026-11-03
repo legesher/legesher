@@ -163,7 +163,12 @@ def _write_launcher(use_global: bool, keyword_smudge: bool) -> str:
     """Write the launcher and return the ``filter.legesher.process`` command."""
     path = _launcher_path(use_global)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(launcher_script(_legesher_filter_executable(), keyword_smudge))
+    # An sh script: LF line endings whatever the platform's text mode writes.
+    path.write_text(
+        launcher_script(_legesher_filter_executable(), keyword_smudge),
+        encoding="utf-8",
+        newline="\n",
+    )
     path.chmod(path.stat().st_mode | 0o111)
     return f"sh {_sh_quote(str(path))}"
 
@@ -780,7 +785,7 @@ def _install_pre_commit_hook(repo_root: Path) -> str:
     if state == "ours" and hook.read_text(encoding="utf-8") == script:
         return "unchanged"
     hook.parent.mkdir(parents=True, exist_ok=True)
-    hook.write_text(script, encoding="utf-8")
+    hook.write_text(script, encoding="utf-8", newline="\n")
     hook.chmod(hook.stat().st_mode | 0o111)
     return "installed"
 

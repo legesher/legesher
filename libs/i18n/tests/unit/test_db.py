@@ -1147,6 +1147,7 @@ class TestTermCategoryValidation:
                 tid = db.get_or_create_term(f"term_{cat}", "python", cat)
                 assert tid > 0
         finally:
+            db.close()
             path.unlink()
 
     def test_typo_implicit_params_plural_rejected(self):
@@ -1156,6 +1157,7 @@ class TestTermCategoryValidation:
             with pytest.raises(ValueError, match="Unknown term category"):
                 db.get_or_create_term("test_term", "python", "implicit_params")
         finally:
+            db.close()
             path.unlink()
 
     def test_typo_reservedword_no_underscore_rejected(self):
@@ -1165,6 +1167,7 @@ class TestTermCategoryValidation:
             with pytest.raises(ValueError, match="Unknown term category"):
                 db.get_or_create_term("test_term2", "python", "reservedword")
         finally:
+            db.close()
             path.unlink()
 
     def test_completely_unknown_category_rejected(self):
@@ -1174,6 +1177,7 @@ class TestTermCategoryValidation:
             with pytest.raises(ValueError, match="Unknown term category"):
                 db.get_or_create_term("test_term3", "python", "totally_made_up")
         finally:
+            db.close()
             path.unlink()
 
     def test_error_message_lists_valid_options(self):
@@ -1187,6 +1191,7 @@ class TestTermCategoryValidation:
             for cat in ("keyword", "implicit_param", "exception", "unknown"):
                 assert cat in msg
         finally:
+            db.close()
             path.unlink()
 
 

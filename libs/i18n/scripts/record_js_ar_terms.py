@@ -43,6 +43,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from legesher_i18n.console_encoding import ensure_utf8_stdio  # noqa: E402
 from legesher_i18n.db.database import TranslationDatabase  # noqa: E402
 
 LANGUAGE = "ar"
@@ -646,6 +647,9 @@ def _validate() -> list[str]:
 
 
 def main() -> int:
+    # The corrections below are printed in Arabic; a piped stdout on
+    # Windows is cp1252 and print() itself would end the run.
+    ensure_utf8_stdio()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--db-path", type=Path, default=None)
     parser.add_argument("--dry-run", action="store_true")

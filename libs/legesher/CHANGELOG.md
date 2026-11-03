@@ -69,6 +69,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- `legesher git setup` writes the filter-process launcher and the guard hook
+  with LF line endings on every platform. On Windows they were written with
+  CRLF, which `sh` does not run.
+
 - Packages that ship data files now work under the runtime import
   hook. The hook's loader had no resource reader, so `importlib.resources`
   raised "Can't open orphan path" for any package it claimed, and
