@@ -257,8 +257,9 @@ def _round_trip(
     The forward hop is the translation the caller asked for: it already ran
     (so its failures already surfaced as ordinary tool errors, flag or no
     flag), and the adapter serves its result rather than translating the
-    same hop twice. Only the return hop reaches the engine, and a failure
-    there is a verdict inside the report, never an exception.
+    same hop twice. Only the return hop, and on a trip between two native
+    languages the compile check's translation to English, reach the engine;
+    a failure there is a verdict inside the report, never an exception.
 
     Classification runs against the non-pivot language's pack — the side
     whose renderings can diverge — preferring the source side when neither
@@ -295,12 +296,28 @@ def _round_trip(
         return outcome.translated_source, outcome.pivoted
 
     # compile_check understands English keywords only, and the validator
-    # receives the forward rendering — which is canonical English exactly
-    # when the trip goes THROUGH the pivot language. Anywhere else the
-    # compile fact is unknown, not assumed: forward_valid stays null.
-    validate = (
-        (lambda text: engine.compile_check(text).valid) if through_lang == PIVOT_LANGUAGE else None
-    )
+    # receives the forward rendering. Through the pivot language that
+    # rendering is the canonical English. Between two native languages the
+    # validator translates it to English first, so a rendering that is no
+    # program (a collision both hops cancel) cannot read VERIFIED; a
+    # translation that raises leaves the fact unknown (forward_valid null).
+    # From English, the rendering's English IS the return hop: a clean trip
+    # gives back the source itself, and a rendering that is no program comes
+    # back as a divergence. forward_valid stays null there.
+    def compiles(text: str) -> bool:
+        return engine.compile_check(text).valid
+
+    def canonical_compiles(text: str) -> bool:
+        canonical, _ = hop(text, through_lang, PIVOT_LANGUAGE, python_version)
+        return compiles(canonical)
+
+    validate: Callable[[str], bool] | None
+    if through_lang == PIVOT_LANGUAGE:
+        validate = compiles
+    elif source_lang != PIVOT_LANGUAGE:
+        validate = canonical_compiles
+    else:
+        validate = None
 
     try:
         report = core_verify_round_trip(
