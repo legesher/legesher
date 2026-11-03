@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-03
+
 ### Changed
 
 - `server.json` names the public repository by its GitHub id as well as
