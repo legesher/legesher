@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- `server.json` names the public repository by its GitHub id as well as
+  its URL (`repository.id`), and `tests/test_registry_manifest.py` pins the
+  pair, so the registry entry and the repository describe the same source.
+  [CORE-1424]
+
 ## [0.2.0] - 2026-11-03
 
 ### Added
