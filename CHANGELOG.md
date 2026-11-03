@@ -263,6 +263,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **legesher-vscode**: 0.1.6. The README packaged into the `.vsix` links the
+  language server's README and the extension's LICENSE by absolute URL, so the
+  Marketplace rendering resolves them; its install steps name the Marketplace
+  and keep the `.vsix` as the fallback.
 - **cli**: packages that ship data files now work under the runtime import
   hook. The hook's loader had no resource reader, so `importlib.resources`
   raised "Can't open orphan path" for any package it claimed, and

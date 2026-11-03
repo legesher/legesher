@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 0.1.6 (2026-11-03)
+
 ### Added
 
 - `legesher.telemetry.repoAttribution` (default off): consent to opt-in
@@ -61,6 +63,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **README links**: the README packaged into the `.vsix` links the language
+  server's README and the extension's LICENSE by absolute URL. `vsce package`
+  rewrote the relative links against the repository root while the README lives
+  in `libs/vs-code/`, so the Marketplace rendering pointed at a missing page and
+  at the repository-root LICENSE.
 - **Language selector**: picking a language now takes effect in a project that sets
   `legesher.targetLanguage` in its workspace settings. The pick was written to user settings, which the
   workspace value outranks, so the language never changed while the notification said it had. Each
@@ -164,6 +171,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Install**: the README's Quick Install names the VS Code Marketplace
+  (`code --install-extension legesher.legesher-vscode`) and keeps the `.vsix` from
+  the GitHub release as the fallback; the language server section gives
+  `pip install legesher-language-server`.
 - The packaged extension no longer carries contributor notes, the test runner
   configuration and fixtures, or the Python dependency bundle's `pyproject.toml`;
   the files the extension reads at runtime are unchanged.
