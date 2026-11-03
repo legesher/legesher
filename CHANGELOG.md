@@ -9,6 +9,27 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **ci**: the core, i18n, legesher, language-server and mcp suites run on one
+  worker per CPU, in CI and in `make test`.
+- **ci**: the push-to-main test matrix's Windows job runs the same suites
+  green as the other legs, with a longer time budget.
+
+### Fixed
+
+- **cli**: `legesher git setup` writes the filter-process launcher and the
+  guard hook with LF line endings on every platform; on Windows they were
+  written with CRLF, which `sh` does not run.
+- **i18n**: the export manifest names its files with forward slashes on
+  every platform; an export run on Windows filed them under backslash keys.
+- **legesher-vscode**: 0.1.6. The README packaged into the `.vsix` links the
+  language server's README and the extension's LICENSE by absolute URL, so the
+  Marketplace rendering resolves them; its install steps name the Marketplace
+  and keep the `.vsix` as the fallback.
+
+## [0.24.0] - 2026-11-03
+
 ### Moved
 
 - **core/cli**: the map family — the register map, mapping log, map-driven
@@ -20,10 +41,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- **ci**: the core, i18n, legesher, language-server and mcp suites run on one
-  worker per CPU, in CI and in `make test`.
-- **ci**: the push-to-main test matrix's Windows job runs the same suites
-  green as the other legs, with a longer time budget.
 - **ci**: the foundation, mcp and language-server release trains run in the
   `release` environment and wait for a maintainer's approval before they
   version anything.
@@ -265,11 +282,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- **cli**: `legesher git setup` writes the filter-process launcher and the
-  guard hook with LF line endings on every platform; on Windows they were
-  written with CRLF, which `sh` does not run.
-- **i18n**: the export manifest names its files with forward slashes on
-  every platform; an export run on Windows filed them under backslash keys.
 - **cli**: packages that ship data files now work under the runtime import
   hook. The hook's loader had no resource reader, so `importlib.resources`
   raised "Can't open orphan path" for any package it claimed, and
@@ -1578,10 +1590,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.23.0  | Yes      |
-| legesher-i18n            | 0.23.0  | Yes      |
-| legesher (CLI)           | 0.23.0  | —        |
-| legesher-language-server | 0.1.3   | Yes      |
+| legesher-core            | 0.24.0  | Yes      |
+| legesher-i18n            | 0.24.0  | Yes      |
+| legesher (CLI)           | 0.24.0  | —        |
+| legesher-language-server | 0.2.0   | Yes      |
 | legesher-vscode          | 0.1.5   | —        |
 
 ### Removed

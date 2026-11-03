@@ -1635,7 +1635,7 @@ wheels = [
 
 [[package]]
 name = "legesher"
-version = "0.23.0"
+version = "0.24.0"
 source = { editable = "libs/legesher" }
 dependencies = [
     { name = "click" },
@@ -1680,7 +1680,7 @@ dev = [
 
 [[package]]
 name = "legesher-core"
-version = "0.23.0"
+version = "0.24.0"
 source = { editable = "libs/core" }
 dependencies = [
     { name = "click" },
@@ -1728,7 +1728,7 @@ dev = [
 
 [[package]]
 name = "legesher-i18n"
-version = "0.23.0"
+version = "0.24.0"
 source = { editable = "libs/i18n" }
 dependencies = [
     { name = "anthropic" },
@@ -2432,7 +2432,7 @@ requires-dist = [{ name = "legesher-i18n", editable = "libs/i18n" }]
 
 [[package]]
 name = "legesher-language-server"
-version = "0.1.3"
+version = "0.2.0"
 source = { editable = "libs/language-server" }
 dependencies = [
     { name = "legesher-i18n" },
@@ -2470,7 +2470,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "legesher-mcp"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "libs/mcp" }
 dependencies = [
     { name = "legesher-core" },
@@ -2505,7 +2505,7 @@ dev = [
 
 [[package]]
 name = "legesher-monorepo"
-version = "0.23.0"
+version = "0.24.0"
 source = { editable = "." }
 dependencies = [
     { name = "legesher" },
@@ -2595,7 +2595,7 @@ dev = [
 
 [[package]]
 name = "legesher-vs-code"
-version = "0.1.5"
+version = "0.1.6"
 source = { editable = "libs/vs-code" }
 dependencies = [
     { name = "legesher" },
