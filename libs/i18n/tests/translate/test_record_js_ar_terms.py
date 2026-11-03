@@ -17,7 +17,9 @@ def run_script(script: Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(script), *args],
         capture_output=True,
-        text=True,
+        # The scripts write UTF-8 (Arabic terms); the host locale does not
+        # decide how that is read back.
+        encoding="utf-8",
         check=False,
     )
 

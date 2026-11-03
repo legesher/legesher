@@ -30,6 +30,14 @@ def git(repo, *args, env=None, stdin=None):
     ).stdout
 
 
+def write(repo, name, text):
+    # Bytes, so the file holds exactly these line endings on every
+    # platform. Text mode writes CRLF on Windows, and the filter stores
+    # what it reads, so the assertions below would then compare CRLF
+    # against the LF they were written with.
+    (repo / name).write_bytes(text.encode())
+
+
 def make_repo(tmp_path, language="es", process=True):
     repo = tmp_path / "repo"
     repo.mkdir(parents=True)
@@ -73,8 +81,10 @@ class TestUnderGit:
     def test_one_process_serves_every_file_in_a_git_add(self, tmp_path):
         repo = make_repo(tmp_path)
         for index in range(12):
-            (repo / f"m{index}.py").write_text(
-                f"definir f{index}(x):\n    si x:\n        return {index}\n"
+            write(
+                repo,
+                f"m{index}.py",
+                f"definir f{index}(x):\n    si x:\n        return {index}\n",
             )
         trace = tmp_path / "trace.json"
         env = dict(os.environ, GIT_TRACE2_EVENT=str(trace))
@@ -87,8 +97,10 @@ class TestUnderGit:
     def test_status_after_a_touch_is_clean_and_uses_one_process(self, tmp_path):
         repo = make_repo(tmp_path)
         for index in range(8):
-            (repo / f"m{index}.py").write_text(
-                f"definir f{index}(x):\n    si x:\n        return {index}\n"
+            write(
+                repo,
+                f"m{index}.py",
+                f"definir f{index}(x):\n    si x:\n        return {index}\n",
             )
         git(repo, "add", ".")
         git(repo, "commit", "-q", "-m", "files")
@@ -103,10 +115,10 @@ class TestUnderGit:
         # Mid-edit, the text parses under no reading, so only the committed
         # version can say the block is Spanish; the stray must still move.
         repo = make_repo(tmp_path)
-        (repo / "m.py").write_text("definir f(x):\n    devolver x\n")
+        write(repo, "m.py", "definir f(x):\n    devolver x\n")
         git(repo, "add", "m.py")
         git(repo, "commit", "-q", "-m", "spanish")
-        (repo / "m.py").write_text("definir f(x)\n    return x\n")
+        write(repo, "m.py", "definir f(x)\n    return x\n")
         git(repo, "add", "m.py")
         assert git(repo, "cat-file", "blob", ":0:m.py") == (
             "definir f(x)\n    devolver x\n".encode()
@@ -186,13 +198,14 @@ class TestBatchStoredReader:
         git(tmp_path, "init", "-q")
         git(tmp_path, "config", "user.email", "test@example.com")
         git(tmp_path, "config", "user.name", "Test")
+        git(tmp_path, "config", "core.autocrlf", "false")
         return tmp_path
 
     def test_head_wins_over_a_staged_version(self, repo):
-        (repo / "a b.py").write_text("committed\n")
+        write(repo, "a b.py", "committed\n")
         git(repo, "add", "a b.py")
         git(repo, "commit", "-q", "-m", "c")
-        (repo / "a b.py").write_text("staged\n")
+        write(repo, "a b.py", "staged\n")
         git(repo, "add", "a b.py")
         reader = BatchStoredReader(cwd=str(repo))
         try:
@@ -201,7 +214,7 @@ class TestBatchStoredReader:
             reader.close()
 
     def test_the_index_for_a_path_never_committed(self, repo):
-        (repo / "new.py").write_text("staged\n")
+        write(repo, "new.py", "staged\n")
         git(repo, "add", "new.py")
         reader = BatchStoredReader(cwd=str(repo))
         try:
@@ -213,18 +226,20 @@ class TestBatchStoredReader:
     def test_answers_match_the_per_file_lookup(self, repo):
         from legesher_core.git_filter import read_stored_blob
 
-        for name, text in {
-            "x.py": "x = 1\n",
-            "d/ñ.py": "ñ = 2\n",
-            ":c.py": "c = 3\n",
-        }.items():
+        files = {"x.py": "x = 1\n", "d/ñ.py": "ñ = 2\n"}
+        if sys.platform != "win32":
+            # A name git could read as a revision prefix. NTFS refuses a
+            # colon in a name (with < > " / \ | ? *), so the case runs
+            # where the file can exist.
+            files[":c.py"] = "c = 3\n"
+        for name, text in files.items():
             (repo / name).parent.mkdir(parents=True, exist_ok=True)
-            (repo / name).write_text(text)
+            write(repo, name, text)
         git(repo, "add", ".")
         git(repo, "commit", "-q", "-m", "c")
         reader = BatchStoredReader(cwd=str(repo))
         try:
-            for name in ("x.py", "d/ñ.py", ":c.py", "missing.py"):
+            for name in (*files, "missing.py"):
                 assert reader(name) == read_stored_blob(name, cwd=repo), name
         finally:
             reader.close()
@@ -235,8 +250,8 @@ class TestBatchStoredReader:
         # input line, so "m\r" was answered with "m"'s committed version.
         from legesher_core.git_filter import read_stored_blob
 
-        (repo / "m").write_text("plain\n")
-        (repo / "m\r").write_text("with cr\n")
+        write(repo, "m", "plain\n")
+        write(repo, "m\r", "with cr\n")
         git(repo, "add", "m", "m\r")
         git(repo, "commit", "-q", "-m", "c")
         reader = BatchStoredReader(cwd=str(repo))
@@ -246,7 +261,7 @@ class TestBatchStoredReader:
             reader.close()
 
     def test_falls_back_to_the_per_file_lookup_when_the_batch_dies(self, repo):
-        (repo / "x.py").write_text("x = 1\n")
+        write(repo, "x.py", "x = 1\n")
         git(repo, "add", "x.py")
         git(repo, "commit", "-q", "-m", "c")
         reader = BatchStoredReader(cwd=str(repo))

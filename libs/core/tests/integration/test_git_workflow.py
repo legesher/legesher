@@ -34,6 +34,14 @@ def status(repo):
     return git(repo, "status", "--porcelain").decode()
 
 
+def write(repo, name, text):
+    # Bytes, so the file holds exactly these line endings on every
+    # platform. Text mode writes CRLF on Windows, and the filter stores
+    # what it reads, so the assertions below would then compare CRLF
+    # against the LF they were written with.
+    (repo / name).write_bytes(text.encode())
+
+
 def make_repo(tmp_path, language, smudge=False):
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -61,7 +69,7 @@ def spanish_repo(tmp_path):
 
 
 def commit(repo, name, text, message="c"):
-    (repo / name).write_bytes(text.encode())
+    write(repo, name, text)
     git(repo, "add", name)
     git(repo, "commit", "-q", "-m", message)
 
@@ -69,17 +77,17 @@ def commit(repo, name, text, message="c"):
 class TestCleanUnderGit:
     def test_git_add_stores_english_strays_in_the_blocks_language(self, spanish_repo):
         text = "definir f(x):\n    if x:\n        devolver 1\n"
-        (spanish_repo / "m.py").write_text(text)
+        write(spanish_repo, "m.py", text)
         git(spanish_repo, "add", "m.py")
         assert stored(spanish_repo, "m.py") == (
             "definir f(x):\n    si x:\n        devolver 1\n"
         )
         # The working tree is the author's; the filter never writes it.
-        assert (spanish_repo / "m.py").read_text() == text
+        assert (spanish_repo / "m.py").read_bytes() == text.encode()
 
     def test_the_committed_version_decides_the_block(self, spanish_repo):
         commit(spanish_repo, "e.py", "def f(x):\n    return x\n")
-        (spanish_repo / "e.py").write_text("def f(x):\n    si x:\n        return x\n")
+        write(spanish_repo, "e.py", "def f(x):\n    si x:\n        return x\n")
         git(spanish_repo, "add", "e.py")
         assert stored(spanish_repo, "e.py") == (
             "def f(x):\n    if x:\n        return x\n"
@@ -139,9 +147,9 @@ class TestReviewRegressions:
         broken = self.SLIP.replace(
             "    return None", "    total = 1 +\n    return None"
         )
-        (spanish_repo / "app.py").write_text(broken)
+        write(spanish_repo, "app.py", broken)
         git(spanish_repo, "add", "app.py")
-        (spanish_repo / "app.py").write_text(broken.replace("1 +", "1 + 2"))
+        write(spanish_repo, "app.py", broken.replace("1 +", "1 + 2"))
         git(spanish_repo, "add", "app.py")
         assert stored(spanish_repo, "app.py") == self.ENGLISH.replace(
             "    return None", "    total = 1 + 2\n    return None"
@@ -162,15 +170,13 @@ class TestReviewRegressions:
             .strip()
         )
         git(spanish_repo, "update-index", "--cacheinfo", f"100644,{blob},app.py")
-        (spanish_repo / "app.py").write_text(self.SLIP)
+        write(spanish_repo, "app.py", self.SLIP)
         git(spanish_repo, "add", "--renormalize", "app.py")
         assert stored(spanish_repo, "app.py") == self.ENGLISH
 
     def test_status_stays_clean_after_staging_a_broken_edit(self, spanish_repo):
         commit(spanish_repo, "m.py", "definir f(x):\n    si x:\n        devolver 1\n")
-        (spanish_repo / "m.py").write_text(
-            "definir f(x):\n    if x:\n        devolver 2 +\n"
-        )
+        write(spanish_repo, "m.py", "definir f(x):\n    if x:\n        devolver 2 +\n")
         git(spanish_repo, "add", "m.py")
         os.utime(spanish_repo / "m.py", (1, 1))
         assert status(spanish_repo) == "M  m.py\n"
@@ -183,9 +189,9 @@ class TestKeywordOnlySmudgeUnderGit:
         commit(repo, "e.py", english)
         (repo / "e.py").unlink()
         git(repo, "checkout", "--", "e.py")
-        assert (repo / "e.py").read_text() == (
+        assert (repo / "e.py").read_bytes() == (
             "definir f(x):\n    por i en x:\n        print(i)\n    devolver nulo\n"
-        )
+        ).encode()
         assert stored(repo, "e.py") == english
         os.utime(repo / "e.py", (1, 1))
         assert status(repo) == ""
@@ -195,6 +201,6 @@ class TestKeywordOnlySmudgeUnderGit:
         commit(repo, "e.py", "def f(x):\n    return x\n")
         (repo / "e.py").unlink()
         git(repo, "checkout", "--", "e.py")
-        (repo / "e.py").write_text("definir f(x):\n    si x:\n        devolver x\n")
+        write(repo, "e.py", "definir f(x):\n    si x:\n        devolver x\n")
         git(repo, "add", "e.py")
         assert stored(repo, "e.py") == "def f(x):\n    if x:\n        return x\n"

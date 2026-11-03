@@ -57,7 +57,11 @@ def _run_under_ansi_codepage(pack_yaml: Path) -> subprocess.CompletedProcess[str
     return subprocess.run(
         ["uv", "run", "python", str(_VALIDATOR), str(pack_yaml)],
         capture_output=True,
-        text=True,
+        # The validator re-encodes its own output as UTF-8 whatever the
+        # console is, so that is how to read it back. ``text=True`` would
+        # decode with this process's locale, which on a Windows runner is
+        # the same code page the child was just told to use.
+        encoding="utf-8",
         cwd=_REPO_ROOT,
         env=env,
     )

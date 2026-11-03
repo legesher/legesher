@@ -42,7 +42,10 @@ def _run_validator(pack_yaml: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["uv", "run", "python", str(_VALIDATOR), str(pack_yaml)],
         capture_output=True,
-        text=True,
+        # The validator writes UTF-8 whatever the console is; decoding with
+        # this process's locale (cp1252 on a Windows runner) loses the
+        # capture entirely.
+        encoding="utf-8",
         cwd=_REPO_ROOT,
     )
 

@@ -12,6 +12,7 @@ import json
 import re
 import sqlite3
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -437,7 +438,10 @@ def test_a_file_whose_check_raises_is_a_failing_report_and_the_run_continues(
     runner: CliRunner, repo: Path, tmp_path: Path
 ) -> None:
     review, _ = merge(repo, fill(SI, GOOD), tmp_path)
-    link = repo / "reviews" / "si" / "x@legesher ![p](https:" / "si-link.md"
+    # The directory name carries a mention and an image link the report must
+    # not render. NTFS refuses a colon in a name, so Windows goes without it.
+    injected = "x@legesher ![p](https" + ("" if sys.platform == "win32" else ":")
+    link = repo / "reviews" / "si" / injected / "si-link.md"
     link.parent.mkdir(parents=True)
     link.symlink_to(review)
     report = tmp_path / "gate.md"

@@ -119,7 +119,9 @@ jobs:
   test:
     name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    # The Windows runner needs well over thirty minutes for the same suites,
+    # so it has a longer budget than the other legs.
+    timeout-minutes: ${{ matrix.os == 'windows-latest' && 75 || 30 }}
     # Same skip-gate as the `lint` job above — see its comment for why this
     # uses `startsWith` instead of `contains`.
     # Two independent gates:
