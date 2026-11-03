@@ -49,10 +49,12 @@ Keep every listing to what this open package does.
 PyPI description). `server.json` and this page stay in the repository: the
 registry reads `server.json` from the working directory at publish time.
 
-The manifest names the repository by URL only. The registry's optional
-`repository.id` (the forge's numeric id, `gh api repos/legesher/legesher
---jq .id`) is added at submission time, once the public repository exists,
-because the id changes if the public repository is a fresh one.
+The manifest names the repository by URL and by `repository.id`, the
+forge's numeric id (`gh api repos/legesher/legesher --jq .id`), written as a
+string. The registry schema describes the id as stable across renames and
+different for a repository that was deleted and recreated, so if the
+repository is ever recreated, read the new id and change it in `server.json`
+and in the test together.
 
 | Artifact | Read by | Kept true by |
 | --- | --- | --- |

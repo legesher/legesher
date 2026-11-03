@@ -8,6 +8,7 @@
   "repository": {
     "url": "https://github.com/legesher/legesher",
     "source": "github",
+    "id": "1439134339",
     "subfolder": "libs/mcp"
   },
   "packages": [

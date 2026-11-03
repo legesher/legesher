@@ -43,6 +43,11 @@ EXACT_VERSION = re.compile(r"^\d+(\.\d+)*([-+][0-9A-Za-z.-]+)?$")
 MARKER = re.compile(r"mcp-name:\s*(\S+)")
 #: Every environment variable the server module reads, by either access form.
 ENVIRONMENT_READ = re.compile(r'os\.environ(?:\.get\(|\[)"([A-Z0-9_]+)"')
+#: The public repository and the id GitHub assigned it
+#: (``gh api repos/legesher/legesher --jq .id``). The id belongs to the
+#: repository the URL names, so the two change together.
+REPOSITORY_URL = "https://github.com/legesher/legesher"
+REPOSITORY_ID = "1439134339"
 
 
 @pytest.fixture(scope="module")
@@ -129,6 +134,23 @@ def test_the_repository_points_at_this_package(manifest: dict[str, Any]) -> None
     expected = f"{PACKAGE_DIR.parent.name}/{PACKAGE_DIR.name}"
     assert repository["subfolder"] == expected, (
         f"server.json repository.subfolder {repository['subfolder']!r} != {expected!r}"
+    )
+
+
+def test_the_repository_id_is_the_forge_id_of_the_named_repository(
+    manifest: dict[str, Any],
+) -> None:
+    """The registry schema types ``repository.id`` as a string, though GitHub
+    reports the id as a number; and an id copied from another repository
+    would describe a different source than the URL."""
+    repository = manifest["repository"]
+    assert isinstance(repository.get("id"), str), (
+        f"server.json: repository.id must be a JSON string, found {repository.get('id')!r}"
+    )
+    assert (repository["url"], repository["id"]) == (REPOSITORY_URL, REPOSITORY_ID), (
+        f"server.json repository {repository['url']!r} with id {repository['id']!r} != "
+        f"{REPOSITORY_URL!r} with id {REPOSITORY_ID!r}; read the id again with "
+        "`gh api repos/<owner>/<repo> --jq .id` and change both together"
     )
 
 

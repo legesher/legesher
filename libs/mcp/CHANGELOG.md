@@ -11,6 +11,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- `server.json` names the public repository by its GitHub id as well as
+  its URL (`repository.id`), and `tests/test_registry_manifest.py` pins the
+  pair, so the registry entry and the repository describe the same source.
+  [CORE-1424]
 - With `verify_round_trip: true`, a byte-identical trip that the check cannot
   vouch for reads `round-trip NOT VERIFIED` in `verdict_line`, and
   `round_trip.schema_version` is 1.1.0 (from legesher-core). The skill and
