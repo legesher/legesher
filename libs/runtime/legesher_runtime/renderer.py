@@ -93,20 +93,28 @@ logger = logging.getLogger(__name__)
 def _empty_catalog_reason(db_path: object) -> str:
     """Why :func:`load_catalog` came back empty — the two cases look identical
     at the call site (CORE-1848): no database file at all, or a database that
-    predates/skips the messages partition. Diagnostic only; never raises.
+    predates/skips the messages partition. For the default database, the
+    catalog seed that ships with ``legesher-i18n`` did not load either.
+    Diagnostic only; never raises.
     """
     try:
-        from legesher_i18n.db.database import default_db_path
+        # Resolve through the module load_catalog reads from, so the path
+        # named is the one it actually tried.
+        from legesher_i18n import messages
 
-        path = Path(db_path) if db_path is not None else default_db_path()  # type: ignore[arg-type]
+        path = Path(db_path) if db_path is not None else messages.default_db_path()  # type: ignore[arg-type]
     except Exception:  # noqa: BLE001 - a diagnostic must not out-crash the renderer
         return f"could not resolve a database path from {db_path!r}"
     if not path.exists():
-        return f"no translations database at {path}"
-    return (
-        f"translations database at {path} has no message catalog rows "
-        "(messages partition missing or unseeded)"
-    )
+        reason = f"no translations database at {path}"
+    else:
+        reason = (
+            f"translations database at {path} has no message catalog rows "
+            "(messages partition missing or unseeded)"
+        )
+    if db_path is None:
+        reason += f", and no catalog seed loaded from {messages.SEED_DIR}"
+    return reason
 
 
 #: A structural frame line: ``  File "x", line 1, in f`` (indent preserved).
@@ -137,7 +145,10 @@ class TracebackRenderer:
         python_version: ``'X.Y'`` catalog/pack tier, or ``None`` for the
             running interpreter (messages are raised by THIS interpreter, so
             auto is almost always right).
-        db_path: Override the translations database (tests only).
+        db_path: Override the translations database (tests only). Without
+            it the catalog comes from the default database, or from the seed
+            that ships with ``legesher-i18n`` when that database has no
+            catalog rows (an installed package has no database at all).
         source_map: Optional source mapper for translated files — an object
             with ``has_mapping(filename)``, ``get_native_line(filename,
             lineno)``, and ``get_native_source_line(filename, lineno)`` (the

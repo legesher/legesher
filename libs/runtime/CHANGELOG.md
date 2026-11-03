@@ -41,6 +41,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Tracebacks localize their structure and messages from an installed package,
+  with no translations database present: the catalog comes from the seed that
+  ships with `legesher-i18n`. [CORE-1679]
 - Consistency hardening in the traceback renderer; neither entry changes
   output for any pack or mapper shipping today. [CORE-1777]
   - The fallback frame header (used when the message catalog is missing or a

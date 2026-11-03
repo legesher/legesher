@@ -34,7 +34,10 @@ legesher run programa.py --lang es
 - Structural strings (`Traceback (most recent call last):`, `File …, line …,
   in …`, the chained-exception sentences) and message templates come from the
   Legesher message catalog; the catalog's matchers carry named slots, so
-  values (names, counts, types, paths) survive translation.
+  values (names, counts, types, paths) survive translation. The catalog
+  ships inside `legesher-i18n`, so an installed package needs no
+  translations database. Its Spanish and Arabic entries are machine
+  translations awaiting review by native speakers.
 - Exception TYPE names come from the python language pack for the language,
   consumed as-is.
 - `uninstall()` restores the hooks that were live before the first

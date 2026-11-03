@@ -345,6 +345,20 @@ class TestEmptyCatalogDiagnostic:
         assert "messages partition missing or unseeded" in caplog.text
         assert str(db) in caplog.text
 
+    def test_default_database_and_seed_both_missing_are_named(self, tmp_path, monkeypatch, caplog):
+        # The default resolution reads the seed when the database has no
+        # catalog rows; only when both are gone does the catalog come back
+        # empty, and the line says so before structure passes through.
+        missing = tmp_path / "translations.db"
+        monkeypatch.setattr("legesher_i18n.messages.default_db_path", lambda: missing)
+        monkeypatch.setattr("legesher_i18n.messages.SEED_DIR", tmp_path / "no-seeds")
+        with caplog.at_level("DEBUG", logger="legesher_runtime.renderer"):
+            renderer = TracebackRenderer("es")
+        assert f"no translations database at {missing}" in caplog.text
+        assert f"no catalog seed loaded from {tmp_path / 'no-seeds'}" in caplog.text
+        header = "Traceback (most recent call last):\n"
+        assert renderer.render_text(header) == header
+
 
 @pytest.mark.skipif(
     sys.version_info < (3, 11),

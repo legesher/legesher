@@ -11,6 +11,10 @@ them, so the suite requires 3.11+ (the workspace floor for DB paths is 3.13).
 RTL posture (v1): the Arabic goldens are LOGICAL-order strings — the
 renderer inserts no bidi control characters and leaves display reordering to
 the terminal. See libs/runtime/README.md.
+
+Every golden runs twice: against the seeded database the conftest builds, and
+with no database at all, which is what an installed package has. Both must
+render the same lines.
 """
 
 from __future__ import annotations
@@ -53,6 +57,20 @@ CHAINED_SCRIPT = (
 
 
 FRAME_MARKERS = ('File "', 'Archivo "', 'الملف "')
+
+
+@pytest.fixture(autouse=True, params=["seeded database", "no database"])
+def catalog_source(request, tmp_path, monkeypatch) -> str:
+    """Where the catalog comes from: the conftest's database, or nowhere.
+
+    ``translations.db`` never ships in a wheel, so on an installed package the
+    default path has nothing behind it and the catalog is read from the seed
+    that ships with ``legesher-i18n`` (CORE-1679).
+    """
+    if request.param == "no database":
+        missing = tmp_path / "translations.db"
+        monkeypatch.setattr("legesher_i18n.messages.default_db_path", lambda: missing)
+    return request.param
 
 
 def rendered_tail(lang: str, cap) -> list[str]:
