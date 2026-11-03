@@ -26,14 +26,34 @@ jobs:
   release:
     name: Release legesher-mcp
     runs-on: ubuntu-latest
+    environment: release
     if: "github.event_name != 'push' || (!contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: update uv.lock') && !contains(github.event.head_commit.message, 'docs(changelog): stamp release'))"
 
     steps:
+      - name: Mint the release token
+        # The train pushes its version commit to `main`, which the
+        # `protect main` ruleset refuses from `GITHUB_TOKEN`: that push is
+        # attributed to the GitHub Actions app, and this organization cannot
+        # list that app as a bypass actor. The release App is the ruleset's
+        # one bypass actor. Its token lives for an hour and is minted only
+        # here, from the `release` environment, which allows `main` alone and
+        # waits for the release maintainer's approval. A push with this token
+        # starts the ordinary push-to-main workflows (a `GITHUB_TOKEN` push
+        # starts none), so the release commit gets a CI run of its own.
+        id: release-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          # The token carries contents write and nothing else, whatever the
+          # App is granted later.
+          permission-contents: write
+
       - name: Checkout code
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0  # Fetch all history for semantic-release
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.release-token.outputs.token }}
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
