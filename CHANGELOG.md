@@ -1620,7 +1620,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 | legesher-core            | 0.25.1  | Yes      |
 | legesher-i18n            | 0.25.1  | Yes      |
 | legesher (CLI)           | 0.25.1  | —        |
-| legesher-language-server | 0.2.0   | Yes      |
+| legesher-language-server | 0.3.0   | Yes      |
 | legesher-vscode          | 0.1.7   | —        |
 
 ### Removed

@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-03
+
 ### Fixed
 
 - The enhanced-intelligence proxy keeps a name after a dot, a keyword-argument
