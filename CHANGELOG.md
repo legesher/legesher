@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- **legesher-vscode**: 0.1.8. The extension icon is 512 by 512 pixels, within the
+  Visual Studio Marketplace's 1024 by 1024 limit, so the package can be published.
+
 ## [0.25.1] - 2026-11-03
 
 ### Fixed
