@@ -9,8 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **mcp**: `glama.json` at the repository root names the maintainer who can
+  claim and edit the `legesher-mcp` listing on Glama. [CORE-1424]
+
 ### Changed
 
+- **ci**: the core, i18n, legesher, language-server and mcp suites run on one
+  worker per CPU, in CI and in `make test`.
 - **ci**: the push-to-main test matrix's Windows job runs the same suites
   green as the other legs, with a longer time budget.
 
@@ -31,6 +38,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `os.open`. The language server's proxy follows the engine. [CORE-2237]
 - **core/mcp**: the round-trip check no longer reports VERIFIED for code it
   cannot vouch for; such a trip reads `round-trip NOT VERIFIED`. [CORE-2237]
+
+### Security
+
+- **legesher-vscode**: 0.1.7. The packaged extension bundles `js-yaml` 4.3.2
+  and `brace-expansion` 5.0.12, releases with published security fixes.
 
 ## [0.24.0] - 2026-11-03
 

@@ -98,19 +98,19 @@ test-all: test
 # Individual package tests
 test-i18n:
 	@echo "Running i18n tests..."
-	cd libs/i18n && uv run pytest tests/ -v
+	cd libs/i18n && uv run pytest tests/ -v -n auto
 
 test-core:
 	@echo "Running core tests..."
-	cd libs/core && uv run pytest tests/ -v
+	cd libs/core && uv run pytest tests/ -v -n auto
 
 test-legesher:
 	@echo "Running legesher tests..."
-	cd libs/legesher && uv run pytest tests/ -v
+	cd libs/legesher && uv run pytest tests/ -v -n auto
 
 test-language-server:
 	@echo "Running language-server tests..."
-	cd libs/language-server && uv run pytest tests/ -v
+	cd libs/language-server && uv run pytest tests/ -v -n auto
 
 # Release-tier language-server suite: the clean-environment wheel install
 # (CORE-2203). Builds the wheels, installs them into an empty venv and drives
@@ -124,7 +124,7 @@ test-language-server-scheduled:
 
 test-mcp:
 	@echo "Running MCP server tests..."
-	cd libs/mcp && uv run pytest tests/ -v
+	cd libs/mcp && uv run pytest tests/ -v -n auto
 
 # Release-tier MCP suites: the all-packs round-trip sweep (CORE-1745) and the
 # clean-environment wheel spawn test (CORE-1746). Excluded from `test-mcp`
@@ -151,7 +151,7 @@ test-coverage:
 # the results under .benchmarks/ (gitignored) for `pytest-benchmark compare`.
 # One invocation per package: both suites live in a `tests` package, and a
 # single pytest run would import the second `tests.benchmarks` as the first.
-# The language server's timing tests are plain tests, not benchmark fixtures:
+# The core and language-server timing tests are plain tests, not benchmark fixtures:
 # they run in its default suite with their wall-clock bounds off, and
 # `--timing` turns the bounds on (CORE-2321). `-m timing` selects them, and
 # --no-cov because that subset is not a coverage run.
@@ -159,6 +159,7 @@ bench:
 	@echo "Running benchmarks (timing on, autosave to .benchmarks/)..."
 	cd libs/core && uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-autosave
 	cd libs/legesher && uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-autosave
+	cd libs/core && uv run pytest tests/ -m timing --timing --no-cov
 	cd libs/language-server && uv run pytest tests/ -m timing --timing --no-cov
 
 # ============================================================================
