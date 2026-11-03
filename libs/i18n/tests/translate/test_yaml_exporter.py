@@ -518,6 +518,8 @@ class TestPackagingSafety:
             text = re.sub(r'^version = ".*"$', 'version = "V"', text, flags=re.M)
             for old, new in (
                 (f"python/{code}/", "python/CODE/"),
+                # The pack directory itself, as path_filters names it.
+                (f'python/{code}"', 'python/CODE"'),
                 (f"python_{code}", "python_CODE"),
                 (f"python-{code}", "python-CODE"),
                 (name, "NAME"),

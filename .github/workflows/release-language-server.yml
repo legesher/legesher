@@ -167,7 +167,7 @@ jobs:
             --changelogs libs/language-server/CHANGELOG.md
           git add CHANGELOG.md libs/language-server/CHANGELOG.md
           if [ -n "$(git diff --cached --name-only)" ]; then
-            git commit -m "docs(changelog): stamp release [CORE-608]"
+            git commit -m "docs(changelog): stamp release"
           fi
 
       - name: Push release commits

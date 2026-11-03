@@ -689,9 +689,12 @@ Two things worth knowing before touching a per-package release config:
   invoke semantic-release from the repo root with an explicit
   `-c libs/<pkg>/pyproject.toml`. A cwd-relative path silently reads and
   rewrites the *root* files.
-- **Bumps are scoped by tag, not by path.** A package's version increment is
-  computed from every commit since its last matching tag, so the workflow's
-  `paths:` filter controls *when* a release fires, not *what it counts*.
+- **Bumps are scoped by tag and by path.** A package's version increment is
+  computed from the commits since its last matching tag that change a file in
+  that package (`path_filters` in its config). The workflow's `paths:` filter
+  controls *when* a release fires; `path_filters` controls *what it counts*. Unlike
+  the other configured paths, `path_filters` resolve against the working
+  directory, which is one more reason to run from the repo root.
 
 ### During Development (Your Part)
 

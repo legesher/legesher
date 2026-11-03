@@ -149,7 +149,8 @@ confirm each upload before the next:
 
 1. `runtime`, only when `legesher-runtime` has a new version (see "Versioning" in
    `libs/runtime/README.md`). It goes before `foundation` so that a failed runtime upload
-   leaves no published CLI requiring a runtime the index lacks.
+   leaves no published CLI requiring a runtime the index lacks. After the upload, tag
+   `runtime-vX.Y.Z`, annotated, on the commit the run built from.
 2. `foundation`: `legesher-core`, `legesher-i18n` and `legesher` in one run.
 3. `mcp`: `legesher-mcp`.
 4. `language-server`: `legesher-language-server`.

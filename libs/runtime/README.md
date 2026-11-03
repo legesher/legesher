@@ -109,6 +109,9 @@ A new version is published before the foundation packages (`legesher-core`,
 again, so a rehearsal on TestPyPI uses a development release of the next version
 (`0.1.1.dev1` while `0.1.0` is current) and leaves the real number free.
 
+After the `runtime` upload to PyPI, tag the release `runtime-vX.Y.Z`, as an
+annotated tag on the commit the run built from.
+
 ## License
 
 Apache-2.0.
