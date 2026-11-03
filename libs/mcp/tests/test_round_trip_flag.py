@@ -24,6 +24,7 @@ from pydantic import ValidationError
 from legesher_mcp.engine import TranslationOutcome, get_engine
 from legesher_mcp.schemas import SNIPPET_MAX_CHARS, DivergenceModel
 from tests.conftest import assert_sanitized, call_err, call_ok
+from tests.interpreter_gaps import xfail_if_return_hop_is_inert
 
 pytestmark = pytest.mark.anyio
 
@@ -332,7 +333,7 @@ async def test_a_native_to_native_trip_compiles_its_english(
 
 @pytest.mark.parametrize("through", NATIVE_PIVOT_TARGETS)
 async def test_a_clean_native_to_native_trip_earns_a_compile_fact(
-    client: ClientSession, through: str
+    client: ClientSession, through: str, request: pytest.FixtureRequest
 ) -> None:
     native = await _native_es(client)
     result = await call_ok(
@@ -340,6 +341,8 @@ async def test_a_clean_native_to_native_trip_earns_a_compile_fact(
         "translate_to_native",
         {"source": native, "source_lang": "es", "target_lang": through, "verify_round_trip": True},
     )
+    # Hindi's marked words come back in fragments on CPython 3.10 and 3.11.
+    xfail_if_return_hop_is_inert(request, native, str(result["translated_source"]))
     info = result["round_trip"]
     assert info["round_trips"] is True
     assert info["forward_valid"] is True
