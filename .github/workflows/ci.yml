@@ -223,12 +223,13 @@ jobs:
       # visibility this buys.
       # The larger suites run on one worker per CPU (pytest-xdist); the
       # runtime suite is small enough that starting workers costs more.
+      # i18n stays serial on Windows, where parallel workers made it slower.
       - name: Run core tests
         run: uv run pytest libs/core/tests/ -v -n auto --cov=legesher_core --cov-report=xml:coverage-core.xml
 
       - name: Run i18n tests
         if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
-        run: uv run pytest libs/i18n/tests/ -v -n auto --cov=legesher_i18n --cov-report=xml:coverage-i18n.xml
+        run: uv run pytest libs/i18n/tests/ -v -n ${{ matrix.os == 'windows-latest' && '0' || 'auto' }} --cov=legesher_i18n --cov-report=xml:coverage-i18n.xml
 
       # CORE-950 collision guardrail. Pre-commit's
       # validate-language-pack-yaml hook (configured at
