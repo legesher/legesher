@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--next-version-placeholder-->
 
+## 0.1.8 (2026-11-04)
+
+### Changed
+
+- **Telemetry**: opt-in usage telemetry is sent to an Azure Application Insights resource in a US
+  region (East US), as the privacy page states. 0.1.6 and 0.1.7 sent it to a resource in UAE North.
+  Telemetry stays off unless both VS Code's telemetry setting and `legesher.telemetry.enabled` are on
+
 ## 0.1.7 (2026-11-03)
 
 ### Security

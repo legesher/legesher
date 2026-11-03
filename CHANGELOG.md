@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **legesher-vscode**: 0.1.8. Opt-in usage telemetry goes to a US-region Application
+  Insights resource, as the privacy page states.
+
 ## [0.25.1] - 2026-11-03
 
 ### Fixed
