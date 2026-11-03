@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-03
+
 ### Fixed
 
 - Log records now reach the client through the LSP `window/logMessage`
