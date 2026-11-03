@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Security
+
+- **Dependencies**: two packages that ship in the packaged extension move to releases with published
+  security fixes: `js-yaml` 4.3.1 to 4.3.2 (CPU use on empty merge sources) and the `brace-expansion`
+  under `minimatch` 5.0.9 to 5.0.12 (three denial-of-service advisories). Development-only tooling
+  moves in range alongside. Lockfile-only; `minimatch` itself waits for `vscode-languageclient` to
+  adopt its next major
+
 ## 0.1.6 (2026-11-03)
 
 ### Added
