@@ -359,6 +359,22 @@ class TestEmptyCatalogDiagnostic:
         header = "Traceback (most recent call last):\n"
         assert renderer.render_text(header) == header
 
+    def test_an_i18n_release_without_the_seed_fallback_still_constructs(
+        self, tmp_path, monkeypatch, caplog
+    ):
+        # This package accepts legesher-i18n releases from before the seed
+        # fallback, whose messages module has no SEED_DIR. The diagnostic
+        # must not turn that into an exception out of install().
+        missing = tmp_path / "translations.db"
+        monkeypatch.setattr("legesher_i18n.messages.default_db_path", lambda: missing)
+        monkeypatch.delattr("legesher_i18n.messages.SEED_DIR")
+        with caplog.at_level("DEBUG", logger="legesher_runtime.renderer"):
+            renderer = TracebackRenderer("es")
+        assert f"no translations database at {missing}" in caplog.text
+        assert "catalog seed" not in caplog.text
+        header = "Traceback (most recent call last):\n"
+        assert renderer.render_text(header) == header
+
 
 @pytest.mark.skipif(
     sys.version_info < (3, 11),

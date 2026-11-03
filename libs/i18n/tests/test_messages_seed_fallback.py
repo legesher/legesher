@@ -22,17 +22,19 @@ import legesher_i18n
 from legesher_i18n import messages
 from legesher_i18n.messages import load_catalog, match_message
 from scripts.activate_messages_partition import activate
-from scripts.seed_message_templates import seed_database, template_version_added
+from scripts.seed_message_templates import (
+    seed_database,
+    template_version_added,
+    validate_seed,
+)
 
-#: Every tracked seed. Located here rather than through ``messages.SEED_DIR``,
-#: so a fallback pointed at the wrong directory fails the parity test instead
-#: of emptying its parametrization.
-SEEDS = [
-    json.loads(path.read_text(encoding="utf-8"))
-    for path in sorted(
-        (Path(legesher_i18n.__file__).parent / "db" / "seeds").glob("*.json")
-    )
-]
+#: Every tracked seed file. Located here rather than through
+#: ``messages.SEED_DIR``, so a fallback pointed at the wrong directory fails
+#: the parity test instead of emptying its parametrization.
+SEED_FILES = sorted(
+    (Path(legesher_i18n.__file__).parent / "db" / "seeds").glob("*.json")
+)
+SEEDS = [json.loads(path.read_text(encoding="utf-8")) for path in SEED_FILES]
 
 #: (implementation, locale, python_version) triples taken from the seeds
 #: themselves: every locale a seed translates plus one it does not (English
@@ -117,6 +119,12 @@ class TestNoDatabase:
         # The parity cases below come from SEEDS; an empty list would skip
         # them all rather than fail.
         assert "cpython" in {seed["implementation"] for seed in SEEDS}
+
+    @pytest.mark.parametrize("path", SEED_FILES, ids=lambda path: path.name)
+    def test_every_tracked_seed_passes_the_seeders_validation(self, path: Path):
+        # The seed read trusts the file's shape; the seeder's validation is
+        # what checks it, so every file the package ships has to pass it.
+        assert validate_seed(json.loads(path.read_text(encoding="utf-8"))) == []
 
     def test_spanish_header_comes_from_the_seed(self, default_db: Path):
         rules = load_catalog("es", "3.12")
@@ -203,6 +211,15 @@ class TestDatabaseRowsWin:
         keys = {r.key for r in load_catalog("es", "3.12")}
         assert "traceback.header" in keys
 
+    def test_a_default_database_that_is_not_sqlite_reads_the_seed(
+        self, default_db: Path
+    ):
+        # A truncated download or an unfetched LFS pointer in ~/.legesher.
+        default_db.parent.mkdir(parents=True)
+        default_db.write_text("version https://git-lfs.github.com/spec/v1\n")
+        keys = {r.key for r in load_catalog("es", "3.12")}
+        assert "traceback.header" in keys
+
     def test_rows_for_another_implementation_do_not_count(self, default_db: Path):
         operational_db(default_db, {"es"})
         activate(default_db)
@@ -216,6 +233,11 @@ class TestExplicitDbPath:
 
     def test_missing_explicit_database_is_an_empty_catalog(self, tmp_path: Path):
         assert load_catalog("es", "3.12", db_path=tmp_path / "missing.db") == []
+
+    def test_explicit_file_that_is_not_sqlite_is_an_empty_catalog(self, tmp_path: Path):
+        path = tmp_path / "translations.db"
+        path.write_bytes(b"not a database")
+        assert load_catalog("es", "3.12", db_path=path) == []
 
     def test_explicit_database_without_the_partition_is_an_empty_catalog(
         self, tmp_path: Path

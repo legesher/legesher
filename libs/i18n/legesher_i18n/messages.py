@@ -5,14 +5,16 @@ lives in the translations database — the database is the source of truth,
 activated by ``scripts/activate_messages_partition.py`` and filled by
 ``scripts/seed_message_templates.py`` from the tracked seeds in
 ``db/seeds/``. This module is the runtime-facing read path:
-:func:`load_catalog` performs ONE read and returns plain, immutable rules
+:func:`load_catalog` reads once (the database, or the seed files when it
+falls back) and returns plain, immutable rules
 (compiled matcher + localized template), so consumers such as the
 ``legesher-runtime`` traceback renderer hold no SQLite connection at render
 time.
 
 No wheel and no clone carries the database (CORE-1794), so when the DEFAULT
-database has no catalog rows, :func:`load_catalog` reads the seed the
-database is filled from, which ships as package data. An installed package
+database has no catalog rows (templates with a matcher),
+:func:`load_catalog` reads the seed the database is filled from, which
+ships as package data. An installed package
 therefore renders the catalog a seeded checkout renders. Rows in the
 database always win; an explicit ``db_path`` is never replaced by the seed.
 
@@ -127,9 +129,9 @@ def load_catalog(
 ) -> list[MessageRule]:
     """Load the message catalog for one locale and interpreter version.
 
-    One read (the database, or the seed when the default database has no
-    catalog rows); the returned rules are plain compiled objects with no
-    database handle behind them.
+    One read of the database, or of the seed files when the default database
+    has no catalog rows; the returned rules are plain compiled objects with
+    no database handle behind them.
 
     Args:
         locale: BCP 47 tag (``'es'``, ``'ar'``). A locale with no translations
@@ -145,10 +147,10 @@ def load_catalog(
     Returns:
         One :class:`MessageRule` per applicable template row that carries a
         matcher, highest applicable ``version_added`` winning per key. When
-        the default database is missing, predates the messages partition
-        (e.g. a stale ``~/.legesher`` copy) or holds no rows for
-        ``implementation``, the rows come from the seed in :data:`SEED_DIR`
-        instead. An explicit ``db_path`` is read alone: one without catalog
+        the default database is missing, unreadable, predates the messages
+        partition (e.g. a stale ``~/.legesher`` copy) or holds no rows with a
+        matcher for ``implementation``, the rows come from the seed in
+        :data:`SEED_DIR` instead. An explicit ``db_path`` is read alone: one without catalog
         rows yields an empty catalog rather than an error, and callers
         degrade to untranslated passthrough.
     """
@@ -190,12 +192,14 @@ def _database_rows(path: Path, locale: str, implementation: str) -> list[_Row]:
     # Read-only open (the migrate_to_v2 source pattern): a plain
     # sqlite3.connect on a missing/wrong path would silently CREATE an empty
     # database file as a side effect of a read API. Missing file or
-    # unreadable database degrades to no rows.
+    # unreadable database degrades to no rows. DatabaseError, not only
+    # OperationalError: a file that is not SQLite at all ("file is not a
+    # database") raises the parent class, on the first query.
     if not path.exists():
         return []
     try:
         connection = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
-    except sqlite3.OperationalError:
+    except sqlite3.DatabaseError:
         return []
     try:
         try:
@@ -211,8 +215,8 @@ def _database_rows(path: Path, locale: str, implementation: str) -> list[_Row]:
                 "ORDER BY t.id",
                 (locale, implementation),
             ).fetchall()
-        except sqlite3.OperationalError:
-            return []  # partition not activated in this database file
+        except sqlite3.DatabaseError:
+            return []  # partition not activated, or not a SQLite file
     finally:
         connection.close()
 
@@ -223,9 +227,12 @@ def _seed_rows(locale: str, implementation: str) -> list[_Row]:
     Reads what ``scripts/seed_message_templates.py`` writes: templates
     without a matcher are skipped, a template's own ``version_added``
     overrides the file's, and a translation's status defaults to
-    ``machine``. Files are read in name order and templates in file order,
-    the order the seeder inserts them, so first-match-wins holds. A file that
-    cannot be read or parsed is skipped, as a missing database is.
+    ``machine``. Templates are read in file order, the order the seeder
+    inserts them, so first-match-wins holds; files are read in name order
+    (the seeder takes one file per run, and each implementation has one seed
+    today). A file that cannot be read or is not JSON is skipped, as a
+    missing database is; the seeds' shape is checked by the seeder's
+    validation, not here.
     """
     rows: list[_Row] = []
     for path in sorted(SEED_DIR.glob("*.json")):

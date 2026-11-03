@@ -43,7 +43,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - Tracebacks localize their structure and messages from an installed package,
   with no translations database present: the catalog comes from the seed that
-  ships with `legesher-i18n`. [CORE-1679]
+  ships with `legesher-i18n`. The fallback is in `legesher-i18n`; this package
+  works with releases before and after it. [CORE-1679]
+- A message the catalog has no translation for in the target language passes
+  through exactly as CPython printed it, instead of being rebuilt from its
+  English template, so `en` output stays byte-identical to stock CPython.
+  [CORE-1679]
 - Consistency hardening in the traceback renderer; neither entry changes
   output for any pack or mapper shipping today. [CORE-1777]
   - The fallback frame header (used when the message catalog is missing or a

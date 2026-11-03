@@ -168,8 +168,8 @@ A database whose partition predates the provenance columns is refused by every w
 `scripts/add_message_provenance.py` has run on it.
 
 The seed is also what ships. No wheel or clone carries the database, so `load_catalog` reads
-`legesher_i18n/db/seeds/` whenever the default database has no message rows. A translation that reaches the
-database only through step 3 or 4 is not in an installed package until the seed carries it too.
+`legesher_i18n/db/seeds/` whenever the default database carries no message catalog. A translation that reaches
+the database only through step 3 or 4 is not in an installed package until the seed carries it too.
 
 ## Adding a language
 

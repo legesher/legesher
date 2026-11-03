@@ -103,6 +103,8 @@ def _empty_catalog_reason(db_path: object) -> str:
         from legesher_i18n import messages
 
         path = Path(db_path) if db_path is not None else messages.default_db_path()  # type: ignore[arg-type]
+        # Absent before the legesher-i18n release that added the fallback.
+        seed_dir = getattr(messages, "SEED_DIR", None)
     except Exception:  # noqa: BLE001 - a diagnostic must not out-crash the renderer
         return f"could not resolve a database path from {db_path!r}"
     if not path.exists():
@@ -112,8 +114,8 @@ def _empty_catalog_reason(db_path: object) -> str:
             f"translations database at {path} has no message catalog rows "
             "(messages partition missing or unseeded)"
         )
-    if db_path is None:
-        reason += f", and no catalog seed loaded from {messages.SEED_DIR}"
+    if db_path is None and seed_dir is not None:
+        reason += f", and no catalog seed loaded from {seed_dir}"
     return reason
 
 
@@ -188,6 +190,13 @@ class TracebackRenderer:
                 self.python_version,
                 _empty_catalog_reason(db_path),
             )
+        # Only translated rules rewrite anything. A rule without a translation
+        # for this language would re-render the message from its English
+        # template, and a matcher can accept wording its template does not
+        # reproduce ("takes 1 positional argument" comes back plural). Without
+        # it the line passes through as CPython printed it, so ``en`` output
+        # stays byte-identical to stock CPython.
+        rules = [rule for rule in rules if rule.localized]
         self._structural: dict[str, MessageRule] = {
             r.key: r for r in rules if r.key.startswith("traceback.")
         }

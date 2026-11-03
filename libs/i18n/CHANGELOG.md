@@ -24,9 +24,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the card and the push gate about which files it accounted for.
 - **The error-message catalog loads with no translations database.**
   `load_catalog` reads the catalog seed that ships with the package when the
-  default database has no message rows, so tracebacks localize their structure
-  and messages from an installed package or a fresh clone. Rows in the
-  database still win, and an explicit `db_path` is read alone. [CORE-1679]
+  default database is missing, unreadable or carries no message catalog, so
+  tracebacks localize their structure and messages from an installed package
+  or a fresh clone. Rows in the database still win, and an explicit `db_path`
+  is read alone. [CORE-1679]
 
 ## [0.24.0] - 2026-11-03
 

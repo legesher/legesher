@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import re
 import sys
+import traceback
 
 import pytest
 
@@ -172,3 +173,30 @@ class TestArabicGoldens:
         # line, i.e. the string starts with the Arabic token, not the path.
         frame_line = next(line for line in rendered.splitlines() if "script.py" in line)
         assert re.match(r'\s*الملف "', frame_line)
+
+
+class TestEnglishIsStockCPython:
+    """``en`` renders exactly what CPython prints, from either catalog source.
+
+    The catalog has no ``en`` translations, so no rule may rewrite anything.
+    Two of its matchers accept wording their English templates do not
+    reproduce (the singular "1 positional argument", the module path after
+    "cannot import name"); those cases are here for that reason.
+    """
+
+    @pytest.mark.parametrize(
+        "code",
+        [
+            ZERODIV_SCRIPT,
+            CHAINED_SCRIPT,
+            "print(variable_desconocida)\n",
+            "def f(a):\n    pass\n\nf(1, 2)\n",
+            "from json import no_such_name\n",
+        ],
+        ids=["zerodivision", "chained", "nameerror", "arg-count-singular", "import-path"],
+    )
+    def test_output_is_byte_identical(self, raise_from_script, code):
+        cap = raise_from_script(code)
+        stock = "".join(traceback.format_exception(cap.exc_type, cap.exc_value, cap.exc_tb))
+        rendered = TracebackRenderer("en").render(cap.exc_type, cap.exc_value, cap.exc_tb)
+        assert rendered == stock
