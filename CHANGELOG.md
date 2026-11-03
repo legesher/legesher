@@ -11,6 +11,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **ci**: the core, i18n, legesher, language-server and mcp suites run on one
+  worker per CPU, in CI and in `make test`.
 - **ci**: the push-to-main test matrix's Windows job runs the same suites
   green as the other legs, with a longer time budget.
 
