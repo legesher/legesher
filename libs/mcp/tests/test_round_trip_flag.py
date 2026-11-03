@@ -24,6 +24,7 @@ from pydantic import ValidationError
 from legesher_mcp.engine import TranslationOutcome, get_engine
 from legesher_mcp.schemas import SNIPPET_MAX_CHARS, DivergenceModel
 from tests.conftest import assert_sanitized, call_err, call_ok
+from tests.interpreter_gaps import xfail_if_return_hop_is_inert
 
 pytestmark = pytest.mark.anyio
 
@@ -105,8 +106,8 @@ async def test_flag_verifies_a_clean_trip_on_translate_to_native(
     assert info["grammar_version"] == "3.13"
     assert info["schema_version"] == "1.1.0"
     assert info["pivoted"] is False
-    # compile_check understands English only, and the forward rendering
-    # here is Spanish — the compile fact is unknown, never assumed.
+    # From English the rendering's English is the return hop itself, which
+    # gave back the source: the compile fact is not asserted, only unknown.
     assert info["forward_valid"] is None
 
 
@@ -296,6 +297,88 @@ async def test_pivoted_trip_is_disclosed(client: ClientSession) -> None:
     info = result["round_trip"]
     assert info["pivoted"] is True
     assert "pivot" in info["verdict_line"].lower()
+
+
+# -- the compile check between two native languages -------------------------
+
+#: Spanish source using ``y`` as an identifier: ``y`` is the Spanish pack's
+#: ``and``, so its English is ``and = 1``, which is no program. Both hops
+#: cancel the collision, so the trip itself comes back byte-identical.
+CANCELLING_COLLISION_ES = "y = 1\n"
+
+#: Arabic and Hindi: the renderings carry harakat and Devanagari marks.
+NATIVE_PIVOT_TARGETS = ("ar", "hi")
+
+
+@pytest.mark.parametrize("through", NATIVE_PIVOT_TARGETS)
+async def test_a_native_to_native_trip_compiles_its_english(
+    client: ClientSession, through: str
+) -> None:
+    result = await call_ok(
+        client,
+        "translate_to_native",
+        {
+            "source": CANCELLING_COLLISION_ES,
+            "source_lang": "es",
+            "target_lang": through,
+            "verify_round_trip": True,
+        },
+    )
+    info = result["round_trip"]
+    assert info["round_trips"] is True, "the collision must cancel for this to test anything"
+    assert info["forward_valid"] is False
+    assert "canonical form does not compile" in info["verdict_line"]
+    assert "VERIFIED" not in info["verdict_line"]
+
+
+@pytest.mark.parametrize("through", NATIVE_PIVOT_TARGETS)
+async def test_a_clean_native_to_native_trip_earns_a_compile_fact(
+    client: ClientSession, through: str, request: pytest.FixtureRequest
+) -> None:
+    native = await _native_es(client)
+    result = await call_ok(
+        client,
+        "translate_to_native",
+        {"source": native, "source_lang": "es", "target_lang": through, "verify_round_trip": True},
+    )
+    # Hindi's marked words come back in fragments on CPython 3.10 and 3.11.
+    xfail_if_return_hop_is_inert(request, native, str(result["translated_source"]))
+    info = result["round_trip"]
+    assert info["round_trips"] is True
+    assert info["forward_valid"] is True
+    assert "round-trip VERIFIED" in info["verdict_line"]
+
+
+async def test_a_compile_check_whose_translation_raises_leaves_the_fact_unknown(
+    client: ClientSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The validator's own hop (ar to en) fails; every other hop is real.
+    The fact is unknown, never assumed, and the tool still answers."""
+    native = await _native_es(client)
+    engine = get_engine()
+    real_translate = engine.translate
+
+    def failing_canonical_hop(
+        *, source: str, source_lang: str, target_lang: str, python_version: str
+    ) -> TranslationOutcome:
+        if source_lang == "ar" and target_lang == "en":
+            raise RuntimeError("probe: the compile check's hop fails")
+        return real_translate(
+            source=source,
+            source_lang=source_lang,
+            target_lang=target_lang,
+            python_version=python_version,
+        )
+
+    monkeypatch.setattr(engine, "translate", failing_canonical_hop)
+    result = await call_ok(
+        client,
+        "translate_to_native",
+        {"source": native, "source_lang": "es", "target_lang": "ar", "verify_round_trip": True},
+    )
+    info = result["round_trip"]
+    assert info["round_trips"] is True
+    assert info["forward_valid"] is None
 
 
 # -- the vacuous trip --------------------------------------------------------

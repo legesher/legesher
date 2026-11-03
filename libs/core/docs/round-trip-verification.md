@@ -227,7 +227,12 @@ both directions with no mode flag — `translate_to_source` passes
 Translation is **injected**, never re-derived: `libs/mcp`'s engine already
 owns the cached, pivot-aware translator, and this module composes it.
 `validate` is likewise injected (the engine's `compile_check`); when absent,
-`forward_valid` is `None` — unknown, not assumed.
+`forward_valid` is `None` — unknown, not assumed. It receives the forward
+rendering. The MCP adapter compiles that rendering's canonical English: the
+rendering itself on a trip through English, its translation to English on a
+trip between two native languages (CORE-2629). On a trip from English it
+passes no validator, because the rendering's English is the return hop: a
+clean trip gives back the source itself.
 
 `source_lang == through_lang` raises `ValueError`. The engine short-circuits
 identical languages to identity, so both hops would be no-ops and the

@@ -21,6 +21,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the AGENTS template say what to do with it, and that a library's names keep
   their own spelling after a dot and as keyword arguments. [CORE-2237]
 
+### Fixed
+
+- `translate_to_native` with `verify_round_trip: true` between two native
+  languages checks that the rendering's English compiles, as a trip through
+  English already did. A rendering that is no program in English now reads
+  `round-trip FAILED · canonical form does not compile` with
+  `forward_valid: false`, where it read VERIFIED. [CORE-2629]
+
 ## [0.2.0] - 2026-11-03
 
 ### Added

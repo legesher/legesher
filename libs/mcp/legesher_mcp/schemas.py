@@ -151,9 +151,11 @@ class RoundTripInfo(ToolResult):
     round_trips: bool
     forward_valid: bool | None = Field(
         description=(
-            "Whether the canonical form compiles. A round trip can be "
-            "byte-identical over an invalid canonical form when a collision "
-            "cancels itself; this field carries that fact."
+            "Whether the canonical form compiles: the English of the forward "
+            "rendering. A round trip can be byte-identical over an invalid "
+            "canonical form when a collision cancels itself; this field "
+            "carries that fact. Null when not checked: on a trip from "
+            "English, or when the translation to English failed."
         )
     )
     verdict_line: str = Field(
