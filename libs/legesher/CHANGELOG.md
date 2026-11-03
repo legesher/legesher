@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-11-03
+
 ### Fixed
 
 - `legesher run` reports an error in the script from the script's first frame, as
