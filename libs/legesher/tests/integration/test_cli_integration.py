@@ -1386,6 +1386,7 @@ class TestErrorHandling:
         getattr(os, "geteuid", lambda: 1)() == 0,
         reason="root bypasses chmod; act and some self-hosted runners run as root",
     )
+    @pytest.mark.skipif(os.name == "nt", reason="POSIX directory permissions")
     def test_output_directory_permission_error(self, tmp_path: Path):
         """Test handling of permission errors on output."""
         input_file = tmp_path / "test.py"

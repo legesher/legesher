@@ -2037,10 +2037,7 @@ def main() -> int:
             "categories": list(CATEGORY_FAMILIES),
             "pl_versions": list(VERSIONS),
             "locales": locales,
-            "files": {
-                manifest_key(f, tree): sha256(f)
-                for f in sorted(files, key=lambda f: manifest_key(f, tree))
-            },
+            "files": dict(sorted((manifest_key(f, tree), sha256(f)) for f in files)),
         }
 
     # Copied BEFORE the manifest is built. The manifest is the artifact's own

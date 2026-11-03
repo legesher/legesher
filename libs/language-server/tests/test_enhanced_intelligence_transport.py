@@ -936,6 +936,10 @@ class TestPlatformDiscoveryPaths:
         """A stripped environment yields no candidates rather than a crash."""
         assert default_fallback_bin_dirs(platform="win32", environ={}) == []
 
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="the POSIX branch spells its home paths with the host separator",
+    )
     def test_posix_searches_the_homebrew_and_npm_prefixes(self):
         """The Apple Silicon prefix and the npm global bin are both covered."""
         dirs = default_fallback_bin_dirs(platform="darwin", environ={})

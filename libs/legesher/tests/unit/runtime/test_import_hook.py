@@ -1602,6 +1602,7 @@ class TestBytecodeCache:
         assert module.value() == 41, tagged
         assert stats["hits"] == 0 and stats["writes"] == 1, stats
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX directory permissions")
     def test_unwritable_pycache_still_imports(self, tmp_path):
         if hasattr(os, "geteuid") and os.geteuid() == 0:
             pytest.skip("root ignores directory permissions")

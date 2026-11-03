@@ -60,7 +60,7 @@ def make_repo(tmp_path, language="es", process=True):
             f"{FILTER} --clean --language {language} --path %f",
         )
     git(repo, "config", "filter.legesher.required", "false")
-    (repo / ".gitattributes").write_text("*.py filter=legesher\n")
+    write(repo, ".gitattributes", "*.py filter=legesher\n")
     git(repo, "add", ".gitattributes")
     git(repo, "commit", "-q", "-m", "attributes")
     return repo
@@ -68,7 +68,7 @@ def make_repo(tmp_path, language="es", process=True):
 
 def filter_starts(trace) -> int:
     count = 0
-    for line in trace.read_text().splitlines():
+    for line in trace.read_text(encoding="utf-8").splitlines():
         event = json.loads(line)
         if event.get("event") == "child_start" and any(
             "legesher_core" in arg for arg in event.get("argv", [])
@@ -227,11 +227,6 @@ class TestBatchStoredReader:
         from legesher_core.git_filter import read_stored_blob
 
         files = {"x.py": "x = 1\n", "d/ñ.py": "ñ = 2\n"}
-        if sys.platform != "win32":
-            # A name git could read as a revision prefix. NTFS refuses a
-            # colon in a name (with < > " / \ | ? *), so the case runs
-            # where the file can exist.
-            files[":c.py"] = "c = 3\n"
         for name, text in files.items():
             (repo / name).parent.mkdir(parents=True, exist_ok=True)
             write(repo, name, text)
@@ -241,6 +236,19 @@ class TestBatchStoredReader:
         try:
             for name in (*files, "missing.py"):
                 assert reader(name) == read_stored_blob(name, cwd=repo), name
+        finally:
+            reader.close()
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="a colon in a file name")
+    def test_a_name_git_could_read_as_a_revision_prefix(self, repo):
+        from legesher_core.git_filter import read_stored_blob
+
+        write(repo, ":c.py", "c = 3\n")
+        git(repo, "add", ".")
+        git(repo, "commit", "-q", "-m", "c")
+        reader = BatchStoredReader(cwd=str(repo))
+        try:
+            assert reader(":c.py") == read_stored_blob(":c.py", cwd=repo) == "c = 3\n"
         finally:
             reader.close()
 

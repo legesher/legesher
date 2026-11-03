@@ -57,7 +57,7 @@ def make_repo(tmp_path, language, smudge=False):
             f"{FILTER} --{mode} --language {language} --path %f",
         )
     git(repo, "config", "filter.legesher.required", "false")
-    (repo / ".gitattributes").write_text("*.py filter=legesher\n")
+    write(repo, ".gitattributes", "*.py filter=legesher\n")
     git(repo, "add", ".gitattributes")
     git(repo, "commit", "-q", "-m", "attributes")
     return repo
