@@ -1098,7 +1098,11 @@ classifiers = [
 # singular `version_variable` key, so the package __version__ never moved.
 version_toml = ["{pack_root}/pyproject.toml:project.version"]
 version_variables = ["{pack_root}/legesher_i18n_python_{language_code}/__init__.py:__version__"]
-commit_parser = "conventional"
+# `conventional-monorepo` is the conventional parser plus `path_filters`
+# (below): a commit counts toward this package's next version only when it
+# changes a file in the package's directory. The plain parser counted every
+# feat/fix in the repository (CORE-2627).
+commit_parser = "conventional-monorepo"
 # PSR's default release-commit subject is the bare version, which the skip in
 # release-language-packs.yml and ci.yml (`chore(release)`) never matched, so
 # every release retriggered its own train once (CORE-1852).
@@ -1111,6 +1115,8 @@ tag_format = "i18n-python-{language_code}-v{{version}}"
 commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
 [tool.semantic_release.commit_parser_options]
+# Relative to the working directory, which is the repository root in every train.
+path_filters = ["{pack_root}"]
 allowed_tags = [
     "feat", "fix", "docs", "style", "refactor",
     "perf", "test", "build", "ci", "chore", "revert"

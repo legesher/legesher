@@ -19,9 +19,10 @@ on:
   workflow_dispatch:  # Allow manual triggers
 
 # Nothing here calls the Issues or Pulls APIs — `semantic_release version`
-# commits and tags, `publish` uploads release assets. Single-job workflow, so
-# zizmor's excessive-permissions audit never fires on it; narrowed by hand for
-# the same reason release-language-packs was (CORE-1920).
+# commits, tags and creates the release, and `gh release upload` attaches
+# assets. Single-job workflow, so zizmor's excessive-permissions audit never
+# fires on it; narrowed by hand for the same reason release-language-packs
+# was (CORE-1920).
 permissions:
   contents: write
 
@@ -116,20 +117,12 @@ jobs:
           python scripts/stamp-changelog-release.py
           git add CHANGELOG.md libs/core/CHANGELOG.md libs/i18n/CHANGELOG.md libs/legesher/CHANGELOG.md
           if [ -n "$(git diff --cached --name-only)" ]; then
-            git commit -m "docs(changelog): stamp release [CORE-608]"
+            git commit -m "docs(changelog): stamp release"
           fi
 
       - name: Push release commits
         if: steps.semantic-release.outputs.release_created == 'true'
         run: git push origin main
-
-      - name: Create GitHub Release
-        if: steps.semantic-release.outputs.release_created == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Creating GitHub Release..."
-          uv run semantic-release publish
 
       - name: Build packages
         if: steps.semantic-release.outputs.release_created == 'true'
@@ -150,22 +143,17 @@ jobs:
             libs/legesher/dist/
           retention-days: 90
 
-      # CORE-1155: semantic-release publish (above) attaches the
-      # `legesher-monorepo` metapackage wheel to the GitHub Release —
-      # that wheel is pure metadata (no .py files) and its declared deps
-      # aren't on PyPI, so anyone downloading it from the release page
-      # gets nothing useful. The actual built sub-package wheels exist
-      # (see "Build packages" above) but only land in the workflow
-      # artifact, which requires Actions auth to download. This step
-      # promotes them to release assets so the GitHub Release page is
-      # the source of truth for "the released artifacts".
+      # The only upload to the GitHub Release: the three packages' wheels and
+      # sdists from "Build packages" above (CORE-1155). The root config
+      # builds and uploads nothing, so the root workspace package, which is
+      # not published, is never attached (CORE-2604).
       - name: Attach foundation wheels to GitHub Release
         if: steps.semantic-release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # The release was just created by `semantic-release publish`,
-          # so the most recent tag is what we want.
+          # `semantic-release version` created the release and its tag, so
+          # the most recent tag is what we want.
           TAG=$(git describe --tags --abbrev=0)
           echo "📤 Attaching real foundation wheels to release ${TAG}..."
           gh release upload "${TAG}" \

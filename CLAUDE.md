@@ -219,12 +219,17 @@ explains the model.
 
 Facts that change what you write:
 
-- The foundation config is `[tool.semantic_release]` in the root `pyproject.toml`: the `conventional` parser,
-  release commit `chore(release): {version}`, and `major_on_zero = false`, so a breaking change (`feat!:`)
+- The foundation config is `[tool.semantic_release]` in the root `pyproject.toml`: the `conventional-monorepo`
+  parser, release commit `chore(release): {version}`, and `major_on_zero = false`, so a breaking change (`feat!:`)
   bumps the minor version while the foundation is below 1.0. Every pack pins `legesher-i18n<1.0.0`, so 1.0 is a
   coordinated decision, never a side effect.
-- Bumps count every `feat`/`fix` commit since the package's last tag, whatever paths it touched. A workflow's
-  `paths:` filter decides when a train runs, not what it counts.
+- Bumps count only the commits since the package's last tag that change a file under the config's
+  `path_filters`: the three foundation packages for the root config, the package's own directory for the others.
+  A workflow's `paths:` filter decides when a train runs; `path_filters` decides what it counts. Unlike every
+  other configured path, `path_filters` resolves against the working directory, so run semantic-release from the
+  root.
+- The foundation train attaches only the three packages' wheels and sdists to its GitHub release; the root
+  config builds and uploads nothing.
 - The MCP, language-server and pack trains refuse to run unless the last reachable tag equals
   `project.version`; a package with no baseline tag cannot release until one is pushed. Do not hand-edit the
   version of the foundation, `legesher-mcp` or `legesher-language-server`; their trains write it. Language packs

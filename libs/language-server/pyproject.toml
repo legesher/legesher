@@ -83,7 +83,11 @@ dev = [
 # resolves every configured path against the repository root, so a bare
 # "pyproject.toml" would read and rewrite the ROOT pyproject (CORE-1852).
 version_toml = ["libs/language-server/pyproject.toml:project.version"]
-commit_parser = "conventional"
+# `conventional-monorepo` is the conventional parser plus `path_filters`
+# (below): a commit counts toward this package's next version only when it
+# changes a file in the package's directory. The plain parser counted every
+# feat/fix in the repository (CORE-2627).
+commit_parser = "conventional-monorepo"
 # The release commit's subject. PSR's default is the bare version, which the
 # `chore(release)` skip in release-language-server.yml and ci.yml never
 # matched, so every release retriggered its own train once (CORE-1852).
@@ -98,6 +102,8 @@ tag_format = "language-server-v{version}"
 commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
 [tool.semantic_release.commit_parser_options]
+# Relative to the working directory, which is the repository root in every train.
+path_filters = ["libs/language-server"]
 allowed_tags = [
     "feat", "fix", "docs", "style", "refactor",
     "perf", "test", "build", "ci", "chore", "revert"

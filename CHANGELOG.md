@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **release**: the foundation release on GitHub carries only the `legesher`,
+  `legesher-core` and `legesher-i18n` wheels and sdists, and each package's
+  version counts only the commits that change that package. [CORE-2604]
+  [CORE-2627]
+
 ### Fixed
 
 - **legesher-vscode**: 0.1.8. The extension icon is 512 by 512 pixels, within the
