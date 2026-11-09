@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/legesher/legesher/branch/main/graph/badge.svg)](https://codecov.io/gh/legesher/legesher)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
-[![PyPI](https://img.shields.io/badge/PyPI-coming%20soon-orange.svg)](https://pypi.org/)
+[![PyPI](https://img.shields.io/pypi/v/legesher.svg)](https://pypi.org/project/legesher/)
 
 Every package in this repository is Apache-2.0; see [Licensing](#licensing).
 
