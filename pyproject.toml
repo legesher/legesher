@@ -23,6 +23,12 @@ readme = "README.md"
 [project.urls]
 repository = "https://www.github.com/legesher/legesher"
 
+[tool.uv]
+# Python 3.10 cannot take filelock's fixed releases (4.2.1 and later need 3.11),
+# and the releases from 3.30 to 4.2.0 carry further advisories of their own, so
+# 3.10 stays on the 3.29 line. Remove this when the Python floor moves to 3.11.
+constraint-dependencies = ["filelock<3.30; python_full_version < '3.11'"]
+
 [tool.uv.workspace]
 members = [
     "libs/core",
