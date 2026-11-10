@@ -15,6 +15,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `legesher-core` and `legesher-i18n` wheels and sdists, and each package's
   version counts only the commits that change that package. [CORE-2604]
   [CORE-2627]
+- **docs**: the README, the VS Code extension README and the getting-started
+  page install the extension from the VS Code Marketplace and the language
+  server from PyPI with `pipx` or `uv tool`. [CORE-2217]
 
 ### Fixed
 

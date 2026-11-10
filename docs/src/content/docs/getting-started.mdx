@@ -28,10 +28,26 @@ code --install-extension legesher.legesher-vscode
 
 Hover, completion, diagnostics and keyword highlighting come from a separate
 language server: the `legesher-lsp` command, from the `legesher-language-server`
-Python package, which is not on PyPI yet. The extension starts without it, and
-the Legesher item in the status bar then shows a warning that names the
-package. When `legesher-lsp` is installed, it has to be on your `PATH`, or the
-`legesher.serverCommand` setting has to hold its full path.
+Python package. Install it with a tool installer, so that `legesher-lsp` works
+outside any project environment:
+
+```bash
+pipx install legesher-language-server
+```
+
+Or, with uv:
+
+```bash
+uv tool install legesher-language-server
+```
+
+If the installer warns that its bin directory is not on your `PATH`, run
+`pipx ensurepath` or `uv tool update-shell`, then restart VS Code.
+
+The extension starts without the server, and the Legesher item in the status
+bar then shows a warning that names the package. `legesher-lsp` has to be on
+the `PATH` VS Code sees, or the `legesher.serverCommand` setting has to hold its
+full path.
 
 ### 2. Select Your Language
 

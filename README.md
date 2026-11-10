@@ -60,7 +60,7 @@ population who don't speak English as their first language. Developers must lear
   optional `treesitter` extra. Both produce identical output
 - **Git:** A clean filter that stores each file in its author's language, and a pre-commit guard
 - **IDE:** LSP server with hover, completion, diagnostics, and semantic tokens
-- **VS Code:** Extension covering all 56 languages, installed from VSIX
+- **VS Code:** Extension covering all 56 languages, installed from the VS Code Marketplace
 - **Tests:** 200+ test files across the core, i18n, legesher, language-server, mcp, and runtime packages
 
 ## Licensing
@@ -148,11 +148,25 @@ uv run legesher git setup --language es
 
 The Legesher VS Code extension is available in pre-beta:
 
-1. **Install from VSIX** (current method):
-   - Download the latest `.vsix` from releases
-   - In VS Code: Extensions → `...` menu → "Install from VSIX..."
+1. **Install the extension from the VS Code Marketplace:**
+   - In VS Code: Extensions → search "Legesher" → Install
+   - Or run `code --install-extension legesher.legesher-vscode`
+   - To use a `.vsix` instead, download it from the latest `vscode-v` release on the
+     [releases page](https://github.com/legesher/legesher/releases), then Extensions → `...` menu →
+     "Install from VSIX..."
 
-2. **Features included:**
+2. **Install the language server** (hover, completion, diagnostics and keyword highlighting):
+
+   ```bash
+   pipx install legesher-language-server
+   # or
+   uv tool install legesher-language-server
+   ```
+
+   `legesher-lsp` has to be on the `PATH` VS Code sees, or the `legesher.serverCommand` setting has to hold
+   its full path.
+
+3. **Features included:**
    - Language selector with 56 languages
    - Translation panel (side-by-side view)
    - Syntax highlighting for translated code
