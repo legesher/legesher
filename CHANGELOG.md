@@ -24,6 +24,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **docs**: on the Spanish and Arabic pages, code samples start in the page's
+  language when the reader has not picked a code language. A pick made with
+  the code-language picker still wins on every page. [CORE-2760]
 - **legesher-vscode**: 0.1.8. The extension icon is 512 by 512 pixels, within the
   Visual Studio Marketplace's 1024 by 1024 limit, so the package can be published.
 

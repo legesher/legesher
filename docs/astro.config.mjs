@@ -19,9 +19,12 @@ export default defineConfig({
 			},
 			head: [
 				{
+					// The code language starts as the reader's stored pick, else the
+					// page language (<html lang>), else English. A language with no
+					// snippet variant has no CSS rule, so English shows.
 					tag: 'script',
 					content:
-						"(()=>{try{var l=localStorage.getItem('legesher-snippet-lang');if(l&&l!=='en')document.documentElement.dataset.snippetLang=l;}catch(e){}})();",
+						"(()=>{var d=document.documentElement,l=null;try{l=localStorage.getItem('legesher-snippet-lang');}catch(e){}if(!l)l=(d.lang||'en').split('-')[0].toLowerCase();if(l!=='en')d.dataset.snippetLang=l;})();",
 				},
 			],
 			logo: {
