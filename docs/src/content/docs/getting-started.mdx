@@ -15,8 +15,9 @@ Welcome to Legesher! This guide will help you start coding in your native langua
 
 Install from the VS Code Marketplace:
 
-- Search for "Legesher" in the Extensions panel
-- Click "Install"
+- Open the **Extensions** view (**Cmd+Shift+X** on macOS, **Ctrl+Shift+X** on Windows and Linux)
+- Search for **Legesher**
+- Click **Install**
 
 Or install manually:
 
@@ -44,19 +45,21 @@ uv tool install legesher-language-server
 If the installer warns that its bin directory is not on your `PATH`, run
 `pipx ensurepath` or `uv tool update-shell`, then restart VS Code.
 
-The extension starts without the server, and the Legesher item in the status
+The extension starts without the server, and the **Legesher** item in the status
 bar then shows a warning that names the package. `legesher-lsp` has to be on
 the `PATH` VS Code sees, or the `legesher.serverCommand` setting has to hold its
 full path.
 
 ### 2. Select Your Language
 
-After installation, you'll see a welcome dialog. Click **"Choose Your Language"** to select your preferred coding language.
+The first time the extension starts, VS Code opens the **Get Started with Legesher**
+walkthrough. In its **Choose Your Target Language** step, click **Select Language** and
+choose your language.
 
 Or manually:
 
-1. Open Command Palette (Cmd+Shift+P or Ctrl+Shift+P)
-2. Type "Legesher: Select Language"
+1. Open the Command Palette (**Cmd+Shift+P** on macOS, **Ctrl+Shift+P** on Windows and Linux)
+2. Type **Legesher: Select Language** and press **Enter**
 3. Choose your language from the list
 
 {/* VISUAL: [Demo 7] GIF/screenshot of the language selector dropdown in command palette */}
@@ -74,24 +77,11 @@ Open a Python file and start typing! Legesher will:
 
 ## Supported Languages
 
-Legesher currently supports Python 3.10+ with translations in **56 languages**, including:
+Legesher supports Python 3.10+ in **56 languages**, from Amharic (አማርኛ) to Xhosa
+(isiXhosa), including right-to-left languages such as Arabic (العربية), Hebrew (עברית),
+Persian (فارسی) and Urdu (اردو).
 
-- **Amharic** (አማርኛ) · **Arabic** (العربية) · **Bengali** (বাংলা) · **Bosnian** (Bosanski)
-- **Burmese** (မြန်မာ) · **Catalan** (Català) · **Chinese** (中文) · **Croatian** (Hrvatski)
-- **Czech** (Čeština) · **Danish** (Dansk) · **Dutch** (Nederlands) · **English**
-- **Filipino** (Filipino) · **Finnish** (Suomi) · **French** (Français) · **Galician** (Galego)
-- **German** (Deutsch) · **Greek** (Ελληνικά) · **Gujarati** (ગુજરાતી) · **Hebrew** (עברית)
-- **Hindi** (हिन्दी) · **Hungarian** (Magyar) · **Indonesian** (Bahasa Indonesia) · **Irish** (Gaeilge)
-- **Italian** (Italiano) · **Japanese** (日本語) · **Kannada** (ಕನ್ನಡ) · **Korean** (한국어)
-- **Latvian** (Latviešu) · **Macedonian** (Македонски) · **Malay** (Bahasa Melayu) · **Malayalam** (മലയാളം)
-- **Mongolian** (Монгол) · **Nepali** (नेपाली) · **Norwegian** (Norsk) · **Persian** (فارسی)
-- **Polish** (Polski) · **Portuguese** (Português) · **Romanian** (Română) · **Russian** (Русский)
-- **Scottish Gaelic** (Gàidhlig) · **Serbian** (Српски) · **Sinhala** (සිංහල) · **Spanish** (Español)
-- **Sundanese** (Basa Sunda) · **Swahili** (Kiswahili) · **Swedish** (Svenska) · **Telugu** (తెలుగు)
-- **Thai** (ไทย) · **Turkish** (Türkçe) · **Ukrainian** (Українська) · **Urdu** (اردو)
-- **Uzbek** (O'zbek) · **Vietnamese** (Tiếng Việt) · **Welsh** (Cymraeg) · **Xhosa** (isiXhosa)
-
-See [Supported Languages](/reference/supported-languages/) for the complete list with details.
+See [Supported Languages](/reference/supported-languages/) for the full list.
 
 ## Features
 
@@ -180,7 +170,7 @@ Control what data Legesher collects:
 Change your coding language anytime:
 
 1. Click the language indicator in the status bar (bottom right)
-2. Or use Command Palette: "Legesher: Select Language"
+2. Or use the Command Palette: **Legesher: Select Language**
 
 ## Troubleshooting
 
@@ -188,15 +178,16 @@ Change your coding language anytime:
 
 1. Check that you have Python installed
 2. Open a `.py` file to trigger activation
-3. Check the Output panel: View > Output > Select "Legesher Language Server"
+3. Check the Output panel: **View** > **Output**, then choose **Legesher Language Server** in the
+   panel's dropdown
 
 ### Translations not showing?
 
-1. Hover over the Legesher item in the status bar. If it shows a warning, the
+1. Hover over the **Legesher** item in the status bar. If it shows a warning, the
    language server was not found, and the tooltip names the package it needs
 2. Verify language selection: Check status bar
-3. Restart language server: Command Palette > "Legesher: Restart Language Server"
-4. Check for errors in Output panel
+3. Restart the language server: Command Palette > **Legesher: Restart Language Server**
+4. Check for errors in the **Output** panel
 
 {/* VISUAL: [Demo 13] Screenshot of status bar showing connection indicator states */}
 

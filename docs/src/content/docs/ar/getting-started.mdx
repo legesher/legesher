@@ -19,8 +19,9 @@ import LocalizedCode from '../../../components/LocalizedCode.astro';
 
 ثبّته من VS Code Marketplace:
 
-- ابحث عن "Legesher" في لوحة الامتدادات
-- انقر على "Install"
+- افتح لوحة الامتدادات (**Cmd+Shift+X** على macOS، و**Ctrl+Shift+X** على Windows وLinux)
+- ابحث عن **Legesher**
+- انقر على **Install**
 
 أو ثبّته يدويًا:
 
@@ -32,12 +33,13 @@ code --install-extension legesher.legesher-vscode
 
 ### 2. اختر لغتك
 
-بعد التثبيت سيظهر لك مربع حوار ترحيبي. انقر على **"Choose Your Language"** لاختيار اللغة التي تفضل البرمجة بها.
+عند تشغيل الامتداد لأول مرة، يفتح VS Code دليل **Get Started with Legesher**. في خطوة
+**Choose Your Target Language**، انقر على **Select Language** واختر لغتك.
 
 أو يدويًا:
 
-1. افتح لوحة الأوامر (Cmd+Shift+P أو Ctrl+Shift+P)
-2. اكتب "Legesher: Select Language"
+1. افتح لوحة الأوامر (**Cmd+Shift+P** على macOS، و**Ctrl+Shift+P** على Windows وLinux)
+2. اكتب **Legesher: Select Language** ثم اضغط **Enter**
 3. اختر لغتك من القائمة
 
 {/* VISUAL: [Demo 7] GIF/screenshot of the language selector dropdown in command palette */}
@@ -55,24 +57,11 @@ code --install-extension legesher.legesher-vscode
 
 ## اللغات المدعومة
 
-يدعم Legesher حاليًا Python 3.10 وما بعده مع ترجمات إلى **56 لغة**، من بينها:
+يدعم Legesher حاليًا Python 3.10 وما بعده مع ترجمات إلى **56 لغة**، من الأمهرية (አማርኛ) إلى
+الخوسية (isiXhosa)، ومنها لغات تُكتب من اليمين إلى اليسار مثل العربية والعبرية (עברית) والفارسية
+(فارسی) والأردية (اردو).
 
-- **الأمهرية** (አማርኛ) · **العربية** · **البنغالية** (বাংলা) · **البوسنية** (Bosanski)
-- **البورمية** (မြန်မာ) · **الكتالانية** (Català) · **الصينية** (中文) · **الكرواتية** (Hrvatski)
-- **التشيكية** (Čeština) · **الدنماركية** (Dansk) · **الهولندية** (Nederlands) · **الإنجليزية** (English)
-- **الفلبينية** (Filipino) · **الفنلندية** (Suomi) · **الفرنسية** (Français) · **الجاليكية** (Galego)
-- **الألمانية** (Deutsch) · **اليونانية** (Ελληνικά) · **الغوجاراتية** (ગુજરાતી) · **العبرية** (עברית)
-- **الهندية** (हिन्दी) · **المجرية** (Magyar) · **الإندونيسية** (Bahasa Indonesia) · **الأيرلندية** (Gaeilge)
-- **الإيطالية** (Italiano) · **اليابانية** (日本語) · **الكنادية** (ಕನ್ನಡ) · **الكورية** (한국어)
-- **اللاتفية** (Latviešu) · **المقدونية** (Македонски) · **الملايوية** (Bahasa Melayu) · **المالايالامية** (മലയാളം)
-- **المنغولية** (Монгол) · **النيبالية** (नेपाली) · **النرويجية** (Norsk) · **الفارسية** (فارسی)
-- **البولندية** (Polski) · **البرتغالية** (Português) · **الرومانية** (Română) · **الروسية** (Русский)
-- **الغيلية الاسكتلندية** (Gàidhlig) · **الصربية** (Српски) · **السنهالية** (සිංහල) · **الإسبانية** (Español)
-- **السوندية** (Basa Sunda) · **السواحيلية** (Kiswahili) · **السويدية** (Svenska) · **التيلوغوية** (తెలుగు)
-- **التايلاندية** (ไทย) · **التركية** (Türkçe) · **الأوكرانية** (Українська) · **الأردية** (اردو)
-- **الأوزبكية** (O'zbek) · **الفيتنامية** (Tiếng Việt) · **الويلزية** (Cymraeg) · **الخوسية** (isiXhosa)
-
-راجع [اللغات المدعومة](/ar/reference/supported-languages/) للاطلاع على القائمة الكاملة بالتفاصيل.
+راجع [اللغات المدعومة](/ar/reference/supported-languages/) للاطلاع على القائمة الكاملة.
 
 ## الميزات
 
@@ -160,7 +149,7 @@ definir ejemplo_manejo_errores():
 غيّر لغة البرمجة في أي وقت:
 
 1. انقر على مؤشر اللغة في شريط الحالة (أسفل يمين النافذة)
-2. أو استخدم لوحة الأوامر: "Legesher: Select Language"
+2. أو استخدم لوحة الأوامر: **Legesher: Select Language**
 
 ## استكشاف الأخطاء وإصلاحها
 
@@ -168,13 +157,14 @@ definir ejemplo_manejo_errores():
 
 1. تأكد من أن Python مثبت لديك
 2. افتح ملف `.py` لتشغيل التفعيل
-3. راجع لوحة الإخراج: View > Output > اختر "Legesher Language Server"
+3. راجع لوحة الإخراج: **View** > **Output** ثم اختر **Legesher Language Server** من القائمة المنسدلة
+   في اللوحة
 
 ### الترجمات لا تظهر؟
 
 1. تحقق من اختيار اللغة: راجع شريط الحالة
-2. أعد تشغيل خادم اللغة: لوحة الأوامر > "Legesher: Restart Language Server"
-3. ابحث عن الأخطاء في لوحة الإخراج
+2. أعد تشغيل خادم اللغة: لوحة الأوامر > **Legesher: Restart Language Server**
+3. ابحث عن الأخطاء في لوحة **Output**
 
 {/* VISUAL: [Demo 13] Screenshot of status bar showing connection indicator states */}
 

@@ -149,11 +149,11 @@ uv run legesher git setup --language es
 The Legesher VS Code extension is available in pre-beta:
 
 1. **Install the extension from the VS Code Marketplace:**
-   - In VS Code: Extensions → search "Legesher" → Install
+   - In VS Code: **Extensions** → search **Legesher** → **Install**
    - Or run `code --install-extension legesher.legesher-vscode`
    - To use a `.vsix` instead, download it from the latest `vscode-v` release on the
-     [releases page](https://github.com/legesher/legesher/releases), then Extensions → `...` menu →
-     "Install from VSIX..."
+     [releases page](https://github.com/legesher/legesher/releases), then **Extensions** → **...** menu →
+     **Install from VSIX...**
 
 2. **Install the language server** (hover, completion, diagnostics and keyword highlighting):
 
