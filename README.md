@@ -163,8 +163,9 @@ The Legesher VS Code extension is available in pre-beta:
    uv tool install legesher-language-server
    ```
 
-   `legesher-lsp` has to be on the `PATH` VS Code sees, or the `legesher.serverCommand` setting has to hold
-   its full path.
+   If the installer warns that its bin directory is not on your `PATH`, run `pipx ensurepath` or
+   `uv tool update-shell`, then restart VS Code. `legesher-lsp` has to be on the `PATH` VS Code sees, or the
+   `legesher.serverCommand` setting has to hold its full path.
 
 3. **Features included:**
    - Language selector with 56 languages
