@@ -26,7 +26,7 @@ import langs from '../../.astro/integrations/legesher-snippets/snippet-langs.jso
       const current = document.documentElement.dataset.snippetLang || 'en';
       if ([...sel.options].some((o) => o.value === current)) sel.value = current;
       sel.addEventListener('change', () => {
-        localStorage.setItem(KEY, sel.value);
+        try { localStorage.setItem(KEY, sel.value); } catch (e) { /* storage blocked: this page still switches */ }
         if (sel.value === 'en') delete document.documentElement.dataset.snippetLang;
         else document.documentElement.dataset.snippetLang = sel.value;
         pickers().forEach((other) => {
