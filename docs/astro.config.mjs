@@ -2,7 +2,13 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import vercel from '@astrojs/vercel';
+import { readFileSync } from 'node:fs';
 import { legesherSnippets } from './integrations/legesher-snippets.mjs';
+
+// Codes with a snippet variant, from the committed artifact the picker also reads.
+const snippetLangs = JSON.parse(
+	readFileSync(new URL('./generated/snippet-langs.json', import.meta.url), 'utf-8'),
+).map((/** @type {{ code: string }} */ l) => l.code);
 
 // https://astro.build/config
 export default defineConfig({
@@ -20,11 +26,10 @@ export default defineConfig({
 			head: [
 				{
 					// The code language starts as the reader's stored pick, else the
-					// page language (<html lang>), else English. A language with no
-					// snippet variant has no CSS rule, so English shows.
+					// page language (<html lang>), else English. A stored or page
+					// language with no snippet variant falls through to the next.
 					tag: 'script',
-					content:
-						"(()=>{var d=document.documentElement,l=null;try{l=localStorage.getItem('legesher-snippet-lang');}catch(e){}if(!l)l=(d.lang||'en').split('-')[0].toLowerCase();if(l!=='en')d.dataset.snippetLang=l;})();",
+					content: `(()=>{var k=${JSON.stringify(snippetLangs)},d=document.documentElement,l=null;try{l=localStorage.getItem('legesher-snippet-lang');}catch(e){}if(k.indexOf(l)<0)l=(d.lang||'en').split('-')[0].toLowerCase();if(k.indexOf(l)<0)l='en';if(l!=='en')d.dataset.snippetLang=l;})();`,
 				},
 			],
 			logo: {
