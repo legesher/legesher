@@ -19,8 +19,9 @@ import LocalizedCode from '../../../components/LocalizedCode.astro';
 
 Instálala desde el VS Code Marketplace:
 
-- Busca "Legesher" en el panel de extensiones
-- Haz clic en "Install"
+- Abre el panel de extensiones (**Cmd+Shift+X** en macOS, **Ctrl+Shift+X** en Windows y Linux)
+- Busca **Legesher**
+- Haz clic en **Install**
 
 O instálala manualmente:
 
@@ -32,12 +33,14 @@ code --install-extension legesher.legesher-vscode
 
 ### 2. Selecciona tu idioma
 
-Después de la instalación verás un cuadro de diálogo de bienvenida. Haz clic en **"Choose Your Language"** para seleccionar el idioma en el que quieres programar.
+La guía **Get Started with Legesher** se abre después de instalar la extensión o la primera vez
+que abres un archivo de Python. En el paso **Choose Your Target Language**, haz clic en
+**Select Language** y elige tu idioma.
 
 O hazlo manualmente:
 
-1. Abre la paleta de comandos (Cmd+Shift+P o Ctrl+Shift+P)
-2. Escribe "Legesher: Select Language"
+1. Abre la paleta de comandos (**Cmd+Shift+P** en macOS, **Ctrl+Shift+P** en Windows y Linux)
+2. Escribe **Legesher: Select Language** y pulsa **Enter**
 3. Elige tu idioma de la lista
 
 {/* VISUAL: [Demo 7] GIF/screenshot of the language selector dropdown in command palette */}
@@ -55,24 +58,11 @@ Abre un archivo de Python y empieza a escribir. Legesher hará lo siguiente:
 
 ## Idiomas compatibles
 
-Legesher es actualmente compatible con Python 3.10+ con traducciones a **56 idiomas**, entre ellos:
+Legesher es compatible con Python 3.10+ en **56 idiomas**, del amárico (አማርኛ) al xhosa
+(isiXhosa), incluidos idiomas que se escriben de derecha a izquierda, como el árabe (العربية),
+el hebreo (עברית), el persa (فارسی) y el urdu (اردو).
 
-- **Amárico** (አማርኛ) · **Árabe** (العربية) · **Bengalí** (বাংলা) · **Bosnio** (Bosanski)
-- **Birmano** (မြန်မာ) · **Catalán** (Català) · **Chino** (中文) · **Croata** (Hrvatski)
-- **Checo** (Čeština) · **Danés** (Dansk) · **Neerlandés** (Nederlands) · **Inglés** (English)
-- **Filipino** (Filipino) · **Finés** (Suomi) · **Francés** (Français) · **Gallego** (Galego)
-- **Alemán** (Deutsch) · **Griego** (Ελληνικά) · **Guyaratí** (ગુજરાતી) · **Hebreo** (עברית)
-- **Hindi** (हिन्दी) · **Húngaro** (Magyar) · **Indonesio** (Bahasa Indonesia) · **Irlandés** (Gaeilge)
-- **Italiano** (Italiano) · **Japonés** (日本語) · **Canarés** (ಕನ್ನಡ) · **Coreano** (한국어)
-- **Letón** (Latviešu) · **Macedonio** (Македонски) · **Malayo** (Bahasa Melayu) · **Malayalam** (മലയാളം)
-- **Mongol** (Монгол) · **Nepalí** (नेपाली) · **Noruego** (Norsk) · **Persa** (فارسی)
-- **Polaco** (Polski) · **Portugués** (Português) · **Rumano** (Română) · **Ruso** (Русский)
-- **Gaélico escocés** (Gàidhlig) · **Serbio** (Српски) · **Cingalés** (සිංහල) · **Español**
-- **Sundanés** (Basa Sunda) · **Suajili** (Kiswahili) · **Sueco** (Svenska) · **Telugu** (తెలుగు)
-- **Tailandés** (ไทย) · **Turco** (Türkçe) · **Ucraniano** (Українська) · **Urdu** (اردو)
-- **Uzbeko** (O'zbek) · **Vietnamita** (Tiếng Việt) · **Galés** (Cymraeg) · **Xhosa** (isiXhosa)
-
-Consulta [Idiomas compatibles](/es/reference/supported-languages/) para ver la lista completa con detalles.
+Consulta [Idiomas compatibles](/es/reference/supported-languages/) para ver la lista completa.
 
 ## Funcionalidades
 
@@ -161,7 +151,7 @@ Controla qué datos recopila Legesher:
 Cambia tu idioma de programación en cualquier momento:
 
 1. Haz clic en el indicador de idioma de la barra de estado (abajo a la derecha)
-2. O usa la paleta de comandos: "Legesher: Select Language"
+2. O usa la paleta de comandos: **Legesher: Select Language**
 
 ## Solución de problemas
 
@@ -169,13 +159,14 @@ Cambia tu idioma de programación en cualquier momento:
 
 1. Comprueba que tienes Python instalado
 2. Abre un archivo `.py` para activar la extensión
-3. Revisa el panel de salida: View > Output > selecciona "Legesher Language Server"
+3. Revisa el panel de salida: **View** > **Output** y elige **Legesher Language Server** en el menú
+   desplegable del panel
 
 ### ¿No aparecen las traducciones?
 
 1. Verifica la selección de idioma: revisa la barra de estado
-2. Reinicia el servidor de lenguaje: paleta de comandos > "Legesher: Restart Language Server"
-3. Busca errores en el panel de salida
+2. Reinicia el servidor de lenguaje: paleta de comandos > **Legesher: Restart Language Server**
+3. Busca errores en el panel **Output**
 
 {/* VISUAL: [Demo 13] Screenshot of status bar showing connection indicator states */}
 

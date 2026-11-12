@@ -61,11 +61,17 @@ Extensions (`Cmd+Shift+X`) → `...` menu → "Install from VSIX..." and select 
 
 The extension does not bundle its language server. It runs the command in
 `legesher.serverCommand`, which defaults to `legesher-lsp`. That command comes
-from the `legesher-language-server` Python package:
+from the `legesher-language-server` Python package. Install it with a tool
+installer, so that `legesher-lsp` works outside any project environment:
 
 ```bash
-pip install legesher-language-server
+pipx install legesher-language-server
+# or
+uv tool install legesher-language-server
 ```
+
+If the installer warns that its bin directory is not on your `PATH`, run
+`pipx ensurepath` or `uv tool update-shell`, then restart VS Code.
 
 `legesher-lsp` has to be on the `PATH` VS Code sees, or `legesher.serverCommand`
 has to hold its full path.
