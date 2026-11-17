@@ -1,0 +1,18 @@
+id: ok-editor
+release: null
+package: legesher-vscode 0.1.8
+badge: improved
+surface: editor
+title:
+  en: Hover a word to see Python's own
+  es: Pasa el cursor sobre una palabra para ver la de Python
+  ar: مرِّر المؤشر على كلمة لترى كلمة Python الأصلية
+why:
+  en: Rest the pointer on any localized keyword and the editor shows the word Python uses.
+  es: Deja el puntero sobre cualquier palabra clave localizada y el editor muestra la palabra que usa Python.
+  ar: ضع المؤشر على أي كلمة مفتاحية مترجَمة، فيعرض المحرِّر الكلمة التي تستخدمها Python.
+covers: [language server hover]
+file_name: divide.py
+steps:
+  - open_file: divide.py
+  - hover: def

@@ -1,0 +1,5 @@
+se intentó 10 / 2
+5.0
+no se puede dividir 1 entre cero
+se intentó 1 / 0
+None
