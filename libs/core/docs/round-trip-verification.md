@@ -148,6 +148,7 @@ class Layer(str, Enum):
     COMMENTS = "comments"
     STRINGS = "strings"
     COLLISION = "collision"            # identifier spelled like a pack term
+    PUNCTUATION = "punctuation"        # native mark in code position, read as ASCII
 
 def classify_divergence(divergence, expected_source, actual_source, pack, *, native_side) -> Layer | None
 def classified(divergences, expected_source, actual_source, pack, *, native_side) -> list[Divergence]
@@ -189,6 +190,16 @@ Correctness requirements the review established, each pinned by a test:
   downstream consumer to the wrong action: the skill filed pack bugs against
   correct packs, the demo verifier hard-failed on them, and the eval matrix
   bucketed them as hand-translated keywords.
+- **Native punctuation is named only when it is the whole difference.** The
+  engine reads `،` `؛` `，` `；` `：` `（` `）` in code position as ASCII and never
+  writes them (`native_punctuation`), so source typed with one runs and comes
+  back with the ASCII mark. A line that differs from its return only by that
+  reading classifies as `PUNCTUATION`. A line with a second difference behind
+  the mark classifies by that difference, so no layer is credited as clean
+  while its divergence sits after a comma. Tokens for the expected side are
+  taken from the source as the engine reads it: from CPython 3.12 the
+  tokenizer lexes `否则：` as one name, and the keyword inside it could not
+  otherwise be classified.
 - **Tokenization runs once per batch.** `classified()` builds both token
   indexes once and classifies every divergence against them. Re-tokenizing
   both whole sources per divergence measured quadratic — ~24 CPU-hours for a
@@ -200,6 +211,7 @@ Why the classes matter — each maps to a different action:
 | --- | --- | --- |
 | keywords / builtins / exceptions / implicit_params | the deterministic layer failed: pack or engine defect | the pack, or the engine |
 | collision | an identifier is spelled like a pack rendering | known class (CORE-1840); not a pack bug |
+| punctuation | the source uses native punctuation in code position; it runs, and the return writes ASCII | nothing in the pack or engine; the author keeps the mark or types the ASCII one |
 | identifiers | expected today — canonical form retains native identifiers (CORE-1841) | nothing; disclosed, not failed |
 | comments / strings | the writer's fuzzy layer drifted | the writer's own output |
 
@@ -290,7 +302,8 @@ versions nothing.
 
 ```text
 legesher: round-trip VERIFIED — es→en→es · exercised: builtins, keywords ·
-not covered: comments, identifiers, strings (CORE-1841) · grammar 3.13
+not covered: collision, comments, exceptions, identifiers, implicit_params,
+punctuation, strings (CORE-1841) · grammar 3.13
 ```
 
 ```text

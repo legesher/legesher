@@ -28,6 +28,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Protocol
 
 from legesher_core.name_positions import SOFT_KEYWORDS, name_roles, word_at
+from legesher_core.native_punctuation import fold_code_punctuation
 from legesher_core.utils import merge_exception_translations
 
 if TYPE_CHECKING:
@@ -71,6 +72,12 @@ class Layer(str, Enum):
     ``COLLISION`` is an identifier spelled like a pack rendering
     (CORE-1840's ``e``/``and``) - a known class, not a pack defect, and the
     distinction routes readers to entirely different fixes.
+
+    ``PUNCTUATION`` is a line whose only difference is native punctuation
+    in code position (``native_punctuation``): the engine read the mark as
+    its ASCII equivalent and the return leg wrote ASCII. That is by design,
+    not a defect in any layer; the source runs, and the author's file keeps
+    the mark as typed.
     """
 
     KEYWORDS = "keywords"
@@ -81,6 +88,7 @@ class Layer(str, Enum):
     COMMENTS = "comments"
     STRINGS = "strings"
     COLLISION = "collision"
+    PUNCTUATION = "punctuation"
 
 
 @dataclass(frozen=True)
@@ -381,6 +389,21 @@ def _first_differing_index(
     return None
 
 
+def _as_read(expected_source: str) -> tuple[str, list[str] | None]:
+    """The expected source as the engine reads it, and its lines.
+
+    The engine reads native punctuation in code position as ASCII, one
+    character for one, so tokens are taken from that reading: on CPython
+    3.12 and later the tokenizer lexes ``否则：`` as one name, and the keyword
+    in it could never be classified. The lines are ``None`` when the source
+    holds no such mark, which is every source written with ASCII marks.
+    """
+    read = fold_code_punctuation(expected_source)
+    if read is expected_source:
+        return read, None
+    return read, read.splitlines(keepends=True)
+
+
 def _classify(
     divergence: Divergence,
     expected_lines: dict[int, list[tokenize.TokenInfo]],
@@ -388,9 +411,17 @@ def _classify(
     sections: _PackSections,
     *,
     native_side: bool,
+    read_lines: list[str] | None = None,
 ) -> Layer | None:
     if divergence.offset is None:
         return None
+    if read_lines is not None and divergence.line <= len(read_lines):
+        # Punctuation is named only when it is the whole difference on the
+        # line. With a second difference behind the mark, the tokens below
+        # (taken from the same reading) find that one, so a layer is never
+        # credited as clean while its divergence hides behind a comma.
+        if _strip_terminator(read_lines[divergence.line - 1]) == divergence.actual:
+            return Layer.PUNCTUATION
     expected_line = expected_lines.get(divergence.line, [])
     actual_line = actual_lines.get(divergence.line, [])
     if not expected_line:
@@ -426,12 +457,14 @@ def classify_divergence(
     Thin wrapper over the batch path; classifying many divergences goes
     through ``classified``, which tokenizes each source once.
     """
+    read, read_lines = _as_read(expected_source)
     return _classify(
         divergence,
-        _tokens_by_line(expected_source),
+        _tokens_by_line(read),
         _tokens_by_line(actual_source),
         _pack_sections(pack),
         native_side=native_side,
+        read_lines=read_lines,
     )
 
 
@@ -447,14 +480,20 @@ def classified(
     whole batch - per-divergence re-tokenization measured quadratic
     (~24 CPU-hours at SOURCE_MAX_CHARS with every line differing).
     """
-    expected_lines = _tokens_by_line(expected_source)
+    read, read_lines = _as_read(expected_source)
+    expected_lines = _tokens_by_line(read)
     actual_lines = _tokens_by_line(actual_source)
     sections = _pack_sections(pack)
     return [
         replace(
             d,
             layer=_classify(
-                d, expected_lines, actual_lines, sections, native_side=native_side
+                d,
+                expected_lines,
+                actual_lines,
+                sections,
+                native_side=native_side,
+                read_lines=read_lines,
             ),
         )
         for d in divergences
@@ -894,10 +933,14 @@ def verify_round_trip(
         else ()
     )
 
-    findings = _name_findings(source, forward, pack, native_side=native_side)
+    # Names are read from the source as the engine reads it (native
+    # punctuation in code position as ASCII, same length, same offsets), so
+    # a keyword typed against a fullwidth colon is still seen as a name.
+    read = fold_code_punctuation(source)
+    findings = _name_findings(read, forward, pack, native_side=native_side)
 
     clean = count == 0
-    exercised = _layers_exercised(source, pack, native_side=native_side)
+    exercised = _layers_exercised(read, pack, native_side=native_side)
     if clean:
         verified = exercised
     elif count == len(found) and all(d.layer is not None for d in found):

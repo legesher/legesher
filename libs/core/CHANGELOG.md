@@ -9,6 +9,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Native punctuation in code position is read as its ASCII mark, in the token
+  and tree-sitter backends and in every pack: the Arabic comma and semicolon
+  (`،` `؛`) and the fullwidth comma, semicolon, colon and parentheses
+  (`，` `；` `：` `（` `）`). A program typed on an Arabic, Persian or Urdu
+  keyboard, or with a Chinese, Japanese or Korean input method in fullwidth
+  mode, now translates and runs; before, the English form failed with
+  `SyntaxError: invalid character`. A mark inside a string, a comment or the
+  text of an f-string is kept byte for byte. One character is replaced by one,
+  so line and column numbers do not move. `legesher_core.native_punctuation`
+  holds the table (`NATIVE_PUNCTUATION`) and the function both backends call
+  (`fold_code_punctuation`).
+- The engine reads these marks and never writes them. A translation for
+  display and the return leg of a round trip carry ASCII punctuation, and the
+  git clean filter does not touch punctuation, so git stores the file as
+  typed. Source that uses a native mark in code position therefore runs and
+  does not come back byte-identical: the round-trip check reports
+  `round-trip FAILED` with the new layer `punctuation`, which names the cause
+  and credits the other layers the trip exercised. `RoundTripReport`'s keys
+  and schema version are unchanged; `layer` gains the value `punctuation`.
+
 ## [0.25.1] - 2026-11-03
 
 ## [0.25.0] - 2026-11-03

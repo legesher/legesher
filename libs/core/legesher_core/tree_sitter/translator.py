@@ -15,6 +15,7 @@ from pathlib import Path
 from .parser import PythonParser, TreeSitterError
 from ..exceptions import InvalidCodeError
 from ..name_positions import kept_names
+from ..native_punctuation import fold_code_punctuation
 from ..token_mapper import TokenMapper
 from ..types import CulturalCommentMetadata
 from ..utils import (
@@ -144,11 +145,13 @@ class TreeSitterTranslator:
 
         Translation process:
         1. Normalize line endings (\\r\\n → \\n)
-        2. Parse source code using tree-sitter
-        3. Walk the parse tree for keyword and identifier nodes
-        4. Identify builtin function calls in the AST
-        5. Replace keywords/builtins with translated versions
-        6. Reconstruct code preserving exact formatting
+        2. Read native punctuation in code position as its ASCII mark
+           (``native_punctuation``)
+        3. Parse source code using tree-sitter
+        4. Walk the parse tree for keyword and identifier nodes
+        5. Identify builtin function calls in the AST
+        6. Replace keywords/builtins with translated versions
+        7. Reconstruct code preserving exact formatting
 
         Args:
             source_code: Python source code to translate
@@ -195,6 +198,11 @@ class TreeSitterTranslator:
 
         # Normalize line endings for consistent processing
         source_code = normalize_newlines(source_code)
+
+        # Native punctuation in code position is read as its ASCII mark, by
+        # the same function the token backend calls, so the two backends
+        # cannot disagree about what is code and what is prose.
+        source_code = fold_code_punctuation(source_code)
 
         try:
             # Parse code with tree-sitter

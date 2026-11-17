@@ -9,6 +9,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **core**: the Arabic comma and semicolon (`،` `؛`) and the fullwidth comma,
+  semicolon, colon and parentheses (`，` `；` `：` `（` `）`) are read as their
+  ASCII marks in code position, so a program typed on an Arabic keyboard or
+  with a fullwidth input method translates and runs. Strings and comments keep
+  their marks. The engine never writes these marks: display and the return leg
+  of a round trip carry ASCII punctuation, git stores the file as typed, and
+  the round-trip check reports such source under the new layer `punctuation`.
+
 ### Changed
 
 - **release**: the foundation release on GitHub carries only the `legesher`,
