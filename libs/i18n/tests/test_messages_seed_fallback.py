@@ -2,11 +2,12 @@
 
 No wheel and no clone carries ``translations.db`` (CORE-1794), so the default
 path :func:`load_catalog` resolves has nothing behind it on an installed
-package or a fresh checkout. The catalog then comes from the tracked seed the
-database is filled from. None of these tests needs the real database: the
-parity test fills a synthetic one through the real activation script and
-seeder, then holds the seed reading to it, so an install renders exactly what
-a seeded checkout renders.
+package or a fresh checkout. The English side of the catalog then comes from
+the tracked seed the database is filled from, and the translations from the
+language packs (CORE-2630); the seed carries none. None of these tests needs
+the real database: the parity test fills a synthetic one through the real
+activation script and seeder, then holds the seed reading to it, so an
+install reads the English side exactly as a seeded checkout does.
 """
 
 from __future__ import annotations
@@ -91,13 +92,12 @@ def one_template_seed(implementation: str = "cpython") -> dict:
 
 @pytest.fixture(autouse=True)
 def no_packs(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Hide the language packs, so these tests read the seed's translations.
+    """Hide the language packs, so these tests see the seed alone.
 
-    Since the Spanish and Arabic packs carry their messages, an install
-    reads translations from the pack and the seed's own translations only
-    for a locale whose pack carries none (CORE-2630). This module holds that
-    seed path; the pack path is held by ``test_messages_pack_join.py`` and
-    ``translate/test_export_messages.py``.
+    An install reads translations only from the packs (CORE-2630). This
+    module holds the seed's English side and what the catalog does without
+    any translations; the pack path is held by ``test_messages_pack_join.py``
+    and ``translate/test_export_messages.py``.
     """
     monkeypatch.setattr(LanguagePackLoader, "_discover_packs", lambda self: {})
 
@@ -140,30 +140,23 @@ class TestNoDatabase:
         # what checks it, so every file the package ships has to pass it.
         assert validate_seed(json.loads(path.read_text(encoding="utf-8"))) == []
 
-    def test_spanish_header_comes_from_the_seed(self, default_db: Path):
+    def test_without_a_pack_the_header_is_the_interpreters_own(self, default_db: Path):
         rules = load_catalog("es", "3.12")
         (header,) = [r for r in rules if r.key == "traceback.header"]
-        assert header.template == "Rastreo (llamada más reciente al final):"
-        assert header.localized
-        assert header.status == "machine"
+        assert header.template == "Traceback (most recent call last):"
+        assert not header.localized
+        assert header.status is None
 
-    @pytest.mark.parametrize(
-        ("locale", "name", "expected"),
-        [
-            ("ar", "عَدَّادٌ", "الاسم 'عَدَّادٌ' غير معرف"),
-            ("es", "गिनती", "el nombre 'गिनती' no está definido"),
-        ],
-    )
-    def test_slot_values_survive_byte_for_byte(
-        self, default_db, locale, name, expected
-    ):
-        # Vocalised Arabic and Devanagari carry combining marks a lossy
-        # normalization would drop or reorder.
+    @pytest.mark.parametrize("locale", ["ar", "es", "xx"])
+    @pytest.mark.parametrize("name", ["عَدَّادٌ", "गिनती", "ශ්\u200dරී"])
+    def test_slot_values_survive_byte_for_byte(self, default_db, locale, name):
+        # Vocalised Arabic, Devanagari and Sinhala with ZWJ carry combining
+        # marks and joiners a lossy normalization would drop or reorder.
         rules = load_catalog(locale, "3.12")
         rendered = match_message(
             rules, f"name '{name}' is not defined", key_prefix="NameError"
         )
-        assert rendered == expected
+        expected = f"name '{name}' is not defined"
         assert rendered.encode("utf-8") == expected.encode("utf-8")
 
     def test_reading_the_seed_creates_no_database(self, default_db: Path):
@@ -182,13 +175,13 @@ class TestNoDatabase:
         )
         assert from_seed == from_db
 
-    def test_seed_defaults_read_as_the_seeder_stores_them(
+    def test_a_translation_left_in_a_seed_never_reaches_the_catalog(
         self, default_db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):
-        # The tracked seeds state every status and most tiers explicitly, so
-        # the parity cases above never reach the defaults. This seed leaves
-        # both to them: no status (the seeder stores machine) and no
-        # template-level version_added (the file's applies).
+        # The seeder still stores a seed's translations in a database (a
+        # maintainer checkout reads them from there), but an install reads
+        # only the seed's English side. This seed also leaves its tier to the
+        # file-level default, which the parity cases above never reach.
         seed = one_template_seed()
         seeds = tmp_path / "seeds"
         seeds.mkdir()
@@ -199,9 +192,20 @@ class TestNoDatabase:
         seeded = operational_db(tmp_path / "seeded" / "translations.db", {"es"})
         activate(seeded)
         seed_database(seeded, seed)
-        from_seed = load_catalog("es", "3.12")
-        assert from_seed == load_catalog("es", "3.12", db_path=seeded)
-        assert [(r.status, r.version_added) for r in from_seed] == [("machine", "3.10")]
+        (from_seed,) = load_catalog("es", "3.12")
+        (from_db,) = load_catalog("es", "3.12", db_path=seeded)
+        assert (from_db.template, from_db.status) == ("división entre cero", "machine")
+        assert (from_seed.template, from_seed.localized, from_seed.status) == (
+            "division by zero",
+            False,
+            None,
+        )
+        assert (from_seed.key, from_seed.matcher, from_seed.version_added) == (
+            from_db.key,
+            from_db.matcher,
+            from_db.version_added,
+        )
+        assert from_seed.version_added == "3.10"
 
 
 class TestDatabaseRowsWin:
@@ -277,6 +281,4 @@ class TestSeedUnavailable:
             json.dumps(one_template_seed(), ensure_ascii=False), encoding="utf-8"
         )
         monkeypatch.setattr(messages, "SEED_DIR", seeds)
-        assert [r.template for r in load_catalog("es", "3.12")] == [
-            "división entre cero"
-        ]
+        assert [r.template for r in load_catalog("es", "3.12")] == ["division by zero"]

@@ -157,8 +157,10 @@ skips an incomplete section rather than shipping it half-filled.
 `schema_v2.sql`. They are outside the published corpus. In order, each with `--db <db>` and `--dry-run`:
 
 1. `scripts/activate_messages_partition.py`: once per database.
-2. `scripts/seed_message_templates.py --seed legesher_i18n/db/seeds/<catalog>.json`: templates plus their first
-   translations, append-once. A reworded message is a new row under a new `version_added`, never an edit.
+2. `scripts/seed_message_templates.py --seed legesher_i18n/db/seeds/<catalog>.json`: templates, append-once. A
+   reworded message is a new row under a new `version_added`, never an edit. The CPython seed carries no
+   translations (a test holds that); on a fresh database, `scripts/translate/import_yaml_to_db.py` restores the
+   ones the packs carry.
 3. `scripts/add_message_locale.py --file <addition>.json`: a new locale for existing templates. All-or-nothing,
    checks placeholder parity and bidi hygiene, requires `source`. Never INSERT directly and never invent a
    `version_added` for a locale.
@@ -175,9 +177,9 @@ A database whose partition predates the provenance columns is refused by every w
 No wheel or clone carries the database, so whenever the default database carries no message catalog,
 `load_catalog` reads the English side from `legesher_i18n/db/seeds/` and the translations from the locale's pack
 (its `messages` section, `docs/pack-messages.md`). A pack entry is used only when its `src` matches the English
-template; otherwise that message prints as CPython printed it. A locale whose pack carries no messages still
-reads the seed's own translations. es and ar render from their packs. A translation that reaches the database
-only through step 3 or 4 is not in an installed package until step 5 puts it in a pack.
+template; otherwise that message prints as CPython printed it. A locale whose pack carries no messages prints
+CPython's own text. A translation that reaches the database only through step 3 or 4 is not in an installed
+package until step 5 puts it in a pack.
 
 ## Adding a language
 

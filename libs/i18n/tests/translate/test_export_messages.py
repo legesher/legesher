@@ -6,8 +6,10 @@ must keep messages out, and the shipped packs themselves: a pack's messages
 render exactly what the seed's translations rendered before the packs carried
 them.
 
-The English side is the real tracked seed. Translations that are not the
-seed's are vocalised Arabic and Devanagari.
+The English side is the real tracked seed. The seed carries no translations,
+so a test database takes them from the shipped packs through the reverse
+import, which every such test therefore exercises. Translations that are not
+the packs' are vocalised Arabic and Devanagari.
 """
 
 from __future__ import annotations
@@ -48,9 +50,22 @@ SEED = json.loads(
         Path(legesher_i18n.__file__).parent / "db" / "seeds" / "cpython_messages.json"
     ).read_text(encoding="utf-8")
 )
-#: Every locale the seed translates, read from the seed.
-SEED_LOCALES = sorted(
-    {tag for template in SEED["templates"] for tag in template.get("translations", {})}
+
+
+def shipped_messages(locale: str) -> list[tuple[str, dict]]:
+    """``(version, messages)`` per shipped pack file of ``locale``, oldest first."""
+    packs = PACKS_DIR / locale / f"legesher_i18n_python_{locale}" / "packs"
+    found = []
+    for path in sorted(packs.glob("3.*.yml"), key=lambda p: int(p.stem.split(".")[1])):
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        if data.get("messages"):
+            found.append((path.stem, data["messages"]))
+    return found
+
+
+#: Every locale whose shipped pack carries messages, read from the packs.
+PACK_LOCALES = sorted(
+    locale for locale in get_active_language_codes() if shipped_messages(locale)
 )
 
 
@@ -61,11 +76,17 @@ def strip_translations(seed: dict) -> dict:
     return copy
 
 
-def make_db(path: Path, seed: dict | None = SEED) -> TranslationDatabase:
-    """A v1 database with the messages partition, seeded from ``seed``."""
+def make_db(
+    path: Path, seed: dict | None = SEED, *, from_packs: bool = True
+) -> TranslationDatabase:
+    """A v1 database with the messages partition, seeded from ``seed``.
+
+    With ``from_packs``, the shipped packs' messages are imported too, so the
+    database holds what a maintainer's does.
+    """
     db = TranslationDatabase(db_path=str(path))
     connection = db._get_connection()
-    for tag in [*SEED_LOCALES, "zz"]:
+    for tag in [*PACK_LOCALES, "zz"]:
         connection.execute(
             "INSERT OR IGNORE INTO languages (code, name, native_name) VALUES (?, ?, ?)",
             (tag, tag, tag),
@@ -74,19 +95,19 @@ def make_db(path: Path, seed: dict | None = SEED) -> TranslationDatabase:
     activate(path)
     if seed is not None:
         seed_database(path, seed)
+        if from_packs:
+            for locale in PACK_LOCALES:
+                imported, skipped = import_yaml_to_db.import_pack_messages(locale, path)
+                assert imported and not skipped, (locale, imported, skipped)
     return db
 
 
 def by_version(locale: str) -> dict[str, dict[str, str]]:
-    """``{version: {key: text}}`` the seed gives ``locale``, placed by tier."""
-    placed: dict[str, dict[str, str]] = {}
-    for template in SEED["templates"]:
-        translation = template.get("translations", {}).get(locale)
-        if translation is None:
-            continue
-        version = template.get("version_added", SEED["version_added"])
-        placed.setdefault(version, {})[template["key"]] = translation["template"]
-    return placed
+    """``{version: {key: text}}`` as the shipped pack of ``locale`` places them."""
+    return {
+        version: {key: entry["text"] for key, entry in messages["cpython"].items()}
+        for version, messages in shipped_messages(locale)
+    }
 
 
 @pytest.fixture
@@ -109,7 +130,7 @@ def no_database(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 class TestBuild:
-    @pytest.mark.parametrize("locale", SEED_LOCALES)
+    @pytest.mark.parametrize("locale", PACK_LOCALES)
     def test_every_translation_is_placed_by_its_tier(self, seeded, tmp_path, locale):
         built = YAMLExporter(
             seeded, output_dir=tmp_path / "out"
@@ -486,13 +507,13 @@ def stored(path: Path, locale: str) -> dict[tuple[str, str], tuple[str, str]]:
 
 
 class TestImport:
-    @pytest.mark.parametrize("locale", SEED_LOCALES)
+    @pytest.mark.parametrize("locale", PACK_LOCALES)
     def test_export_then_import_restores_every_translation(
         self, seeded, tmp_path, locale
     ):
         packs = export_pack(seeded, tmp_path / "pack", locale)
         fresh = tmp_path / "fresh.db"
-        make_db(fresh, strip_translations(SEED)).close()
+        make_db(fresh, from_packs=False).close()
         imported, skipped = import_yaml_to_db.import_pack_messages(
             locale, fresh, packs_dir=packs
         )
@@ -505,7 +526,7 @@ class TestImport:
     def test_a_dry_run_writes_nothing(self, seeded, tmp_path):
         packs = export_pack(seeded, tmp_path / "pack", "es")
         fresh = tmp_path / "fresh.db"
-        make_db(fresh, strip_translations(SEED)).close()
+        make_db(fresh, from_packs=False).close()
         counts = import_yaml_to_db.import_pack_messages(
             "es", fresh, packs_dir=packs, dry_run=True
         )
@@ -543,7 +564,7 @@ class TestImport:
             encoding="utf-8",
         )
         fresh = tmp_path / "fresh.db"
-        make_db(fresh, strip_translations(SEED)).close()
+        make_db(fresh, from_packs=False).close()
         assert import_yaml_to_db.import_pack_messages("es", fresh, packs_dir=packs) == (
             0,
             1,
@@ -554,7 +575,7 @@ class TestImport:
         packs = export_pack(seeded, tmp_path / "pack", "es")
         (packs / "3.11.yml").write_text("messages: [unclosed\n", encoding="utf-8")
         fresh = tmp_path / "fresh.db"
-        make_db(fresh, strip_translations(SEED)).close()
+        make_db(fresh, from_packs=False).close()
         imported, skipped = import_yaml_to_db.import_pack_messages(
             "es", fresh, packs_dir=packs
         )
@@ -563,7 +584,7 @@ class TestImport:
 
     def test_the_script_imports_the_shipped_messages(self, tmp_path, monkeypatch):
         fresh = tmp_path / "fresh.db"
-        make_db(fresh, strip_translations(SEED)).close()
+        make_db(fresh, from_packs=False).close()
         monkeypatch.setattr(
             sys,
             "argv",
@@ -656,7 +677,7 @@ class TestImport:
             encoding="utf-8",
         )
         fresh = tmp_path / "fresh.db"
-        make_db(fresh, strip_translations(SEED)).close()
+        make_db(fresh, from_packs=False).close()
         assert import_yaml_to_db.import_pack_messages("zz", fresh, packs_dir=packs) == (
             1,
             1,
@@ -671,7 +692,7 @@ class TestImport:
     def test_imported_rows_say_where_they_came_from(self, seeded, tmp_path):
         packs = export_pack(seeded, tmp_path / "pack", "es")
         fresh = tmp_path / "fresh.db"
-        make_db(fresh, strip_translations(SEED)).close()
+        make_db(fresh, from_packs=False).close()
         import_yaml_to_db.import_pack_messages("es", fresh, packs_dir=packs)
         connection = sqlite3.connect(fresh)
         try:
@@ -852,7 +873,7 @@ def test_message_translations_stay_out_of_the_vocabulary_config() -> None:
     """Until the endorsement keys are content-addressed, no message
     translation is published to the dataset, though packs carry them."""
     texts = shipped_message_texts()
-    assert set(SEED_LOCALES) <= set(texts), "the packs were expected to carry messages"
+    assert PACK_LOCALES and set(PACK_LOCALES) <= set(texts)
     export_packs = _load_export_packs()
     rows = export_packs.build_rows(
         export_packs.pack_locales(), export_packs.load_registry()
@@ -893,29 +914,25 @@ def seeded_catalog(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 PARITY = [
     (locale, version)
-    for locale in SEED_LOCALES
+    for locale in PACK_LOCALES
     for version in LanguagePackLoader().list_available_versions()
 ]
 
 
 @pytest.mark.parametrize(("locale", "version"), PARITY)
-def test_a_shipped_pack_renders_what_the_seed_rendered(
+def test_a_shipped_pack_renders_what_its_database_renders(
     no_database, seeds_without_translations, seeded_catalog, locale, version
 ) -> None:
-    """Moving the translations into the packs changes no rendered line.
-
-    The seed the catalog reads here has no translations, so every localized
-    line on the pack side came from the pack.
-    """
+    """An install (seed plus pack) and a maintainer checkout (database) agree."""
     from_pack = load_catalog(locale, version)
-    from_seed = load_catalog(locale, version, db_path=seeded_catalog)
+    from_db = load_catalog(locale, version, db_path=seeded_catalog)
     assert [(r.key, r.template, r.status, r.localized) for r in from_pack] == [
-        (r.key, r.template, r.status, r.localized) for r in from_seed
+        (r.key, r.template, r.status, r.localized) for r in from_db
     ]
     assert any(r.localized for r in from_pack)
 
 
-@pytest.mark.parametrize("locale", SEED_LOCALES)
+@pytest.mark.parametrize("locale", PACK_LOCALES)
 def test_a_shipped_pack_is_where_the_translations_come_from(
     no_database, seeds_without_translations, locale
 ) -> None:

@@ -420,9 +420,10 @@ TARGET = "python"
 #: The tracked catalog the ``messages`` category is built from (CORE-1679).
 #: The seed file, not the database: the database is untracked (CORE-1794) and
 #: an export input that is not a tracked file breaks "regenerable from the
-#: tag". Only the English side is read -- the seed also carries ar/es
-#: translations, and those stay out of ``vocabulary`` until the
-#: content-addressed-key gate (CORE-1565) clears.
+#: tag". The seed is the English side only. Message translations live in the
+#: packs' ``messages`` sections, which this export does not read, so they stay
+#: out of ``vocabulary`` until the content-addressed-key gate (CORE-1565)
+#: clears.
 MESSAGES_SEED = _I18N_ROOT / "legesher_i18n" / "db" / "seeds" / "cpython_messages.json"
 
 #: SPDX identifier declared for the published compilation. Matches the monorepo

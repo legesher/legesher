@@ -14,7 +14,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **i18n**: a language pack can carry the translations of Python's error
   messages and traceback lines, in a `messages` section exported from the
   translations database. The Spanish and Arabic packs carry theirs, and
-  tracebacks render from the pack with no change in output. [CORE-2630]
+  tracebacks render from the pack with no change in output. The catalog that
+  ships in `legesher-i18n` now holds only the English side. [CORE-2630]
 
 ### Changed
 

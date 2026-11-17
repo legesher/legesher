@@ -131,13 +131,12 @@ In order:
    version. When the pack has no file for that version (an interpreter
    newer than the pack), its newest file below that version is read: every
    entry is joined by fingerprint, so a message the newer Python reworded
-   stays in English and every other message stays translated. A pack that
-   carries messages for the implementation is the only source of
-   translations: a message it does not translate prints in English.
-4. When there is no pack for the locale, no pack file at or below that
-   Python version, the pack does not load, or it carries no messages for
-   the implementation, the translations in the seed are used. This step
-   exists while packs are gaining the section.
+   stays in English and every other message stays translated. The pack is
+   the only source of translations: a message it does not translate prints
+   in English, and so does every message when there is no pack for the
+   locale, no pack file at or below that Python version, the pack does not
+   load, or it carries no messages for the implementation. The seed carries
+   no translations.
 
 The pack's minimum interpreter version is not enforced for this read. That
 guard protects translated identifiers that would not parse on an older

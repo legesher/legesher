@@ -58,6 +58,8 @@ DEVANAGARI = "नाम '{name}' परिभाषित नहीं है"
 DEVANAGARI_OLD = "स्थानीय चर '{name}' का उपयोग मान देने से पहले किया गया"
 DEVANAGARI_NEW = "स्थानीय चर '{name}' तक नहीं पहुँचा जा सकता, उसका कोई मान नहीं है"
 ARABIC_HEADER = "التَّتَبُّعُ (آخِرُ اسْتِدْعَاءٍ فِي الأَسْفَلِ):"
+#: A header translation that only the synthetic database carries.
+DB_HEADER = "ट्रेसबैक (डेटाबेस से, सबसे हाल की कॉल अंत में):"
 
 
 def _version(text: str) -> tuple[int, int]:
@@ -155,13 +157,18 @@ def write_pack(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 
 @pytest.fixture(scope="module")
 def seeded_db(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """A database filled from the CPython seed by the real seeder."""
-    locales = {tag for t in SEED["templates"] for tag in t.get("translations", {})}
-    path = operational_db(
-        tmp_path_factory.mktemp("seeded") / "translations.db", locales
-    )
+    """A database filled from the CPython seed by the real seeder.
+
+    The tracked seed carries no translations, so this one adds a Spanish
+    header that exists only in the database: a test that sees it knows the
+    database was read.
+    """
+    seed = json.loads(json.dumps(SEED))
+    (header,) = [t for t in seed["templates"] if t["key"] == "traceback.header"]
+    header["translations"] = {"es": {"template": DB_HEADER}}
+    path = operational_db(tmp_path_factory.mktemp("seeded") / "translations.db", {"es"})
     activate(path)
-    seed_database(path, SEED)
+    seed_database(path, seed)
     return path
 
 
@@ -651,16 +658,22 @@ class TestJoin:
 
 
 class TestPrecedence:
-    """The synthetic pack here is ``es``, a locale the seed also translates."""
+    """The synthetic pack here is ``es``, a locale whose real pack has messages."""
 
-    SEED_HEADER = "Rastreo (llamada más reciente al final):"
+    ENGLISH_HEADER = "Traceback (most recent call last):"
 
     def header_only(self) -> dict:
         return cpython(traceback__header=entry(ARABIC_HEADER, "traceback.header"))
 
-    def test_the_seed_translates_the_header(self) -> None:
-        (template,) = [t for t in SEED["templates"] if t["key"] == "traceback.header"]
-        assert template["translations"]["es"]["template"] == self.SEED_HEADER
+    def english_header(self, version: str = "3.12") -> None:
+        found = rule(load_catalog("es", version), "traceback.header")
+        assert found.template == self.ENGLISH_HEADER
+        assert not found.localized
+
+    def test_the_seed_carries_no_translations(self) -> None:
+        """Translations live in the packs; one left in the seed would never ship."""
+        carrying = [t["key"] for t in SEED["templates"] if t.get("translations")]
+        assert carrying == []
 
     def test_the_pack_supplies_translations_when_there_is_no_database(
         self, no_database, write_pack
@@ -673,7 +686,7 @@ class TestPrecedence:
     def test_a_pack_with_messages_is_the_only_source_of_translations(
         self, no_database, write_pack
     ):
-        """A partial pack is partial: the seed does not fill its gaps."""
+        """A partial pack is partial: nothing fills its gaps."""
         write_pack({"3.10": self.header_only()}, language="es")
         found = rule(load_catalog("es", "3.12"), "NameError.not_defined")
         assert not found.localized
@@ -684,7 +697,7 @@ class TestPrecedence:
     ):
         write_pack({"3.10": self.header_only()}, language="es")
         rules = load_catalog("es", "3.12", db_path=seeded_db)
-        assert rule(rules, "traceback.header").template == self.SEED_HEADER
+        assert rule(rules, "traceback.header").template == DB_HEADER
 
     def test_an_explicit_database_without_rows_is_an_empty_catalog(
         self, no_database, write_pack, tmp_path
@@ -698,16 +711,12 @@ class TestPrecedence:
         monkeypatch.setattr("legesher_i18n.messages.default_db_path", lambda: seeded_db)
         write_pack({"3.10": self.header_only()}, language="es")
         assert rule(load_catalog("es", "3.12"), "traceback.header").template == (
-            self.SEED_HEADER
+            DB_HEADER
         )
 
-    def test_a_pack_without_messages_reads_the_seeds_translations(
-        self, no_database, write_pack
-    ):
+    def test_a_pack_without_messages_is_english(self, no_database, write_pack):
         write_pack({"3.10": {}}, language="es")
-        assert rule(load_catalog("es", "3.12"), "traceback.header").template == (
-            self.SEED_HEADER
-        )
+        self.english_header()
 
     def test_messages_for_another_implementation_do_not_count(
         self, no_database, write_pack
@@ -724,13 +733,9 @@ class TestPrecedence:
             },
             language="es",
         )
-        assert rule(load_catalog("es", "3.12"), "traceback.header").template == (
-            self.SEED_HEADER
-        )
+        self.english_header()
 
-    def test_a_pack_that_does_not_load_reads_the_seeds_translations(
-        self, no_database, write_pack
-    ):
+    def test_a_pack_that_does_not_load_is_english(self, no_database, write_pack):
         module = write_pack({"3.10": self.header_only()}, language="es")
         (module / "packs" / "3.10.yml").write_text(
             "language: es\ntarget: python\nversion: '3.10'\nnot_a_section: {}\n",
@@ -738,9 +743,7 @@ class TestPrecedence:
         )
         with pytest.raises(Exception, match="not_a_section"):
             LanguagePackLoader().load("es", "python", "3.10")
-        assert rule(load_catalog("es", "3.10"), "traceback.header").template == (
-            self.SEED_HEADER
-        )
+        self.english_header("3.10")
 
     def test_an_interpreter_newer_than_the_pack_reads_its_newest_file(
         self, no_database, write_pack

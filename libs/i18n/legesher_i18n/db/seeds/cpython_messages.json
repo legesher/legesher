@@ -1,7 +1,7 @@
 {
  "implementation": "cpython",
  "version_added": "3.10",
- "provenance": "CPython error-message catalog (CORE-1679). Templates transcribed from CPython 3.10-3.13 runtime messages; 3.12+ rewordings and additions are separate rows keyed by version_added, and the 3.11 UnboundLocalError rewording carries version_removed on the pre-3.11 row. Spanish and Arabic enter at status='machine' pending native review (pack-correction policy: best-effort native-quality, review-gated). Stored templates are clean of bidi controls; isolation of interpolated values is applied at render time per the ratified code-vs-display policy.",
+ "provenance": "CPython error-message catalog (CORE-1679). Templates transcribed from CPython 3.10-3.13 runtime messages; 3.12+ rewordings and additions are separate rows keyed by version_added, and the 3.11 UnboundLocalError rewording carries version_removed on the pre-3.11 row. Translations are not in this file: each language pack carries its own, in its `messages` section, exported from the translations database (CORE-2630). Stored templates are clean of bidi controls; isolation of interpolated values is applied at render time per the ratified code-vs-display policy.",
  "templates": [
   {
    "key": "traceback.header",
@@ -9,16 +9,6 @@
    "placeholders": [],
    "matcher": "^Traceback \\(most recent call last\\):$",
    "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "Rastreo (llamada más reciente al final):",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "التتبع (آخر استدعاء في الأسفل):",
-     "status": "machine"
-    }
-   },
    "cluster": "traceback"
   },
   {
@@ -41,16 +31,6 @@
    ],
    "matcher": "^File \"(?P<file>[^\"]+)\", line (?P<line>\\d+), in (?P<name>.+)$",
    "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "Archivo \"{file}\", línea {line}, en {name}",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الملف \"{file}\"، السطر {line}، في {name}",
-     "status": "machine"
-    }
-   },
    "cluster": "traceback"
   },
   {
@@ -69,16 +49,6 @@
    ],
    "matcher": "^File \"(?P<file>[^\"]+)\", line (?P<line>\\d+)$",
    "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "Archivo \"{file}\", línea {line}",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الملف \"{file}\"، السطر {line}",
-     "status": "machine"
-    }
-   },
    "cluster": "traceback"
   },
   {
@@ -87,16 +57,6 @@
    "placeholders": [],
    "matcher": "^The above exception was the direct cause of the following exception:$",
    "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "La excepción anterior fue la causa directa de la siguiente excepción:",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "كان الاستثناء أعلاه السبب المباشر في الاستثناء التالي:",
-     "status": "machine"
-    }
-   },
    "cluster": "traceback"
   },
   {
@@ -105,16 +65,6 @@
    "placeholders": [],
    "matcher": "^During handling of the above exception, another exception occurred:$",
    "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "Durante el manejo de la excepción anterior, ocurrió otra excepción:",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "أثناء معالجة الاستثناء أعلاه، حدث استثناء آخر:",
-     "status": "machine"
-    }
-   },
    "cluster": "traceback"
   },
   {
@@ -122,85 +72,35 @@
    "template_en": "invalid syntax",
    "placeholders": [],
    "matcher": "^invalid syntax$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "sintaxis inválida",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "بناء جملة غير صالح",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "SyntaxError.invalid_syntax_comma",
    "template_en": "invalid syntax. Perhaps you forgot a comma?",
    "placeholders": [],
    "matcher": "^invalid syntax\\. Perhaps you forgot a comma\\?$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "sintaxis inválida. ¿Quizás olvidaste una coma?",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "بناء جملة غير صالح. ربما نسيت فاصلة؟",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "SyntaxError.missing_parentheses_print",
    "template_en": "Missing parentheses in call to 'print'. Did you mean print(...)?",
    "placeholders": [],
    "matcher": "^Missing parentheses in call to 'print'\\. Did you mean print\\(\\.\\.\\.\\)\\?$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "Faltan paréntesis en la llamada a 'print'. ¿Quisiste decir print(...)?",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "أقواس مفقودة في استدعاء 'print'. هل قصدت print(...)؟",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "SyntaxError.cannot_assign_literal",
    "template_en": "cannot assign to literal here. Maybe you meant '==' instead of '='?",
    "placeholders": [],
    "matcher": "^cannot assign to literal here\\. Maybe you meant '==' instead of '='\\?$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "no se puede asignar a un literal aquí. ¿Quizás quisiste decir '==' en lugar de '='?",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "لا يمكن الإسناد إلى قيمة حرفية هنا. ربما قصدت '==' بدلا من '='؟",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "SyntaxError.cannot_assign_expression",
    "template_en": "cannot assign to expression here. Maybe you meant '==' instead of '='?",
    "placeholders": [],
    "matcher": "^cannot assign to expression here\\. Maybe you meant '==' instead of '='\\?$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "no se puede asignar a una expresión aquí. ¿Quizás quisiste decir '==' en lugar de '='?",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "لا يمكن الإسناد إلى تعبير هنا. ربما قصدت '==' بدلا من '='؟",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "SyntaxError.unterminated_string",
@@ -213,17 +113,7 @@
     }
    ],
    "matcher": "^unterminated string literal \\(detected at line (?P<line>\\d+)\\)$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "literal de cadena sin terminar (detectado en la línea {line})",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "قيمة نصية غير منتهية (اكتشفت عند السطر {line})",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "SyntaxError.unterminated_triple_string",
@@ -236,17 +126,7 @@
     }
    ],
    "matcher": "^unterminated triple-quoted string literal \\(detected at line (?P<line>\\d+)\\)$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "literal de cadena con comillas triples sin terminar (detectado en la línea {line})",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "قيمة نصية ثلاثية الاقتباس غير منتهية (اكتشفت عند السطر {line})",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "SyntaxError.bracket_never_closed",
@@ -258,85 +138,35 @@
     }
    ],
    "matcher": "^'(?P<bracket>[(\\[{])' was never closed$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "'{bracket}' nunca se cerró",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "'{bracket}' لم يغلق أبدا",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "SyntaxError.expected_colon",
    "template_en": "expected ':'",
    "placeholders": [],
    "matcher": "^expected ':'$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "se esperaba ':'",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "كان متوقعا ':'",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "SyntaxError.leading_zeros",
    "template_en": "leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers",
    "placeholders": [],
    "matcher": "^leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "no se permiten ceros iniciales en literales enteros decimales; usa el prefijo 0o para enteros octales",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الأصفار البادئة غير مسموح بها في الأعداد الصحيحة العشرية؛ استخدم البادئة 0o للأعداد الثمانية",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "SyntaxError.import_from_suggestion",
    "template_en": "Did you mean to use 'from ... import ...' instead?",
    "placeholders": [],
    "matcher": "^Did you mean to use 'from \\.\\.\\. import \\.\\.\\.' instead\\?$",
-   "version_added": "3.12",
-   "translations": {
-    "es": {
-     "template": "¿Quisiste decir 'from ... import ...'?",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "هل قصدت استخدام 'from ... import ...' بدلا من ذلك؟",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.12"
   },
   {
    "key": "SyntaxError.fstring_valid_expression",
    "template_en": "f-string: valid expression required before '}'",
    "placeholders": [],
    "matcher": "^f-string: valid expression required before '}'$",
-   "version_added": "3.12",
-   "translations": {
-    "es": {
-     "template": "f-string: se requiere una expresión válida antes de '}'",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "f-string: مطلوب تعبير صالح قبل '}'",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.12"
   },
   {
    "key": "NameError.not_defined",
@@ -348,17 +178,7 @@
     }
    ],
    "matcher": "^name '(?P<name>[^']+)' is not defined$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "el nombre '{name}' no está definido",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الاسم '{name}' غير معرف",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "NameError.self_suggestion",
@@ -370,17 +190,7 @@
     }
    ],
    "matcher": "^name '(?P<name>[^']+)' is not defined\\. Did you mean: 'self\\.(?P=name)'\\?$",
-   "version_added": "3.12",
-   "translations": {
-    "es": {
-     "template": "el nombre '{name}' no está definido. ¿Quisiste decir: 'self.{name}'?",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الاسم '{name}' غير معرف. هل قصدت: 'self.{name}'؟",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.12"
   },
   {
    "key": "NameError.not_defined_did_you_mean",
@@ -396,17 +206,7 @@
     }
    ],
    "matcher": "^name '(?P<name>[^']+)' is not defined\\. Did you mean: '(?P<suggestion>[^']+)'\\?$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "el nombre '{name}' no está definido. ¿Quisiste decir: '{suggestion}'?",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الاسم '{name}' غير معرف. هل قصدت: '{suggestion}'؟",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "NameError.forgot_import",
@@ -422,17 +222,7 @@
     }
    ],
    "matcher": "^name '(?P<name>[^']+)' is not defined\\. Did you forget to import '(?P<module>[^']+)'\\?$",
-   "version_added": "3.12",
-   "translations": {
-    "es": {
-     "template": "el nombre '{name}' no está definido. ¿Olvidaste importar '{module}'?",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الاسم '{name}' غير معرف. هل نسيت استيراد '{module}'؟",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.12"
   },
   {
    "key": "TypeError.unsupported_operand",
@@ -452,17 +242,7 @@
     }
    ],
    "matcher": "^unsupported operand type\\(s\\) for (?P<op>[^:]+): '(?P<left>[^']+)' and '(?P<right>[^']+)'$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "tipo(s) de operando no soportado(s) para {op}: '{left}' y '{right}'",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "نوع (أنواع) معاملات غير مدعومة للعملية {op}: '{left}' و'{right}'",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "TypeError.not_callable",
@@ -474,17 +254,7 @@
     }
    ],
    "matcher": "^'(?P<obj_type>[^']+)' object is not callable$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "el objeto '{obj_type}' no es invocable",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الكائن '{obj_type}' غير قابل للاستدعاء",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "TypeError.not_subscriptable",
@@ -496,17 +266,7 @@
     }
    ],
    "matcher": "^'(?P<obj_type>[^']+)' object is not subscriptable$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "el objeto '{obj_type}' no es subindexable",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الكائن '{obj_type}' لا يقبل الفهرسة",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "TypeError.not_iterable",
@@ -518,17 +278,7 @@
     }
    ],
    "matcher": "^'(?P<obj_type>[^']+)' object is not iterable$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "el objeto '{obj_type}' no es iterable",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الكائن '{obj_type}' غير قابل للتكرار",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "TypeError.arg_count",
@@ -550,17 +300,7 @@
     }
    ],
    "matcher": "^(?P<func>.+)\\(\\) takes (?P<expected>\\d+) positional arguments? but (?P<given>\\d+) (?:was|were) given$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "{func}() acepta {expected} argumentos posicionales pero se dieron {given}",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "{func}() تقبل {expected} من الوسائط الموضعية لكن أعطيت {given}",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "TypeError.missing_argument",
@@ -581,17 +321,7 @@
     }
    ],
    "matcher": "^(?P<func>.+)\\(\\) missing (?P<count>\\d+) required positional argument: '(?P<name>[^']+)'$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "a {func}() le falta {count} argumento posicional requerido: '{name}'",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "{func}() تنقصها {count} وسيطة موضعية مطلوبة: '{name}'",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "TypeError.missing_arguments",
@@ -612,17 +342,7 @@
     }
    ],
    "matcher": "^(?P<func>.+)\\(\\) missing (?P<count>\\d+) required positional arguments: (?P<names>.+)$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "a {func}() le faltan {count} argumentos posicionales requeridos: {names}",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "{func}() تنقصها {count} من الوسائط الموضعية المطلوبة: {names}",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "TypeError.can_only_concatenate_str",
@@ -634,17 +354,7 @@
     }
    ],
    "matcher": "^can only concatenate str \\(not \"(?P<other_type>[^\"]+)\"\\) to str$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "solo se puede concatenar str (no \"{other_type}\") a str",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "يمكن ضم str فقط (وليس \"{other_type}\") إلى str",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "AttributeError.no_attribute",
@@ -660,17 +370,7 @@
     }
    ],
    "matcher": "^'(?P<obj_type>[^']+)' object has no attribute '(?P<attr>[^']+)'$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "el objeto '{obj_type}' no tiene el atributo '{attr}'",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الكائن '{obj_type}' ليس له السمة '{attr}'",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "AttributeError.no_attribute_did_you_mean",
@@ -690,17 +390,7 @@
     }
    ],
    "matcher": "^'(?P<obj_type>[^']+)' object has no attribute '(?P<attr>[^']+)'\\. Did you mean: '(?P<suggestion>[^']+)'\\?$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "el objeto '{obj_type}' no tiene el atributo '{attr}'. ¿Quisiste decir: '{suggestion}'?",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الكائن '{obj_type}' ليس له السمة '{attr}'. هل قصدت: '{suggestion}'؟",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "AttributeError.module_no_attribute",
@@ -716,17 +406,7 @@
     }
    ],
    "matcher": "^module '(?P<module>[^']+)' has no attribute '(?P<attr>[^']+)'$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "el módulo '{module}' no tiene el atributo '{attr}'",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "الوحدة '{module}' ليس لها السمة '{attr}'",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "ImportError.cannot_import_name",
@@ -742,17 +422,7 @@
     }
    ],
    "matcher": "^cannot import name '(?P<name>[^']+)' from '(?P<module>[^']+)'.*$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "no se puede importar el nombre '{name}' desde '{module}'",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "لا يمكن استيراد الاسم '{name}' من '{module}'",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "ModuleNotFoundError.no_module",
@@ -764,51 +434,21 @@
     }
    ],
    "matcher": "^No module named '(?P<module>[^']+)'$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "No existe ningún módulo llamado '{module}'",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "لا توجد وحدة باسم '{module}'",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "IndexError.list_index",
    "template_en": "list index out of range",
    "placeholders": [],
    "matcher": "^list index out of range$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "índice de lista fuera de rango",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "فهرس القائمة خارج النطاق",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "IndexError.string_index",
    "template_en": "string index out of range",
    "placeholders": [],
    "matcher": "^string index out of range$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "índice de cadena fuera de rango",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "فهرس السلسلة النصية خارج النطاق",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "KeyError.key",
@@ -820,17 +460,7 @@
     }
    ],
    "matcher": "^(?P<key>.+)$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "{key}",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "{key}",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "ValueError.int_literal",
@@ -846,17 +476,7 @@
     }
    ],
    "matcher": "^invalid literal for int\\(\\) with base (?P<base>\\d+): (?P<value>.+)$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "literal inválido para int() con base {base}: {value}",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "قيمة حرفية غير صالحة للدالة int() بالأساس {base}: {value}",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "ValueError.too_many_unpack",
@@ -869,17 +489,7 @@
     }
    ],
    "matcher": "^too many values to unpack \\(expected (?P<expected>\\d+)\\)$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "demasiados valores para desempaquetar (se esperaban {expected})",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "قيم أكثر من اللازم لفك التجميع (المتوقع {expected})",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "ValueError.not_enough_unpack",
@@ -897,68 +507,28 @@
     }
    ],
    "matcher": "^not enough values to unpack \\(expected (?P<expected>\\d+), got (?P<got>\\d+)\\)$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "no hay suficientes valores para desempaquetar (se esperaban {expected}, se obtuvieron {got})",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "لا توجد قيم كافية لفك التجميع (المتوقع {expected}، الموجود {got})",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "ZeroDivisionError.division_by_zero",
    "template_en": "division by zero",
    "placeholders": [],
    "matcher": "^division by zero$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "división por cero",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "القسمة على صفر",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "ZeroDivisionError.float_division",
    "template_en": "float division by zero",
    "placeholders": [],
    "matcher": "^float division by zero$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "división de float por cero",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "قسمة عدد عشري على صفر",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "ZeroDivisionError.int_division_or_modulo",
    "template_en": "integer division or modulo by zero",
    "placeholders": [],
    "matcher": "^integer division or modulo by zero$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "división entera o módulo por cero",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "قسمة صحيحة أو باقي قسمة على صفر",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "IndentationError.expected_block",
@@ -975,68 +545,28 @@
     }
    ],
    "matcher": "^expected an indented block after '(?P<statement>[^']+)' statement on line (?P<line>\\d+)$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "se esperaba un bloque sangrado después de la sentencia '{statement}' en la línea {line}",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "كان متوقعا وجود كتلة بإزاحة بعد جملة '{statement}' في السطر {line}",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "IndentationError.unexpected_indent",
    "template_en": "unexpected indent",
    "placeholders": [],
    "matcher": "^unexpected indent$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "sangría inesperada",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "إزاحة غير متوقعة",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "IndentationError.unindent_mismatch",
    "template_en": "unindent does not match any outer indentation level",
    "placeholders": [],
    "matcher": "^unindent does not match any outer indentation level$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "la reducción de sangría no coincide con ningún nivel de sangría exterior",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "تقليل الإزاحة لا يطابق أي مستوى إزاحة خارجي",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "TabError.inconsistent",
    "template_en": "inconsistent use of tabs and spaces in indentation",
    "placeholders": [],
    "matcher": "^inconsistent use of tabs and spaces in indentation$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "uso inconsistente de tabulaciones y espacios en la sangría",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "استخدام غير متسق لعلامات الجدولة والمسافات في الإزاحة",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "FileNotFoundError.enoent",
@@ -1052,34 +582,14 @@
     }
    ],
    "matcher": "^\\[Errno (?P<errno>\\d+)\\] No such file or directory: (?P<filename>.+)$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "[Errno {errno}] No existe el archivo o directorio: {filename}",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "[Errno {errno}] لا يوجد ملف أو مجلد بهذا الاسم: {filename}",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "RecursionError.max_depth",
    "template_en": "maximum recursion depth exceeded",
    "placeholders": [],
    "matcher": "^maximum recursion depth exceeded.*$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "se excedió la profundidad máxima de recursión",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "تم تجاوز الحد الأقصى لعمق الاستدعاء الذاتي",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "UnboundLocalError.before_assignment",
@@ -1092,16 +602,6 @@
    ],
    "matcher": "^local variable '(?P<name>[^']+)' referenced before assignment$",
    "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "variable local '{name}' referenciada antes de su asignación",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "تمت الإشارة إلى المتغير المحلي '{name}' قبل إسناده",
-     "status": "machine"
-    }
-   },
    "version_removed": "3.11"
   },
   {
@@ -1114,85 +614,35 @@
     }
    ],
    "matcher": "^cannot access local variable '(?P<name>[^']+)' where it is not associated with a value$",
-   "version_added": "3.11",
-   "translations": {
-    "es": {
-     "template": "no se puede acceder a la variable local '{name}' donde no tiene un valor asociado",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "لا يمكن الوصول إلى المتغير المحلي '{name}' حيث لا ترتبط به قيمة",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.11"
   },
   {
    "key": "RuntimeError.generator_raised_stopiteration",
    "template_en": "generator raised StopIteration",
    "placeholders": [],
    "matcher": "^generator raised StopIteration$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "el generador lanzó StopIteration",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "أطلق المولد StopIteration",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "StopIteration.no_value",
    "template_en": "",
    "placeholders": [],
    "matcher": "^$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "KeyboardInterrupt.interrupt",
    "template_en": "",
    "placeholders": [],
    "matcher": "^$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   },
   {
    "key": "AssertionError.no_message",
    "template_en": "",
    "placeholders": [],
    "matcher": "^$",
-   "version_added": "3.10",
-   "translations": {
-    "es": {
-     "template": "",
-     "status": "machine"
-    },
-    "ar": {
-     "template": "",
-     "status": "machine"
-    }
-   }
+   "version_added": "3.10"
   }
  ]
 }
