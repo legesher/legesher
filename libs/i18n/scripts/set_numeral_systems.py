@@ -20,9 +20,10 @@ The table is CLDR 46's ``native`` numbering system for each published locale
 when that system is a Unicode decimal-digit block, and ``latn`` otherwise:
 Amharic, Japanese, Korean and Sinhala, whose CLDR native system is ``latn``,
 and Chinese, whose native numerals (``〇一二三``, CLDR ``hanidec``) are not
-decimal digits Python reads. The separator is CLDR's decimal symbol for the
-native system (U+066B for Arabic, Persian and Urdu), and ``.`` for a language
-that writes ASCII digits, the mark a numeric literal in code uses.
+decimal digits Python reads. An empty separator is filled with the mark the
+row's numeral system is written with (``numerals.decimal_separator_for``:
+U+066B for Arabic-Indic and Extended Arabic-Indic, ``.`` otherwise, which is
+also the mark a numeric literal in code uses).
 
 Run it on a database that predates the identifiers, then regenerate the
 registry with ``legesher_i18n/scripts/generate_languages.py``. A new language
@@ -46,6 +47,7 @@ from legesher_i18n.db import TranslationDatabase, default_db_path
 from legesher_i18n.numerals import (
     DECIMAL_SEPARATORS,
     LATIN,
+    decimal_separator_for,
     is_known_numeral_system,
 )
 
@@ -109,13 +111,6 @@ NUMERAL_SYSTEMS: dict[str, str] = {
     "zh": LATIN,
 }
 
-#: Language code to its decimal separator, where it is not ``.``.
-SEPARATORS: dict[str, str] = {
-    "ar": "٫",  # ARABIC DECIMAL SEPARATOR
-    "fa": "٫",
-    "ur": "٫",
-}
-
 #: The values the column held before CLDR identifiers. ``thai`` was in that
 #: vocabulary too, and is also the CLDR identifier, so it is kept as it is.
 LEGACY_VALUES = frozenset(
@@ -163,7 +158,11 @@ def _resolve(code: str, system: str | None, separator: str | None) -> Row:
     else:
         new_system = None
     if separator is None:
-        new_separator = SEPARATORS.get(code, ".") if code in NUMERAL_SYSTEMS else None
+        # The mark the row's numeral system is written with, so the pair is
+        # always one the generator accepts.
+        new_separator = (
+            decimal_separator_for(new_system) if new_system is not None else None
+        )
     elif separator in DECIMAL_SEPARATORS:
         new_separator = separator
     else:

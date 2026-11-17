@@ -13,8 +13,8 @@ from legesher_i18n.language_registry import (
     get_decimal_separator,
     get_numeral_system,
 )
-from legesher_i18n.numerals import DECIMAL_SEPARATORS, is_known_numeral_system
-from scripts.set_numeral_systems import NUMERAL_SYSTEMS, SEPARATORS, main
+from legesher_i18n.numerals import decimal_separator_for, is_known_numeral_system
+from scripts.set_numeral_systems import NUMERAL_SYSTEMS, main
 
 #: Rows as the working database held them before CLDR identifiers.
 _LEGACY = [
@@ -77,8 +77,24 @@ def test_table_agrees_with_the_registry() -> None:
     for code in NUMERAL_SYSTEMS:
         assert is_known_numeral_system(NUMERAL_SYSTEMS[code]), code
         assert NUMERAL_SYSTEMS[code] == get_numeral_system(code), code
-        assert SEPARATORS.get(code, ".") == get_decimal_separator(code), code
-    assert set(SEPARATORS.values()) <= DECIMAL_SEPARATORS
+        assert decimal_separator_for(NUMERAL_SYSTEMS[code]) == get_decimal_separator(
+            code
+        ), code
+
+
+def test_empty_separator_takes_the_mark_of_the_recorded_system(tmp_path: Path) -> None:
+    # A recorded identifier is kept, and the separator filled beside it must
+    # be the one that system is written with, not the one the table implies.
+    db = _legacy_db(
+        tmp_path / "t.db", with_separator_column=True, extra=[("ta", "latn")]
+    )
+    conn = sqlite3.connect(db)
+    conn.execute("UPDATE languages SET numeral_system = 'latn' WHERE code = 'ar'")
+    conn.commit()
+    conn.close()
+    assert main(["--db", str(db)]) == 0
+    assert _values(db)["ar"] == ("latn", ".")
+    assert _values(db)["ta"] == ("latn", ".")
 
 
 def test_replaces_the_legacy_vocabulary(tmp_path: Path) -> None:
