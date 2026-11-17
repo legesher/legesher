@@ -15,13 +15,24 @@ Legesher.
 from __future__ import annotations
 
 import ast
+import functools
+import hashlib
+import importlib.util
+import io
+import json
 import re
+import sys
+import tokenize
 from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
 
-from generate_snippets import _nfc
+from generate_snippets import REPO_ROOT, _nfc, _validate_glossary, categorize_tokens
+
+# Format characters copy text may carry: Sinhala, Persian and other scripts
+# need the joiners in their words (identifiers from Python 3.13).
+ALLOWED_FORMAT_CHARS = frozenset({"‍", "‌"})
 
 PAGE_LANGUAGES = ("en", "es", "ar")
 # Hand-written names and strings exist for these languages only; every other
@@ -287,3 +298,122 @@ def load_stories(stories_dir: Path) -> list[Story]:
         ),
         key=lambda s: s.id,
     )
+
+
+@dataclass(frozen=True)
+class Variant:
+    """One language's version of a story: what the page shows, what Copy gives, what it prints."""
+
+    lang: str
+    rtl: bool
+    spans: list[tuple[str, str]]
+    copy_text: str
+    output: str | None
+    draft: bool
+
+
+@functools.lru_cache(maxsize=1)
+def _unicode_guard():
+    """The engine's Unicode guard, loaded by path: the module is dependency-free,
+    while importing the legesher_core package pulls in tree-sitter."""
+    path = REPO_ROOT / "libs" / "core" / "legesher_core" / "unicode_guard.py"
+    spec = importlib.util.spec_from_file_location("legesher_unicode_guard", path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = (
+        module  # dataclasses resolve annotations through sys.modules
+    )
+    spec.loader.exec_module(module)
+    return module
+
+
+def copy_text_issues(text: str) -> list[str]:
+    """Bidi controls, BOMs, tatweel and invisible characters in copy text, one line each."""
+    issues = _unicode_guard().scan_text(text, allowed_format_chars=ALLOWED_FORMAT_CHARS)
+    return [
+        f"{i.codepoint} ({i.char_name}, {i.kind}) at offset {i.offset}" for i in issues
+    ]
+
+
+def _sample_tokens(sample: str) -> list[tokenize.TokenInfo]:
+    return list(tokenize.generate_tokens(io.StringIO(sample).readline))
+
+
+def _apply_strings(
+    story: Story, lang: str, spans: list[tuple[str, str]]
+) -> list[tuple[str, str]]:
+    file = f"words.{lang}.yml"
+    strings = story.words[lang].strings
+    for source, localized in strings.items():
+        try:
+            ok = isinstance(ast.literal_eval(localized), str)
+        except (ValueError, SyntaxError):
+            ok = False
+        if not ok:
+            raise _fail(
+                story.path,
+                file,
+                f"strings[{source!r}]: {localized!r} is not a string literal",
+            )
+    used: set[str] = set()
+    out: list[tuple[str, str]] = []
+    for text, kind in spans:
+        if kind == "string" and text in strings:
+            used.add(text)
+            text = strings[text]
+        out.append((text, kind))
+    unused = sorted(set(strings) - used)
+    if unused:
+        raise _fail(
+            story.path,
+            file,
+            f"strings match nothing in sample.py: {', '.join(map(repr, unused))}",
+        )
+    return out
+
+
+def story_variants(story: Story, bundles: dict[str, dict]) -> dict[str, Variant]:
+    """One variant per pack language, English first: the engine's keywords plus, where a
+    word list exists, the hand-written names and strings. Raises StoryError for a word-list
+    entry that matches nothing and for copy text that carries a bidi or invisible character."""
+    sample_names = {
+        t.string for t in _sample_tokens(story.sample) if t.type == tokenize.NAME
+    }
+    variants: dict[str, Variant] = {}
+    for lang in ["en"] + sorted(code for code in bundles if code != "en"):
+        bundle = bundles[lang]
+        words = story.words.get(lang)
+        names = words.names if words else None
+        if words:
+            unused = sorted(set(words.names) - sample_names)
+            if unused:
+                raise _fail(
+                    story.path,
+                    f"words.{lang}.yml",
+                    f"names match nothing in sample.py: {', '.join(unused)}",
+                )
+            _validate_glossary(lang, story.id, words.names, bundle)
+        spans = categorize_tokens(story.sample, bundle, names)
+        if words:
+            spans = _apply_strings(story, lang, spans)
+        copy_text = "".join(text for text, _ in spans)
+        issues = copy_text_issues(copy_text)
+        if issues:
+            file = f"words.{lang}.yml" if words else "sample.py"
+            raise _fail(story.path, file, f"the {lang} copy text carries {issues[0]}")
+        variants[lang] = Variant(
+            lang=lang,
+            rtl=bool(bundle["rtl"]),
+            spans=spans,
+            copy_text=copy_text,
+            output=story.outputs.get(lang if words else "en"),
+            draft=words.draft if words else False,
+        )
+    return variants
+
+
+def variants_digest(variants: dict[str, Variant]) -> str:
+    """SHA-256 over each language's copy text and expected output, in language order."""
+    payload = [[lang, v.copy_text, v.output] for lang, v in variants.items()]
+    return hashlib.sha256(
+        json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()

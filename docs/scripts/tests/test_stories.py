@@ -1,4 +1,3 @@
-import shutil
 import sys
 from pathlib import Path
 
@@ -6,26 +5,9 @@ import pytest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _story_fixtures import FIXTURES, copy_story  # noqa: E402
 from stories import StoryError, load_stories, load_story  # noqa: E402
-
-FIXTURES = Path(__file__).resolve().parent / "fixtures" / "stories"
-
-
-def copy_story(
-    tmp_path: Path, name: str, edit=None, source: str = "ok-playground"
-) -> Path:
-    """Copy a fixture story to tmp_path/<name>, set its id to <name>, apply edit(story_yml_dict)."""
-    target = tmp_path / name
-    shutil.copytree(FIXTURES / source, target)
-    path = target / "story.yml"
-    data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    data["id"] = name
-    if edit:
-        edit(data)
-    path.write_text(
-        yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8"
-    )
-    return target
 
 
 def refused(story_dir: Path, file: str):
