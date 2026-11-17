@@ -133,13 +133,25 @@ class UnsupportedInterpreterError(LanguagePackError):
     :meth:`LanguagePackLoader.load` to bypass this check.
     """
 
-    def __init__(self, language: str, required_version: str, requested_version: str):
+    def __init__(
+        self,
+        language: str,
+        required_version: str,
+        requested_version: str,
+        *,
+        declared: bool = True,
+    ):
         self.language = language
         self.required_version = required_version
         self.requested_version = requested_version
+        why = (
+            f"declares python_version_min '{required_version}'"
+            if declared
+            else f"its oldest tier is {required_version}"
+        )
         super().__init__(
             f"Language pack '{language}' requires Python >= {required_version} "
-            f"(declares python_version_min '{required_version}'); cannot serve "
+            f"({why}); cannot serve "
             f"the {requested_version} pack — its identifiers are only valid on "
             f"Python {required_version}+. Load it on Python >= {required_version}, "
             "or pass enforce_min_interpreter=False to inspect the raw pack."

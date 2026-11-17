@@ -37,7 +37,7 @@ from legesher_i18n.schema_validator import SchemaValidator
 TIERS = LanguagePackLoader().list_available_versions("python")
 NEWEST = TIERS[-1]
 _major, _minor = (int(part) for part in NEWEST.split("."))
-#: One minor release past every shipped tier: Python 3.15 on 17 Nov 2026.
+#: One minor release past every shipped tier (3.15 while the packs end at 3.14).
 NEWER = f"{_major}.{_minor + 1}"
 OLDEST = TIERS[0]
 

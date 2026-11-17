@@ -47,7 +47,7 @@ def _shift(version: str, minors: int) -> str:
 TIERS = LanguagePackLoader().list_available_versions("python")
 NEWEST = TIERS[-1]
 OLDEST = TIERS[0]
-#: One minor release past every shipped tier: Python 3.15 on 17 Nov 2026.
+#: One minor release past every shipped tier (3.15 while the packs end at 3.14).
 NEWER = _shift(NEWEST, 1)
 #: One minor release below every shipped tier.
 OLDER = _shift(OLDEST, -1)
@@ -74,7 +74,7 @@ LANGUAGES = [
 @pytest.fixture(autouse=True)
 def _fresh_report_ledger(monkeypatch):
     """Each test starts with nothing logged yet; the ledger is per process."""
-    monkeypatch.setattr(pack_loader, "_REPORTED_NEWER_REQUESTS", set(), raising=False)
+    monkeypatch.setattr(pack_loader, "_REPORTED_NEWER_REQUESTS", set())
 
 
 def _sections(pack) -> dict[str, dict[str, str]]:
@@ -92,9 +92,14 @@ def _write(path: Path, body: str) -> None:
 
 
 def _tier(
-    language: str, version: str, *, floor: str | None = None, extends: str | None = None
+    language: str,
+    version: str,
+    *,
+    floor: str | None = None,
+    extends: str | None = None,
+    declare_floor: bool = True,
 ) -> str:
-    """A minimal valid pack file for one tier."""
+    """A minimal valid pack file for one tier; ``declare_floor=False`` omits metadata."""
     lines = [
         f"language: {language}",
         "target: python",
@@ -107,9 +112,9 @@ def _tier(
         f"  def: def_{version.replace('.', '_')}",
         "builtins: {}",
         "exceptions: {}",
-        "metadata:",
-        f"  python_version_min: '{floor or version}'",
     ]
+    if declare_floor:
+        lines += ["metadata:", f"  python_version_min: '{floor or version}'"]
     return "\n".join(lines) + "\n"
 
 
@@ -226,6 +231,36 @@ class TestTheRule:
         with pytest.raises(UnsupportedInterpreterError) as raised:
             loader.load("zz", "python", "3.12")
         assert "requires Python >= 3.13" in str(raised.value)
+
+    def test_a_pack_that_declares_no_floor_is_floored_at_its_oldest_tier(
+        self, tmp_path
+    ):
+        # The one case where only the explicit floor check stops a downward
+        # serve: no tier declares python_version_min, so nothing else refuses.
+        zz = _fake_pack(
+            tmp_path,
+            "zz",
+            {
+                "3.12": _tier("zz", "3.12", declare_floor=False),
+                "3.13": _tier("zz", "3.13", extends="3.12.yml", declare_floor=False),
+            },
+        )
+        loader = _loader_with(zz=zz)
+        with pytest.raises(UnsupportedInterpreterError) as raised:
+            loader.load("zz", "python", "3.11")
+        message = str(raised.value)
+        assert "requires Python >= 3.12" in message
+        assert "its oldest tier is 3.12" in message
+        assert "declares" not in message  # it declared nothing
+        assert loader.load("zz", "python", "3.14").version == "3.13"
+
+    def test_another_major_version_is_not_served_a_3x_tier(self, tmp_path):
+        # "Tiers only grow" holds across 3.x minor releases; nothing says a
+        # Python 4 parses a 3.x tier, so the rule stops at the major version.
+        zz = _fake_pack(tmp_path, "zz", {"3.10": _tier("zz", "3.10")})
+        loader = _loader_with(zz=zz)
+        with pytest.raises(PackNotFoundError):
+            loader.load("zz", "python", "4.0")
 
     def test_a_gap_inside_the_pack_is_not_filled(self, tmp_path):
         # Only a request past the newest tier is served something else. A

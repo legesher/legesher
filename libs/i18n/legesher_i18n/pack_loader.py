@@ -404,13 +404,14 @@ class LanguagePackLoader:
         Which tier is served (one rule for every surface, CORE-2828):
 
         * The pack's ``{version}.yml`` when it has one.
-        * When ``version`` is newer than every tier the pack has, the pack's
-          newest tier. Tiers only grow, so a newer interpreter parses every
+        * When ``version`` is newer than every tier the pack has, within the
+          same major version, the pack's newest tier. Tiers only grow, so a newer interpreter parses every
           older tier; on Python 3.15 with packs up to 3.14, the 3.14 tier is
           served. The newest tier is this pack's own, not the newest across
           all packs. Logged once per process, at INFO.
         * Never downward: when ``version`` is below the pack's floor (the
-          ``python_version_min`` of its oldest tier), ``UnsupportedInterpreterError``.
+          ``python_version_min`` of its oldest tier, or that tier itself when
+          it declares none), ``UnsupportedInterpreterError``.
           An older interpreter is never served a newer tier.
         * A tier missing from the middle of a pack is not filled from a
           neighbour: ``PackNotFoundError``.
@@ -613,7 +614,10 @@ class LanguagePackLoader:
             return None
 
         newest = tiers[-1]
-        if requested > (_parse_xy(newest) or (0, 0)):
+        newest_xy = _parse_xy(newest) or (0, 0)
+        # Within one major version only: "tiers only grow" is a fact about
+        # 3.x minor releases, and says nothing about a Python 4.
+        if requested > newest_xy and requested[0] == newest_xy[0]:
             _report_newer_request(target, version, newest)
             return newest
 
@@ -621,7 +625,7 @@ class LanguagePackLoader:
         if enforce_min_interpreter and requested < (_parse_xy(oldest) or (0, 0)):
             # The floor is what the oldest tier declares; the tier itself when
             # it declares none or cannot be read.
-            floor = oldest
+            floor, declared_floor = oldest, False
             try:
                 base = self.load(
                     language, target, oldest, enforce_min_interpreter=False
@@ -632,9 +636,11 @@ class LanguagePackLoader:
                 base.metadata.python_version_min if base and base.metadata else None
             )
             if declared and _parse_xy(declared):
-                floor = declared
+                floor, declared_floor = declared, True
             if requested < (_parse_xy(floor) or (0, 0)):
-                raise UnsupportedInterpreterError(language, floor, version)
+                raise UnsupportedInterpreterError(
+                    language, floor, version, declared=declared_floor
+                )
         return None
 
     def _resolve_inheritance(

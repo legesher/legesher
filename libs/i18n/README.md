@@ -68,6 +68,10 @@ Language packs automatically adapt to different Python versions:
 - **Python 3.13**: No new keywords (inherits from 3.12), one new exception
 - **Python 3.14**: No new terms yet (inherits from 3.13)
 
+On a Python newer than every tier a pack has (3.15 today), the loader serves that pack's newest tier: tiers only
+grow, so a newer interpreter parses every older one, and the terms the new release added stay in English until the
+packs carry its tier. It never serves a newer tier to an older interpreter.
+
 ### Supported Languages
 
 **56 complete language packs** - All support Python 3.10-3.14 with version inheritance, and all carry the same

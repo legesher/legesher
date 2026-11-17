@@ -16,7 +16,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   renderer, so pinning it in `.legesher/config.yml` picks the pack tier
   everywhere. `install_import_hook` and `install_error_handler` take a
   `python_version` argument; with no language given, both read it from the
-  config. [CORE-2828]
+  config. A project whose config names a `python_version` now runs under that
+  tier everywhere (`legesher init` writes the floor of `requires-python`, such as
+  `3.10`), where the hooks used to take the running interpreter's tier; the git
+  filter and the traceback renderer already followed the config. [CORE-2828]
 
 ## [0.27.0] - 2026-11-18
 
