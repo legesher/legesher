@@ -419,11 +419,13 @@ project there cannot have a filter language of its own: `legesher init` does not
 `legesher git setup` refuses (unless `--global`), and `legesher git status` says so. Run `git init` in the
 project to give it its own repository.
 
-**A file that cannot be used** (YAML that does not parse, YAML that is not a mapping, or a value that fails
-validation, such as an absolute `metadata.directory`) is left out whole: it neither sets nor hides anything.
-`legesher run`, `legesher guard` and the git filter warn once and carry on without it, and `run`'s note
-names it; `legesher git status` lists it; `legesher config get` and `config list` exit 1 naming it; and
-`legesher git setup` refuses to write over it until it is fixed.
+**A file that cannot be used** (YAML that does not parse or is nested too deeply to read, YAML that is not
+a mapping, or a value that fails validation, such as an absolute `metadata.directory`) is left out whole: it
+neither sets nor hides anything. `legesher run`, `legesher guard --staged` (the pre-commit hook) and the git
+filter warn once and carry on without it, and `run`'s note names it; `legesher git status` lists it;
+`legesher config get` and `config list` exit 1 naming it; and `legesher git setup` refuses to write over it
+until it is fixed. `legesher guard --diff` reads a pull request's base config the same way, so a base whose
+config cannot be used is judged as English.
 
 ### Project configuration
 

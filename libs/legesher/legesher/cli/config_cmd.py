@@ -62,7 +62,7 @@ def _load_yaml_mapping(config_path: Path) -> dict:
     try:
         with open(config_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
-    except yaml.YAMLError as e:
+    except (yaml.YAMLError, RecursionError) as e:
         raise click.ClickException(
             f"Config file {config_path} is not valid YAML. Fix or remove the file.\n{e}"
         ) from e

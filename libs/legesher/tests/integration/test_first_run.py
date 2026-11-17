@@ -173,18 +173,25 @@ def write_program(
 ) -> Path:
     """``ENGLISH`` in ``lang``'s keywords; it must not compile as English.
 
-    Pass ``request`` from a test that runs the program, so the interpreter
-    gap that stops it running on CPython before 3.12 is a strict xfail.
+    Pass ``request`` from a test that runs the program: when it runs
+    (``assert_runs``), the interpreter gap that stops it on CPython before
+    3.12 makes the test a strict xfail. Applied then, not here, so the
+    test's config assertions before the run still count on those versions.
     """
     english = ENGLISH.format(name=name, text=text)
     source = TokenTranslator.from_language_pack(lang).translate_code(english)
-    if request is not None:
-        xfail_if_return_hop_is_inert(request, english, source)
     with pytest.raises(SyntaxError):
         compile(source, "programa.py", "exec")
     script = root / "programa.py"
     script.write_text(source, encoding="utf-8")
+    if request is not None:
+        _RENDERINGS[script] = (request, english, source)
     return script
+
+
+#: Each written program's test, English form and native form, for the
+#: interpreter-gap check ``assert_runs`` makes.
+_RENDERINGS: dict[Path, tuple[pytest.FixtureRequest, str, str]] = {}
 
 
 def run_script(script: Path, *args: str, cwd: Path | None = None):
@@ -251,6 +258,8 @@ def assert_every_reader_agrees(lang: str) -> None:
 
 
 def assert_runs(script: Path, text: str, **kwargs) -> None:
+    if script in _RENDERINGS:
+        xfail_if_return_hop_is_inert(*_RENDERINGS.pop(script))
     result = run_script(script, **kwargs)
     assert result.returncode == 0, result.stderr.decode("utf-8", "replace")
     assert result.stdout == (text + os.linesep).encode("utf-8")
@@ -706,9 +715,14 @@ LEFT_OUT = [
     pytest.param("language: [unclosed\n", "cannot be read as YAML", id="unparsable"),
     pytest.param("- es\n- ar\n", "not a YAML mapping", id="not-a-mapping"),
     pytest.param(
-        "language: ar\nmetadata:\n  directory: /var/meta\n",
-        "must be a relative path",
+        "language: ar\nmetadata:\n  max_history_entries: -1\n",
+        "must be >= 0",
         id="fails-validation",
+    ),
+    pytest.param(
+        "language: " + "[" * 5000 + "]" * 5000 + "\n",
+        "cannot be read as YAML",
+        id="nested-too-deeply",
     ),
 ]
 
@@ -772,11 +786,35 @@ class TestAProjectFileThatCannotBeUsed:
         assert first.startswith(f"legesher: {project_file} could not be used")
         assert reason in first
         assert f"read as 'he', the language set in {user}." in second
-        assert stderr.count(f"Ignoring {project_file}") <= 1
+        assert stderr.count(f"Ignoring {project_file}") == 1
+
+    @pytest.mark.parametrize(("setup", "reason"), LEFT_OUT, indirect=["setup"])
+    def test_the_guard_hook_carries_on_without_it(self, setup, reason, repo):
+        # The pre-commit hook runs `legesher guard --staged`; a config file it
+        # cannot use must not block every commit.
+        (repo / "m.py").write_bytes(b"x = 1\n")
+        git(repo, "add", "m.py")
+        result = legesher("guard", "--staged", ok=False)
+        assert result.exception is None or isinstance(result.exception, SystemExit)
+        assert result.exit_code == 0, result.output
+
+    @pytest.mark.parametrize(("setup", "reason"), LEFT_OUT, indirect=["setup"])
+    def test_the_git_filter_warns_once(self, setup, reason, repo, filter_on_path):
+        project_file, _user = setup
+        bad = project_file.read_bytes()
+        project_file.write_text("language: es\n", encoding="utf-8")
+        legesher("git", "setup", "--language", "es", "--no-hook")
+        project_file.write_bytes(bad)
+        (repo / "m.py").write_bytes(b"x = 1\n")
+        added = subprocess.run(
+            ["git", "add", "m.py"], cwd=repo, capture_output=True, check=True
+        )
+        assert added.stderr.decode("utf-8").count(f"Ignoring {project_file}") == 1
 
     @pytest.mark.parametrize(("setup", "reason"), [LEFT_OUT[2]], indirect=["setup"])
     def test_config_set_can_fix_a_value_that_fails_validation(self, setup, reason):
-        legesher("config", "set", "metadata.directory", ".legesher/metadata")
+        assert LegesherConfig.load().language == "he"
+        legesher("config", "set", "metadata.max_history_entries", "100")
         assert legesher("config", "get", "language").output.strip() == "ar"
         assert LegesherConfig.load().language == "ar"
 

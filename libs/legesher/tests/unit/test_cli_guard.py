@@ -378,6 +378,27 @@ class TestDiffReviewRegressions:
         assert result.exit_code == 1, result.output
         assert "m.py:2:5: keyword: `if`" in result.output
 
+    @pytest.mark.parametrize(
+        "base_config",
+        [
+            "language: es\nmetadata:\n  max_history_entries: -1\n",
+            "language: " + "[" * 5000 + "]" * 5000 + "\n",
+        ],
+        ids=["fails-validation", "nested-too-deeply"],
+    )
+    def test_a_base_config_that_cannot_be_used_names_no_language(
+        self, repo, base_config
+    ):
+        # Left out whole, as `--staged` and every other reader leave it out:
+        # the base is judged as English, so a Spanish file's stray English
+        # `if` is not a finding, where `language: es` alone would make it one.
+        commit(repo, ".legesher/config.yml", base_config)
+        base = head(repo)
+        stage(repo, "m.py", "definir f(x):\n    if x:\n        devolver 1\n")
+        git(repo, "commit", "-q", "-m", "stray")
+        result = run("--diff", base)
+        assert result.exit_code == 0, result.output
+
     def test_legesher_replaced_by_a_symlink(self, repo):
         commit(repo, ".legesher/config.yml", "language: es\n")
         base = head(repo)

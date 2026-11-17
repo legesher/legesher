@@ -29,9 +29,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   and does not set the git filter up; `legesher git setup` refuses (unless
   `--global`); `legesher git status` says why. `git setup` there wrote the
   project's language into the user config.
-- A config file that cannot be used (unparsable YAML, not a mapping, or a
-  value that fails validation) is left out whole by every reader, with one
-  warning per command. `legesher config get` and `list` exit 1 naming it;
+- A config file that cannot be used (unparsable YAML, YAML nested too deeply
+  to read, not a mapping, or a value that fails validation) is left out whole
+  by every reader, with one warning per command, including `legesher guard
+  --diff` reading a pull request's base, which it now judges as English. `legesher config get` and `list` exit 1 naming it;
   `git status` lists it; `run`'s note names it; `git setup` refuses to write
   over it. `config set` on YAML that does not parse is an error, not a
   traceback.

@@ -23,10 +23,10 @@ so register a new marker in `pyproject.toml`.
     above the working directory; never the user file) and `project_root()` (where `init` writes: the git
     root, else the working directory). A home directory kept in git is not a repository for either
     (`home_is_the_repository()`); `init` and `git setup` refuse to set the filter up there.
-  - how one file is read: `read_config_file()`, which returns the data through `normalize_config_data()`
-    (including the shape an earlier `init` wrote) or the reason the file is left out whole. The loader,
-    `load_project_config()`, `load_user_config()`, `legesher config get` and `list`, and `git setup` all
-    use it; `guard --diff` reads a commit's blob through `normalize_config_data()` directly.
+  - how one file is read: `parse_config_text()` (and `read_config_file()` for a file on disk), which returns
+    the data through `normalize_config_data()` (including the shape an earlier `init` wrote) or the reason
+    the file is left out whole. The loader, `load_project_config()`, `load_user_config()`, `legesher config
+    get` and `list`, `git setup`, and `guard --diff` reading a commit's blob all use it.
   - how the two files combine: `merge_config_data()`, per top-level key, used by `load()` and `config`.
   - how a file is written: `dump_config()`; `save_*_config()` merge into the file on disk.
 - `git setup`, `git status` and `init`'s git step locate the repository with `LegesherConfig._find_repo_root()`,

@@ -23,10 +23,12 @@ git runs the filter and the guard hook. Outside one it is the nearest
 not have to be a git repository. A home directory kept in git is not a
 project's repository, because its root holds the user config.
 
-A file that cannot be used (unparsable YAML, not a mapping, or a value that
-fails validation) is left out whole by every reader (``read_config_file``).
-The runtime warns and carries on without it; ``legesher config`` and
-``legesher git setup`` refuse until it is fixed.
+A file that cannot be used (unparsable YAML, YAML nested too deeply to read,
+not a mapping, or a value that fails validation) is left out whole by every
+reader (``parse_config_text``, through ``read_config_file`` for a file on
+disk). The runtime warns and carries on without it; ``legesher config`` and
+``legesher git setup`` refuse until it is fixed; ``legesher guard --diff``
+judges a pull request against a base whose config is left out as English.
 
 One schema, written by ``legesher init`` and ``legesher git setup`` alike.
 ``legesher init`` once wrote a different one (``languages`` as a list and no
@@ -299,34 +301,47 @@ def shadowed_project_configs(start: Path | None = None) -> list[Path]:
     return shadowed
 
 
-def read_config_file(config_path: Path | None) -> tuple[dict | None, str | None]:
-    """A config file as every reader uses it.
+def parse_config_text(text: str) -> tuple[dict | None, str | None]:
+    """A config file's text as every reader uses it.
 
     Returns ``(data, None)`` for a usable file, read through
-    ``normalize_config_data`` (an empty file is an empty mapping);
-    ``(None, None)`` when there is no file; and ``(None, problem)`` for a
-    file that is left out whole: unreadable, unparsable, not a mapping, or
-    holding a value that fails validation. A file left out neither sets
-    nor hides anything.
+    ``normalize_config_data`` (an empty file is an empty mapping), or
+    ``(None, problem)`` for one that is left out whole: unparsable, nested
+    too deeply to read, not a mapping, or holding a value that fails
+    validation. A file left out neither sets nor hides anything.
     """
-    if config_path is None or not config_path.is_file():
-        return None, None
     try:
-        with open(config_path, encoding="utf-8") as f:
-            raw = yaml.safe_load(f)
-    except (OSError, ValueError, yaml.YAMLError) as e:
+        raw = yaml.safe_load(text)
+    except (ValueError, yaml.YAMLError, RecursionError) as e:
         reason = " ".join(str(e).split())
         return None, f"it cannot be read as YAML ({reason})"
     if raw is None:
         return {}, None
     if not isinstance(raw, dict):
         return None, f"it is not a YAML mapping (found {type(raw).__name__})"
-    data = normalize_config_data(raw)
     try:
+        data = normalize_config_data(raw)
         LegesherConfig.from_dict(data)
+    except RecursionError:
+        return None, "it is nested too deeply to read"
     except (TypeError, ValueError, AttributeError) as e:
         return None, str(e)
     return data, None
+
+
+def read_config_file(config_path: Path | None) -> tuple[dict | None, str | None]:
+    """A config file on disk as every reader uses it (``parse_config_text``).
+
+    ``(None, None)`` when there is no file.
+    """
+    if config_path is None or not config_path.is_file():
+        return None, None
+    try:
+        text = config_path.read_text(encoding="utf-8")
+    except (OSError, ValueError) as e:
+        reason = " ".join(str(e).split())
+        return None, f"it cannot be read ({reason})"
+    return parse_config_text(text)
 
 
 #: Files already reported as left out in this process, so a command that
@@ -675,7 +690,11 @@ class LegesherConfig:
         config = cls.from_dict(merged_data)
         config.left_out = left_out
         for path, data in ((project_path, project_data), (user_path, user_data)):
-            if data is not None and _is_language(data.get("language")):
+            if (
+                path is not None
+                and data is not None
+                and _is_language(data.get("language"))
+            ):
                 config.language_source = path
                 break
         return config
@@ -728,7 +747,8 @@ class LegesherConfig:
             Path to saved config file
 
         Raises:
-            ValueError: If not in a git repository
+            ValueError: If not in a git repository, or if the file would be
+                the user config (a home directory kept in git)
 
         Example:
             >>> config = LegesherConfig(language="es")
@@ -737,11 +757,15 @@ class LegesherConfig:
         if repo_root is None:
             repo_root = self._find_repo_root()
 
-        # Create .legesher directory if it doesn't exist
-        legesher_dir = repo_root / ".legesher"
-        legesher_dir.mkdir(exist_ok=True)
+        config_path = repo_root / CONFIG_RELATIVE_PATH
+        if is_user_config(config_path) or repo_root.resolve() == home_directory():
+            raise ValueError(
+                f"{config_path} is the user config, not a project's; "
+                "save it with save_user_config()"
+            )
 
-        config_path = legesher_dir / "config.yml"
+        # Create .legesher directory if it doesn't exist
+        config_path.parent.mkdir(exist_ok=True)
 
         self._write_config(config_path, self.file_dict())
 

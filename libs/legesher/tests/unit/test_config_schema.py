@@ -323,7 +323,7 @@ CASES = [
     ),
     pytest.param(
         "language: he\n",
-        "language: ar\nmetadata:\n  directory: /var/x\n",
+        "language: ar\nmetadata:\n  max_history_entries: -1\n",
         "he",
         False,
         id="project-fails-validation",
@@ -413,7 +413,7 @@ class TestMerge:
         config_in(
             home,
             "language: he\ntelemetry:\n  enabled: false\n"
-            "metadata:\n  directory: /var/x\n",
+            "metadata:\n  max_history_entries: -1\n",
         )
         monkeypatch.chdir(tmp_path)
         config = LegesherConfig.load()
@@ -463,7 +463,7 @@ class TestLanguageSource:
         [
             "language: [unclosed\n",
             "- es\n",
-            "language: ar\nmetadata:\n  directory: /x\n",
+            "language: ar\nmetadata:\n  max_history_entries: -1\n",
         ],
         ids=["unparsable", "not-a-mapping", "fails-validation"],
     )
@@ -501,14 +501,36 @@ class TestReadConfigFile:
             ("language: [unclosed\n", "cannot be read as YAML"),
             ("- es\n", "not a YAML mapping (found list)"),
             ("just a scalar\n", "not a YAML mapping (found str)"),
-            ("metadata:\n  directory: /abs\n", "must be a relative path"),
+            ("metadata:\n  max_history_entries: x\n", "not supported between"),
+            ("language: " + "[" * 5000 + "]" * 5000 + "\n", "cannot be read as YAML"),
             ("metadata:\n  max_history_entries: -1\n", "must be >= 0"),
         ],
-        ids=["unparsable", "list", "scalar", "absolute-directory", "negative-history"],
+        ids=[
+            "unparsable",
+            "list",
+            "scalar",
+            "history-not-a-number",
+            "nested-too-deeply",
+            "negative-history",
+        ],
     )
     def test_a_file_left_out_says_why(self, tmp_path, text, reason):
         data, problem = read_config_file(write(tmp_path / "c.yml", text))
         assert data is None and reason in problem
+
+    def test_an_absolute_metadata_directory_is_left_out(self, tmp_path):
+        # Built from tmp_path, so it is absolute on every platform: a rooted
+        # POSIX path such as /var/x is not absolute on Windows.
+        directory = (tmp_path / "meta").as_posix()
+        text = f"metadata:\n  directory: '{directory}'\n"
+        data, problem = read_config_file(write(tmp_path / "c.yml", text))
+        assert data is None and "must be a relative path" in problem
+
+    def test_saving_a_project_config_never_writes_the_user_config(self, home):
+        repository(home)
+        with pytest.raises(ValueError, match="user config"):
+            LegesherConfig(language="es").save_project_config(home)
+        assert not user_config_path().exists()
 
 
 class TestShadowedConfigs:

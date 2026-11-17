@@ -300,9 +300,10 @@ def git_setup(
 
         # A config file that cannot be used is the user's to fix: setup
         # starting from defaults would reset everything else in it.
-        target = (
-            user_config_path() if use_global else repo_root / ".legesher" / "config.yml"
-        )
+        if use_global or repo_root is None:
+            target = user_config_path()
+        else:
+            target = repo_root / ".legesher" / "config.yml"
         _data, problem = read_config_file(target)
         if problem is not None:
             click.echo(f"✗ Cannot use {target}: {problem}.", err=True)

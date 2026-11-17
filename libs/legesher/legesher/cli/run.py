@@ -63,10 +63,12 @@ def _language_note(script: Path, config: LegesherConfig) -> str:
         fix = "set one with: legesher config set language <code>"
     else:
         fix = "set one with: legesher init"
-    lines.append(
-        f"legesher: {script.name} was read as English (en), because no "
-        "language is configured here."
+    why = (
+        "no usable config names a language"
+        if config.left_out
+        else "no language is configured here"
     )
+    lines.append(f"legesher: {script.name} was read as English (en), because {why}.")
     lines.append(
         f"legesher: if it is written in another language, pass --lang <code>, or {fix}"
     )
