@@ -46,11 +46,13 @@ PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
 class Reviewed:
     """What the advisory database showed for one package."""
 
-    #: The first release outside every published advisory.
+    #: The lowest release a declared range may start at: the first release
+    #: outside every published advisory on the release line the range uses.
     floor: str
     #: Releases an advisory still covers, at least the newest one on each
     #: release line that has any. A declared range must admit none of them.
-    covered: tuple[str, ...]
+    #: Empty for a package with no published advisory.
+    covered: tuple[str, ...] = ()
 
 
 #: Canonical package name -> what was read, and when.
@@ -59,8 +61,8 @@ REVIEWED: dict[str, Reviewed] = {
     # so the cap matters as much as the floor: the range has to stay off the
     # 2.x releases below 2.2.0 if it is ever widened.
     "mcp": Reviewed(floor="1.30.0", covered=("1.29.1", "2.0.0", "2.1.1")),
-    # Read 2026-11-17. The one advisory on the 2.x line ends at 2.4.0.
-    "pydantic": Reviewed(floor="2.4.0", covered=("2.3.0",)),
+    # Read 2026-11-17. The 2.x advisory ends at 2.4.0; the 1.x one at 1.10.13.
+    "pydantic": Reviewed(floor="2.4.0", covered=("1.10.12", "2.3.0")),
 }
 
 #: Operators that put a lower bound on a version range.
@@ -139,9 +141,9 @@ def problems(requirement: Requirement) -> list[str]:
     elif floor < Version(reviewed.floor):
         found.append(
             f"{line!r} puts its lower bound at {name} {floor}, below {reviewed.floor}, the "
-            "first release outside every published advisory: an install into an environment "
-            f"that already holds an older {name} could keep it. "
-            f"Write the range as >={reviewed.floor} or later"
+            "reviewed floor (the first release outside every published advisory on its "
+            f"line): an install into an environment that already holds an older {name} "
+            f"could keep it. Write the range as >={reviewed.floor} or later"
         )
     found.extend(
         f"{line!r} admits {name} {release}, which a published advisory covers"

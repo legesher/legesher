@@ -44,13 +44,17 @@ def test_the_ledger_names_only_current_requirements(name: str) -> None:
 
 @pytest.mark.parametrize("name", sorted(REVIEWED))
 def test_each_ledger_entry_agrees_with_itself(name: str) -> None:
-    """A floor that an advisory covers, or no covered release to probe with."""
+    """A floor no advisory covers, and one its own check accepts."""
     reviewed = REVIEWED[name]
     assert reviewed.floor not in reviewed.covered, (
         f"REVIEWED[{name!r}] names {reviewed.floor} as both the floor and a covered release"
     )
-    older = newest_covered_release_below_the_floor(name)
-    assert Version(older) < Version(reviewed.floor)
     assert not problems(Requirement(f"{name}=={reviewed.floor}")), (
         f"REVIEWED[{name!r}] rejects its own floor {reviewed.floor}"
     )
+
+
+def test_the_sdk_entry_names_an_older_release_to_install_over() -> None:
+    """The scheduled install test starts from a covered SDK release below the floor."""
+    older = newest_covered_release_below_the_floor("mcp")
+    assert Version(older) < Version(REVIEWED["mcp"].floor)
