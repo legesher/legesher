@@ -209,6 +209,22 @@ class TestFingerprint:
         assert composed != decomposed
         assert message_fingerprint(composed) == message_fingerprint(decomposed)
 
+    def test_it_is_nfc_not_nfkc(self) -> None:
+        """A compatibility character is a different wording, not the same one."""
+        assert message_fingerprint("ﬁle '{name}'") != message_fingerprint(
+            "file '{name}'"
+        )
+        assert message_fingerprint("１ argument") != message_fingerprint("1 argument")
+
+    def test_surrounding_space_is_part_of_the_wording(self) -> None:
+        assert message_fingerprint(" x ") != message_fingerprint("x")
+
+    def test_a_non_ascii_vector(self) -> None:
+        template = "nombre '{name}' no está definido"
+        expected = hashlib.sha256(template.encode("utf-8")).hexdigest()[:12]
+        assert message_fingerprint(template) == expected
+        assert message_fingerprint(unicodedata.normalize("NFD", template)) == expected
+
     def test_the_seed_has_no_two_wordings_with_one_fingerprint(self) -> None:
         """Distinct English templates must not collide in twelve digits."""
         by_print: dict[str, set[str]] = {}
@@ -266,6 +282,28 @@ class TestEntryProblem:
         candidate = {**self.good(), field: "x"}
         problem = self.problem(candidate)
         assert problem is not None and repr(field) in problem
+
+    @pytest.mark.parametrize(
+        ("text", "label"),
+        [
+            ("नाम '{name}'\x00", "U+0000"),
+            ("\x1b[31mनाम '{name}'", "U+001B"),
+            ("नाम '{name}'\x9b", "U+009B"),
+            ("नाम '{name}'\ud800", "U+D800"),
+        ],
+    )
+    def test_a_control_character_in_text_is_named(self, text: str, label: str) -> None:
+        problem = self.problem(self.good(text))
+        assert problem is not None and "control" in problem and label in problem
+
+    def test_joiners_are_not_control_characters(self) -> None:
+        """ZWJ and ZWNJ are format characters some scripts need."""
+        assert self.problem(self.good("ශ්\u200dරී '{name}' \u200c")) is None
+
+    def test_a_huge_placeholder_mismatch_is_not_echoed(self) -> None:
+        text = " ".join(f"{{p{i}}}" for i in range(20_000))
+        problem = self.problem(self.good(text))
+        assert problem is not None and "placeholders" in problem and len(problem) < 300
 
     def test_the_known_fields_are_the_documented_three(self) -> None:
         assert ENTRY_FIELDS == {"text", "src", "status"}
@@ -704,10 +742,58 @@ class TestPrecedence:
     def test_an_interpreter_newer_than_the_pack_reads_its_newest_file(
         self, no_database, write_pack
     ):
-        write_pack({"3.10": self.header_only()}, language="es")
-        assert rule(load_catalog("es", "3.99"), "traceback.header").template == (
+        """Only the newest file carries this text, so no older file can pass."""
+        newest = "ट्रेसबैक (केवल 3.14 फ़ाइल में):"
+        write_pack(
+            {
+                "3.10": self.header_only(),
+                "3.14": cpython(traceback__header=entry(newest, "traceback.header")),
+            },
+            language="es",
+        )
+        assert rule(load_catalog("es", "3.13"), "traceback.header").template == (
             ARABIC_HEADER
         )
+        assert rule(load_catalog("es", "3.99"), "traceback.header").template == newest
+
+    def test_a_broken_file_for_the_interpreter_is_not_replaced_by_an_older_one(
+        self, no_database, write_pack
+    ):
+        module = write_pack(
+            {"3.10": self.header_only(), "3.12": {"keywords": {"type": "प्रकार"}}},
+            language="zz",
+        )
+        (module / "packs" / "3.12.yml").write_text(
+            "language: zz\ntarget: python\nversion: '3.12'\nextends: 3.11.yml\n"
+            "keywords: [unclosed\n",
+            encoding="utf-8",
+        )
+        with pytest.raises(Exception):  # noqa: B017 - any load failure
+            LanguagePackLoader().load("zz", "python", "3.12")
+        assert rule(load_catalog("zz", "3.11"), "traceback.header").localized
+        assert not rule(load_catalog("zz", "3.12"), "traceback.header").localized
+
+    def test_an_error_while_finding_packs_leaves_the_catalog_english(
+        self, no_database, monkeypatch
+    ):
+        def explode(self):
+            raise RuntimeError("discovery failed")
+
+        def view(rules: list) -> list:
+            return [(r.key, r.template, r.localized) for r in rules]
+
+        monkeypatch.setattr(LanguagePackLoader, "_discover_packs", lambda self: {})
+        without_packs = view(load_catalog("es", "3.12"))
+        monkeypatch.setattr(LanguagePackLoader, "_discover_packs", explode)
+        assert without_packs and view(load_catalog("es", "3.12")) == without_packs
+
+    def test_a_database_without_this_locale_does_not_let_the_pack_fill_in(
+        self, write_pack, seeded_db, monkeypatch
+    ):
+        """The database is the whole catalog when it has one, for every locale."""
+        monkeypatch.setattr("legesher_i18n.messages.default_db_path", lambda: seeded_db)
+        write_pack({"3.10": self.header_only()}, language="zz")
+        assert not rule(load_catalog("zz", "3.12"), "traceback.header").localized
 
     def test_a_newer_interpreters_rewording_is_not_given_the_old_translation(
         self, no_database, write_pack, tmp_path, monkeypatch
@@ -864,8 +950,8 @@ class TestTiers:
         for version in ("3.11", "3.12"):
             keys = [r.key for r in load_catalog("zz", version)]
             assert keys == ["ZeroDivisionError.division_by_zero"], version
-            (problem,) = pack_message_problems("zz", version)
-            assert problem.startswith("SyntaxError.retired: no English message")
+            # Inherited by the later files, which cannot remove it: not a problem.
+            assert pack_message_problems("zz", version) == []
 
 
 # ---------------------------------------------------------------------------
@@ -953,9 +1039,11 @@ class TestPlaceholderKinds:
         from_pack = {r.key: r.slot_kinds for r in load_catalog("zz", "3.12")}
         assert from_seed == from_db == from_pack == english_only
 
-    def test_a_database_seeded_before_kinds_reads_as_verbatim(
+    def test_a_database_seeded_before_kinds_takes_them_from_the_seed(
         self, tmp_path: Path
     ) -> None:
+        """The seeder is append-once, so a maintainer's database never gains
+        kinds; the seed is the English side's truth, so they come from it."""
         legacy = json.loads(json.dumps(SEED))
         for template in legacy["templates"]:
             for placeholder in template.get("placeholders", []):
@@ -963,8 +1051,12 @@ class TestPlaceholderKinds:
         path = operational_db(tmp_path / "legacy" / "translations.db", {"es", "ar"})
         activate(path)
         seed_database(path, legacy)
-        rules = load_catalog("es", "3.12", db_path=path)
-        assert rules and all(r.slot_kinds == () for r in rules)
+        from_legacy = {
+            r.key: r.slot_kinds for r in load_catalog("es", "3.12", db_path=path)
+        }
+        english_only = {r.key: r.slot_kinds for r in load_catalog("xx", "3.12")}
+        assert any(english_only.values())
+        assert from_legacy == english_only
 
     def test_a_kind_this_release_does_not_know_reads_as_verbatim(
         self, seeded_db: Path, tmp_path: Path
@@ -993,6 +1085,8 @@ class TestPlaceholderKinds:
         connection.close()
         rules = load_catalog("es", "3.12", db_path=path)
         assert rule(rules, "traceback.frame").slot_kinds == ()
+        # Unreadable placeholders: no names to match the seed's against, so
+        # nothing is guessed.
         assert rule(rules, "traceback.frame_no_scope").slot_kinds == ()
 
     def test_the_seeder_refuses_an_unknown_kind(self) -> None:
@@ -1002,6 +1096,15 @@ class TestPlaceholderKinds:
         problems = validate_seed(seed)
         assert len(problems) == 1
         assert "traceback.frame" in problems[0] and "'ordinal'" in problems[0]
+
+    def test_the_seeder_refuses_a_kind_on_a_non_ascii_number(self) -> None:
+        """A renderer converts ASCII digits; another script's digits are text."""
+        seed = json.loads(json.dumps(SEED))
+        (frame,) = [t for t in seed["templates"] if t["key"] == "traceback.frame"]
+        assert frame["placeholders"][1]["name"] == "line"
+        frame["placeholders"][1]["example"] = "٧"
+        problems = validate_seed(seed)
+        assert any("'line'" in problem and "'٧'" in problem for problem in problems)
 
     def test_the_seeder_refuses_a_kind_on_a_value_that_is_not_a_number(self) -> None:
         seed = json.loads(json.dumps(SEED))
@@ -1074,13 +1177,80 @@ class TestPackMessageProblems:
             assert problem.startswith(key), version
 
     def test_the_english_side_is_the_seed_even_with_a_database(
-        self, write_pack, seeded_db, monkeypatch
+        self, write_pack, tmp_path, monkeypatch
     ):
-        monkeypatch.setattr("legesher_i18n.messages.default_db_path", lambda: seeded_db)
-        write_pack(
-            {"3.10": cpython(NameError__not_defined={"text": ARABIC, "src": "0" * 12})}
+        """A pack ships to installs, which have the seed and no database."""
+        seed = json.loads(json.dumps(SEED))
+        (row,) = [t for t in seed["templates"] if t["key"] == "NameError.not_defined"]
+        row["template_en"] = "name '{name}' is not defined (database wording)"
+        row.pop("matcher")
+        row["matcher"] = (
+            "^name '(?P<name>[^']+)' is not defined \\(database wording\\)$"
         )
-        assert len(pack_message_problems("zz", "3.12")) == 1
+        path = operational_db(tmp_path / "db" / "translations.db", {"es", "ar"})
+        activate(path)
+        seed_database(path, seed)
+        monkeypatch.setattr("legesher_i18n.messages.default_db_path", lambda: path)
+        write_pack(
+            {
+                "3.10": cpython(
+                    NameError__not_defined=entry(ARABIC, "NameError.not_defined")
+                )
+            }
+        )
+        assert pack_message_problems("zz", "3.12") == []
+
+    def test_an_earlier_wordings_translation_is_not_a_problem_later(
+        self, no_database, write_pack
+    ):
+        """A partial pack may translate a message's 3.10 wording and not its
+        3.11 rewording; the later files inherit the entry and cannot drop it."""
+        key = "UnboundLocalError.before_assignment"
+        write_pack(
+            {
+                "3.10": cpython(
+                    UnboundLocalError__before_assignment=entry(
+                        DEVANAGARI_OLD, key, "3.10"
+                    )
+                )
+            }
+        )
+        for version in PACK_VERSIONS:
+            assert pack_message_problems("zz", version) == [], version
+        assert rule(load_catalog("zz", "3.10"), key).localized
+        assert not rule(load_catalog("zz", "3.12"), key).localized
+
+    def test_an_entry_matching_no_wording_of_its_key_is_still_reported(
+        self, no_database, write_pack
+    ):
+        key = "UnboundLocalError.before_assignment"
+        write_pack(
+            {
+                "3.10": cpython(
+                    UnboundLocalError__before_assignment={
+                        "text": DEVANAGARI_OLD,
+                        "src": "0" * 12,
+                    }
+                )
+            }
+        )
+        for version in PACK_VERSIONS:
+            (problem,) = pack_message_problems("zz", version)
+            assert problem.startswith(key) and "000000000000" in problem
+
+    def test_a_huge_unknown_key_is_not_echoed(self, no_database, write_pack):
+        key = "A." + "b" * 50_000
+        write_pack(
+            {
+                "3.10": {
+                    "messages": {
+                        "cpython": {key: entry(ARABIC, "NameError.not_defined")}
+                    }
+                }
+            }
+        )
+        (problem,) = pack_message_problems("zz", "3.12")
+        assert len(problem) < 300 and "no English message" in problem
 
     def test_no_pack_and_no_messages_are_both_clean(self, no_database, write_pack):
         write_pack({"3.10": {}})

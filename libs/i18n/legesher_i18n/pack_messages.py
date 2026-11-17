@@ -142,8 +142,10 @@ def entry_problem(
     The rules, in order:
 
     1. The entry is a mapping carrying only :data:`ENTRY_FIELDS`, with a
-       string ``text``, a well-formed ``src`` and, when present, a ``status``
-       from :data:`ALLOWED_STATUSES`.
+       string ``text`` free of control characters (category ``Cc``, such as
+       NUL or the ESC that starts a terminal escape sequence) and of lone
+       surrogates, a well-formed ``src`` and, when present, a ``status``
+       from :data:`ALLOWED_STATUSES`. The text is written to a terminal.
     2. ``src`` is the fingerprint of ``template_en``. A translation written
        for another wording of the same key (an earlier Python version's, or
        one since corrected) is not used.
@@ -167,6 +169,11 @@ def entry_problem(
     text = entry.get("text")
     if not isinstance(text, str):
         return "'text' is not a string"
+    controls = [
+        f"U+{ord(ch):04X}" for ch in text if unicodedata.category(ch) in ("Cc", "Cs")
+    ]
+    if controls:
+        return f"'text' carries control characters {_short(controls)}"
     src = entry.get("src")
     if not isinstance(src, str) or not MESSAGE_SRC_PATTERN.fullmatch(src):
         return "'src' is not twelve lowercase hex digits"
@@ -182,7 +189,10 @@ def entry_problem(
         )
     used = used_placeholders(text)
     if used != set(placeholders):
-        return f"placeholders {sorted(used)} != declared {sorted(placeholders)}"
+        return (
+            f"placeholders {_short(sorted(used))} != declared "
+            f"{_short(sorted(placeholders))}"
+        )
     if text == "" and template_en != "":
         return "empty text for a template that is not empty"
     return None

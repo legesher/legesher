@@ -84,7 +84,10 @@ nothing wrong:
 1. The entry carries only `text`, `src` and `status`, and `status`, when
    present, is one of the four rungs. An entry with any other field is not
    used: a field a later release adds may change what the text means, and a
-   reader that does not know it must not guess.
+   reader that does not know it must not guess. The text carries no control
+   character (NUL, or the ESC that starts a terminal escape sequence) and no
+   lone surrogate: it is written to a terminal. Joiners such as ZWJ are
+   allowed.
 2. `src` is the fingerprint of that English template. This is what keeps a
    translation off a wording it was not written for. Python 3.11 reworded
    "local variable 'x' referenced before assignment" under the same key and
@@ -104,22 +107,28 @@ one pack and version, and reports an unknown key too. A test runs it over
 every shipped pack at every version, so an entry the join would skip fails
 the suite instead of leaving a message in English without notice.
 
+Two unused entries are expected and not reported, because a later pack file
+can add or override an entry but never remove one: the translation of an
+earlier wording of a message, inherited by the files after the one where
+Python reworded it, and the translation of a message Python stopped printing.
+So a pack may translate a message's earlier wording without its rewording.
+
 ## Where the catalog comes from
 
 In order:
 
 1. An explicit `db_path` is read alone.
 2. The default translations database, when it holds the catalog, is the
-   whole catalog: English and translations. Only a maintainer checkout has
-   one.
+   whole catalog: English and translations. Normally only a maintainer
+   checkout has one.
 3. Otherwise the English side comes from the seed that ships in the package,
    and the translations from the pack for the locale at the running Python
-   version. On an interpreter newer than the pack's newest file, that file
-   is read: every entry is joined by fingerprint, so a message the newer
-   Python reworded stays in English and every other message stays
-   translated. A pack that carries messages for the implementation is the
-   only source of translations: a message it does not translate prints in
-   English.
+   version. When the pack has no file for that version (an interpreter
+   newer than the pack), its newest file below that version is read: every
+   entry is joined by fingerprint, so a message the newer Python reworded
+   stays in English and every other message stays translated. A pack that
+   carries messages for the implementation is the only source of
+   translations: a message it does not translate prints in English.
 4. When there is no pack for the locale, no pack file at or below that
    Python version, the pack does not load, or it carries no messages for
    the implementation, the translations in the seed are used. This step
@@ -136,7 +145,8 @@ number, `count` for a count. A placeholder with no kind is copied verbatim,
 which includes numbers that are neither, such as an errno. The kind reaches
 a renderer as `MessageRule.slot_kinds` and `MessageRule.kind_of(name)`, so
 which values a renderer may reformat is data on the English side and a pack
-carries nothing for it. A database seeded before kinds existed reports none.
+carries nothing for it. A database seeded before kinds existed takes them
+from the seed's row with the same key and wording.
 
 ## Version tiering
 

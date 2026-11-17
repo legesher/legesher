@@ -50,7 +50,12 @@ from typing import Any, NamedTuple
 from .db.database import default_db_path
 from .exceptions import PackNotFoundError
 from .pack_loader import LanguagePackLoader
-from .pack_messages import DEFAULT_STATUS, PLACEHOLDER_KINDS, entry_problem
+from .pack_messages import (
+    DEFAULT_STATUS,
+    PLACEHOLDER_KINDS,
+    entry_problem,
+    message_fingerprint,
+)
 
 __all__ = [
     "MessageRule",
@@ -79,6 +84,20 @@ SEED_DIR = Path(__file__).parent / "db" / "seeds"
 #: implementation with no entry here has no pack to read, and its
 #: translations come from its seed.
 _IMPLEMENTATION_TARGETS = {"cpython": "python"}
+
+#: A pack version file's stem: ``3.12``.
+_VERSION_FILE = re.compile(r"\d+\.\d+")
+
+#: Longest key quoted in a reason before it is cut.
+_KEY_LABEL_LIMIT = 80
+
+
+def _key_label(key: object) -> str:
+    """``key`` as a reason starts with it, cut when it is very long."""
+    text = str(key)
+    if len(text) <= _KEY_LABEL_LIMIT:
+        return text
+    return text[:_KEY_LABEL_LIMIT] + f"... ({len(text)} characters)"
 
 
 class _Row(NamedTuple):
@@ -283,9 +302,15 @@ def pack_message_problems(
     side in the seed, as an installed package does, and reports every entry
     the join would skip: an entry that fails
     :func:`legesher_i18n.pack_messages.entry_problem`, and an entry whose key
-    has no English row at this interpreter version. At run time such an
+    has no English row at this interpreter version yet. At run time such an
     entry is skipped without an error; this is how a pack is checked before
     it ships.
+
+    Two kinds of unused entry are expected and not reported, because a later
+    pack file can add or override an entry but never remove one: the
+    translation of an earlier wording of a message, inherited by the files
+    after the one that rewords it, and the translation of a message removed
+    with no rewording to replace it.
 
     Args:
         locale: The pack's language code.
@@ -301,7 +326,9 @@ def pack_message_problems(
         or there is no pack for the locale at this version.
 
     Raises:
-        LanguagePackError: If the pack exists and does not load.
+        Exception: Whatever the pack loader raises for a pack file that
+            exists and does not load: :class:`LanguagePackError` for one that
+            fails validation, a YAML error for one that does not parse.
     """
     version = _parse_version(python_version)
     target = _IMPLEMENTATION_TARGETS.get(implementation)
@@ -317,8 +344,31 @@ def pack_message_problems(
     except PackNotFoundError:
         return []
     entries = pack.messages.get(implementation) or {}
-    applicable = _applicable_rows(_seed_rows(locale, implementation), version)
-    _, problems = _join(entries, applicable, report_unknown=True)
+    rows = _seed_rows(locale, implementation)
+    applicable = _applicable_rows(rows, version)
+    inherited: set[str] = set()
+    for key, entry in entries.items():
+        if not isinstance(entry, dict):
+            continue
+        current = applicable.get(key)
+        for row in rows:
+            added = _parse_version(row.version_added) if row.version_added else (0, 0)
+            if (
+                row.key == key
+                and row is not current
+                and added <= version
+                and entry.get("src") == message_fingerprint(row.template_en)
+            ):
+                # The translation of an earlier wording: superseded by a
+                # rewording, or of a message removed with none. It was
+                # checked at the versions where it applies.
+                inherited.add(key)
+                break
+    _, problems = _join(
+        {key: entry for key, entry in entries.items() if key not in inherited},
+        applicable,
+        report_unknown=True,
+    )
     return problems
 
 
@@ -348,16 +398,17 @@ def _pack_entries(
     """The pack's entries for ``implementation``, or ``None`` when it has none.
 
     The pack file for the interpreter's version is read; when the pack has
-    none (an interpreter newer than the pack), the newest file below it is.
-    That is safe because every entry is joined by fingerprint: a message
-    the newer interpreter reworded is a different English template, so the
-    older translation does not attach to it, and every message it did not
-    reword stays translated.
+    no such file (an interpreter newer than the pack), the newest of the
+    pack's own files below it is. That is safe because every entry is joined
+    by fingerprint: a message the newer interpreter reworded is a different
+    English template, so the older translation does not attach to it, and
+    every message it did not reword stays translated.
 
     ``None`` covers every way a pack can have nothing to offer: no pack for
     the locale, no pack file at or below this interpreter version, a pack
-    that does not load, and a pack with no messages for the implementation.
-    The caller then reads the seed's translations.
+    file that does not load, a pack with no messages for the implementation,
+    and any error while finding the pack. The caller then reads the seed's
+    translations.
 
     The pack's minimum interpreter is not enforced: that guard protects
     translated identifiers that would not parse, and rendering a message
@@ -366,24 +417,27 @@ def _pack_entries(
     target = _IMPLEMENTATION_TARGETS.get(implementation)
     if target is None:
         return None
-    loader = LanguagePackLoader()
     try:
-        older = [
-            candidate
-            for candidate in reversed(loader.list_available_versions(target))
-            if _parse_version(candidate) < version
-        ]
-    except Exception:  # noqa: BLE001 - discovery trouble degrades, never crashes
-        older = []
-    for candidate in [f"{version[0]}.{version[1]}", *older]:
-        try:
-            pack = loader.load(locale, target, candidate, enforce_min_interpreter=False)
-        except PackNotFoundError:
-            continue
-        except Exception:  # noqa: BLE001 - a broken pack degrades, never crashes
+        loader = LanguagePackLoader()
+        pack_dir = loader._discover_packs().get(f"{target}-{locale}")
+        if pack_dir is None:
             return None
-        return pack.messages.get(implementation) or None
-    return None
+        files = [
+            path.stem
+            for path in (pack_dir / "packs").glob("*.yml")
+            if path.stem != "default" and _VERSION_FILE.fullmatch(path.stem)
+        ]
+        candidates = sorted(
+            (stem for stem in files if _parse_version(stem) <= version),
+            key=_parse_version,
+            reverse=True,
+        )
+        if not candidates:
+            return None
+        pack = loader.load(locale, target, candidates[0], enforce_min_interpreter=False)
+    except Exception:  # noqa: BLE001 - a missing or broken pack degrades, never crashes
+        return None
+    return pack.messages.get(implementation) or None
 
 
 def _join(
@@ -413,7 +467,9 @@ def _join(
         row = applicable.get(key)
         if row is None:
             if report_unknown:
-                problems.append(f"{key}: no English message with this key applies here")
+                problems.append(
+                    f"{_key_label(key)}: no English message with this key applies here"
+                )
             continue
         problem = entry_problem(
             entry,
@@ -421,7 +477,7 @@ def _join(
             placeholders=[name for name, _ in row.placeholders],
         )
         if problem is not None:
-            problems.append(f"{key}: {problem}")
+            problems.append(f"{_key_label(key)}: {problem}")
             continue
         usable[key] = (entry["text"], entry.get("status", DEFAULT_STATUS))
     return usable, problems
@@ -457,7 +513,29 @@ def _database_rows(path: Path, locale: str, implementation: str) -> list[_Row]:
             ).fetchall()
         except sqlite3.DatabaseError:
             return []  # partition not activated, or not a SQLite file
-        return [_Row(*row[:7], _placeholders(row[7])) for row in rows]
+        seed_kinds: dict[tuple[str, str], tuple[tuple[str, str | None], ...]] | None = (
+            None
+        )
+        result: list[_Row] = []
+        for row in rows:
+            placeholders = _placeholders(row[7])
+            if row[7] is None or '"kind"' not in str(row[7]):
+                # Rows seeded before placeholder kinds existed. The seeder is
+                # append-once, so they never gain them; the seed is the
+                # English side's truth, so take the kinds from its row with
+                # the same key and wording.
+                if seed_kinds is None:
+                    seed_kinds = {
+                        (seed_row.key, seed_row.template_en): seed_row.placeholders
+                        for seed_row in _seed_rows("", implementation)
+                    }
+                from_seed = seed_kinds.get((row[0], row[1]))
+                if from_seed is not None and [n for n, _ in from_seed] == [
+                    n for n, _ in placeholders
+                ]:
+                    placeholders = from_seed
+            result.append(_Row(*row[:7], placeholders))
+        return result
     finally:
         connection.close()
 
