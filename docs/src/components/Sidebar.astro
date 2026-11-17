@@ -1,0 +1,10 @@
+---
+// Starlight's sidebar, with the account link under it. The sidebar is the
+// menu on a phone, so on a page with a sidebar this one placement serves
+// every window too narrow for the link to sit in the header bar (see
+// AccountLink.astro).
+import Default from '@astrojs/starlight/components/Sidebar.astro';
+import AccountLink from './AccountLink.astro';
+---
+<Default><slot /></Default>
+<AccountLink placement="sidebar" />

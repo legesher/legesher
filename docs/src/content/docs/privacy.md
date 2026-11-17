@@ -3,7 +3,7 @@ title: Privacy Policy — VS Code Extension & Documentation
 description: Product-specific privacy practices for the Legesher VS Code extension and documentation site
 ---
 
-**Last Updated:** November 4, 2026
+**Last Updated:** November 17, 2026
 
 > **Looking for the company-wide policy?** General terms — including your rights, how to contact us,
 > retention periods, GDPR/CCPA/CPRA disclosures, and who we are — live in the
@@ -126,6 +126,18 @@ type, and timestamp. No IP addresses, user agents, or personal information are s
 
 Because Vercel Web Analytics collects no personal data and uses no cookies, no consent banner is
 required under GDPR or ePrivacy regulations.
+
+### Sign-in state
+
+If you have signed in to your Legesher account at [app.legesher.io](https://app.legesher.io), your
+browser holds a small sign-in cookie for legesher.io: a timestamp set by our sign-in provider, Clerk,
+with no name, email or account ID in it. A script on this site reads that cookie in your browser only
+to choose which link to show: one to your account if you are signed in, or one to create an account
+if you are not. The script does not send the result anywhere, sets no cookie of its own, and loads no
+sign-in code.
+
+Like any cookie for legesher.io, your browser also includes it in requests to this site. The pages
+here are static files, so nothing on the server uses it.
 
 ### Fonts
 

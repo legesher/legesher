@@ -1,5 +1,6 @@
 ---
 import Default from '@astrojs/starlight/components/SocialIcons.astro';
+import AccountLink from './AccountLink.astro';
 // Bundled at build time: import.meta.url is not source-relative once Astro
 // prerenders from dist/.prerender/, so runtime fs reads break there.
 import langs from '../../.astro/integrations/legesher-snippets/snippet-langs.json';
@@ -11,6 +12,7 @@ import langs from '../../.astro/integrations/legesher-snippets/snippet-langs.jso
   </select>
 </label>
 <Default><slot /></Default>
+<AccountLink placement="header" />
 <style>
   .lg-picker select { background: transparent; border: 1px solid var(--sl-color-gray-5); border-radius: 0.25rem; color: inherit; }
 </style>
