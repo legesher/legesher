@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from legesher_core.native_digits import fold_code_digits
+from legesher_core.native_digits import fold_code_digits, read_native_code
 from legesher_core.round_trip import FOLD_LAYERS, Layer, verify_round_trip
 from legesher_core.transformer import TokenTranslator
 from legesher_core.tree_sitter.translator import TreeSitterTranslator
@@ -369,12 +369,24 @@ class TestErrorPositions:
 class TestWithNativePunctuation:
     """Both folds on one line: punctuation is read first, then digits."""
 
+    @pytest.mark.parametrize("language", NATIVE)
+    @pytest.mark.parametrize("mark", ["\u060c", "\uff0c", "\u061b", "\uff1b"])
+    def test_read_native_code_reads_a_mark_glued_to_a_digit(
+        self, language: str, mark: str
+    ) -> None:
+        typed = f"f({native(language, '1')}{mark}{native(language, '2')})\n"
+        ascii_mark = "," if mark in "\u060c\uff0c" else ";"
+        assert read_native_code(typed, language) == f"f(1{ascii_mark}2)\n"
+
     @pytest.mark.parametrize("backend", BACKENDS, ids=lambda b: b.__name__)
     @pytest.mark.parametrize("language", NATIVE)
     @pytest.mark.parametrize(
         ("template", "english"),
         [
             ("x = ({a}\u060c {b})\n", "x = (1, 2)\n"),  # Arabic comma
+            # Unspaced: from CPython 3.12 the tokenizer reads a mark and the
+            # digit after it as one name, so only this order reads both.
+            ("x = f({a}\u060c{b})\n", "x = f(1,2)\n"),
             ("x = [{a}\uff0c{b}]\n", "x = [1,2]\n"),  # fullwidth comma
             ("y = {a}\u061b z = {b}\n", "y = 1; z = 2\n"),  # Arabic semicolon
         ],
@@ -450,6 +462,9 @@ class TestRoundTrip:
             # The first differing character decides the name.
             ("x = ({a}\u060c {b})\n", Layer.DIGITS),
             ("x = (y\u060c {a})\n", Layer.PUNCTUATION),
+            # Unspaced, where the order of the two folds decides the reading.
+            ("x = f({a}\u060c{b})\n", Layer.DIGITS),
+            ("x = [{a}\uff0c{b}]\n", Layer.DIGITS),
         ],
     )
     def test_line_with_both_folds_is_named_for_its_first_difference(

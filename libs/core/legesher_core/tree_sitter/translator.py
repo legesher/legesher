@@ -15,8 +15,7 @@ from pathlib import Path
 from .parser import PythonParser, TreeSitterError
 from ..exceptions import InvalidCodeError
 from ..name_positions import kept_names
-from ..native_punctuation import fold_code_punctuation
-from ..native_digits import fold_code_digits
+from ..native_digits import read_native_code
 from ..token_mapper import TokenMapper
 from ..types import CulturalCommentMetadata
 from ..utils import (
@@ -214,14 +213,10 @@ class TreeSitterTranslator:
 
         # Native punctuation in code position is read as its ASCII mark, then
         # a numeric literal typed in the source language's own digits is read
-        # as ASCII, by the same functions the token backend calls, so the two
-        # backends cannot disagree about what is code and what is prose.
-        # Punctuation goes first: the digit fold tokenizes, and an Arabic
-        # comma stops the tokenizer from CPython 3.12. The text as given is
-        # what a pass-through below hands back.
-        read = fold_code_digits(
-            fold_code_punctuation(source_code), self.source_language
-        )
+        # as ASCII, by the same function the token backend calls, so the two
+        # backends cannot disagree about what is code and what is prose. The
+        # text as given is what a pass-through below hands back.
+        read = read_native_code(source_code, self.source_language)
 
         try:
             # Parse code with tree-sitter

@@ -28,8 +28,8 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Protocol
 
 from legesher_core.name_positions import SOFT_KEYWORDS, name_roles, word_at
-from legesher_core.native_punctuation import NATIVE_PUNCTUATION, fold_code_punctuation
-from legesher_core.native_digits import fold_code_digits
+from legesher_core.native_digits import read_native_code
+from legesher_core.native_punctuation import NATIVE_PUNCTUATION
 from legesher_core.utils import merge_exception_translations
 
 if TYPE_CHECKING:
@@ -411,7 +411,7 @@ def _as_read(
     the source itself, which is every source written with ASCII marks and
     digits.
     """
-    read = fold_code_digits(fold_code_punctuation(expected_source), language)
+    read = read_native_code(expected_source, language)
     if read is expected_source:
         return read, None
     return read, read.splitlines(keepends=True)
@@ -1016,9 +1016,7 @@ def verify_round_trip(
     # same length, same offsets), so a keyword typed against a fullwidth
     # colon is still seen as a name, and on CPython 3.12 and later a native
     # literal is not read as a name the trip renamed.
-    read = fold_code_digits(
-        fold_code_punctuation(source), _reading_language(pack, native_side)
-    )
+    read = read_native_code(source, _reading_language(pack, native_side))
     findings = _name_findings(read, forward, pack, native_side=native_side)
 
     clean = count == 0

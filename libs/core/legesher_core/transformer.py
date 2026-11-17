@@ -16,8 +16,7 @@ from typing import cast
 from .cultural_comments import CulturalCommentParser
 from .exceptions import InvalidCodeError
 from .name_positions import kept_names
-from .native_punctuation import fold_code_punctuation
-from .native_digits import fold_code_digits
+from .native_digits import read_native_code
 from .token_mapper import TokenMapper
 from .types import CulturalCommentMetadata
 from .utils import validate_utf8_encoding, normalize_newlines
@@ -199,13 +198,10 @@ class TokenTranslator:
         # Native punctuation in code position (an Arabic comma, a fullwidth
         # parenthesis) is read as its ASCII mark, then a numeric literal typed
         # in the source language's own digits is read as ASCII; strings,
-        # comments and identifiers keep theirs. Punctuation goes first: the
-        # digit fold tokenizes, and an Arabic comma stops the tokenizer from
-        # CPython 3.12. One character for one, so no offset moves. The text
-        # as given is what a pass-through below hands back.
-        read = fold_code_digits(
-            fold_code_punctuation(source_code), self.source_language
-        )
+        # comments and identifiers keep theirs (``native_digits``, which owns
+        # the order). One character for one, so no offset moves. The text as
+        # given is what a pass-through below hands back.
+        read = read_native_code(source_code, self.source_language)
 
         try:
             # Tokenize the source code

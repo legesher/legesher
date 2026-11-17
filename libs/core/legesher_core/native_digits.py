@@ -72,10 +72,11 @@ from functools import lru_cache
 from legesher_i18n.language_registry import get_decimal_separator, get_native_digits
 from legesher_i18n.numerals import DECIMAL_SEPARATORS
 
+from .native_punctuation import fold_code_punctuation
 from .stored_form import tokenizer_view
 from .utils import continues_identifier
 
-__all__ = ["fold_code_digits"]
+__all__ = ["fold_code_digits", "read_native_code"]
 
 _PREFIXES = ("0x", "0b", "0o")
 _QUOTES = frozenset("'\"")
@@ -197,3 +198,16 @@ def fold_code_digits(source: str, language: str | None) -> str:
     for start, end in kept:
         chars[start:end] = folded[start:end]
     return "".join(chars)
+
+
+def read_native_code(source: str, language: str | None) -> str:
+    """``source`` as the engine reads it: native marks, then native digits.
+
+    The one place the order of the two folds is decided; both translator
+    backends and the round-trip check read through this. Punctuation comes
+    first because the digit fold tokenizes: from CPython 3.12 the tokenizer
+    reads a native mark as the start of a name and takes the digit after it
+    into that name, so ``f(١،٢)`` read digits first would leave ``٢`` as
+    typed. One character for one either way, so no offset moves.
+    """
+    return fold_code_digits(fold_code_punctuation(source), language)
