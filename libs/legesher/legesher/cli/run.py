@@ -37,14 +37,15 @@ def _from_script(tb: TracebackType | None, script: str) -> TracebackType | None:
     return tb
 
 
-def _language_note(script: Path, language: str) -> str:
+def _language_note(script: Path, language: str, source: Path | None) -> str:
     """Which language a script that did not compile was read as, and why.
 
     A file written in one language and read as another fails on its first
     keyword, and Python's ``SyntaxError`` cannot say that the language was
     the problem. Printed only when ``--lang`` did not name the language.
+    ``source`` is the config file the language came from, or None when no
+    file names one.
     """
-    source = LegesherConfig.language_source()
     if source is not None:
         return (
             f"legesher: {script.name} was read as '{language}', the language "
@@ -162,5 +163,6 @@ def run(script: str, lang: str | None, args: str | None):
             raise
         sys.excepthook(type(exc), exc, tb)
         if compile_error and lang is None:
-            click.echo(_language_note(script_path, language), err=True)
+            note = _language_note(script_path, language, config.language_source)
+            click.echo(note, err=True)
         sys.exit(1)

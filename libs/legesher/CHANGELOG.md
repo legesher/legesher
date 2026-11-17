@@ -18,9 +18,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   use, and the interactive prompt asks which one when several are ticked. It
   no longer writes `git.enabled`, `ai_context`, `translation` or `editor`,
   which nothing read.
+- Inside a git repository `legesher init` writes the config at the
+  repository's root, whichever directory it is run from, where `git setup`
+  writes it and git runs the filter. It wrote in the current directory. It
+  does not run in the home directory, where the file is the user-level config.
+- Inside a git repository every command reads the config at the repository's
+  root. `legesher config` read the nearest one at or above the current
+  directory, including one above the repository and `~/.legesher/config.yml`,
+  which a `config set` without `--global` could then write to. A repository
+  with no config at its root still has one in a subdirectory read from there
+  down, and `legesher git status` says that the git filter does not see it.
+- A setting the project config does not name comes from the user config, as
+  `legesher config get` already reported. In `legesher run` and the git
+  filter, any project config replaced every user setting with a default.
+- `git.filter_enabled` records whether `legesher init` set the filter up, not
+  whether it was asked to: asked for outside a git repository, it is `false`.
 - When a script does not compile and `--lang` was not given, `legesher run`
-  follows Python's `SyntaxError` with the language the file was read as, where
-  that came from, and how to name another.
+  follows Python's `SyntaxError` with the language the file was read as, the
+  file that came from, and how to name another.
+- `legesher config set` writes text as itself, not as escapes, as `init` and
+  `git setup` do.
 
 ### Fixed
 
@@ -33,18 +50,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `language` is read as the first entry of `languages` and
   `git.filter_enabled` as `git.enabled`, by every command including
   `legesher guard --diff`, which judged such a base as English. The file is
-  never rewritten for being old and its other sections are never removed.
+  never rewritten for being old, and `git setup` and `config set` keep its
+  other sections. This applies to `~/.legesher/config.yml` too.
 - The project config is read outside a git repository. `legesher run` and
   `legesher git status` ignored `.legesher/config.yml` unless the directory
   was inside one, while `legesher config` read it.
-- `legesher git setup` changes the language and the filter switch and keeps
-  the rest of an existing config. It rewrote the file from defaults, which
-  reset `python_version` and the metadata settings and dropped
-  `runtime.cache_size` and any other key.
-- `legesher config` reads the same project file as the runtime: the nearest
-  one at or above the current directory, no higher than the git repository's
-  root, and never `~/.legesher/config.yml`, which a `config set` without
-  `--global` run under the home directory could write to.
+- `legesher git setup` starts from the existing config and keeps what it was
+  not given. It rewrote the file from defaults, which reset `python_version`
+  and the metadata settings and dropped `runtime.cache_size` and any other
+  key.
+- A `language` that is not a language code (a number, a list, an empty
+  string) names no language, for every reader. `legesher config get` printed
+  it while the runtime failed on it.
 
 ## [0.26.0] - 2026-11-18
 

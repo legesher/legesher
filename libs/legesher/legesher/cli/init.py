@@ -18,7 +18,6 @@ from collections.abc import Sequence
 
 import click
 import questionary
-import yaml
 
 try:
     import tomllib  # Python 3.11+
@@ -29,7 +28,13 @@ from legesher_core import AIContextGenerator
 from legesher_i18n import LanguagePackLoader, PackNotFoundError
 from legesher_i18n.language_registry import LANGUAGE_METADATA
 
-from legesher.config import LegesherConfig
+from legesher.config import (
+    CONFIG_RELATIVE_PATH,
+    LegesherConfig,
+    is_user_config,
+    dump_config,
+    project_root,
+)
 
 
 #: The comment at the top of a config file this command writes.
@@ -113,8 +118,31 @@ def init(
     click.echo(click.style("\n🌍 Welcome to Legesher!\n", fg="cyan", bold=True))
     click.echo("Let's set up your project for multilingual Python development.\n")
 
+    # The config belongs at the git repository's root, where `git setup`
+    # writes it and git runs the filter; in this directory outside one.
+    root = project_root()
+    here = Path.cwd().resolve()
+    if root == _home() and here != root:
+        # Home is itself a repository (dotfiles kept in git): its root holds
+        # the user-level config, so the project is this directory.
+        root = here
+    legesher_dir = Path(".legesher") if root == here else root / ".legesher"
+    config_path = legesher_dir / CONFIG_RELATIVE_PATH.name
+
+    # ~/.legesher/config.yml is the user-level config, never a project's.
+    if root == _home() or is_user_config(config_path):
+        click.echo(
+            click.style(
+                "❌ This is your home directory, where .legesher/config.yml is",
+                fg="red",
+            )
+        )
+        click.echo("   your user-level config and not a project's.\n")
+        click.echo("   Run 'legesher init' inside a project directory, or set a")
+        click.echo("   default with: legesher config set --global language <code>")
+        sys.exit(1)
+
     # Check if already initialized
-    config_path = Path(".legesher/config.yml")
     if config_path.exists() and not force:
         click.echo(
             click.style(
@@ -237,15 +265,20 @@ def init(
     click.echo(click.style("📦 Creating Legesher configuration...\n", bold=True))
 
     # Create .legesher directory structure
-    legesher_dir = Path(".legesher")
     legesher_dir.mkdir(exist_ok=True)
     (legesher_dir / "metadata").mkdir(exist_ok=True)
 
+    # Set up git first: the config records whether the filter was set up,
+    # not whether it was asked for.
+    git_configured = _setup_git_integration() if git_enabled else False
+
     # Generate config.yml
     _generate_config(
-        config_path, working_language, selected_languages, py_version, git_enabled
+        config_path, working_language, selected_languages, py_version, git_configured
     )
     click.echo(f"✓ Created {config_path}")
+    if root != here:
+        click.echo("   (at the git repository's root, where the git filter reads it)")
 
     # Generate AI context files if enabled
     generated_ai_contexts = []
@@ -284,9 +317,6 @@ def init(
                     )
                 )
 
-    # Setup git if enabled
-    git_configured = _setup_git_integration() if git_enabled else False
-
     # Success summary
     click.echo("\n" + "─" * 60 + "\n")
     if git_enabled and not git_configured:
@@ -304,7 +334,7 @@ def init(
     click.echo(f"   • {config_path}")
     if generated_ai_contexts:
         for lang in generated_ai_contexts:
-            click.echo(f"   • .legesher/AI-CONTEXT-{lang}.md")
+            click.echo(f"   • {legesher_dir / f'AI-CONTEXT-{lang}.md'}")
     if git_configured:
         click.echo("   • .gitattributes (updated)")
         click.echo("   • .git/config (updated)")
@@ -319,6 +349,14 @@ def init(
         click.echo("💡 Tip: Your AI coding assistant (Claude Code, Copilot, etc.)")
         click.echo("   can now understand your multilingual code thanks to the")
         click.echo("   AI-CONTEXT files. They'll suggest code in your language!\n")
+
+
+def _home() -> Path | None:
+    """The user's home directory, resolved; None when it cannot be found."""
+    try:
+        return Path.home().resolve()
+    except (OSError, RuntimeError):
+        return None
 
 
 def _detect_python_version() -> str | None:
@@ -427,7 +465,7 @@ def _generate_config(
         language: The language in use
         languages: Every selected language code, ``language`` among them
         python_version: Python version string
-        git_enabled: Whether the git filter is being set up
+        git_enabled: Whether the git filter was set up
     """
     config = LegesherConfig(
         language=language,
@@ -436,13 +474,9 @@ def _generate_config(
         git_canonical_language="en",
         git_filter_enabled=git_enabled,
     )
-    body = yaml.safe_dump(
-        config.file_dict(),
-        default_flow_style=False,
-        sort_keys=False,
-        allow_unicode=True,
+    config_path.write_text(
+        CONFIG_HEADER + dump_config(config.file_dict()), encoding="utf-8"
     )
-    config_path.write_text(CONFIG_HEADER + body, encoding="utf-8")
 
 
 def _setup_git_integration() -> bool:

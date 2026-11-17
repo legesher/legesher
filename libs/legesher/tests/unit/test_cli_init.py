@@ -100,7 +100,9 @@ class TestInitNonInteractive:
                 '[project]\nrequires-python = ">=3.13"', encoding="utf-8"
             )
             # Mock git integration setup so the test doesn't depend on a real git binary
-            with patch("legesher.cli.init._setup_git_integration"):
+            with patch(
+                "legesher.cli.init._setup_git_integration", return_value=True
+            ) as setup:
                 result = runner.invoke(
                     cli,
                     ["init", "-l", "es", "--no-ai-context"],
@@ -108,6 +110,7 @@ class TestInitNonInteractive:
                 )
             assert result.exit_code == 0, result.output
             assert "Git integration will be enabled" in result.output
+            setup.assert_called_once_with()
 
     def test_force_overwrites_existing(self, mock_ai_gen, mock_loader, tmp_path):
         """--force allows overwriting existing config."""
@@ -279,8 +282,6 @@ def a_terminal():
     return patch("legesher.cli.init.sys", fake)
 
 
-@patch("legesher.cli.init.LanguagePackLoader")
-@patch("legesher.cli.init.AIContextGenerator")
 class TestWorkingLanguage:
     """One language is in use; every language chosen is on record."""
 
@@ -289,15 +290,13 @@ class TestWorkingLanguage:
             cli, ["init", "-p", "3.13", "--no-git", "--no-ai-context", *args], input=""
         )
 
-    def test_one_language_prints_no_extra_line(
-        self, mock_ai_gen, mock_loader, tmp_path
-    ):
+    def test_one_language_prints_no_extra_line(self, tmp_path):
         with CliRunner().isolated_filesystem(temp_dir=tmp_path):
             result = self._init("-l", "hi")
             assert result.exit_code == 0, result.output
             assert "Working language" not in result.output
 
-    def test_flags_take_the_first(self, mock_ai_gen, mock_loader, tmp_path):
+    def test_flags_take_the_first(self, tmp_path):
         with CliRunner().isolated_filesystem(temp_dir=tmp_path):
             result = self._init("-l", "hi", "-l", "ar")
             assert result.exit_code == 0, result.output
@@ -305,18 +304,14 @@ class TestWorkingLanguage:
             data = yaml.safe_load(Path(".legesher/config.yml").read_text("utf-8"))
             assert (data["language"], data["languages"]) == ("hi", ["hi", "ar"])
 
-    def test_a_language_given_twice_is_recorded_once(
-        self, mock_ai_gen, mock_loader, tmp_path
-    ):
+    def test_a_language_given_twice_is_recorded_once(self, tmp_path):
         with CliRunner().isolated_filesystem(temp_dir=tmp_path):
             result = self._init("-l", "si", "-l", "he", "-l", "si")
             assert result.exit_code == 0, result.output
             data = yaml.safe_load(Path(".legesher/config.yml").read_text("utf-8"))
             assert (data["language"], data["languages"]) == ("si", ["si", "he"])
 
-    def test_the_interactive_prompt_asks_which_one(
-        self, mock_ai_gen, mock_loader, tmp_path
-    ):
+    def test_the_interactive_prompt_asks_which_one(self, tmp_path):
         with (
             CliRunner().isolated_filesystem(temp_dir=tmp_path),
             a_terminal(),
@@ -331,9 +326,7 @@ class TestWorkingLanguage:
             data = yaml.safe_load(Path(".legesher/config.yml").read_text("utf-8"))
             assert (data["language"], data["languages"]) == ("th", ["ar", "th"])
 
-    def test_one_interactive_choice_is_not_asked_about(
-        self, mock_ai_gen, mock_loader, tmp_path
-    ):
+    def test_one_interactive_choice_is_not_asked_about(self, tmp_path):
         with (
             CliRunner().isolated_filesystem(temp_dir=tmp_path),
             a_terminal(),
@@ -344,9 +337,7 @@ class TestWorkingLanguage:
             assert result.exit_code == 0, result.output
             ask.assert_not_called()
 
-    def test_cancelling_the_prompt_writes_nothing(
-        self, mock_ai_gen, mock_loader, tmp_path
-    ):
+    def test_cancelling_the_prompt_writes_nothing(self, tmp_path):
         with (
             CliRunner().isolated_filesystem(temp_dir=tmp_path),
             a_terminal(),

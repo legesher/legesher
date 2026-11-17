@@ -23,7 +23,7 @@ from pathlib import Path
 
 import click
 
-from legesher.config import LegesherConfig
+from legesher.config import LegesherConfig, find_project_config
 from legesher_core.transformer import TokenTranslator
 
 # Configure logger
@@ -445,13 +445,26 @@ def git_status():
             click.echo("Not in a git repository\n")
             repo_root = None
 
-        # Load configuration
+        # Load configuration, as every other command finds and reads it
         try:
-            config = LegesherConfig.load(repo_root)
+            config = LegesherConfig.load()
             click.echo("Configuration:")
             click.echo(f"  Language: {config.language}")
             click.echo(f"  Python version: {config.python_version or '(auto-detect)'}")
             click.echo(f"  Filters enabled: {config.git_filter_enabled}")
+            config_path = find_project_config()
+            if (
+                repo_root is not None
+                and config_path is not None
+                and config_path.parent.parent != repo_root
+            ):
+                # Git runs the filter and the guard hook at the repository
+                # root, so a config below it is one they never read.
+                click.echo(f"  ⚠ Read from {config_path}, which is not at the")
+                click.echo("    repository root: the git filter and the guard hook do")
+                click.echo(
+                    "    not read it. Run 'legesher git setup' to write one there."
+                )
         except Exception as e:
             click.echo(f"  No configuration found: {e}")
 

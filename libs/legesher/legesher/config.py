@@ -4,7 +4,7 @@ This module handles reading and writing Legesher configuration files,
 which store user preferences for language, Python version, and git settings.
 
 Configuration files are stored in YAML format at:
-    - Project config: .legesher/config.yml (in git repo root)
+    - Project config: .legesher/config.yml (see ``find_project_config``)
     - User global config: ~/.legesher/config.yml (user home directory)
 
 Configuration precedence (highest to lowest):
@@ -12,10 +12,15 @@ Configuration precedence (highest to lowest):
     2. User global config (~/.legesher/config.yml)
     3. Default values
 
-The project config is the nearest ``.legesher/config.yml`` at or above the
-working directory, looking no higher than the git repository's root when
-there is one (``find_project_config``). A project does not have to be a git
-repository.
+Precedence is per top-level key (``merge_config_data``): a setting the
+project file does not name comes from the user file, and a section such as
+``git`` is taken whole from the file that names it.
+
+Inside a git repository the project config is the one at the repository's
+root, where ``legesher init`` and ``legesher git setup`` write it and where
+git runs the filter and the guard hook. Outside one it is the nearest
+``.legesher/config.yml`` at or above the working directory: a project does
+not have to be a git repository.
 
 One schema, written by ``legesher init`` and ``legesher git setup`` alike.
 ``legesher init`` once wrote a different one (``languages`` as a list and no
@@ -98,6 +103,11 @@ def language_list(value: object) -> list[str]:
     return codes
 
 
+def _is_language(value: object) -> bool:
+    """Whether a ``language`` value is a code: a non-empty string."""
+    return isinstance(value, str) and bool(value.strip())
+
+
 def normalize_config_data(data: object) -> dict:
     """A config file's YAML as the one schema every reader shares.
 
@@ -109,17 +119,27 @@ def normalize_config_data(data: object) -> dict:
       the file names itself always wins.
     - ``git.filter_enabled``, from ``git.enabled``.
 
+    A ``language`` that is not a code (a number, a list, an empty string)
+    names none: it is treated as missing, filled from the list or dropped.
+
     Every reader of a config file goes through this (the loader, ``legesher
     config`` and ``legesher guard``), so they cannot disagree about what an
     old file says. Anything that is not a mapping reads as an empty config.
+    This is the one place ``languages`` decides a language; a file with a
+    ``language`` of its own never has its list consulted.
     """
     if not isinstance(data, dict):
         return {}
     result = copy.deepcopy(data)
-    if not isinstance(result.get("language"), str):
+    if not _is_language(result.get("language")):
         codes = language_list(result.get("languages"))
         if codes:
             result["language"] = codes[0]
+        else:
+            # A number, a list or an empty string there names no language.
+            # Left in, it would hide the user config's language from one
+            # reader and not from another.
+            result.pop("language", None)
     git = result.get("git")
     if (
         isinstance(git, dict)
@@ -130,25 +150,88 @@ def normalize_config_data(data: object) -> dict:
     return result
 
 
+def merge_config_data(user_data: object, project_data: object) -> dict:
+    """The user and project config files as one mapping, the project's first.
+
+    Each file's YAML is read through ``normalize_config_data``. A top-level
+    key the project file names replaces the user's, a section whole; a key
+    it does not name is the user's. ``telemetry`` is the exception: it is
+    the user's own section filled out with the defaults, whatever the
+    project file says. No other default is filled in, so what comes back is
+    what the files say.
+
+    The loader and ``legesher config`` both merge through this, so the
+    command reports what the runtime uses.
+    """
+    merged = normalize_config_data(user_data)
+    merged.update(normalize_config_data(project_data))
+    merged["telemetry"] = user_telemetry(user_data)
+    return merged
+
+
+def dump_config(data: dict) -> str:
+    """Config data as the YAML every command writes.
+
+    Keys in the order given, and text as itself: a value in Devanagari or
+    Arabic is written in that script, not as escapes.
+    """
+    return yaml.safe_dump(
+        data, default_flow_style=False, sort_keys=False, allow_unicode=True
+    )
+
+
+def is_user_config(path: Path) -> bool:
+    """Whether ``path`` is the user-level config file, through any symlink."""
+    try:
+        return path.samefile(user_config_path())
+    except (OSError, RuntimeError):
+        return False
+
+
+def project_root(start: Path | None = None) -> Path:
+    """The directory a project's ``.legesher/`` belongs in.
+
+    The root of the git repository ``start`` (default: the working
+    directory) is in, which is where git runs the filter and the guard
+    hook; ``start`` itself outside a repository.
+    """
+    origin = (start or Path.cwd()).resolve()
+    current = origin
+    while True:
+        if (current / ".git").exists():
+            return current
+        if current == current.parent:
+            return origin
+        current = current.parent
+
+
 def find_project_config(start: Path | None = None) -> Path | None:
     """The project's ``.legesher/config.yml``, or ``None`` when it has none.
 
-    The nearest one at or above ``start`` (default: the working directory).
-    The search stops at the root of the git repository ``start`` is in, so
-    a config above a repository never reaches into it, and it never returns
-    the user-level file, which sits at the same relative path under home.
+    Inside a git repository it is the file at the repository's root,
+    whatever directory ``start`` (default: the working directory) is: that
+    is where ``legesher init`` and ``legesher git setup`` write, and where
+    git runs the filter and the guard hook, so every command reads one
+    file. A repository with none at its root falls back to the nearest one
+    between ``start`` and the root, which is where an earlier ``legesher
+    init`` run in a subdirectory left it.
+
+    Outside a repository it is the nearest one at or above ``start``.
+
+    It is never the user-level file, which sits at the same relative path
+    under home, and the search never goes above a repository's root.
     """
     current = (start or Path.cwd()).resolve()
-    try:
-        user_path = user_config_path().resolve()
-    except (OSError, RuntimeError):
-        user_path = None
+    nearest: Path | None = None
     while True:
         candidate = current / CONFIG_RELATIVE_PATH
-        if candidate.is_file() and candidate != user_path:
-            return candidate
-        if (current / ".git").exists() or current == current.parent:
-            return None
+        found = candidate.is_file() and not is_user_config(candidate)
+        if (current / ".git").exists():
+            return candidate if found else nearest
+        if found and nearest is None:
+            nearest = candidate
+        if current == current.parent:
+            return nearest
         current = current.parent
 
 
@@ -196,8 +279,11 @@ class LegesherConfig:
     Attributes:
         language: Default natural language code (e.g., "es", "ar")
         languages: Every language chosen for the project, as a record (a
-            list of codes, or None when the config keeps no list). Nothing
-            reads it to decide a language: ``language`` is the one in use.
+            list of codes, or None when the config keeps no list).
+            ``language`` is the one in use; the list stands in for it only
+            in a file that has no ``language`` (``normalize_config_data``).
+        language_source: The config file ``load()`` took ``language`` from,
+            or None when no file names one and it is the default.
         python_version: Python version (e.g., "3.13", None for auto-detect)
         git_canonical_language: Language used for git storage (default: "en")
         git_filter_enabled: Whether git filters are enabled (default: True)
@@ -247,6 +333,7 @@ class LegesherConfig:
         """
         self.language = language
         self.languages = list(languages) if languages else None
+        self.language_source: Path | None = None  # set by load()
         self.python_version = python_version
         self.git_canonical_language = git_canonical_language
         self.git_filter_enabled = git_filter_enabled
@@ -282,8 +369,14 @@ class LegesherConfig:
         metadata_config = _section(data.get("metadata"))
         telemetry_config = telemetry_section(data.get("telemetry"))
 
+        # A language is a code. Anything else a file holds there (a
+        # number, a list) names none, and the default stands.
+        language = data.get("language")
+        if not _is_language(language):
+            language = "en"
+
         config = cls(
-            language=data.get("language", "en"),
+            language=language,
             languages=language_list(data.get("languages")),
             python_version=data.get("python_version"),
             git_canonical_language=git_config.get("canonical_language", "en"),
@@ -365,8 +458,7 @@ class LegesherConfig:
 
         Args:
             repo_root: The directory that holds ``.legesher/`` (default: the
-                nearest one at or above the working directory, see
-                ``find_project_config``)
+                project's own file, found by ``find_project_config``)
 
         Returns:
             Tuple of (LegesherConfig instance or None, file_exists bool)
@@ -380,7 +472,7 @@ class LegesherConfig:
         if repo_root is None:
             config_path = find_project_config()
             if config_path is None:
-                logger.debug("No project config found at or above the cwd")
+                logger.debug("No project config found from the cwd")
                 return (None, False)
         else:
             config_path = repo_root / CONFIG_RELATIVE_PATH
@@ -435,6 +527,9 @@ class LegesherConfig:
         This method loads configuration from both project and user config files,
         with project config taking precedence over user config, except for
         the ``telemetry`` section, which comes from the user config only.
+        Precedence is per top-level key (``merge_config_data``), the rule
+        ``legesher config`` reports by. ``language_source`` on the result is
+        the file the language came from.
 
         Args:
             repo_root: The directory that holds the project's ``.legesher/``
@@ -446,34 +541,64 @@ class LegesherConfig:
         Example:
             >>> config = LegesherConfig.load()  # Load with precedence
         """
-        # Start with default config
+        user_path = user_config_path()
+        try:
+            if repo_root is None:
+                project_path = find_project_config()
+            else:
+                project_path = repo_root / CONFIG_RELATIVE_PATH
+        except (OSError, RuntimeError) as e:
+            logger.debug(f"Could not look for a project config: {e}")
+            project_path = None
+
+        user_data = cls._usable_file_data(user_path)
+        project_data = cls._usable_file_data(project_path)
+
+        # Defaults, then what the files say, the project's settings first.
         merged_data = copy.deepcopy(DEFAULT_CONFIG)
+        merged_data.update(merge_config_data(user_data, project_data))
 
-        # Merge user config (if exists)
-        try:
-            user_config, user_exists = cls.load_user_config()
-            if user_exists and user_config:
-                user_data = user_config.to_dict()
-                merged_data.update(user_data)
-        except Exception as e:
-            logger.debug(f"Could not load user config: {e}")
-
-        # Merge project config (if exists)
-        try:
-            project_config, project_exists = cls.load_project_config(repo_root)
-            if project_exists and project_config:
-                project_data = project_config.to_dict()
-                merged_data.update(project_data)
-        except Exception as e:
-            logger.debug(f"Could not load project config: {e}")
-
-        # Telemetry is consent: the user's own section, never the project's.
-        # to_dict() always writes a full telemetry block, so without this a
-        # project file holding only `language: es` would reset the user's
-        # choice, and one holding `telemetry:` would make it for them.
+        # Telemetry is consent: the user's own section, never the project's,
+        # and read from the user file as written, so a user file that is
+        # unusable for another reason still carries the user's choice.
         merged_data["telemetry"] = user_telemetry(cls._read_user_yaml())
 
-        return cls.from_dict(merged_data)
+        config = cls.from_dict(merged_data)
+        for path, data in ((project_path, project_data), (user_path, user_data)):
+            if data is not None and isinstance(data.get("language"), str):
+                config.language_source = path
+                break
+        return config
+
+    @classmethod
+    def _usable_file_data(cls, config_path: Path | None) -> dict | None:
+        """A config file as ``load()`` uses it, or ``None`` when it does not.
+
+        ``None`` for no file, a file that cannot be read, one whose YAML is
+        not a mapping, and one that fails validation: such a file is left
+        out whole, so it neither sets nor hides anything. An empty file is
+        an empty mapping.
+        """
+        if config_path is None or not config_path.is_file():
+            return None
+        try:
+            with open(config_path, encoding="utf-8") as f:
+                raw = yaml.safe_load(f)
+        except (OSError, ValueError, yaml.YAMLError) as e:
+            logger.error(f"Ignoring {config_path}: {e}")
+            return None
+        if raw is None:
+            return {}
+        if not isinstance(raw, dict):
+            logger.error(f"Ignoring {config_path}: it is not a YAML mapping")
+            return None
+        data = normalize_config_data(raw)
+        try:
+            cls.from_dict(data)
+        except Exception as e:
+            logger.error(f"Ignoring {config_path}: {e}")
+            return None
+        return data
 
     @staticmethod
     def _read_yaml(config_path: Path) -> object:
@@ -489,29 +614,6 @@ class LegesherConfig:
     def _read_user_yaml(cls) -> object:
         """The user config file's raw YAML, or ``None`` if it cannot be read."""
         return cls._read_yaml(user_config_path())
-
-    @classmethod
-    def language_source(cls, repo_root: Path | None = None) -> Path | None:
-        """The config file ``load()`` takes the language from.
-
-        ``None`` means no file names one and the language is the default,
-        English. A project config that loads stands in front of the user
-        config for every setting, as it does in ``load()``, so a project
-        file that names no language leaves the default in place.
-        """
-        if repo_root is None:
-            project_path = find_project_config()
-        else:
-            project_path = repo_root / CONFIG_RELATIVE_PATH
-        for config_path in (project_path, user_config_path()):
-            if config_path is None or not config_path.is_file():
-                continue
-            data = cls._read_yaml(config_path)
-            if not isinstance(data, dict):
-                continue  # load() skips a file it cannot read
-            named = normalize_config_data(data).get("language")
-            return config_path if isinstance(named, str) else None
-        return None
 
     @classmethod
     def _write_config(cls, config_path: Path, data: dict) -> None:
@@ -531,13 +633,7 @@ class LegesherConfig:
             else:
                 merged[key] = value
         with open(config_path, "w", encoding="utf-8") as f:
-            yaml.safe_dump(
-                merged,
-                f,
-                default_flow_style=False,
-                sort_keys=False,
-                allow_unicode=True,
-            )
+            f.write(dump_config(merged))
 
     def save_project_config(self, repo_root: Path | None = None) -> Path:
         """Save configuration to project .legesher/config.yml.
@@ -588,10 +684,8 @@ class LegesherConfig:
             >>> config_path = config.save_user_config()
         """
         # Create ~/.legesher directory if it doesn't exist
-        legesher_dir = Path.home() / ".legesher"
-        legesher_dir.mkdir(exist_ok=True)
-
-        config_path = legesher_dir / "config.yml"
+        config_path = user_config_path()
+        config_path.parent.mkdir(exist_ok=True)
 
         # The file's own telemetry section is one of the keys left as it is.
         self._write_config(config_path, self.file_dict())

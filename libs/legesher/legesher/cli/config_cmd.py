@@ -21,10 +21,10 @@ import yaml
 
 from legesher.config import (
     USER_ONLY_SECTIONS,
+    dump_config,
     find_project_config,
-    normalize_config_data,
+    merge_config_data,
     user_config_path,
-    user_telemetry,
 )
 
 
@@ -79,16 +79,14 @@ def _load_config() -> tuple[dict, Path]:
 def _load_merged_config() -> tuple[dict, list[Path]]:
     """Load user-level and project config merged (project takes precedence).
 
-    Merging is a top-level update, matching LegesherConfig.load(): a
-    project-level section replaces the user-level section of the same
-    name entirely, so these commands report what the runtime actually
-    uses. The telemetry section is the exception, again matching the
-    runtime: it is the user's own section filled out with the defaults,
-    and a project config never changes it.
-
-    Each file is read through ``normalize_config_data``, again as the
-    runtime reads it, so a file in the shape ``legesher init`` once wrote
-    reports the ``language`` and ``git.filter_enabled`` it stands for.
+    The merge is ``merge_config_data``, the one ``LegesherConfig.load()``
+    uses, so these commands report what the runtime uses: a top-level
+    key the project file names replaces the user's (a section whole), a
+    file in the shape ``legesher init`` once wrote reports the
+    ``language`` and ``git.filter_enabled`` it stands for, and the
+    telemetry section is the user's own filled out with the defaults.
+    The runtime's built-in defaults for keys neither file names are not
+    reported.
 
     Returns:
         Tuple of (merged data, list of contributing config paths)
@@ -96,14 +94,13 @@ def _load_merged_config() -> tuple[dict, list[Path]]:
     Raises:
         click.ClickException: If neither config file exists
     """
-    data: dict = {}
     user_data: dict | None = None
+    project_data: dict | None = None
     paths: list[Path] = []
 
     user_path = _user_config_path()
     if user_path.exists():
         user_data = _load_yaml_mapping(user_path)
-        data = normalize_config_data(user_data)
         paths.append(user_path)
 
     try:
@@ -112,12 +109,9 @@ def _load_merged_config() -> tuple[dict, list[Path]]:
         if not paths:
             raise
     else:
-        data = dict(data)
-        data.update(normalize_config_data(project_data))
         paths.append(project_path)
 
-    data["telemetry"] = user_telemetry(user_data)
-    return data, paths
+    return merge_config_data(user_data, project_data), paths
 
 
 _MISSING = object()
@@ -296,7 +290,7 @@ def config_set(key: str, value: str, use_global: bool):
         data, config_path = _load_config()
     _set_nested(data, key, value)
     with open(config_path, "w", encoding="utf-8") as f:
-        yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
+        f.write(dump_config(data))
     click.echo(f"Set {key} = {_coerce_value(value)} in {config_path}")
 
 

@@ -18,10 +18,16 @@ so register a new marker in `pyproject.toml`.
   `error_handler.py` (traceback frames point at the localized source). `legesher run` installs both through
   `install_import_hook()` and `install_error_handler()`.
 - `legesher/config.py`: project `.legesher/config.yml` over user `~/.legesher/config.yml` over defaults. It
-  owns the file's contract: `find_project_config()` (the nearest file at or above the working directory, no
-  higher than the git root, never the user file) and `normalize_config_data()` (how a file is read, including
-  the shape an earlier `init` wrote). `init`, `git setup`, `config`, `guard`, `run` and the git filter all
-  go through them; do not read or locate the file any other way.
+  owns the file's contract, and nothing else may re-derive any of it:
+  - where the file is: `project_root()` (the git root inside a repository, else the working directory; `init`
+    and `git setup` write there) and `find_project_config()` (the root file inside a repository, else the
+    nearest at or above the working directory; never the user file);
+  - how a file is read: `normalize_config_data()`, including the shape an earlier `init` wrote;
+  - how the two files combine: `merge_config_data()`, per top-level key. `LegesherConfig.load()` and
+    `legesher config` both use it;
+  - how it is written: `dump_config()`.
+- `guard` and `git setup` name the repository root themselves and read `<root>/.legesher/config.yml`
+  through the same reader: a pull request's base has no working directory to search from.
 
 ## Gotchas
 
