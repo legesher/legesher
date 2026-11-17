@@ -201,15 +201,16 @@ class TreeSitterTranslator:
 
         # Native punctuation in code position is read as its ASCII mark, by
         # the same function the token backend calls, so the two backends
-        # cannot disagree about what is code and what is prose.
-        source_code = fold_code_punctuation(source_code)
+        # cannot disagree about what is code and what is prose. The text as
+        # given is what a pass-through below hands back.
+        read = fold_code_punctuation(source_code)
 
         try:
             # Parse code with tree-sitter
-            tree = self.parser.parse(source_code)
+            tree = self.parser.parse(read)
 
             # Build byte→char mapping for character-level replacement
-            byte_to_char = self._build_byte_to_char_map(source_code)
+            byte_to_char = self._build_byte_to_char_map(read)
 
             # Collect replacements as (start_byte, end_byte, new_text) tuples
             replacements = []
@@ -221,12 +222,12 @@ class TreeSitterTranslator:
             # cannot be the builtin (an attribute, a keyword argument, a
             # module path) keep their spelling, by the token-level rule the
             # token path applies, so the two backends agree (CORE-2237).
-            kept = self._kept_start_bytes(source_code)
+            kept = self._kept_start_bytes(read)
             if kept:
                 replacements = [r for r in replacements if r[0] not in kept]
 
             # Apply replacements at character level to avoid UTF-8 round-trip issues
-            result = self._apply_replacements(source_code, byte_to_char, replacements)
+            result = self._apply_replacements(read, byte_to_char, replacements)
 
             # Handle metadata if requested
             if return_metadata:

@@ -194,9 +194,12 @@ Correctness requirements the review established, each pinned by a test:
   engine reads `،` `؛` `，` `；` `：` `（` `）` in code position as ASCII and never
   writes them (`native_punctuation`), so source typed with one runs and comes
   back with the ASCII mark. A line that differs from its return only by that
-  reading classifies as `PUNCTUATION`. A line with a second difference behind
-  the mark classifies by that difference, so no layer is credited as clean
-  while its divergence sits after a comma. Tokens for the expected side are
+  reading, line ending included, classifies as `PUNCTUATION`. A line with a
+  second difference behind the mark classifies by that difference, so no
+  layer is credited as clean while its divergence sits after a comma; a line
+  whose ending also changed is left unattributed. `PUNCTUATION` names a
+  cause, not a layer a trip could cover, so a verdict line never lists it as
+  uncovered. Tokens for the expected side are
   taken from the source as the engine reads it: from CPython 3.12 the
   tokenizer lexes `否则：` as one name, and the keyword inside it could not
   otherwise be classified.
@@ -302,8 +305,7 @@ versions nothing.
 
 ```text
 legesher: round-trip VERIFIED — es→en→es · exercised: builtins, keywords ·
-not covered: collision, comments, exceptions, identifiers, implicit_params,
-punctuation, strings (CORE-1841) · grammar 3.13
+not covered: comments, identifiers, strings (CORE-1841) · grammar 3.13
 ```
 
 ```text

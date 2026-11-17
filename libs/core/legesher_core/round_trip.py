@@ -412,16 +412,25 @@ def _classify(
     *,
     native_side: bool,
     read_lines: list[str] | None = None,
+    actual_raw: list[str] | None = None,
 ) -> Layer | None:
     if divergence.offset is None:
         return None
     if read_lines is not None and divergence.line <= len(read_lines):
         # Punctuation is named only when it is the whole difference on the
-        # line. With a second difference behind the mark, the tokens below
-        # (taken from the same reading) find that one, so a layer is never
-        # credited as clean while its divergence hides behind a comma.
-        if _strip_terminator(read_lines[divergence.line - 1]) == divergence.actual:
-            return Layer.PUNCTUATION
+        # line, line ending included. With a second difference behind the
+        # mark, the tokens below (taken from the same reading) find that
+        # one, so a layer is never credited as clean while its divergence
+        # hides behind a comma. A line whose ending also changed has two
+        # causes and is left unattributed, like any terminator difference.
+        read_line = read_lines[divergence.line - 1]
+        if _strip_terminator(read_line) == divergence.actual:
+            actual_line = (
+                actual_raw[divergence.line - 1]
+                if actual_raw is not None and divergence.line <= len(actual_raw)
+                else None
+            )
+            return Layer.PUNCTUATION if read_line == actual_line else None
     expected_line = expected_lines.get(divergence.line, [])
     actual_line = actual_lines.get(divergence.line, [])
     if not expected_line:
@@ -465,6 +474,7 @@ def classify_divergence(
         _pack_sections(pack),
         native_side=native_side,
         read_lines=read_lines,
+        actual_raw=actual_source.splitlines(keepends=True),
     )
 
 
@@ -483,6 +493,7 @@ def classified(
     read, read_lines = _as_read(expected_source)
     expected_lines = _tokens_by_line(read)
     actual_lines = _tokens_by_line(actual_source)
+    actual_raw = actual_source.splitlines(keepends=True) if read_lines else None
     sections = _pack_sections(pack)
     return [
         replace(
@@ -494,6 +505,7 @@ def classified(
                 sections,
                 native_side=native_side,
                 read_lines=read_lines,
+                actual_raw=actual_raw,
             ),
         )
         for d in divergences
@@ -791,8 +803,14 @@ class RoundTripReport:
             )
 
         exercised = ", ".join(sorted(layer.value for layer in self.verified)) or "none"
+        # Punctuation names a cause, never a layer a trip could cover, so it
+        # is not listed as uncovered.
         uncovered = ", ".join(
-            sorted(layer.value for layer in Layer if layer not in self.verified)
+            sorted(
+                layer.value
+                for layer in Layer
+                if layer not in self.verified and layer is not Layer.PUNCTUATION
+            )
         )
         return (
             f"legesher: round-trip VERIFIED — {trip} · exercised: {exercised} · "

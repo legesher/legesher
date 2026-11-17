@@ -177,20 +177,21 @@ class TokenTranslator:
         # never disagree with the register map's rendering (CORE-1160).
         source_code = normalize_newlines(source_code)
 
-        # Native punctuation in code position (an Arabic comma, a fullwidth
-        # parenthesis) is read as its ASCII mark; strings and comments keep
-        # theirs. One character for one, so no offset moves.
-        source_code = fold_code_punctuation(source_code)
-
         # Handle empty input
         if not source_code or not source_code.strip():
             if return_metadata:
                 return source_code, CulturalCommentMetadata()
             return source_code
 
+        # Native punctuation in code position (an Arabic comma, a fullwidth
+        # parenthesis) is read as its ASCII mark; strings and comments keep
+        # theirs. One character for one, so no offset moves. The text as
+        # given is what a pass-through below hands back.
+        read = fold_code_punctuation(source_code)
+
         try:
             # Tokenize the source code
-            tokens = list(tokenize.generate_tokens(io.StringIO(source_code).readline))
+            tokens = list(tokenize.generate_tokens(io.StringIO(read).readline))
 
             # Extract cultural comment metadata if requested (for IDE integration)
             cultural_metadata: CulturalCommentMetadata | None = None

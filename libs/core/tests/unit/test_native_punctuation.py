@@ -214,17 +214,27 @@ def test_the_code_sweep_types_every_mark_of_the_family(family: str) -> None:
 @pytest.mark.parametrize("family", sorted(FAMILIES))
 @pytest.mark.parametrize("entry", ENTRIES, ids=_entry_id)
 @pytest.mark.parametrize("backend", BACKENDS)
-@pytest.mark.parametrize("language", ("ar", "zh", "hi", "he", "th", "si", "ko"))
+@pytest.mark.parametrize("language", LANGUAGES)
 def test_native_marks_in_prose_survive_byte_for_byte(
     language: str, backend: str, entry: CorpusFile, family: str
 ) -> None:
+    """Typing native marks into prose changes nothing but those marks.
+
+    Stated against the same program with ASCII prose marks, typed the same
+    way into what the engine reads from it, so the known round-trip failures
+    (an identifier read as a pack word inside an f-string on CPython 3.10
+    and 3.11) cancel out on both sides.
+    """
     native = _native(language, entry.name)
     typed, count = typed_in_prose(native, FAMILIES[family])
     if not count:
         pytest.skip(f"{entry.name} has no {family} mark inside a string or comment")
     _, reverse = _translators(language, backend)
     back = reverse.translate_code(typed, language, "en")
-    assert prose(back) == prose(typed)
+    expected, _ = typed_in_prose(
+        _plain_english(language, backend, entry.name), FAMILIES[family]
+    )
+    assert back == expected
 
 
 def test_the_prose_sweep_is_not_empty() -> None:
@@ -235,82 +245,103 @@ def test_the_prose_sweep_is_not_empty() -> None:
     assert all(counts.values()), counts
 
 
-# -- the acceptance samples, spelled out -------------------------------------------
+# -- the acceptance sample -------------------------------------------------------
 
-#: Vocalised Arabic in the string and the comment: combining marks beside the
-#: Arabic comma, which must all survive.
-ARABIC_ENGLISH = (
-    "def join(first, second):\n"
-    "    pair = [first, second]; total = len(pair)\n"
-    "    return 'مَرْحَبًا، يَا عَالَم؛'  # تَعْلِيق، هُنَا؛\n"
-)
+#: The corpus file with vocalised Arabic, Han and pointed Hebrew prose, whose
+#: strings and comments carry native marks that must all survive.
+SAMPLE = "native_prose.py"
 
-#: Han in the string and the comment, with fullwidth marks that are prose.
-CHINESE_ENGLISH = (
-    "def join(first, second):\n"
-    "    pair = (first, second); total = len(pair)\n"
-    "    if total:\n"
-    "        return '你好，世界：（一）'  # 注释，这里：（二）\n"
-)
+ACCEPTANCE = [
+    pytest.param("ar", "arabic", id="ar"),
+    pytest.param("zh", "fullwidth", id="zh"),
+]
 
 
-def _typed_sample(language: str, english: str, family: str) -> tuple[str, str]:
-    forward, _ = _translators(language, "token")
-    native = forward.translate_code(english, "en", language)
+def _sample(language: str, family: str) -> tuple[str, str, str]:
+    """``(english, native, typed)`` for the sample in one pack."""
+    english = next(entry.source for entry in ENTRIES if entry.name == SAMPLE)
+    native = _native(language, SAMPLE)
     typed, count = typed_in_code(native, FAMILIES[family])
-    assert count
-    return native, typed
+    assert count, f"{SAMPLE} has no {family} mark to type in {language}"
+    return english, native, typed
+
+
+def _first_typed_line(native: str, typed: str) -> int:
+    pairs = zip(native.splitlines(True), typed.splitlines(True))
+    return next(index for index, (left, right) in enumerate(pairs) if left != right)
+
+
+def _without_prose(source: str) -> str:
+    chars = list(source)
+    for start, end, _ in _spans(source, _PROSE):
+        chars[start:end] = [""] * (end - start)
+    return "".join(chars)
 
 
 @pytest.mark.parametrize("backend", BACKENDS)
-def test_arabic_comma_and_semicolon_translate_and_compile(backend: str) -> None:
-    _, typed = _typed_sample("ar", ARABIC_ENGLISH, "arabic")
-    assert "\u060c " in typed.splitlines()[0] and "\u061b " in typed.splitlines()[1]
-    _, reverse = _translators("ar", backend)
-    back = reverse.translate_code(typed, "ar", "en")
-    assert back == ARABIC_ENGLISH
-    compile(back, "<arabic>", "exec")
-
-
-@pytest.mark.parametrize("backend", BACKENDS)
-def test_fullwidth_marks_translate_and_compile(backend: str) -> None:
-    _, typed = _typed_sample("zh", CHINESE_ENGLISH, "fullwidth")
-    first = typed.splitlines()[0]
-    assert "\uff08" in first and first.endswith("\uff09\uff1a")
-    _, reverse = _translators("zh", backend)
-    back = reverse.translate_code(typed, "zh", "en")
-    assert back == CHINESE_ENGLISH
-    compile(back, "<chinese>", "exec")
-
-
-@pytest.mark.parametrize("backend", BACKENDS)
-def test_native_and_ascii_marks_mix_in_one_program(backend: str) -> None:
-    native, typed = _typed_sample("ar", ARABIC_ENGLISH, "arabic")
-    lines, typed_lines = native.splitlines(True), typed.splitlines(True)
-    mixed = typed_lines[0] + "".join(lines[1:])
-    assert mixed not in (native, typed)
-    _, reverse = _translators("ar", backend)
-    assert reverse.translate_code(mixed, "ar", "en") == ARABIC_ENGLISH
-
-
-@pytest.mark.parametrize("backend", BACKENDS)
-@pytest.mark.parametrize(
-    ("language", "english"),
-    [
-        pytest.param("ar", ARABIC_ENGLISH, id="ar"),
-        pytest.param("zh", CHINESE_ENGLISH, id="zh"),
-    ],
-)
-def test_the_engine_never_writes_a_native_mark(
-    backend: str, language: str, english: str
+@pytest.mark.parametrize(("language", "family"), ACCEPTANCE)
+def test_the_sample_typed_natively_translates_and_compiles(
+    backend: str, language: str, family: str
 ) -> None:
+    english, _, typed = _sample(language, family)
+    _, reverse = _translators(language, backend)
+    back = reverse.translate_code(typed, language, "en")
+    assert back == english
+    compile(back, SAMPLE, "exec")
+
+
+@pytest.mark.parametrize("backend", BACKENDS)
+@pytest.mark.parametrize(("language", "family"), ACCEPTANCE)
+def test_native_and_ascii_marks_mix_in_one_program(
+    backend: str, language: str, family: str
+) -> None:
+    english, native, typed = _sample(language, family)
+    lines, typed_lines = native.splitlines(True), typed.splitlines(True)
+    first = _first_typed_line(native, typed)
+    mixed = "".join(lines[:first] + [typed_lines[first]] + lines[first + 1 :])
+    assert mixed not in (native, typed)
+    _, reverse = _translators(language, backend)
+    assert reverse.translate_code(mixed, language, "en") == english
+
+
+@pytest.mark.parametrize("backend", BACKENDS)
+@pytest.mark.parametrize(("language", "family"), ACCEPTANCE)
+def test_a_metadata_request_reads_the_same_program(
+    backend: str, language: str, family: str
+) -> None:
+    english, _, typed = _sample(language, family)
+    _, reverse = _translators(language, backend)
+    code, _ = reverse.translate_code(typed, language, "en", return_metadata=True)
+    assert code == english
+
+
+def test_incomplete_code_passes_through_the_token_backend_as_typed() -> None:
+    """The token backend hands incomplete code back unchanged, as it always
+    has; the fold never leaks into that pass-through."""
+    _, _, typed = _sample("zh", "fullwidth")
+    incomplete = typed + "x = f（1，\n"
+    _, reverse = _translators("zh", "token")
+    assert reverse.translate_code(incomplete, "zh", "en") == incomplete
+
+
+def test_incomplete_code_is_read_up_to_where_it_stops_by_tree_sitter() -> None:
+    """Tree-sitter translates incomplete code; the marks it reads there are
+    read as ASCII too, so keywords and punctuation never come back mixed."""
+    english, _, typed = _sample("zh", "fullwidth")
+    incomplete = typed + "x = f（1，\n"
+    _, reverse = _translators("zh", "tree-sitter")
+    assert reverse.translate_code(incomplete, "zh", "en") == english + "x = f(1,\n"
+
+
+@pytest.mark.parametrize("backend", BACKENDS)
+@pytest.mark.parametrize("language", LANGUAGES)
+def test_the_engine_never_writes_a_native_mark(backend: str, language: str) -> None:
     """Display keeps ASCII punctuation; only the prose carries native marks."""
     forward, _ = _translators(language, backend)
-    native = forward.translate_code(english, "en", language)
-    code_only = native
-    for text in prose(native):
-        code_only = code_only.replace(text, "")
-    assert not set(code_only) & set(NATIVE_PUNCTUATION)
+    for entry in ENTRIES:
+        native = forward.translate_code(entry.source, "en", language)
+        written = set(_without_prose(native)) & set(NATIVE_PUNCTUATION)
+        assert not written, f"{entry.name}: {sorted(written)}"
 
 
 # -- the fold itself -----------------------------------------------------------------
@@ -385,9 +416,74 @@ class TestFold:
         source = f"x = f(a{mark} b)\n"
         assert fold_code_punctuation(source) is source
 
-    def test_text_that_cannot_be_tokenized_is_returned_as_is(self) -> None:
-        source = "x = f\uff08a\uff0c '''never closed\n"
-        assert fold_code_punctuation(source) is source
+    @pytest.mark.parametrize(
+        ("typed", "expected"),
+        [
+            pytest.param(
+                "def f\uff08a\uff0c b\uff09\uff1a\n    return a\nprint\uff081\uff0c\n",
+                "def f(a, b):\n    return a\nprint(1,\n",
+                id="a bracket still open at the end",
+            ),
+            pytest.param(
+                "x = f\uff08a\uff0c b\uff09\ns = '''never\uff0c closed\n",
+                "x = f(a, b)\ns = '''never\uff0c closed\n",
+                id="an unterminated triple-quoted string",
+            ),
+            pytest.param(
+                "x = f\uff08a\uff09\ny = 'abc\u060c def\nz = \uff081\uff0c 2\uff09\n",
+                "x = f(a)\ny = 'abc\u060c def\nz = \uff081\uff0c 2\uff09\n",
+                id="an unterminated single-quoted string",
+            ),
+            pytest.param(
+                "if x\uff1a\n        a = \uff081\uff0c 2\uff09\n    b = \uff083\uff09\n",
+                "if x:\n        a = (1, 2)\n    b = \uff083\uff09\n",
+                id="an indentation error",
+            ),
+        ],
+    )
+    def test_folding_stops_where_the_tokenizer_stops(
+        self, typed: str, expected: str
+    ) -> None:
+        """Marks before the point the tokenizer cannot read past are folded;
+        from there on the text is returned as given. On CPython 3.10 and 3.11
+        the tokenizer reads past an unterminated single quote by lexing the
+        string's text as code, so folding stops at that quote too."""
+        folded = fold_code_punctuation(typed)
+        assert folded == expected
+        assert len(folded) == len(typed)
+
+    @pytest.mark.parametrize(
+        ("typed", "expected"),
+        [
+            pytest.param(
+                "\u0645\u064e\u0631 = [\u0623\u064e\u060c \u0628\u064f]\u061b y = 1\n",
+                "\u0645\u064e\u0631 = [\u0623\u064e, \u0628\u064f]; y = 1\n",
+                id="vocalised Arabic",
+            ),
+            pytest.param(
+                "\u0915\u094d\u0937 = \uff08\u092b\u093c\u0932\uff0c 2\uff09\n",
+                "\u0915\u094d\u0937 = (\u092b\u093c\u0932, 2)\n",
+                id="Devanagari with a virama and a nukta",
+            ),
+            pytest.param(
+                "\u05e9\u05b8\u05c1\u05dc\u05d5\u05b9\u05dd = \uff081\uff0c 2\uff09\n",
+                "\u05e9\u05b8\u05c1\u05dc\u05d5\u05b9\u05dd = (1, 2)\n",
+                id="pointed Hebrew",
+            ),
+            pytest.param(
+                "\u0e04\u0e48\u0e32 = \uff08\u0e01\u0e49\u0e2d\u0e19\uff0c 2\uff09\n",
+                "\u0e04\u0e48\u0e32 = (\u0e01\u0e49\u0e2d\u0e19, 2)\n",
+                id="Thai with tone marks",
+            ),
+        ],
+    )
+    def test_names_with_combining_marks_beside_native_marks(
+        self, typed: str, expected: str
+    ) -> None:
+        """On CPython 3.10 and 3.11 these names lex as fragments around error
+        tokens; the marks beside them are code all the same."""
+        assert fold_code_punctuation(typed) == expected
+        compile(expected, "<fold>", "exec")
 
     @pytest.mark.skipif(
         sys.version_info < (3, 12),
@@ -408,13 +504,22 @@ class TestFold:
         source = "s = f'{a\uff0c b}\uff0c {c\uff1a>4}'\n"
         assert fold_code_punctuation(source) is source
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 14),
+        reason="template strings arrive in CPython 3.14",
+    )
+    def test_t_string_fields_are_code_and_their_text_is_prose(self) -> None:
+        typed = "s = t'{a， b}，'\n"
+        assert fold_code_punctuation(typed) == "s = t'{a, b}，'\n"
+
 
 # -- what is stored, and what the round-trip check says ----------------------------
 
 
-def test_the_clean_filter_stores_the_file_as_typed() -> None:
-    _, typed = _typed_sample("ar", ARABIC_ENGLISH, "arabic")
-    assert GitFilter("ar").clean_text(typed) == typed
+@pytest.mark.parametrize(("language", "family"), ACCEPTANCE)
+def test_the_clean_filter_stores_the_file_as_typed(language: str, family: str) -> None:
+    _, _, typed = _sample(language, family)
+    assert GitFilter(language).clean_text(typed) == typed
 
 
 class TestRoundTripReport:
@@ -447,31 +552,56 @@ class TestRoundTripReport:
             validate=self._compiles,
         )
 
-    @pytest.mark.parametrize(
-        ("language", "english", "family", "lines"),
-        [
-            pytest.param("ar", ARABIC_ENGLISH, "arabic", 2, id="ar"),
-            pytest.param("zh", CHINESE_ENGLISH, "fullwidth", 3, id="zh"),
-        ],
-    )
+    @pytest.mark.parametrize(("language", "family"), ACCEPTANCE)
     def test_native_marks_run_but_do_not_come_back(
-        self, language: str, english: str, family: str, lines: int
+        self, language: str, family: str
     ) -> None:
-        native, typed = _typed_sample(language, english, family)
+        english, native, typed = _sample(language, family)
+        typed_lines = sum(
+            left != right
+            for left, right in zip(native.splitlines(True), typed.splitlines(True))
+        )
         report = self._report(language, typed)
         assert report.forward == english
         assert report.forward_valid is True
         assert report.returned == native
         assert report.round_trips is False
-        assert report.divergence_count == lines
+        assert report.divergence_count == typed_lines
         assert {d.layer for d in report.divergences} == {Layer.PUNCTUATION}
         assert "layer punctuation" in report.verdict_line
+        # Every divergence is attributed, so the layers the trip exercised
+        # are credited, and punctuation, which is not a layer of the pack,
+        # never is.
+        assert {Layer.KEYWORDS, Layer.BUILTINS} <= report.verified
+        assert Layer.PUNCTUATION not in report.verified
 
     def test_the_same_program_with_ascii_marks_still_verifies(self) -> None:
-        native, _ = _typed_sample("ar", ARABIC_ENGLISH, "arabic")
+        _, native, _ = _sample("ar", "arabic")
         report = self._report("ar", native)
         assert report.round_trips is True
         assert "VERIFIED" in report.verdict_line
+        # Punctuation is a cause, not a layer to cover: a verified line for
+        # source without native marks reads as it did before.
+        assert "punctuation" not in report.verdict_line
+
+    def test_a_line_that_also_changes_its_line_ending_is_not_attributed(
+        self,
+    ) -> None:
+        """Punctuation is the whole difference only if the terminator agrees.
+
+        A line typed with a native mark and a CRLF ending comes back with an
+        ASCII mark and LF: two causes on one line, so no layer is named and
+        nothing is credited.
+        """
+        _, native, typed = _sample("ar", "arabic")
+        lines, typed_lines = native.splitlines(True), typed.splitlines(True)
+        first = _first_typed_line(native, typed)
+        crlf = typed_lines[first].replace("\n", "\r\n")
+        source = "".join(lines[:first] + [crlf] + lines[first + 1 :])
+        report = self._report("ar", source)
+        assert report.divergence_count == 1
+        assert report.divergences[0].layer is None
+        assert report.verified == frozenset()
 
     def test_a_line_with_a_second_difference_is_not_blamed_on_punctuation(
         self,
@@ -490,7 +620,7 @@ class TestRoundTripReport:
             return source, False
 
         report = verify_round_trip(
-            f"x = [{rendering}\u060c 1]\n",
+            f"x = [{rendering}، 1]\n",
             "es",
             "en",
             RUNNING_VERSION,

@@ -19,17 +19,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   mode, now translates and runs; before, the English form failed with
   `SyntaxError: invalid character`. A mark inside a string, a comment or the
   text of an f-string is kept byte for byte. One character is replaced by one,
-  so line and column numbers do not move. `legesher_core.native_punctuation`
+  so line and column numbers do not move. In incomplete code the marks are
+  read up to the point the tokenizer cannot read past (a bracket still open,
+  an unterminated string) and the rest is left as typed; the token backend
+  still hands incomplete code back unchanged. `legesher_core.native_punctuation`
   holds the table (`NATIVE_PUNCTUATION`) and the function both backends call
   (`fold_code_punctuation`).
 - The engine reads these marks and never writes them. A translation for
   display and the return leg of a round trip carry ASCII punctuation, and the
   git clean filter does not touch punctuation, so git stores the file as
-  typed. Source that uses a native mark in code position therefore runs and
-  does not come back byte-identical: the round-trip check reports
-  `round-trip FAILED` with the new layer `punctuation`, which names the cause
-  and credits the other layers the trip exercised. `RoundTripReport`'s keys
-  and schema version are unchanged; `layer` gains the value `punctuation`.
+  typed. `legesher guard` is unchanged: it still refuses the fullwidth marks
+  in code position, and the Arabic marks pass it. Source that uses a native
+  mark in code position runs and does not come back byte-identical: the
+  round-trip check reports `round-trip FAILED` with the new layer
+  `punctuation`, named only when the mark is the whole difference on its
+  line, and credits the other layers the trip exercised. `RoundTripReport`'s
+  keys and schema version are unchanged, `layer` gains the value
+  `punctuation`, and a verdict line for source without native marks reads as
+  before.
 
 ## [0.25.1] - 2026-11-03
 

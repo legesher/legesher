@@ -18,6 +18,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   their marks. The engine never writes these marks: display and the return leg
   of a round trip carry ASCII punctuation, git stores the file as typed, and
   the round-trip check reports such source under the new layer `punctuation`.
+  `legesher guard` still refuses the fullwidth marks in code position.
 
 ### Changed
 
