@@ -8,8 +8,9 @@ Tests verify that:
 
 import subprocess
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+import yaml
 from click.testing import CliRunner
 
 from legesher.cli.main import cli
@@ -262,3 +263,97 @@ class TestInitGitFailureBanner:
             assert "Legesher setup complete!" in result.output
             assert "git integration skipped" not in result.output
             assert ".gitattributes (updated)" in result.output
+
+
+def a_terminal():
+    """Patch init's ``sys`` so stdin is a terminal and ``exit`` still exits.
+
+    CliRunner swaps ``sys.stdin`` for its own stream during ``invoke``, so
+    the stream cannot be patched from outside; the module's ``sys`` can.
+    """
+    import sys
+
+    fake = MagicMock()
+    fake.stdin.isatty.return_value = True
+    fake.exit.side_effect = sys.exit
+    return patch("legesher.cli.init.sys", fake)
+
+
+@patch("legesher.cli.init.LanguagePackLoader")
+@patch("legesher.cli.init.AIContextGenerator")
+class TestWorkingLanguage:
+    """One language is in use; every language chosen is on record."""
+
+    def _init(self, *args):
+        return CliRunner().invoke(
+            cli, ["init", "-p", "3.13", "--no-git", "--no-ai-context", *args], input=""
+        )
+
+    def test_one_language_prints_no_extra_line(
+        self, mock_ai_gen, mock_loader, tmp_path
+    ):
+        with CliRunner().isolated_filesystem(temp_dir=tmp_path):
+            result = self._init("-l", "hi")
+            assert result.exit_code == 0, result.output
+            assert "Working language" not in result.output
+
+    def test_flags_take_the_first(self, mock_ai_gen, mock_loader, tmp_path):
+        with CliRunner().isolated_filesystem(temp_dir=tmp_path):
+            result = self._init("-l", "hi", "-l", "ar")
+            assert result.exit_code == 0, result.output
+            assert "Working language: hi" in result.output
+            data = yaml.safe_load(Path(".legesher/config.yml").read_text("utf-8"))
+            assert (data["language"], data["languages"]) == ("hi", ["hi", "ar"])
+
+    def test_a_language_given_twice_is_recorded_once(
+        self, mock_ai_gen, mock_loader, tmp_path
+    ):
+        with CliRunner().isolated_filesystem(temp_dir=tmp_path):
+            result = self._init("-l", "si", "-l", "he", "-l", "si")
+            assert result.exit_code == 0, result.output
+            data = yaml.safe_load(Path(".legesher/config.yml").read_text("utf-8"))
+            assert (data["language"], data["languages"]) == ("si", ["si", "he"])
+
+    def test_the_interactive_prompt_asks_which_one(
+        self, mock_ai_gen, mock_loader, tmp_path
+    ):
+        with (
+            CliRunner().isolated_filesystem(temp_dir=tmp_path),
+            a_terminal(),
+            patch("legesher.cli.init._select_languages", return_value=["ar", "th"]),
+            patch(
+                "legesher.cli.init._select_working_language", return_value="th"
+            ) as ask,
+        ):
+            result = self._init()
+            assert result.exit_code == 0, result.output
+            ask.assert_called_once_with(["ar", "th"])
+            data = yaml.safe_load(Path(".legesher/config.yml").read_text("utf-8"))
+            assert (data["language"], data["languages"]) == ("th", ["ar", "th"])
+
+    def test_one_interactive_choice_is_not_asked_about(
+        self, mock_ai_gen, mock_loader, tmp_path
+    ):
+        with (
+            CliRunner().isolated_filesystem(temp_dir=tmp_path),
+            a_terminal(),
+            patch("legesher.cli.init._select_languages", return_value=["he"]),
+            patch("legesher.cli.init._select_working_language") as ask,
+        ):
+            result = self._init()
+            assert result.exit_code == 0, result.output
+            ask.assert_not_called()
+
+    def test_cancelling_the_prompt_writes_nothing(
+        self, mock_ai_gen, mock_loader, tmp_path
+    ):
+        with (
+            CliRunner().isolated_filesystem(temp_dir=tmp_path),
+            a_terminal(),
+            patch("legesher.cli.init._select_languages", return_value=["ar", "th"]),
+            patch("legesher.cli.init._select_working_language", return_value=None),
+        ):
+            result = self._init()
+            assert result.exit_code == 1
+            assert "Setup cancelled" in result.output
+            assert not Path(".legesher/config.yml").exists()

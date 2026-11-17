@@ -18,7 +18,7 @@ from types import TracebackType
 import click
 import legesher_runtime
 
-from legesher.config import LegesherConfig
+from legesher.config import LegesherConfig, find_project_config
 from legesher.runtime import install_error_handler, install_import_hook
 from legesher.runtime.source_mapper import get_source_mapper
 from legesher_core import TokenTranslator
@@ -35,6 +35,32 @@ def _from_script(tb: TracebackType | None, script: str) -> TracebackType | None:
     while tb is not None and tb.tb_frame.f_code.co_filename != script:
         tb = tb.tb_next
     return tb
+
+
+def _language_note(script: Path, language: str) -> str:
+    """Which language a script that did not compile was read as, and why.
+
+    A file written in one language and read as another fails on its first
+    keyword, and Python's ``SyntaxError`` cannot say that the language was
+    the problem. Printed only when ``--lang`` did not name the language.
+    """
+    source = LegesherConfig.language_source()
+    if source is not None:
+        return (
+            f"legesher: {script.name} was read as '{language}', the language "
+            f"set in {source}.\n"
+            "legesher: if it is written in another language, pass --lang <code>."
+        )
+    if find_project_config() is not None:
+        fix = "legesher config set language <code>"
+    else:
+        fix = "legesher init"
+    return (
+        f"legesher: {script.name} was read as English (en), because no "
+        "language is configured here.\n"
+        "legesher: if it is written in another language, pass --lang <code>, "
+        f"or set one with: {fix}"
+    )
 
 
 @click.command()
@@ -127,10 +153,14 @@ def run(script: str, lang: str | None, args: str | None):
         # CPython prints it without a header), through the installed hook,
         # exit status 1. An error before the script ran, such as a file that
         # cannot be decoded, is the command's own and keeps every frame.
+        # A script that does not compile under a language nobody named on
+        # the command line is followed by a note saying which one it was.
         script_file = str(script_path)
         tb = _from_script(exc.__traceback__, script_file)
         compile_error = isinstance(exc, SyntaxError) and exc.filename == script_file
         if tb is None and not compile_error:
             raise
         sys.excepthook(type(exc), exc, tb)
+        if compile_error and lang is None:
+            click.echo(_language_note(script_path, language), err=True)
         sys.exit(1)

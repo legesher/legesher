@@ -387,3 +387,49 @@ class TestConfigSetGlobal:
             result = runner.invoke(cli, ["config", "get", "language"])
             assert result.exit_code != 0
             assert "not a YAML mapping" in result.output
+
+
+class TestTheFileTheRuntimeReads:
+    """`legesher config` and the runtime find and read one project config."""
+
+    def test_the_old_init_shape_reports_its_language(self, tmp_path):
+        runner = CliRunner()
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            Path(".legesher").mkdir()
+            Path(".legesher/config.yml").write_text(
+                "languages:\n  - hi\n  - ar\ngit:\n  enabled: false\n",
+                encoding="utf-8",
+            )
+            language = runner.invoke(cli, ["config", "get", "language"])
+            assert (language.exit_code, language.output) == (0, "hi\n")
+            switch = runner.invoke(cli, ["config", "get", "git.filter_enabled"])
+            assert (switch.exit_code, switch.output) == (0, "false\n")
+            listing = runner.invoke(cli, ["config", "list"]).output
+            assert "language = hi" in listing and "languages = hi, ar" in listing
+
+    def test_a_config_above_the_repository_is_not_this_projects(
+        self, tmp_path, monkeypatch
+    ):
+        (tmp_path / ".legesher").mkdir()
+        (tmp_path / ".legesher" / "config.yml").write_text("language: es\n")
+        inner = tmp_path / "repo"
+        (inner / ".git").mkdir(parents=True)
+        monkeypatch.chdir(inner)
+        result = CliRunner().invoke(cli, ["config", "get", "language"])
+        assert result.exit_code == 1
+        assert "No .legesher/config.yml found" in result.output
+
+    def test_a_project_set_never_lands_in_the_user_config(self, temp_home, monkeypatch):
+        # The user config sits at the same relative path under home, so a
+        # search upwards from a directory inside home used to find it and
+        # write a project setting into it.
+        user_config = temp_home / ".legesher" / "config.yml"
+        user_config.parent.mkdir()
+        user_config.write_text("language: es\n")
+        work = temp_home / "कार्य"
+        work.mkdir()
+        monkeypatch.chdir(work)
+        result = CliRunner().invoke(cli, ["config", "set", "language", "ar"])
+        assert result.exit_code == 1
+        assert "No .legesher/config.yml found" in result.output
+        assert user_config.read_text() == "language: es\n"

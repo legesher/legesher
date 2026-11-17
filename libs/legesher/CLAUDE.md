@@ -17,13 +17,20 @@ so register a new marker in `pyproject.toml`.
 - `legesher/runtime/`: `import_hook.py` (translates a localized module at import time), `source_mapper.py`,
   `error_handler.py` (traceback frames point at the localized source). `legesher run` installs both through
   `install_import_hook()` and `install_error_handler()`.
-- `legesher/config.py`: project `.legesher/config.yml` over user `~/.legesher/config.yml` over defaults.
+- `legesher/config.py`: project `.legesher/config.yml` over user `~/.legesher/config.yml` over defaults. It
+  owns the file's contract: `find_project_config()` (the nearest file at or above the working directory, no
+  higher than the git root, never the user file) and `normalize_config_data()` (how a file is read, including
+  the shape an earlier `init` wrote). `init`, `git setup`, `config`, `guard`, `run` and the git filter all
+  go through them; do not read or locate the file any other way.
 
 ## Gotchas
 
 - **`legesher.runtime` is not `legesher_runtime`.** The first is this package's import hook and source mapper.
   The second is a separate distribution (`libs/runtime/`) that renders exception type names and messages from
   the pack. `legesher run` uses both.
+- **Saving a config keeps the keys it does not own.** `save_project_config()` and `save_user_config()` merge
+  into the file on disk. A command that changes one setting loads the file first and changes that setting
+  (`git setup` does), so it cannot reset the others to their defaults.
 - **`telemetry` is read from the user config only.** It is consent, so a committed project config must not be
   able to change it (`USER_ONLY_SECTIONS` in `config.py`). Keep any new consent setting user-only too.
 - **`metadata` is per-file translation history** under `.legesher/metadata/`, not language-pack information.

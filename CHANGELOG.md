@@ -47,6 +47,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- **legesher**: `legesher run`, `legesher config`, `legesher git status` and
+  the git clean filter work straight after `legesher init`, in a git
+  repository or outside one. `init` wrote a config the other commands could
+  not read, so the language fell back to English and `run` failed with a
+  `SyntaxError`. `init` and `git setup` now write one shape, `init` also
+  records every language chosen as `languages`, a config written by an earlier
+  `init` keeps working as it is, and `git setup` no longer resets the settings
+  it was not given. When a script does not compile, `run` says which language
+  it was read as.
 - **docs**: on the Spanish and Arabic pages, code samples start in the page's
   language when the reader has not picked a code language. A pick made with
   the code-language picker still wins on every page. [CORE-2760]

@@ -9,6 +9,43 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- `legesher init` writes `.legesher/config.yml` in the shape `legesher git setup`
+  writes and every command reads: `language`, `python_version`,
+  `git.canonical_language`, `git.filter_enabled` and `metadata.*`. It also
+  records every language chosen as `languages`; the first is the `language` in
+  use, and the interactive prompt asks which one when several are ticked. It
+  no longer writes `git.enabled`, `ai_context`, `translation` or `editor`,
+  which nothing read.
+- When a script does not compile and `--lang` was not given, `legesher run`
+  follows Python's `SyntaxError` with the language the file was read as, where
+  that came from, and how to name another.
+
+### Fixed
+
+- `legesher run`, `legesher config get language`, `legesher git status` and
+  the git clean filter use the language `legesher init` was asked for. `init`
+  wrote a config none of them could read, so the language fell back to
+  English: `run` failed with a `SyntaxError`, `config get language` exited 1,
+  `git status` reported `en`, and the filter stored stray keywords as typed.
+- A config file written by an earlier `legesher init` keeps working as it is:
+  `language` is read as the first entry of `languages` and
+  `git.filter_enabled` as `git.enabled`, by every command including
+  `legesher guard --diff`, which judged such a base as English. The file is
+  never rewritten for being old and its other sections are never removed.
+- The project config is read outside a git repository. `legesher run` and
+  `legesher git status` ignored `.legesher/config.yml` unless the directory
+  was inside one, while `legesher config` read it.
+- `legesher git setup` changes the language and the filter switch and keeps
+  the rest of an existing config. It rewrote the file from defaults, which
+  reset `python_version` and the metadata settings and dropped
+  `runtime.cache_size` and any other key.
+- `legesher config` reads the same project file as the runtime: the nearest
+  one at or above the current directory, no higher than the git repository's
+  root, and never `~/.legesher/config.yml`, which a `config set` without
+  `--global` run under the home directory could write to.
+
 ## [0.26.0] - 2026-11-18
 
 ## [0.25.1] - 2026-11-03

@@ -19,11 +19,17 @@ from pathlib import Path
 import click
 import yaml
 
-from legesher.config import USER_ONLY_SECTIONS, user_telemetry
+from legesher.config import (
+    USER_ONLY_SECTIONS,
+    find_project_config,
+    normalize_config_data,
+    user_config_path,
+    user_telemetry,
+)
 
 
 def _find_config_path() -> Path:
-    """Find .legesher/config.yml in the current or parent directories.
+    """Find the project's .legesher/config.yml, as the runtime does.
 
     Returns:
         Path to config.yml
@@ -31,23 +37,17 @@ def _find_config_path() -> Path:
     Raises:
         click.ClickException: If no config file found
     """
-    current = Path.cwd().resolve()
-    while True:
-        config_path = current / ".legesher" / "config.yml"
-        if config_path.exists():
-            return config_path
-        if current == current.parent:
-            break
-        current = current.parent
-
-    raise click.ClickException(
-        "No .legesher/config.yml found. Run 'legesher init' first."
-    )
+    config_path = find_project_config()
+    if config_path is None:
+        raise click.ClickException(
+            "No .legesher/config.yml found. Run 'legesher init' first."
+        )
+    return config_path
 
 
 def _user_config_path() -> Path:
     """Return the user-level config path (~/.legesher/config.yml)."""
-    return Path.home() / ".legesher" / "config.yml"
+    return user_config_path()
 
 
 def _load_yaml_mapping(config_path: Path) -> dict:
@@ -86,6 +86,10 @@ def _load_merged_config() -> tuple[dict, list[Path]]:
     runtime: it is the user's own section filled out with the defaults,
     and a project config never changes it.
 
+    Each file is read through ``normalize_config_data``, again as the
+    runtime reads it, so a file in the shape ``legesher init`` once wrote
+    reports the ``language`` and ``git.filter_enabled`` it stands for.
+
     Returns:
         Tuple of (merged data, list of contributing config paths)
 
@@ -99,7 +103,7 @@ def _load_merged_config() -> tuple[dict, list[Path]]:
     user_path = _user_config_path()
     if user_path.exists():
         user_data = _load_yaml_mapping(user_path)
-        data = dict(user_data)
+        data = normalize_config_data(user_data)
         paths.append(user_path)
 
     try:
@@ -109,7 +113,7 @@ def _load_merged_config() -> tuple[dict, list[Path]]:
             raise
     else:
         data = dict(data)
-        data.update(project_data)
+        data.update(normalize_config_data(project_data))
         paths.append(project_path)
 
     data["telemetry"] = user_telemetry(user_data)
@@ -215,8 +219,8 @@ def config():
     \b
     Examples:
         $ legesher config list
-        $ legesher config get git.enabled
-        $ legesher config set translation.default_target ar
+        $ legesher config get language
+        $ legesher config set python_version 3.13
         $ legesher config set --global language es
     """
     pass
@@ -237,7 +241,7 @@ def config_list():
 def config_get(key: str):
     """Get a specific configuration value.
 
-    KEY is a dotted path like 'git.enabled' or 'translation.default_target'.
+    KEY is a dotted path like 'language' or 'git.filter_enabled'.
     Values are read from the user-level config merged with the project
     config (project takes precedence).
     """
@@ -272,7 +276,7 @@ def config_get(key: str):
 def config_set(key: str, value: str, use_global: bool):
     """Set a configuration value.
 
-    KEY is a dotted path like 'git.enabled' or 'translation.default_target'.
+    KEY is a dotted path like 'language' or 'git.filter_enabled'.
     VALUE is the new value (booleans: true/false, numbers auto-detected).
     With --global, the value is written to the user-level config
     (~/.legesher/config.yml) instead of the project config. Telemetry

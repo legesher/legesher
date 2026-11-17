@@ -277,8 +277,14 @@ def _check_tree_links(
 
 
 def _language_at(repo: Path, commit: str) -> str | None:
-    """The ``language`` a commit's own ``.legesher/config.yml`` names."""
+    """The ``language`` a commit's own ``.legesher/config.yml`` names.
+
+    Read as every other reader reads the file, so a config in the shape
+    ``legesher init`` once wrote names the first of its ``languages``.
+    """
     import yaml
+
+    from legesher.config import normalize_config_data
 
     data = _blob(repo, f"{commit}:.legesher/config.yml")
     if data is None:
@@ -287,7 +293,7 @@ def _language_at(repo: Path, commit: str) -> str | None:
         config = yaml.safe_load(data)
     except (yaml.YAMLError, RecursionError):
         return None
-    language = config.get("language") if isinstance(config, dict) else None
+    language = normalize_config_data(config).get("language")
     return language if isinstance(language, str) else None
 
 

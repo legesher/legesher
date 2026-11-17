@@ -366,6 +366,18 @@ class TestDiffReviewRegressions:
         assert result.exit_code == 1, result.output
         assert "z.py:1:3: unicode: U+200C" in result.output
 
+    def test_a_base_in_the_old_init_shape_names_its_first_language(self, repo):
+        # `legesher init` once wrote `languages:` and no `language:`. A base
+        # holding that file was judged as English, which skipped the
+        # keyword check for the language the project was set up in.
+        commit(repo, ".legesher/config.yml", "languages:\n  - es\n  - ar\n")
+        base = head(repo)
+        stage(repo, "m.py", "definir f(x):\n    if x:\n        devolver 1\n")
+        git(repo, "commit", "-q", "-m", "stray")
+        result = run("--diff", base)
+        assert result.exit_code == 1, result.output
+        assert "m.py:2:5: keyword: `if`" in result.output
+
     def test_legesher_replaced_by_a_symlink(self, repo):
         commit(repo, ".legesher/config.yml", "language: es\n")
         base = head(repo)

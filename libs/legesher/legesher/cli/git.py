@@ -307,12 +307,23 @@ def git_setup(
 
         # Step 3: Create configuration
         click.echo("\nCreating configuration...")
-        config = LegesherConfig(
-            language=language,
-            python_version=python_version,
-            git_canonical_language="en",
-            git_filter_enabled=True,
-        )
+        # Start from the file already there, so setup changes the language
+        # and the filter switch and nothing it was not asked to: a Python
+        # version from an earlier run, metadata and runtime settings, and
+        # the record of languages `legesher init` keeps.
+        if use_global:
+            config, _exists = LegesherConfig.load_user_config()
+        else:
+            config, _exists = LegesherConfig.load_project_config(repo_root)
+        if config is None:
+            config = LegesherConfig()
+        config.language = language
+        if python_version is not None:
+            config.python_version = python_version
+        config.git_canonical_language = "en"
+        config.git_filter_enabled = True
+        if config.languages and language not in config.languages:
+            config.languages.append(language)
 
         if use_global:
             config_path = config.save_user_config()
