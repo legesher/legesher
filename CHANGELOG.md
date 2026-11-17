@@ -29,6 +29,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   and the engine never writes native digits: display and the return leg of a
   round trip carry ASCII digits, git stores the file as typed, and the
   round-trip check reports such source under the new layer `digits`.
+- **docs**: the playground offers the right-to-left pack languages (Arabic,
+  Hebrew, Persian and Urdu). Picking one lays out the editor, the output and
+  the controls from right to left; a left-to-right language stays left to
+  right, including on the Arabic pages. The engine the playground runs in the
+  browser moves from 0.23.0 to 0.25.1.
 
 ### Changed
 
