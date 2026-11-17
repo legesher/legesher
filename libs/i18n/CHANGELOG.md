@@ -32,7 +32,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   render as before. A database with the catalog still wins, and an explicit
   `db_path` is still read alone. [CORE-2630]
 - **`pack_message_problems`** reports every pack message the catalog would
-  skip, with the reason, for one locale and Python version. [CORE-2630]
+  skip, with the reason, for one locale and Python version, except an entry
+  the pack carried unchanged at a version where its earlier wording applied:
+  a later pack file cannot remove an entry. [CORE-2630]
 - **Catalog placeholders can declare a kind.** A placeholder on the English
   side may be marked `line` (a line number) or `count`; the CPython catalog
   marks its twelve. `MessageRule.slot_kinds` and `MessageRule.kind_of`

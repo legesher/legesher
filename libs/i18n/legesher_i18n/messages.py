@@ -115,6 +115,18 @@ class _Row(NamedTuple):
     placeholders: tuple[tuple[str, str | None], ...]
 
 
+def _declares_kinds(raw: Any) -> bool:
+    """Whether stored placeholders carry a ``kind`` field on any placeholder."""
+    try:
+        declared = json.loads(raw) if isinstance(raw, str) else raw
+    except ValueError:
+        return False
+    return isinstance(declared, list) and any(
+        isinstance(placeholder, dict) and "kind" in placeholder
+        for placeholder in declared
+    )
+
+
 def _placeholders(declared: Any) -> tuple[tuple[str, str | None], ...]:
     """``(name, kind)`` pairs from a template's declared placeholders.
 
@@ -334,34 +346,51 @@ def pack_message_problems(
     target = _IMPLEMENTATION_TARGETS.get(implementation)
     if target is None:
         return []
+    loader = loader or LanguagePackLoader()
+    requested = f"{version[0]}.{version[1]}"
     try:
-        pack = (loader or LanguagePackLoader()).load(
-            locale,
-            target,
-            f"{version[0]}.{version[1]}",
-            enforce_min_interpreter=False,
-        )
+        pack = loader.load(locale, target, requested, enforce_min_interpreter=False)
     except PackNotFoundError:
         return []
     entries = pack.messages.get(implementation) or {}
     rows = _seed_rows(locale, implementation)
     applicable = _applicable_rows(rows, version)
+
+    # An entry for an earlier wording is expected only when it really is
+    # inherited: the pack carried the same entry at a version where that
+    # wording applied, and the entry was checked there. An entry that names
+    # an earlier wording but first appears, or changes, after that wording
+    # stopped applying is a stale fingerprint, and is reported.
+    earlier_files = [
+        stem
+        for stem in _pack_versions(loader, locale, target)
+        if _parse_version(stem) < version
+    ]
+    earlier_entries: dict[str, dict[str, Any]] = {}
+
+    def entries_at(stem: str) -> dict[str, Any]:
+        if stem not in earlier_entries:
+            earlier = loader.load(locale, target, stem, enforce_min_interpreter=False)
+            earlier_entries[stem] = earlier.messages.get(implementation) or {}
+        return earlier_entries[stem]
+
     inherited: set[str] = set()
     for key, entry in entries.items():
         if not isinstance(entry, dict):
             continue
         current = applicable.get(key)
         for row in rows:
-            added = _parse_version(row.version_added) if row.version_added else (0, 0)
             if (
-                row.key == key
-                and row is not current
-                and added <= version
-                and entry.get("src") == message_fingerprint(row.template_en)
+                row.key != key
+                or row is current
+                or entry.get("src") != message_fingerprint(row.template_en)
             ):
-                # The translation of an earlier wording: superseded by a
-                # rewording, or of a message removed with none. It was
-                # checked at the versions where it applies.
+                continue
+            if any(
+                _row_applies(row, _parse_version(stem))
+                and entries_at(stem).get(key) == entry
+                for stem in earlier_files
+            ):
                 inherited.add(key)
                 break
     _, problems = _join(
@@ -370,6 +399,29 @@ def pack_message_problems(
         report_unknown=True,
     )
     return problems
+
+
+def _row_applies(row: _Row, version: tuple[int, int]) -> bool:
+    """Whether ``row``'s wording is the one printed at ``version``."""
+    added = _parse_version(row.version_added) if row.version_added else (0, 0)
+    if added > version:
+        return False
+    return not (row.version_removed and _parse_version(row.version_removed) <= version)
+
+
+def _pack_versions(loader: LanguagePackLoader, locale: str, target: str) -> list[str]:
+    """The ``X.Y`` stems of the pack's own version files, oldest first."""
+    pack_dir = loader._discover_packs().get(f"{target}-{locale}")
+    if pack_dir is None:
+        return []
+    return sorted(
+        (
+            path.stem
+            for path in (pack_dir / "packs").glob("*.yml")
+            if _VERSION_FILE.fullmatch(path.stem)
+        ),
+        key=_parse_version,
+    )
 
 
 def _applicable_rows(rows: list[_Row], version: tuple[int, int]) -> dict[str, _Row]:
@@ -419,22 +471,16 @@ def _pack_entries(
         return None
     try:
         loader = LanguagePackLoader()
-        pack_dir = loader._discover_packs().get(f"{target}-{locale}")
-        if pack_dir is None:
-            return None
-        files = [
-            path.stem
-            for path in (pack_dir / "packs").glob("*.yml")
-            if path.stem != "default" and _VERSION_FILE.fullmatch(path.stem)
+        candidates = [
+            stem
+            for stem in _pack_versions(loader, locale, target)
+            if _parse_version(stem) <= version
         ]
-        candidates = sorted(
-            (stem for stem in files if _parse_version(stem) <= version),
-            key=_parse_version,
-            reverse=True,
-        )
         if not candidates:
             return None
-        pack = loader.load(locale, target, candidates[0], enforce_min_interpreter=False)
+        pack = loader.load(
+            locale, target, candidates[-1], enforce_min_interpreter=False
+        )
     except Exception:  # noqa: BLE001 - a missing or broken pack degrades, never crashes
         return None
     return pack.messages.get(implementation) or None
@@ -519,7 +565,7 @@ def _database_rows(path: Path, locale: str, implementation: str) -> list[_Row]:
         result: list[_Row] = []
         for row in rows:
             placeholders = _placeholders(row[7])
-            if row[7] is None or '"kind"' not in str(row[7]):
+            if not _declares_kinds(row[7]):
                 # Rows seeded before placeholder kinds existed. The seeder is
                 # append-once, so they never gain them; the seed is the
                 # English side's truth, so take the kinds from its row with

@@ -85,8 +85,9 @@ nothing wrong:
    present, is one of the four rungs. An entry with any other field is not
    used: a field a later release adds may change what the text means, and a
    reader that does not know it must not guess. The text carries no control
-   character (NUL, or the ESC that starts a terminal escape sequence) and no
-   lone surrogate: it is written to a terminal. Joiners such as ZWJ are
+   character (NUL, or the ESC that starts a terminal escape sequence), no line
+   or paragraph separator and no lone surrogate: it is written to a
+   terminal. Joiners such as ZWJ are
    allowed.
 2. `src` is the fingerprint of that English template. This is what keeps a
    translation off a wording it was not written for. Python 3.11 reworded
@@ -112,6 +113,10 @@ can add or override an entry but never remove one: the translation of an
 earlier wording of a message, inherited by the files after the one where
 Python reworded it, and the translation of a message Python stopped printing.
 So a pack may translate a message's earlier wording without its rewording.
+Such an entry is exempt only when the pack carried it unchanged at a version
+where that wording applied. An entry that names an earlier wording but first
+appears, or is rewritten, after that wording stopped applying is a stale
+fingerprint and is reported.
 
 ## Where the catalog comes from
 

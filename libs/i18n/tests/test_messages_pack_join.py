@@ -290,6 +290,8 @@ class TestEntryProblem:
             ("\x1b[31mनाम '{name}'", "U+001B"),
             ("नाम '{name}'\x9b", "U+009B"),
             ("नाम '{name}'\ud800", "U+D800"),
+            ("नाम '{name}'\u2028", "U+2028"),
+            ("नाम '{name}'\u2029", "U+2029"),
         ],
     )
     def test_a_control_character_in_text_is_named(self, text: str, label: str) -> None:
@@ -1097,6 +1099,43 @@ class TestPlaceholderKinds:
         assert any(english_only.values())
         assert from_legacy == english_only
 
+    def test_a_legacy_row_takes_kinds_only_from_the_same_wording(
+        self, tmp_path: Path
+    ) -> None:
+        legacy = json.loads(json.dumps(SEED))
+        for template in legacy["templates"]:
+            for placeholder in template.get("placeholders", []):
+                placeholder.pop("kind", None)
+            if template["key"] == "traceback.frame":
+                template["template_en"] = (
+                    'File "{file}", line {line}, in {name} (other)'
+                )
+                template["matcher"] = (
+                    '^File "(?P<file>[^"]+)", line (?P<line>\\d+), in (?P<name>.+) '
+                    "\\(other\\)$"
+                )
+        path = operational_db(tmp_path / "legacy" / "translations.db", {"es", "ar"})
+        activate(path)
+        seed_database(path, legacy)
+        rules = load_catalog("es", "3.12", db_path=path)
+        assert rule(rules, "traceback.frame").slot_kinds == ()
+        assert rule(rules, "traceback.frame_no_scope").slot_kinds == (("line", "line"),)
+
+    @pytest.mark.parametrize(
+        ("raw", "declares"),
+        [
+            ('[{"name": "line", "example": "7", "kind": "line"}]', True),
+            ('[{"name": "kind", "example": "x"}]', False),
+            ("[]", False),
+            ("not json", False),
+            (None, False),
+        ],
+    )
+    def test_a_kind_field_not_a_placeholder_named_kind_marks_a_row(
+        self, raw: object, declares: bool
+    ) -> None:
+        assert messages._declares_kinds(raw) is declares
+
     def test_a_kind_this_release_does_not_know_reads_as_verbatim(
         self, seeded_db: Path, tmp_path: Path
     ) -> None:
@@ -1258,6 +1297,48 @@ class TestPackMessageProblems:
             assert pack_message_problems("zz", version) == [], version
         assert rule(load_catalog("zz", "3.10"), key).localized
         assert not rule(load_catalog("zz", "3.12"), key).localized
+
+    def test_an_earlier_fingerprint_first_written_later_is_reported(
+        self, no_database, write_pack
+    ):
+        """A rewording's text with the old ``src``: the slip the check exists for."""
+        key = "UnboundLocalError.before_assignment"
+        write_pack(
+            {
+                "3.11": cpython(
+                    UnboundLocalError__before_assignment=entry(
+                        DEVANAGARI_NEW, key, "3.10"
+                    )
+                )
+            }
+        )
+        for version in ("3.11", "3.12", "3.13", "3.14"):
+            (problem,) = pack_message_problems("zz", version)
+            assert problem.startswith(key) and "does not match" in problem, version
+
+    def test_an_inherited_entry_rewritten_later_with_the_old_fingerprint_is_reported(
+        self, no_database, write_pack
+    ):
+        key = "UnboundLocalError.before_assignment"
+        write_pack(
+            {
+                "3.10": cpython(
+                    UnboundLocalError__before_assignment=entry(
+                        DEVANAGARI_OLD, key, "3.10"
+                    )
+                ),
+                "3.12": cpython(
+                    UnboundLocalError__before_assignment=entry(
+                        DEVANAGARI_NEW, key, "3.10"
+                    )
+                ),
+            }
+        )
+        assert pack_message_problems("zz", "3.10") == []
+        assert pack_message_problems("zz", "3.11") == []
+        for version in ("3.12", "3.13", "3.14"):
+            (problem,) = pack_message_problems("zz", version)
+            assert problem.startswith(key), version
 
     def test_an_entry_matching_no_wording_of_its_key_is_still_reported(
         self, no_database, write_pack

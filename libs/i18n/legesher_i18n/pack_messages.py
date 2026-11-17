@@ -143,8 +143,8 @@ def entry_problem(
 
     1. The entry is a mapping carrying only :data:`ENTRY_FIELDS`, with a
        string ``text`` free of control characters (category ``Cc``, such as
-       NUL or the ESC that starts a terminal escape sequence) and of lone
-       surrogates, a well-formed ``src`` and, when present, a ``status``
+       NUL or the ESC that starts a terminal escape sequence), of line and
+       paragraph separators (U+2028, U+2029) and of lone surrogates, a well-formed ``src`` and, when present, a ``status``
        from :data:`ALLOWED_STATUSES`. The text is written to a terminal.
     2. ``src`` is the fingerprint of ``template_en``. A translation written
        for another wording of the same key (an earlier Python version's, or
@@ -170,7 +170,9 @@ def entry_problem(
     if not isinstance(text, str):
         return "'text' is not a string"
     controls = [
-        f"U+{ord(ch):04X}" for ch in text if unicodedata.category(ch) in ("Cc", "Cs")
+        f"U+{ord(ch):04X}"
+        for ch in text
+        if unicodedata.category(ch) in ("Cc", "Cs", "Zl", "Zp")
     ]
     if controls:
         return f"'text' carries control characters {_short(controls)}"
