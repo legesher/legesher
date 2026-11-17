@@ -338,11 +338,14 @@ _UNICODE_OF_CPYTHON: dict[tuple[int, int], str] = {
 
 
 def interpreter_needed_for_identifier(value: str) -> tuple[int, int] | None:
-    """The oldest CPython release whose identifier rules accept every character of ``value``.
+    """The CPython release a value's newest identifier character needs, from the pinned tables.
 
-    ``None`` when Python 3.10, the supported floor, already accepts them all.
-    Static: it reads the pinned tables, never the running interpreter, so the
-    answer is the same on every interpreter that asks.
+    ``None`` when ``value`` has no character added after Python 3.10, the
+    supported floor; that says nothing else about whether ``value`` is an
+    identifier. A character 3.11 or 3.12 added reads as needing 3.13, because
+    the 3.13 table is the whole 3.10 -> 3.13 measurement. Static: it reads the
+    tables, never the running interpreter, so every interpreter gets the same
+    answer.
     """
     needed: tuple[int, int] | None = None
     for version, added in _XID_ADDED_BY_CPYTHON.items():
@@ -1851,7 +1854,10 @@ class SchemaValidator:
                 }
             )
             pretty = ", ".join(
-                f"U+{ord(ch):04X} {unicodedata.name(ch, 'unnamed')}" for ch in offending
+                f"U+{ord(ch):04X} {unicodedata.name(ch)}"
+                if unicodedata.name(ch, "")
+                else f"U+{ord(ch):04X}"
+                for ch in offending
             )
             release = f"{needed[0]}.{needed[1]}"
             findings.append(

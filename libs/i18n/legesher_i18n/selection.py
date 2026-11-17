@@ -256,11 +256,8 @@ def vocabulary_value_error(
                 "where it mirrors the source term's own star; a recommended "
                 "variable name cannot carry one"
             )
-        if not LanguagePackSchema._is_valid_identifier(value, source_key=None):
-            return (
-                f"variable_conventions.{slug}: '{value}' is not a valid Python "
-                "identifier, so it cannot be recommended as a variable name"
-            )
+        # Static, before the running interpreter's own check, so the verdict
+        # names the release a value needs on every interpreter that asks.
         needed = interpreter_needed_for_identifier(value)
         if needed is not None:
             newer = sorted(
@@ -278,6 +275,11 @@ def vocabulary_value_error(
                 f"{needed[0]}.{needed[1]}. A recommended name has no version "
                 "overlay to be tiered into, so it must parse on the 3.10 floor — "
                 "respell it"
+            )
+        if not LanguagePackSchema._is_valid_identifier(value, source_key=None):
+            return (
+                f"variable_conventions.{slug}: '{value}' is not a valid Python "
+                "identifier, so it cannot be recommended as a variable name"
             )
         nfc = unicodedata.normalize("NFC", value)
         nfkc = unicodedata.normalize("NFKC", value)

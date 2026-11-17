@@ -9,6 +9,8 @@ from pathlib import Path
 
 from legesher_i18n.pack_loader import LanguagePackLoader
 from tests.interpreter_gaps import NEEDS_UNICODE_15_1
+from tests import language_packs_root, pack_file
+from legesher_i18n.language_registry import get_active_language_codes
 from legesher_i18n.schema_validator import (
     LanguagePackMetadata,
     LanguagePackSchema,
@@ -830,16 +832,24 @@ class TestJapaneseInterpreterTiers:
         )
 
 
-def _shipped_tier_files() -> list[tuple[str, Path]]:
-    """Every shipped pack file as ``(language, path)``, read from discovery."""
-    files = []
-    for key, pack_dir in sorted(LanguagePackLoader()._discover_packs().items()):
-        target, _, code = key.partition("-")
-        if target == "python":
-            files += [
-                (code, path) for path in sorted((pack_dir / "packs").glob("*.yml"))
-            ]
-    return files
+def _expected_tier_files() -> list[tuple[str, Path]]:
+    """Every tier file this checkout must ship, as ``(language, path)``.
+
+    Anchored to the registry and the version index, not to discovery: discovery
+    prefers installed packs over this checkout, and a walk that found nothing
+    would let the floor test pass over zero files.
+    """
+    index = yaml.safe_load(
+        (language_packs_root() / "version-index.yml").read_text(encoding="utf-8")
+    )
+    versions = sorted(
+        index["python_versions"], key=lambda v: tuple(map(int, v.split(".")))
+    )
+    return [
+        (code, pack_file(code, version))
+        for code in get_active_language_codes()
+        for version in versions
+    ]
 
 
 def _raw_tier_schema(path: Path) -> LanguagePackSchema:
@@ -876,22 +886,36 @@ def test_no_identifier_character_newer_than_its_tiers_floor():
     are the validator's own: a local copy of the characters someone knew
     about is what let ``ja`` ship U+30FB under a 3.10 floor (CORE-1905).
     """
-    offenders = [
-        f"{code} {path.name} {finding.location}: {finding.message}"
-        for code, path in _shipped_tier_files()
+    files = _expected_tier_files()
+    offenders, evaluated = [], 0
+    for code, path in files:
         for finding in SchemaValidator.check_min_interpreter_identifier(
             _raw_tier_schema(path), code
-        )
-    ]
+        ):
+            offenders.append(
+                f"{code} {path.name} {finding.location}: {finding.message}"
+            )
+        evaluated += 1
     assert offenders == [], "\n".join(offenders)
+    # Every expected file was read and judged; none was skipped on the way.
+    assert evaluated == len(files)
 
 
 def test_the_floor_test_reads_every_shipped_tier_file():
-    # Guards the test above: an empty or partial walk would pass it vacuously.
-    files = _shipped_tier_files()
-    languages = {code for code, _ in files}
-    assert len(languages) == len(
-        LanguagePackLoader().list_available_languages("python")
+    # Guards the test above against a vacuous pass: every active language has
+    # every indexed tier on disk in this checkout, and nothing else ships.
+    files = _expected_tier_files()
+    assert len(files) == len(get_active_language_codes()) * len(
+        yaml.safe_load(
+            (language_packs_root() / "version-index.yml").read_text(encoding="utf-8")
+        )["python_versions"]
     )
-    for version in LanguagePackLoader().list_available_versions("python"):
-        assert any(path.name == f"{version}.yml" for _, path in files), version
+    missing = [f"{code} {path.name}" for code, path in files if not path.is_file()]
+    assert missing == [], missing
+    shipped = {
+        path
+        for path in language_packs_root().glob("*/legesher_i18n_python_*/packs/*.yml")
+    }
+    assert shipped == {path for _, path in files}, sorted(
+        str(p) for p in shipped ^ {path for _, path in files}
+    )
