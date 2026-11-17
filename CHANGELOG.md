@@ -37,6 +37,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **legesher-vscode**: 0.1.8. The extension icon is 512 by 512 pixels, within the
   Visual Studio Marketplace's 1024 by 1024 limit, so the package can be published.
 
+### Security
+
+- **mcp**: `legesher-mcp` requires the MCP Python SDK (`mcp`) 1.30.0 or later,
+  the first 1.x release outside every security advisory published for the SDK.
+  Installing or upgrading the server moves an older SDK already in the
+  environment to 1.30.0 or later.
+
 ## [0.25.1] - 2026-11-03
 
 ### Fixed

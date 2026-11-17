@@ -27,8 +27,21 @@ from pathlib import Path
 import pytest
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from packaging.utils import canonicalize_name
+from packaging.version import Version
+
+from tests.dependency_floors import (
+    REVIEWED,
+    newest_covered_release_below_the_floor,
+    problems,
+    third_party,
+)
 
 pytestmark = [pytest.mark.anyio, pytest.mark.scheduled]
+
+#: The SDK release an older environment would hold: the newest 1.x release
+#: that a published advisory still covers.
+OLDER_SDK = newest_covered_release_below_the_floor("mcp")
 
 #: Only the runtime packages a host would get from an index. The language
 #: packs are deliberately NOT installed separately — legesher-i18n bundles
@@ -60,40 +73,90 @@ def _minimal_env(venv: Path) -> dict[str, str]:
 
 
 @pytest.fixture(scope="module")
-def clean_install(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
-    """Build the wheels, install them into a fresh venv, return (python, cwd).
-
-    Synchronous and module-scoped on purpose: the work is subprocess-bound
-    and far too slow to repeat per test.
-    """
+def wheelhouse(tmp_path_factory: pytest.TempPathFactory) -> list[str]:
+    """Build one wheel per runtime package, once for the module."""
     root = _monorepo_root()
     if root is None:  # pragma: no cover — only when run from an installed wheel
         pytest.skip("needs the monorepo checkout to build wheels")
     if shutil.which("uv") is None:  # pragma: no cover — uv is the repo's toolchain
         pytest.skip("needs `uv` on PATH to build wheels and create the venv")
 
-    base = tmp_path_factory.mktemp("clean-env")
-    wheelhouse = base / "wheelhouse"
-    venv = base / "venv"
-    # An empty directory with no relationship to the repo: the server's cwd.
-    workdir = base / "elsewhere"
-    workdir.mkdir()
-
+    out_dir = tmp_path_factory.mktemp("wheelhouse")
     for package in WHEEL_PACKAGES:
         subprocess.run(
-            ["uv", "build", "--package", package, "--wheel", "--out-dir", str(wheelhouse)],
+            ["uv", "build", "--package", package, "--wheel", "--out-dir", str(out_dir)],
             cwd=root,
             check=True,
             capture_output=True,
         )
 
-    wheels = sorted(str(path) for path in wheelhouse.glob("*.whl"))
+    wheels = sorted(str(path) for path in out_dir.glob("*.whl"))
     assert len(wheels) == len(WHEEL_PACKAGES), f"expected one wheel per package, got {wheels}"
+    return wheels
+
+
+@pytest.fixture(scope="module")
+def clean_install(
+    wheelhouse: list[str], tmp_path_factory: pytest.TempPathFactory
+) -> tuple[Path, Path]:
+    """Install the built wheels into a fresh venv, return (python, cwd).
+
+    Synchronous and module-scoped on purpose: the work is subprocess-bound
+    and far too slow to repeat per test.
+    """
+    base = tmp_path_factory.mktemp("clean-env")
+    venv = base / "venv"
+    # An empty directory with no relationship to the repo: the server's cwd.
+    workdir = base / "elsewhere"
+    workdir.mkdir()
 
     subprocess.run(["uv", "venv", str(venv)], check=True, capture_output=True)
     python = venv / "bin" / "python"
     subprocess.run(
-        ["uv", "pip", "install", "--python", str(python), *wheels],
+        ["uv", "pip", "install", "--python", str(python), *wheelhouse],
+        check=True,
+        capture_output=True,
+    )
+    return python, workdir
+
+
+@pytest.fixture(scope="module")
+def install_over_an_older_sdk(
+    wheelhouse: list[str], tmp_path_factory: pytest.TempPathFactory
+) -> tuple[Path, Path]:
+    """Install the built wheels into a venv that already holds an older SDK.
+
+    The older SDK is the newest release below the reviewed floor that a
+    published advisory still covers.
+    An installer keeps a package that is already present whenever the new
+    requirement admits it, so this is the environment where the declared
+    floor is the only thing that moves the SDK.
+    """
+    base = tmp_path_factory.mktemp("older-sdk-env")
+    venv = base / "venv"
+    workdir = base / "elsewhere"
+    workdir.mkdir()
+
+    subprocess.run(["uv", "venv", str(venv)], check=True, capture_output=True)
+    python = venv / "bin" / "python"
+    subprocess.run(
+        [
+            "uv",
+            "pip",
+            "install",
+            "--python",
+            str(python),
+            f"mcp=={OLDER_SDK}",
+        ],
+        check=True,
+        capture_output=True,
+    )
+    held = _run_in_venv(python, workdir, "import importlib.metadata as m; print(m.version('mcp'))")
+    assert held == OLDER_SDK, (
+        f"the starting environment holds mcp {held}, not the older release under test"
+    )
+    subprocess.run(
+        ["uv", "pip", "install", "--python", str(python), *wheelhouse],
         check=True,
         capture_output=True,
     )
@@ -186,6 +249,58 @@ def test_the_version_enum_is_derived_in_a_clean_install(
     versions = json.loads(payload)
     assert versions["default"] in versions["supported"]
     assert len(versions["supported"]) > 1
+
+
+# -- the requirements the wheel declares ------------------------------------
+
+
+def test_the_wheel_metadata_keeps_to_the_ledger(
+    clean_install: tuple[Path, Path],
+) -> None:
+    """The ranges in the built wheel are what an installer reads, not pyproject."""
+    python, workdir = clean_install
+    payload = _run_in_venv(
+        python,
+        workdir,
+        "import importlib.metadata as m, json\nprint(json.dumps(m.requires('legesher-mcp') or []))",
+    )
+    declared = third_party(json.loads(payload))
+    names = {canonicalize_name(requirement.name) for requirement in declared}
+    assert names == set(REVIEWED), (
+        f"the wheel requires {sorted(names)}, the ledger reviews {sorted(REVIEWED)}"
+    )
+    found = [problem for requirement in declared for problem in problems(requirement)]
+    assert not found, "the built wheel's metadata fails the ledger:\n" + "\n".join(found)
+
+
+def test_an_install_over_an_older_sdk_moves_it_past_the_advisories(
+    install_over_an_older_sdk: tuple[Path, Path],
+) -> None:
+    python, workdir = install_over_an_older_sdk
+    installed = _run_in_venv(
+        python, workdir, "import importlib.metadata as m; print(m.version('mcp'))"
+    )
+    assert Version(installed) >= Version(REVIEWED["mcp"].floor), (
+        f"installing the wheel into an environment that held mcp {OLDER_SDK} left mcp "
+        f"{installed} in place; the declared range must move it to "
+        f"{REVIEWED['mcp'].floor} or later"
+    )
+    assert installed not in REVIEWED["mcp"].covered, (
+        f"the install resolved mcp {installed}, which a published advisory covers"
+    )
+
+
+async def test_a_host_can_initialize_after_an_install_over_an_older_sdk(
+    install_over_an_older_sdk: tuple[Path, Path],
+) -> None:
+    """The upgraded environment still serves a session, not only resolves."""
+    python, workdir = install_over_an_older_sdk
+    async with stdio_client(_server_params(python, workdir)) as (read, write):
+        async with ClientSession(read, write) as session:
+            result = await session.initialize()
+            assert result.serverInfo.name
+            tools = await session.list_tools()
+            assert tools.tools, "the server listed no tools after the SDK moved"
 
 
 # -- a real stdio session --------------------------------------------------

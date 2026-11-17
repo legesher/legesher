@@ -2565,7 +2565,7 @@ dev = [
 requires-dist = [
     { name = "legesher-core", editable = "libs/core" },
     { name = "legesher-i18n", editable = "libs/i18n" },
-    { name = "mcp", specifier = ">=1.16.0,<2.0.0" },
+    { name = "mcp", specifier = ">=1.30.0,<2.0.0" },
     { name = "pydantic", specifier = ">=2.5.0" },
 ]
 
