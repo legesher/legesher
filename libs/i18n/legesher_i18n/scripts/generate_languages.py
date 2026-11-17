@@ -45,6 +45,7 @@ sys.path.insert(0, str(I18N_DIR.parent))
 from legesher_i18n.db import TranslationDatabase, default_db_path  # noqa: E402
 from legesher_i18n.numerals import (  # noqa: E402
     DECIMAL_SEPARATORS,
+    decimal_separator_for,
     is_known_numeral_system,
 )
 
@@ -127,6 +128,13 @@ def load_registry_from_db(db_path: str | Path | None = None) -> dict:
                 f"{sorted(DECIMAL_SEPARATORS)} ('.' for a language that writes "
                 f"ASCII digits). For a database that predates the column, run "
                 f"libs/i18n/scripts/set_numeral_systems.py."
+            )
+        if decimal_separator != decimal_separator_for(numeral_system):
+            raise ValueError(
+                f"Published language {code!r} has decimal_separator "
+                f"{decimal_separator!r} with numeral_system {numeral_system!r}; "
+                f"that system is written with "
+                f"{decimal_separator_for(numeral_system)!r}."
             )
         languages[code] = {
             "name": row["name"],

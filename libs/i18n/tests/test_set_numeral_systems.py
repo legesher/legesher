@@ -69,10 +69,12 @@ def _values(path: Path) -> dict[str, tuple[str, str]]:
         conn.close()
 
 
-def test_table_covers_every_published_language_as_the_registry_holds_it() -> None:
+def test_table_agrees_with_the_registry() -> None:
+    # The table is the migration's record of the languages published when it
+    # ran; a language added since is given its values by hand, not here.
     published = set(get_active_language_codes())
-    assert set(NUMERAL_SYSTEMS) == published
-    for code in published:
+    assert set(NUMERAL_SYSTEMS) <= published
+    for code in NUMERAL_SYSTEMS:
         assert is_known_numeral_system(NUMERAL_SYSTEMS[code]), code
         assert NUMERAL_SYSTEMS[code] == get_numeral_system(code), code
         assert SEPARATORS.get(code, ".") == get_decimal_separator(code), code

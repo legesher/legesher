@@ -13,7 +13,10 @@ The language registry records two facts per language, both generated from the
   Arabic-Indic and Extended Arabic-Indic digits). A language that writes
   ASCII digits records ``.``, the mark a numeric literal in code uses,
   whatever its prose convention (German writes ``3,5`` in text, ``3.5`` in
-  code). It is stored per language because the digits do not decide it.
+  code). It is stored per language, like every registry fact, and checked
+  against the mark CLDR writes with the system in every locale that uses it
+  (:func:`decimal_separator_for`). Khmer is the one CLDR system whose mark is
+  a comma; a comma is a tuple in code, so it has no entry here.
 
 Every decimal numbering system Unicode encodes is a block of ten consecutive
 code points with the zero first, and ``unicodedata.digit`` already reads each
@@ -46,6 +49,7 @@ __all__ = [
     "DECIMAL_SEPARATORS",
     "LATIN",
     "NUMERAL_SYSTEM_ZEROS",
+    "decimal_separator_for",
     "is_known_numeral_system",
     "numeral_system_digits",
 ]
@@ -74,6 +78,22 @@ NUMERAL_SYSTEM_ZEROS: Final[Mapping[str, int]] = MappingProxyType(
         "thai": 0x0E50,  # THAI DIGIT ZERO
     }
 )
+
+
+#: Systems CLDR writes with U+066B in every locale; every other system here
+#: is written with ".".
+_ARABIC_DECIMAL = frozenset({"arab", "arabext"})
+
+
+def decimal_separator_for(system: str) -> str:
+    """The decimal mark CLDR writes with ``system`` (U+066B or ``.``).
+
+    Raises:
+        ValueError: If ``system`` is not a known identifier.
+    """
+    if not is_known_numeral_system(system):
+        raise ValueError(f"unknown numeral system {system!r}")
+    return "\u066b" if system in _ARABIC_DECIMAL else "."
 
 
 def is_known_numeral_system(system: str) -> bool:

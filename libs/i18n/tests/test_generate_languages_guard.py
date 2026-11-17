@@ -193,6 +193,9 @@ class TestNumeralFields:
             ("arab", "\u066c", "decimal_separator"),
             ("arab", "\u202e", "decimal_separator"),
             ("arab", "5", "decimal_separator"),
+            # An allowed mark on the wrong system.
+            ("arab", ".", "decimal_separator"),
+            ("latn", "\u066b", "decimal_separator"),
         ],
     )
     def test_unusable_numeral_value_refuses_without_writing(

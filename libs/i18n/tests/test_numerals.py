@@ -6,7 +6,8 @@ Three layers:
   character database, by value and by character name;
 - the registry's ``numeral_system`` and ``decimal_separator`` for every
   published language: a known identifier, an allowed separator, and the
-  values the 3 November audit found wrong pinned;
+  values that were once recorded wrong (Urdu as Arabic-Indic; Persian and
+  Burmese empty) pinned;
 - the registry against each style guide, both ways: a native digit block
   needs ``supports.native_digits``, a flag needs a native block unless the
   language is listed as profiling numerals that are not one, and the guide's
@@ -32,8 +33,10 @@ from legesher_i18n.language_registry import (
     get_numeral_system,
 )
 from legesher_i18n.numerals import (
+    DECIMAL_SEPARATORS,
     LATIN,
     NUMERAL_SYSTEM_ZEROS,
+    decimal_separator_for,
     is_known_numeral_system,
     numeral_system_digits,
 )
@@ -138,6 +141,23 @@ class TestRegistry:
         # A numeric literal in code uses ".", whatever the prose convention.
         if get_numeral_system(code) == LATIN:
             assert get_decimal_separator(code) == "."
+
+    @pytest.mark.parametrize("code", get_active_language_codes())
+    def test_separator_is_the_one_its_system_is_written_with(self, code: str) -> None:
+        assert get_decimal_separator(code) == decimal_separator_for(
+            get_numeral_system(code)
+        )
+
+    def test_schema_allows_exactly_the_module_separators(self) -> None:
+        schema = json.loads(
+            (LANGUAGES_JSON.parent / "languages.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        allowed = schema["$defs"]["languageMetadata"]["properties"][
+            "decimal_separator"
+        ]["enum"]
+        assert set(allowed) == DECIMAL_SEPARATORS
 
     def test_unknown_code_writes_ascii(self) -> None:
         assert get_numeral_system("xx") == LATIN

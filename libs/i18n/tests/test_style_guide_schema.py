@@ -170,7 +170,7 @@ class TestValidatorDigitChecks:
 
     def test_note_from_another_block_is_flagged(self) -> None:
         # Urdu's note shows Extended Arabic-Indic; a registry naming the
-        # Arabic-Indic block (the 3 November error) contradicts it.
+        # Arabic-Indic block, as the registry once did, contradicts it.
         g = self._guide(True, "Digits: Urdu natively uses ۰۱۲۳; x.")
         problems = V._digit_problems("xx", g, self._meta("arab"))
         assert any("U+06F0" in p for p in problems)
