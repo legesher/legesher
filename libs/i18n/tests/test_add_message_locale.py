@@ -438,3 +438,118 @@ class TestV2Database:
             "le nom '{name}' n'est pas défini",
             "machine",
         )
+
+
+class TestEmptyTemplateRule:
+    """A rendering is empty exactly when its English template is.
+
+    Three CPython templates have no text (a bare ``assert``,
+    ``StopIteration``, ``KeyboardInterrupt``); their matcher is ``^$``, so a
+    rendering with words in it would print an invented sentence. The reverse
+    mistake, an empty rendering of a worded template, prints nothing where
+    the learner needs the message. Placeholder parity sees neither: both
+    sides declare no slots.
+    """
+
+    #: Worded renderings in scripts whose text is more than base letters:
+    #: pointed Hebrew, vocalised Arabic, Devanagari conjuncts, Sinhala with
+    #: ZWJ, Persian with ZWNJ, Thai with SARA AM.
+    WORDED = {
+        "he": "חֲלוּקָה בְּאֶפֶס",
+        "ar": "قِسْمَةٌ عَلَى صِفْرٍ",
+        "hi": "शून्य से विभाजन",
+        "si": "ශ්\u200dරී බෙදීම බිංදුවෙන්",
+        "fa": "تقسیم بر صفر نمی\u200cشود",
+        "th": "หารด้วยศูนย์ จำนวน",
+    }
+
+    @pytest.fixture
+    def empty_db(self, tmp_path: Path) -> Path:
+        path = tmp_path / "translations.db"
+        conn = sqlite3.connect(path)
+        conn.executescript(
+            """
+            CREATE TABLE languages (code TEXT PRIMARY KEY, name TEXT NOT NULL);
+            INSERT INTO languages (code, name) VALUES
+                ('he', 'Hebrew'), ('ar', 'Arabic'), ('hi', 'Hindi'),
+                ('si', 'Sinhala'), ('fa', 'Persian'), ('th', 'Thai');
+            """
+        )
+        conn.commit()
+        conn.close()
+        activate(path)
+        seed_database(
+            path,
+            {
+                "implementation": "cpython",
+                "version_added": "3.10",
+                "templates": [
+                    {
+                        "key": "ZeroDivisionError.division_by_zero",
+                        "template_en": "division by zero",
+                        "placeholders": [],
+                        "matcher": "^division by zero$",
+                        "translations": {},
+                    },
+                    {
+                        "key": "KeyboardInterrupt.interrupt",
+                        "template_en": "",
+                        "placeholders": [],
+                        "matcher": "^$",
+                        "translations": {},
+                    },
+                ],
+            },
+        )
+        return path
+
+    @staticmethod
+    def addition(locale: str, worded: str, interrupt: str) -> dict:
+        return {
+            "implementation": "cpython",
+            "locale": locale,
+            "source": "community",
+            "translations": [
+                {
+                    "key": "ZeroDivisionError.division_by_zero",
+                    "version_added": "3.10",
+                    "template": worded,
+                },
+                {
+                    "key": "KeyboardInterrupt.interrupt",
+                    "version_added": "3.10",
+                    "template": interrupt,
+                },
+            ],
+        }
+
+    @pytest.mark.parametrize("locale", sorted(WORDED))
+    def test_worded_and_empty_renderings_are_stored_exactly(
+        self, empty_db: Path, locale: str
+    ):
+        worded = self.WORDED[locale]
+        assert add_locale(empty_db, self.addition(locale, worded, "")) == 2
+        stored = stored_translations(empty_db, locale)
+        assert stored["ZeroDivisionError.division_by_zero"][0] == worded
+        interrupt = stored["KeyboardInterrupt.interrupt"][0]
+        assert interrupt is not None
+        assert interrupt == ""
+
+    @pytest.mark.parametrize(
+        "invented",
+        ["कोई संदेश नहीं", "הַפְסָקָה", "(no message)", " "],
+    )
+    def test_text_for_an_empty_template_is_refused(self, empty_db: Path, invented: str):
+        addition = self.addition("hi", self.WORDED["hi"], invented)
+        with pytest.raises(SystemExit, match="English template is empty"):
+            add_locale(empty_db, addition)
+        assert stored_translations(empty_db, "hi") == {}
+
+    @pytest.mark.parametrize("blank", ["", "   ", "\u3000\u00a0", "\n"])
+    def test_blank_rendering_of_a_worded_template_is_refused(
+        self, empty_db: Path, blank: str
+    ):
+        addition = self.addition("he", blank, "")
+        with pytest.raises(SystemExit, match="translation is empty"):
+            add_locale(empty_db, addition)
+        assert stored_translations(empty_db, "he") == {}

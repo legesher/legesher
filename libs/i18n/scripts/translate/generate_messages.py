@@ -26,7 +26,13 @@ dry-run, DB store) with message-specific machinery:
   best-effort native and non-blocking; the gate blocks on mechanical
   errors only.
 * **One call per locale.** 55 short sentences fit one response;
-  a per-message call is the economics leak (CORE-1805).
+  a per-message call is the economics leak (CORE-1805). The response gets
+  its own output ceiling (:data:`MAX_OUTPUT_TOKENS`), and a response the
+  model did not finish (cut off at the ceiling, or declined) is a named
+  per-locale failure whose tokens still count against the budget.
+* **Sentences are spelled as sentences.** The style guides describe
+  identifiers; the prompt says so, and asks for the language's normal
+  orthography. Code inside a template stays code.
 * **English is never generated** — ``template_en`` IS the English surface.
 * **Nothing is published.** ``message_translations`` stays outside the HF
   one-way door until content-addressed keys (CORE-1565) land.
@@ -71,13 +77,13 @@ except ImportError:  # run as a script: scripts/ was put on sys.path above
 
 try:  # imported as part of the `scripts.translate` package (tests)
     from .generate_vocabulary import (
-        call_model,
+        create_message,
         parse_json_response,
         render_style_profile,
     )
 except ImportError:  # run as a script
     from generate_vocabulary import (  # noqa: E402
-        call_model,
+        create_message,
         parse_json_response,
         render_style_profile,
     )
@@ -92,6 +98,76 @@ SOURCE = "claude_agent"
 SEED_LANGUAGE = "en"
 
 CREATED_BY = "generate_messages.py"
+
+#: Output ceiling for one locale's response. Current models think before
+#: they answer and that thinking counts against the ceiling, and scripts
+#: that cost several tokens per character (Burmese, Sinhala, Malayalam)
+#: make the 55 renderings themselves long. The vocabulary lane's ceiling
+#: fits neither.
+MAX_OUTPUT_TOKENS = 16_000
+
+
+class IncompleteResponse(Exception):
+    """The model stopped without finishing its answer.
+
+    The call was still billed, so the token counts travel with the failure
+    and the lane adds them to the run's spend.
+    """
+
+    def __init__(self, reason: str, input_tokens: int, output_tokens: int) -> None:
+        super().__init__(reason)
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
+
+
+def read_response(response, max_tokens: int) -> tuple[str, int, int]:
+    """The text of a finished response: ``(text, input_tokens, output_tokens)``.
+
+    Raises:
+        IncompleteResponse: If the model hit the output ceiling
+            (``max_tokens``) or declined (``refusal``). Either way the text,
+            if any, is not a complete answer; parsing it would report a
+            JSON error and hide the cause.
+    """
+    input_tokens = response.usage.input_tokens
+    output_tokens = response.usage.output_tokens
+    stop_reason = getattr(response, "stop_reason", None)
+    if stop_reason == "max_tokens":
+        raise IncompleteResponse(
+            f"response cut off at the {max_tokens}-token output ceiling "
+            "(stop_reason=max_tokens); nothing usable was returned",
+            input_tokens,
+            output_tokens,
+        )
+    if stop_reason == "refusal":
+        details = getattr(response, "stop_details", None)
+        # SDK releases that predate the field keep it as a plain dict
+        if isinstance(details, dict):
+            category = details.get("category")
+        else:
+            category = getattr(details, "category", None)
+        detail = f", category={category}" if category else ""
+        raise IncompleteResponse(
+            f"the model declined the request (stop_reason=refusal{detail})",
+            input_tokens,
+            output_tokens,
+        )
+    text = "".join(
+        block.text for block in response.content if getattr(block, "type", "") == "text"
+    )
+    return text, input_tokens, output_tokens
+
+
+def call_model(prompt: str, model: str) -> tuple[str, int, int]:
+    """One model call for one locale: ``(text, input_tokens, output_tokens)``.
+
+    Raises:
+        RuntimeError: No API key or no SDK (the configuration channel).
+        IncompleteResponse: The model did not finish its answer.
+    """
+    return read_response(
+        create_message(prompt, model, MAX_OUTPUT_TOKENS), MAX_OUTPUT_TOKENS
+    )
 
 
 def identity_id(template: dict) -> str:
@@ -154,7 +230,8 @@ Slots are substituted by name, so their order is free.
 literal text (some messages talk about braces); keep it verbatim.
 - Plain text only: no directional control characters (LRM, RLM, isolates, \
 embeddings) — display isolation is handled at render time, not in the \
-stored string.
+stored string. Joiners that belong to a word's spelling are not \
+directional controls; keep them.
 - An empty English template means "this message has no text"; return an \
 empty string for it.
 
@@ -164,13 +241,32 @@ Neutral, clear, and idiomatic for a beginner reading an error. Keep the \
 technical meaning exact. Exception class names (like ZeroDivisionError) \
 are NOT part of these templates — translate only the message text given.
 
+## Code stays code
+
+Python names, operators and literal syntax inside a template are code, not \
+prose. Keep them exactly as written and translate the words around them: \
+`'print'`, `print(...)`, `'=='`, `int()`, `str`, `StopIteration`, `0o`, \
+`f-string`, `[Errno {{errno}}]`.
+
 ## The templates
 
 {render_template_inventory(templates)}
 
-## Script and formatting profile for {language_name}
+## Script profile for {language_name}
 
-{render_style_profile(locale)}
+These templates are sentences. Write them in the language's normal \
+orthography, as a careful native writer would in ordinary prose:
+
+- usual spacing and punctuation, and no underscores between words;
+- the language's own standard letters, never presentation or \
+compatibility forms;
+- every mark or joiner its standard spelling uses, such as the dependent \
+vowel signs of a Brahmic script, the zero-width joiner in Sinhala \
+conjuncts and the zero-width non-joiner in Persian;
+- vowel points or diacritics only where ordinary prose uses them: Hebrew \
+and Arabic-script prose is normally written unpointed.
+
+{render_style_profile(locale, identifier_rules=False)}
 
 ## Output format
 
@@ -266,7 +362,8 @@ def run_lane(
         locales: Explicit locale list, or ``None`` for every pack language
             that has no message translations yet.
         call: The model-call function (injected in tests); the
-            ``call_model`` contract — ``(prompt, model) -> (text, in, out)``.
+            ``call_model`` contract — ``(prompt, model) -> (text, in, out)``,
+            raising :class:`IncompleteResponse` for an unfinished answer.
         max_budget: USD ceiling, or ``None`` to run without one (the CLI's
             ``--no-budget``). Checked before each call against the spend so
             far; the lane stops requesting once reached. A ceiling that
@@ -372,6 +469,12 @@ def run_lane(
             text, input_tokens, output_tokens = call(prompt, model)
         except RuntimeError:
             raise  # configuration problem: abort the whole run
+        except IncompleteResponse as exc:
+            # billed all the same: the ceiling must see it
+            total_in += exc.input_tokens
+            total_out += exc.output_tokens
+            failures[locale] = [str(exc)]
+            continue
         except Exception as exc:  # noqa: BLE001 — one locale must not end the run
             failures[locale] = [f"model call failed: {exc}"]
             continue

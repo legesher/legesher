@@ -21,6 +21,11 @@ validation rather than reimplementing it:
   learner's traceback;
 - **no bidi control characters** in stored strings (isolation of interpolated
   values is a render-time concern);
+- **empty exactly when the English template is**: a few templates have no
+  text at all (a bare ``assert``), and their translation is the empty string;
+  words there would print an invented sentence, and a blank translation of a
+  worded template would print nothing. Parity cannot see either mistake when
+  the template declares no placeholders;
 - **locale exists** — in ``locales`` on a v2 build, in ``languages`` on the
   operational v1 file (which predates ``locales``); never created here as a
   side effect;
@@ -101,16 +106,17 @@ def _template_rows(
 ) -> dict[tuple[str, str | None], dict]:
     """The implementation's template rows, keyed by ``(key, version_added)``."""
     rows = connection.execute(
-        "SELECT id, key, version_added, placeholders FROM message_templates "
-        "WHERE implementation = ?",
+        "SELECT id, key, version_added, placeholders, template_en "
+        "FROM message_templates WHERE implementation = ?",
         (implementation,),
     ).fetchall()
     return {
         (key, version_added): {
             "id": row_id,
             "declared": {p["name"] for p in json.loads(placeholders_json or "[]")},
+            "english": template_en,
         }
-        for row_id, key, version_added, placeholders_json in rows
+        for row_id, key, version_added, placeholders_json, template_en in rows
     }
 
 
@@ -176,6 +182,19 @@ def _validate_entries(
         bad = bidi_controls(entry["template"])
         if bad:
             problems.append(f"{label}: translation stores bidi controls {bad}")
+
+        # ``== ""`` on purpose, not truthiness: the empty string IS the
+        # template for the few messages that have no text.
+        if template["english"] == "":
+            if entry["template"] != "":
+                problems.append(
+                    f"{label}: the English template is empty (this message "
+                    "has no text), so its translation must be the empty string"
+                )
+        elif not entry["template"].strip():
+            problems.append(
+                f"{label}: translation is empty, but the English template is not"
+            )
 
     for key, version_added in sorted(
         set(templates) - covered, key=lambda i: (i[0], i[1] or "")
