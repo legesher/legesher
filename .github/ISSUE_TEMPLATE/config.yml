@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+- name: Review a language pack
+  url: https://github.com/legesher/language-packs#start-here
+  about: Language reviews arrive as pull requests in legesher/language-packs. Start there.
 - name: GitHub Discussions
   url: https://github.com/legesher/legesher/discussions
   about: Ask questions and discuss ideas with the community
