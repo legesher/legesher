@@ -11,8 +11,9 @@ that misses, tries the name's NFKC form against an index of that table's
 keys folded the same way. That is "normalize both sides before comparing",
 done at the lookup and not at the lexer. (The token backend hands the mapper
 the NFC form of each token; the tree-sitter backend hands it the token as
-written. Both reach the same entry for a table whose keys are NFC-stable,
-which the pack validator requires of every value.)
+written. Both reach the same entry for a table in which no two keys fold to
+the same NFKC form, which holds for every shipped pack; for a hand-built
+table that breaks it, the collision warning below fires.)
 
 - The relation is Python's own. Python folds identifiers with NFKC when it
   parses them (PEP 3131), so two NFKC-equal spellings are one name to the
