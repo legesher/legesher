@@ -77,7 +77,7 @@ on PyPI at the version the manifest names.
 | --- | --- | --- |
 | Official MCP Registry (`registry.modelcontextprotocol.io`) | `server.json`; the `mcp-name` marker in the README published on PyPI | `mcp-publisher login github --token <token>` as an Owner of the `legesher` GitHub organisation, with a token that can read the organisation's membership (a classic personal access token with `read:org`, or the `MCP_GITHUB_TOKEN` environment variable holding one); the browser sign-in without a token cannot grant an organisation namespace ([registry#1468](https://github.com/modelcontextprotocol/registry/issues/1468)). Membership alone is refused for the `io.github.legesher/*` namespace; a DNS-verified name under the project domain is the alternative. Then `mcp-publisher publish` from `libs/mcp` on a checkout of `main` whose `server.json` carries the released version. Re-publish on every version bump. |
 | PyPI | `README.md`, `[project.urls]`, keywords, classifiers | Nothing beyond the package publish. |
-| Glama (`glama.ai/mcp/servers`) | the public GitHub repository | Indexed automatically. To claim and edit the listing, add `glama.json` at the repository root (`$schema` `https://glama.ai/mcp/schemas/server.json`, `maintainers` as GitHub usernames; organisation repositories must use the file), then run the claim flow. Check on the day. |
+| Glama (`glama.ai/mcp/servers`) | the public GitHub repository, `glama.json`, and the build settings saved on the listing | Listed at <https://glama.ai/mcp/servers/legesher/legesher>. `glama.json` at the repository root names the maintainers who can edit it (organisation repositories must use the file). Glama builds a container from the listing's build settings before it lists a server; see [Glama](#glama) below. |
 | Smithery (`smithery.ai`) | the public GitHub repository | Submit with a GitHub sign-in. Check their current requirements for a stdio server on the day; they change. |
 | PulseMCP (`pulsemcp.com`) | the official registry | Submissions paused as of October 2026; the site says it will pick up the official registry when it reopens. Check on the day. |
 | mcp.so | a submission | Submit the repository URL and the canonical copy. |
@@ -89,6 +89,84 @@ servers; the official registry is the route. Directories for remote servers
 (Anthropic's connectors directory, OpenAI's apps directory, cloud
 marketplaces) list a remote endpoint, not a local package, and are outside
 this page.
+
+## Glama
+
+What follows is how the listing worked in November 2026; check it on the day.
+
+Glama builds each server into a container, starts it and runs the protocol's
+introspection exchange (`tools/list`, `resources/list`, `prompts/list`)
+before it lists it. The build comes from settings saved on the listing (its
+Admin tab, under Dockerfile), not from a file in this repository: Glama turns
+the settings into its own Dockerfile.
+
+The settings for this server install the published package, so the listing
+runs what `uvx legesher-mcp` runs:
+
+| Setting | Value |
+| --- | --- |
+| Python version | 3.13 |
+| Build steps | `["uv venv /opt/legesher-mcp", "uv pip install --python /opt/legesher-mcp/bin/python legesher-mcp==<version>"]` |
+| Command | `["mcp-proxy", "--", "/opt/legesher-mcp/bin/legesher-mcp"]` |
+
+`<version>` is the `legesher-mcp` version on PyPI that the Glama release is
+for. Naming it makes a Glama release mean one server version; left out, each
+rebuild installs whatever is newest that day. The build step names no date,
+so on Glama the server's dependencies resolve on the day of each build. The
+settings page kept an edit only when a build was started from it.
+
+`libs/mcp/Dockerfile` runs the same build steps on a pinned base, so they can
+be tried on a laptop first. It fixes everything the build downloads: the base
+image and the uv image by digest; Python, mcp-proxy and `legesher-mcp` by
+version; and the packages those two depend on by date (`RESOLVED_BEFORE`).
+The base image, the user and the mcp-proxy version are this file's own
+choices; Glama's generated file makes its own. The file needs no build
+context, so it builds from standard input:
+
+```bash
+docker build -t legesher-mcp - < libs/mcp/Dockerfile
+make test-mcp-docker
+```
+
+The make target builds the image and drives a session against it twice: over stdio, the
+image's default, and through mcp-proxy over HTTP, the listing's command. Each
+runs the introspection exchange, and a translation into Arabic and Hindi and
+back, byte for byte. It needs a running Docker daemon and fails without one.
+`tests/test_container_image.py` holds the file to its pins in the default
+test run, and keeps the Python version, the command and the start of each
+build step above in step with the file.
+
+The image starts the stdio server by default. mcp-proxy, the listing's
+command, listens on every interface, asks for no credentials and answers any
+origin; that suits a directory's sandbox. To try it by hand, publish the port
+on loopback only:
+
+```bash
+docker run --rm --publish 127.0.0.1:8080:8080 legesher-mcp mcp-proxy -- /opt/legesher-mcp/bin/legesher-mcp
+```
+
+For each `legesher-mcp` release, after the package is on PyPI:
+
+1. In `libs/mcp/Dockerfile`, raise `LEGESHER_MCP_VERSION` to the published
+   version, and `RESOLVED_BEFORE` to a day after it and the `legesher-core`
+   and `legesher-i18n` releases it requires were published. The date may not
+   be in the future, so a release published today waits until tomorrow. Then
+   run `make test-mcp-docker`. Commit it as `build(mcp)`; a `fix` or `feat`
+   subject would start another release.
+2. On the listing, set the same version in the build step, start a build, and
+   wait for its test to pass.
+3. Create the Glama release from that build, with the server's own version
+   number.
+
+Refresh the other pins (the two image digests, Python and mcp-proxy) in the
+same change when a newer release of one has been out for a week, or at once
+when it is a security fix.
+
+Keep Glama's automatic releases off for this repository. That setting cut a
+Glama release for every GitHub release, and this repository publishes one for
+each package it holds, so the listing would take its version numbers from
+other packages. Glama accepted only a version higher than its latest, and its
+admin page had no way to remove a release.
 
 ## Submission day
 

@@ -11,6 +11,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **mcp**: `libs/mcp/Dockerfile` builds the published `legesher-mcp` into a
+  container image, with the images pinned by digest, the tools by version and
+  their dependencies by date. `make test-mcp-docker` builds it and drives a
+  session against the image. The README links the server's Glama listing.
 - **core**: the Arabic comma and semicolon (`،` `؛`) and the fullwidth comma,
   semicolon, colon and parentheses (`，` `；` `：` `（` `）`) are read as their
   ASCII marks in code position, so a program typed on an Arabic keyboard or
@@ -40,6 +44,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the code-language picker still wins on every page. [CORE-2760]
 - **legesher-vscode**: 0.1.8. The extension icon is 512 by 512 pixels, within the
   Visual Studio Marketplace's 1024 by 1024 limit, so the package can be published.
+
+### Security
+
+- **mcp**: `legesher-mcp` requires the MCP Python SDK (`mcp`) 1.30.0 or later,
+  the first 1.x release outside every security advisory published for the SDK.
+  Installing or upgrading the server moves an older SDK already in the
+  environment to 1.30.0 or later.
 
 ## [0.25.1] - 2026-11-03
 

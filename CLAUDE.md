@@ -61,6 +61,9 @@ The deselected tests are the `scheduled` release-tier suites, which have their o
 `make test-language-server-scheduled` (wheel install plus a live LSP session). Both build wheels. The release
 workflows run them as gates, so run the matching one green before a release of either package.
 
+`make test-mcp-docker` is a third opt-in tier: it builds `libs/mcp/Dockerfile` and drives a session against the
+image. It needs a running Docker daemon and fails without one; no workflow runs it.
+
 **Run one package per pytest invocation.** Every package keeps its tests in a top-level `tests` package with its
 own `conftest.py`, so `uv run pytest libs/core/tests libs/mcp/tests` fails at collection with
 `ImportPathMismatchError`. One package at a time from the root works (`uv run pytest libs/core/tests -q`, which
