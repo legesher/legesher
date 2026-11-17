@@ -6,10 +6,13 @@ name with the table is the engine's half of the text-identity contract
 (store NFC, compare NFKC), and this module is where that half is stated.
 
 **The contract.** Every lookup (keyword, builtin or exception, implicit
-parameter) tries the name as given and, only when that misses, tries the
-name's NFKC form against an index of the table's keys folded the same way.
-That is "normalize both sides before comparing", done at the lookup and not
-at the lexer:
+parameter) tries the name it is given against its own table and, only when
+that misses, tries the name's NFKC form against an index of that table's
+keys folded the same way. That is "normalize both sides before comparing",
+done at the lookup and not at the lexer. (The token backend hands the mapper
+the NFC form of each token; the tree-sitter backend hands it the token as
+written. Both reach the same entry for a table whose keys are NFC-stable,
+which the pack validator requires of every value.)
 
 - The relation is Python's own. Python folds identifiers with NFKC when it
   parses them (PEP 3131), so two NFKC-equal spellings are one name to the
@@ -19,8 +22,9 @@ at the lexer:
   pack word keeps its bytes, and a name that is one is replaced by the
   table's target. Normalizing at the lexer would change text the author
   wrote, which the round trip has to return byte for byte.
-- An exact match wins, so a pack whose words already match byte for byte
-  behaves as it would with no fallback.
+- Within a table an exact match wins, so a pack whose words already match
+  byte for byte behaves as it would with no fallback. Across tables the
+  translators' order holds: keyword, then builtin, then implicit parameter.
 - Case is not folded. Case distinguishes Python names (``Print`` is not
   ``print``), so the lookup must not merge them.
   ``text_identity.compare_key`` adds a case fold for a different question:
@@ -34,12 +38,15 @@ shipped pack to this in both backends.
 
 **Collisions.** Two keys of one table that fold to the same NFKC form with
 different targets cannot both be reached through the fallback; the index
-keeps the first and logs a warning. Shipped packs do not get there. The pack
-validator refuses a value that is not already stable under NFC and NFKC
+keeps the first and logs a warning. The pack validator refuses a value that
+is not already stable under NFC and NFKC
 (``legesher_i18n.schema_validator.SchemaValidator.check_normalization``,
-finding code ``nfkc-instability``, with SARA AM as its one allowance), so
-that rule is the authoring-time check and the warning here is the load-time
-backstop for a table built by hand.
+finding code ``nfkc-instability``), so that rule is the authoring-time
+check, and for a stable value NFKC-equal means byte-equal. Its one allowance
+is SARA AM: a Thai value may carry U+0E33, so two values that differ only in
+how SARA AM is written would pass the validator and collide here. The
+warning is the load-time backstop for that case and for a table built by
+hand, and the same test module fails any shipped pack that triggers it.
 
 The ``is_*`` predicates are exact-match membership tests on the table as
 given. They do not apply the fallback; use the ``get_*`` lookups to decide

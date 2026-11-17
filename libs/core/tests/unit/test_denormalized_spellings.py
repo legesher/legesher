@@ -13,7 +13,7 @@ The invariant is stated against the stored spelling, not against a list:
 whatever a spelling the pack stores translates to, every spelling that is
 NFKC-equal to it translates to the same thing.
 
-Three kinds of spelling are generated from the Unicode tables, never from a
+Four kinds of spelling are generated from the Unicode tables, never from a
 hand-kept list, so a new pack or a new word is covered the day it ships:
 
 * ``decomposed``: the NFD form (Arabic hamza carriers, Vietnamese and Latin
@@ -24,6 +24,14 @@ hand-kept list, so a new pack or a new word is covered the day it ships:
 * ``ligature``: one run of characters replaced by a single code point that
   NFKC expands to it (Latin ``fi``, Arabic lam-alef, the precomposed
   Devanagari nukta letters that NFC itself keeps decomposed).
+* ``folded``: the NFKC form of a stored word that NFKC changes. Packs store
+  NFKC-stable words with one allowance, Thai SARA AM (U+0E33), which NFKC
+  writes as NIKHAHIT and SARA AA; this is the spelling Python itself folds
+  the word to.
+
+Some scripts have no other spelling at all (Ethiopic, Gujarati, Myanmar,
+Cyrillic without diacritics). A table with nothing to check is skipped by
+name, never passed, and a guard holds each of the three tables above zero.
 
 On CPython 3.10 and 3.11 the pure-Python tokenizer cannot read a name with
 a combining mark whole, so the token backend never sees such a spelling as
@@ -48,8 +56,6 @@ from legesher_i18n import get_active_language_codes
 from tests.interpreter_gaps import (
     PURE_PYTHON_TOKENIZER,
     error_tokens,
-    unloadable_here,
-    xfail_if_unloadable_here,
 )
 
 RUNNING_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
@@ -65,7 +71,7 @@ BACKENDS: tuple[str, ...] = ("token", "tree-sitter")
 #: when a translator is built from a pack, so that row covers both.
 SECTIONS: tuple[str, ...] = ("keyword_map", "builtin_map", "implicit_param_map")
 
-KINDS: tuple[str, ...] = ("decomposed", "compatibility", "ligature")
+KINDS: tuple[str, ...] = ("decomposed", "compatibility", "ligature", "folded")
 
 #: Compatibility tags in the order a typist meets them: an input method's
 #: width setting first, then the shaped forms a paste carries.
@@ -135,13 +141,19 @@ def _ligature(word: str) -> str:
     return word
 
 
+def _folded(word: str) -> str:
+    return unicodedata.normalize("NFKC", word)
+
+
 _GENERATORS = {
     "decomposed": _decomposed,
     "compatibility": _compatibility,
     "ligature": _ligature,
+    "folded": _folded,
 }
 
 
+@functools.cache
 def spellings(word: str) -> dict[str, str]:
     """Other spellings of ``word`` that Python reads as the same identifier.
 
@@ -227,10 +239,13 @@ def _mismatches(
 @pytest.mark.parametrize("backend", BACKENDS)
 @pytest.mark.parametrize("language", LANGUAGES)
 def test_every_spelling_translates_as_the_stored_word(
-    request: pytest.FixtureRequest, language: str, backend: str, section: str
+    language: str, backend: str, section: str
 ) -> None:
-    xfail_if_unloadable_here(request, language, RUNNING_VERSION)
-    failures, _ = _mismatches(language, backend, section, whole=True)
+    failures, checked = _mismatches(language, backend, section, whole=True)
+    if not checked:
+        pytest.skip(
+            "no word of this table has another spelling this tokenizer reads whole"
+        )
     assert not failures, "\n".join(failures)
 
 
@@ -269,7 +284,6 @@ def test_spellings_the_pure_python_tokenizer_fragments(
 
 @pytest.mark.parametrize("language", LANGUAGES)
 def test_no_shipped_pack_holds_two_words_that_differ_only_in_form(
-    request: pytest.FixtureRequest,
     language: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -282,7 +296,6 @@ def test_no_shipped_pack_holds_two_words_that_differ_only_in_form(
     same promise, in both directions, so a pack that slips past the
     validator fails here by name.
     """
-    xfail_if_unloadable_here(request, language, RUNNING_VERSION)
     with caplog.at_level(logging.WARNING, logger="legesher_core.token_mapper"):
         forward = create_translator_from_language_pack(
             "python", language, use_tree_sitter=False
@@ -301,32 +314,48 @@ def test_no_shipped_pack_holds_two_words_that_differ_only_in_form(
 # -- guards: the sweep must never pass by testing nothing --------------------
 
 
+#: What ``get_script`` answers for a character that belongs to no one script:
+#: shared punctuation and digits, combining marks, and the underscore.
+_NO_SCRIPT = frozenset({"Common", "Inherited", "Unknown"})
+
+
 @functools.cache
 def _scripts_by_kind() -> dict[str, dict[str, set[str]]]:
     """Per kind, the scripts with at least one spelling and the languages."""
     covered: dict[str, dict[str, set[str]]] = {kind: {} for kind in KINDS}
     for language in LANGUAGES:
-        if language in _unloadable():
-            continue
         for section in SECTIONS:
             for word in _stored(language, section):
+                script = next(
+                    (
+                        get_script(char)
+                        for char in word
+                        if get_script(char) not in _NO_SCRIPT
+                    ),
+                    None,
+                )
+                if script is None:
+                    continue
                 for kind in spellings(word):
-                    script = next(
-                        (
-                            get_script(char)
-                            for char in word
-                            if get_script(char) not in ("Common", "Inherited")
-                        ),
-                        "Common",
-                    )
                     covered[kind].setdefault(script, set()).add(language)
     return covered
 
 
-@functools.cache
-def _unloadable() -> frozenset[str]:
-    return frozenset(
-        language for language in LANGUAGES if unloadable_here(language, RUNNING_VERSION)
+@pytest.mark.parametrize("section", SECTIONS)
+def test_every_table_has_spellings_to_check(section: str) -> None:
+    """No table is swept on an empty list, the implicit parameters least of all."""
+    pairs = sum(
+        len(spellings(word))
+        for language in LANGUAGES
+        for word in _stored(language, section)
+    )
+    languages = sum(
+        1
+        for language in LANGUAGES
+        if any(spellings(word) for word in _stored(language, section))
+    )
+    assert pairs >= 50 and languages >= 20, (
+        f"{section}: {pairs} spellings across {languages} languages"
     )
 
 
@@ -343,27 +372,30 @@ def test_each_kind_reaches_three_scripts_and_a_right_to_left_one(kind: str) -> N
     assert right_to_left, f"no right-to-left script has a {kind} spelling"
 
 
-def test_ligature_spellings_exist() -> None:
-    assert _scripts_by_kind()["ligature"], "no pack word has a ligature spelling"
+@pytest.mark.parametrize("kind", ("ligature", "folded"))
+def test_the_rarer_kinds_exist(kind: str) -> None:
+    assert _scripts_by_kind()[kind], f"no pack word has a {kind} spelling"
 
 
 @pytest.mark.parametrize(
     ("word", "kind", "code_points"),
     [
         # Arabic alef with hamza above, as macOS decomposes it.
-        ("أكد", "decomposed", "U+0627 U+0654 U+0643 U+062F"),
+        ("\u0623\u0643\u062f", "decomposed", "U+0627 U+0654 U+0643 U+062F"),
         # Vietnamese: base letter, then the tone mark.
-        ("và", "decomposed", "U+0076 U+0061 U+0300"),
+        ("v\u00e0", "decomposed", "U+0076 U+0061 U+0300"),
         # Hangul syllable as its jamo.
-        ("만약", "decomposed", "U+1106 U+1161 U+11AB U+110B U+1163 U+11A8"),
+        ("\ub9cc\uc57d", "decomposed", "U+1106 U+1161 U+11AB U+110B U+1163 U+11A8"),
         # Fullwidth Latin from an input method left in fullwidth mode.
         ("si", "compatibility", "U+FF53 U+FF49"),
         # Hebrew wide alef, a presentation form.
-        ("אם", "compatibility", "U+FB21 U+FB26"),
+        ("\u05d0\u05dd", "compatibility", "U+FB21 U+FB26"),
         # Latin fi ligature from a PDF paste.
         ("definir", "ligature", "U+0064 U+0065 U+FB01 U+006E U+0069 U+0072"),
         # Devanagari qa: one code point that NFC itself decomposes.
-        ("क़", "ligature", "U+0958"),
+        ("\u0915\u093c", "ligature", "U+0958"),
+        # Thai SARA AM, which NFKC writes as NIKHAHIT and SARA AA.
+        ("\u0e17\u0e33", "folded", "U+0E17 U+0E4D U+0E32"),
     ],
 )
 def test_the_generators_produce_the_forms_typists_meet(

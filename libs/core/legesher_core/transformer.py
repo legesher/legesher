@@ -262,8 +262,8 @@ class TokenTranslator:
 
                     # Try to translate as reserved word (CORE-710: self, cls).
                     # Short-circuit when the map is empty — most callers (and
-                    # all pre-CORE-710 ones) don't pass implicit_param_map, and
-                    # the extra lookup costs ~6% on the hot path otherwise.
+                    # all pre-CORE-710 ones) don't pass implicit_param_map, so
+                    # the lookup is skipped for them.
                     # The lookup goes through the mapper, like the two above,
                     # so a spelling Python reads as the same name (NFKC-equal)
                     # is the same implicit parameter.
