@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -270,3 +271,49 @@ def test_cli_story_filter_and_editor_stories(tmp_path, variants):
     )
     assert code == 0 and not (other / "reproduced.json").exists()
     assert not (tmp_path / "ok-editor" / "reproduced.json").exists()
+
+
+ARABIC_ON_OLD_PYTHONS = {"ar": {"3.10": "CORE-2192", "3.11": "CORE-2192"}}
+
+
+def test_ledgered_failure_does_not_block_the_record(story, variants):
+    rec = reproduce_story(
+        story,
+        variants,
+        PYTHONS,
+        "0.25.1",
+        "2026-11-17",
+        runner=fake(variants, errors={"ar": {"3.10", "3.11"}}),
+        known=ARABIC_ON_OLD_PYTHONS,
+    )
+    assert runs_on(rec, "ar") == ["3.12", "3.13", "3.14"]
+    assert rec["results"]["ar"]["3.10"] == "error"
+
+
+def test_unledgered_arabic_failure_still_stops(story, variants):
+    calls = []
+    with pytest.raises(ReproductionFailed, match=r"ar.*3\.12"):
+        reproduce_story(
+            story,
+            variants,
+            PYTHONS,
+            "0.25.1",
+            "2026-11-17",
+            runner=fake(variants, errors={"ar": {"3.10", "3.12"}}, calls=calls),
+            known=ARABIC_ON_OLD_PYTHONS,
+        )
+    assert {lang for lang, _ in calls} == {"ar"}
+
+
+def test_known_failures_ledger_names_tickets():
+    from reproduce_stories import KNOWN_FAILURES
+
+    for story_id, langs in KNOWN_FAILURES.items():
+        for lang, pythons in langs.items():
+            for python, ticket in pythons.items():
+                assert re.fullmatch(r"CORE-\d+", ticket), (
+                    story_id,
+                    lang,
+                    python,
+                    ticket,
+                )

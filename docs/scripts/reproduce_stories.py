@@ -49,6 +49,17 @@ EN_PACKS = (
 FULL_SUPPORT = ("ar", "en", "es")
 TIMEOUT_SECONDS = 300
 
+# Known failures: story id -> language -> Python -> the ticket that tracks it.
+# A ledgered run may fail without blocking the record; the gate in
+# test_story_records.py marks each entry strict-xfail, so it goes red the day
+# the bug is fixed and the entry must come out. Never ledger a failure to get
+# a page published without a ticket that will fix it.
+KNOWN_FAILURES: dict[str, dict[str, dict[str, str]]] = {
+    # CPython 3.10 and 3.11 tokenize stops a name at a combining mark, so the
+    # engine cannot reverse Arabic keywords with diacritics (finally, print).
+    "handle-errors-in-your-words": {"ar": {"3.10": "CORE-2192", "3.11": "CORE-2192"}},
+}
+
 Runner = Callable[[list[str], Path, int], "subprocess.CompletedProcess[str]"]
 
 
@@ -128,9 +139,13 @@ def reproduce_story(
     legesher: str,
     today: str,
     runner: Runner = subprocess_runner,
+    known: dict[str, dict[str, str]] | None = None,
 ) -> dict | None:
     """Run every variant on every Python and return the record; None for editor stories,
-    which print nothing. Raises ReproductionFailed as soon as a language breaks the policy."""
+    which print nothing. Raises ReproductionFailed as soon as a language breaks the policy.
+    known maps a language to the Pythons (and tickets) on which it may fail without
+    breaking the policy; see KNOWN_FAILURES."""
+    known = known or {}
     if story.surface == "editor":
         return None
     results: dict[str, dict[str, str]] = {}
@@ -141,12 +156,20 @@ def reproduce_story(
         }
         results[lang] = {python: r.status for python, r in outcomes.items()}
         matched = [python for python, r in outcomes.items() if r.status == "match"]
-        required = len(pythons) if lang in FULL_SUPPORT else 1
-        if len(matched) < required:
+        excused = known.get(lang, {})
+        if lang in FULL_SUPPORT:
+            broken = [
+                p
+                for p, r in outcomes.items()
+                if r.status != "match" and p not in excused
+            ]
+        else:
+            broken = [] if matched else list(outcomes)
+        if broken:
             detail = "; ".join(
                 f"{python}: {r.status}" + (f" ({r.detail})" if r.detail else "")
                 for python, r in outcomes.items()
-                if r.status != "match"
+                if python in broken
             )
             need = "every Python" if lang in FULL_SUPPORT else "at least one Python"
             raise ReproductionFailed(
@@ -201,6 +224,7 @@ def main(
                 args.legesher,
                 today,
                 runner,
+                KNOWN_FAILURES.get(story.id),
             )
         except ReproductionFailed as exc:
             print(f"error: {exc}", file=sys.stderr)
