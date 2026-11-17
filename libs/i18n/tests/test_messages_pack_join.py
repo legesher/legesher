@@ -915,6 +915,45 @@ class TestTiers:
             assert len(expected) > 40, version
             assert [r.key for r in load_catalog("xx", version)] == expected, version
 
+    def test_a_replacing_wording_keeps_its_keys_place(
+        self, no_database, tmp_path, monkeypatch
+    ):
+        """A rewording that does not remove the earlier row still keeps order."""
+        seed = {
+            "implementation": "cpython",
+            "version_added": "3.10",
+            "templates": [
+                {
+                    "key": "A.first",
+                    "template_en": "a",
+                    "placeholders": [],
+                    "matcher": "^a$",
+                },
+                {
+                    "key": "B.second",
+                    "template_en": "b",
+                    "placeholders": [],
+                    "matcher": "^b$",
+                },
+                {
+                    "key": "A.first",
+                    "template_en": "a, reworded",
+                    "placeholders": [],
+                    "matcher": "^a, reworded$",
+                    "version_added": "3.12",
+                },
+            ],
+        }
+        seeds = tmp_path / "seeds"
+        seeds.mkdir()
+        (seeds / "one.json").write_text(json.dumps(seed), encoding="utf-8")
+        monkeypatch.setattr(messages, "SEED_DIR", seeds)
+        rules = load_catalog("xx", "3.12")
+        assert [(r.key, r.template_en) for r in rules] == [
+            ("A.first", "a, reworded"),
+            ("B.second", "b"),
+        ]
+
     def test_a_message_removed_without_a_replacement_disappears(
         self, no_database, write_pack, tmp_path, monkeypatch
     ):
@@ -1251,6 +1290,20 @@ class TestPackMessageProblems:
         )
         (problem,) = pack_message_problems("zz", "3.12")
         assert len(problem) < 300 and "no English message" in problem
+
+    def test_a_packs_minimum_interpreter_does_not_stop_the_check(
+        self, no_database, write_pack
+    ):
+        write_pack(
+            {
+                "3.10": {
+                    "metadata": {"python_version_min": "3.13"},
+                    **cpython(NameError__not_defined={"text": ARABIC, "src": "0" * 12}),
+                }
+            }
+        )
+        (problem,) = pack_message_problems("zz", "3.10")
+        assert problem.startswith("NameError.not_defined")
 
     def test_no_pack_and_no_messages_are_both_clean(self, no_database, write_pack):
         write_pack({"3.10": {}})
