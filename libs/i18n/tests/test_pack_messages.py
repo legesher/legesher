@@ -255,6 +255,23 @@ class TestSchemaField:
             )
         assert "messages.cpython.NameError.not_defined" in str(excinfo.value)
 
+    def test_the_load_error_names_every_problem(self) -> None:
+        """A contributor fixes all of them in one pass, not one per load."""
+        with pytest.raises(ValidationError) as excinfo:
+            make_schema(
+                messages={
+                    "cpython": {
+                        "NameError.not_defined": {"text": DEVANAGARI, "src": "nope"},
+                        "traceback.frame": {"text": 7, "src": SRC_B},
+                        "bad key": entry(ARABIC),
+                    }
+                }
+            )
+        message = str(excinfo.value)
+        assert "messages.cpython.NameError.not_defined: 'src'" in message
+        assert "messages.cpython.traceback.frame: 'text'" in message
+        assert "'bad key'" in message
+
     def test_extra_entry_fields_are_kept(self) -> None:
         schema = make_schema(
             messages=section(NameError__not_defined=entry(ARABIC, status="reviewed"))
