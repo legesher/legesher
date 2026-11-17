@@ -31,10 +31,12 @@ the tokenizer reports an operator token; everywhere else the original
 character stays. No target of the table can open or close a string or a
 comment, so the tokenizer's own answer is used instead of a second,
 hand-written reading of Python's string syntax. One exception: from CPython
-3.12, a colon folded inside an f-string replacement field opens a format
-spec, which changes how the rest of the f-string is read, up to and
-including where it ends. A fullwidth colon typed there is not valid Python,
-so the fold reads it as the format-spec colon the author's keyboard meant.
+3.12 the replacement fields of an f-string are code, and there a folded mark
+can change how the rest of the f-string is read, up to and including where
+it ends. A colon at the top level of a field opens a format spec, and a
+parenthesis decides whether a later colon is at the top level. The marks as
+typed are not valid Python there, so the fold reads them as the marks the
+author's keyboard meant.
 
 Folding stops where the tokenizer stops. Code being typed is often
 incomplete (a bracket still open at the end, an unterminated string, an
