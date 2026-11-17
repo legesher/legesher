@@ -24,10 +24,12 @@ not have to be a git repository. A home directory kept in git is not a
 project's repository, because its root holds the user config.
 
 A file that cannot be used (unparsable YAML, YAML nested too deeply to read,
-not a mapping, or a value that fails validation) is left out whole by every
-reader (``parse_config_text``, through ``read_config_file`` for a file on
-disk). The runtime warns and carries on without it; ``legesher config`` and
-``legesher git setup`` refuse until it is fixed.
+not a mapping, or a value that fails validation) is found by
+``parse_config_text`` (``read_config_file`` for a file on disk). The runtime
+(``LegesherConfig.load()``, so ``legesher run``, the git filter and
+``legesher guard --staged``) leaves it out whole, warns, and carries on
+without it; ``legesher config`` and ``legesher git setup`` refuse until it
+is fixed.
 
 ``legesher guard --diff`` is stricter on purpose (``language_named_in``): it
 judges a pull request by the language its base's file names whenever that

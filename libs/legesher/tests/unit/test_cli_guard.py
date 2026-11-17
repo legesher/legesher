@@ -416,8 +416,22 @@ class TestDiffReviewRegressions:
         git(repo, "commit", "-q", "-m", "stray")
         result = run("--diff", base)
         assert result.exit_code == 0, result.output
-        assert "base's .legesher/config.yml cannot be read" in result.output
+        assert "base's .legesher/config.yml is unusable: it " in result.output
         assert "judged as English" in result.output
+
+    def test_a_base_config_that_is_not_utf8_is_judged_as_english_and_says_so(
+        self, repo
+    ):
+        (repo / ".legesher").mkdir()
+        (repo / ".legesher" / "config.yml").write_bytes(b"language: es\xff\n")
+        git(repo, "add", ".legesher/config.yml")
+        git(repo, "commit", "-q", "-m", "c")
+        base = head(repo)
+        stage(repo, "m.py", "definir f(x):\n    if x:\n        devolver 1\n")
+        git(repo, "commit", "-q", "-m", "stray")
+        result = run("--diff", base)
+        assert result.exit_code == 0, result.output
+        assert "is unusable: it is not UTF-8. The pull request" in result.output
 
     def test_legesher_replaced_by_a_symlink(self, repo):
         commit(repo, ".legesher/config.yml", "language: es\n")

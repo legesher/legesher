@@ -305,8 +305,8 @@ def _language(
         named, problem = _language_at(repo, base)
         if problem is not None:
             click.echo(
-                f"legesher guard: the base's .legesher/config.yml cannot be "
-                f"read ({problem}), so the pull request is judged as English.",
+                f"legesher guard: the base's .legesher/config.yml is unusable: "
+                f"{problem}. The pull request is judged as English.",
                 err=True,
             )
         language = named or "en"
