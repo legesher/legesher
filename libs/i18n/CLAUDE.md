@@ -169,9 +169,12 @@ skips an incomplete section rather than shipping it half-filled.
 A database whose partition predates the provenance columns is refused by every write path until
 `scripts/add_message_provenance.py` has run on it.
 
-The seed is also what ships. No wheel or clone carries the database, so `load_catalog` reads
-`legesher_i18n/db/seeds/` whenever the default database carries no message catalog. A translation that reaches
-the database only through step 3 or 4 is not in an installed package until the seed carries it too.
+No wheel or clone carries the database, so whenever the default database carries no message catalog,
+`load_catalog` reads the English side from `legesher_i18n/db/seeds/` and the translations from the locale's pack
+(its `messages` section, `docs/pack-messages.md`). A pack entry is used only when its `src` matches the English
+template; otherwise that message prints as CPython printed it. A locale whose pack carries no messages still
+reads the seed's own translations, so today the seed is what ships for es and ar. A translation that reaches the
+database only through step 3 or 4 is not in an installed package until a pack or the seed carries it.
 
 ## Adding a language
 

@@ -15,31 +15,48 @@ English wording it was not written for. The English side of the catalog
 (key, English template, matcher, placeholders, version tiers) is not pack
 data; it stays in this package.
 
-This module holds the STRUCTURAL rules, the ones the pack schema applies when
-a pack loads. A violation here fails the load, like any other malformed
-section. Everything about what an entry means (does ``src`` match, do the
-placeholders agree, is the key known) is decided where the catalog is joined,
-and a failing entry there is skipped without failing the pack: one bad
-message must not take a pack's keywords and exception names down with it.
-An entry may therefore carry fields this module does not name.
+This module holds both sets of rules for an entry.
+
+The STRUCTURAL rules (:func:`messages_structure_errors`) are the ones the pack
+schema applies when a pack loads. A violation there fails the load, like any
+other malformed section.
+
+The JOIN rules (:func:`entry_problem`) decide whether an entry may be used for
+one English template: is it only the fields this release knows, does ``src``
+match, do the placeholders agree. They are applied where the catalog is
+joined (:func:`legesher_i18n.messages.load_catalog`), and a failing entry
+there is skipped without failing the pack: one bad message must not take a
+pack's keywords and exception names down with it. The message then prints as
+the interpreter printed it.
 """
 
 from __future__ import annotations
 
+import hashlib
 import re
 import reprlib
+import unicodedata
+from collections.abc import Collection
 from typing import Any
 
 from .script_policy import BIDI_CONTROLS
 
 __all__ = [
+    "ALLOWED_STATUSES",
+    "DEFAULT_STATUS",
+    "ENTRY_FIELDS",
     "FORBIDDEN_BIDI",
     "MESSAGES_SECTION",
     "MESSAGE_IMPLEMENTATION_PATTERN",
     "MESSAGE_KEY_PATTERN",
     "MESSAGE_SRC_PATTERN",
+    "PLACEHOLDER",
+    "PLACEHOLDER_KINDS",
     "bidi_controls",
+    "entry_problem",
+    "message_fingerprint",
     "messages_structure_errors",
+    "used_placeholders",
 ]
 
 #: The pack's top-level key.
@@ -73,6 +90,100 @@ _SHORT.maxlist = _SHORT.maxtuple = _SHORT.maxdict = _SHORT.maxset = 3
 def _short(value: Any) -> str:
     """A repr of ``value`` short enough to put in an error message."""
     return _SHORT.repr(value)
+
+
+#: A ``{name}`` placeholder. A template may carry other braces (CPython's
+#: "f-string: valid expression required before '}'"), which is why templates
+#: are never read with ``str.format``.
+PLACEHOLDER = re.compile(r"\{(\w+)\}")
+
+#: The review rungs a translation may carry: the ``message_translations.status``
+#: CHECK set.
+ALLOWED_STATUSES = ("machine", "experimental", "reviewed", "official")
+
+#: The rung of an entry that states none.
+DEFAULT_STATUS = "machine"
+
+#: Every field an entry may carry on this release. An entry with any other
+#: field is not used: a field added by a later release may change what the
+#: text means (plural forms, for one), and a reader that does not know it
+#: must not guess.
+ENTRY_FIELDS = frozenset({"text", "src", "status"})
+
+#: What a placeholder's value is, when that matters to a renderer: a line
+#: number or a count. Declared on the English side only. A placeholder with
+#: no kind is copied verbatim.
+PLACEHOLDER_KINDS = ("line", "count")
+
+
+def used_placeholders(template: str) -> set[str]:
+    """Placeholder names a template interpolates, ignoring ``{{ }}`` escapes."""
+    stripped = template.replace("{{", "").replace("}}", "")
+    return set(PLACEHOLDER.findall(stripped))
+
+
+def message_fingerprint(template_en: str) -> str:
+    """The ``src`` value for an English template.
+
+    The first twelve hex digits of the SHA-256 of the NFC-normalized
+    template, encoded as UTF-8. The matcher is deliberately not part of it:
+    a fix to how a message is recognized keeps every translation of its
+    wording valid.
+    """
+    normalized = unicodedata.normalize("NFC", template_en)
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:12]
+
+
+def entry_problem(
+    entry: Any, *, template_en: str, placeholders: Collection[str]
+) -> str | None:
+    """Why ``entry`` cannot be used for one English template, or ``None``.
+
+    The rules, in order:
+
+    1. The entry is a mapping carrying only :data:`ENTRY_FIELDS`, with a
+       string ``text``, a well-formed ``src`` and, when present, a ``status``
+       from :data:`ALLOWED_STATUSES`.
+    2. ``src`` is the fingerprint of ``template_en``. A translation written
+       for another wording of the same key (an earlier Python version's, or
+       one since corrected) is not used.
+    3. The placeholders in ``text`` are exactly ``placeholders``.
+    4. ``text`` is empty only when ``template_en`` is.
+
+    Args:
+        entry: One pack entry, as loaded.
+        template_en: The English template that applies to the running
+            interpreter for the entry's key.
+        placeholders: The placeholder names that template declares.
+
+    Returns:
+        A one-line reason, or ``None`` when the entry is usable.
+    """
+    if not isinstance(entry, dict):
+        return f"entry is not a mapping ({type(entry).__name__})"
+    unknown = sorted(str(name) for name in set(entry) - ENTRY_FIELDS)
+    if unknown:
+        return f"fields this release does not know: {unknown}"
+    text = entry.get("text")
+    if not isinstance(text, str):
+        return "'text' is not a string"
+    src = entry.get("src")
+    if not isinstance(src, str) or not MESSAGE_SRC_PATTERN.fullmatch(src):
+        return "'src' is not twelve lowercase hex digits"
+    if "status" in entry and entry["status"] not in ALLOWED_STATUSES:
+        return f"status {entry['status']!r} is not one of {list(ALLOWED_STATUSES)}"
+    expected = message_fingerprint(template_en)
+    if src != expected:
+        return (
+            f"src {src} does not match the English template (expected {expected}); "
+            "the translation was written for another wording"
+        )
+    used = used_placeholders(text)
+    if used != set(placeholders):
+        return f"placeholders {sorted(used)} != declared {sorted(placeholders)}"
+    if text == "" and template_en != "":
+        return "empty text for a template that is not empty"
+    return None
 
 
 def bidi_controls(text: str) -> list[str]:
