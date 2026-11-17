@@ -9,7 +9,9 @@ overlays) for:
 2. **Consistency with languages.json** (the single source of truth):
    ``supports.case_distinction`` matches ``has_case_distinction``; the
    case-dependent flags (``upper_snake_case`` / ``pascal_case`` / ``camel_case``)
-   are ``false`` for a caseless script; ``script.direction`` matches ``rtl``.
+   are ``false`` for a caseless script; ``script.direction`` matches ``rtl``;
+   ``supports.native_digits`` agrees with ``numeral_system`` both ways, and
+   the "Digits: ... natively uses ..." note shows digits from that system.
 3. **Resolvable chain** — every file named in ``extends`` exists.
 
 Exits non-zero when any guide has a problem. Zero == all guides valid.
@@ -29,6 +31,7 @@ from pathlib import Path
 
 import yaml
 
+from legesher_i18n.numerals import LATIN, is_known_numeral_system, numeral_system_digits
 from legesher_i18n.style_guides import StyleGuideLoader
 
 _LANG_CODE_RE = re.compile(r"^[a-z]{2,3}$")
@@ -37,6 +40,67 @@ _LANGUAGES_JSON = Path(__file__).resolve().parents[1] / "languages.json"
 _SCHEMA = _STYLE_GUIDES_DIR / "_schema.json"
 
 _CASE_DEPENDENT = ("upper_snake_case", "pascal_case", "camel_case")
+
+#: Languages whose guide profiles native numerals (``native_digits: true``)
+#: that are not a decimal-digit block a program could be written in, so the
+#: registry records ``latn``. Strict: an entry whose registry or flag no longer
+#: matches is reported, so the list cannot go stale.
+#:
+#: - am: Ge'ez numerals (፩፪፫) are not positional; CLDR's native system is latn.
+#: - ja, ko: CLDR's native system is latn; fullwidth digits are an input mode.
+#: - si: CLDR's native system is latn; the Sinhala Lith digits are archaic.
+#: - zh: Chinese numerals (〇一二三, CLDR hanidec) are not decimal digits.
+NATIVE_NUMERALS_WITHOUT_A_DIGIT_BLOCK = frozenset({"am", "ja", "ko", "si", "zh"})
+
+#: "Digits: Urdu natively uses ۰۱۲۳; ..." (the digits are the first word after
+#: "natively uses", optionally after "fullwidth").
+_DIGIT_NOTE = re.compile(r"Digits: .*? natively uses (?:fullwidth )?(\S+?);")
+
+
+def _digit_problems(code: str, guide: dict, meta: dict) -> list[str]:
+    """``supports.native_digits`` and the digit note against ``numeral_system``."""
+    problems: list[str] = []
+    system = meta.get("numeral_system", LATIN)
+    flag = guide["supports"].get("native_digits")
+    excepted = code in NATIVE_NUMERALS_WITHOUT_A_DIGIT_BLOCK
+    if not is_known_numeral_system(system):
+        return [f"languages.json numeral_system {system!r} is not a known identifier"]
+    if system != LATIN and flag is not True:
+        problems.append(
+            f"languages.json numeral_system is {system!r} (a native digit block) "
+            f"but supports.native_digits is {flag!r}"
+        )
+    if system == LATIN and flag is True and not excepted:
+        problems.append(
+            "supports.native_digits is true but languages.json numeral_system "
+            "is 'latn'; record the native system in the registry, or list the "
+            "language in NATIVE_NUMERALS_WITHOUT_A_DIGIT_BLOCK if its numerals "
+            "are not a digit block"
+        )
+    if excepted and not (system == LATIN and flag is True):
+        problems.append(
+            f"listed in NATIVE_NUMERALS_WITHOUT_A_DIGIT_BLOCK, but numeral_system "
+            f"is {system!r} and supports.native_digits is {flag!r}; remove it "
+            "from the list"
+        )
+    if system == LATIN:
+        return problems
+    digits = numeral_system_digits(system)
+    constraints = (guide.get("script") or {}).get("constraints") or []
+    examples = [m.group(1) for note in constraints if (m := _DIGIT_NOTE.search(note))]
+    if not examples:
+        problems.append(
+            "script.constraints has no 'Digits: ... natively uses ...;' note"
+        )
+    for example in examples:
+        foreign = sorted({c for c in example if c not in digits})
+        if foreign:
+            shown = ", ".join(f"U+{ord(c):04X}" for c in foreign)
+            problems.append(
+                f"the Digits note writes {shown}, which are not in the "
+                f"registry's {system!r} digits {digits}"
+            )
+    return problems
 
 
 def _enums(schema: dict) -> dict[str, list[str]]:
@@ -109,6 +173,7 @@ def _validate_guide(
         for flag in _CASE_DEPENDENT:
             if s.get(flag):
                 problems.append(f"caseless script: supports.{flag} must be false")
+    problems.extend(_digit_problems(code, guide, meta))
     want_dir = "rtl" if meta["rtl"] else "ltr"
     if guide["script"]["direction"] != want_dir:
         problems.append(

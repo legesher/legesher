@@ -1,14 +1,17 @@
 """The numeral-system data model: one identifier per language, digits derived.
 
-Three layers, each checked against an outside authority rather than itself:
+Three layers:
 
 - the zero code points in ``legesher_i18n.numerals`` against the Unicode
-  character database;
-- the registry's ``numeral_system`` and ``decimal_separator`` against the
-  identifiers that module knows, for every language the registry publishes;
-- the registry against each style guide's ``supports.native_digits`` flag and
-  its "Digits: ... natively uses ..." note, which name the digits a native
-  reader expects.
+  character database, by value and by character name;
+- the registry's ``numeral_system`` and ``decimal_separator`` for every
+  published language: a known identifier, an allowed separator, and the
+  values the 3 November audit found wrong pinned;
+- the registry against each style guide, both ways: a native digit block
+  needs ``supports.native_digits``, a flag needs a native block unless the
+  language is listed as profiling numerals that are not one, and the guide's
+  "Digits: ... natively uses ..." note must show digits from the block.
+  The validator owns that check; this runs it.
 """
 
 from __future__ import annotations
@@ -19,6 +22,7 @@ import unicodedata
 from pathlib import Path
 
 import pytest
+import yaml
 
 from legesher_i18n import language_registry
 from legesher_i18n.language_registry import (
@@ -33,9 +37,26 @@ from legesher_i18n.numerals import (
     is_known_numeral_system,
     numeral_system_digits,
 )
-from legesher_i18n.style_guides import StyleGuideLoader
+from legesher_i18n.scripts import validate_style_guides as V
 
 STYLE_GUIDES = Path(__file__).parent.parent / "style-guides"
+LANGUAGES_JSON = Path(__file__).parent.parent / "legesher_i18n" / "languages.json"
+
+#: The Unicode name of each system's zero, typed from the Unicode character
+#: database: an authority independent of the code points in ``numerals``.
+ZERO_NAMES = {
+    "latn": "DIGIT ZERO",
+    "arab": "ARABIC-INDIC DIGIT ZERO",
+    "arabext": "EXTENDED ARABIC-INDIC DIGIT ZERO",
+    "beng": "BENGALI DIGIT ZERO",
+    "deva": "DEVANAGARI DIGIT ZERO",
+    "gujr": "GUJARATI DIGIT ZERO",
+    "knda": "KANNADA DIGIT ZERO",
+    "mlym": "MALAYALAM DIGIT ZERO",
+    "mymr": "MYANMAR DIGIT ZERO",
+    "telu": "TELUGU DIGIT ZERO",
+    "thai": "THAI DIGIT ZERO",
+}
 
 
 class TestDerivation:
@@ -46,7 +67,10 @@ class TestDerivation:
         for value, char in enumerate(digits):
             assert unicodedata.category(char) == "Nd", (system, f"U+{ord(char):04X}")
             assert unicodedata.digit(char) == value, (system, f"U+{ord(char):04X}")
-        assert unicodedata.name(digits[0]).endswith("DIGIT ZERO"), system
+        assert unicodedata.name(digits[0]) == ZERO_NAMES[system], system
+
+    def test_every_system_has_a_named_zero(self) -> None:
+        assert set(NUMERAL_SYSTEM_ZEROS) == set(ZERO_NAMES)
 
     @pytest.mark.parametrize(
         ("system", "expected"),
@@ -60,8 +84,7 @@ class TestDerivation:
             ("mymr", "၀၁၂၃၄၅၆၇၈၉"),
         ],
     )
-    def test_shared_vectors(self, system: str, expected: str) -> None:
-        # The same strings the JavaScript engine's digit maps must produce.
+    def test_known_vectors(self, system: str, expected: str) -> None:
         assert numeral_system_digits(system) == expected
 
     def test_arabic_and_extended_arabic_differ_in_every_digit(self) -> None:
@@ -110,6 +133,12 @@ class TestRegistry:
         assert get_numeral_system(code) == system
         assert get_decimal_separator(code) == separator
 
+    @pytest.mark.parametrize("code", get_active_language_codes())
+    def test_ascii_digits_take_the_ascii_point(self, code: str) -> None:
+        # A numeric literal in code uses ".", whatever the prose convention.
+        if get_numeral_system(code) == LATIN:
+            assert get_decimal_separator(code) == "."
+
     def test_unknown_code_writes_ascii(self) -> None:
         assert get_numeral_system("xx") == LATIN
         assert get_decimal_separator("xx") == "."
@@ -143,63 +172,23 @@ class TestRegistry:
         assert languages["ar"]["decimal_separator"] == "."
 
 
-#: "Digits: Urdu natively uses ۰۱۲۳; code uses ASCII 0-9 today."
-_DIGIT_NOTE = re.compile(r"Digits: .*? natively uses (?:fullwidth )?(\S+?);")
-
-
-def _style_guide_codes() -> list[str]:
-    return [
-        code
-        for code in get_active_language_codes()
-        if (STYLE_GUIDES / f"{code}.yml").exists()
-    ]
-
-
 class TestStyleGuidesAgree:
     """``supports.native_digits`` is the human profile; the registry is the data.
 
-    A language whose registry names a native digit block must carry the flag.
-    The converse does not hold: Chinese, Japanese, Korean, Amharic and Sinhala
-    profile native numerals (algorithmic, fullwidth or archaic) and write
-    their programs with ASCII digits, so their registry entry is ``latn``.
+    The check lives in the style-guide validator (the blocking pre-commit
+    gate); this runs it over every published language, so the test suite and
+    the hook cannot disagree.
     """
 
-    @pytest.fixture(scope="class")
-    def loader(self) -> StyleGuideLoader:
-        return StyleGuideLoader(STYLE_GUIDES)
+    @pytest.mark.parametrize("code", get_active_language_codes())
+    def test_validator_finds_no_digit_problem(self, code: str) -> None:
+        guide = yaml.safe_load(
+            (STYLE_GUIDES / f"{code}.yml").read_text(encoding="utf-8")
+        )
+        meta = json.loads(LANGUAGES_JSON.read_text(encoding="utf-8"))["languages"][code]
+        assert V._digit_problems(code, guide, meta) == []
 
-    def test_every_published_language_has_a_style_guide(self) -> None:
-        assert len(_style_guide_codes()) == len(get_active_language_codes())
-
-    @pytest.mark.parametrize("code", _style_guide_codes())
-    def test_native_digit_block_carries_the_flag(
-        self, code: str, loader: StyleGuideLoader
-    ) -> None:
-        flag = loader.load(code).get("supports", {}).get("native_digits")
-        if get_native_digits(code) is not None:
-            assert flag is True, (
-                f"{code}: the registry names {get_numeral_system(code)!r} but "
-                f"style-guides/{code}.yml has supports.native_digits {flag!r}"
-            )
-        if flag is not True:
-            assert get_numeral_system(code) == LATIN, code
-
-    @pytest.mark.parametrize("code", _style_guide_codes())
-    def test_note_digits_belong_to_the_registry_block(
-        self, code: str, loader: StyleGuideLoader
-    ) -> None:
-        digits = get_native_digits(code)
-        if digits is None:
-            return
-        constraints = loader.load(code).get("script", {}).get("constraints", [])
-        examples = [
-            m.group(1) for note in constraints if (m := _DIGIT_NOTE.search(note))
-        ]
-        assert examples, f"{code}: no 'Digits: ... natively uses ...' note"
-        for example in examples:
-            for char in example:
-                assert char in digits, (
-                    f"{code}: the style guide writes {char!r} "
-                    f"(U+{ord(char):04X}), which is not in the registry's "
-                    f"{get_numeral_system(code)!r} digits {digits}"
-                )
+    def test_exceptions_are_published_languages(self) -> None:
+        assert V.NATIVE_NUMERALS_WITHOUT_A_DIGIT_BLOCK <= set(
+            get_active_language_codes()
+        )

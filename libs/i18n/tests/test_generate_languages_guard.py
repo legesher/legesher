@@ -186,6 +186,13 @@ class TestNumeralFields:
             ("arab", None, "decimal_separator"),
             ("arab", "", "decimal_separator"),
             ("arab", "٫٫", "decimal_separator"),
+            # A comma is a tuple in code; U+066C is the Arabic thousands
+            # separator that looks like U+066B; a bidi control and a digit
+            # are single characters that are never a decimal mark.
+            ("arab", ",", "decimal_separator"),
+            ("arab", "\u066c", "decimal_separator"),
+            ("arab", "\u202e", "decimal_separator"),
+            ("arab", "5", "decimal_separator"),
         ],
     )
     def test_unusable_numeral_value_refuses_without_writing(

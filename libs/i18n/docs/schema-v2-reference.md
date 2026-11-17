@@ -209,9 +209,11 @@ is_valid() before inserting a tag here.
 
 - **`numeral_system`** · `TEXT`
 
-  The CLDR numbering-system identifier of the digits the locale writes
-  natively (`latn`, `arab`, `arabext`, `deva`, ...), carried over from
-  v1 `languages.numeral_system`. NULL when not recorded.
+  The locale's native digit system, carried over from v1
+  `languages.numeral_system`: a CLDR numbering-system identifier
+  (`latn`, `arab`, `arabext`, `deva`, ...) in a v2 database built from a
+  v1 database that has them. One built earlier holds the v1 values of
+  its time. NULL when not recorded.
 
 - **`has_case_distinction`** · `INTEGER` · not null · default `1`
 

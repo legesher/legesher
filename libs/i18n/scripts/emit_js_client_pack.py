@@ -41,6 +41,10 @@ from legesher_i18n.numerals import is_known_numeral_system  # noqa: E402
 
 TARGET = "javascript"
 EXPECTED_SPLIT = {"keyword": 17, "builtin": 16, "member": 29}
+#: The numbering systems the JavaScript engine's ``compilePack`` accepts.
+#: A pack naming any other would be emitted and then refused there, so the
+#: emitter refuses it first; widen this when the engine registers more.
+CLIENT_NUMBERING_SYSTEMS = frozenset({"arab", "latn"})
 CATEGORY_TO_PARTITION = {
     "keyword": "keywords",
     "builtin": "builtins",
@@ -158,6 +162,12 @@ def main() -> int:
                 f"languages.numeral_system {numeral_system!r} is not a CLDR "
                 f"numbering-system id known to legesher_i18n.numerals "
                 f"(run scripts/set_numeral_systems.py on an older database)"
+            )
+        if numeral_system not in CLIENT_NUMBERING_SYSTEMS:
+            return fail(
+                f"languages.numeral_system {numeral_system!r} is not one the "
+                f"JavaScript engine registers {sorted(CLIENT_NUMBERING_SYSTEMS)}; "
+                f"register it there before emitting this pack"
             )
         terms = db.get_terms(programming_language=TARGET)
         if not terms:

@@ -127,3 +127,60 @@ class TestValidatorCrossChecks:
         meta = {"has_case_distinction": False, "rtl": False}
         problems = V._validate_guide("xx", g, _SCHEMA, meta, loader)
         assert any("unknown flags" in p for p in problems)
+
+
+class TestValidatorDigitChecks:
+    """``supports.native_digits`` and the Digits note against ``numeral_system``."""
+
+    _NOTE = "Digits: Arabic natively uses ٠١٢٣; code note."
+
+    def _guide(self, flag: bool, note: str | None = None) -> dict:
+        g = _guide()
+        g["supports"]["native_digits"] = flag
+        g["script"]["constraints"] = [note] if note else []
+        return g
+
+    def _meta(self, system: str) -> dict:
+        return {"has_case_distinction": False, "rtl": False, "numeral_system": system}
+
+    def test_native_block_with_flag_and_note_passes(self) -> None:
+        g = self._guide(True, self._NOTE)
+        assert V._digit_problems("xx", g, self._meta("arab")) == []
+
+    def test_native_block_without_the_flag_is_flagged(self) -> None:
+        g = self._guide(False, self._NOTE)
+        problems = V._digit_problems("xx", g, self._meta("arab"))
+        assert any("supports.native_digits is False" in p for p in problems)
+
+    def test_flag_without_a_native_block_is_flagged(self) -> None:
+        # The direction a single-sided check missed: a native-digit language
+        # whose registry entry slipped back to latn.
+        g = self._guide(True, self._NOTE)
+        problems = V._digit_problems("xx", g, self._meta("latn"))
+        assert any("numeral_system is 'latn'" in p for p in problems)
+
+    def test_listed_exception_with_latn_passes(self) -> None:
+        g = self._guide(True, "Digits: Chinese natively uses 一二三; x.")
+        assert V._digit_problems("zh", g, self._meta("latn")) == []
+
+    def test_stale_exception_is_flagged(self) -> None:
+        g = self._guide(False)
+        problems = V._digit_problems("zh", g, self._meta("latn"))
+        assert any("remove it from the list" in p for p in problems)
+
+    def test_note_from_another_block_is_flagged(self) -> None:
+        # Urdu's note shows Extended Arabic-Indic; a registry naming the
+        # Arabic-Indic block (the 3 November error) contradicts it.
+        g = self._guide(True, "Digits: Urdu natively uses ۰۱۲۳; x.")
+        problems = V._digit_problems("xx", g, self._meta("arab"))
+        assert any("U+06F0" in p for p in problems)
+
+    def test_native_block_without_a_note_is_flagged(self) -> None:
+        g = self._guide(True)
+        problems = V._digit_problems("xx", g, self._meta("arab"))
+        assert any("no 'Digits:" in p for p in problems)
+
+    def test_unknown_identifier_is_flagged(self) -> None:
+        g = self._guide(True, self._NOTE)
+        problems = V._digit_problems("xx", g, self._meta("arabic_indic"))
+        assert any("not a known identifier" in p for p in problems)

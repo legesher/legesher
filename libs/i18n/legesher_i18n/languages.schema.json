@@ -78,13 +78,12 @@
         "numeral_system": {
           "type": "string",
           "pattern": "^[a-z]{4,8}$",
-          "description": "CLDR numbering-system identifier of the digits the language writes natively (CLDR's native system for the locale): 'latn' for ASCII 0-9, 'arab' for Arabic-Indic, 'arabext' for Persian and Urdu, 'deva' for Devanagari. The ten digits derive from it (legesher_i18n.numerals)."
+          "description": "CLDR numbering-system identifier of the digits the language writes natively: CLDR's native system for the locale when it is a Unicode decimal-digit block ('arab' for Arabic-Indic, 'arabext' for Persian and Urdu, 'deva' for Devanagari), otherwise 'latn' for ASCII 0-9. The ten digits derive from it (legesher_i18n.numerals)."
         },
         "decimal_separator": {
           "type": "string",
-          "minLength": 1,
-          "maxLength": 1,
-          "description": "Decimal mark written with the native digits: U+066B for 'arab' and 'arabext', '.' otherwise. Stored, because no rule derives it from the digits."
+          "enum": [".", "\u066b"],
+          "description": "Decimal mark written with the native digits: CLDR's decimal symbol for the locale's native system (U+066B for Arabic, Persian and Urdu). A language that writes ASCII digits records '.', the mark a numeric literal in code uses."
         },
         "status": {
           "type": "string",

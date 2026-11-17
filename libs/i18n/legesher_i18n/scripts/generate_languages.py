@@ -43,7 +43,10 @@ VSCODE_GENERATED_DIR = REPO_ROOT / "libs" / "vs-code" / "src" / "generated"
 sys.path.insert(0, str(I18N_DIR.parent))
 
 from legesher_i18n.db import TranslationDatabase, default_db_path  # noqa: E402
-from legesher_i18n.numerals import is_known_numeral_system  # noqa: E402
+from legesher_i18n.numerals import (  # noqa: E402
+    DECIMAL_SEPARATORS,
+    is_known_numeral_system,
+)
 
 # The canonical language: the language Legesher's Python keywords are authored
 # in. translations.db has no canonical flag, so it is fixed here (this matches
@@ -112,16 +115,18 @@ def load_registry_from_db(db_path: str | Path | None = None) -> dict:
             raise ValueError(
                 f"Published language {code!r} has numeral_system "
                 f"{numeral_system!r} in translations.db; it must be a CLDR "
-                f"numbering-system identifier known to legesher_i18n.numerals "
-                f"(run libs/i18n/scripts/set_numeral_systems.py on a database "
-                f"that predates the identifiers)."
+                f"numbering-system identifier known to legesher_i18n.numerals. "
+                f"For a new language, set the CLDR native system of its locale "
+                f"('latn' for ASCII digits); for a database that predates the "
+                f"identifiers, run libs/i18n/scripts/set_numeral_systems.py."
             )
-        if not decimal_separator or len(decimal_separator) != 1:
+        if decimal_separator not in DECIMAL_SEPARATORS:
             raise ValueError(
                 f"Published language {code!r} has decimal_separator "
-                f"{decimal_separator!r} in translations.db; it must be one "
-                f"character (run libs/i18n/scripts/set_numeral_systems.py on a "
-                f"database that predates the column)."
+                f"{decimal_separator!r} in translations.db; it must be one of "
+                f"{sorted(DECIMAL_SEPARATORS)} ('.' for a language that writes "
+                f"ASCII digits). For a database that predates the column, run "
+                f"libs/i18n/scripts/set_numeral_systems.py."
             )
         languages[code] = {
             "name": row["name"],

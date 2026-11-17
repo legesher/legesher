@@ -4,11 +4,16 @@ The language registry records two facts per language, both generated from the
 ``languages`` table of ``translations.db`` into ``languages.json``:
 
 - ``numeral_system``: the CLDR numbering-system identifier of the digits the
-  language writes natively, CLDR's ``native`` system for the locale (``arab``
-  for Arabic, ``deva`` for Hindi, ``latn`` for ASCII ``0``-``9``).
-- ``decimal_separator``: the decimal mark written with those digits (U+066B
-  ``٫`` with Arabic-Indic digits). No rule computes it from the digits, so it
-  is stored.
+  language writes natively: CLDR's ``native`` system for the locale when that
+  is a Unicode decimal-digit block (``arab`` for Arabic, ``deva`` for Hindi),
+  and ``latn`` (ASCII ``0``-``9``) otherwise, which includes Chinese, whose
+  CLDR native system ``hanidec`` (``〇一二三``) is not one.
+- ``decimal_separator``: the decimal mark written with those digits, CLDR's
+  decimal symbol for the locale's native system (U+066B ``٫`` with
+  Arabic-Indic and Extended Arabic-Indic digits). A language that writes
+  ASCII digits records ``.``, the mark a numeric literal in code uses,
+  whatever its prose convention (German writes ``3,5`` in text, ``3.5`` in
+  code). It is stored per language because the digits do not decide it.
 
 Every decimal numbering system Unicode encodes is a block of ten consecutive
 code points with the zero first, and ``unicodedata.digit`` already reads each
@@ -38,6 +43,7 @@ from types import MappingProxyType
 from typing import Final
 
 __all__ = [
+    "DECIMAL_SEPARATORS",
     "LATIN",
     "NUMERAL_SYSTEM_ZEROS",
     "is_known_numeral_system",
@@ -46,6 +52,11 @@ __all__ = [
 
 #: The identifier of ASCII ``0``-``9``.
 LATIN: Final = "latn"
+
+#: The decimal marks a language may record: the ASCII full stop, and U+066B
+#: ARABIC DECIMAL SEPARATOR. Not the comma (a tuple in code) and not U+066C,
+#: the Arabic thousands separator that looks like U+066B.
+DECIMAL_SEPARATORS: Final[frozenset[str]] = frozenset({".", "\u066b"})
 
 #: CLDR numbering-system identifier to the code point of its digit zero.
 NUMERAL_SYSTEM_ZEROS: Final[Mapping[str, int]] = MappingProxyType(

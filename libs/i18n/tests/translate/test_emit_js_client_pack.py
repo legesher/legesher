@@ -136,6 +136,16 @@ class TestEmitNumeralSystem:
         assert "'arabic_indic' is not a CLDR numbering-system id" in result.stderr
         assert not out.exists()
 
+    def test_id_the_js_engine_does_not_register_fails_loud(
+        self, tmp_path: Path
+    ) -> None:
+        db_path = self._db_with_arabic(tmp_path, "deva")
+        out = tmp_path / "ar.ts"
+        result = run_emit("--out", str(out), "--db-path", str(db_path))
+        assert result.returncode != 0
+        assert "'deva' is not one the JavaScript engine registers" in result.stderr
+        assert not out.exists()
+
     def test_cldr_id_passes_the_numeral_gate(self, tmp_path: Path) -> None:
         # Past the numeral check, the run stops at the next gate (no terms).
         db_path = self._db_with_arabic(tmp_path, "arab")
