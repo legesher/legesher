@@ -14,10 +14,10 @@ messages:
   cpython:
     traceback.frame:
       text: "Archivo \"{file}\", línea {line}, en {name}"
-      src: fcb6c6422b34
+      src: "fcb6c6422b34"
     NameError.not_defined:
       text: "el nombre '{name}' no está definido"
-      src: 998720c0a4af
+      src: "998720c0a4af"
 ```
 
 ## What is in the pack and what is not
@@ -192,8 +192,9 @@ never overwritten. Inserted rows record `source = 'pack-import'`.
 
 A message that a later Python version stops printing, with no rewording to
 replace it, cannot be retracted from the files after the one that carries it:
-`extends` only adds and overrides. The entry is ignored at run time, and the
-shipped-pack test reports it, so such a change needs its own handling.
+`extends` only adds and overrides. The entry is ignored at run time, and
+`pack_message_problems` treats it as inherited, like an earlier wording's
+translation.
 
 The published dataset does not carry pack messages: `scripts/export_packs.py`
 reads only the term and vocabulary sections from packs, and a test holds that

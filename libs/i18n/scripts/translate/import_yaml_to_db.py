@@ -336,7 +336,13 @@ def import_pack_messages(
     )
     sections: list[tuple[str, dict]] = []
     for path in files:
-        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+            # As the term import does: one unreadable file is reported and
+            # skipped, never the end of the whole run.
+            logger.warning(f"  {path.name}: messages not imported, unreadable: {exc}")
+            continue
         section = data.get(MESSAGES_SECTION) if isinstance(data, dict) else None
         if isinstance(section, dict) and section:
             sections.append((path.name, section))

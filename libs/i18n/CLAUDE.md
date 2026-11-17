@@ -30,6 +30,7 @@ the repository root, which is said where it applies.
 | Published languages     | `languages` rows with `in_registry = 1` in the v1 DB      | `languages.json` and `libs/vs-code/src/generated/languages.ts`           |
 | Term inventory          | `legesher_i18n/term_definitions.py` (code)                | what a complete pack must contain                                        |
 | Vocabulary inventory    | `legesher_i18n/vocabulary_definitions.py` (code)          | `vocabulary_entries`, via `scripts/seed_vocabulary.py`                   |
+| Message translations    | `message_translations` in the v1 DB                       | pack `messages` sections, via `scripts/translate/yaml_exporter.py`       |
 | Corpus and reviews      | the v2 DB                                                 | the Hugging Face corpus, via `scripts/export_corpus.py`                  |
 
 Pack YAML and `languages.json` are outputs. A YAML-only edit is reverted by the next regen. Never hand-edit

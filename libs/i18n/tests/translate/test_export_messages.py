@@ -31,7 +31,9 @@ from scripts.activate_messages_partition import activate
 from scripts.seed_message_templates import seed_database
 from scripts.translate import import_yaml_to_db
 from tests.interpreter_gaps import NEEDS_UNICODE_15_1
+from tests.translate.test_yaml_exporter import _pack_file, _populate_full_language
 from scripts.translate.yaml_exporter import (
+    BulkExportError,
     CorruptSelectionError,
     UnplaceableMessageError,
     YAMLExporter,
@@ -261,7 +263,96 @@ class TestBuild:
 
     def test_the_section_is_registered_with_the_writer(self) -> None:
         assert "messages" in _PACK_SECTIONS
-        assert _PACK_VERSIONS == ("3.10", "3.11", "3.12", "3.13", "3.14")
+        assert _PACK_VERSIONS == gate.EXPECTED_VERSIONS
+
+    def test_a_key_a_pack_load_would_refuse_stops_the_export(self, seeded, tmp_path):
+        """The seeder accepts any key; the exporter must not write a pack that
+        does not load, which would take its keywords down with it."""
+        connection = sqlite3.connect(seeded.db_path)
+        cursor = connection.execute(
+            "INSERT INTO message_templates (implementation, key, template_en, "
+            "placeholders, matcher, version_added) VALUES "
+            "('cpython', 'Recursion', 'maximum recursion depth exceeded', '[]', "
+            "'^maximum recursion depth exceeded$', '3.10')"
+        )
+        connection.execute(
+            "INSERT INTO message_translations (template_id, locale, template, status, "
+            "source) VALUES (?, 'es', 'profundidad máxima de recursión excedida', "
+            "'machine', 'test')",
+            (cursor.lastrowid,),
+        )
+        connection.commit()
+        connection.close()
+        exporter = YAMLExporter(seeded, output_dir=tmp_path / "out")
+        with pytest.raises(CorruptSelectionError, match="'Recursion'"):
+            exporter._build_message_sections("es")
+
+    def test_unreadable_placeholders_stop_the_export(self, seeded, tmp_path):
+        connection = seeded._get_connection()
+        connection.execute(
+            "UPDATE message_templates SET placeholders = 'not json' "
+            "WHERE key = 'NameError.not_defined'"
+        )
+        connection.commit()
+        exporter = YAMLExporter(seeded, output_dir=tmp_path / "out")
+        with pytest.raises(CorruptSelectionError, match="NameError.not_defined"):
+            exporter._build_message_sections("es")
+
+    def test_a_refused_message_leaves_every_pack_file_untouched(self, tmp_path):
+        db = make_db(tmp_path / "translations.db")
+        try:
+            _populate_full_language(db, "es")
+            out = tmp_path / "out"
+            exporter = YAMLExporter(db, output_dir=out)
+            exporter.export_language("es", overwrite=True)
+            files = {
+                version: _pack_file(out, "es", version).read_bytes()
+                for version in _PACK_VERSIONS
+            }
+            assert b"messages:" in files["3.10"] and b"messages:" in files["3.12"]
+            connection = sqlite3.connect(db.db_path)
+            # A valid change to a 3.10 translation, so an export that wrote
+            # 3.10.yml before reaching the bad 3.12 row would show here.
+            connection.execute(
+                "UPDATE message_translations SET template = ? WHERE locale = 'es' AND "
+                "template_id = (SELECT id FROM message_templates "
+                "WHERE key = 'traceback.header')",
+                ("Rastreo de llamadas (la más reciente al final):",),
+            )
+            connection.execute(
+                "UPDATE message_translations SET template = ? WHERE locale = 'es' AND "
+                "template_id = (SELECT id FROM message_templates "
+                "WHERE key = 'NameError.forgot_import')",
+                ("\u202b" + "el nombre '{name}' no está definido",),
+            )
+            connection.commit()
+            connection.close()
+            with pytest.raises(CorruptSelectionError, match="NameError.forgot_import"):
+                exporter.export_language("es", overwrite=True)
+            for version, before in files.items():
+                assert _pack_file(out, "es", version).read_bytes() == before, version
+        finally:
+            db.close()
+
+    def test_an_unplaceable_message_is_ranked_as_a_data_failure(self, tmp_path):
+        db = make_db(tmp_path / "translations.db")
+        try:
+            _populate_full_language(db, "es")
+            connection = sqlite3.connect(db.db_path)
+            connection.execute(
+                "UPDATE message_templates SET version_added = '3.15' "
+                "WHERE key = 'NameError.forgot_import'"
+            )
+            connection.commit()
+            connection.close()
+            exporter = YAMLExporter(db, output_dir=tmp_path / "out")
+            with pytest.raises(BulkExportError) as excinfo:
+                exporter.export_all_languages(overwrite=True, strict=True)
+            assert isinstance(
+                excinfo.value.data_integrity.get("es"), UnplaceableMessageError
+            )
+        finally:
+            db.close()
 
 
 # ---------------------------------------------------------------------------
@@ -405,6 +496,78 @@ class TestImport:
             0,
         )
         assert stored(fresh, locale) == stored(Path(seeded.db_path), locale)
+
+    def test_a_dry_run_writes_nothing(self, seeded, tmp_path):
+        packs = export_pack(seeded, tmp_path / "pack", "es")
+        fresh = tmp_path / "fresh.db"
+        make_db(fresh, strip_translations(SEED)).close()
+        counts = import_yaml_to_db.import_pack_messages(
+            "es", fresh, packs_dir=packs, dry_run=True
+        )
+        assert counts == (sum(len(v) for v in by_version("es").values()), 0)
+        assert stored(fresh, "es") == {}
+
+    @pytest.mark.parametrize(
+        ("text", "why"),
+        [
+            ("el nombre no está definido", "placeholders"),
+            ("\u202bel nombre '{name}' no está definido", "bidi"),
+        ],
+    )
+    def test_a_hand_written_entry_that_fails_a_rule_is_skipped(
+        self, tmp_path, text, why
+    ):
+        packs = tmp_path / "packs"
+        packs.mkdir()
+        (packs / "3.10.yml").write_text(
+            yaml.dump(
+                {
+                    "messages": {
+                        "cpython": {
+                            "NameError.not_defined": {
+                                "text": text,
+                                "src": message_fingerprint(
+                                    "name '{name}' is not defined"
+                                ),
+                            }
+                        }
+                    }
+                },
+                allow_unicode=True,
+            ),
+            encoding="utf-8",
+        )
+        fresh = tmp_path / "fresh.db"
+        make_db(fresh, strip_translations(SEED)).close()
+        assert import_yaml_to_db.import_pack_messages("es", fresh, packs_dir=packs) == (
+            0,
+            1,
+        )
+        assert stored(fresh, "es") == {}
+
+    def test_an_unreadable_pack_file_is_skipped_not_fatal(self, seeded, tmp_path):
+        packs = export_pack(seeded, tmp_path / "pack", "es")
+        (packs / "3.11.yml").write_text("messages: [unclosed\n", encoding="utf-8")
+        fresh = tmp_path / "fresh.db"
+        make_db(fresh, strip_translations(SEED)).close()
+        imported, skipped = import_yaml_to_db.import_pack_messages(
+            "es", fresh, packs_dir=packs
+        )
+        assert imported == len(by_version("es")["3.10"]) + len(by_version("es")["3.12"])
+        assert skipped == 0
+
+    def test_the_script_imports_the_shipped_messages(self, tmp_path, monkeypatch):
+        fresh = tmp_path / "fresh.db"
+        make_db(fresh, strip_translations(SEED)).close()
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["import_yaml_to_db.py", "--languages", "es", "--db-path", str(fresh)],
+        )
+        import_yaml_to_db.main()
+        assert len(stored(fresh, "es")) == sum(
+            len(v) for v in by_version("es").values()
+        )
 
     def test_a_second_import_is_a_no_op(self, seeded, tmp_path):
         packs = export_pack(seeded, tmp_path / "pack", "ar")
@@ -551,6 +714,22 @@ class TestGate:
             "messages.cpython.NameError.not_defined:"
         )
 
+    def test_a_status_only_change_is_a_changed_message(self, tmp_path):
+        before = {
+            "cpython": {"NameError.not_defined": {"text": "नाम", "src": "a" * 12}}
+        }
+        after = json.loads(json.dumps(before))
+        after["cpython"]["NameError.not_defined"]["status"] = "reviewed"
+        findings: list[dict] = []
+        gate.compare_file(
+            self.pack(tmp_path / "s.yml", before),
+            self.pack(tmp_path / "r.yml", after),
+            findings,
+            "zz",
+        )
+        changed = [f for f in findings if f["kind"] == "value_changed"]
+        assert len(changed) == 1 and "reviewed" in changed[0]["detail"]
+
     def test_an_added_and_a_removed_message_are_named(self, tmp_path):
         before = {
             "cpython": {"NameError.not_defined": {"text": "नाम", "src": "a" * 12}}
@@ -636,6 +815,18 @@ def test_message_translations_stay_out_of_the_vocabulary_config() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture
+def seeds_without_translations(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Point the catalog at a copy of the seed with no translations in it."""
+    seeds = tmp_path / "seeds"
+    seeds.mkdir()
+    (seeds / "cpython_messages.json").write_text(
+        json.dumps(strip_translations(SEED), ensure_ascii=False), encoding="utf-8"
+    )
+    monkeypatch.setattr("legesher_i18n.messages.SEED_DIR", seeds)
+    return seeds
+
+
 @pytest.fixture(scope="module")
 def seeded_catalog(tmp_path_factory: pytest.TempPathFactory) -> Path:
     path = tmp_path_factory.mktemp("catalog") / "translations.db"
@@ -652,9 +843,13 @@ PARITY = [
 
 @pytest.mark.parametrize(("locale", "version"), PARITY)
 def test_a_shipped_pack_renders_what_the_seed_rendered(
-    no_database, seeded_catalog, locale, version
+    no_database, seeds_without_translations, seeded_catalog, locale, version
 ) -> None:
-    """Moving the translations into the packs changes no rendered line."""
+    """Moving the translations into the packs changes no rendered line.
+
+    The seed the catalog reads here has no translations, so every localized
+    line on the pack side came from the pack.
+    """
     from_pack = load_catalog(locale, version)
     from_seed = load_catalog(locale, version, db_path=seeded_catalog)
     assert [(r.key, r.template, r.status, r.localized) for r in from_pack] == [
@@ -665,7 +860,7 @@ def test_a_shipped_pack_renders_what_the_seed_rendered(
 
 @pytest.mark.parametrize("locale", SEED_LOCALES)
 def test_a_shipped_pack_is_where_the_translations_come_from(
-    no_database, locale
+    no_database, seeds_without_translations, locale
 ) -> None:
     """Prove the pack, not the seed's own translations, supplied the text."""
     loader = LanguagePackLoader()

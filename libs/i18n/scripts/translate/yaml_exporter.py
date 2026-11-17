@@ -94,6 +94,7 @@ from legesher_i18n.pack_messages import (
     bidi_controls,
     entry_problem,
     message_fingerprint,
+    messages_structure_errors,
 )
 from legesher_i18n.schema_validator import SchemaValidator
 from legesher_i18n.selection import is_valid_pack_value, vocabulary_value_error
@@ -270,9 +271,10 @@ class UnplaceableMessageError(ValueError):
     """A message translation belongs to a Python version with no pack file.
 
     A translation is written into the file of the version its English
-    wording entered at. A wording that entered after the newest pack file
-    has nowhere to go, and putting it in an older file would make it
-    visible on interpreters that never print it.
+    wording entered at. A wording that entered at a version with no pack
+    file (newer than the newest, or older than the base) has nowhere to go,
+    and putting it in another file would make it visible on interpreters
+    that never print it.
     """
 
 
@@ -649,9 +651,12 @@ class YAMLExporter:
            file raises :class:`UnplaceableMessageError`.
         3. **Re-checked on the way out.** Every entry must pass the
            catalog's join rules (:func:`legesher_i18n.pack_messages.entry_problem`)
-           and carry no bidi control. The partition's writers refuse such a
-           row, so seeing one means the database is damaged:
-           :class:`CorruptSelectionError`.
+           and carry no bidi control, and the section as a whole must pass
+           the shape check a pack load applies
+           (:func:`legesher_i18n.pack_messages.messages_structure_errors`),
+           so the exporter never writes a pack that does not load. The
+           partition's writers refuse such a row, so seeing one means the
+           database is damaged: :class:`CorruptSelectionError`.
         4. **Catalog order.** Entries are written in template id order, the
            seeder's insertion order, so a regeneration is byte-reproducible.
 
@@ -720,6 +725,13 @@ class YAMLExporter:
                     )
                 messages = resolved.setdefault(version, {MESSAGES_SECTION: {}})
                 messages[MESSAGES_SECTION].setdefault(implementation, {})[key] = entry
+        for version, body in resolved.items():
+            errors = messages_structure_errors(body[MESSAGES_SECTION])
+            if errors:
+                raise CorruptSelectionError(
+                    f"Message translations for '{language_code}' at {version} would "
+                    f"make the pack unloadable: {'; '.join(errors[:5])}"
+                )
         return resolved
 
     @staticmethod
@@ -848,6 +860,8 @@ class YAMLExporter:
             UnparseablePackError: When an existing pack file cannot be
                 parsed back, so rewriting it would destroy curated
                 metadata.
+            UnplaceableMessageError: When a message translation's English
+                wording entered at a Python version with no pack file.
         """
         lang_dir = self.output_dir / language_code
         pack_name = f"legesher_i18n_python_{language_code}"
@@ -1485,7 +1499,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
             BulkExportError: If any language could not be exported —
                 a data-integrity failure (:class:`CorruptSelectionError`,
                 :class:`InterpreterFloorCollisionError`,
-                :class:`UnparseablePackError`, or in strict mode
+                :class:`UnparseablePackError`,
+                :class:`UnplaceableMessageError`, or in strict mode
                 :class:`IncompleteSelectionError`) or an environmental
                 one (``OSError`` and friends, ranked below them). Raised
                 at the END of the run: every healthy language is still
@@ -1514,12 +1529,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
                 )
                 if output_dir:
                     results[lang_code] = output_dir
-            except (
-                CorruptSelectionError,
-                IncompleteSelectionError,
-                InterpreterFloorCollisionError,
-                UnparseablePackError,
-            ) as e:
+            except _DATA_INTEGRITY_FAILURES as e:
                 # Data-integrity failures, not per-language flakiness:
                 # swallowing them would drop a pack from the run with only
                 # a log line to show for it. Collected rather than raised

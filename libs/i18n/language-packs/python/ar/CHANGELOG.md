@@ -11,7 +11,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - The 55 error messages and traceback lines, in a `messages` section of the
   3.10, 3.11 and 3.12 files. They are the Arabic translations the catalog
-  already rendered, now carried by the pack. [CORE-2630]
+  already rendered, now carried by the pack. A `legesher-i18n` release from
+  before the `messages` section refuses this pack's `3.10.yml`, so this
+  version needs the release that adds the section. [CORE-2630]
 
 ## [0.0.4] - 2026-04-29
 
