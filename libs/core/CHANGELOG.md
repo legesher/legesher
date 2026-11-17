@@ -30,8 +30,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   git clean filter does not touch punctuation, so git stores the file as
   typed. `legesher guard` is unchanged: it still refuses the fullwidth marks
   in code position, and the Arabic marks pass it. As before, the clean filter
-  and the guard do not normalize stray keywords in a file that has a native
-  mark in code position. Source that uses a native
+  and the guard do not normalize stray keywords in a file with a native mark
+  in code position when it is new, or when its committed version also has
+  one. Source that uses a native
   mark in code position runs and does not come back byte-identical: the
   round-trip check reports `round-trip FAILED` with the new layer
   `punctuation`, named only when the mark is the whole difference on its
