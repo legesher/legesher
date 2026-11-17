@@ -13,7 +13,9 @@ the repository root, which is said where it applies.
 - `language-packs/python/<lang>/legesher_i18n_python_<lang>/packs/3.10.yml` is the full base. `3.11.yml` to
   `3.14.yml` each `extends:` the previous file and hold only that version's additions. `version-index.yml` records
   what each Python version added. Sections: `keywords`, `builtins`, `exceptions`, `implicit_params` (`self`/`cls`),
-  and the optional vocabulary sections `symbols` and `variable_conventions` (`docs/pack-vocabulary.md`).
+  the optional vocabulary sections `symbols` and `variable_conventions` (`docs/pack-vocabulary.md`), and the
+  optional `messages` section for localized error messages (`docs/pack-messages.md`; no shipped pack carries
+  it yet).
 - `scripts/` (this package's): DB writers, the regen gate, migrations, exporters. `scripts/translate/`: the
   generation pipeline, `yaml_exporter.py`, prompts. Root `scripts/` holds the REFERENCE.md and README-count
   generators.

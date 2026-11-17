@@ -26,6 +26,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .exceptions import PackValidationError, VersionIndexError
+from .pack_messages import messages_structure_errors
 from .script_policy import (
     ALWAYS_ALLOWED_SCRIPTS,
     FORBIDDEN_FORMAT_CHARS,
@@ -354,6 +355,12 @@ class LanguagePackSchema(BaseModel):
             programmers reach for, keyed by the ROLE it fills
             (``loop_index`` -> ``i``). Real identifiers: this is advice a
             developer types into their own code (CORE-1396).
+        messages: Localized error-message templates, nested by
+            implementation (``cpython``) and keyed by the catalog key
+            (``NameError.not_defined``). Each entry carries ``text`` and
+            ``src``, a fingerprint of the English template it translates.
+            Only the shape is validated here; see
+            :mod:`legesher_i18n.pack_messages` (CORE-2630).
         cultural_notes: Per-term cultural context notes.
         metadata: Optional pack metadata block.
     """
@@ -384,6 +391,12 @@ class LanguagePackSchema(BaseModel):
     # shipped before this partition existed validates unchanged.
     symbols: dict[str, str] = Field(default_factory=dict)
     variable_conventions: dict[str, str] = Field(default_factory=dict)
+
+    # Localized error messages (CORE-2630). Defaults empty, so a pack
+    # without the section validates unchanged. An entry is an open mapping
+    # on purpose: only its shape is checked at load, and a field a later
+    # release adds must not make the pack unloadable on this one.
+    messages: dict[str, dict[str, dict[str, Any]]] = Field(default_factory=dict)
 
     # Metadata
     metadata: LanguagePackMetadata | None = None
@@ -506,6 +519,25 @@ class LanguagePackSchema(BaseModel):
             error = vocabulary_value_error("variable_conventions", key, value)
             if error is not None:
                 raise ValueError(error)
+        return v
+
+    @field_validator("messages", mode="before")
+    @classmethod
+    def validate_messages(cls, v: Any) -> Any:
+        """Validate the shape of the ``messages`` section.
+
+        Runs before type coercion so every problem is reported with the path
+        of the offending value, in one error. The rules are
+        :func:`legesher_i18n.pack_messages.messages_structure_errors`:
+        structure only. Whether an entry is usable (its fingerprint, its
+        placeholders, its key) is decided when the catalog is joined, where
+        a failing entry is skipped and the pack still loads.
+        """
+        if v is None:
+            return {}
+        errors = messages_structure_errors(v)
+        if errors:
+            raise ValueError("; ".join(errors))
         return v
 
     @field_validator(
