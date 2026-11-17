@@ -32,6 +32,7 @@ from tests.container_image import (
     command,
     image_references,
     instructions,
+    parser_directives,
     run_commands,
 )
 
@@ -57,7 +58,15 @@ EXPECTED_COMMANDS = [
     'uv python install "${PYTHON_VERSION}"',
     "uv venv /opt/legesher-mcp",
     "uv pip install --python /opt/legesher-mcp/bin/python"
-    ' --exclude-newer "${RESOLVED_BEFORE}" "legesher-mcp==${LEGESHER_MCP_VERSION}"',
+    ' --exclude-newer "${RESOLVED_BEFORE}T00:00:00Z" "legesher-mcp==${LEGESHER_MCP_VERSION}"',
+]
+
+#: The one file copied into the image: uv, from its pinned image. Anything
+#: copied from a build context would replace what the pins describe.
+EXPECTED_COPIES = [
+    "--from=ghcr.io/astral-sh/uv:0.13.7@sha256:"
+    "96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490"
+    " /uv /uvx /usr/local/bin/",
 ]
 
 #: The build arguments, and nothing else.
@@ -93,6 +102,19 @@ def _project() -> dict[str, Any]:
     )
     project: dict[str, Any] = loaded["project"]
     return project
+
+
+def test_it_sets_no_parser_directive() -> None:
+    """``# syntax=`` would run an unpinned image as the build's frontend."""
+    found = parser_directives()
+    assert not found, f"{DOCKERFILE.name} carries parser directives: {found}"
+
+
+def test_it_copies_only_uv_from_its_pinned_image() -> None:
+    copies = [rest for keyword, rest in instructions() if keyword == "COPY"]
+    assert copies == EXPECTED_COPIES, (
+        f"{DOCKERFILE.name} copies {copies}; the reviewed copy is {EXPECTED_COPIES}"
+    )
 
 
 def test_it_uses_only_the_reviewed_instructions() -> None:
@@ -133,14 +155,23 @@ def test_every_version_argument_defaults_to_one_exact_release(name: str) -> None
     )
 
 
-def test_the_resolution_date_is_one_calendar_day() -> None:
-    default = ARGUMENTS["RESOLVED_BEFORE"]
+def test_the_resolution_date_is_a_day_that_has_begun() -> None:
+    """A future date would take releases published after the change, unseen.
+
+    A day that has begun stays begun, so this cannot go stale.
+    """
+    default = str(ARGUMENTS["RESOLVED_BEFORE"])
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", default), (
+        f"ARG RESOLVED_BEFORE defaults to {default!r}; it must be a date, YYYY-MM-DD"
+    )
     try:
-        datetime.date.fromisoformat(str(default))
+        resolved_before = datetime.date.fromisoformat(default)
     except ValueError:
-        pytest.fail(f"ARG RESOLVED_BEFORE defaults to {default!r}; it must be a date, YYYY-MM-DD")
-    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(default)), (
-        f"ARG RESOLVED_BEFORE defaults to {default!r}; write it as YYYY-MM-DD"
+        pytest.fail(f"ARG RESOLVED_BEFORE defaults to {default!r}, which is not a calendar day")
+    today = datetime.datetime.now(datetime.timezone.utc).date()
+    assert resolved_before <= today, (
+        f"ARG RESOLVED_BEFORE is {resolved_before}, after today ({today}, UTC); the build "
+        "would take every release published until then"
     )
 
 
@@ -209,6 +240,9 @@ def test_the_listings_page_prints_this_recipe() -> None:
             f"{DOCKERFILE.name} no longer runs {step!r}"
         )
         assert step in page, f"{LISTINGS_DOC.name} does not print the build step {step!r}"
+    assert "legesher-mcp==<version>" in page, (
+        f"{LISTINGS_DOC.name} does not tell the listing to install a named version"
+    )
     minor = ".".join(str(ARGUMENTS["PYTHON_VERSION"]).split(".")[:2])
     assert f"| Python version | {minor} |" in page, (
         f"{LISTINGS_DOC.name} does not give the Python version as {minor}, the one the "

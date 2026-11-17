@@ -272,8 +272,9 @@ uv run mypy legesher_mcp  # types
 
 Three test tiers. The default run exercises every tool through a real MCP
 client session and stays fast. The `docker` tier (`make test-mcp-docker`,
-from the repository root) builds the [container image](#listings) and drives
-a session against it; it needs a Docker daemon. The `scheduled` tier is
+from the repository root) builds the
+[container image](https://github.com/legesher/legesher/blob/main/libs/mcp/Dockerfile)
+and drives a session against it; it needs a Docker daemon. The `scheduled` tier is
 excluded from the default run too, and run before a release:
 
 - **All-packs round-trip sweep** — the byte-identical guarantee across every

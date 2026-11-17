@@ -17,8 +17,9 @@
 #   - the base image and the uv image, by digest;
 #   - Python, mcp-proxy and legesher-mcp, by exact version;
 #   - the packages mcp-proxy and legesher-mcp depend on, by date: both
-#     installs take only releases published before RESOLVED_BEFORE, so the
-#     same file resolves the same set on any later day.
+#     installs take only releases published before the start of
+#     RESOLVED_BEFORE (UTC), so the same file resolves the same set on any
+#     later day, unless one of those releases is later yanked or removed.
 #
 # By default the container runs the server over stdio, the way a desktop
 # client starts it:
@@ -40,7 +41,8 @@ FROM node:24.22.3-trixie-slim@sha256:af02d57b57719b9657a45199a79264a9437940cd55b
 COPY --from=ghcr.io/astral-sh/uv:0.13.7@sha256:96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490 /uv /uvx /usr/local/bin/
 
 # Dependencies resolve as the indexes stood at the start of this day (UTC).
-# It has to be later than the day the pinned legesher-mcp was published.
+# It has to be later than the day the pinned legesher-mcp was published, and
+# no later than the day of the change.
 ARG RESOLVED_BEFORE=2026-11-10
 ARG PYTHON_VERSION=3.13.18
 ARG MCP_PROXY_VERSION=6.10.0
@@ -61,7 +63,7 @@ ARG LEGESHER_MCP_VERSION=0.3.0
 
 # The listing's two build steps, with the version and the date named.
 RUN uv venv /opt/legesher-mcp \
-    && uv pip install --python /opt/legesher-mcp/bin/python --exclude-newer "${RESOLVED_BEFORE}" "legesher-mcp==${LEGESHER_MCP_VERSION}"
+    && uv pip install --python /opt/legesher-mcp/bin/python --exclude-newer "${RESOLVED_BEFORE}T00:00:00Z" "legesher-mcp==${LEGESHER_MCP_VERSION}"
 
 # The server reads nothing outside its own install and keeps no state, so it
 # needs no privileges.

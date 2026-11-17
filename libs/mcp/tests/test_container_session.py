@@ -37,6 +37,7 @@ from tests.container_image import (
     LISTING_COMMAND,
     PROXY_PORT,
     build_arguments,
+    image_references,
 )
 from tests.corpus import corpus_for
 
@@ -97,11 +98,11 @@ def image() -> Iterator[str]:
 def proxy_url(image: str) -> Iterator[str]:
     """Start the listing's command, published on loopback, and wait for the proxy."""
     name = f"legesher-mcp-test-proxy-{uuid.uuid4().hex[:12]}"
-    _docker(
-        "run", "--detach", "--name", name,
-        "--publish", f"127.0.0.1::{PROXY_PORT}", image, *LISTING_COMMAND,
-    )  # fmt: skip
     try:
+        _docker(
+            "run", "--detach", "--name", name,
+            "--publish", f"127.0.0.1::{PROXY_PORT}", image, *LISTING_COMMAND,
+        )  # fmt: skip
         address = _docker("port", name, f"{PROXY_PORT}/tcp").splitlines()[0]
         base = f"http://127.0.0.1:{address.rsplit(':', 1)[1]}"
         deadline = time.monotonic() + STARTUP_SECONDS
@@ -223,3 +224,29 @@ async def test_a_translation_round_trips_over_http(
 def test_the_container_runs_unprivileged(image: str) -> None:
     uid = _docker("run", "--rm", image, "id", "-u")
     assert uid != "0", "the image runs as root"
+
+
+def _tag(repository: str) -> str:
+    """The version tag the Dockerfile gives an image, without its variant."""
+    (image,) = (
+        ref for ref in image_references() if ref.split("@")[0].rsplit(":", 1)[0] == repository
+    )
+    return image.split("@")[0].rsplit(":", 1)[1].split("-")[0]
+
+
+def test_the_tools_are_the_versions_the_tags_name(image: str) -> None:
+    """A digest is what Docker pulls; the tag beside it is only a label.
+
+    So the label is checked against what the pulled image actually holds.
+    """
+    script = (
+        "node --version; uv --version; mcp-proxy --version; /opt/legesher-mcp/bin/python --version"
+    )
+    node, uv, proxy, python = _docker("run", "--rm", image, "sh", "-c", script).splitlines()
+    arguments = build_arguments()
+    assert node == f"v{_tag('node')}", f"the node image holds {node}, tagged {_tag('node')}"
+    assert uv.split()[1] == _tag("ghcr.io/astral-sh/uv"), (
+        f"the uv image holds {uv}, tagged {_tag('ghcr.io/astral-sh/uv')}"
+    )
+    assert proxy == arguments["MCP_PROXY_VERSION"], f"mcp-proxy is {proxy}"
+    assert python == f"Python {arguments['PYTHON_VERSION']}", f"the server runs on {python}"

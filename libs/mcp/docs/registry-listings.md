@@ -121,13 +121,14 @@ image and the uv image by digest; Python, mcp-proxy and `legesher-mcp` by
 version; and the packages those two depend on by date (`RESOLVED_BEFORE`).
 The base image, the user and the mcp-proxy version are this file's own
 choices; Glama's generated file makes its own. The file needs no build
-context:
+context, so it builds from standard input:
 
 ```bash
+docker build -t legesher-mcp - < libs/mcp/Dockerfile
 make test-mcp-docker
 ```
 
-That builds the image and drives a session against it twice: over stdio, the
+The make target builds the image and drives a session against it twice: over stdio, the
 image's default, and through mcp-proxy over HTTP, the listing's command. Each
 runs the introspection exchange, and a translation into Arabic and Hindi and
 back, byte for byte. It needs a running Docker daemon and fails without one.
@@ -148,8 +149,9 @@ For each `legesher-mcp` release, after the package is on PyPI:
 
 1. In `libs/mcp/Dockerfile`, raise `LEGESHER_MCP_VERSION` to the published
    version, and `RESOLVED_BEFORE` to a day after it and the `legesher-core`
-   and `legesher-i18n` releases it requires were published, then run
-   `make test-mcp-docker`. Commit it as `build(mcp)`; a `fix` or `feat`
+   and `legesher-i18n` releases it requires were published. The date may not
+   be in the future, so a release published today waits until tomorrow. Then
+   run `make test-mcp-docker`. Commit it as `build(mcp)`; a `fix` or `feat`
    subject would start another release.
 2. On the listing, set the same version in the build step, start a build, and
    wait for its test to pass.

@@ -26,6 +26,9 @@ LISTING_COMMAND = ["mcp-proxy", "--", SERVER_EXECUTABLE]
 PROXY_PORT = 8080
 
 _CONTINUATION = re.compile(r"\\\n\s*")
+#: A parser directive: a comment Docker reads as configuration. ``syntax=``
+#: names an image that runs the whole build, so it is a download too.
+_DIRECTIVE = re.compile(r"^\s*#\s*(?P<name>syntax|escape|check)\s*=", re.I)
 _ARG = re.compile(r"^ARG (?P<name>[A-Za-z0-9_]+)(?:=(?P<default>\S*))?$")
 _FROM = re.compile(r"^FROM (?:--platform=\S+ )?(?P<image>\S+)(?: AS (?P<stage>\S+))?$", re.I)
 _ANY_FROM = re.compile(r"\bfrom=(?P<image>[^\s,]+)", re.I)
@@ -47,6 +50,16 @@ def instructions(text: str | None = None) -> list[tuple[str, str]]:
         keyword, _, rest = line.strip().partition(" ")
         parsed.append((keyword.upper(), " ".join(rest.split())))
     return parsed
+
+
+def parser_directives(text: str | None = None) -> list[str]:
+    """Every comment line Docker could read as a parser directive.
+
+    Docker reads directives only at the top of the file; every such line is
+    reported wherever it sits, so moving one up cannot slip past a check.
+    """
+    source = DOCKERFILE.read_text(encoding="utf-8") if text is None else text
+    return [line.strip() for line in source.splitlines() if _DIRECTIVE.match(line)]
 
 
 def image_references(text: str | None = None) -> list[str]:
