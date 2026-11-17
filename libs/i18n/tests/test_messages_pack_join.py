@@ -689,13 +689,86 @@ class TestPrecedence:
             self.SEED_HEADER
         )
 
-    def test_no_pack_file_for_the_interpreter_reads_the_seeds_translations(
+    def test_an_interpreter_newer_than_the_pack_reads_its_newest_file(
         self, no_database, write_pack
     ):
         write_pack({"3.10": self.header_only()}, language="es")
         assert rule(load_catalog("es", "3.99"), "traceback.header").template == (
-            self.SEED_HEADER
+            ARABIC_HEADER
         )
+
+    def test_a_newer_interpreters_rewording_is_not_given_the_old_translation(
+        self, no_database, write_pack, tmp_path, monkeypatch
+    ):
+        """The case a newer interpreter brings: same key, new English wording.
+
+        The pack has files up to 3.14 only. Reading 3.14.yml on 3.15 keeps
+        the unchanged message translated and leaves the reworded one alone.
+        """
+        old = "'{obj}' object has no attribute '{attr}'"
+        new = "'{obj}' object has no attribute '{attr}'. Did you mean '.{attr}'?"
+        seed = {
+            "implementation": "cpython",
+            "version_added": "3.10",
+            "templates": [
+                {
+                    "key": "ZeroDivisionError.division_by_zero",
+                    "template_en": "division by zero",
+                    "placeholders": [],
+                    "matcher": "^division by zero$",
+                },
+                {
+                    "key": "AttributeError.reworded",
+                    "template_en": old,
+                    "placeholders": [
+                        {"name": "obj", "example": "list"},
+                        {"name": "attr", "example": "apend"},
+                    ],
+                    "matcher": "^'(?P<obj>[^']+)' object has no attribute '(?P<attr>[^']+)'$",
+                    "version_removed": "3.15",
+                },
+                {
+                    "key": "AttributeError.reworded",
+                    "template_en": new,
+                    "placeholders": [
+                        {"name": "obj", "example": "list"},
+                        {"name": "attr", "example": "apend"},
+                    ],
+                    "matcher": (
+                        "^'(?P<obj>[^']+)' object has no attribute '(?P<attr>[^']+)'"
+                        "\\. Did you mean '\\.(?P=attr)'\\?$"
+                    ),
+                    "version_added": "3.15",
+                },
+            ],
+        }
+        seeds = tmp_path / "seeds"
+        seeds.mkdir()
+        (seeds / "one.json").write_text(json.dumps(seed), encoding="utf-8")
+        monkeypatch.setattr(messages, "SEED_DIR", seeds)
+        write_pack(
+            {
+                "3.10": cpython(
+                    ZeroDivisionError__division_by_zero={
+                        "text": "शून्य से भाग",
+                        "src": message_fingerprint("division by zero"),
+                    },
+                    AttributeError__reworded={
+                        "text": "'{obj}' वस्तु में '{attr}' गुण नहीं है",
+                        "src": message_fingerprint(old),
+                    },
+                )
+            }
+        )
+        on_314 = load_catalog("zz", "3.14")
+        assert rule(on_314, "AttributeError.reworded").localized
+        on_315 = load_catalog("zz", "3.15")
+        assert rule(on_315, "ZeroDivisionError.division_by_zero").template == (
+            "शून्य से भाग"
+        )
+        reworded = rule(on_315, "AttributeError.reworded")
+        assert not reworded.localized
+        assert reworded.template == new
 
     def test_a_locale_with_no_pack_and_no_seed_translation_is_english(
         self, no_database, write_pack

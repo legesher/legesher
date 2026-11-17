@@ -208,12 +208,13 @@ def load_catalog(
        messages partition or holds no such rows, which is every installed
        package) the English side comes from the seed in :data:`SEED_DIR` and
        the translations from the ``messages`` section of the language pack
-       for ``locale`` at this interpreter version. A pack entry is used only
+       for ``locale`` at this interpreter version, or at the newest version
+       the pack has below it. A pack entry is used only
        when :func:`legesher_i18n.pack_messages.entry_problem` finds nothing
        wrong with it for the English row that applies; otherwise that rule
        is not localized.
-    4. When that pack is missing, does not load, or carries no messages for
-       ``implementation``, the seed's own translations are used.
+    4. When there is no such pack file, it does not load, or it carries no
+       messages for ``implementation``, the seed's own translations are used.
 
     Args:
         locale: BCP 47 tag (``'es'``, ``'ar'``). A locale with no translations
@@ -346,10 +347,17 @@ def _pack_entries(
 ) -> dict[str, Any] | None:
     """The pack's entries for ``implementation``, or ``None`` when it has none.
 
+    The pack file for the interpreter's version is read; when the pack has
+    none (an interpreter newer than the pack), the newest file below it is.
+    That is safe because every entry is joined by fingerprint: a message
+    the newer interpreter reworded is a different English template, so the
+    older translation does not attach to it, and every message it did not
+    reword stays translated.
+
     ``None`` covers every way a pack can have nothing to offer: no pack for
-    the locale, no pack file for this interpreter version, a pack that does
-    not load, and a pack with no messages for the implementation. The caller
-    then reads the seed's translations.
+    the locale, no pack file at or below this interpreter version, a pack
+    that does not load, and a pack with no messages for the implementation.
+    The caller then reads the seed's translations.
 
     The pack's minimum interpreter is not enforced: that guard protects
     translated identifiers that would not parse, and rendering a message
@@ -358,16 +366,24 @@ def _pack_entries(
     target = _IMPLEMENTATION_TARGETS.get(implementation)
     if target is None:
         return None
+    loader = LanguagePackLoader()
     try:
-        pack = LanguagePackLoader().load(
-            locale,
-            target,
-            f"{version[0]}.{version[1]}",
-            enforce_min_interpreter=False,
-        )
-    except Exception:  # noqa: BLE001 - a broken pack degrades, never crashes
-        return None
-    return pack.messages.get(implementation) or None
+        older = [
+            candidate
+            for candidate in reversed(loader.list_available_versions(target))
+            if _parse_version(candidate) < version
+        ]
+    except Exception:  # noqa: BLE001 - discovery trouble degrades, never crashes
+        older = []
+    for candidate in [f"{version[0]}.{version[1]}", *older]:
+        try:
+            pack = loader.load(locale, target, candidate, enforce_min_interpreter=False)
+        except PackNotFoundError:
+            continue
+        except Exception:  # noqa: BLE001 - a broken pack degrades, never crashes
+            return None
+        return pack.messages.get(implementation) or None
+    return None
 
 
 def _join(

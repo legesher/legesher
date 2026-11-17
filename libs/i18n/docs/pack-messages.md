@@ -114,13 +114,16 @@ In order:
    one.
 3. Otherwise the English side comes from the seed that ships in the package,
    and the translations from the pack for the locale at the running Python
-   version. A pack that carries messages for the implementation is the only
-   source of translations: a message it does not translate prints in
+   version. On an interpreter newer than the pack's newest file, that file
+   is read: every entry is joined by fingerprint, so a message the newer
+   Python reworded stays in English and every other message stays
+   translated. A pack that carries messages for the implementation is the
+   only source of translations: a message it does not translate prints in
    English.
-4. When there is no pack for the locale, no pack file for that Python
-   version, the pack does not load, or it carries no messages for the
-   implementation, the translations in the seed are used. This step exists
-   while packs are gaining the section.
+4. When there is no pack for the locale, no pack file at or below that
+   Python version, the pack does not load, or it carries no messages for
+   the implementation, the translations in the seed are used. This step
+   exists while packs are gaining the section.
 
 The pack's minimum interpreter version is not enforced for this read. That
 guard protects translated identifiers that would not parse on an older
