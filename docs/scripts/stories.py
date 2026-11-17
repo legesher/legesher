@@ -417,3 +417,72 @@ def variants_digest(variants: dict[str, Variant]) -> str:
     return hashlib.sha256(
         json.dumps(payload, ensure_ascii=False).encode("utf-8")
     ).hexdigest()
+
+
+RECORD_FILE = "reproduced.json"
+
+
+def runs_on(record: dict, lang: str) -> list[str]:
+    """The Python versions on which lang's copied code printed its expected output."""
+    results = record["results"].get(lang, {})
+    return [python for python in record["python"] if results.get(python) == "match"]
+
+
+def read_record(story: Story) -> dict | None:
+    """The story's reproduction record (written by reproduce_stories.py), if it has one."""
+    path = story.path / RECORD_FILE
+    if not path.is_file():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def story_payload(
+    story: Story, variants: dict[str, Variant], record: dict | None
+) -> dict:
+    """The JSON the What's New page reads for one story."""
+    reproduction = None
+    if record is not None:
+        reproduction = {
+            "legesher": record["legesher"],
+            "checked": record["checked"],
+            "current": record["digest"] == variants_digest(variants),
+            "runs_on": {lang: runs_on(record, lang) for lang in record["results"]},
+        }
+    return {
+        "id": story.id,
+        "release": story.release,
+        "package": story.package,
+        "badge": story.badge,
+        "surface": story.surface,
+        "title": story.title,
+        "why": story.why,
+        "file_name": story.file_name,
+        "steps": [[kind, arg] for kind, arg in story.steps],
+        "variants": {
+            lang: {
+                "rtl": v.rtl,
+                "draft": v.draft,
+                "spans": [[text, kind] for text, kind in v.spans],
+                "copy_text": v.copy_text,
+                "output": v.output,
+            }
+            for lang, v in variants.items()
+        },
+        "reproduction": reproduction,
+    }
+
+
+def emit_stories(stories_dir: Path, out_dir: Path, bundles: dict[str, dict]) -> None:
+    """Write out_dir/stories/<id>.json for every story; nothing when there are none."""
+    stories = load_stories(stories_dir)
+    if not stories:
+        return
+    target = out_dir / "stories"
+    target.mkdir(parents=True, exist_ok=True)
+    for story in stories:
+        payload = story_payload(
+            story, story_variants(story, bundles), read_record(story)
+        )
+        (target / f"{story.id}.json").write_text(
+            json.dumps(payload, ensure_ascii=False) + "\n", encoding="utf-8"
+        )

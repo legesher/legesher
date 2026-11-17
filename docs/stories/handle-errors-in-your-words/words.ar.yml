@@ -1,0 +1,10 @@
+status: draft
+names:
+  divide: اقسم
+  numerator: بسط
+  denominator: مقام
+strings:
+  '"cannot divide"': '"لا يمكن قسمة"'
+  '"by zero"': '"على صفر"'
+  '"attempted"': '"محاولة قسمة"'
+  '"/"': '"على"'

@@ -1,0 +1,5 @@
+attempted 10 / 2
+5.0
+cannot divide 1 by zero
+attempted 1 / 0
+None

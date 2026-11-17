@@ -1,0 +1,20 @@
+id: handle-errors-in-your-words
+release: null
+package: legesher 0.25.1
+badge: new
+surface: playground
+title:
+  en: Handle errors in your own words
+  es: Maneja los errores con tus propias palabras
+  ar: عالِج الأخطاء بكلمات لغتك
+why:
+  en: "`try`, `except` and `finally` read in your language, and the program behaves exactly as before."
+  es: "`try`, `except` y `finally` se leen en tu idioma, y el programa se comporta exactamente igual."
+  ar: "تقرأ `try` و`except` و`finally` بلغتك، ويعمل البرنامج تمامًا كما كان."
+covers: [legesher run, try/except/finally keywords]
+file_name: divide.py
+steps:
+  - type
+  - run
+  - expect_output
+  - show_original
