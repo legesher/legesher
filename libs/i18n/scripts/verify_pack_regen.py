@@ -106,10 +106,10 @@ PACKS_DIR = _I18N_ROOT / "language-packs" / "python"
 
 # Kept in step with ``_PACK_SECTIONS`` in scripts/translate/yaml_exporter.py
 # — the ``unknown_section`` finding class below is what forces that. The
-# last two are the vocabulary partition (CORE-1396); they diff exactly like
-# the term sections, since both sides are ``{key: string}`` mappings, and
-# they are absent from every pack until a language's vocabulary is
-# generated.
+# vocabulary partition (CORE-1396) diffs exactly like the term sections,
+# since both sides are ``{key: string}`` mappings. ``messages`` (CORE-2630)
+# is nested one level deeper, so it is compared entry by entry; see
+# :func:`_section_entries`.
 SECTIONS = (
     "keywords",
     "builtins",
@@ -117,7 +117,12 @@ SECTIONS = (
     "implicit_params",
     "symbols",
     "variable_conventions",
+    "messages",
 )
+
+#: Sections whose values are ``{implementation: {key: entry}}`` rather than
+#: ``{key: string}``.
+NESTED_SECTIONS = frozenset({"messages"})
 SCALAR_FIELDS = ("language", "target", "version", "extends")
 
 #: Every top-level key this gate knows how to diff. Anything outside it
@@ -274,6 +279,25 @@ def _comments_of(text: str) -> list[str]:
     ]
 
 
+def _section_entries(section: str, value: object) -> dict:
+    """A section as ``{key: value}``, one level deep, for diffing.
+
+    A nested section (``messages``) is flattened to ``implementation.key``
+    so a changed message is reported as that message, not as a difference
+    in the whole implementation's mapping.
+    """
+    if not isinstance(value, dict):
+        return {}
+    if section not in NESTED_SECTIONS:
+        return value
+    return {
+        f"{implementation}.{key}": entry
+        for implementation, entries in value.items()
+        if isinstance(entries, dict)
+        for key, entry in entries.items()
+    }
+
+
 def compare_file(
     shipped: Path,
     regen: Path,
@@ -336,8 +360,8 @@ def compare_file(
                 f"{section}: shipped={'present' if in_shipped else 'absent'} "
                 f"regen={'present' if in_regen else 'absent'}",
             )
-        s_map = shipped_data.get(section) or {}
-        r_map = regen_data.get(section) or {}
+        s_map = _section_entries(section, shipped_data.get(section))
+        r_map = _section_entries(section, regen_data.get(section))
         s_keys = {k for k, v in s_map.items() if v is not None}
         r_keys = {k for k, v in r_map.items() if v is not None}
         for key in sorted(s_keys - r_keys):

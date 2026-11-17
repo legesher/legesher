@@ -35,6 +35,7 @@ from legesher_i18n.pack_loader import LanguagePackLoader
 from legesher_i18n.pack_messages import (
     ALLOWED_STATUSES,
     ENTRY_FIELDS,
+    IMPLEMENTATION_TARGETS,
     PLACEHOLDER_KINDS,
     entry_problem,
     message_fingerprint,
@@ -884,7 +885,7 @@ class TestPrecedence:
             raise AssertionError("a pack was loaded")
 
         monkeypatch.setattr(LanguagePackLoader, "load", refuse)
-        assert "v8" not in messages._IMPLEMENTATION_TARGETS
+        assert "v8" not in IMPLEMENTATION_TARGETS
         load_catalog("ar", implementation="v8")
         assert pack_message_problems("ar", implementation="v8") == []
 

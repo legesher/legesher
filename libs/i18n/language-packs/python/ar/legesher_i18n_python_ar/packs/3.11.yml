@@ -10,6 +10,11 @@ keywords:
 exceptions:
   baseexceptiongroup: مجموعةالاستثناءاتالأساسية
   exceptiongroup: مجموعةالاستثناءات
+messages:
+  cpython:
+    UnboundLocalError.before_assignment:
+      text: لا يمكن الوصول إلى المتغير المحلي '{name}' حيث لا ترتبط به قيمة
+      src: "6716c6784981"
 metadata:
   python_version_min: '3.11'
   python_version_max: '3.13'
@@ -17,7 +22,7 @@ metadata:
   - '3.11'
   - '3.12'
   - '3.13'
-  last_updated: '2026-01-26'
+  last_updated: '2026-11-17'
   community_reviewed: false
   author: Legesher Team
   license: Apache-2.0

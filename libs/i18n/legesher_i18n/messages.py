@@ -52,6 +52,7 @@ from .exceptions import PackNotFoundError
 from .pack_loader import LanguagePackLoader
 from .pack_messages import (
     DEFAULT_STATUS,
+    IMPLEMENTATION_TARGETS,
     PLACEHOLDER_KINDS,
     entry_problem,
     message_fingerprint,
@@ -79,11 +80,6 @@ _CATCH_ALL_PROBE = "\x02legesher catch-all probe 47\x03"
 #: ``implementation`` (``cpython_messages.json``, ``v8_jej_messages.json``).
 #: Package data: an installed wheel carries them, the database it fills never.
 SEED_DIR = Path(__file__).parent / "db" / "seeds"
-
-#: The pack target that carries each implementation's messages. An
-#: implementation with no entry here has no pack to read, and its
-#: translations come from its seed.
-_IMPLEMENTATION_TARGETS = {"cpython": "python"}
 
 #: A pack version file's stem: ``3.12``.
 _VERSION_FILE = re.compile(r"\d+\.\d+")
@@ -343,7 +339,7 @@ def pack_message_problems(
             fails validation, a YAML error for one that does not parse.
     """
     version = _parse_version(python_version)
-    target = _IMPLEMENTATION_TARGETS.get(implementation)
+    target = IMPLEMENTATION_TARGETS.get(implementation)
     if target is None:
         return []
     loader = loader or LanguagePackLoader()
@@ -463,7 +459,7 @@ def _pack_entries(
     translated identifiers that would not parse, and rendering a message
     executes none.
     """
-    target = _IMPLEMENTATION_TARGETS.get(implementation)
+    target = IMPLEMENTATION_TARGETS.get(implementation)
     if target is None:
         return None
     try:

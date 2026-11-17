@@ -14,8 +14,7 @@ the repository root, which is said where it applies.
   `3.14.yml` each `extends:` the previous file and hold only that version's additions. `version-index.yml` records
   what each Python version added. Sections: `keywords`, `builtins`, `exceptions`, `implicit_params` (`self`/`cls`),
   the optional vocabulary sections `symbols` and `variable_conventions` (`docs/pack-vocabulary.md`), and the
-  optional `messages` section for localized error messages (`docs/pack-messages.md`; no shipped pack carries
-  it yet).
+  optional `messages` section for localized error messages (`docs/pack-messages.md`; es and ar carry it).
 - `scripts/` (this package's): DB writers, the regen gate, migrations, exporters. `scripts/translate/`: the
   generation pipeline, `yaml_exporter.py`, prompts. Root `scripts/` holds the REFERENCE.md and README-count
   generators.
@@ -164,7 +163,10 @@ skips an incomplete section rather than shipping it half-filled.
    `version_added` for a locale.
 4. `scripts/translate/generate_messages.py --all-missing` (or `--locales fr am`): model renderings, each written
    through step 3's checks with model provenance. `--dry-run` renders the prompts without calling a model.
-5. The durable-home push.
+5. Regenerate the packs of every locale whose translations changed (`export_language`, "Changing pack values"
+   step 2): the exporter writes their `messages` sections. Then the pack version bump, the regen gate and the
+   REFERENCE.md regeneration, as for any pack change.
+6. The durable-home push.
 
 A database whose partition predates the provenance columns is refused by every write path until
 `scripts/add_message_provenance.py` has run on it.
@@ -173,8 +175,8 @@ No wheel or clone carries the database, so whenever the default database carries
 `load_catalog` reads the English side from `legesher_i18n/db/seeds/` and the translations from the locale's pack
 (its `messages` section, `docs/pack-messages.md`). A pack entry is used only when its `src` matches the English
 template; otherwise that message prints as CPython printed it. A locale whose pack carries no messages still
-reads the seed's own translations, so today the seed is what ships for es and ar. A translation that reaches the
-database only through step 3 or 4 is not in an installed package until a pack or the seed carries it.
+reads the seed's own translations. es and ar render from their packs. A translation that reaches the database
+only through step 3 or 4 is not in an installed package until step 5 puts it in a pack.
 
 ## Adding a language
 

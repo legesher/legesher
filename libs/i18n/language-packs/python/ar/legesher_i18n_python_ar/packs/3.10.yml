@@ -184,12 +184,165 @@ exceptions:
 implicit_params:
   self: نفس
   cls: الصفنفسه
+messages:
+  cpython:
+    traceback.header:
+      text: 'التتبع (آخر استدعاء في الأسفل):'
+      src: "5dd94ced5a2a"
+    traceback.frame:
+      text: الملف "{file}"، السطر {line}، في {name}
+      src: "fcb6c6422b34"
+    traceback.frame_no_scope:
+      text: الملف "{file}"، السطر {line}
+      src: "1a3c011cc860"
+    traceback.cause:
+      text: 'كان الاستثناء أعلاه السبب المباشر في الاستثناء التالي:'
+      src: "966282d41922"
+    traceback.context:
+      text: 'أثناء معالجة الاستثناء أعلاه، حدث استثناء آخر:'
+      src: "6e3748232ef0"
+    SyntaxError.invalid_syntax:
+      text: بناء جملة غير صالح
+      src: "cab55a6f6670"
+    SyntaxError.invalid_syntax_comma:
+      text: بناء جملة غير صالح. ربما نسيت فاصلة؟
+      src: "cb0c9c17ad83"
+    SyntaxError.missing_parentheses_print:
+      text: أقواس مفقودة في استدعاء 'print'. هل قصدت print(...)؟
+      src: "1d8cfb71cb8f"
+    SyntaxError.cannot_assign_literal:
+      text: لا يمكن الإسناد إلى قيمة حرفية هنا. ربما قصدت '==' بدلا من '='؟
+      src: "1b1f3fa4bba4"
+    SyntaxError.cannot_assign_expression:
+      text: لا يمكن الإسناد إلى تعبير هنا. ربما قصدت '==' بدلا من '='؟
+      src: "baab57529ee8"
+    SyntaxError.unterminated_string:
+      text: قيمة نصية غير منتهية (اكتشفت عند السطر {line})
+      src: "de7f2a057a82"
+    SyntaxError.unterminated_triple_string:
+      text: قيمة نصية ثلاثية الاقتباس غير منتهية (اكتشفت عند السطر {line})
+      src: "5a69100134f7"
+    SyntaxError.bracket_never_closed:
+      text: '''{bracket}'' لم يغلق أبدا'
+      src: "7309dd98bf46"
+    SyntaxError.expected_colon:
+      text: كان متوقعا ':'
+      src: "21761155cc82"
+    SyntaxError.leading_zeros:
+      text: الأصفار البادئة غير مسموح بها في الأعداد الصحيحة العشرية؛ استخدم البادئة
+        0o للأعداد الثمانية
+      src: "5ccfc14b423d"
+    NameError.not_defined:
+      text: الاسم '{name}' غير معرف
+      src: "998720c0a4af"
+    NameError.not_defined_did_you_mean:
+      text: 'الاسم ''{name}'' غير معرف. هل قصدت: ''{suggestion}''؟'
+      src: "c8bd77320391"
+    TypeError.unsupported_operand:
+      text: 'نوع (أنواع) معاملات غير مدعومة للعملية {op}: ''{left}'' و''{right}'''
+      src: "b6d504fd5f73"
+    TypeError.not_callable:
+      text: الكائن '{obj_type}' غير قابل للاستدعاء
+      src: "7545c7d0d024"
+    TypeError.not_subscriptable:
+      text: الكائن '{obj_type}' لا يقبل الفهرسة
+      src: "5dedda6c6aea"
+    TypeError.not_iterable:
+      text: الكائن '{obj_type}' غير قابل للتكرار
+      src: "a0a77d9c95b6"
+    TypeError.arg_count:
+      text: '{func}() تقبل {expected} من الوسائط الموضعية لكن أعطيت {given}'
+      src: "ef5ecbc19cb0"
+    TypeError.missing_argument:
+      text: '{func}() تنقصها {count} وسيطة موضعية مطلوبة: ''{name}'''
+      src: "f2600ed52c15"
+    TypeError.missing_arguments:
+      text: '{func}() تنقصها {count} من الوسائط الموضعية المطلوبة: {names}'
+      src: "50d82709d2bf"
+    TypeError.can_only_concatenate_str:
+      text: يمكن ضم str فقط (وليس "{other_type}") إلى str
+      src: "f7ede5d5b786"
+    AttributeError.no_attribute:
+      text: الكائن '{obj_type}' ليس له السمة '{attr}'
+      src: "4bc329d99f61"
+    AttributeError.no_attribute_did_you_mean:
+      text: 'الكائن ''{obj_type}'' ليس له السمة ''{attr}''. هل قصدت: ''{suggestion}''؟'
+      src: "740d97d74980"
+    AttributeError.module_no_attribute:
+      text: الوحدة '{module}' ليس لها السمة '{attr}'
+      src: "3832fccc3d4b"
+    ImportError.cannot_import_name:
+      text: لا يمكن استيراد الاسم '{name}' من '{module}'
+      src: "1a4a46b21cf9"
+    ModuleNotFoundError.no_module:
+      text: لا توجد وحدة باسم '{module}'
+      src: "abb6eee2592a"
+    IndexError.list_index:
+      text: فهرس القائمة خارج النطاق
+      src: "f6b287406351"
+    IndexError.string_index:
+      text: فهرس السلسلة النصية خارج النطاق
+      src: "19ff6e327ab1"
+    KeyError.key:
+      text: '{key}'
+      src: "359598810a84"
+    ValueError.int_literal:
+      text: 'قيمة حرفية غير صالحة للدالة int() بالأساس {base}: {value}'
+      src: "5c2d2025ce46"
+    ValueError.too_many_unpack:
+      text: قيم أكثر من اللازم لفك التجميع (المتوقع {expected})
+      src: "99194cd80d92"
+    ValueError.not_enough_unpack:
+      text: لا توجد قيم كافية لفك التجميع (المتوقع {expected}، الموجود {got})
+      src: "772615981147"
+    ZeroDivisionError.division_by_zero:
+      text: القسمة على صفر
+      src: "2bc124600496"
+    ZeroDivisionError.float_division:
+      text: قسمة عدد عشري على صفر
+      src: "8e186aca0f88"
+    ZeroDivisionError.int_division_or_modulo:
+      text: قسمة صحيحة أو باقي قسمة على صفر
+      src: "5c6f15550dfe"
+    IndentationError.expected_block:
+      text: كان متوقعا وجود كتلة بإزاحة بعد جملة '{statement}' في السطر {line}
+      src: "a88bac6eca5e"
+    IndentationError.unexpected_indent:
+      text: إزاحة غير متوقعة
+      src: "769bc4baab39"
+    IndentationError.unindent_mismatch:
+      text: تقليل الإزاحة لا يطابق أي مستوى إزاحة خارجي
+      src: "857d1309faee"
+    TabError.inconsistent:
+      text: استخدام غير متسق لعلامات الجدولة والمسافات في الإزاحة
+      src: "7af3a6997073"
+    FileNotFoundError.enoent:
+      text: '[Errno {errno}] لا يوجد ملف أو مجلد بهذا الاسم: {filename}'
+      src: "14c6c5ea69c2"
+    RecursionError.max_depth:
+      text: تم تجاوز الحد الأقصى لعمق الاستدعاء الذاتي
+      src: "34e02bfc2281"
+    UnboundLocalError.before_assignment:
+      text: تمت الإشارة إلى المتغير المحلي '{name}' قبل إسناده
+      src: "2ba5fbdd7304"
+    RuntimeError.generator_raised_stopiteration:
+      text: أطلق المولد StopIteration
+      src: "f447bdc1634b"
+    StopIteration.no_value:
+      text: ''
+      src: "e3b0c44298fc"
+    KeyboardInterrupt.interrupt:
+      text: ''
+      src: "e3b0c44298fc"
+    AssertionError.no_message:
+      text: ''
+      src: "e3b0c44298fc"
 metadata:
   python_version_min: '3.10'
   python_version_max: '3.13'
   compatibility_tested:
   - '3.10'
-  last_updated: '2026-07-28'
+  last_updated: '2026-11-17'
   community_reviewed: false
   author: Legesher Team (Aya AI Model)
   license: Apache-2.0

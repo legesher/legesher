@@ -30,6 +30,13 @@ CORE-1400 contract — pack regeneration is safe because:
   file, and is OPTIONAL — a language with none exports exactly as it did
   before the partition existed. A section that is present but incomplete
   is skipped with a warning rather than emitted half-filled.
+- The ``messages`` section (CORE-2630) reads the messages partition
+  (``message_templates`` joined to ``message_translations``) instead. Each
+  translation is written into the file of the Python version its English
+  wording entered at, with the fingerprint of that wording, and is
+  re-checked against the catalog's join rules on the way out. It is
+  OPTIONAL and may be PARTIAL: a message with no translation prints in
+  English, so a locale can gain messages one at a time.
 - Existing file header comments, metadata, and key order are preserved;
   ``metadata.last_updated`` only changes when section content changed.
 - An existing pack file that cannot be parsed, or does not parse to a
@@ -70,6 +77,7 @@ CORE-1400 contract — pack regeneration is safe because:
   ``[tool.uv.sources]`` override, no version reset).
 """
 
+import json
 import logging
 import unicodedata
 from datetime import datetime
@@ -79,6 +87,14 @@ import yaml
 
 from legesher_i18n.db import TranslationDatabase
 from legesher_i18n.language_registry import get_language_name, get_native_name
+from legesher_i18n.pack_messages import (
+    DEFAULT_STATUS,
+    IMPLEMENTATION_TARGETS,
+    MESSAGES_SECTION,
+    bidi_controls,
+    entry_problem,
+    message_fingerprint,
+)
 from legesher_i18n.schema_validator import SchemaValidator
 from legesher_i18n.selection import is_valid_pack_value, vocabulary_value_error
 from legesher_i18n.term_definitions import (
@@ -165,6 +181,12 @@ _XID_ONLY_FROM_CPYTHON_313 = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
 #   carries either section yet, and each must keep exporting unchanged — but a
 #   half-filled section is never emitted either. See
 #   ``_build_vocabulary_sections``.
+#
+# CORE-2630 appends the ``messages`` section: localized error-message
+# templates, nested by implementation and keyed by catalog key. Its source is
+# the messages partition, its tiering follows each English wording's
+# ``version_added``, and it is partial by design. See
+# ``_build_message_sections``.
 _PACK_SECTIONS = (
     "keywords",
     "builtins",
@@ -172,6 +194,48 @@ _PACK_SECTIONS = (
     "implicit_params",
     "symbols",
     "variable_conventions",
+    MESSAGES_SECTION,
+)
+
+#: The pack files the exporter writes, oldest first.
+_PACK_VERSIONS = ("3.10", "3.11", "3.12", "3.13", "3.14")
+
+
+class _QuotedStr(str):
+    """A string the pack writer always emits double-quoted.
+
+    Used for a message's ``src``. Twelve hex digits can be all digits, or
+    look like a number in exponent form (``1e12``) to a YAML 1.2 reader;
+    quoting keeps every reader on the string. Applied only inside
+    :meth:`YAMLExporter._write_yaml_pack`, so the sections the exporter
+    builds stay plain data.
+    """
+
+
+def _quote_message_sources(messages: dict) -> dict:
+    """``messages`` with every entry's ``src`` wrapped in :class:`_QuotedStr`."""
+    return {
+        implementation: {
+            key: (
+                {**entry, "src": _QuotedStr(entry["src"])}
+                if isinstance(entry, dict) and isinstance(entry.get("src"), str)
+                else entry
+            )
+            for key, entry in entries.items()
+        }
+        for implementation, entries in messages.items()
+    }
+
+
+class _PackDumper(yaml.Dumper):
+    """The pack writer's dumper: the default one, plus :class:`_QuotedStr`."""
+
+
+_PackDumper.add_representer(
+    _QuotedStr,
+    lambda dumper, value: dumper.represent_scalar(
+        "tag:yaml.org,2002:str", str(value), style='"'
+    ),
 )
 
 # The subset of _PACK_SECTIONS that comes from the term layer. Everything
@@ -202,6 +266,16 @@ class InterpreterFloorCollisionError(ValueError):
     """Interpreter-floor stripping would collapse two distinct terms."""
 
 
+class UnplaceableMessageError(ValueError):
+    """A message translation belongs to a Python version with no pack file.
+
+    A translation is written into the file of the version its English
+    wording entered at. A wording that entered after the newest pack file
+    has nowhere to go, and putting it in an older file would make it
+    visible on interpreters that never print it.
+    """
+
+
 class UnstrippableXIDError(ValueError):
     """A canonical value needs a 3.13-only character that cannot be removed.
 
@@ -222,6 +296,7 @@ _DATA_INTEGRITY_FAILURES = (
     IncompleteSelectionError,
     InterpreterFloorCollisionError,
     UnparseablePackError,
+    UnplaceableMessageError,
     UnstrippableXIDError,
 )
 
@@ -553,6 +628,100 @@ class YAMLExporter:
             resolved[section] = {slug: values[slug] for slug in expected}
         return resolved
 
+    def _build_message_sections(self, language_code: str) -> dict[str, dict]:
+        """Resolve the ``messages`` section of each pack file (CORE-2630).
+
+        Returns ``{version: {"messages": {implementation: {key: entry}}}}``
+        for the versions that carry at least one translation. Each entry is
+        ``text`` and ``src``, plus ``status`` when the review rung is not
+        ``machine``.
+
+        Rules, each because the alternative fails quietly:
+
+        1. **Optional and partial.** A language with no message translations
+           exports exactly as before, and one with some exports those. An
+           untranslated message prints in English, which a reader can tell
+           apart from a wrong translation.
+        2. **Placed by wording.** A translation goes into the file of the
+           version its English template's ``version_added`` names (none
+           means the base file). A later wording of the same key overrides
+           it from its own file through ``extends``. A version with no pack
+           file raises :class:`UnplaceableMessageError`.
+        3. **Re-checked on the way out.** Every entry must pass the
+           catalog's join rules (:func:`legesher_i18n.pack_messages.entry_problem`)
+           and carry no bidi control. The partition's writers refuse such a
+           row, so seeing one means the database is damaged:
+           :class:`CorruptSelectionError`.
+        4. **Catalog order.** Entries are written in template id order, the
+           seeder's insertion order, so a regeneration is byte-reproducible.
+
+        A database without the messages partition yields nothing. Only the
+        implementations whose messages live in Python packs are read.
+
+        Raises:
+            CorruptSelectionError: If a stored translation fails a join rule.
+            UnplaceableMessageError: If a wording entered at a version with
+                no pack file.
+        """
+        connection = self.db._get_connection()
+        has_partition = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' "
+            "AND name IN ('message_templates', 'message_translations')"
+        ).fetchall()
+        if len(has_partition) < 2:
+            return {}
+
+        resolved: dict[str, dict] = {}
+        for implementation, target in IMPLEMENTATION_TARGETS.items():
+            if target != "python":
+                continue
+            rows = connection.execute(
+                "SELECT t.key, t.template_en, t.placeholders, t.version_added, "
+                "       tr.template, tr.status "
+                "FROM message_templates t "
+                "JOIN message_translations tr "
+                "  ON tr.template_id = t.id AND tr.locale = ? "
+                "WHERE t.implementation = ? AND t.matcher IS NOT NULL "
+                "ORDER BY t.id",
+                (language_code, implementation),
+            ).fetchall()
+            for key, template_en, placeholders, added, text, status in rows:
+                version = added or _PACK_VERSIONS[0]
+                where = f"'{language_code}' {implementation} {key} at {version}"
+                if version not in _PACK_VERSIONS:
+                    raise UnplaceableMessageError(
+                        f"Message translation {where}: the English wording "
+                        f"entered at Python {version}, which has no pack file "
+                        f"(pack files: {', '.join(_PACK_VERSIONS)})."
+                    )
+                entry: dict[str, str] = {
+                    "text": text,
+                    "src": message_fingerprint(template_en),
+                }
+                if status != DEFAULT_STATUS:
+                    entry["status"] = status
+                try:
+                    declared = [p["name"] for p in json.loads(placeholders or "[]")]
+                except (ValueError, TypeError, KeyError) as exc:
+                    raise CorruptSelectionError(
+                        f"Message template {where} has unreadable placeholders "
+                        f"({exc}); the messages partition is damaged."
+                    ) from exc
+                problem = entry_problem(
+                    entry, template_en=template_en, placeholders=declared
+                )
+                controls = bidi_controls(text) if isinstance(text, str) else []
+                if problem is not None or controls:
+                    raise CorruptSelectionError(
+                        f"Message translation {where} fails the pack rules "
+                        f"({problem or f'bidi controls {controls}'}); the "
+                        f"partition's writers refuse such a row, so the "
+                        f"database is damaged."
+                    )
+                messages = resolved.setdefault(version, {MESSAGES_SECTION: {}})
+                messages[MESSAGES_SECTION].setdefault(implementation, {})[key] = entry
+        return resolved
+
     @staticmethod
     def _raise_unstrippable(
         language_code: str,
@@ -715,6 +884,11 @@ class YAMLExporter:
         # slots and BEFORE any write, keeping the "nothing reaches disk
         # until everything resolves" property intact.
         sections["3.10"].update(self._build_vocabulary_sections(language_code))
+        # Messages are placed by the version their English wording entered
+        # at, so they can land in any file (CORE-2630). Same rule: resolved
+        # before anything is written.
+        for version, extra in self._build_message_sections(language_code).items():
+            sections[version].update(extra)
 
         lang_name = get_language_name(language_code)
         # (file, version, extends, header used only for a file created
@@ -927,13 +1101,17 @@ class YAMLExporter:
             existing_section = existing_data.get(section) or {}
             if dict(existing_section) != new_values:
                 content_changed = True
-            emit_empty = (
+            emit_empty = section != MESSAGES_SECTION and (
                 section in existing_data
                 if file_exists
                 else section in ("keywords", "exceptions")
             )
             if new_values or emit_empty:
                 yaml_data[section] = self._order_section(new_values, existing_section)
+        if MESSAGES_SECTION in yaml_data:
+            yaml_data[MESSAGES_SECTION] = _quote_message_sources(
+                yaml_data[MESSAGES_SECTION]
+            )
 
         existing_metadata = existing_data.get("metadata", {}) or {}
         today = datetime.now().strftime("%Y-%m-%d")
@@ -970,6 +1148,7 @@ class YAMLExporter:
             yaml.dump(
                 yaml_data,
                 f,
+                Dumper=_PackDumper,
                 default_flow_style=False,
                 allow_unicode=True,
                 sort_keys=False,

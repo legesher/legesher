@@ -21,6 +21,7 @@ import pytest
 import legesher_i18n
 from legesher_i18n import messages
 from legesher_i18n.messages import load_catalog, match_message
+from legesher_i18n.pack_loader import LanguagePackLoader
 from scripts.activate_messages_partition import activate
 from scripts.seed_message_templates import (
     seed_database,
@@ -86,6 +87,19 @@ def one_template_seed(implementation: str = "cpython") -> dict:
             }
         ],
     }
+
+
+@pytest.fixture(autouse=True)
+def no_packs(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Hide the language packs, so these tests read the seed's translations.
+
+    Since the Spanish and Arabic packs carry their messages, an install
+    reads translations from the pack and the seed's own translations only
+    for a locale whose pack carries none (CORE-2630). This module holds that
+    seed path; the pack path is held by ``test_messages_pack_join.py`` and
+    ``translate/test_export_messages.py``.
+    """
+    monkeypatch.setattr(LanguagePackLoader, "_discover_packs", lambda self: {})
 
 
 @pytest.fixture

@@ -8,13 +8,27 @@ extends: 3.11.yml
 keywords:
   type: النوع
 exceptions: {}
+messages:
+  cpython:
+    SyntaxError.import_from_suggestion:
+      text: هل قصدت استخدام 'from ... import ...' بدلا من ذلك؟
+      src: "b053b27c081a"
+    SyntaxError.fstring_valid_expression:
+      text: 'f-string: مطلوب تعبير صالح قبل ''}'''
+      src: "bfe717d949a3"
+    NameError.self_suggestion:
+      text: 'الاسم ''{name}'' غير معرف. هل قصدت: ''self.{name}''؟'
+      src: "d2866b953d09"
+    NameError.forgot_import:
+      text: الاسم '{name}' غير معرف. هل نسيت استيراد '{module}'؟
+      src: "cc879a1eb956"
 metadata:
   python_version_min: '3.12'
   python_version_max: '3.13'
   compatibility_tested:
   - '3.12'
   - '3.13'
-  last_updated: '2026-01-26'
+  last_updated: '2026-11-17'
   community_reviewed: false
   author: Legesher Team
   license: Apache-2.0
