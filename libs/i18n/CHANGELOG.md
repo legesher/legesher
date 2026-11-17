@@ -20,8 +20,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   checks the section's shape only. Whether a well-formed message is usable
   is decided where the catalog is read, so such a message the catalog cannot
   use never makes a pack unloadable. No shipped pack carries the section
-  yet, and nothing reads it at run time yet. See `docs/pack-messages.md`.
-  [CORE-2630]
+  yet. See `docs/pack-messages.md`. [CORE-2630]
 - **The error-message catalog reads translations from the language pack.**
   With no translations database, `load_catalog` takes the English side from
   the catalog seed and the translations from the pack's `messages` section
