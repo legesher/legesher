@@ -702,6 +702,18 @@ def _shipped_tiers() -> list[object]:
     return tiers
 
 
+def test_the_tier_list_covers_every_shipped_pack_file() -> None:
+    """The parametrization below is only as wide as this list."""
+    on_disk = {
+        (path.parents[2].name, path.stem)
+        for path in (LIB_ROOT / "language-packs" / "python").glob(
+            "*/legesher_i18n_python_*/packs/3.*.yml"
+        )
+    }
+    listed = {tuple(tier.values) for tier in _shipped_tiers()}
+    assert on_disk and listed == on_disk
+
+
 @pytest.mark.parametrize(("language", "version"), _shipped_tiers())
 def test_every_shipped_pack_loads_with_a_well_formed_section(
     language: str, version: str

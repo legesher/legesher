@@ -41,7 +41,7 @@ rendering belongs to the pack.
 - An entry is a mapping with two required fields:
   - `text`: the localized template. Placeholders are written `{name}`.
   - `src`: twelve lowercase hex digits. Always write it quoted. Unquoted,
-    some values read as numbers (`123456789012`, `0b0101010101`, or `1e1234567890`
+    some values read as numbers (`123456789012`, `0b0101010101`, or `1234567890e1`
     to a YAML 1.2 reader such as the editor extension's).
 - An entry may carry other fields, under any field name. A pack load does
   not examine them.
