@@ -316,8 +316,11 @@ class TreeSitterTranslator:
                 # Short-circuit on empty map to avoid the per-identifier dict
                 # lookup overhead for packs that don't ship implicit_params.
                 # Keywords still win on conflict (handled above with early return).
-                elif implicit_param_map := self.mapper.implicit_param_map:
-                    translated = implicit_param_map.get(text)
+                # The lookup goes through the mapper, like the two above, so a
+                # spelling Python reads as the same name (NFKC-equal) is the
+                # same implicit parameter.
+                elif self.mapper.implicit_param_map:
+                    translated = self.mapper.get_implicit_param(text)
                     if translated and translated != text:
                         replacements.append(
                             (node.start_byte, node.end_byte, translated)

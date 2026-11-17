@@ -9,6 +9,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- An implicit parameter (`self`, `cls`) typed in another Unicode form of the
+  pack's word translates as that word, in the token and tree-sitter backends,
+  as keywords and builtins already do. This covers decomposed text (as macOS
+  produces), fullwidth letters, presentation forms and ligatures, all of which
+  Python reads as the same name. Before, the tree-sitter backend left a
+  decomposed spelling untranslated and both backends left a compatibility
+  spelling, so the English form held a second name.
+
 ## [0.25.1] - 2026-11-03
 
 ## [0.25.0] - 2026-11-03

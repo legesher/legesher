@@ -29,6 +29,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the code-language picker still wins on every page. [CORE-2760]
 - **legesher-vscode**: 0.1.8. The extension icon is 512 by 512 pixels, within the
   Visual Studio Marketplace's 1024 by 1024 limit, so the package can be published.
+- **core**: an implicit parameter (`self`, `cls`) typed in another Unicode form
+  of the pack's word (decomposed, fullwidth, a presentation form or a ligature)
+  translates as that word, as keywords and builtins already do.
 
 ## [0.25.1] - 2026-11-03
 

@@ -263,9 +263,12 @@ class TokenTranslator:
                     # Try to translate as reserved word (CORE-710: self, cls).
                     # Short-circuit when the map is empty — most callers (and
                     # all pre-CORE-710 ones) don't pass implicit_param_map, and
-                    # the extra dict.get() costs ~6% on the hot path otherwise.
-                    if implicit_param_map := self.mapper.implicit_param_map:
-                        translated = implicit_param_map.get(lookup)
+                    # the extra lookup costs ~6% on the hot path otherwise.
+                    # The lookup goes through the mapper, like the two above,
+                    # so a spelling Python reads as the same name (NFKC-equal)
+                    # is the same implicit parameter.
+                    if self.mapper.implicit_param_map:
+                        translated = self.mapper.get_implicit_param(lookup)
                         if translated and translated != tok.string:
                             new_tok = tokenize.TokenInfo(
                                 tok.type,

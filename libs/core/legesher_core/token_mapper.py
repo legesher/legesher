@@ -1,7 +1,49 @@
-"""Token mapper abstraction for language translation maps.
+"""Token mapper: the lookup contract for pack words.
 
-This module provides the TokenMapper class which abstracts language map lookups,
-preparing for future integration with the version-aware language pack system (CORE-345).
+``TokenMapper`` answers one question for both translator backends: is this
+name a pack word, and if so, what does it translate to. How it compares the
+name with the table is the engine's half of the text-identity contract
+(store NFC, compare NFKC), and this module is where that half is stated.
+
+**The contract.** Every lookup (keyword, builtin or exception, implicit
+parameter) tries the name as given and, only when that misses, tries the
+name's NFKC form against an index of the table's keys folded the same way.
+That is "normalize both sides before comparing", done at the lookup and not
+at the lexer:
+
+- The relation is Python's own. Python folds identifiers with NFKC when it
+  parses them (PEP 3131), so two NFKC-equal spellings are one name to the
+  interpreter. Reading them as one pack word keeps the engine from splitting
+  a name Python would not split.
+- The source text is never rewritten to a normal form. A name that is not a
+  pack word keeps its bytes, and a name that is one is replaced by the
+  table's target. Normalizing at the lexer would change text the author
+  wrote, which the round trip has to return byte for byte.
+- An exact match wins, so a pack whose words already match byte for byte
+  behaves as it would with no fallback.
+- Case is not folded. Case distinguishes Python names (``Print`` is not
+  ``print``), so the lookup must not merge them.
+  ``text_identity.compare_key`` adds a case fold for a different question:
+  whether two coined names are too alike to coexist.
+
+**What the fallback reaches.** Decomposed text (NFD, as macOS produces),
+compatibility forms (fullwidth letters, Arabic and Hebrew presentation
+forms), ligatures, and Thai SARA AM (U+0E33), which NFKC decomposes.
+``tests/unit/test_denormalized_spellings.py`` holds every word of every
+shipped pack to this in both backends.
+
+**Collisions.** Two keys of one table that fold to the same NFKC form with
+different targets cannot both be reached through the fallback; the index
+keeps the first and logs a warning. Shipped packs do not get there. The pack
+validator refuses a value that is not already stable under NFC and NFKC
+(``legesher_i18n.schema_validator.SchemaValidator.check_normalization``,
+finding code ``nfkc-instability``, with SARA AM as its one allowance), so
+that rule is the authoring-time check and the warning here is the load-time
+backstop for a table built by hand.
+
+The ``is_*`` predicates are exact-match membership tests on the table as
+given. They do not apply the fallback; use the ``get_*`` lookups to decide
+how a name in source text translates.
 """
 
 import logging
@@ -73,10 +115,11 @@ class TokenMapper:
         self.builtin_map = builtin_map
         self.implicit_param_map = implicit_param_map or {}
 
-        # Additive NFKC-normalized indexes. Exact lookups still win; these are
-        # consulted only as a fallback so the packs that already match exactly
-        # are unaffected. Fixes silent breaks like the Thai SARA-AM (U+0E33)
-        # round-trip and the fullwidth 'ｉｆ' -> 'if' spoof.
+        # Additive NFKC-normalized indexes (the contract in the module
+        # docstring). Exact lookups still win; these are consulted only as a
+        # fallback so the packs that already match exactly are unaffected.
+        # Fixes silent breaks like the Thai SARA-AM (U+0E33) round-trip and
+        # the fullwidth 'ｉｆ' -> 'if' spoof.
         self._keyword_nfkc = self._build_nfkc_index(self.keyword_map)
         self._builtin_nfkc = self._build_nfkc_index(self.builtin_map)
         self._reserved_nfkc = self._build_nfkc_index(self.implicit_param_map)
