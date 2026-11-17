@@ -17,9 +17,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   template it translates. The loader merges the section per key along the
   `extends` chain, including a section that appears only in a later
   version's file, and exposes it as `LanguagePack.messages`. A pack load
-  checks the section's shape only. Whether a message is usable is decided
-  where the catalog is read, so a message the catalog cannot use never makes
-  a pack unloadable. No shipped pack carries the section yet, and nothing
+  checks the section's shape only. Whether a well-formed message is usable
+  is decided where the catalog is read, so such a message the catalog cannot
+  use never makes a pack unloadable. No shipped pack carries the section yet, and nothing
   reads it at run time yet. See `docs/pack-messages.md`. [CORE-2630]
 
 ## [0.25.1] - 2026-11-03

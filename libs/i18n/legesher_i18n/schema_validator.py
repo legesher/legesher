@@ -394,9 +394,11 @@ class LanguagePackSchema(BaseModel):
 
     # Localized error messages (CORE-2630). Defaults empty, so a pack
     # without the section validates unchanged. An entry is an open mapping
-    # on purpose: only its shape is checked at load, and a field a later
-    # release adds must not make the pack unloadable on this one.
-    messages: dict[str, dict[str, dict[str, Any]]] = Field(default_factory=dict)
+    # on purpose, field names included (YAML reads ``on:`` or ``1:`` as a
+    # non-string key): only ``text`` and ``src`` are checked at load, and a
+    # field a later release adds must not make the pack unloadable on this
+    # one.
+    messages: dict[str, dict[str, dict[Any, Any]]] = Field(default_factory=dict)
 
     # Metadata
     metadata: LanguagePackMetadata | None = None

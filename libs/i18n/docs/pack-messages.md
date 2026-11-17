@@ -40,9 +40,11 @@ rendering belongs to the pack.
   (`traceback.frame`, `NameError.not_defined`). Keys are never localized.
 - An entry is a mapping with two required fields:
   - `text`: the localized template. Placeholders are written `{name}`.
-  - `src`: twelve lowercase hex digits. Quote a value made only of digits,
-    or YAML reads it as a number.
-- An entry may carry other fields. A pack load does not examine them.
+  - `src`: twelve lowercase hex digits. Always write it quoted. Unquoted,
+    some values read as numbers (`123456789012`, `0b0101010101`, or `1e1234567890`
+    to a YAML 1.2 reader such as the editor extension's).
+- An entry may carry other fields, under any field name. A pack load does
+  not examine them.
 
 ## What a pack load checks
 

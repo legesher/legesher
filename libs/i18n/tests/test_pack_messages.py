@@ -28,8 +28,10 @@ from legesher_i18n.schema_validator import (
     TRANSLATION_SECTIONS,
     VOCABULARY_SECTIONS,
     LanguagePackSchema,
+    SchemaValidator,
 )
 from legesher_i18n.script_policy import BIDI_CONTROLS
+from tests.interpreter_gaps import NEEDS_UNICODE_15_1
 
 LIB_ROOT = Path(__file__).parent.parent
 
@@ -214,6 +216,70 @@ class TestStructureRules:
         errors = messages_structure_errors(messages)
         assert len(errors) == 4
 
+    def test_problems_after_the_first_bad_name_are_still_reported(self) -> None:
+        """The bad items come first here, so stopping at one would show."""
+        messages = {
+            "Bad_One": {"NameError.not_defined": entry(DEVANAGARI)},
+            "Bad-Two": {"NameError.not_defined": entry(DEVANAGARI)},
+            "cpython": {
+                "bad key": entry(ARABIC),
+                "also bad": entry(ARABIC),
+                "NameError.not_defined": {"text": 7, "src": SRC_A},
+            },
+        }
+        errors = messages_structure_errors(messages)
+        assert len(errors) == 5
+        assert sum("'Bad_One'" in e or "'Bad-Two'" in e for e in errors) == 2
+        assert sum("'bad key'" in e or "'also bad'" in e for e in errors) == 2
+
+    def test_a_missing_text_is_named_with_its_path(self) -> None:
+        errors = messages_structure_errors(
+            section(NameError__not_defined={"src": SRC_A})
+        )
+        assert errors == [
+            "messages.cpython.NameError.not_defined: 'text' must be a string, "
+            "got NoneType"
+        ]
+
+    @pytest.mark.parametrize("implementation", ["c_python", "py3_13"])
+    def test_an_underscore_in_an_implementation_name_is_named(
+        self, implementation: str
+    ) -> None:
+        errors = messages_structure_errors(
+            {implementation: {"NameError.not_defined": entry(DEVANAGARI)}}
+        )
+        assert len(errors) == 1 and repr(implementation) in errors[0]
+
+    @pytest.mark.parametrize("key", ["NameError.not-defined", "Name-Error.not_defined"])
+    def test_a_hyphen_in_a_key_is_named(self, key: str) -> None:
+        errors = messages_structure_errors({"cpython": {key: entry(DEVANAGARI)}})
+        assert len(errors) == 1 and repr(key) in errors[0]
+
+    @pytest.mark.parametrize("control", sorted(BIDI_CONTROLS))
+    def test_a_bidi_control_at_either_end_of_text_is_named(self, control: str) -> None:
+        for text in (control + ARABIC, ARABIC + control, f" {control} "):
+            errors = messages_structure_errors(
+                section(NameError__not_defined=entry(text))
+            )
+            assert len(errors) == 1, (text, errors)
+            assert f"U+{ord(control):04X}" in errors[0]
+
+    def test_an_error_never_echoes_a_huge_value(self) -> None:
+        """Aliases can build an enormous value from a small file."""
+        huge = ["नाम" * 1000] * 1000
+        errors = messages_structure_errors(
+            {
+                "X" * 10_000: {},
+                "cpython": {
+                    "y" * 10_000: entry(DEVANAGARI),
+                    "NameError.not_defined": {"text": huge, "src": huge},
+                },
+            }
+        )
+        assert len(errors) == 4
+        assert all(len(error) < 400 for error in errors), [len(e) for e in errors]
+        assert any("got list" in error for error in errors)
+
     def test_fields_beyond_text_and_src_are_not_examined(self) -> None:
         """The catalog decides what an entry means; the load checks shape."""
         messages = section(
@@ -271,6 +337,25 @@ class TestSchemaField:
         assert "messages.cpython.NameError.not_defined: 'src'" in message
         assert "messages.cpython.traceback.frame: 'text'" in message
         assert "'bad key'" in message
+
+    @pytest.mark.parametrize("value", [[], "", 0, False])
+    def test_a_falsy_section_that_is_not_a_mapping_fails_validation(
+        self, value: object
+    ) -> None:
+        with pytest.raises(ValidationError, match="messages: must be a mapping"):
+            make_schema(messages=value)
+
+    @pytest.mark.parametrize("field", [True, False, 1, None, 3.5])
+    def test_an_entry_field_name_that_is_not_a_string_is_not_examined(
+        self, field: object
+    ) -> None:
+        """YAML reads ``on:``, ``yes:``, ``1:`` and ``null:`` as non-strings."""
+        schema = make_schema(
+            messages=section(
+                NameError__not_defined=entry(ARABIC, **{"_": 0}) | {field: 1}
+            )
+        )
+        assert schema.messages["cpython"]["NameError.not_defined"][field] == 1
 
     def test_extra_entry_fields_are_kept(self) -> None:
         schema = make_schema(
@@ -371,6 +456,24 @@ class TestMerge:
         assert override == {
             "messages": section(traceback__frame=entry(DEVANAGARI, SRC_B))
         }
+
+    def test_a_null_implementation_in_the_base_is_not_hidden_by_an_overlay(
+        self,
+    ) -> None:
+        merged = LanguagePackLoader()._merge_packs(
+            base={"messages": {"cpython": None}},
+            override={"messages": section(NameError__not_defined=entry(ARABIC))},
+        )
+        assert merged["messages"] == {"cpython": None}
+        assert messages_structure_errors(merged["messages"]) != []
+
+    def test_a_null_implementation_in_the_overlay_is_not_inherit(self) -> None:
+        merged = LanguagePackLoader()._merge_packs(
+            base={"messages": section(NameError__not_defined=entry(ARABIC))},
+            override={"messages": {"cpython": None}},
+        )
+        assert merged["messages"] == {"cpython": None}
+        assert messages_structure_errors(merged["messages"]) != []
 
     @pytest.mark.parametrize(
         ("base", "override"),
@@ -547,15 +650,65 @@ class TestLoading:
         pack = loader.load("zz", version="3.10")
         assert "messages=1" in repr(pack)
 
+    def test_the_repr_counts_entries_across_implementations(
+        self, tmp_path: Path
+    ) -> None:
+        loader = write_pack_tree(
+            tmp_path,
+            {
+                "3.10": {
+                    "keywords": {"def": "परिभाषा"},
+                    "messages": {
+                        "cpython": {
+                            "NameError.not_defined": entry(ARABIC),
+                            "traceback.frame": entry(DEVANAGARI, SRC_B),
+                        },
+                        "pypy": {"NameError.not_defined": entry(ARABIC)},
+                    },
+                }
+            },
+        )
+        assert "messages=3" in repr(loader.load("zz", version="3.10"))
 
-@pytest.mark.parametrize("language", get_active_language_codes())
-def test_every_shipped_pack_loads_with_a_well_formed_section(language: str) -> None:
+
+def _shipped_tiers() -> list[object]:
+    """Every (language, version) the packs ship, from the registry and the loader.
+
+    A tier whose merged values carry a character that is an identifier
+    character only under Unicode 15.1 is marked with the interpreter-gap
+    ledger: on 3.10 to 3.12 the schema rejects its identifiers before
+    ``messages`` is reached.
+    """
+    loader = LanguagePackLoader()
+    only_from_313 = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
+    tiers: list[object] = []
+    for language in get_active_language_codes():
+        for version in loader.list_available_versions():
+            path = loader._get_pack_path(language, "python", version)
+            data, _ = loader._resolve_inheritance(path, set())
+            values = "".join(
+                str(value)
+                for name in (*TRANSLATION_SECTIONS, *VOCABULARY_SECTIONS)
+                for value in (data.get(name) or {}).values()
+            )
+            marks = (
+                [NEEDS_UNICODE_15_1]
+                if any(ch in only_from_313 for ch in values)
+                else []
+            )
+            tiers.append(
+                pytest.param(language, version, marks=marks, id=f"{language}-{version}")
+            )
+    return tiers
+
+
+@pytest.mark.parametrize(("language", "version"), _shipped_tiers())
+def test_every_shipped_pack_loads_with_a_well_formed_section(
+    language: str, version: str
+) -> None:
     """Holds before and after packs carry messages: the section, when present,
     passes the structural rules at every version the pack ships."""
-    loader = LanguagePackLoader()
-    for version in loader.list_available_versions():
-        try:
-            pack = loader.load(language, version=version, enforce_min_interpreter=False)
-        except Exception as exc:  # pragma: no cover - a failure names the file
-            pytest.fail(f"{language} {version}: {type(exc).__name__}: {exc}")
-        assert messages_structure_errors(pack.messages) == [], (language, version)
+    pack = LanguagePackLoader().load(
+        language, version=version, enforce_min_interpreter=False
+    )
+    assert messages_structure_errors(pack.messages) == []

@@ -27,6 +27,7 @@ An entry may therefore carry fields this module does not name.
 from __future__ import annotations
 
 import re
+import reprlib
 from typing import Any
 
 from .script_policy import BIDI_CONTROLS
@@ -60,6 +61,20 @@ MESSAGE_SRC_PATTERN = re.compile(r"[0-9a-f]{12}")
 FORBIDDEN_BIDI = frozenset(ord(ch) for ch in BIDI_CONTROLS)
 
 
+#: Bounded repr for values quoted in an error. A pack value can be built from
+#: YAML aliases into something very large; an error must never echo all of it.
+_SHORT = reprlib.Repr()
+_SHORT.maxstring = 60
+_SHORT.maxother = 60
+_SHORT.maxlevel = 2
+_SHORT.maxlist = _SHORT.maxtuple = _SHORT.maxdict = _SHORT.maxset = 3
+
+
+def _short(value: Any) -> str:
+    """A repr of ``value`` short enough to put in an error message."""
+    return _SHORT.repr(value)
+
+
 def bidi_controls(text: str) -> list[str]:
     """The forbidden bidi control codepoints ``text`` carries, as U+ labels."""
     return [f"U+{ord(ch):04X}" for ch in text if ord(ch) in FORBIDDEN_BIDI]
@@ -90,7 +105,7 @@ def messages_structure_errors(messages: Any) -> list[str]:
             implementation, str
         ) or not MESSAGE_IMPLEMENTATION_PATTERN.fullmatch(implementation):
             errors.append(
-                f"messages: implementation name {implementation!r} must be "
+                f"messages: implementation name {_short(implementation)} must be "
                 "lowercase letters and digits"
             )
             continue
@@ -104,7 +119,7 @@ def messages_structure_errors(messages: Any) -> list[str]:
             path = f"{where}.{key}"
             if not isinstance(key, str) or not MESSAGE_KEY_PATTERN.fullmatch(key):
                 errors.append(
-                    f"{where}: message key {key!r} is not a catalog key "
+                    f"{where}: message key {_short(key)} is not a catalog key "
                     "(for example 'NameError.not_defined')"
                 )
                 continue
@@ -116,7 +131,9 @@ def messages_structure_errors(messages: Any) -> list[str]:
                 continue
             text = entry.get("text")
             if not isinstance(text, str):
-                errors.append(f"{path}: 'text' must be a string, got {text!r}")
+                errors.append(
+                    f"{path}: 'text' must be a string, got {type(text).__name__}"
+                )
             else:
                 controls = bidi_controls(text)
                 if controls:
@@ -127,6 +144,7 @@ def messages_structure_errors(messages: Any) -> list[str]:
             src = entry.get("src")
             if not isinstance(src, str) or not MESSAGE_SRC_PATTERN.fullmatch(src):
                 errors.append(
-                    f"{path}: 'src' must be twelve lowercase hex digits, got {src!r}"
+                    f"{path}: 'src' must be twelve lowercase hex digits, "
+                    f"got {_short(src)}"
                 )
     return errors

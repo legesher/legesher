@@ -97,7 +97,7 @@ class LanguagePack:
     members: dict[str, str] = field(default_factory=dict)
     symbols: dict[str, str] = field(default_factory=dict)
     variable_conventions: dict[str, str] = field(default_factory=dict)
-    messages: dict[str, dict[str, dict[str, Any]]] = field(default_factory=dict)
+    messages: dict[str, dict[str, dict[Any, Any]]] = field(default_factory=dict)
     metadata: LanguagePackMetadata | None = None
     extends: str | None = None
     inheritance_chain: list[str] = field(default_factory=list)
@@ -762,12 +762,12 @@ class LanguagePackLoader:
             return override
         merged: dict[Any, Any] = dict(base)
         for implementation, entries in override.items():
-            parent = merged.get(implementation)
-            if parent is None or not isinstance(entries, dict):
+            if implementation not in merged or not isinstance(entries, dict):
                 merged[implementation] = entries
-            elif isinstance(parent, dict):
-                merged[implementation] = {**parent, **entries}
-            # A parent that is not a mapping stays, for the schema to reject.
+            elif isinstance(merged[implementation], dict):
+                merged[implementation] = {**merged[implementation], **entries}
+            # A parent that is not a mapping (``cpython: null`` in the base)
+            # stays, for the schema to reject; an overlay must not hide it.
         return merged
 
     def refresh_discovery(self) -> None:
