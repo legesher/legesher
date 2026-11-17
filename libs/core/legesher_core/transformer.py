@@ -16,6 +16,7 @@ from typing import cast
 from .cultural_comments import CulturalCommentParser
 from .exceptions import InvalidCodeError
 from .name_positions import kept_names
+from .native_punctuation import fold_code_punctuation
 from .token_mapper import TokenMapper
 from .types import CulturalCommentMetadata
 from .utils import validate_utf8_encoding, normalize_newlines
@@ -117,11 +118,13 @@ class TokenTranslator:
 
         Translation process:
         1. Normalize line endings (\\r\\n → \\n)
-        2. Tokenize source code using Python's tokenize module
-        3. Optionally extract cultural comment metadata (for IDE integration)
-        4. For each NAME token, check if it's a keyword or builtin
-        5. Replace with translated version if found in maps
-        6. Reconstruct code using untokenize, preserving formatting
+        2. Read native punctuation in code position as its ASCII mark
+           (``native_punctuation``)
+        3. Tokenize source code using Python's tokenize module
+        4. Optionally extract cultural comment metadata (for IDE integration)
+        5. For each NAME token, check if it's a keyword or builtin
+        6. Replace with translated version if found in maps
+        7. Reconstruct code using untokenize, preserving formatting
 
         Args:
             source_code: Python source code to translate
@@ -162,6 +165,9 @@ class TokenTranslator:
             - A name after a dot, a keyword-argument name and a module path
               keep their spelling even when spelled like a builtin, unless
               the file binds that name itself (``name_positions``, CORE-2237)
+            - Native punctuation in code position (``،`` ``؛`` and fullwidth
+              ``，`` ``；`` ``：`` ``（`` ``）``) is read as ASCII and written as
+              ASCII; inside strings and comments it is preserved
             - Incomplete code is handled gracefully (translates valid portion)
             - Syntax errors return original code unchanged
         """
@@ -177,9 +183,15 @@ class TokenTranslator:
                 return source_code, CulturalCommentMetadata()
             return source_code
 
+        # Native punctuation in code position (an Arabic comma, a fullwidth
+        # parenthesis) is read as its ASCII mark; strings and comments keep
+        # theirs. One character for one, so no offset moves. The text as
+        # given is what a pass-through below hands back.
+        read = fold_code_punctuation(source_code)
+
         try:
             # Tokenize the source code
-            tokens = list(tokenize.generate_tokens(io.StringIO(source_code).readline))
+            tokens = list(tokenize.generate_tokens(io.StringIO(read).readline))
 
             # Extract cultural comment metadata if requested (for IDE integration)
             cultural_metadata: CulturalCommentMetadata | None = None

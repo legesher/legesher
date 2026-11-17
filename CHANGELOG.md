@@ -15,6 +15,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   container image, with the images pinned by digest, the tools by version and
   their dependencies by date. `make test-mcp-docker` builds it and drives a
   session against the image. The README links the server's Glama listing.
+- **core**: the Arabic comma and semicolon (`،` `؛`) and the fullwidth comma,
+  semicolon, colon and parentheses (`，` `；` `：` `（` `）`) are read as their
+  ASCII marks in code position, so a program typed on an Arabic keyboard or
+  with a fullwidth input method translates and runs. Strings and comments keep
+  their marks. The engine never writes these marks: display and the return leg
+  of a round trip carry ASCII punctuation, git stores the file as typed, and
+  the round-trip check reports such source under the new layer `punctuation`.
+  `legesher guard` still refuses the fullwidth marks in code position.
 
 ### Changed
 
