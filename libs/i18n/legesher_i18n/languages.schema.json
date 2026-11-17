@@ -41,6 +41,8 @@
         "bcp47",
         "rtl",
         "has_case_distinction",
+        "numeral_system",
+        "decimal_separator",
         "status"
       ],
       "additionalProperties": false,
@@ -72,6 +74,17 @@
         "has_case_distinction": {
           "type": "boolean",
           "description": "Whether the language's primary script distinguishes upper/lowercase. False for Arabic-family, CJK, Brahmic, SE-Asian, and Ge'ez scripts; true for Latin, Cyrillic, Greek. Used by PromptBuilder (CORE-950) to substitute snake_case for PascalCase identifiers when the script can't represent case."
+        },
+        "numeral_system": {
+          "type": "string",
+          "pattern": "^[a-z]{4,8}$",
+          "description": "CLDR numbering-system identifier of the digits the language writes natively (CLDR's native system for the locale): 'latn' for ASCII 0-9, 'arab' for Arabic-Indic, 'arabext' for Persian and Urdu, 'deva' for Devanagari. The ten digits derive from it (legesher_i18n.numerals)."
+        },
+        "decimal_separator": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1,
+          "description": "Decimal mark written with the native digits: U+066B for 'arab' and 'arabext', '.' otherwise. Stored, because no rule derives it from the digits."
         },
         "status": {
           "type": "string",

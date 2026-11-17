@@ -43,6 +43,7 @@ VSCODE_GENERATED_DIR = REPO_ROOT / "libs" / "vs-code" / "src" / "generated"
 sys.path.insert(0, str(I18N_DIR.parent))
 
 from legesher_i18n.db import TranslationDatabase, default_db_path  # noqa: E402
+from legesher_i18n.numerals import is_known_numeral_system  # noqa: E402
 
 # The canonical language: the language Legesher's Python keywords are authored
 # in. translations.db has no canonical flag, so it is fixed here (this matches
@@ -65,7 +66,8 @@ def load_registry_from_db(db_path: str | Path | None = None) -> dict:
     ``languages.json``: ``{"canonical_language": str, "languages": {code: meta}}``,
     with languages sorted by code and only the published (``in_registry = 1``)
     set included. DB columns are mapped onto the json field names
-    (``native_name`` -> ``native``, ``direction`` -> ``rtl`` boolean).
+    (``native_name`` -> ``native``, ``direction`` -> ``rtl`` boolean);
+    ``numeral_system`` and ``decimal_separator`` keep their names.
 
     Args:
         db_path: Optional path to the SQLite database. Defaults to the canonical
@@ -101,6 +103,26 @@ def load_registry_from_db(db_path: str | Path | None = None) -> dict:
                 f"bcp47={row['bcp47']!r}). The DB must be the complete source of "
                 f"truth for published languages — backfill it before regenerating."
             )
+        # The digits a language writes are a registry fact like its direction:
+        # a published language without them, or with an identifier nothing can
+        # derive digits from, would ship a registry the engine misreads.
+        numeral_system = row.get("numeral_system")
+        decimal_separator = row.get("decimal_separator")
+        if not numeral_system or not is_known_numeral_system(numeral_system):
+            raise ValueError(
+                f"Published language {code!r} has numeral_system "
+                f"{numeral_system!r} in translations.db; it must be a CLDR "
+                f"numbering-system identifier known to legesher_i18n.numerals "
+                f"(run libs/i18n/scripts/set_numeral_systems.py on a database "
+                f"that predates the identifiers)."
+            )
+        if not decimal_separator or len(decimal_separator) != 1:
+            raise ValueError(
+                f"Published language {code!r} has decimal_separator "
+                f"{decimal_separator!r} in translations.db; it must be one "
+                f"character (run libs/i18n/scripts/set_numeral_systems.py on a "
+                f"database that predates the column)."
+            )
         languages[code] = {
             "name": row["name"],
             "native": row["native_name"],
@@ -108,6 +130,8 @@ def load_registry_from_db(db_path: str | Path | None = None) -> dict:
             "bcp47": row["bcp47"],
             "rtl": row["direction"] == "rtl",
             "has_case_distinction": bool(row["has_case_distinction"]),
+            "numeral_system": numeral_system,
+            "decimal_separator": decimal_separator,
             "status": row["status"],
         }
     return {"canonical_language": CANONICAL_LANGUAGE, "languages": languages}

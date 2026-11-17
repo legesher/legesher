@@ -209,9 +209,9 @@ is_valid() before inserting a tag here.
 
 - **`numeral_system`** · `TEXT`
 
-  The locale's native digit system, as recorded in v1
-  `languages.numeral_system` (the JS client pack maps it to a CLDR
-  numbering-system id). NULL when not recorded.
+  The CLDR numbering-system identifier of the digits the locale writes
+  natively (`latn`, `arab`, `arabext`, `deva`, ...), carried over from
+  v1 `languages.numeral_system`. NULL when not recorded.
 
 - **`has_case_distinction`** · `INTEGER` · not null · default `1`
 

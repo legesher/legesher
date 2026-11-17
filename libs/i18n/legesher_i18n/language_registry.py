@@ -11,7 +11,9 @@ Module-level constants:
     LANGUAGE_METADATA: Mapping of language code to metadata dict. Keys are
         ISO 639-1 codes (e.g., ``"es"``, ``"ar"``). Each metadata dict has
         ``name`` (English), ``native`` (native script), ``iso639_2``,
-        ``bcp47``, ``rtl`` (bool), and ``status`` (``"available"`` /
+        ``bcp47``, ``rtl`` (bool), ``numeral_system`` (the CLDR
+        numbering-system identifier of the digits the language writes
+        natively), ``decimal_separator``, and ``status`` (``"available"`` /
         ``"experimental"`` / ``"deprecated"``).
     CANONICAL_LANGUAGE: The language code treated as canonical for git
         storage (typically ``"en"``). Translations are stored in git as
@@ -27,6 +29,8 @@ import json
 from pathlib import Path
 from typing import Literal, TypedDict
 
+from .numerals import LATIN, numeral_system_digits
+
 # Path to the generated language data (regenerated from translations.db)
 _LANGUAGES_JSON = Path(__file__).parent / "languages.json"
 
@@ -39,6 +43,8 @@ class LanguageMetadata(TypedDict):
     iso639_2: str  # ISO 639-2 three-letter code
     bcp47: str  # BCP 47 language tag (e.g., 'en', 'zh-Hans', 'pt-BR')
     rtl: bool  # Right-to-left script
+    numeral_system: str  # CLDR numbering-system id of the native digits
+    decimal_separator: str  # Decimal mark written with those digits
     status: Literal["available", "experimental", "deprecated"]
 
 
@@ -59,6 +65,11 @@ def _load_languages() -> tuple[dict[str, LanguageMetadata], str]:
             "iso639_2": meta["iso639_2"],
             "bcp47": meta["bcp47"],
             "rtl": meta["rtl"],
+            # A registry generated before these fields existed reads as ASCII
+            # digits; the generator itself imports this module, so a missing
+            # field must not stop the import that would regenerate it.
+            "numeral_system": meta.get("numeral_system", LATIN),
+            "decimal_separator": meta.get("decimal_separator", "."),
             "status": meta["status"],
         }
 
@@ -112,6 +123,58 @@ def is_rtl_language(language_code: str) -> bool:
     if metadata is None:
         return False
     return metadata.get("rtl", False)
+
+
+def get_numeral_system(language_code: str) -> str:
+    """Get the numbering system a language writes its digits in.
+
+    Args:
+        language_code: ISO 639-1 language code (e.g., 'en', 'ar', 'hi')
+
+    Returns:
+        The CLDR numbering-system identifier (``"arab"``, ``"deva"``, ...),
+        or ``"latn"`` (ASCII 0-9) for an unknown code
+    """
+    metadata = LANGUAGE_METADATA.get(language_code)
+    if metadata is None:
+        return LATIN
+    return metadata["numeral_system"]
+
+
+def get_decimal_separator(language_code: str) -> str:
+    """Get the decimal mark a language writes with its native digits.
+
+    Args:
+        language_code: ISO 639-1 language code (e.g., 'en', 'ar', 'hi')
+
+    Returns:
+        The separator (U+066B ``٫`` for Arabic, Persian and Urdu), or ``"."``
+        for an unknown code
+    """
+    metadata = LANGUAGE_METADATA.get(language_code)
+    if metadata is None:
+        return "."
+    return metadata["decimal_separator"]
+
+
+def get_native_digits(language_code: str) -> str | None:
+    """Get the digits a language writes in place of ASCII 0-9, if any.
+
+    This is the one answer to "does this language have native digits a
+    program can convert": the language's numbering system is a Unicode
+    decimal-digit block other than ASCII.
+
+    Args:
+        language_code: ISO 639-1 language code (e.g., 'en', 'ar', 'hi')
+
+    Returns:
+        The ten digits, zero first (``"٠١٢٣٤٥٦٧٨٩"`` for Arabic), or ``None``
+        for a language that writes ASCII digits and for an unknown code
+    """
+    system = get_numeral_system(language_code)
+    if system == LATIN:
+        return None
+    return numeral_system_digits(system)
 
 
 def is_supported_language(language_code: str) -> bool:
@@ -170,6 +233,9 @@ __all__ = [
     "LanguageMetadata",
     "get_language_name",
     "get_native_name",
+    "get_numeral_system",
+    "get_decimal_separator",
+    "get_native_digits",
     "is_rtl_language",
     "is_supported_language",
     "get_available_language_codes",

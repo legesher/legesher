@@ -16,6 +16,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   translations database. The Spanish and Arabic packs carry theirs, and
   tracebacks render from the pack with no change in output. The CPython
   catalog that ships in `legesher-i18n` now holds only the English side. [CORE-2630]
+- **i18n**: the language registry records the digits each language writes:
+  `numeral_system`, the CLDR identifier of its native numbering system (`arab`,
+  `arabext`, `deva`, `beng`, `thai`, `mymr` and others; `latn` for ASCII), and
+  `decimal_separator`. The ten digits derive from the identifier. Urdu's
+  numbering system is corrected to Extended Arabic-Indic, and Persian, Burmese
+  and Kannada gain theirs.
 
 ### Changed
 

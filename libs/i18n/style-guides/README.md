@@ -50,7 +50,7 @@ CORE-1394). `python.yml` and the `_*.yml` overlays are building blocks and are
 | `supports.upper_snake_case` | constants as `ALL_CAPS` | bool (requires case) | transfer, validator | derived |
 | `supports.pascal_case` | `CapWords` classes | bool (requires case) | transfer, validator | derived |
 | `supports.camel_case` | `camelCase` | bool (requires case) | transfer, validator | derived |
-| `supports.native_digits` | language has its own numerals | bool | transfer, Legesher | profile |
+| `supports.native_digits` | language has its own numerals | bool (true where languages.json names a native digit block) | transfer, human | profile |
 | `supports.combining_marks` | chars compose from base + marks | bool | validator (grapheme length) | profile |
 | `supports.requires_word_separator` | `_` mandatory (spaceless scripts) | bool | transfer | profile |
 | `supports.diacritics_in_identifiers` | diacritics / tone marks are part of identifier spelling (e.g. Yoruba, Vietnamese) | bool | transfer, validator | profile |
@@ -82,6 +82,12 @@ note that (with a sample), e.g.
 ```
 
 Set `supports.native_digits` accordingly. Do not put enable/convert logic here.
+Which digits a language writes is registry data: `numeral_system` and
+`decimal_separator` in `languages.json`, generated from `translations.db`. A
+test keeps the two consistent: a language whose registry names a native digit
+block must set `native_digits: true`, and its "Digits:" note must show digits
+from that block. A guide may set the flag for numerals that are not a digit
+block (Chinese, Japanese, Amharic); their registry entry stays `latn`.
 
 ## Adding a language
 

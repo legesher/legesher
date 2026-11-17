@@ -183,7 +183,10 @@ package until step 5 puts it in a pack.
 
 ## Adding a language
 
-Database first, like any value change: a `languages` row with `in_registry = 1`, then `generate_languages.py`.
+Database first, like any value change: a `languages` row with `in_registry = 1`, its `numeral_system` (the CLDR
+identifier of the locale's native numbering system, `latn` for ASCII digits; a new identifier also needs its zero in
+`legesher_i18n/numerals.py`) and `decimal_separator`, then `generate_languages.py`, which refuses a published row
+without them.
 Register a `ScriptPolicy` (the walkthrough is the `script_policy.py` module docstring; the checklist is
 `tests/test_new_language_onboarding.py`). Select every term DB-first (`scripts/translate/backfill_common.py` is the
 shared machinery the recent per-language backfills use), export the pack, copy the package scaffold

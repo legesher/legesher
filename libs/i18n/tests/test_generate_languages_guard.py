@@ -33,9 +33,9 @@ def _load_generator():
 gen = _load_generator()
 
 _LANGS = [
-    ("ar", "Arabic", "العربية", "ara", "ar", "rtl"),
-    ("es", "Spanish", "Español", "spa", "es", "ltr"),
-    ("fr", "French", "Français", "fra", "fr", "ltr"),
+    ("ar", "Arabic", "العربية", "ara", "ar", "rtl", "arab", "\u066b"),
+    ("es", "Spanish", "Español", "spa", "es", "ltr", "latn", "."),
+    ("fr", "French", "Français", "fra", "fr", "ltr", "latn", "."),
 ]
 
 
@@ -43,12 +43,13 @@ def _make_db(path: Path, published: int) -> Path:
     """Create a schema-valid translations.db with N published languages."""
     TranslationDatabase(path).close()  # initializes the schema
     conn = sqlite3.connect(path)
-    for code, name, native, iso639_2, bcp47, direction in _LANGS[:published]:
+    for row in _LANGS[:published]:
         conn.execute(
             "INSERT INTO languages (code, name, native_name, iso639_2, bcp47, "
-            "direction, has_case_distinction, status, in_registry) "
-            "VALUES (?, ?, ?, ?, ?, ?, 1, 'available', 1)",
-            (code, name, native, iso639_2, bcp47, direction),
+            "direction, numeral_system, decimal_separator, "
+            "has_case_distinction, status, in_registry) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 'available', 1)",
+            row,
         )
     conn.commit()
     conn.close()
@@ -147,3 +148,56 @@ class TestRegistryGuard:
         assert gen.main(["--db", str(db)]) == 0
         written = json.loads(languages_json.read_text(encoding="utf-8"))
         assert sorted(written["languages"]) == ["ar", "es"]
+
+
+def _set_numerals(db: Path, code: str, system, separator) -> None:
+    conn = sqlite3.connect(db)
+    conn.execute(
+        "UPDATE languages SET numeral_system = ?, decimal_separator = ? WHERE code = ?",
+        (system, separator, code),
+    )
+    conn.commit()
+    conn.close()
+
+
+class TestNumeralFields:
+    """The digits a language writes ship in the registry, or nothing ships."""
+
+    def test_regeneration_carries_numeral_system_and_separator(
+        self, tmp_path, artifacts
+    ):
+        languages_json, _ = artifacts
+        db = _make_db(tmp_path / "translations.db", published=3)
+
+        assert gen.main(["--db", str(db)]) == 0
+        written = json.loads(languages_json.read_text(encoding="utf-8"))
+        assert written["languages"]["ar"]["numeral_system"] == "arab"
+        assert written["languages"]["ar"]["decimal_separator"] == "٫"
+        assert written["languages"]["es"]["numeral_system"] == "latn"
+        assert written["languages"]["es"]["decimal_separator"] == "."
+
+    @pytest.mark.parametrize(
+        ("system", "separator", "field"),
+        [
+            (None, "٫", "numeral_system"),
+            # The vocabulary the column held before CLDR identifiers.
+            ("arabic_indic", "٫", "numeral_system"),
+            ("Arab", "٫", "numeral_system"),
+            ("arab", None, "decimal_separator"),
+            ("arab", "", "decimal_separator"),
+            ("arab", "٫٫", "decimal_separator"),
+        ],
+    )
+    def test_unusable_numeral_value_refuses_without_writing(
+        self, tmp_path, artifacts, system, separator, field
+    ):
+        languages_json, vscode_dir = artifacts
+        _committed_json(languages_json, ["ar", "es", "fr"])
+        before = languages_json.read_text(encoding="utf-8")
+        db = _make_db(tmp_path / "translations.db", published=3)
+        _set_numerals(db, "ar", system, separator)
+
+        with pytest.raises(ValueError, match=rf"'ar' has {field}"):
+            gen.main(["--db", str(db)])
+        assert languages_json.read_text(encoding="utf-8") == before
+        assert not (vscode_dir / "languages.ts").exists()

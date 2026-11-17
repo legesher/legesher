@@ -95,7 +95,7 @@ class TestEmitFailLoud:
             conn.execute(
                 "INSERT OR IGNORE INTO languages"
                 " (code, name, native_name, direction, numeral_system)"
-                " VALUES ('ar', 'Arabic', 'العربية', 'rtl', 'arabic_indic')"
+                " VALUES ('ar', 'Arabic', 'العربية', 'rtl', 'arab')"
             )
             conn.commit()
         finally:
@@ -105,3 +105,41 @@ class TestEmitFailLoud:
         assert result.returncode != 0
         assert "unselected" in result.stderr
         assert not out.exists()
+
+
+class TestEmitNumeralSystem:
+    """``languages.numeral_system`` is the CLDR id the client pack carries."""
+
+    def _db_with_arabic(self, tmp_path: Path, numeral_system: str) -> Path:
+        from legesher_i18n.db.database import TranslationDatabase
+
+        db_path = tmp_path / "test.db"
+        db = TranslationDatabase(db_path=str(db_path))
+        try:
+            conn = db._get_connection()
+            conn.execute(
+                "INSERT INTO languages"
+                " (code, name, native_name, direction, numeral_system)"
+                " VALUES ('ar', 'Arabic', 'العربية', 'rtl', ?)",
+                (numeral_system,),
+            )
+            conn.commit()
+        finally:
+            db.close()
+        return db_path
+
+    def test_legacy_vocabulary_fails_loud(self, tmp_path: Path) -> None:
+        db_path = self._db_with_arabic(tmp_path, "arabic_indic")
+        out = tmp_path / "ar.ts"
+        result = run_emit("--out", str(out), "--db-path", str(db_path))
+        assert result.returncode != 0
+        assert "'arabic_indic' is not a CLDR numbering-system id" in result.stderr
+        assert not out.exists()
+
+    def test_cldr_id_passes_the_numeral_gate(self, tmp_path: Path) -> None:
+        # Past the numeral check, the run stops at the next gate (no terms).
+        db_path = self._db_with_arabic(tmp_path, "arab")
+        result = run_emit("--out", str(tmp_path / "ar.ts"), "--db-path", str(db_path))
+        assert result.returncode != 0
+        assert "numeral_system" not in result.stderr
+        assert "no javascript terms seeded" in result.stderr
