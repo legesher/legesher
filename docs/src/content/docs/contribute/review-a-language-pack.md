@@ -37,16 +37,17 @@ Python pack.
   it, and a pack changes only when the evidence says so.
 - **The Required boxes are yours to tick.** The review check fails without them, and nobody can
   tick them for you, because they record your own agreement.
-- **Your file is public once merged, comments included.** Never put an email address or private
-  contact detail in it.
+- **Your file is public as soon as you open the pull request, comments included.** Never put an
+  email address or private contact detail in it.
 
 ## What happens next
 
 1. A maintainer runs the review check, reads every line, and replies on your pull request within
    7 days: either it is ready to merge, or the reply names exactly what to fix.
 2. Push any fixes to the same branch, with each commit signed off.
-3. After the merge, your endorsements and suggestions join the public language corpus. A new word
-   you suggest is held until a maintainer clears it.
+3. After the merge, a maintainer imports your review, and your endorsements and suggestions appear
+   in the next published release of the language corpus. A new word you suggest is held until a
+   maintainer clears it.
 4. Endorsements add up. When a language crosses a review gate, a new pack version ships, and the
    pack can move from experimental to reviewed and, through a ratification session, to official.
 

@@ -41,16 +41,17 @@ para revisar un paquete de Python.
   pueden respaldarla, y un paquete solo cambia cuando la evidencia lo indica.
 - **Las casillas Required las marcas tú.** La comprobación de la revisión falla sin ellas, y nadie
   puede marcarlas por ti, porque registran tu propio consentimiento.
-- **Tu archivo es público una vez fusionado, comentarios incluidos.** Nunca pongas en él una
-  dirección de correo ni datos de contacto privados.
+- **Tu archivo es público en cuanto abres la pull request, comentarios incluidos.** Nunca pongas
+  en él una dirección de correo ni datos de contacto privados.
 
 ## Qué pasa después
 
 1. Una persona mantenedora ejecuta la comprobación, lee cada línea y responde en tu pull request en
    un plazo de 7 días: o está lista para fusionarse, o la respuesta indica exactamente qué corregir.
 2. Sube las correcciones a la misma rama, con cada commit firmado.
-3. Tras la fusión, tus respaldos y sugerencias se suman al corpus lingüístico público. Una palabra
-   nueva que sugieras queda en espera hasta que una persona mantenedora la apruebe.
+3. Tras la fusión, una persona mantenedora importa tu revisión, y tus respaldos y sugerencias
+   aparecen en la siguiente versión publicada del corpus lingüístico. Una palabra nueva que sugieras
+   queda en espera hasta que una persona mantenedora la apruebe.
 4. Los respaldos se acumulan. Cuando un idioma supera un umbral de revisión, se publica una nueva
    versión del paquete, que puede pasar de experimental a revisado y, mediante una sesión de
    ratificación, a oficial.
