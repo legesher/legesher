@@ -874,9 +874,7 @@ class TestPrecedence:
         assert not reworded.localized
         assert reworded.template == new
 
-    def test_a_locale_with_no_pack_and_no_seed_translation_is_english(
-        self, no_database, write_pack
-    ):
+    def test_a_locale_with_no_pack_is_english(self, no_database, write_pack):
         write_pack({"3.10": self.header_only()}, language="es")
         rules = load_catalog("xx", "3.12")
         assert rules and all(not r.localized for r in rules)

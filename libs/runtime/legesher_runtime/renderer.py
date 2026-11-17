@@ -148,9 +148,10 @@ class TracebackRenderer:
             running interpreter (messages are raised by THIS interpreter, so
             auto is almost always right).
         db_path: Override the translations database (tests only). Without
-            it the catalog comes from the default database, or from the seed
-            that ships with ``legesher-i18n`` when that database has no
-            catalog rows (an installed package has no database at all).
+            it the catalog comes from the default database, or, when that
+            database has no catalog rows (an installed package has no
+            database at all), from the English seed and the language pack
+            that ship with ``legesher-i18n``.
         source_map: Optional source mapper for translated files — an object
             with ``has_mapping(filename)``, ``get_native_line(filename,
             lineno)``, and ``get_native_source_line(filename, lineno)`` (the

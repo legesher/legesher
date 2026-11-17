@@ -133,7 +133,9 @@ the data comes from this file, and no gate compares them.
 source database carries the `message_templates` partition (CORE-1679), which
 this migration does not carry over, so a v2 build would silently start with
 none. The flag says you know that; re-seed afterwards with
-`scripts/seed_message_templates.py` from `legesher_i18n/db/seeds/`. Dropping
+`scripts/seed_message_templates.py` from `legesher_i18n/db/seeds/` for the
+English side, then restore the translations from the packs with
+`scripts/translate/import_yaml_to_db.py` (the CPython seed carries none). Dropping
 the partition from the source first is the other way through. Either is fine
 for the corpus — `message_templates` is not one of the five exported configs
 and never reaches the Hub — but it changes what the local v2 database holds,

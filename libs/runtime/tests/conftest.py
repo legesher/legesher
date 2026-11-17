@@ -18,7 +18,7 @@ from legesher_i18n.language_registry import (
     is_rtl_language,
 )
 from legesher_i18n.pack_loader import LanguagePackLoader
-from legesher_i18n.pack_messages import DEFAULT_STATUS, message_fingerprint
+from legesher_i18n.pack_messages import DEFAULT_STATUS, entry_problem, message_fingerprint
 
 CATALOG_SEED = Path(legesher_i18n.__file__).parent / "db" / "seeds" / "cpython_messages.json"
 
@@ -59,8 +59,9 @@ def seeded_message_catalog(tmp_path_factory: pytest.TempPathFactory):
     side from the tracked catalog seed (``db/seeds/cpython_messages.json``),
     inserted as ``libs/i18n/scripts/seed_message_templates.py`` inserts it,
     and the translations from the shipped language packs' ``messages``
-    sections, matched to their English row by key and fingerprint (the seed
-    carries no translations, CORE-2630). The scripts are not imported: they
+    sections, matched to their English row by key and fingerprint and kept
+    only when they pass the join rule an install applies (the seed carries no
+    translations, CORE-2630). The scripts are not imported: they
     are reachable only by putting ``libs/i18n`` on ``sys.path`` under the
     generic package name ``scripts``, which several workspace directories
     share. Both halves are what ships, so the goldens still describe it.
@@ -107,9 +108,14 @@ def seeded_message_catalog(tmp_path_factory: pytest.TempPathFactory):
                 ),
             )
             src = message_fingerprint(template["template_en"])
+            declared = [p["name"] for p in template.get("placeholders", [])]
             for locale in locales:
                 entry = translations[locale].get((template["key"], src))
-                if entry is None:
+                # The join rule an install applies: an entry it would skip
+                # is not put in the database either.
+                if entry is None or entry_problem(
+                    entry, template_en=template["template_en"], placeholders=declared
+                ):
                     continue
                 connection.execute(
                     "INSERT INTO message_translations "

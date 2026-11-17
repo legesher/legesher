@@ -48,8 +48,10 @@ reframe).
 EXCEPTION — the messages partition (CORE-1679): message_templates /
 message_translations rows living in the operational v1 database (activated by
 activate_messages_partition.py) are NOT migrated by this script; a v2 build
-starts with the partition empty and must be re-seeded from the catalog seeds
-(seed_message_templates.py). To make that gap impossible to trip over
+starts with the partition empty. Re-seed it from the catalog seeds
+(seed_message_templates.py) for the English side, then restore the
+translations from the packs (translate/import_yaml_to_db.py): the CPython
+seed carries none (CORE-2630). To make that gap impossible to trip over
 silently, the migration REFUSES a source that carries message rows unless
 --acknowledge-message-rows-not-migrated is passed.
 
@@ -963,7 +965,8 @@ def migrate(
         acknowledge_message_rows_not_migrated: The messages partition
             (CORE-1679) is NOT carried over; a source carrying message rows is
             refused unless this is True (re-seed the v2 build with
-            ``seed_message_templates.py`` afterwards).
+            ``seed_message_templates.py`` afterwards, then restore the
+            translations from the packs with ``translate/import_yaml_to_db.py``).
 
     Returns:
         The reconciliation ledger.
@@ -991,13 +994,16 @@ def migrate(
             "NOT carry over -- the v2 build would silently start without "
             "them. Re-run with --acknowledge-message-rows-not-migrated and "
             "re-seed the v2 build via seed_message_templates.py "
-            "(db/seeds/*.json), or drop the partition from the source first."
+            "(db/seeds/*.json), then restore its translations from the packs "
+            "with translate/import_yaml_to_db.py, or drop the partition from "
+            "the source first."
         )
     if message_rows:
         print(
             f"NOTE: {message_rows} message_templates rows in the source are NOT "
             "migrated (messages partition, CORE-1679). Re-seed the v2 build "
-            "with seed_message_templates.py."
+            "with seed_message_templates.py, then restore its translations "
+            "from the packs with translate/import_yaml_to_db.py."
         )
 
     if publish:

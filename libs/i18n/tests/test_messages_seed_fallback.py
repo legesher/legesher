@@ -147,12 +147,12 @@ class TestNoDatabase:
         assert not header.localized
         assert header.status is None
 
-    @pytest.mark.parametrize("locale", ["ar", "es", "xx"])
     @pytest.mark.parametrize("name", ["عَدَّادٌ", "गिनती", "ශ්\u200dරී"])
-    def test_slot_values_survive_byte_for_byte(self, default_db, locale, name):
+    def test_slot_values_survive_byte_for_byte(self, default_db, name):
         # Vocalised Arabic, Devanagari and Sinhala with ZWJ carry combining
-        # marks and joiners a lossy normalization would drop or reorder.
-        rules = load_catalog(locale, "3.12")
+        # marks and joiners a lossy normalization would drop or reorder. With
+        # no pack, the English template is rendered from the matched slot.
+        rules = load_catalog("es", "3.12")
         rendered = match_message(
             rules, f"name '{name}' is not defined", key_prefix="NameError"
         )

@@ -266,7 +266,7 @@ def load_catalog(
         rows = _database_rows(default_db_path(), locale, implementation)
         if not rows:
             rows = _seed_rows(implementation)
-            entries = _pack_entries(locale, version, implementation) or {}
+            entries = _pack_entries(locale, version, implementation)
 
     applicable = _applicable_rows(rows, version)
     if entries is not None:

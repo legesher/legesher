@@ -9,14 +9,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-### Changed
-
-- **Error-message translations come only from the language packs.** The
-  CPython catalog seed carries the English side only: keys, templates,
-  matchers, placeholders and version tiers. With no translations database,
-  a locale whose pack carries no messages prints the interpreter's own text.
-  A database still wins in a maintainer checkout. [CORE-2630]
-
 ### Added
 
 - **A language pack may carry a `messages` section.** The pack schema accepts
@@ -55,6 +47,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   marks its twelve. `MessageRule.slot_kinds` and `MessageRule.kind_of`
   expose it, so a renderer can tell a line number from a value it must copy
   verbatim. [CORE-2630]
+
+### Changed
+
+- **Error-message translations come only from the language packs.** The
+  CPython catalog seed carries the English side only: keys, templates,
+  matchers, placeholders and version tiers. With no translations database,
+  a locale whose pack carries no messages prints the interpreter's own text.
+  A database still wins in a maintainer checkout. [CORE-2630]
 
 ## [0.25.1] - 2026-11-03
 

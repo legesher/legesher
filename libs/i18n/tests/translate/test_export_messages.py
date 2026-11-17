@@ -2,9 +2,14 @@
 
 Covers the exporter (what it writes, where, and what it refuses), the reverse
 import, the regeneration gate's view of the section, the dataset export that
-must keep messages out, and the shipped packs themselves: a pack's messages
-render exactly what the seed's translations rendered before the packs carried
-them.
+must keep messages out, and the shipped packs themselves: an install (seed
+plus pack) renders what a maintainer database built from the same pack
+renders, and the pack is where the text comes from.
+
+These tests do not pin the wording of each shipped message: the database is
+its source of truth, and the regeneration gate (`verify_pack_regen.py`, run
+against the maintainer database) is what catches a pack drifting from it.
+The runtime goldens pin the messages they render.
 
 The English side is the real tracked seed. The seed carries no translations,
 so a test database takes them from the shipped packs through the reverse
@@ -67,13 +72,6 @@ def shipped_messages(locale: str) -> list[tuple[str, dict]]:
 PACK_LOCALES = sorted(
     locale for locale in get_active_language_codes() if shipped_messages(locale)
 )
-
-
-def strip_translations(seed: dict) -> dict:
-    copy = json.loads(json.dumps(seed))
-    for template in copy["templates"]:
-        template.pop("translations", None)
-    return copy
 
 
 def make_db(
@@ -183,7 +181,7 @@ class TestBuild:
 
     def test_a_locale_with_some_translations_exports_those(self, tmp_path):
         """Partial is allowed: one message is a valid section."""
-        seed = strip_translations(SEED)
+        seed = json.loads(json.dumps(SEED))
         (zero_div,) = [
             t
             for t in seed["templates"]
@@ -597,7 +595,7 @@ class TestImport:
 
     def test_the_scripts_dry_run_writes_nothing(self, tmp_path, monkeypatch):
         fresh = tmp_path / "fresh.db"
-        make_db(fresh, strip_translations(SEED)).close()
+        make_db(fresh, from_packs=False).close()
         monkeypatch.setattr(
             sys,
             "argv",
@@ -616,7 +614,7 @@ class TestImport:
     def test_a_template_with_unreadable_placeholders_is_skipped(self, seeded, tmp_path):
         packs = export_pack(seeded, tmp_path / "pack", "es")
         fresh = tmp_path / "fresh.db"
-        make_db(fresh, strip_translations(SEED)).close()
+        make_db(fresh, from_packs=False).close()
         connection = sqlite3.connect(fresh)
         connection.execute(
             "UPDATE message_templates SET placeholders = 'not json' "
@@ -893,18 +891,6 @@ def test_message_translations_stay_out_of_the_vocabulary_config() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture
-def seeds_without_translations(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Point the catalog at a copy of the seed with no translations in it."""
-    seeds = tmp_path / "seeds"
-    seeds.mkdir()
-    (seeds / "cpython_messages.json").write_text(
-        json.dumps(strip_translations(SEED), ensure_ascii=False), encoding="utf-8"
-    )
-    monkeypatch.setattr("legesher_i18n.messages.SEED_DIR", seeds)
-    return seeds
-
-
 @pytest.fixture(scope="module")
 def seeded_catalog(tmp_path_factory: pytest.TempPathFactory) -> Path:
     path = tmp_path_factory.mktemp("catalog") / "translations.db"
@@ -921,7 +907,7 @@ PARITY = [
 
 @pytest.mark.parametrize(("locale", "version"), PARITY)
 def test_a_shipped_pack_renders_what_its_database_renders(
-    no_database, seeds_without_translations, seeded_catalog, locale, version
+    no_database, seeded_catalog, locale, version
 ) -> None:
     """An install (seed plus pack) and a maintainer checkout (database) agree."""
     from_pack = load_catalog(locale, version)
@@ -934,7 +920,7 @@ def test_a_shipped_pack_renders_what_its_database_renders(
 
 @pytest.mark.parametrize("locale", PACK_LOCALES)
 def test_a_shipped_pack_is_where_the_translations_come_from(
-    no_database, seeds_without_translations, locale
+    no_database, locale
 ) -> None:
     """Prove the pack, not the seed's own translations, supplied the text."""
     loader = LanguagePackLoader()

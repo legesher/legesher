@@ -64,8 +64,8 @@ __all__ = [
 MESSAGES_SECTION = "messages"
 
 #: The pack target that carries each implementation's messages. An
-#: implementation with no entry here has no pack to read or write; its
-#: translations live in its catalog seed only.
+#: implementation with no entry here has no pack to read or write, and the
+#: catalog reads no translations for it.
 IMPLEMENTATION_TARGETS: dict[str, str] = {"cpython": "python"}
 
 #: An implementation name: ``cpython``, ``v8``. Compared with ``fullmatch``.
