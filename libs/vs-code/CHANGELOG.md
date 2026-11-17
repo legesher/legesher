@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!--next-version-placeholder-->
 
+## [Unreleased]
+
+### Added
+
+- **Install the language server from the editor**: when no `legesher-lsp` is
+  found, the extension offers to install it, and the new command
+  `Legesher: Install Language Server` does the same at any time. The extension
+  downloads a pinned uv release into its own storage, checked against a SHA-256
+  that ships with the extension; uv installs Python 3.12 and the server from
+  `server/requirements.lock`, which pins every package with a SHA-256 for each
+  file. No terminal, no Python of your own and no `PATH` change. Available on
+  macOS, Linux on x64 and ARM64, and Windows on x64
+- **Automatic server updates**: when a new extension release ships a different
+  lock, the server it names installs in the background, the extension switches
+  to it and says so, and the replaced install is removed once no open window
+  still runs it
+
+### Changed
+
+- **Which server runs**: the extension starts the command in
+  `legesher.serverCommand` when it is set to anything other than
+  `legesher-lsp`, then `legesher-lsp` on `PATH`, then its own install. It
+  never writes the setting. The server it installed runs without the user's
+  `PYTHONPATH` and `PYTHONHOME`
+- **Server not found**: the status bar tooltip names the install command
+
 ## 0.1.8 (2026-11-04)
 
 ### Fixed

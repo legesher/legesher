@@ -18,7 +18,8 @@ The Legesher VS Code extension provides the UI and editor integration for coding
 
 > **Note**: Hover, completion, diagnostics and keyword highlighting come from the
 > [Legesher language server](https://github.com/legesher/legesher/blob/main/libs/language-server/README.md),
-> a separate Python package. See [The language server](#the-language-server) below.
+> a separate Python package. The extension offers to install it for you, with no terminal.
+> See [The language server](#the-language-server) below.
 
 ## Supported Languages
 
@@ -59,10 +60,38 @@ Extensions (`Cmd+Shift+X`) → `...` menu → "Install from VSIX..." and select 
 
 ### The language server
 
-The extension does not bundle its language server. It runs the command in
-`legesher.serverCommand`, which defaults to `legesher-lsp`. That command comes
-from the `legesher-language-server` Python package. Install it with a tool
-installer, so that `legesher-lsp` works outside any project environment:
+Hover, completion, diagnostics and keyword highlighting come from the language
+server, `legesher-lsp`, from the `legesher-language-server` Python package. The
+extension does not bundle it.
+
+**Install it from the editor.** The first time you open a Python file and no
+server is found, the extension offers to install it: press **Install**. You can
+also run **Legesher: Install Language Server** from the Command Palette at any
+time. You need no terminal, no Python of your own and no change to your `PATH`.
+The extension downloads [uv](https://docs.astral.sh/uv/) into its own storage,
+and uv fetches Python 3.12 and the server. The download is about 60 MB, and the
+install takes about 150 MB of disk.
+
+- **What it downloads, and how each file is checked.** uv comes from its
+  release on GitHub, and is checked against a SHA-256 that ships with the
+  extension. uv then fetches Python from Astral's builds, checked against the
+  checksums built into that uv release, and the server and its packages from
+  PyPI, each file checked against the SHA-256 in the extension's
+  `server/requirements.lock`. A file that does not match is not installed.
+- **Where it goes.** Into VS Code's storage for this extension. Nothing is
+  added to your `PATH`, and your own Python installs are not touched.
+- **Updates.** When a new version of the extension expects a newer server, the
+  extension installs it in the background, switches to it, and says so. It
+  removes the old one once no open VS Code window still runs it.
+- **If it breaks.** If the installed server stops starting (for example,
+  antivirus removed a file), run **Legesher: Install Language Server** again
+  and it is installed afresh.
+- **Where it works.** macOS, Linux on x64 and ARM64, and Windows on x64. On
+  Windows on ARM one of the server's packages publishes nothing ready to
+  install, so use the steps below.
+
+**Or install it yourself.** Use a tool installer, so that `legesher-lsp` works
+outside any project environment:
 
 ```bash
 pipx install legesher-language-server
@@ -73,11 +102,12 @@ uv tool install legesher-language-server
 If the installer warns that its bin directory is not on your `PATH`, run
 `pipx ensurepath` or `uv tool update-shell`, then restart VS Code.
 
-`legesher-lsp` has to be on the `PATH` VS Code sees, or `legesher.serverCommand`
-has to hold its full path.
+**Which server runs.** The extension starts, in this order: the command in
+`legesher.serverCommand`, if you set it to anything other than `legesher-lsp`;
+`legesher-lsp` on the `PATH` VS Code sees; the server the extension installed.
+It never changes `legesher.serverCommand` itself.
 
-Hover, completion, diagnostics and keyword highlighting all come from the
-server. Without it the extension still starts: the language picker and the
+Without a server the extension still starts: the language picker and the
 translation panel work, and the status bar item shows a warning whose tooltip
 names the package it needs.
 
@@ -95,6 +125,7 @@ names the package it needs.
 | `Legesher: Select Language`         | Choose the language you work in      |
 | `Legesher: Manage My Languages`     | Edit the set of languages you read   |
 | `Legesher: Show Translation Panel`  | Open side-by-side translation view   |
+| `Legesher: Install Language Server` | Install the server, with no terminal |
 | `Legesher: Restart Language Server` | Reconnect to the language server     |
 | `Legesher: Give Feedback`           | Submit feedback about the extension  |
 

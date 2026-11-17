@@ -1,7 +1,13 @@
 import * as vscode from 'vscode';
 import { createLanguageClient, type LegesherClient } from './client';
-import { isServerAvailable } from './utils';
-import { serverNotFoundMessage } from './serverInstall';
+import { DEFAULT_SERVER_COMMAND, serverNotFoundMessage } from './serverInstall';
+import {
+    installServerCommand,
+    offerServerInstall,
+    resolveServer,
+    type Restart,
+    serverStarted,
+} from './serverSetup';
 import {
     getLanguageConfig,
     getActiveLanguages,
@@ -519,6 +525,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<Legesh
         })
     );
 
+    // Register the command that installs the extension's own language server
+    context.subscriptions.push(
+        vscode.commands.registerCommand('legesher.installLanguageServer', async () => {
+            await installServerCommand(context, restartAfterInstall(context));
+        })
+    );
+
     // Register language selection command
     context.subscriptions.push(
         vscode.commands.registerCommand('legesher.selectLanguage', async () => {
@@ -664,13 +677,15 @@ async function startServer(
         statusBarItem.text = "$(sync~spin) Legesher";
         statusBarItem.tooltip = "Legesher: Connecting...";
 
-        // Check if server is available
+        // Find a server that answers: the user's own setting, then
+        // legesher-lsp on PATH, then the extension's own install. The
+        // setting is never written (see managedServer.ts).
         const config = vscode.workspace.getConfiguration('legesher', resource);
-        const serverCommand = config.get<string>('serverCommand', 'legesher-lsp');
+        const serverCommand = config.get<string>('serverCommand', DEFAULT_SERVER_COMMAND);
 
-        const serverAvailable = await isServerAvailable(serverCommand);
+        const resolvedServer = await resolveServer(context, serverCommand);
 
-        if (!serverAvailable) {
+        if (!resolvedServer) {
             // The server is a separate install, so name the package and the
             // setting rather than only saying something is missing (CORE-2203).
             const durationMs = Date.now() - startTime;
@@ -680,8 +695,16 @@ async function startServer(
             statusBarItem.text = "$(warning) Legesher";
             statusBarItem.tooltip = `Legesher: ${message}`;
             Logger.warn(message);
+            // Offered only to someone on the default: a command they set
+            // themselves is theirs to fix, and an install would not be used.
+            // Not awaited: the offer waits on a person, and this runs inside
+            // the transition queue.
+            if (serverCommand === DEFAULT_SERVER_COMMAND) {
+                void offerServerInstall(context, restartAfterInstall(context));
+            }
             return 'unavailable';
         }
+        Logger.info(`Language server: ${resolvedServer.command} (${resolvedServer.source})`);
 
         // Start with the languages the caller resolved: the source may come
         // from a folder-scoped setting the client could not see when it read
@@ -697,7 +720,8 @@ async function startServer(
             resource,
             // Each document resolved exactly as the status bar and the
             // translation panel resolve it.
-            document => resolveLanguage(context, document).language
+            document => resolveLanguage(context, document).language,
+            { command: resolvedServer.command, isolated: resolvedServer.installed !== undefined }
         );
 
         // Handle client state changes
@@ -729,6 +753,12 @@ async function startServer(
         statusBarItem.text = "$(check) Legesher";
         statusBarItem.tooltip = "Legesher: Connected";
         Logger.info('Legesher language server started and connected successfully');
+
+        // The extension's own install: record that this window runs it, and
+        // either update it or clear out what it replaced (serverSetup.ts).
+        // Not awaited: this runs inside the transition queue, and the restart
+        // that switches servers queues behind it.
+        void serverStarted(context, resolvedServer, restartAfterInstall(context));
         return 'started';
     } catch (error) {
         // Drop the client that failed to start. It never reached Running, so
@@ -755,6 +785,17 @@ async function startServer(
         // language the user is not getting rather than only the exception.
         throw error instanceof Error ? error : new Error(errorMessage);
     }
+}
+
+/**
+ * Restart after the extension installed or updated its own server, and say
+ * whether a server is now running.
+ */
+function restartAfterInstall(context: vscode.ExtensionContext): Restart {
+    return async () => {
+        await ensureRestart(context);
+        return server.status === 'running';
+    };
 }
 
 /**

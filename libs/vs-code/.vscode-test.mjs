@@ -8,7 +8,12 @@ import * as path from 'node:path';
 // and blows past it from a git worktree, failing with EINVAL before any test
 // runs. Anchor it in the system temp directory so the harness works regardless
 // of how deep the checkout is.
-const userDataDir = path.join(os.tmpdir(), 'legesher-vscode-test');
+//
+// LEGESHER_TEST_USER_DATA_DIR overrides it, so the end-to-end install test
+// (test/integration/managedInstall.test.ts) can put the extension's storage
+// under a folder with a space and a non-Latin script in its name. Keep that
+// name short: the socket limit above still applies.
+const userDataDir = process.env.LEGESHER_TEST_USER_DATA_DIR || path.join(os.tmpdir(), 'legesher-vscode-test');
 
 export default defineConfig({
     files: 'out/test/**/*.test.js',
