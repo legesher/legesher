@@ -56,8 +56,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   language chosen as `languages`, a config written by an earlier `init` keeps
   working as it is, and `git setup` no longer resets the settings it was not
   given. A setting the project config does not name comes from the user
-  config. When a script does not compile, `run` says which language it was
-  read as.
+  config, a config file that cannot be used is reported by name instead of
+  silently ignored, and a home directory kept in git is no longer treated as
+  a project's repository. When a script does not compile, `run` says which
+  language it was read as.
 - **docs**: on the Spanish and Arabic pages, code samples start in the page's
   language when the reader has not picked a code language. A pick made with
   the code-language picker still wins on every page. [CORE-2760]

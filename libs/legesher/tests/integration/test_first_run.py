@@ -10,6 +10,11 @@ try it, and keep a config file already on disk in the old shape working.
 ``init``, ``config`` and ``git`` run in process against real git
 repositories. ``run`` is a subprocess, because the hooks it installs are
 process-wide.
+
+On CPython 3.10 and 3.11 the pure-Python tokenizer cannot read some of these
+scripts (``tests/interpreter_gaps.py``, gap 1), so the cases that run a
+program or put one through the filter are strict xfails there, decided from
+the program's own bytes.
 """
 
 from __future__ import annotations
@@ -18,16 +23,17 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import yaml
 from click.testing import CliRunner
 from legesher_core import TokenTranslator
-from legesher_core.__main__ import _get_language_from_config as filter_language
 from legesher_i18n.language_registry import get_active_language_codes
 
 from legesher.cli.main import cli
 from legesher.config import LegesherConfig
+from tests.interpreter_gaps import xfail_if_return_hop_is_inert
 
 #: The console script's body (see test_cli_run.py for why not ``-m``).
 CLI = "from legesher.cli.main import cli; cli()"
@@ -133,11 +139,22 @@ def project(tmp_path, monkeypatch) -> Path:
 
 @pytest.fixture
 def repo(project) -> Path:
-    """An empty git repository."""
+    """An empty git repository that stores files byte for byte."""
     git(project, "init", "-q")
     git(project, "config", "user.email", "test@example.com")
     git(project, "config", "user.name", "Test")
+    git(project, "config", "core.autocrlf", "false")
     return project
+
+
+def filter_language() -> str:
+    """The language the git filter's own lookup gives, from the working
+    directory. Its module configures logging on import, which this suite
+    does not want for every test after it."""
+    with patch("logging.basicConfig"):
+        from legesher_core.__main__ import _get_language_from_config
+
+    return _get_language_from_config()
 
 
 def legesher(*args: str, ok: bool = True):
@@ -147,11 +164,22 @@ def legesher(*args: str, ok: bool = True):
     return result
 
 
-def write_program(root: Path, lang: str, name: str, text: str) -> Path:
-    """``ENGLISH`` in ``lang``'s keywords; it must not compile as English."""
-    source = TokenTranslator.from_language_pack(lang).translate_code(
-        ENGLISH.format(name=name, text=text)
-    )
+def write_program(
+    root: Path,
+    lang: str,
+    name: str,
+    text: str,
+    request: pytest.FixtureRequest | None = None,
+) -> Path:
+    """``ENGLISH`` in ``lang``'s keywords; it must not compile as English.
+
+    Pass ``request`` from a test that runs the program, so the interpreter
+    gap that stops it running on CPython before 3.12 is a strict xfail.
+    """
+    english = ENGLISH.format(name=name, text=text)
+    source = TokenTranslator.from_language_pack(lang).translate_code(english)
+    if request is not None:
+        xfail_if_return_hop_is_inert(request, english, source)
     with pytest.raises(SyntaxError):
         compile(source, "programa.py", "exec")
     script = root / "programa.py"
@@ -171,10 +199,13 @@ def run_script(script: Path, *args: str, cwd: Path | None = None):
     )
 
 
-def stray_keyword(lang: str, name: str) -> tuple[str, str]:
+def stray_keyword(
+    lang: str, name: str, request: pytest.FixtureRequest
+) -> tuple[str, str]:
     """``STRAY`` as typed (one English keyword left in) and as stored."""
     english = STRAY.format(name=name)
     native = TokenTranslator.from_language_pack(lang).translate_code(english)
+    xfail_if_return_hop_is_inert(request, english, native)
     typed = native.splitlines(keepends=True)
     typed[1] = english.splitlines(keepends=True)[1]
     assert typed != native.splitlines(keepends=True)
@@ -192,7 +223,9 @@ def stored_by_git(repo: Path, relative: str, text: str) -> str:
     """What ``git add`` stores for ``text``, through the real clean filter."""
     path = repo / relative
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    # Bytes, so the file holds exactly these line endings on every platform:
+    # text mode writes CRLF on Windows, and the filter stores what it reads.
+    path.write_bytes(text.encode("utf-8"))
     git(repo, "add", relative)
     shown = subprocess.run(
         ["git", "show", f":0:{relative}"], cwd=repo, capture_output=True, check=True
@@ -227,25 +260,25 @@ class TestRunStraightAfterInit:
     """The definition of done: every reader agrees with what init was asked."""
 
     @pytest.mark.parametrize(("lang", "name", "text"), PROGRAMS)
-    def test_with_git(self, repo, lang, name, text):
-        script = write_program(repo, lang, name, text)
+    def test_with_git(self, repo, lang, name, text, request):
+        script = write_program(repo, lang, name, text, request)
         legesher("init", "-l", lang, "-p", "3.13", "--git", "--no-ai-context")
         assert_every_reader_agrees(lang)
         assert_runs(script, text)
 
     @pytest.mark.parametrize(("lang", "name", "text"), PROGRAMS)
-    def test_outside_a_git_repository(self, project, lang, name, text):
-        script = write_program(project, lang, name, text)
+    def test_outside_a_git_repository(self, project, lang, name, text, request):
+        script = write_program(project, lang, name, text, request)
         legesher("init", "-l", lang, "-p", "3.13", "--no-git", "--no-ai-context")
         assert legesher("config", "get", "language").output.strip() == lang
         assert LegesherConfig.load().language == lang
         assert_runs(script, text)
 
-    def test_from_a_subdirectory(self, project):
+    def test_from_a_subdirectory(self, project, request):
         legesher("init", "-l", "hi", "-p", "3.13", "--no-git", "--no-ai-context")
         package = project / "पैकेज"
         package.mkdir()
-        script = write_program(package, "hi", "नमस्ते", "नमस्ते दुनिया")
+        script = write_program(package, "hi", "नमस्ते", "नमस्ते दुनिया", request)
         assert_runs(script, "नमस्ते दुनिया", cwd=package)
 
     @pytest.mark.parametrize("lang", sorted(get_active_language_codes()))
@@ -256,10 +289,10 @@ class TestRunStraightAfterInit:
 
     @pytest.mark.parametrize(("lang", "name", "text"), PROGRAMS)
     def test_the_clean_filter_knows_the_language(
-        self, repo, filter_on_path, lang, name, text
+        self, repo, filter_on_path, lang, name, text, request
     ):
         legesher("init", "-l", lang, "-p", "3.13", "--git", "--no-ai-context")
-        typed, stored = stray_keyword(lang, name)
+        typed, stored = stray_keyword(lang, name, request)
         assert stored_by_git(repo, "m.py", typed) == stored
 
 
@@ -289,11 +322,13 @@ class TestInitInsideARepository:
         monkeypatch.chdir(repo)
         assert_every_reader_agrees("hi")
 
-    def test_run_and_the_filter_work_on_a_file_below(self, repo, below, filter_on_path):
+    def test_run_and_the_filter_work_on_a_file_below(
+        self, repo, below, filter_on_path, request
+    ):
         legesher("init", "-l", "hi", "-p", "3.13", "--git", "--no-ai-context")
-        script = write_program(below, "hi", "नमस्ते", "नमस्ते दुनिया")
+        script = write_program(below, "hi", "नमस्ते", "नमस्ते दुनिया", request)
         assert_runs(script, "नमस्ते दुनिया")
-        typed, stored = stray_keyword("hi", "नमस्ते")
+        typed, stored = stray_keyword("hi", "नमस्ते", request)
         assert stored_by_git(repo, "ऐप/स्रोत/m.py", typed) == stored
 
     def test_git_setup_then_writes_the_same_file(self, repo, below):
@@ -325,7 +360,7 @@ class TestInitAndTheHomeDirectory:
             "init", "-l", "es", "-p", "3.13", "--no-git", "--no-ai-context", ok=False
         )
         assert refused.exit_code == 1
-        assert "home directory" in refused.output
+        assert "your user-level config" in refused.output
         assert "config set --global language" in refused.output
         assert not (isolated_home / ".legesher").exists()
 
@@ -360,6 +395,41 @@ class TestInitAndTheHomeDirectory:
         assert not (isolated_home / ".legesher").exists()
         assert legesher("config", "get", "language").output.strip() == "hi"
         assert LegesherConfig.load().language == "hi"
+
+    def test_git_integration_is_not_set_up_in_a_home_kept_in_git(
+        self, isolated_home, monkeypatch
+    ):
+        # Git would run the filter at home, where the config is the user's,
+        # so the project could never get its own filter language there.
+        git(isolated_home, "init", "-q")
+        project = isolated_home / "परियोजना"
+        project.mkdir()
+        monkeypatch.chdir(project)
+        result = legesher("init", "-l", "hi", "-p", "3.13", "--git", "--no-ai-context")
+        assert "home directory's" in result.output and "git init" in result.output
+        assert read_config(project)["git"]["filter_enabled"] is False
+        assert not (isolated_home / ".gitattributes").exists()
+        unset = subprocess.run(
+            ["git", "config", "--local", "--get", "filter.legesher.clean"],
+            cwd=isolated_home,
+            capture_output=True,
+            check=False,
+        )
+        assert unset.returncode == 1
+        assert "home directory's" in legesher("git", "status").output
+
+    def test_git_setup_refuses_a_home_kept_in_git(self, isolated_home, monkeypatch):
+        git(isolated_home, "init", "-q")
+        (isolated_home / ".legesher").mkdir()
+        user_config = isolated_home / ".legesher" / "config.yml"
+        user_config.write_text("language: he\n", encoding="utf-8")
+        project = isolated_home / "परियोजना"
+        project.mkdir()
+        monkeypatch.chdir(project)
+        refused = legesher("git", "setup", "--language", "es", ok=False)
+        assert refused.exit_code == 1
+        assert "home directory's" in refused.output and "--global" in refused.output
+        assert user_config.read_text(encoding="utf-8") == "language: he\n"
 
 
 class TestWhatInitWrites:
@@ -420,8 +490,8 @@ class TestWhatInitWrites:
 
 
 class TestEitherOrder:
-    def test_git_setup_after_init_keeps_what_init_wrote(self, repo):
-        script = write_program(repo, "he", "שָׁלוֹם", "שָׁלוֹם עוֹלָם")
+    def test_git_setup_after_init_keeps_what_init_wrote(self, repo, request):
+        script = write_program(repo, "he", "שָׁלוֹם", "שָׁלוֹם עוֹלָם", request)
         legesher(
             "init", "-l", "he", "-l", "ar", "-p", "3.13", "--no-git", "--no-ai-context"
         )
@@ -453,8 +523,8 @@ class TestEitherOrder:
         assert data["runtime"] == {"cache_size": 64}
         assert data["equipo"] == {"nombre": "लेगेशर"}
 
-    def test_init_after_git_setup(self, repo):
-        script = write_program(repo, "th", "สวัสดี", "สวัสดีชาวโลก")
+    def test_init_after_git_setup(self, repo, request):
+        script = write_program(repo, "th", "สวัสดี", "สวัสดีชาวโลก", request)
         legesher("git", "setup", "--language", "th")
         refused = legesher(
             "init", "-l", "th", "-p", "3.13", "--git", "--no-ai-context", ok=False
@@ -470,16 +540,17 @@ class TestAConfigAlreadyOnDisk:
     """A file ``init`` wrote before this change keeps working, untouched."""
 
     @pytest.mark.parametrize(("lang", "name", "text"), PROGRAMS)
-    def test_the_old_init_shape_is_read(self, repo, lang, name, text):
-        script = write_program(repo, lang, name, text)
+    def test_the_old_init_shape_is_read(self, repo, lang, name, text, request):
+        script = write_program(repo, lang, name, text, request)
         config_file(repo).parent.mkdir()
         old = OLD_INIT_CONFIG.format(lang=lang).encode("utf-8")
         config_file(repo).write_bytes(old)
         assert_every_reader_agrees(lang)
-        assert_runs(script, text)
         assert legesher("config", "get", "git.filter_enabled").output.strip() == "true"
         assert legesher("config", "get", "languages").output.strip() == lang
         # Reading never rewrites the user's file.
+        assert config_file(repo).read_bytes() == old
+        assert_runs(script, text)
         assert config_file(repo).read_bytes() == old
 
     def test_git_setup_strips_nothing_from_it(self, repo):
@@ -497,7 +568,9 @@ class TestAConfigAlreadyOnDisk:
         assert after["language"] == "es"
         assert after["git"]["filter_enabled"] is True
 
-    def test_one_left_below_the_root_is_read_and_reported(self, repo, monkeypatch):
+    def test_one_left_below_the_root_is_read_and_reported(
+        self, repo, monkeypatch, request
+    ):
         # An earlier init run in a subdirectory wrote its config there. It
         # is still read from that directory down, and `git status` says the
         # filter, which git runs at the root, does not see it.
@@ -512,19 +585,23 @@ class TestAConfigAlreadyOnDisk:
         status = legesher("git", "status").output
         assert "Language: hi\n" in status
         assert "not at the" in status and "legesher git setup" in status
-        script = write_program(nested, "hi", "नमस्ते", "नमस्ते दुनिया")
-        assert_runs(script, "नमस्ते दुनिया")
 
         monkeypatch.chdir(repo)
         root_status = legesher("git", "status").output
         assert "Language: en\n" in root_status and "not at the" not in root_status
         assert filter_language() == "en"
 
-        # `git setup` writes the root file, and from then on it is the one.
+        # `git setup` writes the root file, and from then on it is the one;
+        # the nested file is reported as not read.
         legesher("git", "setup", "--language", "hi")
         monkeypatch.chdir(nested)
         assert_every_reader_agrees("hi")
-        assert "not at the" not in legesher("git", "status").output
+        status = legesher("git", "status").output
+        assert "not at the" not in status
+        assert f"{config_file(nested.resolve())} is not read" in status
+
+        script = write_program(nested, "hi", "नमस्ते", "नमस्ते दुनिया", request)
+        assert_runs(script, "नमस्ते दुनिया")
 
     def test_an_explicit_language_wins_over_the_list(self, repo):
         config_file(repo).parent.mkdir()
@@ -579,7 +656,7 @@ class TestRunSaysWhichLanguageItUsed:
         assert result.returncode == 1
         note = stderr[stderr.index("legesher:") :]
         assert "'es'" in note
-        assert os.path.join(".legesher", "config.yml") in note
+        assert f"set in {config_file(repo.resolve())}." in note
         assert "--lang" in note
 
     def test_the_users_language_is_named_with_the_users_file(
@@ -596,7 +673,9 @@ class TestRunSaysWhichLanguageItUsed:
         stderr = result.stderr.decode("utf-8")
         assert result.returncode == 1
         note = stderr[stderr.index("legesher:") :]
-        assert "'th'" in note and str(user_config) in note
+        assert "'th'" in note
+        assert f"set in {user_config}." in note
+        assert str(config_file(project.resolve())) not in note
 
     def test_a_project_config_without_a_language_points_at_config_set(self, project):
         config_file(project).parent.mkdir()
@@ -620,3 +699,104 @@ class TestRunSaysWhichLanguageItUsed:
         assert result.returncode == 1
         assert b"ZeroDivisionError" in result.stderr
         assert b"legesher:" not in result.stderr
+
+
+#: Project files the runtime leaves out whole, each with what the reason says.
+LEFT_OUT = [
+    pytest.param("language: [unclosed\n", "cannot be read as YAML", id="unparsable"),
+    pytest.param("- es\n- ar\n", "not a YAML mapping", id="not-a-mapping"),
+    pytest.param(
+        "language: ar\nmetadata:\n  directory: /var/meta\n",
+        "must be a relative path",
+        id="fails-validation",
+    ),
+]
+
+
+class TestAProjectFileThatCannotBeUsed:
+    """Every reader leaves it out whole, and every command says so."""
+
+    @pytest.fixture
+    def setup(self, repo, isolated_home, request) -> tuple[Path, Path]:
+        text = request.param
+        (isolated_home / ".legesher").mkdir()
+        user = isolated_home / ".legesher" / "config.yml"
+        user.write_text("language: he\n", encoding="utf-8")
+        config_file(repo).parent.mkdir()
+        config_file(repo).write_text(text, encoding="utf-8")
+        return config_file(repo.resolve()), user
+
+    @pytest.mark.parametrize(("setup", "reason"), LEFT_OUT, indirect=["setup"])
+    def test_the_runtime_uses_the_rest_and_records_why(self, setup, reason):
+        project_file, user = setup
+        config = LegesherConfig.load()
+        assert (config.language, config.language_source) == ("he", user)
+        assert [path for path, _ in config.left_out] == [project_file]
+        assert reason in config.left_out[0][1]
+        assert filter_language() == "he"
+
+    @pytest.mark.parametrize(("setup", "reason"), LEFT_OUT, indirect=["setup"])
+    def test_config_get_refuses_and_names_it(self, setup, reason):
+        project_file, _user = setup
+        result = legesher("config", "get", "language", ok=False)
+        assert result.exit_code == 1
+        assert f"Cannot use {project_file}" in result.output
+        assert reason in result.output
+        assert "Traceback" not in result.output
+
+    @pytest.mark.parametrize(("setup", "reason"), LEFT_OUT, indirect=["setup"])
+    def test_git_status_reports_it(self, setup, reason):
+        project_file, _user = setup
+        status = legesher("git", "status").output
+        assert "Language: he\n" in status
+        assert f"Left out {project_file}: " in status and reason in status
+
+    @pytest.mark.parametrize(("setup", "reason"), LEFT_OUT, indirect=["setup"])
+    def test_git_setup_refuses_and_leaves_it_as_it_is(self, setup, reason):
+        project_file, _user = setup
+        before = project_file.read_bytes()
+        result = legesher("git", "setup", "--language", "es", ok=False)
+        assert result.exit_code == 1
+        assert f"Cannot use {project_file}" in result.output and reason in result.output
+        assert project_file.read_bytes() == before
+
+    @pytest.mark.parametrize(("setup", "reason"), LEFT_OUT, indirect=["setup"])
+    def test_run_names_it_before_the_language(self, setup, reason, repo):
+        project_file, user = setup
+        script = write_program(repo, "hi", "नमस्ते", "नमस्ते दुनिया")
+        result = run_script(script)
+        stderr = result.stderr.decode("utf-8")
+        assert result.returncode == 1
+        note = stderr[stderr.index("legesher: ") :]
+        first, second = note.splitlines()[:2]
+        assert first.startswith(f"legesher: {project_file} could not be used")
+        assert reason in first
+        assert f"read as 'he', the language set in {user}." in second
+        assert stderr.count(f"Ignoring {project_file}") <= 1
+
+    @pytest.mark.parametrize(("setup", "reason"), [LEFT_OUT[2]], indirect=["setup"])
+    def test_config_set_can_fix_a_value_that_fails_validation(self, setup, reason):
+        legesher("config", "set", "metadata.directory", ".legesher/metadata")
+        assert legesher("config", "get", "language").output.strip() == "ar"
+        assert LegesherConfig.load().language == "ar"
+
+    @pytest.mark.parametrize(("setup", "reason"), [LEFT_OUT[0]], indirect=["setup"])
+    def test_config_set_on_unparsable_yaml_is_a_clear_error(self, setup, reason):
+        project_file, _user = setup
+        before = project_file.read_bytes()
+        result = legesher("config", "set", "language", "es", ok=False)
+        assert result.exit_code == 1
+        assert "not valid YAML" in result.output and "Traceback" not in result.output
+        assert project_file.read_bytes() == before
+
+
+class TestInitFindsThePythonVersionAtTheRoot:
+    def test_from_a_subdirectory(self, repo, monkeypatch):
+        (repo / "pyproject.toml").write_text(
+            '[project]\nrequires-python = ">=3.12"\n', encoding="utf-8"
+        )
+        below = repo / "स्रोत"
+        below.mkdir()
+        monkeypatch.chdir(below)
+        legesher("init", "-l", "hi", "--no-git", "--no-ai-context")
+        assert read_config(repo)["python_version"] == "3.12"

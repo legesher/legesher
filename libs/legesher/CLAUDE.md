@@ -18,16 +18,20 @@ so register a new marker in `pyproject.toml`.
   `error_handler.py` (traceback frames point at the localized source). `legesher run` installs both through
   `install_import_hook()` and `install_error_handler()`.
 - `legesher/config.py`: project `.legesher/config.yml` over user `~/.legesher/config.yml` over defaults. It
-  owns the file's contract, and nothing else may re-derive any of it:
-  - where the file is: `project_root()` (the git root inside a repository, else the working directory; `init`
-    and `git setup` write there) and `find_project_config()` (the root file inside a repository, else the
-    nearest at or above the working directory; never the user file);
-  - how a file is read: `normalize_config_data()`, including the shape an earlier `init` wrote;
-  - how the two files combine: `merge_config_data()`, per top-level key. `LegesherConfig.load()` and
-    `legesher config` both use it;
-  - how it is written: `dump_config()`.
-- `guard` and `git setup` name the repository root themselves and read `<root>/.legesher/config.yml`
-  through the same reader: a pull request's base has no working directory to search from.
+  owns the file's contract; add to it rather than re-deriving any part elsewhere:
+  - where the file is: `find_project_config()` (the root file inside a repository, else the nearest at or
+    above the working directory; never the user file) and `project_root()` (where `init` writes: the git
+    root, else the working directory). A home directory kept in git is not a repository for either
+    (`home_is_the_repository()`); `init` and `git setup` refuse to set the filter up there.
+  - how one file is read: `read_config_file()`, which returns the data through `normalize_config_data()`
+    (including the shape an earlier `init` wrote) or the reason the file is left out whole. The loader,
+    `load_project_config()`, `load_user_config()`, `legesher config get` and `list`, and `git setup` all
+    use it; `guard --diff` reads a commit's blob through `normalize_config_data()` directly.
+  - how the two files combine: `merge_config_data()`, per top-level key, used by `load()` and `config`.
+  - how a file is written: `dump_config()`; `save_*_config()` merge into the file on disk.
+- `git setup`, `git status` and `init`'s git step locate the repository with `LegesherConfig._find_repo_root()`,
+  because git commands need the real repository; they check `home_is_the_repository()` before writing.
+  `config set` reads and writes the raw YAML on purpose, so it can fix a value that fails validation.
 
 ## Gotchas
 

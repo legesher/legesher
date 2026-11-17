@@ -37,31 +37,40 @@ def _from_script(tb: TracebackType | None, script: str) -> TracebackType | None:
     return tb
 
 
-def _language_note(script: Path, language: str, source: Path | None) -> str:
+def _language_note(script: Path, config: LegesherConfig) -> str:
     """Which language a script that did not compile was read as, and why.
 
     A file written in one language and read as another fails on its first
     keyword, and Python's ``SyntaxError`` cannot say that the language was
     the problem. Printed only when ``--lang`` did not name the language.
-    ``source`` is the config file the language came from, or None when no
-    file names one.
     """
-    if source is not None:
-        return (
-            f"legesher: {script.name} was read as '{language}', the language "
-            f"set in {source}.\n"
+    lines = [
+        f"legesher: {path} could not be used, so none of its settings apply: {problem}."
+        for path, problem in config.left_out
+    ]
+    if config.language_source is not None:
+        lines.append(
+            f"legesher: {script.name} was read as '{config.language}', the "
+            f"language set in {config.language_source}."
+        )
+        lines.append(
             "legesher: if it is written in another language, pass --lang <code>."
         )
-    if find_project_config() is not None:
-        fix = "legesher config set language <code>"
+        return "\n".join(lines)
+    if config.left_out:
+        fix = "fix the file above"
+    elif find_project_config() is not None:
+        fix = "set one with: legesher config set language <code>"
     else:
-        fix = "legesher init"
-    return (
+        fix = "set one with: legesher init"
+    lines.append(
         f"legesher: {script.name} was read as English (en), because no "
-        "language is configured here.\n"
-        "legesher: if it is written in another language, pass --lang <code>, "
-        f"or set one with: {fix}"
+        "language is configured here."
     )
+    lines.append(
+        f"legesher: if it is written in another language, pass --lang <code>, or {fix}"
+    )
+    return "\n".join(lines)
 
 
 @click.command()
@@ -163,6 +172,5 @@ def run(script: str, lang: str | None, args: str | None):
             raise
         sys.excepthook(type(exc), exc, tb)
         if compile_error and lang is None:
-            note = _language_note(script_path, language, config.language_source)
-            click.echo(note, err=True)
+            click.echo(_language_note(script_path, config), err=True)
         sys.exit(1)

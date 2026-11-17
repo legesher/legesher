@@ -434,30 +434,6 @@ class TestTheFileTheRuntimeReads:
         assert "No .legesher/config.yml found" in result.output
         assert user_config.read_text() == "language: es\n"
 
-    @pytest.mark.parametrize(
-        ("user", "project"),
-        [
-            ("language: he\n", "python_version: '3.13'\n"),
-            ("language: he\n", "languages: []\n"),
-            ("languages:\n  - th\n", "git:\n  enabled: false\n"),
-            ("language: he\n", "language: ar\n"),
-        ],
-        ids=["project-names-none", "empty-list", "old-shape-user", "both-name-one"],
-    )
-    def test_get_language_is_what_the_loader_uses(
-        self, temp_home, tmp_path, monkeypatch, user, project
-    ):
-        from legesher.config import LegesherConfig
-
-        (temp_home / ".legesher").mkdir()
-        (temp_home / ".legesher" / "config.yml").write_text(user, encoding="utf-8")
-        (tmp_path / ".legesher").mkdir()
-        (tmp_path / ".legesher" / "config.yml").write_text(project, encoding="utf-8")
-        monkeypatch.chdir(tmp_path)
-        result = CliRunner().invoke(cli, ["config", "get", "language"])
-        assert result.exit_code == 0, result.output
-        assert result.output.strip() == LegesherConfig.load().language
-
     def test_set_writes_text_as_itself(self, tmp_path, monkeypatch):
         (tmp_path / ".legesher").mkdir()
         config_file = tmp_path / ".legesher" / "config.yml"

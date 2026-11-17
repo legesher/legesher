@@ -20,7 +20,13 @@ Inside a git repository the project config is the one at the repository's
 root, where ``legesher init`` and ``legesher git setup`` write it and where
 git runs the filter and the guard hook. Outside one it is the nearest
 ``.legesher/config.yml`` at or above the working directory: a project does
-not have to be a git repository.
+not have to be a git repository. A home directory kept in git is not a
+project's repository, because its root holds the user config.
+
+A file that cannot be used (unparsable YAML, not a mapping, or a value that
+fails validation) is left out whole by every reader (``read_config_file``).
+The runtime warns and carries on without it; ``legesher config`` and
+``legesher git setup`` refuse until it is fixed.
 
 One schema, written by ``legesher init`` and ``legesher git setup`` alike.
 ``legesher init`` once wrote a different one (``languages`` as a list and no
@@ -37,7 +43,7 @@ switch a user's telemetry back on.
 import copy
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TypeGuard
 
 import yaml
 
@@ -103,7 +109,7 @@ def language_list(value: object) -> list[str]:
     return codes
 
 
-def _is_language(value: object) -> bool:
+def _is_language(value: object) -> TypeGuard[str]:
     """Whether a ``language`` value is a code: a non-empty string."""
     return isinstance(value, str) and bool(value.strip())
 
@@ -122,9 +128,10 @@ def normalize_config_data(data: object) -> dict:
     A ``language`` that is not a code (a number, a list, an empty string)
     names none: it is treated as missing, filled from the list or dropped.
 
-    Every reader of a config file goes through this (the loader, ``legesher
-    config`` and ``legesher guard``), so they cannot disagree about what an
-    old file says. Anything that is not a mapping reads as an empty config.
+    Every reader of a config file goes through this (``read_config_file``,
+    ``merge_config_data`` and ``legesher guard``), so they cannot disagree
+    about what an old file says. Anything that is not a mapping reads as an
+    empty config.
     This is the one place ``languages`` decides a language; a file with a
     ``language`` of its own never has its list consulted.
     """
@@ -188,20 +195,57 @@ def is_user_config(path: Path) -> bool:
         return False
 
 
+def home_directory() -> Path | None:
+    """The user's home directory, resolved; None when it cannot be found."""
+    try:
+        return Path.home().resolve()
+    except (OSError, RuntimeError):
+        return None
+
+
+def _repository_root(start: Path) -> Path | None:
+    """The root of the git repository ``start`` is in, or None outside one.
+
+    A home directory kept in git does not count: its root holds the user
+    config, so it cannot hold a project's, and git there runs the filter
+    with the user's language. ``start`` must be resolved.
+    """
+    home = home_directory()
+    current = start
+    while True:
+        if (current / ".git").exists() and current != home:
+            return current
+        if current == current.parent:
+            return None
+        current = current.parent
+
+
 def project_root(start: Path | None = None) -> Path:
     """The directory a project's ``.legesher/`` belongs in.
 
     The root of the git repository ``start`` (default: the working
     directory) is in, which is where git runs the filter and the guard
-    hook; ``start`` itself outside a repository.
+    hook; ``start`` itself outside a repository, or inside a home
+    directory kept in git.
     """
     origin = (start or Path.cwd()).resolve()
-    current = origin
+    return _repository_root(origin) or origin
+
+
+def home_is_the_repository(start: Path | None = None) -> bool:
+    """Whether the git repository around ``start`` is the home directory's.
+
+    Git runs the filter and the guard hook at that root, where
+    ``.legesher/config.yml`` is the user config, so a project inside it
+    cannot have a filter language of its own.
+    """
+    home = home_directory()
+    current = (start or Path.cwd()).resolve()
     while True:
         if (current / ".git").exists():
-            return current
+            return current == home
         if current == current.parent:
-            return origin
+            return False
         current = current.parent
 
 
@@ -216,23 +260,85 @@ def find_project_config(start: Path | None = None) -> Path | None:
     between ``start`` and the root, which is where an earlier ``legesher
     init`` run in a subdirectory left it.
 
-    Outside a repository it is the nearest one at or above ``start``.
+    Outside a repository, and inside a home directory kept in git, it is
+    the nearest one at or above ``start``.
 
     It is never the user-level file, which sits at the same relative path
     under home, and the search never goes above a repository's root.
     """
-    current = (start or Path.cwd()).resolve()
+    origin = (start or Path.cwd()).resolve()
+    root = _repository_root(origin)
     nearest: Path | None = None
+    current = origin
     while True:
         candidate = current / CONFIG_RELATIVE_PATH
         found = candidate.is_file() and not is_user_config(candidate)
-        if (current / ".git").exists():
+        if current == root:
             return candidate if found else nearest
         if found and nearest is None:
             nearest = candidate
         if current == current.parent:
             return nearest
         current = current.parent
+
+
+def shadowed_project_configs(start: Path | None = None) -> list[Path]:
+    """Config files between ``start`` and its repository's root that no
+    command reads, because the root has one."""
+    origin = (start or Path.cwd()).resolve()
+    root = _repository_root(origin)
+    if root is None or not (root / CONFIG_RELATIVE_PATH).is_file():
+        return []
+    shadowed: list[Path] = []
+    current = origin
+    while current != root:
+        candidate = current / CONFIG_RELATIVE_PATH
+        if candidate.is_file():
+            shadowed.append(candidate)
+        current = current.parent
+    return shadowed
+
+
+def read_config_file(config_path: Path | None) -> tuple[dict | None, str | None]:
+    """A config file as every reader uses it.
+
+    Returns ``(data, None)`` for a usable file, read through
+    ``normalize_config_data`` (an empty file is an empty mapping);
+    ``(None, None)`` when there is no file; and ``(None, problem)`` for a
+    file that is left out whole: unreadable, unparsable, not a mapping, or
+    holding a value that fails validation. A file left out neither sets
+    nor hides anything.
+    """
+    if config_path is None or not config_path.is_file():
+        return None, None
+    try:
+        with open(config_path, encoding="utf-8") as f:
+            raw = yaml.safe_load(f)
+    except (OSError, ValueError, yaml.YAMLError) as e:
+        reason = " ".join(str(e).split())
+        return None, f"it cannot be read as YAML ({reason})"
+    if raw is None:
+        return {}, None
+    if not isinstance(raw, dict):
+        return None, f"it is not a YAML mapping (found {type(raw).__name__})"
+    data = normalize_config_data(raw)
+    try:
+        LegesherConfig.from_dict(data)
+    except (TypeError, ValueError, AttributeError) as e:
+        return None, str(e)
+    return data, None
+
+
+#: Files already reported as left out in this process, so a command that
+#: loads the config twice warns once.
+_REPORTED: set[tuple[str, str]] = set()
+
+
+def _report_left_out(config_path: Path, problem: str) -> None:
+    key = (str(config_path), problem)
+    if key not in _REPORTED:
+        _REPORTED.add(key)
+        logger.warning(f"Ignoring {config_path}: {problem}")
 
 
 def _section(value: object) -> dict:
@@ -284,6 +390,8 @@ class LegesherConfig:
             in a file that has no ``language`` (``normalize_config_data``).
         language_source: The config file ``load()`` took ``language`` from,
             or None when no file names one and it is the default.
+        left_out: The config files ``load()`` could not use, each with the
+            reason, as ``(path, problem)`` pairs.
         python_version: Python version (e.g., "3.13", None for auto-detect)
         git_canonical_language: Language used for git storage (default: "en")
         git_filter_enabled: Whether git filters are enabled (default: True)
@@ -330,10 +438,14 @@ class LegesherConfig:
             metadata_track_in_git: Whether to track metadata files in git (default: True)
             metadata_verbose_history: Include detailed history in metadata (default: False)
             metadata_max_history_entries: Maximum history entries per file (default: 100)
+            telemetry_enabled: Telemetry switch, read from the user config only
+            telemetry_repo_attribution: Repository attribution opt-in, user only
+            languages: Every language chosen for the project, as a record
         """
         self.language = language
         self.languages = list(languages) if languages else None
         self.language_source: Path | None = None  # set by load()
+        self.left_out: list[tuple[Path, str]] = []  # set by load()
         self.python_version = python_version
         self.git_canonical_language = git_canonical_language
         self.git_filter_enabled = git_filter_enabled
@@ -477,20 +589,14 @@ class LegesherConfig:
         else:
             config_path = repo_root / CONFIG_RELATIVE_PATH
 
-        if not config_path.exists():
-            logger.debug(f"No project config found at {config_path}")
+        data, problem = read_config_file(config_path)
+        if problem is not None:
+            _report_left_out(config_path, problem)
+        if data is None:
+            logger.debug(f"No usable project config at {config_path}")
             return (None, False)
-
-        try:
-            with open(config_path, encoding="utf-8") as f:
-                data = yaml.safe_load(f) or {}
-
-            logger.info(f"Loaded project config from {config_path}")
-            return (cls.from_dict(data), True)
-
-        except Exception as e:
-            logger.error(f"Error loading project config: {e}")
-            return (None, False)
+        logger.info(f"Loaded project config from {config_path}")
+        return (cls.from_dict(data), True)
 
     @classmethod
     def load_user_config(cls) -> tuple[Optional["LegesherConfig"], bool]:
@@ -504,21 +610,14 @@ class LegesherConfig:
             >>> config, exists = LegesherConfig.load_user_config()
         """
         config_path = user_config_path()
-
-        if not config_path.exists():
-            logger.debug(f"No user config found at {config_path}")
+        data, problem = read_config_file(config_path)
+        if problem is not None:
+            _report_left_out(config_path, problem)
+        if data is None:
+            logger.debug(f"No usable user config at {config_path}")
             return (None, False)
-
-        try:
-            with open(config_path, encoding="utf-8") as f:
-                data = yaml.safe_load(f) or {}
-
-            logger.info(f"Loaded user config from {config_path}")
-            return (cls.from_dict(data), True)
-
-        except Exception as e:
-            logger.error(f"Error loading user config: {e}")
-            return (None, False)
+        logger.info(f"Loaded user config from {config_path}")
+        return (cls.from_dict(data), True)
 
     @classmethod
     def load(cls, repo_root: Path | None = None) -> "LegesherConfig":
@@ -551,8 +650,18 @@ class LegesherConfig:
             logger.debug(f"Could not look for a project config: {e}")
             project_path = None
 
-        user_data = cls._usable_file_data(user_path)
-        project_data = cls._usable_file_data(project_path)
+        user_data, user_problem = read_config_file(user_path)
+        project_data, project_problem = read_config_file(project_path)
+        left_out = [
+            (path, problem)
+            for path, problem in (
+                (project_path, project_problem),
+                (user_path, user_problem),
+            )
+            if path is not None and problem is not None
+        ]
+        for path, problem in left_out:
+            _report_left_out(path, problem)
 
         # Defaults, then what the files say, the project's settings first.
         merged_data = copy.deepcopy(DEFAULT_CONFIG)
@@ -564,41 +673,12 @@ class LegesherConfig:
         merged_data["telemetry"] = user_telemetry(cls._read_user_yaml())
 
         config = cls.from_dict(merged_data)
+        config.left_out = left_out
         for path, data in ((project_path, project_data), (user_path, user_data)):
-            if data is not None and isinstance(data.get("language"), str):
+            if data is not None and _is_language(data.get("language")):
                 config.language_source = path
                 break
         return config
-
-    @classmethod
-    def _usable_file_data(cls, config_path: Path | None) -> dict | None:
-        """A config file as ``load()`` uses it, or ``None`` when it does not.
-
-        ``None`` for no file, a file that cannot be read, one whose YAML is
-        not a mapping, and one that fails validation: such a file is left
-        out whole, so it neither sets nor hides anything. An empty file is
-        an empty mapping.
-        """
-        if config_path is None or not config_path.is_file():
-            return None
-        try:
-            with open(config_path, encoding="utf-8") as f:
-                raw = yaml.safe_load(f)
-        except (OSError, ValueError, yaml.YAMLError) as e:
-            logger.error(f"Ignoring {config_path}: {e}")
-            return None
-        if raw is None:
-            return {}
-        if not isinstance(raw, dict):
-            logger.error(f"Ignoring {config_path}: it is not a YAML mapping")
-            return None
-        data = normalize_config_data(raw)
-        try:
-            cls.from_dict(data)
-        except Exception as e:
-            logger.error(f"Ignoring {config_path}: {e}")
-            return None
-        return data
 
     @staticmethod
     def _read_yaml(config_path: Path) -> object:

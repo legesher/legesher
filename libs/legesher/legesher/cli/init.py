@@ -31,8 +31,10 @@ from legesher_i18n.language_registry import LANGUAGE_METADATA
 from legesher.config import (
     CONFIG_RELATIVE_PATH,
     LegesherConfig,
-    is_user_config,
     dump_config,
+    home_directory,
+    home_is_the_repository,
+    is_user_config,
     project_root,
 )
 
@@ -122,22 +124,18 @@ def init(
     # writes it and git runs the filter; in this directory outside one.
     root = project_root()
     here = Path.cwd().resolve()
-    if root == _home() and here != root:
-        # Home is itself a repository (dotfiles kept in git): its root holds
-        # the user-level config, so the project is this directory.
-        root = here
     legesher_dir = Path(".legesher") if root == here else root / ".legesher"
     config_path = legesher_dir / CONFIG_RELATIVE_PATH.name
 
     # ~/.legesher/config.yml is the user-level config, never a project's.
-    if root == _home() or is_user_config(config_path):
+    if root == home_directory() or is_user_config(config_path):
         click.echo(
             click.style(
-                "❌ This is your home directory, where .legesher/config.yml is",
+                "❌ Here .legesher/config.yml is your user-level config,",
                 fg="red",
             )
         )
-        click.echo("   your user-level config and not a project's.\n")
+        click.echo("   not a project's.\n")
         click.echo("   Run 'legesher init' inside a project directory, or set a")
         click.echo("   default with: legesher config set --global language <code>")
         sys.exit(1)
@@ -155,7 +153,7 @@ def init(
         sys.exit(1)
 
     # Step 1: Detect Python version
-    detected_version = _detect_python_version()
+    detected_version = _detect_python_version(root)
     if python_version:
         py_version = python_version
         click.echo(f"✓ Using Python version: {py_version} (from --python-version flag)")
@@ -208,10 +206,11 @@ def init(
     working_language = selected_languages[0]
     if len(selected_languages) > 1:
         if not language and sys.stdin.isatty():
-            working_language = _select_working_language(selected_languages)
-            if not working_language:
+            chosen = _select_working_language(selected_languages)
+            if not chosen:
                 click.echo(click.style("\n❌ Setup cancelled.", fg="red"))
                 sys.exit(1)
+            working_language = chosen
         click.echo(f"✓ Working language: {working_language}")
         click.echo("   Change it with: legesher config set language <code>")
 
@@ -351,21 +350,18 @@ def init(
         click.echo("   AI-CONTEXT files. They'll suggest code in your language!\n")
 
 
-def _home() -> Path | None:
-    """The user's home directory, resolved; None when it cannot be found."""
-    try:
-        return Path.home().resolve()
-    except (OSError, RuntimeError):
-        return None
-
-
-def _detect_python_version() -> str | None:
+def _detect_python_version(root: Path | None = None) -> str | None:
     """Detect Python version from pyproject.toml.
+
+    The one in the working directory, else the one at ``root``, the
+    project's root, where the config is written.
 
     Returns:
         Python version string (e.g., "3.13") or None if not found
     """
     pyproject_path = Path("pyproject.toml")
+    if not pyproject_path.exists() and root is not None:
+        pyproject_path = root / "pyproject.toml"
     if not pyproject_path.exists():
         return None
 
@@ -505,6 +501,19 @@ def _setup_git_integration() -> bool:
             click.style(f"  ⚠ Could not set up git integration: {e}", fg="yellow")
         )
         click.echo("    Run 'legesher git setup' from within a git repository.")
+        return False
+
+    if home_is_the_repository(repo_root):
+        click.echo(
+            click.style(
+                "  ⚠ Could not set up git integration: this repository is your",
+                fg="yellow",
+            )
+        )
+        click.echo("    home directory's, and git runs the filter at its root, where")
+        click.echo("    .legesher/config.yml is your user-level config. Run 'git init'")
+        click.echo("    here to give the project its own repository, then")
+        click.echo("    'legesher git setup'.")
         return False
 
     if not _configure_git_filters():

@@ -73,9 +73,11 @@ and the git filter work straight after `init`, in a git repository or outside on
 Inside a git repository `init` writes the file at the repository's root, whichever directory it is run
 from: that is where `legesher git setup` writes it and where git runs the filter. Outside one it writes in
 the current directory. It does not run in your home directory, where `.legesher/config.yml` is your
-user-level config; set a default there with `legesher config set --global language <code>`. `--force`
-replaces an existing project file with a new one. Without a `pyproject.toml` to read the Python version
-from, a non-interactive run needs `--python-version`.
+user-level config; set a default there with `legesher config set --global language <code>`. A home
+directory kept in git is not a project's repository: `init` writes the config in the directory it is run
+from, and does not set up the git filter there (see [Configuration](#configuration)). `--force` replaces an
+existing project file with a new one. The Python version is read from a `pyproject.toml` in the current
+directory or at the project's root; without one, a non-interactive run needs `--python-version`.
 
 ### `legesher translate`
 
@@ -338,7 +340,10 @@ legesher config set language es --global
 ```
 
 `config get` exits 1 with `Key '<key>' not found.` when the key is absent from both files: it does not
-report the built-in defaults the runtime falls back to.
+report the built-in defaults the runtime falls back to. `get` and `list` also exit 1, naming the file and
+the reason, when a config file is one the runtime leaves out (see [Configuration](#configuration)), so they
+never report settings that are not in effect. `set` reads the file as written, so it can fix a value that
+fails validation; a file that is not valid YAML has to be fixed by hand.
 
 **Configuration Locations:**
 
@@ -404,7 +409,21 @@ directory. It is never `~/.legesher/config.yml`, and the search never goes above
 
 A repository with no config at its root but one in a subdirectory, where an earlier `legesher init` run
 there left it, still has that one read by commands run in or below that directory. The git filter does not
-see it, and `legesher git status` says so; `legesher git setup` writes the root file.
+see it, and `legesher git status` says so; `legesher git setup` writes the root file. Once the root has a
+config, `git status` names any in a subdirectory as not read.
+
+A home directory kept in git (dotfiles) is not a project's repository, because its root holds your
+user-level config. Under it, the project file is found as it is outside a repository. Git still runs the
+filter and the guard hook at the home directory's root, where they read your user-level config, so a
+project there cannot have a filter language of its own: `legesher init` does not set the filter up,
+`legesher git setup` refuses (unless `--global`), and `legesher git status` says so. Run `git init` in the
+project to give it its own repository.
+
+**A file that cannot be used** (YAML that does not parse, YAML that is not a mapping, or a value that fails
+validation, such as an absolute `metadata.directory`) is left out whole: it neither sets nor hides anything.
+`legesher run`, `legesher guard` and the git filter warn once and carry on without it, and `run`'s note
+names it; `legesher git status` lists it; `legesher config get` and `config list` exit 1 naming it; and
+`legesher git setup` refuses to write over it until it is fixed.
 
 ### Project configuration
 
@@ -442,6 +461,9 @@ file like that keeps working as it is:
 
 - `language` is read as the first entry of `languages`, and `git.filter_enabled` as `git.enabled`. A
   `language` or `git.filter_enabled` the file names itself wins.
+- That is a change for a repository that has such a file at its root: the git filter and the
+  `legesher guard` pre-commit hook used English, and now use the first of `languages`. A stray keyword in
+  the other language is normalized at `git add`, and the hook refuses one that skipped the filter.
 - Nothing rewrites the file for being old. `legesher git setup` and `legesher config set` add the current
   keys beside its extra sections and keep those; like any rewrite by those two commands, that drops the
   file's comments.
@@ -462,9 +484,6 @@ Settings are resolved in this order (highest to lowest priority):
 2. Project configuration (`.legesher/config.yml`)
 3. User configuration (`~/.legesher/config.yml`)
 4. Built-in defaults
-
-A file that cannot be used (unparsable YAML, not a mapping, or a value that fails validation such as an
-absolute `metadata.directory`) is left out whole: it neither sets nor hides anything.
 
 ## Examples
 

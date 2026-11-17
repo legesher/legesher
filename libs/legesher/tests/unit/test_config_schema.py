@@ -20,14 +20,20 @@ from pathlib import Path
 import pytest
 import yaml
 
+from click.testing import CliRunner
+
+from legesher.cli.main import cli
 from legesher.config import (
     LegesherConfig,
     dump_config,
     find_project_config,
+    home_is_the_repository,
     language_list,
     merge_config_data,
     normalize_config_data,
     project_root,
+    read_config_file,
+    shadowed_project_configs,
     user_config_path,
 )
 
@@ -179,6 +185,16 @@ class TestProjectRoot:
         plain.mkdir()
         assert project_root(plain) == plain.resolve()
 
+    def test_the_directory_itself_inside_a_home_kept_in_git(self, home):
+        # Home's root holds the user config, so it is never a project root.
+        repository(home)
+        below = home / "परियोजना" / "स्रोत"
+        below.mkdir(parents=True)
+        assert project_root(below) == below.resolve()
+        assert project_root(home) == home.resolve()
+        assert home_is_the_repository(below)
+        assert not home_is_the_repository(repository(home / "अपना"))
+
 
 class TestFindProjectConfig:
     def test_without_a_git_repository(self, tmp_path):
@@ -279,6 +295,53 @@ class TestFindProjectConfig:
         assert LegesherConfig.load().language == "si"
 
 
+#: User and project files, the language the runtime uses, and whether the
+#: project file is used at all.
+CASES = [
+    pytest.param(
+        "language: he\n",
+        "python_version: '3.13'\n",
+        "he",
+        True,
+        id="project-names-none",
+    ),
+    pytest.param(
+        "language: he\n", "languages: []\n", "he", True, id="project-list-empty"
+    ),
+    pytest.param("language: he\n", "", "he", True, id="project-empty"),
+    pytest.param(
+        "language: he\n", "# only a comment\n", "he", True, id="project-comment-only"
+    ),
+    pytest.param(
+        "language: he\n", "- es\n- ar\n", "he", False, id="project-not-a-mapping"
+    ),
+    pytest.param(
+        "language: he\n", "language: [unclosed\n", "he", False, id="project-unparsable"
+    ),
+    pytest.param(
+        "language: he\n", "language: 7\n", "he", True, id="project-language-not-a-code"
+    ),
+    pytest.param(
+        "language: he\n",
+        "language: ar\nmetadata:\n  directory: /var/x\n",
+        "he",
+        False,
+        id="project-fails-validation",
+    ),
+    pytest.param(
+        "language: he\n", "language: ar\n", "ar", True, id="project-names-one"
+    ),
+    pytest.param(
+        "languages:\n  - th\n",
+        "git:\n  enabled: true\n",
+        "th",
+        True,
+        id="old-shape-user",
+    ),
+    pytest.param("", "", "en", True, id="neither"),
+]
+
+
 class TestMerge:
     """One rule for the user's file under the project's, for every reader."""
 
@@ -312,42 +375,37 @@ class TestMerge:
             "telemetry": {"enabled": True, "repo_attribution": False}
         }
 
-    @pytest.mark.parametrize(
-        ("user", "project", "language"),
-        [
-            ("language: he\n", "python_version: '3.13'\n", "he"),
-            ("language: he\n", "languages: []\n", "he"),
-            ("language: he\n", "", "he"),
-            ("language: he\n", "# only a comment\n", "he"),
-            ("language: he\n", "- es\n- ar\n", "he"),
-            ("language: he\n", "language: [unclosed\n", "he"),
-            ("language: he\n", "language: 7\n", "he"),
-            ("language: he\n", "language: ar\nmetadata:\n  directory: /var/x\n", "he"),
-            ("language: he\n", "language: ar\n", "ar"),
-            ("languages:\n  - th\n", "git:\n  enabled: true\n", "th"),
-            ("", "", "en"),
-        ],
-        ids=[
-            "project-names-none",
-            "project-list-empty",
-            "project-empty",
-            "project-comment-only",
-            "project-not-a-mapping",
-            "project-unparsable",
-            "project-language-not-a-code",
-            "project-fails-validation",
-            "project-names-one",
-            "old-shape-user-file",
-            "neither",
-        ],
-    )
+    @pytest.mark.parametrize(("user", "project", "language", "used"), CASES)
     def test_the_loader_takes_the_language_by_the_same_rule(
-        self, tmp_path, monkeypatch, home, user, project, language
+        self, tmp_path, monkeypatch, home, user, project, language, used
     ):
         config_in(home, user)
         path = config_in(tmp_path / "p", project)
         monkeypatch.chdir(path.parent.parent)
-        assert LegesherConfig.load().language == language
+        config = LegesherConfig.load()
+        assert config.language == language
+        assert (config.left_out == []) is used
+
+    @pytest.mark.parametrize(("user", "project", "language", "used"), CASES)
+    def test_config_get_reports_what_the_loader_uses(
+        self, tmp_path, monkeypatch, home, user, project, language, used
+    ):
+        config_in(home, user)
+        path = config_in(tmp_path / "p", project)
+        monkeypatch.chdir(path.parent.parent)
+        config = LegesherConfig.load()
+        result = CliRunner().invoke(cli, ["config", "get", "language"])
+        if not used:
+            # The runtime leaves the project file out; `config` will not
+            # report settings from it, and says why.
+            assert result.exit_code == 1
+            assert f"Cannot use {path.resolve()}" in result.output
+        elif config.language_source is None:
+            assert result.exit_code == 1
+            assert "not found" in result.output
+            assert config.language == "en"
+        else:
+            assert (result.exit_code, result.output) == (0, f"{config.language}\n")
 
     def test_a_user_file_that_fails_validation_still_carries_consent(
         self, tmp_path, monkeypatch, home
@@ -423,6 +481,54 @@ class TestLanguageSource:
         path = config_in(root, "language: si\n")
         config = LegesherConfig.load(root)
         assert (config.language, config.language_source) == ("si", path)
+
+
+class TestReadConfigFile:
+    def test_no_file(self, tmp_path):
+        assert read_config_file(None) == (None, None)
+        assert read_config_file(tmp_path / "missing.yml") == (None, None)
+
+    def test_an_empty_file_is_an_empty_mapping(self, tmp_path):
+        assert read_config_file(write(tmp_path / "c.yml", "")) == ({}, None)
+
+    def test_a_usable_file_is_read_as_the_old_shape_is(self, tmp_path):
+        data, problem = read_config_file(write(tmp_path / "c.yml", "languages: [si]\n"))
+        assert problem is None and data["language"] == "si"
+
+    @pytest.mark.parametrize(
+        ("text", "reason"),
+        [
+            ("language: [unclosed\n", "cannot be read as YAML"),
+            ("- es\n", "not a YAML mapping (found list)"),
+            ("just a scalar\n", "not a YAML mapping (found str)"),
+            ("metadata:\n  directory: /abs\n", "must be a relative path"),
+            ("metadata:\n  max_history_entries: -1\n", "must be >= 0"),
+        ],
+        ids=["unparsable", "list", "scalar", "absolute-directory", "negative-history"],
+    )
+    def test_a_file_left_out_says_why(self, tmp_path, text, reason):
+        data, problem = read_config_file(write(tmp_path / "c.yml", text))
+        assert data is None and reason in problem
+
+
+class TestShadowedConfigs:
+    def test_one_below_the_root_is_reported_when_the_root_has_one(self, tmp_path):
+        root = repository(tmp_path / "r")
+        config_in(root, "language: es\n")
+        nested = config_in(root / "ऐप", "language: hi\n")
+        below = nested.parent.parent / "स्रोत"
+        below.mkdir()
+        assert shadowed_project_configs(below) == [nested.resolve()]
+
+    def test_none_when_the_root_has_none(self, tmp_path):
+        root = repository(tmp_path / "r")
+        nested = config_in(root / "ऐप", "language: hi\n")
+        assert shadowed_project_configs(nested.parent.parent) == []
+
+    def test_none_outside_a_repository(self, tmp_path):
+        config_in(tmp_path, "language: es\n")
+        nested = config_in(tmp_path / "ऐप", "language: hi\n")
+        assert shadowed_project_configs(nested.parent.parent) == []
 
 
 class TestDump:

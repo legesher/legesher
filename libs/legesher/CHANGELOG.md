@@ -21,13 +21,32 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Inside a git repository `legesher init` writes the config at the
   repository's root, whichever directory it is run from, where `git setup`
   writes it and git runs the filter. It wrote in the current directory. It
-  does not run in the home directory, where the file is the user-level config.
+  does not run in the home directory, where the file is the user-level config,
+  and reads `pyproject.toml` at the project's root when the current directory
+  has none.
+- A home directory kept in git is not a project's repository: its root holds
+  the user config. `legesher init` under it writes the config where it is run
+  and does not set the git filter up; `legesher git setup` refuses (unless
+  `--global`); `legesher git status` says why. `git setup` there wrote the
+  project's language into the user config.
+- A config file that cannot be used (unparsable YAML, not a mapping, or a
+  value that fails validation) is left out whole by every reader, with one
+  warning per command. `legesher config get` and `list` exit 1 naming it;
+  `git status` lists it; `run`'s note names it; `git setup` refuses to write
+  over it. `config set` on YAML that does not parse is an error, not a
+  traceback.
+- A repository whose config file at the root is in the shape an earlier
+  `legesher init` wrote: the git clean filter and the `legesher guard`
+  pre-commit hook used English for it, and now use the first of its
+  `languages`, so `git add` normalizes stray keywords and the hook refuses
+  one that skipped the filter.
 - Inside a git repository every command reads the config at the repository's
   root. `legesher config` read the nearest one at or above the current
   directory, including one above the repository and `~/.legesher/config.yml`,
   which a `config set` without `--global` could then write to. A repository
   with no config at its root still has one in a subdirectory read from there
   down, and `legesher git status` says that the git filter does not see it.
+  Once the root has one, `git status` names any in a subdirectory as not read.
 - A setting the project config does not name comes from the user config, as
   `legesher config get` already reported. In `legesher run` and the git
   filter, any project config replaced every user setting with a default.
