@@ -161,9 +161,9 @@ def entry_problem(
     """
     if not isinstance(entry, dict):
         return f"entry is not a mapping ({type(entry).__name__})"
-    unknown = sorted(str(name) for name in set(entry) - ENTRY_FIELDS)
+    unknown = sorted(_short(name) for name in set(entry) - ENTRY_FIELDS)
     if unknown:
-        return f"fields this release does not know: {unknown}"
+        return f"fields this release does not know: {', '.join(unknown[:5])}"
     text = entry.get("text")
     if not isinstance(text, str):
         return "'text' is not a string"
@@ -171,7 +171,9 @@ def entry_problem(
     if not isinstance(src, str) or not MESSAGE_SRC_PATTERN.fullmatch(src):
         return "'src' is not twelve lowercase hex digits"
     if "status" in entry and entry["status"] not in ALLOWED_STATUSES:
-        return f"status {entry['status']!r} is not one of {list(ALLOWED_STATUSES)}"
+        return (
+            f"status {_short(entry['status'])} is not one of {list(ALLOWED_STATUSES)}"
+        )
     expected = message_fingerprint(template_en)
     if src != expected:
         return (

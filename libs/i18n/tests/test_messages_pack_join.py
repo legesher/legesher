@@ -26,7 +26,6 @@ import yaml
 
 import legesher_i18n
 from legesher_i18n import messages
-from legesher_i18n.language_registry import get_active_language_codes
 from legesher_i18n.messages import (
     load_catalog,
     match_message,
@@ -44,6 +43,7 @@ from legesher_i18n.pack_messages import (
 from scripts.activate_messages_partition import activate
 from scripts.seed_message_templates import seed_database, validate_seed
 from tests.test_messages_seed_fallback import operational_db
+from tests.test_pack_messages import _shipped_tiers
 
 SEED_PATH = (
     Path(legesher_i18n.__file__).parent / "db" / "seeds" / "cpython_messages.json"
@@ -254,6 +254,18 @@ class TestEntryProblem:
     def test_a_field_this_release_does_not_know_is_named(self) -> None:
         problem = self.problem(self.good(plural={"few": ARABIC}))
         assert problem is not None and "plural" in problem
+
+    def test_a_huge_status_or_field_name_is_not_echoed(self) -> None:
+        problem = self.problem(self.good(status=["नाम" * 1000] * 1000))
+        assert problem is not None and len(problem) < 300
+        problem = self.problem(self.good(**{"x" * 10_000: 1}))
+        assert problem is not None and len(problem) < 300
+
+    @pytest.mark.parametrize("field", [True, 1, None])
+    def test_a_field_name_that_is_not_a_string_is_named(self, field: object) -> None:
+        candidate = {**self.good(), field: "x"}
+        problem = self.problem(candidate)
+        assert problem is not None and repr(field) in problem
 
     def test_the_known_fields_are_the_documented_three(self) -> None:
         assert ENTRY_FIELDS == {"text", "src", "status"}
@@ -1088,18 +1100,16 @@ class TestPackMessageProblems:
             pack_message_problems("zz", "3.10")
 
 
-@pytest.mark.parametrize("language", get_active_language_codes())
-def test_every_shipped_pack_entry_joins_at_every_version(language: str) -> None:
+@pytest.mark.parametrize(("language", "version"), _shipped_tiers())
+def test_every_shipped_pack_entry_joins_at_every_version(
+    language: str, version: str
+) -> None:
     """No shipped message is skipped by the join, at any version it is visible on.
 
     At run time an entry that fails a join rule is skipped without an error,
     so a stale fingerprint or a dropped placeholder in a shipped pack would
     only ever show as a message that quietly stayed in English. This is
-    where it fails instead.
+    where it fails instead. Tiers whose identifiers need Unicode 15.1 carry
+    the interpreter-gap ledger, as in ``test_pack_messages.py``.
     """
-    loader = LanguagePackLoader()
-    versions = loader.list_available_versions()
-    assert versions, "no pack versions discovered"
-    for version in versions:
-        problems = pack_message_problems(language, version, loader=loader)
-        assert problems == [], (language, version)
+    assert pack_message_problems(language, version) == []
