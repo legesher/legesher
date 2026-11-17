@@ -1,14 +1,20 @@
-"""The gate: every runnable story has a current reproduction record that meets the policy.
+"""The gate: every runnable story has a reproduction record that meets the policy.
 
 The record (docs/stories/<id>/reproduced.json) comes from reproduce_stories.py, which
 runs each language's copied code with the released Legesher. These tests make no
-network calls; they fail when a record is missing, when the copied code or expected
-output changed since it was written, when the supported Pythons changed, or when it
-shows Arabic, English or Spanish failing on a Python (unless ledgered in
-KNOWN_FAILURES with a ticket, as strict xfail) or any language matching nowhere.
+network calls; they fail when a record is missing, or when it shows Arabic, English
+or Spanish failing on a Python (unless ledgered in KNOWN_FAILURES with a ticket, as
+strict xfail) or any language matching nowhere.
+
+A language whose copy text or expected output changed since the run (a pack change,
+say) is not a failure: only the next release can be run on the new text, so a pull
+request could never fix it. The page data drops that language's results (see
+story_payload) and this file warns, naming the languages and the re-run to do once
+the change is released.
 """
 
 import sys
+import warnings
 from pathlib import Path
 
 import pytest
@@ -18,7 +24,13 @@ REPO_ROOT = SCRIPTS.parents[1]
 sys.path.insert(0, str(SCRIPTS))
 from generate_snippets import load_packs  # noqa: E402
 from reproduce_stories import FULL_SUPPORT, KNOWN_FAILURES, supported_pythons  # noqa: E402
-from stories import load_stories, read_record, runs_on, story_variants, variants_digest  # noqa: E402
+from stories import (  # noqa: E402
+    load_stories,
+    read_record,
+    runs_on,
+    story_variants,
+    unchecked_languages,
+)
 
 RUNNABLE = [
     s for s in load_stories(REPO_ROOT / "docs" / "stories") if s.surface != "editor"
@@ -32,19 +44,19 @@ def bundles():
 
 
 @pytest.mark.parametrize("story", RUNNABLE, ids=lambda s: s.id)
-def test_story_has_a_current_record(story, bundles):
+def test_story_has_a_record(story, bundles):
     record = read_record(story)
     assert record is not None, (
         f"stories/{story.id}: no reproduced.json; " + RERUN.format(id=story.id)
     )
-    assert record["digest"] == variants_digest(story_variants(story, bundles)), (
-        f"stories/{story.id}: copied code or expected output changed since the last run; "
-        + RERUN.format(id=story.id)
-    )
-    assert record["python"] == supported_pythons(REPO_ROOT), (
-        f"stories/{story.id}: the supported Pythons changed; "
-        + RERUN.format(id=story.id)
-    )
+    unchecked = unchecked_languages(record, story_variants(story, bundles))
+    if unchecked or record["python"] != supported_pythons(REPO_ROOT):
+        warnings.warn(
+            f"stories/{story.id}: not checked against the current text or Pythons "
+            f"({', '.join(unchecked) or 'Python list'}); the page shows no result for "
+            "them until the next release is run; " + RERUN.format(id=story.id),
+            stacklevel=1,
+        )
 
 
 def _full_support_cases():

@@ -9,7 +9,12 @@ The result is docs/stories/<id>/reproduced.json: which Pythons each language's
 copied code printed its expected output on. It is written only when the policy
 holds: Arabic, English and Spanish match on every Python, and every other
 language on at least one. The docs generator folds the record into the story's
-page data, and a test fails while any record is missing or out of date.
+page data, and a test fails while any record is missing.
+
+Each language's copy text and expected output are fingerprinted separately. When a
+pack or story change alters one language, the page drops that language's result
+until this is run again; run it after each release that ships such a change.
+Runs use an empty HOME, so the maintainer's ~/.legesher config is never read.
 
 Usage:
     uv run python docs/scripts/reproduce_stories.py --legesher 0.25.1 [--story ID] [--python 3.10,3.11]
@@ -21,7 +26,9 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import functools
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -34,10 +41,10 @@ from stories import (
     RECORD_FILE,
     Story,
     Variant,
+    language_digests,
     load_stories,
     runs_on,
     story_variants,
-    variants_digest,
 )
 
 DOCS = REPO_ROOT / "docs"
@@ -62,19 +69,53 @@ KNOWN_FAILURES: dict[str, dict[str, dict[str, str]]] = {
 
 Runner = Callable[[list[str], Path, int], "subprocess.CompletedProcess[str]"]
 
+# Variables that would make the run differ from a reader's: legesher reads its
+# config from ~/.legesher (HOME is replaced instead), and these change what Python
+# imports or which environment uv uses.
+DROPPED_ENV = ("PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV")
+
+
+def reader_env(
+    base: dict[str, str], home: Path, uv_dirs: dict[str, str]
+) -> dict[str, str]:
+    """base with an empty HOME and no maintainer settings, keeping uv's real cache and
+    Python install directories so nothing is downloaded again."""
+    env = {
+        key: value
+        for key, value in base.items()
+        if key not in DROPPED_ENV and not key.startswith("LEGESHER_")
+    }
+    env.update(uv_dirs, HOME=str(home))
+    return env
+
+
+@functools.cache
+def _uv_dirs() -> dict[str, str]:
+    def ask(*args: str) -> str:
+        return subprocess.run(
+            ["uv", *args], capture_output=True, text=True, check=True
+        ).stdout.strip()
+
+    return {
+        "UV_CACHE_DIR": ask("cache", "dir"),
+        "UV_PYTHON_INSTALL_DIR": ask("python", "dir"),
+    }
+
 
 def subprocess_runner(
     cmd: list[str], cwd: Path, timeout: int
 ) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        cmd,
-        cwd=cwd,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        timeout=timeout,
-        check=False,
-    )
+    with tempfile.TemporaryDirectory() as home:
+        return subprocess.run(
+            cmd,
+            cwd=cwd,
+            env=reader_env(dict(os.environ), Path(home), _uv_dirs()),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=timeout,
+            check=False,
+        )
 
 
 @dataclass(frozen=True)
@@ -149,12 +190,16 @@ def reproduce_story(
     if story.surface == "editor":
         return None
     results: dict[str, dict[str, str]] = {}
+    details: dict[str, dict[str, str]] = {}
     for lang in _order(variants):
         outcomes = {
             python: run_copy(variants[lang], story.file_name, python, legesher, runner)
             for python in pythons
         }
         results[lang] = {python: r.status for python, r in outcomes.items()}
+        reasons = {p: r.detail for p, r in outcomes.items() if r.status != "match"}
+        if reasons:
+            details[lang] = reasons
         matched = [python for python, r in outcomes.items() if r.status == "match"]
         excused = known.get(lang, {})
         if lang in FULL_SUPPORT:
@@ -180,9 +225,12 @@ def reproduce_story(
         "story": story.id,
         "legesher": legesher,
         "checked": today,
-        "digest": variants_digest(variants),
+        "digests": language_digests(variants),
         "python": list(pythons),
         "results": results,
+        # Why each non-match failed, so a ledgered failure can be checked against
+        # the cause its ticket names.
+        "details": details,
     }
 
 

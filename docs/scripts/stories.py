@@ -411,12 +411,17 @@ def story_variants(story: Story, bundles: dict[str, dict]) -> dict[str, Variant]
     return variants
 
 
-def variants_digest(variants: dict[str, Variant]) -> str:
-    """SHA-256 over each language's copy text and expected output, in language order."""
-    payload = [[lang, v.copy_text, v.output] for lang, v in variants.items()]
-    return hashlib.sha256(
-        json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    ).hexdigest()
+def language_digests(variants: dict[str, Variant]) -> dict[str, str]:
+    """Per language, SHA-256 over its copy text and expected output.
+
+    Per language, so a pack change to one language withdraws only that language's
+    reproduction results, not the whole story's."""
+    return {
+        lang: hashlib.sha256(
+            json.dumps([v.copy_text, v.output], ensure_ascii=False).encode("utf-8")
+        ).hexdigest()
+        for lang, v in variants.items()
+    }
 
 
 RECORD_FILE = "reproduced.json"
@@ -426,6 +431,16 @@ def runs_on(record: dict, lang: str) -> list[str]:
     """The Python versions on which lang's copied code printed its expected output."""
     results = record["results"].get(lang, {})
     return [python for python in record["python"] if results.get(python) == "match"]
+
+
+def unchecked_languages(record: dict, variants: dict[str, Variant]) -> list[str]:
+    """Languages whose copy text or expected output the record's run never saw."""
+    recorded = record.get("digests", {})
+    return sorted(
+        lang
+        for lang, digest in language_digests(variants).items()
+        if recorded.get(lang) != digest
+    )
 
 
 def read_record(story: Story) -> dict | None:
@@ -442,11 +457,19 @@ def story_payload(
     """The JSON the What's New page reads for one story."""
     reproduction = None
     if record is not None:
+        unchecked = unchecked_languages(record, variants)
         reproduction = {
             "legesher": record["legesher"],
             "checked": record["checked"],
-            "current": record["digest"] == variants_digest(variants),
-            "runs_on": {lang: runs_on(record, lang) for lang in record["results"]},
+            "current": not unchecked,
+            "unchecked": unchecked,
+            # Only languages whose current copy text was run: the page claims
+            # nothing for the rest.
+            "runs_on": {
+                lang: runs_on(record, lang)
+                for lang in record["results"]
+                if lang in variants and lang not in unchecked
+            },
         }
     return {
         "id": story.id,

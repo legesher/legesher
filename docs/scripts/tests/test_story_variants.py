@@ -13,9 +13,9 @@ from generate_snippets import load_packs  # noqa: E402
 from stories import (  # noqa: E402
     StoryError,
     copy_text_issues,
+    language_digests,
     load_story,
     story_variants,
-    variants_digest,
 )
 
 
@@ -129,16 +129,20 @@ def test_zwj_is_allowed_in_copy_text():
     assert copy_text_issues("ශ්‍රී") == []
 
 
-def test_digest_is_stable_and_follows_output(tmp_path, story, bundles):
-    first = variants_digest(story_variants(story, bundles))
-    assert first == variants_digest(story_variants(story, bundles))
+def test_digests_are_per_language_and_follow_output(tmp_path, story, bundles):
+    first = language_digests(story_variants(story, bundles))
+    assert set(first) == set(bundles)
+    assert first == language_digests(story_variants(story, bundles))
     d = copy_story(tmp_path, "changed-output")
     (d / "output.ar.txt").write_text(
         (d / "output.ar.txt").read_text(encoding="utf-8").replace("None", "لاشيء"),
         encoding="utf-8",
     )
-    changed = load_story(d)
-    assert variants_digest(story_variants(changed, bundles)) != first
+    changed = language_digests(story_variants(load_story(d), bundles))
+    assert changed["ar"] != first["ar"]
+    assert {k: v for k, v in changed.items() if k != "ar"} == {
+        k: v for k, v in first.items() if k != "ar"
+    }
 
 
 @pytest.mark.parametrize("lang", ["ar", "es"])

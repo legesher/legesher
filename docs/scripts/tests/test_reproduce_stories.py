@@ -15,11 +15,12 @@ from generate_snippets import load_packs  # noqa: E402
 from reproduce_stories import (  # noqa: E402
     ReproductionFailed,
     main,
+    reader_env,
     reproduce_story,
     run_copy,
     supported_pythons,
 )
-from stories import load_story, runs_on, story_variants, variants_digest  # noqa: E402
+from stories import language_digests, load_story, runs_on, story_variants  # noqa: E402
 
 PYTHONS = ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
@@ -213,8 +214,68 @@ def test_record_shape(story, variants):
         and rec["legesher"] == "0.25.1"
         and rec["checked"] == "2026-11-17"
     )
-    assert rec["python"] == PYTHONS and rec["digest"] == variants_digest(variants)
+    assert rec["python"] == PYTHONS and rec["digests"] == language_digests(variants)
+    assert "digest" not in rec and rec["details"] == {}
     assert set(rec["results"]) == set(variants)
+
+
+def test_record_keeps_the_reason_for_each_non_match(story, variants):
+    """A ledgered failure claims a cause; the record must show what actually failed."""
+    rec = reproduce_story(
+        story,
+        variants,
+        PYTHONS,
+        "0.25.1",
+        "2026-11-17",
+        runner=fake(variants, errors={"si": {"3.13"}}, differs={"hi": {"3.10"}}),
+    )
+    assert rec["details"] == {
+        "hi": {"3.10": "printed something other than the expected output"},
+        "si": {"3.13": "NameError: name 'x' is not defined"},
+    }
+
+
+def test_reader_env_hides_the_maintainers_config(tmp_path):
+    """legesher run reads ~/.legesher/config.yml (python_version among others), and
+    PYTHONPATH or a LEGESHER_ variable would change what runs: a reader has none."""
+    env = reader_env(
+        {
+            "HOME": "/Users/maintainer",
+            "PATH": "/usr/bin",
+            "PYTHONPATH": "/somewhere",
+            "PYTHONHOME": "/elsewhere",
+            "VIRTUAL_ENV": "/checkout/.venv",
+            "LEGESHER_LANG": "ar",
+            "UV_INDEX_URL": "https://example.invalid/simple",
+        },
+        home=tmp_path,
+        uv_dirs={"UV_CACHE_DIR": "/c", "UV_PYTHON_INSTALL_DIR": "/p"},
+    )
+    assert env["HOME"] == str(tmp_path) and env["PATH"] == "/usr/bin"
+    assert env["UV_CACHE_DIR"] == "/c" and env["UV_PYTHON_INSTALL_DIR"] == "/p"
+    for gone in ("PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV", "LEGESHER_LANG"):
+        assert gone not in env
+    assert env["UV_INDEX_URL"] == "https://example.invalid/simple"
+
+
+def test_subprocess_runner_runs_in_an_empty_home(tmp_path, monkeypatch):
+    import reproduce_stories
+
+    seen = {}
+
+    def fake_run(cmd, **kwargs):
+        home = Path(kwargs["env"]["HOME"])
+        seen.update(home=home, empty=home.is_dir() and not any(home.iterdir()))
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr(reproduce_stories.subprocess, "run", fake_run)
+    monkeypatch.setattr(
+        reproduce_stories,
+        "_uv_dirs",
+        lambda: {"UV_CACHE_DIR": "/c", "UV_PYTHON_INSTALL_DIR": "/p"},
+    )
+    reproduce_stories.subprocess_runner(["uvx"], tmp_path, 5)
+    assert seen["empty"] and seen["home"] != Path.home()
 
 
 def test_editor_story_is_skipped():
