@@ -35,14 +35,17 @@ class LegesherErrorHandler:
     the module docstring for where those are handled.
     """
 
-    def __init__(self, language: str):
+    def __init__(self, language: str, python_version: str | None = None):
         """Initialize the error handler.
 
         Args:
             language: Target language code (e.g., 'es', 'ar', 'zh')
+            python_version: Pack tier (``X.Y``); None means the running
+                interpreter. The loader serves the newest tier when this is
+                newer than every tier the pack has.
         """
         self.language = language
-        self.translator = TokenTranslator.from_language_pack(language)
+        self.translator = TokenTranslator.from_language_pack(language, python_version)
         self.source_mapper = get_source_mapper()
 
         # Load translations (for future enhancement)
@@ -144,7 +147,9 @@ class LegesherErrorHandler:
         return message
 
 
-def install_error_handler(language: str | None = None):
+def install_error_handler(
+    language: str | None = None, python_version: str | None = None
+):
     """Install native language exception handler.
 
     This replaces sys.excepthook with a custom handler that shows
@@ -152,6 +157,8 @@ def install_error_handler(language: str | None = None):
 
     Args:
         language: Target language code (default: auto-detect from config)
+        python_version: Pack tier (``X.Y``). When ``language`` is None both come
+            from the config; otherwise None means the running interpreter.
 
     Returns:
         LegesherErrorHandler instance that was installed
@@ -163,8 +170,10 @@ def install_error_handler(language: str | None = None):
     if language is None:
         config = LegesherConfig.load()
         language = config.language
+        if python_version is None:
+            python_version = config.python_version
 
-    handler = LegesherErrorHandler(language)
+    handler = LegesherErrorHandler(language, python_version)
 
     def excepthook(exc_type, exc_value, exc_traceback):
         """Custom exception hook showing native language errors."""

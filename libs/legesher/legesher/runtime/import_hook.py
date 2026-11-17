@@ -280,16 +280,24 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
     The cache uses LRU eviction to keep memory usage bounded.
     """
 
-    def __init__(self, language: str, cache_size: int = 128):
+    def __init__(
+        self,
+        language: str,
+        cache_size: int = 128,
+        python_version: str | None = None,
+    ):
         """Initialize the finder with a target language and cache size.
 
         Args:
             language: Language code (e.g., 'es', 'ar', 'zh')
             cache_size: Maximum number of cache entries (default: 128)
+            python_version: Pack tier (``X.Y``); None means the running
+                interpreter. The loader serves the newest tier when this is
+                newer than every tier the pack has.
         """
         self.language = language
         # EN->native translator (for future use)
-        self.translator = TokenTranslator.from_language_pack(language)
+        self.translator = TokenTranslator.from_language_pack(language, python_version)
         # native->EN translator (for executing native code)
         self.reverse_translator = self.translator.reverse()
         # LRU cache with configurable size
@@ -514,8 +522,9 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         # location, so every module this finder loaded had no __file__,
         # breaking code that locates resources relative to its own file.
         spec.has_location = True
-        # __cached__ names the file this loader actually caches to, never the
-        # stock .pyc path, which the loader neither reads nor writes.
+        # spec.cached names the file this loader actually caches to, never the
+        # stock .pyc path, which the loader neither reads nor writes. Python
+        # 3.10 to 3.14 copy it to the module's __cached__; 3.15 does not.
         spec.cached = spec.loader._bytecode_path()  # type: ignore[union-attr]
         if is_package:
             # ModuleSpec(is_package=True) initializes submodule_search_locations
@@ -927,12 +936,18 @@ def _get_cache_size(explicit_size: int | None = None) -> int:
     return 128
 
 
-def install_import_hook(language: str | None = None, cache_size: int | None = None):
+def install_import_hook(
+    language: str | None = None,
+    cache_size: int | None = None,
+    python_version: str | None = None,
+):
     """Install the Legesher import hook for native language execution.
 
     Args:
         language: Target language code (default: auto-detect from config)
         cache_size: Maximum cache entries (default: 128, configurable via env/config)
+        python_version: Pack tier (``X.Y``). When ``language`` is None both come
+            from the config; otherwise None means the running interpreter.
 
     Returns:
         LegesherMetaPathFinder instance that was installed
@@ -952,12 +967,16 @@ def install_import_hook(language: str | None = None, cache_size: int | None = No
     if language is None:
         config = LegesherConfig.load()
         language = config.language
+        if python_version is None:
+            python_version = config.python_version
 
     # Resolve cache size from configuration sources
     resolved_cache_size = _get_cache_size(cache_size)
 
     # Create and install the finder
-    finder = LegesherMetaPathFinder(language, cache_size=resolved_cache_size)
+    finder = LegesherMetaPathFinder(
+        language, cache_size=resolved_cache_size, python_version=python_version
+    )
     sys.meta_path.insert(0, finder)  # Insert at front for priority
 
     return finder

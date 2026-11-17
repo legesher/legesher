@@ -9,6 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- `legesher run` passes the configured `python_version` to the import hook, the
+  error handler and the translator for the script, not only to the traceback
+  renderer, so pinning it in `.legesher/config.yml` picks the pack tier
+  everywhere. `install_import_hook` and `install_error_handler` take a
+  `python_version` argument; with no language given, both read it from the
+  config. [CORE-2828]
+
 ## [0.27.0] - 2026-11-18
 
 ### Changed

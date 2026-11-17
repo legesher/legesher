@@ -8,6 +8,7 @@ import importlib.metadata
 import importlib.util
 import logging
 import re
+import threading
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -17,6 +18,7 @@ import yaml
 
 from .exceptions import (
     CircularInheritanceError,
+    LanguagePackError,
     MaxInheritanceDepthError,
     PackNotFoundError,
     PackValidationError,
@@ -47,6 +49,50 @@ def _parse_xy(version: str) -> tuple[int, int] | None:
     """
     match = re.match(r"^(\d+)\.(\d+)", version)
     return (int(match.group(1)), int(match.group(2))) if match else None
+
+
+def _tier_versions(packs_dir: Path) -> list[str]:
+    """The ``X.Y`` tiers in one pack's ``packs`` directory, oldest first.
+
+    ``default.yml`` is not a tier. A file is a tier only if its stem is a name
+    ``load()`` would accept, so nothing here can name a file ``load()`` refuses.
+    """
+    if not packs_dir.is_dir():
+        return []
+    stems = {
+        path.stem
+        for path in packs_dir.glob("*.yml")
+        if path.stem != "default" and _VERSION_PATTERN.match(path.stem)
+    }
+    return sorted(stems, key=lambda v: _parse_xy(v) or (0, 0))
+
+
+#: ``(target, requested, served)`` already reported by the newest-tier rule, so
+#: each is logged once per process however many packs and loaders reach it.
+_REPORTED_NEWER_REQUESTS: set[tuple[str, str, str]] = set()
+_REPORTED_LOCK = threading.Lock()
+
+
+def _report_newer_request(target: str, requested: str, served: str) -> None:
+    """Log, once per process, that a request newer than every tier was served."""
+    key = (target, requested, served)
+    with _REPORTED_LOCK:
+        if key in _REPORTED_NEWER_REQUESTS:
+            return
+        _REPORTED_NEWER_REQUESTS.add(key)
+    # INFO, not WARNING: the CLI configures no logging, so a warning would
+    # print on every `legesher run` and on every git clean-filter call.
+    name = target.capitalize()
+    logger.info(
+        "Language packs without a %s %s tier are served their newest tier "
+        "(%s here; logged once). Terms added in %s %s stay in English until "
+        "a pack carries that tier.",
+        name,
+        requested,
+        served,
+        name,
+        requested,
+    )
 
 
 @dataclass(frozen=True)
@@ -355,6 +401,22 @@ class LanguagePackLoader:
 
         This method is thread-safe and caches results using lru_cache.
 
+        Which tier is served (one rule for every surface, CORE-2828):
+
+        * The pack's ``{version}.yml`` when it has one.
+        * When ``version`` is newer than every tier the pack has, the pack's
+          newest tier. Tiers only grow, so a newer interpreter parses every
+          older tier; on Python 3.15 with packs up to 3.14, the 3.14 tier is
+          served. The newest tier is this pack's own, not the newest across
+          all packs. Logged once per process, at INFO.
+        * Never downward: when ``version`` is below the pack's floor (the
+          ``python_version_min`` of its oldest tier), ``UnsupportedInterpreterError``.
+          An older interpreter is never served a newer tier.
+        * A tier missing from the middle of a pack is not filled from a
+          neighbour: ``PackNotFoundError``.
+
+        The returned pack's ``version`` is the tier actually served.
+
         Args:
             language: Language code (e.g., 'es', 'ar')
             target: Target programming language (default: 'python')
@@ -375,11 +437,13 @@ class LanguagePackLoader:
             Loaded LanguagePack with merged keywords from inheritance
 
         Raises:
-            PackNotFoundError: If pack file doesn't exist (includes available languages)
+            PackNotFoundError: If there is no pack for the language, or no tier
+                to serve for ``version`` (includes available languages)
             CircularInheritanceError: If circular inheritance detected
             MaxInheritanceDepthError: If inheritance too deep
-            UnsupportedInterpreterError: If the pack's ``python_version_min``
-                exceeds ``version`` and ``enforce_min_interpreter`` is True
+            UnsupportedInterpreterError: If ``enforce_min_interpreter`` is True
+                and ``version`` is below the served tier's
+                ``python_version_min``, or below the pack's floor
             ValueError: If ``version`` is not ``X.Y`` or ``"default"``
                 (path-traversal guard, since version is joined into a filename)
         """
@@ -397,6 +461,13 @@ class LanguagePackLoader:
 
         # Build pack path
         pack_path = self._get_pack_path(language, target, version)
+
+        if not pack_path.exists() and version is not None:
+            served = self._tier_for_missing_file(
+                language, target, version, enforce_min_interpreter
+            )
+            if served is not None:
+                pack_path = self._get_pack_path(language, target, served)
 
         if not pack_path.exists():
             # Get list of available languages for helpful error message
@@ -512,6 +583,59 @@ class LanguagePackLoader:
         # target/lang/version the user asked for.
         filename = f"{version}.yml" if version else "default.yml"
         return Path(f"<not-discovered>/{target}-{language}/packs/{filename}")
+
+    def _tier_for_missing_file(
+        self,
+        language: str,
+        target: str,
+        version: str,
+        enforce_min_interpreter: bool,
+    ) -> str | None:
+        """The tier ``load`` serves when the pack has no ``{version}.yml``.
+
+        Upward only. A request newer than every tier this pack has gets the
+        pack's newest tier. A request below the pack's floor raises
+        ``UnsupportedInterpreterError`` when the floor is enforced. Anything
+        else (no pack, no ``X.Y`` to compare, a gap inside the pack, or the
+        floor bypassed) returns ``None`` and the caller raises
+        ``PackNotFoundError``.
+
+        Raises:
+            UnsupportedInterpreterError: If ``enforce_min_interpreter`` is True
+                and ``version`` is below the floor of the pack's oldest tier.
+        """
+        requested = _parse_xy(version)
+        pack_dir = self._discover_packs().get(f"{target}-{language}")
+        if requested is None or pack_dir is None:
+            return None
+        tiers = _tier_versions(pack_dir / "packs")
+        if not tiers:
+            return None
+
+        newest = tiers[-1]
+        if requested > (_parse_xy(newest) or (0, 0)):
+            _report_newer_request(target, version, newest)
+            return newest
+
+        oldest = tiers[0]
+        if enforce_min_interpreter and requested < (_parse_xy(oldest) or (0, 0)):
+            # The floor is what the oldest tier declares; the tier itself when
+            # it declares none or cannot be read.
+            floor = oldest
+            try:
+                base = self.load(
+                    language, target, oldest, enforce_min_interpreter=False
+                )
+            except LanguagePackError:
+                base = None
+            declared = (
+                base.metadata.python_version_min if base and base.metadata else None
+            )
+            if declared and _parse_xy(declared):
+                floor = declared
+            if requested < (_parse_xy(floor) or (0, 0)):
+                raise UnsupportedInterpreterError(language, floor, version)
+        return None
 
     def _resolve_inheritance(
         self,
@@ -802,17 +926,8 @@ class LanguagePackLoader:
         """
         versions: set[str] = set()
         for pack_key, pack_dir in self._discover_packs().items():
-            if not pack_key.startswith(f"{target}-"):
-                continue
-            packs_dir = pack_dir / "packs"
-            if not packs_dir.exists():
-                continue
-            for pack_file in packs_dir.glob("*.yml"):
-                stem = pack_file.stem
-                # Reuse the loader's own version grammar so the index can
-                # never admit a name ``load()`` would refuse.
-                if stem != "default" and _VERSION_PATTERN.match(stem):
-                    versions.add(stem)
+            if pack_key.startswith(f"{target}-"):
+                versions.update(_tier_versions(pack_dir / "packs"))
         return sorted(versions, key=lambda v: _parse_xy(v) or (0, 0))
 
     def clear_cache(self) -> None:
