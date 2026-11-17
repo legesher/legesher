@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from legesher_core.native_digits import fold_code_digits
-from legesher_core.round_trip import Layer, verify_round_trip
+from legesher_core.round_trip import FOLD_LAYERS, Layer, verify_round_trip
 from legesher_core.transformer import TokenTranslator
 from legesher_core.tree_sitter.translator import TreeSitterTranslator
 from legesher_i18n import LanguagePackLoader
@@ -117,13 +117,15 @@ class TestWholeFile:
         # and prefixed literals were never touched.
         assert english == ENGLISH
 
+    @pytest.mark.parametrize("backend", BACKENDS, ids=lambda b: b.__name__)
     @pytest.mark.parametrize("language", NATIVE)
-    def test_english_form_runs_to_the_same_values(self, language: str) -> None:
+    def test_english_form_runs_to_the_same_values(
+        self, language: str, backend: type
+    ) -> None:
         ascii_digits, typed = native_file(language)
-        skip_if_return_hop_is_inert(ENGLISH, ascii_digits, pinned_by=_PIN)
-        english = (
-            TokenTranslator.from_language_pack(language).reverse().translate_code(typed)
-        )
+        if backend is TokenTranslator:
+            skip_if_return_hop_is_inert(ENGLISH, ascii_digits, pinned_by=_PIN)
+        english = backend.from_language_pack(language).reverse().translate_code(typed)
         ran: dict = {}
         exec(compile(english, f"<{language}>", "exec"), ran)  # noqa: S102
         expected: dict = {}
@@ -151,10 +153,13 @@ class TestWholeFile:
         with pytest.raises(SyntaxError, match="invalid character"):
             compile(english, f"<{language}>", "exec")
 
+    @pytest.mark.parametrize("backend", BACKENDS, ids=lambda b: b.__name__)
     @pytest.mark.parametrize("language", NATIVE)
-    def test_engine_never_writes_native_digits(self, language: str) -> None:
+    def test_engine_never_writes_native_digits(
+        self, language: str, backend: type
+    ) -> None:
         # Display (English into the language) keeps the digits as given.
-        rendered = TokenTranslator.from_language_pack(language).translate_code(ENGLISH)
+        rendered = backend.from_language_pack(language).translate_code(ENGLISH)
         for line_in, line_out in zip(
             ENGLISH.splitlines(), rendered.splitlines(), strict=True
         ):
@@ -211,6 +216,19 @@ class TestLiteralRules:
         typed = line(native(language, "1") + "." + native(language, "5"))
         assert fold_code_digits(typed, language) == line("1.5")
 
+    def test_a_comma_separator_is_never_read_as_the_point(self, monkeypatch) -> None:
+        # The registry refuses a comma, but the fold must not depend on that:
+        # read as the point, a comma would turn two arguments into one float.
+        import legesher_core.native_digits as nd
+
+        monkeypatch.setattr(nd, "get_decimal_separator", lambda _code: ",")
+        nd._reading.cache_clear()
+        try:
+            typed = f"f({native('ar', '1')},{native('ar', '2')})\n"
+            assert fold_code_digits(typed, "ar") == "f(1,2)\n"
+        finally:
+            nd._reading.cache_clear()
+
     @pytest.mark.parametrize("language", NATIVE)
     @pytest.mark.parametrize("prefix", ["0x", "0X", "0b", "0o"])
     def test_prefixed_literal_is_left_as_typed(
@@ -251,6 +269,29 @@ class TestLiteralRules:
         self, language: str, suffix: str
     ) -> None:
         typed = line(native(language, "12") + suffix)
+        assert fold_code_digits(typed, language) == typed
+
+    @pytest.mark.parametrize("language", NATIVE)
+    @pytest.mark.parametrize(
+        "stem",
+        [
+            "\u0938\u0902\u0916\u094d\u092f\u093e",  # संख्या, ends in a vowel sign
+            "\u0642\u064a\u0645\u0629\u064b",  # قيمةً, ends in a haraka
+            "\u0e17\u0e35\u0e48",  # ที่, ends in a tone mark
+            "\u09b8\u0982\u0996\u09cd\u09af\u09be",  # সংখ্যা
+            "\u1000\u102d\u1014\u103a\u1038",  # ကိန်း
+            "a\u00b7",  # middle dot, Other_ID_Continue
+            "a\u203f",  # undertie, connector punctuation
+        ],
+    )
+    def test_digit_after_a_mark_stays_in_the_identifier(
+        self, language: str, stem: str
+    ) -> None:
+        # On CPython 3.10 and 3.11 the tokenizer splits these names at the
+        # mark and reports the trailing digit as a number; it is part of the
+        # identifier, which compiles as typed.
+        typed = f"{stem}{native(language, '1')} = 5\n"
+        compile(typed, "<id>", "exec")
         assert fold_code_digits(typed, language) == typed
 
     @pytest.mark.parametrize("language", NATIVE)
@@ -325,6 +366,27 @@ class TestErrorPositions:
         assert typed[raised.value.offset - 1] == "$"
 
 
+class TestWithNativePunctuation:
+    """Both folds on one line: punctuation is read first, then digits."""
+
+    @pytest.mark.parametrize("backend", BACKENDS, ids=lambda b: b.__name__)
+    @pytest.mark.parametrize("language", NATIVE)
+    @pytest.mark.parametrize(
+        ("template", "english"),
+        [
+            ("x = ({a}\u060c {b})\n", "x = (1, 2)\n"),  # Arabic comma
+            ("x = [{a}\uff0c{b}]\n", "x = [1,2]\n"),  # fullwidth comma
+            ("y = {a}\u061b z = {b}\n", "y = 1; z = 2\n"),  # Arabic semicolon
+        ],
+    )
+    def test_marks_and_digits_read_together(
+        self, language: str, backend: type, template: str, english: str
+    ) -> None:
+        typed = template.format(a=native(language, "1"), b=native(language, "2"))
+        reverse = backend.from_language_pack(language).reverse()
+        assert reverse.translate_code(typed) == english
+
+
 class TestRoundTrip:
     @staticmethod
     def _translate(source: str, source_lang: str, target_lang: str, version: str):
@@ -337,6 +399,18 @@ class TestRoundTrip:
         return translator.translate_code(source), False
 
     @staticmethod
+    def _translate_tree_sitter(
+        source: str, source_lang: str, target_lang: str, version: str
+    ):
+        if source_lang == "en":
+            translator = TreeSitterTranslator.from_language_pack(target_lang, version)
+        else:
+            translator = TreeSitterTranslator.from_language_pack(
+                source_lang, version
+            ).reverse()
+        return translator.translate_code(source), False
+
+    @staticmethod
     def _compiles(code: str) -> bool:
         try:
             compile(code, "<rt>", "exec")
@@ -344,17 +418,60 @@ class TestRoundTrip:
             return False
         return True
 
-    def _trip(self, source: str, language: str):
+    def _trip(self, source: str, language: str, *, tree_sitter: bool = False):
         pack = LanguagePackLoader().load(language, target="python", version="3.13")
         return verify_round_trip(
             source,
             language,
             "en",
             "3.13",
-            translate=self._translate,
+            translate=self._translate_tree_sitter if tree_sitter else self._translate,
             pack=pack,
             validate=self._compiles,
         )
+
+    @pytest.mark.parametrize("language", NATIVE)
+    def test_tree_sitter_trip_names_digits_on_every_interpreter(
+        self, language: str
+    ) -> None:
+        # The tree-sitter backend reads vowel-sign renderings on 3.10 and 3.11
+        # too, so this keeps the classification covered where the token
+        # backend's trip is skipped.
+        _, typed = native_file(language)
+        report = self._trip(typed, language, tree_sitter=True)
+        assert report.forward_valid is True
+        assert report.divergences
+        assert {d.layer for d in report.divergences} == {Layer.DIGITS}
+
+    @pytest.mark.parametrize("language", NATIVE)
+    @pytest.mark.parametrize(
+        ("template", "layer"),
+        [
+            # The first differing character decides the name.
+            ("x = ({a}\u060c {b})\n", Layer.DIGITS),
+            ("x = (y\u060c {a})\n", Layer.PUNCTUATION),
+        ],
+    )
+    def test_line_with_both_folds_is_named_for_its_first_difference(
+        self, language: str, template: str, layer: Layer
+    ) -> None:
+        typed = template.format(a=native(language, "1"), b=native(language, "2"))
+        report = self._trip(typed, language, tree_sitter=True)
+        assert [d.layer for d in report.divergences] == [layer]
+
+    @pytest.mark.parametrize("language", NATIVE)
+    def test_second_difference_is_reported_at_its_own_column(
+        self, language: str
+    ) -> None:
+        # The literal is read by design; the English builtin after it comes
+        # back in the language. The column points at the builtin, the cause
+        # the layer names, not at the digit.
+        typed = f"x = {native(language, '12')} + len(y)\n"
+        report = self._trip(typed, language, tree_sitter=True)
+        [divergence] = report.divergences
+        assert divergence.layer not in FOLD_LAYERS
+        assert divergence.layer is not None
+        assert typed[divergence.offset - 1 :].startswith("len")
 
     @pytest.mark.parametrize("language", NATIVE)
     def test_native_literals_are_named_as_digits(self, language: str) -> None:

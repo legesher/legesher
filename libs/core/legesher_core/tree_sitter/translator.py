@@ -219,7 +219,9 @@ class TreeSitterTranslator:
         # Punctuation goes first: the digit fold tokenizes, and an Arabic
         # comma stops the tokenizer from CPython 3.12. The text as given is
         # what a pass-through below hands back.
-        read = fold_code_digits(fold_code_punctuation(source_code), self.source_language)
+        read = fold_code_digits(
+            fold_code_punctuation(source_code), self.source_language
+        )
 
         try:
             # Parse code with tree-sitter

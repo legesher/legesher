@@ -52,3 +52,49 @@ def test_native_digit_literals_run(tmp_path: Path, lang: str) -> None:
     )
     assert result.returncode == 0, result.stderr
     assert result.stdout == f"310 {n('12')}\n"
+
+
+def run(script: Path, lang: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, "-c", CLI, "run", str(script), "--lang", lang],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        cwd=script.parent,
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+        check=False,
+    )
+
+
+@pytest.mark.parametrize("lang", NATIVE)
+def test_identifier_digit_after_a_mark_keeps_its_name(
+    tmp_path: Path, lang: str
+) -> None:
+    # संख्या ends in a vowel sign; the digit after it belongs to the name,
+    # which code can read back as text (CPython 3.10 and 3.11 split it).
+    digits = get_native_digits(lang)
+    assert digits is not None
+    name = "संख्या" + digits[1]
+    script = tmp_path / "script.py"
+    script.write_text(
+        f'{name} = 5\nprint(globals().get("{name}"), list(dict({name}=1)))\n',
+        encoding="utf-8",
+    )
+    result = run(script, lang)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == f"5 ['{name}']\n"
+
+
+@pytest.mark.parametrize("lang", NATIVE)
+def test_module_with_only_native_digits_is_imported(tmp_path: Path, lang: str) -> None:
+    # No keyword in the module, so only its digits can claim it for reading.
+    digits = get_native_digits(lang)
+    assert digits is not None
+    (tmp_path / "constants.py").write_text(
+        f"मान = {digits[1]}{digits[2]}\n", encoding="utf-8"
+    )
+    script = tmp_path / "main.py"
+    script.write_text("import constants\nprint(constants.मान + 1)\n", encoding="utf-8")
+    result = run(script, lang)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == "13\n"

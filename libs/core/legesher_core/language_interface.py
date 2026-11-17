@@ -194,6 +194,13 @@ def create_translator(
         - create_translator_from_language_pack: Convenience function for language packs
         - get_default_backend: Query the default backend from environment
         - get_supported_languages: List all supported programming languages
+
+    Note:
+        A translator built here from maps does not know its source language,
+        so it reads ASCII digits only. Build one with
+        ``create_translator_from_language_pack`` (and ``reverse()`` for the
+        native side) to read numeric literals typed in a language's own
+        digits.
     """
     should_use_ts = _should_use_tree_sitter(use_tree_sitter)
 

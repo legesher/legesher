@@ -55,7 +55,12 @@ tokenizer reads past an unterminated single-quoted string by lexing the
 string's text as code, so folding also stops at the quote that opens it. From
 CPython 3.12 the replacement fields of an f-string are tokens, so a literal
 inside ``{...}`` is read there; on 3.10 and 3.11 an f-string is a single
-string token and all of it is prose.
+string token and all of it is prose. A self-documenting field reads the
+same way: ``f"{١٢=}"`` prints ``12=12``.
+
+The language server keeps its own reading of the file for editor
+diagnostics and does not call this yet, so the editor still marks a
+native-digit literal as an error that ``legesher run`` does not raise.
 """
 
 from __future__ import annotations
@@ -65,8 +70,10 @@ import tokenize
 from functools import lru_cache
 
 from legesher_i18n.language_registry import get_decimal_separator, get_native_digits
+from legesher_i18n.numerals import DECIMAL_SEPARATORS
 
 from .stored_form import tokenizer_view
+from .utils import continues_identifier
 
 __all__ = ["fold_code_digits"]
 
@@ -94,7 +101,9 @@ def _reading(language: str) -> tuple[frozenset[str], dict[int, str]] | None:
         return None
     table = {ord(digit): str(value) for value, digit in enumerate(digits)}
     separator = get_decimal_separator(language)
-    if separator != ".":
+    # Only a mark the registry allows: a comma read as the point would turn
+    # ``f(١,٢)`` into ``f(1.2)``.
+    if separator != "." and separator in DECIMAL_SEPARATORS:
         table[ord(separator)] = "."
     return frozenset(digits), table
 
@@ -109,11 +118,15 @@ def _is_native_literal(original: str, ascii_form: str, digits: frozenset[str]) -
 
 
 def _glued(source: str, index: int) -> bool:
-    """Whether ``source[index]`` would continue a literal it stands beside."""
+    """Whether ``source[index]`` joins the token beside it into one word.
+
+    By Python's identifier rules, not the tokenizer's: on CPython 3.10 and
+    3.11 the tokenizer splits ``संख्या१`` at the vowel sign and reports the
+    trailing digit as a number, but the digit belongs to the identifier.
+    """
     if not 0 <= index < len(source):
         return False
-    char = source[index]
-    return char.isalnum() or char == "_"
+    return continues_identifier(source[index])
 
 
 def fold_code_digits(source: str, language: str | None) -> str:
@@ -165,9 +178,11 @@ def fold_code_digits(source: str, language: str | None) -> str:
             if original == token.string:
                 continue
             if _glued(source, start - 1) or _glued(source, end):
-                # The literal runs on into characters the tokenizer did not
-                # take (``١٢abc``, ``١٢२``, and ``٠١٢٣``, which CPython 3.10
-                # and 3.11 split in two): it is not one literal as typed.
+                # The number is part of a longer word: the tail of an
+                # identifier the 3.10 and 3.11 tokenizer split at a mark
+                # (``संख्या१``, ``قيمةً٣``), or a literal running into a name
+                # or another script's digit (``١٢abc``, ``١٢२``, and
+                # ``٠١٢٣``, which that tokenizer splits in two).
                 continue
             if _is_native_literal(original, token.string, digits):
                 kept.append((start, end))

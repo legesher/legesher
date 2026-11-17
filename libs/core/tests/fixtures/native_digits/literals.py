@@ -27,6 +27,14 @@ var3 = 4
 राशि = 30
 จำนวน = 40
 数量 = 50
+# Identifiers whose last letter carries a mark, then a native digit: on
+# CPython 3.10 and 3.11 the tokenizer splits them at the mark.
+संख्या१ = 6
+قيمةً٣ = 7
+قيمةً۳ = 8
+ที่๑ = 9
+সংখ্যা১ = 10
+ကိန်း၁ = 11
 label = "Price: ١٢٣ ۴۵۶ १२३ ১২৩ ๑๒๓ ၁၂၃"
 raw = r"\d{3} ٤٥٦ ۷۸۹"
 template = f"{integer + 1} items, ٧٨٩ left"
@@ -63,6 +71,13 @@ RESULT = (
     राशि,
     จำนวน,
     数量,
+    संख्या१,
+    قيمةً٣,
+    قيمةً۳,
+    ที่๑,
+    সংখ্যা১,
+    ကိန်း၁,
+    globals().get("संख्या१"),
     label,
     raw,
     template,

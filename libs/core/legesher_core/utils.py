@@ -183,6 +183,19 @@ def merge_exception_translations(
     return merged
 
 
+def continues_identifier(char: str) -> bool:
+    """Whether ``char`` can sit inside an identifier, by Python's own rules.
+
+    Not ``\\w``: combining marks (a Devanagari vowel sign, an Arabic
+    haraka, a Thai tone mark), connector punctuation and the other
+    ``Other_ID_Continue`` characters continue a word too. The pure-Python
+    tokenizer of CPython 3.10 and 3.11 reads names as ``\\w+`` and splits a
+    word at those characters, so anything that decides where a word ends
+    from tokens on those versions asks this instead.
+    """
+    return ("a" + char).isidentifier()
+
+
 def strip_bom(code: str) -> str:
     """Strip a single leading byte-order mark (U+FEFF) from source text.
 
