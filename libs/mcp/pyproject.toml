@@ -158,9 +158,12 @@ testpaths = ["tests"]
 # `scheduled` is deselected by default: those suites are correct but slow
 # (all packs × the round-trip corpus, wheel builds into fresh venvs).
 # Run them with `-m scheduled`, or `make test-mcp-scheduled`.
-addopts = "-v -m 'not scheduled'"
+# `docker` is deselected by default too: it builds the container image, so it
+# needs a Docker daemon and the network. Run it with `make test-mcp-docker`.
+addopts = "-v -m 'not scheduled and not docker'"
 markers = [
     "scheduled: slow, release-tier suites — excluded from the per-commit run",
+    "docker: builds libs/mcp/Dockerfile and drives the image; needs a Docker daemon",
 ]
 
 [tool.mypy]

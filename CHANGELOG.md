@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **mcp**: `libs/mcp/Dockerfile` builds the published `legesher-mcp` into a
+  container image, with the images pinned by digest, the tools by version and
+  their dependencies by date. `make test-mcp-docker` builds it and drives a
+  session against the image. The README links the server's Glama listing.
+
 ### Changed
 
 - **release**: the foundation release on GitHub carries only the `legesher`,

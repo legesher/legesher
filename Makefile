@@ -2,7 +2,7 @@
 # ===========================
 # Common commands for development, testing, and code generation.
 
-.PHONY: help install generate generate-languages generate-docs generate-schema-reference check-generated check-generated-languages check-generated-docs check-generated-schema-reference check-generated-reference test test-all test-i18n test-core test-legesher test-language-server test-language-server-scheduled test-mcp test-mcp-scheduled test-runtime bench lint format typecheck clean vscode-compile vscode-package
+.PHONY: help install generate generate-languages generate-docs generate-schema-reference check-generated check-generated-languages check-generated-docs check-generated-schema-reference check-generated-reference test test-all test-i18n test-core test-legesher test-language-server test-language-server-scheduled test-mcp test-mcp-scheduled test-mcp-docker test-runtime bench lint format typecheck clean vscode-compile vscode-package
 
 # Default target
 help:
@@ -29,6 +29,7 @@ help:
 	@echo "  make test-language-server-scheduled  Release-tier language-server suite (wheel install)"
 	@echo "  make test-mcp             Run MCP server tests"
 	@echo "  make test-mcp-scheduled   Run release-tier MCP suites (all packs, wheel spawn)"
+	@echo "  make test-mcp-docker      Build libs/mcp/Dockerfile and drive the image (needs Docker)"
 	@echo "  make test-runtime         Run runtime package tests"
 	@echo "  make bench                Run the benchmark and timing suites with timing on"
 	@echo ""
@@ -134,6 +135,16 @@ test-mcp:
 test-mcp-scheduled:
 	@echo "Running scheduled (release-tier) MCP suites..."
 	cd libs/mcp && uv run pytest tests/ -v -m scheduled
+
+# Builds libs/mcp/Dockerfile and drives a session against the image, over
+# stdio and through mcp-proxy over HTTP. Needs a running Docker daemon and the
+# network, and fails without them, so it is in neither `test-mcp` nor the
+# release gate. Run it after changing the Dockerfile and before changing a
+# directory's build settings. It tests the published package the Dockerfile
+# names, not this checkout.
+test-mcp-docker:
+	@echo "Building the MCP server image and driving a session against it..."
+	cd libs/mcp && uv run pytest tests/ -v -m docker
 
 test-runtime:
 	@echo "Running runtime tests..."

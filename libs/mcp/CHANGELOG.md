@@ -9,6 +9,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `Dockerfile` builds the published `legesher-mcp` into a container image. It
+  starts the stdio server by default and carries mcp-proxy, so it can also be
+  started the way a directory that builds servers from source runs it, over
+  HTTP. The build fixes what it downloads: the base image and the uv image
+  by digest, Python, mcp-proxy and `legesher-mcp` by version, and their
+  dependencies by date. `make test-mcp-docker` builds the image and drives a
+  session against it over stdio and over HTTP, and
+  `tests/test_container_image.py` holds the file to its pins in the default
+  run.
+- `docs/registry-listings.md` gains a Glama section: the build settings the
+  listing uses, how to check them locally, and the steps for each release.
+  The README links the Glama listing.
+
 ### Security
 
 - Requires the MCP Python SDK (`mcp`) 1.30.0 or later, the first 1.x release
