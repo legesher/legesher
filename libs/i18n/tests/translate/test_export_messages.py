@@ -265,15 +265,20 @@ class TestBuild:
         assert "messages" in _PACK_SECTIONS
         assert _PACK_VERSIONS == gate.EXPECTED_VERSIONS
 
-    def test_a_key_a_pack_load_would_refuse_stops_the_export(self, seeded, tmp_path):
+    @pytest.mark.parametrize("version", ["3.10", "3.12"])
+    def test_a_key_a_pack_load_would_refuse_stops_the_export(
+        self, seeded, tmp_path, version
+    ):
         """The seeder accepts any key; the exporter must not write a pack that
-        does not load, which would take its keywords down with it."""
+        does not load, which would take its keywords down with it. Checked in
+        the base file and in a later one."""
         connection = sqlite3.connect(seeded.db_path)
         cursor = connection.execute(
             "INSERT INTO message_templates (implementation, key, template_en, "
             "placeholders, matcher, version_added) VALUES "
             "('cpython', 'Recursion', 'maximum recursion depth exceeded', '[]', "
-            "'^maximum recursion depth exceeded$', '3.10')"
+            "'^maximum recursion depth exceeded$', ?)",
+            (version,),
         )
         connection.execute(
             "INSERT INTO message_translations (template_id, locale, template, status, "
@@ -569,6 +574,42 @@ class TestImport:
             len(v) for v in by_version("es").values()
         )
 
+    def test_the_scripts_dry_run_writes_nothing(self, tmp_path, monkeypatch):
+        fresh = tmp_path / "fresh.db"
+        make_db(fresh, strip_translations(SEED)).close()
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "import_yaml_to_db.py",
+                "--languages",
+                "es",
+                "--db-path",
+                str(fresh),
+                "--dry-run",
+            ],
+        )
+        import_yaml_to_db.main()
+        assert stored(fresh, "es") == {}
+
+    def test_a_template_with_unreadable_placeholders_is_skipped(self, seeded, tmp_path):
+        packs = export_pack(seeded, tmp_path / "pack", "es")
+        fresh = tmp_path / "fresh.db"
+        make_db(fresh, strip_translations(SEED)).close()
+        connection = sqlite3.connect(fresh)
+        connection.execute(
+            "UPDATE message_templates SET placeholders = 'not json' "
+            "WHERE key = 'NameError.not_defined'"
+        )
+        connection.commit()
+        connection.close()
+        imported, skipped = import_yaml_to_db.import_pack_messages(
+            "es", fresh, packs_dir=packs
+        )
+        assert skipped == 1
+        assert imported == sum(len(v) for v in by_version("es").values()) - 1
+        assert ("NameError.not_defined", "3.10") not in stored(fresh, "es")
+
     def test_a_second_import_is_a_no_op(self, seeded, tmp_path):
         packs = export_pack(seeded, tmp_path / "pack", "ar")
         assert import_yaml_to_db.import_pack_messages(
@@ -729,6 +770,22 @@ class TestGate:
         )
         changed = [f for f in findings if f["kind"] == "value_changed"]
         assert len(changed) == 1 and "reviewed" in changed[0]["detail"]
+
+    def test_a_src_only_change_is_a_changed_message(self, tmp_path):
+        before = {
+            "cpython": {"NameError.not_defined": {"text": "नाम", "src": "a" * 12}}
+        }
+        after = json.loads(json.dumps(before))
+        after["cpython"]["NameError.not_defined"]["src"] = "b" * 12
+        findings: list[dict] = []
+        gate.compare_file(
+            self.pack(tmp_path / "s.yml", before),
+            self.pack(tmp_path / "r.yml", after),
+            findings,
+            "zz",
+        )
+        changed = [f for f in findings if f["kind"] == "value_changed"]
+        assert len(changed) == 1 and "bbbbbbbbbbbb" in changed[0]["detail"]
 
     def test_an_added_and_a_removed_message_are_named(self, tmp_path):
         before = {

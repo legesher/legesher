@@ -374,18 +374,27 @@ def import_pack_messages(
                         f"  {filename}: messages for {implementation!r} not imported"
                     )
                     continue
-                templates: dict[tuple[str, str], tuple[int, str, list[str]]] = {
-                    (key, message_fingerprint(template_en)): (
+                templates: dict[tuple[str, str], tuple[int, str, list[str]]] = {}
+                for row_id, key, template_en, placeholders in connection.execute(
+                    "SELECT id, key, template_en, placeholders "
+                    "FROM message_templates WHERE implementation = ?",
+                    (implementation,),
+                ):
+                    try:
+                        declared = [p["name"] for p in json.loads(placeholders or "[]")]
+                    except (ValueError, TypeError, KeyError):
+                        # A damaged template row: its entries find no
+                        # template and are reported as skipped below.
+                        logger.warning(
+                            f"  template {key!r} has unreadable placeholders; "
+                            "its translations are not imported"
+                        )
+                        continue
+                    templates[(key, message_fingerprint(template_en))] = (
                         row_id,
                         template_en,
-                        [p["name"] for p in json.loads(placeholders or "[]")],
+                        declared,
                     )
-                    for row_id, key, template_en, placeholders in connection.execute(
-                        "SELECT id, key, template_en, placeholders "
-                        "FROM message_templates WHERE implementation = ?",
-                        (implementation,),
-                    )
-                }
                 for key, entry in entries.items():
                     where = f"{filename} {implementation} {key}"
                     src = entry.get("src") if isinstance(entry, dict) else None
