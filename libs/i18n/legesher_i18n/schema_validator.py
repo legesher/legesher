@@ -237,6 +237,121 @@ _XID_CHARS_ADDED_BY_CPYTHON_313: frozenset[str] = frozenset(
     for codepoint in range(first, last + 1)
 )
 
+# The same measurement, one release at a time after 3.13: the codepoints
+# ``("a" + chr(cp)).isidentifier()`` accepts on CPython 3.14.7 (Unicode 16.0)
+# and not on 3.13.13 (15.1), then on 3.15.2 (17.0) and not on 3.14.7. Neither
+# step removed a codepoint. Each new CPython release that moves to a newer
+# Unicode gets its own table here, measured the same way, and a row in
+# ``_XID_ADDED_BY_CPYTHON``.
+#
+# 3.13.13 -> 3.14.7: 31 ranges, 4,433 codepoints.
+_XID_RANGES_ADDED_BY_CPYTHON_314: tuple[tuple[int, int], ...] = (
+    (0x0897, 0x0897),  # ARABIC PEPET
+    (0x1C89, 0x1C8A),  # CYRILLIC CAPITAL LETTER TJE +1
+    (0xA7CB, 0xA7CD),  # LATIN CAPITAL LETTER RAMS HORN +2
+    (0xA7DA, 0xA7DC),  # LATIN CAPITAL LETTER LAMBDA +2
+    (0x105C0, 0x105F3),  # TODHRI LETTER A +51
+    (0x10D40, 0x10D65),  # GARAY DIGIT ZERO +37
+    (0x10D69, 0x10D6D),  # GARAY VOWEL SIGN E +4
+    (0x10D6F, 0x10D85),  # GARAY REDUPLICATION MARK +22
+    (0x10EC2, 0x10EC4),  # ARABIC LETTER DAL WITH TWO DOTS VERTICALLY BELOW +2
+    (0x10EFC, 0x10EFC),  # ARABIC COMBINING ALEF OVERLAY
+    (0x11380, 0x11389),  # TULU-TIGALARI LETTER A +9
+    (0x1138B, 0x1138B),  # TULU-TIGALARI LETTER EE
+    (0x1138E, 0x1138E),  # TULU-TIGALARI LETTER AI
+    (0x11390, 0x113B5),  # TULU-TIGALARI LETTER OO +37
+    (0x113B7, 0x113C0),  # TULU-TIGALARI SIGN AVAGRAHA +9
+    (0x113C2, 0x113C2),  # TULU-TIGALARI VOWEL SIGN EE
+    (0x113C5, 0x113C5),  # TULU-TIGALARI VOWEL SIGN AI
+    (0x113C7, 0x113CA),  # TULU-TIGALARI VOWEL SIGN OO +3
+    (0x113CC, 0x113D3),  # TULU-TIGALARI SIGN ANUSVARA +7
+    (0x113E1, 0x113E2),  # TULU-TIGALARI VEDIC TONE SVARITA +1
+    (0x116D0, 0x116E3),  # MYANMAR PAO DIGIT ZERO +19
+    (0x11BC0, 0x11BE0),  # SUNUWAR LETTER DEVI +32
+    (0x11BF0, 0x11BF9),  # SUNUWAR DIGIT ZERO +9
+    (0x11F5A, 0x11F5A),  # KAWI SIGN NUKTA
+    (0x13460, 0x143FA),  # EGYPTIAN HIEROGLYPH-13460 +3994
+    (0x16100, 0x16139),  # GURUNG KHEMA LETTER A +57
+    (0x16D40, 0x16D6C),  # KIRAT RAI SIGN ANUSVARA +44
+    (0x16D70, 0x16D79),  # KIRAT RAI DIGIT ZERO +9
+    (0x18CFF, 0x18CFF),  # KHITAN SMALL SCRIPT CHARACTER-18CFF
+    (0x1CCF0, 0x1CCF9),  # OUTLINED DIGIT ZERO +9
+    (0x1E5D0, 0x1E5FA),  # OL ONAL LETTER O +42
+)
+
+# 3.14.7 -> 3.15.2: 27 ranges, 4,699 codepoints. Arabic letters and marks,
+# the Telugu and Kannada archaic shrii, Sharada vowel signs, four new scripts
+# (Sidetic, Tolong Siki, Beria Erfe, Tai Yo), and CJK Extension J.
+_XID_RANGES_ADDED_BY_CPYTHON_315: tuple[tuple[int, int], ...] = (
+    (0x088F, 0x088F),  # ARABIC LETTER NOON WITH RING ABOVE
+    (0x0C5C, 0x0C5C),  # TELUGU ARCHAIC SHRII
+    (0x0CDC, 0x0CDC),  # KANNADA ARCHAIC SHRII
+    (0x1ACF, 0x1ADD),  # COMBINING DOUBLE CARON +14
+    (0x1AE0, 0x1AEB),  # COMBINING LEFT TACK ABOVE +11
+    (0xA7CE, 0xA7CF),  # LATIN CAPITAL LETTER PHARYNGEAL VOICED FRICATIVE +1
+    (0xA7D2, 0xA7D2),  # LATIN CAPITAL LETTER DOUBLE THORN
+    (0xA7D4, 0xA7D4),  # LATIN CAPITAL LETTER DOUBLE WYNN
+    (0xA7F1, 0xA7F1),  # MODIFIER LETTER CAPITAL S
+    (0x10940, 0x10959),  # SIDETIC LETTER N01 +25
+    (0x10EC5, 0x10EC7),  # ARABIC SMALL YEH BARREE WITH TWO DOTS BELOW +2
+    (0x10EFA, 0x10EFB),  # ARABIC DOUBLE VERTICAL BAR BELOW +1
+    (0x11B60, 0x11B67),  # SHARADA VOWEL SIGN OE +7
+    (0x11DB0, 0x11DDB),  # TOLONG SIKI LETTER I +43
+    (0x11DE0, 0x11DE9),  # TOLONG SIKI DIGIT ZERO +9
+    (0x16EA0, 0x16EB8),  # BERIA ERFE CAPITAL LETTER ARKAB +24
+    (0x16EBB, 0x16ED3),  # BERIA ERFE SMALL LETTER ARKAB +24
+    (0x16FF2, 0x16FF6),  # CHINESE SMALL SIMPLIFIED ER +4
+    (0x187F8, 0x187FF),  # TANGUT IDEOGRAPH-187F8 +7
+    (0x18D09, 0x18D1E),  # TANGUT IDEOGRAPH-18D09 +21
+    (0x18D80, 0x18DF2),  # TANGUT COMPONENT-769 +114
+    (0x1E6C0, 0x1E6DE),  # TAI YO LETTER LOW KO +30
+    (0x1E6E0, 0x1E6F5),  # TAI YO LETTER AA +21
+    (0x1E6FE, 0x1E6FF),  # TAI YO SYMBOL MUEANG +1
+    (0x2B73A, 0x2B73F),  # CJK UNIFIED IDEOGRAPH-2B73A +5
+    (0x2CEA2, 0x2CEAD),  # CJK UNIFIED IDEOGRAPH-2CEA2 +11
+    (0x323B0, 0x33479),  # CJK UNIFIED IDEOGRAPH-323B0 +4297
+)
+
+
+def _expand(ranges: tuple[tuple[int, int], ...]) -> frozenset[str]:
+    return frozenset(
+        chr(codepoint) for first, last in ranges for codepoint in range(first, last + 1)
+    )
+
+
+#: Every identifier character added after Python 3.10, the supported floor, by
+#: the first CPython release that accepts it. One measured delta per release.
+#: The 3.13 row is the whole 3.10 -> 3.13 measurement, so a character 3.11 or
+#: 3.12 added is reported as needing 3.13: conservative, never permissive.
+_XID_ADDED_BY_CPYTHON: dict[tuple[int, int], frozenset[str]] = {
+    (3, 13): _XID_CHARS_ADDED_BY_CPYTHON_313,
+    (3, 14): _expand(_XID_RANGES_ADDED_BY_CPYTHON_314),
+    (3, 15): _expand(_XID_RANGES_ADDED_BY_CPYTHON_315),
+}
+
+#: The Unicode version each row's CPython release reads identifiers with.
+_UNICODE_OF_CPYTHON: dict[tuple[int, int], str] = {
+    (3, 13): "15.1",
+    (3, 14): "16.0",
+    (3, 15): "17.0",
+}
+
+
+def interpreter_needed_for_identifier(value: str) -> tuple[int, int] | None:
+    """The oldest CPython release whose identifier rules accept every character of ``value``.
+
+    ``None`` when Python 3.10, the supported floor, already accepts them all.
+    Static: it reads the pinned tables, never the running interpreter, so the
+    answer is the same on every interpreter that asks.
+    """
+    needed: tuple[int, int] | None = None
+    for version, added in _XID_ADDED_BY_CPYTHON.items():
+        if needed is not None and version <= needed:
+            continue
+        if any(ch in added for ch in value):
+            needed = version
+    return needed
+
 
 @dataclass(frozen=True)
 class Finding:
@@ -1691,17 +1806,18 @@ class SchemaValidator:
         XID_Continue in the same Unicode release. A value using either is safe
         only if the pack declares a minimum interpreter of 3.13 or newer.
 
-        The character set is the FULL measured 3.10 -> 3.13 delta
-        (:data:`_XID_RANGES_ADDED_BY_CPYTHON_313`), not a list of the traps
-        someone has already hit — U+30FB shipped in a 3.10-floor pack precisely
-        because the old two-member set did not name it.
+        Every CPython release that moves to a newer Unicode adds identifier
+        characters, so the rule is one rule per release: a value that needs
+        release V (:func:`interpreter_needed_for_identifier`, from the measured
+        per-release tables in :data:`_XID_ADDED_BY_CPYTHON`) is flagged when the
+        pack's declared minimum is below V. 3.14 (Unicode 16.0) and 3.15
+        (Unicode 17.0) each have their own table; a 3.15-only character in a
+        3.14 tier is caught exactly as a 3.13-only character in a 3.10 tier is.
 
-        This is a **static** XID check (never calls ``compile()``): if a value
-        contains any character in
-        :data:`SchemaValidator._XID_ONLY_FROM_CPYTHON_313` and the declared minimum
-        interpreter is < 3.13, it is flagged. Conservative by design — it errs
-        toward warning the maintainer rather than trusting the running
-        interpreter's Unicode version.
+        This is a **static** XID check (never calls ``compile()``), so the
+        verdict is the same on every interpreter that runs the gate.
+        Conservative by design: the 3.13 table is the whole 3.10 -> 3.13
+        measurement, so a character 3.11 or 3.12 added reads as needing 3.13.
 
         Args:
             pack_schema: Validated, merged pack.
@@ -1718,36 +1834,42 @@ class SchemaValidator:
         if declared is None:
             declared = pack_schema.version
 
-        supports_unicode15_1_xid = SchemaValidator._version_at_least(declared, 3, 13)
-        if supports_unicode15_1_xid:
-            return []
-
         findings: list[Finding] = []
         for section, key, value in SchemaValidator._iter_translation_items(pack_schema):
+            needed = interpreter_needed_for_identifier(value)
+            if needed is None or SchemaValidator._version_at_least(declared, *needed):
+                continue
+            # Every character the declared floor does not accept, from every
+            # release above it, so one finding names all of them.
             offending = sorted(
-                {ch for ch in value if ch in SchemaValidator._XID_ONLY_FROM_CPYTHON_313}
+                {
+                    ch
+                    for release, added in _XID_ADDED_BY_CPYTHON.items()
+                    if not SchemaValidator._version_at_least(declared, *release)
+                    for ch in value
+                    if ch in added
+                }
             )
-            if offending:
-                pretty = ", ".join(
-                    f"U+{ord(ch):04X} {unicodedata.name(ch, 'unnamed')}"
-                    for ch in offending
+            pretty = ", ".join(
+                f"U+{ord(ch):04X} {unicodedata.name(ch, 'unnamed')}" for ch in offending
+            )
+            release = f"{needed[0]}.{needed[1]}"
+            findings.append(
+                Finding(
+                    severity="error",
+                    code="min-interpreter-xid",
+                    location=f"{section}.{key}",
+                    message=(
+                        f"Value '{value}' uses {pretty}; the newest of these only "
+                        f"became a valid identifier character in CPython {release} "
+                        f"(Unicode {_UNICODE_OF_CPYTHON[needed]} XID). The pack "
+                        f"declares minimum interpreter '{declared}'; this raises "
+                        f"SyntaxError on any Python before {release}. Raise "
+                        f"python_version_min to '{release}', or give the tiers "
+                        f"below {release} a spelling that avoids the character."
+                    ),
                 )
-                findings.append(
-                    Finding(
-                        severity="error",
-                        code="min-interpreter-xid",
-                        location=f"{section}.{key}",
-                        message=(
-                            f"Value '{value}' uses {pretty}, which only became "
-                            f"a valid identifier character in CPython 3.13 "
-                            f"(Unicode 15.1 XID). The pack declares minimum "
-                            f"interpreter '{declared}'; this raises SyntaxError "
-                            "on 3.10-3.12. Raise python_version_min to '3.13', "
-                            "or give the pre-3.13 packs a spelling that avoids "
-                            "the character."
-                        ),
-                    )
-                )
+            )
         return findings
 
     @staticmethod

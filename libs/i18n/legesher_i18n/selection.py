@@ -35,7 +35,11 @@ from __future__ import annotations
 import unicodedata
 from dataclasses import dataclass
 
-from .schema_validator import LanguagePackSchema, SchemaValidator
+from .schema_validator import (
+    _XID_ADDED_BY_CPYTHON,
+    LanguagePackSchema,
+    interpreter_needed_for_identifier,
+)
 from .script_policy import forbidden_letters_in, nfkc_delta_class
 
 # Translation sources ordered from most to least trusted. Sources not in
@@ -257,16 +261,23 @@ def vocabulary_value_error(
                 f"variable_conventions.{slug}: '{value}' is not a valid Python "
                 "identifier, so it cannot be recommended as a variable name"
             )
-        needs_313 = sorted(
-            {c for c in value if c in SchemaValidator._XID_ONLY_FROM_CPYTHON_313}
-        )
-        if needs_313:
-            points = ", ".join(f"U+{ord(c):04X}" for c in needs_313)
+        needed = interpreter_needed_for_identifier(value)
+        if needed is not None:
+            newer = sorted(
+                {
+                    c
+                    for c in value
+                    for added in _XID_ADDED_BY_CPYTHON.values()
+                    if c in added
+                }
+            )
+            points = ", ".join(f"U+{ord(c):04X}" for c in newer)
             return (
-                f"variable_conventions.{slug}: '{value}' uses {points}, which "
-                "only became a valid identifier character in CPython 3.13. A "
-                "recommended name has no version overlay to be tiered into, so "
-                "it must parse on the 3.10 floor — respell it"
+                f"variable_conventions.{slug}: '{value}' uses {points}; the newest "
+                "of these only became a valid identifier character in CPython "
+                f"{needed[0]}.{needed[1]}. A recommended name has no version "
+                "overlay to be tiered into, so it must parse on the 3.10 floor — "
+                "respell it"
             )
         nfc = unicodedata.normalize("NFC", value)
         nfkc = unicodedata.normalize("NFKC", value)

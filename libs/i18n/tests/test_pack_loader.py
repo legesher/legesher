@@ -9,7 +9,11 @@ from pathlib import Path
 
 from legesher_i18n.pack_loader import LanguagePackLoader
 from tests.interpreter_gaps import NEEDS_UNICODE_15_1
-from legesher_i18n.schema_validator import SchemaValidator
+from legesher_i18n.schema_validator import (
+    LanguagePackMetadata,
+    LanguagePackSchema,
+    SchemaValidator,
+)
 from legesher_i18n.exceptions import (
     CircularInheritanceError,
     MaxInheritanceDepthError,
@@ -826,41 +830,68 @@ class TestJapaneseInterpreterTiers:
         )
 
 
-def test_no_xid_313_only_char_below_the_declared_floor():
-    """No pack value may contain a character that only became a valid identifier
-    on CPython 3.13 while the pack declares a floor below 3.13 — that value would
-    ``SyntaxError`` on the interpreter it targets.
+def _shipped_tier_files() -> list[tuple[str, Path]]:
+    """Every shipped pack file as ``(language, path)``, read from discovery."""
+    files = []
+    for key, pack_dir in sorted(LanguagePackLoader()._discover_packs().items()):
+        target, _, code = key.partition("-")
+        if target == "python":
+            files += [
+                (code, path) for path in sorted((pack_dir / "packs").glob("*.yml"))
+            ]
+    return files
 
-    Generalises the CORE-1521 Sinhala fix to every shipped pack: the deterministic
-    static guarantee that each tier parses on its own interpreter.
 
-    The character set is the validator's own, not a local copy. A local
-    ``{ZWJ, ZWNJ}`` literal is what let ``ja`` ship ``U+30FB KATAKANA MIDDLE DOT``
-    under a 3.10 floor with this test green (CORE-1905): the test asserted the
-    two characters its author knew about rather than the rule.
+def _raw_tier_schema(path: Path) -> LanguagePackSchema:
+    """One tier file as the gate sees it, WITHOUT loading it.
+
+    Loading validates identifiers with the running interpreter, so on 3.13 a
+    value that needs 3.14 would fail to load, and a test that skipped what it
+    could not load would wave it through. The raw file carries the tier's own
+    values and its own declared floor, which is exactly what has to agree.
     """
-    xid_313_only = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
-    loader = LanguagePackLoader()
-    offenders = []
-    for code, _name in loader.list_available_languages("python"):
-        for version in ("3.10", "3.11", "3.12", "3.13", "3.14"):
-            try:
-                pack = loader.load(
-                    code, "python", version, enforce_min_interpreter=False
-                )
-            except Exception:
-                continue
-            floor = pack.metadata.python_version_min if pack.metadata else None
-            try:
-                below_313 = floor is None or tuple(
-                    int(p) for p in floor.split(".")[:2]
-                ) < (3, 13)
-            except ValueError:
-                below_313 = True
-            if not below_313:
-                continue
-            for section in ("keywords", "builtins", "exceptions", "implicit_params"):
-                for key, value in (getattr(pack, section, {}) or {}).items():
-                    if any(ch in xid_313_only for ch in value):
-                        offenders.append((code, version, key, value))
-    assert offenders == [], f"XID-3.13-only chars below a <3.13 floor: {offenders}"
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    fields = {
+        name: data[name]
+        for name in LanguagePackSchema.model_fields
+        if name in data and name != "metadata"
+    }
+    metadata = data.get("metadata")
+    if isinstance(metadata, dict):
+        fields["metadata"] = LanguagePackMetadata.model_construct(**metadata)
+    return LanguagePackSchema.model_construct(**fields)
+
+
+def test_no_identifier_character_newer_than_its_tiers_floor():
+    """No tier may carry a character its own declared floor cannot parse.
+
+    The rule is one rule per CPython release (CORE-2832): a value that needs
+    release V (a character added to Python's identifiers in V: 3.13, 3.14 or
+    3.15) may only appear in a tier whose ``python_version_min`` is at least
+    V. Each tier file is checked against its own floor with the validator's
+    own gate, so a 3.15-only character in a 3.14 tier fails exactly as a
+    3.13-only character in a 3.10 tier does.
+
+    It generalises the CORE-1521 Sinhala fix to every shipped pack. The tables
+    are the validator's own: a local copy of the characters someone knew
+    about is what let ``ja`` ship U+30FB under a 3.10 floor (CORE-1905).
+    """
+    offenders = [
+        f"{code} {path.name} {finding.location}: {finding.message}"
+        for code, path in _shipped_tier_files()
+        for finding in SchemaValidator.check_min_interpreter_identifier(
+            _raw_tier_schema(path), code
+        )
+    ]
+    assert offenders == [], "\n".join(offenders)
+
+
+def test_the_floor_test_reads_every_shipped_tier_file():
+    # Guards the test above: an empty or partial walk would pass it vacuously.
+    files = _shipped_tier_files()
+    languages = {code for code, _ in files}
+    assert len(languages) == len(
+        LanguagePackLoader().list_available_languages("python")
+    )
+    for version in LanguagePackLoader().list_available_versions("python"):
+        assert any(path.name == f"{version}.yml" for _, path in files), version
