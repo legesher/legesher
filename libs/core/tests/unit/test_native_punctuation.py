@@ -325,8 +325,9 @@ def test_incomplete_code_passes_through_the_token_backend_as_typed() -> None:
 
 
 def test_incomplete_code_is_read_up_to_where_it_stops_by_tree_sitter() -> None:
-    """Tree-sitter translates incomplete code; the marks it reads there are
-    read as ASCII too, so keywords and punctuation never come back mixed."""
+    """Tree-sitter translates incomplete code; the marks before the open
+    bracket are read as ASCII too, so the complete lines above it no longer
+    come back as English keywords beside fullwidth marks."""
     english, _, typed = _sample("zh", "fullwidth")
     incomplete = typed + "x = f（1，\n"
     _, reverse = _translators("zh", "tree-sitter")

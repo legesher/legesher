@@ -21,15 +21,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   text of an f-string is kept byte for byte. One character is replaced by one,
   so line and column numbers do not move. In incomplete code the marks are
   read up to the point the tokenizer cannot read past (a bracket still open,
-  an unterminated string) and the rest is left as typed; the token backend
-  still hands incomplete code back unchanged. `legesher_core.native_punctuation`
+  an unterminated string) and the rest is left as typed, so a mark after that
+  point can still come back beside an English keyword. `legesher_core.native_punctuation`
   holds the table (`NATIVE_PUNCTUATION`) and the function both backends call
   (`fold_code_punctuation`).
 - The engine reads these marks and never writes them. A translation for
   display and the return leg of a round trip carry ASCII punctuation, and the
   git clean filter does not touch punctuation, so git stores the file as
   typed. `legesher guard` is unchanged: it still refuses the fullwidth marks
-  in code position, and the Arabic marks pass it. Source that uses a native
+  in code position, and the Arabic marks pass it. As before, the clean filter
+  and the guard do not normalize stray keywords in a file that has a native
+  mark in code position. Source that uses a native
   mark in code position runs and does not come back byte-identical: the
   round-trip check reports `round-trip FAILED` with the new layer
   `punctuation`, named only when the mark is the whole difference on its

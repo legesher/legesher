@@ -29,9 +29,12 @@ How code position is found. The whole text is folded first, one character
 for one, and that folded text is tokenized. A fold is then kept only where
 the tokenizer reports an operator token; everywhere else the original
 character stays. No target of the table can open or close a string or a
-comment, so folding inside prose cannot change where prose ends, and the
-tokenizer's own answer is used instead of a second, hand-written reading of
-Python's string syntax.
+comment, so the tokenizer's own answer is used instead of a second,
+hand-written reading of Python's string syntax. One exception: from CPython
+3.12, a colon folded inside an f-string replacement field opens a format
+spec, which changes how what follows in that field is read. That is what a
+colon typed there means; text whose reading changes this way and that does
+not compile as written does not compile either way.
 
 Folding stops where the tokenizer stops. Code being typed is often
 incomplete (a bracket still open at the end, an unterminated string, an

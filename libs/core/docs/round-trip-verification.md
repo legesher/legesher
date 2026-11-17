@@ -305,7 +305,8 @@ versions nothing.
 
 ```text
 legesher: round-trip VERIFIED — es→en→es · exercised: builtins, keywords ·
-not covered: comments, identifiers, strings (CORE-1841) · grammar 3.13
+not covered: collision, comments, exceptions, identifiers, implicit_params,
+strings (CORE-1841) · grammar 3.13
 ```
 
 ```text
