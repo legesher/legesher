@@ -22,6 +22,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `decimal_separator`. The ten digits derive from the identifier. Urdu's
   numbering system is corrected to Extended Arabic-Indic, and Persian, Burmese
   and Kannada gain theirs.
+- **core**: a numeric literal typed in the language's own digits (Arabic
+  `٠١٢٣`, Persian and Urdu `۰۱۲۳`, Hindi `०१२३`, Bengali, Thai, Burmese and
+  others) is read as ASCII, so `x = ١٢٣ + 456` translates and runs. Strings,
+  comments and identifiers keep their digits, prefixed literals stay ASCII,
+  and the engine never writes native digits: display and the return leg of a
+  round trip carry ASCII digits, git stores the file as typed, and the
+  round-trip check reports such source under the new layer `digits`.
 
 ### Changed
 

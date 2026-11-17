@@ -42,7 +42,7 @@ script:
   - "Root-and-pattern morphology (Arabic-specific): abbreviate by dropping whole words, never by truncating a root; write bare consonantal skeletons. Use the standard Arabic block (U+0600–06FF); avoid presentation forms (U+FB50–FDFF, U+FE70–FEFF)."
   - "Combining marks are legal in identifiers, but every identifier must be an NFKC fixed point. Separately — NFKC does NOT catch these — the zero-width joiner (U+200D), zero-width non-joiner (U+200C), and tatweel (U+0640) are forbidden by codepoint: Python accepts them inside identifiers, producing rendered-identical confusables."
   - "Omit vowel diacritics (harakat / tashkil) in identifiers — write the bare consonantal skeleton."
-  - "Digits: Arabic natively uses ٠١٢٣; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+  - "Digits: Arabic natively uses ٠١٢٣; numeric literals may be typed in these digits, and Legesher reads them as ASCII 0-9 when the code runs (prefixed literals such as 0x stay ASCII). Identifiers keep ASCII digits."
 
 # Formatting rules.
 formatting:

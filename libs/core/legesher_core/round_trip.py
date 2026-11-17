@@ -28,7 +28,8 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Protocol
 
 from legesher_core.name_positions import SOFT_KEYWORDS, name_roles, word_at
-from legesher_core.native_punctuation import fold_code_punctuation
+from legesher_core.native_punctuation import NATIVE_PUNCTUATION, fold_code_punctuation
+from legesher_core.native_digits import fold_code_digits
 from legesher_core.utils import merge_exception_translations
 
 if TYPE_CHECKING:
@@ -38,6 +39,7 @@ __all__ = [
     "Divergence",
     "DivergenceKind",
     "FINDING_TICKETS",
+    "FOLD_LAYERS",
     "FindingKind",
     "Layer",
     "NameFinding",
@@ -78,6 +80,12 @@ class Layer(str, Enum):
     its ASCII equivalent and the return leg wrote ASCII. That is by design,
     not a defect in any layer; the source runs, and the author's file keeps
     the mark as typed.
+
+    ``DIGITS`` is a line whose only difference is a numeric literal typed in
+    the language's own digits (``native_digits``): the engine read it as
+    ASCII and the return leg wrote ASCII. That is by design, not a defect in
+    any layer; the source runs, and the author's file keeps the digits as
+    typed.
     """
 
     KEYWORDS = "keywords"
@@ -89,6 +97,7 @@ class Layer(str, Enum):
     STRINGS = "strings"
     COLLISION = "collision"
     PUNCTUATION = "punctuation"
+    DIGITS = "digits"
 
 
 @dataclass(frozen=True)
@@ -389,19 +398,34 @@ def _first_differing_index(
     return None
 
 
-def _as_read(expected_source: str) -> tuple[str, list[str] | None]:
+def _as_read(
+    expected_source: str, language: str | None
+) -> tuple[str, list[str] | None]:
     """The expected source as the engine reads it, and its lines.
 
-    The engine reads native punctuation in code position as ASCII, one
+    The engine reads native punctuation in code position as ASCII, then a
+    numeric literal typed in the language's own digits as ASCII, one
     character for one, so tokens are taken from that reading: on CPython
-    3.12 and later the tokenizer lexes ``否则：`` as one name, and the keyword
-    in it could never be classified. The lines are ``None`` when the source
-    holds no such mark, which is every source written with ASCII marks.
+    3.12 and later the tokenizer lexes ``否则：`` and ``١٢٣`` as names, and
+    neither could be classified. The lines are ``None`` when the reading is
+    the source itself, which is every source written with ASCII marks and
+    digits.
     """
-    read = fold_code_punctuation(expected_source)
+    read = fold_code_digits(fold_code_punctuation(expected_source), language)
     if read is expected_source:
         return read, None
     return read, read.splitlines(keepends=True)
+
+
+def _fold_layer(divergence: Divergence) -> Layer:
+    """Which fold made a line differ: the cause of its first differing character.
+
+    Called only for a line the folds account for in full, so the first
+    character that differs is a native mark or a native digit.
+    """
+    column = divergence.offset or 1
+    first = divergence.expected[column - 1 : column]
+    return Layer.PUNCTUATION if first in NATIVE_PUNCTUATION else Layer.DIGITS
 
 
 def _classify(
@@ -417,11 +441,12 @@ def _classify(
     if divergence.offset is None:
         return None
     if read_lines is not None and divergence.line <= len(read_lines):
-        # Punctuation is named only when it is the whole difference on the
-        # line, line ending included. With a second difference behind the
-        # mark, the tokens below (taken from the same reading) find that
-        # one, so a layer is never credited as clean while its divergence
-        # hides behind a comma. A line whose ending also changed has two
+        # A fold (punctuation or digits) is named only when it is the whole
+        # difference on the line, line ending included. With a second
+        # difference beside it, the tokens below (taken from the same
+        # reading) find that one, so a layer is never credited as clean
+        # while its divergence hides behind a comma or a number. A line
+        # whose ending also changed has two
         # causes and is left unattributed, like any terminator difference.
         read_line = read_lines[divergence.line - 1]
         if _strip_terminator(read_line) == divergence.actual:
@@ -430,7 +455,7 @@ def _classify(
                 if actual_raw is not None and divergence.line <= len(actual_raw)
                 else None
             )
-            return Layer.PUNCTUATION if read_line == actual_line else None
+            return _fold_layer(divergence) if read_line == actual_line else None
     expected_line = expected_lines.get(divergence.line, [])
     actual_line = actual_lines.get(divergence.line, [])
     if not expected_line:
@@ -453,6 +478,15 @@ def _classify(
     return None
 
 
+def _reading_language(pack: LanguagePack, native_side: bool) -> str | None:
+    """The language whose digits the expected side is read with.
+
+    The native side is written in the pack's language; the other side is
+    the canonical language, which writes ASCII digits.
+    """
+    return pack.language if native_side else None
+
+
 def classify_divergence(
     divergence: Divergence,
     expected_source: str,
@@ -466,7 +500,7 @@ def classify_divergence(
     Thin wrapper over the batch path; classifying many divergences goes
     through ``classified``, which tokenizes each source once.
     """
-    read, read_lines = _as_read(expected_source)
+    read, read_lines = _as_read(expected_source, _reading_language(pack, native_side))
     return _classify(
         divergence,
         _tokens_by_line(read),
@@ -490,7 +524,7 @@ def classified(
     whole batch - per-divergence re-tokenization measured quadratic
     (~24 CPU-hours at SOURCE_MAX_CHARS with every line differing).
     """
-    read, read_lines = _as_read(expected_source)
+    read, read_lines = _as_read(expected_source, _reading_language(pack, native_side))
     expected_lines = _tokens_by_line(read)
     actual_lines = _tokens_by_line(actual_source)
     actual_raw = actual_source.splitlines(keepends=True) if read_lines else None
@@ -507,9 +541,31 @@ def classified(
                 read_lines=read_lines,
                 actual_raw=actual_raw,
             ),
+            offset=_read_offset(d, read_lines),
         )
         for d in divergences
     ]
+
+
+def _read_offset(divergence: Divergence, read_lines: list[str] | None) -> int | None:
+    """The column to report, once the folds are taken into account.
+
+    On a line where a fold applied and something else also differs, the
+    column of the first raw difference is the folded character, while the
+    layer names the other cause; report the column where the reading and the
+    returned line part instead. A line the folds account for in full keeps
+    its column, the first character a fold changed.
+    """
+    if (
+        divergence.kind is not DivergenceKind.CONTENT
+        or read_lines is None
+        or divergence.line > len(read_lines)
+    ):
+        return divergence.offset
+    read = _strip_terminator(read_lines[divergence.line - 1])
+    if read in (divergence.expected, divergence.actual):
+        return divergence.offset
+    return _first_differing_column(read, divergence.actual)
 
 
 def _all_tokens(source: str) -> list[tokenize.TokenInfo] | None:
@@ -651,6 +707,10 @@ SCHEMA_VERSION = "1.1.0"
 #: The ticket that widens coverage; referenced in every verdict line, so a
 #: constant rather than a string scattered through f-strings.
 SCOPE_TICKET = "CORE-1841"
+
+#: Layers that name a fold the engine applies by design (it reads the native
+#: form as ASCII and writes ASCII), not a layer a defect can sit in.
+FOLD_LAYERS: frozenset[Layer] = frozenset({Layer.PUNCTUATION, Layer.DIGITS})
 
 PACK_LAYERS: frozenset[Layer] = frozenset(
     {Layer.KEYWORDS, Layer.BUILTINS, Layer.EXCEPTIONS, Layer.IMPLICIT_PARAMS}
@@ -803,13 +863,13 @@ class RoundTripReport:
             )
 
         exercised = ", ".join(sorted(layer.value for layer in self.verified)) or "none"
-        # Punctuation names a cause, never a layer a trip could cover, so it
-        # is not listed as uncovered.
+        # Punctuation and digits name a cause, never a layer a trip could
+        # cover, so they are not listed as uncovered.
         uncovered = ", ".join(
             sorted(
                 layer.value
                 for layer in Layer
-                if layer not in self.verified and layer is not Layer.PUNCTUATION
+                if layer not in self.verified and layer not in FOLD_LAYERS
             )
         )
         return (
@@ -952,9 +1012,13 @@ def verify_round_trip(
     )
 
     # Names are read from the source as the engine reads it (native
-    # punctuation in code position as ASCII, same length, same offsets), so
-    # a keyword typed against a fullwidth colon is still seen as a name.
-    read = fold_code_punctuation(source)
+    # punctuation in code position, then native-digit literals, as ASCII;
+    # same length, same offsets), so a keyword typed against a fullwidth
+    # colon is still seen as a name, and on CPython 3.12 and later a native
+    # literal is not read as a name the trip renamed.
+    read = fold_code_digits(
+        fold_code_punctuation(source), _reading_language(pack, native_side)
+    )
     findings = _name_findings(read, forward, pack, native_side=native_side)
 
     clean = count == 0

@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `legesher run` and the import hook read numeric literals typed in the
+  language's own digits (through `legesher-core`), and the import hook also
+  loads a module whose only native content is digits (`मान = १२`), which has
+  no keyword to claim it by. The hook's identifier rule now comes from
+  `legesher_core.utils.continues_identifier`, shared with the digit fold.
+
 ### Fixed
 
 - `legesher run`, `legesher translate` and the git clean filter work on a

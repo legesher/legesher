@@ -17,6 +17,7 @@ from .cultural_comments import CulturalCommentParser
 from .exceptions import InvalidCodeError
 from .name_positions import kept_names
 from .native_punctuation import fold_code_punctuation
+from .native_digits import fold_code_digits
 from .token_mapper import TokenMapper
 from .types import CulturalCommentMetadata
 from .utils import validate_utf8_encoding, normalize_newlines
@@ -63,6 +64,9 @@ class TokenTranslator:
         builtin_map: dict[str, str],
         python_version: str = "3.13",
         implicit_param_map: dict[str, str] | None = None,
+        *,
+        source_language: str | None = None,
+        target_language: str | None = None,
     ) -> None:
         """Initialize translator with language maps and Python version.
 
@@ -73,6 +77,11 @@ class TokenTranslator:
             implicit_param_map: Optional mapping of Python conventions like
                 ``self`` and ``cls`` to target language (CORE-710). Defaults
                 to empty so existing callers don't need to change.
+            source_language: The language the input is written in. A numeric
+                literal typed in its native digits is read as ASCII
+                (``native_digits``). ``None`` reads ASCII digits only.
+            target_language: The language the output is written in; becomes
+                the source language of :meth:`reverse`.
 
         Raises:
             ValueError: If keyword_map or builtin_map is empty or None.
@@ -87,6 +96,8 @@ class TokenTranslator:
         """
         self.mapper = TokenMapper(keyword_map, builtin_map, implicit_param_map)
         self.python_version = python_version
+        self.source_language = source_language
+        self.target_language = target_language
 
     def __repr__(self) -> str:
         """Return a developer-friendly string representation for debugging.
@@ -120,11 +131,13 @@ class TokenTranslator:
         1. Normalize line endings (\\r\\n → \\n)
         2. Read native punctuation in code position as its ASCII mark
            (``native_punctuation``)
-        3. Tokenize source code using Python's tokenize module
-        4. Optionally extract cultural comment metadata (for IDE integration)
-        5. For each NAME token, check if it's a keyword or builtin
-        6. Replace with translated version if found in maps
-        7. Reconstruct code using untokenize, preserving formatting
+        3. Read numeric literals typed in the source language's own digits
+           as ASCII (``native_digits``)
+        4. Tokenize source code using Python's tokenize module
+        5. Optionally extract cultural comment metadata (for IDE integration)
+        6. For each NAME token, check if it's a keyword or builtin
+        7. Replace with translated version if found in maps
+        8. Reconstruct code using untokenize, preserving formatting
 
         Args:
             source_code: Python source code to translate
@@ -184,10 +197,13 @@ class TokenTranslator:
             return source_code
 
         # Native punctuation in code position (an Arabic comma, a fullwidth
-        # parenthesis) is read as its ASCII mark; strings and comments keep
-        # theirs. One character for one, so no offset moves. The text as
-        # given is what a pass-through below hands back.
-        read = fold_code_punctuation(source_code)
+        # parenthesis) is read as its ASCII mark, then a numeric literal typed
+        # in the source language's own digits is read as ASCII; strings,
+        # comments and identifiers keep theirs. Punctuation goes first: the
+        # digit fold tokenizes, and an Arabic comma stops the tokenizer from
+        # CPython 3.12. One character for one, so no offset moves. The text
+        # as given is what a pass-through below hands back.
+        read = fold_code_digits(fold_code_punctuation(source_code), self.source_language)
 
         try:
             # Tokenize the source code
@@ -399,6 +415,8 @@ class TokenTranslator:
             builtin_map=reversed_mapper.builtin_map,
             implicit_param_map=reversed_mapper.implicit_param_map,
             python_version=self.python_version,
+            source_language=self.target_language,
+            target_language=self.source_language,
         )
 
     @classmethod
@@ -452,7 +470,7 @@ class TokenTranslator:
             Concurrent calls are thread-safe.
         """
         # Import here to avoid circular dependency
-        from legesher_i18n import LanguagePackLoader
+        from legesher_i18n import CANONICAL_LANGUAGE, LanguagePackLoader
 
         # Auto-detect Python version if not provided
         if python_version is None:
@@ -487,6 +505,8 @@ class TokenTranslator:
             builtin_map=builtin_map,
             implicit_param_map=implicit_param_map,
             python_version=python_version,
+            source_language=CANONICAL_LANGUAGE,
+            target_language=pack.language,
         )
 
     @classmethod
