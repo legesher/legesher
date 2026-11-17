@@ -427,6 +427,24 @@ class TestInitAndTheHomeDirectory:
         assert unset.returncode == 1
         assert "home directory's" in legesher("git", "status").output
 
+    def test_git_setup_refuses_a_project_linked_to_the_user_config(
+        self, repo, isolated_home
+    ):
+        (isolated_home / ".legesher").mkdir()
+        user_config = isolated_home / ".legesher" / "config.yml"
+        user_config.write_text("language: he\n", encoding="utf-8")
+        try:
+            (repo / ".legesher").symlink_to(
+                isolated_home / ".legesher", target_is_directory=True
+            )
+        except OSError:
+            pytest.skip("this platform does not let the test create symlinks")
+        refused = legesher("git", "setup", "--language", "es", ok=False)
+        assert refused.exit_code == 1
+        assert "is your user-level config" in refused.output
+        assert "Unexpected error" not in refused.output
+        assert user_config.read_text(encoding="utf-8") == "language: he\n"
+
     def test_git_setup_refuses_a_home_kept_in_git(self, isolated_home, monkeypatch):
         git(isolated_home, "init", "-q")
         (isolated_home / ".legesher").mkdir()
@@ -826,6 +844,33 @@ class TestAProjectFileThatCannotBeUsed:
         assert result.exit_code == 1
         assert "not valid YAML" in result.output and "Traceback" not in result.output
         assert project_file.read_bytes() == before
+
+
+class TestAUserFileThatCannotBeUsed:
+    """The user's own file is left out the same way, and never blocks a commit."""
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "language: " + "[" * 5000 + "]" * 5000 + "\n",
+            "language: es\nmetadata:\n  max_history_entries: -1\n",
+        ],
+        ids=["nested-too-deeply", "fails-validation"],
+    )
+    def test_run_and_the_guard_hook_carry_on(self, repo, isolated_home, text):
+        (isolated_home / ".legesher").mkdir()
+        user = isolated_home / ".legesher" / "config.yml"
+        user.write_text(text, encoding="utf-8")
+        config = LegesherConfig.load()
+        assert config.language == "en"
+        assert [path for path, _ in config.left_out] == [user]
+        (repo / "m.py").write_bytes(b"x = 1\n")
+        git(repo, "add", "m.py")
+        assert legesher("guard", "--staged", ok=False).exit_code == 0
+        script = write_program(repo, "hi", "नमस्ते", "नमस्ते दुनिया")
+        stderr = run_script(script).stderr.decode("utf-8")
+        assert "Traceback" not in stderr
+        assert f"legesher: {user} could not be used" in stderr
 
 
 class TestInitFindsThePythonVersionAtTheRoot:

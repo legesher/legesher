@@ -27,6 +27,7 @@ from legesher.config import (
     LegesherConfig,
     find_project_config,
     home_is_the_repository,
+    is_user_config,
     read_config_file,
     shadowed_project_configs,
     user_config_path,
@@ -304,6 +305,20 @@ def git_setup(
             target = user_config_path()
         else:
             target = repo_root / ".legesher" / "config.yml"
+            if is_user_config(target):
+                # A .legesher linked to the user's: setup would write a
+                # project's language into the user config.
+                click.echo(
+                    f"✗ {target} is your user-level config (through a link), "
+                    "not a project's.",
+                    err=True,
+                )
+                click.echo(
+                    "\nHint: Replace the link with a directory of the project's "
+                    "own, or use --global to set your default.",
+                    err=True,
+                )
+                sys.exit(1)
         _data, problem = read_config_file(target)
         if problem is not None:
             click.echo(f"✗ Cannot use {target}: {problem}.", err=True)

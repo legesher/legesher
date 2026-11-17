@@ -378,26 +378,46 @@ class TestDiffReviewRegressions:
         assert result.exit_code == 1, result.output
         assert "m.py:2:5: keyword: `if`" in result.output
 
+    def test_a_bad_value_beside_the_language_does_not_switch_the_check_off(self, repo):
+        # Re-review of the config rework: a pull request that only breaks an
+        # unrelated value passes, and once merged it must not make the next
+        # pull request be judged as English.
+        commit(repo, ".legesher/config.yml", "language: es\n")
+        first_base = head(repo)
+        stage(
+            repo,
+            ".legesher/config.yml",
+            "language: es\nmetadata:\n  max_history_entries: -1\n",
+        )
+        git(repo, "commit", "-q", "-m", "an unrelated bad value")
+        assert run("--diff", first_base).exit_code == 0
+        second_base = head(repo)
+        stage(repo, "m.py", "definir f(x):\n    if x:\n        devolver 1\n")
+        git(repo, "commit", "-q", "-m", "stray")
+        result = run("--diff", second_base)
+        assert result.exit_code == 1, result.output
+        assert "m.py:2:5: keyword: `if`" in result.output
+
     @pytest.mark.parametrize(
         "base_config",
         [
-            "language: es\nmetadata:\n  max_history_entries: -1\n",
             "language: " + "[" * 5000 + "]" * 5000 + "\n",
+            "language: [unclosed\n",
+            "- es\n",
         ],
-        ids=["fails-validation", "nested-too-deeply"],
+        ids=["nested-too-deeply", "unparsable", "not-a-mapping"],
     )
-    def test_a_base_config_that_cannot_be_used_names_no_language(
+    def test_a_base_config_that_cannot_be_read_is_judged_as_english_and_says_so(
         self, repo, base_config
     ):
-        # Left out whole, as `--staged` and every other reader leave it out:
-        # the base is judged as English, so a Spanish file's stray English
-        # `if` is not a finding, where `language: es` alone would make it one.
         commit(repo, ".legesher/config.yml", base_config)
         base = head(repo)
         stage(repo, "m.py", "definir f(x):\n    if x:\n        devolver 1\n")
         git(repo, "commit", "-q", "-m", "stray")
         result = run("--diff", base)
         assert result.exit_code == 0, result.output
+        assert "base's .legesher/config.yml cannot be read" in result.output
+        assert "judged as English" in result.output
 
     def test_legesher_replaced_by_a_symlink(self, repo):
         commit(repo, ".legesher/config.yml", "language: es\n")

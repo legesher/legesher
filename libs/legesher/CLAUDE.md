@@ -26,7 +26,9 @@ so register a new marker in `pyproject.toml`.
   - how one file is read: `parse_config_text()` (and `read_config_file()` for a file on disk), which returns
     the data through `normalize_config_data()` (including the shape an earlier `init` wrote) or the reason
     the file is left out whole. The loader, `load_project_config()`, `load_user_config()`, `legesher config
-    get` and `list`, `git setup`, and `guard --diff` reading a commit's blob all use it.
+    get` and `list`, and `git setup` all use it. `guard --diff` reads a base commit's blob with
+    `language_named_in()` instead: the same reading of `language`, without validating the rest, so a bad
+    value elsewhere in a merged file cannot switch the pull-request check to English.
   - how the two files combine: `merge_config_data()`, per top-level key, used by `load()` and `config`.
   - how a file is written: `dump_config()`; `save_*_config()` merge into the file on disk.
 - `git setup`, `git status` and `init`'s git step locate the repository with `LegesherConfig._find_repo_root()`,

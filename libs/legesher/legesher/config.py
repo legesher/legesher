@@ -27,8 +27,13 @@ A file that cannot be used (unparsable YAML, YAML nested too deeply to read,
 not a mapping, or a value that fails validation) is left out whole by every
 reader (``parse_config_text``, through ``read_config_file`` for a file on
 disk). The runtime warns and carries on without it; ``legesher config`` and
-``legesher git setup`` refuse until it is fixed; ``legesher guard --diff``
-judges a pull request against a base whose config is left out as English.
+``legesher git setup`` refuse until it is fixed.
+
+``legesher guard --diff`` is stricter on purpose (``language_named_in``): it
+judges a pull request by the language its base's file names whenever that
+file can be parsed, even if another value in it fails validation, so an
+unrelated bad value merged earlier cannot switch the check off. Only a base
+file that cannot be parsed at all is judged as English, with a notice.
 
 One schema, written by ``legesher init`` and ``legesher git setup`` alike.
 ``legesher init`` once wrote a different one (``languages`` as a list and no
@@ -327,6 +332,33 @@ def parse_config_text(text: str) -> tuple[dict | None, str | None]:
     except (TypeError, ValueError, AttributeError) as e:
         return None, str(e)
     return data, None
+
+
+def language_named_in(text: str) -> tuple[str | None, str | None]:
+    """The language a config file's text names, for ``legesher guard --diff``.
+
+    Returns ``(language, None)``, read as every other reader reads it (so
+    the shape an earlier ``legesher init`` wrote names the first of its
+    ``languages``), or ``(None, None)`` when the file names none. Unlike
+    ``parse_config_text`` this does not validate the rest of the file: a
+    pull request is judged by the language its base names, and a bad value
+    elsewhere in that file must not change which language that is.
+    ``(None, problem)`` only when the text cannot be read as a mapping.
+    """
+    try:
+        raw = yaml.safe_load(text)
+    except (ValueError, yaml.YAMLError, RecursionError) as e:
+        reason = " ".join(str(e).split())
+        return None, f"it cannot be read as YAML ({reason})"
+    if raw is None:
+        return None, None
+    if not isinstance(raw, dict):
+        return None, f"it is not a YAML mapping (found {type(raw).__name__})"
+    try:
+        language = normalize_config_data(raw).get("language")
+    except RecursionError:
+        return None, "it is nested too deeply to read"
+    return (language if _is_language(language) else None), None
 
 
 def read_config_file(config_path: Path | None) -> tuple[dict | None, str | None]:
@@ -675,8 +707,8 @@ class LegesherConfig:
             )
             if path is not None and problem is not None
         ]
-        for path, problem in left_out:
-            _report_left_out(path, problem)
+        for left_path, problem in left_out:
+            _report_left_out(left_path, problem)
 
         # Defaults, then what the files say, the project's settings first.
         merged_data = copy.deepcopy(DEFAULT_CONFIG)
@@ -689,13 +721,14 @@ class LegesherConfig:
 
         config = cls.from_dict(merged_data)
         config.left_out = left_out
-        for path, data in ((project_path, project_data), (user_path, user_data)):
+        sources = ((project_path, project_data), (user_path, user_data))
+        for source, data in sources:
             if (
-                path is not None
+                source is not None
                 and data is not None
                 and _is_language(data.get("language"))
             ):
-                config.language_source = path
+                config.language_source = source
                 break
         return config
 
@@ -705,7 +738,7 @@ class LegesherConfig:
         try:
             with open(config_path, encoding="utf-8") as f:
                 return yaml.safe_load(f)
-        except (OSError, ValueError, yaml.YAMLError) as e:
+        except (OSError, ValueError, yaml.YAMLError, RecursionError) as e:
             logger.debug(f"Could not read {config_path}: {e}")
             return None
 

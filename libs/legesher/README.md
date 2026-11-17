@@ -424,8 +424,12 @@ a mapping, or a value that fails validation, such as an absolute `metadata.direc
 neither sets nor hides anything. `legesher run`, `legesher guard --staged` (the pre-commit hook) and the git
 filter warn once and carry on without it, and `run`'s note names it; `legesher git status` lists it;
 `legesher config get` and `config list` exit 1 naming it; and `legesher git setup` refuses to write over it
-until it is fixed. `legesher guard --diff` reads a pull request's base config the same way, so a base whose
-config cannot be used is judged as English.
+until it is fixed.
+
+`legesher guard --diff` is stricter on purpose. It judges a pull request by the language its base's config
+names whenever that file can be parsed, even if another value in it fails validation, so an unrelated bad
+value merged earlier cannot switch the check off. Only a base config that cannot be parsed at all is judged
+as English, and the guard says so.
 
 ### Project configuration
 
