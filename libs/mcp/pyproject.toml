@@ -24,7 +24,12 @@ classifiers = [
 ]
 
 dependencies = [
-    "mcp>=1.16.0,<2.0.0",  # Official MCP Python SDK (FastMCP server, stdio transport)
+    # Official MCP Python SDK (FastMCP server, stdio transport). The floor is
+    # the first 1.x release outside every advisory published for the SDK, and
+    # the cap keeps the range off the 2.x releases an advisory covers. The
+    # ledger is tests/dependency_floors.py; tests/test_dependency_floors.py
+    # checks this range against it.
+    "mcp>=1.30.0,<2.0.0",
     "pydantic>=2.5.0",
     # Sibling ranges ship in the wheel metadata; in-repo the workspace override
     # in [tool.uv.sources] applies. <1.0.0 because semantic-release

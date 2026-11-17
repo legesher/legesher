@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Security
+
+- Requires the MCP Python SDK (`mcp`) 1.30.0 or later, the first 1.x release
+  outside every security advisory published for the SDK. Installing or
+  upgrading `legesher-mcp` now moves an older SDK that is already in the
+  environment to 1.30.0 or later, where it used to keep it.
+
 ## [0.3.0] - 2026-11-03
 
 ### Changed
