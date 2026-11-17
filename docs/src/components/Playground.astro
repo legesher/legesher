@@ -12,6 +12,10 @@
 // right-to-left (src/playground/direction.ts). Direction is decided by that
 // flag alone, never by a language code.
 //
+// The section is marked `not-content`. Without it, the site's prose styles add
+// a top margin to every editor line and to the editor's caret and selection
+// layers, and a click lands on a different line from the one under the pointer.
+//
 // These JSON artifacts are the same ones the static snippets use; importing them
 // statically bundles their contents at build time.
 import langsMeta from '../../.astro/integrations/legesher-snippets/snippet-langs.json';
@@ -62,7 +66,7 @@ const data = { offered, samples, defaultLang: 'es' };
 const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
 ---
 
-<section id="pg-root" class="pg" aria-label="Python playground">
+<section id="pg-root" class="pg not-content" aria-label="Python playground">
   <div class="pg-toolbar">
     <label class="pg-lang-label">
       Language
@@ -559,21 +563,22 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
     white-space: pre-wrap;
     word-break: break-word;
   }
-  .pg-stderr {
+  /* The output's lines are created at run time, so they do not carry this
+     component's style scope: each selector below reaches them with :global. */
+  .pg-output :global(.pg-stderr) {
     color: var(--sl-color-orange-high);
   }
-  .pg-error {
+  .pg-output :global(.pg-error) {
     color: var(--sl-color-red-high);
     font-weight: 600;
   }
-  .pg-muted {
+  .pg-output :global(.pg-muted) {
     color: var(--sl-color-gray-3);
     font-style: italic;
   }
   /* A Python traceback is left-to-right text whose indentation carries its
      structure. Inside a right-to-left output it stays a left-to-right block
-     instead of being pushed flush right line by line. The output spans are
-     created at run time, so the selector has to reach past the style scope. */
+     instead of being pushed flush right line by line. */
   .pg-output[dir='rtl'] :global(.pg-error) {
     display: block;
     direction: ltr;

@@ -900,3 +900,156 @@ test('left-to-right output keeps the order the program printed', async ({ page }
   const leaf = await outputBox(page, 'وَرَقَة');
   expect(leaf.left - leaf.outLeft, 'eight spaces of indentation on the left').toBeGreaterThan(40);
 });
+
+/** The 1-based line the caret is on, read from the editor's current-line marker. */
+const caretLine = (page: Page) =>
+  page.evaluate(
+    () =>
+      Array.from(document.querySelectorAll('#pg-editor .cm-line')).findIndex((line) =>
+        line.classList.contains('cm-activeLine'),
+      ) + 1,
+  );
+
+/**
+ * Contrast of the editor text that contains `needle` against what is painted
+ * behind it (walking up through translucent layers), as WCAG computes it.
+ */
+const inkContrast = (page: Page, needle: string) =>
+  page.evaluate((text) => {
+    const rgb = (value: string) => (value.match(/[\d.]+/g) ?? []).map(Number);
+    const luminance = ([r, g, b]: number[]) => {
+      const channel = (c: number) => {
+        const v = c / 255;
+        return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+    };
+    const background = (el: Element) => {
+      const layers: number[][] = [];
+      for (let node: Element | null = el; node; node = node.parentElement) {
+        const [r, g, b, a = 1] = rgb(getComputedStyle(node).backgroundColor);
+        if (a > 0) layers.push([r, g, b, a]);
+        if (a >= 1) break;
+      }
+      let base = [255, 255, 255];
+      for (const [r, g, b, a] of layers.reverse()) {
+        base = [r * a + base[0] * (1 - a), g * a + base[1] * (1 - a), b * a + base[2] * (1 - a)];
+      }
+      return base;
+    };
+    const holder = Array.from(document.querySelectorAll('#pg-editor .cm-line span')).find(
+      (span) => span.textContent === text,
+    );
+    if (!holder) throw new Error(`no editor token "${text}"`);
+    const [hi, lo] = [luminance(rgb(getComputedStyle(holder).color)), luminance(background(holder))].sort(
+      (x, y) => y - x,
+    );
+    return (hi + 0.05) / (lo + 0.05);
+  }, needle.normalize('NFC'));
+
+for (const code of ['es', ...RTL_LANGS.map((l) => l.code)]) {
+  test(`${code}: clicking a line puts the caret on that line`, async ({ page }) => {
+    const rtl = RTL_LANGS.some((l) => l.code === code);
+    await openPlayground(page, `/playground/?src=en&tgt=${code}&sample=loops`);
+    const lines = page.locator('#pg-editor .cm-line');
+    const count = await lines.count();
+    expect(count).toBeGreaterThan(5);
+    for (let i = 0; i < count; i++) {
+      const box = await lines.nth(i).boundingBox();
+      if (!box) throw new Error(`line ${i + 1} is not on screen`);
+      // Inside the line's own box, a little in from its start edge.
+      await page.mouse.click(rtl ? box.x + box.width - 20 : box.x + 20, box.y + box.height / 2);
+      await expect.poll(() => caretLine(page), { message: `click on line ${i + 1}` }).toBe(i + 1);
+    }
+  });
+}
+
+test('Cmd or Ctrl and Enter runs the program without editing it', async ({ page }) => {
+  test.skip(!RUN_PYODIDE, 'Pyodide execution disabled via PLAYGROUND_SKIP_PYODIDE');
+  test.setTimeout(180_000);
+  await openPlayground(page, '/playground/?src=en&tgt=ar');
+  const before = await editorText(page);
+
+  await page.locator('#pg-editor .cm-content').click();
+  await page.keyboard.press('ControlOrMeta+Enter');
+
+  await expect(page.locator('#pg-output')).toContainText(EXPECTED_STDOUT, { timeout: 110_000 });
+  expect(await editorText(page), 'the shortcut runs; it does not insert a line').toBe(before);
+});
+
+test('errors and an empty run are styled apart from ordinary output', async ({ page }) => {
+  test.skip(!RUN_PYODIDE, 'Pyodide execution disabled via PLAYGROUND_SKIP_PYODIDE');
+  test.setTimeout(180_000);
+  const output = page.locator('#pg-output');
+  const style = (locator: ReturnType<typeof page.locator>) =>
+    locator.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { color: s.color, weight: s.fontWeight, italic: s.fontStyle === 'italic' };
+    });
+
+  // A program that fails: the error lines take the error colour and weight.
+  await openPlayground(page, `/playground/?code=${toBase64url(localize('print(1 / 0)\n', 'es', ['print']))}&src=en&tgt=es`);
+  await page.locator('#pg-run').click();
+  await expect(output).toContainText('ZeroDivisionError', { timeout: 110_000 });
+  const plain = await style(output);
+  const error = await style(output.locator('.pg-error').last());
+  expect(error.color, 'error text has its own colour').not.toBe(plain.color);
+  expect(Number(error.weight), 'error text is bold').toBeGreaterThanOrEqual(600);
+
+  // A program that prints nothing: the placeholder is muted and italic.
+  await openPlayground(page, `/playground/?code=${toBase64url('x = 1\n')}&src=en&tgt=es`);
+  await page.locator('#pg-run').click();
+  await expect(output).toContainText('(no output)', { timeout: 110_000 });
+  const muted = await style(output.locator('.pg-muted'));
+  expect(muted.italic, 'the placeholder is italic').toBe(true);
+  expect(muted.color, 'the placeholder is muted').not.toBe(plain.color);
+});
+
+test('dark theme keeps the editor readable and follows a theme switch', async ({ page }) => {
+  // Readable means at least 4.5:1, the minimum contrast for body text.
+  const READABLE = 4.5;
+  const terms = packTerms('ar');
+  const colourOf = (token: string) =>
+    page
+      .locator('#pg-editor .cm-content span', { hasText: token })
+      .first()
+      .evaluate((el) => getComputedStyle(el).color);
+
+  // English keyword colours in each theme, from the stock Python grammar.
+  await openPlayground(page, '/playground/?src=en&tgt=en');
+  const englishLight = await colourOf('def');
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await openPlayground(page, '/playground/?src=en&tgt=en');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  const englishDark = await colourOf('def');
+  expect(englishDark, 'dark theme has its own keyword colour').not.toBe(englishLight);
+
+  await openPlayground(page, '/playground/?src=en&tgt=ar');
+  // The first line carries the current-line band; check text on it and off it.
+  expect(await caretLine(page)).toBe(1);
+  for (const [what, token] of [
+    ['keyword on the current line', terms.def],
+    ['keyword on another line', terms.try],
+    ['string', '"Please pass a string"'],
+  ] as const) {
+    expect(await inkContrast(page, token), what).toBeGreaterThanOrEqual(READABLE);
+  }
+  const gutter = await page.locator('#pg-editor .cm-gutters').evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(gutter, 'the line-number column is not white').not.toBe('rgb(245, 245, 245)');
+  // Localized keywords take exactly the colour English keywords have.
+  expect(await colourOf(terms.def), 'localized keyword matches English in dark').toBe(englishDark);
+
+  // Switching the site's theme with the editor mounted switches the editor,
+  // localized keywords included.
+  const picker = page.locator('starlight-theme-select select').first();
+  await picker.selectOption('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect
+    .poll(() => colourOf(terms.def), { message: 'localized keyword matches English after switching to light' })
+    .toBe(englishLight);
+  expect(await inkContrast(page, terms.def)).toBeGreaterThanOrEqual(READABLE);
+  await picker.selectOption('dark');
+  await expect
+    .poll(() => colourOf(terms.def), { message: 'localized keyword matches English after switching back' })
+    .toBe(englishDark);
+});

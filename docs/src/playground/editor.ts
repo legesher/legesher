@@ -6,14 +6,16 @@
 // structural/string/comment highlighting, and the pack-driven decoration
 // layer (highlight.ts, passed in via `extensions`) colors localized keywords
 // and names to match the English view. The base text direction comes from
-// direction.ts and can be switched while the editor is mounted.
+// direction.ts and can be switched while the editor is mounted; theme.ts
+// gives it a dark theme that follows the site's.
 
 import { EditorView, keymap } from "@codemirror/view";
-import { EditorState, type Extension } from "@codemirror/state";
+import { EditorState, Prec, type Extension } from "@codemirror/state";
 import { basicSetup } from "codemirror";
 import { python } from "@codemirror/lang-python";
 
 import { editorDirection, type TextDirection } from "./direction";
+import { siteTheme } from "./theme";
 
 export interface PlaygroundEditor {
   /** Current editor contents (the localized source to translate + run). */
@@ -48,7 +50,10 @@ export function mountEditor({
   extensions = [],
 }: MountOptions): PlaygroundEditor {
   const baseDirection = editorDirection(direction);
-  const runKey = keymap.of([
+  const theme = siteTheme();
+  // Highest precedence: basicSetup's default keymap also binds Mod-Enter (to
+  // insert a blank line), and it would otherwise win.
+  const runKey = Prec.highest(keymap.of([
     {
       key: "Mod-Enter",
       preventDefault: true,
@@ -57,7 +62,7 @@ export function mountEditor({
         return true;
       },
     },
-  ]);
+  ]));
 
   const changeListener = EditorView.updateListener.of((update) => {
     if (update.docChanged) onChange?.();
@@ -74,6 +79,7 @@ export function mountEditor({
         changeListener,
         EditorState.tabSize.of(4),
         baseDirection.extension,
+        theme.extension,
         EditorView.theme({
           "&": { fontSize: "0.9rem", borderRadius: "0.5rem" },
           "&.cm-focused": { outline: "2px solid var(--sl-color-accent)" },
@@ -84,6 +90,8 @@ export function mountEditor({
     }),
   });
 
+  const stopFollowingTheme = theme.follow(view);
+
   return {
     getDoc: () => view.state.doc.toString(),
     setDoc: (text: string) =>
@@ -92,6 +100,9 @@ export function mountEditor({
       }),
     setDirection: (next: TextDirection) => baseDirection.set(view, next),
     focus: () => view.focus(),
-    destroy: () => view.destroy(),
+    destroy: () => {
+      stopFollowingTheme();
+      view.destroy();
+    },
   };
 }
