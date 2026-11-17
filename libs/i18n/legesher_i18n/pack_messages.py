@@ -144,8 +144,9 @@ def entry_problem(
     1. The entry is a mapping carrying only :data:`ENTRY_FIELDS`, with a
        string ``text`` free of control characters (category ``Cc``, such as
        NUL or the ESC that starts a terminal escape sequence), of line and
-       paragraph separators (U+2028, U+2029) and of lone surrogates, a well-formed ``src`` and, when present, a ``status``
-       from :data:`ALLOWED_STATUSES`. The text is written to a terminal.
+       paragraph separators (U+2028, U+2029) and of lone surrogates, a
+       well-formed ``src`` and, when present, a ``status`` from
+       :data:`ALLOWED_STATUSES`. The text is written to a terminal.
     2. ``src`` is the fingerprint of ``template_en``. A translation written
        for another wording of the same key (an earlier Python version's, or
        one since corrected) is not used.

@@ -1340,6 +1340,43 @@ class TestPackMessageProblems:
             (problem,) = pack_message_problems("zz", version)
             assert problem.startswith(key), version
 
+    def test_a_stale_fingerprint_is_reported_when_the_rewording_names_no_removal(
+        self, no_database, write_pack, tmp_path, monkeypatch
+    ):
+        """A seed may add a rewording without closing the earlier row."""
+        old, new = "a value was expected", "a value was expected here"
+        seed = {
+            "implementation": "cpython",
+            "version_added": "3.10",
+            "templates": [
+                {
+                    "key": "A.thing",
+                    "template_en": old,
+                    "placeholders": [],
+                    "matcher": f"^{old}$",
+                },
+                {
+                    "key": "A.thing",
+                    "template_en": new,
+                    "placeholders": [],
+                    "matcher": f"^{new}$",
+                    "version_added": "3.12",
+                },
+            ],
+        }
+        seeds = tmp_path / "seeds"
+        seeds.mkdir()
+        (seeds / "one.json").write_text(json.dumps(seed), encoding="utf-8")
+        monkeypatch.setattr(messages, "SEED_DIR", seeds)
+        stale = {"text": "यहाँ एक मान अपेक्षित था", "src": message_fingerprint(old)}
+        write_pack({"3.12": {"messages": {"cpython": {"A.thing": stale}}}})
+        assert pack_message_problems("zz", "3.11") == []
+        for version in ("3.12", "3.13", "3.14"):
+            (problem,) = pack_message_problems("zz", version)
+            assert problem.startswith("A.thing") and "does not match" in problem, (
+                version
+            )
+
     def test_an_entry_matching_no_wording_of_its_key_is_still_reported(
         self, no_database, write_pack
     ):

@@ -374,6 +374,11 @@ def pack_message_problems(
             earlier_entries[stem] = earlier.messages.get(implementation) or {}
         return earlier_entries[stem]
 
+    def applicable_at(stem: str) -> dict[str, _Row]:
+        # The wording printed at that version: a later rewording supersedes
+        # an earlier one whether or not the earlier row names a removal.
+        return _applicable_rows(rows, _parse_version(stem))
+
     inherited: set[str] = set()
     for key, entry in entries.items():
         if not isinstance(entry, dict):
@@ -387,7 +392,7 @@ def pack_message_problems(
             ):
                 continue
             if any(
-                _row_applies(row, _parse_version(stem))
+                applicable_at(stem).get(key) is row
                 and entries_at(stem).get(key) == entry
                 for stem in earlier_files
             ):
@@ -399,14 +404,6 @@ def pack_message_problems(
         report_unknown=True,
     )
     return problems
-
-
-def _row_applies(row: _Row, version: tuple[int, int]) -> bool:
-    """Whether ``row``'s wording is the one printed at ``version``."""
-    added = _parse_version(row.version_added) if row.version_added else (0, 0)
-    if added > version:
-        return False
-    return not (row.version_removed and _parse_version(row.version_removed) <= version)
 
 
 def _pack_versions(loader: LanguagePackLoader, locale: str, target: str) -> list[str]:
