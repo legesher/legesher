@@ -1,0 +1,4 @@
+# What the one-line installer puts on the machine, as uv tools.
+# After changing a pin, run: uv run python scripts/update_installer_constraints.py
+legesher==0.25.1
+legesher-language-server==0.3.0
