@@ -29,13 +29,18 @@ export function directionOf(meta: DirectionMeta | null | undefined): TextDirecti
   return meta?.rtl === true ? "rtl" : "ltr";
 }
 
-// In a right-to-left editor the line-number gutter sits on the right, so its
-// separator belongs on the gutter's left edge. CodeMirror's default style
-// draws it on the right for a "before" gutter whatever the direction.
-const gutterSeparator = EditorView.theme({
+// CodeMirror's default style assumes left-to-right on two physical edges. In
+// a right-to-left editor the line-number gutter sits on the right, so its
+// separator belongs on the gutter's left edge, and the wider line padding
+// (6px, against 2px at the line end) belongs on the right, next to the
+// gutter, or the first letter of each line touches the separator.
+const mirroredEdges = EditorView.theme({
   '&[dir="rtl"] .cm-gutters.cm-gutters-before': {
     borderRightWidth: "0",
     borderLeftWidth: "1px",
+  },
+  '&[dir="rtl"] .cm-line': {
+    padding: "0 6px 0 2px",
   },
 });
 
@@ -59,7 +64,7 @@ export function editorDirection(initial: TextDirection): EditorDirection {
   const compartment = new Compartment();
   let current = initial;
   return {
-    extension: [gutterSeparator, compartment.of(directionAttributes(initial))],
+    extension: [mirroredEdges, compartment.of(directionAttributes(initial))],
     set(view, direction) {
       if (direction === current) return;
       current = direction;

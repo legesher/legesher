@@ -302,12 +302,12 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
       span.textContent = text;
       outputEl.appendChild(span);
     };
-    // One line of program output: text in an unknown script. The line starts
-    // on the output's own start side and keeps its leading whitespace there,
-    // so indentation survives in either direction. The rest is isolated and
+    // One line of output from a right-to-left run: text in an unknown script.
+    // The line starts on the output's right edge and keeps its leading
+    // whitespace there, so indentation survives. The rest is isolated and
     // takes its direction from its own first strong character, so a Latin
-    // line reads correctly inside a right-to-left output and the reverse.
-    const appendLine = (line: string, cls?: string) => {
+    // line (or one that starts with a digit) still reads left to right.
+    const appendRtlLine = (line: string, cls?: string) => {
       const indent = /^[ \t]*/.exec(line)?.[0] ?? '';
       if (indent) outputEl.appendChild(document.createTextNode(indent));
       const span = document.createElement('span');
@@ -399,7 +399,13 @@ const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
             setStatus('Running…');
           }
         },
-        onOutput: (stream, line) => appendLine(line, stream === 'stderr' ? 'pg-stderr' : undefined),
+        onOutput: (stream, line) => {
+          const cls = stream === 'stderr' ? 'pg-stderr' : undefined;
+          // A left-to-right run keeps the output exactly as before: each line
+          // in the output's own direction, in the order the program printed.
+          if (langDirection() === 'rtl') appendRtlLine(line, cls);
+          else append(line + '\n', cls);
+        },
         onError: (phase, message) => {
           const label =
             phase === 'translate'

@@ -120,6 +120,32 @@ const paintedBox = (page: Page, text: string) =>
     throw new Error(`"${needle}" is not on any editor line`);
   }, text);
 
+/** Where a substring of the program output is painted, and the output's own edges. */
+const outputBox = (page: Page, text: string) =>
+  page.evaluate((needle) => {
+    const pre = document.querySelector('#pg-output');
+    if (!pre) throw new Error('no output pane');
+    const walker = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) nodes.push(node as Text);
+    const at = nodes.map((node) => node.data).join('').indexOf(needle);
+    if (at < 0) throw new Error(`"${needle}" is not in the output`);
+    const range = document.createRange();
+    let seen = 0;
+    for (const node of nodes) {
+      const end = seen + node.data.length;
+      if (at >= seen && at < end) range.setStart(node, at - seen);
+      if (at + needle.length > seen && at + needle.length <= end) {
+        range.setEnd(node, at + needle.length - seen);
+        break;
+      }
+      seen = end;
+    }
+    const box = range.getBoundingClientRect();
+    const edges = pre.getBoundingClientRect();
+    return { left: box.left, right: box.right, outLeft: edges.left, outRight: edges.right };
+  }, text.normalize('NFC'));
+
 /** The layout facts that differ between a left-to-right and a right-to-left editor. */
 const layout = (page: Page) =>
   page.evaluate(() => {
@@ -258,6 +284,9 @@ for (const lang of RTL_LANGS) {
     // line, not the left: this is what a right-to-left base direction means.
     const box = await paintedBox(page, keyword);
     expect(box.lineRight - box.right).toBeLessThan(8);
+    // The line keeps its padding next to the gutter, mirrored from the
+    // left-to-right side, so the first letter does not touch the separator.
+    expect(box.lineRight - box.right, 'room between the gutter and the first letter').toBeGreaterThanOrEqual(4);
     expect(box.left - box.lineLeft).toBeGreaterThan(100);
 
     // Back to a left-to-right language: everything returns.
@@ -265,6 +294,7 @@ for (const lang of RTL_LANGS) {
     await expect.poll(() => layout(page)).toEqual(LTR_LAYOUT);
     const esBox = await paintedBox(page, 'definir');
     expect(esBox.left - esBox.lineLeft).toBeLessThan(8);
+    expect(esBox.left - esBox.lineLeft, 'room between the gutter and the first letter').toBeGreaterThanOrEqual(4);
   });
 }
 
@@ -832,34 +862,41 @@ test('Show English turns an Arabic buffer left-to-right and back', async ({ page
   await expect.poll(() => layout(page)).toEqual(RTL_LAYOUT);
 });
 
-test('indented output keeps its indentation in both directions', async ({ page }) => {
+test('right-to-left output keeps the indentation of each line', async ({ page }) => {
   test.skip(!RUN_PYODIDE, 'Pyodide execution disabled via PLAYGROUND_SKIP_PYODIDE');
   test.setTimeout(180_000);
-  // Each program prints a flush line and an indented line whose text runs
-  // against the output's direction: Latin in Arabic, Arabic in Spanish.
-  const cases = [
-    { lang: 'ar', flush: 'root', indented: 'leaf', start: 'right' },
-    { lang: 'es', flush: 'جِذْر', indented: 'وَرَقَة', start: 'left' },
-  ] as const;
+  // A flush and an indented line of Latin text in an Arabic run.
+  const source = localize('print("root")\nprint("        leaf")\n', 'ar', ['print']);
+  await openPlayground(page, `/playground/?code=${toBase64url(source)}&src=en&tgt=ar`);
+  await page.locator('#pg-run').click();
 
-  for (const { lang, flush, indented, start } of cases) {
-    const source = localize(`print("${flush}")\nprint("        ${indented}")\n`, lang, ['print']);
-    await openPlayground(page, `/playground/?code=${toBase64url(source)}&src=en&tgt=${lang}`);
-    await page.locator('#pg-run').click();
+  const output = page.locator('#pg-output');
+  await expect(output).toContainText('leaf', { timeout: 110_000 });
+  await expect(output.locator('.pg-error')).toHaveCount(0);
+  const root = await outputBox(page, 'root');
+  const leaf = await outputBox(page, 'leaf');
+  expect(root.outRight - root.right, 'the flush line starts at the right edge').toBeLessThan(30);
+  expect(leaf.outRight - leaf.right - (root.outRight - root.right), 'eight spaces of indentation').toBeGreaterThan(40);
+});
 
-    const output = page.locator('#pg-output');
-    await expect(output).toContainText(indented, { timeout: 110_000 });
-    await expect(output.locator('.pg-error')).toHaveCount(0);
-    // Distance of each line's text from the output's start edge.
-    const gaps = await output.evaluate((el, side) => {
-      const pre = el.getBoundingClientRect();
-      return Array.from(el.querySelectorAll('span[dir="auto"]')).map((span) => {
-        const box = span.getBoundingClientRect();
-        return side === 'right' ? pre.right - box.right : box.left - pre.left;
-      });
-    }, start);
-    expect(gaps, `${lang}: two output lines`).toHaveLength(2);
-    expect(gaps[0], `${lang}: the flush line starts at the ${start} edge`).toBeLessThan(30);
-    expect(gaps[1] - gaps[0], `${lang}: eight spaces of indentation`).toBeGreaterThan(40);
-  }
+test('left-to-right output keeps the order the program printed', async ({ page }) => {
+  test.skip(!RUN_PYODIDE, 'Pyodide execution disabled via PLAYGROUND_SKIP_PYODIDE');
+  test.setTimeout(180_000);
+  // In a Spanish run, a line that holds an Arabic word between Latin values,
+  // and an indented line of Arabic. Both must read as they did before
+  // right-to-left support: left to right, in the order printed.
+  const source = localize('print(3, "عَرَبِي", "x")\nprint("        وَرَقَة")\n', 'es', ['print']);
+  await openPlayground(page, `/playground/?code=${toBase64url(source)}&src=en&tgt=es`);
+  await page.locator('#pg-run').click();
+
+  const output = page.locator('#pg-output');
+  await expect(output).toContainText('وَرَقَة'.normalize('NFC'), { timeout: 110_000 });
+  await expect(output.locator('.pg-error')).toHaveCount(0);
+  await expect(output).toHaveAttribute('dir', 'ltr');
+  const three = await outputBox(page, '3');
+  const x = await outputBox(page, 'x');
+  expect(three.left - three.outLeft, 'the line starts at the left edge').toBeLessThan(30);
+  expect(three.right, '3 is painted left of x, as printed').toBeLessThanOrEqual(x.left + 1);
+  const leaf = await outputBox(page, 'وَرَقَة');
+  expect(leaf.left - leaf.outLeft, 'eight spaces of indentation on the left').toBeGreaterThan(40);
 });
