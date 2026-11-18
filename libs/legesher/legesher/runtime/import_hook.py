@@ -514,8 +514,9 @@ class LegesherMetaPathFinder(importlib.abc.MetaPathFinder):
         # location, so every module this finder loaded had no __file__,
         # breaking code that locates resources relative to its own file.
         spec.has_location = True
-        # __cached__ names the file this loader actually caches to, never the
-        # stock .pyc path, which the loader neither reads nor writes.
+        # spec.cached names the file this loader actually caches to, never the
+        # stock .pyc path, which the loader neither reads nor writes. Python
+        # 3.10 to 3.14 copy it to the module's __cached__; 3.15 does not.
         spec.cached = spec.loader._bytecode_path()  # type: ignore[union-attr]
         if is_package:
             # ModuleSpec(is_package=True) initializes submodule_search_locations

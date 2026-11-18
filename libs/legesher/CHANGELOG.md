@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- `legesher run`, `legesher translate` and the git clean filter work on a
+  Python newer than every tier the language packs have (Python 3.15 today).
+  They failed in every language with `PackNotFoundError`; the pack loader in
+  `legesher-i18n` now serves each pack's newest tier to a newer interpreter.
+
 ## [0.27.0] - 2026-11-18
 
 ### Changed
