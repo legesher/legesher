@@ -11,15 +11,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- **A language pack may carry a `messages` section.** The pack schema accepts
-  localized error-message templates, nested by implementation and keyed by
-  the message key, each with its text and a fingerprint of the English
-  template it translates. The loader merges the section per key along the
-  `extends` chain, including a section that appears only in a later
-  version's file, and exposes it as `LanguagePack.messages`. A pack load
-  checks the section's shape only. Whether a well-formed message is usable
-  is decided where the catalog is read, so such a message the catalog cannot
-  use never makes a pack unloadable. See `docs/pack-messages.md`. [CORE-2630]
 - **The error-message catalog reads translations from the language pack.**
   With no translations database, `load_catalog` takes the English side from
   the catalog seed and the translations from the pack's `messages` section
@@ -48,6 +39,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   marks its twelve. `MessageRule.slot_kinds` and `MessageRule.kind_of`
   expose it, so a renderer can tell a line number from a value it must copy
   verbatim. [CORE-2630]
+
+## [0.27.0] - 2026-11-18
+
+### Added
+
+- **A language pack may carry a `messages` section.** The pack schema accepts
+  localized error-message templates, nested by implementation and keyed by
+  the message key, each with its text and a fingerprint of the English
+  template it translates. The loader merges the section per key along the
+  `extends` chain, including a section that appears only in a later
+  version's file, and exposes it as `LanguagePack.messages`. A pack load
+  checks the section's shape only. Whether a well-formed message is usable
+  is decided where the catalog is read, so such a message the catalog cannot
+  use never makes a pack unloadable. No shipped pack carries the section
+  yet, and nothing reads it at run time yet. See `docs/pack-messages.md`.
+  [CORE-2630]
 
 ### Fixed
 

@@ -366,6 +366,73 @@ class TestDiffReviewRegressions:
         assert result.exit_code == 1, result.output
         assert "z.py:1:3: unicode: U+200C" in result.output
 
+    def test_a_base_in_the_old_init_shape_names_its_first_language(self, repo):
+        # `legesher init` once wrote `languages:` and no `language:`. A base
+        # holding that file was judged as English, which skipped the
+        # keyword check for the language the project was set up in.
+        commit(repo, ".legesher/config.yml", "languages:\n  - es\n  - ar\n")
+        base = head(repo)
+        stage(repo, "m.py", "definir f(x):\n    if x:\n        devolver 1\n")
+        git(repo, "commit", "-q", "-m", "stray")
+        result = run("--diff", base)
+        assert result.exit_code == 1, result.output
+        assert "m.py:2:5: keyword: `if`" in result.output
+
+    def test_a_bad_value_beside_the_language_does_not_switch_the_check_off(self, repo):
+        # Re-review of the config rework: a pull request that only breaks an
+        # unrelated value passes, and once merged it must not make the next
+        # pull request be judged as English.
+        commit(repo, ".legesher/config.yml", "language: es\n")
+        first_base = head(repo)
+        stage(
+            repo,
+            ".legesher/config.yml",
+            "language: es\nmetadata:\n  max_history_entries: -1\n",
+        )
+        git(repo, "commit", "-q", "-m", "an unrelated bad value")
+        assert run("--diff", first_base).exit_code == 0
+        second_base = head(repo)
+        stage(repo, "m.py", "definir f(x):\n    if x:\n        devolver 1\n")
+        git(repo, "commit", "-q", "-m", "stray")
+        result = run("--diff", second_base)
+        assert result.exit_code == 1, result.output
+        assert "m.py:2:5: keyword: `if`" in result.output
+
+    @pytest.mark.parametrize(
+        "base_config",
+        [
+            "language: " + "[" * 5000 + "]" * 5000 + "\n",
+            "language: [unclosed\n",
+            "- es\n",
+        ],
+        ids=["nested-too-deeply", "unparsable", "not-a-mapping"],
+    )
+    def test_a_base_config_that_cannot_be_read_is_judged_as_english_and_says_so(
+        self, repo, base_config
+    ):
+        commit(repo, ".legesher/config.yml", base_config)
+        base = head(repo)
+        stage(repo, "m.py", "definir f(x):\n    if x:\n        devolver 1\n")
+        git(repo, "commit", "-q", "-m", "stray")
+        result = run("--diff", base)
+        assert result.exit_code == 0, result.output
+        assert "base's .legesher/config.yml is unusable: it " in result.output
+        assert "judged as English" in result.output
+
+    def test_a_base_config_that_is_not_utf8_is_judged_as_english_and_says_so(
+        self, repo
+    ):
+        (repo / ".legesher").mkdir()
+        (repo / ".legesher" / "config.yml").write_bytes(b"language: es\xff\n")
+        git(repo, "add", ".legesher/config.yml")
+        git(repo, "commit", "-q", "-m", "c")
+        base = head(repo)
+        stage(repo, "m.py", "definir f(x):\n    if x:\n        devolver 1\n")
+        git(repo, "commit", "-q", "-m", "stray")
+        result = run("--diff", base)
+        assert result.exit_code == 0, result.output
+        assert "is unusable: it is not UTF-8. The pull request" in result.output
+
     def test_legesher_replaced_by_a_symlink(self, repo):
         commit(repo, ".legesher/config.yml", "language: es\n")
         base = head(repo)
