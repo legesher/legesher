@@ -9,6 +9,55 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-18
+
+## [0.26.0] - 2026-11-18
+
+### Added
+
+- Native punctuation in code position is read as its ASCII mark, in the token
+  and tree-sitter backends and in every pack: the Arabic comma and semicolon
+  (`،` `؛`) and the fullwidth comma, semicolon, colon and parentheses
+  (`，` `；` `：` `（` `）`). A program typed on an Arabic, Persian or Urdu
+  keyboard, or with a Chinese, Japanese or Korean input method in fullwidth
+  mode, now translates and runs; before, the English form failed with
+  `SyntaxError: invalid character`. A mark inside a string, a comment or the
+  text of an f-string is kept byte for byte. One character is replaced by one,
+  so line and column numbers do not move. In incomplete code the marks are
+  read up to the point the tokenizer cannot read past (a bracket still open,
+  an unterminated string) and the rest is left as typed, so a mark after that
+  point can still come back beside an English keyword. `legesher_core.native_punctuation`
+  holds the table (`NATIVE_PUNCTUATION`) and the function both backends call
+  (`fold_code_punctuation`).
+- The engine reads these marks and never writes them. A translation for
+  display and the return leg of a round trip carry ASCII punctuation, and the
+  git clean filter does not touch punctuation, so git stores the file as
+  typed. `legesher guard` is unchanged: it still refuses the fullwidth marks
+  in code position, and the Arabic marks pass it. As before, the clean filter
+  and the guard do not normalize stray keywords in a file with a native mark
+  in code position when it is new, or when its committed version also has
+  one. Source that uses a native
+  mark in code position runs and does not come back byte-identical: the
+  round-trip check reports `round-trip FAILED` with the new layer
+  `punctuation`, named only when the mark is the whole difference on its
+  line, and credits the other layers the trip exercised. `RoundTripReport`'s
+  keys and schema version are unchanged, `layer` gains the value
+  `punctuation`, and a verdict line for source without native marks reads as
+  before.
+
+### Fixed
+
+- An implicit parameter (`self`, `cls`) typed in another Unicode form of the
+  pack's word translates as that word, in the token and tree-sitter backends,
+  as keywords and builtins already do. This covers decomposed text (as macOS
+  produces), fullwidth letters, presentation forms and ligatures, all of which
+  Python reads as the same name. Before, the tree-sitter backend left a
+  decomposed spelling untranslated and both backends left a compatibility
+  spelling, so the English form held a second name.
+- The full (model-backed) translation no longer hands such a spelling of an
+  implicit parameter to the model as a user-defined name: the extractor asks
+  the same lookup the translators use.
+
 ## [0.25.1] - 2026-11-03
 
 ## [0.25.0] - 2026-11-03

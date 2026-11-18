@@ -96,7 +96,7 @@ somewhere to put it.
 | Control / format characters | refused | refused |
 | Trailing `*` (the soft-keyword marker) | refused | **refused** — the starred form is a term-section device, and refusing it first keeps the `SOFT_KEYWORDS` short-circuit unreachable |
 | NFKC-stable | not required — prose is never parsed | **required**, with the term gates' SARA-AM allowance (NFC-stable values whose only NFKC delta is Thai U+0E33 pass; CPython folds it in identifiers) |
-| CPython 3.13-only XID characters | irrelevant | **refused** |
+| Identifier characters CPython 3.10 does not accept (added in 3.13, 3.14 or 3.15) | irrelevant | **refused** |
 | Python keyword | irrelevant | refused (`_` is fine) |
 | Collides with a translated term surface | irrelevant | refused |
 | Shadows a builtin | irrelevant | warning |
@@ -107,11 +107,15 @@ called by the pydantic layer, the strict validator, the database write
 boundary, the exporter and the generation script, so no two layers can disagree
 about what is publishable.
 
-The 3.13-XID rule is the one that differs from a term translation, and the
+The newer-identifier-character rule is the one that differs from a term translation, and the
 reason is worth knowing: a pack translation carrying a 3.13-only character is
 handled by the exporter's interpreter-floor tiering, which strips it for the
 pre-3.13 files and restores it in a 3.13 overlay. A **recommended name** has no
 overlay to be tiered into, so the constraint is absolute rather than managed.
+
+A character that Python 3.14 or 3.15 added is not tiered yet. The exporter
+tiers on the 3.13 boundary only, so a term translation carrying one is written
+to a file whose floor cannot parse it and fails the interpreter-floor gate.
 
 The NFKC rule exists because Python folds identifiers at parse time: advice to
 name your loop variable fullwidth `ｉ` would be advice about an identifier the

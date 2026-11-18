@@ -36,7 +36,6 @@ from pydantic import ValidationError
 from legesher_i18n.db import TranslationDatabase
 from legesher_i18n.pack_loader import LanguagePack, LanguagePackLoader
 from legesher_i18n.schema_validator import LanguagePackSchema, SchemaValidator
-from tests.interpreter_gaps import IDENTIFIER_RULES_ARE_UNICODE_15_1
 from legesher_i18n.selection import (
     MAX_SYMBOL_NAME_LENGTH,
     vocabulary_value_error,
@@ -145,20 +144,25 @@ class TestPublishGate:
         # keyword-collision check is not reused for this section.
         assert vocabulary_value_error("variable_conventions", "throwaway", "_") is None
 
-    def test_variable_convention_rejects_a_313_only_character(self) -> None:
-        # ZWJ is XID_Continue from CPython 3.13. A pack translation can be
-        # tiered into a 3.13 overlay; advice has no overlay to live in.
-        # Before Unicode 15.1 the value is no identifier at all, and the
-        # rejection says so instead.
+    @pytest.mark.parametrize(
+        ("char", "release"),
+        [(0x200D, "3.13"), (0x0897, "3.14"), (0x088F, "3.15")],
+        ids=["ZWJ-3.13", "U+0897-3.14", "U+088F-3.15"],
+    )
+    def test_variable_convention_rejects_a_character_newer_than_310(
+        self, char, release
+    ) -> None:
+        # A pack translation can be tiered into an overlay for the release it
+        # needs; advice has no overlay to live in, so it must parse on 3.10.
+        # The verdict is static (the measured per-release tables), so it names
+        # the release on every interpreter, including one too old to read the
+        # character at all.
         error = vocabulary_value_error(
-            "variable_conventions", "loop_index", "a" + chr(0x200D) + "b"
+            "variable_conventions", "loop_index", "a" + chr(char) + "b"
         )
-        reason = (
-            "3.13"
-            if IDENTIFIER_RULES_ARE_UNICODE_15_1
-            else "not a valid Python identifier"
-        )
-        assert error is not None and reason in error
+        assert error is not None
+        assert f"U+{char:04X}" in error
+        assert f"CPython {release}" in error
 
     def test_unknown_section_is_reported_not_silently_passed(self) -> None:
         assert vocabulary_value_error("cultural_notes", "x", "y") is not None
@@ -253,6 +257,8 @@ class TestLayerAgreement:
             "ຕົວຳ",  # Lao analogue, outside the allowance
             "el contador",  # prose
             "a‍b",  # 3.13-only XID (ZWJ)
+            "a\u0897b",  # 3.14-only XID (Unicode 16.0)
+            "a\u088fb",  # 3.15-only XID (Unicode 17.0)
         )
         for value in probes:
             assert self._gate_accepts(value) == self._pack_load_accepts(value), (

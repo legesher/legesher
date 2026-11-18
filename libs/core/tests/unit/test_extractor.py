@@ -555,6 +555,45 @@ class TestExtractorSkipsReservedWords:
         # but `count` (a real user identifier) should still be extracted
         assert "count" in identifier_texts
 
+    def test_fullwidth_self_is_skipped_like_self(self):
+        """Python reads fullwidth ``self`` as ``self`` (NFKC), and so does the
+        translator, so the model must not be handed it as a user name."""
+        extractor = self._build_extractor()
+        fullwidth_self = "\uff53\uff45\uff4c\uff46"
+        code = f"class Foo:\n    def area({fullwidth_self}, x):\n        return x\n"
+        elements = extractor.extract(code)
+        identifier_texts = [e.text for e in elements if e.kind == "identifier"]
+        assert fullwidth_self not in identifier_texts
+        assert "area" in identifier_texts
+
+    def test_a_decomposed_pack_word_for_self_is_skipped(self):
+        """The extractor asks the mapper, as it does for keywords and builtins,
+        so a spelling the translator resolves is never sent to the model.
+
+        Vietnamese with its tone marks decomposed, as macOS hands text back.
+        """
+        import unicodedata
+
+        from legesher_core.token_mapper import TokenMapper
+        from legesher_core.tree_sitter.extractor import TranslatableExtractor
+
+        stored = "b\u1ea3nth\u00e2n"
+        decomposed = unicodedata.normalize("NFD", stored)
+        assert decomposed != stored
+        extractor = TranslatableExtractor(
+            TokenMapper(
+                keyword_map={"\u0111\u1ecbnh_ngh\u0129a": "def"},
+                builtin_map={"in_ra": "print"},
+                implicit_param_map={stored: "self"},
+            )
+        )
+        for spelling in (stored, decomposed):
+            code = f"\u0111\u1ecbnh_ngh\u0129a area({spelling}, side):\n    pass\n"
+            elements = extractor.extract(code)
+            identifier_texts = [e.text for e in elements if e.kind == "identifier"]
+            assert spelling not in identifier_texts, _code_points(spelling)
+            assert "side" in identifier_texts
+
     def test_user_identifiers_still_surface_to_llm(self):
         """Non-reserved identifiers (class/function/var names) still reach LLM."""
         extractor = self._build_extractor()
@@ -647,3 +686,7 @@ class TestExtractorSkipsReservedWords:
         # `e` and `x` are user identifiers; should still surface to LLM
         assert "e" in identifier_texts
         assert "x" in identifier_texts
+
+
+def _code_points(text: str) -> str:
+    return " ".join(f"U+{ord(char):04X}" for char in text)

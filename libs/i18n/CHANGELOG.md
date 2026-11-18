@@ -11,15 +11,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- **A language pack may carry a `messages` section.** The pack schema accepts
-  localized error-message templates, nested by implementation and keyed by
-  the message key, each with its text and a fingerprint of the English
-  template it translates. The loader merges the section per key along the
-  `extends` chain, including a section that appears only in a later
-  version's file, and exposes it as `LanguagePack.messages`. A pack load
-  checks the section's shape only. Whether a well-formed message is usable
-  is decided where the catalog is read, so such a message the catalog cannot
-  use never makes a pack unloadable. See `docs/pack-messages.md`. [CORE-2630]
 - **The error-message catalog reads translations from the language pack.**
   With no translations database, `load_catalog` takes the English side from
   the catalog seed and the translations from the pack's `messages` section
@@ -55,6 +46,39 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   matchers, placeholders and version tiers. With no translations database,
   a locale whose pack carries no messages prints the interpreter's own text.
   A database still wins in a maintainer checkout. [CORE-2630]
+
+## [0.27.0] - 2026-11-18
+
+### Added
+
+- **A language pack may carry a `messages` section.** The pack schema accepts
+  localized error-message templates, nested by implementation and keyed by
+  the message key, each with its text and a fingerprint of the English
+  template it translates. The loader merges the section per key along the
+  `extends` chain, including a section that appears only in a later
+  version's file, and exposes it as `LanguagePack.messages`. A pack load
+  checks the section's shape only. Whether a well-formed message is usable
+  is decided where the catalog is read, so such a message the catalog cannot
+  use never makes a pack unloadable. No shipped pack carries the section
+  yet, and nothing reads it at run time yet. See `docs/pack-messages.md`.
+  [CORE-2630]
+
+### Fixed
+
+- The interpreter-floor identifier gate knows Python 3.14 (Unicode 16.0) and 3.15
+  (Unicode 17.0). It used to know one table, the characters CPython 3.13 added
+  over 3.10, so a value that needs 3.14 or 3.15 passed in a tier below. There is
+  now one measured table per release, and the rule is one rule: a value that
+  needs release V fails in any tier whose `python_version_min` is below V. The
+  shipped-pack test judges what every tier file resolves to (its own values over
+  the ones it inherits) against its declared floor with the gate itself, instead
+  of loading the pack, which on an older interpreter skipped exactly the files
+  it should have flagged. `interpreter_needed_for_identifier`
+  names the release a value needs, and the vocabulary publish gate uses it, so a
+  recommended name with a 3.14 or 3.15 character is refused too. No shipped pack
+  carries such a character.
+
+## [0.26.0] - 2026-11-18
 
 ## [0.25.1] - 2026-11-03
 

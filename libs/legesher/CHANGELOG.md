@@ -9,6 +9,87 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-18
+
+### Changed
+
+- `legesher init` writes `.legesher/config.yml` in the shape `legesher git setup`
+  writes and every command reads: `language`, `python_version`,
+  `git.canonical_language`, `git.filter_enabled` and `metadata.*`. It also
+  records every language chosen as `languages`; the first is the `language` in
+  use, and the interactive prompt asks which one when several are ticked. It
+  no longer writes `git.enabled`, `ai_context`, `translation` or `editor`,
+  which nothing read.
+- Inside a git repository `legesher init` writes the config at the
+  repository's root, whichever directory it is run from, where `git setup`
+  writes it and git runs the filter. It wrote in the current directory. It
+  does not run in the home directory, where the file is the user-level config,
+  and reads `pyproject.toml` at the project's root when the current directory
+  has none.
+- A home directory kept in git is not a project's repository: its root holds
+  the user config. `legesher init` under it writes the config where it is run
+  and does not set the git filter up; `legesher git setup` refuses (unless
+  `--global`); `legesher git status` says why. `git setup` there wrote the
+  project's language into the user config.
+- A config file that cannot be used (unparsable YAML, YAML nested too deeply
+  to read, not a mapping, or a value that fails validation) is left out whole
+  by the runtime, the git filter and `legesher guard --staged`, with one
+  warning per command. `legesher guard --diff` still judges a pull request by
+  the language its base's config names, even when another value in that file
+  fails validation; a base config it cannot parse is judged as English, and
+  the guard now says so. `legesher config get` and `list` exit 1 naming it;
+  `git status` lists it; `run`'s note names it; `git setup` refuses to write
+  over it. `config set` on YAML that does not parse is an error, not a
+  traceback.
+- A repository whose config file at the root is in the shape an earlier
+  `legesher init` wrote: the git clean filter and the `legesher guard`
+  pre-commit hook used English for it, and now use the first of its
+  `languages`, so `git add` normalizes stray keywords and the hook refuses
+  one that skipped the filter.
+- Inside a git repository every command reads the config at the repository's
+  root. `legesher config` read the nearest one at or above the current
+  directory, including one above the repository and `~/.legesher/config.yml`,
+  which a `config set` without `--global` could then write to. A repository
+  with no config at its root still has one in a subdirectory read from there
+  down, and `legesher git status` says that the git filter does not see it.
+  Once the root has one, `git status` names any in a subdirectory as not read.
+- A setting the project config does not name comes from the user config, as
+  `legesher config get` already reported. In `legesher run` and the git
+  filter, any project config replaced every user setting with a default.
+- `git.filter_enabled` records whether `legesher init` set the filter up, not
+  whether it was asked to: asked for outside a git repository, it is `false`.
+- When a script does not compile and `--lang` was not given, `legesher run`
+  follows Python's `SyntaxError` with the language the file was read as, the
+  file that came from, and how to name another.
+- `legesher config set` writes text as itself, not as escapes, as `init` and
+  `git setup` do.
+
+### Fixed
+
+- `legesher run`, `legesher config get language`, `legesher git status` and
+  the git clean filter use the language `legesher init` was asked for. `init`
+  wrote a config none of them could read, so the language fell back to
+  English: `run` failed with a `SyntaxError`, `config get language` exited 1,
+  `git status` reported `en`, and the filter stored stray keywords as typed.
+- A config file written by an earlier `legesher init` keeps working as it is:
+  `language` is read as the first entry of `languages` and
+  `git.filter_enabled` as `git.enabled`, by every command including
+  `legesher guard --diff`, which judged such a base as English. The file is
+  never rewritten for being old, and `git setup` and `config set` keep its
+  other sections. This applies to `~/.legesher/config.yml` too.
+- The project config is read outside a git repository. `legesher run` and
+  `legesher git status` ignored `.legesher/config.yml` unless the directory
+  was inside one, while `legesher config` read it.
+- `legesher git setup` starts from the existing config and keeps what it was
+  not given. It rewrote the file from defaults, which reset `python_version`
+  and the metadata settings and dropped `runtime.cache_size` and any other
+  key.
+- A `language` that is not a language code (a number, a list, an empty
+  string) names no language, for every reader. `legesher config get` printed
+  it while the runtime failed on it.
+
+## [0.26.0] - 2026-11-18
+
 ## [0.25.1] - 2026-11-03
 
 ### Fixed

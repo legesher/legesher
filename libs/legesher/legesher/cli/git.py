@@ -23,7 +23,15 @@ from pathlib import Path
 
 import click
 
-from legesher.config import LegesherConfig
+from legesher.config import (
+    LegesherConfig,
+    find_project_config,
+    home_is_the_repository,
+    is_user_config,
+    read_config_file,
+    shadowed_project_configs,
+    user_config_path,
+)
 from legesher_core.transformer import TokenTranslator
 
 # Configure logger
@@ -273,8 +281,51 @@ def git_setup(
                     "\nHint: Run this command from within a git repository.", err=True
                 )
                 sys.exit(1)
+            if home_is_the_repository(repo_root):
+                # Its root's .legesher/config.yml is the user config: setup
+                # would write a project's language into it.
+                click.echo(
+                    "✗ This repository is your home directory's. Git runs the "
+                    "filter at its root, where .legesher/config.yml is your "
+                    "user-level config.",
+                    err=True,
+                )
+                click.echo(
+                    "\nHint: Run 'git init' in the project directory to give it "
+                    "its own repository, or use --global to set your default.",
+                    err=True,
+                )
+                sys.exit(1)
         else:
             repo_root = None
+
+        # A config file that cannot be used is the user's to fix: setup
+        # starting from defaults would reset everything else in it.
+        if use_global or repo_root is None:
+            target = user_config_path()
+        else:
+            target = repo_root / ".legesher" / "config.yml"
+            if is_user_config(target):
+                # A .legesher linked to the user's: setup would write a
+                # project's language into the user config.
+                click.echo(
+                    f"✗ {target} is your user-level config (through a link), "
+                    "not a project's.",
+                    err=True,
+                )
+                click.echo(
+                    "\nHint: Replace the link with a directory of the project's "
+                    "own, or use --global to set your default.",
+                    err=True,
+                )
+                sys.exit(1)
+        _data, problem = read_config_file(target)
+        if problem is not None:
+            click.echo(f"✗ Cannot use {target}: {problem}.", err=True)
+            click.echo(
+                "\nHint: Fix or remove the file, then run setup again.", err=True
+            )
+            sys.exit(1)
 
         # Step 2: Validate language pack is available
         click.echo(f"\nValidating language pack '{language}'...")
@@ -307,12 +358,23 @@ def git_setup(
 
         # Step 3: Create configuration
         click.echo("\nCreating configuration...")
-        config = LegesherConfig(
-            language=language,
-            python_version=python_version,
-            git_canonical_language="en",
-            git_filter_enabled=True,
-        )
+        # Start from the file already there, so setup changes the language
+        # and the filter switch and nothing it was not asked to: a Python
+        # version from an earlier run, metadata and runtime settings, and
+        # the record of languages `legesher init` keeps.
+        if use_global:
+            config, _exists = LegesherConfig.load_user_config()
+        else:
+            config, _exists = LegesherConfig.load_project_config(repo_root)
+        if config is None:
+            config = LegesherConfig()
+        config.language = language
+        if python_version is not None:
+            config.python_version = python_version
+        config.git_canonical_language = "en"
+        config.git_filter_enabled = True
+        if config.languages and language not in config.languages:
+            config.languages.append(language)
 
         if use_global:
             config_path = config.save_user_config()
@@ -434,13 +496,36 @@ def git_status():
             click.echo("Not in a git repository\n")
             repo_root = None
 
-        # Load configuration
+        # Load configuration, as every other command finds and reads it
         try:
-            config = LegesherConfig.load(repo_root)
+            config = LegesherConfig.load()
             click.echo("Configuration:")
             click.echo(f"  Language: {config.language}")
             click.echo(f"  Python version: {config.python_version or '(auto-detect)'}")
             click.echo(f"  Filters enabled: {config.git_filter_enabled}")
+            for path, problem in config.left_out:
+                click.echo(f"  ⚠ Left out {path}: {problem}")
+            config_path = find_project_config()
+            if repo_root is not None and home_is_the_repository(repo_root):
+                click.echo("  ⚠ This repository is your home directory's: the git")
+                click.echo("    filter and the guard hook run at its root and read")
+                click.echo("    your user-level config. Run 'git init' in the project")
+                click.echo("    to give it a filter language of its own.")
+            elif (
+                repo_root is not None
+                and config_path is not None
+                and config_path.parent.parent != repo_root
+            ):
+                # Git runs the filter and the guard hook at the repository
+                # root, so a config below it is one they never read.
+                click.echo(f"  ⚠ Read from {config_path}, which is not at the")
+                click.echo("    repository root: the git filter and the guard hook do")
+                click.echo(
+                    "    not read it. Run 'legesher git setup' to write one there."
+                )
+            for path in shadowed_project_configs():
+                click.echo(f"  ⚠ {path} is not read: the repository's config at")
+                click.echo("    its root is, for every command.")
         except Exception as e:
             click.echo(f"  No configuration found: {e}")
 
