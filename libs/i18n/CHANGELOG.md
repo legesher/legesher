@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-18
+
 ### Added
 
 - **A language pack may carry a `messages` section.** The pack schema accepts
