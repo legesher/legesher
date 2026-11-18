@@ -35,7 +35,11 @@ from __future__ import annotations
 import unicodedata
 from dataclasses import dataclass
 
-from .schema_validator import LanguagePackSchema, SchemaValidator
+from .schema_validator import (
+    _XID_ADDED_BY_CPYTHON,
+    LanguagePackSchema,
+    interpreter_needed_for_identifier,
+)
 from .script_policy import forbidden_letters_in, nfkc_delta_class
 
 # Translation sources ordered from most to least trusted. Sources not in
@@ -175,12 +179,13 @@ def vocabulary_value_error(
           which (called without a source term) would otherwise
           short-circuit on ``SOFT_KEYWORDS`` and accept the literal
           ``except*`` that the pack-load validator rejects.
-        * **No CPython-3.13-only XID character.** Pack values get that
-          guarantee from the exporter's interpreter-floor tiering, which
-          strips such characters for the pre-3.13 files. Tiering is not
-          available here — a recommended NAME has no version-overlay file
-          to live in — so the character is refused at the write boundary
-          instead.
+        * **No identifier character newer than the 3.10 floor.** That is any
+          character CPython 3.13, 3.14 or 3.15 added; the error names the
+          release. Pack values with a 3.13 character get that guarantee
+          from the exporter's interpreter-floor tiering, which strips such
+          characters for the pre-3.13 files. Tiering is not available here
+          (a recommended NAME has no version-overlay file to live in), so the
+          character is refused at the write boundary instead.
         * **Normalization-stable.** Python NFKC-folds identifiers at parse
           time, so a value like fullwidth ``ｉ`` would silently bind ``i``
           — the advice a reader sees would not be the identifier the
@@ -252,21 +257,30 @@ def vocabulary_value_error(
                 "where it mirrors the source term's own star; a recommended "
                 "variable name cannot carry one"
             )
+        # Static, before the running interpreter's own check, so the verdict
+        # names the release a value needs on every interpreter that asks.
+        needed = interpreter_needed_for_identifier(value)
+        if needed is not None:
+            newer = sorted(
+                {
+                    c
+                    for c in value
+                    for added in _XID_ADDED_BY_CPYTHON.values()
+                    if c in added
+                }
+            )
+            points = ", ".join(f"U+{ord(c):04X}" for c in newer)
+            return (
+                f"variable_conventions.{slug}: '{value}' uses {points}; the newest "
+                "of these only became a valid identifier character in CPython "
+                f"{needed[0]}.{needed[1]}. A recommended name has no version "
+                "overlay to be tiered into, so it must parse on the 3.10 floor — "
+                "respell it"
+            )
         if not LanguagePackSchema._is_valid_identifier(value, source_key=None):
             return (
                 f"variable_conventions.{slug}: '{value}' is not a valid Python "
                 "identifier, so it cannot be recommended as a variable name"
-            )
-        needs_313 = sorted(
-            {c for c in value if c in SchemaValidator._XID_ONLY_FROM_CPYTHON_313}
-        )
-        if needs_313:
-            points = ", ".join(f"U+{ord(c):04X}" for c in needs_313)
-            return (
-                f"variable_conventions.{slug}: '{value}' uses {points}, which "
-                "only became a valid identifier character in CPython 3.13. A "
-                "recommended name has no version overlay to be tiered into, so "
-                "it must parse on the 3.10 floor — respell it"
             )
         nfc = unicodedata.normalize("NFC", value)
         nfkc = unicodedata.normalize("NFKC", value)

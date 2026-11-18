@@ -4,6 +4,7 @@ import starlight from '@astrojs/starlight';
 import vercel from '@astrojs/vercel';
 import { readFileSync } from 'node:fs';
 import { legesherSnippets } from './integrations/legesher-snippets.mjs';
+import { ACCOUNT_MARKER_SCRIPT } from './src/account/marker-script.mjs';
 
 // Codes with a snippet variant, from the committed artifact the picker also reads.
 const snippetLangs = JSON.parse(
@@ -21,6 +22,7 @@ export default defineConfig({
 			title: 'Legesher Documentation',
 			customCss: ['./src/styles/custom.css'],
 			components: {
+				Sidebar: './src/components/Sidebar.astro',
 				SocialIcons: './src/components/SnippetLangSelect.astro',
 			},
 			head: [
@@ -30,6 +32,12 @@ export default defineConfig({
 					// language with no snippet variant falls through to the next.
 					tag: 'script',
 					content: `(()=>{var k=${JSON.stringify(snippetLangs)},d=document.documentElement,l=null;try{l=localStorage.getItem('legesher-snippet-lang');}catch(e){}if(k.indexOf(l)<0)l=(d.lang||'en').split('-')[0].toLowerCase();if(k.indexOf(l)<0)l='en';if(l!=='en')d.dataset.snippetLang=l;})();`,
+				},
+				{
+					// Shows "Your account" in place of "Create an account" for a reader who
+					// is signed in at app.legesher.io. See src/account/marker-script.mjs.
+					tag: 'script',
+					content: ACCOUNT_MARKER_SCRIPT,
 				},
 			],
 			logo: {

@@ -270,9 +270,12 @@ uv run ruff check .       # lint
 uv run mypy legesher_mcp  # types
 ```
 
-Two test tiers. The default run exercises every tool through a real MCP
-client session and stays fast. The `scheduled` tier is excluded from it and
-run before a release:
+Three test tiers. The default run exercises every tool through a real MCP
+client session and stays fast. The `docker` tier (`make test-mcp-docker`,
+from the repository root) builds the
+[container image](https://github.com/legesher/legesher/blob/main/libs/mcp/Dockerfile)
+and drives a session against it; it needs a Docker daemon. The `scheduled` tier is
+excluded from the default run too, and run before a release:
 
 - **All-packs round-trip sweep** — the byte-identical guarantee across every
   installed pack and the whole construct corpus (the per-commit run samples
@@ -314,6 +317,12 @@ the PyPI package belongs to the listing. `docs/registry-listings.md` holds
 the canonical listing copy and what each directory reads, so every listing
 says the same thing. `tests/test_registry_manifest.py` pins the manifest to
 this package's name, version and environment variables.
+
+- [Glama](https://glama.ai/mcp/servers/legesher/legesher). Glama builds the
+  server into a container before it lists it.
+  [`Dockerfile`](https://github.com/legesher/legesher/blob/main/libs/mcp/Dockerfile)
+  runs the listing's build steps with every download fixed, and
+  `make test-mcp-docker` builds it and drives a session against the image.
 
 ## License
 

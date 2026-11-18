@@ -16,6 +16,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   translations database. The Spanish and Arabic packs carry theirs, and
   tracebacks render from the pack with no change in output. [CORE-2630]
 
+## [0.26.0] - 2026-11-18
+
+### Added
+
+- **mcp**: `libs/mcp/Dockerfile` builds the published `legesher-mcp` into a
+  container image, with the images pinned by digest, the tools by version and
+  their dependencies by date. `make test-mcp-docker` builds it and drives a
+  session against the image. The README links the server's Glama listing.
+- **core**: the Arabic comma and semicolon (`،` `؛`) and the fullwidth comma,
+  semicolon, colon and parentheses (`，` `；` `：` `（` `）`) are read as their
+  ASCII marks in code position, so a program typed on an Arabic keyboard or
+  with a fullwidth input method translates and runs. Strings and comments keep
+  their marks. The engine never writes these marks: display and the return leg
+  of a round trip carry ASCII punctuation, git stores the file as typed, and
+  the round-trip check reports such source under the new layer `punctuation`.
+  `legesher guard` still refuses the fullwidth marks in code position.
+- **docs**: the docs site links to the Legesher account app: a sign-up link for
+  everyone, and a link to the reader's account when they are signed in at
+  app.legesher.io. The site reads the account app's sign-in cookie in the
+  browser to choose; it loads no sign-in code, makes no request and sets no
+  cookie for this, and the privacy page says so. The link is in the header in
+  a wide window and under the sidebar in a narrower one. [CORE-2732]
+
 ### Changed
 
 - **release**: the foundation release on GitHub carries only the `legesher`,
@@ -36,6 +59,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the code-language picker still wins on every page. [CORE-2760]
 - **legesher-vscode**: 0.1.8. The extension icon is 512 by 512 pixels, within the
   Visual Studio Marketplace's 1024 by 1024 limit, so the package can be published.
+- **core**: an implicit parameter (`self`, `cls`) typed in another Unicode form
+  of the pack's word (decomposed, fullwidth, a presentation form or a ligature)
+  translates as that word, as keywords and builtins already do.
+
+### Security
+
+- **mcp**: `legesher-mcp` requires the MCP Python SDK (`mcp`) 1.30.0 or later,
+  the first 1.x release outside every security advisory published for the SDK.
+  Installing or upgrading the server moves an older SDK already in the
+  environment to 1.30.0 or later.
 
 ## [0.25.1] - 2026-11-03
 
@@ -1645,11 +1678,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.25.1  | Yes      |
-| legesher-i18n            | 0.25.1  | Yes      |
-| legesher (CLI)           | 0.25.1  | —        |
+| legesher-core            | 0.26.0  | Yes      |
+| legesher-i18n            | 0.26.0  | Yes      |
+| legesher (CLI)           | 0.26.0  | —        |
 | legesher-language-server | 0.3.0   | Yes      |
-| legesher-vscode          | 0.1.7   | —        |
+| legesher-vscode          | 0.1.8   | —        |
 
 ### Removed
 

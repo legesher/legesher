@@ -1,0 +1,71 @@
+---
+// The link to the account app. Both links are in the static HTML and the
+// sign-up one shows by default, so a reader without JavaScript, a crawler
+// and a preview deployment all get a working sign-up link. The inline head
+// script (src/account/marker-script.mjs) marks <html> for a signed-in reader
+// and the styles below swap which link shows.
+//
+// It has two placements: the header bar, which has room for it only in a
+// wide window, and under the sidebar, which is the menu on a phone. The
+// styles show at most one placement at any width. A page without a sidebar
+// (the home page, the 404 page) has only the header placement, so it shows
+// the link only in a wide window.
+import labels from '../account/labels.json';
+
+interface Props {
+  placement: 'header' | 'sidebar';
+}
+
+const SIGN_UP = 'https://app.legesher.io/signup';
+const ACCOUNT = 'https://app.legesher.io/';
+
+const { placement } = Astro.props;
+const lang = Astro.locals.starlightRoute.lang.split('-')[0].toLowerCase();
+const label = labels[lang as keyof typeof labels];
+if (!label) {
+  throw new Error(
+    `No account-link labels for the "${lang}" locale. Add them to src/account/labels.json.`,
+  );
+}
+---
+<span class="lg-account-slot" data-placement={placement}>
+  <a class="lg-account" data-account-link="signed-out" href={SIGN_UP}>{label.signedOut}</a>
+  <a class="lg-account" data-account-link="signed-in" href={ACCOUNT}>{label.signedIn}</a>
+</span>
+<style>
+  /* Narrow first: the sidebar placement shows, the header one does not. */
+  .lg-account-slot[data-placement='header'] { display: none; }
+  .lg-account-slot[data-placement='sidebar'] { display: block; }
+  /* From 77rem the header bar fits the longest label in every locale without
+     squeezing the site title. Starlight renders the header's icon slot a
+     second time in the phone menu's footer; that copy is not inside <header>
+     and never shows. */
+  @media (min-width: 77rem) {
+    :global(header) .lg-account-slot[data-placement='header'] { display: contents; }
+    .lg-account-slot[data-placement='sidebar'] { display: none; }
+  }
+
+  .lg-account {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--sl-color-text-accent);
+    border-radius: 999rem;
+    color: var(--sl-color-text-accent);
+    font-size: var(--sl-text-sm);
+    font-weight: 600;
+    line-height: 1.5;
+    text-decoration: none;
+  }
+  .lg-account-slot[data-placement='header'] .lg-account { white-space: nowrap; }
+  .lg-account:hover {
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-white);
+  }
+  /* The border is close in colour to the browser's focus ring: leave a gap
+     so focus reads as a ring, not a thicker border. */
+  .lg-account:focus-visible { outline-offset: 3px; }
+  .lg-account[data-account-link='signed-in'] { display: none; }
+  :global(html[data-account='signed-in']) .lg-account[data-account-link='signed-out'] { display: none; }
+  :global(html[data-account='signed-in']) .lg-account[data-account-link='signed-in'] { display: inline-flex; }
+</style>
