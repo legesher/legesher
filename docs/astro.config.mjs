@@ -16,6 +16,10 @@ export default defineConfig({
 	site: 'https://docs.legesher.io',
 	output: 'static',
 	adapter: vercel(),
+	// Astro 7's default ('jsx') drops the whitespace between inline elements,
+	// which puts each sidebar badge flush against its label. `true` collapses
+	// that whitespace to one space instead, as Astro 6 did.
+	compressHTML: true,
 	integrations: [
 		legesherSnippets(),
 		starlight({
