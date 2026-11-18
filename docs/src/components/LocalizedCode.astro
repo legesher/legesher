@@ -42,17 +42,19 @@ const html = (spans: [string, string][]) =>
     )
     .join('');
 ---
-<figure class="lg-code">
-  <figcaption class="lg-code-bar">
-    <span class="lg-code-pl">Python</span>
-    <span class="lg-code-pick">
+<figure class="lg-code" aria-label="Python">
+  <div class="lg-code-bar">
+    <span class="lg-code-pl" aria-hidden="true">Python</span>
+    <label class="lg-code-pick">
       <span aria-hidden="true">{label.picker}</span>
       <select class="lg-snippet-lang" aria-label={label.picker}>
         {options.map((l) => <option value={l.code} lang={l.code}>{l.native}</option>)}
       </select>
-    </span>
-    <button type="button" class="lg-code-copy" data-copied={label.copied}>{label.copy}</button>
-  </figcaption>
+    </label>
+    <!-- Hidden until the script below wires it: it does nothing without JavaScript. -->
+    <button type="button" class="lg-code-copy" data-copied={label.copied} data-failed={label.failed} hidden>{label.copy}</button>
+    <span class="sr-only" role="status"></span>
+  </div>
   {Object.entries(variants).map(([code, v]) => (
     <pre data-lang={code} dir={v.rtl ? 'rtl' : 'ltr'}><code set:html={html(v.spans)} /></pre>
   ))}
@@ -109,22 +111,33 @@ const html = (spans: [string, string][]) =>
         if (sel.value === 'en') delete document.documentElement.dataset.snippetLang;
         else document.documentElement.dataset.snippetLang = sel.value;
         pickers().forEach((other) => {
-          if (other !== sel) other.value = sel.value;
+          // A sample without this variant keeps its own pick.
+          if (other !== sel && [...other.options].some((o) => o.value === sel.value)) other.value = sel.value;
         });
       });
     });
     document.querySelectorAll('.lg-code .lg-code-copy').forEach((btn) => {
       if (btn.dataset.lgWired) return;
       btn.dataset.lgWired = '1';
+      btn.hidden = false;
       const idle = btn.textContent;
+      const status = btn.parentElement.querySelector('[role="status"]');
+      let reset = 0;
+      const show = (text) => {
+        btn.textContent = text;
+        status.textContent = text;
+        clearTimeout(reset);
+        reset = setTimeout(() => { btn.textContent = idle; status.textContent = ''; }, 2000);
+      };
       btn.addEventListener('click', async () => {
         const shown = [...btn.closest('.lg-code').querySelectorAll('pre')].find((p) => p.getClientRects().length);
         if (!shown) return;
         try {
           await navigator.clipboard.writeText(shown.innerText);
-          btn.textContent = btn.dataset.copied;
-          setTimeout(() => { btn.textContent = idle; }, 2000);
-        } catch (e) { /* clipboard refused: leave the button as it is */ }
+          show(btn.dataset.copied);
+        } catch (e) {
+          show(btn.dataset.failed);
+        }
       });
     });
   })();
