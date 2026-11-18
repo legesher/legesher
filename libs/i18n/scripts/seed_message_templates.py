@@ -56,6 +56,14 @@ sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from legesher_i18n.db.schema_v2 import connect  # noqa: E402
 
+# The stored-template bidi rule has one definition, in the package, because
+# the pack schema applies it too. Re-exported here for the scripts that
+# import it from this module.
+from legesher_i18n.pack_messages import (  # noqa: E402, F401
+    FORBIDDEN_BIDI,
+    bidi_controls,
+)
+
 try:  # imported as part of the `scripts` package (tests)
     from .add_message_provenance import PROVENANCE_COLUMNS
 except ImportError:  # run as a script: the scripts dir itself is sys.path[0]
@@ -69,22 +77,6 @@ DEFAULT_SEED = (
     / "v8_jej_messages.json"
 )
 
-# Codepoints forbidden in STORED templates (render-time isolation only).
-FORBIDDEN_BIDI = {
-    0x2066,
-    0x2067,
-    0x2068,
-    0x2069,
-    0x202A,
-    0x202B,
-    0x202C,
-    0x202D,
-    0x202E,
-    0x200E,
-    0x200F,
-    0x061C,
-}
-
 PLACEHOLDER = re.compile(r"\{(\w+)\}")
 
 #: The ``message_translations.status`` CHECK set, mirrored for callers that
@@ -97,11 +89,6 @@ def used_placeholders(template: str) -> set[str]:
     """Placeholder names a template interpolates, ignoring ``{{ }}`` escapes."""
     stripped = template.replace("{{", "").replace("}}", "")
     return set(PLACEHOLDER.findall(stripped))
-
-
-def bidi_controls(text: str) -> list[str]:
-    """The forbidden bidi control codepoints ``text`` carries, as U+ labels."""
-    return [f"U+{ord(ch):04X}" for ch in text if ord(ch) in FORBIDDEN_BIDI]
 
 
 def _has_table(connection: sqlite3.Connection, name: str) -> bool:

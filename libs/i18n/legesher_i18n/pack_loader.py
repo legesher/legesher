@@ -75,6 +75,13 @@ class LanguagePack:
         variable_conventions: The idiomatic short name for each variable
             ROLE (``loop_index`` -> ``i``), CORE-1396. Advice for a human
             writing new code, not a substitution the engine performs.
+        messages: Localized error-message entries, by implementation
+            (``cpython``) and then by catalog key
+            (``NameError.not_defined``), merged per key along the
+            inheritance chain (CORE-2630). Each entry carries ``text`` and
+            ``src``. These are the pack's raw entries: an entry is used
+            only after the message catalog has checked it against the
+            English side. Empty when the pack carries no messages.
         metadata: Optional metadata about the pack
         extends: Optional path to parent pack (for reference)
         inheritance_chain: List of pack paths in inheritance order
@@ -90,6 +97,7 @@ class LanguagePack:
     members: dict[str, str] = field(default_factory=dict)
     symbols: dict[str, str] = field(default_factory=dict)
     variable_conventions: dict[str, str] = field(default_factory=dict)
+    messages: dict[str, dict[str, dict[Any, Any]]] = field(default_factory=dict)
     metadata: LanguagePackMetadata | None = None
     extends: str | None = None
     inheritance_chain: list[str] = field(default_factory=list)
@@ -209,7 +217,8 @@ class LanguagePack:
             f"builtins={len(self.builtins)}, exceptions={len(self.exceptions)}, "
             f"implicit_params={len(self.implicit_params)}, members={len(self.members)}, "
             f"symbols={len(self.symbols)}, "
-            f"variable_conventions={len(self.variable_conventions)})"
+            f"variable_conventions={len(self.variable_conventions)}, "
+            f"messages={sum(len(entries) for entries in self.messages.values())})"
         )
 
 
@@ -427,6 +436,10 @@ class LanguagePackLoader:
             members=dict(pack_schema.members),
             symbols=dict(pack_schema.symbols),
             variable_conventions=dict(pack_schema.variable_conventions),
+            messages={
+                implementation: {key: dict(entry) for key, entry in entries.items()}
+                for implementation, entries in pack_schema.messages.items()
+            },
             metadata=pack_schema.metadata,
             extends=pack_schema.extends,
             inheritance_chain=inheritance_chain,
@@ -705,11 +718,56 @@ class LanguagePackLoader:
                     **override.get(section, {}),
                 }
 
+        # Merge the localized error messages (CORE-2630). A translation of
+        # a message reworded in a later Python version is written into that
+        # version's file, so the section often appears ONLY in an overlay
+        # file; without this block the overlay's entries would be dropped.
+        if "messages" in base or "messages" in override:
+            merged["messages"] = self._merge_messages(
+                base.get("messages"), override.get("messages")
+            )
+
         # Override scalar fields
         for key in ["language", "target", "version", "extends", "metadata"]:
             if key in override:
                 merged[key] = override[key]
 
+        return merged
+
+    @staticmethod
+    def _merge_messages(base: Any, override: Any) -> Any:
+        """Merge two ``messages`` sections: per implementation, per key.
+
+        The override's entry replaces the base's entry for the same key. An
+        entry is replaced whole, never field by field: its ``text`` and its
+        ``src`` describe one English wording together.
+
+        A side that is not a mapping is returned as it is, so the schema
+        validation that follows reports it instead of the merge hiding it.
+
+        Args:
+            base: The parent file's section, or None when it has none.
+            override: The child file's section, or None when it has none.
+
+        Returns:
+            The merged section.
+        """
+        if override is None:
+            return base
+        if base is None:
+            return override
+        if not isinstance(base, dict):
+            return base
+        if not isinstance(override, dict):
+            return override
+        merged: dict[Any, Any] = dict(base)
+        for implementation, entries in override.items():
+            if implementation not in merged or not isinstance(entries, dict):
+                merged[implementation] = entries
+            elif isinstance(merged[implementation], dict):
+                merged[implementation] = {**merged[implementation], **entries}
+            # A parent that is not a mapping (``cpython: null`` in the base)
+            # stays, for the schema to reject; an overlay must not hide it.
         return merged
 
     def refresh_discovery(self) -> None:

@@ -22,6 +22,14 @@ Covers v2 only; the v1 pack database (`schema.py`) is not described there.
 
 **Use this for:** Looking up what a v2 table or column means before querying or changing it (CORE-2232)
 
+### [pack-messages.md](./pack-messages.md)
+
+The `messages` section of a pack: localized traceback and error-message
+templates, what a pack load checks, how the section merges across Python
+versions, and which `legesher-i18n` releases can read it.
+
+**Use this for:** Reading or changing how packs carry error messages (CORE-2630)
+
 ### [corpus-publish-runbook.md](./corpus-publish-runbook.md)
 
 The operator sequence from the working database to the published corpus dataset:
