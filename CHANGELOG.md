@@ -30,6 +30,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [0.27.0] - 2026-11-18
 
+### Added
+
+- **docs**: the docs site links to the Legesher account app: a sign-up link for
+  everyone, and a link to the reader's account when they are signed in at
+  app.legesher.io. The site reads the account app's sign-in cookie in the
+  browser to choose; it loads no sign-in code, makes no request and sets no
+  cookie for this, and the privacy page says so. The link is in the header in
+  a wide window and under the sidebar in a narrower one. [CORE-2732]
+
 ### Fixed
 
 - **legesher**: `legesher run`, `legesher config`, `legesher git status` and
@@ -62,12 +71,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   of a round trip carry ASCII punctuation, git stores the file as typed, and
   the round-trip check reports such source under the new layer `punctuation`.
   `legesher guard` still refuses the fullwidth marks in code position.
-- **docs**: the docs site links to the Legesher account app: a sign-up link for
-  everyone, and a link to the reader's account when they are signed in at
-  app.legesher.io. The site reads the account app's sign-in cookie in the
-  browser to choose; it loads no sign-in code, makes no request and sets no
-  cookie for this, and the privacy page says so. The link is in the header in
-  a wide window and under the sidebar in a narrower one. [CORE-2732]
 
 ### Changed
 
