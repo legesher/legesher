@@ -70,7 +70,9 @@ repos:
     # The pack REFERENCE.md files are generated (scripts/generate_reference_docs.py)
     # and their shape is pinned by scripts/tests/test_review_template_contract.py;
     # a --fix pass over them would only create drift for make check-generated.
-    exclude: ^(\.claude/|libs/i18n/context/|libs/i18n/docs/|libs/i18n/language-packs/python/[^/]+/REFERENCE\.md|libs/vs-code/|scripts/|docs/src/content/|docs/development/)
+    # .github/welcome/ holds comment fragments posted on issues and pull requests,
+    # where a line break shows as a break, so their lines stay unwrapped.
+    exclude: ^(\.claude/|\.github/welcome/|libs/i18n/context/|libs/i18n/docs/|libs/i18n/language-packs/python/[^/]+/REFERENCE\.md|libs/vs-code/|scripts/|docs/src/content/|docs/development/)
 
   # YAML formatting
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
