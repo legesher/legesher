@@ -19,11 +19,18 @@ from pathlib import Path
 import click
 import yaml
 
-from legesher.config import USER_ONLY_SECTIONS, user_telemetry
+from legesher.config import (
+    USER_ONLY_SECTIONS,
+    dump_config,
+    find_project_config,
+    merge_config_data,
+    read_config_file,
+    user_config_path,
+)
 
 
 def _find_config_path() -> Path:
-    """Find .legesher/config.yml in the current or parent directories.
+    """Find the project's .legesher/config.yml, as the runtime does.
 
     Returns:
         Path to config.yml
@@ -31,23 +38,17 @@ def _find_config_path() -> Path:
     Raises:
         click.ClickException: If no config file found
     """
-    current = Path.cwd().resolve()
-    while True:
-        config_path = current / ".legesher" / "config.yml"
-        if config_path.exists():
-            return config_path
-        if current == current.parent:
-            break
-        current = current.parent
-
-    raise click.ClickException(
-        "No .legesher/config.yml found. Run 'legesher init' first."
-    )
+    config_path = find_project_config()
+    if config_path is None:
+        raise click.ClickException(
+            "No .legesher/config.yml found. Run 'legesher init' first."
+        )
+    return config_path
 
 
 def _user_config_path() -> Path:
     """Return the user-level config path (~/.legesher/config.yml)."""
-    return Path.home() / ".legesher" / "config.yml"
+    return user_config_path()
 
 
 def _load_yaml_mapping(config_path: Path) -> dict:
@@ -58,8 +59,13 @@ def _load_yaml_mapping(config_path: Path) -> dict:
     Raises:
         click.ClickException: If the YAML root is not a mapping.
     """
-    with open(config_path, encoding="utf-8") as f:
-        data = yaml.safe_load(f)
+    try:
+        with open(config_path, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+    except (yaml.YAMLError, RecursionError) as e:
+        raise click.ClickException(
+            f"Config file {config_path} is not valid YAML. Fix or remove the file.\n{e}"
+        ) from e
     if data is None:
         return {}
     if not isinstance(data, dict):
@@ -79,12 +85,15 @@ def _load_config() -> tuple[dict, Path]:
 def _load_merged_config() -> tuple[dict, list[Path]]:
     """Load user-level and project config merged (project takes precedence).
 
-    Merging is a top-level update, matching LegesherConfig.load(): a
-    project-level section replaces the user-level section of the same
-    name entirely, so these commands report what the runtime actually
-    uses. The telemetry section is the exception, again matching the
-    runtime: it is the user's own section filled out with the defaults,
-    and a project config never changes it.
+    Each file is read by ``read_config_file`` and the two are merged by
+    ``merge_config_data``, as ``LegesherConfig.load()`` does, so these
+    commands report what the runtime uses: a top-level
+    key the project file names replaces the user's (a section whole), a
+    file in the shape ``legesher init`` once wrote reports the
+    ``language`` and ``git.filter_enabled`` it stands for, and the
+    telemetry section is the user's own filled out with the defaults.
+    The runtime's built-in defaults for keys neither file names are not
+    reported. A file the runtime leaves out is an error here.
 
     Returns:
         Tuple of (merged data, list of contributing config paths)
@@ -92,28 +101,39 @@ def _load_merged_config() -> tuple[dict, list[Path]]:
     Raises:
         click.ClickException: If neither config file exists
     """
-    data: dict = {}
-    user_data: dict | None = None
     paths: list[Path] = []
 
     user_path = _user_config_path()
-    if user_path.exists():
-        user_data = _load_yaml_mapping(user_path)
-        data = dict(user_data)
+    user_data = _usable(user_path) if user_path.exists() else None
+    if user_data is not None:
         paths.append(user_path)
 
-    try:
-        project_data, project_path = _load_config()
-    except click.ClickException:
-        if not paths:
-            raise
-    else:
-        data = dict(data)
-        data.update(project_data)
+    project_data = None
+    project_path = find_project_config()
+    if project_path is not None:
+        project_data = _usable(project_path)
         paths.append(project_path)
+    elif not paths:
+        _find_config_path()  # raises the "run legesher init" error
 
-    data["telemetry"] = user_telemetry(user_data)
-    return data, paths
+    return merge_config_data(user_data, project_data), paths
+
+
+def _usable(config_path: Path) -> dict:
+    """A config file as the runtime uses it; an error for one it leaves out.
+
+    Reporting the values of a file the runtime ignores would show settings
+    that are not in effect, so ``get`` and ``list`` refuse until it is
+    fixed. ``set`` reads the file as written, so it can fix a value that
+    fails validation.
+    """
+    data, problem = read_config_file(config_path)
+    if problem is not None:
+        raise click.ClickException(
+            f"Cannot use {config_path}: {problem}. legesher run and the git "
+            "filter leave this file out until it is fixed."
+        )
+    return data or {}
 
 
 _MISSING = object()
@@ -215,8 +235,8 @@ def config():
     \b
     Examples:
         $ legesher config list
-        $ legesher config get git.enabled
-        $ legesher config set translation.default_target ar
+        $ legesher config get language
+        $ legesher config set python_version 3.13
         $ legesher config set --global language es
     """
     pass
@@ -237,7 +257,7 @@ def config_list():
 def config_get(key: str):
     """Get a specific configuration value.
 
-    KEY is a dotted path like 'git.enabled' or 'translation.default_target'.
+    KEY is a dotted path like 'language' or 'git.filter_enabled'.
     Values are read from the user-level config merged with the project
     config (project takes precedence).
     """
@@ -272,7 +292,7 @@ def config_get(key: str):
 def config_set(key: str, value: str, use_global: bool):
     """Set a configuration value.
 
-    KEY is a dotted path like 'git.enabled' or 'translation.default_target'.
+    KEY is a dotted path like 'language' or 'git.filter_enabled'.
     VALUE is the new value (booleans: true/false, numbers auto-detected).
     With --global, the value is written to the user-level config
     (~/.legesher/config.yml) instead of the project config. Telemetry
@@ -292,7 +312,7 @@ def config_set(key: str, value: str, use_global: bool):
         data, config_path = _load_config()
     _set_nested(data, key, value)
     with open(config_path, "w", encoding="utf-8") as f:
-        yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
+        f.write(dump_config(data))
     click.echo(f"Set {key} = {_coerce_value(value)} in {config_path}")
 
 

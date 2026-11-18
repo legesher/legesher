@@ -276,19 +276,23 @@ def _check_tree_links(
     return findings
 
 
-def _language_at(repo: Path, commit: str) -> str | None:
-    """The ``language`` a commit's own ``.legesher/config.yml`` names."""
-    import yaml
+def _language_at(repo: Path, commit: str) -> tuple[str | None, str | None]:
+    """The ``language`` a commit's own ``.legesher/config.yml`` names.
 
-    data = _blob(repo, f"{commit}:.legesher/config.yml")
-    if data is None:
-        return None
-    try:
-        config = yaml.safe_load(data)
-    except (yaml.YAMLError, RecursionError):
-        return None
-    language = config.get("language") if isinstance(config, dict) else None
-    return language if isinstance(language, str) else None
+    ``(language, problem)`` from ``language_named_in``: a config in the shape
+    ``legesher init`` once wrote names the first of its ``languages``, and a
+    bad value elsewhere in the file does not stop its language counting, so
+    no merged change can switch the check off that way. ``problem`` is why a
+    file that is there could not be read at all.
+    """
+    from legesher.config import language_named_in
+
+    text = _blob(repo, f"{commit}:.legesher/config.yml")
+    if text is None:
+        if _blob_bytes(repo, f"{commit}:.legesher/config.yml") is not None:
+            return None, "it is not UTF-8"
+        return None, None
+    return language_named_in(text)
 
 
 def _language(
@@ -298,7 +302,14 @@ def _language(
         # A pull request is judged by the language its base declares, English
         # when it declares none (the configuration's default), and never by
         # its own configuration, so it cannot choose a laxer one for itself.
-        language = _language_at(repo, base) or "en"
+        named, problem = _language_at(repo, base)
+        if problem is not None:
+            click.echo(
+                f"legesher guard: the base's .legesher/config.yml is unusable: "
+                f"{problem}. The pull request is judged as English.",
+                err=True,
+            )
+        language = named or "en"
     if language is None:
         from legesher.config import LegesherConfig
 

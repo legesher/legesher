@@ -65,6 +65,20 @@ legesher init
 legesher init --language es --language fr --git --no-ai-context
 ```
 
+The first language is the one in use, written as `language:`; every language chosen is recorded beside it
+as `languages:`. Choosing several at the interactive prompt asks which one you write in. The file is in the
+one shape every command reads (see [Configuration](#configuration)), so `legesher run`, `legesher config`
+and the git filter work straight after `init`, in a git repository or outside one.
+
+Inside a git repository `init` writes the file at the repository's root, whichever directory it is run
+from: that is where `legesher git setup` writes it and where git runs the filter. Outside one it writes in
+the current directory. It does not run in your home directory, where `.legesher/config.yml` is your
+user-level config; set a default there with `legesher config set --global language <code>`. A home
+directory kept in git is not a project's repository: `init` writes the config in the directory it is run
+from, and does not set up the git filter there (see [Configuration](#configuration)). `--force` replaces an
+existing project file with a new one. The Python version is read from a `pyproject.toml` in the current
+directory or at the project's root; without one, a non-interactive run needs `--python-version`.
+
 ### `legesher translate`
 
 Translate Python source files between languages.
@@ -139,13 +153,23 @@ legesher run programa.py --lang es
 legesher run programa.py --lang es --args "--verbose input.txt"
 ```
 
-`--lang` wins. Without it the language comes from the `language:` key in `.legesher/config.yml`,
-falling back to `en` when that key is absent. A config written by `legesher init` does not have that
-key (see [Configuration](#configuration)), so dropping `--lang` there runs the file untranslated and
-Python raises `SyntaxError`. Pass `--lang`, or write the config with `legesher git setup`.
+`--lang` wins. Without it the language comes from the `language:` key in the project's
+`.legesher/config.yml`, then the user's when the project's names none, falling back to `en` when neither
+does (see [Configuration](#configuration)).
 
 An error in the script is reported as `python programa.py` would report it: the traceback starts at the
-script's first frame, and the command exits with status 1.
+script's first frame, and the command exits with status 1. A file written in one language and read as
+another fails on its first keyword, and Python's `SyntaxError` cannot say so. When the script does not
+compile and `--lang` was not given, the error is followed by the language the file was read as and where
+that came from:
+
+```text
+  File "/path/to/programa.py", line 1
+    definir saludar(nombre):
+SyntaxError: invalid syntax
+legesher: programa.py was read as English (en), because no language is configured here.
+legesher: if it is written in another language, pass --lang <code>, or set one with: legesher init
+```
 
 ### `legesher git`
 
@@ -296,9 +320,10 @@ Protect `.github/workflows/` as well, for example with a code owner and required
 
 Manage project and global configuration.
 
-Project configuration is created by `legesher init` or `legesher git setup`; `config` reads and writes it
-afterwards. `get` and `list` report the keys that are actually in the files, so what they show depends on
-which of those two commands wrote the config (see [Configuration](#configuration)).
+Project configuration is created by `legesher init` or `legesher git setup`, in the same shape; `config`
+reads and writes it afterwards. `get` and `list` report what the two files say, found and merged by the
+rule the runtime uses (see [Configuration](#configuration)), so `config get language` is the language
+`legesher run` and the git filter use whenever a file names one.
 
 ```bash
 # Set default language for project
@@ -315,27 +340,30 @@ legesher config set language es --global
 ```
 
 `config get` exits 1 with `Key '<key>' not found.` when the key is absent from both files: it does not
-fall back to the built-in defaults.
+report the built-in defaults the runtime falls back to. `get` and `list` also exit 1, naming the file and
+the reason, when a config file is one the runtime leaves out (see [Configuration](#configuration)), so they
+never report settings that are not in effect. `set` reads the file as written, so it can fix a value that
+fails validation; a file that is not valid YAML has to be fixed by hand.
 
 **Configuration Locations:**
 
-- **Project**: `.legesher/config.yml` (current directory)
+- **Project**: inside a git repository, `.legesher/config.yml` at the repository's root; outside one, the
+  nearest `.legesher/config.yml` at or above the current directory
 - **User**: `~/.legesher/config.yml` (user home directory)
 
-**Available Settings** (the keys the runtime reads, and the ones `legesher git setup` writes):
+**Available Settings:**
 
-- `language`: Default language code (e.g., `es`, `fr`, `ar`)
+- `language`: The language in use (e.g., `es`, `fr`, `ar`)
+- `languages`: Every language chosen with `legesher init`, as a record. `language` is the one in use, and
+  `config set language` does not change the list. The list decides the language only in a file that has no
+  `language`, which is how an earlier `legesher init` wrote it
 - `python_version`: Target Python version (e.g., `3.12`, `3.11`), or `null` to auto-detect
 - `git.canonical_language`: written as `en` by `legesher init` and `legesher git setup` for compatibility; the
   filter does not read it, because each file is stored in its author's language
-- `git.filter_enabled`: Enable git filter integration (boolean)
+- `git.filter_enabled`: Whether `legesher init` or `legesher git setup` set up the git filter (boolean)
 - `runtime.cache_size`: Translation cache size. Honoured when present; neither command writes it out
 - `metadata.enabled`, `metadata.directory`, `metadata.track_in_git`,
   `metadata.verbose_history`, `metadata.max_history_entries`: Metadata tracking
-
-`legesher init` writes a different set of keys (`languages`, `git.enabled`, `ai_context.*`,
-`translation.*`, `editor.*`). `config get` and `config list` will report those verbatim, but nothing in
-the runtime consults them.
 
 ### `legesher metadata`
 
@@ -373,22 +401,47 @@ legesher-i18n validate libs/i18n/language-packs/python/es/legesher_i18n_python_e
 The legesher CLI uses YAML configuration files for project and user settings: `.legesher/config.yml`
 in a project, `~/.legesher/config.yml` for user-wide defaults.
 
-> **Known issue: `legesher init` and `legesher git setup` write two different, incompatible shapes.**
-> `git setup` writes the shape the runtime reads. `init` writes its own shape, which the runtime does
-> not understand, so after `legesher init --language es` the working language silently falls back to
-> `en`: `legesher git status` reports `Language: en`, `legesher run` without `--lang` fails to compile
-> the file, `config get language` exits 1, and the git clean filter cannot recognize your language, so it
-> leaves stray keywords as typed. Reconciling the two is tracked as its own issue. Until it lands, run
-> `legesher git setup --language <code>` after `legesher init` (it rewrites `config.yml` in the shape
-> everything else reads, and leaves the generated AI context files alone).
+**Which file is the project's.** Inside a git repository it is the one at the repository's root, whichever
+directory a command is run from: `legesher init` and `legesher git setup` write it there, and git runs the
+filter and the guard hook there, so every command reads one file. A project does not have to be a git
+repository: outside one, the project file is the nearest `.legesher/config.yml` at or above the current
+directory. It is never `~/.legesher/config.yml`, and the search never goes above a repository's root.
 
-### Project configuration written by `legesher git setup`
+A repository with no config at its root but one in a subdirectory, where an earlier `legesher init` run
+there left it, still has that one read by commands run in or below that directory. The git filter does not
+see it, and `legesher git status` says so; `legesher git setup` writes the root file. Once the root has a
+config, `git status` names any in a subdirectory as not read.
 
-This is the shape `LegesherConfig` loads, and the keys `legesher config` documents above:
+A home directory kept in git (dotfiles) is not a project's repository, because its root holds your
+user-level config. Under it, the project file is found as it is outside a repository. Git still runs the
+filter and the guard hook at the home directory's root, where they read your user-level config, so a
+project there cannot have a filter language of its own: `legesher init` does not set the filter up,
+`legesher git setup` refuses (unless `--global`), and `legesher git status` says so. Run `git init` in the
+project to give it its own repository.
+
+**A file that cannot be used** (YAML that does not parse or is nested too deeply to read, YAML that is not
+a mapping, or a value that fails validation, such as an absolute `metadata.directory`) is left out whole: it
+neither sets nor hides anything. `legesher run`, `legesher guard --staged` (the pre-commit hook) and the git
+filter warn once and carry on without it, and `run`'s note names it; `legesher git status` lists it;
+`legesher config get` and `config list` exit 1 naming it; and `legesher git setup` refuses to write over it
+until it is fixed.
+
+`legesher guard --diff` is stricter on purpose. It judges a pull request by the language its base's config
+names whenever that file can be parsed, even if another value in it fails validation, so an unrelated bad
+value merged earlier cannot switch the check off. Only a base config that cannot be parsed at all is judged
+as English, and the guard says so.
+
+### Project configuration
+
+`legesher init` and `legesher git setup` write the same shape, and every command reads it: `legesher run`,
+`legesher config`, `legesher git status`, `legesher guard` and the git filter.
 
 ```yaml
-language: es
-python_version: null      # null means auto-detect
+language: es              # the language in use
+languages:                # every language chosen with `legesher init`; a record
+  - es
+  - fr
+python_version: '3.13'    # null means auto-detect
 git:
   canonical_language: en
   filter_enabled: true
@@ -400,49 +453,40 @@ metadata:
   max_history_entries: 100
 ```
 
-### Project configuration written by `legesher init`
+`legesher git setup` alone writes no `languages` list. Run on an existing file, it sets `language`,
+`git.filter_enabled` and `git.canonical_language`, adds its language to the list when the file has one and
+it is new, and takes `python_version` only when `--python-version` is given. It and `legesher config set`
+never remove a key they do not own, so a section you add by hand stays. `legesher init --force` is the
+exception: it replaces the file.
 
-Same path, different keys. Nothing in the runtime reads the keys unique to
-this shape; `python_version` and `git.canonical_language` are shared with the
-shape above and are read:
+### A file written by an earlier `legesher init`
 
-```yaml
-# Languages enabled in this project
-languages:                # a list, not the single `language:` string above
-  - es
+Before the two commands shared a shape, `legesher init` wrote `languages` without `language`, `git.enabled`
+without `git.filter_enabled`, and three sections nothing read (`ai_context`, `translation`, `editor`). A
+file like that keeps working as it is:
 
-python_version: "3.13"
-
-git:
-  enabled: true           # not git.filter_enabled
-  canonical_language: "en"
-
-ai_context:
-  enabled: true
-  context_files:
-    - AI-CONTEXT-es.md
-
-translation:
-  default_source: "en"
-  default_target: "es"
-  preserve_comments: true
-  preserve_strings: true
-
-editor:
-  lsp_hover: true
-  inline_completion: true
-  bilingual_tooltips: true
-```
+- `language` is read as the first entry of `languages`, and `git.filter_enabled` as `git.enabled`. A
+  `language` or `git.filter_enabled` the file names itself wins.
+- That is a change for a repository that has such a file at its root: the git filter and the
+  `legesher guard` pre-commit hook used English, and now use the first of `languages`. A stray keyword in
+  the other language is normalized at `git add`, and the hook refuses one that skipped the filter.
+- Nothing rewrites the file for being old. `legesher git setup` and `legesher config set` add the current
+  keys beside its extra sections and keep those; like any rewrite by those two commands, that drops the
+  file's comments.
+- `legesher init --force` replaces the file with a new one in the current shape.
 
 ### User Configuration
 
-`~/.legesher/config.yml` holds user-wide defaults and uses the same keys as the `git setup` shape.
+`~/.legesher/config.yml` holds user-wide defaults and uses the same keys. A setting the project file names
+wins; one it does not name comes from the user file. That is decided per top-level key, so a section such
+as `git` or `metadata` is taken whole from the project file when it has one. `telemetry` is the exception:
+it is read from the user file only.
 
 ### Configuration Precedence
 
 Settings are resolved in this order (highest to lowest priority):
 
-1. Command-line flags (e.g., `--language es`)
+1. Command-line flags (e.g., `--lang es`)
 2. Project configuration (`.legesher/config.yml`)
 3. User configuration (`~/.legesher/config.yml`)
 4. Built-in defaults
@@ -460,10 +504,6 @@ git init
 # Initialize legesher configuration (writes config.yml, git filters, AI context)
 legesher init --language es --git --python-version 3.13
 
-# Rewrite config.yml in the shape the runtime reads. Without this the filters are
-# installed but inert, and your code is stored in Spanish. See Configuration above
-legesher git setup --language es --python-version 3.13
-
 # Create a Python file in Spanish. Keywords and builtins are Spanish;
 # your own names, and everything inside strings, stay as you write them
 cat > hola.py << 'EOF'
@@ -473,6 +513,10 @@ definir saludar(nombre):
 
 saludar("Mundo")
 EOF
+
+# Run it; the language comes from the config `init` wrote
+legesher run hola.py
+# Output: ¡Hola, Mundo!
 
 git add .
 git commit -m "Initial commit"
@@ -501,7 +545,7 @@ legesher translate src/ --to es --output src_es/
 ### Example 3: Switching Between Languages
 
 ```bash
-# Currently working in Spanish (config written by `legesher git setup --language es`)
+# Currently working in Spanish (config written by `legesher init` or `legesher git setup`)
 legesher config get language
 # Output: es
 
