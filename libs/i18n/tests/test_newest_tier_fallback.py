@@ -3,7 +3,7 @@
 Python 3.15 shipped before any pack had a ``3.15.yml``, and every surface that
 takes the tier from the running interpreter (the import hook, ``legesher run``,
 ``translate``, the git filter, the traceback renderer) failed with
-``PackNotFoundError`` in every language (CORE-2828). The rule now lives in one
+``PackNotFoundError`` in every language. The rule now lives in one
 place, ``LanguagePackLoader.load``:
 
 * A request newer than every tier a pack has is served that pack's newest tier.

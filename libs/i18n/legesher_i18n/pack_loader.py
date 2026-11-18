@@ -401,7 +401,7 @@ class LanguagePackLoader:
 
         This method is thread-safe and caches results using lru_cache.
 
-        Which tier is served (one rule for every surface, CORE-2828):
+        Which tier is served (one rule for every surface):
 
         * The pack's ``{version}.yml`` when it has one.
         * When ``version`` is newer than every tier the pack has, within the

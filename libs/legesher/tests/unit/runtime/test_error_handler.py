@@ -81,7 +81,6 @@ class TestInstallErrorHandler:
         """Test installing error handler from project config."""
         mock_config = Mock()
         mock_config.language = "ar"
-        mock_config.python_version = None  # a real config: None = this interpreter
         mock_load.return_value = mock_config
 
         handler = install_error_handler()
@@ -94,7 +93,6 @@ class TestInstallErrorHandler:
         """Test installing without explicit language uses config."""
         mock_config = Mock()
         mock_config.language = "fr"
-        mock_config.python_version = None  # a real config: None = this interpreter
         mock_load.return_value = mock_config
 
         handler = install_error_handler()

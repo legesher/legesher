@@ -101,11 +101,9 @@ def run(script: str, lang: str | None, args: str | None):
     config = LegesherConfig.load()
     language = lang or config.language
 
-    # Install runtime hooks. A configured python_version picks the pack tier
-    # for every hook and for the script itself, not only for the renderer
-    # below; None means the running interpreter.
-    install_import_hook(language, python_version=config.python_version)
-    install_error_handler(language, python_version=config.python_version)
+    # Install runtime hooks
+    install_import_hook(language)
+    install_error_handler(language)
     # Localized tracebacks (CORE-1679): installed LAST so the error handler
     # above is the fallback chain when the renderer degrades. The source
     # mapper is passed through so frames compiled from TRANSLATED source
@@ -141,9 +139,7 @@ def run(script: str, lang: str | None, args: str | None):
 
         # Translate main script if needed (import hook only handles imports)
         # from_language_pack creates EN->target translator, so we reverse for target->EN
-        en_to_native = TokenTranslator.from_language_pack(
-            language, config.python_version
-        )
+        en_to_native = TokenTranslator.from_language_pack(language)
         native_to_en = en_to_native.reverse()
         code = native_to_en.translate_code(native_code)
 

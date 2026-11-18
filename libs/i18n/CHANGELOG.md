@@ -19,7 +19,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   logged once per process, at INFO, naming the requested and the served tier.
   The rule never goes downward: a request below a pack's floor raises
   `UnsupportedInterpreterError` naming the floor, where it used to raise a
-  `PackNotFoundError` that listed every language. [CORE-2828]
+  `PackNotFoundError` that listed every language.
 
 ## [0.27.0] - 2026-11-18
 

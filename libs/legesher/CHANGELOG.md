@@ -11,15 +11,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- `legesher run` passes the configured `python_version` to the import hook, the
-  error handler and the translator for the script, not only to the traceback
-  renderer, so pinning it in `.legesher/config.yml` picks the pack tier
-  everywhere. `install_import_hook` and `install_error_handler` take a
-  `python_version` argument; with no language given, both read it from the
-  config. A project whose config names a `python_version` now runs under that
-  tier everywhere (`legesher init` writes the floor of `requires-python`, such as
-  `3.10`), where the hooks used to take the running interpreter's tier; the git
-  filter and the traceback renderer already followed the config. [CORE-2828]
+- `legesher run`, `legesher translate` and the git clean filter work on a
+  Python newer than every tier the language packs have (Python 3.15 today).
+  They failed in every language with `PackNotFoundError`; the pack loader in
+  `legesher-i18n` now serves each pack's newest tier to a newer interpreter.
 
 ## [0.27.0] - 2026-11-18
 
