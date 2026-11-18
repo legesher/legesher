@@ -14,6 +14,10 @@ Production-ready translation engine for multilingual Python with two complete tr
   strict xfails in `libs/mcp/tests/test_roundtrip_sweep.py`
 - **RTL Languages**: Arabic, Hebrew, Persian, and Urdu translate like any other language. Values are stored in
   logical order with no bidi control characters, so display order is the terminal's or editor's to decide
+- **Native Punctuation**: the Arabic comma and semicolon (`،` `؛`) and the fullwidth comma, semicolon, colon and
+  parentheses (`，` `；` `：` `（` `）`) are read as their ASCII marks in code position, so a program typed on an
+  Arabic keyboard or a fullwidth input method runs. Strings and comments keep their marks. The engine reads these
+  marks and never writes them: display and the return leg of a round trip carry ASCII punctuation
 - **Fast**: both backends translate a small module in well under a millisecond; run
   `pytest libs/core/tests/benchmarks` to measure on your own hardware
 - **Graceful Degradation**: Handles incomplete code and syntax errors

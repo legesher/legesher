@@ -7,6 +7,7 @@ LLM translation.
 
 import logging
 import re
+import unicodedata
 
 from legesher_i18n.term_definitions import IMPLICIT_PARAMS as _IMPLICIT_PARAMS_SOURCE
 
@@ -492,7 +493,16 @@ class TranslatableExtractor:
         # usages (`self.x`) are skipped — the translator's dispatch order
         # (implicit_param_map before IdentifierMap) ensures correct
         # substitution at output time regardless of where they appear.
-        if text in IMPLICIT_PARAMS:
+        #
+        # Asked the way the translator asks: the mapper's exact-then-NFKC
+        # lookup covers the pack's own words in either direction, and the
+        # canonical names are compared NFKC-folded for a mapper built with
+        # no implicit-parameter table. A spelling the translator resolves
+        # must never reach the model as a user name.
+        if (
+            self.mapper.get_implicit_param(text) is not None
+            or unicodedata.normalize("NFKC", text) in IMPLICIT_PARAMS
+        ):
             return
 
         # Skip dunder/magic methods
