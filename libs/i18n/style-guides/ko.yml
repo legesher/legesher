@@ -40,7 +40,7 @@ script:
   direction: ltr
   constraints:
   - "Hangul blocks delimit syllables, not words; underscores between logical words aid readability in multi-word identifiers."
-  - "Digits: Korean natively uses fullwidth １２３; code uses ASCII 0-9 today. Native-digit support is a planned Legesher feature (currently ASCII-only)."
+  - "Digits: a Korean input method in fullwidth mode types １２３; code uses ASCII 0-9. Legesher does not read fullwidth digits as numbers, so numeric literals are typed in ASCII. Identifiers keep ASCII digits."
 
 # Formatting rules.
 formatting:
