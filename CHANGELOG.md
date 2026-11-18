@@ -17,6 +17,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   tracebacks render from the pack with no change in output. The CPython
   catalog that ships in `legesher-i18n` now holds only the English side. [CORE-2630]
 
+### Fixed
+
+- **i18n**, **legesher**: `legesher run`, `translate`, the git filter and
+  localized tracebacks work on Python 3.15. A Python newer than every tier of a
+  language pack is served the pack's newest tier, so words that 3.15 added stay
+  in English until the packs carry a 3.15 tier.
+
 ## [0.27.0] - 2026-11-18
 
 ### Fixed
