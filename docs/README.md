@@ -42,6 +42,25 @@ All commands are run from the `docs/` directory:
 | `pnpm build`     | Build production site to `./dist/`           |
 | `pnpm preview`   | Preview production build locally             |
 
+## Account link
+
+The site shows one link to the account app: "Create an account" for everyone, and "Your account" for a
+reader who is signed in at app.legesher.io.
+
+- Both links are in every page's static HTML (`src/components/AccountLink.astro`) and the sign-up link
+  shows by default, so the page works without JavaScript and on preview deployments.
+- An inline head script (`src/account/marker-script.mjs`) reads the sign-in marker cookie the account
+  app leaves on legesher.io and marks `<html data-account="signed-in">`. The site loads no sign-in
+  code, makes no request and sets no cookie for this. The privacy page describes it; keep the two in
+  step.
+- Labels per locale live in `src/account/labels.json`. A locale without labels fails the build.
+- The link is in the header bar in a wide window (77rem and up) and under the sidebar in anything
+  narrower, which is the menu on a phone. Pages without a sidebar (the home page and the 404 page)
+  show it only in a wide window.
+- A preview deployment or `localhost` cannot see the legesher.io cookie, so it always shows the sign-up
+  link. To see the signed-in state locally, set a cookie named `__client_uat` to `1` for `localhost` in
+  the browser's developer tools. `tests/account-link.spec.ts` covers both states.
+
 ## Adding Content
 
 - Add new pages as `.md` or `.mdx` files in `src/content/docs/`

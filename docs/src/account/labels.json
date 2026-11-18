@@ -1,0 +1,5 @@
+{
+  "en": { "signedOut": "Create an account", "signedIn": "Your account" },
+  "es": { "signedOut": "Crear una cuenta", "signedIn": "Tu cuenta" },
+  "ar": { "signedOut": "إنشاء حساب", "signedIn": "حسابك" }
+}

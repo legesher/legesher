@@ -9,7 +9,13 @@ from pathlib import Path
 
 from legesher_i18n.pack_loader import LanguagePackLoader
 from tests.interpreter_gaps import NEEDS_UNICODE_15_1
-from legesher_i18n.schema_validator import SchemaValidator
+from tests import language_packs_root, pack_file
+from legesher_i18n.language_registry import get_active_language_codes
+from legesher_i18n.schema_validator import (
+    LanguagePackMetadata,
+    LanguagePackSchema,
+    SchemaValidator,
+)
 from legesher_i18n.exceptions import (
     CircularInheritanceError,
     MaxInheritanceDepthError,
@@ -826,41 +832,107 @@ class TestJapaneseInterpreterTiers:
         )
 
 
-def test_no_xid_313_only_char_below_the_declared_floor():
-    """No pack value may contain a character that only became a valid identifier
-    on CPython 3.13 while the pack declares a floor below 3.13 — that value would
-    ``SyntaxError`` on the interpreter it targets.
+def _expected_tier_files() -> list[tuple[str, Path]]:
+    """Every tier file this checkout must ship, as ``(language, path)``.
 
-    Generalises the CORE-1521 Sinhala fix to every shipped pack: the deterministic
-    static guarantee that each tier parses on its own interpreter.
-
-    The character set is the validator's own, not a local copy. A local
-    ``{ZWJ, ZWNJ}`` literal is what let ``ja`` ship ``U+30FB KATAKANA MIDDLE DOT``
-    under a 3.10 floor with this test green (CORE-1905): the test asserted the
-    two characters its author knew about rather than the rule.
+    Anchored to the registry and the version index, not to discovery: discovery
+    prefers installed packs over this checkout, and a walk that found nothing
+    would let the floor test pass over zero files.
     """
-    xid_313_only = SchemaValidator._XID_ONLY_FROM_CPYTHON_313
-    loader = LanguagePackLoader()
-    offenders = []
-    for code, _name in loader.list_available_languages("python"):
-        for version in ("3.10", "3.11", "3.12", "3.13", "3.14"):
-            try:
-                pack = loader.load(
-                    code, "python", version, enforce_min_interpreter=False
-                )
-            except Exception:
-                continue
-            floor = pack.metadata.python_version_min if pack.metadata else None
-            try:
-                below_313 = floor is None or tuple(
-                    int(p) for p in floor.split(".")[:2]
-                ) < (3, 13)
-            except ValueError:
-                below_313 = True
-            if not below_313:
-                continue
-            for section in ("keywords", "builtins", "exceptions", "implicit_params"):
-                for key, value in (getattr(pack, section, {}) or {}).items():
-                    if any(ch in xid_313_only for ch in value):
-                        offenders.append((code, version, key, value))
-    assert offenders == [], f"XID-3.13-only chars below a <3.13 floor: {offenders}"
+    index = yaml.safe_load(
+        (language_packs_root() / "version-index.yml").read_text(encoding="utf-8")
+    )
+    versions = sorted(
+        index["python_versions"], key=lambda v: tuple(map(int, v.split(".")))
+    )
+    return [
+        (code, pack_file(code, version))
+        for code in get_active_language_codes()
+        for version in versions
+    ]
+
+
+def _raw_tier_schema(path: Path) -> LanguagePackSchema:
+    """One tier file as the gate sees it, WITHOUT loading it.
+
+    Loading validates identifiers with the running interpreter, so on 3.13 a
+    value that needs 3.14 would fail to load, and a test that skipped what it
+    could not load would wave it through. The raw file carries the tier's own
+    values and its own declared floor, which is exactly what has to agree.
+    """
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    fields = {
+        name: data[name]
+        for name in LanguagePackSchema.model_fields
+        if name in data and name != "metadata"
+    }
+    metadata = data.get("metadata")
+    if isinstance(metadata, dict):
+        fields["metadata"] = LanguagePackMetadata.model_construct(**metadata)
+    return LanguagePackSchema.model_construct(**fields)
+
+
+def test_no_identifier_character_newer_than_its_tiers_floor():
+    """No tier may carry a character its own declared floor cannot parse.
+
+    The rule is one rule per CPython release: a value that needs release V (a
+    character added to Python's identifiers in V: 3.13, 3.14 or 3.15) may only
+    appear in a tier whose ``python_version_min`` is at least V. A tier is
+    loaded on top of the tiers it extends, so each tier is judged on what it
+    resolves to (its own values over the ones it inherits) against its own
+    declared floor, with the validator's own gate. A 3.15-only character in a
+    3.14 tier fails exactly as a 3.13-only character in a 3.10 tier does, and
+    so does a tier that declares a floor below one it inherits values from.
+
+    It generalises the CORE-1521 Sinhala fix to every shipped pack. The tables
+    are the validator's own: a local copy of the characters someone knew
+    about is what let ``ja`` ship U+30FB under a 3.10 floor (CORE-1905).
+    """
+    files = _expected_tier_files()
+    offenders, evaluated = [], 0
+    # Per language, the values of the tiers read so far. The files come oldest
+    # tier first, and every tier extends the one before it.
+    inherited: dict[str, dict[str, dict[str, str]]] = {}
+    for code, path in files:
+        try:
+            schema = _raw_tier_schema(path)
+            merged = inherited.setdefault(code, {})
+            for section, key, value in SchemaValidator._iter_translation_items(schema):
+                merged.setdefault(section, {})[key] = value
+            effective = schema.model_copy(
+                update={section: dict(values) for section, values in merged.items()}
+            )
+            findings = SchemaValidator.check_min_interpreter_identifier(effective, code)
+        except (yaml.YAMLError, AttributeError, TypeError, ValueError) as exc:
+            # Name the file: a tier that cannot be read is a failure here, not
+            # a bare parser error with no path.
+            offenders.append(f"{code} {path.name}: cannot be read as a tier: {exc!r}")
+            continue
+        for finding in findings:
+            offenders.append(
+                f"{code} {path.name} {finding.location}: {finding.message}"
+            )
+        evaluated += 1
+    assert offenders == [], "\n".join(offenders)
+    # Every expected file was read and judged; none was skipped on the way.
+    assert evaluated == len(files)
+
+
+def test_the_floor_test_reads_every_shipped_tier_file():
+    # Guards the test above against a vacuous pass: every active language has
+    # every indexed tier on disk in this checkout, and nothing else ships.
+    files = _expected_tier_files()
+    assert len(files) == len(get_active_language_codes()) * len(
+        yaml.safe_load(
+            (language_packs_root() / "version-index.yml").read_text(encoding="utf-8")
+        )["python_versions"]
+    )
+    missing = [f"{code} {path.name}" for code, path in files if not path.is_file()]
+    assert missing == [], missing
+    shipped = {
+        path
+        for path in language_packs_root().glob("*/legesher_i18n_python_*/packs/*.yml")
+    }
+    assert shipped == {path for _, path in files}, sorted(
+        str(p) for p in shipped ^ {path for _, path in files}
+    )
