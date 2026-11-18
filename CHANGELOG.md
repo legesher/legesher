@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-11-18
+
 ### Added
 
 - **mcp**: `libs/mcp/Dockerfile` builds the published `legesher-mcp` into a
@@ -1663,11 +1665,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 | Package                  | Version | Changed? |
 | ------------------------ | ------- | -------- |
-| legesher-core            | 0.25.1  | Yes      |
-| legesher-i18n            | 0.25.1  | Yes      |
-| legesher (CLI)           | 0.25.1  | —        |
+| legesher-core            | 0.26.0  | Yes      |
+| legesher-i18n            | 0.26.0  | Yes      |
+| legesher (CLI)           | 0.26.0  | —        |
 | legesher-language-server | 0.3.0   | Yes      |
-| legesher-vscode          | 0.1.7   | —        |
+| legesher-vscode          | 0.1.8   | —        |
 
 ### Removed
 
