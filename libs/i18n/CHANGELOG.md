@@ -16,12 +16,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   over 3.10, so a value that needs 3.14 or 3.15 passed in a tier below. There is
   now one measured table per release, and the rule is one rule: a value that
   needs release V fails in any tier whose `python_version_min` is below V. The
-  shipped-pack test reads every tier file against its own floor with the gate
-  itself instead of loading the pack, which on an older interpreter skipped
-  exactly the files it should have flagged. `interpreter_needed_for_identifier`
+  shipped-pack test judges what every tier file resolves to (its own values over
+  the ones it inherits) against its declared floor with the gate itself, instead
+  of loading the pack, which on an older interpreter skipped exactly the files
+  it should have flagged. `interpreter_needed_for_identifier`
   names the release a value needs, and the vocabulary publish gate uses it, so a
   recommended name with a 3.14 or 3.15 character is refused too. No shipped pack
-  carries such a character. [CORE-2832]
+  carries such a character.
 
 ## [0.26.0] - 2026-11-18
 

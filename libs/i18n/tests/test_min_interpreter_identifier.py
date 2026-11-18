@@ -2,17 +2,20 @@
 
 Synthetic fixtures. The Sinhala ZWJ trap: ``virama + ZWJ + consonant`` is a
 valid identifier on CPython 3.13+ (Unicode 15.1 XID) but a ``SyntaxError`` on
-3.10-3.12. The check is static (never calls ``compile()``): a value using a
-post-Unicode-15.0 XID character is flagged when the pack's declared minimum
-interpreter is < 3.13.
+3.10-3.12. The check is static (never calls ``compile()``), and it is one rule
+per CPython release: a value using a character that release V added to
+Python's identifiers (3.13, 3.14 or 3.15) is flagged when the pack's declared
+minimum interpreter is below V.
 
-The character set is the measured 3.10 -> 3.13 delta, not a denylist of the
-traps someone had already hit. ``TestTheXIDDeltaTable`` pins the table itself;
+Each character set is a measured delta between two interpreters, not a
+denylist of the traps someone had already hit. ``TestTheXIDDeltaTable`` pins
+the 3.13 table, ``TestOneDeltaPerRelease`` every table, and
 ``TestKatakanaMiddleDot`` is the case the old two-member denylist missed.
 """
 
 from __future__ import annotations
 
+import hashlib
 import sys
 import unicodedata
 
@@ -225,7 +228,7 @@ class TestTheXIDDeltaTable:
         assert offenders == [], f"listed but not XID_Continue here: {offenders[:10]}"
 
 
-# -- one measured delta per CPython release (CORE-2832) ------------------------
+# -- one measured delta per CPython release -----------------------------------
 
 #: Each release's range table, its measured size, and the release it was
 #: measured against (the interpreter on which none of its members is valid).
@@ -235,6 +238,23 @@ RELEASES = {
     (3, 15): (_XID_RANGES_ADDED_BY_CPYTHON_315, 27, 4699, (3, 14)),
 }
 RUNNING = sys.version_info[:2]
+
+#: The content of each range table, pinned. The sizes above cannot tell one
+#: range from another of the same length, and only an interpreter at or past a
+#: release can confirm that release's members, so on an older interpreter this
+#: is what turns a changed range into a failure. A table changes only with a
+#: new measurement; update the digest in the same change.
+RANGE_DIGESTS = {
+    (3, 13): "2faac6ca03a77731",
+    (3, 14): "5d1242377a2d1f19",
+    (3, 15): "ddbec1f59e186d57",
+}
+
+
+def _digest(ranges: tuple[tuple[int, int], ...]) -> str:
+    text = ",".join(f"{first:X}-{last:X}" for first, last in ranges)
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
+
 
 #: A character first accepted by each release, from its table: U+088F ARABIC
 #: LETTER NOON WITH RING ABOVE (Unicode 17, CPython 3.15) and U+0897 ARABIC
@@ -265,6 +285,13 @@ class TestOneDeltaPerRelease:
             previous_last = last
         assert len(ranges) == n_ranges
         assert len(_XID_ADDED_BY_CPYTHON[release]) == n_points
+
+    @pytest.mark.parametrize("release", sorted(RELEASES), ids=_label)
+    def test_the_table_content_is_the_measured_one(self, release) -> None:
+        assert _digest(RELEASES[release][0]) == RANGE_DIGESTS[release], (
+            f"the CPython {_label(release)} range table changed; re-measure it on "
+            "real interpreters before updating the digest"
+        )
 
     def test_no_character_is_claimed_by_two_releases(self) -> None:
         seen: dict[str, tuple[int, int]] = {}
@@ -330,12 +357,16 @@ class TestTheGateIsOneRulePerRelease:
     """A value that needs release V fails in any tier whose floor is below V."""
 
     @pytest.mark.parametrize(
-        ("char", "release"),
-        [(ZWJ, "3.13"), (ONLY_FROM_314, "3.14"), (ONLY_FROM_315, "3.15")],
+        ("char", "release", "unicode_version"),
+        [
+            (ZWJ, "3.13", "15.1"),
+            (ONLY_FROM_314, "3.14", "16.0"),
+            (ONLY_FROM_315, "3.15", "17.0"),
+        ],
         ids=["3.13", "3.14", "3.15"],
     )
     def test_a_value_is_refused_one_release_below_what_it_needs(
-        self, char, release
+        self, char, release, unicode_version
     ) -> None:
         below = f"3.{int(release.split('.')[1]) - 1}"
         value = f"ب{char}ب"
@@ -346,7 +377,11 @@ class TestTheGateIsOneRulePerRelease:
         assert findings[0].location == "keywords.def"
         assert f"U+{ord(char):04X}" in message
         assert f"CPython {release}" in message
+        assert f"Unicode {unicode_version}" in message
         assert f"python_version_min to '{release}'" in message
+        # An interpreter older than the release has no name for the character;
+        # the finding then gives the code point alone.
+        assert "unnamed" not in message
 
     @pytest.mark.parametrize(
         ("char", "release"),

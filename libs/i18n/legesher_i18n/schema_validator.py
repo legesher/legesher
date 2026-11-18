@@ -280,8 +280,9 @@ _XID_RANGES_ADDED_BY_CPYTHON_314: tuple[tuple[int, int], ...] = (
 )
 
 # 3.14.7 -> 3.15.2: 27 ranges, 4,699 codepoints. Arabic letters and marks,
-# the Telugu and Kannada archaic shrii, Sharada vowel signs, four new scripts
-# (Sidetic, Tolong Siki, Beria Erfe, Tai Yo), and CJK Extension J.
+# the Telugu and Kannada archaic shrii, combining diacritics, Latin Extended-D
+# letters, Sharada vowel signs, four new scripts (Sidetic, Tolong Siki, Beria
+# Erfe, Tai Yo), Tangut ideographs and components, and CJK Extension J.
 _XID_RANGES_ADDED_BY_CPYTHON_315: tuple[tuple[int, int], ...] = (
     (0x088F, 0x088F),  # ARABIC LETTER NOON WITH RING ABOVE
     (0x0C5C, 0x0C5C),  # TELUGU ARCHAIC SHRII
@@ -603,7 +604,7 @@ class LanguagePackSchema(BaseModel):
         recommended variable name takes the vocabulary gate,
         :func:`legesher_i18n.selection.vocabulary_value_error`, which carries
         the identifier check PLUS the rules a translation does not (no
-        trailing ``*``, no CPython-3.13-only XID character,
+        trailing ``*``, no identifier character newer than the 3.10 floor,
         normalization-stability with the SARA-AM allowance) — and it is the
         SAME function the database write boundary calls, so pack-load and
         the DB gate cannot return different verdicts for one value. They
@@ -1792,6 +1793,10 @@ class SchemaValidator:
     # around. ZWJ (U+200D) is the Sinhala conjunct case and ZWNJ (U+200C) the
     # Persian/Urdu one; U+30FB KATAKANA MIDDLE DOT belongs here for exactly the
     # same reason and a set naming only the first two waved it through.
+    #
+    # The gate below no longer reads this name: it reads every release's table
+    # through ``interpreter_needed_for_identifier``. The name stays for the
+    # callers that still tier on the 3.13 boundary alone.
     _XID_ONLY_FROM_CPYTHON_313: frozenset[str] = _XID_CHARS_ADDED_BY_CPYTHON_313
 
     @staticmethod
@@ -2201,8 +2206,9 @@ class SchemaValidator:
           identifiers at parse time, so a fullwidth ``ｉ`` would silently
           bind ``i``. Same SARA-AM allowance as :meth:`check_normalization`
           (CORE-1514): NFC-stable, sara-am-only deltas pass.
-        * **a 3.13-only XID character** (error) — it would not parse on the
-          3.10 floor, and advice has no version overlay to be tiered into.
+        * **an identifier character CPython 3.13, 3.14 or 3.15 added**
+          (error) — it would not parse on the 3.10 floor, and advice has no
+          version overlay to be tiered into.
         * **a live Python keyword** (error) — ``for`` as a variable name is
           a SyntaxError. Checked against ``keyword.kwlist`` only: the soft
           keywords are excluded on purpose, because ``_`` is one of them and
@@ -2354,8 +2360,8 @@ class SchemaValidator:
         Two of the aggregated checks are Python-specific and are gated by the
         ``run_min_interpreter`` / ``run_cross_section`` toggles (CORE-1372):
 
-        * ``check_min_interpreter_identifier`` guards the CPython 3.13 XID trap —
-          meaningless for a non-CPython runtime.
+        * ``check_min_interpreter_identifier`` guards the per-release CPython
+          XID trap (3.13, 3.14, 3.15), meaningless for a non-CPython runtime.
         * the cross-section collision pass inside ``_strict_duplicate_findings``
           guards CPython's flat ``tokenize`` dispatch; JavaScript's acorn AST is
           category-aware, so cross-partition homonyms are legal there (D4).

@@ -156,7 +156,7 @@ class TestPublishGate:
         # needs; advice has no overlay to live in, so it must parse on 3.10.
         # The verdict is static (the measured per-release tables), so it names
         # the release on every interpreter, including one too old to read the
-        # character at all (CORE-2832).
+        # character at all.
         error = vocabulary_value_error(
             "variable_conventions", "loop_index", "a" + chr(char) + "b"
         )

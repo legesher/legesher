@@ -179,12 +179,13 @@ def vocabulary_value_error(
           which (called without a source term) would otherwise
           short-circuit on ``SOFT_KEYWORDS`` and accept the literal
           ``except*`` that the pack-load validator rejects.
-        * **No CPython-3.13-only XID character.** Pack values get that
-          guarantee from the exporter's interpreter-floor tiering, which
-          strips such characters for the pre-3.13 files. Tiering is not
-          available here — a recommended NAME has no version-overlay file
-          to live in — so the character is refused at the write boundary
-          instead.
+        * **No identifier character newer than the 3.10 floor.** That is any
+          character CPython 3.13, 3.14 or 3.15 added; the error names the
+          release. Pack values with a 3.13 character get that guarantee
+          from the exporter's interpreter-floor tiering, which strips such
+          characters for the pre-3.13 files. Tiering is not available here
+          (a recommended NAME has no version-overlay file to live in), so the
+          character is refused at the write boundary instead.
         * **Normalization-stable.** Python NFKC-folds identifiers at parse
           time, so a value like fullwidth ``ｉ`` would silently bind ``i``
           — the advice a reader sees would not be the identifier the

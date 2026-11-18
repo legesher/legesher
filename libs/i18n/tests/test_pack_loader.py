@@ -875,12 +875,14 @@ def _raw_tier_schema(path: Path) -> LanguagePackSchema:
 def test_no_identifier_character_newer_than_its_tiers_floor():
     """No tier may carry a character its own declared floor cannot parse.
 
-    The rule is one rule per CPython release (CORE-2832): a value that needs
-    release V (a character added to Python's identifiers in V: 3.13, 3.14 or
-    3.15) may only appear in a tier whose ``python_version_min`` is at least
-    V. Each tier file is checked against its own floor with the validator's
-    own gate, so a 3.15-only character in a 3.14 tier fails exactly as a
-    3.13-only character in a 3.10 tier does.
+    The rule is one rule per CPython release: a value that needs release V (a
+    character added to Python's identifiers in V: 3.13, 3.14 or 3.15) may only
+    appear in a tier whose ``python_version_min`` is at least V. A tier is
+    loaded on top of the tiers it extends, so each tier is judged on what it
+    resolves to (its own values over the ones it inherits) against its own
+    declared floor, with the validator's own gate. A 3.15-only character in a
+    3.14 tier fails exactly as a 3.13-only character in a 3.10 tier does, and
+    so does a tier that declares a floor below one it inherits values from.
 
     It generalises the CORE-1521 Sinhala fix to every shipped pack. The tables
     are the validator's own: a local copy of the characters someone knew
@@ -888,10 +890,25 @@ def test_no_identifier_character_newer_than_its_tiers_floor():
     """
     files = _expected_tier_files()
     offenders, evaluated = [], 0
+    # Per language, the values of the tiers read so far. The files come oldest
+    # tier first, and every tier extends the one before it.
+    inherited: dict[str, dict[str, dict[str, str]]] = {}
     for code, path in files:
-        for finding in SchemaValidator.check_min_interpreter_identifier(
-            _raw_tier_schema(path), code
-        ):
+        try:
+            schema = _raw_tier_schema(path)
+            merged = inherited.setdefault(code, {})
+            for section, key, value in SchemaValidator._iter_translation_items(schema):
+                merged.setdefault(section, {})[key] = value
+            effective = schema.model_copy(
+                update={section: dict(values) for section, values in merged.items()}
+            )
+            findings = SchemaValidator.check_min_interpreter_identifier(effective, code)
+        except (yaml.YAMLError, AttributeError, TypeError, ValueError) as exc:
+            # Name the file: a tier that cannot be read is a failure here, not
+            # a bare parser error with no path.
+            offenders.append(f"{code} {path.name}: cannot be read as a tier: {exc!r}")
+            continue
+        for finding in findings:
             offenders.append(
                 f"{code} {path.name} {finding.location}: {finding.message}"
             )
