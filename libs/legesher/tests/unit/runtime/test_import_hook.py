@@ -1411,7 +1411,9 @@ class TestBytecodeCache:
 
         module, stats = self._import(tmp_path, "cache_first")
         assert module.value() == 41
-        assert module.__cached__ == tagged, module.__cached__
+        # spec.cached, not __cached__: Python 3.15 stopped setting the module
+        # attribute, and spec.cached is what the import system reads.
+        assert module.__spec__.cached == tagged, module.__spec__.cached
         assert stats == {"hits": 0, "misses": 1, "writes": 1, "write_errors": 0}
         assert os.listdir(os.path.dirname(tagged)) == [os.path.basename(tagged)]
         assert not os.path.exists(stock), stock

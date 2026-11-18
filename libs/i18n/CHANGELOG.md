@@ -31,6 +31,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   expose it, so a renderer can tell a line number from a value it must copy
   verbatim. [CORE-2630]
 
+### Fixed
+
+- On a Python newer than every tier a pack has, `LanguagePackLoader.load` serves
+  that pack's newest tier instead of raising `PackNotFoundError`. On Python 3.15,
+  with packs up to 3.14, the 3.14 tier is served. Tiers only grow, so a newer
+  interpreter parses every older one. The newest tier is the pack's own, not the
+  newest across all packs, and the rule stays within one major version. It is
+  logged once per process, at INFO, naming the requested and the served tier.
+  The rule never goes downward: a request below a pack's floor raises
+  `UnsupportedInterpreterError` naming the floor, where it used to raise a
+  `PackNotFoundError` that listed every language.
+
 ## [0.27.0] - 2026-11-18
 
 ### Added
