@@ -137,7 +137,8 @@ test in `tests/test_new_language_onboarding.py`:
 3. Values must be NFC/NFKC-stable.
 4. No illegal format/bidi characters (only the policy's allow-listed ones).
 5. No value may equal a live Python keyword/builtin (except its own target).
-6. A value with an identifier character a Python release added must declare that release as `python_version_min` or newer (ZWJ-bearing values: `>= 3.13`).
+6. A value with an identifier character a Python release added must declare that release as
+   `python_version_min` or newer (ZWJ-bearing values: `>= 3.13`).
 7. No duplicate targets (except the intentional `keywords.type == builtins.type`).
 8. Add a coverage row by ensuring `tests/test_script_policy_coverage.py` passes
    (it asserts every shipped pack code has a policy — a missing entry fails CI).
