@@ -1,0 +1,9 @@
+---
+// Starlight's social icons, followed by the account link. The header's only
+// language selector is Starlight's own, for the page language; the code
+// language is chosen on each localized sample (LocalizedCode.astro).
+import Default from '@astrojs/starlight/components/SocialIcons.astro';
+import AccountLink from './AccountLink.astro';
+---
+<Default><slot /></Default>
+<AccountLink placement="header" />
