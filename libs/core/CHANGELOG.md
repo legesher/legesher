@@ -41,6 +41,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `punctuation`, and a verdict line for source without native marks reads as
   before.
 
+### Fixed
+
+- An implicit parameter (`self`, `cls`) typed in another Unicode form of the
+  pack's word translates as that word, in the token and tree-sitter backends,
+  as keywords and builtins already do. This covers decomposed text (as macOS
+  produces), fullwidth letters, presentation forms and ligatures, all of which
+  Python reads as the same name. Before, the tree-sitter backend left a
+  decomposed spelling untranslated and both backends left a compatibility
+  spelling, so the English form held a second name.
+- The full (model-backed) translation no longer hands such a spelling of an
+  implicit parameter to the model as a user-defined name: the extractor asks
+  the same lookup the translators use.
+
 ## [0.25.1] - 2026-11-03
 
 ## [0.25.0] - 2026-11-03
