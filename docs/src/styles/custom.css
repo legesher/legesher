@@ -4,3 +4,59 @@
 	--sl-font: 'Noto Sans Variable', sans-serif;
 	--sl-font-system: 'Noto Sans Variable', sans-serif;
 }
+
+/*
+ * One palette for code on the site: the colours the ordinary code blocks get
+ * from Expressive Code's Night Owl themes, as rendered (after its contrast
+ * adjustment). The localized sample (LocalizedCode.astro) and the playground
+ * editor (src/playground/editor.ts) read these, so all code looks the same.
+ * Dark is Starlight's default theme; light is [data-theme='light'].
+ */
+:root {
+	--lg-code-bg: #23262f;
+	--lg-code-fg: #d6deeb;
+	--lg-code-keyword: #c792ea;
+	--lg-code-builtin: #c5e478;
+	--lg-code-function: #82aaff;
+	--lg-code-class: #ffcb8b;
+	--lg-code-self: #7fdbca;
+	--lg-code-atom: #ff6a83;
+	--lg-code-string: #ecc48d;
+	--lg-code-number: #f78c6c;
+	--lg-code-comment: #919f9f;
+	--lg-code-punctuation: #d9f5dd;
+}
+:root[data-theme='light'] {
+	--lg-code-bg: #f6f7f9;
+	--lg-code-fg: #403f53;
+	--lg-code-keyword: #8844ae;
+	--lg-code-builtin: #3b61b0;
+	--lg-code-function: #3b61b0;
+	--lg-code-class: #111111;
+	--lg-code-self: #096e72;
+	--lg-code-atom: #a24848;
+	--lg-code-string: #984e4d;
+	--lg-code-number: #aa0982;
+	--lg-code-comment: #5f636f;
+	--lg-code-punctuation: #111111;
+}
+
+/*
+ * Badges (the sidebar's "review" marker) use the text font: Starlight's
+ * monospace with letter spacing breaks the joining of Arabic letters.
+ */
+.sl-badge {
+	font-family: var(--sl-font);
+	letter-spacing: normal;
+}
+
+/*
+ * In the sidebar the badge is a status label, not a warning: one quiet grey
+ * pill, the same on every entry, including the page you are reading (where
+ * Starlight would otherwise switch it to an outline in the link's colours).
+ */
+#starlight__sidebar .sl-badge {
+	background-color: var(--sl-color-gray-6);
+	border-color: var(--sl-color-gray-5);
+	color: var(--sl-color-gray-2);
+}

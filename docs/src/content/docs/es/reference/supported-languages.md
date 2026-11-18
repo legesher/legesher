@@ -4,7 +4,7 @@ description: Los 56 idiomas compatibles con Legesher para programar en tu idioma
 sidebar:
   badge:
     text: revisión
-    variant: caution
+    variant: default
 ---
 
 Legesher es actualmente compatible con **56 idiomas** para el desarrollo en Python. Cada paquete de idioma incluye

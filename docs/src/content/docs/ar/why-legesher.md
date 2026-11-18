@@ -4,7 +4,7 @@ description: لماذا نبني أدوات برمجة متعددة اللغات
 sidebar:
   badge:
     text: بحاجة لمراجعة
-    variant: caution
+    variant: default
 ---
 
 ## السبب

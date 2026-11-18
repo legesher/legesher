@@ -4,7 +4,7 @@ description: Por qué construimos herramientas de programación multilingües, y
 sidebar:
   badge:
     text: revisión
-    variant: caution
+    variant: default
 ---
 
 ## La razón de ser

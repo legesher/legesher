@@ -75,6 +75,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   again. Astro 7's default HTML compression had dropped the space and put each
   badge against its label; the docs build now collapses whitespace to one
   space, as it did on Astro 6.
+- **docs**: code is coloured one way across the docs site. The localized
+  sample and the playground editor use the palette of the ordinary code
+  blocks, light and dark, so every token is readable (at least 4.5:1); before,
+  the sample's yellow and green fell below 2:1 in light mode and the
+  playground kept its light colours in dark mode. The sidebar review badges
+  are one quiet grey label in the text font, so Arabic letters join.
 
 ## [0.27.0] - 2026-11-18
 

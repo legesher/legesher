@@ -13,6 +13,46 @@ import { EditorView, keymap } from "@codemirror/view";
 import { EditorState, Prec, type Extension } from "@codemirror/state";
 import { basicSetup } from "codemirror";
 import { python } from "@codemirror/lang-python";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { tags as t } from "@lezer/highlight";
+
+// The site's code palette (src/styles/custom.css: --lg-code-*), the one the
+// ordinary code blocks use. The variables switch with the light and dark
+// themes, so the editor follows the page. basicSetup's default style stays as
+// a fallback only; this one wins. The localized highlight layer (highlight.ts)
+// asks the active style for its classes, so localized words get these too.
+const palette = HighlightStyle.define([
+  { tag: [t.keyword, t.controlKeyword, t.definitionKeyword, t.moduleKeyword, t.operatorKeyword], color: "var(--lg-code-keyword)" },
+  { tag: [t.bool, t.null, t.atom], color: "var(--lg-code-atom)" },
+  { tag: t.self, color: "var(--lg-code-self)" },
+  { tag: [t.string, t.special(t.string)], color: "var(--lg-code-string)" },
+  { tag: t.number, color: "var(--lg-code-number)" },
+  { tag: t.comment, color: "var(--lg-code-comment)" },
+  // Definition names only. Call names stay in the text colour: the grammar
+  // does not know localized keywords, so it reads `saludar(nombre)` after
+  // `definir` as a call, and a call colour would sit inside the definition
+  // colour the localized layer gives that name.
+  { tag: t.function(t.definition(t.variableName)), color: "var(--lg-code-function)" },
+  { tag: [t.className, t.definition(t.className)], color: "var(--lg-code-class)" },
+  { tag: [t.punctuation, t.paren, t.squareBracket, t.brace, t.separator], color: "var(--lg-code-punctuation)" },
+  // Plain names and operators take the editor's text colour by inheritance;
+  // styling them here would add spans the localized layer does not mirror.
+]);
+
+const surface = EditorView.theme({
+  "&": { backgroundColor: "var(--lg-code-bg)", color: "var(--lg-code-fg)" },
+  ".cm-content": { caretColor: "var(--lg-code-fg)" },
+  ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--lg-code-fg)" },
+  ".cm-gutters": {
+    backgroundColor: "var(--lg-code-bg)",
+    color: "var(--lg-code-comment)",
+    borderRight: "1px solid var(--sl-color-gray-5)",
+  },
+  ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "rgba(127, 127, 127, 0.1)" },
+  "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, ::selection": {
+    backgroundColor: "rgba(130, 170, 255, 0.3)",
+  },
+});
 
 import { editorDirection, type TextDirection } from "./direction";
 import { siteTheme } from "./theme";
@@ -75,6 +115,8 @@ export function mountEditor({
       extensions: [
         basicSetup,
         python(),
+        syntaxHighlighting(palette),
+        surface,
         runKey,
         changeListener,
         EditorState.tabSize.of(4),
