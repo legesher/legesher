@@ -198,15 +198,18 @@ def test_install_sh_passes_shellcheck() -> None:
     shutil.which("pwsh") is None, reason="PowerShell (pwsh) is not installed"
 )
 def test_install_ps1_parses() -> None:
+    # The path goes in through the environment: `pwsh -Command` appends any
+    # further arguments to the command text instead of binding them to $args.
     script = (
         "$errors = $null; "
-        "[System.Management.Automation.Language.Parser]::ParseFile($args[0], [ref]$null, [ref]$errors) | Out-Null; "
+        "[System.Management.Automation.Language.Parser]::ParseFile($env:LEGESHER_TEST_PS1, [ref]$null, [ref]$errors) | Out-Null; "
         "if ($errors) { $errors | ForEach-Object { $_.Message }; exit 1 }"
     )
     result = subprocess.run(
-        ["pwsh", "-NoProfile", "-Command", script, str(PS1)],
+        ["pwsh", "-NoProfile", "-NonInteractive", "-Command", script],
         capture_output=True,
         text=True,
+        env={**os.environ, "LEGESHER_TEST_PS1": str(PS1)},
     )
     assert result.returncode == 0, result.stdout + result.stderr
 
