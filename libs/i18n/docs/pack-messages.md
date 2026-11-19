@@ -43,8 +43,16 @@ rendering belongs to the pack.
   - `src`: twelve lowercase hex digits. Always write it quoted. Unquoted,
     some values read as numbers (`123456789012`, `0b0101010101`, or `1234567890e1`
     to a YAML 1.2 reader such as the editor extension's).
+- An entry may also carry `status`, the review rung of the translation:
+  `machine`, `experimental`, `reviewed` or `official`. An entry with no
+  `status` is `machine`.
 - An entry may carry other fields, under any field name. A pack load does
-  not examine them.
+  not examine any field beyond `text` and `src`.
+
+`src` is the first twelve hex digits of the SHA-256 of the English template,
+NFC-normalized and encoded as UTF-8 (`legesher_i18n.pack_messages.message_fingerprint`).
+The matcher is not part of it, so a fix to how a message is recognized keeps
+every translation of its wording valid.
 
 ## What a pack load checks
 
@@ -60,12 +68,90 @@ Loading a pack checks the **shape** of the section, with
 A violation fails the load and names the path of the offending value, as any
 other malformed section does.
 
-A load does **not** decide whether an entry is usable: whether its key is a
-known message, whether `src` matches the English template, whether its
-placeholders agree. Those are decided where the catalog is read, and an entry
-that fails there is skipped. The message then prints as the interpreter
-printed it, and the pack still loads. One unusable message must not take a
-pack's keywords and exception names down with it.
+A load does **not** decide whether an entry is usable. That is decided where
+the catalog is read, and an entry that fails there is skipped. The message
+then prints as the interpreter printed it, and the pack still loads. One
+unusable message must not take a pack's keywords and exception names down
+with it.
+
+## When an entry is used
+
+`legesher_i18n.messages.load_catalog` pairs each entry with the English
+template that applies to the running interpreter for the entry's key, and
+uses the entry only when `legesher_i18n.pack_messages.entry_problem` finds
+nothing wrong:
+
+1. The entry carries only `text`, `src` and `status`, and `status`, when
+   present, is one of the four rungs. An entry with any other field is not
+   used: a field a later release adds may change what the text means, and a
+   reader that does not know it must not guess. The text carries no control
+   character (NUL, or the ESC that starts a terminal escape sequence), no line
+   or paragraph separator and no lone surrogate: it is written to a
+   terminal. Joiners such as ZWJ are
+   allowed.
+2. `src` is the fingerprint of that English template. This is what keeps a
+   translation off a wording it was not written for. Python 3.11 reworded
+   "local variable 'x' referenced before assignment" under the same key and
+   with the same placeholder, so nothing else tells a translation of the old
+   sentence from a translation of the new one. The same holds when an
+   English template is corrected.
+3. The placeholders in `text` are exactly the ones the English template
+   declares. A brace that is not a `{name}` placeholder is plain text.
+4. `text` is empty only when the English template is empty.
+
+An entry whose key has no English template at this interpreter version is
+ignored. A pack may be newer than the catalog it is read with.
+
+A skipped entry is logged at debug level with its key and the reason.
+`legesher_i18n.messages.pack_message_problems` returns the same reasons for
+one pack and version, and reports an unknown key too. A test runs it over
+every shipped pack at every version, so an entry the join would skip fails
+the suite instead of leaving a message in English without notice.
+
+Two unused entries are expected and not reported, because a later pack file
+can add or override an entry but never remove one: the translation of an
+earlier wording of a message, inherited by the files after the one where
+Python reworded it, and the translation of a message Python stopped printing.
+So a pack may translate a message's earlier wording without its rewording.
+Such an entry is exempt only when the pack carried it unchanged at a version
+where that wording applied. An entry that names an earlier wording but first
+appears, or is rewritten, after that wording stopped applying is a stale
+fingerprint and is reported.
+
+## Where the catalog comes from
+
+In order:
+
+1. An explicit `db_path` is read alone.
+2. The default translations database, when it holds the catalog, is the
+   whole catalog: English and translations. Normally only a maintainer
+   checkout has one.
+3. Otherwise the English side comes from the seed that ships in the package,
+   and the translations from the pack for the locale at the running Python
+   version. When the pack has no file for that version (an interpreter
+   newer than the pack), its newest file below that version is read: every
+   entry is joined by fingerprint, so a message the newer Python reworded
+   stays in English and every other message stays translated. A pack that
+   carries messages for the implementation is the only source of
+   translations: a message it does not translate prints in English.
+4. When there is no pack for the locale, no pack file at or below that
+   Python version, the pack does not load, or it carries no messages for
+   the implementation, the translations in the seed are used. This step
+   exists while packs are gaining the section.
+
+The pack's minimum interpreter version is not enforced for this read. That
+guard protects translated identifiers that would not parse on an older
+interpreter, and rendering a message runs none.
+
+## Placeholder kinds
+
+On the English side, a placeholder may declare a `kind`: `line` for a line
+number, `count` for a count. A placeholder with no kind is copied verbatim,
+which includes numbers that are neither, such as an errno. The kind reaches
+a renderer as `MessageRule.slot_kinds` and `MessageRule.kind_of(name)`, so
+which values a renderer may reformat is data on the English side and a pack
+carries nothing for it. A database seeded before kinds existed takes them
+from the seed's row with the same key and wording.
 
 ## Version tiering
 

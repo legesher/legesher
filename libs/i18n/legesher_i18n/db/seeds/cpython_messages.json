@@ -31,7 +31,8 @@
     },
     {
      "name": "line",
-     "example": "7"
+     "example": "7",
+     "kind": "line"
     },
     {
      "name": "name",
@@ -62,7 +63,8 @@
     },
     {
      "name": "line",
-     "example": "7"
+     "example": "7",
+     "kind": "line"
     }
    ],
    "matcher": "^File \"(?P<file>[^\"]+)\", line (?P<line>\\d+)$",
@@ -206,7 +208,8 @@
    "placeholders": [
     {
      "name": "line",
-     "example": "3"
+     "example": "3",
+     "kind": "line"
     }
    ],
    "matcher": "^unterminated string literal \\(detected at line (?P<line>\\d+)\\)$",
@@ -228,7 +231,8 @@
    "placeholders": [
     {
      "name": "line",
-     "example": "3"
+     "example": "3",
+     "kind": "line"
     }
    ],
    "matcher": "^unterminated triple-quoted string literal \\(detected at line (?P<line>\\d+)\\)$",
@@ -536,11 +540,13 @@
     },
     {
      "name": "expected",
-     "example": "2"
+     "example": "2",
+     "kind": "count"
     },
     {
      "name": "given",
-     "example": "3"
+     "example": "3",
+     "kind": "count"
     }
    ],
    "matcher": "^(?P<func>.+)\\(\\) takes (?P<expected>\\d+) positional arguments? but (?P<given>\\d+) (?:was|were) given$",
@@ -566,7 +572,8 @@
     },
     {
      "name": "count",
-     "example": "1"
+     "example": "1",
+     "kind": "count"
     },
     {
      "name": "name",
@@ -596,7 +603,8 @@
     },
     {
      "name": "count",
-     "example": "2"
+     "example": "2",
+     "kind": "count"
     },
     {
      "name": "names",
@@ -856,7 +864,8 @@
    "placeholders": [
     {
      "name": "expected",
-     "example": "2"
+     "example": "2",
+     "kind": "count"
     }
    ],
    "matcher": "^too many values to unpack \\(expected (?P<expected>\\d+)\\)$",
@@ -878,11 +887,13 @@
    "placeholders": [
     {
      "name": "expected",
-     "example": "3"
+     "example": "3",
+     "kind": "count"
     },
     {
      "name": "got",
-     "example": "2"
+     "example": "2",
+     "kind": "count"
     }
    ],
    "matcher": "^not enough values to unpack \\(expected (?P<expected>\\d+), got (?P<got>\\d+)\\)$",
@@ -959,7 +970,8 @@
     },
     {
      "name": "line",
-     "example": "2"
+     "example": "2",
+     "kind": "line"
     }
    ],
    "matcher": "^expected an indented block after '(?P<statement>[^']+)' statement on line (?P<line>\\d+)$",

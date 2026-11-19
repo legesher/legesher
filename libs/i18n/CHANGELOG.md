@@ -9,6 +9,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **The error-message catalog reads translations from the language pack.**
+  With no translations database, `load_catalog` takes the English side from
+  the catalog seed and the translations from the pack's `messages` section
+  for the locale and Python version. An entry is used only when its `src`
+  matches the English template that applies, its placeholders agree and it
+  carries no field this release does not know; otherwise that message
+  prints as the interpreter printed it. A locale whose pack carries no
+  messages still reads the translations in the seed, so Spanish and Arabic
+  render as before. A database with the catalog still wins, and an explicit
+  `db_path` is still read alone. [CORE-2630]
+- **`pack_message_problems`** reports every pack message the catalog would
+  skip, with the reason, for one locale and Python version, except an entry
+  the pack carried unchanged at a version where its earlier wording applied:
+  a later pack file cannot remove an entry. [CORE-2630]
+- **Catalog placeholders can declare a kind.** A placeholder on the English
+  side may be marked `line` (a line number) or `count`; the CPython catalog
+  marks its twelve. `MessageRule.slot_kinds` and `MessageRule.kind_of`
+  expose it, so a renderer can tell a line number from a value it must copy
+  verbatim. [CORE-2630]
+
 ### Fixed
 
 - On a Python newer than every tier a pack has, `LanguagePackLoader.load` serves

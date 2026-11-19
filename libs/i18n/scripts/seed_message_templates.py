@@ -20,6 +20,9 @@ Validation before any write:
 - placeholder parity: every ``{name}`` used in the English template and each
   translation is declared in ``placeholders`` (after stripping ``{{ }}``
   escapes), and vice versa;
+- placeholder kind: an optional ``kind`` (``line`` or ``count``) marks a
+  placeholder whose value is a line number or a count, and such a
+  placeholder's example is a number;
 - matcher discipline (when a template carries a ``matcher``): the regex
   compiles, is anchored at both ends, its NAMED groups are exactly the
   declared placeholders, and it round-trips its own English template — the
@@ -56,12 +59,16 @@ sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from legesher_i18n.db.schema_v2 import connect  # noqa: E402
 
-# The stored-template bidi rule has one definition, in the package, because
-# the pack schema applies it too. Re-exported here for the scripts that
-# import it from this module.
+# The template rules have one definition, in the package, because the pack
+# schema and the catalog join apply them too. Re-exported here for the
+# scripts that import them from this module.
 from legesher_i18n.pack_messages import (  # noqa: E402, F401
+    ALLOWED_STATUSES,
     FORBIDDEN_BIDI,
+    PLACEHOLDER,
+    PLACEHOLDER_KINDS,
     bidi_controls,
+    used_placeholders,
 )
 
 try:  # imported as part of the `scripts` package (tests)
@@ -76,19 +83,6 @@ DEFAULT_SEED = (
     / "seeds"
     / "v8_jej_messages.json"
 )
-
-PLACEHOLDER = re.compile(r"\{(\w+)\}")
-
-#: The ``message_translations.status`` CHECK set, mirrored for callers that
-#: validate input files before writing (``add_message_locale.py`` reports a
-#: bad status as a named problem instead of a SQLite CHECK error).
-ALLOWED_STATUSES = ("machine", "experimental", "reviewed", "official")
-
-
-def used_placeholders(template: str) -> set[str]:
-    """Placeholder names a template interpolates, ignoring ``{{ }}`` escapes."""
-    stripped = template.replace("{{", "").replace("}}", "")
-    return set(PLACEHOLDER.findall(stripped))
 
 
 def _has_table(connection: sqlite3.Connection, name: str) -> bool:
@@ -234,6 +228,20 @@ def validate_seed(seed: dict) -> list[str]:
         problems.append(f"duplicate (key, version_added) in seed: {identity}")
 
     for t in templates:
+        for p in t.get("placeholders", []):
+            kind = p.get("kind")
+            if kind is None:
+                continue
+            if kind not in PLACEHOLDER_KINDS:
+                problems.append(
+                    f"{t['key']}: placeholder {p['name']!r} has kind {kind!r}, "
+                    f"not one of {list(PLACEHOLDER_KINDS)}"
+                )
+            elif not (p["example"].isascii() and p["example"].isdigit()):
+                problems.append(
+                    f"{t['key']}: placeholder {p['name']!r} has kind {kind!r} "
+                    f"but its example {p['example']!r} is not a number"
+                )
         declared = {p["name"] for p in t.get("placeholders", [])}
         surfaces = {"template_en": t["template_en"]} | {
             f"translations[{loc}]": tr["template"]
