@@ -86,8 +86,8 @@ export function localizedHighlight(getTerms: () => HighlightTerms | null) {
 
       update(update: ViewUpdate) {
         const reparsed = syntaxTree(update.state) !== syntaxTree(update.startState);
-        // A reconfigured editor may have switched highlight styles (light to
-        // dark theme), and the classes below come from the active style.
+        // A reconfigured editor may have switched highlight styles, and the
+        // classes below come from the active style.
         const reconfigured = update.transactions.some((tr) => tr.reconfigured);
         if (update.docChanged || update.viewportChanged || reparsed || reconfigured) {
           this.decorations = build(update.view, getTerms());

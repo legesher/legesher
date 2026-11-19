@@ -174,6 +174,25 @@ for (const scheme of SCHEMES) {
       });
     }
 
+    // A second editor theme merges as text without a conflict and can still
+    // pass the contrast checks, so check that one highlight style applies.
+    test('one highlight style colours each token, and the gutter takes the code background', async ({ page }) => {
+      await open(page, 'localized');
+      const got = await page.evaluate((content) => {
+        const spans = [...document.querySelectorAll(`${content} span`)];
+        // CodeMirror prefixes the class names of every style module with 'ͼ'.
+        const styles = (s: Element) => [...s.classList].filter((c) => c.startsWith('ͼ')).length;
+        return {
+          spans: spans.length,
+          doubled: spans.filter((s) => styles(s) > 1).map((s) => s.textContent),
+          gutter: getComputedStyle(document.querySelector('#pg-editor .cm-gutters')!).backgroundColor,
+        };
+      }, content);
+      expect(got.spans, 'highlighted tokens in the editor').toBeGreaterThan(3);
+      expect(got.doubled, 'tokens coloured by more than one highlight style').toEqual([]);
+      expect(hex(got.gutter), 'gutter background').toBe(PALETTE[scheme].bg);
+    });
+
     test('every token is readable on the selection, a word match and the active line', async ({ page }) => {
       await open(page, 'localized');
       const word = await wordAt(page, 'nombre');
@@ -245,3 +264,43 @@ for (const scheme of SCHEMES) {
     expect(r > b && g > b, `amber fill (${bg})`).toBe(true);
   });
 }
+
+// The palette variables switch with <html data-theme>, so a theme picked while
+// the editor is open recolours it in place: no reload, no new editor.
+test('the playground editor and gutter recolour when the theme is switched with the editor open', async ({ page }) => {
+  test.setTimeout(180_000);
+  const content = '#pg-editor .cm-content';
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/playground/');
+  await expect(page.locator(content)).toContainText('imprimir', { timeout: 60_000 });
+  // Marks this editor: a reload or a remount would drop the mark.
+  await page.locator('#pg-editor .cm-editor').evaluate((el) => { el.dataset.probe = 'same-editor'; });
+
+  const look = async () => {
+    const got = await page.evaluate((content) => {
+      const span = (text: string) => [...document.querySelectorAll(`${content} span`)].find((s) => s.textContent === text);
+      const colour = (el: Element | null | undefined, prop: 'color' | 'backgroundColor') => (el ? getComputedStyle(el)[prop] : 'missing');
+      return {
+        keyword: colour(span('definir'), 'color'),
+        string: colour(span('"world"'), 'color'),
+        text: colour(document.querySelector(content), 'color'),
+        editor: colour(document.querySelector('#pg-editor .cm-editor'), 'backgroundColor'),
+        gutter: colour(document.querySelector('#pg-editor .cm-gutters'), 'backgroundColor'),
+        same: document.querySelector('#pg-editor .cm-editor')?.getAttribute('data-probe') === 'same-editor',
+      };
+    }, content);
+    const { same, ...colours } = got;
+    return { same, ...Object.fromEntries(Object.entries(colours).map(([k, v]) => [k, v === 'missing' ? v : hex(v)])) };
+  };
+  const want = (s: (typeof SCHEMES)[number]) => ({
+    same: true, keyword: PALETTE[s].keyword, string: PALETTE[s].string, text: PALETTE[s].fg, editor: PALETTE[s].bg, gutter: PALETTE[s].bg,
+  });
+
+  expect(await look(), 'light, as loaded').toEqual(want('light'));
+  const picker = page.locator('starlight-theme-select select').first();
+  for (const s of ['dark', 'light'] as const) {
+    await picker.selectOption(s);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', s);
+    await expect.poll(look, { message: `editor after switching to ${s}` }).toEqual(want(s));
+  }
+});
