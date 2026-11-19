@@ -1,5 +1,5 @@
 id: handle-errors-in-your-words
-release: null
+release:
 package: legesher 0.25.1
 badge: new
 surface: playground
@@ -14,7 +14,7 @@ why:
 covers: [legesher run, try/except/finally keywords]
 file_name: divide.py
 steps:
-  - type
-  - run
-  - expect_output
-  - show_original
+- type
+- run
+- expect_output
+- show_original

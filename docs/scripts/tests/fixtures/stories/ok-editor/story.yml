@@ -1,5 +1,5 @@
 id: ok-editor
-release: null
+release:
 package: legesher-vscode 0.1.8
 badge: improved
 surface: editor
@@ -14,5 +14,5 @@ why:
 covers: [language server hover]
 file_name: divide.py
 steps:
-  - open_file: divide.py
-  - hover: def
+- open_file: divide.py
+- hover: def
