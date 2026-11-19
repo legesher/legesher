@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.28.1] - 2026-11-19
+
 ### Fixed
 
 - Requires `legesher-core` 0.28.0 and `legesher-i18n` 0.28.0 or later.
