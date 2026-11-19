@@ -14,7 +14,11 @@ dependencies = [
     # override in the root [tool.uv.sources] applies. <1.0.0 because
     # semantic-release (major_on_zero = true) moves 0.x to 1.0 on a
     # breaking change.
-    "legesher-i18n>=0.22.0,<1.0.0",
+    # 0.28.0: `native_digits.py` imports `get_native_digits` and
+    # `get_decimal_separator` from `legesher_i18n.language_registry` and
+    # `DECIMAL_SEPARATORS` from `legesher_i18n.numerals`, all first released in
+    # 0.28.0, and `transformer.py` imports `native_digits` at module load.
+    "legesher-i18n>=0.28.0,<1.0.0",
     "pyyaml>=6.0",
 ]
 name = "legesher-core"
