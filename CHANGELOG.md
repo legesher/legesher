@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **install**: the one-line installers install `legesher` 0.28.1, with
+  `legesher-core` and `legesher-i18n` 0.28.1. Running one again over an
+  earlier install upgrades it.
+
 ## [0.28.1] - 2026-11-19
 
 ### Fixed

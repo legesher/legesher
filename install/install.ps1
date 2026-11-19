@@ -37,7 +37,7 @@
     # The oldest uv whose tool commands this relies on.
     $UvMinimum = '0.5.0'
     $ServerPython = '3.12'
-    $CliPin = 'legesher==0.27.0'
+    $CliPin = 'legesher==0.28.1'
     $ServerPin = 'legesher-language-server==0.3.0'
     $ExtensionId = 'legesher.legesher-vscode'
     $ManualSteps = 'https://github.com/legesher/legesher#installation'
@@ -186,9 +186,9 @@ jinja2==3.1.6
 jiter==0.19.0
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
-legesher==0.27.0
-legesher-core==0.27.0
-legesher-i18n==0.27.0
+legesher==0.28.1
+legesher-core==0.28.1
+legesher-i18n==0.28.1
 legesher-language-server==0.3.0
 legesher-runtime==0.1.0
 lru-dict==1.4.1
