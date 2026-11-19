@@ -7,20 +7,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-### Fixed
-
-- Requires `legesher-i18n` 0.28.0 or later, the first release that reads the
-  pack's `messages` section. Installed next to an older `legesher-i18n`, the
-  pack failed to load (0.26.0 and older) or its Arabic error messages were not
-  read from it (0.27.0).
-
 ### Added
 
 - The 55 error messages and traceback lines, in a `messages` section of the
   3.10, 3.11 and 3.12 files. They are the Arabic translations the catalog
   already rendered, now carried by the pack. A `legesher-i18n` release from
   before the `messages` section refuses this pack's `3.10.yml`, so this
-  version needs the release that adds the section. [CORE-2630]
+  version needs `legesher-i18n` 0.28.0, the first release that reads it. [CORE-2630]
+
+### Fixed
+
+- Requires `legesher-i18n` 0.28.0 or later, the first release that reads the
+  pack's `messages` section. Installed next to an older `legesher-i18n`, the
+  pack failed to load (0.26.0 and older) or its Arabic error messages were not
+  read from it (0.27.0).
 
 ## [0.0.4] - 2026-04-29
 
