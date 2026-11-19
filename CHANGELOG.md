@@ -54,6 +54,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   own colour and weight; the styles never reached output written at run time.
 - **docs**: the playground editor has a dark theme that follows the site's, so
   code stays readable in dark mode; light mode is unchanged.
+- **docs**: review badges in the sidebar sit a word space after their label
+  again. Astro 7's default HTML compression had dropped the space and put each
+  badge against its label; the docs build now collapses whitespace to one
+  space, as it did on Astro 6.
 
 ## [0.27.0] - 2026-11-18
 
