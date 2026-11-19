@@ -235,13 +235,14 @@ def load_catalog(
        messages partition or holds no such rows, which is every installed
        package) the English side comes from the seed in :data:`SEED_DIR` and
        the translations from the ``messages`` section of the language pack
-       for ``locale`` at this interpreter version, or at the newest version
-       the pack has below it. A pack entry is used only
+       for ``locale``, at the tier the pack loader serves for this
+       interpreter version: on a version newer than every tier the pack has,
+       its newest tier. A pack entry is used only
        when :func:`legesher_i18n.pack_messages.entry_problem` finds nothing
        wrong with it for the English row that applies; otherwise that rule
-       is not localized. When there is no such pack file, it does not load,
-       or it carries no messages for ``implementation``, no rule is
-       localized.
+       is not localized. When the loader serves no tier for this version,
+       the pack does not load, or it carries no messages for
+       ``implementation``, no rule is localized.
 
     Args:
         locale: BCP 47 tag (``'es'``, ``'ar'``). A locale with no translations
@@ -328,15 +329,24 @@ def pack_message_problems(
         loader: The pack loader to read with. Pass one loader when checking
             many packs, so they are discovered once.
 
+    A version newer than every tier the pack has is checked as the pack's
+    newest tier against that version's English, which is what such an
+    interpreter reads.
+
     Returns:
         ``"<key>: <reason>"`` lines, sorted by key. Empty when every entry
         joins, and when the pack carries no messages for ``implementation``
-        or there is no pack for the locale at this version.
+        or the loader serves no tier for the locale at this version (no pack,
+        a version below its oldest tier, a tier missing from the middle, the
+        next major version).
 
     Raises:
         Exception: Whatever the pack loader raises for a pack file that
             exists and does not load: :class:`LanguagePackError` for one that
-            fails validation, a YAML error for one that does not parse.
+            fails validation, a YAML error for one that does not parse. That
+            includes a tier whose words need newer identifier rules than the
+            running interpreter has, at its own version and at every newer
+            version it is served for.
     """
     version = _parse_version(python_version)
     target = IMPLEMENTATION_TARGETS.get(implementation)
@@ -442,17 +452,20 @@ def _pack_entries(
 ) -> dict[str, Any] | None:
     """The pack's entries for ``implementation``, or ``None`` when it has none.
 
-    The pack file for the interpreter's version is read; when the pack has
-    no such file (an interpreter newer than the pack), the newest of the
-    pack's own files below it is. That is safe because every entry is joined
-    by fingerprint: a message the newer interpreter reworded is a different
+    The tier is the one :meth:`LanguagePackLoader.load` serves for the
+    interpreter's version, so messages and words always come from the same
+    tier. On an interpreter newer than every tier the pack has, that is the
+    pack's newest tier, which is safe because every entry is joined by
+    fingerprint: a message the newer interpreter reworded is a different
     English template, so the older translation does not attach to it, and
     every message it did not reword stays translated.
 
     ``None`` covers every way a pack can have nothing to offer: no pack for
-    the locale, no pack file at or below this interpreter version, a pack
-    file that does not load, a pack with no messages for the implementation,
-    and any error while finding the pack. No rule is then localized.
+    the locale, a version the loader serves no tier for (below the pack's
+    oldest tier, a tier missing from the middle, the next major version), a
+    pack file that does not load, a pack with no messages for the
+    implementation, and any error while finding the pack. No rule is then
+    localized.
 
     The pack's minimum interpreter is not enforced: that guard protects
     translated identifiers that would not parse, and rendering a message
@@ -462,16 +475,11 @@ def _pack_entries(
     if target is None:
         return None
     try:
-        loader = LanguagePackLoader()
-        candidates = [
-            stem
-            for stem in _pack_versions(loader, locale, target)
-            if _parse_version(stem) <= version
-        ]
-        if not candidates:
-            return None
-        pack = loader.load(
-            locale, target, candidates[-1], enforce_min_interpreter=False
+        pack = LanguagePackLoader().load(
+            locale,
+            target,
+            f"{version[0]}.{version[1]}",
+            enforce_min_interpreter=False,
         )
     except Exception:  # noqa: BLE001 - a missing or broken pack degrades, never crashes
         return None

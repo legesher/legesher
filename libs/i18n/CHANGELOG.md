@@ -92,6 +92,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   The rule never goes downward: a request below a pack's floor raises
   `UnsupportedInterpreterError` naming the floor, where it used to raise a
   `PackNotFoundError` that listed every language.
+- The message catalog takes its pack tier from that rule. `load_catalog`
+  chose the pack file itself, the newest at or below the interpreter, so it
+  could read messages from a tier the loader serves no words from: one below
+  a tier missing from the middle of a pack, or the newest tier on the next
+  major version. Messages and words now come from the same tier.
+  `pack_message_problems` checks a version past the newest tier as that
+  tier.
 
 ## [0.27.0] - 2026-11-18
 

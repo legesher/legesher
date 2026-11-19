@@ -105,8 +105,9 @@ ignored. A pack may be newer than the catalog it is read with.
 A skipped entry is logged at debug level with its key and the reason.
 `legesher_i18n.messages.pack_message_problems` returns the same reasons for
 one pack and version, and reports an unknown key too. A test runs it over
-every shipped pack at every version, so an entry the join would skip fails
-the suite instead of leaving a message in English without notice.
+every shipped pack at every version, and at one version past the newest
+tier, so an entry the join would skip fails the suite instead of leaving a
+message in English without notice.
 
 Two unused entries are expected and not reported, because a later pack file
 can add or override an entry but never remove one: the translation of an
@@ -127,16 +128,17 @@ In order:
    whole catalog: English and translations. Normally only a maintainer
    checkout has one.
 3. Otherwise the English side comes from the seed that ships in the package,
-   and the translations from the pack for the locale at the running Python
-   version. When the pack has no file for that version (an interpreter
-   newer than the pack), its newest file below that version is read: every
-   entry is joined by fingerprint, so a message the newer Python reworded
-   stays in English and every other message stays translated. The pack is
-   the only source of translations: a message it does not translate prints
-   in English, and so does every message when there is no pack for the
-   locale, no pack file at or below that Python version, the pack does not
-   load, or it carries no messages for the implementation. The seed carries
-   no translations.
+   and the translations from the pack for the locale, at the tier the pack
+   loader serves for the running Python version. Messages and words come
+   from the same tier. On a Python newer than every tier the pack has, that
+   is its newest tier: every entry is joined by fingerprint, so a message
+   the newer Python reworded stays in English and every other message stays
+   translated. The pack is the only source of translations: a message it
+   does not translate prints in English, and so does every message when
+   there is no pack for the locale, the loader serves no tier for that
+   Python version (below the pack's oldest tier, a tier missing from the
+   middle, the next major version), the pack does not load, or it carries
+   no messages for the implementation. The seed carries no translations.
 
 The pack's minimum interpreter version is not enforced for this read. That
 guard protects translated identifiers that would not parse on an older
