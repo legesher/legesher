@@ -44,7 +44,7 @@ from .style_guides import StyleGuideLoader
 from .version_detector import PythonVersionDetector
 from .version_index import PythonVersionInfo, VersionIndex
 
-__version__ = "0.27.0"
+__version__ = "0.28.0"
 
 __all__ = [
     # Core pack loading
