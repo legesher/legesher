@@ -7,11 +7,11 @@
     "pydantic",
     "packaging"
   ],
-  "core": "legesher_core-0.25.1-py3-none-any.whl",
-  "i18n": "legesher_i18n-0.25.1-py3-none-any.whl",
+  "core": "legesher_core-0.27.0-py3-none-any.whl",
+  "i18n": "legesher_i18n-0.27.0-py3-none-any.whl",
   "packs": {
     "am": "legesher_i18n_python_am-0.0.3-py3-none-any.whl",
-    "ar": "legesher_i18n_python_ar-0.0.5-py3-none-any.whl",
+    "ar": "legesher_i18n_python_ar-0.0.6-py3-none-any.whl",
     "bn": "legesher_i18n_python_bn-0.0.3-py3-none-any.whl",
     "bs": "legesher_i18n_python_bs-0.0.3-py3-none-any.whl",
     "ca": "legesher_i18n_python_ca-0.0.3-py3-none-any.whl",
@@ -21,7 +21,7 @@
     "de": "legesher_i18n_python_de-0.0.4-py3-none-any.whl",
     "el": "legesher_i18n_python_el-0.0.5-py3-none-any.whl",
     "en": "legesher_i18n_python_en-0.0.4-py3-none-any.whl",
-    "es": "legesher_i18n_python_es-0.0.5-py3-none-any.whl",
+    "es": "legesher_i18n_python_es-0.0.6-py3-none-any.whl",
     "fa": "legesher_i18n_python_fa-0.0.3-py3-none-any.whl",
     "fi": "legesher_i18n_python_fi-0.0.5-py3-none-any.whl",
     "fr": "legesher_i18n_python_fr-0.0.4-py3-none-any.whl",
