@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-19
+
 ### Added
 
 - `round_trip` carries `finding_count`, the number of names the trip cannot
